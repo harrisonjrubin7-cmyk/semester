@@ -60,12 +60,23 @@ describe('the window title', () => {
   });
 });
 
+/**
+ * How many layouts `App.tsx` returns: the phone, the desk and the workspace.
+ *
+ * Named rather than written as a literal, because three separate files count
+ * mounts against it and a fourth layout has to raise all three together or
+ * the one that was missed silently asserts the wrong thing.
+ */
+const LAYOUTS = 3;
+
 describe('the component that writes it', () => {
   const src = () => readFileSync('src/App.tsx', 'utf8');
 
-  it('is mounted in both layouts', () => {
-    // The phone's return and the desk's. One is the skip-link bug again.
-    expect([...src().matchAll(/<Titled \/>/g)].length).toBe(2);
+  it('is mounted in every layout', () => {
+    // The phone's return, the desk's and the workspace's. One missing is the
+    // skip-link bug again — and the number here is the number of layouts, so
+    // adding a fourth means adding its mount rather than raising this.
+    expect([...src().matchAll(/<Titled \/>/g)].length).toBe(LAYOUTS);
   });
 
   it('reads the header rather than keeping a second list of names', () => {

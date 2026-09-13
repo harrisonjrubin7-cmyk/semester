@@ -855,6 +855,12 @@ export function destination(screen: Screen): Destination | undefined {
  */
 const NESTED_NAMES: Partial<Record<Screen, string>> = {
   onboarding: 'setting up',
+  // The two screens the workspace shell is made of. Named here rather than in
+  // the registry because neither is a place in the app — one is the app's own
+  // front door and the other is the index of everything behind it, the way a
+  // browser's new-tab page is not one of your bookmarks. See `lib/desk.ts`.
+  search: 'the search home',
+  directory: 'all apps',
   course: 'this course',
   item: 'this deadline',
   event: 'this event',

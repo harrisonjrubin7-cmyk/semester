@@ -31,12 +31,14 @@ describe('the screen boundary', () => {
     expect(boundary).toContain('componentDidCatch');
   });
 
-  it('wraps the screen in both layouts, not just one', () => {
-    // The phone and the wide layout are two separate return statements in
-    // `App.tsx`. Wrapping one and not the other would leave a phone — where
-    // this app is mostly used — taking the whole app down on a bad screen.
+  it('wraps the screen in every layout, not just one', () => {
+    // The phone, the wide layout and the workspace are three separate return
+    // statements in `App.tsx`. Wrapping one and not another would leave a
+    // phone — where this app is mostly used — taking the whole app down on a
+    // bad screen. Three, because there are three layouts; a fourth has to
+    // bring its own boundary rather than raise this.
     const wraps = app.match(/<ScreenTrouble\b/g) ?? [];
-    expect(wraps.length, 'both the phone and the wide layout need one').toBe(2);
+    expect(wraps.length, 'every layout needs one').toBe(3);
   });
 
   it('resets when you move on, so one failure does not follow you', () => {

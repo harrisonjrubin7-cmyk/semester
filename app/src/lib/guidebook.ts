@@ -145,7 +145,7 @@ const SETTINGS: { name: string; options: { id: string; label: string }[]; does: 
    * page they both live on is named in the prose.
    */
   { name: 'How your day is drawn', options: FEEDS, does: 'The shape of Today — cards, compact rows, or one timeline down the day.', doesNot: 'It does not change what is on it.' },
-  { name: 'Navigation', options: NAVS, does: 'Which single navigation the app draws: a tab bar, one feed, a home screen of icons, or two rows of shelves. On Layout and navigation.', doesNot: 'It never draws two. Every screen is reachable in all four, and search finds them all.' },
+  { name: 'Navigation', options: NAVS, does: 'Which single navigation the app draws: the workspace — tabs across the top and one search bar under them — a tab bar, one feed, a home screen of icons, or two rows of shelves. On Layout and navigation.', doesNot: 'It never draws two. Every screen is reachable in all five, and search finds them all.' },
   { name: 'Layout', options: SHELLS, does: 'How a screen is arranged once you are on it — drawn cards, grouped inset lists, or soft raised tiles. On Layout and navigation, beside the navigation.', doesNot: 'It changes no content and adds no navigation of its own.' },
 ];
 

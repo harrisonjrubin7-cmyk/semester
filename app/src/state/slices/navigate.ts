@@ -13,6 +13,7 @@ import type { Screen } from '../../lib/types';
 import { NAMED } from '../../lib/route';
 import { ROOTS, type Action, type State } from '../shape';
 import { ONB_STEPS } from '../../data/misc';
+import { firstScreen } from '../../lib/chrome';
 import { dayOf } from '../../lib/date';
 
 /**
@@ -63,6 +64,9 @@ export function navigate(state: State, action: Action): State | null {
 
     case 'apps':
       return { ...state, apps: action.open };
+
+    case 'customize':
+      return { ...state, customize: action.open };
 
     case 'go':
       return push(
@@ -183,16 +187,25 @@ export function navigate(state: State, action: Action): State | null {
     case 'setMathTab':
       return { ...state, mathTab: action.tab };
 
+    /*
+     * Where setting up lets you out.
+     *
+     * `firstScreen` rather than a literal `home`, so finishing onboarding
+     * lands where opening the app lands. The workspace opens on its search
+     * page, and hard-coding home here was the difference between "the app
+     * opens on the search home" and "the app opens on the search home unless
+     * you have just set it up" — which is the first thing anybody sees.
+     */
     case 'onbNext':
       return state.onb >= ONB_STEPS - 1
-        ? { ...state, screen: 'home', history: [], seenOnboarding: true, onb: 0 }
+        ? { ...state, screen: firstScreen(state.nav), history: [], seenOnboarding: true, onb: 0 }
         : { ...state, onb: state.onb + 1 };
 
     case 'restartOnboarding':
       return { ...state, screen: 'onboarding', history: [], onb: 0 };
 
     case 'finishOnboarding':
-      return { ...state, screen: 'home', history: [], seenOnboarding: true, onb: 0 };
+      return { ...state, screen: firstScreen(state.nav), history: [], seenOnboarding: true, onb: 0 };
 
     case 'setLoadStep':
       return { ...state, loadStep: action.step };

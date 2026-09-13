@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FULLSCREEN, chromeFor, homeShape, navigationsDrawn } from './chrome';
+import { FULLSCREEN, chromeFor, firstScreen, homeShape, navigationsDrawn } from './chrome';
 import { NAVS, SHELLS, navOf } from './look';
 import { DESTINATIONS } from './nav';
 import type { NavMode, Screen } from './types';
@@ -30,7 +30,7 @@ describe('the navigation rule', () => {
             doubled.push(
               `${nav} on ${screen} (${wide ? 'wide' : 'phone'}): ${
                 Object.entries(chrome)
-                  .filter(([k, v]) => v && k !== 'fab')
+                  .filter(([k, v]) => v && k !== 'fab' && k !== 'sidebar')
                   .map(([k]) => k)
                   .join(' + ')
               }`,
@@ -78,6 +78,21 @@ describe('the navigation rule', () => {
     }
   });
 
+  /*
+   * The workspace's sidebar is the wide half of one navigation, not a second
+   * one — the same relationship the rail has to the tab bar. Asserted rather
+   * than left to the count above, which would go on passing if `sidebar` were
+   * ever drawn on a phone as well as the strip.
+   */
+  it('unrolls the workspace into a sidebar only where there is room', () => {
+    expect(chromeFor('workspace', 'courses', false).sidebar).toBe(false);
+    expect(chromeFor('workspace', 'courses', true).sidebar).toBe(true);
+    expect(chromeFor('workspace', 'courses', true).rail).toBe(false);
+    for (const nav of MODES.filter((n) => n !== 'workspace')) {
+      expect(chromeFor(nav, 'courses', true).sidebar, nav).toBe(false);
+    }
+  });
+
   it('puts the import button on the feed’s home screen and nowhere else', () => {
     expect(chromeFor('feed', 'home', false).fab).toBe(true);
     expect(chromeFor('feed', 'courses', false).fab).toBe(false);
@@ -94,16 +109,28 @@ describe('the home screen', () => {
     expect(homeShape('feed')).toBe('feed');
     expect(homeShape('tabs')).toBe('today');
     expect(homeShape('shelves')).toBe('today');
+    // The workspace's home screen is Today, like the bar's. Where it differs
+    // is where the app *lands*, which is the next test — and the two being
+    // separate is what stops the Today row in its sidebar opening the search
+    // page instead of Today.
+    expect(homeShape('workspace')).toBe('today');
   });
 
   it('has an answer for every navigation there is', () => {
     for (const nav of MODES) expect(homeShape(nav)).toBeTruthy();
   });
+
+  it('lands the workspace on its search page and everything else on home', () => {
+    expect(firstScreen('workspace')).toBe('search');
+    for (const nav of MODES.filter((n) => n !== 'workspace')) {
+      expect(firstScreen(nav), nav).toBe('home');
+    }
+  });
 });
 
 describe('reading a navigation back', () => {
-  it('keeps the four the app has', () => {
-    expect(MODES).toEqual(['tabs', 'feed', 'springboard', 'shelves']);
+  it('keeps the five the app has', () => {
+    expect(MODES).toEqual(['tabs', 'feed', 'springboard', 'shelves', 'workspace']);
     for (const nav of MODES) expect(navOf(nav)).toBe(nav);
   });
 

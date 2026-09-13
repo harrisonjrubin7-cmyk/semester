@@ -364,6 +364,49 @@ function NavPreview({ nav }: { nav: string }) {
     );
   }
 
+  if (nav === 'workspace') {
+    /*
+     * The one drawing whose chrome is at the top: a strip of tabs, the search
+     * bar under it, and a column of shortcuts beside the page. Drawn on the
+     * void rather than the panel, because that is what the strip actually
+     * sits on — see `.deskwork` in `app.css`.
+     */
+    return (
+      <Frame void>
+        <span style={{ display: 'flex', gap: 'var(--sp-1)' }}>
+          {pill(20, true)}
+          {pill(14)}
+          {pill(7)}
+        </span>
+        <span
+          style={{
+            display: 'block',
+            height: 8,
+            marginTop: 'var(--sp-2)',
+            borderRadius: 4,
+            background: 'var(--app-line)',
+          }}
+        />
+        <span style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)' }}>
+          <span style={{ display: 'block', flex: 'none', width: 16 }}>
+            {[0, 1, 2, 3].map((i) => (
+              <span key={i} style={{ display: 'block', marginTop: i === 0 ? 0 : 4 }}>
+                {bar('100%', i !== 0)}
+              </span>
+            ))}
+          </span>
+          <span style={{ display: 'block', flex: 1, minWidth: 0 }}>
+            {bar('72%')}
+            <span style={{ display: 'block', height: 5 }} />
+            {bar('54%', true)}
+            <span style={{ display: 'block', height: 5 }} />
+            {bar('64%', true)}
+          </span>
+        </span>
+      </Frame>
+    );
+  }
+
   // The bar: content above, a fixed row of tabs pinned to the bottom.
   return (
     <Frame>
@@ -403,7 +446,7 @@ function NavPreview({ nav }: { nav: string }) {
 // ── The pickers ─────────────────────────────────────────────────────────
 
 /**
- * Which navigation is drawn. One of four, and only ever one.
+ * Which navigation is drawn. One of five, and only ever one.
  */
 export function NavPicker() {
   const { state, dispatch } = useStore();
@@ -412,8 +455,8 @@ export function NavPicker() {
     <Folding name="Appearance">
       <SectionLabel style={LABEL_STYLE}>Navigation</SectionLabel>
       <div style={BLURB_STYLE}>
-        Four ways of moving through the same screens. Only one is ever on screen at a time, and
-        none of them hides anything — every screen is reachable in all four, and search finds
+        Five ways of moving through the same screens. Only one is ever on screen at a time, and
+        none of them hides anything — every screen is reachable in all five, and search finds
         everything whichever you pick.
       </div>
       <Row>

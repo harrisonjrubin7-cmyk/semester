@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PERSISTED, initialEphemeral, loadPersisted, pickPersisted, type Persisted, type State } from './shape';
 import { SCHEMA, migrate } from '../lib/migrate';
+import { NAVS } from '../lib/look';
 
 /**
  * Storage is not a trusted input, and the app opens whatever it finds.
@@ -66,8 +67,10 @@ describe('opening the app on damaged storage', () => {
     for (const field of LISTS) {
       expect(Array.isArray(state[field as keyof typeof state]), `${field} came back a non-array`).toBe(true);
     }
-    // And the navigation is one it can actually draw. See `navOf`.
-    expect(['tabs', 'feed', 'springboard', 'shelves']).toContain(state.nav);
+    // And the navigation is one it can actually draw. Read from `NAVS`
+    // rather than written out, so adding one does not turn this into a check
+    // that the app has not changed. See `navOf`.
+    expect(NAVS.map((n) => n.id)).toContain(state.nav);
   });
 
   it('keeps a good list rather than emptying it', () => {

@@ -147,6 +147,17 @@ export const STRATEGY: Record<string, Strategy> = {
   // The home screen's icons, for exactly the same reason: dragging them back
   // into place on the second device is the work these keys exist to avoid.
   boardOrder: 'theirs',
+  // The workspace's shortcuts, and the third arrangement somebody makes once
+  // on purpose. Same argument again: pinning Study and Calendar back on the
+  // laptop is the work these keys exist to avoid. `lib/desk.ts` resolves the
+  // list against the registry on the way out, so a merge that arrives naming
+  // a screen this device's school has switched off drops it rather than
+  // showing a dead tile.
+  favourites: 'theirs',
+  // Whether the search home draws the row at all. About the front door rather
+  // than about the screen in front of you, so it follows the account the way
+  // the shell and the directory do.
+  shortcuts: 'theirs',
   // Ergonomics: about the screen in front of you, not about you. See `mine`.
   textSize: 'mine',
   // `mine` like every other look setting: how this device phrases things is a

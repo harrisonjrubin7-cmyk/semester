@@ -14,6 +14,7 @@
 import {
   AccountIcon,
   ActivitiesIcon,
+  AppsIcon,
   AheadIcon,
   AnalyseIcon,
   AnnounceIcon,
@@ -57,6 +58,7 @@ import {
   ProofIcon,
   RegistrarIcon,
   RunwayIcon,
+  Search,
   SettingsIcon,
   SheetIcon,
   SolveIcon,
@@ -86,6 +88,11 @@ type Glyph = typeof TodayIcon;
  * screen — the bar and the launcher draw them now too.
  */
 const OWN: Partial<Record<Screen, Glyph>> = {
+  // The workspace shell's own two. Named here rather than left to the shelf
+  // fallback, which would draw a note for a search page: neither sits on a
+  // shelf, because neither is a place in the app. See `lib/desk.ts`.
+  search: Search,
+  directory: AppsIcon,
   home: TodayIcon,
   courses: CoursesIcon,
   study: StudyIcon,

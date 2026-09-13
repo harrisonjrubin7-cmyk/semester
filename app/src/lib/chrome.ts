@@ -61,6 +61,22 @@ export interface Chrome {
   /** Two rows of pills: the shelf you are on, and the screens on it. */
   shelves: boolean;
   /**
+   * The workspace: a tab strip, one search bar under it, and the launcher.
+   *
+   * One navigation, drawn at every width, in the way `tabs` and `rail` are
+   * one navigation drawn two ways. What changes with the width is the
+   * sidebar — see `sidebar` below — not what this is.
+   */
+  desk: boolean;
+  /**
+   * The workspace's column of shortcuts, where there is room for it.
+   *
+   * Not counted as a navigation of its own for exactly that reason: it is the
+   * wide expression of `desk`, and counting both would make the invariant
+   * below fail on every laptop.
+   */
+  sidebar: boolean;
+  /**
    * The floating "import a syllabus" button.
    *
    * Not a navigation — one action, on one screen — but it is drawn by the
@@ -85,7 +101,17 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
   // holds at any width, and it used to stay, so a lesson on a laptop was the
   // one screen that never got the display it asked for.
   const full = FULLSCREEN.includes(screen);
-  if (full) return { tabs: false, rail: false, shelves: false, fab: false };
+  if (full) return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false, fab: false };
+
+  /*
+   * The workspace answers first, and answers for every width.
+   *
+   * It is the only navigation whose chrome is at the *top* of the window, so
+   * it has nothing to trade against the tab bar or the rail — a phone gets
+   * the tab strip and the search bar, a laptop gets those and the sidebar,
+   * and neither gets a second navigation underneath.
+   */
+  const desk = nav === 'workspace';
 
   return {
     tabs: nav === 'tabs' && !wide,
@@ -95,8 +121,10 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
     // layout worse than the narrow one. The shelves are excluded because they
     // are already a navigation that shows both the shelf and its screens —
     // drawing the rail beside them is the doubling this file exists to stop.
-    rail: wide && nav !== 'shelves',
+    rail: wide && nav !== 'shelves' && !desk,
     shelves: nav === 'shelves',
+    desk,
+    sidebar: desk && wide,
     fab: nav === 'feed' && screen === 'home' && !wide,
   };
 }
@@ -118,6 +146,23 @@ export function homeShape(nav: NavMode): 'springboard' | 'feed' | 'today' {
 }
 
 /**
+ * The screen the app opens on, when nothing in the address says otherwise.
+ *
+ * A different question from `homeShape`, and keeping them apart is the whole
+ * of this function. `home` is Today in the workspace exactly as it is under
+ * the tab bar — the Today row in the sidebar has to open Today, and it goes
+ * to `home` like every other route to it in the app. What the workspace
+ * changes is where you *land*: on the search home, the way a browser opens on
+ * a new tab rather than on the last page you read.
+ *
+ * Written as a rule here rather than as a condition in `state/store.tsx`, for
+ * the reason the file is about: a navigation's shape decided in one place.
+ */
+export function firstScreen(nav: NavMode): Screen {
+  return nav === 'workspace' ? 'search' : 'home';
+}
+
+/**
  * How many navigations are on screen. One, or none — never two.
  *
  * The number this returns is the whole invariant, which is why it is a
@@ -125,5 +170,5 @@ export function homeShape(nav: NavMode): 'springboard' | 'feed' | 'today' {
  * and goes nowhere else.
  */
 export function navigationsDrawn(c: Chrome): number {
-  return [c.tabs, c.rail, c.shelves].filter(Boolean).length;
+  return [c.tabs, c.rail, c.shelves, c.desk].filter(Boolean).length;
 }

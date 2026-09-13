@@ -193,34 +193,56 @@ describe('the button in the header', () => {
   it('opens the launcher from every screen, not only a root one', () => {
     const button = /aria-label="All apps"/.exec(src());
     expect(button, 'the All apps button has gone from the header').not.toBeNull();
-    // The three action buttons that are always drawn sit before the `atRoot`
-    // block; the two gated ones after it. This one must be in the first half.
+    /*
+     * The three action buttons that are always drawn sit before the `atRoot`
+     * block; the two gated ones after it. This one must be in the first half.
+     *
+     * `{atRoot` rather than the whole condition: the alerts bell is gated on
+     * being at a root *and* on not being in the workspace, whose bar carries
+     * its own bell — see `slim` in `App.tsx`. What is held here is that All
+     * apps is before whatever that gate says, not what it says.
+     */
     const at = src().indexOf('aria-label="All apps"');
-    const gate = src().indexOf('{atRoot && (');
+    const gate = src().indexOf('{atRoot &&');
     expect(gate).toBeGreaterThan(-1);
     expect(at, 'All apps must not be gated on being at a root screen').toBeLessThan(gate);
   });
 
   it('is mounted wherever the search overlay is', () => {
     /*
-     * The phone and the wide pane are two separate trees in `App.tsx`, and an
-     * overlay added to one of them only is how the search screen and the
-     * search overlay came to be two different things — you got whichever one
-     * your window was wide enough for.
+     * The phone, the wide pane and the workspace are three separate trees in
+     * `App.tsx`, and an overlay added to one of them only is how the search
+     * screen and the search overlay came to be two different things — you got
+     * whichever one your window was wide enough for.
      *
      * Counting the mounts would not catch that: the first attempt at this
      * change put both of its copies in the wide tree, which counts as two and
      * left the phone with a button that did nothing. So the check is the
-     * invariant itself — every place `Command` is mounted, this is too.
+     * invariant itself — every place `Command` is mounted, a launcher is
+     * mounted in the same tree.
+     *
+     * Two launchers, because the workspace's is a panel hanging off the nine
+     * dots rather than a sheet over the window — see
+     * `components/desk/AppsPanel.tsx`. Both are matched here: what this holds
+     * is that no layout can search and not launch, not which drawing of the
+     * launcher it uses.
      */
     const lines = src().split('\n');
     const search = lines.flatMap((l, i) => (/<Command onClose=/.test(l) ? [i] : []));
-    expect(search.length, 'both layouts mount the search overlay').toBe(2);
+    const launchers = lines.flatMap((l, i) =>
+      /<(AllApps|AppsPanel) onClose=/.test(l) ? [i] : [],
+    );
+    expect(search.length, 'every layout mounts the search overlay').toBe(3);
+    expect(launchers.length, 'every layout mounts a launcher').toBe(3);
     for (const at of search) {
-      const near = lines.slice(Math.max(0, at - 6), at + 7).join('\n');
-      expect(near, 'a layout that can search but cannot open the launcher').toMatch(
-        /<AllApps onClose=/,
-      );
+      /*
+       * The nearest launcher, and it has to be close enough to be in the same
+       * return statement. The three trees are hundreds of lines apart, so a
+       * launcher borrowed from the layout above would fail this; a launcher
+       * thirty lines down, past the pane it stacks over, passes.
+       */
+      const gap = Math.min(...launchers.map((at2) => Math.abs(at2 - at)));
+      expect(gap, 'a layout that can search but cannot open the launcher').toBeLessThan(60);
     }
   });
 });

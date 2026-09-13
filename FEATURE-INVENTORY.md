@@ -194,8 +194,10 @@ university that does not offer a thing does not show its tile.
 
 ## 4. Navigation surfaces
 
-Four selectable navigation modes (`NavMode`): `tabs`, `feed`, `springboard`,
-`shelves` — chosen in Settings → Navigation.
+Five selectable navigation modes (`NavMode`): `workspace`, `tabs`, `feed`,
+`springboard`, `shelves` — chosen in Settings → Layout and navigation.
+`workspace` is what a device with nothing saved opens as; a device that has
+saved anything keeps whatever it had.
 
 - **Tab bar** — `lib/tabbar.ts`. `DEFAULT_TABS = ['home','courses','study','calendar','me']`,
   user-reorderable, with a floor of `FEWEST_CHOSEN` before it reverts to default.
@@ -203,6 +205,22 @@ Four selectable navigation modes (`NavMode`): `tabs`, `feed`, `springboard`,
   (`AllApps`, `AppGrid`, `ByTask`, `Folder`, `Launcher`, `ShelfNav`, `TileSheet`).
   Shelves in `GROUPS` order, tiles reorderable and saved as `groupOrder`.
 - **Springboard** — `lib/springboard.ts`, dock stored under the `dock` look key.
+- **Workspace** — `lib/desk.ts` + `components/desk/` (`TopBar`, `Sidebar`,
+  `AppsPanel`, `Customize`, `suggesting`) + `screens/Search.tsx` and
+  `screens/Directory.tsx`. Chrome at the top of the window rather than beside
+  the screen: the tab strip drawn from the first tab, one search bar under it
+  on every screen, the nine-dot launcher as a panel, and — above the desktop
+  breakpoint — a sidebar of New, All apps, Search home, your shortcuts,
+  Connect accounts and Settings. The app lands on `search` (`firstScreen` in
+  `lib/chrome.ts`) rather than on `home`, which is still Today. Shortcuts are
+  the `favourites` look key and the row is switched by `shortcuts`; both are
+  resolved against the registry and the school gate on every read, so a stale
+  or synced list can arrange the row and never put a dead tile in it. The bar
+  searches apps (label, short name, blurb, keywords, category, and the
+  school's own words) and hands anything else to the existing palette. The
+  centre of the search home is `hidden` — out of the tab order and the
+  accessibility tree — whenever the suggestions, the launcher, Customize, the
+  palette or the capture box is open (`centreHidden`).
 - **The app's browser — tabs and universal search** — `components/Command.tsx` +
   `lib/find.ts` + `lib/browser.ts` + `lib/typeahead.ts`, an overlay rather than a
   screen. A strip of tabs across the top, each holding a place in the app (the
@@ -266,6 +284,8 @@ falling back to **localStorage** when IndexedDB is unavailable, slow to open
 | `semester.aloud` | read-aloud toggle |
 | `semester.ai.corner` | assistant dock corner |
 | `dock` | springboard dock (look key) |
+| `favourites` | workspace shortcuts, screen ids (look key) |
+| `shortcuts` | whether the search home draws the shortcut row (look key) |
 
 ### Top-level state — selected fields
 
