@@ -354,10 +354,10 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'equations',
-    label: 'Equations',
+    label: 'Equations, and the graph',
     short: 'Maths',
-    blurb: 'Write a formula properly — on screen, into a document, or as a line you can paste anywhere.',
-    keywords: 'equation equations formula formulas maths math latex mathml notation fraction exponent superscript subscript square root sum sigma greek symbol elasticity standard deviation margin of error present value regression z score expected value statistics',
+    blurb: 'Write a formula properly, work it out at your own numbers, and draw its curve.',
+    keywords: 'equation equations formula formulas maths math latex mathml notation fraction exponent superscript subscript square root sum sigma greek symbol elasticity standard deviation margin of error present value regression z score expected value statistics graph graphing graphs plot plotting curve curves chart function functions desmos geogebra graphing calculator scientific calculator calculate calculator compute evaluate work out solve for a value trig trigonometry sin cos tan log ln exponential asymptote intercept zeros roots turning point maximum minimum intersection area under the curve integral slope tangent derivative parabola circle sliders parameter degrees radians factorial permutation combination',
     group: 'Make',
     taskTags: ['make', 'study'],
     root: 'study',
@@ -533,8 +533,11 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'mail',
     label: 'Email',
-    blurb: 'Draft the email you have been putting off — extension, question, meeting.',
-    keywords: 'email mail write draft professor reply extension office hours absence recommendation letter follow up gmail outlook compose message send',
+    blurb: 'Your inbox, in the shape Gmail taught you — and the email you have been putting off.',
+    keywords:
+      'email mail inbox mailbox read reply forward archive delete trash spam junk star flag snooze label folder ' +
+      'conversation thread unread search from subject attachment draft drafts sent outbox compose write ' +
+      'professor extension office hours absence recommendation letter follow up gmail outlook message send announcement',
     /*
      * Life rather than Make, since the making screens arrived.
      *

@@ -48,6 +48,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // Things you add to. Losing one of these is losing work.
   courses: 'union',
   notes: 'union',
+  // Emails written here. A draft started on the laptop and one on the phone
+  // are two drafts, not a conflict.
+  mailDrafts: 'union',
   tasks: 'union',
   appointments: 'union',
   commitments: 'union',
@@ -60,6 +63,22 @@ export const STRATEGY: Record<string, Strategy> = {
   documents: 'union',
   sheets: 'union',
   equations: 'union',
+  /*
+   * The graph's working surface, which is one drawing rather than a list of
+   * made things — so the copy that synced later wins, as a setting does.
+   *
+   * A union would be wrong here in a way the others are not: the lines of a
+   * plot are read together, a parameter above the curve that uses it, and
+   * interleaving two devices' lists gives a graph neither device drew. What is
+   * worth keeping off a plot is its equation, and `equations` above unions
+   * those properly.
+   */
+  plots: 'theirs',
+  // The calculator's half-finished working, and the values given to its
+  // letters. One box on one screen: the copy that synced later wins, for the
+  // same reason as the plot above it.
+  mathWorking: 'theirs',
+  mathGiven: 'theirs',
   decks: 'union',
   // A folder made on the phone and one made on the laptop are two folders.
   // The files inside them are in IndexedDB and do not sync at all, so the
@@ -104,6 +123,12 @@ export const STRATEGY: Record<string, Strategy> = {
   // not drop the plan already entered for next term on the phone.
   plans: 'ticks',
   linkUrls: 'ticks',
+  // What you have done to a message the app can only read: starred here,
+  // archived there. Keyed by message id, so two devices marking two different
+  // messages should end with both marked — the same argument as every other
+  // map above, and the one place it matters most, since nothing on the server
+  // can put a lost mark back.
+  mailMarks: 'ticks',
   feedHidden: 'ticks',
   notifs: 'ticks',
 
@@ -133,6 +158,9 @@ export const STRATEGY: Record<string, Strategy> = {
   // than about the screen it is on, so it follows them between devices.
   courseColours: 'theirs',
   shell: 'theirs',
+  // Where the message sits beside the list. About how somebody reads a
+  // mailbox rather than about the window it is in, so it follows them.
+  mailPane: 'theirs',
   // Whether the directory is a list or nine tiles. `theirs` for the same
   // reason the shell is: somebody who has learned that Data is bottom-left
   // has learned it, and finding a column of fifty-five rows on the laptop
@@ -506,6 +534,8 @@ const LABELS: Record<string, string> = {
   documents: 'Documents',
   sheets: 'Sheets',
   equations: 'Equations',
+  plots: 'What is on the graph',
+  mathWorking: 'What the calculator is working on',
   decks: 'Decks',
   folders: 'Drive folders',
   attendance: 'Attendance',

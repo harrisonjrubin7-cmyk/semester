@@ -13,6 +13,7 @@ import {
   leaveGroup,
   membersOf,
   partsOf,
+  roomKey,
   setGroup,
   setPart,
   startGroup,
@@ -101,6 +102,21 @@ export function Groupwork() {
   const [busy, setBusy] = useState(false);
 
   const term = termOf(now);
+  /**
+   * What the database knows this class as, which is not what the picker shows.
+   *
+   * A room is keyed by the school and the code together — `vanderbilt/BUS
+   * 1600` — because `BUS 1600` on its own would put four campuses in one
+   * group. `classmates-schools.sql` made that the key everywhere, and this
+   * screen kept sending the bare code: every policy on `groups` gates on
+   * `in_class(term, code)`, which compares that string against the enrolment
+   * rows, so a bare code matched nothing. The list came back empty for a class
+   * you are in, and starting a group was refused by a policy you satisfy.
+   *
+   * The picker keeps showing `code`, because the school in the key is the
+   * database's business and not a thing to read on a screen.
+   */
+  const room = roomKey(state.schoolId, code);
   const open = groups.find((g) => g.id === openId) ?? null;
   const iAmIn = members.some((m) => m.user_id === account?.id);
 
@@ -122,13 +138,13 @@ export function Groupwork() {
    * loose about. `Classmates` guards the same way, and was already right.
    */
   const loadGroups = useCallback(async () => {
-    if (!account || !code) return;
+    if (!account || !room) return;
     try {
-      setGroups(await groupsIn(term, code));
+      setGroups(await groupsIn(term, room));
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
-  }, [account, term, code]);
+  }, [account, term, room]);
 
   /**
    * One group's roster, on opening it and again after anything in it changes.
@@ -267,7 +283,7 @@ export function Groupwork() {
               disabled={busy || !newName.trim()}
               onClick={() =>
                 void guard(async () => {
-                  const id = await startGroup(account.id, term, code, newName);
+                  const id = await startGroup(account.id, term, room, newName);
                   setNewName('');
                   await loadGroups();
                   setOpenId(id);

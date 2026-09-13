@@ -40,8 +40,9 @@
  * held in this browser's storage, and there is no backend to send them to.
  */
 
-import type { Course, CourseId, FeedEvent } from './types';
+import type { Course, FeedEvent } from './types';
 import { matchCourse } from './ics';
+import { parseAddress, parseAddresses, type FolderId, type Mail } from './mailbox';
 
 export type ProviderId = 'microsoft' | 'google' | 'zoom' | 'apple';
 
@@ -666,21 +667,277 @@ export async function listRemoteFiles(id: ProviderId): Promise<RemoteFile[]> {
 }
 
 // ── Mail ──────────────────────────────────────────────────────────────────
-// Course announcements arrive as email — a class cancelled, a reading swapped,
-// a deadline moved — and then get lost in an inbox. The app looks for the ones
-// that name a course it knows about, and offers to turn them into material, a
-// task, or an appointment. It reads; it never sends.
+/*
+ * The inbox, read.
+ *
+ * Two reasons this is here rather than left to the web clients. The first is
+ * that course announcements arrive as email — a class cancelled, a reading
+ * swapped, a deadline moved — and then get lost between a receipt and a
+ * newsletter; the app knows your course codes and can say which is which. The
+ * second is that the email you owe a professor is answered from the one you
+ * were sent, and a reply written in a tab you have to go and find is a reply
+ * that does not get written.
+ *
+ * Read-only, and the scopes above say so: `gmail.readonly` and `Mail.Read`.
+ * Nothing in this file marks a message read on the server, moves it, deletes
+ * it or sends one. What the mailbox screen does with stars and folders is
+ * yours and local — `lib/mailbox.ts` explains where those live and why.
+ */
 
-export interface Message {
-  id: string;
-  from: string;
-  subject: string;
-  /** First few lines, enough to see what it is. */
-  preview: string;
-  /** ISO date. */
-  date: string;
-  link: string;
-  courseId: CourseId | null;
+/** Which provider folder a fetch is asking for, in each provider's spelling. */
+const GMAIL_LABEL: Partial<Record<FolderId, string>> = {
+  inbox: 'INBOX',
+  starred: 'STARRED',
+  sent: 'SENT',
+  drafts: 'DRAFT',
+  spam: 'SPAM',
+  trash: 'TRASH',
+};
+
+const GRAPH_FOLDER: Partial<Record<FolderId, string>> = {
+  inbox: 'inbox',
+  sent: 'sentitems',
+  drafts: 'drafts',
+  archive: 'archive',
+  spam: 'junkemail',
+  trash: 'deleteditems',
+};
+
+export interface MailPull {
+  /** Which folder to read. The archive is everything else, on both. */
+  folder: FolderId;
+  /** How many to ask for. Both providers page; the screen pages locally. */
+  limit?: number;
+  /** A provider-side search, for a query too big to answer from what is held. */
+  query?: string;
+}
+
+/**
+ * Gmail's bodies, which arrive as a tree of base64url parts.
+ *
+ * `text/plain` is preferred and HTML is the fallback with its tags taken out —
+ * an HTML newsletter rendered as raw markup is unreadable, and rendering the
+ * markup itself would put a stranger's stylesheet and remote images inside the
+ * app. The plain text of a message is the honest thing to show.
+ */
+interface GmailPart {
+  mimeType?: string;
+  filename?: string;
+  body?: { data?: string; size?: number; attachmentId?: string };
+  parts?: GmailPart[];
+}
+
+export function decodeBase64Url(data: string): string {
+  const padded = data.replace(/-/g, '+').replace(/_/g, '/');
+  try {
+    const bytes = Uint8Array.from(atob(padded), (c) => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return '';
+  }
+}
+
+/** Tags out, entities back, runs of blank lines collapsed. */
+export function textFromHtml(html: string): string {
+  return html
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+    .replace(/<\/(p|div|tr|h[1-6]|li)>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/** The first part of a kind, depth first, skipping the attachments. */
+function part(tree: GmailPart | undefined, want: string): string {
+  if (!tree) return '';
+  if (tree.mimeType === want && tree.body?.data && !tree.filename)
+    return decodeBase64Url(tree.body.data);
+  for (const child of tree.parts ?? []) {
+    const found = part(child, want);
+    if (found) return found;
+  }
+  return '';
+}
+
+export function gmailBody(tree: GmailPart | undefined): string {
+  const plain = part(tree, 'text/plain').trim();
+  if (plain) return plain;
+  const html = part(tree, 'text/html');
+  return html ? textFromHtml(html) : '';
+}
+
+export function gmailAttachments(part: GmailPart | undefined): number {
+  if (!part) return 0;
+  let n = part.filename && part.body?.attachmentId ? 1 : 0;
+  for (const child of part.parts ?? []) n += gmailAttachments(child);
+  return n;
+}
+
+/**
+ * A folder of mail, from whichever account this is.
+ *
+ * Gmail lists ids and then wants a request per message, which is why the
+ * default is twenty-five rather than the fifty a page shows: fifty is fifty
+ * round trips on a phone. Graph returns the lot in one, so it asks for more.
+ */
+export async function readMail(
+  courses: Course[],
+  id: ProviderId,
+  opts: MailPull,
+): Promise<Mail[]> {
+  if (id === 'microsoft') return graphMail(courses, opts);
+  if (id === 'google') return gmailMail(courses, opts);
+  throw new Error(`${PROVIDERS[id].name} has no mail this app can read.`);
+}
+
+async function graphMail(courses: Course[], opts: MailPull): Promise<Mail[]> {
+  type Graph = {
+    id: string;
+    conversationId?: string;
+    subject?: string;
+    bodyPreview?: string;
+    body?: { contentType?: string; content?: string };
+    receivedDateTime?: string;
+    sentDateTime?: string;
+    isRead?: boolean;
+    hasAttachments?: boolean;
+    webLink?: string;
+    categories?: string[];
+    flag?: { flagStatus?: string };
+    from?: { emailAddress?: { name?: string; address?: string } };
+    sender?: { emailAddress?: { name?: string; address?: string } };
+    toRecipients?: { emailAddress?: { name?: string; address?: string } }[];
+    ccRecipients?: { emailAddress?: { name?: string; address?: string } }[];
+  };
+  const top = opts.limit ?? 50;
+  const where = GRAPH_FOLDER[opts.folder];
+  const select =
+    '$select=id,conversationId,subject,bodyPreview,body,receivedDateTime,sentDateTime,isRead,' +
+    'hasAttachments,webLink,categories,flag,from,toRecipients,ccRecipients';
+  /*
+   * `$search` and `$orderby` cannot both be sent — Graph rejects the pair —
+   * so a search comes back in relevance order and the screen sorts it by date
+   * like everything else.
+   */
+  const url = opts.query
+    ? `https://graph.microsoft.com/v1.0/me/messages?$search=${encodeURIComponent(`"${opts.query}"`)}&$top=${top}&${select}`
+    : `https://graph.microsoft.com/v1.0/me/mailFolders/${where ?? 'inbox'}/messages` +
+      `?$top=${top}&$orderby=receivedDateTime desc&${select}`;
+
+  const json = await get<{ value: Graph[] }>('microsoft', url);
+  const who = (a?: { emailAddress?: { name?: string; address?: string } }) => ({
+    name: a?.emailAddress?.name ?? a?.emailAddress?.address ?? '',
+    address: a?.emailAddress?.address ?? '',
+  });
+
+  return json.value.map((m) => {
+    const text =
+      m.body?.contentType === 'html' ? textFromHtml(m.body.content ?? '') : (m.body?.content ?? '');
+    return {
+      id: m.id,
+      source: 'microsoft' as const,
+      threadId: m.conversationId || m.id,
+      from: who(m.from ?? m.sender),
+      to: (m.toRecipients ?? []).map(who),
+      cc: (m.ccRecipients ?? []).map(who),
+      subject: m.subject || '(no subject)',
+      snippet: (m.bodyPreview ?? '').slice(0, 400),
+      body: text || (m.bodyPreview ?? ''),
+      at: new Date(m.receivedDateTime ?? m.sentDateTime ?? Date.now()).getTime(),
+      unread: m.isRead === false,
+      starred: m.flag?.flagStatus === 'flagged',
+      folder: opts.folder,
+      labels: m.categories ?? [],
+      attachments: m.hasAttachments ? 1 : 0,
+      link: m.webLink ?? '',
+      courseId: matchCourse(courses, `${m.subject ?? ''} ${m.bodyPreview ?? ''}`),
+    };
+  });
+}
+
+async function gmailMail(courses: Course[], opts: MailPull): Promise<Mail[]> {
+  type Ref = { id: string; threadId?: string };
+  type Full = {
+    id: string;
+    threadId?: string;
+    snippet?: string;
+    internalDate?: string;
+    labelIds?: string[];
+    payload?: GmailPart & { headers?: { name: string; value: string }[] };
+  };
+
+  const label = GMAIL_LABEL[opts.folder];
+  const params = new URLSearchParams({ maxResults: String(opts.limit ?? 25) });
+  if (label && !opts.query) params.set('labelIds', label);
+  /*
+   * The archive is what is left: Gmail has no "archived" label, so a message
+   * with none of the folder labels on it is one that was archived. `-in:` says
+   * that in the query language rather than by filtering a page client-side,
+   * which would come back mostly empty.
+   */
+  if (opts.folder === 'archive' && !opts.query)
+    params.set('q', '-in:inbox -in:sent -in:draft -in:trash -in:spam');
+  if (opts.query) params.set('q', opts.query);
+
+  const list = await get<{ messages?: Ref[] }>(
+    'google',
+    `https://gmail.googleapis.com/gmail/v1/users/me/messages?${params.toString()}`,
+  );
+
+  const refs = list.messages ?? [];
+  const full = await Promise.all(
+    refs.map((ref) =>
+      get<Full>('google', `https://gmail.googleapis.com/gmail/v1/users/me/messages/${ref.id}?format=full`),
+    ),
+  );
+
+  return full.map((m) => {
+    const header = (name: string) =>
+      m.payload?.headers?.find((h) => h.name.toLowerCase() === name)?.value ?? '';
+    const labels = m.labelIds ?? [];
+    const body = gmailBody(m.payload) || (m.snippet ?? '');
+    return {
+      id: m.id,
+      source: 'google' as const,
+      threadId: m.threadId || m.id,
+      from: parseAddress(header('from')),
+      to: parseAddresses(header('to')),
+      cc: parseAddresses(header('cc')),
+      subject: header('subject') || '(no subject)',
+      snippet: (m.snippet ?? '').slice(0, 400),
+      body,
+      at: Number(m.internalDate ?? Date.now()),
+      unread: labels.includes('UNREAD'),
+      starred: labels.includes('STARRED'),
+      folder: gmailFolder(labels, opts.folder),
+      // The folder labels are where the message is rather than what it is
+      // about, and the mailbox already knows where it is.
+      labels: labels.filter((l) => !['UNREAD', 'STARRED', 'IMPORTANT'].includes(l)),
+      attachments: gmailAttachments(m.payload),
+      link: `https://mail.google.com/mail/u/0/#all/${m.id}`,
+      courseId: matchCourse(courses, `${header('subject')} ${m.snippet ?? ''}`),
+    };
+  });
+}
+
+/** Where Gmail's labels say a message actually is. */
+export function gmailFolder(labels: string[], asked: FolderId): FolderId {
+  if (labels.includes('TRASH')) return 'trash';
+  if (labels.includes('SPAM')) return 'spam';
+  if (labels.includes('DRAFT')) return 'drafts';
+  if (labels.includes('SENT')) return 'sent';
+  if (labels.includes('INBOX')) return 'inbox';
+  // Nothing left means archived — unless we were reading a view, in which case
+  // the message is wherever it was and the view is not a place.
+  return asked === 'starred' ? 'archive' : asked;
 }
 
 // ── Writing back ──────────────────────────────────────────────────────────

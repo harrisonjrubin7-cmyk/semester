@@ -370,7 +370,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'maps':
       return { kicker: 'Campus, city, and how to get there', title: 'Getting there' };
     case 'mail':
-      return { kicker: 'Drafted here, sent by you', title: 'Email' };
+      return { kicker: 'Read here, sent by you', title: 'Email' };
     case 'export':
       return { kicker: 'Formats other software reads', title: 'Take it with you' };
     case 'yes':
@@ -414,7 +414,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'sheet':
       return { kicker: 'Added up here, not guessed', title: 'Sheet or table' };
     case 'equations':
-      return { kicker: 'Written, never computed', title: 'Equations' };
+      return { kicker: 'Written, worked out, drawn', title: 'Equations' };
     case 'exam':
       return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
     case 'ahead':

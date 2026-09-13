@@ -490,6 +490,102 @@ export const SHAPES = {
     { d: 'M9.6 9.6a2.5 2.5 0 0 1 4.9.7c0 1.7-2.5 2-2.5 3.7' },
     { d: 'M12 17.4h.01' },
   ],
+
+  /*
+   * ── The mailbox ──────────────────────────────────────────────────────────
+   *
+   * The glyphs a mail client is read by rather than labelled by: nobody reads
+   * the word "archive" in a row of four buttons, they recognise the box. Drawn
+   * to the same Lucide-like rule as everything above, so the mailbox does not
+   * look like a different app bolted on.
+   */
+
+  /** Inbox — the tray with the flap cut out of its lid. */
+  inbox: [
+    { d: 'M22 12h-5l-1.5 2.5h-7L7 12H2' },
+    { d: 'M5.5 5.2 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.8A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.2z' },
+  ],
+
+  /** Archive — the lidded box. Dealt with, and kept. */
+  archive: [
+    { d: 'M3 3.8h18a.8.8 0 0 1 .8.8v2.6a.8.8 0 0 1-.8.8H3a.8.8 0 0 1-.8-.8V4.6a.8.8 0 0 1 .8-.8z' },
+    { d: 'M4.2 8v11a1.8 1.8 0 0 0 1.8 1.8h12a1.8 1.8 0 0 0 1.8-1.8V8' },
+    { d: 'M10 12h4' },
+  ],
+
+  /** Trash. Deleted here, and only here — see `lib/mailbox.ts`. */
+  trash: [
+    { d: 'M3.5 6h17' },
+    { d: 'M8.5 6V4.4A1.4 1.4 0 0 1 9.9 3h4.2a1.4 1.4 0 0 1 1.4 1.4V6' },
+    { d: 'M6 6.8 7 20a1.8 1.8 0 0 0 1.8 1.7h6.4A1.8 1.8 0 0 0 17 20l1-13.2' },
+  ],
+
+  /** Send — the folded paper plane, with its fold drawn. */
+  send: [
+    { d: 'M21.5 2.5 11 13' },
+    { d: 'M21.5 2.5 15 21.5 11 13 2.5 9z' },
+  ],
+
+  /** Reply — one arrow back over the line. */
+  reply: [
+    { d: 'm9.5 16.5-5-5 5-5' },
+    { d: 'M20 19v-2.5a5 5 0 0 0-5-5H4.5' },
+  ],
+
+  /** Reply all — two, so it is told apart at 19px rather than by its tooltip. */
+  replyAll: [
+    { d: 'm7.5 16.5-5-5 5-5' },
+    { d: 'm13 16.5-5-5 5-5' },
+    { d: 'M21 19v-2.5a5 5 0 0 0-5-5H9' },
+  ],
+
+  /** Forward — the same arrow, the other way. */
+  forward: [
+    { d: 'm14.5 16.5 5-5-5-5' },
+    { d: 'M4 19v-2.5a5 5 0 0 1 5-5h10.5' },
+  ],
+
+  /** Snooze — a clock, because "later" has no shape of its own. */
+  clock: [{ c: [12, 12, 9] }, { d: 'M12 6.8V12l3.4 2' }],
+
+  /** A label, with the hole the string goes through. */
+  tag: [
+    { d: 'M12.6 2.8 21 11.2a2 2 0 0 1 0 2.8l-6.9 6.9a2 2 0 0 1-2.8 0L2.8 12.4A2 2 0 0 1 2.2 11V4a2 2 0 0 1 2-2h7a2 2 0 0 1 1.4.6z' },
+    { c: [7.2, 7.2, 1.3] },
+  ],
+
+  /** Refresh — the two-quarter circle both clients put over the list. */
+  refresh: [
+    { d: 'M20.5 11a8.5 8.5 0 0 0-14.6-5L2.5 9' },
+    { d: 'M2.5 4.5V9H7' },
+    { d: 'M3.5 13a8.5 8.5 0 0 0 14.6 5l3.4-3' },
+    { d: 'M21.5 19.5V15H17' },
+  ],
+
+  /** The folders, behind a button, on a phone. */
+  menu: [{ d: 'M4 7h16' }, { d: 'M4 12h16' }, { d: 'M4 17h16' }],
+
+  /** Mark as read — the envelope with its flap open. */
+  opened: [
+    { d: 'm2.8 9.2 9.2-6.2 9.2 6.2v9.6a2 2 0 0 1-2 2H4.8a2 2 0 0 1-2-2z' },
+    { d: 'm2.8 9.2 9.2 6.2 9.2-6.2' },
+  ],
+
+  /** Spam — the provider's judgement, not the app's. */
+  spam: [
+    { d: 'M10.6 3.6 2.4 18a1.6 1.6 0 0 0 1.4 2.4h16.4a1.6 1.6 0 0 0 1.4-2.4L13.4 3.6a1.6 1.6 0 0 0-2.8 0z' },
+    { d: 'M12 9.4v4' },
+    { d: 'M12 17.2h.01' },
+  ],
+
+  /** Close — the one glyph that must never be a rotated chevron. */
+  close: [{ d: 'M6.2 6.2 17.8 17.8' }, { d: 'M17.8 6.2 6.2 17.8' }],
+
+  /** The reading pane, and where it sits. */
+  pane: [
+    { d: 'M3.8 4.2h16.4a1.6 1.6 0 0 1 1.6 1.6v12.4a1.6 1.6 0 0 1-1.6 1.6H3.8a1.6 1.6 0 0 1-1.6-1.6V5.8a1.6 1.6 0 0 1 1.6-1.6z' },
+    { d: 'M14 4.2v15.6' },
+  ],
 } as const satisfies Record<string, readonly Shape[]>;
 
 export type IconName = keyof typeof SHAPES;
