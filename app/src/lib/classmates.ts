@@ -637,8 +637,31 @@ export function explain(message: string): string {
     return 'A display name has to be between 2 and 40 characters.';
   }
   if (text.includes('duplicate key')) return 'You are already in that class.';
-  if (text.includes('relation') && text.includes('does not exist')) {
-    return 'The classmates tables are not set up on this project yet — run supabase/classmates.sql.';
+  /*
+   * A table that was never created, in both of the wordings that reach us.
+   *
+   * Postgres says "relation ... does not exist". PostgREST, which is what the
+   * app actually talks to, says "Could not find the table 'public.groups' in
+   * the schema cache" — and only the first of those was recognised here, so
+   * the screen showed a student the raw sentence about a schema cache. It is
+   * accurate and it is useless: it reads like a caching bug, and the cause is
+   * that a setup file has not been run.
+   *
+   * Which file depends on the table, so the table is named back. `groups`,
+   * `group_members` and `group_tasks` come from groups.sql; everything else
+   * this module touches comes from classmates.sql.
+   */
+  if (
+    text.includes('schema cache') ||
+    (text.includes('relation') && text.includes('does not exist'))
+  ) {
+    const file = /group/.test(text) ? 'groups.sql' : 'classmates.sql';
+    return (
+      `This part of the app is not set up on this project yet — whoever runs this ` +
+      `deployment needs to run supabase/${file} once in the SQL Editor. If the tables ` +
+      `are already there, the API's schema cache is stale: run ` +
+      `NOTIFY pgrst, 'reload schema';`
+    );
   }
   return message;
 }
