@@ -127,6 +127,19 @@ export async function forget(docId: string): Promise<void> {
   }
 }
 
+/**
+ * Drop every version of every document.
+ *
+ * For `lib/erase.ts` — "Erase from this device" cleared the store, the files
+ * and the snapshots and did not know this database existed, so a history of
+ * up to twenty full copies of every document survived it. The common case
+ * that button names is a shared or borrowed laptop, which is the one place
+ * that matters most.
+ */
+export async function clearVersions(): Promise<void> {
+  await tx('readwrite', (s) => s.clear());
+}
+
 /** Every version of everything, for the storage figures on the Data screen. */
 export async function allVersions(): Promise<Version[]> {
   try {

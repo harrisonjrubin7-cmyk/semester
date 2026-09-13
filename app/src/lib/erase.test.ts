@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { PREFIX, keysIn } from './erase';
+import { DATABASES, PREFIX, keysIn } from './erase';
 
 /**
  * Erase from this device.
@@ -107,5 +107,78 @@ describe('what the sweep collects', () => {
     });
     expect(keysIn(localStorage)).toEqual([]);
     boom.mockRestore();
+  });
+});
+
+describe('every database the app opens is one the sweep clears', () => {
+  /*
+   * The other half of the same claim, and the half that had already broken.
+   *
+   * The keys are swept by prefix, so a new one cannot be missed. The
+   * databases are named one at a time, which is the hand-kept list this
+   * file's own docblock argues against — and it drifted: `semester-drafts`
+   * shipped holding twenty copies of every document and `eraseDevice` had
+   * never heard of it. Nothing caught that, because nothing read `DATABASES`.
+   *
+   * This reads every `store(...)` call in the app instead of remembering
+   * them, so the next database is caught by the commit that adds it.
+   */
+  it('so a database cannot ship without being erased', () => {
+    const opened = new Set<string>();
+    for (const file of sources(SRC)) {
+      const text = readFileSync(file, 'utf8');
+      // `store(NAME, STORE, version)` from `lib/idb.ts`, with a name given
+      // either inline or as a constant declared in the same file.
+      const consts = new Map<string, string>();
+      for (const m of text.matchAll(/const (\w+) = '([^']+)'/g)) consts.set(m[1], m[2]);
+      for (const m of text.matchAll(/\bstore\(\s*(?:'([^']+)'|(\w+))/g)) {
+        const name = m[1] ?? consts.get(m[2] ?? '');
+        if (name?.startsWith('semester-')) opened.add(name);
+      }
+    }
+    // `state/persist/db.ts` is the one that does not go through `lib/idb.ts`.
+    opened.add('semester-store');
+    expect([...opened].sort()).toEqual([...DATABASES].sort());
+  });
+
+  it('and the list is the one the erase actually reaches', async () => {
+    /*
+     * Naming a database in `DATABASES` and forgetting to clear it would pass
+     * the test above and erase nothing, so this asserts the calls rather than
+     * the list. Each store clears through its own module, which is why there
+     * is a list at all: they are separate databases on purpose.
+     */
+    const drafts = await import('./docversions');
+    const files = await import('./files');
+    const snaps = await import('./snapshots');
+    const share = await import('./shared');
+    const db = await import('../state/persist/db');
+    const persist = await import('../state/persist');
+
+    const calls: string[] = [];
+    vi.spyOn(persist, 'stopWriting').mockImplementation(() => undefined);
+    vi.spyOn(db, 'wipe').mockImplementation(async () => {
+      calls.push('semester-store');
+    });
+    vi.spyOn(files, 'clearFiles').mockImplementation(async () => {
+      calls.push('semester-files');
+    });
+    vi.spyOn(snaps, 'clearSnapshots').mockImplementation(async () => {
+      calls.push('semester-snapshots');
+    });
+    vi.spyOn(drafts, 'clearVersions').mockImplementation(async () => {
+      calls.push('semester-drafts');
+    });
+    vi.spyOn(share, 'clearShared').mockImplementation(async () => {
+      calls.push('semester-shared');
+    });
+
+    const { eraseDevice } = await import('./erase');
+    await eraseDevice();
+
+    for (const name of DATABASES) expect(calls, name).toContain(name);
+    // Not a database, and swept for the same reason: a share that arrived and
+    // was never collected is a file somebody else handed this device.
+    expect(calls).toContain('semester-shared');
   });
 });
