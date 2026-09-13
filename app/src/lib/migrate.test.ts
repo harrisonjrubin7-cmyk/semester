@@ -88,6 +88,65 @@ describe('step 3: the directory nobody chose', () => {
   });
 });
 
+describe('step 4: the workspace, for everybody', () => {
+  const at3 = (extra: Record<string, unknown> = {}) => ({ schemaVersion: 3, ...extra });
+
+  it('moves a copy that has only ever had the tab bar', () => {
+    // Which is every copy ever written: `nav` has always been persisted, so
+    // the literal `tabs` in there was put there by the app, not chosen.
+    expect(migrate(at3({ nav: 'tabs' })).state.nav).toBe('workspace');
+  });
+
+  it('moves the other three as well, which is the trade it is', () => {
+    // Unconditional, and deliberately so — there is no record anywhere of
+    // whether a navigation was chosen or defaulted, so "leave the ones
+    // somebody picked" is not a rule this can implement. Asserted rather than
+    // left implicit: it is the part of the step worth seeing in a diff.
+    for (const nav of ['feed', 'springboard', 'shelves']) {
+      expect(migrate(at3({ nav })).state.nav, nav).toBe('workspace');
+    }
+  });
+
+  it('runs once, so going back to the tab bar sticks', () => {
+    /*
+     * The whole reason this is a step behind a version marker rather than a
+     * line in the loader. Somebody reads the new layout, decides against it,
+     * and picks the bar again — and the app has to keep that, on this device
+     * and every reopening after. A step that re-ran would overrule the
+     * setting it offers, every morning.
+     */
+    const after = migrate(at3({ nav: 'tabs' })).state;
+    const chosen = { ...after, nav: 'tabs' };
+    expect(migrate(chosen).state.nav).toBe('tabs');
+    expect(migrate(chosen).ran).toEqual([]);
+  });
+
+  it('touches nothing else in the copy', () => {
+    const before = at3({
+      nav: 'shelves',
+      shell: 'soft',
+      ground: 'oxide',
+      courses: [{ id: 'econ' }],
+      done: { 'econ-m1': true },
+      favourites: 'study,calendar',
+    });
+    const after = migrate(before).state;
+    expect(after.shell).toBe('soft');
+    expect(after.ground).toBe('oxide');
+    expect(after.courses).toEqual([{ id: 'econ' }]);
+    expect(after.done).toEqual({ 'econ-m1': true });
+    expect(after.favourites).toBe('study,calendar');
+  });
+
+  it('leaves the collections by reference, so a save writes only what moved', () => {
+    // `state/persist/index.ts` diffs the migrated copy against the one it
+    // read, by reference, to decide what to write back. A step that rebuilt
+    // the arrays would rewrite every record in the account on the way past.
+    const courses = [{ id: 'econ' }];
+    expect(migrate(at3({ nav: 'tabs', courses })).state.courses).toBe(courses);
+  });
+});
+
 describe('a copy from the future', () => {
   it('is left exactly as it is', () => {
     // Somebody opening a laptop on last month's build, after their phone wrote

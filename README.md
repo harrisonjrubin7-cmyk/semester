@@ -51,7 +51,7 @@ Three things were decided rather than inherited:
 - **Navigation and layout are two settings, not two apps.** The canvas compared
   a tab bar against a single filtered feed; rather than pick, both ship, and
   three more joined them — the springboard, the shelves, and the **workspace**
-  the app now opens as: a browser-shaped shell with a tab strip across the top,
+  the app is now laid out as: a browser-shaped shell with a tab strip across the top,
   one search bar under it on every screen, a nine-dot launcher, a Drive-style
   directory of all 54 apps, and a sidebar where the window is wide enough.
   They are one axis — *how you move* — with exactly one

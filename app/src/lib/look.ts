@@ -756,11 +756,20 @@ export function homeTitle(nav: string | undefined): string {
  * build, or a half-finished sync wrote. An unrecognised value used to reach
  * `App.tsx` untouched, where every branch tested for a name it did not match
  * — so the app drew no navigation at all and the only way out was to clear
- * the site's data. Falling back to the bar is a worse app for a moment; no
- * navigation is not an app.
+ * the site's data. Any navigation is a worse app for a moment; no navigation
+ * is not an app.
+ *
+ * The fallback is the workspace, and it moved there with the default. It was
+ * the tab bar on the argument that landing somebody in a navigation they had
+ * never seen is not a fallback — which was true while the bar was what
+ * everybody had, and stopped being true the moment `migrate` step 4 opened
+ * the workspace for every account. Answering a corrupt key with a navigation
+ * the app no longer defaults to would strand exactly the person this function
+ * exists for: the one whose stored value cannot be read, who now gets an app
+ * that does not match the one on their other device.
  */
 export function navOf(id: string | undefined): NavMode {
-  return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'tabs';
+  return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'workspace';
 }
 
 /**

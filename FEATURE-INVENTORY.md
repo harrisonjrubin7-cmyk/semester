@@ -196,8 +196,11 @@ university that does not offer a thing does not show its tile.
 
 Five selectable navigation modes (`NavMode`): `workspace`, `tabs`, `feed`,
 `springboard`, `shelves` — chosen in Settings → Layout and navigation.
-`workspace` is what a device with nothing saved opens as; a device that has
-saved anything keeps whatever it had.
+`workspace` is the app's layout: it is the default, and `migrate` step 4
+(`SCHEMA = 4`) moves every existing account onto it once. Once, so a reader
+who goes back to another navigation keeps it. `navOf` falls back to it too,
+so a stored value that cannot be read lands on the default rather than on a
+navigation the app no longer opens as.
 
 - **Tab bar** — `lib/tabbar.ts`. `DEFAULT_TABS = ['home','courses','study','calendar','me']`,
   user-reorderable, with a floor of `FEWEST_CHOSEN` before it reverts to default.

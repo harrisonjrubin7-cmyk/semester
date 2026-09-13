@@ -968,17 +968,15 @@ export const SYNCED_KEY = 'semester.synced';
 
 export const DEFAULT_PERSISTED: Persisted = {
   /*
-   * The workspace is what the app opens as now: a tab strip, one search bar
-   * under it, and the launcher — see `lib/chrome.ts` and `lib/desk.ts`.
+   * The workspace is what the app opens as: a tab strip, one search bar under
+   * it, and the launcher — see `lib/chrome.ts` and `lib/desk.ts`.
    *
-   * Only for a device that has never saved anything. `nav` has always been a
-   * persisted field, so anybody who has opened this app before keeps exactly
-   * the navigation they had, whether or not they ever chose it on purpose —
-   * and `navOf` still answers an unreadable saved value with the bar rather
-   * than with this, because falling back to a navigation somebody has never
-   * seen is not a fallback. Both routes out are one click: Customize
-   * Semester, and Settings → Layout and navigation, where every navigation
-   * including this one is chosen.
+   * This line alone only ever reached a device that had never saved anything,
+   * which is nobody who has used the app: `nav` has always been persisted, so
+   * every stored copy carries a literal `tabs` written by the app rather than
+   * chosen by anybody. Step 4 of `lib/migrate.ts` is what makes it everyone's,
+   * once — and once, so that going back to the tab bar on Layout and
+   * navigation, or on the last row of Customize Semester, sticks.
    */
   nav: 'workspace',
   done: {},

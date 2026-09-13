@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { FULLSCREEN, chromeFor, firstScreen, homeShape, navigationsDrawn } from './chrome';
 import { NAVS, SHELLS, navOf } from './look';
 import { DESTINATIONS } from './nav';
+import { DEFAULT_PERSISTED } from '../state/shape';
 import type { NavMode, Screen } from './types';
 
 const MODES = NAVS.map((n) => n.id as NavMode);
@@ -138,11 +139,29 @@ describe('reading a navigation back', () => {
    * A stored value nothing recognises used to reach `App.tsx` untouched,
    * where every branch tested for a name it did not match — so the app drew
    * no navigation at all, on a phone, with no way off the screen.
+   *
+   * The name it falls back to is the app's default, which is the workspace;
+   * what this holds is the invariant under it, which is that *something* is
+   * drawn. The last line is the one that matters and the one that would have
+   * caught the original bug.
    */
-  it('falls back to the bar rather than to nothing', () => {
-    expect(navOf('soft')).toBe('tabs');
-    expect(navOf(undefined)).toBe('tabs');
-    expect(navOf('')).toBe('tabs');
+  it('falls back to the default rather than to nothing', () => {
+    expect(navOf('soft')).toBe('workspace');
+    expect(navOf(undefined)).toBe('workspace');
+    expect(navOf('')).toBe('workspace');
     expect(navigationsDrawn(chromeFor(navOf('nonsense'), 'home', false))).toBe(1);
+  });
+
+  /*
+   * And the fallback is the default, rather than the two drifting apart.
+   *
+   * They were the same value for a reason and then were not: the default
+   * moved to the workspace while the fallback stayed on the bar, so a corrupt
+   * key put somebody on a navigation the app no longer opens as. Asserted
+   * against `DEFAULT_PERSISTED` rather than against the literal, so the next
+   * change to the default cannot leave this behind again.
+   */
+  it('falls back to whatever the app actually defaults to', () => {
+    expect(navOf('nonsense')).toBe(DEFAULT_PERSISTED.nav);
   });
 });
