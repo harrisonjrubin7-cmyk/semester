@@ -63,9 +63,12 @@ import { WAKING_HOURS, hoursOn } from './windows';
 import { tally } from './review';
 import { liveGuide } from './live';
 import { meetings, pairings } from './meet';
+import { codeOf } from './call';
 import { bytesOf } from './inventory';
 import { pickPersisted } from '../state/shape';
-import { dateToIso, shiftIso } from './date';
+import { dateToIso, isoToDate, longLabel, shiftIso } from './date';
+import { billFor, money } from './bill';
+import { forTerm as costsFor, total } from './cost';
 
 export interface TopHero {
   label: string;
@@ -610,6 +613,25 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         stats: term,
       };
 
+    case 'call': {
+      /*
+       * The next call in the diary, because a scheduled call is an ordinary
+       * appointment — see `whereFor` in `lib/call.ts`. Counting them is the
+       * only honest fact this screen has above the fold: how many people are
+       * in a call right now is a thing nobody knows until they walk in.
+       */
+      const scheduled = state.appointments
+        .filter((a) => codeOf(a) && a.date >= iso)
+        .sort((a, b) => (a.date === b.date ? a.at - b.at : a.date < b.date ? -1 : 1));
+      const next = scheduled[0];
+      return {
+        hero: next
+          ? { label: 'Next call', meta: next.time, said: next.title, foot: longLabel(isoToDate(next.date)) }
+          : { label: 'Video call', said: 'Nothing scheduled.', foot: 'Start one, or join with a code' },
+        stats: term,
+      };
+    }
+
     case 'activities':
       // Active ones, because that is what the screen this opens counts, and a
       // tile that disagrees with the screen behind it is worse than no tile.
@@ -638,8 +660,45 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     case 'people':
       return holds('People', state.people.length + state.letters.length, 'record');
 
-    case 'costs':
+    case 'costs': {
+      /*
+       * The bill first, and a count of receipts only where there is no bill.
+       *
+       * The screen's two halves are not the same size: a tuition balance is
+       * five figures and the books are two, so a header that counted entries
+       * reported "0 · No costs yet" above a headline reading "$15,921.50
+       * owed". A summary that disagrees with the screen under it is worse
+       * than no summary, which is the rule already written on `activities`
+       * above.
+       */
+      const bill = billFor(state, state.term, now);
+      if (bill.any) {
+        const out = total(costsFor(state.costs, state.term));
+        return {
+          hero: {
+            label: 'Owed',
+            meta: bill.owed.pendingCents > 0 ? 'on confirmed aid' : undefined,
+            figure: money(bill.owed.owedCents),
+            foot: bill.next
+              ? `${money(bill.next.shortCents)} due ${bill.next.overdue ? 'already' : 'next'}`
+              : `${money(bill.owed.chargesCents)} charged this term`,
+          },
+          /*
+           * The term's three deadline counts replaced by three money figures,
+           * for the reason `mine` and `settings` do the same below: the one
+           * screen that is not about coursework should not report coursework.
+           * Three, never four — `StatRow` takes two or three and a test holds
+           * every screen to it.
+           */
+          stats: [
+            { label: 'Charged', value: money(bill.owed.chargesCents) },
+            { label: 'Covered', value: money(bill.owed.creditedCents) },
+            { label: 'Out of pocket', value: money(out.net) },
+          ],
+        };
+      }
       return holds('Costs', state.costs.length, 'cost');
+    }
 
     case 'links':
       return holds('Links', state.extraLinks.length, 'link');
@@ -665,6 +724,37 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           said: state.myName ? `Signed in as ${state.myName}.` : 'Not signed in, so this semester lives on this device only.',
         },
         stats: term,
+      };
+
+    /*
+     * A sentence rather than a figure, and the numbers under it are about the
+     * person rather than the term.
+     *
+     * The term's three — due today, this week, overdue — are right above every
+     * screen that is about the semester and wrong above this one, for the same
+     * reason `mine` and `settings` above had to stop reporting them: a strip
+     * saying "Overdue 6" over a screen about who you are is three true numbers
+     * answering a question nobody asked here. What this screen is about is what
+     * the app holds of yours, so that is what it counts.
+     *
+     * There is no counting done here. Every figure is a length of something
+     * already in the state, which is the same thing `screens/Data.tsx` weighs
+     * and `lib/profile.ts` summarises — one number per fact, in three places.
+     */
+    case 'profile':
+      return {
+        hero: {
+          label: 'You',
+          said: state.myName
+            ? `The app calls you ${state.myName}.`
+            : 'The app has not been told your name yet.',
+          foot: state.myName ? undefined : 'Set it below — it never leaves the device.',
+        },
+        stats: [
+          { label: 'Courses', value: num(courses) },
+          { label: 'Notes', value: num(state.notes.length) },
+          { label: 'Your tasks', value: num(state.tasks.length) },
+        ],
       };
 
     case 'connect':

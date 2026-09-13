@@ -21,6 +21,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
+import { HowMuch } from '../components/HowMuch';
 import { ActionButton, FilePick, SectionLabel } from '../components/ui';
 import { addFile, formatBytes, type FileMeta } from '../lib/files';
 import { gather } from '../lib/bundle';
@@ -201,7 +202,7 @@ export function AddMaterial() {
     setStudying(true);
     setReadError('');
     try {
-      const got = await readMaterial(text, context);
+      const got = await readMaterial(text, context, undefined, state.controls);
       setReadSummary(got.note);
       setReadCards(got.cards);
       setReadTerms(got.terms);
@@ -651,6 +652,11 @@ export function AddMaterial() {
           onApply={applyChanges}
         />
       )}
+
+      {/* Same component as Add a course, for the same reason it is beside the
+          build button there: the deck this makes is the deck you are about to
+          revise from. */}
+      <HowMuch />
 
       <SectionLabel>The material</SectionLabel>
       <textarea

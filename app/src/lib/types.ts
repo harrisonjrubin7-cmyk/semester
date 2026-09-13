@@ -345,6 +345,12 @@ export interface Note {
   created: number;
   updated: number;
   courseId: CourseId | null;
+  /**
+   * The deadline it is for, where it is for one. See `Doc.itemId` in
+   * `lib/document.ts` for why every made thing carries this and why it is
+   * optional. Read through `lib/forwork.ts`.
+   */
+  itemId?: string | null;
   /** Ids of files attached to this note, held in IndexedDB. */
   fileIds: string[];
 }
@@ -482,6 +488,10 @@ export type Screen =
   | 'calendar'
   | 'event'
   | 'me'
+  // You: the name, the account, and what the app holds about you. `me` is the
+  // progress report and the directory — it was called Me once, and the note in
+  // `lib/nav.ts` beside its label says why that name never fitted it.
+  | 'profile'
   | 'notifs'
   | 'settings'
   | 'import'
@@ -536,6 +546,7 @@ export type Screen =
   | 'degree'
   | 'people'
   | 'meet'
+  | 'call'
   // The settings pages. Real screens rather than a sub-mode of one, so Back,
   // the recent list and a deep link all work the way they do everywhere else.
   | 'setLook'
@@ -560,6 +571,16 @@ export type Screen =
 export type ReportGrain = 'day' | 'week' | 'term';
 export type ChangeSource = 'told' | 'feed';
 export type CoursesTab = 'courses' | 'due' | 'grades';
+/**
+ * The two halves of what a term costs.
+ *
+ * `bill` is the university's statement and the aid against it — large, dated,
+ * and somebody else's arithmetic to check. `out` is what you chose to spend:
+ * books, access codes, a lab fee. They are one screen because they are one
+ * question, and two tabs because confusing a $32,000 charge with a $64.99
+ * textbook in one list helps nobody.
+ */
+export type CostsTab = 'bill' | 'out';
 
 export type StudyMode =
   | 'cards'

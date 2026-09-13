@@ -58,6 +58,19 @@ describe('writing one back', () => {
     expect(money(0)).toBe('$0.00');
   });
 
+  // Written for textbooks, now also used for a tuition line. "$32415.00" is
+  // misread at a glance, and the statement it is checked against groups too.
+  it('groups thousands, so a tuition line is readable', () => {
+    expect(money(100_000)).toBe('$1,000.00');
+    expect(money(99_999)).toBe('$999.99');
+    expect(money(3_241_500)).toBe('$32,415.00');
+    expect(money(123_456_789)).toBe('$1,234,567.89');
+  });
+
+  it('keeps the grouping on a negative, with the minus that aligns with digits', () => {
+    expect(money(-100_000)).toBe('\u2212$1,000.00');
+  });
+
   it('survives a round trip', () => {
     for (const text of ['$64.99', '65', '0.05', '1,240']) {
       const cents = readMoney(text);

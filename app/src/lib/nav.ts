@@ -18,6 +18,7 @@
 import type { Screen } from './types';
 import { settingsTitle } from './settings';
 import { allowed, cardName, lmsName, showsCash, showsSwipes, swipeUnit, type Capabilities } from './school';
+import { DEFAULT_ROLE, forRole, type Role } from './role';
 import { showing, type Facts } from './reveal';
 
 /**
@@ -353,10 +354,10 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'equations',
-    label: 'Equations',
+    label: 'Equations, and the graph',
     short: 'Maths',
-    blurb: 'Write a formula properly — on screen, into a document, or as a line you can paste anywhere.',
-    keywords: 'equation equations formula formulas maths math latex mathml notation fraction exponent superscript subscript square root sum sigma greek symbol elasticity standard deviation margin of error present value regression z score expected value statistics',
+    blurb: 'Write a formula properly, work it out at your own numbers, and draw its curve.',
+    keywords: 'equation equations formula formulas maths math latex mathml notation fraction exponent superscript subscript square root sum sigma greek symbol elasticity standard deviation margin of error present value regression z score expected value statistics graph graphing graphs plot plotting curve curves chart function functions desmos geogebra graphing calculator scientific calculator calculate calculator compute evaluate work out solve for a value trig trigonometry sin cos tan log ln exponential asymptote intercept zeros roots turning point maximum minimum intersection area under the curve integral slope tangent derivative parabola circle sliders parameter degrees radians factorial permutation combination',
     group: 'Make',
     taskTags: ['make', 'study'],
     root: 'study',
@@ -440,12 +441,22 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'costs',
-    label: 'What this term cost',
-    short: 'Costs',
-    blurb: 'Books, fees and access codes, with what came back — and what the same course cost last time.',
-    keywords: 'cost costs money price prices textbook textbooks book books buy rent rental sell back buyback bookstore fee fees access code clicker supplies spend spending budget expense expenses receipt total how much',
+    label: 'Money',
+    short: 'Money',
+    blurb: 'Your tuition bill and the aid against it, with what each instalment comes to — and, beside it, the books and fees you paid for yourself.',
+    keywords: 'cost costs money price prices textbook textbooks book books buy rent rental sell back buyback bookstore fee fees access code clicker supplies spend spending budget expense expenses receipt total how much bill bills statement balance owe owed owing tuition bursar student account charges charge pay payment payments instalment installment payment plan due aid financial aid award award letter grant grants scholarship scholarships loan loans work study work-study refund refunds fafsa hold holds',
     group: 'Life',
     taskTags: ['campus', 'ahead'],
+    root: 'courses',
+  },
+  {
+    screen: 'call',
+    label: 'Video call',
+    short: 'Call',
+    blurb: 'A call with the people in your course — a code you can read down a phone, and a link that opens straight into it.',
+    keywords: 'call calls video call videocall video chat zoom meet google meet teams webex facetime meeting meetings join join a meeting host start a meeting room study room study group group call screen share sharescreen share my screen present presentation camera webcam mic microphone mute unmute raise hand hand up office hours virtual remote online face to face together live huddle standup check in link invite code dial in gallery speaker view',
+    group: 'Campus',
+    taskTags: ['campus'],
     root: 'courses',
   },
   {
@@ -676,6 +687,32 @@ export const DESTINATIONS: Destination[] = [
     root: 'me',
   },
   {
+    screen: 'profile',
+    label: 'Profile',
+    short: 'Profile',
+    /*
+     * Life rather than Data, and the two readings of this screen are what
+     * decides it. Data is the shelf you go to when something needs correcting:
+     * what comes in, what is held, what is sent, how to take it out. This is
+     * not a correction — it is the one screen that is about the person rather
+     * than about the semester, and it sits beside the other things that are
+     * theirs rather than the syllabus's. Data is also at eight, which is the
+     * ceiling `nav.test.ts` holds.
+     */
+    blurb: 'Your name, your account, and everything the app holds about you.',
+    // "Profile" is not a word anybody types. The searches that have to land
+    // here are the ones a person makes when looking for themselves — and the
+    // account words, because the row above the fold on this screen is the
+    // account and somebody typing "sign in" should be offered both.
+    keywords:
+      'profile me you your account avatar picture initials name what should the app call me ' +
+      'who am i my details personal details identity sign in signed in log in login email address ' +
+      'school university role student teaching what am i here to do',
+    group: 'Life',
+    taskTags: ['data', 'app'],
+    root: 'me',
+  },
+  {
     screen: 'links',
     label: 'Links',
     short: 'Links',
@@ -874,23 +911,29 @@ export function destinationsIn(group: Group): Destination[] {
  * is filtered here, once, so the directory, search and the tab chooser cannot
  * disagree about whether a screen exists.
  */
-export function destinationsFor(group: Group, c: Capabilities): Destination[] {
-  return destinationsIn(group).filter((d) => allowed(d.screen, c));
+export function destinationsFor(
+  group: Group,
+  c: Capabilities,
+  role: Role = DEFAULT_ROLE,
+): Destination[] {
+  return destinationsIn(group).filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
 }
 
-/** Every destination the app can offer this student, across all groups. */
-export function offered(c: Capabilities): Destination[] {
-  return DESTINATIONS.filter((d) => allowed(d.screen, c));
+/** Every destination the app can offer this person, across all groups. */
+export function offered(c: Capabilities, role: Role = DEFAULT_ROLE): Destination[] {
+  return DESTINATIONS.filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
 }
 
 /**
- * The two gates together, which are different things.
+ * The three gates together, which are three different questions.
  *
  * `allowed` is about the school — a meal plan screen at a university with no
  * meal plan is absent, not pending, and no amount of using the app produces
- * one. `showing` is about how far along somebody is — a real screen that is
- * not useful yet. A destination has to pass both, and the order does not
- * matter because neither can un-hide what the other hid.
+ * one. `forRole` is about who is holding the phone — a degree audit is not
+ * addressed to the person teaching the course. `showing` is about how far
+ * along somebody is — a real screen that is not useful yet. A destination has
+ * to pass all three, and the order does not matter because none of them can
+ * un-hide what another hid.
  */
 export function listed(
   group: Group,
@@ -898,8 +941,9 @@ export function listed(
   facts: Facts,
   visited: Record<string, boolean>,
   showAll: boolean,
+  role: Role = DEFAULT_ROLE,
 ): Destination[] {
-  return destinationsFor(group, c).filter((d) => showing(d.screen, facts, visited, showAll));
+  return destinationsFor(group, c, role).filter((d) => showing(d.screen, facts, visited, showAll));
 }
 
 /**
@@ -1079,12 +1123,22 @@ export function lately(
   c: Capabilities,
   hide: string[] = [],
   limit = 4,
+  /**
+   * Who is holding the phone.
+   *
+   * The recents list is a record of where somebody has been, and a role
+   * switch does not unvisit anything — so a student who opened Housing and
+   * then switched to Teaching had a Housing tile in Lately, one tap from a
+   * screen the directory had just stopped offering. Last and defaulted, so a
+   * caller with no role behaves exactly as before.
+   */
+  role: Role = DEFAULT_ROLE,
 ): Destination[] {
   const out: Destination[] = [];
   const seen = new Set<string>();
   for (const screen of recent) {
     if (seen.has(screen) || onBar.includes(screen) || hide.includes(screen)) continue;
-    if (!allowed(screen, c)) continue;
+    if (!allowed(screen, c) || !forRole(screen, role)) continue;
     const d = DESTINATIONS.find((x) => x.screen === screen);
     if (!d) continue;
     seen.add(screen);

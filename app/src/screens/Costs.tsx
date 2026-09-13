@@ -5,7 +5,8 @@ import { useStore } from '../state/store';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
-import { SectionLabel } from '../components/ui';
+import { SectionLabel, Segmented } from '../components/ui';
+import { Bill } from './Bill';
 import { TermSwitch } from '../components/TermSwitch';
 import { CAMPUS_LINKS } from '../data/campus';
 import {
@@ -25,7 +26,17 @@ import { readTerm } from '../lib/term';
 import { CourseTag } from '../components/CourseTag';
 
 /**
- * What this term cost.
+ * What this term cost — the statement, and what you chose to spend.
+ *
+ * Two tabs rather than two destinations, under the standing rule that every
+ * thing has one home: a student asking "what is this term costing me" is
+ * asking one question, and the answer has a large half the university decides
+ * (`./Bill.tsx`) and a small half they decide themselves (below). Separate
+ * screens would have made them choose which kind of money they meant before
+ * they could look, and one list holding a $32,000 tuition line beside a $64.99
+ * textbook would have made the total unreadable.
+ *
+ * The out-of-pocket half, which came first:
  *
  * The bookstore has been one tap away from the campus shelf since it was
  * linked, and nothing added up. Rent-versus-buy across four books is a
@@ -38,7 +49,35 @@ import { CourseTag } from '../components/CourseTag';
  * does the arithmetic and remembers it, which is the part nobody can do in
  * their head eleven months later.
  */
+/**
+ * The screen: a chooser, and whichever half was chosen.
+ *
+ * The tab is held in the store rather than in local state, so coming back to
+ * the screen from Today's payment card lands on the half you were last on
+ * rather than resetting to the bill every time.
+ */
 export function Costs() {
+  const { state, dispatch } = useStore();
+
+  return (
+    <Page bottom={26}>
+      <TermSwitch />
+      <Segmented
+        options={[
+          { id: 'bill', label: 'The bill' },
+          { id: 'out', label: 'Out of pocket' },
+        ]}
+        value={state.costsTab}
+        onChange={(tab) => dispatch({ type: 'setCostsTab', tab })}
+        style={{ marginTop: 'var(--sp-6)' }}
+      />
+      {state.costsTab === 'bill' ? <Bill /> : <OutOfPocket />}
+    </Page>
+  );
+}
+
+/** Books, access codes and lab fees — the half a student chooses. */
+function OutOfPocket() {
   const { state, dispatch, catalog, courseCode } = useStore();
 
   const [what, setWhat] = useState('');
@@ -82,9 +121,7 @@ export function Costs() {
   };
 
   return (
-    <Page bottom={26}>
-      <TermSwitch />
-
+    <>
       <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
@@ -307,6 +344,6 @@ export function Costs() {
         one shown confidently is worse than a blank field — so you type what you paid, and the app
         remembers it for the August when you are deciding again.
       </div>
-    </Page>
+    </>
   );
 }

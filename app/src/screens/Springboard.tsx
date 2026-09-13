@@ -239,8 +239,8 @@ export function Springboard() {
   const [query, setQuery] = useState('');
 
   const look = currentLook(state);
-  const pages = arrangedPages(school.capabilities, look.boardOrder);
-  const dock = arrangedDock(school.capabilities, look.boardOrder);
+  const pages = arrangedPages(school.capabilities, look.boardOrder, state.role);
+  const dock = arrangedDock(school.capabilities, look.boardOrder, state.role);
   const open = (screen: string) => dispatch({ type: 'go', screen: screen as Screen });
 
   /** One list of the arrangement, written back whole. See `afterMove`. */
@@ -261,14 +261,14 @@ export function Springboard() {
   });
 
   const searching = query.trim().length > 0;
-  const found = searchable(school.capabilities).filter((s) => matches(s, query));
+  const found = searchable(school.capabilities, state.role).filter((s) => matches(s, query));
   const here = pages[at];
 
   const due = outstanding(catalog, state);
   // Against the dock rather than the tab bar: this layout's own navigation is
   // the dock, and a shortcut to something already one tap away is noise. Same
   // rule as the Me screen, from the same place. See `lib/nav.ts`.
-  const recent = lately(state.recent, dock, school.capabilities);
+  const recent = lately(state.recent, dock, school.capabilities, [], 4, state.role);
 
   /*
    * No `<Page>` here, deliberately.

@@ -33,10 +33,21 @@ import {
  */
 export function RecordButton({
   courseId,
+  itemId = null,
   label,
   onSaved,
 }: {
   courseId: string | null;
+  /**
+   * The deadline the recording is for, where the thing recording it has one.
+   *
+   * A seminar recorded from notes filed against Friday's response paper is a
+   * recording for Friday's response paper. Without this it was stored against
+   * the course only, so it was the one thing attached to a note that did not
+   * turn up under the note's own deadline. Optional and defaulted, because
+   * the other caller — a course, with no deadline in hand — has none.
+   */
+  itemId?: string | null;
   /** Used to name the file — a course code, or a note's title. */
   label: string;
   onSaved: (file: FileMeta, seconds: number, transcript: string) => void;
@@ -119,7 +130,7 @@ export function RecordButton({
       const got = await rec.stop();
       const ext = got.mime.includes('mp4') ? 'm4a' : got.mime.includes('ogg') ? 'ogg' : 'webm';
       const file = new File([got.blob], `${recordingName(label)}.${ext}`, { type: got.mime });
-      const meta = await addFile(file, courseId);
+      const meta = await addFile(file, courseId, null, '', itemId);
       setSaved({ name: meta.name, size: meta.size, seconds: got.seconds });
       onSaved(meta, got.seconds, asText(paragraphs(heard), stamps));
     } catch (e) {

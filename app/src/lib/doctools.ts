@@ -260,3 +260,47 @@ export function marked(text: string, mark: 'bold' | 'italic'): boolean {
   const parts = runs(text);
   return parts.length > 0 && parts.every((r) => (mark === 'bold' ? r.bold : r.italic));
 }
+
+/**
+ * The first few lines of a document, for a thumbnail.
+ *
+ * A shelf of documents drawn as identical grey rectangles tells you nothing
+ * you did not already know from the name above it. Google renders the real
+ * first page; this renders the first few lines of the real first blocks,
+ * which is the same idea at the size a phone can spare.
+ *
+ * Every kind resolves to a line of text or is skipped. A page break has
+ * nothing to show, and a table's rows would be unreadable at this size, so
+ * they come back as a word saying what they are — which is more than a blank
+ * would say, and honest about what is there.
+ */
+export function glance(doc: Pick<Doc, 'blocks'>, lines = 6): string[] {
+  const out: string[] = [];
+  for (const block of doc.blocks) {
+    if (out.length >= lines) break;
+    switch (block.kind) {
+      case 'heading':
+      case 'text':
+        if (block.text.trim()) out.push(block.text.trim());
+        break;
+      case 'bullets':
+        for (const item of block.items) {
+          if (out.length >= lines) break;
+          if (item.trim()) out.push(`• ${item.trim()}`);
+        }
+        break;
+      case 'quote':
+        if (block.text.trim()) out.push(`“${block.text.trim()}”`);
+        break;
+      case 'table':
+        out.push(`${block.rows.length} × ${block.rows[0]?.length ?? 0} table`);
+        break;
+      case 'equation':
+        if (block.latex.trim()) out.push(block.latex.trim());
+        break;
+      case 'break':
+        break;
+    }
+  }
+  return out.slice(0, lines);
+}

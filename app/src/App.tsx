@@ -6,10 +6,13 @@ import {
   Bell,
   Check,
   ChevronLeft,
-  Person,
   Plus,
   Search as SearchIcon,
 } from './components/Icons';
+import { Avatar } from './components/Avatar';
+import { showsAvatar } from './lib/header';
+import { useSitting } from './lib/sitting.hook';
+import { running } from './lib/session';
 import { creditHoursOr0 } from './lib/credits';
 import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
@@ -45,6 +48,9 @@ const Behind = lazy(() => import('./screens/Behind').then((m) => ({ default: m.B
 const Degree = lazy(() => import('./screens/Degree').then((m) => ({ default: m.Degree })));
 const People = lazy(() => import('./screens/People').then((m) => ({ default: m.People })));
 const Meet = lazy(() => import('./screens/Meet').then((m) => ({ default: m.Meet })));
+// The call, and everything it drags in — a peer connection, an audio meter,
+// the signalling channel. Nobody opening Today should download any of it.
+const Call = lazy(() => import('./screens/call/Index').then((m) => ({ default: m.Call })));
 const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
 const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
 const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
@@ -108,6 +114,7 @@ const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work 
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
+const Profile = lazy(() => import('./screens/Profile').then((m) => ({ default: m.Profile })));
 const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
 const Help = lazy(() => import('./screens/Help').then((m) => ({ default: m.Help })));
 
@@ -121,7 +128,7 @@ import { ShellBody } from './components/shell/ShellBody';
 import { isCanvas } from './components/shell/exempt';
 import { ShelfNav } from './components/nav/ShelfNav';
 import { SoftTop } from './components/soft/SoftTop';
-import { litRailTab, litTab, tabLabel } from './lib/tabbar';
+import { barFor, litRailTab, litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
@@ -130,6 +137,7 @@ import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
 import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
+import { TabStrip, TabsFollow } from './components/Tabs';
 import { AllApps } from './components/nav/AllApps';
 import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
@@ -216,7 +224,7 @@ function Titled() {
 
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
-  const { state, now, catalog } = useStore();
+  const { state, now, catalog, school } = useStore();
   // Not `guide.code`. Opening a study screen by its own URL — which is the
   // point of having URLs — arrives with no course chosen, and the four study
   // kickers below then read a field off `undefined` and take the whole app
@@ -291,6 +299,17 @@ function useHeader(): { kicker: string; title: string } {
     }
     case 'me':
       return { kicker: load, title: 'Progress' };
+    /*
+     * The one screen whose kicker is not about the semester.
+     *
+     * `load` — "4 courses · 11 credits" — is right above every screen that is
+     * about the term and wrong above this one, which is about the person
+     * holding it. The school is the context that belongs here, and where
+     * nobody has said which school it falls back to the app's own name rather
+     * than to an empty kicker, which draws as a gap where a line should be.
+     */
+    case 'profile':
+      return { kicker: school.name || 'Semester', title: 'Profile' };
     case 'notifs':
       return { kicker: 'Today', title: 'Alerts' };
     case 'settings':
@@ -386,7 +405,7 @@ function useHeader(): { kicker: string; title: string } {
     case 'sheet':
       return { kicker: 'Added up here, not guessed', title: 'Sheet or table' };
     case 'equations':
-      return { kicker: 'Written, never computed', title: 'Equations' };
+      return { kicker: 'Written, worked out, drawn', title: 'Equations' };
     case 'exam':
       return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
     case 'ahead':
@@ -394,11 +413,13 @@ function useHeader(): { kicker: string; title: string } {
     case 'announce':
       return { kicker: 'What moved, and what said so', title: 'A change to a date' };
     case 'costs':
-      return { kicker: 'Books, fees and what came back', title: 'What this term cost' };
+      return { kicker: 'The bill, the aid, and what you paid', title: 'Money' };
     case 'gap':
       return { kicker: 'One thumb, and the walk taken off', title: 'Between classes' };
     case 'groupwork':
       return { kicker: 'Who has what, and by when', title: 'Group work' };
+    case 'call':
+      return { kicker: 'A code, a link, and who is in it', title: 'Video call' };
     case 'meals':
       return { kicker: 'Swipes, cash, and the week they run out', title: 'Meal plan' };
     case 'housing':
@@ -491,6 +512,15 @@ function Header() {
   // already competing with a Back button and a long title.
   const showActions = true;
   const atRoot = rootOf(state.screen) === state.screen;
+  /*
+   * The two things the action row's width depends on, for `showsAvatar`.
+   *
+   * `useSitting` rather than a prop: `components/Running.tsx` reads the same
+   * hook to decide whether to draw the pill at all, so the row and the rule
+   * about the row cannot disagree about whether a timer is counting.
+   */
+  const phone = useTier() === 'phone';
+  const counting = running(useSitting()[0]);
 
   /*
    * Move focus into the new screen's heading whenever the screen changes.
@@ -714,14 +744,34 @@ function Header() {
             )}
           </button>
           )}
-          {state.nav === 'feed' && atRoot && (
+          {/*
+            You, last in the row, on every navigation.
+
+            This was the feed layout's own button and it went to Progress — a
+            person glyph opening a report, because there was no screen it could
+            honestly open. There is one now, and the button is the thing every
+            phone puts at this exact corner: your picture, opening you.
+
+            When it is drawn is `lib/header.ts`, measured rather than
+            guessed: at a root, and on a phone only while the timer pill is not
+            also in the row. Six controls and an 83px pill do not fit across
+            320px — the row was overflowing and clipping this very button — and
+            the avatar is the one of the six with another route from a root
+            screen, through the Progress tab, the All apps grid and the search
+            beside it. That file has the measurement and the argument.
+
+            The label carries the name when there is one. A screen reader
+            saying "Profile, Harrison" is the same information the letters in
+            the box carry, and "HR" read out as letters is not.
+          */}
+          {showsAvatar({ atRoot, phone, counting }) && (
             <button
               type="button"
               className="btn btn-ghost btn-icon tap"
-              onClick={() => dispatch({ type: 'go', screen: 'me' })}
-              aria-label="Me"
+              onClick={() => dispatch({ type: 'go', screen: 'profile' })}
+              aria-label={state.myName.trim() ? `Profile — ${state.myName.trim()}` : 'Profile'}
             >
-              <Person size={19} />
+              <Avatar name={state.myName} size={22} />
             </button>
           )}
         </div>
@@ -759,13 +809,14 @@ function useTabBarHeight(ref: React.RefObject<HTMLElement | null>) {
 }
 
 function TabBar() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, school } = useStore();
   const bar = useRef<HTMLElement>(null);
   useTabBarHeight(bar);
   // The seven that shipped are still the default; this is whichever seven the
-  // student arranged. `litTab` rather than `rootOf` because a chosen bar can
-  // hold a screen and the tab it files under at the same time.
-  const tabs = state.tabs;
+  // student arranged, minus anything the school or the role has since taken
+  // off the table — see `barFor`. `litTab` rather than `rootOf` because a
+  // chosen bar can hold a screen and the tab it files under at the same time.
+  const tabs = barFor(state.tabs, school.capabilities, state.role);
   const here = litTab(state.screen, tabs);
   const labelled = state.labels !== 'off';
 
@@ -866,6 +917,8 @@ function CurrentScreen() {
       return <EventDetail />;
     case 'me':
       return <Me />;
+    case 'profile':
+      return <Profile />;
     case 'notifs':
       return <Notifications />;
     case 'settings':
@@ -974,6 +1027,8 @@ function CurrentScreen() {
       return <Gap />;
     case 'groupwork':
       return <Groupwork />;
+    case 'call':
+      return <Call />;
     case 'meals':
       return <Meals />;
     case 'housing':
@@ -1002,8 +1057,11 @@ function CurrentScreen() {
  * phone is set to, and it carries the things the phone keeps under Me.
  */
 function Rail() {
-  const { state, dispatch } = useStore();
-  const tabs = state.tabs;
+  const { state, dispatch, school } = useStore();
+  // Through the same gate as the bar: the rail is the same list on a wider
+  // screen, and a screen hidden from this role must not survive by being on
+  // a laptop.
+  const tabs = barFor(state.tabs, school.capabilities, state.role);
   // The rail keeps its labels whatever the tab bar does: it is a wide-screen
   // sidebar with room for words, and the setting exists to buy height back on
   // a phone, which the rail is not on.
@@ -1327,11 +1385,33 @@ export default function App() {
               portals it into `.device` regardless — mounted here so the two
               overlays are read in one place rather than found separately. */}
           {state.apps && <AllApps onClose={() => dispatch({ type: 'apps', open: false })} />}
+          {/* And the piece that keeps the tab strip honest: a tab records the
+              place you navigated to, however you got there — from the strip,
+              the tab bar, a link in an answer, or the browser's own Back. See
+              `components/Tabs.tsx`. */}
+          <TabsFollow />
           {/* And the capture box, for the same reason and with the same
               answer: its one field was a white browser textbox out here, and
               with nothing capping it its explanation ran the full width of a
               laptop in a single line. See its own `position`. */}
           {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+          {/*
+            The tabs, on the window rather than only inside the search
+            overlay.
+
+            This is what makes them worth having: the places you have open
+            are one click away from wherever you are, with nothing opened and
+            nothing dismissed on the way. It draws itself from the second tab
+            onwards — a row of chrome that can never do anything is a row
+            people learn to look past — and it is above the header because a
+            strip that sat under the title of the screen it switches would
+            read as part of that screen.
+
+            The phone reaches the same strip through the search overlay.
+            Forty pixels of permanent chrome is a different trade on a screen
+            that is 800 tall and mostly thumb.
+          */}
+          <TabStrip />
           <Header />
           {/* Under the header, not above it: the change strip covers the
               screen's own name otherwise, and "moved to Friday" means a
@@ -1416,6 +1496,19 @@ export default function App() {
       {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
       {/* The launcher, on this layout too. See the wide layout's copy. */}
       {state.apps && <AllApps onClose={() => dispatch({ type: 'apps', open: false })} />}
+      {/* And the follower, on this layout too. See the wide layout's copy. */}
+      <TabsFollow />
+      {/*
+        The tabs on this layout too, from the second one onwards.
+
+        A phone has no room for permanent chrome, and this is not permanent:
+        with one tab open it is not drawn at all. It appears the moment there
+        is somewhere to switch to — which is the point at which a row of tabs
+        is worth forty pixels, and the moment a result opened from search
+        stops being a place you could only get back to by searching for it
+        again.
+      */}
+      <TabStrip />
       <Header />
       {/* Under the header. See the note at the wide layout's copy. */}
       <Said />

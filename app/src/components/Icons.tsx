@@ -58,6 +58,7 @@ export const CoursesIcon = svg('courses');
 export const StudyIcon = svg('study');
 export const NotesIcon = svg('notes');
 export const FolderIcon = svg('folder');
+export const Paperclip = svg('paperclip');
 
 /**
  * The one icon that carries a state.
@@ -120,6 +121,17 @@ export const EditIcon = svg('edit');
 export const RegistrarIcon = svg('registrar');
 export const AnnounceIcon = svg('announce');
 export const MeetIcon = svg('meet');
+export const CallIcon = svg('call');
+export const MicIcon = svg('mic');
+export const MicOffIcon = svg('micOff');
+export const CamOffIcon = svg('camOff');
+export const ScreenShareIcon = svg('screenShare');
+export const HandIcon = svg('hand');
+export const ChatIcon = svg('chat');
+export const MoreIcon = svg('more');
+export const LeaveIcon = svg('leave');
+export const GalleryIcon = svg('gallery');
+export const SpotlightIcon = svg('spotlight');
 export const GroupworkIcon = svg('groupwork');
 export const MealsIcon = svg('meals');
 export const HousingIcon = svg('housing');
@@ -138,3 +150,5 @@ export const ExportIcon = svg('export');
 export const SettingsIcon = svg('settings');
 export const ActivitiesIcon = svg('activities');
 export const HelpIcon = svg('help');
+/** You, ringed. `Person` is anybody; this one is the reader. */
+export const ProfileIcon = svg('profile');

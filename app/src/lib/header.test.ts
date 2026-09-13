@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { DESTINATIONS } from './nav';
 import { SETTINGS, pageTitle, settingsTitle } from './settings';
+import { showsAvatar } from './header';
+import { withoutComments } from '../styles/rules';
 
 /**
  * Every screen wears its own name in the header.
@@ -130,6 +132,44 @@ describe('the header buttons a thumb has to hit', () => {
     expect([...src().matchAll(/className="btn btn-ghost btn-icon tap"/g)].length).toBeGreaterThanOrEqual(4);
   });
 
+  /*
+   * The avatar, which is the one header control that is a *place* rather than
+   * an action — and the one most easily broken by a well-meant tidy.
+   *
+   * The markup must ask `lib/header.ts` rather than testing anything itself.
+   * Three conditions written inline is the shape that produced the bug: the
+   * first version of this was `state.nav === 'feed' && atRoot`, which hid the
+   * app's own profile from three of its four navigations *and* left the row
+   * overflowing at 320px in the fourth. The rule, its measurement and its
+   * argument are in that file; this holds that the markup defers to it.
+   */
+  it('asks lib/header.ts whether to draw the avatar', () => {
+    const at = src().indexOf('<Avatar name={state.myName}');
+    expect(at, 'the header avatar has moved; point this test at it').toBeGreaterThan(-1);
+    // The condition its own element opens under: the text from the `{` that
+    // starts the block to the `<button` that starts the element.
+    const block = src().slice(0, at).split('<button').pop() ?? '';
+    const opened = (src().slice(0, at - block.length - '<button'.length).match(/\{[^\n]*&& \(\s*$/) ?? [''])[0];
+    expect(opened.trim(), 'the avatar is drawn by showsAvatar, not by a condition here').toBe(
+      '{showsAvatar({ atRoot, phone, counting }) && (',
+    );
+  });
+
+  it('sends the avatar to the profile, not to the progress report', () => {
+    // It went to `me` for as long as there was no screen about the person.
+    const at = src().indexOf('<Avatar name={state.myName}');
+    const opening = src().slice(0, at).split('<button').pop() ?? '';
+    expect(opening).toContain("screen: 'profile'");
+  });
+
+  it('reads whether a timer is counting from the hook the pill reads', () => {
+    // Two sources for "is a timer running" is two answers, and the row and the
+    // rule about the row would disagree at exactly the width that matters.
+    expect(src()).toContain('running(useSitting()[0])');
+    const pill = readFileSync('src/components/Running.tsx', 'utf8');
+    expect(pill).toContain('useSitting()');
+  });
+
   it('keeps the action row wide enough that those areas do not overlap', () => {
     // 36px button + 8px gap = 44px pitch, which is the overlay's own width.
     // --sp-1 (2px) and --sp-2 (4px) both put the buttons back on top of one
@@ -137,5 +177,52 @@ describe('the header buttons a thumb has to hit', () => {
     const row = /<div style=\{\{ display: 'flex', gap: '(var\(--sp-\d\))', flex: 'none', alignItems: 'center' \}\}>/.exec(src());
     expect(row, 'the header action row has moved; point this test at it').not.toBeNull();
     expect(row![1]).toBe('var(--sp-4)');
+  });
+});
+
+/**
+ * The row's own arithmetic, apart from the markup that draws it.
+ *
+ * The numbers behind it are in `lib/header.ts`: six 36px buttons at a 44px
+ * pitch, an 18px gutter each side, and an 83px timer pill do not fit across
+ * 320px. Measured in a browser — the row's right edge landed at 331, and the
+ * control it clipped was this one.
+ */
+describe('what the header can carry', () => {
+  it('draws the avatar on a phone while nothing is counting', () => {
+    expect(showsAvatar({ atRoot: true, phone: true, counting: false })).toBe(true);
+  });
+
+  it('gives the room to the timer when both want it on a phone', () => {
+    expect(showsAvatar({ atRoot: true, phone: true, counting: true })).toBe(false);
+  });
+
+  it('keeps both where there is room for both', () => {
+    // A tablet or a window: the rail is drawn and the header is not the
+    // narrowest thing in the app any more.
+    expect(showsAvatar({ atRoot: true, phone: false, counting: true })).toBe(true);
+  });
+
+  it('is never drawn off a root, where Back has the corner', () => {
+    for (const phone of [true, false]) {
+      for (const counting of [true, false]) {
+        expect(showsAvatar({ atRoot: false, phone, counting }), `${phone} ${counting}`).toBe(false);
+      }
+    }
+  });
+
+  /*
+   * The rule it replaced, asserted as a rule rather than as an absence.
+   *
+   * `state.nav === 'feed'` was the first version and it was wrong twice: it
+   * hid the profile from three navigations, and the fourth — feed — is where
+   * the overflow was already happening before the avatar existed.
+   */
+  it('does not depend on which navigation is on', () => {
+    // Comments blanked: the file's own note names the feed layout, because
+    // that is where the overflow was first drawn. The rule must not.
+    const code = withoutComments(readFileSync('src/lib/header.ts', 'utf8'));
+    expect(code).not.toContain("'feed'");
+    expect(readFileSync('src/App.tsx', 'utf8')).not.toContain("state.nav === 'feed' && atRoot");
   });
 });

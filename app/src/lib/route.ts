@@ -58,7 +58,7 @@ export interface Route {
  * Everything not listed is a screen you are simply on, and its route is its
  * name. Kept as a table so a screen cannot be routable in one direction only.
  */
-export const NAMED: Partial<Record<Screen, 'courseId' | 'itemId' | 'eventId' | 'guideId' | 'noteId'>> = {
+export const NAMED: Partial<Record<Screen, 'courseId' | 'itemId' | 'eventId' | 'guideId' | 'noteId' | 'callCode'>> = {
   course: 'courseId',
   edit: 'courseId',
   item: 'itemId',
@@ -69,6 +69,9 @@ export const NAMED: Partial<Record<Screen, 'courseId' | 'itemId' | 'eventId' | '
   lesson: 'guideId',
   slides: 'guideId',
   note: 'noteId',
+  // The one address in this app somebody sends to another person on purpose.
+  // A call is a code, and the link is the code — see `lib/call.ts`.
+  call: 'callCode',
 };
 
 /**

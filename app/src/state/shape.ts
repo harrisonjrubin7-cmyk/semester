@@ -15,6 +15,7 @@ import type {
   Appointment,
   CampusLink,
   ChangeSource,
+  CostsTab,
   CoursesTab,
   CourseId,
   CourseModule,
@@ -53,6 +54,7 @@ import type { NewSource, Source } from '../lib/sources';
 import type { Doc } from '../lib/document';
 import type { Sheet } from '../lib/sheet';
 import type { SavedEquation } from '../lib/maths';
+import type { PlotLine } from '../lib/plot';
 import type { Folder } from '../lib/folders';
 import type { StoredDeck } from '../lib/decks';
 import { type Reviews } from '../lib/review';
@@ -61,6 +63,10 @@ import type { Found, TermDate } from '../lib/registrar';
 import type { Spent } from '../lib/pace';
 import type { Window } from '../lib/windows';
 import type { Cost } from '../lib/cost';
+import type { Aid, Charge, Payment, Plan } from '../lib/bill';
+import type { Quiet } from '../lib/notify';
+import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
+import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
 import { LEGACY_TERM } from '../lib/term';
@@ -73,7 +79,17 @@ import type { PostMortem } from '../lib/postmortem';
 import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
-import { list, readDeck, readFolder, readList, readModule, readWindow, record } from '../lib/stored';
+import {
+  list,
+  readControls,
+  readDeck,
+  readFolder,
+  readList,
+  readModule,
+  readQuiet,
+  readWindow,
+  record,
+} from '../lib/stored';
 
 /**
  * What the last load's migration did, for the diagnostics dump.
@@ -352,6 +368,27 @@ export interface Persisted {
   sheets: Sheet[];
   equations: SavedEquation[];
   /**
+   * What is on the graph.
+   *
+   * A list of lines rather than a list of graphs: there is one plot, the way
+   * there is one drawing on a graphing calculator, and it holds whatever was
+   * last being worked on. Saving a *curve* is saving its equation, which
+   * `equations` above already does — a second store of the same notation under
+   * a different name would be two places to look for one formula.
+   */
+  plots: PlotLine[];
+  /**
+   * What the calculator is working on, and the values given to its letters.
+   *
+   * In the store for the same reason `plots` is: a formula half filled in is
+   * work, and a tab switch to look up the symbol you are stuck on should not
+   * throw it away. `given` is keyed by the letter — `r`, `n`, `P_2` — and
+   * holds what was typed rather than what it came to, so `1/3` stays a third
+   * rather than becoming 0.333.
+   */
+  mathWorking: string;
+  mathGiven: Record<string, string>;
+  /**
    * Decks, which until now were built and forgotten.
    *
    * A presentation is made on Sunday, fixed on Tuesday and given on
@@ -403,6 +440,26 @@ export interface Persisted {
    */
   costs: Cost[];
   /**
+   * The university's own statement, and the aid set against it.
+   *
+   * Four fields rather than one object because they are four lists that grow
+   * at different times: charges arrive in August, an award letter in July, a
+   * payment every month, and the plan is chosen once. See `lib/bill.ts` for
+   * why none of it is fetched, and for the four mistakes the arithmetic is
+   * there to stop.
+   */
+  charges: Charge[];
+  aid: Aid[];
+  payments: Payment[];
+  /**
+   * The payment plan, per term.
+   *
+   * Keyed by term rather than a single plan, because the plan is a decision
+   * made again every semester and last term's instalment dates are actively
+   * misleading against this term's balance.
+   */
+  plans: Record<string, Plan>;
+  /**
    * Meal-plan balances, as read off CBORD GET.
    *
    * Logged rather than overwritten: one balance is a fact about today and
@@ -429,6 +486,31 @@ export interface Persisted {
    * every student about.
    */
   accessLeadDays: number;
+  /**
+   * The hours nothing is allowed to interrupt you in, or nothing.
+   *
+   * Minutes from midnight, and the window wraps midnight because the one
+   * everybody sets does. Null rather than a pair of zeroes for "not set", so
+   * "off" and "quiet from midnight to midnight" cannot be confused — see
+   * `inQuiet` in `lib/notify.ts`.
+   */
+  quiet: Quiet | null;
+  /**
+   * How much study material to make, at what level, and how many cards.
+   *
+   * One setting for both generation paths — the syllabus pipeline and adding a
+   * reading — because they make the same thing and a student who wants shorter
+   * decks wants them from both. See `lib/controls.ts`.
+   */
+  controls: Controls;
+  /**
+   * What this person is here to do — see `lib/role.ts`.
+   *
+   * A statement about the person, not a permission. It decides which
+   * destinations are addressed to them, the same way the school's
+   * capabilities decide which ones exist at all.
+   */
+  role: Role;
   /**
    * When each deadline was ticked, epoch ms.
    *
@@ -620,6 +702,15 @@ export interface Ephemeral {
   itemId: string;
   eventId: string;
   guideId: CourseId;
+  /**
+   * The call this device is in or about to join — a code, or ''.
+   *
+   * Ephemeral, and that is the whole design of it: a call is a thing happening
+   * now, and a code restored from last week's storage would put somebody in a
+   * green room for a call that ended on Tuesday. It is in the URL, though,
+   * which is what makes a link worth sending — see `lib/route.ts`.
+   */
+  callCode: string;
   mode: StudyMode;
   episodeId: string | null;
   filter: string;
@@ -659,6 +750,18 @@ export interface Ephemeral {
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
   homeTab: 'today' | 'hours' | 'week' | 'done';
   coursesTab: CoursesTab;
+  /** Which half of the money screen is showing. See `lib/types.ts`. */
+  costsTab: CostsTab;
+  /**
+   * Which third of the equations screen is showing.
+   *
+   * Here rather than in the screen for the reason every other tab on this list
+   * is here: something outside the screen has to be able to land on a
+   * particular half of it. A formula kept for Friday's problem set is reachable
+   * from that deadline now, and a link that arrived on Write — an empty box —
+   * would be a link that looked broken.
+   */
+  mathTab: 'write' | 'calculate' | 'graph' | 'library' | 'kept';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'all' | 'task';
   /** Which shelf of the directory is showing under Everything. */
@@ -904,15 +1007,25 @@ export const DEFAULT_PERSISTED: Persisted = {
   documents: [],
   sheets: [],
   equations: [],
+  plots: [],
+  mathWorking: '',
+  mathGiven: {},
   decks: [],
   folders: [],
   registrar: [],
   spent: [],
   windows: [],
   costs: [],
+  charges: [],
+  aid: [],
+  payments: [],
+  plans: {},
   balances: [],
   residences: [],
   accessLeadDays: 0,
+  quiet: null,
+  controls: DEFAULT_CONTROLS,
+  role: DEFAULT_ROLE,
   tickedAt: {},
   accent: 'sterling',
   textSize: 'normal',
@@ -976,6 +1089,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     itemId: 'bus-ga1',
     eventId: 'e1',
     guideId: 'econ',
+    callCode: '',
     mode: 'cards',
     episodeId: null,
     filter: 'All',
@@ -987,8 +1101,10 @@ export function initialEphemeral(now: Date): Ephemeral {
     calSource: 'all',
     calDay: null,
     mineTab: 'tasks',
+    mathTab: 'write',
     homeTab: 'today',
     coursesTab: 'courses',
+    costsTab: 'bill',
     meTab: 'you',
     meGroup: 'Study',
     examPreset: null,
@@ -1211,15 +1327,28 @@ export function loadPersisted(): Persisted {
       documents: list(saved.documents),
       sheets: list(saved.sheets),
       equations: list(saved.equations),
+      plots: list(saved.plots),
+      mathWorking: typeof saved.mathWorking === 'string' ? saved.mathWorking : '',
+      mathGiven: record(saved.mathGiven),
       decks: readList(saved.decks, readDeck),
       folders: readList(saved.folders, readFolder),
       registrar: list(saved.registrar),
       spent: list(saved.spent),
       windows: readList(saved.windows, readWindow),
       costs: list(saved.costs),
+      charges: list(saved.charges),
+      aid: list(saved.aid),
+      payments: list(saved.payments),
+      plans: record(saved.plans),
       balances: list(saved.balances),
       residences: list(saved.residences),
       accessLeadDays: saved.accessLeadDays ?? 0,
+      quiet: readQuiet(saved.quiet),
+      // Through the table rather than trusted: a role this build has never
+      // heard of would hide every screen it does not name, and an app that
+      // opens on an empty directory looks broken rather than out of date.
+      controls: readControls(saved.controls),
+      role: roleOf(typeof saved.role === 'string' ? saved.role : DEFAULT_ROLE).id,
       tickedAt: saved.tickedAt ?? {},
       started: readStarted(saved.started),
       schoolId: typeof saved.schoolId === 'string' ? saved.schoolId : DEFAULT_PERSISTED.schoolId,
@@ -1312,15 +1441,25 @@ export function pickPersisted(state: State): Persisted {
     documents: state.documents,
     sheets: state.sheets,
     equations: state.equations,
+    plots: state.plots,
+    mathWorking: state.mathWorking,
+    mathGiven: state.mathGiven,
     decks: state.decks,
     folders: state.folders,
     registrar: state.registrar,
     spent: state.spent,
     windows: state.windows,
     costs: state.costs,
+    charges: state.charges,
+    aid: state.aid,
+    payments: state.payments,
+    plans: state.plans,
     balances: state.balances,
     residences: state.residences,
     accessLeadDays: state.accessLeadDays,
+    quiet: state.quiet,
+    controls: state.controls,
+    role: state.role,
     tickedAt: state.tickedAt,
     started: state.started,
     schoolId: state.schoolId,
@@ -1385,6 +1524,16 @@ export type Action =
   | { type: 'openItem'; id: string }
   | { type: 'openCourse'; id: CourseId }
   | { type: 'openEvent'; id: string }
+  /**
+   * Open the call screen on a code — or on none, which is the lobby.
+   *
+   * One action for both directions, including the one that looks like it
+   * should not need it: leaving a call dispatches this with an empty code, so
+   * the address bar stops naming a call nobody is in. Doing that as a plain
+   * `go` would leave `#/call/bcd-fghj-kmn` in the history, and Back would walk
+   * somebody straight into a green room for the call they just left.
+   */
+  | { type: 'openCall'; code: string }
   | { type: 'openGuide'; id: CourseId; mode?: StudyMode; from?: Screen; unit?: number }
   | { type: 'setMode'; mode: StudyMode }
   | { type: 'setEpisode'; id: string }
@@ -1562,6 +1711,7 @@ export type Action =
   | { type: 'setCalDay'; date: string | null }
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
+  | { type: 'setCostsTab'; tab: CostsTab }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: CoursesTab }
   | { type: 'setMeTab'; tab: 'you' | 'all' | 'task' }
@@ -1588,7 +1738,12 @@ export type Action =
    * is the same loss `keepNote` avoids. Same split, same reason. See
    * `state/slices/made.ts`.
    */
-  | { type: 'newDocument'; courseId: CourseId | null }
+  /**
+   * `itemId` says which deadline the new thing is for, and is what the New
+   * buttons on a deadline pass. Optional and last, so every caller that only
+   * knows a course is unchanged. See `lib/forwork.ts`.
+   */
+  | { type: 'newDocument'; courseId: CourseId | null; itemId?: string | null }
   | { type: 'makeDocument'; doc: Omit<Doc, 'id' | 'created' | 'updated'>; open?: boolean }
   | { type: 'openDocument'; id: string }
   /** Back to the shelf. Its own action rather than an open with no id. */
@@ -1596,7 +1751,7 @@ export type Action =
   | { type: 'updateDocument'; id: string; patch: Partial<Omit<Doc, 'id'>> }
   | { type: 'deleteDocument'; id: string }
   | { type: 'editBlock'; at: number | null }
-  | { type: 'newSheet'; courseId: CourseId | null }
+  | { type: 'newSheet'; courseId: CourseId | null; itemId?: string | null }
   /*
    * `open` is the one exception to the split above, and it is the button's,
    * not the assistant's. A tool proposal leaves it unset and nothing moves. A
@@ -1621,7 +1776,7 @@ export type Action =
    * `makeDeck` is what a generated deck dispatches, and being thrown into an
    * editor is a loss the generator should not be able to cause.
    */
-  | { type: 'newDeck'; courseId: CourseId | null }
+  | { type: 'newDeck'; courseId: CourseId | null; itemId?: string | null }
   | { type: 'makeDeck'; deck: Omit<StoredDeck, 'id' | 'created' | 'updated'>; open?: boolean }
   /* `editDeck`, not `openDeck`: that name is taken by the study slideshow,
      which opens a guide unit at `#/slides` and is a different thing. */
@@ -1634,7 +1789,20 @@ export type Action =
   | { type: 'moveFolder'; id: string; parentId: string | null }
   /** Takes everything under it with it. The files inside go to the drive's top. */
   | { type: 'deleteFolder'; id: string }
+  /**
+   * File a kept equation against a deadline, or against none.
+   *
+   * Its own action rather than a general `updateEquation`, because an equation
+   * is kept rather than edited — there is no editor to patch it from, and the
+   * one field anybody changes after keeping it is this.
+   */
+  | { type: 'fileEquation'; id: string; itemId: string | null }
   | { type: 'deleteEquation'; id: string }
+  | { type: 'addPlot'; text?: string }
+  | { type: 'writePlot'; id: string; patch: Partial<Omit<PlotLine, 'id'>> }
+  | { type: 'dropPlot'; id: string }
+  | { type: 'setPlot'; lines: string[] }
+  | { type: 'writeMaths'; text?: string; given?: Record<string, string> }
   | { type: 'sitPaper'; minutes: number; formatId: string; code?: string }
   | { type: 'clearPaperPreset' }
   | { type: 'writeRoomDraft'; text: string }
@@ -1666,11 +1834,12 @@ export type Action =
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
   | { type: 'setAppointmentKind'; id: string; kind: string }
   | { type: 'deleteAppointment'; id: string }
-  | { type: 'newNote'; courseId: CourseId | null }
+  | { type: 'setMathTab'; tab: State['mathTab'] }
+  | { type: 'newNote'; courseId: CourseId | null; itemId?: string | null }
   /** Save a finished piece of text as a note without leaving the screen. */
   | { type: 'keepNote'; title: string; body: string; courseId: CourseId | null }
   | { type: 'openNote'; id: string }
-  | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId'>> }
+  | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId' | 'itemId'>> }
   | { type: 'attachFile'; noteId: string; fileId: string }
   | { type: 'detachFile'; noteId: string; fileId: string }
   | { type: 'deleteNote'; id: string }
@@ -1710,7 +1879,26 @@ export type Action =
   | { type: 'addCost'; cost: Omit<Cost, 'id' | 'at'> }
   | { type: 'patchCost'; id: string; patch: Partial<Cost> }
   | { type: 'dropCost'; id: string }
+  /*
+   * The university's statement. Entered, never fetched — `lib/bill.ts`.
+   *
+   * `patchAid` exists so confirming an award is one tap rather than a delete
+   * and a retype: the number is already right, it is the condition on it that
+   * has changed, and retyping a five-figure amount to flip a flag is how a
+   * figure gets a digit dropped.
+   */
+  | { type: 'addCharge'; charge: Omit<Charge, 'id' | 'at'> }
+  | { type: 'dropCharge'; id: string }
+  | { type: 'addAid'; aid: Omit<Aid, 'id' | 'at'> }
+  | { type: 'patchAid'; id: string; patch: Partial<Pick<Aid, 'pending' | 'cents' | 'what'>> }
+  | { type: 'dropAid'; id: string }
+  | { type: 'addPayment'; payment: Omit<Payment, 'id' | 'at'> }
+  | { type: 'dropPayment'; id: string }
+  | { type: 'setPlan'; term: string; plan: Plan }
   | { type: 'setAccessLead'; days: number }
+  | { type: 'setQuiet'; quiet: Quiet | null }
+  | { type: 'setControls'; patch: Partial<Controls> }
+  | { type: 'setRole'; role: Role }
   /** Where you live this term, from the housing portal. */
   | { type: 'setResidence'; residence: Omit<Residence, 'id' | 'created'> }
   | { type: 'dropResidence'; id: string }

@@ -148,6 +148,25 @@ all three on screen:
   `ALL CHECKS PASSED`. What it cannot cover is realtime delivery, which is a
   websocket rather than a policy and still wants one real second device.
 
+### Optional · Reactions, and who is in the room
+
+The class chat works on `classmates.sql` alone. Two things in it need one more
+file: the faces under a message, and the dot beside somebody who has the room
+open. SQL Editor → New query → paste [`supabase/rooms.sql`](supabase/rooms.sql)
+→ Run, after `classmates.sql`. Safe to run twice.
+
+Both fail to nothing rather than to an error. Without the table the room draws
+the conversation and no reactions, and the first tap on a face says which file
+to run. Without the presence policies the live channel is refused and the room
+shows no dots — which costs an ornament, not the conversation.
+
+The presence half is the only place in this project that writes a policy on
+`realtime.messages`. A channel with no authorization is joinable by anything
+holding the publishable key, so presence on one would publish which accounts
+are online in which class to anybody who guessed the topic. The policy puts
+that channel behind the same two questions as every table here: are you
+verified, and are you in this class.
+
 ### Optional · Group work
 
 A shared checklist for a group project, inside a class room. SQL Editor → New
@@ -170,6 +189,38 @@ checks, four synthetic accounts, rolled back at the end.
 Turn on email confirmation (Authentication → Providers → Email → *Confirm
 email*) or the domain check is the only gate and an unconfirmed address passes
 it.
+
+### Optional · Calls
+
+Nothing to run. A call's offers and answers ride on a Supabase **broadcast**
+channel, which needs no table and no policy — the video does not go through it,
+or through any server: it goes straight between the browsers in the call.
+
+What a build with no Supabase project gets is the green room and nothing else:
+the camera, the microphone, the pickers and the level meter work, and the
+screen says plainly that nobody else can join, because two browsers cannot
+introduce themselves without something in the middle to carry the introduction.
+
+### A relay for calls
+
+Two browsers find each other with **STUN**, which is one packet, is free, and
+which Google runs — that is the default and there is nothing to configure.
+Roughly one network in ten will not carry a direct connection anyway, and a
+locked-down campus or hotel network rather more often than that. Those need
+**TURN**, which relays the media and therefore costs somebody bandwidth. There
+is no free one, so none is configured:
+
+```
+VITE_TURN_URL=turns:turn.example.com:5349
+VITE_TURN_USER=<username>
+VITE_TURN_PASS=<credential>
+```
+
+`VITE_STUN_URLS` overrides the default STUN server, comma-separated, if you
+would rather not use Google's.
+
+Both the lobby and the green room say which of the two you have, in those
+words, rather than showing a spinner on a call that is never going to connect.
 
 ### Tell Supabase where the app lives
 

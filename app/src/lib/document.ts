@@ -53,9 +53,35 @@ export interface Doc {
   title: string;
   subtitle: string;
   courseId: CourseId | null;
+  /**
+   * The deadline this was written for, where it was written for one.
+   *
+   * A course was as close as anything made in this app could get to saying
+   * what it was for, and a course is four months and eleven deadlines wide.
+   * The response paper due Friday and the one due in November were both
+   * "ECON 1010", which is the filing equivalent of one drawer for the term.
+   *
+   * Optional on every made thing for the same two reasons: a document written
+   * before this field existed has none, and plenty of documents are genuinely
+   * not for a deadline. Read it through `lib/forwork.ts`, which is the one
+   * place that knows an id here may name a deadline that has since been
+   * edited out of a course — a dangling link is shown as no link rather than
+   * as a broken one.
+   */
+  itemId?: string | null;
   blocks: Block[];
   created: number;
   updated: number;
+  /**
+   * When it was last opened, which is not when it was last changed.
+   *
+   * What the shelf's default order sorts by, and the reason it can be called
+   * "Last opened" honestly. Absent on everything made before this existed, and
+   * read as "not since" rather than as the epoch — `lib/shelf.ts` falls back to
+   * when it was last written to. The same field, for the same reason, as
+   * `opened` on `Sheet` in `lib/sheet.ts`.
+   */
+  opened?: number;
 }
 
 /** What each kind is called where somebody has to choose one. */
@@ -97,11 +123,16 @@ export function blankBlock(kind: BlockKind): Block {
   }
 }
 
-export function blankDoc(title: string, courseId: CourseId | null = null): Omit<Doc, 'id'> {
+export function blankDoc(
+  title: string,
+  courseId: CourseId | null = null,
+  itemId: string | null = null,
+): Omit<Doc, 'id'> {
   return {
     title: title.trim() || 'Untitled document',
     subtitle: '',
     courseId,
+    itemId,
     blocks: [{ kind: 'text', text: '' }],
     created: Date.now(),
     updated: Date.now(),

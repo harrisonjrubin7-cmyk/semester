@@ -203,8 +203,14 @@ Four selectable navigation modes (`NavMode`): `tabs`, `feed`, `springboard`,
   (`AllApps`, `AppGrid`, `ByTask`, `Folder`, `Launcher`, `ShelfNav`, `TileSheet`).
   Shelves in `GROUPS` order, tiles reorderable and saved as `groupOrder`.
 - **Springboard** — `lib/springboard.ts`, dock stored under the `dock` look key.
-- **Command palette / universal search** — `components/Command.tsx` + `lib/find.ts`,
-  an overlay rather than a screen. Searches destinations by label, blurb and
+- **The app's browser — tabs and universal search** — `components/Command.tsx` +
+  `lib/find.ts` + `lib/browser.ts` + `lib/typeahead.ts`, an overlay rather than a
+  screen. A strip of tabs across the top, each holding a place in the app (the
+  page a tab shows is the app itself); a new tab is the search page — wordmark,
+  one box, and shortcuts ordered by `state.recent`. The box offers your recent
+  searches and completions drawn from what can actually be found; Enter turns
+  the page into results, with chips that narrow them to one kind and a
+  per-result "open in a new tab". Searches destinations by label, blurb and
   keywords, plus live records.
 - **By task** — `taskTags` on each destination drive the "what are you trying to
   do" view.
@@ -306,17 +312,57 @@ merge as unions and are never shed by `lib/keep.ts`.
 
 ### 6.2 Sheet or table — `#/sheet`, `screens/Sheet.tsx`, `lib/sheet.ts`
 
-- Model `Sheet { id, title, courseId, cells: Record<A1,string>, rows, cols, created, updated }`.
+- Model `Sheet { id, title, courseId, cells: Record<A1,string>,
+  styles?: Record<A1,CellStyle>, rows, cols, created, updated, opened? }`.
+- `CellStyle { num?, decimals?, bold?, italic?, strike?, under?, align?, ink?,
+  wash?, edge?, size? }` — the picture over a cell, stored apart from the cell
+  so formatting never rewrites the value a formula reads. `picture()`,
+  `styledDisplay()`, `restyle()`. `ink`/`wash` name one of six colours rather
+  than holding a hex, and each surface picks its own: `inkOn`/`washOn` for the
+  app's dark panel, `inkPaper`/`washPaper` for Excel's white page. `edge` is
+  any of `t`, `b`, `l`, `r`, so one cell can be two sides of an outline.
+- Selection in `lib/grid.ts` (`Range` as two corners; `box`, `cells`, `label`,
+  `step`, `summarise`) — the name box, the status line's sum/average/count/
+  min/max, shift-click and shift-arrow, and column and row headers that select.
+- Editor undo/redo in `lib/history.ts` — coalesced by cell so a run of typing
+  is one step. Distinct from `lib/undo.ts`, which is the app's one-step toast.
+- **The ribbon** — `lib/ribbon.ts` holds it as a value (tabs, named groups,
+  four kinds of control) with the same rules the menu bar has: a control with
+  no handler is dead rather than drawn live, ids are unique, the tab order is
+  fixed (`TABS = home insert formulas data view`). `components/Ribbon.tsx`
+  draws it, along with the formula bar, the sheet tab strip and the status bar.
+  There is no File tab: the app's one menu bar already owns the file.
+- **Editing the shape of a sheet** — `lib/sheetedit.ts`, all of it pure:
+  `insertRows`/`deleteRows`/`insertCols`/`deleteCols` (the grid moves under the
+  formulas), `fill` down and right (the formulas move with them), `sortRange`
+  and `sortable`, `find`/`replaceAll` over what was typed, `copy`/`clear`/
+  `paste` with `clipText`/`readClip` for the system clipboard, and `autoSum`.
+  Under all of it: `rewrite`, `translate` (a formula moved — `$` holds a row or
+  a column still) and `shift` (the grid moved — a deletion *shrinks* a range it
+  reached into and only breaks one it took entirely).
+- Templates in `lib/sheettemplates.ts` — to-do list, monthly budget, term
+  budget, reading tracker, lab readings, each with its formulas already in it.
 - New sheets open at 12×6; ceiling `MAX_ROWS = 200`, `MAX_COLS = 26`.
 - A1 addressing: `colName`, `colIndex`, `ref`, `parseRef`, `expand` (ranges).
-- **32 formula functions**: `IF SUMPRODUCT AND OR NOT COUNTA CONCAT LEN UPPER
-  LOWER TRIM SUM PRODUCT COUNT AVERAGE AVG MEDIAN MIN MAX STDEV STDEVP VAR VARP
-  ABS INT SQRT EXP LN LOG10 POWER MOD ROUND`.
-- Five real errors said in the cell rather than swallowed: `#DIV/0!`, `#REF!`,
-  `#NAME?`, `#VALUE!`, `#CYCLE!`. Cycle detection via a `seen` set.
+- **63 formula functions** (the figure here said 32 and had not been counted
+  since; the lookups, the dates, the conditionals and the finance were all
+  added after it): `IF IFS IFERROR AND OR NOT SUMPRODUCT COUNTA CONCAT LEN
+  LEFT RIGHT MID SPLIT TEXT TRIM UPPER LOWER VLOOKUP HLOOKUP XLOOKUP INDEX
+  MATCH TODAY NOW DATE DATEDIF WEEKDAY EOMONTH COUNTIF SUMIF AVERAGEIF
+  COUNTIFS SUMIFS SUM PRODUCT COUNT AVERAGE AVG MEDIAN MODE MIN MAX STDEV
+  STDEVP VAR VARP CORREL ABS INT SQRT EXP LN LOG10 POWER MOD ROUND NPV IRR
+  PMT FV PV RATE`.
+- Seven real errors said in the cell rather than swallowed: `#DIV/0!`, `#REF!`,
+  `#NAME?`, `#VALUE!`, `#CYCLE!`, `#N/A`, `#DEEP!`. Cycle detection via a
+  `seen` set. An error written *into* a formula — which is what a deleted
+  reference leaves behind — is read back as that error rather than degraded to
+  `#VALUE!`.
 - `weighted(scores, weights)` — the syllabus-weighted gradebook helper.
-- Out: **`.xlsx` with the formulas still in it** (`lib/xlsx.ts`), `.csv`
-  (`toCsv`), and a Markdown table for a document (`toMarkdown`).
+- Out: **`.xlsx` with the formulas and the formats still in it**
+  (`lib/xlsx.ts`; `styleTable()` builds `cellXfs`, `fonts`, `fills` and
+  `borders` from the distinct `Look`s the book uses — fills start at index 2,
+  because 0 and 1 are reserved and a workbook pointing at 1 opens striped),
+  `.csv` (`toCsv`), and a Markdown table for a document (`toMarkdown`).
 - In: `readTable()` parses pasted TSV/CSV.
 - Reducer actions: `newSheet`, `makeSheet`, `openSheet`, `closeSheet`,
   `updateSheet`, `deleteSheet`.
@@ -328,14 +374,41 @@ merge as unions and are never shed by `lib/keep.ts`.
 - `slidesFor(minutes, kind)` sizes a deck to a talk; `holes(plan)` names what the
   student still has to supply; `speakerNotes()` writes the notes.
 - Figures become slides (`figureSlide`).
+- Editing — `screens/deck/Edit.tsx` and `screens/deck/Canvas.tsx`. The slide is
+  drawn at 16:9 in the deck's colours and typed into in place; `Canvas`,
+  `Still` and `Thumb` are one renderer used by the editor, the presenter and
+  the rail, so the three cannot drift from each other or from `slideXml`.
+- Layouts: `LAYOUTS`, `blankSlide`, `layoutOf` (read off the slide, not stored
+  beside it), `relayout` (title and speaker notes always survive) and
+  `losesSomething` (names what a change would throw away, before it does).
+- Themes: `THEMES`/`themeOf` in `lib/decks.ts` — Ink, Slate, Paper, Sand, each
+  a `Palette { ink, paper, dim }` threaded through `lib/pptx.ts`, so the
+  exported file opens in the colours chosen here. Contrast-audited in
+  `lib/decktheme.test.ts`.
+- Reorder, duplicate, hide (`hidden[]`, skipped when presenting and left out of
+  the file) and a presenter view with notes, the next slide and a clock.
 
-### 6.4 Personal → Files — `#/mine`, `screens/Mine.tsx`, `lib/files.ts`
+### 6.4 Personal → Files — `#/mine`, `screens/mine/Drive.tsx`, `lib/files.ts`
 
 - Tabs: `tasks` | `appointments` | `notes` | `files`.
-- `StoredFile { id, name, type, size, added, courseId, blob }`, `FileMeta` is the
-  same without the blob.
-- `addFile`, `listFiles`, `getFile`, `deleteFile`, `clearFiles`, `totalSize`,
-  `formatBytes`, `openFile` (object URL, revoked after 60s).
+- `StoredFile { id, name, type, size, added, courseId, folderId, starred,
+  openedAt, trashedAt, text, blob }`, `FileMeta` is the same without the blob.
+- `addFile`, `listFiles`, `getFile`, `moveFile`, `starFile`, `trashFile`,
+  `restoreFile`, `deleteFile`, `emptyTrash`, `sweepTrash`, `clearFiles`,
+  `totalSize`, `formatBytes`, `search`, `openFile` (object URL, revoked
+  after 60s).
+- Folders in `lib/folders.ts`, with a folder per course derived from the
+  catalogue. Drag to move, or the Move picker — a drag always has a
+  single-pointer equal (`a11y/dragging.test.ts`).
+- Five places: **Home**, My drive, Recent, Starred, Bin — a rail beside the
+  files where there is room, a row of tabs on a phone, with the browser's own
+  storage estimate under it. No "Shared with me" and no Spam: nothing here can
+  be sent to you, and an empty destination is a promise of a feature that does
+  not exist.
+- The home is `lib/drivehome.ts`: the folders something has happened in lately,
+  and the files to pick up again with the **reason** beside each — opened beats
+  added beats starred, each file named once under its strongest reason.
+- Delete moves to the bin; the bin keeps it for `TRASH_DAYS`.
 - Files attach to notes (`attachFile` action, `note.fileIds`).
 - Everything stays on the device; nothing is uploaded.
 
@@ -442,7 +515,9 @@ This is the real gap list — the honest version of §2 of the build prompt.
 - No search across file *contents*.
 - No star/favourite, no recents view, **no trash and no restore** (delete is
   immediate and final).
-- No link between a file and an *assignment* — only to a course and to notes.
+- ~~No link between a file and an *assignment* — only to a course and to notes.~~
+  — **closed.** `StoredFile.itemId`, set from the drive's own **For** button or
+  from the deadline's *Work for this* panel, and shown on the file's row.
 - Quota exists (`lib/quota.ts`) but is on the Data screen, not over the files.
 
 **Docs**
@@ -458,7 +533,11 @@ This is the real gap list — the honest version of §2 of the build prompt.
 - No "Open in Docs" from a study guide.
 
 **Sheets**
-- **Single grid per file — no tabs, so no cross-sheet `Sheet2!A1` references.**
+- **Single grid per file — no cross-sheet `Sheet2!A1` references.** There is a
+  tab strip along the bottom of the editor now, but it switches between the
+  account's sheets rather than between tabs inside one workbook: an imported
+  workbook's worksheets each arrive as a sheet of their own, so a formula can
+  never reach across one.
 - Missing functions the prompt names: `IFS IFERROR VLOOKUP HLOOKUP XLOOKUP INDEX
   MATCH LEFT RIGHT MID TEXT SPLIT TODAY NOW DATE DATEDIF WEEKDAY EOMONTH MODE
   CORREL COUNTIF SUMIF COUNTIFS SUMIFS AVERAGEIF NPV IRR PMT FV PV RATE`.
@@ -474,10 +553,16 @@ This is the real gap list — the honest version of §2 of the build prompt.
 - No fill handle — so a formula filled down in Excel arrives as the values it
   last had, not as a live formula. The import says so rather than leaving it to
   be found in a total that stopped moving.
-- No fill handle, no paste-special, no undo/redo inside the grid.
-- No cell formatting at all: number/currency/percent/date formats, bold, fill,
-  borders, alignment, wrap, merge.
-- No sort, no filter, no freeze panes.
+- ~~No fill handle, no paste-special, no undo/redo inside the grid.~~ — undo
+  and redo are in the grid now (`lib/history.ts`), coalesced by cell so a run
+  of typing is one step rather than one per keystroke. No fill handle and no
+  paste-special still.
+- ~~No cell formatting at all: number/currency/percent/date formats, bold,
+  fill, borders, alignment, wrap, merge.~~ — number, currency, percent, date
+  and decimal places, bold, italic, strikethrough and alignment are on the
+  toolbar and go into the `.xlsx`. Still no fill, borders, wrap or merge.
+- No sort, no filter, no freeze panes. (A `.xlsx` export freezes the header
+  row; nothing on the screen does.)
 - No conditional formatting, no data validation or dropdowns.
 - **No charts and no pivot tables.**
 - ~~**No XLSX or CSV import** (export only)~~ — **wrong as written.** CSV and
@@ -489,19 +574,43 @@ This is the real gap list — the honest version of §2 of the build prompt.
 - No auto-generated grade calculator per course, no GPA planner template.
 
 **Slides**
-- No canvas editor. `#/deck` generates a deck and exports it; you cannot lay out
-  a slide, move a text box, or place a shape.
-- No layouts picker, no themes/palettes, no transitions or animations.
-- No images, tables or charts placed on slides.
-- No presenter mode, no per-slide reorder/hide UI.
+- ~~No canvas editor.~~ — the slide is drawn at 16:9 and typed into in place
+  (`screens/deck/Canvas.tsx`). What is still absent is *free* layout: you
+  cannot move a text box or place a shape, because the boxes are the layout's
+  and the layout is what the exported file draws.
+- ~~No layouts picker, no themes/palettes~~ — both exist (`LAYOUTS`, `THEMES`).
+  No transitions or animations, and none is planned: `lib/pptx.ts` would have
+  to write them into the file for the promise to be real, and a transition that
+  only happens in this app's presenter view is a lie about the `.pptx`.
+- No images or charts placed on slides. Tables have been placeable since
+  `table()` in `lib/pptx.ts` — this line was wrong when it was written.
+- ~~No presenter mode, no per-slide reorder/hide UI.~~ — also wrong when
+  written: `Presenter` and the rail's reorder and hide were both already here.
 - No PDF or PNG export, no PPTX import.
-- No templates.
+- No templates for a whole deck. (There are three *builders* — from a unit,
+  from a sheet, from a brief — which is the same need answered from the app's
+  own material rather than from a gallery.)
 
 **Cross-app**
-- No single "＋ New" button offering Folder/Document/Presentation/Spreadsheet/Upload.
+- ~~No single "＋ New" button offering Folder/Document/Presentation/Spreadsheet/Upload.~~
+  — **closed on the deadline, where the question is actually asked.** *Work for
+  this* on a deadline offers ＋ Document · Sheet · Deck · Note · Upload, and each
+  makes something already filed against that deadline and its course. There is
+  still no such row on a *folder*, which is the half of this entry that remains.
 - No paste-a-range-into-Docs-as-a-table.
-- Universal search does not return documents, sheets or files.
-- No assignment-attachment flow for any of these.
+- ~~Universal search does not return documents, sheets or files.~~ — closed
+  earlier; and search now matches a document, sheet or deck on the *deadline*
+  it is for as well as on its own name and contents. (The drive also has a
+  search of its own, which reads names and the text inside.)
+- ~~No assignment-attachment flow for any of these.~~ — **closed.** An optional
+  `itemId` on `Doc`, `Sheet`, `StoredDeck`, `SavedEquation`, `Note` and
+  `StoredFile` links work to one deadline rather than to a term-wide course.
+  `app/src/lib/forwork.ts` is the only reader of it, `app/src/lib/clips.ts`
+  makes the count affordable per row, and the link is drawn from both ends —
+  a panel on the deadline, a *What it is for* picker on every screen that makes
+  something, a paperclip and a count on every deadline row, and a *for Quiz #1*
+  line on a file in the drive. A link whose deadline has been edited away reads
+  as no link rather than as a broken one.
 
 > **Two entries above were wrong when this was written**, and are struck
 > through rather than deleted so the correction is visible. Both were found by

@@ -23,6 +23,7 @@ import { newId } from '../../lib/idb';
 import { blankDoc, type Doc } from '../../lib/document';
 import { blankSheet, type Sheet } from '../../lib/sheet';
 import type { SavedEquation } from '../../lib/maths';
+import type { PlotLine } from '../../lib/plot';
 import { subtree, withCourses, type Folder } from '../../lib/folders';
 import { blankDeck, type StoredDeck } from '../../lib/decks';
 import type { Action, State } from '../shape';
@@ -34,7 +35,7 @@ export const LIMIT = 200;
 export function made(state: State, action: Action): State | null {
   switch (action.type) {
     case 'newDocument': {
-      const doc: Doc = { ...blankDoc('', action.courseId), id: newId() };
+      const doc: Doc = { ...blankDoc('', action.courseId, action.itemId ?? null), id: newId() };
       return push(
         { ...state, documents: [doc, ...state.documents], documentId: doc.id, blockAt: 0 },
         'write',
@@ -49,7 +50,25 @@ export function made(state: State, action: Action): State | null {
     }
 
     case 'openDocument':
-      return push({ ...state, documentId: action.id, blockAt: null }, 'write');
+      /*
+       * Opening is recorded, the way `openSheet` below records it.
+       *
+       * Without it the shelf's default order is called "Last opened" and is
+       * last *edited* — so a document you read this morning and did not type
+       * into sits where it was, under a heading that says it has not been
+       * touched in a month. Same field, same reason, as a sheet's.
+       */
+      return push(
+        {
+          ...state,
+          documents: state.documents.map((d) =>
+            d.id === action.id ? { ...d, opened: Date.now() } : d,
+          ),
+          documentId: action.id,
+          blockAt: null,
+        },
+        'write',
+      );
 
     case 'closeDocument':
       return { ...state, documentId: null, blockAt: null };
@@ -74,7 +93,7 @@ export function made(state: State, action: Action): State | null {
       return { ...state, blockAt: action.at };
 
     case 'newSheet': {
-      const sheet: Sheet = { ...blankSheet('', action.courseId), id: newId() };
+      const sheet: Sheet = { ...blankSheet('', action.courseId, action.itemId ?? null), id: newId() };
       return push({ ...state, sheets: [sheet, ...state.sheets], sheetId: sheet.id }, 'sheet');
     }
 
@@ -85,8 +104,25 @@ export function made(state: State, action: Action): State | null {
       return action.open ? push({ ...next, sheetId: sheet.id }, 'sheet') : next;
     }
 
+    /*
+     * Opening stamps `opened`, and deliberately not `updated`.
+     *
+     * The shelf sorts by "last opened", which is the order a person's own list
+     * of files is in everywhere else, and there was nothing to sort by: a
+     * sheet carried when it was made and when it was last written to, so the
+     * gradebook somebody checks every Friday without typing in it sank to the
+     * bottom. Stamping `updated` instead would have been the easy version of
+     * this and a lie — "edited just now" against a sheet nobody has changed.
+     */
     case 'openSheet':
-      return push({ ...state, sheetId: action.id }, 'sheet');
+      return push(
+        {
+          ...state,
+          sheets: state.sheets.map((s) => (s.id === action.id ? { ...s, opened: Date.now() } : s)),
+          sheetId: action.id,
+        },
+        'sheet',
+      );
 
     case 'closeSheet':
       return { ...state, sheetId: null };
@@ -166,7 +202,7 @@ export function made(state: State, action: Action): State | null {
     }
 
     case 'newDeck': {
-      const deck: StoredDeck = { ...blankDeck('', action.courseId), id: newId() };
+      const deck: StoredDeck = { ...blankDeck('', action.courseId, action.itemId ?? null), id: newId() };
       return push({ ...state, decks: [deck, ...state.decks], deckId: deck.id }, 'deck');
     }
 
@@ -178,7 +214,14 @@ export function made(state: State, action: Action): State | null {
     }
 
     case 'editDeck':
-      return push({ ...state, deckId: action.id }, 'deck');
+      return push(
+        {
+          ...state,
+          decks: state.decks.map((d) => (d.id === action.id ? { ...d, opened: Date.now() } : d)),
+          deckId: action.id,
+        },
+        'deck',
+      );
 
     case 'closeDeck':
       return { ...state, deckId: null };
@@ -208,8 +251,56 @@ export function made(state: State, action: Action): State | null {
       return { ...state, equations: [equation, ...state.equations].slice(0, LIMIT) };
     }
 
+    case 'fileEquation':
+      return {
+        ...state,
+        equations: state.equations.map((e) =>
+          e.id === action.id ? { ...e, itemId: action.itemId } : e,
+        ),
+      };
+
     case 'deleteEquation':
       return { ...state, equations: state.equations.filter((e) => e.id !== action.id) };
+
+    /*
+     * The graph's own list.
+     *
+     * A row is added at the end rather than the top — unlike everything else
+     * in this slice, where the newest thing is the one you want first. A plot
+     * is read downwards: the parameter is defined above the curve that uses
+     * it, and a new line dropped on top of the list would land between a
+     * slider and what it moves.
+     */
+    case 'addPlot': {
+      const line: PlotLine = { id: newId(), text: action.text ?? '', on: true };
+      return { ...state, plots: [...state.plots, line].slice(0, LIMIT) };
+    }
+
+    case 'writePlot':
+      return {
+        ...state,
+        plots: state.plots.map((p) => (p.id === action.id ? { ...p, ...action.patch } : p)),
+      };
+
+    case 'dropPlot':
+      return { ...state, plots: state.plots.filter((p) => p.id !== action.id) };
+
+    case 'writeMaths':
+      return {
+        ...state,
+        mathWorking: action.text ?? state.mathWorking,
+        // A new formula clears the values given to the old one's letters:
+        // `r = 0.05` meant for a present value is not the `r` of a growth
+        // rate, and carrying it over is how a right-looking wrong number gets
+        // into somebody's working.
+        mathGiven: action.given ?? (action.text === undefined ? state.mathGiven : {}),
+      };
+
+    case 'setPlot':
+      return {
+        ...state,
+        plots: action.lines.slice(0, LIMIT).map((text) => ({ id: newId(), text, on: true })),
+      };
 
     default:
       return null;

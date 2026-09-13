@@ -89,6 +89,7 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   mail: campus.mail,
   yes: campus.yes,
   classmates: campus.classmates,
+  call: campus.call,
   activities: campus.activities,
   links: campus.links,
 
@@ -102,6 +103,7 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   connect: yours.connect,
   export: yours.exportScreen,
   account: yours.account,
+  profile: yours.profile,
   privacy: yours.privacy,
 
   // The three the registry keeps outside its groups.

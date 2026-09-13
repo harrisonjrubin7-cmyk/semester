@@ -45,7 +45,7 @@ export function ShelfNav() {
   const { state, dispatch, school } = useStore();
   const here = shelfOf(state.screen);
   const caps = school.capabilities;
-  const onShelf = destinationsFor(here, caps);
+  const onShelf = destinationsFor(here, caps, state.role);
   const said = destination(state.screen);
   const rows = useRef<HTMLElement>(null);
 
@@ -82,7 +82,7 @@ export function ShelfNav() {
                 // A shelf is not a screen, so pressing one opens the first
                 // screen on it rather than doing nothing. Row two then shows
                 // where that landed, which is the whole point of the pair.
-                const first = destinationsFor(g, caps)[0];
+                const first = destinationsFor(g, caps, state.role)[0];
                 if (first) dispatch({ type: 'go', screen: first.screen });
               }}
             >

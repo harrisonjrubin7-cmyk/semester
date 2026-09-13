@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { classesToNudge, dueReminders } from './notify';
+import { classesToNudge, dueReminders, inQuiet } from './notify';
 import type { DatedItem } from './types';
 import type { NotifKey } from '../data/misc';
 
 const ALL: Record<NotifKey, boolean> = {
   class: true, today: true, two: true, free: true, sun: true, exam: true, term: true, attend: true,
+  bill: true,
 };
 const NONE: Record<NotifKey, boolean> = {
   class: false, today: false, two: false, free: false, sun: false, exam: false, term: false, attend: false,
+  bill: false,
 };
 
 const item = (over: Partial<DatedItem>): DatedItem =>
@@ -154,6 +156,118 @@ describe('registrar deadlines', () => {
       items: [], classes: [], registrar: sheet,
     });
     expect(out.filter((r) => r.rule === 'term')).toEqual([]);
+  });
+});
+
+describe('quiet hours', () => {
+  const at = (h: number, m = 0) => new Date(2026, 8, 3, h, m);
+  const night = { from: 22 * 60, to: 8 * 60 };
+  const src = { items: [item({ isToday: true })], classes: [], quiet: night };
+
+  // The whole difficulty, and the reason `inQuiet` is a function rather than
+  // `m >= from && m < to` at the call site: that comparison is false for every
+  // minute of the window everybody actually sets.
+  it('wraps midnight', () => {
+    expect(inQuiet(23 * 60, night)).toBe(true);
+    expect(inQuiet(2 * 60, night)).toBe(true);
+    expect(inQuiet(12 * 60, night)).toBe(false);
+  });
+
+  it('is half-open, so a held reminder fires on the tick that ends it', () => {
+    expect(inQuiet(22 * 60, night)).toBe(true);
+    expect(inQuiet(8 * 60, night)).toBe(false);
+    expect(inQuiet(8 * 60 - 1, night)).toBe(true);
+  });
+
+  it('handles a window inside one day as well', () => {
+    const nap = { from: 13 * 60, to: 15 * 60 };
+    expect(inQuiet(14 * 60, nap)).toBe(true);
+    expect(inQuiet(12 * 60, nap)).toBe(false);
+    expect(inQuiet(23 * 60, nap)).toBe(false);
+  });
+
+  // Two readings of the same two numbers, and the one that silences the app
+  // forever is not what anybody means by setting a start equal to an end.
+  it('reads a window that starts when it ends as off, not as all day', () => {
+    const none = { from: 9 * 60, to: 9 * 60 };
+    for (const m of [0, 9 * 60, 9 * 60 + 1, 23 * 60 + 59]) expect(inQuiet(m, none)).toBe(false);
+  });
+
+  it('is off where none is set', () => {
+    expect(inQuiet(3 * 60, null)).toBe(false);
+  });
+
+  it('silences every rule inside the window, with no exception', () => {
+    expect(dueReminders(at(23), ALL, src)).toEqual([]);
+    expect(
+      dueReminders(at(3), ALL, {
+        ...src,
+        classes: [{ label: 'ECON 1020', at: 3 * 60 + 10, where: 'Hall 201' }],
+        registrar: [
+          { id: 'drop-clean', label: 'Drop', iso: '2026-09-10', until: '', cost: '', kind: 'deadline' as const },
+        ],
+        bill: { due: '2026-09-10', cents: 1000 },
+      }),
+    ).toEqual([]);
+  });
+
+  it('says everything again the moment the window lifts', () => {
+    expect(dueReminders(at(8), ALL, src).length).toBeGreaterThan(0);
+  });
+
+  it('changes nothing for somebody who has not set one', () => {
+    expect(dueReminders(at(23), ALL, { items: src.items, classes: [] }).length).toBeGreaterThan(0);
+  });
+});
+
+describe('the tuition instalment', () => {
+  const bill = { due: '2026-09-10', cents: 368_644 };
+
+  it('warns a week out, with the amount and the consequence', () => {
+    const out = dueReminders(THU, ALL, { items: [], classes: [], bill });
+    const said = out.find((r) => r.rule === 'bill');
+    expect(said?.title).toBe('One week: tuition payment');
+    expect(said?.body).toBe(
+      "$3,686.44 due. An unpaid balance is what puts a hold on next term's registration.",
+    );
+  });
+
+  it('warns again the day before, and not on the days between', () => {
+    const days = [8, 9, 10].map(
+      (d) =>
+        dueReminders(new Date(2026, 8, d, 9, 0), ALL, { items: [], classes: [], bill }).filter(
+          (r) => r.rule === 'bill',
+        ).length,
+    );
+    expect(days).toEqual([0, 1, 0]);
+  });
+
+  it('holds off until the morning, like the registrar rule', () => {
+    const out = dueReminders(new Date(2026, 8, 3, 6, 30), ALL, { items: [], classes: [], bill });
+    expect(out.filter((r) => r.rule === 'bill')).toEqual([]);
+  });
+
+  it('says nothing where no payment date has been entered', () => {
+    expect(
+      dueReminders(THU, ALL, { items: [], classes: [] }).filter((r) => r.rule === 'bill'),
+    ).toEqual([]);
+    expect(
+      dueReminders(THU, ALL, { items: [], classes: [], bill: null }).filter(
+        (r) => r.rule === 'bill',
+      ),
+    ).toEqual([]);
+  });
+
+  // The point of keeping this separate from the registrar rule: academic
+  // deadlines without money notifications has to be a reachable setting.
+  it('is silent when the rule is off, with the registrar rule still on', () => {
+    const out = dueReminders(THU, { ...ALL, bill: false }, { items: [], classes: [], bill });
+    expect(out.filter((r) => r.rule === 'bill')).toEqual([]);
+  });
+
+  it('fires independently of the registrar rule being off', () => {
+    const out = dueReminders(THU, { ...ALL, term: false }, { items: [], classes: [], bill });
+    expect(out.filter((r) => r.rule === 'bill')).toHaveLength(1);
   });
 });
 

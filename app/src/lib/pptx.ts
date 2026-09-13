@@ -36,10 +36,36 @@ const EMU = 914_400;
 const W = 12_192_000;
 const H = 6_858_000;
 
-/** The app's own palette, so a deck and the screen it came from match. */
+/** The default of the four in `lib/decks.ts`: the app's own, so a deck and the screen it came from match. */
 const INK = '0A0B0E';
 const PAPER = 'E8EAEE';
 const DIM = '949BA7';
+
+/**
+ * The three colours a slide is made of.
+ *
+ * They were three constants, which made every deck this app has ever written
+ * the same deck: dark ground, light type. That is a good default and it was
+ * also the whole of the choice — a seminar handout printed from it came out as
+ * a page of ink, and a department that asks for a light deck could not have
+ * one.
+ *
+ * So the three are a parameter, carried on the {@link Deck}, and
+ * `lib/decks.ts` holds the named sets the editor offers. Everything that draws
+ * takes one: the ground, the type, the table rules, the master and the theme
+ * part, so a deck opened in PowerPoint is the colours it was on the screen
+ * rather than the colours this file was written with.
+ */
+export interface Palette {
+  /** The ground the slide is drawn on. */
+  ink: string;
+  /** What is read on it: titles, points, the equation. */
+  paper: string;
+  /** The second rank — the line under a title, a table's body, the rules. */
+  dim: string;
+}
+
+export const DEFAULT_PALETTE: Palette = { ink: INK, paper: PAPER, dim: DIM };
 
 export interface Slide {
   title: string;
@@ -86,6 +112,8 @@ export interface Deck {
   title: string;
   subtitle: string;
   slides: Slide[];
+  /** The colours. {@link DEFAULT_PALETTE} where a caller has no opinion. */
+  palette?: Palette;
 }
 
 /** XML text escaping. Every string that reaches the file goes through here. */
@@ -184,6 +212,7 @@ function table(
   id: number,
   rows: string[][],
   at: { x: number; y: number; w: number },
+  look: Palette,
 ): string {
   const columns = rows.reduce((n, row) => Math.max(n, row.length), 0);
   if (columns === 0) return '';
@@ -195,17 +224,17 @@ function table(
   const cell = (text: string, heading: boolean) =>
     '<a:tc><a:txBody><a:bodyPr/><a:lstStyle/>' +
     `<a:p><a:pPr><a:buNone/></a:pPr><a:r><a:rPr lang="en-US" sz="${size}" b="${heading ? 1 : 0}">` +
-    `<a:solidFill><a:srgbClr val="${heading ? PAPER : DIM}"/></a:solidFill>` +
+    `<a:solidFill><a:srgbClr val="${heading ? look.paper : look.dim}"/></a:solidFill>` +
     `<a:latin typeface="Arial"/></a:rPr><a:t>${xml(text)}</a:t></a:r></a:p></a:txBody>` +
     '<a:tcPr marL="68580" marR="68580" marT="45720" marB="45720">' +
     ['L', 'R', 'T', 'B']
       .map(
         (side) =>
-          `<a:ln${side} w="6350"><a:solidFill><a:srgbClr val="${DIM}"><a:alpha val="45000"/>` +
+          `<a:ln${side} w="6350"><a:solidFill><a:srgbClr val="${look.dim}"><a:alpha val="45000"/>` +
           `</a:srgbClr></a:solidFill></a:ln${side}>`,
       )
       .join('') +
-    `<a:solidFill><a:srgbClr val="${INK}"/></a:solidFill></a:tcPr></a:tc>`;
+    `<a:solidFill><a:srgbClr val="${look.ink}"/></a:solidFill></a:tcPr></a:tc>`;
 
   const body = rows
     .map(
@@ -228,13 +257,13 @@ function table(
   );
 }
 
-function slideXml(slide: Slide): string {
+function slideXml(slide: Slide, look: Palette): string {
   const shapes: string[] = [
     // The ground. Set per slide rather than on the master, because a master
     // background is the one thing Google Slides is happy to ignore.
     '<p:sp><p:nvSpPr><p:cNvPr id="2" name="Ground"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>' +
       `<p:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${W}" cy="${H}"/></a:xfrm>` +
-      `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="${INK}"/></a:solidFill>` +
+      `<a:prstGeom prst="rect"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val="${look.ink}"/></a:solidFill>` +
       '<a:ln><a:noFill/></a:ln></p:spPr><p:txBody><a:bodyPr/><a:lstStyle/><a:p/></p:txBody></p:sp>',
   ];
 
@@ -246,7 +275,7 @@ function slideXml(slide: Slide): string {
         w: 11.5,
         h: 2.4,
         anchor: 'ctr',
-        lines: [{ text: slide.title, size: 40, color: PAPER, bold: true }],
+        lines: [{ text: slide.title, size: 40, color: look.paper, bold: true }],
       }),
     );
     if (slide.note) {
@@ -256,7 +285,7 @@ function slideXml(slide: Slide): string {
           y: 4.7,
           w: 11.5,
           h: 0.9,
-          lines: [{ text: slide.note, size: 18, color: DIM }],
+          lines: [{ text: slide.note, size: 18, color: look.dim }],
         }),
       );
     }
@@ -269,7 +298,7 @@ function slideXml(slide: Slide): string {
       y: 0.7,
       w: 11.5,
       h: 1.3,
-      lines: [{ text: slide.title, size: 28, color: PAPER, bold: true }],
+      lines: [{ text: slide.title, size: 28, color: look.paper, bold: true }],
     }),
   );
 
@@ -281,7 +310,7 @@ function slideXml(slide: Slide): string {
         y: 1.95,
         w: 11.5,
         h: 0.5,
-        lines: [{ text: slide.note, size: 13, color: DIM }],
+        lines: [{ text: slide.note, size: 13, color: look.dim }],
       }),
     );
   }
@@ -294,18 +323,19 @@ function slideXml(slide: Slide): string {
         w: 11.5,
         h: 1,
         anchor: 'ctr',
-        lines: [{ text: slide.equation, size: 26, color: PAPER }],
+        lines: [{ text: slide.equation, size: 26, color: look.paper }],
       }),
     );
   }
 
   if (slide.table && slide.table.length) {
     shapes.push(
-      table(next++, slide.table, {
-        x: 0.9,
-        y: slide.equation ? 3.3 : slide.note ? 2.6 : 2.2,
-        w: 11.5,
-      }),
+      table(
+        next++,
+        slide.table,
+        { x: 0.9, y: slide.equation ? 3.3 : slide.note ? 2.6 : 2.2, w: 11.5 },
+        look,
+      ),
     );
   }
 
@@ -317,7 +347,7 @@ function slideXml(slide: Slide): string {
         y: slide.note ? 2.6 : 2.2,
         w: 11.5,
         h: slide.note ? 4.2 : 4.6,
-        lines: slide.bullets.map((text) => ({ text, size, color: PAPER, bullet: true })),
+        lines: slide.bullets.map((text) => ({ text, size, color: look.paper, bullet: true })),
       }),
     );
   }
@@ -337,12 +367,12 @@ function frame(shapes: string[]): string {
 
 const LAYOUT = `${HEAD}<p:sldLayout ${NS} type="blank" preserve="1"><p:cSld name="Blank"><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>`;
 
-const MASTER = `${HEAD}<p:sldMaster ${NS}><p:cSld><p:bg><p:bgPr><a:solidFill><a:srgbClr val="${INK}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMap bg1="dk1" tx1="lt1" bg2="dk2" tx2="lt2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst></p:sldMaster>`;
+const master = (look: Palette) => `${HEAD}<p:sldMaster ${NS}><p:cSld><p:bg><p:bgPr><a:solidFill><a:srgbClr val="${look.ink}"/></a:solidFill><a:effectLst/></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr></p:spTree></p:cSld><p:clrMap bg1="dk1" tx1="lt1" bg2="dk2" tx2="lt2" accent1="accent1" accent2="accent2" accent3="accent3" accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/><p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/></p:sldLayoutIdLst></p:sldMaster>`;
 
-function themeXml(): string {
+function themeXml(look: Palette): string {
   const scheme = [
-    ['dk1', INK],
-    ['lt1', PAPER],
+    ['dk1', look.ink],
+    ['lt1', look.paper],
     ['dk2', '15171C'],
     ['lt2', 'C8CED8'],
     ['accent1', 'C8CED8'],
@@ -459,6 +489,8 @@ function notesXml(text: string): string {
 export function parts(deck: Deck): Record<string, string> {
   const slides = deck.slides.length ? deck.slides : [{ title: deck.title, bullets: [], opening: true }];
   const out: Record<string, string> = {};
+  /** The deck's colours, or the app's own where it has not chosen any. */
+  const look = deck.palette ?? DEFAULT_PALETTE;
   /** Whether anything in this deck needs the notes half of the package at all. */
   const anyNotes = slides.some((slide) => slide.notes?.trim());
 
@@ -534,7 +566,7 @@ export function parts(deck: Deck): Record<string, string> {
     '</p:sldIdLst>' +
     `<p:sldSz cx="${W}" cy="${H}"/><p:notesSz cx="${H}" cy="${W}"/></p:presentation>`;
 
-  out['ppt/slideMasters/slideMaster1.xml'] = MASTER;
+  out['ppt/slideMasters/slideMaster1.xml'] = master(look);
   out['ppt/slideMasters/_rels/slideMaster1.xml.rels'] = rels([
     { id: 'rId1', type: 'slideLayout', target: '../slideLayouts/slideLayout1.xml' },
     { id: 'rId2', type: 'theme', target: '../theme/theme1.xml' },
@@ -545,7 +577,7 @@ export function parts(deck: Deck): Record<string, string> {
     { id: 'rId1', type: 'slideMaster', target: '../slideMasters/slideMaster1.xml' },
   ]);
 
-  out['ppt/theme/theme1.xml'] = themeXml();
+  out['ppt/theme/theme1.xml'] = themeXml(look);
 
   if (anyNotes) {
     out['ppt/notesMasters/notesMaster1.xml'] = NOTES_MASTER;
@@ -557,7 +589,7 @@ export function parts(deck: Deck): Record<string, string> {
   }
 
   slides.forEach((slide, i) => {
-    out[`ppt/slides/slide${i + 1}.xml`] = slideXml(slide);
+    out[`ppt/slides/slide${i + 1}.xml`] = slideXml(slide, look);
     const links = [
       { id: 'rId1', type: 'slideLayout', target: '../slideLayouts/slideLayout1.xml' },
     ];

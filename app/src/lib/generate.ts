@@ -25,6 +25,7 @@ import { ask, type Citation, type Doc } from './claude';
 import { courseId } from './edit';
 import type { Course, CourseModule, GradeRow, Item, RecurringBlock } from './types';
 import { check, flatten, tally, worthCiting, type Checked } from './cite';
+import { MOST, capsFor, countsSay, shapeSays, type Controls } from './controls';
 
 export interface GenerationInput {
   /**
@@ -48,6 +49,14 @@ export interface GenerationInput {
    * one course to every screen in the app. See `courseId` in `lib/edit.ts`.
    */
   taken?: string[];
+  /**
+   * How much, at what level, and how many cards — see `lib/controls.ts`.
+   *
+   * Optional and defaulted for the same reason as `readMaterial`: a caller
+   * that passes nothing gets exactly the prompt this pipeline had before
+   * controls existed, and the four shipped courses were built by that prompt.
+   */
+  controls?: Controls;
 }
 
 export interface GenerationResult {
@@ -126,10 +135,34 @@ export async function generateCourse(
 
   const citations: Citation[] = [];
 
+  const caps = capsFor(input.controls);
+  const says = shapeSays(input.controls);
+
+  // Each is added only when it says something the default prompt does not.
+  const rules = [
+    says,
+    caps.cards !== MOST.cards || caps.terms !== MOST.terms ? countsSay(caps) : '',
+  ].filter(Boolean);
+
   const reply = await ask({
     signal,
-    maxTokens: 8000,
-    system: SYSTEM,
+    // As in `readMaterial`: a reply cut off mid-JSON parses as nothing, so the
+    // budget rises with a ceiling the student raised rather than leaving them
+    // to see "could not read it" for a syllabus that read fine.
+    maxTokens: Math.min(16_000, 8_000 + Math.max(0, caps.cards - MOST.cards) * 160),
+    /*
+     * Empty on the defaults, so this is byte-for-byte the system prompt that
+     * built the four shipped courses for anybody who has not chosen anything.
+     *
+     * The counts are their own rule rather than a tail on the register one.
+     * They were written as `says ? … countsSay(caps) : SYSTEM`, and `says` is
+     * empty whenever depth and level are both untouched — so a student who
+     * asked for twelve cards and changed nothing else had the number computed,
+     * clamped, and then never sent. It read as the control doing nothing,
+     * which is the worst kind of broken setting: no error, no clue, and the
+     * app quietly behaving as though you had not asked.
+     */
+    system: rules.length > 0 ? `${SYSTEM}\n${rules.map((r, i) => `${8 + i}. ${r}`).join('\n')}` : SYSTEM,
     docs,
     cite: worthCiting(docs),
     onCitation: (c) => citations.push(c),
@@ -324,18 +357,38 @@ function validate(
     }));
   if (schedule.length === 0) notes.push('No meeting pattern was stated, so the day rail will be empty.');
 
+  /*
+   * The ceilings, enforced rather than only requested.
+   *
+   * The prompt asks for at most N cards and a model is free to ignore it, so
+   * "at most 12" was twelve in the instruction and eighteen in the guide — a
+   * control that does not control anything. Cut across the whole guide rather
+   * than per unit, because that is what the number means to the person who
+   * typed it: twelve cards for this course, not twelve for each of eleven
+   * units.
+   *
+   * Taken in order, so what survives is the front of each unit in the order
+   * the model wrote them — what it judged most worth knowing, and the units
+   * in the course's own sequence rather than a sample.
+   */
+  const caps = capsFor(input.controls);
+  let left = caps.cards;
+  const units = raw.guide.units
+    .map((u) => {
+      const kept = (u.cards ?? []).filter((c) => c?.q && c?.a).slice(0, Math.max(0, left));
+      left -= kept.length;
+      return { name: u.name ?? 'Unit', mastery: 0, cards: kept };
+    })
+    .filter((u) => u.cards.length > 0);
+
   const guide = {
     ...raw.guide,
     code: course.code,
     source,
     mastery: 0,
     audio: false,
-    units: raw.guide.units.map((u) => ({
-      name: u.name ?? 'Unit',
-      mastery: 0,
-      cards: (u.cards ?? []).filter((c) => c?.q && c?.a),
-    })).filter((u) => u.cards.length > 0),
-    terms: raw.guide.terms ?? [],
+    units,
+    terms: (raw.guide.terms ?? []).slice(0, caps.terms),
   };
 
   const cards = guide.units.reduce((n, u) => n + u.cards.length, 0);

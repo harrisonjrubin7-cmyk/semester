@@ -60,6 +60,22 @@ export const STRATEGY: Record<string, Strategy> = {
   documents: 'union',
   sheets: 'union',
   equations: 'union',
+  /*
+   * The graph's working surface, which is one drawing rather than a list of
+   * made things — so the copy that synced later wins, as a setting does.
+   *
+   * A union would be wrong here in a way the others are not: the lines of a
+   * plot are read together, a parameter above the curve that uses it, and
+   * interleaving two devices' lists gives a graph neither device drew. What is
+   * worth keeping off a plot is its equation, and `equations` above unions
+   * those properly.
+   */
+  plots: 'theirs',
+  // The calculator's half-finished working, and the values given to its
+  // letters. One box on one screen: the copy that synced later wins, for the
+  // same reason as the plot above it.
+  mathWorking: 'theirs',
+  mathGiven: 'theirs',
   decks: 'union',
   // A folder made on the phone and one made on the laptop are two folders.
   // The files inside them are in IndexedDB and do not sync at all, so the
@@ -70,6 +86,11 @@ export const STRATEGY: Record<string, Strategy> = {
   spent: 'union',
   windows: 'union',
   costs: 'union',
+  // The statement, the award letter and what has been paid. Three lists with
+  // ids, entered on whichever device was to hand when the letter arrived.
+  charges: 'union',
+  aid: 'union',
+  payments: 'union',
   balances: 'union',
   residences: 'union',
   feeds: 'union',
@@ -94,6 +115,10 @@ export const STRATEGY: Record<string, Strategy> = {
   // this course's scale off its syllabus on the laptop must not wipe the one
   // typed for another course on the phone.
   gradeSystems: 'ticks',
+  // The payment plan, keyed by term. `ticks` rather than `theirs` for the same
+  // reason as the cutoffs above: choosing this term's plan on the laptop must
+  // not drop the plan already entered for next term on the phone.
+  plans: 'ticks',
   linkUrls: 'ticks',
   feedHidden: 'ticks',
   notifs: 'ticks',
@@ -270,6 +295,14 @@ export const STRATEGY: Record<string, Strategy> = {
   // the laptop because that is where you first opened the calendar.
   keyOpen: 'theirs',
   accessLeadDays: 'theirs',
+  quiet: 'theirs',
+  // How much study material to make. A setting about the person, like the
+  // quiet window above — somebody who wants shorter decks wants them on both
+  // devices, which is what separates this from the `mine` category.
+  controls: 'theirs',
+  // Who this person is. About them rather than about the device, so a role
+  // chosen on the laptop is the role on the phone.
+  role: 'theirs',
   // Where you have been lately, newest first. Interleaving two devices'
   // histories would make it a list of nowhere in particular.
   recent: 'theirs',
@@ -478,6 +511,8 @@ const LABELS: Record<string, string> = {
   documents: 'Documents',
   sheets: 'Sheets',
   equations: 'Equations',
+  plots: 'What is on the graph',
+  mathWorking: 'What the calculator is working on',
   decks: 'Decks',
   folders: 'Drive folders',
   attendance: 'Attendance',

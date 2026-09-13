@@ -132,7 +132,7 @@ export function TabChooser() {
     // A screen this school has no equivalent of cannot be put in the bar
     // either — otherwise the one place that lists everything would be the one
     // place the gating leaked.
-    items: destinationsFor(group, school.capabilities).filter(
+    items: destinationsFor(group, school.capabilities, state.role).filter(
       (d) => d.screen !== PINNED && !chosen.includes(d.screen),
     ),
   })).filter((s) => s.items.length > 0);

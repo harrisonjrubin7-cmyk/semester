@@ -112,6 +112,24 @@ describe('what a cell comes to', () => {
     expect(evaluate(sheet({ A1: '=1/0' }), 'A1')).toBe('#DIV/0!');
   });
 
+  /**
+   * An error written into the formula itself.
+   *
+   * Nothing used to write one, so `#` was not a character this understood and
+   * the honest answer came back as a vaguer one. Deleting a row a formula
+   * points at now writes `#REF!` into that formula — see `lib/sheetedit.ts` —
+   * so the cell has to say the reference is gone, which is the thing to go
+   * and fix, rather than that something about the formula is wrong.
+   */
+  it('reads an error the formula carries as that error', () => {
+    expect(evaluate(sheet({ A1: '=#REF!' }), 'A1')).toBe('#REF!');
+    expect(evaluate(sheet({ A1: '=#REF!+1' }), 'A1')).toBe('#REF!');
+    expect(evaluate(sheet({ A1: '=SUM(#REF!)' }), 'A1')).toBe('#REF!');
+    // And an error that is not one of the seven is still a name it does not
+    // know, rather than something it swallows.
+    expect(evaluate(sheet({ A1: '=#NOPE!' }), 'A1')).toBe('#VALUE!');
+  });
+
   it('names an unknown function rather than guessing at it', () => {
     // VLOOKUP used to stand here, as the example of a function the engine did
     // not have. It has one now, so the example has to be a name no sheet will
@@ -747,5 +765,75 @@ describe('a chain of cells longer than the stack', () => {
   it('still says #CYCLE! for an actual cycle, which is a different fault', () => {
     expect(display({ A1: '=B1', B1: '=A1' }, 'A1')).toBe('#CYCLE!');
     expect(display({ A1: '=A1' }, 'A1')).toBe('#CYCLE!');
+  });
+});
+
+/**
+ * The functions a quantitative course actually asks for.
+ *
+ * The sheet could add a column up and could not fit a line to two of them,
+ * which is the one piece of statistics a social-science degree runs on. Each
+ * of these is checked against the answer Excel gives, because that is the
+ * sheet the marker has open — an argument order of our own would be a silent
+ * disagreement rather than an error.
+ */
+describe('the scientific functions', () => {
+  const at = (formula: string, cells: Cells = {}): string => display({ ...cells, Z1: formula }, 'Z1');
+
+  it('does trigonometry in radians, with the pair that converts', () => {
+    expect(at('=SIN(PI()/2)')).toBe('1');
+    expect(at('=COS(0)')).toBe('1');
+    expect(at('=DEGREES(PI())')).toBe('180');
+    expect(at('=ROUND(SIN(RADIANS(90)),9)')).toBe('1');
+    expect(at('=ROUND(ATAN2(1,1),6)')).toBe('0.785398');
+  });
+
+  it('takes a log to any base', () => {
+    expect(at('=LOG(8,2)')).toBe('3');
+    expect(at('=LOG(1000)')).toBe('3');
+    expect(at('=LOG(0,2)')).toBe('#VALUE!');
+  });
+
+  it('rounds away from zero and towards it, as a spreadsheet does', () => {
+    expect(at('=ROUNDUP(2.341,2)')).toBe('2.35');
+    expect(at('=ROUNDDOWN(2.349,2)')).toBe('2.34');
+    expect(at('=ROUNDUP(-2.5,0)')).toBe('-3');
+    expect(at('=CEILING(2.1)')).toBe('3');
+    expect(at('=TRUNC(-2.7)')).toBe('-2');
+    expect(at('=SIGN(-4)')).toBe('-1');
+  });
+
+  it('counts the ways a probability course counts them', () => {
+    expect(at('=FACT(5)')).toBe('120');
+    expect(at('=COMBIN(5,2)')).toBe('10');
+    expect(at('=PERMUT(5,2)')).toBe('20');
+    expect(at('=FACT(2.5)')).toBe('#VALUE!');
+  });
+
+  it('fits a line to two columns, and reports it three ways', () => {
+    // y = 2x + 1 exactly, so the slope, the intercept and r² are all exact.
+    const data: Cells = {
+      A1: '1', A2: '2', A3: '3', A4: '4',
+      B1: '3', B2: '5', B3: '7', B4: '9',
+    };
+    expect(at('=SLOPE(B1:B4,A1:A4)', data)).toBe('2');
+    expect(at('=INTERCEPT(B1:B4,A1:A4)', data)).toBe('1');
+    expect(at('=RSQ(B1:B4,A1:A4)', data)).toBe('1');
+    expect(at('=FORECAST(10,B1:B4,A1:A4)', data)).toBe('21');
+  });
+
+  it('refuses a fit over columns of different lengths rather than padding one', () => {
+    const data: Cells = { A1: '1', A2: '2', B1: '3', B2: '5', B3: '7' };
+    expect(at('=SLOPE(B1:B3,A1:A2)', data)).toBe('#DIV/0!');
+  });
+
+  it('reads a percentile the way the five-number summary means it', () => {
+    const data: Cells = { A1: '1', A2: '2', A3: '3', A4: '4' };
+    expect(at('=QUARTILE(A1:A4,2)', data)).toBe('2.5');
+    expect(at('=PERCENTILE(A1:A4,0.5)', data)).toBe('2.5');
+    expect(at('=PERCENTILE(A1:A4,0)', data)).toBe('1');
+    expect(at('=LARGE(A1:A4,1)', data)).toBe('4');
+    expect(at('=SMALL(A1:A4,2)', data)).toBe('2');
+    expect(at('=LARGE(A1:A4,9)', data)).toBe('#VALUE!');
   });
 });

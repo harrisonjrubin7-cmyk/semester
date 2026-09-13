@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { modeInfo, modesFor } from './modes';
-import { flatten, hitKey, openHit } from './openhit';
+import { flatten, hitKey, landingOf, openHit } from './openhit';
 import { arrivedByShare, forgetShare, SHARE_CACHE, SHARE_KEY, takeShared } from './shared';
 import { onOtherTab, tellOtherTabs } from './tabs';
 import { buildCatalog } from '../data/catalog';
@@ -163,6 +163,17 @@ describe('openHit', () => {
     ]);
   });
 
+  // Unlike a task, each of these has a screen of its own, so the result opens
+  // the thing rather than the list that holds it.
+  it('opens a made thing on its own screen', () => {
+    expect(sentBy(hit({ kind: 'document', id: 'd1' }))).toEqual([
+      { type: 'openDocument', id: 'd1' },
+    ]);
+    expect(sentBy(hit({ kind: 'sheet', id: 's1' }))).toEqual([{ type: 'openSheet', id: 's1' }]);
+    // `editDeck`, not `openDeck` — that name belongs to the study slideshow.
+    expect(sentBy(hit({ kind: 'deck', id: 'k1' }))).toEqual([{ type: 'editDeck', id: 'k1' }]);
+  });
+
   it('opens a study unit in the mode it was found in', () => {
     expect(
       sentBy(hit({ kind: 'unit', courseId: 'econ', unit: 3, mode: 'cards' })),
@@ -193,6 +204,48 @@ describe('openHit', () => {
     for (const kind of kinds) {
       expect(sentBy(hit({ kind, courseId: 'econ', unit: 0, mode: 'cards', screen: 'calendar' })), kind)
         .not.toHaveLength(0);
+    }
+  });
+});
+
+/*
+ * And the same table read the other way, which the strip of tabs depends on.
+ *
+ * A tab is labelled with the thing you opened and points at the screen that
+ * opened it, so a `landingOf` that disagrees with `openHit` is a tab that
+ * takes you somewhere other than where it says. The two switches sit next to
+ * each other in the file for that reason; this is the check that they agree.
+ */
+describe('landingOf', () => {
+  const hit = (over: Partial<Hit>): Hit =>
+    ({ kind: 'item', id: 'x', title: 't', sub: 's', tag: 'T', score: 1, ...over }) as Hit;
+
+  it('names the screen each action pushes', () => {
+    expect(landingOf(hit({ kind: 'item' }))).toBe('item');
+    expect(landingOf(hit({ kind: 'course' }))).toBe('course');
+    expect(landingOf(hit({ kind: 'unit', courseId: 'econ', unit: 1, mode: 'cards' }))).toBe('guide');
+    expect(landingOf(hit({ kind: 'note' }))).toBe('note');
+    // `openDocument` pushes `write` and `editDeck` pushes `deck`; neither
+    // screen is named after the thing it holds, which is exactly why this is
+    // worth pinning rather than deriving.
+    expect(landingOf(hit({ kind: 'document' }))).toBe('write');
+    expect(landingOf(hit({ kind: 'sheet' }))).toBe('sheet');
+    expect(landingOf(hit({ kind: 'deck' }))).toBe('deck');
+    expect(landingOf(hit({ kind: 'screen', screen: 'calendar' }))).toBe('calendar');
+  });
+
+  it('sends a task and an appointment to the tab that holds them', () => {
+    expect(landingOf(hit({ kind: 'task' }))).toBe('mine');
+    expect(landingOf(hit({ kind: 'appointment' }))).toBe('mine');
+  });
+
+  it('has a screen for every kind of hit there is', () => {
+    const kinds: Hit['kind'][] = ['item', 'course', 'unit', 'note', 'task', 'appointment', 'screen'];
+    for (const kind of kinds) {
+      expect(
+        landingOf(hit({ kind, courseId: 'econ', unit: 0, mode: 'cards', screen: 'calendar' })),
+        kind,
+      ).toBeTruthy();
     }
   });
 });

@@ -308,6 +308,36 @@ you have not seen, so it climbs back into tonight's plan.
 Nothing added is invented. Prose that does not split cleanly into a question
 and an answer stays prose.
 
+## Your profile
+
+The round button at the top right of every root screen, which is where every
+phone puts it. It opens **Profile**: the name the app calls you, what the app
+is holding of yours, and a row into each of the screens that own the rest —
+Account, Your data, Privacy, Take it with you, Settings.
+
+The name is the one thing the screen owns rather than points at. It was a field
+on Settings → Courses, because until there was a profile there was nowhere else
+to put it; there is one box for it now and Settings keeps a row saying where it
+went. Everything else on the profile is a link, deliberately: signing in is
+explained by the account screen, byte counts belong to the data screen, and a
+profile that re-implemented either would be a second door onto a room that
+already has one.
+
+The avatar is your initials, and only ever from the name you typed. It is never
+guessed at from an email address — that is the promise
+[`app/src/state/shape.ts`](app/src/state/shape.ts) makes where the field is
+declared, and an avatar is exactly where it would get broken quietly, because
+`H` from `harrison@…` looks like a reasonable guess and is somebody's name
+invented and shown back to them as fact. With no name there are no initials:
+the button draws a figure, and the screen asks.
+
+There is no photograph, no bio and no "member since". A photograph needs bytes
+in the same quota that already sheds data when it fills, and uploading one
+needs a server this app does not have. A bio is for other people to read and
+there are no other people here. The line at the foot says how long your
+semester has been on this device, which is the date you would actually want
+before wiping a phone.
+
 ## Connecting accounts
 
 **Me → Connect accounts.** Two routes, and the screen says which is which:
@@ -363,29 +393,111 @@ model in it or needs a key:
   `$$…$$` equations into blocks you can edit.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
-  `ROUND`, `SQRT`, `SUMPRODUCT` and the arithmetic around them. Out as a real
-  `.xlsx` **with the formulas still in it** — a CSV of a gradebook is the
-  answers with the working thrown away — or as a CSV, a Markdown table, or a
-  table dropped into a document. A pasted table is read whether it is a copy
-  out of Excel, a CSV or Markdown.
-- **Equations.** A small piece of LaTeX — `\frac{a}{b}`, `x^2`, `x_i`,
-  `\sqrt{x}`, `\sum_{i=1}^{n}`, `\bar{x}`, the greek and the relations —
-  written once and rendered three ways: MathML on screen, a real Word equation
-  object in the `.docx`, and one line of ordinary text for anywhere else. It
-  opens on a library of the fifteen formulas these courses actually use, each
-  with **every symbol named**, because that is the half a picture of an equation
-  loses and the half a marker looks for.
+  `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It
+  has the shape every spreadsheet has, because that shape is already in the
+  hands of anybody who has opened one:
+  - a **ribbon** — Home, Insert, Formulas, Data, View — with its controls in
+    named groups (Clipboard, Font, Alignment, Number, Cells, Editing), rather
+    than the flat row of fifteen buttons it was;
+  - a **name box and formula bar**, because the cell is 92 pixels wide and
+    `=SUMPRODUCT(B2:B9,C2:C9)` is not, and because typing `C14` into the name
+    box should go there;
+  - **frozen headings** and a **corner box** that selects the whole sheet, so a
+    column of numbers whose heading has scrolled away stops happening;
+  - a **status bar** carrying the selection's sum, average, count and range —
+    the commonest question anybody asks a spreadsheet, answered by looking
+    rather than by writing a `SUM` and deleting it again — plus the zoom;
+  - a **tab strip** along the bottom, so the gradebook and the budget beside it
+    are one tap apart.
+
+  What it can now do to a sheet, none of which it could before: **rows and
+  columns inserted and deleted in the middle**, with every formula rewritten to
+  follow — a range a deletion reached into *shrinks* rather than breaking, and
+  a reference to something genuinely gone says `#REF!` rather than quietly
+  pointing one row down; **fill down and fill right** (⌘D and ⌘R), where `$`
+  finally means what it means everywhere else — `=B2*$F$1` dragged down a
+  column keeps the rate in F1; **cut, copy and paste** of a block, carrying its
+  formulas in the app and tab-separated text to and from Excel; **sort** a
+  block by one of its columns, refused outright where a formula in it would be
+  broken by the move; **find and replace** over what was *typed*, not over the
+  answers; and **type colour, fill colour, borders, underline and type size**
+  beside the pictures — percentages, money, decimal places, bold, alignment —
+  none of which change the number underneath. **Undo and redo** cover all of
+  it, one step per thing you did.
+  It opens on **templates** — a to-do list, a monthly and a term budget, a
+  reading tracker, a lab's readings — each arriving with its totals already
+  written, beside the gradebook built from your own syllabus's weights. Out as
+  a real `.xlsx` **with the formulas and the formats still in it**, colours and
+  borders included — a CSV of a gradebook is the answers with the working
+  thrown away — or as a CSV, a Markdown table, or a table dropped into a
+  document. The six colours are chosen twice, once for this app's dark panel
+  and once for Excel's white page, so a cell marked red reads as red in both. A pasted table is read
+  whether it is a copy out of Excel, a CSV or Markdown.
+- **Equations, worked out and drawn.** A small piece of LaTeX — `\frac{a}{b}`,
+  `x^2`, `x_i`, `\sqrt{x}`, `\sum_{i=1}^{n}`, `\bar{x}`, the greek and the
+  relations — written once and rendered three ways: MathML on screen, a real
+  Word equation object in the `.docx`, and one line of ordinary text for
+  anywhere else. It opens on a library of the fifteen formulas these courses
+  actually use, each with **every symbol named**, because that is the half a
+  picture of an equation loses and the half a marker looks for.
+
+  The same notation is now also **worked out** and **graphed**, by one engine
+  with one test file: `app/src/lib/calc.ts`. *Work out* takes the formula you
+  wrote — or one from the library, or one you kept — lists its letters, and
+  fills in the answer as you name them, so a present value is `FV`, `r` and `n`
+  rather than a line of brackets retyped into a phone keypad, which is where
+  the bracket goes missing and the answer comes out plausible. *Graph* is the
+  expression list beside the picture that every graphing calculator has:
+  `y = 2x + 3`, `x = 4`, `x^2 + y^2 = 25` drawn as a relation by marching
+  squares, `f(x) = …` for definitions, `a = 2` with a **slider**, `(2, 3)` for
+  a point, and a list — `a = [1, 1.5, …, 4]` — drawn as a family of curves.
+  Drag to move, pinch to zoom, press to read a point off it, and one button to
+  fit the window to what is actually on it.
+
+  Then the part a calculator leaves you to hunt with a cursor, written out
+  instead: **where it crosses zero, where it turns, where two curves meet, the
+  slope under your finger, and the area between two values** — bisection,
+  thirds and Simpson's rule in `app/src/lib/plot.ts`, each with the test that
+  holds it. An asymptote breaks the line rather than being joined through, one
+  unit across is one unit down so a circle is round, and a reading is reported
+  to the precision it was measured at rather than to twelve figures of false
+  confidence.
 
 **Make a deck** gained a third door beside *From a unit* and *From a brief*:
 **From a sheet** puts a table you built onto slides as a real PowerPoint table
 you can still edit, split across several slides when it is long rather than
 shrunk until nobody at the back can read it.
 
-Nothing here computes what it renders and nothing here renders what it computes:
-the sheet does arithmetic and says so, the equation screen writes a formula and
-will not evaluate one. An error in a cell is said — `#DIV/0!`, `#CYCLE!`,
-`#NAME?` — rather than resolved to a zero that looks like an answer, because a
-spreadsheet is the format where an invented figure travels furthest.
+And editing a deck is **the slide**, not a form about it. The middle of the
+screen is the slide itself at sixteen by nine, in the deck's own colours, with
+the title and the points where the exported file puts them — because the two
+faults you cannot fix afterwards are a title that runs to three lines and
+eleven points on a slide that holds six, and a stack of labelled boxes hides
+both until the export. A rail of real thumbnails down the side, a layout you
+can change on a slide that already exists (and which says what the change would
+throw away before it does it), four **themes** — two for a projector, two for
+printing — that go into the `.pptx` so the file opens in the colours you chose,
+and speaker notes under the canvas where every slide editor puts them. The
+presenter view draws from the same code, so what is on the wall is what is in
+the file.
+
+Two arithmetic engines, and they stay two. `app/src/lib/sheet.ts` evaluates
+`=SUM(B2:B9)` against a grid of cells — A1 references, ranges, lookups, dates,
+and now the scientific functions and a fitted line: `SIN`, `LOG` to any base,
+`FACT`, `COMBIN`, `QUARTILE`, and `SLOPE`, `INTERCEPT`, `RSQ` and `FORECAST`
+over two columns. `app/src/lib/calc.ts` works out a formula with *letters* in
+it. Neither of those is the other wearing a hat, and what was refused before —
+an equation renderer that quietly computed — is still refused: the engine that
+does the arithmetic here is one engine with a test file that makes the sentence
+true. Neither will rearrange: `x + 3 = 7` is drawn and tested, never solved for
+x, because symbolic algebra is a different program and one that half-solved
+would be worse than none.
+
+An error is said rather than resolved to something that looks like an answer —
+`#DIV/0!`, `#CYCLE!`, `#NAME?` in a cell; a blank and the name of the letter
+you have not given a value to, on the calculator — because a spreadsheet is the
+format where an invented figure travels furthest and a graph is the one where
+it is hardest to notice.
 
 Three writers, no libraries: `app/src/lib/docx.ts`, `app/src/lib/xlsx.ts` and
 the `app/src/lib/pptx.ts` that was already here each write OOXML directly, the
@@ -393,6 +505,48 @@ way the app already *reads* a `.docx` syllabus. And the assistant can propose
 any of them — `make_document`, `make_sheet` and `save_equation` in
 `app/src/lib/tools.ts` — as a confirmation you accept, with an undo decided
 before the write happens like every other tool in that file.
+
+### They open the way every editor opens
+
+Three screens that make a file, and each had invented its own furniture: the
+title was a form field on two of them and absent on the third, the exports were
+three stacked buttons under "Take it away" on one and four under the same words
+on the next, and deleting the thing you were editing was a full-width button at
+the very bottom of the page. None of them had the one thing Word, Pages, Excel,
+Docs, Sheets and Keynote all have — a bar across the top reading **File · Edit ·
+View · Insert · Format · Tools · Help**.
+
+They all have it now, and it is the same bar, drawn once from a list. A menu
+item with nothing behind it is greyed rather than left live, because a control
+that does nothing when pressed cannot be told from a broken one. The menus read
+in the order those applications read them, which is the order in the muscle
+memory of anybody who has used any of them — so the reading is free, and a test
+fails rather than a screen inventing a seventh menu called Actions. On a phone
+the whole bar folds into one button whose panel lists every menu under its own
+name; nothing is hidden, because a menu you have to discover by dragging a row
+sideways is a menu that does not exist.
+
+The bar does not replace a toolbar and is not replaced by one. Sheet keeps its
+pictures — the formats, bold, the alignments, undo — one press away, and the
+deck keeps its six slide actions, for the same reason Excel and PowerPoint keep
+both: a button is for the hand that knows where it is, and a menu is for
+everybody else.
+
+**Write** and **Make a deck** now open on a shelf rather than a list: a row of
+things to start from — a blank, then the seven document shapes that used to be
+behind a button nobody pressed — and then everything you already have, under
+**Today**, **Previous 7 days**, **Previous 30 days** and **Earlier**, as
+thumbnails or as rows, sorted three ways and narrowable to one course. The
+thumbnails are the real thing small: a document's own first lines, a deck's
+first slide as a slide. Sheet has a shelf of its own, built alongside this one
+and richer in one way this is not — it knows when a sheet was last *opened* as
+well as last edited. Folding the two into one is worth doing and is not done
+here.
+
+What is deliberately absent is keystrokes printed beside the commands.
+`app/src/lib/keys.ts` is right that a shortcut carrying Meta or Control belongs
+to the browser, and a label for a binding the app has not made is worse than no
+label at all.
 
 ## Claude, in the app
 
@@ -429,6 +583,43 @@ professor. Anything worth keeping saves as a note.
 What it will not do is write the work you submit. Ask it to and it says so in
 one line and offers the version that helps you write it. Vanderbilt's Honor Code
 is student-run and the work has to be yours.
+
+## Work that knows which deadline it is for
+
+Everything the app can make — a document, a sheet, a deck, an equation, a note,
+a file dropped into the drive — could say which **course** it belonged to, and a
+course is four months and a dozen deadlines wide. So the response paper due
+Friday, the one due in November and week two's reading notes were all filed
+identically as "ECON 1010", and the last step of every evening's work was the
+same hunt: open Make, open Write, read six documents called *Draft* and guess.
+Nothing was lost. It was just never in the same place as the thing it was for.
+
+Each of those six now carries the deadline it is for as well as the course, and
+the link is shown from both ends:
+
+- **On the deadline.** Under the plan that breaks it into evenings, *Work for
+  this* lists everything filed against it, and **＋ Document · Sheet · Deck ·
+  Note · Upload** make something **already** filed against it — a picker you
+  have to remember to use is a picker most work never reaches. Anything that
+  already exists attaches from the same panel. **Unfile** takes the link off and
+  leaves the work alone; nothing here deletes a draft.
+- **On everything that makes something.** *What it is for* sits under the course
+  chips in the document editor, the sheet, the deck editor, the equation screen,
+  the note editor and the drive — the course's own deadlines, what is still
+  ahead first and what has gone by after it, because the second commonest case
+  is the thing that was due yesterday and is being finished now.
+- **Back on the lists.** A deadline with work against it wears a paperclip and a
+  count wherever it is drawn — Today, the calendar, the course page. A file in
+  the drive says *for Quiz #1* beside its size and its course, and search finds
+  a document by the deadline's name as well as by its own, because "the Rawls
+  essay" is how people refer to a document called *Draft 3*.
+
+A deadline can be edited out of a course, so a link can lose its other end. One
+rule, in one place: a dangling link reads as **no link** rather than as a broken
+one, and the id is left on the work rather than scrubbed, so re-importing the
+course brings the filing back. `app/src/lib/forwork.ts` is the only module that
+reads it; `app/src/lib/clips.ts` is what makes asking "how much is filed against
+this" affordable on forty rows at once.
 
 ## Phone, iPad, laptop, or its own window
 

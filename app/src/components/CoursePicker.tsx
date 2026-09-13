@@ -40,7 +40,21 @@ export function CoursePicker({
                 key={o.label}
                 type="button"
                 className="btn"
-                onClick={() => onChange(o.id as CourseId | null)}
+                /*
+                 * Silent when the answer has not changed.
+                 *
+                 * Pressing the chip that is already lit used to fire `onChange`
+                 * with the value it already had. That was harmless while a
+                 * course was the only thing this decided; it stopped being
+                 * harmless when screens started clearing the deadline along
+                 * with the course, because then tapping the course a document
+                 * is *already* filed under threw away what it was for. A
+                 * control that undoes something when pressed with no intent to
+                 * change anything is a control people learn not to touch.
+                 */
+                onClick={() => {
+                  if (o.id !== value) onChange(o.id as CourseId | null);
+                }}
                 aria-pressed={on}
                 style={{
                   flex: 'none',

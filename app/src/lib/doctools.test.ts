@@ -3,6 +3,7 @@ import {
   characters,
   emphasise,
   findAll,
+  glance,
   marked,
   outline,
   readingMinutes,
@@ -233,5 +234,38 @@ describe('emphasis inside an emphasised run', () => {
   it('still wraps and unwraps the ordinary cases', () => {
     expect(emphasise('the real cost', 4, 8, 'bold')).toBe('the **real** cost');
     expect(emphasise('the **real** cost', 6, 10, 'bold')).toBe('the real cost');
+  });
+});
+
+describe('the first few lines, for a thumbnail', () => {
+  it('reads headings and prose in the order they are written', () => {
+    expect(
+      glance(doc([
+          { kind: 'heading', level: 1, text: 'A memo' },
+          { kind: 'text', text: 'The recommendation first.' },
+        ])),
+    ).toEqual(['A memo', 'The recommendation first.']);
+  });
+
+  it('skips a block with nothing in it rather than drawing an empty line', () => {
+    expect(
+      glance(doc([
+          { kind: 'text', text: '   ' },
+          { kind: 'break' },
+          { kind: 'text', text: 'Here.' },
+        ])),
+    ).toEqual(['Here.']);
+  });
+
+  it('says what a table is, because its rows would be unreadable at that size', () => {
+    expect(
+      glance(doc([{ kind: 'table', rows: [['a', 'b'], ['1', '2']], header: true, caption: '' }])),
+    ).toEqual(['2 × 2 table']);
+  });
+
+  it('stops at the number of lines asked for, part-way through a list', () => {
+    expect(
+      glance(doc([{ kind: 'bullets', items: ['one', 'two', 'three'], numbered: false }]), 2),
+    ).toEqual(['• one', '• two']);
   });
 });

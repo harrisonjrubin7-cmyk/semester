@@ -5,11 +5,14 @@ import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
+import { DeadlinePicker } from '../components/DeadlinePicker';
+import { forLine } from '../lib/forwork';
 import { ActionButton, EmptyState, FilePick, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { ChevronRight, Plus } from '../components/Icons';
 import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { Drive } from './mine/Drive';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
+import { codeOf } from '../lib/call';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
 import { CheckIt } from '../components/CheckIt';
@@ -541,6 +544,25 @@ function Appointments() {
                 {[kindOf(a.kind).label, a.where].filter(Boolean).join(' · ')}
               </div>
             </div>
+            {/*
+              A call in the diary opens into the call.
+
+              This is the whole reason a scheduled call is an appointment
+              rather than a fifth kind of dated thing — see `whereFor` in
+              `lib/call.ts`. The code is on the row already, because `where`
+              is where it was written; this turns it into the way in.
+            */}
+            {codeOf(a) ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => dispatch({ type: 'openCall', code: codeOf(a) })}
+                aria-label={`Join ${a.title}`}
+                style={{ flex: 'none', height: 32, paddingInline: 'var(--sp-6)', fontSize: 'var(--type-xs)', width: 'auto' }}
+              >
+                Join
+              </button>
+            ) : null}
             <button
               type="button"
               className="btn btn-ghost"
@@ -559,7 +581,7 @@ function Appointments() {
 }
 
 function Notes({ rows }: { rows?: Note[] }) {
-  const { state, dispatch, courseCode } = useStore();
+  const { state, dispatch, courseCode, allItems } = useStore();
   const rowThirteen = useRowStyle(13);
   const all = [...state.notes].sort((a, b) => b.updated - a.updated);
   /*
@@ -615,6 +637,9 @@ function Notes({ rows }: { rows?: Note[] }) {
                   }}
                 >
                   {n.courseId ? `${courseCode(n.courseId)} · ` : ''}
+                  {/* What it is for, where it is for something — the same
+                      phrase the drive and the three shelves use. */}
+                  {forLine(allItems, n.itemId) && `${forLine(allItems, n.itemId)} · `}
                   {n.fileIds.length > 0 ? `${n.fileIds.length} file · ` : ''}
                   {n.body.slice(0, 60) || 'Empty'}
                 </span>
@@ -688,6 +713,7 @@ export function NoteEditor() {
   const { state, dispatch } = useStore();
   const note = state.notes.find((n) => n.id === state.noteId);
   const [files, setFiles] = useState<FileMeta[]>([]);
+  const [allDeadlines, setAllDeadlines] = useState(false);
 
   useEffect(() => {
     void listFiles().then(setFiles);
@@ -725,7 +751,10 @@ export function NoteEditor() {
   const attach = async (list: File[]) => {
     if (list.length === 0) return;
     for (const f of list) {
-      const meta = await addFile(f, note.courseId);
+      /* The note's deadline as well as its course. A reading attached to
+         notes for Friday's paper is a file for Friday's paper, and asking
+         somebody to say so twice is how one of the two ends up wrong. */
+      const meta = await addFile(f, note.courseId, null, '', note.itemId ?? null);
       dispatch({ type: 'attachFile', noteId: note.id, fileId: meta.id });
     }
     void listFiles().then(setFiles);
@@ -742,9 +771,21 @@ export function NoteEditor() {
         aria-label="Note title"
       />
 
+      {/* The deadline goes with the course — see the note in `screens/Write.tsx`. */}
       <CoursePicker
         value={note.courseId}
-        onChange={(courseId) => dispatch({ type: 'updateNote', id: note.id, patch: { courseId } })}
+        onChange={(courseId) =>
+          dispatch({ type: 'updateNote', id: note.id, patch: { courseId, itemId: null } })
+        }
+      />
+      {/* Reading notes for a seminar are notes for the response paper that
+          seminar is assessed by, and this is what puts them there. */}
+      <DeadlinePicker
+        courseId={note.courseId}
+        value={note.itemId}
+        onChange={(itemId) => dispatch({ type: 'updateNote', id: note.id, patch: { itemId } })}
+        showAll={allDeadlines}
+        onShowAll={() => setAllDeadlines(true)}
       />
 
       <textarea
@@ -777,6 +818,7 @@ export function NoteEditor() {
       <div style={{ marginTop: 'var(--sp-5)' }}>
         <RecordButton
           courseId={note.courseId ?? null}
+          itemId={note.itemId ?? null}
           label={note.title || 'note'}
           onSaved={(meta, _seconds, transcript) => {
             dispatch({ type: 'attachFile', noteId: note.id, fileId: meta.id });

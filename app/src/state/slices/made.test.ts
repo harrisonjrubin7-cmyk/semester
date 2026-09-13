@@ -136,3 +136,109 @@ describe('equations', () => {
     expect(after.equations.map((e) => e.name)).toEqual(['First']);
   });
 });
+
+/**
+ * Filing what you make against the deadline it is for.
+ *
+ * The link itself is `lib/forwork.ts`'s to read; this is the half the reducer
+ * owns — that a New button pressed on a deadline mints something already filed
+ * against it, rather than something the student then has to remember to file.
+ * A picker nobody remembers is a picker most work never reaches, and the
+ * filing is then wrong in the direction nobody sees.
+ */
+describe('filing against a deadline', () => {
+  it('mints a document already filed against one', () => {
+    const after = run(start(), { type: 'newDocument', courseId: 'econ', itemId: 'econ-m1' });
+    expect(after.documents[0].itemId).toBe('econ-m1');
+    expect(after.documents[0].courseId).toBe('econ');
+  });
+
+  it('does the same for a sheet, a deck and a note', () => {
+    const after = run(
+      start(),
+      { type: 'newSheet', courseId: 'econ', itemId: 'econ-m1' },
+      { type: 'newDeck', courseId: 'econ', itemId: 'econ-m1' },
+      { type: 'newNote', courseId: 'econ', itemId: 'econ-m1' },
+    );
+    expect(after.sheets[0].itemId).toBe('econ-m1');
+    expect(after.decks[0].itemId).toBe('econ-m1');
+    expect(after.notes[0].itemId).toBe('econ-m1');
+  });
+
+  it('leaves a caller that knows only a course filed against nothing', () => {
+    // Every button that existed before this did not pass an `itemId`, and null
+    // rather than undefined is what `lib/forwork.ts` reads as "filed nowhere".
+    const after = run(start(), { type: 'newDocument', courseId: null });
+    expect(after.documents[0].itemId).toBeNull();
+  });
+
+  it('files and unfiles a kept equation', () => {
+    const kept = run(start(), {
+      type: 'saveEquation',
+      equation: { name: 'Elasticity', latex: 'x', note: '', courseId: 'econ', itemId: null },
+    });
+    const id = kept.equations[0].id;
+    const filed = run(kept, { type: 'fileEquation', id, itemId: 'econ-m1' });
+    expect(filed.equations[0].itemId).toBe('econ-m1');
+    // Unfiling takes the link off and leaves the equation alone — the one
+    // guarantee the Unfile button in `components/ForThis.tsx` is making.
+    const loose = run(filed, { type: 'fileEquation', id, itemId: null });
+    expect(loose.equations[0].itemId).toBeNull();
+    expect(loose.equations[0].name).toBe('Elasticity');
+    expect(loose.equations).toHaveLength(1);
+  });
+
+  it('unfiles a document without touching what is in it', () => {
+    const made = run(start(), { type: 'newDocument', courseId: 'econ', itemId: 'econ-m1' });
+    const id = made.documents[0].id;
+    const after = run(made, { type: 'updateDocument', id, patch: { itemId: null } });
+    expect(after.documents).toHaveLength(1);
+    expect(after.documents[0].itemId).toBeNull();
+    expect(after.documents[0].courseId).toBe('econ');
+  });
+});
+
+/**
+ * Changing the course takes the deadline with it.
+ *
+ * A deadline belongs to one course, so a document moved from ECON to PSCI is
+ * not merely stale — its `itemId` names something the new course does not
+ * contain. Left behind, the document read as Personal on its own screen while
+ * still turning up under last week's essay, and the picker drew no control to
+ * clear it because the new course had no deadlines to draw.
+ *
+ * The screens send both fields in one patch, which is what these hold: the
+ * reducer must not drop half of it. See the note in `screens/Write.tsx`.
+ */
+describe('moving work to another course', () => {
+  it('clears the deadline in the same patch', () => {
+    const made = run(start(), { type: 'newDocument', courseId: 'econ', itemId: 'econ-m1' });
+    const id = made.documents[0].id;
+    const after = run(made, {
+      type: 'updateDocument',
+      id,
+      patch: { courseId: 'psci', itemId: null },
+    });
+    expect(after.documents[0].courseId).toBe('psci');
+    expect(after.documents[0].itemId).toBeNull();
+  });
+
+  it('does the same for a sheet, a deck and a note', () => {
+    const made = run(
+      start(),
+      { type: 'newSheet', courseId: 'econ', itemId: 'econ-m1' },
+      { type: 'newDeck', courseId: 'econ', itemId: 'econ-m1' },
+      { type: 'newNote', courseId: 'econ', itemId: 'econ-m1' },
+    );
+    const after = run(
+      made,
+      { type: 'updateSheet', id: made.sheets[0].id, patch: { courseId: null, itemId: null } },
+      { type: 'updateDeck', id: made.decks[0].id, patch: { courseId: null, itemId: null } },
+      { type: 'updateNote', id: made.notes[0].id, patch: { courseId: null, itemId: null } },
+    );
+    expect(after.sheets[0].itemId).toBeNull();
+    expect(after.decks[0].itemId).toBeNull();
+    expect(after.notes[0].itemId).toBeNull();
+    expect(after.notes[0].courseId).toBeNull();
+  });
+});

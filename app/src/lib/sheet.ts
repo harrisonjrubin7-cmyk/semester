@@ -45,13 +45,293 @@ export interface Sheet {
   title: string;
   /** A course to file it under, or nothing. */
   courseId: CourseId | null;
+  /**
+   * The deadline it is for, where it is for one. See `Doc.itemId` in
+   * `lib/document.ts` for why every made thing carries this and why it is
+   * optional. Read through `lib/forwork.ts`.
+   */
+  itemId?: string | null;
   /** What has actually been typed, by A1 reference. */
   cells: Record<string, string>;
+  /**
+   * The picture over each cell, by A1 reference. Absent until somebody
+   * presses a button on the toolbar — see {@link CellStyle}.
+   */
+  styles?: Record<string, CellStyle>;
   /** How far the grid has been dragged out. Never smaller than what is in it. */
   rows: number;
   cols: number;
   created: number;
   updated: number;
+  /**
+   * When it was last opened, which is not when it was last changed.
+   *
+   * What the shelf sorts by. Absent on every sheet made before this existed,
+   * and read as "not since" rather than as the epoch — see `screens/Sheet.tsx`,
+   * where a sheet nobody has opened falls back to when it was last written to.
+   */
+  opened?: number;
+}
+
+/**
+ * How a cell is *shown*, as against what it holds.
+ *
+ * A picture over the number, and the weight of the type. Kept apart from
+ * `cells` on purpose: the cell holds `0.8` and the style says `80%`, so
+ * changing the picture never rewrites what somebody typed and never changes
+ * what a formula reading that cell adds up. Every other arrangement — storing
+ * `"80%"` and parsing it back, or rounding the value when the decimals button
+ * is pressed — loses the number to its own display, which is the one thing a
+ * spreadsheet must not do.
+ *
+ * Absent is plain, and an absent `styles` is a sheet with no formatting in it:
+ * nothing is written until somebody presses a button, so the sheets made
+ * before this existed carry no extra bytes.
+ */
+export interface CellStyle {
+  /** The picture. `plain` and absent are the same thing: show what is there. */
+  num?: NumFormat;
+  /** Places after the point, for the three numeric pictures. 0–6. */
+  decimals?: number;
+  bold?: boolean;
+  italic?: boolean;
+  strike?: boolean;
+  under?: boolean;
+  /**
+   * Where the text sits in the cell.
+   *
+   * Absent is not `left`: it is the spreadsheet rule — numbers right, text
+   * left — which is what makes a column of figures line up at the decimal
+   * point without anybody being asked. Setting it overrides that.
+   */
+  align?: Align;
+  /** The colour of the type. A name, not a hex — see {@link Ink}. */
+  ink?: Ink;
+  /** The colour behind it, which is the one people actually reach for. */
+  wash?: Ink;
+  /**
+   * Which sides of the cell are ruled, as any of `t`, `b`, `l`, `r`.
+   *
+   * A set of letters rather than an enum because a cell really can want two
+   * of them at once: the bottom-left corner of an outlined block is ruled
+   * `b` and `l` and nothing else, and an enum would have needed a member per
+   * combination — sixteen names for four facts.
+   */
+  edge?: string;
+  /**
+   * Type size in points, on Excel's own scale, where 11 is the default.
+   *
+   * Points rather than a multiplier so the number means the same thing here
+   * and in the exported file, and so the dropdown can say `14` and be telling
+   * the truth. On the screen it is read as a ratio against the grid's own
+   * size, which keeps it answering to the Text size setting — an absolute
+   * 14px in a cell would be a piece of the app that setting cannot reach.
+   */
+  size?: number;
+}
+
+export type NumFormat = 'plain' | 'number' | 'percent' | 'money' | 'date';
+export type Align = 'left' | 'center' | 'right';
+
+/**
+ * A colour, named rather than picked.
+ *
+ * Excel gives you a colour wheel and a student gives it a mid-grey on a white
+ * ground, which is fine there and unreadable here: this app is dark. So the
+ * sheet stores *which* colour somebody meant and each surface decides what
+ * that looks like on the ground it has — {@link inkOn} for the screen's dark
+ * panel, {@link inkPaper} for the file's white page. The same cell reads as
+ * red in both, at a contrast somebody chose in both, and neither is a hex
+ * typed once and hoped over.
+ *
+ * Six, because six is the number of colours a gradebook ever needs and a
+ * palette people can hold in their head is a palette they use consistently.
+ */
+export type Ink = 'red' | 'amber' | 'green' | 'blue' | 'violet' | 'grey';
+
+export const INKS = ['red', 'amber', 'green', 'blue', 'violet', 'grey'] as const;
+
+/** What each ink is called, for the button and for anybody listening to one. */
+export const INK_NAMES: Record<Ink, string> = {
+  red: 'Red',
+  amber: 'Amber',
+  green: 'Green',
+  blue: 'Blue',
+  violet: 'Violet',
+  grey: 'Grey',
+};
+
+/** Type of that colour on the app's dark panel: light enough to read. */
+export function inkOn(ink: Ink): string {
+  return {
+    red: '#ff8c7a',
+    amber: '#f0c274',
+    green: '#86d6a2',
+    blue: '#8ec2f5',
+    violet: '#c3a9f0',
+    grey: '#a6acb8',
+  }[ink];
+}
+
+/** The same colour as a wash behind the type, at an alpha the type survives. */
+export function washOn(ink: Ink): string {
+  return {
+    red: 'rgba(255, 140, 122, 0.18)',
+    amber: 'rgba(240, 194, 116, 0.18)',
+    green: 'rgba(134, 214, 162, 0.18)',
+    blue: 'rgba(142, 194, 245, 0.18)',
+    violet: 'rgba(195, 169, 240, 0.18)',
+    grey: 'rgba(166, 172, 184, 0.18)',
+  }[ink];
+}
+
+/**
+ * The same ink on Excel's white page, as the `AARRGGBB` the format wants.
+ *
+ * Darker than the screen's, because these are read on white. A file that
+ * carried the screen's pale green would arrive as a highlighter on paper.
+ */
+export function inkPaper(ink: Ink): string {
+  return {
+    red: 'FFB03A28',
+    amber: 'FF9A6B12',
+    green: 'FF1E7A47',
+    blue: 'FF1F5FA8',
+    violet: 'FF6A45B0',
+    grey: 'FF5B6270',
+  }[ink];
+}
+
+/** And the wash, pale enough on white that black type still reads over it. */
+export function washPaper(ink: Ink): string {
+  return {
+    red: 'FFFBE4E0',
+    amber: 'FFFCF0D8',
+    green: 'FFE1F4E8',
+    blue: 'FFE2EDFB',
+    violet: 'FFEDE4FA',
+    grey: 'FFECEEF2',
+  }[ink];
+}
+
+/**
+ * The type sizes the dropdown offers, in points.
+ *
+ * Excel's own short list. 11 is the default and is what an absent `size`
+ * means, so choosing it takes the property back off the cell rather than
+ * writing it down — see {@link restyle}.
+ */
+export const SIZES = [8, 9, 10, 11, 12, 14, 18, 24] as const;
+
+/** The default, and the number the screen's own grid type stands for. */
+export const BASE_SIZE = 11;
+
+/** As many places as the buttons will add. Past this the number is noise. */
+export const MAX_DECIMALS = 6;
+
+/** The default places each picture opens at, before anybody presses `.0` or `.00`. */
+const PLACES: Record<NumFormat, number> = {
+  plain: 0,
+  number: 2,
+  percent: 0,
+  money: 2,
+  date: 0,
+};
+
+/**
+ * A style as a format string `formatted` can read.
+ *
+ * One conversion, in one place, so the picture on the screen and the picture
+ * in the exported workbook are the same decision made once. `''` means plain,
+ * which is the whole of what "no formatting" has to mean anywhere.
+ */
+export function picture(style: CellStyle | undefined): string {
+  if (!style?.num || style.num === 'plain') return '';
+  if (style.num === 'date') return 'yyyy-mm-dd';
+  const places = Math.min(MAX_DECIMALS, Math.max(0, style.decimals ?? PLACES[style.num]));
+  const tail = places > 0 ? `.${'0'.repeat(places)}` : '';
+  if (style.num === 'percent') return `0${tail}%`;
+  if (style.num === 'money') return `$#,##0${tail}`;
+  return `#,##0${tail}`;
+}
+
+/** The places a picture is showing, so the two decimal buttons know where they are. */
+export function places(style: CellStyle | undefined): number {
+  if (!style?.num || style.num === 'plain' || style.num === 'date') return 0;
+  return Math.min(MAX_DECIMALS, Math.max(0, style.decimals ?? PLACES[style.num]));
+}
+
+/**
+ * What a cell shows, once its style has had a say.
+ *
+ * A plain cell falls straight through to {@link display}, which is what keeps
+ * `80%`, `$12.50` and `007` reading back exactly as typed. A cell with a
+ * picture on it shows the *value* under that picture — which is the point of
+ * having one — and anything the picture cannot be applied to (a word, an
+ * error, an empty cell) is shown the plain way rather than forced.
+ */
+export function styledDisplay(
+  cells: Cells,
+  address: string,
+  style: CellStyle | undefined,
+  ctx: Ctx = clock(),
+): string {
+  const format = picture(style);
+  if (!format) return display(cells, address, ctx);
+  const value = evaluate(cells, address, new Set(), ctx);
+  if (value === '' || isError(value) || typeof value === 'boolean') {
+    return display(cells, address, ctx);
+  }
+  const n = typeof value === 'number' ? value : asNumber(String(value));
+  if (n === null) return display(cells, address, ctx);
+  return show(formatted(n, format));
+}
+
+/** A cell's style, found through the same spelling rules a reference uses. */
+export function styleOf(sheet: Sheet, address: string): CellStyle | undefined {
+  return sheet.styles?.[key(address)];
+}
+
+/**
+ * The same change made to every cell in a selection, as a new style table.
+ *
+ * Pure, and returns the whole table rather than a patch, because that is what
+ * the store stores. A change that leaves a cell with nothing on it takes the
+ * entry out again — an empty `{}` per cell would be a sheet that grows a
+ * megabyte of nothing from a selection somebody pressed Bold on and off.
+ */
+export function restyle(
+  sheet: Sheet,
+  addresses: string[],
+  change: (was: CellStyle) => CellStyle,
+): Record<string, CellStyle> {
+  const out = { ...(sheet.styles ?? {}) };
+  for (const address of addresses) {
+    const at = key(address);
+    const next = change(out[at] ?? {});
+    /*
+     * What counts as "nothing on this cell", in one list.
+     *
+     * `false`, absent and `plain` were always the same thing; `''` and the
+     * default type size joined them when the edges and the size dropdown
+     * arrived. Each of those is a property whose value *is* the default, and
+     * writing it down would mean a style entry per cell somebody had ruled
+     * and unruled — the megabyte of nothing this filter exists to prevent.
+     */
+    const kept = Object.fromEntries(
+      Object.entries(next).filter(
+        ([k, v]) =>
+          v !== undefined &&
+          v !== false &&
+          v !== 'plain' &&
+          v !== '' &&
+          !(k === 'size' && v === BASE_SIZE),
+      ),
+    ) as CellStyle;
+    if (Object.keys(kept).length === 0) delete out[at];
+    else out[at] = kept;
+  }
+  return out;
 }
 
 /** The size a new sheet opens at: enough to look like a sheet, small enough to read. */
@@ -374,6 +654,8 @@ type Token =
   | { kind: 'str'; value: string }
   | { kind: 'ref'; value: string }
   | { kind: 'name'; value: string }
+  /** An error written into the formula itself — `=#REF!+1`. See {@link lex}. */
+  | { kind: 'err'; value: Err }
   | { kind: 'op'; value: string };
 
 const OPS = ['<>', '<=', '>=', '<', '>', '=', '+', '-', '*', '/', '^', '&', '(', ')', ',', ':', '%'];
@@ -392,6 +674,23 @@ function lex(text: string): Token[] | null {
       if (end < 0) return null;
       out.push({ kind: 'str', value: text.slice(i + 1, end) });
       i = end + 1;
+      continue;
+    }
+    /*
+     * An error the formula itself carries.
+     *
+     * Nothing used to write one, so `#` was simply not a character this
+     * understood and `=#REF!+1` came back `#VALUE!` — the honest answer
+     * downgraded to a vaguer one on its way through. Deleting a row a formula
+     * pointed at now writes `#REF!` into that formula (see
+     * `lib/sheetedit.ts`), so the engine has to read one back as what it is:
+     * the cell says the reference is gone, which is the thing to go and fix,
+     * rather than that something about the formula is wrong.
+     */
+    const err = /^#[A-Z0-9/]+[!?]/.exec(text.slice(i));
+    if (err && isError(err[0])) {
+      out.push({ kind: 'err', value: err[0] });
+      i += err[0].length;
       continue;
     }
     const num = /^\d+(\.\d+)?|^\.\d+/.exec(text.slice(i));
@@ -568,6 +867,10 @@ class Parser {
       return t.value;
     }
     if (t.kind === 'str') {
+      this.at += 1;
+      return t.value;
+    }
+    if (t.kind === 'err') {
       this.at += 1;
       return t.value;
     }
@@ -1342,6 +1645,33 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       const mid = Math.floor(s.length / 2);
       return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
     }
+    /**
+     * `PERCENTILE`, `QUARTILE`, `LARGE` and `SMALL`, by Excel's interpolation.
+     *
+     * The rank is `p(n − 1)` and a fractional rank is read between its two
+     * neighbours — the inclusive definition, which is what `QUARTILE` and the
+     * five-number summary of a first statistics course mean. Other
+     * definitions exist and disagree in the third figure; this one agrees with
+     * the sheet the marker has open.
+     */
+    case 'PERCENTILE':
+    case 'QUARTILE': {
+      if (!xs.length) return '#DIV/0!';
+      const asked = name === 'QUARTILE' ? (xs[xs.length - 1] ?? 0) / 4 : (xs[xs.length - 1] ?? 0);
+      const values = [...xs.slice(0, -1)].sort((a, b) => a - b);
+      if (!values.length || asked < 0 || asked > 1) return '#VALUE!';
+      const rank = asked * (values.length - 1);
+      const low = Math.floor(rank);
+      const high = Math.ceil(rank);
+      return values[low] + (values[high] - values[low]) * (rank - low);
+    }
+    case 'LARGE':
+    case 'SMALL': {
+      const k = Math.round(xs[xs.length - 1] ?? 0);
+      const values = [...xs.slice(0, -1)].sort((a, b) => a - b);
+      if (k < 1 || k > values.length) return '#VALUE!';
+      return name === 'LARGE' ? values[values.length - k] : values[k - 1];
+    }
     case 'MIN':
       return xs.length ? Math.min(...xs) : 0;
     case 'MAX':
@@ -1360,6 +1690,80 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       return one(Math.abs);
     case 'INT':
       return one(Math.floor);
+    /*
+     * Trigonometry, in radians, as every spreadsheet has it.
+     *
+     * Degrees is the mistake this invites and `DEGREES`/`RADIANS` are the
+     * answer to it — the same pair Excel ships, so a formula copied from a
+     * problem set works here without being rewritten.
+     */
+    case 'PI':
+      return Math.PI;
+    case 'SIN':
+      return one(Math.sin);
+    case 'COS':
+      return one(Math.cos);
+    case 'TAN':
+      return one(Math.tan);
+    case 'ASIN':
+      return one(Math.asin);
+    case 'ACOS':
+      return one(Math.acos);
+    case 'ATAN':
+      return one(Math.atan);
+    case 'ATAN2':
+      // Excel's order: x first, then y. The other way round is a plausible
+      // angle rather than an error, which is why it is spelled out here.
+      return Math.atan2(xs[1] ?? 0, xs[0] ?? 0);
+    case 'SINH':
+      return one(Math.sinh);
+    case 'COSH':
+      return one(Math.cosh);
+    case 'TANH':
+      return one(Math.tanh);
+    case 'DEGREES':
+      return one((x) => (x * 180) / Math.PI);
+    case 'RADIANS':
+      return one((x) => (x * Math.PI) / 180);
+    case 'SIGN':
+      return one(Math.sign);
+    case 'TRUNC':
+      return one(Math.trunc);
+    case 'CEILING':
+      return one(Math.ceil);
+    case 'FLOOR':
+      return one(Math.floor);
+    case 'ROUNDUP':
+    case 'ROUNDDOWN': {
+      const places = xs[1] ?? 0;
+      const factor = 10 ** places;
+      const scaled = (xs[0] ?? 0) * factor;
+      // Away from zero and towards it, rather than up and down: −2.5 rounded
+      // "up" is −3 in a spreadsheet, which is the one a grade sheet means.
+      const moved = name === 'ROUNDUP' ? Math.ceil(Math.abs(scaled)) : Math.floor(Math.abs(scaled));
+      return (Math.sign(scaled) || 1) * (moved / factor);
+    }
+    /** `FACT`, `COMBIN` and `PERMUT` — the probability a methods course opens with. */
+    case 'FACT': {
+      const n = xs[0] ?? 0;
+      if (!Number.isInteger(n) || n < 0 || n > 170) return '#VALUE!';
+      let out = 1;
+      for (let i = 2; i <= n; i += 1) out *= i;
+      return out;
+    }
+    case 'COMBIN':
+    case 'PERMUT': {
+      const n = xs[0] ?? 0;
+      const k = xs[1] ?? 0;
+      if (!Number.isInteger(n) || !Number.isInteger(k) || k < 0 || n < 0 || k > n) return '#VALUE!';
+      let out = 1;
+      for (let i = 1; i <= k; i += 1) out = (out * (n - k + i)) / i;
+      const chosen = Math.round(out);
+      if (name === 'COMBIN') return chosen;
+      let arrangements = chosen;
+      for (let i = 2; i <= k; i += 1) arrangements *= i;
+      return arrangements;
+    }
     case 'SQRT': {
       const n = number(first ?? '');
       if (isError(n)) return n;
@@ -1376,6 +1780,13 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       const n = number(first ?? '');
       if (isError(n)) return n;
       return n <= 0 ? '#VALUE!' : Math.log10(n);
+    }
+    /** `LOG(x)` is base ten and `LOG(x, b)` is base b, which is Excel's reading. */
+    case 'LOG': {
+      const n = xs[0] ?? 0;
+      const base = xs.length > 1 ? xs[1] : 10;
+      if (n <= 0 || base <= 0 || base === 1) return '#VALUE!';
+      return Math.log(n) / Math.log(base);
     }
     case 'POWER':
       return (xs[0] ?? 0) ** (xs[1] ?? 0);
@@ -1415,6 +1826,46 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       for (let i = 0; i < a.length; i += 1) top += (a[i] - ma) * (b[i] - mb);
       const spread = Math.sqrt(squares(a) * squares(b));
       return spread === 0 ? '#DIV/0!' : top / spread;
+    }
+    /**
+     * The fitted line, in the three pieces a course reports it in.
+     *
+     * `SLOPE(ys, xs)`, `INTERCEPT(ys, xs)`, `RSQ(ys, xs)` and
+     * `FORECAST(x, ys, xs)` — y first, as Excel has them, because the answer
+     * is checked against a classmate's sheet and an argument order of our own
+     * would be a silent disagreement rather than an error.
+     *
+     * This is the one piece of statistics a social-science degree runs on and
+     * the sheet could not do it: `CORREL` said how tight the relationship was
+     * and nothing said what it *was*. Written once here, over the same pair of
+     * ranges `CORREL` takes.
+     */
+    case 'SLOPE':
+    case 'INTERCEPT':
+    case 'RSQ':
+    case 'FORECAST': {
+      const shift = name === 'FORECAST' ? 1 : 0;
+      const ys = numbers(groups[shift]?.values ?? []);
+      const xs2 = numbers(groups[shift + 1]?.values ?? []);
+      if (isError(ys)) return ys;
+      if (isError(xs2)) return xs2;
+      if (ys.length !== xs2.length || ys.length < 2) return '#DIV/0!';
+      const mx = mean(xs2);
+      const my = mean(ys);
+      let top = 0;
+      for (let i = 0; i < ys.length; i += 1) top += (xs2[i] - mx) * (ys[i] - my);
+      const bottom = squares(xs2);
+      if (bottom === 0) return '#DIV/0!';
+      const slope = top / bottom;
+      if (name === 'SLOPE') return slope;
+      const intercept = my - slope * mx;
+      if (name === 'INTERCEPT') return intercept;
+      if (name === 'RSQ') {
+        const spread = squares(ys);
+        return spread === 0 ? '#DIV/0!' : (top * top) / (bottom * spread);
+      }
+      const at = number(groups[0]?.values[0] ?? '');
+      return isError(at) ? at : intercept + slope * at;
     }
     // ── Money ─────────────────────────────────────────────────────────────
     /**
@@ -1512,10 +1963,15 @@ export function extent(sheet: Sheet): { rows: number; cols: number } {
   return { rows: body.length, cols: body[0]?.length ?? 0 };
 }
 
-export function blankSheet(title: string, courseId: CourseId | null = null): Omit<Sheet, 'id'> {
+export function blankSheet(
+  title: string,
+  courseId: CourseId | null = null,
+  itemId: string | null = null,
+): Omit<Sheet, 'id'> {
   return {
     title: title.trim() || 'Untitled sheet',
     courseId,
+    itemId,
     cells: {},
     rows: NEW_ROWS,
     cols: NEW_COLS,

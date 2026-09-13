@@ -61,6 +61,9 @@ const BY_RULE: Record<string, Screen> = {
   // A registrar date — drop, withdraw, add. The registrar screen is the one
   // that says what it costs.
   term: 'registrar' as Screen,
+  // A tuition instalment. The money screen, which is where the plan, the
+  // balance and the payment page all are.
+  bill: 'costs' as Screen,
   sun: 'brief' as Screen,
 };
 

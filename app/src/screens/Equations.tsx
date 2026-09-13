@@ -3,7 +3,11 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
+import { DeadlinePicker } from '../components/DeadlinePicker';
+import { forLine } from '../lib/forwork';
 import { Equation } from '../components/Equation';
+import { Grapher } from '../components/Grapher';
+import { Calculator } from '../components/Calculator';
 import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
@@ -17,10 +21,11 @@ import {
   plain,
   type Formula,
 } from '../lib/maths';
+import { rightOf } from '../lib/plot';
 import type { CourseId } from '../lib/types';
 
 /**
- * Write an equation properly.
+ * Write an equation properly, work it out, and draw it.
  *
  * A student in econ and statistics writes the same twenty formulas all term
  * and had nowhere in this app to put one. What went into a note was
@@ -39,21 +44,39 @@ import type { CourseId } from '../lib/types';
  * The named symbols are the part a picture of an equation loses and the part a
  * marker looks for. See `FORMULAS` in `lib/maths.ts`.
  *
- * ## What it will not do
+ * ## Why the calculator and the graph are on this screen
  *
- * It will not compute, substitute or rearrange. `Sheet or table` does
- * arithmetic and says so; an equation renderer that quietly simplified would
- * be a second calculator nobody had tested.
+ * They were not, for a while, and the note here said why: an equation renderer
+ * that quietly computed would be a second calculator nobody had tested. The
+ * objection was to the *second* engine, not to the arithmetic — so there is
+ * one, `lib/calc.ts`, with the test file that makes the sentence true, and it
+ * reads exactly the notation this screen already draws. Write a formula, fill
+ * in its letters, see the curve: one piece of text, three things done with it,
+ * on one screen rather than three.
+ *
+ * The spreadsheet stays a different engine and always will. `lib/sheet.ts`
+ * evaluates `=SUM(B2:B9)` against a grid of cells — A1 references, ranges,
+ * lookups, dates — and none of that means anything to a formula with letters
+ * in it. Two engines with two subjects, rather than one wearing two hats.
+ *
+ * ## What it still will not do
+ *
+ * It will not rearrange. `x + 3 = 7` is drawn and tested, never solved for x;
+ * symbolic algebra is a different program, and one that half-solved would be
+ * worse than none. `Work the problem` is the screen for the method.
  */
 export function Equations() {
-  const [tab, setTab] = useState<'write' | 'library' | 'kept'>('write');
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
+  const tab = state.mathTab;
+  const setTab = (next: typeof tab) => dispatch({ type: 'setMathTab', tab: next });
 
   return (
-    <Page blurb="On screen, into a document, or as one line you can paste anywhere. Nothing here computes — it writes.">
+    <Page blurb="Write it, work it out at your own numbers, or draw it. One notation, read three ways.">
       <Segmented
         options={[
           { id: 'write', label: 'Write' },
+          { id: 'calculate', label: 'Work out' },
+          { id: 'graph', label: 'Graph' },
           { id: 'library', label: 'Formulas' },
           { id: 'kept', label: `Kept${state.equations.length ? ` (${state.equations.length})` : ''}` },
         ]}
@@ -61,7 +84,17 @@ export function Equations() {
         onChange={setTab}
         style={{ marginBottom: 'var(--sp-7)' }}
       />
-      {tab === 'write' ? <Writer /> : tab === 'library' ? <Library /> : <Kept />}
+      {tab === 'write' ? (
+        <Writer />
+      ) : tab === 'calculate' ? (
+        <Calculator />
+      ) : tab === 'graph' ? (
+        <Grapher />
+      ) : tab === 'library' ? (
+        <Library />
+      ) : (
+        <Kept />
+      )}
     </Page>
   );
 }
@@ -94,6 +127,8 @@ function Writer() {
   const [latex, setLatex] = useState('');
   const [name, setName] = useState('');
   const [courseId, setCourseId] = useState<CourseId | null>(null);
+  const [itemId, setItemId] = useState<string | null>(null);
+  const [allDeadlines, setAllDeadlines] = useState(false);
 
   const line = plain(parse(latex));
   const ready = latex.trim().length > 0;
@@ -159,7 +194,23 @@ function Writer() {
         aria-label="Name for this equation"
         style={{ width: '100%', height: 40 }}
       />
-      <CoursePicker value={courseId} onChange={setCourseId} />
+      {/* The deadline goes with the course — see the note in `screens/Write.tsx`. */}
+      <CoursePicker
+        value={courseId}
+        onChange={(id) => {
+          setCourseId(id);
+          setItemId(null);
+        }}
+      />
+      {/* The problem set it was written out for, so it is beside that deadline
+          the next time the same substitution is needed. */}
+      <DeadlinePicker
+        courseId={courseId}
+        value={itemId}
+        onChange={setItemId}
+        showAll={allDeadlines}
+        onShowAll={() => setAllDeadlines(true)}
+      />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
         <ActionButton
           tone="primary"
@@ -167,7 +218,7 @@ function Writer() {
           onClick={() => {
             dispatch({
               type: 'saveEquation',
-              equation: { name, latex, note: '', courseId },
+              equation: { name, latex, note: '', courseId, itemId },
             });
             say(`${name.trim() || 'The equation'} is kept.`);
             setName('');
@@ -184,6 +235,32 @@ function Writer() {
         >
           Copy as one line
         </ActionButton>
+        {/*
+          The same equation, taken on to the two things you do with one.
+          Written once and carried, rather than retyped into a calculator — the
+          retyping is where a bracket goes missing and the answer comes out
+          plausible. See `lib/calc.ts`.
+        */}
+        <ActionButton
+          disabled={!ready}
+          onClick={() => {
+            dispatch({ type: 'writeMaths', text: rightOf(latex) });
+            dispatch({ type: 'setMathTab', tab: 'calculate' });
+            say('Fill in its letters to work it out.');
+          }}
+        >
+          Work it out
+        </ActionButton>
+        <ActionButton
+          disabled={!ready}
+          onClick={() => {
+            dispatch({ type: 'addPlot', text: latex });
+            dispatch({ type: 'setMathTab', tab: 'graph' });
+            say('It is on the graph.');
+          }}
+        >
+          Draw it
+        </ActionButton>
         <ActionButton
           disabled={!ready}
           onClick={() => {
@@ -193,6 +270,7 @@ function Writer() {
                 title: name.trim() || 'Equation',
                 subtitle: '',
                 courseId,
+                itemId,
                 blocks: [{ kind: 'equation', latex, caption: name.trim() }],
               },
             });
@@ -314,7 +392,7 @@ function FormulaCard({ formula, onKeep }: { formula: Formula; onKeep: () => void
 // ── What has been kept ───────────────────────────────────────────────────
 
 function Kept() {
-  const { state, dispatch, say, courseCode } = useStore();
+  const { state, dispatch, say, courseCode, allItems } = useStore();
 
   if (state.equations.length === 0) {
     return (
@@ -331,7 +409,9 @@ function Kept() {
         <Blueprint key={saved.id} plain style={{ padding: 'var(--sp-6)' }}>
           <div style={{ fontSize: 'var(--type-md)' }}>{saved.name}</div>
           <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-1)' }}>
-            {saved.courseId ? courseCode(saved.courseId) : 'Personal'}
+            {[saved.courseId ? courseCode(saved.courseId) : 'Personal', forLine(allItems, saved.itemId)]
+              .filter(Boolean)
+              .join(' · ')}
           </div>
           <div style={{ margin: 'var(--sp-6) 0' }}>
             <Equation latex={saved.latex} showPlain />
@@ -339,7 +419,8 @@ function Kept() {
           {saved.note ? (
             <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>{saved.note}</div>
           ) : null}
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+          {/* Four on a phone is two rows, not four squeezed columns. */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
             <ActionButton
               onClick={() => {
                 void navigator.clipboard?.writeText(plain(parse(saved.latex)));
@@ -347,6 +428,22 @@ function Kept() {
               }}
             >
               Copy
+            </ActionButton>
+            <ActionButton
+              onClick={() => {
+                dispatch({ type: 'writeMaths', text: rightOf(saved.latex) });
+                dispatch({ type: 'setMathTab', tab: 'calculate' });
+              }}
+            >
+              Work it out
+            </ActionButton>
+            <ActionButton
+              onClick={() => {
+                dispatch({ type: 'addPlot', text: saved.latex });
+                dispatch({ type: 'setMathTab', tab: 'graph' });
+              }}
+            >
+              Draw it
             </ActionButton>
             <ActionButton
               onClick={() => {

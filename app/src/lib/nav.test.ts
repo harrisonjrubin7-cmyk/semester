@@ -495,3 +495,33 @@ describe('every screen is named, not identified', () => {
     for (const d of DESTINATIONS) expect(screenName(d.screen)).toBe(d.label);
   });
 });
+
+describe('what you opened lately, gated by who you are now', () => {
+  const EVERY = {
+    mealPlan: 'both' as const,
+    housing: true,
+    campusMap: true,
+    registrarUrl: 'https://example.invalid',
+    orgPortalUrl: 'https://example.invalid',
+  };
+
+  /*
+   * Recents are a record of where somebody has been, and a role switch does
+   * not unvisit anything — so a student who opened Housing and then switched
+   * to Teaching had a Housing tile in Lately, one tap from a screen the
+   * directory had just stopped offering.
+   */
+  it('drops a screen this role is not meant to reach', () => {
+    const recent = ['housing', 'calendar'];
+    expect(lately(recent, [], EVERY, [], 4, 'student').map((d) => d.screen)).toContain('housing');
+    expect(lately(recent, [], EVERY, [], 4, 'faculty').map((d) => d.screen)).not.toContain('housing');
+  });
+
+  it('keeps what the role does have', () => {
+    expect(lately(['calendar'], [], EVERY, [], 4, 'faculty').map((d) => d.screen)).toEqual(['calendar']);
+  });
+
+  it('defaults to the student, so an unpassed role changes nothing', () => {
+    expect(lately(['housing'], [], EVERY)).toEqual(lately(['housing'], [], EVERY, [], 4, 'student'));
+  });
+});

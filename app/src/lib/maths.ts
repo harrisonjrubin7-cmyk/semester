@@ -774,6 +774,12 @@ export interface SavedEquation {
   /** What it is for, in their words. Optional, and usually empty. */
   note: string;
   courseId: string | null;
+  /**
+   * The deadline it is for — the problem set it was kept in service of. See
+   * `Doc.itemId` in `lib/document.ts` for why it is optional, and read it
+   * through `lib/forwork.ts`.
+   */
+  itemId?: string | null;
   created: number;
 }
 

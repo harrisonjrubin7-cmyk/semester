@@ -83,6 +83,16 @@ describe('the rows that print', () => {
    */
   const NAMED = [
     'components/DeadlineRow.tsx',
+    /*
+     * The work filed against a deadline, on the printed deadline.
+     *
+     * Added deliberately, after the same argument the deadline row itself
+     * won: these rows are the only record on the page of what the draft, the
+     * sheet and the two readings for this piece of work are called. A printed
+     * deadline that named its weight and its quote and none of the work being
+     * done for it would be the same hole this list was made to close.
+     */
+    'components/ForThis.tsx',
     'components/StartToday.tsx',
     'screens/Ahead.tsx',
     'screens/Calendar.tsx',

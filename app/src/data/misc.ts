@@ -20,6 +20,7 @@ export const NOTIF_DEFS = [
   { k: 'exam', label: 'Exam in one week' },
   { k: 'term', label: 'A registrar deadline a week out' },
   { k: 'attend', label: 'Before a class you cannot afford to miss' },
+  { k: 'bill', label: 'A tuition payment a week out' },
 ] as const;
 
 export type NotifKey = (typeof NOTIF_DEFS)[number]['k'];
@@ -40,6 +41,14 @@ export const DEFAULT_NOTIFS: Record<NotifKey, boolean> = {
   // for the one person on their last absence it is the warning that arrives
   // before the class rather than the arithmetic that explains it afterwards.
   attend: true,
+  /*
+   * On by default, for the same reason as `term` above: the cost of missing it
+   * is money and a registration hold rather than points, and it cannot fire at
+   * all for somebody who has not entered a payment date — so it is silent for
+   * most people and is the one warning that arrives in time for the person it
+   * is for.
+   */
+  bill: true,
 };
 
 /** The morning batch. A demonstration of the alert style, not a live feed. */
