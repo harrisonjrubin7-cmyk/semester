@@ -71,7 +71,11 @@ export function Tonight() {
       .filter((s) => typeof s.guess === 'number')
       .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes })),
   );
-  const list = bestBuys(outstanding, state.spent, bias);
+  // The grading tables, so a syllabus that states points rather than
+  // percentages is ranked by what its work is worth instead of falling
+  // through to "No stated weight" and being ordered by deadline.
+  const grading = Object.fromEntries(catalog.courses.map((c) => [c.id, c.grading]));
+  const list = bestBuys(outstanding, state.spent, bias, grading);
   const { taken, over } = fits(list, hours);
   const said = calibrationLine(bias);
 

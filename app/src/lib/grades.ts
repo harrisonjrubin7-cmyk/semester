@@ -143,15 +143,79 @@ export function readWeight(pct: string): {
  * mixed one keeps the percentages and leaves the points rows unweighted,
  * which the screen already marks and explains.
  */
-export function asWeights(
-  read: { weight: number | null; extra: boolean; points: number | null }[],
-): (number | null)[] {
-  const anyPercent = read.some((r) => r.weight !== null);
-  if (anyPercent) return read.map((r) => r.weight);
+type Read = { weight: number | null; extra: boolean; points: number | null };
 
+/**
+ * What a points table's rows are shares of, or null where it is not one.
+ *
+ * The one place the decision is made, because it was made twice and the two
+ * copies drifted the moment one of them was corrected. Two refusals, and both
+ * were found by a reviewer against the second copy while the first — shipping,
+ * behind the grading screen — had them too:
+ *
+ * **Extra credit is not a percentage row.** The test was `weight !== null`
+ * over every row, and `readWeight('+5% EC')` reads a weight of 5. So a course
+ * graded "100 pts, 300 pts, +5% EC bonus" counted as a percentage table and
+ * every point-valued row in it came back unweighted — a bonus nobody has been
+ * given yet deciding the whole course is unreadable.
+ *
+ * **A row nobody could read leaves the denominator short.** "100 pts" beside
+ * an unreadable "Participation" totalled 100, so the problem sets read as the
+ * entire course. Participation might be worth fifty points; the honest answer
+ * is that this table cannot be converted.
+ *
+ * Both are one condition, which is the form below: every row that counts
+ * towards the hundred has to state points. A percentage row does not state
+ * points, so a mixed table is refused by the same line for the same reason —
+ * `readWeight` returns a weight or points and never both. Written as two
+ * checks first, and the second made the first unreachable; a mutation caught
+ * that the percentage test could be deleted with nothing failing.
+ */
+function scaleOf(read: Read[]): number | null {
+  if (read.some((r) => !r.extra && r.points === null)) return null;
   const total = read.filter((r) => !r.extra).reduce((n, r) => n + (r.points ?? 0), 0);
-  if (total <= 0) return read.map(() => null);
-  return read.map((r) => (r.points === null ? null : (r.points / total) * 100));
+  return total > 0 ? total : null;
+}
+
+export function asWeights(read: Read[]): (number | null)[] {
+  const total = scaleOf(read);
+  if (total === null) return read.map((r) => r.weight);
+  // An extra-credit row states its own bonus and keeps it; everything else is
+  // its share of the total.
+  return read.map((r) => (r.points === null ? r.weight : (r.points / total) * 100));
+}
+
+/**
+ * The points a course's grading table adds up to, where that is how it states
+ * weights at all.
+ *
+ * `asWeights` converts a whole table at once, which is what a grading screen
+ * has. Anything holding one deadline at a time has only that row's wording and
+ * needs the denominator separately — `lib/worth.ts` was reading "100 pts" with
+ * `percentOf`, getting nought, and ranking a whole points-based syllabus as
+ * unweighted.
+ *
+ * Null where the syllabus states percentages, or mixes the two, or states
+ * neither: exactly the cases `asWeights` refuses, and for its reason. A total
+ * invented here would put a confident wrong number on a screen whose whole
+ * job is deciding what to do next.
+ */
+export function pointsTotal(grading: { pct: string }[]): number | null {
+  return scaleOf(grading.map((row) => readWeight(row.pct)));
+}
+
+/**
+ * One stated weight as a percentage of the course, points included.
+ *
+ * `percentOf` is this without the denominator, and returns nought for a row
+ * stating points. Where the course's total is known, a points row is worth its
+ * share of it — the same arithmetic `asWeights` does over a whole table.
+ */
+export function percentIn(stated: string, total: number | null): number {
+  const read = readWeight(stated);
+  if (read.weight !== null) return read.weight;
+  if (total !== null && read.points !== null) return (read.points / total) * 100;
+  return 0;
 }
 
 /**
