@@ -31,7 +31,7 @@
  */
 
 /** The shape this build writes. Bump it when you add a step below. */
-export const SCHEMA = 3;
+export const SCHEMA = 4;
 
 export interface Step {
   /** The version this step produces. */
@@ -74,6 +74,41 @@ export const STEPS: Step[] = [
      * `tiles` is never touched, under any shell. It is only ever a choice.
      */
     run: (s) => (s.directory === 'list' && s.shell !== 'soft' ? { ...s, directory: '' } : s),
+  },
+  {
+    to: 4,
+    describe: 'Open the workspace, for everybody rather than for new installs.',
+    /*
+     * The workspace is the app's layout now — the tab strip, the one search
+     * bar under it, the launcher — and `DEFAULT_PERSISTED` alone could not
+     * deliver it: `nav` has always been a persisted field, so every copy ever
+     * written carries a literal `tabs` in it whether or not anybody opened
+     * the setting. The default only ever reached a device that had never
+     * saved anything, which is nobody who has used this app.
+     *
+     * So the step rewrites it, once, for everybody. That is the same argument
+     * step 3 makes about `directory`: a value that is in every stored copy
+     * because the app wrote it there, rather than because somebody chose it.
+     *
+     * ## It is not a permanent opinion
+     *
+     * The version marker is what makes this a change rather than a policy. It
+     * runs on the way from 3 to 4 and never again, so somebody who reads the
+     * new layout and goes back to the tab bar — on Layout and navigation, or
+     * the last row of Customize Semester — keeps the tab bar on every device
+     * and every reopening after. A step with no marker behind it would be an
+     * app that overrules the setting it offers, every morning.
+     *
+     * ## Unconditional, and that is the part to be sure about
+     *
+     * Four navigations go in and one comes out, so a shelves or springboard
+     * reader who chose that on purpose loses the choice they made. It is one
+     * setting, it is named on the first screen they will see, and both routes
+     * back are one click — which is the trade this step is, stated rather
+     * than hidden. Nothing else about their account moves: not a course, not
+     * a tick, not a look key, not the layout their screens are drawn in.
+     */
+    run: (s) => ({ ...s, nav: 'workspace' }),
   },
 ];
 

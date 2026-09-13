@@ -722,6 +722,19 @@ export const NAVS = [
     blurb: 'Two rows of pills — the shelf you are on, and the screens on it — with a line saying what this screen is for.',
     home: 'Today',
   },
+  {
+    id: 'workspace',
+    label: 'Workspace',
+    blurb:
+      'Tabs across the top, one search bar under them, and every app a click away in the launcher. The screens you keep open stay open.',
+    /*
+     * Today, like the bar's — `home` is Today in this navigation as in every
+     * other, and the sidebar's Today row goes to it. What the workspace does
+     * differently is where the app *lands*, which is `firstScreen` in
+     * `lib/chrome.ts` rather than anything about what home is called.
+     */
+    home: 'Today',
+  },
 ];
 
 /**
@@ -743,11 +756,20 @@ export function homeTitle(nav: string | undefined): string {
  * build, or a half-finished sync wrote. An unrecognised value used to reach
  * `App.tsx` untouched, where every branch tested for a name it did not match
  * — so the app drew no navigation at all and the only way out was to clear
- * the site's data. Falling back to the bar is a worse app for a moment; no
- * navigation is not an app.
+ * the site's data. Any navigation is a worse app for a moment; no navigation
+ * is not an app.
+ *
+ * The fallback is the workspace, and it moved there with the default. It was
+ * the tab bar on the argument that landing somebody in a navigation they had
+ * never seen is not a fallback — which was true while the bar was what
+ * everybody had, and stopped being true the moment `migrate` step 4 opened
+ * the workspace for every account. Answering a corrupt key with a navigation
+ * the app no longer defaults to would strand exactly the person this function
+ * exists for: the one whose stored value cannot be read, who now gets an app
+ * that does not match the one on their other device.
  */
 export function navOf(id: string | undefined): NavMode {
-  return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'tabs';
+  return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'workspace';
 }
 
 /**
@@ -1020,6 +1042,25 @@ export interface Look {
    */
   boardOrder?: string;
   /**
+   * The shortcuts on the search home, as screen ids in the order they sit in.
+   *
+   * A look key, like `groupOrder` beside it and for the same reason: this is
+   * a preference about arrangement rather than a record of anything, it
+   * belongs with corners and density, and it travels with the rest of the
+   * look. Empty is a real state — nobody has chosen — and `lib/desk.ts`
+   * answers it with the five the app opens on rather than resolving it here,
+   * which would spend the state on the first save.
+   */
+  favourites?: string;
+  /**
+   * `on` or `off` — whether the search home draws its row of shortcuts.
+   *
+   * The one thing on Customize Semester that is not already a setting
+   * somewhere else. Off leaves the wordmark and the field, which is what
+   * somebody who opens twenty tabs a day actually wants behind them.
+   */
+  shortcuts?: string;
+  /**
    * A hue for the accent, 0–360, or -1 for "use the named accent".
    *
    * Kept alongside `accent` rather than replacing it: the named accents are
@@ -1287,6 +1328,11 @@ export function readLook(saved: Look | undefined): Required<Look> {
     groupOrder: typeof saved?.groupOrder === 'string' ? saved.groupOrder : '',
     // Unvalidated for the same reason, and read back the same way.
     boardOrder: typeof saved?.boardOrder === 'string' ? saved.boardOrder : '',
+    // The same contract again: `readFavourites` checks every name against the
+    // registry on the way out, so a stale list can only arrange the shortcuts
+    // oddly — never offer a screen this school does not have.
+    favourites: typeof saved?.favourites === 'string' ? saved.favourites : '',
+    shortcuts: saved?.shortcuts === 'off' ? 'off' : 'on',
     // -1 rather than 0, because 0 is red.
     hue: typeof saved?.hue === 'number' && saved.hue >= 0 && saved.hue <= 360 ? saved.hue : -1,
   };

@@ -49,8 +49,12 @@ seven phones side by side, and the phone itself (`Semester Phone.dc.html`), a
 Three things were decided rather than inherited:
 
 - **Navigation and layout are two settings, not two apps.** The canvas compared
-  a tab bar against a single filtered feed; rather than pick, both ship, and two
-  more joined them. They are one axis — *how you move* — with exactly one
+  a tab bar against a single filtered feed; rather than pick, both ship, and
+  three more joined them — the springboard, the shelves, and the **workspace**
+  the app is now laid out as: a browser-shaped shell with a tab strip across the top,
+  one search bar under it on every screen, a nine-dot launcher, a Drive-style
+  directory of all 54 apps, and a sidebar where the window is wide enough.
+  They are one axis — *how you move* — with exactly one
   navigation ever drawn. *How a screen is drawn* is the second axis, and adds no
   navigation of its own. Both are chosen on one page, **Settings → Layout and
   navigation**, with a drawing of each option. See

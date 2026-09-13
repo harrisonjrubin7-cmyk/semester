@@ -150,8 +150,17 @@ describe('the header buttons a thumb has to hit', () => {
     // starts the block to the `<button` that starts the element.
     const block = src().slice(0, at).split('<button').pop() ?? '';
     const opened = (src().slice(0, at - block.length - '<button'.length).match(/\{[^\n]*&& \(\s*$/) ?? [''])[0];
+    /*
+     * `showsAvatar` decides whether the row has space for it, and that answer
+     * is still the whole of the measurement. The one thing allowed in front
+     * of it is the workspace's `slim`, which is not a second opinion about
+     * the width: that layout draws the avatar in its own top bar, so the
+     * header's would be the same control twice on one screen. Written into
+     * the expected string rather than stripped out, so a *third* condition
+     * appearing here still fails this.
+     */
     expect(opened.trim(), 'the avatar is drawn by showsAvatar, not by a condition here').toBe(
-      '{showsAvatar({ atRoot, phone, counting }) && (',
+      '{!slim && showsAvatar({ atRoot, phone, counting }) && (',
     );
   });
 

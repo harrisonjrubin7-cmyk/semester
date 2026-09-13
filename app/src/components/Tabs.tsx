@@ -91,6 +91,17 @@ function nameFor(state: State, catalog: Catalog): string {
     return prefix ? `${prefix} · ${under}` : under;
   }
   switch (screen) {
+    /*
+     * The two screens the workspace shell is made of, named the way a browser
+     * names them rather than the way the registry does. `screenName` answers
+     * "the search home", which is right in the sentence it was written for and
+     * wrong on a tab — a tab on a blank search page says New tab, because that
+     * is what it is.
+     */
+    case 'search':
+      return NEW_TAB;
+    case 'directory':
+      return 'All apps';
     case 'course':
       return code ?? screenName(screen);
     case 'item':
@@ -171,6 +182,17 @@ export function TabsFollow() {
 export function TabStrip({
   /** Drawn inside the search overlay, which has its own ground and a Close. */
   inOverlay = false,
+  /**
+   * Drawn from the first tab rather than the second.
+   *
+   * The workspace asks for this, and it is the one layout where it is right:
+   * there the strip is the top edge of the navigation itself, so a bar that
+   * arrived on the second tab would push the whole app down a row the first
+   * time somebody opened one. Everywhere else the rule above still holds —
+   * a row of chrome that can never do anything is a row people learn to look
+   * past.
+   */
+  alwaysOn = false,
   /** What the tab you are on is searching for, if it is searching. */
   searching = '',
   /** Called after a tab has been opened — the overlay closes itself. */
@@ -181,6 +203,7 @@ export function TabStrip({
   onDismiss,
 }: {
   inOverlay?: boolean;
+  alwaysOn?: boolean;
   searching?: string;
   onOpened?: () => void;
   onBlank?: () => void;
@@ -199,7 +222,7 @@ export function TabStrip({
     onBlank?.();
   };
 
-  if (!inOverlay && strip.tabs.length < 2) return null;
+  if (!inOverlay && !alwaysOn && strip.tabs.length < 2) return null;
 
   return (
     <div
@@ -209,6 +232,7 @@ export function TabStrip({
       // that is on says so with `aria-current`, which is what a list of links
       // to places uses.
       aria-label="Open tabs"
+      className={alwaysOn ? 'deskstrip' : undefined}
       style={{
         display: 'flex',
         alignItems: 'center',

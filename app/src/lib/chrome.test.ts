@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { FULLSCREEN, chromeFor, homeShape, navigationsDrawn } from './chrome';
+import { FULLSCREEN, chromeFor, firstScreen, homeShape, navigationsDrawn } from './chrome';
 import { NAVS, SHELLS, navOf } from './look';
 import { DESTINATIONS } from './nav';
+import { DEFAULT_PERSISTED } from '../state/shape';
 import type { NavMode, Screen } from './types';
 
 const MODES = NAVS.map((n) => n.id as NavMode);
@@ -30,7 +31,7 @@ describe('the navigation rule', () => {
             doubled.push(
               `${nav} on ${screen} (${wide ? 'wide' : 'phone'}): ${
                 Object.entries(chrome)
-                  .filter(([k, v]) => v && k !== 'fab')
+                  .filter(([k, v]) => v && k !== 'fab' && k !== 'sidebar')
                   .map(([k]) => k)
                   .join(' + ')
               }`,
@@ -78,6 +79,21 @@ describe('the navigation rule', () => {
     }
   });
 
+  /*
+   * The workspace's sidebar is the wide half of one navigation, not a second
+   * one — the same relationship the rail has to the tab bar. Asserted rather
+   * than left to the count above, which would go on passing if `sidebar` were
+   * ever drawn on a phone as well as the strip.
+   */
+  it('unrolls the workspace into a sidebar only where there is room', () => {
+    expect(chromeFor('workspace', 'courses', false).sidebar).toBe(false);
+    expect(chromeFor('workspace', 'courses', true).sidebar).toBe(true);
+    expect(chromeFor('workspace', 'courses', true).rail).toBe(false);
+    for (const nav of MODES.filter((n) => n !== 'workspace')) {
+      expect(chromeFor(nav, 'courses', true).sidebar, nav).toBe(false);
+    }
+  });
+
   it('puts the import button on the feed’s home screen and nowhere else', () => {
     expect(chromeFor('feed', 'home', false).fab).toBe(true);
     expect(chromeFor('feed', 'courses', false).fab).toBe(false);
@@ -94,16 +110,28 @@ describe('the home screen', () => {
     expect(homeShape('feed')).toBe('feed');
     expect(homeShape('tabs')).toBe('today');
     expect(homeShape('shelves')).toBe('today');
+    // The workspace's home screen is Today, like the bar's. Where it differs
+    // is where the app *lands*, which is the next test — and the two being
+    // separate is what stops the Today row in its sidebar opening the search
+    // page instead of Today.
+    expect(homeShape('workspace')).toBe('today');
   });
 
   it('has an answer for every navigation there is', () => {
     for (const nav of MODES) expect(homeShape(nav)).toBeTruthy();
   });
+
+  it('lands the workspace on its search page and everything else on home', () => {
+    expect(firstScreen('workspace')).toBe('search');
+    for (const nav of MODES.filter((n) => n !== 'workspace')) {
+      expect(firstScreen(nav), nav).toBe('home');
+    }
+  });
 });
 
 describe('reading a navigation back', () => {
-  it('keeps the four the app has', () => {
-    expect(MODES).toEqual(['tabs', 'feed', 'springboard', 'shelves']);
+  it('keeps the five the app has', () => {
+    expect(MODES).toEqual(['tabs', 'feed', 'springboard', 'shelves', 'workspace']);
     for (const nav of MODES) expect(navOf(nav)).toBe(nav);
   });
 
@@ -111,11 +139,29 @@ describe('reading a navigation back', () => {
    * A stored value nothing recognises used to reach `App.tsx` untouched,
    * where every branch tested for a name it did not match — so the app drew
    * no navigation at all, on a phone, with no way off the screen.
+   *
+   * The name it falls back to is the app's default, which is the workspace;
+   * what this holds is the invariant under it, which is that *something* is
+   * drawn. The last line is the one that matters and the one that would have
+   * caught the original bug.
    */
-  it('falls back to the bar rather than to nothing', () => {
-    expect(navOf('soft')).toBe('tabs');
-    expect(navOf(undefined)).toBe('tabs');
-    expect(navOf('')).toBe('tabs');
+  it('falls back to the default rather than to nothing', () => {
+    expect(navOf('soft')).toBe('workspace');
+    expect(navOf(undefined)).toBe('workspace');
+    expect(navOf('')).toBe('workspace');
     expect(navigationsDrawn(chromeFor(navOf('nonsense'), 'home', false))).toBe(1);
+  });
+
+  /*
+   * And the fallback is the default, rather than the two drifting apart.
+   *
+   * They were the same value for a reason and then were not: the default
+   * moved to the workspace while the fallback stayed on the bar, so a corrupt
+   * key put somebody on a navigation the app no longer opens as. Asserted
+   * against `DEFAULT_PERSISTED` rather than against the literal, so the next
+   * change to the default cannot leave this behind again.
+   */
+  it('falls back to whatever the app actually defaults to', () => {
+    expect(navOf('nonsense')).toBe(DEFAULT_PERSISTED.nav);
   });
 });

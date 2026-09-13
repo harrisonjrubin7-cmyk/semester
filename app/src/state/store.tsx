@@ -60,6 +60,7 @@ import { NAMED, fromHash, replaces, same, toHash, type Route } from '../lib/rout
 import { onOtherTab, tellOtherTabs } from '../lib/tabs';
 import { itemsDueToday } from '../lib/select';
 import { reducer } from './reducer';
+import { firstScreen } from '../lib/chrome';
 import { resolveSchool } from '../data/schools';
 import { ACCENT_TINT, anchorHue, tintsFor, type CourseTint } from '../lib/tint';
 import { ground as groundOf, resolveGround } from '../lib/look';
@@ -268,7 +269,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...(landed.opens?.meTab ? { meTab: landed.opens.meTab } : {}),
       };
     }
-    return { ...persisted, ...ephemeral, screen: screenFromUrl() ?? ('home' as Screen) };
+    /*
+     * And with no address at all, wherever the navigation opens.
+     *
+     * `home` for four of the five, and the search page for the workspace —
+     * which is the one navigation shaped like a browser, and a browser opens
+     * on a new tab. `lib/chrome.ts` holds the rule, beside the rest of what a
+     * navigation decides.
+     */
+    return { ...persisted, ...ephemeral, screen: screenFromUrl() ?? firstScreen(persisted.nav) };
   });
 
   // Re-render on the minute so "in 1 hr 19 min" and "Today" stay correct

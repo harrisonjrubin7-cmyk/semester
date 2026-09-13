@@ -560,6 +560,16 @@ export interface Persisted {
   /** `plain`, `grouped` or `soft`. Which layout every screen is drawn in. */
   shell: string;
   /**
+   * The shortcuts on the workspace's search home, as screen ids.
+   *
+   * A look key like `groupOrder`, parsed by `lib/desk.ts`, which checks every
+   * name against the registry on the way out. Empty is the state nobody has
+   * chosen, and that file answers it rather than this one.
+   */
+  favourites: string;
+  /** `on` or `off` — whether the search home draws its row of shortcuts. */
+  shortcuts: string;
+  /**
    * `list` or `tiles`. How the directory of everything is drawn.
    *
    * Empty is the third state and the one that matters: nobody has chosen, so
@@ -857,6 +867,13 @@ export interface Ephemeral {
    * onto a grid of its own icons has forgotten what you came back for.
    */
   apps: boolean;
+  /**
+   * Whether Customize Semester is up.
+   *
+   * Ephemeral for the same reasons as the two above. Every control on it
+   * writes to the look, which is persisted — the panel itself is not.
+   */
+  customize: boolean;
   studyTab: 'guides' | 'revise' | 'ask';
   /** Note currently open in the editor. */
   noteId: string | null;
@@ -950,7 +967,18 @@ export const STORAGE_KEY = 'semester.v1';
 export const SYNCED_KEY = 'semester.synced';
 
 export const DEFAULT_PERSISTED: Persisted = {
-  nav: 'tabs',
+  /*
+   * The workspace is what the app opens as: a tab strip, one search bar under
+   * it, and the launcher — see `lib/chrome.ts` and `lib/desk.ts`.
+   *
+   * This line alone only ever reached a device that had never saved anything,
+   * which is nobody who has used the app: `nav` has always been persisted, so
+   * every stored copy carries a literal `tabs` written by the app rather than
+   * chosen by anybody. Step 4 of `lib/migrate.ts` is what makes it everyone's,
+   * once — and once, so that going back to the tab bar on Layout and
+   * navigation, or on the last row of Customize Semester, sticks.
+   */
+  nav: 'workspace',
   done: {},
   saved: { e1: true, e16: true },
   notifs: { ...DEFAULT_NOTIFS },
@@ -1085,6 +1113,11 @@ export const DEFAULT_PERSISTED: Persisted = {
   feed: 'cards',
   courseColours: 'on',
   shell: 'plain',
+  // Empty for the reason `directory` below is: an empty list is the state
+  // "nobody has arranged their shortcuts", and writing the five defaults in
+  // here would spend that state on the first save.
+  favourites: '',
+  shortcuts: 'on',
   // Not `list`. Writing a default in here made "never chosen" unreachable —
   // the first save stamped `list` on everybody, and `directoryOf`'s soft
   // fallback could never fire again for anyone who had opened the app once.
@@ -1112,6 +1145,8 @@ export function currentLook(state: Persisted): Look {
     feed: state.feed,
     courseColours: state.courseColours,
     shell: state.shell,
+    favourites: state.favourites,
+    shortcuts: state.shortcuts,
     directory: state.directory,
     groupOrder: state.groupOrder,
     boardOrder: state.boardOrder,
@@ -1159,6 +1194,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     mailDraftId: null,
     finder: false,
     apps: false,
+    customize: false,
     studyTab: 'guides',
     noteId: null,
     documentId: null,
@@ -1553,6 +1589,8 @@ export function pickPersisted(state: State): Persisted {
     feed: state.feed,
     courseColours: state.courseColours,
     shell: state.shell,
+    favourites: state.favourites,
+    shortcuts: state.shortcuts,
     directory: state.directory,
     groupOrder: state.groupOrder,
     boardOrder: state.boardOrder,
@@ -1678,6 +1716,14 @@ export type Action =
   | { type: 'quickAdd'; open: boolean }
   | { type: 'finder'; open: boolean }
   | { type: 'apps'; open: boolean }
+  /**
+   * Customize Semester, the workspace's own panel.
+   *
+   * Ephemeral like the other three beside it: a panel left open is not a
+   * state worth restoring, and opening the app into one is a way to lose
+   * people. See `components/desk/Customize.tsx`.
+   */
+  | { type: 'customize'; open: boolean }
   | { type: 'setFeedOrder'; order: string[] }
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }

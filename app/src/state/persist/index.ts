@@ -24,6 +24,7 @@
 import { readAll, isEmpty, open, write, MAPS_STORE, SETTINGS_STORE, type Write } from './db';
 import { COLLECTIONS, MAPS, SETTINGS, idOf } from './shape';
 import { readIncoming } from '../../lib/stored';
+import { migrate, versionOf } from '../../lib/migrate';
 import {
   DEFAULT_PERSISTED,
   STORAGE_KEY,
@@ -34,6 +35,25 @@ import {
 /** Where the migration records that it happened, so it happens once. */
 export const MIGRATED = 'migratedFrom';
 export const MIGRATED_VALUE = 'localStorage.v1';
+
+/**
+ * The version a database account is assumed to be at when it does not say.
+ *
+ * Most of them do not say, and it is not damage. `writesFor` only writes a
+ * setting that differs from the default, and every account written here was
+ * written by a build whose `SCHEMA` equalled its own `DEFAULT_PERSISTED`
+ * marker — so the row was identical to the default and never stored. Reading
+ * that silence as version 1, which is what `versionOf` does for a plain
+ * localStorage blob, would re-run every step ever written on every single
+ * load: step 3 would empty a `list` somebody has since chosen on purpose.
+ *
+ * Three, because three is what the build that added this directory wrote.
+ * `persist/index.ts` and `SCHEMA = 3` arrived in the same commit, so no
+ * database account can predate it — which is a fact about the history rather
+ * than an assumption, and `index.test.ts` pins the two together so a future
+ * step cannot quietly invalidate it.
+ */
+export const FIRST_DB_SCHEMA = 3;
 
 let ready = false;
 
@@ -90,11 +110,32 @@ async function migrateFromLocalStorage(): Promise<Persisted | null> {
   // reimplementing any of it would be a second definition of what a stored
   // account means.
   const state = loadPersisted();
-  const ok = await write([...writesFor(DEFAULT_PERSISTED, state), {
-    store: SETTINGS_STORE,
-    key: MIGRATED,
-    value: MIGRATED_VALUE,
-  }]);
+  const ok = await write([
+    ...writesFor(DEFAULT_PERSISTED, state),
+    {
+      store: SETTINGS_STORE,
+      key: MIGRATED,
+      value: MIGRATED_VALUE,
+    },
+    /*
+     * And the version, written whether or not it differs from the default.
+     *
+     * `writesFor` stores only what differs, and this field almost never does:
+     * a copy that has just been through `loadPersisted` is stamped with this
+     * build's `SCHEMA`, which is the same number the defaults carry. So the
+     * row was silently left out of every account this has ever moved, and the
+     * database came out saying nothing about what shape it was in.
+     *
+     * `forward` reads that silence as `FIRST_DB_SCHEMA` and is right about
+     * every account that exists today. It is right by a fact about the
+     * history rather than by construction, though, and there was one window
+     * where the difference showed: move on Monday, choose a navigation on
+     * Tuesday, reopen — and the step that had already run ran again, because
+     * nothing on disk said it had. Writing the marker at the moment the
+     * account is created closes it by construction.
+     */
+    { store: SETTINGS_STORE, key: 'schemaVersion', value: state.schemaVersion },
+  ]);
   // The old copy stays. It is the way back for one release.
   return ok ? state : null;
 }
@@ -121,7 +162,64 @@ export async function load(): Promise<Persisted | null> {
   // before the reducer's initialiser runs, so its field rules are not in the
   // way. The third door, through the same reader as the other two. See
   // `lib/stored.ts`.
-  return { ...DEFAULT_PERSISTED, ...readIncoming(found as Record<string, unknown>) } as Persisted;
+  const moved = await forward(found);
+  return { ...DEFAULT_PERSISTED, ...readIncoming(moved as Record<string, unknown>) } as Persisted;
+}
+
+/**
+ * The schema steps, on the database path too.
+ *
+ * This file's own promise at the top is that `load()` returns what
+ * `loadPersisted()` returned yesterday, *through the same `lib/migrate.ts`* —
+ * and until now that was only true of the one-time move off localStorage.
+ * Everything already in the database was read straight out and handed to the
+ * app, so a step added to `STEPS` reached the copies that had not moved yet
+ * and silently missed every account that had. That is every account of
+ * anybody who has opened the app since the database shipped: exactly the
+ * people a migration is written for.
+ *
+ * ## And it is written back
+ *
+ * A step that runs on every load is not a migration, it is a policy — it
+ * would undo the setting somebody changed after it, every morning. So when a
+ * step runs, the fields it moved go back to the database with the new marker
+ * beside them, and `versionOf` skips them next time. `writesFor` computes
+ * that diff the same way every other save does: `migrate` copies the top
+ * level and leaves the collections by reference, so only what actually
+ * changed is written.
+ *
+ * A failed write is not a failed load. The app opens on the migrated value
+ * either way; the worst a write that did not land can do is make the step run
+ * again on the next open, which is where it started.
+ */
+async function forward(found: Partial<Persisted>): Promise<Partial<Persisted>> {
+  const { state, writes } = forwardFrom(found);
+  if (writes.length > 0) await write(writes);
+  return state;
+}
+
+/**
+ * The decision inside `forward`, with the database taken out of it.
+ *
+ * Exported for the test, which is the only way to check "steps run, and run
+ * once" without an IndexedDB — the same reason `writesFor` above is exported,
+ * and the same shape: everything that decides anything is a pure function of
+ * what was read.
+ */
+export function forwardFrom(found: Partial<Persisted>): {
+  state: Partial<Persisted>;
+  writes: Write[];
+} {
+  const at = { ...(found as Record<string, unknown>) };
+  // The floor, not `versionOf`'s answer for a missing marker. See
+  // `FIRST_DB_SCHEMA` for why silence here means three rather than one.
+  if (versionOf(at) === 1) at.schemaVersion = FIRST_DB_SCHEMA;
+
+  const moved = migrate(at);
+  if (moved.ran.length === 0) return { state: found, writes: [] };
+
+  const next = moved.state as Partial<Persisted>;
+  return { state: next, writes: writesFor(found, next) };
 }
 
 /**

@@ -4652,3 +4652,1210 @@ input[type='search'].input {
   background: rgb(0 0 0 / 45%);
   border: 0;
 }
+
+/* ── The workspace shell ──────────────────────────────────────────────────
+ *
+ * `nav: 'workspace'` — the tab strip, the one search bar under it, the
+ * launcher panel, the directory and the sidebar. Everything in this block is
+ * scoped under `.deskwork` or one of its own class names, so choosing another
+ * navigation leaves not one declaration of it applying to anything.
+ *
+ * Every colour is a theme token. The reference this was drawn from is a dark
+ * search home over light workspaces, which is what Indigo and the other dark
+ * grounds give on their own: `--app-void` is the deepest surface and
+ * `--app-panel` is the one a screen is drawn on. A reader who has chosen
+ * Paper or Fog gets the same arrangement in their own colours rather than
+ * somebody else's white — the layout is the thing being changed here, not the
+ * palette.
+ *
+ * See `lib/chrome.ts` for when this is drawn and `lib/desk.ts` for the rules
+ * behind it.
+ */
+
+/* `.device` and `.deskwork` together — the note in `App.tsx` says why. These
+   are the two things `.device` asserts about being a phone, undone. */
+.deskwork {
+  max-width: none;
+  background: var(--app-void);
+}
+
+/* The skip link is absolute, and the blanket `position: relative` on
+   `.device > *` would lay it out in the flow. Same fix, same reason as the
+   phone layout's — see the note beside `.device > .skip-link`. */
+.deskwork > .skip-link {
+  position: absolute;
+}
+
+/* ── The tab strip ── */
+
+.deskwork .deskstrip {
+  background: var(--app-void);
+  border-bottom: 0;
+  padding: var(--sp-3) var(--sp-4) 0;
+  flex: none;
+}
+
+/* ── The bar ── */
+
+.desktop-bar {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--sp-6);
+  padding: var(--sp-5) var(--sp-7);
+  background: var(--app-bg);
+}
+
+.desktop-brand {
+  width: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: 0;
+  flex: none;
+}
+
+.desktop-mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-lg);
+  background: var(--app-accent);
+  color: var(--app-void);
+  font-family: var(--font-display);
+  font-size: var(--type-xl);
+  line-height: 1;
+}
+
+.desktop-word {
+  font-size: calc(19px * var(--text-scale, 1));
+  letter-spacing: 0.01em;
+}
+
+/* Below the desktop tier the wordmark goes and the mark carries the name. A
+   34px square and a search field do fit across a phone; the word does not. */
+@media (max-width: 1179px) {
+  .desktop-word {
+    display: none;
+  }
+
+  .desktop-bar {
+    gap: var(--sp-4);
+    padding: var(--sp-4) var(--sp-5);
+  }
+}
+
+.desktop-search {
+  position: relative;
+  min-width: 0;
+  /* The field stops well short of the window on a wide monitor. A search box
+     running 1,400px is a box whose left and right ends are two separate
+     places to look. */
+  max-width: 720px;
+  width: 100%;
+  justify-self: center;
+}
+
+.desktop-field {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-4) var(--sp-5) var(--sp-4) var(--sp-7);
+  border-radius: 999px;
+  background: var(--app-panel);
+  border: 1px solid transparent;
+  color: var(--app-dim);
+  transition: background var(--fast), border-color var(--fast);
+}
+
+.desktop-field:hover {
+  background: var(--app-hero);
+}
+
+.desktop-field:focus-within {
+  background: var(--app-hero);
+  border-color: var(--app-line);
+}
+
+.desktop-input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-fg);
+  font: inherit;
+  font-size: var(--type-md);
+  text-align: left;
+}
+
+.desktop-input::placeholder {
+  color: var(--app-faint);
+}
+
+/* The browser's own clear button, on top of the one this draws. */
+.desktop-input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.desktop-clear,
+.desktop-keys,
+.desktop-ai {
+  flex: none;
+  width: auto;
+}
+
+.desktop-keys {
+  padding: var(--sp-1) var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  font-size: var(--type-xs);
+  color: var(--app-faint);
+  white-space: nowrap;
+}
+
+.desktop-ai {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-6);
+  border-radius: 999px;
+  background: var(--app-raise);
+  color: var(--app-fg);
+  font-size: var(--type-sm);
+  white-space: nowrap;
+}
+
+.desktop-ai:hover {
+  background: var(--app-accent-wash);
+}
+
+@media (max-width: 759px) {
+  .desktop-keys,
+  .desktop-ai span {
+    display: none;
+  }
+}
+
+.desktop-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  flex: none;
+}
+
+.desktop-dot {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  background: var(--app-accent);
+}
+
+/* Two of the four go on a phone: alerts and settings are both one row down in
+   the launcher, and the avatar and the nine dots are the two that are not. */
+@media (max-width: 759px) {
+  .desktop-tools > :nth-child(1),
+  .desktop-tools > :nth-child(2) {
+    display: none;
+  }
+}
+
+/* ── The suggestions ── */
+
+.desktop-drop {
+  position: absolute;
+  top: calc(100% + var(--sp-3));
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift-3);
+  overflow: hidden;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.desktop-drop-head {
+  padding: var(--sp-5) var(--sp-7) var(--sp-3);
+  font-size: var(--type-xs);
+}
+
+.desktop-hit {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-5) var(--sp-7);
+}
+
+.desktop-hit.is-on,
+.desktop-more.is-on {
+  background: var(--app-accent-wash);
+}
+
+.desktop-hit-tile {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  background: var(--app-hero);
+  color: var(--app-accent);
+}
+
+.desktop-hit-says {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.desktop-hit-name {
+  font-size: var(--type-md);
+  color: var(--app-fg);
+}
+
+.desktop-hit-blurb,
+.desktop-hit-group {
+  font-size: var(--type-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-hit-group {
+  flex: none;
+}
+
+@media (max-width: 759px) {
+  .desktop-hit-group {
+    display: none;
+  }
+}
+
+.desktop-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-5) var(--sp-7);
+  border-top: 1px solid var(--app-line-soft);
+  color: var(--app-accent);
+  font-size: var(--type-md);
+}
+
+/* ── The body: the sidebar and the pane ── */
+
+.deskwork-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr);
+  background: var(--app-bg);
+}
+
+.deskwork-one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.desk-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0 var(--sp-6) var(--sp-7);
+  overflow-y: auto;
+}
+
+.desk-new {
+  width: auto;
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  margin: var(--sp-3) 0 var(--sp-7);
+  padding: var(--sp-7) var(--sp-7) var(--sp-7) var(--sp-6);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--app-line);
+  background: var(--app-panel);
+  box-shadow: var(--lift-2);
+  color: var(--app-fg);
+  font-size: var(--type-md);
+}
+
+.desk-new:hover {
+  background: var(--app-hero);
+}
+
+.desk-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-5) var(--sp-6);
+  border-radius: 999px;
+  color: var(--app-dim);
+  font-size: var(--type-md);
+}
+
+.desk-row:hover {
+  background: var(--app-line-soft);
+  color: var(--app-fg);
+}
+
+.desk-row.is-on {
+  background: var(--app-accent-wash);
+  color: var(--app-fg);
+}
+
+.desk-side-label {
+  padding: var(--sp-7) var(--sp-6) var(--sp-3);
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.desk-side-gap {
+  margin-top: var(--sp-7);
+  padding-top: var(--sp-7);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.desk-side-foot {
+  margin-top: auto;
+  padding: var(--sp-7) var(--sp-6) 0;
+  font-size: var(--type-xs);
+  line-height: var(--leading-normal);
+}
+
+/* The pane: the one rounded surface every screen is drawn on. */
+.deskwork-pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line-soft);
+  border-bottom: 0;
+  border-right: 0;
+  border-radius: var(--r-lg) 0 0 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* No rounded corner and no border with nothing beside it. */
+.deskwork-one .deskwork-pane {
+  border-left: 0;
+  border-radius: 0;
+}
+
+/* The search home is the one screen drawn on the ground rather than on the
+   pane: it is the app's front door, and a door with a frame round it is a
+   window. */
+.deskwork-pane:has(.deskhome) {
+  background: var(--app-void);
+  border: 0;
+  border-radius: 0;
+}
+
+/* ── The launcher panel ── */
+
+.desk-panel {
+  position: absolute;
+  z-index: 40;
+  top: calc(var(--sp-7) * 2 + 76px);
+  right: var(--sp-7);
+  width: min(400px, calc(100% - var(--sp-7) * 2));
+  max-height: min(640px, calc(100% - var(--sp-7) * 4));
+  display: flex;
+  flex-direction: column;
+  background: var(--app-panel);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--lift-3);
+  overflow: hidden;
+}
+
+.desk-panel-fav {
+  flex: none;
+  padding: var(--sp-7);
+  background: var(--app-hero);
+}
+
+.desk-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  margin-bottom: var(--sp-5);
+}
+
+.desk-panel-name {
+  font-size: var(--type-lg);
+}
+
+.desk-panel-edit {
+  width: auto;
+  flex: none;
+  padding: var(--sp-3);
+  border-radius: var(--r-md);
+  color: var(--app-dim);
+}
+
+.desk-panel-edit:hover,
+.desk-panel-edit[aria-pressed='true'] {
+  background: var(--app-accent-wash);
+  color: var(--app-fg);
+}
+
+.desk-panel-note {
+  margin: 0;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.desk-panel-all {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--sp-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.desk-panel-foot {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-7);
+  border-top: 1px solid var(--app-line-soft);
+}
+
+.desk-panel-link {
+  width: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 0;
+  color: var(--app-accent);
+  font-size: var(--type-sm);
+}
+
+/* ── Customize Semester ── */
+
+.desk-sheet {
+  position: absolute;
+  z-index: 40;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(360px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-7);
+  overflow-y: auto;
+  background: var(--app-panel);
+  border-left: 1px solid var(--app-line);
+  box-shadow: var(--lift-3);
+}
+
+.desk-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.desk-sheet-name {
+  font-size: calc(17px * var(--text-scale, 1));
+}
+
+.desk-sheet-shut {
+  width: auto;
+  flex: none;
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--app-dim);
+}
+
+.desk-sheet-note {
+  margin: 0;
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.desk-sheet-label {
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--app-dim);
+}
+
+.desk-sheet-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-6);
+}
+
+.desk-swatch {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  border-radius: var(--r-lg);
+  border: 2px solid transparent;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.desk-swatch.is-on {
+  border-color: var(--app-accent);
+  color: var(--app-fg);
+}
+
+.desk-swatch-chip {
+  display: grid;
+  place-items: center;
+  height: 74px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--app-line);
+  background: var(--app-bright, #f0f2f6);
+  color: #1a1c22;
+  font-size: calc(20px * var(--text-scale, 1));
+}
+
+.desk-swatch-chip.is-dark {
+  background: #2b2c31;
+  color: #f0f2f6;
+}
+
+.desk-sheet-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-5) 0;
+  font-size: var(--type-md);
+}
+
+.desk-tick {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--app-line);
+}
+
+.desk-tick.is-on {
+  background: var(--app-accent);
+  border-color: var(--app-accent);
+  color: var(--app-void);
+}
+
+.desk-sheet-row {
+  width: 100%;
+  padding: var(--sp-6);
+  border-radius: 999px;
+  border: 1px solid var(--app-line);
+  color: var(--app-accent);
+  font-size: var(--type-md);
+}
+
+.desk-sheet-row:hover {
+  background: var(--app-accent-wash);
+}
+
+.desk-sheet-plain {
+  width: 100%;
+  padding: var(--sp-5) 0;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+/* ── The search home ── */
+
+.deskhome {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-7);
+  padding: clamp(24px, 7vh, 80px) var(--sp-7) var(--sp-7);
+  text-align: center;
+}
+
+.deskhome-mark {
+  font-family: var(--font-display);
+  font-size: clamp(44px, 10vw, 92px);
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--app-fg);
+}
+
+.deskhome-centre {
+  width: 100%;
+  max-width: 620px;
+  margin-top: var(--sp-7);
+}
+
+.deskhome-field {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-5) var(--sp-5) var(--sp-5) var(--sp-6);
+  border-radius: 999px;
+  background: var(--app-fg);
+  color: var(--app-void);
+  box-shadow: var(--lift-2);
+}
+
+.deskhome-plus,
+.deskhome-box,
+.deskhome-keys,
+.deskhome-ai {
+  color: inherit;
+}
+
+.deskhome-plus {
+  width: auto;
+  flex: none;
+  padding: var(--sp-3);
+  border-radius: 999px;
+}
+
+.deskhome-plus:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.deskhome-box {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  padding: var(--sp-4) 0;
+  font-size: var(--type-lg);
+}
+
+.deskhome-box-say {
+  opacity: 0.55;
+}
+
+.deskhome-keys {
+  flex: none;
+  padding: var(--sp-1) var(--sp-4);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: var(--r-md);
+  font-size: var(--type-xs);
+  opacity: 0.6;
+}
+
+.deskhome-ai {
+  width: auto;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-6);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.07);
+  font-size: var(--type-sm);
+}
+
+.deskhome-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--sp-7);
+  margin-top: var(--sp-7);
+}
+
+.deskhome-shortcut {
+  width: 86px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: 0;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.deskhome-shortcut-tile {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--app-panel);
+  color: var(--app-accent);
+  transition: background var(--fast);
+}
+
+.deskhome-shortcut:hover .deskhome-shortcut-tile {
+  background: var(--app-raise);
+}
+
+.deskhome-shortcut-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deskhome-explore {
+  width: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  margin-top: var(--sp-7);
+  padding: var(--sp-4) var(--sp-6);
+  border-radius: 999px;
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.deskhome-explore:hover {
+  background: var(--app-line-soft);
+  color: var(--app-fg);
+}
+
+.deskhome-foot {
+  margin-top: auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  padding-top: var(--sp-7);
+  color: var(--app-faint);
+  font-size: var(--type-sm);
+  text-align: left;
+}
+
+.deskhome-customize {
+  width: auto;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-5) var(--sp-7);
+  border-radius: 999px;
+  background: var(--app-accent-wash);
+  border: 1px solid var(--app-line);
+  color: var(--app-fg);
+  font-size: var(--type-sm);
+}
+
+@media (max-width: 759px) {
+  .deskhome-foot {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ── The directory ── */
+
+.deskdir {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6);
+  padding: var(--sp-7) var(--page-pad) calc(var(--sp-7) * 3);
+}
+
+.deskdir-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  flex-wrap: wrap;
+}
+
+.deskdir-welcome {
+  margin: 0;
+  font-size: var(--type-xl);
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: var(--leading-tight);
+}
+
+.deskdir-count {
+  font-size: var(--type-sm);
+}
+
+.deskdir-label {
+  font-size: var(--type-lg);
+  color: var(--app-fg);
+}
+
+.deskdir-fav {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: var(--sp-6);
+}
+
+.deskdir-favcard {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-6);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-6);
+  border-radius: var(--r-lg);
+  background: var(--app-hero);
+  color: var(--app-fg);
+}
+
+.deskdir-favcard:hover {
+  background: var(--app-raise);
+}
+
+.deskdir-favtile {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+  color: var(--app-accent);
+}
+
+.deskdir-favsays {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.deskdir-favname {
+  font-size: var(--type-md);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deskdir-favgroup {
+  font-size: var(--type-sm);
+}
+
+.deskdir-favgo {
+  flex: none;
+  color: var(--app-faint);
+}
+
+.deskdir-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-6);
+  margin-top: var(--sp-7);
+}
+
+.deskdir-views {
+  display: flex;
+  flex: none;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid var(--app-line);
+}
+
+.deskdir-view {
+  width: auto;
+  padding: var(--sp-3) var(--sp-6);
+  border-radius: 999px;
+  color: var(--app-dim);
+}
+
+.deskdir-view.is-on {
+  background: var(--app-accent-wash);
+  color: var(--app-fg);
+}
+
+.deskdir-find {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  padding: var(--sp-4) var(--sp-6);
+  border-radius: 999px;
+  background: var(--app-hero);
+  color: var(--app-dim);
+}
+
+.deskdir-findbox {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--app-fg);
+  font: inherit;
+  font-size: var(--type-md);
+  text-align: left;
+}
+
+.deskdir-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
+
+.deskdir-chip {
+  width: auto;
+  padding: var(--sp-4) var(--sp-6);
+  border-radius: 999px;
+  border: 1px solid var(--app-line);
+  color: var(--app-dim);
+  font-size: var(--type-sm);
+}
+
+.deskdir-chip.is-on {
+  background: var(--app-accent-wash);
+  border-color: var(--app-accent-deep);
+  color: var(--app-fg);
+}
+
+.deskdir-none {
+  margin: 0;
+  font-size: var(--type-md);
+}
+
+.deskdir-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: var(--sp-6);
+}
+
+.deskdir-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-7);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--app-line-soft);
+  background: var(--app-hero);
+}
+
+.deskdir-cardtop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-5);
+}
+
+.deskdir-cardtile {
+  width: 40px;
+  height: 40px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-md);
+  background: var(--app-panel);
+  color: var(--app-accent);
+}
+
+.deskdir-cardsays {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  width: 100%;
+  text-align: left;
+  padding: 0;
+}
+
+.deskdir-cardname {
+  font-size: var(--type-md);
+  color: var(--app-fg);
+}
+
+.deskdir-cardblurb,
+.deskdir-cardgroup {
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+}
+
+.deskdir-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.deskdir-head,
+.deskdir-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr) 110px 78px;
+  align-items: center;
+  gap: var(--sp-6);
+}
+
+.deskdir-head {
+  padding: var(--sp-5) var(--sp-6);
+  border-bottom: 1px solid var(--app-line);
+  font-size: var(--type-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.deskdir-row {
+  grid-template-columns: minmax(0, 1fr) 78px;
+  border-bottom: 1px solid var(--app-line-soft);
+}
+
+.deskdir-row:hover {
+  background: var(--app-line-soft);
+}
+
+.deskdir-rowopen {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1.1fr) minmax(0, 2fr) 110px;
+  align-items: center;
+  gap: var(--sp-6);
+  width: 100%;
+  text-align: left;
+  padding: var(--sp-5) var(--sp-6);
+}
+
+.deskdir-rowtile {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-sm);
+  background: var(--app-panel);
+  color: var(--app-accent);
+}
+
+.deskdir-rowname {
+  font-size: var(--type-md);
+  color: var(--app-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deskdir-rowblurb,
+.deskdir-rowgroup {
+  font-size: var(--type-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deskdir-star {
+  width: auto;
+  padding: var(--sp-4);
+  border-radius: var(--r-md);
+  color: var(--app-faint);
+  justify-self: center;
+}
+
+.deskdir-star.is-on {
+  color: var(--app-accent);
+}
+
+/* The blurb and the category are the two columns a narrow window drops: the
+   name and the star are what the row is for. The header's own columns go with
+   them, or it would label columns that are not there. */
+@media (max-width: 899px) {
+  .deskdir-head {
+    display: none;
+  }
+
+  .deskdir-rowopen {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .deskdir-col-blurb,
+  .deskdir-col-group {
+    display: none;
+  }
+
+  .deskdir-row {
+    grid-template-columns: minmax(0, 1fr) 60px;
+  }
+
+  .deskdir-row .deskdir-col-star {
+    display: block;
+  }
+}
+
+/* ── The workspace, corrected against the window ──────────────────────────
+ *
+ * Four things that only show up in a browser, kept together rather than
+ * folded into the block above so the reason for each is legible beside it.
+ */
+
+/*
+ * The chrome stacks over the body, and it has to be said here.
+ *
+ * `.device > *` puts `position: relative; z-index: 1` on every direct child —
+ * so the bar and the body were both at 1, the body came later in the tree and
+ * won, and the suggestions list was painted over by the pane the moment it
+ * opened. Its own `z-index: 30` could not help: that number is inside the
+ * bar's stacking context, and a child cannot lift its parent. Raising the two
+ * strips is the fix, and it is the only place in this sheet that has to know
+ * about that rule.
+ */
+.deskwork > .deskstrip {
+  z-index: 21;
+}
+
+.deskwork > .desktop-bar {
+  z-index: 20;
+}
+
+/*
+ * The focus ring goes on the pill, not on the box inside it.
+ *
+ * `.device :focus-visible` draws a 3px ring at `--r-sm`, which is right for
+ * every control in the app and wrong for a field inside a 999px pill: it drew
+ * a hard rectangle across the middle of the round one. The ring itself is
+ * unchanged — same two shadows, same colour — it is just moved out to the
+ * shape somebody can actually see.
+ */
+.desktop-input:focus-visible,
+.deskdir-findbox:focus-visible {
+  box-shadow: none;
+}
+
+.desktop-field:focus-within,
+.deskdir-find:focus-within {
+  box-shadow: 0 0 0 1px var(--app-bg), 0 0 0 3px var(--app-accent-deep);
+}
+
+/* A filled star for a pinned app. The glyph is drawn as an outline — filling
+   it is what makes a row of fifty readable at a glance rather than fifty
+   identical outlines in two slightly different greys. */
+.deskdir-star.is-on svg {
+  fill: currentColor;
+}
+
+/* The panel's footer is a row, and `.pill-soft` has no width of its own — so
+   Close took the whole of it and pushed the link into two lines. */
+.desk-panel-foot .pill-soft {
+  width: auto;
+  flex: none;
+}
+
+.desk-panel-link {
+  white-space: nowrap;
+}

@@ -1,0 +1,226 @@
+/**
+ * The workspace shell, as rules rather than as markup.
+ *
+ * The shell is a tab strip, one search bar under it, a launcher, a directory
+ * and a sidebar — and every one of those has to agree with the others about
+ * what the app contains, what this student has pinned, and whether the centre
+ * of the search home is currently covered. Five components each answering
+ * those questions for themselves is how the launcher ends up offering a
+ * screen the directory hides, which is the exact fault `lib/nav.ts` was
+ * written to stop one layer down.
+ *
+ * So the answers are here, once, and the components read them.
+ *
+ * ## Nothing here decides what the app contains
+ *
+ * `lib/nav.ts` does, gated by the school and the role, and everything below
+ * goes through `offered`. A saved list of shortcuts is a *preference over*
+ * that registry and never a replacement for it: a name that is no longer a
+ * screen is dropped, a screen this school has switched off cannot come back
+ * by being named in an old list, and the worst a stale list can do is put
+ * five shortcuts in an odd order.
+ */
+
+import { offered, saysFor, type Destination } from './nav';
+import { DEFAULT_ROLE, type Role } from './role';
+import type { Capabilities } from './school';
+import type { Screen } from './types';
+
+/**
+ * The shortcuts a search home opens on, before anybody has moved one.
+ *
+ * The four screens that are the term — what is on today, the courses, the
+ * study modes, the calendar — and the one thing somebody does on day one.
+ * Not "most used": a row whose contents change with the week moves every
+ * icon under it, and a shortcut you have to read is not a shortcut. See the
+ * same argument in `lib/apps.ts`.
+ */
+export const DEFAULT_FAVOURITES: Screen[] = ['home', 'courses', 'study', 'calendar', 'import'];
+
+/** How many shortcuts the row will hold. Six across is the drawn width. */
+export const MAX_FAVOURITES = 6;
+
+/** The saved list, parsed. Anything unrecognised is dropped, not trusted. */
+function saved(list: string | undefined): Screen[] {
+  if (typeof list !== 'string' || list.trim() === '') return [];
+  return list
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean) as Screen[];
+}
+
+/**
+ * The shortcuts, resolved against what this school and this person can have.
+ *
+ * An empty preference is the state "nobody has chosen", answered with the
+ * defaults — and the defaults go through the same gate, so a school with no
+ * syllabus import does not get a dead tile.
+ */
+export function readFavourites(
+  list: string | undefined,
+  caps: Capabilities,
+  role: Role = DEFAULT_ROLE,
+): Destination[] {
+  const can = offered(caps, role);
+  const by = new Map(can.map((d) => [d.screen, d]));
+  const wanted = saved(list);
+  const from = wanted.length > 0 ? wanted : DEFAULT_FAVOURITES;
+  const out: Destination[] = [];
+  for (const screen of from) {
+    const d = by.get(screen);
+    if (d && !out.includes(d)) out.push(d);
+  }
+  return out.slice(0, MAX_FAVOURITES);
+}
+
+/** Back to a look key. */
+export function writeFavourites(screens: Screen[]): string {
+  return screens.slice(0, MAX_FAVOURITES).join(',');
+}
+
+/**
+ * Pin or unpin one screen, returning the key to save.
+ *
+ * Resolved first, so a toggle made against the defaults writes the defaults
+ * plus the change rather than a list of one — pinning a sixth screen must not
+ * silently unpin the five that were showing.
+ */
+export function toggleFavourite(
+  list: string | undefined,
+  screen: Screen,
+  caps: Capabilities,
+  role: Role = DEFAULT_ROLE,
+): string {
+  const now = readFavourites(list, caps, role).map((d) => d.screen);
+  const next = now.includes(screen)
+    ? now.filter((s) => s !== screen)
+    : [...now, screen].slice(0, MAX_FAVOURITES);
+  return writeFavourites(next);
+}
+
+/** Whether a screen is pinned, asked the way the star in the directory asks. */
+export function isFavourite(
+  list: string | undefined,
+  screen: Screen,
+  caps: Capabilities,
+  role: Role = DEFAULT_ROLE,
+): boolean {
+  return readFavourites(list, caps, role).some((d) => d.screen === screen);
+}
+
+/**
+ * How well an app answers to what was typed, or 0 for not at all.
+ *
+ * Four tiers, and the order is the whole of it: the name you typed beats the
+ * name that starts with it, which beats the name that contains it, which
+ * beats a word in the sentence or the keywords. "Deck" has to reach Deck
+ * before it reaches the six screens whose blurb mentions slides, and
+ * "powerpoint" — which is in no label anywhere — still has to reach Deck.
+ *
+ * The school's own words are matched as well as the registry's, so a
+ * Vanderbilt student searching YES finds their registrar.
+ */
+export function scoreApp(d: Destination, query: string, caps: Capabilities): number {
+  const q = query.trim().toLowerCase();
+  if (!q) return 0;
+  const said = saysFor(d, caps);
+  const label = said.label.toLowerCase();
+  const short = (d.short ?? '').toLowerCase();
+  if (label === q || short === q) return 100;
+  if (label.startsWith(q) || short.startsWith(q)) return 80;
+  if (label.includes(q) || short.includes(q)) return 60;
+  const words = `${said.blurb} ${d.keywords} ${d.group}`.toLowerCase();
+  // Word-start rather than bare `includes`: "map" inside "compare" is not a
+  // hit anybody meant, and a search that answers with a screen whose only
+  // connection is a substring in the middle of a word reads as broken.
+  if (new RegExp(`(^|[^a-z])${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(words)) return 40;
+  return 0;
+}
+
+/**
+ * The apps that answer to what was typed, best first.
+ *
+ * Ties keep registry order, which is the order the shelves are in — so two
+ * screens scoring the same come back in the order they sit in the launcher
+ * rather than in whatever order the sort happened to leave them.
+ */
+export function findApps(
+  query: string,
+  caps: Capabilities,
+  role: Role = DEFAULT_ROLE,
+  limit = 8,
+): Destination[] {
+  const scored = offered(caps, role)
+    .map((d, i) => ({ d, i, score: scoreApp(d, query, caps) }))
+    .filter((x) => x.score > 0);
+  scored.sort((a, b) => b.score - a.score || a.i - b.i);
+  return scored.slice(0, limit).map((x) => x.d);
+}
+
+/**
+ * What is standing over the search home, if anything.
+ *
+ * The centre of that screen — the big field, its add button and its AI Tutor
+ * control — is hidden whenever one of these is up, and the guide is explicit
+ * about why: it must not cover results or intercept clicks. One function so
+ * the screen and the shell cannot disagree about whether something is open,
+ * and a boolean rather than a z-index because an element that is merely
+ * behind the overlay is still in the tab order and still read out.
+ */
+export interface Overlays {
+  /** The top bar's own suggestions are dropped. */
+  suggesting: boolean;
+  /** The nine-dot launcher. */
+  apps: boolean;
+  /** Customize Semester. */
+  customize: boolean;
+  /** The command palette. */
+  finder: boolean;
+  /** The one-line capture box. */
+  quickAdd: boolean;
+}
+
+export function centreHidden(o: Overlays): boolean {
+  return o.suggesting || o.apps || o.customize || o.finder || o.quickAdd;
+}
+
+/**
+ * The categories the directory filters by, with "All apps" in front.
+ *
+ * Read off what this school actually offers rather than off `GROUPS`, so a
+ * shelf whose every screen is switched off is not a chip that empties the
+ * list when pressed.
+ */
+export function categories(caps: Capabilities, role: Role = DEFAULT_ROLE): string[] {
+  const seen: string[] = [];
+  for (const d of offered(caps, role)) if (!seen.includes(d.group)) seen.push(d.group);
+  return seen;
+}
+
+/** Everything this person can open, in one list, for the directory. */
+export function allApps(caps: Capabilities, role: Role = DEFAULT_ROLE): Destination[] {
+  return offered(caps, role);
+}
+
+/**
+ * The directory, narrowed by a category and a query.
+ *
+ * The query here is the directory's own box and matches the same way the top
+ * bar does, so "powerpoint" narrows the list to Deck in both places rather
+ * than in one.
+ */
+export function narrowApps(
+  apps: Destination[],
+  category: string,
+  query: string,
+  caps: Capabilities,
+): Destination[] {
+  const inCategory = category ? apps.filter((d) => d.group === category) : apps;
+  const q = query.trim();
+  if (!q) return inCategory;
+  return inCategory
+    .map((d, i) => ({ d, i, score: scoreApp(d, q, caps) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || a.i - b.i)
+    .map((x) => x.d);
+}

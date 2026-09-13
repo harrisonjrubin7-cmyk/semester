@@ -114,11 +114,32 @@ describe('going places', () => {
   });
 
   it('resets the stack at a root in tab mode', () => {
-    const deep = reducer(reducer(blank(), { type: 'go', screen: 'essay' }), {
+    // Named rather than taken from `blank()`: the default navigation is the
+    // workspace now, and a test about tab mode that silently stopped being
+    // about tab mode would go on passing while asserting nothing.
+    const tabs = { ...blank(), nav: 'tabs' as const };
+    const deep = reducer(reducer(tabs, { type: 'go', screen: 'essay' }), {
       type: 'go',
       screen: 'study',
     });
     expect(deep.history).toEqual([]);
+  });
+
+  /*
+   * And the workspace keeps the way back, like the feed.
+   *
+   * Its chrome is at the top of the window — the tab strip, the bar, the
+   * launcher — and none of it is a bar of roots you return to by tapping the
+   * one you are on. So a root reached from somewhere is a place you came
+   * from, and Back has to take you there: it is a browser-shaped shell, and
+   * Back retracing is what makes it one.
+   */
+  it('keeps a way back at a root in the workspace', () => {
+    const deep = reducer(reducer(blank(), { type: 'go', screen: 'essay' }), {
+      type: 'go',
+      screen: 'study',
+    });
+    expect(deep.history).toContain('essay');
   });
 
   it('keeps a way back at a root in feed mode, which has no tab bar', () => {

@@ -478,6 +478,14 @@ export interface FeedEvent {
 }
 
 export type Screen =
+  // The two screens the workspace shell is made of. `search` is what a new
+  // tab opens on — the wordmark, the one field, the shortcuts — and
+  // `directory` is every app the student has, as a list or a grid, with the
+  // categories down the side of it. Neither is a destination in the registry:
+  // they are the shell looking at itself, the way a browser's new-tab page is
+  // not a bookmark. See `lib/desk.ts`.
+  | 'search'
+  | 'directory'
   | 'data'
   | 'help'
   | 'onboarding'
@@ -640,7 +648,7 @@ export interface Lesson {
  * drawn*, and never adds navigation of its own. Every combination of the two
  * is a valid app, which is what makes them settings rather than forks.
  */
-export type NavMode = 'tabs' | 'feed' | 'springboard' | 'shelves';
+export type NavMode = 'tabs' | 'feed' | 'springboard' | 'shelves' | 'workspace';
 
 /** A class that repeats every week, from the syllabus meeting pattern. */
 export interface RecurringBlock {

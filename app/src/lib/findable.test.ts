@@ -43,6 +43,14 @@ const OPENED_FROM_SOMEWHERE_ELSE: Record<string, string> = {
   gap: 'What a drill showed you do not know yet. Opened when a drill ends.',
   lesson: 'A narrated lesson for one unit. Opened from Study or from Watch.',
   slides: 'One unit as a deck. Opened from Study.',
+  search:
+    'The workspace’s search home — the wordmark, the one field and the shortcuts. ' +
+    'What a new tab opens on, and what the Search home row in the sidebar returns to. ' +
+    'Not a destination for the same reason a browser’s new-tab page is not a bookmark.',
+  directory:
+    'Every app this student has, as a list or a grid. Opened from All apps in the ' +
+    'sidebar, from the launcher, and from Explore all apps on the search home. It is ' +
+    'the index of the registry rather than a row in it.',
 };
 
 /** The `Screen` union, read from the source that defines it. */

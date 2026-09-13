@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useLayoutEffect, useRef } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useStore } from './state/store';
 import { currentLook } from './state/shape';
 import {
@@ -113,6 +113,10 @@ const Study = lazy(() => import('./screens/Study').then((m) => ({ default: m.Stu
 const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work })));
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
+/* The workspace's own two screens — the search home a new tab opens on, and
+   the directory of everything behind it. See `lib/desk.ts`. */
+const SearchHome = lazy(() => import('./screens/Search').then((m) => ({ default: m.SearchHome })));
+const Directory = lazy(() => import('./screens/Directory').then((m) => ({ default: m.Directory })));
 const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
 const Profile = lazy(() => import('./screens/Profile').then((m) => ({ default: m.Profile })));
 const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
@@ -139,6 +143,11 @@ import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
 import { TabStrip, TabsFollow } from './components/Tabs';
 import { AllApps } from './components/nav/AllApps';
+import { TopBar } from './components/desk/TopBar';
+import { Sidebar } from './components/desk/Sidebar';
+import { AppsPanel } from './components/desk/AppsPanel';
+import { Customize } from './components/desk/Customize';
+import { SuggestingProvider } from './components/desk/suggesting';
 import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
 import { Tapped } from './components/Tapped';
@@ -474,7 +483,19 @@ function fallbackHeader(screen: Screen, today: string): { kicker: string; title:
   return { kicker: 'In the app', title: known.short ?? known.label };
 }
 
-function Header() {
+function Header({
+  /**
+   * Drawn beside chrome that already carries the icons.
+   *
+   * The workspace's bar holds the nine dots, the alerts bell and the avatar
+   * across the top of the window, on every screen — so a header underneath it
+   * repeating all three is two rows of the same four controls, which is the
+   * duplication this release exists to remove. What stays is what the bar
+   * does not have: the way back, the screen's own name, a running timer, the
+   * one-line capture and the record search.
+   */
+  slim = false,
+}: { slim?: boolean } = {}) {
   const { state, dispatch, now, catalog } = useStore();
   const { kicker, title } = useHeader();
   /*
@@ -711,6 +732,7 @@ function Header() {
             and still do not overlap. `lib/header.test.ts` holds the second
             half of that.
           */}
+          {!slim && (
           <button
             type="button"
             className="btn btn-ghost btn-icon tap"
@@ -721,7 +743,8 @@ function Header() {
           >
             <AppsIcon size={19} />
           </button>
-          {atRoot && (
+          )}
+          {atRoot && !slim && (
           <button
             type="button"
             className="btn btn-ghost btn-icon tap"
@@ -764,7 +787,7 @@ function Header() {
             saying "Profile, Harrison" is the same information the letters in
             the box carry, and "HR" read out as letters is not.
           */}
-          {showsAvatar({ atRoot, phone, counting }) && (
+          {!slim && showsAvatar({ atRoot, phone, counting }) && (
             <button
               type="button"
               className="btn btn-ghost btn-icon tap"
@@ -898,7 +921,15 @@ function CurrentScreen() {
       // way in rather than a different app: every icon goes to the same screen
       // the tab bar would have. `Today` reads the same `homeShape` to decide
       // between its two readings of the day, so the three cannot disagree.
+      //
+      // The workspace is not a case here, deliberately: its home is Today
+      // like everyone else's, and what it does differently is where the app
+      // *lands* — see `firstScreen` in `lib/chrome.ts`.
       return homeShape(state.nav) === 'springboard' ? <Springboard /> : <Today />;
+    case 'search':
+      return <SearchHome />;
+    case 'directory':
+      return <Directory />;
     case 'privacy':
       return <Privacy />;
     case 'data':
@@ -1046,6 +1077,143 @@ function CurrentScreen() {
     default:
       return <Today />;
   }
+}
+
+/**
+ * The workspace: tabs across the top, one search bar under them, and — where
+ * there is room — a column of shortcuts down the side.
+ *
+ * The third layout in this file rather than a fourth condition inside the
+ * other two, and for the reason `lib/chrome.ts` gives at length: the chrome
+ * here is at the *top* of the window, so nothing about the phone layout's
+ * bottom bar or the desktop layout's rail applies to it. Trying to express it
+ * as flags on those would be two layouts wearing a third.
+ *
+ * ## What is the same as the other two, deliberately
+ *
+ * Everything inside the pane. The header, the change strip, the sample
+ * banner, the save-trouble banner, the scroller, the error boundary, the
+ * shell body and the screen itself are the same elements in the same order —
+ * so a screen is one screen, drawn in a different frame, rather than a second
+ * implementation that will drift. The overlays are the same objects too: the
+ * command palette, the capture box, the undo toast and the assistant are
+ * mounted here exactly as they are there.
+ *
+ * Two things are this layout's own: the launcher is a panel hanging off the
+ * nine dots rather than a sheet over the window (`AppsPanel`), and Customize
+ * Semester exists at all.
+ *
+ * ## The header goes away on the shell's own two screens
+ *
+ * The search home is a wordmark and a field, and the directory opens with
+ * "Welcome to Semester". A chrome header saying "the search home" above
+ * either is the app narrating itself — the one place a title adds nothing,
+ * because the screen is already its own title.
+ */
+function Workspace({
+  chrome,
+  trouble,
+}: {
+  chrome: ReturnType<typeof chromeFor>;
+  trouble: React.ReactNode;
+}) {
+  const { state, dispatch, asking, settle } = useStore();
+  const tier = useTier();
+  /*
+   * Whether the bar's suggestions are down, held here because two children
+   * need the answer and neither is the other's parent — the bar raises it and
+   * the search home hides its centre for it. See `components/desk/suggesting.ts`.
+   */
+  const [suggesting, setSuggesting] = useState(false);
+  // Stable, or the effect in `TopBar` that reports the state would re-run on
+  // every render of this component and report it again.
+  const onSuggesting = useCallback((open: boolean) => setSuggesting(open), []);
+  /** The shell's own two screens, which are their own titles. See above. */
+  const ownTitle = state.screen === 'search' || state.screen === 'directory';
+
+  return (
+    <SuggestingProvider value={suggesting}>
+      {/*
+        `.device` as well as `.deskwork`, and it is load-bearing rather than
+        tidy. Every control primitive in `app.css` is scoped `.device .btn`,
+        `.device .input`, `.device .bare` — so a tab strip or a search bar
+        mounted outside it is the one part of the app not drawn in the app's
+        own materials, which is exactly what happened to the assistant panel
+        before its own note was written. `.deskwork` undoes the two things
+        `.device` says that are about being a phone: the 402px cap and the
+        column. Portals that look for `.device` find this, and it is
+        positioned, so they land over the whole workspace.
+      */}
+      <div className="device deskwork" data-tier={tier}>
+        <SkipLink />
+        <Titled />
+        <Fresh />
+        <Keys />
+        <Ringing />
+        <PushTop />
+        <Tapped />
+        <Watching />
+        {/* The one question a first sign-in asks, on this layout too. */}
+        {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
+        <TabsFollow />
+        {/* Always drawn here, from the first tab — unlike the other two
+            layouts, where it earns its forty pixels only once there is
+            somewhere to switch to. In a workspace the strip is the
+            navigation's top edge: a bar that appeared on the second tab would
+            push the whole app down a row the first time you opened one. */}
+        <TabStrip alwaysOn onBlank={() => dispatch({ type: 'go', screen: 'search' })} />
+        <TopBar onSuggesting={onSuggesting} />
+
+        <div className={chrome.sidebar ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
+          {chrome.sidebar && <Sidebar />}
+          <div
+            className={
+              isCanvas(state.screen)
+                ? 'device-pane deskwork-pane has-canvas'
+                : 'device-pane deskwork-pane'
+            }
+          >
+            <Assistant />
+            {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
+            {state.quickAdd && (
+              <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />
+            )}
+            {!ownTitle && <Header slim />}
+            <Said />
+            {/* The sample banner belongs over records, which is what it is
+                about. The search home says the same thing in its own foot
+                line — "Sample semester · 4 courses" — so the labelling is
+                kept where the reference keeps it rather than dropped, and the
+                front door is not a banner and a wordmark. */}
+            {!ownTitle && <SampleMark />}
+            <Replaced />
+            <Undone />
+            {trouble}
+            <ScrollArea screen={state.screen} key={state.screen}>
+              <SoftTop />
+              <Suspense fallback={<Loading />}>
+                <ScreenTrouble
+                  key={state.screen}
+                  onLeave={() => dispatch({ type: 'go', screen: 'search' })}
+                >
+                  <ShellBody screen={state.screen}>
+                    <CurrentScreen />
+                  </ShellBody>
+                </ScreenTrouble>
+              </Suspense>
+            </ScrollArea>
+          </div>
+        </div>
+
+        {/* The launcher and Customize, last so they stack over the body
+            without a z-index of their own to keep in step with anything. */}
+        {state.apps && <AppsPanel onClose={() => dispatch({ type: 'apps', open: false })} />}
+        {state.customize && (
+          <Customize onClose={() => dispatch({ type: 'customize', open: false })} />
+        )}
+      </div>
+    </SuggestingProvider>
+  );
 }
 
 /**
@@ -1311,6 +1479,16 @@ export default function App() {
       {saveTrouble}
     </div>
   ) : null;
+
+  /*
+   * The workspace, at every width.
+   *
+   * Before the `wide` branch rather than inside it: this layout is not the
+   * desktop one with a different navigation bolted on, it is its own frame —
+   * chrome at the top, the sidebar where there is room — and `chromeFor` has
+   * already decided which. See `Workspace` above.
+   */
+  if (chrome.desk) return <Workspace chrome={chrome} trouble={trouble} />;
 
   if (wide) {
     return (
