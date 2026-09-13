@@ -12,6 +12,8 @@
  * actually uploads a PDF.
  */
 
+import { tooPacked, tooPackedSaid } from './zips';
+
 /** What the parser needs from pdf.js, without pulling its types in. */
 interface PdfLib {
   GlobalWorkerOptions: { workerSrc: string };
@@ -112,6 +114,15 @@ function entities(text: string): string {
  * nothing more: tables come out as text, and formatting is discarded.
  */
 async function fromDocx(file: File): Promise<string> {
+  // fflate decompresses the whole archive at once, so the only place a
+  // limit can be applied is here; see `lib/zips.ts`.
+  if (tooPacked(file))
+    throw new Error(
+      tooPackedSaid(
+        file.name,
+        'Save just the pages you need as a smaller file, or paste the text in by hand.',
+      ),
+    );
   const { unzipSync, strFromU8 } = await import('fflate');
   let zip: Record<string, Uint8Array>;
   try {
@@ -147,6 +158,10 @@ async function fromDocx(file: File): Promise<string> {
  * came from — "From Session 7 slides, slide 12" — needs them.
  */
 export async function fromPptx(file: File): Promise<{ slide: number; text: string }[]> {
+  // fflate decompresses the whole archive at once, so the only place a
+  // limit can be applied is here; see `lib/zips.ts`.
+  if (tooPacked(file))
+    throw new Error(tooPackedSaid(file.name, 'Export the deck as a PDF, or save a smaller copy.'));
   const { unzipSync, strFromU8 } = await import('fflate');
   let zip: Record<string, Uint8Array>;
   try {

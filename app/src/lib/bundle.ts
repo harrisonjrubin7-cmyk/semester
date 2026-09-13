@@ -20,6 +20,8 @@
  * readings without knowing it.
  */
 
+import { tooPacked, tooPackedSaid } from './zips';
+
 /** What the app can actually do something with. */
 const READABLE =
   /\.(pdf|docx?|pptx?|txt|md|markdown|csv|tsv|rtf|png|jpe?g|webp|gif|heic|heif)$/i;
@@ -119,9 +121,18 @@ export function whySkipped(name: string, bytes: number): string | null {
  *
  * fflate unzips in memory, which is why the caps above exist and are checked
  * against the *declared* sizes as entries come out rather than after building
- * every File.
+ * every File. They bound what is built, not what unpacking costs — by the time
+ * the loop runs the archive is already decompressed. The size of the zip
+ * itself is checked first, which is the only point at which that can be
+ * bounded; see `lib/zips.ts`.
  */
 export async function unzip(file: File): Promise<Unpacked> {
+  // Before the unpacking, not after it. The caps below run over entries that
+  // `unzipSync` has already decompressed in full, so they bound what gets
+  // built into `File` objects and not what gets held in memory to do it.
+  if (tooPacked(file)) {
+    throw new Error(tooPackedSaid(file.name, 'Unzip it yourself and pick the files you need.'));
+  }
   const { unzipSync } = await import('fflate');
   let entries: Record<string, Uint8Array>;
   try {

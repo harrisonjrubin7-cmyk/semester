@@ -36,6 +36,7 @@
 
 import { blankSheet, colIndex, MAX_COLS, MAX_ROWS, parseRef, type Sheet } from './sheet';
 import type { CourseId } from './types';
+import { tooPacked } from './zips';
 
 export interface Read {
   sheets: Omit<Sheet, 'id'>[];
@@ -578,17 +579,16 @@ function readCells(
 /**
  * How much this will unpack before deciding the file is not a spreadsheet.
  *
- * `unzipSync` decompresses the whole archive into memory in one go, so a small
- * file claiming to hold a great deal is a frozen tab. A real .xlsx is a few
- * hundred kilobytes of XML per worksheet and this app's grid stops at 200×26,
- * so these are far past anything genuine and far short of anything a phone
- * cannot survive.
+ * The size of the file itself is `tooPacked` in `lib/zips.ts`, shared with the
+ * three other readers that call `unzipSync`; this is the bound on what comes
+ * back out. A real .xlsx is a few hundred kilobytes of XML per worksheet and
+ * this app's grid stops at 200×26, so it is far past anything genuine and far
+ * short of anything a phone cannot survive.
  */
-const MOST_PACKED = 64 * 1024 * 1024;
 const MOST_UNPACKED = 128 * 1024 * 1024;
 
 export async function fromXlsx(file: File, courseId: CourseId | null = null): Promise<Read> {
-  if (file.size > MOST_PACKED) {
+  if (tooPacked(file)) {
     throw new Error(
       `${file.name} is too large for this app to open. Its grid stops at ${MAX_ROWS} rows and ` +
         `${MAX_COLS} columns — export the part you need as a CSV.`,
@@ -703,7 +703,7 @@ export async function fromDelimited(
    * every character of it before anything is cut to the grid, so a very large
    * CSV is a frozen tab regardless of the 200×26 limit that follows.
    */
-  if (file.size > MOST_PACKED) {
+  if (tooPacked(file)) {
     throw new Error(
       `${file.name} is too large for this app to open. Its grid stops at ${MAX_ROWS} rows and ` +
         `${MAX_COLS} columns — split the file, or export just the part you need.`,
