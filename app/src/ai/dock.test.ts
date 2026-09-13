@@ -27,15 +27,16 @@ import { fills, FILLS } from '../components/shell/exempt';
 const src = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const css = () => src('../styles/app.css');
 
-describe('the screen that fills its box', () => {
-  it('is a chat, and only a chat', () => {
+describe('the screens that fill their box', () => {
+  it('are the two chats and the mailbox, and nothing else', () => {
     // Not a list anyone should grow casually. A screen belongs here when its
-    // own body pins something to the bottom edge and scrolls the rest — which
-    // is a chat, and both of the app's chats are here: the assistant, and the
-    // class conversation on Classmates.
-    expect(FILLS).toEqual(['ask', 'classmates']);
+    // own body pins something to an edge and scrolls the rest — the two
+    // chats, each with a composer on the bottom, and the mailbox, whose rail,
+    // list and message each hold their own place while one of them scrolls.
+    expect(FILLS).toEqual(['ask', 'classmates', 'mail']);
     expect(fills('ask')).toBe(true);
     expect(fills('classmates')).toBe(true);
+    expect(fills('mail')).toBe(true);
     expect(fills('today' as never)).toBe(false);
   });
 

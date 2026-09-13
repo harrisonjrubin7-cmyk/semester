@@ -89,6 +89,18 @@ export const UNDOABLE: Record<string, Undoable> = {
   dropBalance: { label: 'Reading removed', fields: ['balances'] },
   dropResidence: { label: 'Room removed', fields: ['residences'] },
   deleteNote: { label: 'Note deleted', fields: ['notes'] },
+  dropMailDraft: { label: 'Draft deleted', fields: ['mailDrafts'] },
+  /*
+   * Archiving, deleting and snoozing mail. They take nothing away but they
+   * take it off the screen, which is the same thing to the person who pressed
+   * Archive on the wrong row — `onChange`, like the other moves, because
+   * counting says nothing was lost.
+   *
+   * Reading and starring are `markMail` and are deliberately not here: opening
+   * a message marks it read, and an undo strip after every email you read is
+   * an undo strip nobody reads.
+   */
+  moveMail: { label: 'Moved', fields: ['mailMarks'], onChange: true },
   dropSource: { label: 'Source removed', fields: ['sources'] },
   dropSitting: { label: 'Paper removed', fields: ['sittings'] },
   /*

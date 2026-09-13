@@ -1,5 +1,5 @@
 /**
- * One reducer, nine slices.
+ * One reducer, ten slices.
  *
  * This was a single 560-line `switch` inside `store.tsx`, which is a shape
  * that works right up until you want to change something in it. Ninety-four
@@ -24,6 +24,7 @@ import type { Action, State } from './shape';
 import { changedSomething, snapshot, tookSomething, undoableFor } from '../lib/undo';
 import { library } from './slices/library';
 import { made } from './slices/made';
+import { mailbox } from './slices/mailbox';
 import { mine } from './slices/mine';
 import { navigate } from './slices/navigate';
 import { notes } from './slices/notes';
@@ -37,7 +38,7 @@ import { study } from './slices/study';
  * each one covers. The order is not load-bearing — no two slices claim the
  * same action, and the test above says so.
  */
-const SLICES = [navigate, study, schedule, mine, notes, made, papers, library, settings];
+const SLICES = [navigate, study, schedule, mine, notes, made, mailbox, papers, library, settings];
 
 /**
  * The slices, plus one thing they do not do.

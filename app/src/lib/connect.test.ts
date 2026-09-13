@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   PROVIDERS,
+  decodeBase64Url,
+  gmailBody,
+  gmailFolder,
+  readMail,
+  textFromHtml,
   addEvent,
   addTask,
   describe as explain,
@@ -515,5 +520,166 @@ describe('writable', () => {
   it('reads the stored tokens when it is given none', () => {
     connected('google');
     expect(writable()).toEqual(['google']);
+  });
+});
+
+/**
+ * Reading the inbox.
+ *
+ * The same argument as the calendar above: what is worth pinning is the shape
+ * on this side of the wire. Gmail hands back a tree of base64url parts with
+ * the folder hidden in a list of labels; Graph hands back a flat record with
+ * the body as HTML. The mailbox screen reads one type, and these are the two
+ * translations into it.
+ */
+describe('reading mail', () => {
+  const b64 = (text: string) =>
+    Buffer.from(text, 'utf8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
+
+  /** Answers each request from a table keyed by a fragment of its URL. */
+  function routing(table: { match: string; body: unknown }[]) {
+    const fetchMock = vi.fn(async (url: string) => {
+      const at = String(url);
+      calls.push({ url: at });
+      const row = table.find((r) => at.includes(r.match));
+      return {
+        ok: true,
+        status: 200,
+        json: async () => row?.body ?? {},
+        text: async () => JSON.stringify(row?.body ?? {}),
+      } as Response;
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return fetchMock;
+  }
+
+  it('decodes a base64url body, padding and all', () => {
+    expect(decodeBase64Url(b64('Dear Professor Stromme,'))).toBe('Dear Professor Stromme,');
+    expect(decodeBase64Url('not base64 ***')).toBe('');
+  });
+
+  it('reads an HTML newsletter as the text it says, not as markup', () => {
+    const html = '<style>p{color:red}</style><p>Class is <b>cancelled</b></p><p>See you Thursday</p>';
+    expect(textFromHtml(html)).toBe('Class is cancelled\nSee you Thursday');
+  });
+
+  it('prefers the plain part of a multipart message', () => {
+    const tree = {
+      mimeType: 'multipart/alternative',
+      parts: [
+        { mimeType: 'text/plain', body: { data: b64('the plain one') } },
+        { mimeType: 'text/html', body: { data: b64('<p>the html one</p>') } },
+      ],
+    };
+    expect(gmailBody(tree)).toBe('the plain one');
+  });
+
+  it('falls back to the HTML part when there is no plain one', () => {
+    const tree = {
+      mimeType: 'multipart/mixed',
+      parts: [{ mimeType: 'text/html', body: { data: b64('<p>only html</p>') } }],
+    };
+    expect(gmailBody(tree)).toBe('only html');
+  });
+
+  it('reads where Gmail says a message is out of its labels', () => {
+    expect(gmailFolder(['INBOX', 'UNREAD'], 'inbox')).toBe('inbox');
+    expect(gmailFolder(['TRASH'], 'inbox')).toBe('trash');
+    expect(gmailFolder(['SENT'], 'sent')).toBe('sent');
+    // No folder label at all is what archived looks like in Gmail.
+    expect(gmailFolder(['CATEGORY_PERSONAL'], 'archive')).toBe('archive');
+  });
+
+  it('turns a Gmail message into one the mailbox can draw', async () => {
+    connected('google');
+    routing([
+      { match: '/messages?', body: { messages: [{ id: 'm1', threadId: 'th1' }] } },
+      {
+        match: '/messages/m1',
+        body: {
+          id: 'm1',
+          threadId: 'th1',
+          snippet: 'The deadline has moved',
+          internalDate: '1757500000000',
+          labelIds: ['INBOX', 'UNREAD', 'STARRED', 'CATEGORY_PERSONAL'],
+          payload: {
+            headers: [
+              { name: 'From', value: 'John Stromme <john.stromme@vanderbilt.edu>' },
+              { name: 'To', value: 'you@vanderbilt.edu' },
+              { name: 'Subject', value: 'ECON 1020 problem set' },
+            ],
+            mimeType: 'multipart/mixed',
+            parts: [
+              { mimeType: 'text/plain', body: { data: b64('Moved to Friday.') } },
+              { filename: 'ps2.pdf', mimeType: 'application/pdf', body: { attachmentId: 'a1' } },
+            ],
+          },
+        },
+      },
+    ]);
+
+    const [mail] = await readMail(COURSES, 'google', { folder: 'inbox' });
+    expect(mail.from).toEqual({ name: 'John Stromme', address: 'john.stromme@vanderbilt.edu' });
+    expect(mail.subject).toBe('ECON 1020 problem set');
+    expect(mail.body).toBe('Moved to Friday.');
+    expect(mail.unread).toBe(true);
+    expect(mail.starred).toBe(true);
+    expect(mail.folder).toBe('inbox');
+    expect(mail.attachments).toBe(1);
+    expect(mail.courseId).toBe('econ');
+    // The labels that say where it is are not labels about what it is.
+    expect(mail.labels).toEqual(['INBOX', 'CATEGORY_PERSONAL']);
+  });
+
+  it('asks Gmail for the archive as what is left over', async () => {
+    connected('google');
+    routing([{ match: '/messages?', body: { messages: [] } }]);
+    await readMail(COURSES, 'google', { folder: 'archive' });
+    expect(decodeURIComponent(calls[0].url.replace(/\+/g, ' '))).toContain(
+      '-in:inbox -in:sent -in:draft -in:trash -in:spam',
+    );
+  });
+
+  it('turns a Graph message into the same thing', async () => {
+    connected('microsoft');
+    routing([
+      {
+        match: 'mailFolders/inbox/messages',
+        body: {
+          value: [
+            {
+              id: 'g1',
+              conversationId: 'c1',
+              subject: 'PSCI 1104 reading swapped',
+              bodyPreview: 'Read chapter 4 instead',
+              body: { contentType: 'html', content: '<p>Read chapter 4 instead</p>' },
+              receivedDateTime: '2026-09-10T14:01:00Z',
+              isRead: false,
+              hasAttachments: true,
+              webLink: 'https://outlook.office.com/mail/id/g1',
+              categories: ['Teaching'],
+              flag: { flagStatus: 'flagged' },
+              from: { emailAddress: { name: 'Jessica Trounstine', address: 'j.t@vanderbilt.edu' } },
+              toRecipients: [{ emailAddress: { address: 'you@vanderbilt.edu' } }],
+            },
+          ],
+        },
+      },
+    ]);
+
+    const [mail] = await readMail(COURSES, 'microsoft', { folder: 'inbox' });
+    expect(mail.source).toBe('microsoft');
+    expect(mail.threadId).toBe('c1');
+    expect(mail.body).toBe('Read chapter 4 instead');
+    expect(mail.unread).toBe(true);
+    expect(mail.starred).toBe(true);
+    expect(mail.attachments).toBe(1);
+    expect(mail.labels).toEqual(['Teaching']);
+    expect(mail.courseId).toBe('psci');
+  });
+
+  it('refuses the two providers that have no mail rather than failing oddly', async () => {
+    connected('zoom');
+    await expect(readMail(COURSES, 'zoom', { folder: 'inbox' })).rejects.toThrow(/no mail/);
   });
 });
