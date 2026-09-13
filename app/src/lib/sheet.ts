@@ -1645,6 +1645,33 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       const mid = Math.floor(s.length / 2);
       return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
     }
+    /**
+     * `PERCENTILE`, `QUARTILE`, `LARGE` and `SMALL`, by Excel's interpolation.
+     *
+     * The rank is `p(n − 1)` and a fractional rank is read between its two
+     * neighbours — the inclusive definition, which is what `QUARTILE` and the
+     * five-number summary of a first statistics course mean. Other
+     * definitions exist and disagree in the third figure; this one agrees with
+     * the sheet the marker has open.
+     */
+    case 'PERCENTILE':
+    case 'QUARTILE': {
+      if (!xs.length) return '#DIV/0!';
+      const asked = name === 'QUARTILE' ? (xs[xs.length - 1] ?? 0) / 4 : (xs[xs.length - 1] ?? 0);
+      const values = [...xs.slice(0, -1)].sort((a, b) => a - b);
+      if (!values.length || asked < 0 || asked > 1) return '#VALUE!';
+      const rank = asked * (values.length - 1);
+      const low = Math.floor(rank);
+      const high = Math.ceil(rank);
+      return values[low] + (values[high] - values[low]) * (rank - low);
+    }
+    case 'LARGE':
+    case 'SMALL': {
+      const k = Math.round(xs[xs.length - 1] ?? 0);
+      const values = [...xs.slice(0, -1)].sort((a, b) => a - b);
+      if (k < 1 || k > values.length) return '#VALUE!';
+      return name === 'LARGE' ? values[values.length - k] : values[k - 1];
+    }
     case 'MIN':
       return xs.length ? Math.min(...xs) : 0;
     case 'MAX':
@@ -1663,6 +1690,80 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       return one(Math.abs);
     case 'INT':
       return one(Math.floor);
+    /*
+     * Trigonometry, in radians, as every spreadsheet has it.
+     *
+     * Degrees is the mistake this invites and `DEGREES`/`RADIANS` are the
+     * answer to it — the same pair Excel ships, so a formula copied from a
+     * problem set works here without being rewritten.
+     */
+    case 'PI':
+      return Math.PI;
+    case 'SIN':
+      return one(Math.sin);
+    case 'COS':
+      return one(Math.cos);
+    case 'TAN':
+      return one(Math.tan);
+    case 'ASIN':
+      return one(Math.asin);
+    case 'ACOS':
+      return one(Math.acos);
+    case 'ATAN':
+      return one(Math.atan);
+    case 'ATAN2':
+      // Excel's order: x first, then y. The other way round is a plausible
+      // angle rather than an error, which is why it is spelled out here.
+      return Math.atan2(xs[1] ?? 0, xs[0] ?? 0);
+    case 'SINH':
+      return one(Math.sinh);
+    case 'COSH':
+      return one(Math.cosh);
+    case 'TANH':
+      return one(Math.tanh);
+    case 'DEGREES':
+      return one((x) => (x * 180) / Math.PI);
+    case 'RADIANS':
+      return one((x) => (x * Math.PI) / 180);
+    case 'SIGN':
+      return one(Math.sign);
+    case 'TRUNC':
+      return one(Math.trunc);
+    case 'CEILING':
+      return one(Math.ceil);
+    case 'FLOOR':
+      return one(Math.floor);
+    case 'ROUNDUP':
+    case 'ROUNDDOWN': {
+      const places = xs[1] ?? 0;
+      const factor = 10 ** places;
+      const scaled = (xs[0] ?? 0) * factor;
+      // Away from zero and towards it, rather than up and down: −2.5 rounded
+      // "up" is −3 in a spreadsheet, which is the one a grade sheet means.
+      const moved = name === 'ROUNDUP' ? Math.ceil(Math.abs(scaled)) : Math.floor(Math.abs(scaled));
+      return (Math.sign(scaled) || 1) * (moved / factor);
+    }
+    /** `FACT`, `COMBIN` and `PERMUT` — the probability a methods course opens with. */
+    case 'FACT': {
+      const n = xs[0] ?? 0;
+      if (!Number.isInteger(n) || n < 0 || n > 170) return '#VALUE!';
+      let out = 1;
+      for (let i = 2; i <= n; i += 1) out *= i;
+      return out;
+    }
+    case 'COMBIN':
+    case 'PERMUT': {
+      const n = xs[0] ?? 0;
+      const k = xs[1] ?? 0;
+      if (!Number.isInteger(n) || !Number.isInteger(k) || k < 0 || n < 0 || k > n) return '#VALUE!';
+      let out = 1;
+      for (let i = 1; i <= k; i += 1) out = (out * (n - k + i)) / i;
+      const chosen = Math.round(out);
+      if (name === 'COMBIN') return chosen;
+      let arrangements = chosen;
+      for (let i = 2; i <= k; i += 1) arrangements *= i;
+      return arrangements;
+    }
     case 'SQRT': {
       const n = number(first ?? '');
       if (isError(n)) return n;
@@ -1679,6 +1780,13 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       const n = number(first ?? '');
       if (isError(n)) return n;
       return n <= 0 ? '#VALUE!' : Math.log10(n);
+    }
+    /** `LOG(x)` is base ten and `LOG(x, b)` is base b, which is Excel's reading. */
+    case 'LOG': {
+      const n = xs[0] ?? 0;
+      const base = xs.length > 1 ? xs[1] : 10;
+      if (n <= 0 || base <= 0 || base === 1) return '#VALUE!';
+      return Math.log(n) / Math.log(base);
     }
     case 'POWER':
       return (xs[0] ?? 0) ** (xs[1] ?? 0);
@@ -1718,6 +1826,46 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       for (let i = 0; i < a.length; i += 1) top += (a[i] - ma) * (b[i] - mb);
       const spread = Math.sqrt(squares(a) * squares(b));
       return spread === 0 ? '#DIV/0!' : top / spread;
+    }
+    /**
+     * The fitted line, in the three pieces a course reports it in.
+     *
+     * `SLOPE(ys, xs)`, `INTERCEPT(ys, xs)`, `RSQ(ys, xs)` and
+     * `FORECAST(x, ys, xs)` — y first, as Excel has them, because the answer
+     * is checked against a classmate's sheet and an argument order of our own
+     * would be a silent disagreement rather than an error.
+     *
+     * This is the one piece of statistics a social-science degree runs on and
+     * the sheet could not do it: `CORREL` said how tight the relationship was
+     * and nothing said what it *was*. Written once here, over the same pair of
+     * ranges `CORREL` takes.
+     */
+    case 'SLOPE':
+    case 'INTERCEPT':
+    case 'RSQ':
+    case 'FORECAST': {
+      const shift = name === 'FORECAST' ? 1 : 0;
+      const ys = numbers(groups[shift]?.values ?? []);
+      const xs2 = numbers(groups[shift + 1]?.values ?? []);
+      if (isError(ys)) return ys;
+      if (isError(xs2)) return xs2;
+      if (ys.length !== xs2.length || ys.length < 2) return '#DIV/0!';
+      const mx = mean(xs2);
+      const my = mean(ys);
+      let top = 0;
+      for (let i = 0; i < ys.length; i += 1) top += (xs2[i] - mx) * (ys[i] - my);
+      const bottom = squares(xs2);
+      if (bottom === 0) return '#DIV/0!';
+      const slope = top / bottom;
+      if (name === 'SLOPE') return slope;
+      const intercept = my - slope * mx;
+      if (name === 'INTERCEPT') return intercept;
+      if (name === 'RSQ') {
+        const spread = squares(ys);
+        return spread === 0 ? '#DIV/0!' : (top * top) / (bottom * spread);
+      }
+      const at = number(groups[0]?.values[0] ?? '');
+      return isError(at) ? at : intercept + slope * at;
     }
     // ── Money ─────────────────────────────────────────────────────────────
     /**

@@ -23,6 +23,7 @@ import { newId } from '../../lib/idb';
 import { blankDoc, type Doc } from '../../lib/document';
 import { blankSheet, type Sheet } from '../../lib/sheet';
 import type { SavedEquation } from '../../lib/maths';
+import type { PlotLine } from '../../lib/plot';
 import { subtree, withCourses, type Folder } from '../../lib/folders';
 import { blankDeck, type StoredDeck } from '../../lib/decks';
 import type { Action, State } from '../shape';
@@ -260,6 +261,46 @@ export function made(state: State, action: Action): State | null {
 
     case 'deleteEquation':
       return { ...state, equations: state.equations.filter((e) => e.id !== action.id) };
+
+    /*
+     * The graph's own list.
+     *
+     * A row is added at the end rather than the top — unlike everything else
+     * in this slice, where the newest thing is the one you want first. A plot
+     * is read downwards: the parameter is defined above the curve that uses
+     * it, and a new line dropped on top of the list would land between a
+     * slider and what it moves.
+     */
+    case 'addPlot': {
+      const line: PlotLine = { id: newId(), text: action.text ?? '', on: true };
+      return { ...state, plots: [...state.plots, line].slice(0, LIMIT) };
+    }
+
+    case 'writePlot':
+      return {
+        ...state,
+        plots: state.plots.map((p) => (p.id === action.id ? { ...p, ...action.patch } : p)),
+      };
+
+    case 'dropPlot':
+      return { ...state, plots: state.plots.filter((p) => p.id !== action.id) };
+
+    case 'writeMaths':
+      return {
+        ...state,
+        mathWorking: action.text ?? state.mathWorking,
+        // A new formula clears the values given to the old one's letters:
+        // `r = 0.05` meant for a present value is not the `r` of a growth
+        // rate, and carrying it over is how a right-looking wrong number gets
+        // into somebody's working.
+        mathGiven: action.given ?? (action.text === undefined ? state.mathGiven : {}),
+      };
+
+    case 'setPlot':
+      return {
+        ...state,
+        plots: action.lines.slice(0, LIMIT).map((text) => ({ id: newId(), text, on: true })),
+      };
 
     default:
       return null;

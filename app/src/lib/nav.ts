@@ -354,10 +354,10 @@ export const DESTINATIONS: Destination[] = [
   },
   {
     screen: 'equations',
-    label: 'Equations',
+    label: 'Equations, and the graph',
     short: 'Maths',
-    blurb: 'Write a formula properly — on screen, into a document, or as a line you can paste anywhere.',
-    keywords: 'equation equations formula formulas maths math latex mathml notation fraction exponent superscript subscript square root sum sigma greek symbol elasticity standard deviation margin of error present value regression z score expected value statistics',
+    blurb: 'Write a formula properly, work it out at your own numbers, and draw its curve.',
+    keywords: 'equation equations formula formulas maths math latex mathml notation fraction exponent superscript subscript square root sum sigma greek symbol elasticity standard deviation margin of error present value regression z score expected value statistics graph graphing graphs plot plotting curve curves chart function functions desmos geogebra graphing calculator scientific calculator calculate calculator compute evaluate work out solve for a value trig trigonometry sin cos tan log ln exponential asymptote intercept zeros roots turning point maximum minimum intersection area under the curve integral slope tangent derivative parabola circle sliders parameter degrees radians factorial permutation combination',
     group: 'Make',
     taskTags: ['make', 'study'],
     root: 'study',
