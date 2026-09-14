@@ -41,6 +41,8 @@ import type { CourseId } from './types';
 // Type only, so the cycle with `chart.ts` — which reads this file's cells —
 // never exists at runtime.
 import type { SheetChart } from './chart';
+import type { CondRule } from './condfmt';
+import type { SheetFilter } from './filter';
 
 /** One sheet, as the store holds it. */
 export interface Sheet {
@@ -64,6 +66,22 @@ export interface Sheet {
   /** How far the grid has been dragged out. Never smaller than what is in it. */
   rows: number;
   cols: number;
+  /**
+   * Rows out of sight — see `lib/filter.ts`.
+   *
+   * A view over the grid and nothing more: the cells it hides are still
+   * there, still named by every formula that named them, and still counted by
+   * every `SUM` over them. Absent on every sheet nobody has filtered.
+   */
+  filter?: SheetFilter;
+  /**
+   * Colours that follow the numbers — see `lib/condfmt.ts`.
+   *
+   * Stored as rules rather than as painted cells, so a mark that changes
+   * changes its colour with it. Absent on every sheet nobody has put a rule
+   * on, which is nearly all of them.
+   */
+  rules?: CondRule[];
   /**
    * Pictures of parts of this grid — see `lib/chart.ts`.
    *

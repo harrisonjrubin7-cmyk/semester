@@ -101,3 +101,32 @@ describe('the fill a press then runs', () => {
     expect(out.cells.B3).toBe('=A3*$D$1');
   });
 });
+
+describe('filling while rows are hidden', () => {
+  /*
+   * The hazard the fill handle makes easy to hit: filter a gradebook to one
+   * course, drag a formula down, and it has silently overwritten the rows of
+   * the other three — an edit nobody can see, to data nobody can see.
+   */
+  it('writes nothing into a row the filter is hiding', () => {
+    const cells: Cells = { A1: 'x', A2: 'a', A3: 'b', A4: 'c', B2: '=A2&"!"', B3: 'keep me' };
+    const out = fill(body(cells), { anchor: 'B2', focus: 'B4' }, 'down', new Set([2]));
+    expect(out.cells.B3).toBe('keep me');
+    expect(out.cells.B4).toBe('=A4&"!"');
+  });
+
+  it('still moves the references of the rows it does write', () => {
+    const cells: Cells = { A1: 'x', B1: '=A1*2' };
+    const out = fill(body(cells), { anchor: 'B1', focus: 'B4' }, 'down', new Set([1, 2]));
+    expect(out.cells.B2).toBeUndefined();
+    expect(out.cells.B3).toBeUndefined();
+    expect(out.cells.B4).toBe('=A4*2');
+  });
+
+  it('is the same fill as before when nothing is hidden', () => {
+    const cells: Cells = { A1: 'x', B1: '=A1*2' };
+    expect(fill(body(cells), { anchor: 'B1', focus: 'B3' }, 'down', new Set())).toEqual(
+      fill(body(cells), { anchor: 'B1', focus: 'B3' }, 'down'),
+    );
+  });
+});

@@ -3492,6 +3492,27 @@ input[type='search'].input {
   overflow: hidden;
 }
 
+/* A strip with more in it than a phone's width.
+   Find-and-replace is two fields and three buttons and fits; a filter is a
+   column, a test, a value, the rules already set and a count, and on a 390px
+   screen a single row of those is five controls each three characters wide.
+   So these wrap, and lose `.fx`'s clipping with it — a wrapped row is taller,
+   which is the thing `overflow: hidden` was there to prevent and is correct
+   here. */
+.fx-wrap {
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  overflow: visible;
+}
+
+.fx-wrap > .fx-in {
+  flex: 1 1 96px;
+  min-width: 0;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+}
+
 /* The name box. Fixed width so the formula starts in the same place whether
    the selection is A1 or AA100 — a field that slides sideways as you move
    about the grid is a field you have to find again every time. */

@@ -88,6 +88,20 @@ export function cells(range: Range): string[] {
  * Excel both use, and the second is the one worth having: it is how somebody
  * checks that the range they are about to total is the range they meant.
  */
+/**
+ * The other way: `"B2:B20"` back into a selection.
+ *
+ * {@link label}'s inverse, and it lives beside it so the two spellings of a
+ * range cannot drift. A single address is a range of one cell, which is what
+ * `B2` means everywhere else in a formula.
+ */
+export function rangeOf(text: string): Range {
+  const [from, to] = text.split(':');
+  const anchor = (from ?? '').trim().toUpperCase();
+  const focus = (to ?? from ?? '').trim().toUpperCase();
+  return { anchor, focus };
+}
+
 export function label(range: Range): string {
   const b = box(range);
   const from = ref(b.top, b.left);

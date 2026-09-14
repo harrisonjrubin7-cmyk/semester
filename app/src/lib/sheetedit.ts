@@ -561,11 +561,26 @@ export function deleteCols(body: Body, at: number, count = 1): Body {
  * values in place. Filling *is* overwriting; a fill that skipped the blanks
  * would leave a column half old and half new, which is worse than either.
  */
-export function fill(body: Body, range: Range, way: 'down' | 'right'): Body {
+export function fill(
+  body: Body,
+  range: Range,
+  way: 'down' | 'right',
+  away: ReadonlySet<number> = new Set(),
+): Body {
   const b = box(range);
   const cells = { ...body.cells };
   const styles = { ...body.styles };
   for (let r = b.top; r <= b.bottom; r += 1) {
+    /*
+     * A row the filter is hiding is not written to.
+     *
+     * Filling through one is an edit nobody can see happening to data nobody
+     * can see — filter a gradebook to one course, drag a formula down, and it
+     * has overwritten the rows of the other three. Excel skips them for the
+     * same reason, and it is the one place a *view* has to reach into an
+     * *edit*: everywhere else in this file a filter changes nothing.
+     */
+    if (away.has(r)) continue;
     for (let c = b.left; c <= b.right; c += 1) {
       const from = way === 'down' ? ref(b.top, c) : ref(r, b.left);
       const to = ref(r, c);

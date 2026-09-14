@@ -486,6 +486,26 @@ model in it or needs a key:
   the sheets a formula reads along with it, under the names the tabs will
   actually carry.
 
+  A **filter** hides the rows you are not looking at — pick a column, a test
+  and a value, and set one on as many columns as you like. It hides rows and
+  changes no number: `=SUM(B2:B20)` still adds up what is hidden, exactly as
+  it does in Excel. That is the trap every spreadsheet has, so the figure
+  people actually read for *so what does this come to* — the status bar's sum,
+  average and count under the selection — counts only the rows you can see,
+  and says how many it left out.
+
+  And cells can **colour themselves**: a rule like *C2:C20, less than 60, red*
+  paints the marks that are under sixty and keeps painting the right ones when
+  a mark changes. A rule, not a colour: painting three cells red by hand and
+  then editing one leaves the red where it was, which is worse than no colour
+  at all because it is a claim about a figure that is no longer true. An empty
+  cell is never painted by a numeric rule — a column of marks nobody has
+  entered yet is not a column of zeroes.
+
+  Both go into the `.xlsx` as what they are — hidden rows under a real
+  autofilter, and real conditional-formatting rules — so taking the filter off
+  in Excel brings the rows back and changing a mark there changes its colour.
+
   And the corner of the selection is a **fill handle**: drag it to pull a
   formula down a column or across a row, or press it to fill as far as the
   column beside it goes — which is what double-clicking it does in Excel, and

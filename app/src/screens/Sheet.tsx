@@ -58,6 +58,7 @@ import {
   holds,
   label as rangeLabel,
   many,
+  rangeOf,
   saySize,
   step,
   summarise,
@@ -111,6 +112,32 @@ import {
   type SheetChart as ChartSpec,
 } from '../lib/chart';
 import { SheetChart as ChartPicture } from '../components/SheetChart';
+import { hides } from '../lib/filter';
+import {
+  TEST_LABELS as FILTER_LABELS,
+  TESTS as FILTER_TESTS,
+  blankFilter,
+  columnsIn,
+  filterOf,
+  headingOf,
+  hidden as hiddenRows,
+  saysRule as saysFilter,
+  valuesIn,
+  withRule,
+  withoutRule,
+  type FilterRule,
+  type SheetFilter,
+} from '../lib/filter';
+import {
+  TEST_LABELS as COND_LABELS,
+  TESTS as COND_TESTS,
+  blankRule,
+  painted,
+  rulesOf,
+  saysRule as saysCond,
+  type CondRule,
+  type Test as CondTest,
+} from '../lib/condfmt';
 import { pictureFileName, standalone } from '../lib/svgout';
 import { handOver } from '../lib/draft.hook';
 import type { Menu } from '../lib/menus';
@@ -760,6 +787,10 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   /** What the View tab is showing, and what it is hiding. */
   const [view, setView] = useState({ lines: true, heads: true, formulas: false, freeze: true });
   const [seeking, setSeeking] = useState(false);
+  /** Which panel is open under the ribbon, or none. */
+  const [panel, setPanel] = useState<'filter' | 'rules' | null>(null);
+  /** Which column the filter strip is setting a rule on. */
+  const [onColumn, setOnColumn] = useState<number | null>(null);
   const [needle, setNeedle] = useState('');
   const [instead, setInstead] = useState('');
   const boxes = useRef<Record<string, HTMLInputElement | null>>({});
@@ -1002,8 +1033,48 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const answer = display(sheet.cells, focus, over);
   const wrong = isError(evaluate(sheet.cells, focus, new Set(), over));
   const style = styleOf(sheet, focus) ?? {};
+  /**
+   * The filter, and the rows it is keeping out of sight.
+   *
+   * Read through `filterOf` for the reason `chartsOf` is: a stored copy is
+   * restored with `list()`, which trusts what it finds. Recomputed whenever
+   * the cells change, because a filter is a view and a view that has to be
+   * refreshed by hand is a view that is wrong between refreshes.
+   */
+  const filter = useMemo(() => filterOf(sheet), [sheet]);
+  const away = useMemo(
+    () => (filter ? hiddenRows(sheet.cells, filter, over) : new Set<number>()),
+    [sheet.cells, filter, over],
+  );
+
+  /**
+   * The colour rules, and the ranges they cover, resolved once.
+   *
+   * Once rather than per cell: this component draws `rows × cols` of them and
+   * each would otherwise re-parse every rule's range to ask whether it was
+   * inside it — four regexes a cell for something that changes when a rule
+   * does and not when a number does.
+   */
+  const rules = useMemo(() => rulesOf(sheet, INKS), [sheet]);
+  const ruleRanges = useMemo(
+    () => new Map(rules.map((r) => [r.range, rangeOf(r.range)])),
+    [rules],
+  );
+
   const selected = useMemo(() => cellsIn(sel), [sel]);
-  const totals = useMemo(() => summarise(sheet.cells, selected, over), [sheet.cells, selected, over]);
+  /**
+   * The selection's arithmetic, over the rows you can actually see.
+   *
+   * The one figure on the screen a filter moves, and it has to be this one: a
+   * `SUM` in a cell still adds up the hidden rows — see the head of
+   * `lib/filter.ts` — and the status bar is what people read for "so what does
+   * this come to". Filtering a gradebook to one course and reading a total
+   * that quietly includes the other three is the fault this answers.
+   */
+  const visible = useMemo(() => selected.filter((a) => !hides(away, a)), [selected, away]);
+  const totals = useMemo(() => summarise(sheet.cells, visible, over), [sheet.cells, visible, over]);
+  /** How many of the selected rows the filter is keeping out of the sum above. */
+  const outOfSight = selected.length - visible.length;
   const spot = box(sel);
 
   /*
@@ -1095,9 +1166,35 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     if (!way) return;
     const at = box(from);
     const range: Range = { anchor: ref(at.top, at.left), focus: to };
-    change(fill(bodyOf(sheet), range, way), `fill:${way}`);
+    change(fill(bodyOf(sheet), range, way, away), `fill:${way}`);
     setSel(range);
     say(`Filled ${way} to ${to}.`);
+  };
+
+  /**
+   * Filtering and colouring, patched rather than recorded.
+   *
+   * Neither is one of the grid's undoable steps, and neither should be: undo
+   * in this editor puts back what a cell *held*, and a filter changes nothing
+   * a cell holds while a rule changes nothing but the paint over it. Pressing
+   * undo after setting a filter should take back the last thing typed, which
+   * is what somebody would be reaching for. Both are cleared by the button
+   * that set them, which is the honest undo for a view.
+   */
+  const setFilter = (next: SheetFilter | undefined) => patch({ filter: next });
+  const setRules = (next: CondRule[]) => patch({ rules: next });
+
+  /** The whole filled block, for a filter somebody opened without selecting one. */
+  const fullRange = (): Range => {
+    const size = extent(sheet);
+    return { anchor: 'A1', focus: ref(Math.max(0, size.rows - 1), Math.max(0, size.cols - 1)) };
+  };
+
+  /** The filter this sheet has, or one over the selection ready to take a rule. */
+  const openFilter = () => {
+    setPanel((was) => (was === 'filter' ? null : 'filter'));
+    if (!filter) setFilter(blankFilter(rangeLabel(many(sel) ? sel : fullRange())));
+    setOnColumn((was) => was ?? spot.left);
   };
 
   /**
@@ -1291,7 +1388,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
        */
       if ((key === 'd' || key === 'r') && many(sel)) {
         e.preventDefault();
-        change(fill(body(), sel, key === 'd' ? 'down' : 'right'), `fill:${rangeLabel(sel)}`);
+        change(fill(body(), sel, key === 'd' ? 'down' : 'right', away), `fill:${rangeLabel(sel)}`);
         return;
       }
       if (key === 'c' || key === 'x') {
@@ -1629,6 +1726,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               `align:${rangeLabel(sel)}`,
             ),
         })),
+        [
+          {
+            id: 'format.rules',
+            label: rules.length ? `Colour by value (${rules.length})` : 'Colour by value',
+            hint: 'A colour that follows the number, rather than one painted on and left behind.',
+            run: () => setPanel((was) => (was === 'rules' ? null : 'rules')),
+          },
+        ],
       ],
     },
     {
@@ -1652,12 +1757,12 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             id: 'data.filldown',
             label: 'Fill down',
             hint: 'The top row of the selection, copied down it, formulas moved.',
-            run: many(sel) ? () => change(fill(body(), sel, 'down'), 'fill:down') : undefined,
+            run: many(sel) ? () => change(fill(body(), sel, 'down', away), 'fill:down') : undefined,
           },
           {
             id: 'data.fillright',
             label: 'Fill right',
-            run: many(sel) ? () => change(fill(body(), sel, 'right'), 'fill:right') : undefined,
+            run: many(sel) ? () => change(fill(body(), sel, 'right', away), 'fill:right') : undefined,
           },
         ],
         [
@@ -1669,6 +1774,12 @@ function Grid({ sheet }: { sheet: SheetModel }) {
              * searches what was *typed*, which is the same promise the other
              * two keep about formulas.
              */
+            id: 'data.filter',
+            label: filter && away.size ? `Filter (${away.size} hidden)` : 'Filter',
+            hint: 'Hides rows. It changes no number — a SUM still adds up what is hidden.',
+            run: nothing ? undefined : openFilter,
+          },
+          {
             id: 'data.analyse',
             label: many(sel) ? `Analyse ${rangeLabel(sel)}` : 'Analyse this sheet',
             hint: 'Mean, spread, correlation and a fitted line, on the Analyse screen.',
@@ -1894,6 +2005,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               glyph: '.00',
               run: () => decimals(1),
             },
+            {
+              kind: 'button',
+              id: 'n.rules',
+              label: 'Colour by value',
+              wide: true,
+              on: panel === 'rules',
+              run: () => setPanel((was) => (was === 'rules' ? null : 'rules')),
+            },
           ],
         },
         {
@@ -1966,14 +2085,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               id: 'e.filldown',
               label: 'Fill down',
               glyph: '↓',
-              run: many(sel) ? () => change(fill(body(), sel, 'down'), 'fill:down') : undefined,
+              run: many(sel) ? () => change(fill(body(), sel, 'down', away), 'fill:down') : undefined,
             },
             {
               kind: 'button',
               id: 'e.fillright',
               label: 'Fill right',
               glyph: '→',
-              run: many(sel) ? () => change(fill(body(), sel, 'right'), 'fill:right') : undefined,
+              run: many(sel) ? () => change(fill(body(), sel, 'right', away), 'fill:right') : undefined,
             },
             {
               kind: 'button',
@@ -2221,6 +2340,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             },
             {
               kind: 'button',
+              id: 'd.filter',
+              label: 'Filter',
+              wide: true,
+              on: panel === 'filter',
+              run: nothing ? undefined : openFilter,
+            },
+            {
+              kind: 'button',
               id: 'd.analyse',
               label: 'Analyse',
               wide: true,
@@ -2380,6 +2507,28 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
       <Ribbon tabs={tabs} on={ribbon} onTab={setRibbon} />
 
+      {panel === 'filter' && filter && (
+        <FilterStrip
+          sheet={sheet}
+          over={over}
+          filter={filter}
+          column={onColumn ?? spot.left}
+          hiddenCount={away.size}
+          onColumn={setOnColumn}
+          onFilter={setFilter}
+          onClose={() => setPanel(null)}
+        />
+      )}
+
+      {panel === 'rules' && (
+        <RuleStrip
+          rules={rules}
+          selection={many(sel) ? rangeLabel(sel) : focus}
+          onRules={setRules}
+          onClose={() => setPanel(null)}
+        />
+      )}
+
       {seeking && (
         <Seek
           needle={needle}
@@ -2466,6 +2615,13 @@ function Grid({ sheet }: { sheet: SheetModel }) {
           <tbody>
             {Array.from({ length: sheet.rows }, (_, r) => {
               const frozen = view.freeze && view.heads && r === 0;
+              /*
+               * A hidden row is not drawn at all rather than drawn at zero
+               * height. A zero-height row still holds focusable inputs, so
+               * tabbing across the grid walks into cells nobody can see — and
+               * an arrow key from the row above lands the cursor in one.
+               */
+              if (away.has(r)) return null;
               return (
                 <tr key={r}>
                   {view.heads && (
@@ -2488,6 +2644,8 @@ function Grid({ sheet }: { sheet: SheetModel }) {
                         key={c}
                         sheet={sheet}
                         over={over}
+                        rules={rules}
+                        ruleRanges={ruleRanges}
                         handle={address === corner ? fillHandle : undefined}
                         address={address}
                         inside={holds(sel, address)}
@@ -2544,6 +2702,12 @@ function Grid({ sheet }: { sheet: SheetModel }) {
           many(sel)
             ? [
                 saySize(sel),
+                // Said where the sum is, not beside the filter: this is the
+                // sentence that stops somebody reading a filtered total as a
+                // whole one.
+                outOfSight
+                  ? `${outOfSight} row${outOfSight === 1 ? '' : 's'} hidden, and not counted here`
+                  : '',
                 totals.count > 0 ? `Sum ${show(totals.sum)}` : `${totals.filled} filled`,
                 totals.count > 0 ? `Average ${show(totals.average)}` : '',
                 totals.count > 0 ? `Count ${totals.count}` : '',
@@ -2831,6 +2995,266 @@ function Seek({
 }
 
 /**
+ * The filter, as a strip over the grid.
+ *
+ * One column at a time, with the rules already set listed as chips beside it.
+ * Excel puts a dropdown on every heading; this app is 390 pixels wide, and
+ * twelve dropdowns across a heading row is a heading row nobody can read. A
+ * picker, a test and a box is the same power in the space there is.
+ *
+ * The count of hidden rows is here as well as on the status bar, because this
+ * is where somebody is looking while they set it up — and because a filter
+ * that hides nothing looks exactly like one that is not working.
+ */
+function FilterStrip({
+  sheet,
+  over,
+  filter,
+  column,
+  hiddenCount,
+  onColumn,
+  onFilter,
+  onClose,
+}: {
+  sheet: SheetModel;
+  over: Ctx;
+  filter: SheetFilter;
+  column: number;
+  hiddenCount: number;
+  onColumn: (next: number) => void;
+  onFilter: (next: SheetFilter | undefined) => void;
+  onClose: () => void;
+}) {
+  const rule = filter.rules.find((r) => r.column === column);
+  const test = rule?.test ?? 'contains';
+  const heading = headingOf(sheet.cells, filter, column, over);
+  const offered = valuesIn(sheet.cells, filter, column, over);
+
+  const set = (over_: Partial<FilterRule>) =>
+    onFilter(withRule(filter, { column, test, value: rule?.value ?? '', ...over_ }));
+
+  return (
+    <div className="fx fx-wrap" role="search" aria-label="Filter">
+      <select
+        className="fx-in"
+        value={String(column)}
+        onChange={(e) => onColumn(Number(e.target.value))}
+        aria-label="Which column to filter"
+      >
+        {columnsIn(filter).map((c) => (
+          <option key={c.column} value={c.column}>
+            {headingOf(sheet.cells, filter, c.column, over)}
+          </option>
+        ))}
+      </select>
+
+      <select
+        className="fx-in"
+        value={test}
+        onChange={(e) => set({ test: e.target.value as FilterRule['test'] })}
+        aria-label={`How to filter ${heading}`}
+      >
+        {FILTER_TESTS.map((t) => (
+          <option key={t} value={t}>
+            {FILTER_LABELS[t]}
+          </option>
+        ))}
+      </select>
+
+      {test !== 'filled' && (
+        <input
+          className="fx-in"
+          value={rule?.value ?? ''}
+          onChange={(e) => set({ value: e.target.value })}
+          placeholder={offered[0] ?? heading}
+          aria-label={`What ${heading} must be`}
+          list={`filter-values-${column}`}
+          spellCheck={false}
+        />
+      )}
+      {test === 'between' && (
+        <input
+          className="fx-in"
+          value={rule?.value2 ?? ''}
+          onChange={(e) => set({ value2: e.target.value })}
+          placeholder="and"
+          aria-label={`The far end of the band for ${heading}`}
+          spellCheck={false}
+        />
+      )}
+      {/* The values already in that column, offered rather than imposed: a
+          column of four courses is four things to pick and a column of two
+          hundred marks is still a box you can type into. */}
+      <datalist id={`filter-values-${column}`}>
+        {offered.map((v) => (
+          <option key={v} value={v} />
+        ))}
+      </datalist>
+
+      {rule && (
+        <button
+          type="button"
+          className="rib-btn rib-btn-wide"
+          onClick={() => onFilter(withoutRule(filter, column))}
+        >
+          Clear {heading}
+        </button>
+      )}
+
+      {filter.rules
+        .filter((r) => r.column !== column)
+        .map((r) => (
+          <button
+            key={r.column}
+            type="button"
+            className="rib-btn rib-btn-wide"
+            onClick={() => onColumn(r.column)}
+          >
+            {saysFilter(r, headingOf(sheet.cells, filter, r.column, over))}
+          </button>
+        ))}
+
+      <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), alignSelf: 'center' }}>
+        {hiddenCount
+          ? `${hiddenCount} row${hiddenCount === 1 ? '' : 's'} hidden`
+          : `${filter.range}, nothing hidden`}
+      </span>
+
+      <button
+        type="button"
+        className="rib-btn"
+        aria-label="Take the filter off"
+        onClick={() => {
+          onFilter(undefined);
+          onClose();
+        }}
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
+/**
+ * The colour rules, as a strip over the grid.
+ *
+ * Each rule is a row: what it watches, what it asks, and what colour it makes
+ * the answer. Added against whatever is selected, because "these cells, under
+ * sixty, red" is the sentence somebody is already saying in their head.
+ */
+function RuleStrip({
+  rules,
+  selection,
+  onRules,
+  onClose,
+}: {
+  rules: CondRule[];
+  selection: string;
+  onRules: (next: CondRule[]) => void;
+  onClose: () => void;
+}) {
+  const edit = (id: string, over: Partial<CondRule>) =>
+    onRules(rules.map((r) => (r.id === id ? { ...r, ...over } : r)));
+
+  return (
+    <div className="fx fx-wrap" aria-label="Colour rules">
+      {rules.map((rule) => (
+        <span
+          key={rule.id}
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 'var(--sp-3)',
+            flex: '1 1 100%',
+            alignItems: 'stretch',
+          }}
+        >
+          <input
+            className="fx-in"
+            value={rule.range}
+            onChange={(e) => edit(rule.id, { range: e.target.value.toUpperCase() })}
+            aria-label={`Which cells the rule ${saysCond(rule)} watches`}
+            spellCheck={false}
+          />
+          <select
+            className="fx-in"
+            value={rule.test}
+            onChange={(e) => edit(rule.id, { test: e.target.value as CondTest })}
+            aria-label={`What the rule on ${rule.range} asks`}
+          >
+            {COND_TESTS.map((t) => (
+              <option key={t} value={t}>
+                {COND_LABELS[t]}
+              </option>
+            ))}
+          </select>
+          {rule.test !== 'empty' && rule.test !== 'error' && (
+            <input
+              className="fx-in"
+              value={rule.value}
+              onChange={(e) => edit(rule.id, { value: e.target.value })}
+              placeholder="60"
+              aria-label={`What the rule on ${rule.range} compares against`}
+              spellCheck={false}
+            />
+          )}
+          {rule.test === 'between' && (
+            <input
+              className="fx-in"
+              value={rule.value2 ?? ''}
+              onChange={(e) => edit(rule.id, { value2: e.target.value })}
+              placeholder="and"
+              aria-label={`The far end of the band on ${rule.range}`}
+              spellCheck={false}
+            />
+          )}
+          <select
+            className="fx-in"
+            value={rule.ink}
+            onChange={(e) => edit(rule.id, { ink: e.target.value as Ink })}
+            aria-label={`What colour the rule on ${rule.range} makes it`}
+          >
+            {INKS.map((ink) => (
+              <option key={ink} value={ink}>
+                {INK_NAMES[ink]}
+              </option>
+            ))}
+          </select>
+          <select
+            className="fx-in"
+            value={rule.as}
+            onChange={(e) => edit(rule.id, { as: e.target.value as CondRule['as'] })}
+            aria-label={`Where the colour on ${rule.range} goes`}
+          >
+            <option value="wash">Behind it</option>
+            <option value="ink">On the type</option>
+          </select>
+          <button
+            type="button"
+            className="rib-btn"
+            aria-label={`Remove the rule on ${rule.range}`}
+            onClick={() => onRules(rules.filter((r) => r.id !== rule.id))}
+          >
+            ✕
+          </button>
+        </span>
+      ))}
+
+      <button
+        type="button"
+        className="rib-btn rib-btn-wide"
+        onClick={() => onRules([...rules, blankRule(selection)])}
+      >
+        Colour {selection}
+      </button>
+      <button type="button" className="rib-btn" aria-label="Close the colour rules" onClick={onClose}>
+        ✕
+      </button>
+    </div>
+  );
+}
+
+/**
  * One cell.
  *
  * Its own component because the grid is `rows × cols` of these and the whole
@@ -2843,6 +3267,8 @@ function Seek({
 function Cell({
   sheet,
   over,
+  rules,
+  ruleRanges,
   handle,
   address,
   inside,
@@ -2860,6 +3286,10 @@ function Cell({
   sheet: SheetModel;
   /** The clock and the other sheets — see `over` in `Grid`. */
   over: Ctx;
+  /** The colour rules on this sheet. Empty on nearly every sheet. */
+  rules: CondRule[];
+  /** Their ranges, parsed once by `Grid` rather than once per cell. */
+  ruleRanges: Map<string, Range>;
   /** The fill handle, on the one cell that is the corner of the selection. */
   handle?: ReactNode;
   address: string;
@@ -2877,11 +3307,26 @@ function Cell({
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
   const raw = sheet.cells[address] ?? '';
-  const style = styleOf(sheet, address);
-  const value = styledDisplay(sheet.cells, address, style, over);
+  const own = styleOf(sheet, address);
+  const value = styledDisplay(sheet.cells, address, own, over);
   // Once, not twice: this is `rows × cols` components and the second call was
   // the same walk of the same formula tree for a second answer about it.
   const answer = evaluate(sheet.cells, address, new Set(), over);
+  /*
+   * The rules, laid over what somebody painted by hand.
+   *
+   * The rule wins, which is what Excel does and the only answer that makes a
+   * rule worth setting — a rule you have to un-paint every cell to see is not
+   * a rule. Only the properties it sets are taken, so a bold cell a rule turns
+   * red stays bold. Skipped entirely on a sheet with no rules, which is nearly
+   * every sheet and is `rows × cols` components not doing any of this.
+   */
+  const style = rules.length
+    ? {
+        ...own,
+        ...painted(rules, (range) => holds(ruleRanges.get(range) ?? rangeOf(range), address), answer),
+      }
+    : own;
   const bad = isError(answer);
   /*
    * Numbers right, text left, unless somebody has said otherwise.

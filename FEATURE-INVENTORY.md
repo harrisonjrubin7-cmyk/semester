@@ -641,10 +641,14 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   fill, borders, alignment, wrap, merge.~~ — number, currency, percent, date
   and decimal places, bold, italic, strikethrough and alignment are on the
   toolbar and go into the `.xlsx`. Still no fill, borders, wrap or merge.
-- ~~No sort, no filter, no freeze panes.~~ — sort is `sortRange`, and the
-  View tab freezes the top row on the screen as well as in the file. **No
-  filter** is still true.
-- No conditional formatting, no data validation or dropdowns.
+- ~~No sort, no filter, no freeze panes.~~ — **closed.** Sort is `sortRange`,
+  the View tab freezes the top row, and `lib/filter.ts` hides rows on a rule
+  per column — with the status bar counting only what is visible, because a
+  `SUM` still adds up the hidden rows and that is the trap.
+- ~~No conditional formatting,~~ no data validation or dropdowns. —
+  **conditional formatting closed.** `lib/condfmt.ts` holds rules rather than
+  painted cells, so a colour follows the number; `lib/xlsxcond.ts` writes them
+  into the file as real `cfRule`s against a book-wide `dxfs` table.
 - ~~**No charts and no pivot tables.**~~ — **charts closed.** `lib/chart.ts`
   reads a range into series, `components/SheetChart.tsx` draws columns, bars,
   a line or a pie, and `lib/xlsxchart.ts` writes a *live* chart into the
@@ -710,10 +714,10 @@ notes · a generated PDF, as against the browser's print-to-PDF, which is
 there · `.docx` *import* · "Open in Docs" from a study guide · a WYSIWYG
 surface (the marks are typed).
 
-**Sheets** — named ranges · paste-special · filter · conditional formatting ·
-data validation · pivot tables · a per-course grade calculator and GPA planner
-template. (Cross-sheet references and the fill handle were on this list and
-are done.)
+**Sheets** — named ranges · paste-special · data validation and dropdowns ·
+pivot tables · a per-course grade calculator and GPA planner template.
+(Cross-sheet references, the fill handle, filtering and conditional
+formatting were all on this list and are done.)
 
 **Slides** — free layout (a text box you can move) · images and charts placed
 on a slide · transitions, which are deliberate: `lib/pptx.ts` would have to

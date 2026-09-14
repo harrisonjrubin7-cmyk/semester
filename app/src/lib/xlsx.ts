@@ -40,6 +40,7 @@
 
 import {
   BASE_SIZE,
+  INKS,
   asNumber,
   asPercent,
   clock,
@@ -63,6 +64,9 @@ import {
   sheetRels,
 } from './xlsxchart';
 import { chartsOf, type ChartRead, type SheetChart } from './chart';
+import { autoFilterXml, conditionalFor } from './xlsxcond';
+import { rulesOf, type CondRule } from './condfmt';
+import { filterOf, hidden as hiddenRows } from './filter';
 
 /**
  * A look with nothing on it is no look at all.
@@ -160,6 +164,19 @@ export interface Tab {
    * `ChartRead.at` in `lib/chart.ts`.
    */
   charts?: { chart: SheetChart; read: ChartRead }[];
+  /** Rows the sheet's filter is hiding, by index. Hidden in the file, not dropped. */
+  away?: Set<number>;
+  /** The block the filter covers, so Excel draws its own arrows on it. */
+  autoFilter?: string;
+  /**
+   * The colour rules on this sheet.
+   *
+   * The rules rather than the XML they become, because the `dxfId` each one
+   * points at depends on how many rules the tabs *before* it have — see
+   * `conditionalFor`. Rendering them here would mean every tab numbering from
+   * zero.
+   */
+  rules?: CondRule[];
 }
 
 export interface Book {
@@ -241,7 +258,7 @@ function cellXml(address: string, cell: Formatted, style: number, styles: Styles
   );
 }
 
-function sheetXml(tab: Tab, styles: Styles, drawing = false): string {
+function sheetXml(tab: Tab, styles: Styles, drawing = false, conditional = ''): string {
   const cols = tab.widths?.length
     ? `<cols>${tab.widths
         .map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`)
@@ -259,15 +276,28 @@ function sheetXml(tab: Tab, styles: Styles, drawing = false): string {
     .map((row, r) => {
       const style = tab.header && r === 0 ? 1 : 0;
       const cells = row.map((cell, c) => cellXml(ref(r, c), cell, style, styles)).join('');
-      return cells ? `<row r="${r + 1}">${cells}</row>` : '';
+      /*
+       * A filtered row is hidden, never left out. Dropping it would make the
+       * export a picture of the screen rather than the sheet — the rows would
+       * be gone rather than out of sight, and taking the filter off in Excel
+       * would bring back nothing.
+       */
+      const away = tab.away?.has(r) ? ' hidden="1"' : '';
+      return cells ? `<row r="${r + 1}"${away}>${cells}</row>` : '';
     })
     .join('');
 
   return (
     `${HEAD}<worksheet xmlns="${MAIN}" xmlns:r="${REL}">` +
     `${view}${cols}<sheetData>${rows}</sheetData>` +
-    // `CT_Worksheet` is a sequence and `drawing` is near the end of it: put it
-    // before `sheetData` and the file opens as a repair notice.
+    /*
+     * `CT_Worksheet` is a sequence, and this is the order it wants:
+     * `autoFilter`, then `conditionalFormatting`, then `drawing` near the very
+     * end. Any other order is a repair notice with no hint of which element,
+     * so the order lives here once rather than at each writer.
+     */
+    (tab.autoFilter ? autoFilterXml(tab.autoFilter) : '') +
+    conditional +
     (drawing ? '<drawing r:id="rId1"/>' : '') +
     '</worksheet>'
   );
@@ -410,7 +440,7 @@ export interface Styles {
   index: (look: Look | undefined) => number;
 }
 
-export function styleTable(tabs: Tab[]): Styles {
+export function styleTable(tabs: Tab[], dxfs: string[] = []): Styles {
   const looks: Look[] = [...FIXED];
   const seen = new Set(looks.map(lookKey));
   for (const tab of tabs) {
@@ -500,6 +530,9 @@ export function styleTable(tabs: Tab[]): Styles {
       '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
       `<cellXfs count="${looks.length}">${xfs}</cellXfs>` +
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+      // After `cellStyles` and before `tableStyles`, which is where the
+      // sequence puts them.
+      (dxfs.length ? `<dxfs count="${dxfs.length}">${dxfs.join('')}</dxfs>` : '') +
       '</styleSheet>',
     index: (look) => (look ? (at.get(lookKey(look)) ?? 0) : 0),
   };
@@ -583,10 +616,29 @@ export function parts(book: Book): Record<string, string> {
 
   // Built once for the whole book rather than per sheet: `styles.xml` is one
   // part, and two tabs asking for `$#,##0.00` must land on the same index.
-  const styles = styleTable(tabs);
+  /*
+   * The colour rules of every tab, numbered into one table.
+   *
+   * `dxfId` indexes a table that belongs to the workbook, not to a sheet, so
+   * the ids are handed out here — the only place that can see how many rules
+   * came before this tab's.
+   */
+  let dxfAt = 0;
+  const conditional = tabs.map((tab) => {
+    const made = conditionalFor(tab.rules ?? [], dxfAt);
+    dxfAt += made.dxfs.length;
+    return made;
+  });
+
+  const styles = styleTable(tabs, conditional.flatMap((c) => c.dxfs));
   out['xl/styles.xml'] = styles.xml;
   drawn.forEach((d) => {
-    out[`xl/worksheets/sheet${d.index + 1}.xml`] = sheetXml(d.tab, styles, d.charts.length > 0);
+    out[`xl/worksheets/sheet${d.index + 1}.xml`] = sheetXml(
+      d.tab,
+      styles,
+      d.charts.length > 0,
+      conditional[d.index].blocks,
+    );
     if (!d.charts.length) return;
     out[`xl/worksheets/_rels/sheet${d.index + 1}.xml.rels`] = sheetRels(d.drawing);
     out[`xl/drawings/drawing${d.drawing}.xml`] = drawingXml(d.charts.length, d.tab.rows.length);
@@ -676,10 +728,25 @@ export function fromSheet(sheet: Sheet, header = true, ctx: Ctx = clock()): Tab 
       return n === null ? worn({ kind: 'text', value }) : worn({ kind: 'number', value: n });
     }),
   );
+  /*
+   * The filter and the rules come out with the numbers.
+   *
+   * Both as what they are — hidden rows with an `autoFilter` over them, and
+   * `cfRule`s — rather than as their effect. Baking either in would produce a
+   * file that looks like the screen and stops being true on the first edit:
+   * the hidden rows gone rather than hidden, and a mark changed from 45 to 95
+   * still red.
+   */
+  const filter = filterOf(sheet);
+  const away = filter ? hiddenRows(sheet.cells, filter, ctx) : undefined;
+
   return {
     name: tabName(sheet.title),
     rows,
     header: header && rows.length > 1,
+    ...(away && away.size ? { away } : {}),
+    ...(filter ? { autoFilter: filter.range } : {}),
+    rules: rulesOf(sheet, INKS),
     /*
      * The charts come out with the numbers, or the export is half the thing
      * the student made. One that cannot be read is left out rather than
