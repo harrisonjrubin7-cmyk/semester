@@ -47,6 +47,17 @@ export function Guide() {
   const modes = modesFor(catalog, state.guideId, live);
   const here = modeInfo(modes, state.mode);
 
+  /*
+   * Whether the grid below is this app's navigation or a control on a screen.
+   *
+   * Under `guides` there is no other navigation drawn — see `lib/chrome.ts` —
+   * so the grid is how you move and is held open. Under the other five the
+   * tab bar, the rail or the shelves are doing that job, and folding the grid
+   * away costs nothing but the fold.
+   */
+  const isNav = state.nav === 'guides';
+  const waysOpen = isNav || state.waysOpen;
+
   return (
     // `prose` caps the measure at whatever "Reading width" is set to. The
     // guide is the longest thing in the app, so it is the screen the setting
@@ -83,10 +94,27 @@ export function Guide() {
       </button>
 
       {/*
-        Unrolled it is a menu of ten; rolled up it is one line saying where you
-        are. Both are right, at different points in a semester, so it is a
+        Unrolled it is a menu of eleven; rolled up it is one line saying where
+        you are. Both are right, at different points in a semester, so it is a
         preference that persists rather than a guess made for you.
+
+        Except under the `guides` navigation, where this grid is not a control
+        on the screen but the way you move between screens — there is no tab
+        bar, no rail and no shelf beside it. Folding a navigation away leaves
+        somebody on a guide with the header's Back button and nothing else,
+        which is the "no navigation at all" that `lib/chrome.ts` exists to
+        stop. So it is held open there, and the heading is a heading rather
+        than a control that cannot do anything.
       */}
+      {isNav ? (
+        <SectionLabel
+          fold={false}
+          aside={`${modes.filter((m) => m.ready).length} ways`}
+          style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}
+        >
+          Ways to study this
+        </SectionLabel>
+      ) : (
       <button
         type="button"
         className="bare tappable"
@@ -125,14 +153,15 @@ export function Guide() {
           }}
         />
       </button>
-      {state.waysOpen && (
+      )}
+      {waysOpen && (
         <ModePicker
           modes={modes}
           value={state.mode}
           onChange={(mode) => dispatch({ type: 'setMode', mode })}
         />
       )}
-      {state.waysOpen && here && (
+      {waysOpen && here && (
         <div
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',

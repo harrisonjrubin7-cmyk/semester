@@ -647,8 +647,13 @@ export interface Lesson {
  * drawn. `Shell` (in `components/shell/useShell.ts`) answers *how a screen is
  * drawn*, and never adds navigation of its own. Every combination of the two
  * is a valid app, which is what makes them settings rather than forks.
+ *
+ * `guides` is the sixth and the one the app now opens as. It is the only one
+ * that treats a *course* as the top level rather than a screen: home is the
+ * courses you have, and opening one hands the whole display to its guide,
+ * whose eleven ways of studying are the navigation. See `lib/chrome.ts`.
  */
-export type NavMode = 'tabs' | 'feed' | 'springboard' | 'shelves' | 'workspace';
+export type NavMode = 'tabs' | 'feed' | 'springboard' | 'shelves' | 'workspace' | 'guides';
 
 /** A class that repeats every week, from the syllabus meeting pattern. */
 export interface RecurringBlock {

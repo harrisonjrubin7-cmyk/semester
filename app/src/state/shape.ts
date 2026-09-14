@@ -977,6 +977,12 @@ export const DEFAULT_PERSISTED: Persisted = {
    * chosen by anybody. Step 4 of `lib/migrate.ts` is what makes it everyone's,
    * once — and once, so that going back to the tab bar on Layout and
    * navigation, or on the last row of Customize Semester, sticks.
+   *
+   * The `guides` navigation added beside it is deliberately *not* the default.
+   * It is a sixth option on Layout and navigation, and nobody's app moves to
+   * it until they choose it — the Screen and Implementation Guide requires the
+   * persistent top search field and the app-tab strip be kept, and a default
+   * that replaced them would be a removal dressed as an addition.
    */
   nav: 'workspace',
   done: {},

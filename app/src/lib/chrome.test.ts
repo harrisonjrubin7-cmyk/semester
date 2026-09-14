@@ -55,17 +55,52 @@ describe('the navigation rule', () => {
     expect(SHELLS.map((s) => s.id)).toEqual(['plain', 'grouped', 'soft']);
   });
 
+  /*
+   * The navigations that carry their own way to move on the screen instead of
+   * beside it. Named, never inferred: "draws no chrome" is indistinguishable
+   * from the bug this file exists to catch — a navigation nothing draws —
+   * unless the list of deliberate ones is written down.
+   *
+   * The feed and the springboard are home screens you tap through, so away
+   * from home on a phone they have none. The guides go further and have none
+   * at either width: the grid of courses and the grid of study modes are the
+   * navigation, they wrap to whatever width they are given, and a rail beside
+   * a screen whose own navigation is already visible is the doubling this
+   * file is about. See the head of `chrome.ts`.
+   */
+  const CARRIES_ITS_OWN: NavMode[] = ['feed', 'springboard', 'guides'];
+
   it('gives every navigation a way to move, on both widths', () => {
     for (const nav of MODES) {
-      const phone = chromeFor(nav, 'courses', false);
-      const wide = chromeFor(nav, 'courses', true);
-      // The feed is the one that carries its navigation on the home screen
-      // rather than beside it, so away from home on a phone it has none —
-      // which is its design, and is why it is named here rather than assumed.
-      if (nav !== 'feed' && nav !== 'springboard') {
-        expect(navigationsDrawn(phone), `${nav} on a phone`).toBe(1);
+      if (CARRIES_ITS_OWN.includes(nav)) continue;
+      expect(navigationsDrawn(chromeFor(nav, 'courses', false)), `${nav} on a phone`).toBe(1);
+      expect(navigationsDrawn(chromeFor(nav, 'courses', true)), `${nav} on a laptop`).toBe(1);
+    }
+  });
+
+  /*
+   * And the ones that carry their own are held to actually having one.
+   *
+   * Without this the exemption above is a hole: adding a navigation to
+   * `CARRIES_ITS_OWN` would silence the only test that checks it leads
+   * anywhere. The feed and the springboard are their home screen, so that is
+   * where they are asserted. The guides are asserted on a guide as well,
+   * because that is the screen they hand the whole display to and the one
+   * where "no chrome" would strand somebody if the mode grid were ever
+   * folded away — `screens/Guide.tsx` holds it open for this reason.
+   */
+  it('leaves the ones that carry their own with a screen that does', () => {
+    for (const nav of CARRIES_ITS_OWN) {
+      for (const wide of [false, true]) {
+        expect(navigationsDrawn(chromeFor(nav, 'home', wide)), `${nav} at home`).toBeLessThanOrEqual(1);
       }
-      expect(navigationsDrawn(wide), `${nav} on a laptop`).toBe(1);
+    }
+    // The guides' two screens are the whole of the guides: the courses, and
+    // one course. Neither may pick up chrome, at either width.
+    for (const screen of ['home', 'guide'] as Screen[]) {
+      for (const wide of [false, true]) {
+        expect(navigationsDrawn(chromeFor('guides', screen, wide)), `guides on ${screen}`).toBe(0);
+      }
     }
   });
 
@@ -115,6 +150,8 @@ describe('the home screen', () => {
     // separate is what stops the Today row in its sidebar opening the search
     // page instead of Today.
     expect(homeShape('workspace')).toBe('today');
+    // The one home that is not a reading of the day: the courses themselves.
+    expect(homeShape('guides')).toBe('guides');
   });
 
   it('has an answer for every navigation there is', () => {
@@ -130,8 +167,8 @@ describe('the home screen', () => {
 });
 
 describe('reading a navigation back', () => {
-  it('keeps the five the app has', () => {
-    expect(MODES).toEqual(['tabs', 'feed', 'springboard', 'shelves', 'workspace']);
+  it('keeps the six the app has', () => {
+    expect(MODES).toEqual(['tabs', 'feed', 'springboard', 'shelves', 'workspace', 'guides']);
     for (const nav of MODES) expect(navOf(nav)).toBe(nav);
   });
 
@@ -150,6 +187,19 @@ describe('reading a navigation back', () => {
     expect(navOf(undefined)).toBe('workspace');
     expect(navOf('')).toBe('workspace');
     expect(navigationsDrawn(chromeFor(navOf('nonsense'), 'home', false))).toBe(1);
+  });
+
+  /*
+   * And the guides are reachable by name but are never what a bad key gives
+   * you. A navigation that draws no chrome is the right thing to *choose* and
+   * the wrong thing to be handed by a storage failure, because the person it
+   * happens to has not seen the app before and has no reason to know the grid
+   * on the screen is the way out.
+   */
+  it('never falls back to a navigation that draws no chrome', () => {
+    expect(navOf('guides')).toBe('guides');
+    expect(navOf('nonsense')).not.toBe('guides');
+    expect(navigationsDrawn(chromeFor('guides', 'home', false))).toBe(0);
   });
 
   /*

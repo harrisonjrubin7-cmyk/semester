@@ -735,6 +735,19 @@ export const NAVS = [
      */
     home: 'Today',
   },
+  {
+    id: 'guides',
+    label: 'Study guides',
+    blurb:
+      'Your courses, and nothing else at the top level. Open one and its eleven ways of studying are the navigation.',
+    /*
+     * The only navigation whose home is not a screen about the *day*. The
+     * other five open on Today, Everything or the springboard, each of which
+     * answers "what is happening now"; this one opens on the courses
+     * themselves, because the thing you came to do here is study one.
+     */
+    home: 'Guides',
+  },
 ];
 
 /**
@@ -767,6 +780,11 @@ export function homeTitle(nav: string | undefined): string {
  * the app no longer defaults to would strand exactly the person this function
  * exists for: the one whose stored value cannot be read, who now gets an app
  * that does not match the one on their other device.
+ *
+ * The `guides` added below is a choice, never a fallback, for the same
+ * reason: nobody should meet it because a storage key could not be read.
+ * `chrome.test.ts` holds this to `DEFAULT_PERSISTED.nav` rather than to the
+ * literal, so the two cannot drift apart again.
  */
 export function navOf(id: string | undefined): NavMode {
   return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'workspace';

@@ -113,6 +113,7 @@ const Study = lazy(() => import('./screens/Study').then((m) => ({ default: m.Stu
 const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work })));
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
+const Guides = lazy(() => import('./screens/Guides').then((m) => ({ default: m.Guides })));
 /* The workspace's own two screens — the search home a new tab opens on, and
    the directory of everything behind it. See `lib/desk.ts`. */
 const SearchHome = lazy(() => import('./screens/Search').then((m) => ({ default: m.SearchHome })));
@@ -925,7 +926,18 @@ function CurrentScreen() {
       // The workspace is not a case here, deliberately: its home is Today
       // like everyone else's, and what it does differently is where the app
       // *lands* — see `firstScreen` in `lib/chrome.ts`.
-      return homeShape(state.nav) === 'springboard' ? <Springboard /> : <Today />;
+      //
+      // The guides are the one home that is not a reading of the day at all:
+      // the courses themselves, because opening one is what this navigation
+      // is for. See `screens/Guides.tsx`.
+      switch (homeShape(state.nav)) {
+        case 'springboard':
+          return <Springboard />;
+        case 'guides':
+          return <Guides />;
+        default:
+          return <Today />;
+      }
     case 'search':
       return <SearchHome />;
     case 'directory':
