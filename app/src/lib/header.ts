@@ -61,3 +61,84 @@ export function showsAvatar({ atRoot, phone, counting }: Row): boolean {
   if (!atRoot) return false;
   return !(phone && counting);
 }
+
+/**
+ * Everything else the header draws in that row — and why most of it is a `no`
+ * in the workspace.
+ *
+ * `lib/chrome.ts` guarantees no two *navigations* are on screen together, and
+ * says in its own words that the header is not its business: "the header
+ * belongs to the screen you are on rather than being drawn beside it". True,
+ * and it left a gap nothing was checking. The workspace draws three pieces of
+ * chrome at once — a bar across the top, a sidebar down the side and this
+ * header inside the pane — and nobody had ever compared their contents.
+ *
+ * They overlapped on five controls. Three of the five had been noticed: a
+ * `slim` flag dropped the launcher, the bell and the avatar because the
+ * workspace's top bar carries all three. It was a list written against that
+ * bar's *tools cluster* and never checked against the rest of the bar, so it
+ * missed the two the bar and the sidebar carry elsewhere:
+ *
+ * - **Search.** `TopBar` draws a permanent field, at every width — that field
+ *   being permanent is the whole of what the workspace adds, in that file's
+ *   own first paragraph — and the header drew a magnifier one row below it
+ *   opening the identical palette.
+ * - **Add.** `Sidebar` draws New at the top of the column, "the first thing
+ *   the eye lands on", and the header drew a `+` four inches away opening the
+ *   identical capture box.
+ *
+ * So this is the whole answer rather than five conditions in the markup, for
+ * the reason `chrome.ts` was written and this file already half-follows: a
+ * rule spread across the elements it governs cannot be checked, and the one
+ * that was spread is the one that was wrong.
+ *
+ * ## The two that are not simply `!desk`
+ *
+ * `add` asks about the *sidebar*, not the workspace, because `sidebar: desk &&
+ * wide`. A narrow workspace has no New button and the top bar has no `+`, so
+ * the header's is the only pointing route to the capture box and it stays.
+ * Outside the workspace there is no sidebar at all, so the answer is yes,
+ * which is what it has always been.
+ *
+ * `avatar` keeps `showsAvatar` in front of it: the workspace question is "is
+ * this control already on screen" and the width question is "does it fit", and
+ * collapsing two different questions into one flag is how the row came to be
+ * wrong in the first place.
+ */
+export interface Frame extends Row {
+  /**
+   * The workspace navigation: a search field across the top at every width,
+   * and a tools cluster — alerts, settings, the launcher, the avatar — beside
+   * it. See `components/desk/TopBar.tsx`.
+   */
+  desk: boolean;
+  /**
+   * The workspace's left column, which carries New. Wide only, so it is a
+   * separate question from `desk`. See `components/desk/Sidebar.tsx`.
+   */
+  sidebar: boolean;
+}
+
+/** Which of the row's five controls the header draws. */
+export interface Drawn {
+  /** The `+`, which opens the capture box. */
+  add: boolean;
+  /** The magnifier, which opens the palette. */
+  search: boolean;
+  /** The nine squares, which open the launcher. */
+  apps: boolean;
+  /** The bell, which goes to Alerts. */
+  alerts: boolean;
+  /** Your picture, which goes to your profile. */
+  avatar: boolean;
+}
+
+export function headerRow(f: Frame): Drawn {
+  return {
+    add: !f.sidebar,
+    search: !f.desk,
+    apps: !f.desk,
+    alerts: f.atRoot && !f.desk,
+    avatar: !f.desk && showsAvatar(f),
+  };
+}
