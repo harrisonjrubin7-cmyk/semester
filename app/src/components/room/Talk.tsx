@@ -671,9 +671,25 @@ export function Talk({
                     type="button"
                     className="bare tap-y"
                     onClick={() =>
-                      void block(me, person.user_id).then(() =>
-                        setMessages((all) => all.filter((x) => x.user_id !== person.user_id)),
-                      )
+                      void block(me, person.user_id)
+                        .then(() =>
+                          setMessages((all) => all.filter((x) => x.user_id !== person.user_id)),
+                        )
+                        /*
+                         * Blocking is a safety control, so a block that did
+                         * not happen must not look like one that did.
+                         *
+                         * `block` throws `explain(error.message)` — a sentence
+                         * written to be read — and this was the one call in
+                         * this file that dropped it. The `.then` never ran, so
+                         * their messages stayed on screen with nothing said,
+                         * which reads as the button doing nothing rather than
+                         * as the block having failed. Four other calls here
+                         * already end this way.
+                         */
+                        .catch((e: unknown) =>
+                          setError(e instanceof Error ? e.message : String(e)),
+                        )
                     }
                     style={{
                       flex: 'none',
