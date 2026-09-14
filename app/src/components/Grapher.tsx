@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { Plot, type Drawing } from './Plot';
 import { Surface } from './Surface';
 import { heightOf, heights, range } from '../lib/surface';
+import { asArrows, asContours } from '../lib/fields';
 import { ActionButton, PickChips, SectionLabel, Toggle } from './ui';
 import { secondLine } from '../lib/dim';
 import { ground as groundOf, resolveGround } from '../lib/look';
@@ -76,6 +77,15 @@ export function Grapher() {
    * a control in the way.
    */
   const [turns, setTurns] = useState<number>(DETAIL.turns);
+  /**
+   * How a `z =` line is drawn: as the solid thing, or as its contour lines.
+   *
+   * A control rather than notation, because it is a choice about the drawing
+   * and not about the function. A surface is the better picture of a shape;
+   * contours are the better one for reading values off, which is why a map has
+   * them and an artist's impression does not.
+   */
+  const [view, setView] = useState<'surface' | 'contours'>('surface');
   const [from, setFrom] = useState('0');
   const [to, setTo] = useState('1');
 
@@ -91,17 +101,42 @@ export function Grapher() {
     return lines.map((_, i) => tintAt(anchor + (i * 360) / spread, light).fill);
   }, [lines, state.accent, state.hue, light]);
 
+  /*
+   * The contour map, and the levels it was cut at.
+   *
+   * Worked once and read twice: the lines go on the picture, and the levels go
+   * under it in a sentence. A map whose spacing is not stated is a picture
+   * rather than a reading — the whole reason to draw contours is to be able to
+   * say "every twenty, and this one is zero".
+   */
+  const flat = useMemo(() => {
+    const line = read.find((l, at) => l.kind === 'surface' && lines[at].on);
+    if (!line || line.kind !== 'surface' || view !== 'contours') return null;
+    return asContours(line.body, scope, frame);
+  }, [read, lines, scope, frame, view]);
+
   const drawings: Drawing[] = useMemo(
     () =>
       lines
         .map((line, i) => ({ line, at: i }))
         .filter(({ line, at }) => line.on && read[at].kind !== 'blank')
-        .map(({ line, at }) => ({
-          id: line.id,
-          colour: colours[at],
-          drawn: draw(read[at], scope, frame, { ...DETAIL, turns }),
-        })),
-    [lines, read, scope, frame, colours, turns],
+        .map(({ line, at }) => {
+          const reading = read[at];
+          if (reading.kind === 'field') {
+            return { id: line.id, colour: colours[at], drawn: asArrows(reading.x, reading.y, scope, frame) };
+          }
+          if (reading.kind === 'surface') {
+            // Nothing on the flat picture while the surface has it; drawn as
+            // contours only when the view asks for them.
+            return {
+              id: line.id,
+              colour: colours[at],
+              drawn: view === 'contours' && flat ? flat.drawn : { paths: [], points: [] },
+            };
+          }
+          return { id: line.id, colour: colours[at], drawn: draw(reading, scope, frame, { ...DETAIL, turns }) };
+        }),
+    [lines, read, scope, frame, colours, turns, view, flat],
   );
 
   /** Whether anything on the list is drawn by turning or running, rather than across x. */
@@ -119,7 +154,10 @@ export function Grapher() {
    */
   const solid = lines
     .map((line, at) => ({ line, at }))
-    .find(({ line, at }) => line.on && read[at].kind === 'surface');
+    .find(({ line, at }) => line.on && read[at].kind === 'surface' && view === 'surface');
+  /** Whether a `z =` line is on the list at all, which is what the view chips are for. */
+  const hasSurface = read.some((line, at) => line.kind === 'surface' && lines[at].on);
+
   const solidLine = solid ? read[solid.at] : null;
   // Held still across renders that are not about the surface — every new
   // identity here re-samples the whole mesh, and a trace on the flat picture
@@ -163,8 +201,17 @@ export function Grapher() {
 
       {solidLine ? (
         <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
-          A <code>z =</code> line is a surface, so it is drawn on its own. Turn it off to get the flat
-          picture and the curves back.
+          A <code>z =</code> line is a surface, so it is drawn on its own. Turn it off, or draw it as
+          contours below, to get the flat picture and the curves back.
+        </div>
+      ) : null}
+
+      {flat && flat.cuts.length > 1 ? (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+          A line every {showValue(neat(flat.cuts[1] - flat.cuts[0], 1))}, from{' '}
+          {showValue(flat.cuts[0])} to {showValue(flat.cuts[flat.cuts.length - 1])}
+          {flat.cuts.includes(0) ? ', with zero drawn heaviest' : ''}. Where they crowd together it is
+          steep.
         </div>
       ) : null}
 
@@ -233,6 +280,22 @@ export function Grapher() {
         </>
       ) : null}
 
+      {hasSurface ? (
+        <>
+          <SectionLabel>How to draw it</SectionLabel>
+          <PickChips
+            options={['surface', 'contours'] as const}
+            value={view}
+            onChange={setView}
+            labels={(id) => (id === 'surface' ? 'As a surface' : 'As contours')}
+          />
+          <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+            The same <code>z =</code> line, two pictures: the shape of it, or the lines where it is
+            level — which is the one you read values off, and the one a map uses.
+          </div>
+        </>
+      ) : null}
+
       {winding ? (
         <>
           <SectionLabel>How far round</SectionLabel>
@@ -276,8 +339,10 @@ export function Grapher() {
         slider, and <code>(2, 3)</code> is a point. An <code>r =</code> line with the angle in it is a polar
         curve — <code>{'r = 2 + 2\\cos(\\theta)'}</code> — and a pair with <code>t</code> in it is the
         path a moving point takes — <code>{'(\\cos(t), \\sin(t))'}</code>. A <code>z =</code> line is a
-        surface — <code>z = x^2 - y^2</code> — drawn over the window the axes are set to. It takes the
-        same notation the Write tab draws, so a formula you kept can be pasted in as it is.
+        surface — <code>z = x^2 - y^2</code> — drawn over the window the axes are set to, as the solid
+        thing or as its contour lines. A pair with <code>x</code> or <code>y</code> in it is a field
+        of arrows — <code>(y, -x)</code>, which is every phase diagram. It takes the same notation the
+        Write tab draws, so a formula you kept can be pasted in as it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
         <Toggle on={degrees} label="Work in degrees rather than radians" onChange={() => setDegrees(!degrees)} />
@@ -328,6 +393,7 @@ function Row({
     reading.kind === 'point' ||
     reading.kind === 'polar' ||
     reading.kind === 'parametric' ||
+    reading.kind === 'field' ||
     reading.kind === 'surface';
 
   return (

@@ -90,6 +90,15 @@ export type Line =
    * one list takes every kind of thing somebody writes, whatever draws it.
    */
   | { kind: 'surface'; body: Node }
+  /**
+   * `(y, -x)` — a vector at every point of the window.
+   *
+   * The same brackets as a point and as a parametric curve, told apart by the
+   * same rule: the letters in it. `t` makes it a path, `x` or `y` makes it a
+   * field — which is the picture a phase diagram and a flow are — and neither
+   * makes it the fixed point it looks like.
+   */
+  | { kind: 'field'; x: Node; y: Node }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -197,11 +206,20 @@ export function readLine(source: string): Line {
     const y = node(point[1]);
     if ('says' in x) return { kind: 'fault', says: x.says };
     if ('says' in y) return { kind: 'fault', says: y.says };
-    // A pair that mentions t is a point that moves, which is a curve. Same
-    // notation as a fixed point, and the t is what tells them apart — which is
-    // how it is written on paper and in every other graphing calculator.
-    const moving = [...free(x.node), ...free(y.node)].includes(TIME);
-    return moving ? { kind: 'parametric', x: x.node, y: y.node } : { kind: 'point', x: x.node, y: y.node };
+    /*
+     * Three things wear these brackets, and the letters inside decide which.
+     *
+     * `t` is a path — a point that moves. `x` or `y` is a field — a vector at
+     * every point of the window, which is the picture a phase diagram and a
+     * flow are. Neither is a fixed point, which is what is left.
+     *
+     * `t` wins where both appear: a path drawn at each point of a field is not
+     * a picture of anything, and the moving point is what was written.
+     */
+    const letters = [...free(x.node), ...free(y.node)];
+    if (letters.includes(TIME)) return { kind: 'parametric', x: x.node, y: y.node };
+    if (letters.includes('x') || letters.includes('y')) return { kind: 'field', x: x.node, y: y.node };
+    return { kind: 'point', x: x.node, y: y.node };
   }
 
   const at = equals(text);
@@ -282,6 +300,7 @@ export function missing(line: Line, scope: Scope): string[] {
     case 'surface':
       return free(line.body, scope).filter((n) => !has(n));
     case 'parametric':
+    case 'field':
     case 'point':
       return [...free(line.x, scope), ...free(line.y, scope)].filter((n) => !has(n));
     case 'value':
@@ -301,6 +320,26 @@ const flat = (v: Val): number[] => (Array.isArray(v) ? v : [v]);
 export interface Drawn {
   paths: Point[][];
   points: Point[];
+  /** A field's arrows, where the line is one. See `lib/fields.ts`. */
+  arrows?: Arrow[];
+  /**
+   * How strongly to draw each path, where they are not all equal.
+   *
+   * Contour lines want this and nothing else does: twelve levels of one
+   * function in one colour are unreadable unless the line says which level it
+   * is. Absent means every path is drawn at full strength.
+   */
+  shades?: number[];
+}
+
+/** One arrow of a field: where it starts, where it points, and the two barbs. */
+export interface Arrow {
+  from: Point;
+  to: Point;
+  /** The two barb ends; the head is drawn as barb → tip → barb. */
+  head: [Point, Point];
+  /** How long this one is against the longest, 0 to 1 — what the ink says. */
+  strength: number;
 }
 
 const EMPTY: Drawn = { paths: [], points: [] };
@@ -894,6 +933,16 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'A saddle',
     says: 'A surface: a height over every point of the floor, turned with a finger.',
     lines: ['z = x^2 - y^2'],
+  },
+  {
+    name: 'A flow',
+    says: 'A field: which way it pushes at every point, and how hard.',
+    lines: ['(-y, x)'],
+  },
+  {
+    name: 'Supply, demand and where they move',
+    says: 'A phase diagram: prices rise where demand beats supply.',
+    lines: ['(20 - 2x - y, x - 2)'],
   },
   {
     name: 'Discounting',
