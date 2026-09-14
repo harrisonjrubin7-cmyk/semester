@@ -181,6 +181,64 @@ begin
   perform pg_temp.counted('leaving closes the list behind you', n, 0);
 end $$;
 
+-- ── A member may edit the group, but not move it ──────────────────────────
+--
+-- The update policy is `using (in_group(id)) with check (in_group(id))`, which
+-- reads as "any member may edit their group" and means "any member may write
+-- any column". Three of those columns are not the group's own to change:
+-- `term` and `code` are the room every other policy reads to decide who may
+-- see the group and its member list, and `created_by` is the delete authority
+-- the policy below rests on. See groups-columns-pinned.sql.
+
+do $$
+declare g uuid; n bigint;
+begin
+  perform pg_temp.become('11111111-1111-1111-1111-111111111111');
+  select id into g from public.groups limit 1;
+
+  -- What the policy is actually for.
+  update public.groups set name = 'Opera Philadelphia — final', about = 'due week 9', due = '2026-11-06'
+   where id = g;
+  select count(*) into n from public.groups where id = g and name = 'Opera Philadelphia — final';
+  perform pg_temp.counted('a member can set the name, the blurb and the date', n, 1);
+
+  -- Moving it into another room would put the group and everybody in it in
+  -- front of a class none of them chose.
+  begin
+    update public.groups set code = 'vanderbilt/ECON 1020' where id = g;
+    raise exception 'FAILED: a member moved the group into another class';
+  exception
+    when restrict_violation then
+      raise notice 'ok  a member cannot move the group into another class';
+  end;
+
+  begin
+    update public.groups set term = '2027SP' where id = g;
+    raise exception 'FAILED: a member moved the group into another term';
+  exception
+    when restrict_violation then
+      raise notice 'ok  a member cannot move the group into another term';
+  end;
+
+  -- `created_by` is who may delete it, checked two blocks down.
+  begin
+    update public.groups set created_by = '22222222-2222-2222-2222-222222222222' where id = g;
+    raise exception 'FAILED: a member handed the group away';
+  exception
+    when restrict_violation then
+      raise notice 'ok  a member cannot hand the group to somebody else';
+  end;
+
+  -- And the same on a part, which belongs to the group it was added to.
+  begin
+    update public.group_tasks set group_id = gen_random_uuid() where group_id = g;
+    raise exception 'FAILED: a part was moved to another group';
+  exception
+    when restrict_violation then
+      raise notice 'ok  a part cannot be moved to another group';
+  end;
+end $$;
+
 -- ── Only the starter may delete the group ─────────────────────────────────
 
 do $$

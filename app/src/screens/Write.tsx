@@ -1022,7 +1022,7 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
           className="input"
           value={block.text}
           onChange={(e) => onChange({ ...block, text: e.target.value })}
-          placeholder="Write. **Bold** and *italic* work."
+          placeholder="Write. **Bold**, *italic* and [a link](vanderbilt.edu) all work."
           aria-label="Paragraph"
           rows={5}
           style={{ width: '100%', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}

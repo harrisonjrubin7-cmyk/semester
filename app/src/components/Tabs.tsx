@@ -44,7 +44,6 @@ import {
   Fragment,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
@@ -53,7 +52,9 @@ import { strip as stripNow } from '../lib/browser.hook';
 import {
   closeTab,
   foldGroup,
+  follow,
   here,
+  lastFollowed,
   moveTab,
   openTab,
   pickTab,
@@ -203,13 +204,17 @@ export function TabsFollow() {
       callCode,
     ],
   );
-  const seen = useRef<string | null>(null);
-
   useEffect(() => {
     const key = JSON.stringify(at);
-    const firstLook = seen.current === null;
-    if (seen.current === key) return;
-    seen.current = key;
+    /*
+     * Both of these are the session's, not this component's — see `followed`
+     * in `lib/browser.hook.ts`. A ref here would answer "first look" again
+     * every time this component was remounted, and the rule below would then
+     * discard the navigation that remounted it.
+     */
+    const firstLook = lastFollowed() === null;
+    if (lastFollowed() === key) return;
+    follow(key);
     const tab = here();
     /*
      * On the first look the strip adopts the app only if the tab it is on is

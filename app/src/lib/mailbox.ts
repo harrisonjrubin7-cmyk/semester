@@ -37,6 +37,8 @@
  */
 
 import type { CourseId } from './types';
+// Day and month names come from `lib/date.ts`; see the note there.
+import { DOW, MONTHS } from './date';
 
 /**
  * The eight folders, which are the same eight in both clients.
@@ -458,9 +460,6 @@ export function conversations(mails: Mail[]): Thread[] {
 
 // ── Dates ─────────────────────────────────────────────────────────────────
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
 function sameDay(a: Date, b: Date): boolean {
   return (
     a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
@@ -489,7 +488,7 @@ export function stamp(at: number, now: Date): string {
 /** The reader's line: `Thu, Sep 10, 2026, 9:01 AM`. */
 export function fullStamp(at: number): string {
   const d = new Date(at);
-  return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}, ${clockTime(d)}`;
+  return `${DOW[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}, ${clockTime(d)}`;
 }
 
 /**

@@ -1255,6 +1255,21 @@ export function narrowTasks(sections: TaskSection[], q: string, c?: Capabilities
     .filter((s) => s.rows.length > 0);
 }
 
+/**
+ * The three that never need listing, because you are never more than a tap
+ * from them.
+ *
+ * Today, You and Notifications are on the bar at every width and in every
+ * navigation, so repeating them in a list of suggestions is noise — and on
+ * the directory, `me` is the screen doing the listing. Two surfaces had
+ * worked this out separately and written the same three down: `HIDE` in
+ * `components/nav/ByTask.tsx`, whose comment said "Same list as the shelves",
+ * and `HIDE_IN_LATELY` in `screens/Directory.tsx`, which had carried it
+ * across from `screens/Me.tsx`. It is one list, and it is the same three for
+ * the same reason, so it is here beside `lately`, which is what consumes it.
+ */
+export const ALWAYS_TO_HAND: Screen[] = ['home', 'me', 'notifs'];
+
 export function lately(
   recent: string[],
   onBar: string[],

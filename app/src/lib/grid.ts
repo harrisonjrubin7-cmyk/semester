@@ -31,6 +31,7 @@ import {
   ref,
   type Cells,
   type Value,
+  type Ctx,
 } from './sheet';
 
 /** Where a selection started and where it has got to. */
@@ -87,6 +88,20 @@ export function cells(range: Range): string[] {
  * Excel both use, and the second is the one worth having: it is how somebody
  * checks that the range they are about to total is the range they meant.
  */
+/**
+ * The other way: `"B2:B20"` back into a selection.
+ *
+ * {@link label}'s inverse, and it lives beside it so the two spellings of a
+ * range cannot drift. A single address is a range of one cell, which is what
+ * `B2` means everywhere else in a formula.
+ */
+export function rangeOf(text: string): Range {
+  const [from, to] = text.split(':');
+  const anchor = (from ?? '').trim().toUpperCase();
+  const focus = (to ?? from ?? '').trim().toUpperCase();
+  return { anchor, focus };
+}
+
 export function label(range: Range): string {
   const b = box(range);
   const from = ref(b.top, b.left);
@@ -154,7 +169,7 @@ export interface Summary {
  * `#DIV/0!` in it has a sum that is missing something, and saying so is the
  * same promise the engine makes in the cell.
  */
-export function summarise(cellValues: Cells, addresses: string[]): Summary {
+export function summarise(cellValues: Cells, addresses: string[], ctx?: Ctx): Summary {
   let count = 0;
   let filled = 0;
   let sum = 0;
@@ -163,7 +178,7 @@ export function summarise(cellValues: Cells, addresses: string[]): Summary {
   let wrong = false;
 
   for (const address of addresses) {
-    const value: Value = evaluate(cellValues, address);
+    const value: Value = evaluate(cellValues, address, new Set(), ctx);
     if (value === '') continue;
     filled += 1;
     if (isError(value)) {

@@ -101,8 +101,17 @@ function away() {
   });
 }
 
+/**
+ * The box with this label.
+ *
+ * A wrapped cell is a `<textarea>` and every other box an `<input>` — see
+ * `CellStyle.wrap` — so this asks for either. Both answer `value`,
+ * `selectionStart` and `focus`, which is all any test here does with one.
+ */
 function field(label: string): HTMLInputElement {
-  const el = host.querySelector(`input[aria-label="${label}"]`) as HTMLInputElement | null;
+  const el = host.querySelector(
+    `input[aria-label="${label}"], textarea[aria-label="${label}"]`,
+  ) as HTMLInputElement | null;
   if (!el) throw new Error(`no field labelled “${label}”`);
   return el;
 }
@@ -340,6 +349,166 @@ describe('the bars round the grid', () => {
     expect(host.querySelectorAll('.stab').length).toBe(2); // the sheet, and +
     pressNamed('A new sheet');
     expect(host.querySelectorAll('.stab').length).toBe(3);
+  });
+});
+
+/**
+ * Cells joined into one, and the values that were under them.
+ *
+ * Joining does two things at once — it makes the block, and it clears the
+ * cells the block now covers — and the screen says so: *undo brings them
+ * back*. That sentence was false when it was first written. The clearing went
+ * into the undo history and the block did not, so undoing put the values back
+ * *underneath* a block still covering them: restored, and invisible, which is
+ * the exact fault `lib/joined.ts` exists to avoid.
+ *
+ * So these are not tests of `joined.ts` — that file has its own — but of the
+ * one thing it cannot check: that the screen keeps the promise it makes.
+ */
+describe('joining cells', () => {
+  /** Select a block by putting the cursor in one corner and shift-arrowing. */
+  function selectAcross(from: string, steps: number) {
+    at(from);
+    const el = field(`Cell ${from}`);
+    /*
+     * One `act` per press, not one round them all.
+     *
+     * Each shift-right extends from where the selection *now* reaches, and
+     * React batches inside a single `act` — so two presses in one batch both
+     * read the selection as it was before either, and the block comes out one
+     * cell wide however many times the key is pressed.
+     */
+    act(() => {
+      // Right only leaves a cell from its right-hand end — see `moves` in
+      // `onKey`. Typing puts the caret there; `focus()` in jsdom does not.
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+    for (let i = 0; i < steps; i += 1) {
+      act(() => {
+        el.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'ArrowRight', shiftKey: true, bubbles: true }),
+        );
+      });
+    }
+  }
+
+  function joined(): { colSpan: number } | null {
+    const td = host.querySelector('td.sjoin') as HTMLTableCellElement | null;
+    return td ? { colSpan: td.colSpan } : null;
+  }
+
+  /** Whether a cell is drawn at all. A covered one is not. */
+  function drawn(address: string): boolean {
+    return Boolean(host.querySelector(`[aria-label="Cell ${address}"]`));
+  }
+
+  function undo() {
+    const el = host.querySelector('input:focus, textarea:focus') ?? field('Cell A1');
+    act(() => {
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }));
+    });
+  }
+
+  beforeEach(() => {
+    type('Cell A1', 'Autumn term');
+    type('Cell B1', 'under it');
+    type('Cell C1', 'under it too');
+    away();
+  });
+
+  it('draws the block as one cell reaching across the ones it covers', () => {
+    selectAcross('A1', 2);
+    press(/^Join cells$/);
+    expect(joined()).toEqual({ colSpan: 3 });
+  });
+
+  it('stops drawing the cells underneath, so nothing invisible is focusable', () => {
+    selectAcross('A1', 2);
+    press(/^Join cells$/);
+    expect(drawn('B1')).toBe(false);
+    expect(drawn('C1')).toBe(false);
+  });
+
+  it('keeps the top-left value', () => {
+    selectAcross('A1', 2);
+    press(/^Join cells$/);
+    expect(cell('A1')).toBe('Autumn term');
+  });
+
+  /*
+   * The clearing itself. The *sentence* that reports it cannot be checked
+   * here — `say` renders in the app shell, which this test does not mount —
+   * so what is pinned is the fact it reports, which is the part that would be
+   * a data loss if it changed.
+   */
+  it('clears what the block now covers, so what is shown is what is summed', () => {
+    selectAcross('A1', 2);
+    press(/^Join cells$/);
+    at('A1');
+    press(/^Split apart$/);
+    expect(cell('B1')).toBe('');
+    expect(cell('C1')).toBe('');
+  });
+
+  /*
+   * The regression this describe exists for. Both halves have to come back
+   * together: the values alone would be worse than neither, because they would
+   * be back and covered.
+   */
+  it('gives back the block and the values together on undo', () => {
+    selectAcross('A1', 2);
+    press(/^Join cells$/);
+    at('A1');
+    undo();
+    expect(joined()).toBeNull();
+    expect(cell('B1')).toBe('under it');
+    expect(cell('C1')).toBe('under it too');
+  });
+
+  it('splits back apart, though what was cleared stays cleared', () => {
+    selectAcross('A1', 2);
+    press(/^Join cells$/);
+    at('A1');
+    press(/^Split apart$/);
+    expect(joined()).toBeNull();
+    expect(drawn('B1')).toBe(true);
+    expect(cell('B1')).toBe('');
+  });
+});
+
+/**
+ * Text that folds instead of running past the edge.
+ *
+ * A cell is an `<input>`, and no CSS makes one wrap — so a wrapped cell is a
+ * different element. That is the whole cost of the feature, and the thing
+ * worth pinning is that it is paid only where somebody asked for it.
+ */
+describe('wrapping text', () => {
+  it('leaves an ordinary cell the input it has always been', () => {
+    type('Cell A1', 'a note');
+    expect(host.querySelector('[aria-label="Cell A1"]')?.tagName).toBe('INPUT');
+  });
+
+  it('draws a wrapped cell as a box that can hold more than one line', () => {
+    type('Cell A1', 'a note long enough to need folding');
+    at('A1');
+    pressNamed('Wrap text');
+    expect(host.querySelector('[aria-label="Cell A1"]')?.tagName).toBe('TEXTAREA');
+  });
+
+  it('keeps what was in it when it changes element', () => {
+    type('Cell A1', 'a note long enough to need folding');
+    at('A1');
+    pressNamed('Wrap text');
+    expect(cell('A1')).toBe('a note long enough to need folding');
+  });
+
+  it('turns back off, and is an input again', () => {
+    type('Cell A1', 'a note');
+    at('A1');
+    pressNamed('Wrap text');
+    pressNamed('Wrap text');
+    expect(host.querySelector('[aria-label="Cell A1"]')?.tagName).toBe('INPUT');
   });
 });
 

@@ -28,6 +28,7 @@ import { blankCourse } from '../lib/edit';
 import { Folding } from '../components/Fold';
 import { NeedsKey } from '../components/NeedsKey';
 import { reviewReady } from '../lib/import-review';
+import { DOCUMENTS } from '../lib/extract';
 
 /**
  * What the picker will offer.
@@ -41,9 +42,9 @@ import { reviewReady } from '../lib/import-review';
  *
  * The wildcards stay at the end for the mobile pickers that ignore extensions.
  */
-const ACCEPT =
-  '.pdf,.docx,.pptx,.txt,.md,.markdown,.csv,.tsv,.rtf,.html,.htm,.zip,' +
-  'text/*,application/pdf,application/zip';
+// The formats `lib/extract.ts` can read, plus the media types for them.
+// Import takes documents only; Update is the one that also takes a photo.
+const ACCEPT = `${DOCUMENTS}text/*,application/pdf,application/zip`;
 
 /**
  * The quiet "…or" lines under the picker.

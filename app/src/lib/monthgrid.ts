@@ -32,31 +32,8 @@
  * move.
  */
 
-/** Weekday names in full. The grid's own initials are for the eye, not the ear. */
-export const DAY_NAMES = [
-  'Sunday',
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-];
-
-export const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
+// The grid's words are the app's words: `lib/date.ts` owns both lists.
+import { DAY_NAMES, MONTH_NAMES } from './date';
 
 /** One thing sitting on a day, as the month grid already models it. */
 export interface Mark {
