@@ -1099,8 +1099,23 @@ function MonthView() {
     campus.forEach((e) => add(e.date, { c: null, kind: 'event', title: e.title }));
     feedAll.forEach((e) => add(isoToDate(e.date), { c: e.courseId, kind: 'feed', title: e.title }));
   }
-  if (calSource === 'classes') {
-    // Mark every day that has a class on it, so a term's teaching days show up.
+  /*
+   * Every day that has a class on it, so a term's teaching days show up.
+   *
+   * This asked `calSource === 'classes'` rather than the bucket, which made
+   * All the one chip that hid your classes: a Monday with a nine o'clock
+   * lecture was a blank cell under Everything and a marked one under Classes,
+   * so the chip that promises the most showed less than a subset of itself.
+   * `lib/calsource.ts` is explicit that a view asks that file rather than
+   * writing the condition out again — a local copy is how the four views came
+   * to disagree in the first place — and this was the last copy left.
+   *
+   * Added last on purpose. The cell draws four marks at most, so a day with
+   * three deadlines and a class still leads with the deadlines; it is the
+   * class that falls off the end, which is the right way round for a grid
+   * somebody scans to find what is due.
+   */
+  if (on.classes) {
     for (let d = 1; d <= new Date(calYear, calMonth + 1, 0).getDate(); d++) {
       const date = new Date(calYear, calMonth, d);
       railFor(catalog, date, []).forEach((b) => add(date, { c: b.c, kind: 'class' }));
@@ -1135,6 +1150,15 @@ function MonthView() {
    * appointments off the grid takes them out of the panel too.
    */
   const selAppts = on.classes ? appointmentsOn(state.appointments, selDate) : [];
+  /*
+   * And the classes themselves, for the same reason.
+   *
+   * The grid marks a teaching day now, so the panel has to know about one, or
+   * tapping a marked Monday answers "Nothing due this day" — the exact
+   * disagreement the two comments above record fixing for campus events and
+   * for appointments. Gated on `on.classes` to match the marks exactly.
+   */
+  const selClasses = on.classes ? railFor(catalog, selDate, []) : [];
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
@@ -1553,6 +1577,37 @@ function MonthView() {
         </div>
       )}
 
+      {/*
+        What meets that day, which is what the cell's marks now promise.
+
+        A plain row rather than a button: a class is the timetable repeating
+        and there is no single record behind it to open, and the control for
+        going further is already at the foot of this panel — one button to the
+        day itself, where the hours are drawn and everything can be acted on.
+        Inventing a destination per row would be two ways to the same screen.
+      */}
+      {selClasses.length > 0 && (
+        <>
+          <SectionLabel>Classes</SectionLabel>
+          {selClasses.map((b) => (
+            <div
+              key={`c:${b.at}:${b.title}`}
+              style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline', ...monthTaskRow }}
+            >
+              <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: 'none' }}>{b.time}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
+                  {b.title}
+                </span>
+                {b.meta && (
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine() }}>{b.meta}</span>
+                )}
+              </span>
+            </div>
+          ))}
+        </>
+      )}
+
       {/* Your own appointments that day, in the row the campus list uses: a
           kind, a title, the hour and the place. Tapping one opens the list it
           lives in, which is where it can be edited. */}
@@ -1702,6 +1757,7 @@ function MonthView() {
       {selItems.length === 0 &&
         selTasks.length === 0 &&
         selAppts.length === 0 &&
+        selClasses.length === 0 &&
         selEvents.length === 0 &&
         selFeed.length === 0 && (
           <EmptyState inline title="Nothing due this day" body="Double-tap it to put something there." />
@@ -1713,8 +1769,9 @@ function MonthView() {
         <AddHere date={iso(adding)} onClose={() => setAdding(null)} />
       )}
 
-      {/* Always offered, including on an empty day: this list is deadlines
-          only, and classes and anything of your own live in the day view. */}
+      {/* Always offered, including on an empty day: this panel names what is
+          on, and the day view is where the hours are drawn and a thing can be
+          acted on. */}
       <ActionButton
         onClick={() => {
         dispatch({
