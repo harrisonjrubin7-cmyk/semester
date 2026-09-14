@@ -325,7 +325,7 @@ function DayView() {
              */
             canMove={(b) => Boolean(b.from)}
             onMove={(b, minutes) => {
-              const what = movableOf(b, catalog);
+              const what = movableOf(b, catalog, dateToIso(day));
               if (!what) {
                 // A campus event and a class both refuse, and for different
                 // reasons — one is somebody else's date, the other is the
@@ -740,7 +740,11 @@ function WeekView() {
           // `lib/calsource.ts` so the day rail and this grid cannot disagree.
         ),
         ...campusHours(campus, feedWeek, date),
-      ].filter((b) => keepBlock(b, on)),
+      ]
+        .filter((b) => keepBlock(b, on))
+        // Which day each block came from, so a drop knows what it moved as
+        // well as where it landed — see `on` on `HourBlock`.
+        .map((b) => ({ ...b, on: dateToIso(date) })),
       onOpen: () => {
         dispatch({ type: 'setCalDay', date: dateToIso(date) });
         dispatch({ type: 'setCalView', view: 'day' });
@@ -857,7 +861,7 @@ function WeekView() {
             onMove={(b, dayIndex, minutes) => {
               const to = days[dayIndex]?.date;
               if (!to) return;
-              const what = movableOf(b, catalog);
+              const what = movableOf(b, catalog, b.on);
               if (!what) {
                 // A campus event and a class both refuse, and for different
                 // reasons — one is somebody else's date, the other is the

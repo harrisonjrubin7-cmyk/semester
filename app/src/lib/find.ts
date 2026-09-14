@@ -237,6 +237,8 @@ function textOfBlock(b: Block): string {
       return `${b.language} ${b.text}`;
     case 'checks':
       return b.items.map((i) => i.text).join(' ');
+    case 'toc':
+      return b.title;
     case 'break':
       return '';
   }

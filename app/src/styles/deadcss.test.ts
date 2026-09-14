@@ -51,6 +51,10 @@ const SHEETS = ['app.css', 'features.css'];
 const COMPOSED = new Map([
   ['is-bottom', 'screens/Mail.tsx — `mb-main is-${pane}`'],
   ['is-right', 'screens/Mail.tsx — `mb-main is-${pane}`'],
+  ['docpaper-h2', 'screens/write/Paper.tsx — `docpaper-h docpaper-h${block.level}`'],
+  ['docpaper-h3', 'screens/write/Paper.tsx — `docpaper-h docpaper-h${block.level}`'],
+  ['docpaper-toc2', 'screens/write/Paper.tsx — `docpaper-toc-line docpaper-toc${h.level}`'],
+  ['docpaper-toc3', 'screens/write/Paper.tsx — `docpaper-toc-line docpaper-toc${h.level}`'],
 ]);
 
 /**

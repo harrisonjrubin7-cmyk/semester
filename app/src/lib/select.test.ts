@@ -714,7 +714,16 @@ describe('hoursFor', () => {
     expect(hours.find((h) => h.title === 'PSCI seminar')?.minutes).toBe(75);
   });
 
-  it('gives something you added fifty minutes rather than a duration nobody stated', () => {
+  /*
+   * An hour, not fifty minutes.
+   *
+   * Fifty is a class period, and it was what every appointment got — so a
+   * four-hour shift and a coffee were the same rectangle on the grid. An hour
+   * is what both Google and Outlook put in the box for something with a start
+   * and no stated end, and it is the honest reading of "11:00" with nothing
+   * after it.
+   */
+  it('gives something you added an hour when it does not say how long', () => {
     const appt: Appointment = {
       id: 'a1',
       title: 'Dentist',
@@ -726,8 +735,23 @@ describe('hoursFor', () => {
       created: 0,
     };
     const drawn = hoursFor(CAT, NOW, [appt]).find((h) => h.title === 'Dentist');
-    expect(drawn?.minutes).toBe(50);
+    expect(drawn?.minutes).toBe(60);
     expect(drawn?.kind).toBe('other');
+  });
+
+  it('gives it the length it does state', () => {
+    const shift: Appointment = {
+      id: 'a2',
+      title: 'Shift',
+      date: '2026-09-09',
+      at: 16 * 60,
+      time: '4:00p',
+      minutes: 240,
+      where: 'Rand',
+      note: '',
+      created: 0,
+    };
+    expect(hoursFor(CAT, NOW, [shift]).find((h) => h.title === 'Shift')?.minutes).toBe(240);
   });
 
   it('leaves a class with no kind, so the grid can colour only what is yours', () => {
