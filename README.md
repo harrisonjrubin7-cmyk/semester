@@ -472,6 +472,27 @@ model in it or needs a key:
   - a **tab strip** along the bottom, so the gradebook and the budget beside it
     are one tap apart.
 
+  A formula can **read another sheet**: `=Marks!B2`, or
+  `=SUM('Q1 marks'!B2:B9)` where the name has a space in it. That is the half
+  of a spreadsheet that turns four separate grids into one model — a term
+  sheet that totals a gradebook, a budget that reads a plan — and it comes
+  with the two things that make it safe to rely on. **Rename a sheet** and
+  every formula naming it follows, re-quoted if the new name needs quotes.
+  **Insert or delete rows on it** and every formula on every other sheet
+  pointing into it moves with them, undo included: the alternative is a total
+  that quietly adds up the wrong nine rows with nothing on either screen
+  looking wrong. A name no sheet has, or one that two sheets share, reads
+  `#REF!` rather than guessing which grid was meant. Saving as Excel brings
+  the sheets a formula reads along with it, under the names the tabs will
+  actually carry.
+
+  And the corner of the selection is a **fill handle**: drag it to pull a
+  formula down a column or across a row, or press it to fill as far as the
+  column beside it goes — which is what double-clicking it does in Excel, and
+  is a real button with a name, so it works from the keyboard too. It is also
+  what finally makes `$` mean something on the screen: until something moved a
+  reference, nothing needed holding still.
+
   What it can now do to a sheet, none of which it could before: **rows and
   columns inserted and deleted in the middle**, with every formula rewritten to
   follow — a range a deletion reached into *shrinks* rather than breaking, and

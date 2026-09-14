@@ -18,7 +18,7 @@ import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
 import { useStore } from '../state/store';
 import { secondLine } from '../lib/dim';
-import type { Cells } from '../lib/sheet';
+import type { Cells, Ctx } from '../lib/sheet';
 
 /**
  * The picture itself.
@@ -58,11 +58,27 @@ const PLOT_H = H - PAD.top - PAD.bottom;
 /** Axis and category type, in the drawing's units — about 11px at full width. */
 const AXIS_TYPE = 13;
 
-export function SheetChart({ cells, chart }: { cells: Cells; chart: ChartSpec }) {
+export function SheetChart({
+  cells,
+  chart,
+  over,
+}: {
+  cells: Cells;
+  chart: ChartSpec;
+  /**
+   * The reading the grid above it is done under.
+   *
+   * Without it a chart of a cell that says `=Marks!B2` draws a gap where the
+   * grid two inches above draws 88 — the chart would be reading the sheet on
+   * its own, with no book, and answering `#REF!`. A picture that disagrees
+   * with the numbers it is a picture of is the worst thing on this screen.
+   */
+  over?: Ctx;
+}) {
   const { state } = useStore();
   const light = groundOf(resolveGround(state.ground, usePrefersDark())).light;
 
-  const read = useMemo(() => readChart(cells, chart), [cells, chart]);
+  const read = useMemo(() => readChart(cells, chart, over), [cells, chart, over]);
 
   const colours = useMemo(() => {
     const anchor = anchorHue(state.accent, state.hue);

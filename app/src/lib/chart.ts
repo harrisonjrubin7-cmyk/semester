@@ -295,7 +295,12 @@ function mostlyWords(texts: string[]): boolean {
  * the point: a dialogue asking four questions before drawing anything is how
  * charting became a thing people avoid.
  */
-export function suggest(cells: Cells, range: string, now = Date.now()): SheetChart {
+export function suggest(
+  cells: Cells,
+  range: string,
+  now = Date.now(),
+  ctx: Ctx = clock(now),
+): SheetChart {
   const at = corners(range);
   const blank: SheetChart = {
     id: crypto.randomUUID(),
@@ -308,7 +313,14 @@ export function suggest(cells: Cells, range: string, now = Date.now()): SheetCha
   };
   if (!at) return blank;
 
-  const ctx = clock(now);
+  /*
+   * Read under the caller's context, not a bare clock.
+   *
+   * Guessing without one reads every cross-sheet cell as `#REF!` — which is
+   * text, not a number — so a row of them is taken for a heading row and the
+   * first row of the chart disappears. Found by a test one line after the
+   * chart itself was given the context and this was not.
+   */
   const topRow: string[] = [];
   for (let c = at.left; c <= at.right; c++) topRow.push(textAt(cells, ref(at.top, c), ctx));
   const leftCol: string[] = [];

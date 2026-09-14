@@ -3951,6 +3951,44 @@ input[type='search'].input {
   outline-offset: -2px;
 }
 
+/* The corner you drag to fill.
+   The cell it sits in is the only one that needs to be a positioning context,
+   so the rule is on the class rather than on every `td` in the grid — a
+   `position: relative` on 5,200 cells is 5,200 stacking contexts for one
+   square. */
+.sfill-cell {
+  position: relative;
+}
+
+.sfill {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  z-index: 2;
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  background: var(--app-accent);
+  border: 1px solid var(--app-bg);
+  border-radius: 1px;
+  cursor: crosshair;
+}
+
+/* The touch target, which is not the square. A drawn handle bigger than this
+   covers the cell it is the corner of; a *pressable* area smaller than 24px
+   is one nobody with a finger can hit. So the square stays 8px and an
+   invisible pad around it carries the presses. */
+.sfill::after {
+  position: absolute;
+  inset: -8px;
+  content: '';
+}
+
+.sfill:focus-visible {
+  outline: 2px solid var(--app-accent-bright);
+  outline-offset: 2px;
+}
+
 /* Gridlines off. The cells keep their sizes and lose their rules, which is
    what Excel's own toggle does and what a table meant for a document wants. */
 .sgrid-plain .scell {

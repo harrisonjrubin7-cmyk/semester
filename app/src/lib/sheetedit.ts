@@ -45,7 +45,10 @@ import {
   colName,
   isFormula,
   parseRef,
+  readQualifier,
   ref,
+  sheetKey,
+  writeQualifier,
   type CellStyle,
   type Cells,
 } from './sheet';
@@ -149,16 +152,53 @@ function writeWritten(w: Written): string {
  * out of the middle of it. A caller with no opinion about ranges leaves it
  * off and both ends go through `change` as before.
  */
+/**
+ * An error put in a reference's place, as against a moved reference.
+ *
+ * The difference decides whether the sheet name in front of it is kept. A
+ * moved `Sheet2!A1` is still on Sheet2, so the name goes back on; a gone one
+ * is not a reference at all, and `Sheet2!#REF!` — which is what Excel writes —
+ * is a thing this engine's lexer cannot read back, because a qualifier has to
+ * have an address after it. It would come back `#VALUE!`, which says the
+ * formula is malformed rather than that a cell it pointed at was deleted. So
+ * the name comes off and the error stands on its own.
+ */
+function isErrorText(text: string): boolean {
+  return text.startsWith('#');
+}
+
 export function rewrite(
   formula: string,
-  change: (was: Written) => string | null,
-  changeRange?: (from: Written, to: Written) => string | null,
+  change: (was: Written, sheet: string) => string | null,
+  changeRange?: (from: Written, to: Written, sheet: string) => string | null,
+  changeSheet?: (name: string) => string | null,
 ): string {
   if (!isFormula(formula)) return formula;
   const lead = formula.slice(0, formula.length - formula.trimStart().length);
   const body = formula.trimStart().slice(1);
   let out = '';
   let i = 0;
+
+  /**
+   * The sheet name to write back, which is usually the one that was there.
+   *
+   * Re-quoted through `writeQualifier` rather than patched, so a sheet
+   * renamed from `Marks` to `Q1 marks` comes back quoted — the bare spelling
+   * cannot carry a space, and `=Q1 marks!B1` is a formula that no longer
+   * parses.
+   */
+  const named = (name: string, original: string): string => {
+    if (!name || !changeSheet) return original;
+    const next = changeSheet(name);
+    return next === null ? original : writeQualifier(next);
+  };
+
+  /** The replacement text for one reference, with its sheet name put back. */
+  const put = (replaced: string | null, prefix: string, was: string): string => {
+    if (replaced !== null && isErrorText(replaced)) return replaced;
+    return `${prefix}${replaced ?? was}`;
+  };
+
   while (i < body.length) {
     const ch = body[i];
     if (ch === '"') {
@@ -168,24 +208,91 @@ export function rewrite(
       i = stop;
       continue;
     }
-    const word = WORD.exec(body.slice(i));
+
+    /*
+     * A sheet name in front of the reference, if there is one.
+     *
+     * Read here rather than left to the word scan because the word scan
+     * cannot see it: `Sheet2!A1` is the word `Sheet2`, which is not a
+     * reference and is passed through, then a `!`, then the word `A1`, which
+     * *is* one — so a row inserted in **this** grid rewrote a reference into
+     * another sheet. Silently, and pointing one row off, which is the exact
+     * shape of fault this file exists to prevent.
+     */
+    const rest = body.slice(i);
+    const qualifier = readQualifier(rest);
+    const sheet = qualifier ? qualifier.name : '';
+    /*
+     * What was consumed and what is written out are two lengths, not one.
+     *
+     * Renaming `Marks` to `Q1` makes the prefix five characters where it was
+     * six, and slicing the input by the *new* length walks the scanner into
+     * the middle of the reference — which produced `='Q1'!!B1` from
+     * `=Marks!B1`, caught by a test one run after it was written. `taken` is
+     * always the original.
+     */
+    const taken = qualifier ? qualifier.length : 0;
+    const prefix = qualifier ? named(sheet, rest.slice(0, taken)) : '';
+    const word = WORD.exec(rest.slice(taken));
+
     if (word) {
       const text = word[0];
-      const after = body[i + text.length];
+      const took = taken + text.length;
+      const after = body[i + took];
+      // A word followed by `(` is a call, never a cell.
       const written = after === '(' ? null : readWritten(text);
+
       if (written && changeRange && after === ':') {
-        const tail = WORD.exec(body.slice(i + text.length + 1));
+        const tailRest = body.slice(i + took + 1);
+        const tailQualifier = readQualifier(tailRest);
+        const tookTailPrefix = tailQualifier ? tailQualifier.length : 0;
+        const tailPrefix = tailRest.slice(0, tookTailPrefix);
+        const tail = WORD.exec(tailRest.slice(tookTailPrefix));
         const end = tail ? readWritten(tail[0]) : null;
         if (tail && end) {
-          out += changeRange(written, end) ?? `${text}:${tail[0]}`;
-          i += text.length + 1 + tail[0].length;
+          const tookTail = tookTailPrefix + tail[0].length;
+          const tailShown = tailQualifier ? named(tailQualifier.name, tailPrefix) : '';
+          const written_ = `${prefix}${text}:${tailShown}${tail[0]}`;
+          /*
+           * Both ends on one sheet, or it is left exactly as written.
+           *
+           * `Sheet2!A1:Sheet3!A5` names no rectangle and the engine answers
+           * `#REF!` for it. Rewriting half of a thing that is already wrong
+           * would make it a different wrong thing and lose what somebody
+           * typed, which is the only clue to what they meant.
+           */
+          const same = tailQualifier === null || sheetKey(tailQualifier.name) === sheetKey(sheet);
+          const replaced = same ? changeRange(written, end, sheet) : null;
+          out +=
+            replaced === null
+              ? written_
+              : isErrorText(replaced)
+                ? replaced
+                : `${prefix}${replaced}`;
+          i += took + 1 + tookTail;
           continue;
         }
       }
-      out += written ? (change(written) ?? text) : text;
-      i += text.length;
+
+      out += written ? put(change(written, sheet), prefix, text) : `${prefix}${text}`;
+      i += took;
       continue;
     }
+
+    /*
+     * A sheet name with nothing readable after it.
+     *
+     * Copied whole rather than walked into. `'A1'!` followed by a space would
+     * otherwise be entered character by character, and the word scan starting
+     * inside the quotes would find `A1` and rewrite the *name* — which is the
+     * same class of fault as the one above, one level further in.
+     */
+    if (taken) {
+      out += prefix;
+      i += taken;
+      continue;
+    }
+
     out += ch;
     i += 1;
   }
@@ -233,12 +340,50 @@ export function shift(
   at: number,
   by: number,
 ): string {
+  // This grid only. A reference into another sheet is about rows that did not
+  // move — see {@link shiftIn}, which is the other half of the same edit.
+  return shifting(formula, axis, at, by, (sheet) => sheet === '');
+}
+
+/**
+ * The same edit, seen from a sheet that was not the one edited.
+ *
+ * Inserting a row in **Marks** moves the cells on Marks, and every formula on
+ * every other sheet that says `Marks!B9` is now pointing one row above what it
+ * meant. Nothing on those sheets moved, so {@link shift} correctly leaves them
+ * alone — which means somebody has to walk them, and this is what they use.
+ *
+ * The pair is not optional. Doing only the first half is the arrangement where
+ * a term total quietly adds up the wrong nine rows the moment a row is
+ * inserted on the sheet it reads, and neither number on the screen looks
+ * wrong. `screens/Sheet.tsx` calls both from one place for exactly that
+ * reason.
+ */
+export function shiftIn(
+  formula: string,
+  named: string,
+  axis: 'row' | 'col',
+  at: number,
+  by: number,
+): string {
+  const want = sheetKey(named);
+  return shifting(formula, axis, at, by, (sheet) => sheet !== '' && sheetKey(sheet) === want);
+}
+
+function shifting(
+  formula: string,
+  axis: 'row' | 'col',
+  at: number,
+  by: number,
+  applies: (sheet: string) => boolean,
+): string {
   const limit = axis === 'row' ? MAX_ROWS : MAX_COLS;
   const on = (w: Written) => (axis === 'row' ? w.row : w.col);
   const put = (w: Written, n: number) =>
     writeWritten(axis === 'row' ? { ...w, row: n } : { ...w, col: n });
 
-  const one = (was: Written): string | null => {
+  const one = (was: Written, sheet = ''): string | null => {
+    if (!applies(sheet)) return null;
     const where = on(was);
     if (where < at) return null;
     // Taking out rows 4 and 5 and asking about row 5: it is gone, not moved.
@@ -256,8 +401,11 @@ export function shift(
    * has to come back to the edge of the gap rather than become `#REF!`, and
    * only a range whose every row went is gone.
    */
-  const pair = (from: Written, to: Written): string | null => {
-    if (by >= 0) return `${one(from) ?? writeWritten(from)}:${one(to) ?? writeWritten(to)}`;
+  const pair = (from: Written, to: Written, sheet = ''): string | null => {
+    if (!applies(sheet)) return null;
+    if (by >= 0) {
+      return `${one(from, sheet) ?? writeWritten(from)}:${one(to, sheet) ?? writeWritten(to)}`;
+    }
     const count = -by;
     const lo = Math.min(on(from), on(to));
     const hi = Math.max(on(from), on(to));
@@ -269,6 +417,62 @@ export function shift(
   };
 
   return rewrite(formula, one, pair);
+}
+
+/**
+ * Every formula that names a sheet, following it to its new name.
+ *
+ * A tab is renamed by typing in the box at the top of the screen, which is a
+ * keystroke — so this runs on every keystroke, over every formula on every
+ * other sheet. It is a scan of strings a few dozen characters long and there
+ * are a few hundred of them; the alternative, which is to leave the references
+ * pointing at a name nothing answers to, turns every one of them into `#REF!`
+ * the moment somebody corrects a typo in a title.
+ */
+export function renameIn(formula: string, from: string, to: string): string {
+  const want = sheetKey(from);
+  if (!want || want === sheetKey(to)) return formula;
+  return rewrite(
+    formula,
+    () => null,
+    () => null,
+    (name) => (sheetKey(name) === want ? to : null),
+  );
+}
+
+/**
+ * Which sheets a formula reaches into, by the name it wrote.
+ *
+ * Through the same scanner as everything else here, and that is the point: a
+ * regex for `something!` would find the `A1` inside a quoted string and the
+ * `LOG10` in front of a bracket, which is the pair of mistakes the note above
+ * {@link rewrite} exists to record. Nothing is rewritten — the callbacks all
+ * answer `null` — and the names fall out of the walk.
+ */
+export function sheetsNamed(formula: string): string[] {
+  const found: string[] = [];
+  rewrite(
+    formula,
+    () => null,
+    () => null,
+    (name) => {
+      if (!found.some((had) => sheetKey(had) === sheetKey(name))) found.push(name);
+      return null;
+    },
+  );
+  return found;
+}
+
+/** The sheets a whole grid reaches into, deduplicated, in the order met. */
+export function sheetsBehind(cells: Cells): string[] {
+  const found: string[] = [];
+  for (const text of Object.values(cells)) {
+    if (!isFormula(text)) continue;
+    for (const name of sheetsNamed(text)) {
+      if (!found.some((had) => sheetKey(had) === sheetKey(name))) found.push(name);
+    }
+  }
+  return found;
 }
 
 // ── Rows and columns ─────────────────────────────────────────────────────
@@ -401,6 +605,59 @@ export function fill(body: Body, range: Range, way: 'down' | 'right'): Body {
  * screen says so, which is the same rule the rest of this app runs on: a
  * refusal is honest, a quietly wrong total is not.
  */
+/**
+ * How far a fill should run when nobody says how far.
+ *
+ * The handle at the corner of a selection is dragged, and it is also *pressed*
+ * — by anybody working from the keyboard, and by everybody who has learned
+ * that double-clicking it in Excel fills the formula to the foot of the table.
+ * Both need an answer to "how far", and the answer every spreadsheet gives is
+ * the same: as far as the column beside this one goes.
+ *
+ * The column to the **left**, which is where a table's names are and so is
+ * where its length is written. Falling back to the right only when the
+ * selection starts at column A, because then there is no left.
+ *
+ * `null` when there is nothing to follow — no neighbour, or a neighbour that
+ * stops where the selection already does. A handle that would fill nowhere is
+ * a handle that should not offer to.
+ */
+export function reachOf(body: Body, range: Range, way: 'down' | 'right'): string | null {
+  const at = box(range);
+  if (way === 'down') {
+    const beside = at.left > 0 ? at.left - 1 : at.right + 1;
+    if (beside >= body.cols) return null;
+    let row = at.bottom;
+    while (row + 1 < body.rows && (body.cells[ref(row + 1, beside)] ?? '') !== '') row += 1;
+    return row > at.bottom ? ref(row, at.right) : null;
+  }
+  const beside = at.top > 0 ? at.top - 1 : at.bottom + 1;
+  if (beside >= body.rows) return null;
+  let col = at.right;
+  while (col + 1 < body.cols && (body.cells[ref(beside, col + 1)] ?? '') !== '') col += 1;
+  return col > at.right ? ref(at.bottom, col) : null;
+}
+
+/**
+ * Which way a drag from the corner of a selection is going.
+ *
+ * One axis, whichever the finger has moved further along — a diagonal drag
+ * has to resolve to a fill down or a fill right, because those are the two
+ * things `fill` does and the two things a column of formulas can mean. Ties
+ * and backwards go to `null`: dragging up or left from the corner is not a
+ * shorter fill, it is a different gesture, and guessing at one is how a
+ * handle eats the row above.
+ */
+export function wayOf(from: Range, to: string): 'down' | 'right' | null {
+  const at = box(from);
+  const there = parseRef(to);
+  if (!there) return null;
+  const down = there.row - at.bottom;
+  const right = there.col - at.right;
+  if (down <= 0 && right <= 0) return null;
+  return down >= right ? 'down' : 'right';
+}
+
 export function sortable(body: Body, range: Range): boolean {
   return !cellsIn(range).some((address) => isFormula(body.cells[address] ?? ''));
 }

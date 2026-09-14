@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -32,6 +32,8 @@ import {
   parseRef,
   places,
   readTable,
+  reading,
+  sheetKey,
   ref,
   restyle,
   show,
@@ -43,6 +45,8 @@ import {
   weighted,
   type Align,
   type CellStyle,
+  type Cells,
+  type Ctx,
   type Ink,
   type NumFormat,
   type Sheet as SheetModel,
@@ -62,6 +66,7 @@ import {
 import {
   canRedo,
   canUndo,
+  amend,
   now as nowIn,
   push as remember,
   redo,
@@ -89,10 +94,11 @@ import {
   type Body,
   type Clip,
 } from '../lib/sheetedit';
+import { reachOf, renameIn, sheetsBehind, shiftIn, wayOf } from '../lib/sheetedit';
 import { ZOOMS, stepZoom, type Tab as RibbonTab } from '../lib/ribbon';
 import { FormulaBar, Ribbon, SheetTabs, StatusBar } from '../components/Ribbon';
 import { TEMPLATES, fromTemplate } from '../lib/sheettemplates';
-import { fromSheet, sheetFileName, widthsFor, xlsx } from '../lib/xlsx';
+import { fromSheet, sheetFileName, tabNames, widthsFor, xlsx } from '../lib/xlsx';
 import { canBuild, gradeSheet } from '../lib/gradesheet';
 import { fromDelimited, fromXlsx, readerFor } from '../lib/xlsxin';
 import { LIMIT } from '../state/slices/made';
@@ -167,6 +173,15 @@ export function Sheet() {
 type Order = 'opened' | 'edited' | 'name' | 'course';
 
 const ORDERS = ['opened', 'edited', 'name', 'course'] as const satisfies readonly Order[];
+
+/**
+ * How far a press may wander and still be a press, in pixels.
+ *
+ * The same figure and the same reason as `STILL` in `components/Plot.tsx`: a
+ * finger on glass never holds perfectly still, and a threshold of zero makes
+ * every press a drag on a touchscreen.
+ */
+const STILL = 6;
 
 const ORDER_LABELS: Record<Order, string> = {
   opened: 'Last opened',
@@ -663,11 +678,24 @@ function Thumb({ rows }: { rows: string[][] }) {
  * above the grid, and an undo that silently reverted the title while somebody
  * was taking back a cell would be worse than no undo on them at all.
  */
+/**
+ * The state of the *other* sheets this step rewrote, by sheet id.
+ *
+ * Only ever the ones a step actually touched, which is almost never: a
+ * structural edit on a sheet something else points into, and nothing else.
+ * It is on the snapshot rather than left to the store because undo has to put
+ * it back — see `amend` in `lib/history.ts` for the total that is quietly
+ * wrong without it.
+ */
+type Others = Record<string, Cells>;
+
 interface Snap {
   cells: Record<string, string>;
   styles: Record<string, CellStyle>;
   rows: number;
   cols: number;
+  /** Other sheets this step rewrote. Absent on every step that rewrote none. */
+  others?: Others;
 }
 
 /**
@@ -771,8 +799,119 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     patch(after);
   };
 
+  /**
+   * A new name, and every formula that named the old one following it.
+   *
+   * A tab's name is part of the address of every cell on it, as far as the
+   * other sheets are concerned: `Marks!B1` stops resolving the moment Marks is
+   * called something else, and a title is edited by typing — so somebody
+   * correcting a typo would turn every reference into their gradebook into
+   * `#REF!` on the way through.
+   *
+   * Renaming is not one of the grid's undoable steps, and it does not need to
+   * be: the title and the references move together in one dispatch each, so
+   * there is no state where half of it has happened. Typing the old name back
+   * brings them back.
+   */
+  const rename = (title: string) => {
+    const was = sheet.title;
+    patch({ title });
+    if (sheetKey(was) === sheetKey(title) || !sheetKey(was)) return;
+    let moved = 0;
+    for (const other of state.sheets) {
+      if (other.id === sheet.id) continue;
+      let changed = false;
+      const cells: Cells = {};
+      for (const [address, text] of Object.entries(other.cells)) {
+        const written = renameIn(text, was, title);
+        if (written !== text) changed = true;
+        cells[address] = written;
+      }
+      if (!changed) continue;
+      moved += 1;
+      dispatch({ type: 'updateSheet', id: other.id, patch: { cells } });
+    }
+    if (moved) say(`${moved} other ${moved === 1 ? 'sheet' : 'sheets'} now say “${title}”.`);
+  };
+
+  /** A snapshot put back on screen — this grid, and any other sheet it moved. */
+  const apply = (snap: Snap) => {
+    const { others, ...body } = snap;
+    patch(body);
+    for (const [id, cells] of Object.entries(others ?? {})) {
+      dispatch({ type: 'updateSheet', id, patch: { cells } });
+    }
+  };
+
+  /**
+   * A change to this grid's *shape*, and the same change seen from every other
+   * sheet that points into it.
+   *
+   * Inserting a row here moves this grid's cells, and `shift` rewrites this
+   * grid's own formulas to follow. Nothing on the other sheets moved, so their
+   * formulas are left alone by that — and every one of them saying `Marks!B9`
+   * is now naming the row above the one it meant. `shiftIn` is the other half,
+   * and the two are called from one place because doing only the first is a
+   * term total that quietly adds up the wrong nine rows with nothing on either
+   * screen looking wrong.
+   *
+   * The before and after both go into the undo history: the *before* is
+   * written onto the entry undo will land on, which never knew those formulas
+   * said anything else. See `amend` in `lib/history.ts`.
+   */
+  const reshape = (next: Body, axis: 'row' | 'col', at: number, by: number, tag: string) => {
+    const before: Others = {};
+    const after: Others = {};
+    for (const other of state.sheets) {
+      if (other.id === sheet.id) continue;
+      let moved = false;
+      const cells: Cells = {};
+      for (const [address, text] of Object.entries(other.cells)) {
+        const written = shiftIn(text, sheet.title, axis, at, by);
+        if (written !== text) moved = true;
+        cells[address] = written;
+      }
+      if (!moved) continue;
+      before[other.id] = other.cells;
+      after[other.id] = cells;
+    }
+
+    const snap: Snap = { ...next, ...(Object.keys(after).length ? { others: after } : {}) };
+    setHistory((h) => {
+      const kept = Object.keys(before).length
+        ? amend(h, (was) => ({ ...was, others: { ...was.others, ...before } }))
+        : h;
+      return remember(kept, snap, tag, Date.now());
+    });
+    apply(snap);
+    const touched = Object.keys(after).length;
+    if (touched) {
+      say(`${touched} other ${touched === 1 ? 'sheet' : 'sheets'} pointing here moved with it.`);
+    }
+  };
+
   /** The grid as `lib/sheetedit.ts` takes it, and the way a result comes back. */
   const body = (): Body => bodyOf(sheet);
+
+  /**
+   * The reading this grid is done under — the clock, and the other sheets.
+   *
+   * Once per render rather than once per cell: `reading` walks every sheet to
+   * build the book, and this component draws `rows × cols` cells that each ask
+   * what their formula comes to. Built from the titles and the cells, so
+   * renaming a sheet or typing in one moves every formula pointing at it on
+   * the next paint.
+   *
+   * `Date.now()` inside the memo rather than outside it, for the reason in
+   * `clock`: a sheet whose formulas span midnight still agrees with itself,
+   * because every cell in one paint is read at one instant.
+   */
+  const over = useMemo(
+    () => reading(state.sheets, sheet.title),
+    // The identity of the array changes on every edit to any sheet, which is
+    // exactly when the book has to be rebuilt.
+    [state.sheets, sheet.title],
+  );
 
   const write = (address: string, value: string) => {
     const cells = { ...sheet.cells };
@@ -790,24 +929,68 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
   const rewind = (to: History<Snap>) => {
     setHistory(to);
-    patch(nowIn(to));
+    apply(nowIn(to));
   };
 
-  const rows = filled(sheet);
+  const rows = filled(sheet, over);
   const size = extent(sheet);
   const nothing = rows.length === 0;
 
+  /**
+   * This sheet as a workbook, with every sheet its formulas reach.
+   *
+   * A single tab was right while a formula could only name cells beside it.
+   * The moment one can say `Marks!B1`, exporting this sheet alone writes a
+   * formula pointing at a tab that is not in the file — which opens as `#REF!`
+   * in Excel, on a number that was correct on the screen it came from. So the
+   * sheets it reads come with it, and the sheets *they* read, until the set
+   * stops growing.
+   *
+   * The names are the ones `lib/xlsx.ts` will actually give the tabs — a sheet
+   * titled `Q1: marks` becomes the tab `Q1 marks` — and every qualifier is
+   * rewritten to match through the same function that decides them, so the
+   * formula in the file names the tab in the file.
+   */
   const saveExcel = async () => {
     setBusy(true);
     try {
-      const tab = fromSheet(sheet);
-      const blob = await xlsx({ tabs: [{ ...tab, widths: widthsFor(rows) }] });
+      const wanted: SheetModel[] = [sheet];
+      for (let i = 0; i < wanted.length; i += 1) {
+        for (const name of sheetsBehind(wanted[i].cells)) {
+          const found = state.sheets.find((s) => sheetKey(s.title) === sheetKey(name));
+          if (found && !wanted.some((w) => w.id === found.id)) wanted.push(found);
+        }
+      }
+
+      const names = tabNames(wanted.map((s) => s.title));
+      const carried = wanted.map((s, i) => {
+        // Every qualifier moved to the tab name it will find in the file.
+        const cells: Cells = {};
+        for (const [address, text] of Object.entries(s.cells)) {
+          let written = text;
+          wanted.forEach((other, j) => {
+            written = renameIn(written, other.title, names[j]);
+          });
+          cells[address] = written;
+        }
+        return { ...s, title: names[i], cells };
+      });
+
+      // Read under the *renamed* book, so a cached value in the file is the
+      // value the formula beside it computes.
+      const blob = await xlsx({
+        tabs: carried.map((s) => {
+          const ctx = reading(carried, s.title);
+          return { ...fromSheet(s, true, ctx), widths: widthsFor(filled(s, ctx)) };
+        }),
+      });
       download({
         name: sheetFileName(sheet.title),
         body: blob,
         mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
-      say('Excel file saved.');
+      const extra = wanted.length - 1;
+      say(extra ? `Excel file saved, with ${extra} sheet${extra === 1 ? '' : 's'} it reads.` : 'Excel file saved.');
     } finally {
       setBusy(false);
     }
@@ -816,11 +999,11 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   /** Where the cursor is: one end of the selection, and what the formula bar edits. */
   const focus = sel.focus;
   const raw = sheet.cells[focus] ?? '';
-  const answer = display(sheet.cells, focus);
-  const wrong = isError(evaluate(sheet.cells, focus));
+  const answer = display(sheet.cells, focus, over);
+  const wrong = isError(evaluate(sheet.cells, focus, new Set(), over));
   const style = styleOf(sheet, focus) ?? {};
   const selected = useMemo(() => cellsIn(sel), [sel]);
-  const totals = useMemo(() => summarise(sheet.cells, selected), [sheet.cells, selected]);
+  const totals = useMemo(() => summarise(sheet.cells, selected, over), [sheet.cells, selected, over]);
   const spot = box(sel);
 
   /*
@@ -857,10 +1040,10 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     const rows = many(sel)
       ? Array.from({ length: b.bottom - b.top + 1 }, (_, r) =>
           Array.from({ length: b.right - b.left + 1 }, (_, c) =>
-            display(sheet.cells, ref(b.top + r, b.left + c)),
+            display(sheet.cells, ref(b.top + r, b.left + c), over),
           ),
         )
-      : filled(sheet);
+      : filled(sheet, over);
     if (!rows.length) return;
     handOver('analyse', 'text', toCsv(rows), {
       from: `From ${sheet.title}${many(sel) ? `, ${rangeLabel(sel)}` : ''}.`,
@@ -871,9 +1054,142 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
   const addChart = () => {
     const where = rangeLabel(sel);
-    setCharts([...charts, suggestChart(sheet.cells, where)]);
+    setCharts([...charts, suggestChart(sheet.cells, where, Date.now(), over)]);
     say(`Chart of ${where} added under the grid.`);
   };
+
+  /*
+   * The corner of the selection, dragged.
+   *
+   * `from` is the selection the drag started with, kept because the selection
+   * itself moves under the finger to show where the fill will reach — so
+   * without a copy there is nothing left to fill *from* when the finger comes
+   * up.
+   */
+  const [dragging, setDragging] = useState<Range | null>(null);
+  /**
+   * Where the drag started, and whether the finger has left that spot.
+   *
+   * A `click` still fires after a drag — the pointer capture retargets the
+   * `pointerup` to the handle, so the browser sees a press on it — and the
+   * press does something different from the drag. Without telling them apart,
+   * dragging the handle *backwards* (which correctly fills nothing) fell
+   * through to the press and filled down to the foot of the table. Found in a
+   * browser, not in a test: both halves work on their own.
+   *
+   * A ref rather than state because nothing on screen depends on it and a
+   * re-render per pointermove is a re-render of every cell in the grid.
+   */
+  const grabbed = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+
+  /**
+   * The fill a drag or a press asks for, run.
+   *
+   * The range handed to `fill` runs from the *top-left* of what was selected
+   * to wherever the finger stopped, whichever corner the selection was made
+   * from: `fill` copies the first row of a range down it, so a selection made
+   * upwards would otherwise copy the wrong row.
+   */
+  const runFill = (from: Range, to: string) => {
+    const way = wayOf(from, to);
+    if (!way) return;
+    const at = box(from);
+    const range: Range = { anchor: ref(at.top, at.left), focus: to };
+    change(fill(bodyOf(sheet), range, way), `fill:${way}`);
+    setSel(range);
+    say(`Filled ${way} to ${to}.`);
+  };
+
+  /**
+   * The cell the handle sits in: the bottom-right of the selection, and
+   * during a drag the bottom-right of the selection it *started* from.
+   *
+   * The second half is not cosmetic. The selection moves under the finger to
+   * preview the fill, so a handle that follows it is rendered into a different
+   * `<td>` on the first movement — React unmounts the button, the element
+   * holding the pointer capture goes with it, and the drag dies silently after
+   * one pixel. Measured: the press filled and the drag did nothing at all.
+   */
+  const held = box(dragging ?? sel);
+  const corner = ref(held.bottom, held.right);
+
+  /**
+   * The corner of the selection, which fills when it is dragged and when it
+   * is pressed.
+   *
+   * Both, because a drag is not available to everybody and this is the only
+   * affordance in the grid that would otherwise be. Pressing it does what
+   * double-clicking it does in Excel — fill to the foot of the table beside
+   * it — and the name says which cell that is, so it is the same promise read
+   * out loud as seen. ⌘D and ⌘R were already here and still are; this is the
+   * thing people reach for, and it is what makes `$A$1` mean something,
+   * because until something moved a lone reference nothing held one still.
+   */
+  const press = useMemo(() => {
+    const grid = bodyOf(sheet);
+    // Down first: a column of formulas is what this is nearly always for, and
+    // a row of them is the case where there is nothing below to follow.
+    const down = reachOf(grid, sel, 'down');
+    if (down) return { to: down, way: 'down' as const };
+    const right = reachOf(grid, sel, 'right');
+    return right ? { to: right, way: 'right' as const } : null;
+  }, [sheet, sel]);
+  const fillHandle = (
+    <button
+      type="button"
+      className="sfill"
+      // The direction is in the name because it is not always down — a row
+      // with nothing under it fills across — and a control that says one thing
+      // and does another is worse than one that says nothing.
+      aria-label={press ? `Fill ${press.way} to ${press.to}` : 'Drag to fill'}
+      onPointerDown={(e) => {
+        // The pointer is captured so the drag survives leaving the handle,
+        // which it does immediately — the cells it is filling are all outside
+        // it. Without this the browser stops sending moves at the first edge.
+        e.preventDefault();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        grabbed.current = { x: e.clientX, y: e.clientY, moved: false };
+        setDragging(sel);
+      }}
+      onPointerMove={(e) => {
+        if (!dragging) return;
+        const from = grabbed.current;
+        if (from && !from.moved) {
+          const far = Math.abs(e.clientX - from.x) + Math.abs(e.clientY - from.y);
+          if (far > STILL) from.moved = true;
+        }
+        const under = document.elementFromPoint(e.clientX, e.clientY);
+        const name = under?.getAttribute('aria-label') ?? '';
+        const to = /^Cell ([A-Z]+\d+)$/.exec(name)?.[1];
+        // The selection itself moves under the finger, which is the preview:
+        // one fewer thing on screen than a ghost rectangle, and it is already
+        // drawn correctly.
+        if (to && wayOf(dragging, to)) setSel({ anchor: dragging.anchor, focus: to });
+      }}
+      onPointerUp={(e) => {
+        const from = dragging;
+        setDragging(null);
+        if (!from) return;
+        const under = document.elementFromPoint(e.clientX, e.clientY);
+        const name = under?.getAttribute('aria-label') ?? '';
+        const to = /^Cell ([A-Z]+\d+)$/.exec(name)?.[1];
+        if (to) runFill(from, to);
+        else setSel(from);
+      }}
+      onPointerCancel={() => {
+        // A cancelled drag puts the selection back rather than filling to
+        // wherever the finger happened to be when the system took over.
+        if (dragging) setSel(dragging);
+        setDragging(null);
+      }}
+      onClick={() => {
+        // A drag has already done its work on the way up. See `grabbed`.
+        const dragged = grabbed.current?.moved ?? false;
+        grabbed.current = null;
+        if (!dragged && press) runFill(sel, press.to);
+      }}
+    />
+  );
 
   /** Move the cursor, and take the browser's focus with it. */
   const go = (address: string, extend = false) => {
@@ -1212,7 +1528,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             run:
               sheet.rows >= MAX_ROWS
                 ? undefined
-                : () => change(insertRows(body(), spot.top), 'insert:row'),
+                : () => reshape(insertRows(body(), spot.top), 'row', spot.top, 1, 'insert:row'),
           },
           {
             id: 'insert.colleft',
@@ -1220,7 +1536,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             run:
               sheet.cols >= MAX_COLS
                 ? undefined
-                : () => change(insertCols(body(), spot.left), 'insert:col'),
+                : () => reshape(insertCols(body(), spot.left), 'col', spot.left, 1, 'insert:col'),
           },
           {
             id: 'insert.delrow',
@@ -1229,8 +1545,11 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               sheet.rows <= 1
                 ? undefined
                 : () =>
-                    change(
+                    reshape(
                       deleteRows(body(), spot.top, spot.bottom - spot.top + 1),
+                      'row',
+                      spot.top,
+                      -(spot.bottom - spot.top + 1),
                       'delete:row',
                     ),
           },
@@ -1241,8 +1560,11 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               sheet.cols <= 1
                 ? undefined
                 : () =>
-                    change(
+                    reshape(
                       deleteCols(body(), spot.left, spot.right - spot.left + 1),
+                      'col',
+                      spot.left,
+                      -(spot.right - spot.left + 1),
                       'delete:col',
                     ),
           },
@@ -1371,7 +1693,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             label: 'What the formulas can do',
             run: () =>
               say(
-                'A cell starting with = is a formula. SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND, SQRT, VLOOKUP and SUMPRODUCT are all here, and so are the scientific ones — SIN, COS, TAN, LOG to any base, FACT, COMBIN — and the fitted line: SLOPE, INTERCEPT, RSQ and FORECAST over two columns. All computed on this device.',
+                'A cell starting with = is a formula. SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND, SQRT, VLOOKUP and SUMPRODUCT are all here, and so are the scientific ones — SIN, COS, TAN, LOG to any base, FACT, COMBIN — and the fitted line: SLOPE, INTERCEPT, RSQ and FORECAST over two columns. A formula can also read another sheet: =Marks!B2. All computed on this device.',
               ),
           },
           {
@@ -1388,6 +1710,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             run: () =>
               say(
                 'Nothing. A format is a picture over the cell, kept apart from what is in it, so a formula always reads the value you typed.',
+              ),
+          },
+          {
+            id: 'help.across',
+            label: 'How to read another sheet',
+            run: () =>
+              say(
+                'A formula can name another sheet: =Marks!B2, or =SUM(Marks!B2:B9). A name with a space in it goes in apostrophes — \u2018Q1 marks\u2019!B2. Rename a sheet and every formula naming it follows; insert or delete rows on it and every formula pointing into it moves with them. A name no sheet has, or one two sheets share, reads #REF! rather than guessing. Saving as Excel brings the sheets it reads along with it.',
               ),
           },
           {
@@ -1578,7 +1908,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               run:
                 sheet.rows >= MAX_ROWS
                   ? undefined
-                  : () => change(insertRows(body(), spot.top), 'insert:row'),
+                  : () => reshape(insertRows(body(), spot.top), 'row', spot.top, 1, 'insert:row'),
             },
             {
               kind: 'button',
@@ -1588,7 +1918,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               run:
                 sheet.cols >= MAX_COLS
                   ? undefined
-                  : () => change(insertCols(body(), spot.left), 'insert:col'),
+                  : () => reshape(insertCols(body(), spot.left), 'col', spot.left, 1, 'insert:col'),
             },
             {
               kind: 'button',
@@ -1599,7 +1929,13 @@ function Grid({ sheet }: { sheet: SheetModel }) {
                 sheet.rows <= 1
                   ? undefined
                   : () =>
-                      change(deleteRows(body(), spot.top, spot.bottom - spot.top + 1), 'delete:row'),
+                      reshape(
+                        deleteRows(body(), spot.top, spot.bottom - spot.top + 1),
+                        'row',
+                        spot.top,
+                        -(spot.bottom - spot.top + 1),
+                        'delete:row',
+                      ),
             },
             {
               kind: 'button',
@@ -1610,7 +1946,13 @@ function Grid({ sheet }: { sheet: SheetModel }) {
                 sheet.cols <= 1
                   ? undefined
                   : () =>
-                      change(deleteCols(body(), spot.left, spot.right - spot.left + 1), 'delete:col'),
+                      reshape(
+                        deleteCols(body(), spot.left, spot.right - spot.left + 1),
+                        'col',
+                        spot.left,
+                        -(spot.right - spot.left + 1),
+                        'delete:col',
+                      ),
             },
           ],
         },
@@ -1999,7 +2341,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
       <Bench
         mark={<SheetIcon size={18} />}
         title={sheet.title}
-        onTitle={(title) => patch({ title })}
+        onTitle={rename}
         titleLabel="Sheet title"
         placeholder="Untitled spreadsheet"
         menus={menus}
@@ -2145,6 +2487,8 @@ function Grid({ sheet }: { sheet: SheetModel }) {
                       <Cell
                         key={c}
                         sheet={sheet}
+                        over={over}
+                        handle={address === corner ? fillHandle : undefined}
                         address={address}
                         inside={holds(sel, address)}
                         cursor={sel.focus === address}
@@ -2174,6 +2518,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
       <Charts
         sheet={sheet}
+        over={over}
         charts={charts}
         selection={rangeLabel(sel)}
         onChange={setCharts}
@@ -2237,12 +2582,15 @@ function Grid({ sheet }: { sheet: SheetModel }) {
  */
 function Charts({
   sheet,
+  over,
   charts,
   selection,
   onChange,
   onAdd,
 }: {
   sheet: SheetModel;
+  /** The reading the grid is done under — see `over` in `Grid`. */
+  over: Ctx;
   charts: ChartSpec[];
   /** What is selected in the grid now, for the "read this instead" button. */
   selection: string;
@@ -2268,6 +2616,7 @@ function Charts({
         <ChartCard
           key={chart.id}
           sheet={sheet}
+          over={over}
           chart={chart}
           selection={selection}
           onEdit={(over) => edit(chart.id, over)}
@@ -2294,12 +2643,14 @@ function Charts({
 
 function ChartCard({
   sheet,
+  over,
   chart,
   selection,
   onEdit,
   onRemove,
 }: {
   sheet: SheetModel;
+  over: Ctx;
   chart: ChartSpec;
   selection: string;
   onEdit: (over: Partial<ChartSpec>) => void;
@@ -2339,7 +2690,7 @@ function ChartCard({
       />
 
       <div ref={hold}>
-        <ChartPicture cells={sheet.cells} chart={chart} />
+        <ChartPicture cells={sheet.cells} chart={chart} over={over} />
       </div>
 
       <Segmented
@@ -2491,6 +2842,8 @@ function Seek({
  */
 function Cell({
   sheet,
+  over,
+  handle,
   address,
   inside,
   cursor,
@@ -2505,6 +2858,10 @@ function Cell({
   onKeyDown,
 }: {
   sheet: SheetModel;
+  /** The clock and the other sheets — see `over` in `Grid`. */
+  over: Ctx;
+  /** The fill handle, on the one cell that is the corner of the selection. */
+  handle?: ReactNode;
   address: string;
   inside: boolean;
   cursor: boolean;
@@ -2521,10 +2878,10 @@ function Cell({
 }) {
   const raw = sheet.cells[address] ?? '';
   const style = styleOf(sheet, address);
-  const value = styledDisplay(sheet.cells, address, style);
+  const value = styledDisplay(sheet.cells, address, style, over);
   // Once, not twice: this is `rows × cols` components and the second call was
   // the same walk of the same formula tree for a second answer about it.
-  const answer = evaluate(sheet.cells, address);
+  const answer = evaluate(sheet.cells, address, new Set(), over);
   const bad = isError(answer);
   /*
    * Numbers right, text left, unless somebody has said otherwise.
@@ -2538,7 +2895,7 @@ function Cell({
   const line = '1px solid var(--app-accent-deep)';
   const edge = style?.edge ?? '';
   return (
-    <td className={frozen ? 'sfreeze' : undefined}>
+    <td className={[frozen ? 'sfreeze' : '', handle ? 'sfill-cell' : ''].filter(Boolean).join(' ') || undefined}>
       <input
         className={['scell', inside && !cursor ? 'scell-in' : '', bad ? 'scell-bad' : '']
           .filter(Boolean)
@@ -2582,6 +2939,7 @@ function Cell({
             : undefined,
         }}
       />
+      {handle}
     </td>
   );
 }

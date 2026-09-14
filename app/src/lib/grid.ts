@@ -31,6 +31,7 @@ import {
   ref,
   type Cells,
   type Value,
+  type Ctx,
 } from './sheet';
 
 /** Where a selection started and where it has got to. */
@@ -154,7 +155,7 @@ export interface Summary {
  * `#DIV/0!` in it has a sum that is missing something, and saying so is the
  * same promise the engine makes in the cell.
  */
-export function summarise(cellValues: Cells, addresses: string[]): Summary {
+export function summarise(cellValues: Cells, addresses: string[], ctx?: Ctx): Summary {
   let count = 0;
   let filled = 0;
   let sum = 0;
@@ -163,7 +164,7 @@ export function summarise(cellValues: Cells, addresses: string[]): Summary {
   let wrong = false;
 
   for (const address of addresses) {
-    const value: Value = evaluate(cellValues, address);
+    const value: Value = evaluate(cellValues, address, new Set(), ctx);
     if (value === '') continue;
     filled += 1;
     if (isError(value)) {

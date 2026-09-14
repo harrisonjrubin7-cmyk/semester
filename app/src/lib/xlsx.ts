@@ -42,6 +42,7 @@ import {
   BASE_SIZE,
   asNumber,
   asPercent,
+  clock,
   filled,
   inkPaper,
   isFormula,
@@ -49,6 +50,7 @@ import {
   ref,
   styleOf,
   washPaper,
+  type Ctx,
   type Sheet,
 } from './sheet';
 import {
@@ -175,6 +177,28 @@ export interface Book {
 export function tabName(title: string, fallback = 'Sheet1'): string {
   const clean = title.replace(/[[\]:*?/\\]/g, ' ').replace(/\s+/g, ' ').trim();
   return clean ? clean.slice(0, 31) : fallback;
+}
+
+/**
+ * The names the tabs will actually carry, in order.
+ *
+ * Legal *and* unique, or the workbook opens with a repair notice — two courses
+ * called "Sheet" is an ordinary accident. Exported because a cross-sheet
+ * formula has to name the tab it will find in the finished file: a sheet
+ * titled `Q1: marks` becomes the tab `Q1 marks`, and `='Q1: marks'!B1` written
+ * beside it points at nothing. `screens/Sheet.tsx` rewrites the qualifiers
+ * through this, so the two cannot disagree about what a tab ends up called.
+ */
+export function tabNames(titles: readonly string[]): string[] {
+  const used = new Set<string>();
+  return titles.map((title, i) => {
+    const wanted = tabName(title, `Sheet${i + 1}`);
+    let name = wanted;
+    let n = 2;
+    while (used.has(name.toLowerCase())) name = `${wanted.slice(0, 28)} ${n++}`;
+    used.add(name.toLowerCase());
+    return name;
+  });
 }
 
 function cellXml(address: string, cell: Formatted, style: number, styles: Styles): string {
@@ -548,17 +572,7 @@ export function parts(book: Book): Record<string, string> {
     `<Relationship Id="rId${tabs.length + 1}" Type="${REL}/styles" Target="styles.xml"/>` +
     '</Relationships>';
 
-  // Names have to be unique as well as legal, or the workbook opens with a
-  // repair notice — two courses called "Sheet" is an ordinary accident.
-  const used = new Set<string>();
-  const names = tabs.map((tab, i) => {
-    const wanted = tabName(tab.name, `Sheet${i + 1}`);
-    let name = wanted;
-    let n = 2;
-    while (used.has(name.toLowerCase())) name = `${wanted.slice(0, 28)} ${n++}`;
-    used.add(name.toLowerCase());
-    return name;
-  });
+  const names = tabNames(tabs.map((tab) => tab.name));
 
   out['xl/workbook.xml'] =
     `${HEAD}<workbook xmlns="${MAIN}" xmlns:r="${REL}"><sheets>` +
@@ -604,8 +618,8 @@ export async function xlsx(book: Book): Promise<Blob> {
  * a number if it reads as one and text otherwise — which is what keeps `007`
  * from becoming 7 and a date-shaped course code from becoming a date.
  */
-export function fromSheet(sheet: Sheet, header = true): Tab {
-  const shown = filled(sheet);
+export function fromSheet(sheet: Sheet, header = true, ctx: Ctx = clock()): Tab {
+  const shown = filled(sheet, ctx);
   const rows: Formatted[][] = shown.map((row, r) =>
     row.map((value, c) => {
       const address = ref(r, c);
@@ -671,7 +685,7 @@ export function fromSheet(sheet: Sheet, header = true): Tab {
      * the student made. One that cannot be read is left out rather than
      * written as an empty frame — see `readable`.
      */
-    charts: readable(sheet.cells, chartsOf(sheet)),
+    charts: readable(sheet.cells, chartsOf(sheet), ctx),
   };
 }
 

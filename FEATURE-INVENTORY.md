@@ -604,11 +604,14 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
 - No "Open in Docs" from a study guide.
 
 **Sheets**
-- **Single grid per file — no cross-sheet `Sheet2!A1` references.** There is a
-  tab strip along the bottom of the editor now, but it switches between the
-  account's sheets rather than between tabs inside one workbook: an imported
-  workbook's worksheets each arrive as a sheet of their own, so a formula can
-  never reach across one.
+- ~~**Single grid per file — no cross-sheet `Sheet2!A1` references.**~~ —
+  **closed.** `Marks!B2` and `'Q1 marks'!B2:B9` resolve through `Ctx.book` in
+  `lib/sheet.ts`, with the cycle check qualified by sheet so `A1` on two
+  sheets is two cells. A rename follows (`renameIn`), a row inserted on one
+  sheet moves every reference into it from every other (`shiftIn`, undo
+  included), and an export brings the sheets a formula reads with it under the
+  names the tabs will carry. A name no sheet has, or one two sheets share,
+  reads `#REF!`.
 - ~~Missing functions the prompt names: `IFS IFERROR VLOOKUP HLOOKUP XLOOKUP INDEX
   MATCH LEFT RIGHT MID TEXT SPLIT TODAY NOW DATE DATEDIF WEEKDAY EOMONTH MODE
   CORREL COUNTIF SUMIF COUNTIFS SUMIFS AVERAGEIF NPV IRR PMT FV PV RATE`.~~ —
@@ -630,8 +633,10 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   and redo are in the grid now (`lib/history.ts`), coalesced by cell so a run
   of typing is one step rather than one per keystroke. **Fill down and fill
   right** are on the Data tab and on ⌘D/⌘R (`fill` in `lib/sheetedit.ts`),
-  with `$` honoured. No fill *handle* — the corner you drag — and no
-  paste-special.
+  with `$` honoured. ~~No fill *handle* — the corner you drag~~ — **closed**:
+  the corner of the selection drags to fill and presses to fill as far as the
+  column beside it goes, and it is a real button with a name so it works from
+  the keyboard. No paste-special.
 - ~~No cell formatting at all: number/currency/percent/date formats, bold,
   fill, borders, alignment, wrap, merge.~~ — number, currency, percent, date
   and decimal places, bold, italic, strikethrough and alignment are on the
@@ -705,9 +710,10 @@ notes · a generated PDF, as against the browser's print-to-PDF, which is
 there · `.docx` *import* · "Open in Docs" from a study guide · a WYSIWYG
 surface (the marks are typed).
 
-**Sheets** — cross-sheet references (`Sheet2!A1`) · named ranges · a fill
-*handle* · paste-special · filter · conditional formatting · data validation ·
-pivot tables · a per-course grade calculator and GPA planner template.
+**Sheets** — named ranges · paste-special · filter · conditional formatting ·
+data validation · pivot tables · a per-course grade calculator and GPA planner
+template. (Cross-sheet references and the fill handle were on this list and
+are done.)
 
 **Slides** — free layout (a text box you can move) · images and charts placed
 on a slide · transitions, which are deliberate: `lib/pptx.ts` would have to
@@ -719,13 +725,16 @@ quota shown over the files rather than on the Data screen.
 
 **Cross-app** — a ＋ New row on a *folder* · paste-a-range-into-Docs-as-a-table.
 
-Two of these carry a warning worth writing down. **Cross-sheet references** is
-the largest by a distance and the most dangerous: `evaluate` takes one grid,
-and widening it to several touches the code where a wrong answer is silent and
-looks right — "a total that quietly adds up the wrong nine rows" is this
-repository's own words for its worst failure. **A fill handle** is small on the
-screen and is what finally makes `$A$1` mean something, since nothing else
-moves a lone reference.
+Both of the entries this list once flagged as the dangerous ones have since
+been built, and the warnings turned out to be the right ones. Widening
+`evaluate` to several grids did land in the code where a wrong answer is
+silent — the first version used one function as both the cell-lookup key and
+the cycle-path key, and every formula in the app read as an empty cell until a
+test said so — and the half nobody thinks of is not the reading but the
+*editing*: a row inserted on one sheet has to move the references into it from
+every other sheet, and undo has to put those back. The fill handle was the
+small one, and the two faults in it were both about telling a press from a
+drag.
 
 > **Two entries above were wrong when this was written**, and are struck
 > through rather than deleted so the correction is visible. Both were found by

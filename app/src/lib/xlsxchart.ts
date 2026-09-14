@@ -32,7 +32,7 @@
  */
 
 import { readChart, type ChartRead, type SheetChart } from './chart';
-import { colName, type Cells } from './sheet';
+import { colName, type Cells, type Ctx } from './sheet';
 
 const DRAWING_NS = 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing';
 const ART_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
@@ -301,8 +301,12 @@ export function sheetRels(drawing: number): string {
  * The screen says what is wrong with it; a workbook cannot, so it carries the
  * numbers and no picture, which is the honest half.
  */
-export function readable(cells: Cells, charts: SheetChart[]): { chart: SheetChart; read: ChartRead }[] {
+export function readable(
+  cells: Cells,
+  charts: SheetChart[],
+  ctx?: Ctx,
+): { chart: SheetChart; read: ChartRead }[] {
   return charts
-    .map((chart) => ({ chart, read: readChart(cells, chart) }))
+    .map((chart) => ({ chart, read: readChart(cells, chart, ctx) }))
     .filter(({ read }) => read.trouble === '');
 }
