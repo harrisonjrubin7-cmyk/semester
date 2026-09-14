@@ -312,6 +312,15 @@ same way the rest of the app's search is. Enter opens the one under the
 cursor. It appears once there are four tabs; below that the strip is the
 search.
 
+Under them is **Recently closed**, because the cross is eight pixels from the
+name and on a phone that is inside a thumb: the last ten tabs you shut are
+there to be put back, with what they were — the screen, the name, the group —
+into the seat they were closed from, and one press does it. It is the same
+list the Browser navigation's own reopen reads, and it survives a reload. Ten, and no more: a list of everything closed this term
+is a history of your term, which is a different thing to keep and not one this
+app decided to. **Clear** is beside the list, where somebody is when they want
+it gone.
+
 **Pinning** is the other half of a strip that has got long. The four or five
 places you are in every day — Today, the calendar, the guide you are working
 through — are never finished with, and everything else is opened beside them.
