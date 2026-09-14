@@ -292,6 +292,27 @@ export const SHAPES = {
     { d: 'm4 4 16 16' },
   ],
 
+  /**
+   * A speaker with sound coming out of it — a tab that is talking.
+   *
+   * A speaker and not the microphone above it, which is the glyph two rows up
+   * and means the opposite thing: `mic` is what this device is sending, and
+   * this is what it is playing. Drawing a tab's audio with a microphone would
+   * read as "this tab is listening to you", which is a sentence nobody wants
+   * to misread.
+   */
+  speaker: [
+    { d: 'M4 9.5h3l4.5-3.5v12L7 14.5H4z' },
+    { d: 'M16 9a4 4 0 0 1 0 6' },
+    { d: 'M18.5 6.5a7.5 7.5 0 0 1 0 11' },
+  ],
+
+  /** Muted — the same speaker, with the line every app draws through it. */
+  speakerOff: [
+    { d: 'M4 9.5h3l4.5-3.5v12L7 14.5H4z' },
+    { d: 'm16 10 5 4M21 10l-5 4' },
+  ],
+
   /** Camera off — the call glyph, struck through. */
   camOff: [
     { d: 'M3 7.5a1.5 1.5 0 0 1 1.5-1.5h6.7M15 10.8l6-3.3v9l-3.4-1.9' },

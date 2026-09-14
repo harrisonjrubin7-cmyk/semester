@@ -16,6 +16,7 @@ import {
   backupOf,
   coursesMarkdown,
   deadlineCsv,
+  classEvents,
   deadlineEvents,
   notesMarkdown,
   readBackup,
@@ -44,7 +45,7 @@ const PARTS: { id: PartId; label: string; blurb: string; format: string }[] = [
     id: 'calendar',
     label: 'Calendar',
     blurb:
-      'Deadlines and appointments, with a reminder the evening before and an hour before each.',
+      'Your classes as repeating events, your deadlines with a reminder the evening before and an hour before each, and everything you added.',
     format: 'ICS',
   },
   { id: 'notes', label: 'Notes', blurb: 'Everything you wrote, including transcripts and email drafts.', format: 'Markdown' },
@@ -112,6 +113,13 @@ export function Export() {
   const code = (id: string) => catalog.byId[id]?.code ?? id;
   const items = datedItems(catalog, now);
   const stem = stampedName('semester', now);
+  /* The term, as the dated obligations in it mark it out. */
+  const dates = items.map((i) => i.date.getTime());
+  const termFrom = dates.length ? new Date(Math.min(...dates)) : now;
+  const termTo = dates.length ? new Date(Math.max(...dates)) : now;
+  const classes = dates.length
+    ? catalog.modules.reduce((n, m) => n + m.schedule.filter((b) => !b.optional).length, 0)
+    : 0;
 
   const build = async (forZip: boolean): Promise<Piece[]> => {
     const out: Piece[] = [];
@@ -133,7 +141,23 @@ export function Export() {
       out.push({
         name: `${stem}.ics`,
         body: toIcs(
-          [...deadlineEvents(items, code, ALARMS), ...appointmentEvents(state.appointments)],
+          [
+            /*
+             * The classes first, and the span taken from the term's own dated
+             * obligations.
+             *
+             * A recurring schedule states no first or last day — it is a
+             * pattern, not a range — so the bounds have to come from
+             * somewhere, and the deadlines are the app's own answer to "when
+             * is this term": it is the same span the semester view draws.
+             * With no dated obligations at all there is nothing to bound it
+             * with and the classes stay out, rather than being written as a
+             * series running to an invented date.
+             */
+            ...classEvents(catalog, termFrom, termTo),
+            ...deadlineEvents(items, code, ALARMS),
+            ...appointmentEvents(state.appointments),
+          ],
           'Semester',
         ),
         mime: 'text/calendar',
@@ -217,7 +241,7 @@ export function Export() {
   const counts: Record<PartId, number> = {
     courses: catalog.courses.length,
     deadlines: items.length,
-    calendar: items.length + state.appointments.length,
+    calendar: classes + items.length + state.appointments.length,
     notes: state.notes.length,
     tasks: state.tasks.length,
     files: 0,

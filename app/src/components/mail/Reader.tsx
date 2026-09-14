@@ -44,7 +44,7 @@ export function Reader({
   onRead,
   onArchive,
   onTrash,
-  onSnooze,
+  onMenu,
   onReply,
   onTask,
   onChanges,
@@ -57,7 +57,16 @@ export function Reader({
   onRead: () => void;
   onArchive: () => void;
   onTrash: () => void;
-  onSnooze: () => void;
+  /**
+   * Open one of the screen's two menus at this button.
+   *
+   * The reader draws its own row of actions on a phone — the toolbar's are
+   * hidden there, because eight icons and a search field across 390px is
+   * eight icons you cannot hit — so without this, Snooze in the reader meant
+   * "tomorrow morning" and Move to was unreachable on the device where most
+   * of this mail is read.
+   */
+  onMenu: (which: 'snooze' | 'move', from: HTMLElement) => void;
   onReply: (mail: Mail, mode: 'reply' | 'replyAll' | 'forward') => void;
   /** Make one of your own tasks out of it. */
   onTask: (mail: Mail) => void;
@@ -81,7 +90,13 @@ export function Reader({
         <button type="button" className="mb-ico" aria-label="Delete" title="Delete" onClick={onTrash}>
           <TrashIcon size={18} />
         </button>
-        <button type="button" className="mb-ico" aria-label="Snooze" title="Snooze" onClick={onSnooze}>
+        <button
+          type="button"
+          className="mb-ico"
+          aria-label="Snooze"
+          title="Snooze until…"
+          onClick={(e) => onMenu('snooze', e.currentTarget)}
+        >
           <ClockIcon size={18} />
         </button>
         <button
@@ -140,6 +155,13 @@ export function Reader({
           </button>
           <button type="button" className="btn btn-secondary" onClick={() => onChanges(last)}>
             Read it into my dates
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={(e) => onMenu('move', e.currentTarget)}
+          >
+            Move to, or label
           </button>
           {last.link && (
             <a className="btn btn-secondary" href={last.link} target="_blank" rel="noreferrer">

@@ -1987,7 +1987,15 @@ export type Action =
    * own action, and its own action is what the undo table can name.
    */
   | { type: 'moveTask'; id: string; date: string; time?: string }
-  | { type: 'moveAppointment'; id: string; date: string; at: number; time: string }
+  /**
+   * `from` is the occurrence being dragged, for a repeating appointment.
+   *
+   * Absent is "the whole thing", which is what a one-off is and what every
+   * caller written before repeats existed sends. See the note on the case in
+   * `state/slices/mine.ts` for why one occurrence detaches rather than
+   * dragging fifteen weeks of shifts with it.
+   */
+  | { type: 'moveAppointment'; id: string; date: string; at: number; time: string; from?: string }
   | { type: 'moveItem'; courseId: CourseId; itemId: string; month: number; day: number; year: number }
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
@@ -2129,7 +2137,8 @@ export type Action =
    * on screen to edit back, and only a drag and a delete take that away.
    */
   | { type: 'editAppointment'; id: string; patch: Partial<Omit<Appointment, 'id' | 'created'>> }
-  | { type: 'deleteAppointment'; id: string }
+  /** `date` deletes just that occurrence of a repeating one. */
+  | { type: 'deleteAppointment'; id: string; date?: string }
   | { type: 'setMathTab'; tab: State['mathTab'] }
   | { type: 'newNote'; courseId: CourseId | null; itemId?: string | null }
   /** Save a finished piece of text as a note without leaving the screen. */
@@ -2161,6 +2170,15 @@ export type Action =
    * the screen, and therefore the ones worth an undo.
    */
   | { type: 'moveMail'; ids: string[]; to?: FolderId; snooze?: number }
+  /**
+   * A label of your own, put on or taken off.
+   *
+   * `Mark.labels` has existed since the mailbox did and nothing ever wrote to
+   * it: the rail could filter by a course label the provider happened to send
+   * and there was no way to add one. Toggling, because a label button that
+   * only ever adds is a label you cannot take off.
+   */
+  | { type: 'labelMail'; ids: string[]; label: string }
   /** Open the composer on a new draft, or `null` to shut it. */
   | { type: 'composeMail'; draft: Partial<MailDraft> | null }
   | { type: 'openMailDraft'; id: string }

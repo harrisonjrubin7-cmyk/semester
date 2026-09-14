@@ -1094,6 +1094,33 @@ a:hover {
 /* Printing is how the guide becomes a PDF on a machine with no pipeline.
    Drop the frame, the rail and the chrome; keep the words. */
 @media print {
+  /*
+   * A document prints as the page, never as the editor.
+   *
+   * The editor is a stack of cards with labels, move buttons and input
+   * fields in them, and printing it produced a PDF of a form: "PARAGRAPH",
+   * then a box with the paragraph in it, then ↑ ↓ ×. Both halves are in the
+   * DOM and `hidden` picks one for the screen; here the choice is made for
+   * the paper, whichever was on screen at the time.
+   */
+  .docedit {
+    display: none !important;
+  }
+
+  .docpage,
+  .docpage[hidden] {
+    display: block !important;
+  }
+
+  .docpaper {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #fff;
+  }
+
   .rail,
   .safe-top,
   nav {
@@ -1466,13 +1493,6 @@ a:hover {
   }
 }
 
-/* A hairline that catches light in the middle — the engraved rule. */
-.chrome-rule {
-  height: 1px;
-  border: 0;
-  margin: 0;
-  background: var(--chrome-edge);
-}
 
 /* The kicker above every screen title. */
 .kicker {
@@ -1902,31 +1922,7 @@ a:hover {
   text-wrap: balance;
 }
 
-/*
- * The same display figure, in the one colour, for the one thing it is for.
- *
- * Progress draws four numbers in a row — Ahead, Late, Done, Courses — and
- * drew them identically, so "6 late" and "42 ahead" arrived at the same
- * weight and the one you needed to see was the one you had to read to find.
- * The screen's own comment already assumed otherwise: "a permanent zero in
- * that column is a red number you learn to stop seeing" is why Late is
- * omitted at nothing rather than shown as 0, and the number it describes was
- * never coloured.
- *
- * It is not a new use of the colour. `--app-warn` is a passed deadline
- * everywhere else in the app — Today's banner, a late date in a deadline row,
- * a unit nothing has touched on the runway — and this cell is the count of
- * exactly that fact. It was the one place the app said it in silver.
- *
- * The gradient has to go for the colour to arrive at all: `.chrome-text`
- * paints the brushed metal through the glyphs and fills them with
- * transparent, so a `color` alone would be invisible under it.
- */
-.chrome-text.is-late {
-  background: none;
-  color: var(--app-warn);
-  -webkit-text-fill-color: var(--app-warn);
-}
+
 .device h1,
 .device h2,
 .device h3 {
@@ -2764,11 +2760,6 @@ input[type='search'].input {
   gap: var(--sp-5);
 }
 
-.soft-folder-tile {
-  text-align: left;
-  touch-action: none;
-}
-
 /*
  * Anything that can be dragged into a different place in its list.
  *
@@ -3537,19 +3528,6 @@ input[type='search'].input {
   border-radius: var(--r-sm);
 }
 
-/* The name box. Fixed width so the formula starts in the same place whether
-   the selection is A1 or AA100 — a field that slides sideways as you move
-   about the grid is a field you have to find again every time. */
-.fx-where {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 72px;
-  font-size: var(--type-sm);
-  font-variant-numeric: tabular-nums;
-  color: var(--app-dim);
-  border-right: 1px solid var(--app-line);
-}
 
 .fx-mark {
   flex: none;
@@ -3563,64 +3541,11 @@ input[type='search'].input {
   border-right: 1px solid var(--app-line);
 }
 
-.fx-field {
-  flex: 1;
-  min-width: 0;
-  height: 34px;
-  padding: 0 var(--sp-4);
-  font-size: var(--type-sm);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: var(--app-fg);
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-}
-
 /* The cell the formula bar is about, marked in the grid so the two are
    obviously one thing. */
 .cell-on {
   outline: 2px solid var(--app-accent);
   outline-offset: -2px;
-}
-
-.tabstrip {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin-top: var(--sp-6);
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--app-line);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.tabstrip::-webkit-scrollbar {
-  display: none;
-}
-
-.tabstrip-tab {
-  flex: none;
-  max-width: 180px;
-  padding: var(--sp-3) var(--sp-5);
-  font-size: var(--type-sm);
-  color: var(--app-dim);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--r-sm);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tabstrip-tab:hover {
-  color: var(--app-fg);
-  background: var(--app-panel);
-}
-
-.tabstrip-tab[aria-current='true'] {
-  color: var(--app-accent-bright);
-  background: var(--app-hero);
-  border-color: var(--app-line);
 }
 
 /* ── The spreadsheet ──────────────────────────────────────────────────────
@@ -3904,6 +3829,325 @@ input[type='search'].input {
 
 .fx-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* ── Two columns on a slide ───────────────────────────────────────────────
+   A comparison: this against that. Equal halves on purpose — a pair whose
+   sides are different widths reads as a hierarchy rather than as a pair — and
+   they stay side by side at every width, because a comparison that stacks on
+   a phone is the one list the layout exists to stop being. */
+
+.slide-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-6);
+  flex: 1;
+  min-height: 0;
+}
+
+.slide-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
+/* ── A document as a page ─────────────────────────────────────────────────
+   What Word calls Print Layout and Docs calls Print layout: the document at
+   the width of a sheet of paper, in the font and at the spacing it will
+   actually be printed in. It is also what prints — the rule at the bottom of
+   this file hides the editor's cards and shows this — so "save as PDF"
+   produces the document rather than a picture of a form.
+
+   The measurements come in as custom properties from the layout on the
+   document (`--doc-size`, `--doc-leading`, `--doc-width`, `--doc-margin`),
+   which is why nothing here is a token: a preview of 12-point Times at the
+   width of US Letter is the one place in this app where a real point size is
+   the correct thing to draw. The app's text-size setting scales the chrome
+   around it and deliberately does not scale this, for the same reason Word's
+   zoom is not its font size. */
+
+.docpaper {
+  --doc-font: 'Times New Roman', Times, serif;
+  --doc-size: 12pt;
+  --doc-leading: 2;
+  --doc-width: 8.5in;
+  --doc-margin: 1in;
+
+  display: block;
+  width: 100%;
+  max-width: var(--doc-width);
+  margin: var(--sp-4) auto 0;
+  padding: var(--doc-margin);
+  font-family: var(--doc-font);
+  font-size: var(--doc-size);
+  line-height: var(--doc-leading);
+  color: #14161b;
+  background: #fdfdfb;
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-sm);
+  overflow-wrap: break-word;
+}
+
+/* A phone is 390px wide and a page is 816. Shrinking the type would be a
+   lie about the page; scaling the whole sheet keeps every proportion — the
+   margins, the leading, the length of a line — which is the only thing a
+   preview is for. */
+@media (max-width: 900px) {
+  .docpaper {
+    padding: calc(var(--doc-margin) * 0.55);
+  }
+}
+
+.docpaper a {
+  color: #0b57d0;
+}
+
+.docpaper-head {
+  margin-bottom: calc(var(--doc-size) * 1.5);
+  font-size: var(--doc-size);
+  text-align: right;
+  color: #5a5f6a;
+}
+
+.docpaper-title {
+  margin: 0 0 0.2em;
+  font-family: var(--doc-font);
+  font-size: calc(var(--doc-size) * 1.9);
+  line-height: 1.2;
+}
+
+.docpaper-sub {
+  margin: 0 0 1.4em;
+  font-size: calc(var(--doc-size) * 1.1);
+  font-style: italic;
+  color: #5a5f6a;
+}
+
+.docpaper-h {
+  margin: 1.2em 0 0.4em;
+  font-family: var(--doc-font);
+  line-height: 1.25;
+}
+
+.docpaper-h1 {
+  font-size: calc(var(--doc-size) * 1.45);
+}
+
+.docpaper-h2 {
+  font-size: calc(var(--doc-size) * 1.18);
+}
+
+.docpaper-h3 {
+  font-size: calc(var(--doc-size) * 1.05);
+  font-style: italic;
+}
+
+.docpaper-p {
+  margin: 0 0 0.6em;
+}
+
+.docpaper-list {
+  margin: 0 0 0.6em;
+  padding-left: 1.6em;
+}
+
+.docpaper-ticks {
+  list-style: none;
+  padding-left: 0.4em;
+}
+
+.docpaper-done {
+  color: #5a5f6a;
+  text-decoration: line-through;
+}
+
+.docpaper-quote {
+  margin: 0.6em 1.4em;
+  font-style: italic;
+}
+
+.docpaper-figure {
+  margin: 0.8em 0;
+}
+
+.docpaper-eq {
+  text-align: center;
+}
+
+.docpaper-cap {
+  margin-top: 0.3em;
+  font-size: calc(var(--doc-size) * 0.85);
+  font-style: normal;
+  color: #5a5f6a;
+}
+
+.docpaper-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: calc(var(--doc-size) * 0.9);
+  line-height: 1.3;
+}
+
+.docpaper-table th,
+.docpaper-table td {
+  padding: 0.25em 0.45em;
+  text-align: left;
+  border: 1px solid #bfbfbf;
+}
+
+.docpaper-code,
+.docpaper-tt {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.docpaper-code {
+  margin: 0.6em 0;
+  padding: 0.4em 0.8em;
+  font-size: calc(var(--doc-size) * 0.85);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  border-left: 3px solid #bfbfbf;
+}
+
+.docpaper-toc-line {
+  line-height: 1.5;
+}
+
+.docpaper-toc2 {
+  padding-left: 1.2em;
+}
+
+.docpaper-toc3 {
+  padding-left: 2.4em;
+}
+
+/* Where a page break falls. Drawn as a rule on screen and honoured by the
+   printer, which is the only place it means anything. */
+.docpaper-break {
+  height: 0;
+  margin: 1.2em 0;
+  border-top: 1px dashed #bfbfbf;
+  break-after: page;
+}
+
+/* ── Page setup ───────────────────────────────────────────────────────── */
+
+.docsetup {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: var(--sp-4);
+  margin-top: var(--sp-5);
+}
+
+.docsetup-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.docsetup-name {
+  font-size: var(--type-xs);
+  color: var(--app-faint);
+}
+
+.docsetup-field .input {
+  width: 100%;
+  height: 38px;
+}
+
+/* ── The function list ────────────────────────────────────────────────────
+   A searchable catalogue of everything the calculator can do, which is the
+   control Excel calls Insert Function and Sheets hides under the sigma. The
+   rows are three lines on a phone and one wide row on a laptop: the name and
+   its arguments, what it answers, and an example — in that order, because the
+   name is what is being looked for and the example is what gets copied. */
+
+.fnlib {
+  margin-top: var(--sp-4);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-bg);
+}
+
+.fnlib .fx {
+  margin-top: 0;
+}
+
+.fnlib-shelves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.fnlib-count {
+  margin-top: var(--sp-3);
+  font-size: var(--type-xs);
+  color: var(--app-faint);
+}
+
+.fnlib-list {
+  max-height: 46vh;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.fnlib-row {
+  display: grid;
+  gap: var(--sp-1);
+  width: 100%;
+  padding: var(--sp-4);
+  text-align: left;
+  color: var(--app-fg);
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--app-line-soft);
+  border-radius: var(--r-sm);
+}
+
+.fnlib-list li:first-child .fnlib-row {
+  border-top: 0;
+}
+
+.fnlib-row:hover,
+.fnlib-row:focus-visible {
+  background: var(--app-hero);
+}
+
+.fnlib-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--type-sm);
+  color: var(--app-accent-bright);
+}
+
+.fnlib-args {
+  color: var(--app-faint);
+}
+
+.fnlib-says {
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+
+.fnlib-eg {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--type-xs);
+  color: var(--app-faint);
+}
+
+/* Three lines on a phone, one row on anything wider — the same information
+   either way, and a list that can be scanned rather than scrolled. */
+@media (min-width: 760px) {
+  .fnlib-row {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 13rem);
+    align-items: baseline;
+    gap: var(--sp-5);
+  }
 }
 
 /* ── The grid ─────────────────────────────────────────────────────────────
@@ -5371,13 +5615,6 @@ input[type='search'].input {
   margin: 0;
   font-size: var(--type-sm);
   line-height: var(--leading-normal);
-}
-
-.desk-sheet-label {
-  font-size: var(--type-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--app-dim);
 }
 
 /* The Dark/Light pair that `.desk-sheet-pair` and the `.desk-swatch` rules

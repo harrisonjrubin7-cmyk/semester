@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  LAYOUTS,
   blankDeck,
   blankSlide,
   duplicate,
   forExport,
+  layoutOf,
+  losesSomething,
   minutes,
+  relayout,
   remove,
   reorder,
   running,
@@ -183,5 +187,86 @@ describe('the table layout', () => {
       table: [['Year', 'Rate'], ['2026', '3.1']],
     });
     expect(forExport(d).slides[0].table).toEqual([['Year', 'Rate'], ['2026', '3.1']]);
+  });
+});
+
+/**
+ * The three layouts added after the first six, and the rule that keeps a
+ * layout change honest.
+ *
+ * `layoutOf` works a slide's shape out from what it carries rather than from
+ * a field beside it, so the order it tests in is load-bearing: a slide can
+ * hold more than one thing, and whichever is tested first is what the picker
+ * will say the slide is. Every new shape is tested against the ones that
+ * existed, because that is where the ordering can be wrong.
+ */
+describe('the shapes a slide can be', () => {
+  it('names each new shape from what the slide carries', () => {
+    expect(layoutOf(blankSlide('two'))).toBe('two');
+    expect(layoutOf(blankSlide('quote'))).toBe('quote');
+    expect(layoutOf(blankSlide('big'))).toBe('big');
+  });
+
+  it('round-trips every layout in the picker', () => {
+    for (const l of LAYOUTS) expect(layoutOf(blankSlide(l.id))).toBe(l.id);
+  });
+
+  it('gives every shape a line saying what it is for', () => {
+    for (const l of LAYOUTS) expect(l.says.length).toBeGreaterThan(5);
+  });
+
+  it('keeps the title and the notes across any change of shape', () => {
+    const was = { ...blankSlide('two'), title: 'The objection', notes: 'Slow down here' };
+    const now = relayout(was, 'quote');
+    expect(now.title).toBe('The objection');
+    expect(now.notes).toBe('Slow down here');
+    expect(now.columns).toBeUndefined();
+  });
+
+  it('says what a change of shape would throw away, before it does it', () => {
+    const columns = {
+      ...blankSlide('two'),
+      columns: [
+        { heading: 'For', points: ['a'] },
+        { heading: 'Against', points: ['b'] },
+      ],
+    };
+    expect(losesSomething(columns, 'bullets')).toEqual(['the two columns']);
+
+    const quoted = { ...blankSlide('quote'), quote: { text: 'A passage', source: 'Smith' } };
+    expect(losesSomething(quoted, 'bullets')).toEqual(['the quotation']);
+
+    const figure = { ...blankSlide('big'), big: { value: '61%', says: 'never replied' } };
+    expect(losesSomething(figure, 'bullets')).toEqual(['the figure']);
+  });
+
+  it('says nothing about an empty one, because nothing is lost', () => {
+    expect(losesSomething(blankSlide('quote'), 'bullets')).toEqual([]);
+  });
+
+  /*
+   * A quotation slide with a list under it is two slides in one, and a figure
+   * slide with a list under it is the thing a figure slide exists to replace.
+   * Points come across only into the layouts with a body for them.
+   */
+  it('does not carry points into a layout with nowhere to put them', () => {
+    const listed = { ...blankSlide('bullets'), bullets: ['one', 'two'] };
+    expect(relayout(listed, 'quote').bullets).toEqual([]);
+    expect(relayout(listed, 'big').bullets).toEqual([]);
+    expect(relayout(listed, 'table').bullets).toEqual(['one', 'two']);
+  });
+});
+
+describe('the line along the bottom', () => {
+  it('goes into the exported deck with everything else', () => {
+    const made = forExport({ ...deck(2), footer: 'ECON 1010', numbers: true });
+    expect(made.footer).toBe('ECON 1010');
+    expect(made.numbers).toBe(true);
+  });
+
+  it('survives a deck whose every slide is hidden', () => {
+    const made = forExport({ ...deck(2, [0, 1]), footer: 'ECON 1010' });
+    expect(made.slides).toHaveLength(1);
+    expect(made.footer).toBe('ECON 1010');
   });
 });

@@ -297,8 +297,7 @@ makes it one: a tab holds a place in the app, so "I was reading the guide, let
 me check when that is due, now where was I" costs a click rather than four
 navigations and a hunt for your place. A tab with nothing in it yet is a new
 tab, and a new tab is the search page — opening one and typing is a single
-gesture for *somewhere else, without losing this*. Ten is the ceiling; past
-that, the oldest tab you are not using gives way.
+gesture for *somewhere else, without losing this*.
 
 **Groups** are for the Wednesday when there are nine of them. Right-click a tab
 (or press the ⌄ on the one you are on) and **New group**: it and everything you
@@ -322,8 +321,9 @@ search.
 Under them is **Recently closed**, because the cross is eight pixels from the
 name and on a phone that is inside a thumb: the last ten tabs you shut are
 there to be put back, with what they were — the screen, the name, the group —
-into the seat they were closed from, and one press does it. It is the same
-list the Browser navigation's own reopen reads, and it survives a reload. Ten, and no more: a list of everything closed this term
+into the seat they were closed from, and one press does it. It survives a reload, which is
+what a list kept on the strip can do and a list kept in a variable cannot.
+Ten, and no more: a list of everything closed this term
 is a history of your term, which is a different thing to keep and not one this
 app decided to. **Clear** is beside the list, where somebody is when they want
 it gone.
@@ -342,6 +342,23 @@ the rest of the app uses for anything with an order — and on the strip the
 drop means something as well: let a tab go among a group's tabs and it joins
 the group, drag it clear of them and it leaves. Alt with the left and right
 arrows does the same without a pointer.
+
+**Muting** is for the tab that is talking. A lesson is forty minutes of
+narration and the thing you put on walking across campus, so it keeps playing
+when you go and look at something else — the player is one element that lives
+above every screen, and the *tab* owns it rather than the page. Whichever tab
+is playing grows a speaker, and it is a button: press it and that tab goes
+quiet without you having to go to it, which is the question every browser
+added this control to answer. Muting is not stopping. The lesson runs on and
+keeps its place, the way turning a tab down differs from closing it, and the
+mute is remembered — a tab you silenced on the bus is still silent when you
+come back to it, and **Mute this tab** in the menu silences one before it has
+played anything at all, which is what you want in a library.
+
+A sound ends the way it would in a browser: close the tab that owns it, or
+navigate that tab somewhere else, and it stops. Only one thing plays at a
+time — this is a place to study, and two narrations over each other is not a
+feature anybody asked for.
 
 **Bookmarks** are the other half. A tab is where you are; a bookmark is where
 you keep going back to — the ECON study guide, the essay brief, the deadline

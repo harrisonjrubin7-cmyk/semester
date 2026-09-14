@@ -36,7 +36,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
-import { ALARMS, appointmentEvents, deadlineEvents, toIcs } from '../lib/export';
+import { ALARMS, appointmentEvents, classEvents, deadlineEvents, toIcs } from '../lib/export';
 import { datedItems } from '../lib/select';
 import { feedBase, publishFeed, readFeed, replaceFeed } from '../lib/cloud';
 import { qrSvg } from '../lib/qr';
@@ -63,16 +63,31 @@ export function Subscribe() {
   // and the reasoning are in `lib/subscribe.ts`, next to the copy about it.
   const live = feedItems(datedItems(catalog, now), state.done);
 
+  /*
+   * The term, as its dated obligations mark it out — the bounds a recurring
+   * class needs and a meeting pattern cannot supply. The same span
+   * `screens/Export.tsx` uses, and the same one the semester view draws.
+   */
+  const dated = datedItems(catalog, now).map((i) => i.date.getTime());
+
   const body = useCallback(
     () =>
       toIcs(
         [
+          // The classes, which a subscribed calendar most wants and which
+          // this feed did not carry: a term of four courses arrived as a
+          // calendar of homework with no lectures on it.
+          ...(dated.length
+            ? classEvents(catalog, new Date(Math.min(...dated)), new Date(Math.max(...dated)))
+            : []),
           ...deadlineEvents(live, courseCode, ALARMS),
           ...appointmentEvents(state.appointments),
         ],
         'Semester',
       ),
-    [live, courseCode, state.appointments],
+    // `dated` is rebuilt every render and its contents are what matter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [live, courseCode, state.appointments, catalog, dated.join(',')],
   );
 
   useEffect(() => {
