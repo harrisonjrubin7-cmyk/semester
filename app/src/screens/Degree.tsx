@@ -29,6 +29,7 @@ import {
   forProgramme,
   gpa,
   gpaLine,
+  isCommon,
   hours,
   progressLine,
   programmes,
@@ -128,7 +129,7 @@ function WhatIsLeft() {
             <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
             <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {h.done} hours finished
-              {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g)}
+              {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g, isCommon(state.scale))}
             </div>
           </>
         ) : null}
@@ -204,7 +205,7 @@ function WhatIsLeft() {
       <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
       <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {h.done} hours finished
-        {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g)}
+        {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g, isCommon(state.scale))}
       </div>
 
       <ThisTerm />

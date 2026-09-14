@@ -97,6 +97,12 @@ The brief was to run the whole application through and confirm that every
 function, screen, capability and pathway is finished and works. This is what
 was actually exercised, what broke, and what was fixed.
 
+Five things were wrong. None of them could fail a test, and two were the same
+shape: a capability built end to end — type, reducer, arithmetic, persistence,
+and the sentence that reports it — with no control anywhere in the app to
+reach it. A suite that passes its inputs in by hand can never ask where the
+inputs come from.
+
 ## How it was checked
 
 Static checks first, then the app itself in a real browser, because the two
@@ -104,7 +110,7 @@ find different things and this pass was started by the suite being green.
 
 | Check | Result |
 |---|---|
-| `npm test` | 7492 passed, 10 skipped, 359 files |
+| `npm test` | 7495 passed, 10 skipped, 359 files |
 | `npm run lint` (oxlint · style rule · label rule) | clean |
 | `npm run build` (`tsc -b` + vite) | clean |
 | `npm run check:university` | clean |
@@ -126,7 +132,7 @@ Then the browser, driven per `.claude/skills/run`:
 - **Structural checks against the registries:** every `Screen` has a case in
   `CurrentScreen`, every source file is imported by something, every dispatched
   action has a handler, and every `Action` variant was traced to the code that
-  sends it — which is how §3 and §4 below were found.
+  sends it — which is how §3 and §5 below were found.
 
 ## What was wrong
 
@@ -282,6 +288,50 @@ the file the next run is driven from:
 All corrected, with the failure mode — a retired value coming up working and
 wrong — written down, since that is the part a table cannot say.
 
+### 5. The GPA was computed against a table nobody could see or set
+
+The second instance of §3's shape, and found the same way. `lib/degree.ts`
+opens by explaining why the scale cannot be hardcoded — universities disagree
+about whether an A+ is 4.0 or 4.3, some award no minus grades at all — and ends
+that paragraph with the rule:
+
+> A wrong GPA displayed confidently is worse than no GPA.
+
+`COMMON_SCALE` beside it is labelled "offered as a starting point". `setScale`
+was in the reducer. **Nothing dispatched it**, so the starting point was the
+finishing point: every account computed its GPA from the common American table,
+`screens/Degree.tsx` printed the number without saying where the table came
+from, and the line under it said the left-out courses were "not in **your**
+scale" and that this was "**your** arithmetic" — both quietly claiming a
+choice the reader had never been offered.
+
+It takes both halves to fix, and neither alone would do:
+
+- **The table is editable.** `components/GpaScale.tsx` on Settings → Grading,
+  which is where somebody looking for "what the app thinks a B+ is" looks. The
+  rows are the scale's own keys rather than a fixed thirteen, so a school with
+  no minus grades can end up with a table that has none, and an unknown grade
+  stays uncounted rather than counted as zero — which `gpa()` already did, and
+  is also how pass/fail and a withdrawal stay out without a rule of their own.
+- **The screen says which table it is.** `gpaLine` takes `assumed` and, while
+  the table is untouched, says so and points at the screen that changes it. An
+  editor nobody knows to look for does not stop a wrong number being believed;
+  a disclaimer over a number you cannot change is an apology rather than a fix.
+
+Measured in the browser, on one finished A+ worth 3 hours:
+
+```
+untouched : 4.000 across 3 hours. This is the common table, which your
+            university may not use — check it in Settings → Grading.
+A+ = 4.3  : 4.300 across 3 hours. This is your arithmetic, not the registrar’s.
+reset     : 4.000 across 3 hours. This is the common table, …
+```
+
+`isCommon` lives in `lib/degree.ts` beside the table it is about, because two
+callers that are not neighbours ask it: the editor, to decide whether to offer
+a way back, and `gpaLine`, to decide whether the number rests on an assumption
+or on an answer.
+
 ## Checked and found clean
 
 Worth recording, so the next pass does not re-spend the time:
@@ -342,10 +392,12 @@ on screen in each case; only the verb is missing:
 | `dropSitting` | a sitting cannot be deleted |
 | `moveFolder` | a folder cannot be moved into another |
 | `addTermDate` | a date of your own cannot be added to the registrar list |
-| `setScale` | **the grading scale the GPA on Degree is computed against cannot be changed** |
 
-The last is the one worth doing next: `state.scale` is read by `screens/Degree.tsx`
-and by `ai/providers/upkeep.ts` to compute a GPA, and there is no way to set it.
+`setScale` was on this list and is §5 above — it was the one with a user-visible
+consequence, so it was fixed rather than filed. The seven left are corrections
+and deletions on data that is already on screen; each is a small screen's worth
+of work and none of them makes the app say something untrue in the meantime,
+which is why they are reported here instead.
 
 **Out of scope by design.** `docs/IMPLEMENTATION_STATUS.md` lists the work that
 needs a real institutional integration — SIS transactions, official
@@ -364,4 +416,8 @@ honest.
 - `state/slices/mine.test.ts` covers `patchRest` — the fields a patch does not
   name surviving it, the id surviving it, the bounds being cleaned, and the
   other blocks being left alone.
-- `src/styles/budget.ts` regenerated for the file that grew.
+- `lib/degree.test.ts` covers `isCommon` — the shipped table, a changed value,
+  a school with fewer letters, an added one — and that `gpaLine` says the
+  number is assumed while it is, claims it once it is not, and still reports
+  the uncounted courses either way.
+- `src/styles/budget.ts` regenerated for the files that grew.
