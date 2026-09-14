@@ -16,7 +16,7 @@ import { blankDoc, type Block, type Doc } from './document';
  */
 const doc = (blocks: Block[], title = 'Memo'): Doc => ({ ...blankDoc(title), id: 'd1', blocks });
 
-const documentXml = (d: Doc) => parts(d)['word/document.xml'];
+const documentXml = (d: Doc) => parts(d).text['word/document.xml'];
 
 /**
  * Every part, through a real XML parser.
@@ -49,7 +49,7 @@ describe('well-formedness', () => {
         ],
         'R&D <notes>',
       ),
-    );
+    ).text;
     for (const [path, body] of Object.entries(made)) {
       expect(() => parse(body), path).not.toThrow();
     }
@@ -58,7 +58,7 @@ describe('well-formedness', () => {
 
 describe('the package', () => {
   it('carries every part a reader looks for', () => {
-    const made = parts(doc([]));
+    const made = parts(doc([])).text;
     for (const path of [
       '[Content_Types].xml',
       '_rels/.rels',
@@ -74,7 +74,7 @@ describe('the package', () => {
   });
 
   it('declares a content type for every part that needs one', () => {
-    const made = parts(doc([]));
+    const made = parts(doc([])).text;
     const types = made['[Content_Types].xml'];
     for (const path of Object.keys(made)) {
       if (path.endsWith('.rels') || path === '[Content_Types].xml') continue;
@@ -83,7 +83,7 @@ describe('the package', () => {
   });
 
   it('points every relationship at a part that is in the package', () => {
-    const made = parts(doc([]));
+    const made = parts(doc([])).text;
     const targets = [
       ...made['_rels/.rels'].matchAll(/Target="([^"]+)"/g),
     ].map((m) => m[1]);
@@ -109,7 +109,7 @@ describe('the package', () => {
         { kind: 'quote', text: 'q', source: 's' },
         { kind: 'table', rows: [['a']], header: true, caption: 'c' },
       ]),
-    );
+    ).text;
     const used = [...made['word/document.xml'].matchAll(/<w:pStyle w:val="([^"]+)"\/>/g)].map(
       (m) => m[1],
     );
@@ -120,7 +120,7 @@ describe('the package', () => {
   });
 
   it('points a list at a numbering definition that exists', () => {
-    const made = parts(doc([{ kind: 'bullets', items: ['a'], numbered: true }]));
+    const made = parts(doc([{ kind: 'bullets', items: ['a'], numbered: true }])).text;
     const ids = [...made['word/document.xml'].matchAll(/<w:numId w:val="(\d+)"\/>/g)].map((m) => m[1]);
     expect(ids).toContain('2');
     for (const id of ids) expect(made['word/numbering.xml']).toContain(`<w:num w:numId="${id}">`);
@@ -136,7 +136,7 @@ describe('escaping', () => {
   });
 
   it('escapes the title too, which is the one nobody remembers', () => {
-    const made = parts(doc([], 'R&D <notes>'));
+    const made = parts(doc([], 'R&D <notes>')).text;
     expect(made['word/document.xml']).toContain('R&amp;D &lt;notes&gt;');
     expect(made['docProps/core.xml']).toContain('R&amp;D &lt;notes&gt;');
   });

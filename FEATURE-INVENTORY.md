@@ -327,8 +327,11 @@ merge as unions and are never shed by `lib/keep.ts`.
 
 - Model `Doc { id, title, subtitle, courseId, blocks[], created, updated }`.
 - `Block` kinds: `heading` (levels 1–3), `text`, `bullets` (numbered or not),
-  `quote` (**with a required `source` — the app never quotes blind**), `table`
-  (rows, header flag, caption), `equation` (LaTeX + caption), `break`.
+  `checks` (text + ticked, per item), `quote` (**with a required `source` — the
+  app never quotes blind**), `table` (rows, header flag, caption), `image`
+  (a drive file id + name, alt text and caption), `equation` (LaTeX +
+  caption), `code` (text + language, and the one kind whose text is not marked
+  up), `break`.
 - Inline runs (`runs()`, `unmarked()`), word count (`words()`), summary line,
   `hasContent()`.
 - Markdown out (`toMarkdown`) **and in** (`fromMarkdown`).
@@ -601,7 +604,18 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   is two asterisks somebody typed, and `runs()` would eat them. Its markdown
   fence grows longer than any run of backticks inside it, so a snippet about
   markdown does not end its own block halfway through.
-- No images in documents at all.
+- ~~No images in documents at all.~~ — **closed.** An `image` block holding
+  the id of a file in the drive, plus alt text and a caption; `lib/imagesize.ts`
+  reads PNG, JPEG and GIF dimensions out of the header, and `lib/docx.ts`
+  writes a `wp:inline` drawing with the alt text as `descr`. The bytes are
+  **not** in the block: a document lives in localStorage with the rest of the
+  state, and one phone screenshot base64'd into it would spend the whole 5MB
+  budget on a figure — so the drive keeps them in IndexedDB and the export
+  reads them just before it writes (`pictureOf` in `screens/Write.tsx`). A
+  picture wider than the 6.5-inch text column is brought down to it, keeping
+  its shape, because Word draws exactly the size it is told. A file binned
+  from the drive is an ordinary thing rather than a corrupt document: the
+  caption still exports and the picture does not.
 - ~~No links,~~ alignment, line spacing or margin controls. — links **closed**:
   `[words](where)` in `lib/document.ts`, checked by `safeUrl` against http,
   https and mailto, and written into the `.docx` as a real hyperlink
@@ -780,11 +794,11 @@ reading this has one short list rather than a long one to re-check. Verified
 by grepping for each, not by re-reading the sentence.
 
 **Documents** — horizontal rules (distinct from the page break, which exists
-and borrows their markdown spelling) · indent and outdent · images ·
+and borrows their markdown spelling) · indent and outdent ·
 alignment, line spacing and margins · comments and margin notes · a generated
 PDF, as against the browser's print-to-PDF, which is there · `.docx` *import* ·
 "Open in Docs" from a study guide · a WYSIWYG surface (the marks are typed).
-(Code blocks and checkbox lists were on this list and are done.)
+(Code blocks, checkbox lists and images were on this list and are done.)
 
 **Sheets** — nothing. Every entry this section listed is either built or was
 already built when it was listed.

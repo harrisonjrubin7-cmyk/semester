@@ -298,6 +298,33 @@ export function glance(doc: Pick<Doc, 'blocks'>, lines = 6): string[] {
       case 'equation':
         if (block.latex.trim()) out.push(block.latex.trim());
         break;
+      /*
+       * The first line of the snippet, not the whole of it. A thumbnail is a
+       * handful of lines and a function body would spend all of them, leaving
+       * the prose that says what the document is off the bottom.
+       */
+      case 'code': {
+        const first = block.text.split('\n').find((l) => l.trim());
+        if (first) out.push(first.trim());
+        break;
+      }
+      case 'checks':
+        for (const item of block.items) {
+          if (out.length >= lines) break;
+          if (item.text.trim()) out.push(`${item.done ? '\u2612' : '\u2610'} ${item.text.trim()}`);
+        }
+        break;
+      /*
+       * What it is captioned, or what it is of. A thumbnail cannot draw the
+       * picture — the bytes are in IndexedDB behind an async read and this is
+       * a pure function — so it says there is one, which is the thing a blank
+       * line fails to say.
+       */
+      case 'image': {
+        const said = block.caption.trim() || block.alt.trim() || block.name.trim();
+        out.push(said ? `Picture — ${said}` : 'Picture');
+        break;
+      }
       case 'break':
         break;
     }

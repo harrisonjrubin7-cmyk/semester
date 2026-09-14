@@ -101,7 +101,7 @@ describe('links in a line of text', () => {
 
 describe('a link in the exported .docx', () => {
   it('is a relationship, not a URL in the paragraph', () => {
-    const made = parts(withText('See [the syllabus](https://example.com/s.pdf) for dates.'));
+    const made = parts(withText('See [the syllabus](https://example.com/s.pdf) for dates.')).text;
     const body = made['word/document.xml'];
     expect(body).toContain('<w:hyperlink r:id="rId3">');
     expect(body).not.toContain('https://example.com/s.pdf');
@@ -113,7 +113,7 @@ describe('a link in the exported .docx', () => {
   });
 
   it('does not collide with the two relationships the part always has', () => {
-    const rels = parse(parts(withText('[a](https://a.com)'))['word/_rels/document.xml.rels']);
+    const rels = parse(parts(withText('[a](https://a.com)')).text['word/_rels/document.xml.rels']);
     const ids = [...rels.querySelectorAll('Relationship')].map((r) => r.getAttribute('Id'));
     expect(ids).toEqual(['rId1', 'rId2', 'rId3']);
     expect(new Set(ids).size).toBe(ids.length);
@@ -121,14 +121,14 @@ describe('a link in the exported .docx', () => {
 
   /* What Word itself writes: one relationship per target, however often cited. */
   it('writes one relationship for a page cited twice', () => {
-    const made = parts(withText('[one](https://a.com) and [two](https://a.com) and [three](https://b.com)'));
+    const made = parts(withText('[one](https://a.com) and [two](https://a.com) and [three](https://b.com)')).text;
     const rels = parse(made['word/_rels/document.xml.rels']);
     expect(rels.querySelectorAll('Relationship').length).toBe(4);
     expect(made['word/document.xml'].match(/<w:hyperlink r:id="rId3">/g)?.length).toBe(2);
   });
 
   it('draws it the way a reader expects a link to look', () => {
-    const body = parts(withText('[a](https://a.com)'))['word/document.xml'];
+    const body = parts(withText('[a](https://a.com)')).text['word/document.xml'];
     expect(body).toContain('<w:u w:val="single"/>');
     expect(body).toContain('<w:color w:val="0563C1"/>');
   });
@@ -142,13 +142,13 @@ describe('a link in the exported .docx', () => {
         { kind: 'bullets', items: ['[one](https://b.com)'], numbered: false },
       ],
     };
-    const made = parts(doc);
+    const made = parts(doc).text;
     expect(made['word/document.xml'].match(/<w:hyperlink /g)?.length).toBe(2);
     expect(parse(made['word/_rels/document.xml.rels']).querySelectorAll('Relationship').length).toBe(4);
   });
 
   it('escapes a target with an ampersand in it, and stays well-formed', () => {
-    const made = parts(withText('[search](https://example.com/?a=1&b=2)'));
+    const made = parts(withText('[search](https://example.com/?a=1&b=2)')).text;
     expect(() => parse(made['word/_rels/document.xml.rels'])).not.toThrow();
     expect(() => parse(made['word/document.xml'])).not.toThrow();
     const rels = parse(made['word/_rels/document.xml.rels']);
@@ -163,7 +163,7 @@ describe('a link in the exported .docx', () => {
    * being refused. What must not exist is a hyperlink or a relationship.
    */
   it('leaves a refused target as words with nothing behind them', () => {
-    const made = parts(withText('[here](javascript:alert(1))'));
+    const made = parts(withText('[here](javascript:alert(1))')).text;
     expect(made['word/document.xml']).not.toContain('<w:hyperlink');
     expect(made['word/document.xml']).not.toContain('w:u w:val="single"');
     expect(parse(made['word/_rels/document.xml.rels']).querySelectorAll('Relationship').length).toBe(2);
@@ -174,9 +174,9 @@ describe('a link in the exported .docx', () => {
   });
 
   it('leaves a document with no links exactly as it was', () => {
-    const rels = parse(parts(withText('plain words'))['word/_rels/document.xml.rels']);
+    const rels = parse(parts(withText('plain words')).text['word/_rels/document.xml.rels']);
     expect(rels.querySelectorAll('Relationship').length).toBe(2);
-    expect(parts(withText('plain words'))['word/document.xml']).not.toContain('hyperlink');
+    expect(parts(withText('plain words')).text['word/document.xml']).not.toContain('hyperlink');
   });
 });
 
