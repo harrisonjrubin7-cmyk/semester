@@ -227,11 +227,21 @@ the title, a wrong room or the wrong kind meant deleting the appointment and
 writing it out again — and `setAppointmentKind` had sat in the reducer
 unreachable, a sixth of the answer with no caller.
 
-`editAppointment` replaces it: a patch, like `editTask`, dispatched by the
-form Mine already had. One form, two jobs — writing one and fixing one are
-the same five fields — with Save where Add was and an Edit beside Del on the
-row. Not in `lib/undo.ts`, by the rule written there: an edit leaves the
-thing on screen to edit back.
+`editAppointment` replaces it: a patch, like `editTask`. Not in
+`lib/undo.ts`, by the rule written there — an edit leaves the thing on screen
+to edit back.
+
+**Where the editing happens took two goes, and the second is the point of
+this file.** It landed first in the form at the top of the list, with Save
+where Add was: correct, tested, and a second answer to "how do I fix this?"
+in a screen that already had one. `TaskRow` in the tab next door has edited
+in the row since it was written — press the thing, the row becomes its
+fields, Save puts it back — so Mine was answering one question two ways on
+two adjacent tabs, which is precisely what this pass exists to stop, and it
+was this pass that introduced it. `AppointmentRow` now mirrors `TaskRow`
+exactly: the row is the way in, the fields open in place, and Delete moves
+inside the editor rather than sitting as a two-letter button next to Join.
+The form above writes new ones and nothing else.
 
 ## 5. What this pass changed
 
