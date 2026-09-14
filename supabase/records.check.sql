@@ -195,8 +195,26 @@ begin
 
   update public.tasks set deleted_at = now() where user_id = you and id = 't1';
 
+  -- The sweep is not the app's to run, and the revoke that says so is the
+  -- thing to check first. `records.sql` revokes it from PUBLIC as well as from
+  -- the two roles, because a function carries a default EXECUTE grant to
+  -- PUBLIC that both roles inherit — revoking from the roles alone leaves it
+  -- callable, which is the mistake that comment was written about.
+  begin
+    perform public.sweep_tombstones('90 days');
+    raise exception 'FAILED: a signed-in account could run the sweep';
+  exception
+    when insufficient_privilege then
+      raise notice 'ok  the sweep is not callable from the API';
+  end;
+
+  -- Run it as whoever owns the schema, which is who the comment says runs it.
+  -- `security invoker` is deliberate: the sweep crosses every account, so it
+  -- has to be the owner's row-level access rather than a caller's.
+  reset role;
   removed := public.sweep_tombstones('90 days');
   perform pg_temp.check('the sweep removed something', removed > 0, true);
+  perform pg_temp.become(you);
 
   select count(*) into n from public.tasks where user_id = you and id = 'old-tombstone';
   perform pg_temp.checkn('an old tombstone is gone', n, 0::bigint);

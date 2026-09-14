@@ -24,9 +24,25 @@
 
 begin;
 
--- ── Four people ───────────────────────────────────────────────────────────
+-- ── Five people ───────────────────────────────────────────────────────────
 -- Ana and Ben share a class. Cara is at the university but takes something
--- else. Dan is not at the university at all.
+-- else. Dan is at a different university altogether, and Eve has signed up
+-- without confirming her address.
+--
+-- Dan used to be the outsider here, on the grounds that the gate was a
+-- vanderbilt.edu address. It is not, and has not been since
+-- classmates-schools.sql: that migration redefined `verified_student()` to ask
+-- only whether an address is confirmed, and says at length why a per-school
+-- restriction in a policy is the wrong shape — every school after the first
+-- would need its own copy of every policy. What separates one campus from
+-- another is the room key, `vanderbilt/PSCI 1104`, which is what every code
+-- below now carries and what the check constraint has required since.
+--
+-- So Dan is a student who cannot see this class's rooms, and Eve is the one
+-- who is not a student at all. This file asserted the opposite and had done
+-- since that migration landed — it failed on its first block, which in one
+-- transaction meant every check after it was skipped. Nothing in classmates.sql
+-- was being verified by the script written to verify it.
 
 do $$
 declare
@@ -34,6 +50,7 @@ declare
   ben   uuid := '22222222-2222-2222-2222-222222222222';
   cara  uuid := '33333333-3333-3333-3333-333333333333';
   dan   uuid := '44444444-4444-4444-4444-444444444444';
+  eve   uuid := '55555555-5555-5555-5555-555555555555';
 begin
   insert into auth.users (id, instance_id, aud, role, email, email_confirmed_at,
                           created_at, updated_at)
@@ -44,10 +61,13 @@ begin
      'ben.test@vanderbilt.edu',  now(), now(), now()),
     (cara, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
      'cara.test@vanderbilt.edu', now(), now(), now()),
-    -- Confirmed, but not a Vanderbilt address: the gate is the domain, not
-    -- merely having clicked a link.
+    -- Confirmed, at another university. A student — of somewhere else.
     (dan,  '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-     'dan.test@example.com',     now(), now(), now())
+     'dan.test@example.edu',     now(), now(), now()),
+    -- Signed up and never clicked the link. Confirmation is the whole gate,
+    -- so this is the account that is not a student.
+    (eve,  '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
+     'eve.test@vanderbilt.edu',  null,  now(), now())
   on conflict (id) do nothing;
 end $$;
 
@@ -85,11 +105,18 @@ end $$;
 do $$
 begin
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
-  perform pg_temp.check('a confirmed vanderbilt.edu address is a student',
+  perform pg_temp.check('a confirmed address is a student',
                         private.verified_student(), true);
 
+  -- The gate is confirmation, not the domain. Somebody at another university
+  -- is a student; what keeps them out of this class is the room key, checked
+  -- further down, not this function.
   perform pg_temp.become('44444444-4444-4444-4444-444444444444');
-  perform pg_temp.check('a confirmed address at another domain is not',
+  perform pg_temp.check('so is a confirmed address at another university',
+                        private.verified_student(), true);
+
+  perform pg_temp.become('55555555-5555-5555-5555-555555555555');
+  perform pg_temp.check('an unconfirmed address is not',
                         private.verified_student(), false);
 end $$;
 
@@ -100,42 +127,53 @@ begin
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   insert into public.profiles (user_id, handle) values (auth.uid(), 'ana')
     on conflict (user_id) do update set handle = 'ana';
-  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'PSCI 1104')
+  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'vanderbilt/PSCI 1104')
     on conflict do nothing;
 
   perform pg_temp.become('22222222-2222-2222-2222-222222222222');
   insert into public.profiles (user_id, handle) values (auth.uid(), 'ben')
     on conflict (user_id) do update set handle = 'ben';
-  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'PSCI 1104')
+  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'vanderbilt/PSCI 1104')
     on conflict do nothing;
 
   perform pg_temp.become('33333333-3333-3333-3333-333333333333');
   insert into public.profiles (user_id, handle) values (auth.uid(), 'cara')
     on conflict (user_id) do update set handle = 'cara';
-  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'ECON 1020')
+  insert into public.enrollments (user_id, term, code) values (auth.uid(), '2026FA', 'vanderbilt/ECON 1020')
     on conflict do nothing;
 end $$;
 
 do $$
 declare n bigint;
 begin
-  -- Dan is not a student, so joining must fail outright rather than quietly
-  -- inserting a row nobody can see.
-  perform pg_temp.become('44444444-4444-4444-4444-444444444444');
+  -- Eve has not confirmed her address, so joining must fail outright rather
+  -- than quietly inserting a row nobody can see.
+  perform pg_temp.become('55555555-5555-5555-5555-555555555555');
   begin
     insert into public.enrollments (user_id, term, code)
-    values (auth.uid(), '2026FA', 'PSCI 1104');
-    raise exception 'FAILED: an outsider was allowed to join a class';
+    values (auth.uid(), '2026FA', 'vanderbilt/PSCI 1104');
+    raise exception 'FAILED: an unconfirmed account was allowed to join a class';
   exception
     when insufficient_privilege or check_violation then
-      raise notice 'ok  an outsider cannot join a class';
+      raise notice 'ok  an unconfirmed account cannot join a class';
   end;
+
+  -- Dan is a student, and joins his own university's room. Verified is not
+  -- the same as in the room: his enrolment is real and gets him nothing here,
+  -- which is the whole job the school prefix does.
+  perform pg_temp.become('44444444-4444-4444-4444-444444444444');
+  insert into public.enrollments (user_id, term, code)
+  values (auth.uid(), '2026FA', 'elsewhere/PSCI 1104')
+  on conflict do nothing;
+  select count(*) into n from public.enrollments
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
+  perform pg_temp.counted('another university''s room is not this one', n, 0);
 
   -- Ana may not enrol Ben. The policy is on the row, not on the request.
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   begin
     insert into public.enrollments (user_id, term, code)
-    values ('22222222-2222-2222-2222-222222222222', '2026FA', 'BUS 1600');
+    values ('22222222-2222-2222-2222-222222222222', '2026FA', 'vanderbilt/BUS 1600');
     raise exception 'FAILED: one student enrolled another';
   exception
     when insufficient_privilege or check_violation then
@@ -145,12 +183,12 @@ begin
   -- Who is in the room.
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   select count(*) into n from public.enrollments
-   where term = '2026FA' and code = 'PSCI 1104';
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
   perform pg_temp.counted('a member sees both people in their room', n, 2);
 
   perform pg_temp.become('33333333-3333-3333-3333-333333333333');
   select count(*) into n from public.enrollments
-   where term = '2026FA' and code = 'PSCI 1104';
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
   perform pg_temp.counted('somebody in another class sees nobody in this one', n, 0);
 
   -- Profiles follow enrollment: a classmate's handle is readable, a
@@ -172,29 +210,29 @@ declare n bigint;
 begin
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   insert into public.messages (user_id, term, code, body)
-  values (auth.uid(), '2026FA', 'PSCI 1104', 'Ana: does anyone have Tuesday''s reading?');
+  values (auth.uid(), '2026FA', 'vanderbilt/PSCI 1104', 'Ana: does anyone have Tuesday''s reading?');
 
   perform pg_temp.become('22222222-2222-2222-2222-222222222222');
   insert into public.messages (user_id, term, code, body)
-  values (auth.uid(), '2026FA', 'PSCI 1104', 'Ben: posted on Brightspace this morning');
+  values (auth.uid(), '2026FA', 'vanderbilt/PSCI 1104', 'Ben: posted on Brightspace this morning');
 
   -- The check the whole feature rests on: Ben's words reach Ana.
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   select count(*) into n from public.messages
-   where term = '2026FA' and code = 'PSCI 1104';
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
   perform pg_temp.counted('two people in a room see both messages', n, 2);
 
   -- And do not reach anybody else.
   perform pg_temp.become('33333333-3333-3333-3333-333333333333');
   select count(*) into n from public.messages
-   where term = '2026FA' and code = 'PSCI 1104';
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
   perform pg_temp.counted('somebody in another class sees none of them', n, 0);
 
   -- Posting into a class you are not in.
   perform pg_temp.become('33333333-3333-3333-3333-333333333333');
   begin
     insert into public.messages (user_id, term, code, body)
-    values (auth.uid(), '2026FA', 'PSCI 1104', 'Cara: hello from outside');
+    values (auth.uid(), '2026FA', 'vanderbilt/PSCI 1104', 'Cara: hello from outside');
     raise exception 'FAILED: somebody posted into a class they are not in';
   exception
     when insufficient_privilege or check_violation then
@@ -205,7 +243,7 @@ begin
   perform pg_temp.become('22222222-2222-2222-2222-222222222222');
   begin
     insert into public.messages (user_id, term, code, body)
-    values ('11111111-1111-1111-1111-111111111111', '2026FA', 'PSCI 1104', 'not really Ana');
+    values ('11111111-1111-1111-1111-111111111111', '2026FA', 'vanderbilt/PSCI 1104', 'not really Ana');
     raise exception 'FAILED: somebody posted as another person';
   exception
     when insufficient_privilege or check_violation then
@@ -229,7 +267,7 @@ begin
 
   -- Put it back for the blocking checks.
   insert into public.messages (user_id, term, code, body)
-  values (auth.uid(), '2026FA', 'PSCI 1104', 'Ana: back again');
+  values (auth.uid(), '2026FA', 'vanderbilt/PSCI 1104', 'Ana: back again');
 end $$;
 
 -- ── Blocking ──────────────────────────────────────────────────────────────
@@ -242,7 +280,7 @@ declare n bigint;
 begin
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   select count(*) into n from public.messages
-   where term = '2026FA' and code = 'PSCI 1104';
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
   perform pg_temp.counted('before blocking, Ana sees both', n, 2);
 
   insert into public.blocks (user_id, blocked)
@@ -250,13 +288,13 @@ begin
   on conflict do nothing;
 
   select count(*) into n from public.messages
-   where term = '2026FA' and code = 'PSCI 1104';
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
   perform pg_temp.counted('after blocking, Ben’s message is gone from the wire', n, 1);
 
   -- Blocking is one-directional and private to the blocker.
   perform pg_temp.become('22222222-2222-2222-2222-222222222222');
   select count(*) into n from public.messages
-   where term = '2026FA' and code = 'PSCI 1104';
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
   perform pg_temp.counted('Ben still sees the room, and is not told', n, 2);
 
   select count(*) into n from public.blocks;
@@ -266,7 +304,7 @@ begin
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   delete from public.blocks where user_id = auth.uid();
   select count(*) into n from public.messages
-   where term = '2026FA' and code = 'PSCI 1104';
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
   perform pg_temp.counted('unblocking brings the messages back', n, 2);
 end $$;
 
@@ -292,15 +330,15 @@ do $$
 declare n bigint;
 begin
   perform pg_temp.become('22222222-2222-2222-2222-222222222222');
-  delete from public.enrollments where user_id = auth.uid() and code = 'PSCI 1104';
+  delete from public.enrollments where user_id = auth.uid() and code = 'vanderbilt/PSCI 1104';
 
   select count(*) into n from public.messages
-   where term = '2026FA' and code = 'PSCI 1104';
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
   perform pg_temp.counted('leaving a class closes the room behind you', n, 0);
 
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
   select count(*) into n from public.enrollments
-   where term = '2026FA' and code = 'PSCI 1104';
+   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
   perform pg_temp.counted('and the people still in it see one fewer', n, 1);
 end $$;
 

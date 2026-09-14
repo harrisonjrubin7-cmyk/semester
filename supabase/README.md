@@ -34,18 +34,44 @@ Nothing in here may contain a `begin;`/`commit;` of its own. The runner opens a
 transaction per file, and a `commit` inside one ends *its* transaction and
 leaves the rest of the file running unprotected.
 
-## `*.check.sql` — the tests, run by hand
+## `*.check.sql` — the tests
 
 `classmates.check.sql`, `groups.check.sql`, `records.check.sql`,
 `calendar.check.sql`, `sync.check.sql`.
 
-Each one invents two to four users, proves the row-level policies refuse what
+Each one invents two to five users, proves the row-level policies refuse what
 they should refuse, and ends in `rollback;`. They answer the questions a policy
 can only be wrong about when a second person is involved — can a stranger read
 your room, can one member throw another out — without needing a second person.
 
-**They must never be migrations.** They write to `auth.users`. Run one by
-opening the SQL Editor and pasting its contents.
+**They must never be migrations.** They write to `auth.users`.
+
+### Running them
+
+    supabase/check.sh
+
+That is the whole thing. It initialises a throwaway Postgres in a temporary
+directory, applies `local.sql` (the parts of a Supabase project that are not in
+this repo — the `auth` schema, `auth.uid()`, the three roles), applies every
+migration in order, runs every check, and deletes the cluster. It binds no TCP
+port and touches nothing you have running. Needs a Postgres *server* installed,
+not just `psql`.
+
+Before it existed the only way to run one was to paste it into a live project's
+SQL Editor, against real data, by hand — so they were not run, and two of them
+had been failing on their first block since the migration that broke them
+landed. A failed block aborts the transaction, so everything after it is
+skipped: thirteen of the twenty checks in `records.check.sql` and all
+twenty-four in `classmates.check.sql` had never executed. That is the whole
+argument for a script.
+
+You can still paste one into the SQL Editor. It is the same file.
+
+## `local.sql` — not deployed anywhere
+
+The furniture a real Supabase project already has and a bare Postgres does not.
+Read only by `check.sh`. It is not a reimplementation of Supabase and nothing
+should grow in it that the checks do not need.
 
 ## `scheduler.sql` — infrastructure, applied once by hand
 
