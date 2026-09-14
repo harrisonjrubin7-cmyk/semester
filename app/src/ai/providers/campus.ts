@@ -451,3 +451,28 @@ export const family: Provide = () => ({
     'How do I set an expiry on what someone can see?',
   ],
 });
+
+/**
+ * Create — what the student has made, and what this screen can start.
+ *
+ * The forms, designs and videos are in a device library out of reach here, so
+ * what goes over is the makers the term already holds. The useful thing for
+ * the assistant to know is that this screen *starts* things rather than being
+ * a thing: asked "help me make a poster", the right answer names the tile.
+ */
+export const create: Provide = (look) => {
+  const { state } = look;
+  const made = state.documents.length + state.sheets.length + state.decks.length;
+  return {
+    summary: `Create — one door to the makers. ${made} documents, sheets and decks so far, plus forms, designs and videos kept on this device.`,
+    focus: {
+      documents: state.documents.length,
+      sheets: state.sheets.length,
+      decks: state.decks.length,
+      also_makes: 'forms, designs and videos, stored on this device only',
+    },
+    visible: [],
+    actions: ['open_screen'],
+    suggestions: ['Help me start a poster for this assignment.', 'What should go on each slide?'],
+  };
+};

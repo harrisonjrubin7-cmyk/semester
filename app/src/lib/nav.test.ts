@@ -475,7 +475,21 @@ describe('the promise', () => {
 describe('every screen is named, not identified', () => {
   const screens = (() => {
     const src = readFileSync('src/lib/types.ts', 'utf8');
-    const union = /export type Screen =([\s\S]*?);/.exec(src);
+    /*
+     * Comments stripped before the union is matched.
+     *
+     * The match ends at the first `;`, and the union is annotated — so a
+     * semicolon inside one of those comments cut it short and this test then
+     * walked two thirds of the screens while still passing its own "did I
+     * find anything" check. Measured: a comment reading "already had; the
+     * three that are its own" lost fourteen screens from the walk.
+     *
+     * Stripping first is the fix rather than banning punctuation from the
+     * comments, because a rule that a docblock may not contain a semicolon is
+     * one nobody can be expected to remember.
+     */
+    const bare = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    const union = /export type Screen =([\s\S]*?);/.exec(bare);
     if (!union) throw new Error('the Screen union has moved; point this test at it.');
     return [...union[1].matchAll(/'([A-Za-z]+)'/g)].map((m) => m[1] as Screen);
   })();

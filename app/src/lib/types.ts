@@ -575,6 +575,12 @@ export type Screen =
   | 'career'
   | 'family'
   | 'pathway'
+  /*
+   * One door to everything that makes something. Six of its nine tiles open
+   * a maker this app already had; the three that are its own — a form, a
+   * design, a video — had nowhere to live. See `screens/Create.tsx`.
+   */
+  | 'create'
   // The settings pages. Real screens rather than a sub-mode of one, so Back,
   // the recent list and a deep link all work the way they do everywhere else.
   | 'setLook'

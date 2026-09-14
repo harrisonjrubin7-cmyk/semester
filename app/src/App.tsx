@@ -119,6 +119,7 @@ const Athletics = lazy(() => import('./screens/Athletics').then((m) => ({ defaul
 const Career = lazy(() => import('./screens/Career').then((m) => ({ default: m.Career })));
 const Family = lazy(() => import('./screens/Family').then((m) => ({ default: m.Family })));
 const Pathway = lazy(() => import('./screens/Pathway').then((m) => ({ default: m.Pathway })));
+const Create = lazy(() => import('./screens/Create').then((m) => ({ default: m.Create })));
 /* The workspace's own two screens — the search home a new tab opens on, and
    the directory of everything behind it. See `lib/desk.ts`. */
 const SearchHome = lazy(() => import('./screens/Search').then((m) => ({ default: m.SearchHome })));
@@ -463,6 +464,8 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'What somebody else would see', title: 'Family' };
     case 'pathway':
       return { kicker: 'The part that outlasts this term', title: 'Pathway' };
+    case 'create':
+      return { kicker: 'Whatever it is you have to hand in', title: 'Create' };
     case 'sources':
       return { kicker: 'Yours, never invented', title: 'Sources' };
     case 'account':
@@ -977,6 +980,8 @@ function CurrentScreen() {
       return <Family />;
     case 'pathway':
       return <Pathway />;
+    case 'create':
+      return <Create />;
     case 'privacy':
       return <Privacy />;
     case 'data':

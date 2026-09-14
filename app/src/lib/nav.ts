@@ -287,7 +287,16 @@ export const DESTINATIONS: Destination[] = [
     short: 'Work',
     blurb: 'Paste an assignment and get it broken down — rubric, plan, dates, what to ask.',
     keywords: 'assignment essay paper homework problem set instructions rubric deadline draft feedback outline plan generate write',
-    group: 'Make',
+    /*
+     * Semester, not Make, and it moved when Create arrived needing the place.
+     *
+     * Of the eight on Make it is the one whose output is not a document: it
+     * takes an assignment and gives back a rubric, a plan and *dates*, which
+     * is this term rather than a thing you hand in. Create now fronts the
+     * seven that do produce documents, so the shelf lost nothing a reader
+     * looks for there.
+     */
+    group: 'Semester',
     taskTags: ['study', 'make'],
     root: 'study',
   },
@@ -399,6 +408,17 @@ export const DESTINATIONS: Destination[] = [
     group: 'Courses',
     taskTags: ['make', 'study'],
     root: 'study',
+  },
+  {
+    screen: 'create',
+    label: 'Create',
+    short: 'Create',
+    blurb: 'One door to everything that makes something — and the form, design and video that had no other home.',
+    keywords:
+      'create make new document presentation deck slides spreadsheet sheet form survey quiz design poster graphic diagram video clip edit caption export project projects',
+    group: 'Make',
+    taskTags: ['make'],
+    root: 'mine',
   },
   {
     screen: 'essay',

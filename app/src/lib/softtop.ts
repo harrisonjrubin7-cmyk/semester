@@ -592,6 +592,20 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     }
 
     /*
+     * Create's own three — forms, designs and videos — are in a device
+     * library this function cannot read, so it leads with the makers the term
+     * already holds: the documents, sheets and decks the other six tiles open.
+     * A true number, and the one that says whether there is anything to come
+     * back to.
+     */
+    case 'create':
+      return holds(
+        'Things you have made',
+        state.documents.length + state.sheets.length + state.decks.length,
+        'piece',
+      );
+
+    /*
      * ── Beyond ──────────────────────────────────────────────────────────
      *
      * The four that are not this term keep their work in device libraries

@@ -94,6 +94,7 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   career: campus.career,
   pathway: campus.pathway,
   family: campus.family,
+  create: campus.create,
   call: campus.call,
   activities: campus.activities,
   links: campus.links,
