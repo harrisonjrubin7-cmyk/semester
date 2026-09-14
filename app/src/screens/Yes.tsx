@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import {RegistrationPortal} from '../components/RegistrationPortal';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -48,6 +49,10 @@ const LINKS = [
  * syllabus fills it in.
  */
 export function Yes() {
+ const [view,setView]=useState('plan');
+ return <div className="portal-workspace registration-workspace"><div className="portal-tabs" role="tablist" aria-label="Registration tools">{[['plan','Search & plan'],['import','Enrolled schedule & official portal']].map(([id,label])=><button key={id} role="tab" aria-selected={view===id} onClick={()=>setView(id)}>{label}</button>)}</div>{view==='plan'?<RegistrationPortal/>:<EnrolledSchedule/>}</div>;
+}
+function EnrolledSchedule() {
   const { state, dispatch, catalog } = useStore();
   const rowStyle = useRowStyle(0);
   const [text, setText] = useState('');
@@ -72,7 +77,7 @@ export function Yes() {
   };
 
   return (
-    <Page bottom={26}>
+    <Page bottom={26} folds={false}>
       <SectionLabel>Go there</SectionLabel>
       {LINKS.map((l) => (
         <a key={l.id} href={l.url} target="_blank" rel="noreferrer" className="bare">

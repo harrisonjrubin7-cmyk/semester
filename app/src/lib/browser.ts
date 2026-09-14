@@ -99,6 +99,8 @@ export interface Where {
   sheetId: string | null;
   deckId: string | null;
   mode: StudyMode;
+  openUnit?: number;
+  callCode?: string;
 }
 
 /**
@@ -117,21 +119,24 @@ export interface Where {
 export function placeFor(screen: Screen, at: Where): Action[] {
   switch (screen) {
     case 'course':
-    case 'edit':
       return at.courseId ? [{ type: 'openCourse', id: at.courseId }] : justGo(screen);
+    case 'edit':
+      return at.courseId ? [{ type: 'openCourse', id: at.courseId }, { type: 'go', screen: 'edit' }] : justGo(screen);
     case 'item':
       return at.itemId ? [{ type: 'openItem', id: at.itemId }] : justGo(screen);
     case 'event':
       return at.eventId ? [{ type: 'openEvent', id: at.eventId }] : justGo(screen);
     case 'guide':
-      return at.guideId ? [{ type: 'openGuide', id: at.guideId, mode: at.mode }] : justGo(screen);
+      return at.guideId ? [{ type: 'openGuide', id: at.guideId, mode: at.mode, ...(at.openUnit!==undefined?{unit:at.openUnit}:{}) }] : justGo(screen);
     case 'drill':
     case 'quiz':
     case 'lesson':
     case 'slides':
       return at.guideId
-        ? [{ type: 'openGuide', id: at.guideId, mode: at.mode }, { type: 'go', screen }]
+        ? [{ type: 'openGuide', id: at.guideId, mode: at.mode, ...(at.openUnit!==undefined?{unit:at.openUnit}:{}) }, { type: 'go', screen }]
         : justGo(screen);
+    case 'call':
+      return at.callCode ? [{type:'openCall',code:at.callCode}] : justGo(screen);
     case 'note':
       return at.noteId ? [{ type: 'openNote', id: at.noteId }] : justGo(screen);
     case 'write':
@@ -160,8 +165,8 @@ export const NEW_TAB = 'New tab';
  * A browser lets you open two hundred and then makes them illegible, which is
  * a bargain a phone-sized strip cannot make: below about this many each tab is
  * a favicon and half a letter, and a tab you cannot read is not a tab you can
- * return to. When the strip is full the oldest one that is not on gives way —
- * the same thing a person does by hand, done without asking.
+ * return to. When the strip is full, another tab must be closed first. Opening a result
+ * must never silently replace existing work.
  */
 export const MAX_TABS = 10;
 
@@ -188,7 +193,7 @@ export function current(strip: Strip): AppTab {
 }
 
 function clamp(strip: Strip, at: number): number {
-  return Math.min(Math.max(0, at), Math.max(0, strip.tabs.length - 1));
+  return Math.min(Math.max(0, Number.isFinite(at) ? Math.trunc(at) : 0), Math.max(0, strip.tabs.length - 1));
 }
 
 /**
@@ -199,17 +204,9 @@ function clamp(strip: Strip, at: number): number {
  * the strip stops being in any order at all by the fourth tab.
  */
 export function add(strip: Strip, id: string = tabId()): Strip {
-  const room = strip.tabs.length < MAX_TABS ? strip : evict(strip);
-  const at = clamp(room, room.at) + 1;
-  return { tabs: [...room.tabs.slice(0, at), fresh(id), ...room.tabs.slice(at)], at };
-}
-
-/** Drop the oldest tab that is not the one being used. */
-function evict(strip: Strip): Strip {
-  const at = clamp(strip, strip.at);
-  const drop = strip.tabs.findIndex((_, i) => i !== at);
-  if (drop === -1) return strip;
-  return { tabs: strip.tabs.filter((_, i) => i !== drop), at: drop < at ? at - 1 : at };
+  if(strip.tabs.length>=MAX_TABS)return strip;
+  const at = clamp(strip, strip.at) + 1;
+  return { tabs: [...strip.tabs.slice(0, at), fresh(id), ...strip.tabs.slice(at)], at };
 }
 
 /**
@@ -280,7 +277,8 @@ export function openBeside(
   place: Action[],
   id: string = tabId(),
 ): Strip {
-  return visit(add(strip, id), screen, title, place);
+  const next=add(strip,id);
+  return next===strip?strip:visit(next, screen, title, place);
 }
 
 /** Where the strip is kept between sessions. */
@@ -312,6 +310,7 @@ export const TABS_KEY = 'semester.tabs.v1';
 export const PLACE_ACTIONS = [
   'go',
   'openItem',
+  'openCall',
   'openCourse',
   'openEvent',
   'openGuide',
@@ -354,7 +353,7 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
     const tabs: AppTab[] = [];
     for (const entry of list) {
       const tab = entry as Partial<AppTab>;
-      if (typeof tab?.id !== 'string') continue;
+      if (typeof tab?.id !== 'string' || tabs.some(t=>t.id===tab.id)) continue;
       if (tab.screen === null || tab.screen === undefined) {
         tabs.push(fresh(tab.id));
         continue;

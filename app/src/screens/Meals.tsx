@@ -1,3 +1,4 @@
+import {CampusDirectory, MealPlanner} from '../components/CampusDirectory';
 import { useMemo, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
@@ -39,6 +40,11 @@ import {
  * one balance is a fact about today and says nothing about eating.
  */
 export function Meals() {
+ const {state}=useStore();
+ const [tab,setTab]=useState('mine');const [choice,setChoice]=useState('');
+ return <div className="portal-workspace campus-workspace"><div className="portal-tabs" role="tablist" aria-label="Meals portal">{[['mine','My meal plan'],['directory','Dining & meal plans'],['plan','Plan calculator']].map(([id,label])=><button key={id} role="tab" aria-selected={tab===id} onClick={()=>{setChoice('');setTab(id);}}>{label}</button>)}</div>{tab==='mine'?<MealsDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="dining" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<MealPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
+}
+function MealsDetails() {
   const { state, dispatch, now } = useStore();
 
   const [swipes, setSwipes] = useState('');
@@ -92,8 +98,8 @@ export function Meals() {
   };
 
   return (
-    <Page bottom={26}>
-      <TermSwitch />
+    <Page className="campus-personal" bottom={26} folds={false}>
+      <TermSwitch /><div className="portal-stats"><div><strong>{latest&&latest.swipes>=0?latest.swipes:'—'}</strong><span>Meal swipes recorded</span></div><div><strong>{latest?money(latest.cashCents):'—'}</strong><span>Campus cash recorded</span></div><div><strong>{latest&&latest.diningCents>=0?money(latest.diningCents):'—'}</strong><span>Dining dollars recorded</span></div></div><p className="portal-muted">Balances are your saved readings, not a live account balance. Use the official balance page to check or change your enrolled plan.</p>
 
       <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>

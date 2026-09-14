@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { AssignmentCenter } from '../components/AssignmentCenter';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
@@ -46,6 +47,11 @@ const TABS: { id: Tab; label: string }[] = [
  * at 1am is not.
  */
 export function Work() {
+  const [tools, setTools] = useState(false);
+  return tools ? <><button className="assignment-back" onClick={()=>setTools(false)}>← All assignments</button><AssignmentTools/></> : <AssignmentCenter onTools={()=>setTools(true)}/>;
+}
+
+function AssignmentTools() {
   const { state, dispatch, now, catalog } = useStore();
   const courseId: CourseId = state.guideId;
   const { guide } = useLive(courseId);

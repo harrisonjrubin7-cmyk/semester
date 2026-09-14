@@ -1,3 +1,5 @@
+import {CampusDirectory} from '../components/CampusDirectory';
+import type {CampusListing} from '../lib/campusdirectory';
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
@@ -51,8 +53,9 @@ import { Folding } from '../components/Fold';
  */
 export function Activities() {
   const { state, catalog } = useStore();
-  const [tab, setTab] = useState<'yours' | 'add' | 'find'>('yours');
+  const [tab, setTab] = useState<'yours' | 'add' | 'find' | 'directory'>('directory');
 
+  const [planned,setPlanned]=useState<CampusListing|null>(null);
   const mine = state.commitments;
   const activityHours = weeklyHours(mine);
 
@@ -87,20 +90,22 @@ export function Activities() {
 
   return (
     <Page
-      bottom={26}
+      bottom={26} folds={false} className="portal-workspace clubs-workspace"
     >
         <>
           <Segmented
             options={[
-              { id: 'yours', label: 'Yours' },
-              { id: 'add', label: 'Add one' },
-              { id: 'find', label: 'Find things' },
+              { id: 'directory', label: 'Discover clubs' },
+              { id: 'yours', label: 'My week' },
+              { id: 'add', label: 'Add activity' },
+              { id: 'find', label: 'Official directory & import' },
             ]}
             value={tab}
             onChange={setTab}
             style={{ marginBottom: 'var(--sp-7)' }}
           />
 
+          {tab === 'directory' && <CampusDirectory kind="clubs" onPlan={item=>{setPlanned(item);setTab('add');}}/>}
           {tab === 'yours' && (
             <>
               <Blueprint style={{ padding: '14px 15px' }}>
@@ -166,7 +171,7 @@ export function Activities() {
             </>
           )}
 
-          {tab === 'add' && <AddOne onDone={() => setTab('yours')} />}
+          {tab === 'add' && <AddOne key={planned?.id||'new'} initial={planned} onDone={() => {setPlanned(null);setTab('yours');}} />}
           {tab === 'find' && <FindThings />}
         </>
     </Page>
@@ -250,13 +255,13 @@ function Row({ commitment }: { commitment: Commitment }) {
   );
 }
 
-function AddOne({ onDone }: { onDone: () => void }) {
+function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|null }) {
   const { dispatch } = useStore();
-  const [name, setName] = useState('');
+  const [name, setName] = useState(initial?.name||'');
   const [kind, setKind] = useState<ActivityKind>('club');
   const [role, setRole] = useState('');
-  const [where, setWhere] = useState('');
-  const [url, setUrl] = useState('');
+  const [where, setWhere] = useState(initial?.location||'');
+  const [url, setUrl] = useState(initial?.url||'');
   const [days, setDays] = useState<number[]>([]);
   const [time, setTime] = useState('');
   const [minutes, setMinutes] = useState('60');

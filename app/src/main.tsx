@@ -5,6 +5,10 @@ import { createRoot } from 'react-dom/client';
 import './styles/typefaces.css';
 import './styles/industry.css';
 import './styles/app.css';
+// The ported audit feature modules (study studio, assignment centre, campus
+// directories, registration and the graphing calculator) bring their own
+// scoped rules — see `styles/features.css`.
+import './styles/features.css';
 import App from './App';
 import { Splash } from './components/Splash';
 import { askToPersist } from './lib/device';

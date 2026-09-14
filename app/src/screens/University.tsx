@@ -323,6 +323,26 @@ function Workspace({ storageKey }: { storageKey: string }) {
     }
   };
 
+  /*
+   * Ask the gateway what became of a receipt that is still pending.
+   *
+   * The school completes an action on its own clock, so a receipt can sit at
+   * "pending" long after this screen is done with it. This asks about that
+   * same review rather than sending the action again — reconciling is a read.
+   */
+  const recheck = async () => {
+    if (!review) return;
+    setBusy(true);
+    setNotice('');
+    try {
+      setReceipt(await reconcileInstitutionAction(review.id));
+    } catch (e) {
+      setNotice((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const exportDrafts = () =>
     download({
       name: 'Semester university preparation drafts.json',
@@ -892,6 +912,14 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   {receipt.message} ·{' '}
                   {receipt.status === 'pending' ? 'Awaiting official completion' : 'Completed'} · Receipt{' '}
                   {receipt.id}
+                  {receipt.status === 'pending' && (
+                    <>
+                      {' '}
+                      <ActionButton disabled={busy} onClick={() => void recheck()}>
+                        Recheck this action
+                      </ActionButton>
+                    </>
+                  )}
                 </p>
               ) : review ? (
                 <>

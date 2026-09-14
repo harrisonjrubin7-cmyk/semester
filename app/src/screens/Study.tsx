@@ -1,3 +1,5 @@
+import {StudyJournal} from '../components/StudyJournal';
+import { StudyStudio } from '../components/StudyStudio';
 import { allCards } from '../data/catalog';
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
@@ -83,6 +85,9 @@ export function Study() {
   const [only, setOnly] = useState<CourseId | null>(null);
   /** Whether the ranking below the plan is showing. */
   const [showRest, setShowRest] = useState(false);
+  const [studio, setStudio] = useState(false);
+  const [studioCourse, setStudioCourse] = useState(state.guideId);
+  const selectedStudioCourse = catalog.courses.find(c=>c.id===studioCourse)?.id ?? catalog.courses[0]?.id;
   const rowTwelve = useRowStyle(12);
   const exam = nextExam(catalog, now);
 
@@ -159,6 +164,8 @@ export function Study() {
   );
   const picks = suggest(outstanding, { sources: state.sources.length });
   /** Every tool this tab offers, minus Study itself — this is Study. */
+  /* The audited tree kept a separate `Create` shelf; here the creation
+     destinations already sit on `Make`, so that shelf alone covers them. */
   const tools = [...destinationsIn('Study'), ...destinationsIn('Make')].filter(
     (d) => d.screen !== 'study',
   );
@@ -166,8 +173,12 @@ export function Study() {
   if (catalog.empty) return <FirstRun where="to study" />;
   const tab = state.studyTab;
 
+  if(studio && selectedStudioCourse) return <><div className="studio-course-picker"><label>Course<select value={selectedStudioCourse} onChange={e=>setStudioCourse(e.target.value)}>{catalog.courses.map(c=><option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}</select></label></div><StudyStudio key={selectedStudioCourse} courseId={selectedStudioCourse} onClose={()=>setStudio(false)}/></>;
   return (
     <Page>
+      <div className="studio-entry"><div><strong>One course. Eleven study formats.</strong><p>Choose sources, create a guide, and save it with your course.</p></div><button className="portal-primary" onClick={()=>setStudio(true)}>Create study guide</button></div>
+      <div className="study-next-actions"><button onClick={()=>dispatch({type:'go',screen:'ask'})}>AI Tutor</button><button onClick={()=>dispatch({type:'go',screen:'exam'})}>Practice exam</button><button onClick={()=>dispatch({type:'go',screen:'runway'})}>Exam planner</button><button onClick={()=>dispatch({type:'newNote',courseId:selectedStudioCourse||null})}>New course note</button><button onClick={()=>dispatch({type:'go',screen:'groupwork'})}>Study groups</button><button onClick={()=>dispatch({type:'go',screen:'sources'})}>Citations & evidence</button></div>
+      <StudyJournal/>
       {exam && (
         <Blueprint
           style={{

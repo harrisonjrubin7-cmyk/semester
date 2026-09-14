@@ -433,7 +433,7 @@ export interface Restore {
  * restore would change. One list, so a section added to a backup is
  * automatically a section a restore warns you about.
  */
-export const BACKUP_SECTIONS: { key: string; label: string; array: boolean }[] = [
+export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valueType?: 'string'|'number' }[] = [
   { key: 'courses', label: 'courses', array: true },
   { key: 'updates', label: 'added readings', array: true },
   { key: 'notes', label: 'notes', array: true },
@@ -460,6 +460,58 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean }[] =
   { key: 'done', label: 'what you have ticked off', array: false },
   { key: 'saved', label: 'saved items', array: false },
   { key: 'linkUrls', label: 'link addresses', array: false },
+  { key: 'documents', label: 'documents', array: true },
+  { key: 'sheets', label: 'spreadsheets', array: true },
+  { key: 'decks', label: 'presentations', array: true },
+  { key: 'equations', label: 'equations', array: true },
+  { key: 'folders', label: 'folders', array: true },
+  { key: 'sources', label: 'sources', array: true },
+  { key: 'sittings', label: 'practice papers', array: true },
+  { key: 'commitments', label: 'activities', array: true },
+  { key: 'timers', label: 'timers', array: true },
+  { key: 'alarms', label: 'alarms', array: true },
+  { key: 'applications', label: 'applications', array: true },
+  { key: 'returned', label: 'returned work', array: true },
+  { key: 'requirements', label: 'degree requirements', array: true },
+  { key: 'taken', label: 'completed courses', array: true },
+  { key: 'people', label: 'contacts', array: true },
+  { key: 'visits', label: 'advising visits', array: true },
+  { key: 'letters', label: 'recommendation requests', array: true },
+  { key: 'answers', label: 'practice answers', array: true },
+  { key: 'rest', label: 'rest periods', array: true },
+  { key: 'myRules', label: 'reminder rules', array: true },
+  { key: 'attendance', label: 'attendance records', array: true },
+  { key: 'registrar', label: 'registrar dates', array: true },
+  { key: 'spent', label: 'study sessions', array: true },
+  { key: 'windows', label: 'work windows', array: true },
+  { key: 'costs', label: 'expenses', array: true },
+  { key: 'charges', label: 'bill charges', array: true },
+  { key: 'aid', label: 'aid awards', array: true },
+  { key: 'payments', label: 'recorded payments', array: true },
+  { key: 'balances', label: 'meal balances', array: true },
+  { key: 'residences', label: 'housing records', array: true },
+  { key: 'mySchools', label: 'school profiles', array: true },
+  { key: 'archivedTerms', label: 'archived terms', array: true },
+  { key: 'gradeSystems', label: 'grade systems', array: false },
+  { key: 'pretested', label: 'pretest history', array: false },
+  { key: 'wanted', label: 'opportunity preferences', array: false },
+  { key: 'progress', label: 'assignment progress', array: false },
+  { key: 'regradeWindows', label: 'regrade windows', array: false },
+  { key: 'scale', label: 'grading scale', array: false },
+  { key: 'floor', label: 'rest settings', array: false },
+  { key: 'contract', label: 'weekly workload plan', array: false },
+  { key: 'attendPolicy', label: 'attendance policies', array: false },
+  { key: 'pieces', label: 'assignment steps', array: false },
+  { key: 'drops', label: 'grade drop rules', array: false },
+  { key: 'examCovers', label: 'exam coverage', array: false },
+  { key: 'dayBudget', label: 'daily budgets', array: false },
+  { key: 'plans', label: 'payment plans', array: false },
+  { key: 'tickedAt', label: 'completion history', array: false },
+  { key: 'started', label: 'work start history', array: false },
+  { key: 'term', label: 'current term', array: false, valueType: 'string' },
+  { key: 'schoolId', label: 'school selection', array: false, valueType: 'string' },
+  { key: 'accessLeadDays', label: 'testing lead time', array: false, valueType: 'number' },
+
 ];
 
 export function readBackup(text: string): Restore {
@@ -485,12 +537,12 @@ export function readBackup(text: string): Restore {
   for (const section of BACKUP_SECTIONS) {
     const value = obj[section.key];
     if (value === undefined || value === null) continue;
-    const ok = section.array
+    const ok = section.valueType ? typeof value === section.valueType && (section.valueType !== 'number' || Number.isFinite(value)) : section.array
       ? Array.isArray(value)
       : typeof value === 'object' && !Array.isArray(value);
     if (!ok) continue;
     data[section.key] = value;
-    const count = section.array
+    const count = section.valueType ? 1 : section.array
       ? (value as unknown[]).length
       : Object.keys(value as object).length;
     if (count > 0) parts.push(`${count} ${section.label}`);
@@ -559,6 +611,57 @@ export function backupOf(state: State) {
     })),
     linkUrls: state.linkUrls,
     extraLinks: state.extraLinks,
+    documents: state.documents,
+    sheets: state.sheets,
+    decks: state.decks,
+    equations: state.equations,
+    folders: state.folders,
+    sources: state.sources,
+    sittings: state.sittings,
+    commitments: state.commitments,
+    timers: state.timers,
+    alarms: state.alarms,
+    applications: state.applications,
+    returned: state.returned,
+    requirements: state.requirements,
+    taken: state.taken,
+    people: state.people,
+    visits: state.visits,
+    letters: state.letters,
+    answers: state.answers,
+    rest: state.rest,
+    myRules: state.myRules,
+    attendance: state.attendance,
+    registrar: state.registrar,
+    spent: state.spent,
+    windows: state.windows,
+    costs: state.costs,
+    charges: state.charges,
+    aid: state.aid,
+    payments: state.payments,
+    balances: state.balances,
+    residences: state.residences,
+    mySchools: state.mySchools,
+    archivedTerms: state.archivedTerms,
+    gradeSystems: state.gradeSystems,
+    pretested: state.pretested,
+    wanted: state.wanted,
+    progress: state.progress,
+    regradeWindows: state.regradeWindows,
+    scale: state.scale,
+    floor: state.floor,
+    contract: state.contract,
+    attendPolicy: state.attendPolicy,
+    pieces: state.pieces,
+    drops: state.drops,
+    examCovers: state.examCovers,
+    dayBudget: state.dayBudget,
+    plans: state.plans,
+    tickedAt: state.tickedAt,
+    started: state.started,
+    term: state.term,
+    schoolId: state.schoolId,
+    accessLeadDays: state.accessLeadDays,
     sample: state.sample,
   };
 }

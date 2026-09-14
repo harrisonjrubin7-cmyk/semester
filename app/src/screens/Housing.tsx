@@ -1,3 +1,4 @@
+import {CampusDirectory, HousingPlanner} from '../components/CampusDirectory';
 import { useMemo, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
@@ -40,6 +41,11 @@ import {
  * university credentials — which this app will never do.
  */
 export function Housing() {
+ const {state}=useStore();
+ const [tab,setTab]=useState('mine');const [choice,setChoice]=useState('');
+ return <div className="portal-workspace campus-workspace"><div className="portal-tabs" role="tablist" aria-label="Housing portal">{[['mine','My housing'],['directory','Find housing'],['plan','Application plan']].map(([id,label])=><button key={id} role="tab" aria-selected={tab===id} onClick={()=>{setChoice('');setTab(id);}}>{label}</button>)}</div>{tab==='mine'?<HousingDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="housing" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<HousingPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
+}
+function HousingDetails() {
   const { state, dispatch, now, catalog } = useStore();
 
   const mine = useMemo(() => current(state.residences, state.term), [state.residences, state.term]);
@@ -105,7 +111,7 @@ export function Housing() {
   };
 
   return (
-    <Page bottom={26}>
+    <Page className="campus-personal" bottom={26} folds={false}>
       <TermSwitch />
 
       <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
