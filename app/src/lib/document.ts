@@ -105,9 +105,24 @@ export function nested(items: (string | Line)[]): Branch[] {
   return roots;
 }
 
+/**
+ * Which edge a paragraph is set against.
+ *
+ * `justify` is OOXML's `both` — the two edges, not the middle — and is
+ * spelled the way Word's own button is labelled rather than the way the
+ * format stores it.
+ *
+ * Absent means the document decides, which is what every paragraph written
+ * before this says and what nearly every paragraph should go on saying.
+ * Alignment is stored per block rather than per document because it is a
+ * property of *this* line — a centred heading in a left-aligned paper — and
+ * the document-wide half of page setup already exists in `lib/doclayout.ts`.
+ */
+export type Align = 'left' | 'center' | 'right' | 'justify';
+
 export type Block =
-  | { kind: 'heading'; level: 1 | 2 | 3; text: string }
-  | { kind: 'text'; text: string }
+  | { kind: 'heading'; level: 1 | 2 | 3; text: string; align?: Align }
+  | { kind: 'text'; text: string; align?: Align }
   /**
    * A list, whose items carry how far in they sit.
    *
@@ -124,7 +139,7 @@ export type Block =
    */
   | { kind: 'bullets'; items: (string | Line)[]; numbered: boolean }
   /** A pulled quotation, with where it came from — the app never quotes blind. */
-  | { kind: 'quote'; text: string; source: string }
+  | { kind: 'quote'; text: string; source: string; align?: Align }
   | { kind: 'table'; rows: string[][]; header: boolean; caption: string }
   | { kind: 'equation'; latex: string; caption: string }
   /**

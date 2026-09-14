@@ -1,5 +1,14 @@
+import type { CSSProperties } from 'react';
 import { Equation } from '../../components/Equation';
-import { nested, runs, type Block, type Branch, type Doc, type Run } from '../../lib/document';
+import {
+  nested,
+  runs,
+  type Align,
+  type Block,
+  type Branch,
+  type Doc,
+  type Run,
+} from '../../lib/document';
 import { fontStack, layoutOf, lineHeight, pageSize } from '../../lib/doclayout';
 import { outline } from '../../lib/doctools';
 
@@ -91,16 +100,31 @@ export function Paper({ doc, onGo }: { doc: Doc; onGo?: (at: number) => void }) 
   );
 }
 
+/**
+ * A block's alignment as the one style property it is.
+ *
+ * `undefined` rather than `'left'` when nothing is set, so the paragraph
+ * inherits whatever the page is doing instead of overriding it with a value
+ * that only looks like the absence of one.
+ */
+function set(align?: Align): CSSProperties | undefined {
+  return align ? { textAlign: align } : undefined;
+}
+
 /** One block, drawn the way it will print. */
 function Drawn({ block, headings }: { block: Block; headings: ReturnType<typeof outline> }) {
   switch (block.kind) {
     case 'heading': {
       const Tag = (['h3', 'h4', 'h5'] as const)[block.level - 1];
-      return <Tag className={`docpaper-h docpaper-h${block.level}`}>{<Marked text={block.text} />}</Tag>;
+      return (
+        <Tag className={`docpaper-h docpaper-h${block.level}`} style={set(block.align)}>
+          <Marked text={block.text} />
+        </Tag>
+      );
     }
     case 'text':
       return (
-        <p className="docpaper-p">
+        <p className="docpaper-p" style={set(block.align)}>
           <Marked text={block.text} />
         </p>
       );
@@ -120,7 +144,7 @@ function Drawn({ block, headings }: { block: Block; headings: ReturnType<typeof 
       );
     case 'quote':
       return (
-        <blockquote className="docpaper-quote">
+        <blockquote className="docpaper-quote" style={set(block.align)}>
           <Marked text={block.text} />
           {block.source.trim() && <footer className="docpaper-cap">— {block.source}</footer>}
         </blockquote>
