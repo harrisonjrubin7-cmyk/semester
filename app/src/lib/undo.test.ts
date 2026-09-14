@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   SHOWN_FOR,
   UNDOABLE,
+  changedSomething,
   fresh,
   snapshot,
   tookSomething,
@@ -139,5 +140,44 @@ describe('typing to confirm', () => {
     // Otherwise a course with no code would be deletable by typing nothing.
     expect(typedRight('', '')).toBe(false);
     expect(typedRight('  ', '   ')).toBe(false);
+  });
+});
+
+/**
+ * Moving a folder, which joins the three moves above.
+ *
+ * `moveFolder` had no control until an audit went looking, so there was
+ * nothing for an entry here to cover. Now that `screens/mine/Drive.tsx` opens
+ * the picker for a folder, it needs what the other moves need — and it needs
+ * `onChange`, because counting cannot see it: a move takes nothing away, so
+ * the list is exactly as long afterwards.
+ */
+describe('a folder moved', () => {
+  const withFolders = (rows: { id: string; parentId: string | null }[]): Persisted => ({
+    ...DEFAULT_PERSISTED,
+    folders: rows.map((r) => ({ id: r.id, name: r.id, parentId: r.parentId, created: 1 })),
+  });
+  const took = (before: Persisted) => snapshot(before, UNDOABLE.moveFolder, AT);
+
+  it('is offered back, like the other three moves', () => {
+    expect(undoableFor('moveFolder')?.label).toBe('Folder moved');
+    expect(undoableFor('moveFolder')?.onChange).toBe(true);
+    expect(UNDOABLE.moveFolder.fields).toEqual(['folders']);
+  });
+
+  it('is noticed even though the list did not get shorter', () => {
+    const before = withFolders([{ id: 'a', parentId: null }, { id: 'b', parentId: null }]);
+    const after = withFolders([{ id: 'a', parentId: null }, { id: 'b', parentId: 'a' }]);
+    // The reason it needs `onChange` at all: counting says nothing happened.
+    expect(after.folders).toHaveLength(before.folders.length);
+    expect(tookSomething(took(before), after)).toBe(false);
+    // Comparing does not. Reference equality per field, which is what the
+    // slice gives — it returns a new array only when it changed something.
+    expect(changedSomething(took(before), before, after)).toBe(true);
+  });
+
+  it('is not offered when nothing actually moved', () => {
+    const same = withFolders([{ id: 'a', parentId: null }, { id: 'b', parentId: null }]);
+    expect(changedSomething(took(same), same, same)).toBe(false);
   });
 });

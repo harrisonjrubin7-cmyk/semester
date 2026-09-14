@@ -144,3 +144,85 @@ describe('a block of time you keep', () => {
     expect(after.rest[1]).toEqual(gym);
   });
 });
+
+/**
+ * The corrections a screen could not make.
+ *
+ * Six operations sat in the reducer with nothing dispatching them, found by
+ * tracing every `Action` variant to its sender. The screens have them now —
+ * `TakenRow` and `RequirementRow` in `screens/Degree.tsx`, `Correct` and the
+ * per-visit remove in `screens/People.tsx` — and these are the reducer halves
+ * they lean on. Written against the patch semantics a form actually has: it
+ * sends the fields it holds, so anything it does not name has to survive.
+ */
+describe('correcting what was recorded', () => {
+  const course = { code: 'ECON 1020', title: 'Principles', term: 'Fall 2026', hours: 3, grade: 'B+', current: false };
+
+  it('edits a course on the transcript and keeps what the patch leaves out', () => {
+    const added = run(start(), { type: 'addTaken', patch: course });
+    const c = added.taken[0];
+    const fixed = run(added, { type: 'patchTaken', id: c.id, patch: { grade: 'A-', hours: 4 } });
+
+    expect(fixed.taken).toHaveLength(1);
+    expect(fixed.taken[0].grade).toBe('A-');
+    expect(fixed.taken[0].hours).toBe(4);
+    expect({ ...fixed.taken[0], grade: c.grade, hours: c.hours }).toEqual(c);
+  });
+
+  it('edits a requirement without disturbing its neighbours', () => {
+    const two = run(
+      start(),
+      { type: 'addRequirement', patch: { programme: 'Econ major', name: 'Theory', need: 'courses', count: 2, accepts: ['ECON 3010'] } },
+      { type: 'addRequirement', patch: { programme: 'Econ major', name: 'Methods', need: 'hours', count: 6, accepts: [] } },
+    );
+    const methods = two.requirements[1];
+    const after = run(two, {
+      type: 'patchRequirement',
+      id: two.requirements[0].id,
+      patch: { accepts: ['ECON 3010', 'ECON 3012'], count: 3 },
+    });
+
+    expect(after.requirements[0].accepts).toEqual(['ECON 3010', 'ECON 3012']);
+    expect(after.requirements[0].count).toBe(3);
+    expect(after.requirements[0].name).toBe('Theory');
+    expect(after.requirements[1]).toEqual(methods);
+  });
+
+  it('corrects a person without losing what was recorded about them', () => {
+    // The whole reason delete-and-retype was the wrong repair: `dropPerson`
+    // takes the visits with it, deliberately.
+    const added = run(start(), { type: 'addPerson', patch: { name: 'Dr Stromme', role: 'Professor' } });
+    const p = added.people[0];
+    const withVisit = run(added, { type: 'addVisit', patch: { personId: p.id, what: 'Talked about the thesis' } });
+
+    const fixed = run(withVisit, {
+      type: 'patchPerson',
+      id: p.id,
+      patch: { name: 'Dr. Strømme', email: 'strom@vanderbilt.edu' },
+    });
+    expect(fixed.people[0].name).toBe('Dr. Strømme');
+    expect(fixed.people[0].email).toBe('strom@vanderbilt.edu');
+    expect(fixed.people[0].role).toBe('Professor');
+    expect(fixed.visits).toHaveLength(1);
+
+    // And the contrast that makes the point.
+    expect(run(withVisit, { type: 'dropPerson', id: p.id }).visits).toEqual([]);
+  });
+
+  it('removes one recorded conversation and leaves the others', () => {
+    const added = run(start(), { type: 'addPerson', patch: { name: 'Dr Stromme', role: '' } });
+    const p = added.people[0];
+    const two = run(
+      added,
+      { type: 'addVisit', patch: { personId: p.id, what: 'First' } },
+      { type: 'addVisit', patch: { personId: p.id, what: 'Typed twice by mistake' } },
+    );
+    expect(two.visits).toHaveLength(2);
+
+    const after = run(two, { type: 'dropVisit', id: two.visits[1].id });
+    expect(after.visits).toHaveLength(1);
+    expect(after.visits[0].what).toBe('First');
+    // The person stays; only the line goes.
+    expect(after.people).toHaveLength(1);
+  });
+});

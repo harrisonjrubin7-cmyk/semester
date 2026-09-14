@@ -136,6 +136,8 @@ export function Drive() {
   const [busy, setBusy] = useState('');
   const [trouble, setTrouble] = useState('');
   const [moving, setMoving] = useState<Settled | null>(null);
+  /** The folder being nested under another, while the picker is open. */
+  const [nesting, setNesting] = useState<Shown | null>(null);
   /* The file whose deadline is being changed. A second panel rather than a
      second control on every row: the row already carries a star, a Move and a
      Bin, and a fourth button on a 390px phone is the point at which the file's
@@ -494,6 +496,7 @@ export function Drive() {
               onRename={(next) =>
                 dispatch({ type: 'renameFolder', id: folder.id, name: freeName(folders, folder.parentId, next) })
               }
+              onMove={() => setNesting(folder)}
               onDelete={async () => {
                 /*
                  * The files come out first, then the folder goes — and it is
@@ -641,12 +644,44 @@ export function Drive() {
 
       {moving && (
         <MoveTo
-          file={moving}
+          what={{ id: moving.id, name: moving.name, at: moving.folderId }}
           folders={folders}
           onClose={() => setMoving(null)}
           onPick={async (folderId) => {
             await dropInto(moving.id, folderId);
             setMoving(null);
+          }}
+        />
+      )}
+
+      {/* The same picker, for a folder. `canMove` refuses the move that would
+          put a folder inside itself, so the impossible rows are simply
+          disabled rather than explained. */}
+      {nesting && (
+        <MoveTo
+          what={{ id: nesting.id, name: nesting.name, at: nesting.parentId }}
+          folders={folders}
+          onClose={() => setNesting(null)}
+          onPick={(folderId) => {
+            dispatch({
+              type: 'moveFolder',
+              id: nesting.id,
+              // Renamed if the destination already has a folder of that name,
+              // the same call `onRename` makes — two siblings reading the same
+              // is the thing `freeName` exists to stop, and a move is as
+              // capable of causing it as a rename.
+              parentId: folderId,
+            });
+            dispatch({
+              type: 'renameFolder',
+              id: nesting.id,
+              name: freeName(
+                folders.filter((f) => f.id !== nesting.id),
+                folderId,
+                nesting.name,
+              ),
+            });
+            setNesting(null);
           }}
         />
       )}
@@ -953,6 +988,7 @@ function FolderRow({
   onOpen,
   onDropFile,
   onRename,
+  onMove,
   onDelete,
 }: {
   folder: Shown;
@@ -960,6 +996,7 @@ function FolderRow({
   onOpen: () => void;
   onDropFile: (id: string) => void;
   onRename: (name: string) => void;
+  onMove: () => void;
   onDelete: () => void;
 }) {
   const [over, setOver] = useState(false);
@@ -1034,6 +1071,15 @@ function FolderRow({
             style={{ flex: 'none', fontSize: 'var(--type-xs)', padding: 'var(--sp-2) var(--sp-3)' }}
           >
             Rename
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={onMove}
+            aria-label={`Move ${folder.name} into another folder`}
+            style={{ flex: 'none', fontSize: 'var(--type-xs)', padding: 'var(--sp-2) var(--sp-3)' }}
+          >
+            Move
           </button>
           <button
             type="button"
@@ -1275,19 +1321,35 @@ function FileAgainst({
 }
 
 /**
- * Choosing where a file goes, without dragging it there.
+ * Choosing where a file *or a folder* goes, without dragging it there.
  *
  * Every folder in one flat list, indented by depth rather than opened a level
  * at a time: a drive this size is three folders deep at most, and a picker you
  * have to navigate is a second drive to get lost in.
+ *
+ * ## It took a folder all along, which is why `canMove` looks like this
+ *
+ * `canMove(all, id, into)` refuses to move a thing into itself, refuses a
+ * course folder, and refuses a move into the thing's own subtree. Only the
+ * last of those means anything for a file — a file has no subtree — so the
+ * guard was written for folders, and `moveFolder` sat in the reducer with
+ * nothing dispatching it while a folder could only be renamed or deleted.
+ * Nesting one under another meant making a new folder in the right place and
+ * moving every file across by hand.
+ *
+ * So this takes the thing rather than the file. The old call passed the
+ * literal string `'file'` as the id, which made the subtree check a no-op that
+ * happened to be harmless; it now passes the real id, which is the same answer
+ * for a file and the correct one for a folder.
  */
 function MoveTo({
-  file,
+  what,
   folders,
   onClose,
   onPick,
 }: {
-  file: Settled;
+  /** The thing being moved: its id, what to call it, and where it is now. */
+  what: { id: string; name: string; at: string | null };
   folders: Shown[];
   onClose: () => void;
   onPick: (folderId: string | null) => void;
@@ -1305,7 +1367,7 @@ function MoveTo({
   }, [folders]);
 
   return (
-    <Folding name={`Move ${file.name}`}>
+    <Folding name={`Move ${what.name}`}>
       <Blueprint style={{ padding: 'var(--sp-5)' }}>
         <SectionLabel>Move it to</SectionLabel>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
@@ -1313,7 +1375,7 @@ function MoveTo({
             type="button"
             className="bare"
             onClick={() => onPick(null)}
-            disabled={file.folderId === null}
+            disabled={what.at === null}
             style={{ textAlign: 'left', padding: 'var(--sp-3)' }}
           >
             Drive
@@ -1324,7 +1386,7 @@ function MoveTo({
               type="button"
               className="bare"
               onClick={() => onPick(folder.id)}
-              disabled={folder.id === file.folderId || !canMove(folders, 'file', folder.id)}
+              disabled={folder.id === what.at || !canMove(folders, what.id, folder.id)}
               style={{
                 textAlign: 'left',
                 padding: 'var(--sp-3)',

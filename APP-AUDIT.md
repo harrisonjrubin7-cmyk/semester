@@ -110,7 +110,7 @@ find different things and this pass was started by the suite being green.
 
 | Check | Result |
 |---|---|
-| `npm test` | 7495 passed, 10 skipped, 359 files |
+| `npm test` | 7511 passed, 10 skipped, 359 files |
 | `npm run lint` (oxlint · style rule · label rule) | clean |
 | `npm run build` (`tsc -b` + vite) | clean |
 | `npm run check:university` | clean |
@@ -360,11 +360,92 @@ Worth recording, so the next pass does not re-spend the time:
 - **Corrupt and ancient stored state cannot break the app,** across all fifteen
   payloads tried.
 
+## The seven that were filed, and then done
+
+The list below was reported rather than fixed in the first pass, on the
+grounds that each was a missing convenience rather than something making the
+app say anything untrue. Asked to finish them, all seven now have a way in.
+
+Every one followed the same rule the codebase already states, in
+`screens/Mine.tsx` over `AppointmentRow`: **the row is the thing, pressing it
+turns that row into its fields, and Save puts it back.** Editing behind a
+press rather than always on, because "a list that is also a page of live
+inputs is a page where a stray tap lands in a field", and the draft re-seeded
+when the editor opens rather than kept in sync, because "a draft that follows
+the thing while you are typing in it is a draft that fights you".
+
+| Action | The way in, now |
+|---|---|
+| `patchTaken` | `TakenRow` in `screens/Degree.tsx` — press a transcript row, correct any of its six fields, Save |
+| `patchRequirement` | `RequirementRow` beside it — the same, including the accepts list that was the worst to retype |
+| `patchPerson` | `Correct` in `screens/People.tsx`, inside the drawer that already opens on a press |
+| `dropVisit` | a × on each recorded conversation, in the same drawer |
+| `dropSitting` | `PaperTag` in `screens/Grades.tsx` — the score tag arms, then removes |
+| `moveFolder` | a **Move** button on `FolderRow`, opening the picker files already use |
+| `addTermDate` | `YourOwn` at the foot of `screens/Registrar.tsx` |
+
+Four things worth recording about the doing of it.
+
+**`canMove` had been written for folders all along.** It refuses a move into
+the thing's own subtree — and a file has no subtree, so that guard could never
+fire on the only caller it had. The picker now takes the thing rather than the
+file; the old call passed the literal string `'file'` as the id, which made
+the subtree check a no-op that happened to be harmless, and it now passes the
+real id, which is the same answer for a file and the correct one for a folder.
+Verified in the browser: offering to move *Problem sets*, the picker disables
+*Problem sets* itself and disables *Drive* because it is already there.
+
+**Two of the seven already had undo labels written for them.** `lib/undo.ts`
+carried `dropVisit: { label: 'Conversation removed' }` and `dropSitting:
+{ label: 'Paper removed' }` — undo copy for controls that did not exist. Both
+new controls inherit it, and the toast was visible on the first run.
+
+**A third needed one adding, by that file's own argument.** Its rule is that
+an edit is not undoable because "an edit leaves the thing there to edit back",
+but that the three *moves* are exceptions, because the previous state "is gone
+from the screen the moment the thing lands". A moved folder leaves the view it
+was in, the place it came from is not on screen to put it back from, and the
+picker is a list of near-identical rows one tap apart. `moveFolder` is now the
+fourth entry, with `onChange` — counting cannot see a move, since the list is
+exactly as long afterwards.
+
+**The three patches correctly get no undo,** by the same rule, and
+`addTermDate` adds rather than removes.
+
+**None of the seven needed the style ledger raised.** Where the surrounding
+idiom was off the scale, the new code uses tokens instead — `var(--type-xs)`,
+`var(--sp-3)`, `paddingInline` — so the per-file budgets in
+`src/styles/budget.ts` are untouched.
+
+### How they were checked
+
+Driven in a real browser, not only in the suite, because every one of these is
+a control that either exists on screen or does not:
+
+```
+patchTaken       edit opens · grade B+ → A- · row still there
+patchRequirement accepts list ECON 3010 → ECON 3010, ECON 3012
+patchPerson      name and role corrected · both conversations survived
+dropVisit        one removed, one left, the person kept
+addTermDate      20 → 21 date inputs · its own row, dated · form cleared
+                 · and Clear removes it for good, where a landmark is emptied
+moveFolder       picker disables the impossible rows · Problem sets leaves the
+                 root and is found inside Econ
+dropSitting      12% arms to "Remove?" then goes · 78% kept
+```
+
+Two driver traps worth writing down, because both cost a cycle and both are
+the tester's fault rather than the app's. Every run of capitals in this app is
+`text-transform`, so an exact `innerText` match on `Taken`, `Add` or `Remove?`
+finds nothing — the run skill says so and this pass still did it twice. And
+once a row can be edited there are **two** fields carrying each label, the add
+form's and the editor's, so `querySelector` takes the form and the assertion
+then reports the edit as not having happened.
+
 ## Still open, and deliberately not fixed here
 
 Found by tracing every `Action` variant to its sender. These are reported
-rather than changed, because each is a product decision about a capability
-rather than a defect in one:
+rather than changed:
 
 **Dead state — never read, never written, in any commit in this repository:**
 
@@ -380,24 +461,9 @@ consumer on either side. They were added beside siblings that *are* used
 (`setHomeTab`, `setCoursesTab`, `setMeTab`, `setCostsTab`) and nothing ever
 reached for them.
 
-**Operations the reducer supports and no screen offers.** The data is live and
-on screen in each case; only the verb is missing:
-
-| Action | What cannot be done |
-|---|---|
-| `patchRequirement` | a degree requirement cannot be edited |
-| `patchTaken` | a completed course cannot be edited |
-| `patchPerson` | a person can be added and dropped, never corrected |
-| `dropVisit` | a visit cannot be deleted |
-| `dropSitting` | a sitting cannot be deleted |
-| `moveFolder` | a folder cannot be moved into another |
-| `addTermDate` | a date of your own cannot be added to the registrar list |
-
-`setScale` was on this list and is §5 above — it was the one with a user-visible
-consequence, so it was fixed rather than filed. The seven left are corrections
-and deletions on data that is already on screen; each is a small screen's worth
-of work and none of them makes the app say something untrue in the meantime,
-which is why they are reported here instead.
+**Operations the reducer supports and no screen offers.** None left — the
+seven are the section above, and `setScale` is §5. Every `Action` variant in
+`state/shape.ts` now has a sender in the app.
 
 **Out of scope by design.** `docs/IMPLEMENTATION_STATUS.md` lists the work that
 needs a real institutional integration — SIS transactions, official
@@ -420,4 +486,15 @@ honest.
   a school with fewer letters, an added one — and that `gpaLine` says the
   number is assumed while it is, claims it once it is not, and still reports
   the uncounted courses either way.
-- `src/styles/budget.ts` regenerated for the files that grew.
+- `state/slices/mine.test.ts` covers `patchTaken`, `patchRequirement`,
+  `patchPerson` and `dropVisit` — including that a patch leaves the fields it
+  does not name alone, that correcting a person keeps their conversations
+  where `dropPerson` deliberately does not, and that removing one line leaves
+  the rest.
+- `state/slices/made.test.ts` covers `moveFolder`; `state/reducer.test.ts`
+  covers `dropSitting` and `addTermDate`, including the asymmetry the reducer
+  documents — a landmark is emptied, one of your own goes for good.
+- `lib/undo.test.ts` covers the new `moveFolder` entry, and the reason it
+  needs `onChange`: counting says nothing happened, comparing says it did.
+- `src/styles/budget.ts` regenerated for the files that grew in §3 and §5. The
+  seven needed no raise.

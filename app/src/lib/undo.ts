@@ -69,6 +69,18 @@ export const UNDOABLE: Record<string, Undoable> = {
   moveTask: { label: 'Task moved', fields: ['tasks'], onChange: true },
   moveAppointment: { label: 'Moved', fields: ['appointments'], onChange: true },
   moveItem: { label: 'Deadline moved', fields: ['courses'], onChange: true },
+  /*
+   * A fourth, for the same reason and arrived at from the other end.
+   *
+   * `moveFolder` had no control at all until an audit went looking — the
+   * reducer case sat unused while a folder could only be renamed or deleted —
+   * so there was nothing for an entry here to cover. Now that
+   * `screens/mine/Drive.tsx` opens the picker for a folder, the argument above
+   * applies to it more than to a drag: the folder leaves the view it was in
+   * the moment it lands, the place it came from is not on screen to put it
+   * back from, and the picker is a list of near-identical rows one tap apart.
+   */
+  moveFolder: { label: 'Folder moved', fields: ['folders'], onChange: true },
   deleteTask: { label: 'Task deleted', fields: ['tasks'] },
   deleteAppointment: { label: 'Appointment deleted', fields: ['appointments'] },
   removeCommitment: { label: 'Activity removed', fields: ['commitments'] },
