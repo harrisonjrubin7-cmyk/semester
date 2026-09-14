@@ -99,6 +99,29 @@ jobs:
         working-directory: app
         run: npm run test:zones
 
+      # The same suite again, in a different order.
+      #
+      # Same argument as the timezone step above: a run that is green in one
+      # arrangement and only ever tried in that arrangement is not saying what
+      # it looks like it is saying. A test that leaves something behind — a
+      # module flag, a hash in the address bar — and a test that reads it back
+      # pass together for as long as they run in the order they were written
+      # in, and fail on the day somebody adds a test between them, renames a
+      # file, or the runner shards differently. That failure arrives attached
+      # to a change that did not cause it.
+      #
+      # Two were found this way and fixed: `lib/claude.ts` kept a proxy stood
+      # down for the session, and `components/splash.test.tsx` left
+      # `#/onboarding` in jsdom's address bar for the next test to read.
+      #
+      # Deliberately unseeded. A fixed seed is one more arrangement, which is
+      # the thing this step exists to stop trusting. When it fails, the run
+      # prints the seed it used, and `npx vitest run --sequence.shuffle
+      # --sequence.seed=<n>` reproduces it exactly.
+      - name: Test in a different order
+        working-directory: app
+        run: npm run test:shuffle
+
       - name: Build
         working-directory: app
         run: npm run build

@@ -45,6 +45,19 @@ const curtain = () => host.querySelector('.splash');
 beforeEach(() => {
   vi.useFakeTimers();
   localStorage.clear();
+  /*
+   * A page load is an address as well as a module, and the address is the
+   * half that was being left behind.
+   *
+   * The third test below opens onboarding, and the store writes the screen it
+   * lands on into the hash. jsdom keeps one `location` for the whole file, so
+   * the next test started with `#/onboarding` still in the bar, the store read
+   * it back, and the curtain correctly declined to cover onboarding — which
+   * looked exactly like the curtain failing to appear. It only showed up when
+   * the tests ran in a different order, which is to say: on some other day,
+   * in CI, on a change that had nothing to do with it.
+   */
+  history.replaceState(null, '', '/');
   // A new launch: what the module flag means is "this page load", and each
   // test is a page load. See `lib/splash.ts`.
   forgetSplash();
