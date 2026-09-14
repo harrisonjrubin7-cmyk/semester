@@ -11,7 +11,7 @@
  * Row one is the shelves. Row two is the screens on the shelf you are
  * standing on. Under both, the current screen's own sentence from the
  * registry — which is the cheapest discoverability the app can buy, because
- * fifty-five screens already carry a blurb that until now only the directory
+ * sixty screens already carry a blurb that until now only the directory
  * and the search results ever showed.
  *
  * ## Everything the school has, not everything you have unlocked
@@ -21,7 +21,7 @@
  * and worth stating plainly, because `lib/reveal.ts` argues the opposite for
  * the directory.
  *
- * The argument there is that a directory of forty-six names is a wall to
+ * The argument there is that a directory of sixty names is a wall to
  * somebody who opened the app an hour ago. It is a good argument about a
  * directory. These rows are not a directory: they are the chrome you navigate
  * by, they show one shelf at a time rather than all of them, and a row that

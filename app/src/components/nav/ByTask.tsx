@@ -35,7 +35,7 @@ import type { Screen } from '../../lib/types';
  *
  * ## Why the launcher's shape, exactly
  *
- * These are the same fifty-five screens the launcher files by shelf, and the
+ * These are the same sixty screens the launcher files by shelf, and the
  * two views answer different questions about them — *where does this live*
  * against *what was I trying to do*. Two grids of tiles that differed by four
  * pixels and a corner radius would be the kind of difference nobody can name

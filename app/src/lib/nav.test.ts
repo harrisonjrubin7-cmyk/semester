@@ -460,9 +460,9 @@ describe('the promise', () => {
  *
  * The assistant button is named for where you are — "Ask about Today", "Ask
  * about Getting there" — and it built that name from the registry alone, with
- * the screen id as the fallback. Twenty of the sixty-nine screens are not in
- * the registry on purpose: the eight settings pages, and the twelve you reach
- * from something rather than go to. So on every one of them the fallback was
+ * the screen id as the fallback. Twenty-two of the eighty-two screens are not
+ * in the registry on purpose: the eight settings pages, and the fourteen you
+ * reach from something rather than go to. So on every one of them the fallback was
  * the answer, and a screen reader heard the identifier: "Ask about setNav",
  * "Ask about drill", and, in the sheet it opens, "Looking at: setLook".
  *

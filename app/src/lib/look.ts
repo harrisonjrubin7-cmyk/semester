@@ -716,7 +716,7 @@ export function feedStyleOf(id: string | undefined): string {
  *
  * Genuinely different habits rather than four skins: the bar suits somebody
  * who lives in four screens, the feed somebody who wants the day in one
- * scroll, the springboard somebody who has forty-six screens and would rather
+ * scroll, the springboard somebody who has sixty screens and would rather
  * see them than remember which shelf they are on, the shelves somebody who
  * wants the shelf and its screens visible at once.
  */
@@ -1321,8 +1321,26 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     '--chrome-ink': g.light ? '#f7f5f0' : '#08090c',
     '--chrome-glint': g.light ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.35)',
 
+    /*
+     * The glint is the lightest band of the sweep, and on a light ground it
+     * was the one place the label stopped being readable.
+     *
+     * `--chrome-ink` is named for this gradient — "text sitting ON the
+     * brushed metal", two lines up — and on the five light grounds it met the
+     * 52% stop at 3.72 to 4.17 against the 4.5 its 14px weight-600 label
+     * needs. Not large text by any reading of the rule, so 4.5 is the bar and
+     * the band missed it. The `text-shadow` above helps a real reader and
+     * counts for nothing in the standard, which is the right way round: it
+     * was holding up a contrast the colours were not delivering.
+     *
+     * `.58` rather than `.5`. The worst ground needs `.56`, this clears all
+     * five, and the band is still the lightest of the five stops — lighter
+     * than the `.62` and `.78` either side of it — so the sweep is the same
+     * shape it was. The dark branch was never in question: its worst stop is
+     * 9.57.
+     */
     '--chrome': g.light
-      ? 'linear-gradient(172deg, rgba(0,0,0,.86), rgba(0,0,0,.62) 46%, rgba(0,0,0,.5) 52%, rgba(0,0,0,.78) 65%, rgba(0,0,0,.88))'
+      ? 'linear-gradient(172deg, rgba(0,0,0,.86), rgba(0,0,0,.62) 46%, rgba(0,0,0,.58) 52%, rgba(0,0,0,.78) 65%, rgba(0,0,0,.88))'
       : 'linear-gradient(172deg, #f7f8fa, #c9ced8 46%, #aeb4c0 52%, #dfe3ea 65%, #f4f6f9)',
   };
 }

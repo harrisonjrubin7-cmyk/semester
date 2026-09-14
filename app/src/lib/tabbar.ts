@@ -5,7 +5,7 @@
  * guessing at what a student opens most. It is a reasonable guess and it is
  * wrong for most people: somebody with no classes across campus never opens
  * the map, and somebody drafting a thesis wants Essay in the bar rather than
- * three taps down a directory. Meanwhile every one of the forty-two screens
+ * three taps down a directory. Meanwhile every one of the sixty screens
  * in `lib/nav.ts` is reachable, so the bar is not about what exists — it is
  * about which five things are worth one tap instead of three.
  *

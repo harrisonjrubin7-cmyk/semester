@@ -1,4 +1,5 @@
 import { blocksFor, classNote, codeOf, type Catalog } from '../data/catalog';
+import { occursOn } from './repeat';
 import { CAMPUS_CALENDARS } from '../data/events';
 import {
   dateToIso,
@@ -379,10 +380,44 @@ export function outstanding(
   );
 }
 
-/** Appointments on a given day, in time order. */
+/**
+ * How long an appointment runs when it does not say.
+ *
+ * An hour. Every appointment used to be drawn as fifty minutes — a class
+ * period, which is what the grid had a constant for — so a four-hour shift
+ * and a coffee were the same block. An hour is the honest default for
+ * something somebody typed a start time for and no end, and it is what both
+ * Google and Outlook put in the box.
+ */
+export const LONG_ENOUGH = 60;
+
+/**
+ * How long one of yours runs. Named apart from `lengthOf` below, which
+ * answers the same question about a class and reads it off the syllabus.
+ */
+export function appointmentLength(a: Appointment): number {
+  return a.minutes && a.minutes > 0 ? a.minutes : LONG_ENOUGH;
+}
+
+/**
+ * Appointments on a given day, in time order — the series expanded.
+ *
+ * The one seam every view reads appointments through, which is why the repeat
+ * rule is expanded here rather than in each of them. What comes back is the
+ * *occurrence*: a copy with `date` set to the day asked for, so everything
+ * downstream keeps reading `a.date` and none of it has to know a rule exists.
+ *
+ * The id is not changed. Two occurrences of one series share an id on
+ * purpose — it is one stored appointment, and the id is what a move or a
+ * delete names. Which occurrence they mean is the date, passed separately;
+ * see `moveAppointment` and `deleteAppointment` in `state/slices/mine.ts`.
+ */
 export function appointmentsOn(appointments: Appointment[], date: Date): Appointment[] {
   const iso = dateToIso(date);
-  return appointments.filter((a) => a.date === iso).sort((a, b) => a.at - b.at);
+  return appointments
+    .filter((a) => occursOn(a.date, a.repeat, iso))
+    .map((a) => (a.date === iso ? a : { ...a, date: iso }))
+    .sort((a, b) => a.at - b.at);
 }
 
 /**
@@ -423,6 +458,9 @@ export function railFor(
   const mine = appointmentsOn(appointments, date).map((a) => ({
     time: a.time,
     at: a.at,
+    // Its own length, so a four-hour shift is drawn as four hours. Every
+    // appointment used to be fifty minutes on every grid — see `LONG_ENOUGH`.
+    minutes: appointmentLength(a),
     title: a.title,
     meta: a.where || 'Added by you',
     // The place, said rather than left in the line above: with nowhere
@@ -497,9 +535,11 @@ export function railFor(
 /**
  * A day as blocks an hour grid can draw.
  *
- * Classes carry a real length from the syllabus; anything you added is a point
- * in time, so it gets fifty minutes — long enough to read, short enough not to
- * imply a duration nobody stated.
+ * Every block states its own length now: a class reads it off the syllabus's
+ * meeting line, a commitment carries one, and an appointment has a field for
+ * it — an hour where nobody said. Until it did, everything you added was
+ * drawn as fifty minutes, so a four-hour shift and a coffee were the same
+ * rectangle, which is the one distinction an hour grid exists to make.
  */
 export function hoursFor(
   cat: Catalog,
@@ -527,8 +567,19 @@ export function hoursFor(
     id: `${b.at}-${i}-${b.title}`,
     ...(b.from ? { from: b.from } : {}),
     title: b.title,
-    // A commitment states its own length; an appointment is a point in time
-    // and gets fifty minutes rather than a duration nobody stated.
+    /*
+     * Whatever the block states, and only a class falls back to the syllabus.
+     *
+     * An appointment states its own length now — `railFor` puts it there, so
+     * the grid, the rail and the .ics all draw the same block. A task and a
+     * deadline still do not: they are a moment rather than a span, and fifty
+     * minutes is long enough to read without implying a duration nobody gave.
+     *
+     * The fallback has to stay behind `b.mine`. A task carries the course it
+     * is for, and `lengthOf` reads a length off that course's meeting line —
+     * so without the guard a memo to draft for PSCI was drawn seventy-five
+     * minutes long because the seminar is.
+     */
     minutes: b.minutes ?? (b.mine ? 50 : lengthOf(cat, b)),
     meta: b.meta,
     at: b.at,

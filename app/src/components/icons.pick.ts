@@ -3,9 +3,9 @@
  *
  * Split out of `TabIcon.tsx` because two callers now need the answer and only
  * one of them wants a rendered element: the launcher's tiles carry a cluster
- * of glyphs and have to tell two apart, since most of the fifty-five screens
- * have no drawing of their own and fall back to their shelf's — a cluster
- * taken naively is the same little drawing three times.
+ * of glyphs and have to tell two apart, and a screen with no drawing of its
+ * own falls back to its shelf's — so a cluster taken naively could be the
+ * same little drawing three times.
  *
  * A module of its own rather than another export beside the component, so
  * fast refresh keeps working on the file that draws things.
@@ -205,11 +205,12 @@ export function glyphFor(screen: Screen): Glyph {
 /**
  * Up to `limit` screens whose glyphs differ, for a tile that stands for many.
  *
- * Twenty-two of the fifty-five screens have a glyph of their own; the rest
- * fall back to their shelf's. So the first three screens on a shelf — or
- * under an intention — are often the same drawing three times, which reads as
- * a decorative flourish rather than as a cluster of what is inside. One glyph
- * is a truer answer than three copies of it.
+ * Twenty-two of the fifty-five screens had a glyph of their own when this was
+ * written, and the first three on a shelf were often the same drawing three
+ * times — which reads as a decorative flourish rather than as a cluster of
+ * what is inside. Fifty-nine of the sixty do now, so the rule rarely has
+ * anything to drop; it stays because the fallback it was written for is still
+ * there, and because one glyph is a truer answer than three copies of it.
  *
  * It was the launcher's, privately, until the task index grew tiles of its
  * own. Two clusters drawn by two rules would differ in exactly the way nobody

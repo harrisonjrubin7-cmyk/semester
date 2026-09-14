@@ -240,10 +240,17 @@ export function tidy(fn: Fn): Fn {
     else seen.set(key, { ...p });
   }
   const terms = [...seen.values()].filter((p) => Math.abs(p.c) >= 1e-7);
-  // Slowest decay first, which is how an answer is written: the term that is
-  // still there at the end of the page leads, and `e^{-t} - e^{-2t}` reads the
-  // way it is spoken rather than starting with a minus sign.
-  terms.sort((p, q) => p.delay - q.delay || q.a - p.a || p.n - q.n || (p.wave === q.wave ? 0 : p.wave === 'cos' ? -1 : 1));
+  /*
+   * Slowest decay first, and within that the highest power of t first.
+   *
+   * Both halves are how an answer is written rather than how it was found: the
+   * term still there at the end of the page leads, so `e^{-t} - e^{-2t}` reads
+   * the way it is spoken, and the powers run down as they do in every
+   * polynomial, so a convolution comes out `t - 1 + e^{-t}` rather than
+   * `-1 + t + e^{-t}`. A sum that opens with a minus sign is one somebody has
+   * to read twice.
+   */
+  terms.sort((p, q) => p.delay - q.delay || q.a - p.a || q.n - p.n || (p.wave === q.wave ? 0 : p.wave === 'cos' ? -1 : 1));
   return { terms, impulses: fn.impulses.filter((i) => Math.abs(i.c) >= 1e-7) };
 }
 
@@ -321,7 +328,46 @@ function names(node: Node, into: Set<string> = new Set()): Set<string> {
 }
 
 /** The names this transforms by rule rather than by arithmetic. */
-const FAMILY = new Set(['u', 'step', 'heaviside', 'δ', 'delta', 'dirac', 'impulse', 'exp', 'sin', 'cos', 'sinh', 'cosh']);
+const FAMILY = new Set([
+  'u', 'step', 'heaviside', 'δ', 'delta', 'dirac', 'impulse',
+  'exp', 'sin', 'cos', 'sinh', 'cosh', 'conv', 'convolve', 'convolution',
+]);
+
+/** `f * g`, in the three spellings — the one thing in the family that is not a shape. */
+const CONV = new Set(['conv', 'convolve', 'convolution']);
+
+/** Whether any part of the tree is a convolution, wherever it is buried. */
+function convolving(node: Node): boolean {
+  switch (node.kind) {
+    case 'call':
+    case 'apply':
+      return CONV.has(node.name) || node.args.some(convolving) || (node.kind === 'apply' && node.power ? convolving(node.power) : false);
+    case 'neg':
+    case 'fact':
+    case 'percent':
+    case 'abs':
+      return convolving(node.body);
+    case 'op':
+      return convolving(node.left) || convolving(node.right);
+    case 'list':
+      return node.items.some(convolving);
+    case 'range':
+      return convolving(node.from) || (node.second ? convolving(node.second) : false) || convolving(node.to);
+    case 'big':
+      return convolving(node.from) || convolving(node.to) || convolving(node.body);
+    default:
+      return false;
+  }
+}
+
+/**
+ * Whether this depends on t, which is not the same as having a t written in it.
+ *
+ * `conv(1, 1)` has no t in it and is t: the convolution of two constants is a
+ * ramp. Folding it to a number because the letter is absent would be the one
+ * silently wrong answer in this file.
+ */
+const varying = (node: Node, of: string): boolean => mentions(node, of) || convolving(node);
 
 /**
  * `a(x + 1)`, `f(t)` and `u(t - 2)` all arrive wearing the same brackets.
@@ -489,7 +535,7 @@ const plus = (a: Fn, b: Fn): Fn => ({ terms: [...a.terms, ...b.terms], impulses:
  * anything outside it comes back as a sentence naming the piece.
  */
 export function readFn(node: Node, of: string, scope: Scope = {}): Got<Fn> {
-  if (!mentions(node, of)) {
+  if (!varying(node, of)) {
     const got = fixed(node, scope);
     return got.ok ? good(constant(got.it)) : got;
   }
@@ -531,7 +577,7 @@ function readOp(node: Node & { kind: 'op' }, of: string, scope: Scope): Got<Fn> 
     return timesFn(left.it, right.it);
   }
   if (node.op === '/') {
-    if (mentions(node.right, of)) return bad(`Dividing by something with ${of} in it is not in this family.`);
+    if (varying(node.right, of)) return bad(`Dividing by something with ${of} in it is not in this family.`);
     const by = fixed(node.right, scope);
     if (!by.ok) return by;
     if (Math.abs(by.it) < TINY) return bad('That divides by zero.');
@@ -543,7 +589,7 @@ function readOp(node: Node & { kind: 'op' }, of: string, scope: Scope): Got<Fn> 
 }
 
 function readPower(base: Node, power: Node, of: string, scope: Scope): Got<Fn> {
-  if (!mentions(power, of)) {
+  if (!varying(power, of)) {
     const n = fixed(power, scope);
     if (!n.ok) return n;
     if (!Number.isInteger(n.it) || n.it < 0 || n.it > 12) {
@@ -560,7 +606,7 @@ function readPower(base: Node, power: Node, of: string, scope: Scope): Got<Fn> {
     return good(out);
   }
   // `2^t` and `e^{-3t}` are the same rule: a constant raised to a straight line.
-  if (mentions(base, of)) return bad(`Something with ${of} in it raised to a power of ${of} has no transform here.`);
+  if (varying(base, of)) return bad(`Something with ${of} in it raised to a power of ${of} has no transform here.`);
   const k = fixed(base, scope);
   if (!k.ok) return k;
   if (k.it <= 0) return bad('Only a positive number can be raised to a power of t here.');
@@ -590,6 +636,14 @@ function readCall(name: string, args: Node[], of: string, scope: Scope): Got<Fn>
   if (KICK.has(name)) {
     const at = shiftPoint(args, of, scope, 'An impulse');
     return at.ok ? good({ terms: [], impulses: [{ c: 1, at: at.it }] }) : at;
+  }
+  if (CONV.has(name)) {
+    if (args.length !== 2) return bad('A convolution takes two functions: conv(t, e^{-t}).');
+    const f = readFn(args[0], of, scope);
+    if (!f.ok) return f;
+    const g = readFn(args[1], of, scope);
+    if (!g.ok) return g;
+    return convolved(f.it, g.it);
   }
   if (args.length !== 1) return bad(`${name} takes one thing in its brackets here.`);
   const line = straight(args[0], of, scope);
@@ -1040,6 +1094,91 @@ export function inverse(rat: Transform): Got<Fn> {
   return good(tidy(out));
 }
 
+// ── Convolution, which is a multiplication once you are in s ─────────────
+
+/**
+ * `f * g` — the integral of `f(τ)g(t − τ)` from 0 to t, without the integral.
+ *
+ * This is the convolution theorem and it is the whole reason the theorem is
+ * worth knowing: the integral is awkward, the product of the transforms is
+ * not, and the family here is closed under both directions. So the work is
+ * three steps that already exist — transform each side, multiply, come back —
+ * and the answer is exact rather than a quadrature over a grid.
+ *
+ * Delays add, which is right: a thing switched on at two convolved with a
+ * thing switched on at three is switched on at five, and `timesPiece` gets
+ * that for free from the `e^{-as}e^{-bs}` the two carry.
+ */
+export function convolved(f: Fn, g: Fn): Got<Fn> {
+  const product: Transform = [];
+  for (const p of forward(f)) for (const q of forward(g)) product.push(timesPiece(p, q));
+  return inverse(product);
+}
+
+// ── Where a transform blows up, and what that says about the thing ───────
+
+/** A root of the denominator: where the transform is infinite. */
+export interface Pole {
+  re: number;
+  im: number;
+}
+
+/**
+ * The poles of a transform.
+ *
+ * Every term of the answer is `e^{(pole)t}` times something slower, so the
+ * poles are the whole of how a system behaves without solving it: left of the
+ * axis it dies away, right of it it grows, on it it rings forever. That is why
+ * an engineer looks at these before looking at the curve.
+ */
+export function poles(rat: Transform): Pole[] {
+  const out: Pole[] = [];
+  for (const p of rat) {
+    const den = pTrim(p.den);
+    if (den.length < 2) continue;
+    for (const g of gathered(roots(den), den)) {
+      for (let i = 0; i < g.times; i += 1) out.push({ re: round(g.root.re), im: round(g.root.im) });
+    }
+  }
+  return out.sort((a, b) => b.re - a.re || Math.abs(a.im) - Math.abs(b.im));
+}
+
+/** A pole, or a conjugate pair written once with a ±. */
+function poleName(p: Pole): string {
+  if (Math.abs(p.im) < 1e-7) return numberText(p.re);
+  const real = Math.abs(p.re) < 1e-7 ? '' : `${numberText(p.re)} ± `;
+  return `${real}${Math.abs(p.im) === 1 ? '' : numberText(Math.abs(p.im))}i`;
+}
+
+/**
+ * What the poles say, in a sentence.
+ *
+ * The sentence rather than the numbers alone, because the numbers are only
+ * worth having for what they mean: a pole at `-0.15 ± 0.98861i` is a thing
+ * that wobbles and settles, and reading that off two coordinates is a skill
+ * somebody is still learning on the week they need this screen.
+ */
+export function poleText(list: Pole[]): string {
+  if (!list.length) return 'No poles: this is a polynomial in s, which is an impulse and its slopes.';
+  const seen: Pole[] = [];
+  for (const p of list) {
+    if (p.im < 0 && seen.some((q) => Math.abs(q.re - p.re) < 1e-7 && Math.abs(q.im + p.im) < 1e-7)) continue;
+    if (seen.some((q) => q.re === p.re && q.im === p.im)) continue;
+    seen.push(p);
+  }
+  const where = seen.map(poleName).join(', ');
+  const worst = Math.max(...list.map((p) => p.re));
+  const says =
+    worst < -1e-7
+      ? 'all left of the axis, so it settles'
+      : worst > 1e-7
+        ? 'one of them right of the axis, so it runs away'
+        : 'one of them on the axis, so it neither settles nor runs away';
+  // Counted before the pair is collapsed: `-1 ± 2i` is two poles written once,
+  // and "Pole at -1 ± 2i" is a sentence about a thing that does not exist.
+  return `${list.length === 1 ? 'Pole' : 'Poles'} at ${where} — ${says}.`;
+}
+
 // ── The reason for the other two: solving an equation exactly ────────────
 
 /** The same tree with one name replaced — how `y` and `y'` are taken out to leave the forcing. */
@@ -1183,6 +1322,24 @@ export function exactly(opts: {
     y0: opts.y0,
     v0: opts.v0,
   });
+}
+
+/**
+ * The transfer function of `y'' = a y + b y' + f(t)`, which is `1/(s² − bs − a)`.
+ *
+ * The same `Q(s)` the solution above divides by, read on its own. That is not
+ * a coincidence and it is the point: dividing by `Q` is what solving the
+ * equation *is* once it is transformed, so `1/Q` is the equation itself,
+ * written as the thing it does to whatever is put into it. The initial
+ * conditions are nowhere in it, which is also right — a transfer function is
+ * the system and not the run.
+ */
+export function transferOf(opts: { body: Node; of: string; order: 1 | 2; scope: Scope }): Got<Transform> {
+  const read = linearOde(opts.body, opts.of, opts.scope);
+  if (!read.ok) return read;
+  const { a, b } = read.it;
+  const q: Poly = opts.order === 1 ? [-a, 1] : [-a, -b, 1];
+  return good([{ delay: 0, num: [1], den: q }]);
 }
 
 // ── Writing it down ──────────────────────────────────────────────────────

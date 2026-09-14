@@ -54,7 +54,8 @@ import type { State } from '../state/shape';
 import type { Screen } from './types';
 import type { Capabilities } from './school';
 import { swipeUnit } from './school';
-import { datedItems, nextClass, upcomingItems } from './select';
+import { appointmentsOn, datedItems, nextClass, upcomingItems } from './select';
+import { occurrences } from './repeat';
 import { overdueCount } from './standing';
 import { termProgress } from './you';
 import { week as weekAhead, headline, pressure, showHours } from './ahead';
@@ -169,7 +170,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
    * `overdue`. This did not, so the three numbers in the same row answered
    * different questions: finish every deadline in the week and "Due today"
    * fell to nothing while "This week" sat where it was. That row is carried
-   * at the top of twenty-three screens.
+   * at the top of every screen whose hero counts the term's work.
    *
    * It also reaches the "Work on it" hero, whose "Nothing due this week"
    * could never appear for somebody who had done the week's work — which is
@@ -222,7 +223,10 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       label: 'Due today',
       value: num(
         mineToday.filter((k) => !k.done).length +
-          state.appointments.filter((a) => a.date === iso).length,
+          // Through `appointmentsOn`, which expands a repeat. Counting
+          // `a.date === iso` reads only the first occurrence, so a Tuesday
+          // shift was on this figure once a term and on the calendar weekly.
+          appointmentsOn(state.appointments, now).length,
       ),
       fraction: mineToday.length ? mineToday.filter((k) => k.done).length / mineToday.length : undefined,
     },
@@ -230,7 +234,10 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       label: 'This week',
       value: num(
         state.tasks.filter((k) => !k.done && k.date !== null && k.date > iso && k.date <= weekEnd).length +
-          state.appointments.filter((a) => a.date > iso && a.date <= weekEnd).length,
+          state.appointments.reduce(
+            (n, a) => n + occurrences(a.date, a.repeat, shiftIso(iso, 1), weekEnd).length,
+            0,
+          ),
       ),
     },
     {

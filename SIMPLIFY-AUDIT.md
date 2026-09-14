@@ -1319,6 +1319,61 @@ which is the attribute a tab actually has.
 Incidental: `.tabstrip`, `.tabstrip-tab` and `.tabstrip-tab[aria-current]` in
 `app.css` have no `.tsx` user at all. Left alone here rather than swept into a
 pass about something else, and recorded so the next dead-CSS sweep has it.
+**Done in E3b below.**
+
+### E3b — the rules that style nothing · **CUT**
+
+**131 lines** of `app.css` and `features.css`, 25 classes, styling markup that
+does not exist.
+
+| Sheet | What it was |
+| --- | --- |
+| `app.css` | the spreadsheet formula bar's name box (`.fx-where`, `.fx-field`), `.tabstrip*` superseded by `components/Tabs.tsx`, `.chrome-rule`, `.soft-folder-tile`, `.desk-sheet-label`, and `.chrome-text.is-late` |
+| `features.css` | seventeen selectors left by the ported campus screens — `.university-workspace`, `.semester-primary-nav`, `.maps-sidebar`, `.write-paper`, `.mail-compose` and the rest — including four whole `@media` blocks |
+
+Dead CSS is the quietest thing in a codebase. It does not throw, it does not
+fail a type check, it does not move a pixel, and it costs a reader the
+assumption that a rule they are looking at is reached.
+
+**The census was wrong the first time, in the direction that hides things.**
+Version one called a class used if any dash-prefix of its name appeared
+anywhere in the source — meant to catch `` className={`directory-${kind}`} ``,
+which no literal search finds. It also meant `.semester-primary-nav` counted
+as live because the string "semester" is everywhere in an app called Semester.
+That heuristic rescued **seventeen genuinely dead rules**, and it would have
+gone on rescuing them silently, which is the worst property a census can have.
+
+So the rule is exact-match, and the two things exact matching cannot see are
+written out by name instead of guessed at: `is-bottom` and `is-right`, built
+by `` `mb-main is-${pane}` `` in `screens/Mail.tsx`, and `leaflet-*`, which is
+Leaflet's own DOM that the app restyles. Both lists live in the guard, so
+adding to either is a deliberate edit.
+
+**`industry.css` is deliberately not audited.** Its first line calls it "the
+source of truth for the system's look" — a design system, whose component
+classes are a published vocabulary. A vocabulary is *meant* to be wider than
+today's usage, so its seventeen unused classes are a design decision to make,
+not a cleanup to do. Auditing it would be one sheet's test overruling another
+sheet's purpose.
+
+**Two things the sweep itself got wrong**, both caught before pushing and both
+now held by the guard's second test:
+
+- Stripping rules out of four `@media` wrappers left the **wrappers**. They
+  minify away to nothing, so no check would have complained, and a reader
+  finds a breakpoint that appears to do something.
+- Three rules had explanatory comments above them, which the stripper left
+  behind attached to whatever came next. The twenty-line note about drawing
+  the late count in `--app-warn` rather than silver ended up sitting above
+  `.device h1`, describing a rule that no longer existed. **A comment orphaned
+  onto an unrelated rule is worse than the dead rule was** — the dead rule
+  merely did nothing, where the comment now says something false. Removed by
+  hand, and the reasoning kept here: the late count was the one place the app
+  said a passed deadline in silver instead of `--app-warn`, and if that cell
+  is ever coloured again this is why.
+
+`styles/deadcss.test.ts` holds both. Verified by planting a dead class and an
+empty `@media` block and watching each be named.
 
 **Two guards, both run against the fault before being believed.**
 `onetablist.test.ts` fails if any file spells the role by hand again *or* if

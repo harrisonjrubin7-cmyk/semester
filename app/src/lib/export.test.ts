@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   ALARMS,
   appointmentEvents,
   backupOf,
+  classEvents,
   BACKUP_SECTIONS,
+  NOT_IN_BACKUP,
   readBackup,
   cell,
   deadlineCsv,
@@ -19,7 +23,8 @@ import {
 import { parseIcs } from './ics';
 import { DEFAULT_PERSISTED, initialEphemeral, type State } from '../state/shape';
 import { NO_TIME } from './duetime';
-import type { Appointment, Course, DatedItem, Note } from './types';
+import type { Appointment, Course, CourseModule, DatedItem, Note } from './types';
+import { buildCatalog } from '../data/catalog';
 
 const item = (over: Partial<DatedItem> = {}): DatedItem =>
   ({
@@ -333,6 +338,47 @@ describe('notesMarkdown', () => {
   it('does not leave an untitled note headingless', () => {
     expect(notesMarkdown([{ ...note, title: '', body: '' }], code)).toContain('## Untitled');
   });
+
+  /*
+   * The Export screen says this file is "everything you wrote, including
+   * transcripts and email drafts". Transcripts were true — a kept transcript
+   * is a note — and drafts were not: they are their own collection, and the
+   * sentence had been wrong for as long as the composer has existed.
+   */
+  const draft = {
+    id: 'd1',
+    to: 'prof@example.edu',
+    cc: '',
+    bcc: '',
+    subject: 'Extension on the essay',
+    body: 'I am writing to ask…',
+    courseId: 'econ' as const,
+    purposeId: 'extension',
+    updated: Date.UTC(2026, 8, 5),
+    handed: null,
+  };
+
+  it('carries the email drafts the screen says it carries', () => {
+    const md = notesMarkdown([note], code, [draft]);
+    expect(md).toContain('# Email drafts');
+    expect(md).toContain('## Extension on the essay');
+    expect(md).toContain('To: prof@example.edu');
+    expect(md).toContain('I am writing to ask…');
+  });
+
+  it('says whether a draft ever left the app, without claiming it was sent', () => {
+    expect(notesMarkdown([], code, [draft])).toContain('not sent');
+    expect(notesMarkdown([], code, [{ ...draft, handed: 1 }])).toContain('opened in your mail app');
+  });
+
+  it('writes a file for drafts alone rather than saying nothing was written', () => {
+    const md = notesMarkdown([], code, [draft]);
+    expect(md).toContain('## Extension on the essay');
+  });
+
+  it('is unchanged for a caller that has no drafts', () => {
+    expect(notesMarkdown([note], code, [])).toBe(notesMarkdown([note], code));
+  });
 });
 
 describe('safeName', () => {
@@ -508,5 +554,296 @@ describe('a backup that can be restored from', () => {
     expect(back.synced).toBe(0);
     expect(back.status).toBe('');
     expect(back.count).toBe(0);
+  });
+});
+
+describe('every field the store holds is a decision about the backup', () => {
+  /**
+   * The field names, read out of the store itself.
+   *
+   * The same reading `merge.test.ts` does, and for the same reason:
+   * `pickPersisted` is the one place that says what a persisted field is, and
+   * a guard written against a copy of that list is a guard that drifts with
+   * the copy.
+   */
+  const persistedFields = (): string[] => {
+    const source = readFileSync(join(process.cwd(), 'src/state/shape.ts'), 'utf8');
+    const body = source.split('export function pickPersisted')[1]?.split('\n}')[0] ?? '';
+    return [...body.matchAll(/^\s{4}(\w+):/gm)].map((m) => m[1]);
+  };
+
+  /**
+   * Carried, but not through a section.
+   *
+   * `sample` is a flag rather than a collection — whether the term on screen
+   * is the demonstration one — and `readBackup` reads it by hand, because a
+   * section would report it to the person restoring as "1 sample courses".
+   */
+  const BY_HAND = ['sample'];
+
+  const named = new Set([
+    ...BACKUP_SECTIONS.map((s) => s.key),
+    ...Object.keys(NOT_IN_BACKUP),
+    ...BY_HAND,
+  ]);
+
+  it('found the store, so the rest of this means something', () => {
+    expect(persistedFields().length).toBeGreaterThan(20);
+  });
+
+  it('leaves no field unaccounted for', () => {
+    /*
+     * The failure this exists for.
+     *
+     * `plots` and `mailDrafts` — a graph built line by line, a message to a
+     * professor half written — were persisted, synced and shown on the Data
+     * screen while being in neither half of the backup. Nothing failed: the
+     * file restored cleanly and the work was not in it, which is the worst
+     * shape a data-loss bug can take.
+     *
+     * So a field in neither list fails here, and the fix is to decide which
+     * list it is in rather than to remember.
+     */
+    const undecided = persistedFields().filter((f) => !named.has(f));
+    expect(undecided).toEqual([]);
+  });
+
+  it('holds nothing the store no longer persists', () => {
+    const fields = new Set(persistedFields());
+    const stale = [...named].filter((f) => !fields.has(f));
+    expect(stale).toEqual([]);
+  });
+
+  it('says why for everything it leaves out', () => {
+    // A key with an empty reason is a key somebody added to silence the test
+    // above, which is the one way this guard could be worse than nothing.
+    const blank = Object.entries(NOT_IN_BACKUP).filter(([, why]) => why.trim().length < 10);
+    expect(blank).toEqual([]);
+  });
+
+  it('cannot both carry and omit the same field', () => {
+    const both = BACKUP_SECTIONS.map((s) => s.key).filter((k) => k in NOT_IN_BACKUP);
+    expect(both).toEqual([]);
+  });
+});
+
+describe('the work the app grew after the backup was written', () => {
+  const state = (over: Partial<State> = {}): State =>
+    ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date()), ...over }) as State;
+
+  const draft = {
+    id: 'd1',
+    to: 'prof@example.edu',
+    cc: '',
+    bcc: '',
+    subject: 'Extension on the essay',
+    body: 'I am writing to ask…',
+    courseId: 'econ' as const,
+    purposeId: 'extension',
+    updated: 222,
+    handed: null,
+  };
+
+  it('carries a graph somebody built', () => {
+    const plots = [{ id: 'p1', text: 'y = x^2 - 3', on: true }];
+    const { data } = readBackup(JSON.stringify(backupOf(state({ plots }))));
+    expect(data.plots).toEqual(plots);
+  });
+
+  it('carries an unsent draft, which is the one nobody can retype', () => {
+    const { data } = readBackup(JSON.stringify(backupOf(state({ mailDrafts: [draft] }))));
+    expect((data.mailDrafts as typeof draft[])[0].body).toBe('I am writing to ask…');
+  });
+
+  it('says what it found, so the restore names them', () => {
+    const { parts } = readBackup(
+      JSON.stringify(backupOf(state({ mailDrafts: [draft], plots: [{ id: 'p1', text: 'y = x', on: true }] }))),
+    );
+    expect(parts).toContain('1 graphs');
+    expect(parts).toContain('1 email drafts');
+  });
+
+  it('carries the name letters are signed with', () => {
+    const { data } = readBackup(JSON.stringify(backupOf(state({ myName: 'Harrison Rubin' }))));
+    expect(data.myName).toBe('Harrison Rubin');
+  });
+});
+
+/**
+ * The timetable in the file, which is the half a student most wants and the
+ * half no export this app has ever written carried.
+ *
+ * Two things here are the difference between a calendar that is useful and
+ * one that is actively wrong, and neither is visible by reading the file:
+ * a series whose `DTSTART` falls on a day the class does not meet, and an
+ * `EXDATE` written as a date against a timed `DTSTART` — which both Google
+ * and Outlook silently ignore, so the lecture cancelled for a holiday stays
+ * on the calendar and the app looks like it got the term wrong.
+ */
+describe('classes as repeating events', () => {
+  const course: Course = {
+    id: 'econ',
+    code: 'ECON 1010',
+    name: 'Principles of Macroeconomics',
+    prof: 'Stromme',
+    email: '',
+    meets: 'MWF · 9:05–9:55a',
+    room: 'Buttrick 101',
+    credits: '3',
+    term: '2026FA',
+    source: '',
+    grading: [],
+  };
+
+  const guide = { code: 'ECON 1010', name: '', blurb: '', source: '', mastery: 0, audio: false, units: [], terms: [] };
+
+  const cat = (over: Partial<CourseModule> = {}) =>
+    buildCatalog([
+      {
+        course,
+        items: [],
+        // Monday, Wednesday, Friday at 9:05.
+        schedule: [
+          { days: [1, 3, 5], at: 545, time: '9:05a', title: 'lecture', meta: 'Buttrick 101' },
+        ],
+        guide,
+        planMinutes: '',
+        frameLabel: '',
+        ...over,
+      },
+    ]);
+
+  // A Tuesday, on purpose: the first occurrence has to be the Wednesday.
+  const from = new Date(2026, 8, 1);
+  const to = new Date(2026, 11, 11);
+
+  it('writes one event for the whole meeting pattern, not one per meeting', () => {
+    const made = classEvents(cat(), from, to);
+    expect(made).toHaveLength(1);
+    expect(made[0].rrule).toBe('FREQ=WEEKLY;BYDAY=MO,WE,FR;UNTIL=20261211');
+  });
+
+  /*
+   * `DTSTART` is itself the first occurrence in iCalendar. A Monday/Wednesday/
+   * Friday class starting on a Tuesday is read by a strict client as meeting
+   * on Tuesdays too, and by a lenient one as starting a week late.
+   */
+  it('starts on the first day the class actually meets', () => {
+    const made = classEvents(cat(), from, to);
+    expect(made[0].date.getDay()).toBe(3);
+    expect(made[0].date.getDate()).toBe(2);
+  });
+
+  it('names the days in week order, whatever order the syllabus wrote them', () => {
+    const made = classEvents(
+      cat({ schedule: [{ days: [5, 1, 3], at: 545, time: '9:05a', title: 'lecture', meta: '' }] }),
+      from,
+      to,
+    );
+    expect(made[0]?.rrule).toContain('BYDAY=MO,WE,FR');
+  });
+
+  it('takes its length off the syllabus’s own meeting line', () => {
+    expect(classEvents(cat(), from, to)[0].minutes).toBe(50);
+  });
+
+  it('leaves office hours out unless they are asked for', () => {
+    const withHours = cat({
+      schedule: [
+        { days: [1, 3, 5], at: 545, time: '9:05a', title: 'lecture', meta: '' },
+        { days: [2], at: 840, time: '2:00p', title: 'office hours', meta: '', optional: true },
+      ],
+    });
+    expect(classEvents(withHours, from, to)).toHaveLength(1);
+    expect(classEvents(withHours, from, to, { officeHours: true })).toHaveLength(2);
+  });
+
+  it('carries a cancelled class out as an EXDATE at the class’s own hour', () => {
+    const made = classEvents(
+      cat({ exceptions: [{ month: 10, day: 25, canceled: true }] }),
+      from,
+      to,
+    );
+    expect(made[0].except?.[0].getDate()).toBe(25);
+    const file = toIcs(made);
+    expect(file).toContain('EXDATE:20261125T090500');
+    expect(file).not.toContain('EXDATE;VALUE=DATE');
+  });
+
+  it('ignores a cancellation on a day the class does not meet', () => {
+    // 26 November 2026 is a Thursday; this class is MWF.
+    const made = classEvents(cat({ exceptions: [{ month: 10, day: 26, canceled: true }] }), from, to);
+    expect(made[0].except).toEqual([]);
+  });
+
+  it('writes a one-off extra class as its own entry', () => {
+    const made = classEvents(
+      cat({
+        exceptions: [
+          { month: 9, day: 14, extra: { at: 600, time: '10:00a', title: 'make-up', meta: 'Rand 308' } },
+        ],
+      }),
+      from,
+      to,
+    );
+    expect(made).toHaveLength(2);
+    expect(made[1].rrule).toBeUndefined();
+    expect(made[1].summary).toContain('make-up');
+  });
+
+  it('gives two blocks of one course different ids, even with the same title', () => {
+    const made = classEvents(
+      cat({
+        schedule: [
+          { days: [1], at: 545, time: '9:05a', title: 'lecture', meta: '' },
+          { days: [4], at: 780, time: '1:00p', title: 'lecture', meta: '' },
+        ],
+      }),
+      from,
+      to,
+    );
+    expect(new Set(made.map((e) => e.uid)).size).toBe(2);
+  });
+
+  it('writes nothing for a range that runs backwards or is not a range at all', () => {
+    expect(classEvents(cat(), to, from)).toEqual([]);
+    expect(classEvents(cat(), new Date(Number.NaN), to)).toEqual([]);
+  });
+});
+
+describe('an appointment that repeats', () => {
+  const shift = (over: Partial<Appointment> = {}): Appointment => ({
+    id: 'a1',
+    title: 'Shift',
+    date: '2026-09-15',
+    at: 16 * 60,
+    time: '4:00p',
+    where: 'Rand',
+    note: '',
+    created: 0,
+    ...over,
+  });
+
+  it('goes in as one repeating event rather than as fifteen rows', () => {
+    const made = appointmentEvents([
+      shift({ repeat: { every: 'weekly', until: '2026-12-11' }, minutes: 240 }),
+    ]);
+    expect(made[0].rrule).toBe('FREQ=WEEKLY;UNTIL=20261211');
+    expect(made[0].minutes).toBe(240);
+  });
+
+  it('carries the occurrences taken out of it', () => {
+    const made = appointmentEvents([
+      shift({ repeat: { every: 'weekly', until: '2026-12-11', except: ['2026-09-22'] } }),
+    ]);
+    expect(toIcs(made)).toContain('EXDATE:20260922T160000');
+  });
+
+  it('gives one that says no length an hour, as every calendar does', () => {
+    expect(appointmentEvents([shift()])[0].minutes).toBe(60);
+  });
+
+  it('writes no rule at all for a one-off', () => {
+    expect(appointmentEvents([shift()])[0].rrule).toBeUndefined();
   });
 });

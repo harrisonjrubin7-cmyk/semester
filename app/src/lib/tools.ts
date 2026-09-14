@@ -51,7 +51,7 @@ import type { ToolCall, ToolSpec } from './claude';
 import type { Action, Persisted } from '../state/shape';
 import type { Attended } from './attend';
 import type { CourseId, PersonalTask, Screen } from './types';
-import { fromMarkdown, summary, type Block } from './document';
+import { fromMarkdown, hasContent, summary, type Block } from './document';
 import { fromRows, readTable } from './sheet';
 import { parse, plain } from './maths';
 
@@ -755,17 +755,16 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     const body = str(call.input, 'body');
     if (!title || !body) return null;
     const blocks: Block[] = fromMarkdown(body);
-    // A document with nothing in it is not a document. `fromMarkdown` always
-    // returns at least one empty paragraph, so "it parsed" is not the test.
-    const something = blocks.some(
-      (b) =>
-        (b.kind === 'text' || b.kind === 'heading' || b.kind === 'quote') ? b.text.trim() !== ''
-        : b.kind === 'bullets' ? b.items.some((i) => i.trim() !== '')
-        : b.kind === 'table' ? b.rows.some((r) => r.some((c) => c.trim() !== ''))
-        : b.kind === 'equation' ? b.latex.trim() !== ''
-        : false,
-    );
-    if (!something) return null;
+    /*
+     * A document with nothing in it is not a document. `fromMarkdown` always
+     * returns at least one empty paragraph, so "it parsed" is not the test.
+     *
+     * `hasContent` rather than a copy of it written here: the copy knew four
+     * kinds, and the moment a fifth existed a proposal made entirely of a
+     * checklist was refused as empty — by a rule nobody would think to look
+     * at. One implementation, in `lib/document.ts`, beside the kinds.
+     */
+    if (!hasContent({ blocks })) return null;
     const courseId = str(call.input, 'courseId') as CourseId;
     const course = known.courses.find((c) => c.id === courseId);
     return {

@@ -101,6 +101,38 @@ export interface Slide {
    */
   equation?: string;
   /**
+   * Two columns side by side, each with a heading of its own.
+   *
+   * PowerPoint calls it Two Content and Comparison; a seminar calls it the
+   * slide where the argument meets the objection. It was the commonest thing
+   * a deck built here could not say, and the workaround — one column of
+   * bullets beginning "For:" and "Against:" — is a slide the room reads as
+   * one list.
+   *
+   * Two, never three. A third column on a 13-inch projector is four inches
+   * wide and holds four words a line, and a layout picker that offers a shape
+   * nobody can read is a picker that wastes a decision.
+   */
+  columns?: { heading: string; points: string[] }[];
+  /**
+   * A pulled quotation, with where it came from.
+   *
+   * The same pair `lib/document.ts` keeps for the same reason: the app never
+   * quotes blind. Its own layout because a quotation set as a bullet is a
+   * quotation nobody reads as one — it wants the size, the space round it and
+   * the attribution underneath.
+   */
+  quote?: { text: string; source: string };
+  /**
+   * One figure, and what it means.
+   *
+   * The slide a findings deck is built round — "61%", and under it "of the
+   * sample never opened the second email". Every presentation program has
+   * this shape and none of them names it the same thing; here it is the
+   * number and the sentence, because those are the two things being typed.
+   */
+  big?: { value: string; says: string };
+  /**
    * What you say while this slide is up — the speaker's, not the room's.
    *
    * Written as a real `notesSlide` part rather than as small text on the slide
@@ -118,6 +150,17 @@ export interface Deck {
   slides: Slide[];
   /** The colours. {@link DEFAULT_PALETTE} where a caller has no opinion. */
   palette?: Palette;
+  /**
+   * The line along the bottom of every slide but the opening one.
+   *
+   * A course code and a date, which is what a handed-in deck needs on it and
+   * what a printed handout needs most — six decks in a marker's pile with no
+   * name on any slide but the first is how one gets attributed to the wrong
+   * person.
+   */
+  footer?: string;
+  /** Slide numbers in the bottom right. Off by default, as PowerPoint has it. */
+  numbers?: boolean;
 }
 
 
@@ -137,6 +180,8 @@ function box(
     h: number;
     lines: { text: string; size: number; color: string; bold?: boolean; bullet?: boolean }[];
     anchor?: 'ctr' | 't';
+    /** Left unless said otherwise — `ctr` for a figure, `r` for a page number. */
+    align?: 'ctr' | 'r';
   },
 ): string {
   const paragraphs = opts.lines
@@ -145,8 +190,9 @@ function box(
         ? '<a:buFont typeface="Arial" pitchFamily="34" charset="0"/><a:buChar char="•"/>'
         : '<a:buNone/>';
       const indent = line.bullet ? ' marL="285750" indent="-285750"' : '';
+      const align = opts.align ? ` algn="${opts.align}"` : '';
       return (
-        `<a:p><a:pPr${indent}>${marker}</a:pPr>` +
+        `<a:p><a:pPr${indent}${align}>${marker}</a:pPr>` +
         `<a:r><a:rPr lang="en-US" sz="${Math.round(line.size * 100)}" b="${line.bold ? 1 : 0}" dirty="0">` +
         `<a:solidFill><a:srgbClr val="${line.color}"/></a:solidFill>` +
         '<a:latin typeface="Arial"/></a:rPr>' +
@@ -248,7 +294,43 @@ function table(
   );
 }
 
-function slideXml(slide: Slide, look: Palette): string {
+/**
+ * The line along the bottom, and the number beside it.
+ *
+ * Two boxes rather than one, because they are set differently — the footer is
+ * left and the number is right — and because a deck can want either without
+ * the other. Neither goes on an opening slide: a title slide with "ECON 1010
+ * · 1" along the bottom is a title slide with a footer on it.
+ */
+function footerXml(id: number, look: Palette, footer: string, number: string): string {
+  const shapes: string[] = [];
+  if (footer.trim()) {
+    shapes.push(
+      box(id, {
+        x: 0.9,
+        y: 6.75,
+        w: 9.5,
+        h: 0.4,
+        lines: [{ text: footer, size: 11, color: look.dim }],
+      }),
+    );
+  }
+  if (number) {
+    shapes.push(
+      box(id + 1, {
+        x: 10.6,
+        y: 6.75,
+        w: 1.8,
+        h: 0.4,
+        align: 'r',
+        lines: [{ text: number, size: 11, color: look.dim }],
+      }),
+    );
+  }
+  return shapes.join('');
+}
+
+function slideXml(slide: Slide, look: Palette, foot?: { footer: string; number: string }): string {
   const shapes: string[] = [
     // The ground. Set per slide rather than on the master, because a master
     // background is the one thing Google Slides is happy to ignore.
@@ -294,6 +376,9 @@ function slideXml(slide: Slide, look: Palette): string {
   );
 
   let next = 4;
+  if (foot) {
+    shapes.push(footerXml(90, look, foot.footer, foot.number));
+  }
   if (slide.note) {
     shapes.push(
       box(next++, {
@@ -328,6 +413,127 @@ function slideXml(slide: Slide, look: Palette): string {
         look,
       ),
     );
+  }
+
+  /*
+   * Two columns, each its own text box.
+   *
+   * Absolute boxes rather than a two-column body: PowerPoint can set columns
+   * inside one `bodyPr` and Google Slides ignores the setting, which turns a
+   * comparison into one long list on the machine it is most likely to be
+   * opened on. Two boxes are the same thing everywhere.
+   *
+   * The gutter is half an inch and the boxes are equal — a comparison whose
+   * halves are different widths reads as a hierarchy rather than as a pair.
+   */
+  if (slide.columns && slide.columns.length) {
+    const top = slide.note ? 2.6 : 2.2;
+    const gutter = 0.5;
+    const each = (11.5 - gutter) / 2;
+    const size = bodySize(slide.columns.flatMap((c) => c.points));
+    slide.columns.slice(0, 2).forEach((column, i) => {
+      const x = 0.9 + i * (each + gutter);
+      if (column.heading.trim()) {
+        shapes.push(
+          box(next++, {
+            x,
+            y: top,
+            w: each,
+            h: 0.6,
+            lines: [{ text: column.heading, size: Math.max(size, 18), color: look.paper, bold: true }],
+          }),
+        );
+      }
+      shapes.push(
+        box(next++, {
+          x,
+          y: column.heading.trim() ? top + 0.7 : top,
+          w: each,
+          h: 3.6,
+          lines: column.points
+            .filter((p) => p.trim())
+            .map((text) => ({ text, size, color: look.paper, bullet: true })),
+        }),
+      );
+    });
+  }
+
+  /*
+   * A quotation, set big and centred with the attribution under it.
+   *
+   * No quotation marks drawn round it. A curly pair looks right until the
+   * quotation itself begins with one, and the size and the space are what
+   * make it read as a quotation anyway.
+   */
+  if (slide.quote) {
+    const long = slide.quote.text.length;
+    shapes.push(
+      box(next++, {
+        x: 1.4,
+        y: 2.3,
+        w: 10.5,
+        h: 2.6,
+        anchor: 'ctr',
+        lines: [
+          {
+            text: slide.quote.text,
+            size: long > 260 ? 18 : long > 140 ? 22 : 28,
+            color: look.paper,
+          },
+        ],
+      }),
+    );
+    if (slide.quote.source.trim()) {
+      shapes.push(
+        box(next++, {
+          x: 1.4,
+          y: 5.1,
+          w: 10.5,
+          h: 0.6,
+          lines: [{ text: `— ${slide.quote.source}`, size: 14, color: look.dim }],
+        }),
+      );
+    }
+  }
+
+  /*
+   * One figure, and what it means under it.
+   *
+   * The figure is set at 96pt and shrinks only when it is long: "61%" and
+   * "1,240,000" want the same slide and not the same size.
+   */
+  if (slide.big) {
+    const value = slide.big.value.trim();
+    shapes.push(
+      box(next++, {
+        x: 0.9,
+        y: 2.4,
+        w: 11.5,
+        h: 2,
+        anchor: 'ctr',
+        align: 'ctr',
+        lines: [
+          {
+            text: value,
+            size: value.length > 12 ? 48 : value.length > 7 ? 66 : 96,
+            color: look.paper,
+            bold: true,
+          },
+        ],
+      }),
+    );
+    if (slide.big.says.trim()) {
+      shapes.push(
+        box(next++, {
+          x: 1.9,
+          y: 4.6,
+          w: 9.5,
+          h: 1.2,
+          align: 'ctr',
+          lines: [{ text: slide.big.says, size: 20, color: look.dim }],
+        }),
+      );
+    }
   }
 
   if (slide.bullets.length) {
@@ -578,8 +784,23 @@ export function parts(deck: Deck): Record<string, string> {
     ]);
   }
 
+  const footer = (deck.footer ?? '').trim();
+  const numbering = deck.numbers === true;
+
   slides.forEach((slide, i) => {
-    out[`ppt/slides/slide${i + 1}.xml`] = slideXml(slide, look);
+    /*
+     * The number on the slide is its place in the deck, counted from one.
+     *
+     * Not from the index of the slide in the file, which is the same thing
+     * here only because `forExport` has already dropped the hidden ones —
+     * and that is the right answer: a deck presented with slide 4 hidden
+     * should not skip from 3 to 5 in front of a room.
+     */
+    const foot =
+      footer || numbering
+        ? { footer, number: numbering ? String(i + 1) : '' }
+        : undefined;
+    out[`ppt/slides/slide${i + 1}.xml`] = slideXml(slide, look, foot);
     const links = [
       { id: 'rId1', type: 'slideLayout', target: '../slideLayouts/slideLayout1.xml' },
     ];
