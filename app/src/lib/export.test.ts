@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
@@ -303,6 +303,40 @@ describe('appointmentEvents', () => {
     expect(ics).not.toContain('appt-bad');
   });
 
+  it.each([
+    ['2026-09-15T02:30:00Z', 'the evening, west of Greenwich'],
+    ['2026-09-14T11:30:00Z', 'the next morning, east of it'],
+  ])('stamps the file in one clock and not half of each — %s', (instant) => {
+    /*
+     * DTSTAMP promises UTC — that is what the `Z` means — and it was built
+     * from the local year, month and day glued to the UTC hour, minute and
+     * second. Those two agree only while the local date and the UTC date are
+     * the same day, which for anyone west of Greenwich stops being true every
+     * evening, and for anyone far enough east every morning. The stamp then
+     * named the wrong day while still claiming to be UTC, and a calendar
+     * comparing DTSTAMPs to decide which copy of an event is newer would read
+     * a fresh export as older than the one it already had, and keep the old.
+     *
+     * Two instants, pinned, because one of them only lands on the wrong side
+     * of midnight in half the world: whichever zone the suite runs in, one of
+     * these has the local day and the UTC day disagreeing. Left to the real
+     * clock this caught the bug or not depending on the hour it ran at.
+     */
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(instant));
+    try {
+      const ics = toIcs(deadlineEvents([item()], code));
+      const utc = new Date(instant);
+      const two = (n: number) => String(n).padStart(2, '0');
+      const want =
+        `${utc.getUTCFullYear()}${two(utc.getUTCMonth() + 1)}${two(utc.getUTCDate())}` +
+        `T${two(utc.getUTCHours())}${two(utc.getUTCMinutes())}${two(utc.getUTCSeconds())}Z`;
+      expect(ics).toContain(`DTSTAMP:${want}`);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('writes an appointment with no recorded hour as all-day, not as hour -1', () => {
     // -1 is what a stored appointment holds when neither the number nor the
     // words could be read. It used to reach the formatter and write `T-1-100`.
@@ -317,8 +351,8 @@ describe('notesMarkdown', () => {
     id: 'n1',
     title: 'Lecture 4',
     body: 'Inflation expectations.',
-    created: Date.UTC(2026, 8, 3),
-    updated: Date.UTC(2026, 8, 4),
+    created: new Date(2026, 8, 3, 9, 0).getTime(),
+    updated: new Date(2026, 8, 4, 9, 0).getTime(),
     courseId: 'econ',
     fileIds: [],
   } as Note;
@@ -337,6 +371,21 @@ describe('notesMarkdown', () => {
 
   it('does not leave an untitled note headingless', () => {
     expect(notesMarkdown([{ ...note, title: '', body: '' }], code)).toContain('## Untitled');
+  });
+
+  it('dates a note by the day it was written on, not the day it was in Greenwich', () => {
+    /*
+     * Half past nine on a Thursday evening in Nashville is already Friday in
+     * UTC, and `toISOString().slice(0, 10)` — which is what this wrote — says
+     * so. The student sees an export of tonight's note dated tomorrow.
+     *
+     * Built from local fields and asserted against local fields, so this
+     * holds in every zone `npm run test:zones` runs in rather than only in
+     * the one the export happened to be written in.
+     */
+    const evening = new Date(2026, 8, 3, 21, 30);
+    const md = notesMarkdown([{ ...note, updated: evening.getTime() }], code);
+    expect(md).toContain('2026-09-03');
   });
 
   /*

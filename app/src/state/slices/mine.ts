@@ -14,7 +14,7 @@ import { skip } from '../../lib/repeat';
 import { newAlarm, newTimer } from '../../lib/clocks';
 import { moveTo, newApplication } from '../../lib/apply';
 import { mark, newProgress } from '../../lib/progress';
-import { newReturned } from '../../lib/returned';
+import { newReturned, readWindowDays } from '../../lib/returned';
 import { newRequirement, newTaken } from '../../lib/degree';
 import { newLetter, newPerson, newVisit } from '../../lib/letters';
 import { newRest, readFloor } from '../../lib/rest';
@@ -430,9 +430,16 @@ export function mine(state: State, action: Action): State | null {
       };
 
     case 'setRegradeWindow':
+      // Clamped on the way in, by the same `readWindowDays` that reads it back
+      // out of storage. This was the one door of the two that was open, and
+      // the field behind it is a text input whose number `closesOn` counts
+      // down a day at a time.
       return {
         ...state,
-        regradeWindows: { ...state.regradeWindows, [action.courseId]: action.window },
+        regradeWindows: {
+          ...state.regradeWindows,
+          [action.courseId]: { ...action.window, days: readWindowDays(action.window.days) },
+        },
       };
 
     // The hours you actually work in. See `lib/windows.ts` — these make every
