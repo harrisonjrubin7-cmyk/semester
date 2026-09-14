@@ -45,7 +45,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
       <div
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.55,
+          color: 'var(--app-dim)',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}
@@ -124,7 +124,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
                 }
                 style={{ width: 76, flex: 'none', height: 36, fontSize: 'var(--type-base)', textAlign: 'center' }}
               />
-              <span style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>
+              <span style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
                 from
               </span>
               <input
@@ -137,7 +137,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
                 }
                 style={{ width: 76, flex: 'none', height: 36, fontSize: 'var(--type-base)', textAlign: 'center' }}
               />
-              <span style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>%</span>
+              <span style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>%</span>
             </div>
           ))}
           <ActionButton

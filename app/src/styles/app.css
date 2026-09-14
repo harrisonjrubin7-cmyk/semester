@@ -1619,12 +1619,6 @@ a:hover {
  * overflows alongside it. `::after` rather than a real element so no screen
  * has to remember to render one.
  */
-.scrollarea:not(.is-filled) .pane-body::after {
-  content: '';
-  display: block;
-  height: var(--assistant-strip);
-}
-
 /*
  * Except where the screen *is* the box.
  *
@@ -3035,7 +3029,9 @@ input[type='search'].input {
  * it was, so the outline on the target is the only thing that moves.
  */
 .movable.is-held {
-  opacity: 0.55;
+  /* The row's own state, which is the one job an opacity is still for — the
+     tag and the coloured edge have to go with it. See `lib/dim.ts`. */
+  opacity: var(--app-row-dim);
 }
 
 .movable.is-over {
@@ -6026,7 +6022,7 @@ input[type='search'].input {
 }
 
 .deskhome-box-say {
-  opacity: 0.55;
+  color: var(--app-dim);
 }
 
 /* `.deskhome-keys` and `.desktop-keys` drew a `⌘ K` chip in each of the two

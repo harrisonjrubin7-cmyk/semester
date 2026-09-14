@@ -153,7 +153,7 @@ export function MyRules() {
           Add a reminder rule
         </button>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-6)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)' }}>
           {MOST_RULES} is the limit — past that nobody remembers what they asked for.
         </div>
       )}

@@ -42,7 +42,7 @@ export function Question({ text, onEdit }: { text: string; onEdit?: (next: strin
                 setDraft(text);
                 setEditing(false);
               }}
-              style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.55 }}
+              style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', color: 'var(--app-dim)' }}
             >
               CANCEL
             </button>
@@ -247,7 +247,7 @@ export function Waiting({ who, doing = [] }: { who: string; doing?: string[] }) 
         display: 'flex',
         alignItems: 'center',
         gap: 'var(--sp-4)',
-        opacity: 0.55,
+        color: 'var(--app-dim)',
         fontSize: 'var(--type-sm)',
       }}
     >
@@ -295,7 +295,7 @@ export function Looked({ said, detail }: { said: string; detail: string }) {
           gap: 'var(--sp-3)',
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.06em',
-          opacity: 0.55,
+          color: 'var(--app-dim)',
         }}
       >
         <span aria-hidden>{open ? '▾' : '▸'}</span>
