@@ -47,6 +47,7 @@ function svg(name: IconName) {
 
 export const ChevronRight = svg('chevronRight');
 export const ChevronLeft = svg('chevronLeft');
+export const ChevronDown = svg('chevronDown');
 export const Search = svg('search');
 export const Bell = svg('bell');
 export const Person = svg('person');

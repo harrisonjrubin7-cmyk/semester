@@ -4695,6 +4695,20 @@ input[type='search'].input {
   flex: none;
 }
 
+/* ── The bookmarks bar ──
+ *
+ * Under the search field, drawn only when there is something in it — a row of
+ * chrome that is always empty is a row people learn to look past, and the
+ * workspace has three bars above the page already. Opaque, because it is over
+ * the pane rather than beside it; see the z-index note at the foot of this
+ * sheet. */
+
+.deskwork .deskmarks {
+  background: var(--app-bg);
+  border-bottom: 0;
+  padding: 0 var(--sp-7) var(--sp-3);
+}
+
 /* ── The bar ── */
 
 .desktop-bar {
@@ -4802,10 +4816,26 @@ input[type='search'].input {
 }
 
 .desktop-clear,
+.desktop-star,
 .desktop-keys,
 .desktop-ai {
   flex: none;
   width: auto;
+}
+
+/* The star sits in the field, where every browser window has it. It never
+   dims below the field's own secondary colour, and it takes the accent when
+   the page in front of you is saved — a filled star that is still grey is a
+   state nobody reads as "kept". */
+.desktop-star[aria-pressed='true'] {
+  color: var(--app-accent);
+}
+
+.desktop-star:disabled {
+  /* `--app-faint` is held to 3:1, which is the bar for a disabled control and
+     is what makes it read as unavailable. Same as `.bench-item:disabled`. */
+  color: var(--app-faint);
+  cursor: default;
 }
 
 .desktop-keys {
@@ -5422,6 +5452,16 @@ input[type='search'].input {
   white-space: nowrap;
 }
 
+/* The saved places, under the shortcuts and above "Explore all apps". A
+   narrower column than the app row above it: these are named by hand and run
+   longer than "Calendar", and a row of them at full width reads as a second
+   navigation rather than as a shelf of what somebody kept. */
+.deskhome-marks {
+  width: 100%;
+  max-width: 560px;
+  margin-top: var(--sp-7);
+}
+
 .deskhome-explore {
   width: auto;
   display: flex;
@@ -5821,6 +5861,14 @@ input[type='search'].input {
 
 .deskwork > .desktop-bar {
   z-index: 20;
+}
+
+/* And the bookmarks bar under it, for the same reason one step down: its
+   chips open a menu, and a menu at 1 is a menu the pane paints over. Below
+   the two above it, which sit over it on the screen and must stay over it
+   when one of their own panels is open. */
+.deskwork > .deskmarks {
+  z-index: 19;
 }
 
 /*

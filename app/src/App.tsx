@@ -149,6 +149,7 @@ import { QuickAdd } from './components/QuickAdd';
 import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
 import { TabStrip, TabsFollow } from './components/Tabs';
+import { BookmarksBar } from './components/Bookmarks';
 import { AllApps } from './components/nav/AllApps';
 import { TopBar } from './components/desk/TopBar';
 import { Sidebar } from './components/desk/Sidebar';
@@ -1217,6 +1218,10 @@ function Workspace({
             push the whole app down a row the first time you opened one. */}
         <TabStrip alwaysOn onBlank={() => dispatch({ type: 'go', screen: 'search' })} />
         <TopBar onSuggesting={onSuggesting} />
+        {/* And the bookmarks under the field, which is where the browser this
+            layout is shaped like keeps them. It draws nothing at all until
+            something has been starred. */}
+        <BookmarksBar />
 
         <div className={chrome.sidebar ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
           {chrome.sidebar && <Sidebar />}
