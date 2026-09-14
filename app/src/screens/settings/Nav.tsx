@@ -8,7 +8,7 @@ import { countHidden, revealLine } from '../../lib/reveal';
 import { TabChooser } from '../../components/TabChooser';
 import { Reorder } from '../../components/Reorder';
 import { LayoutPicker, NavPicker } from '../../components/Appearance';
-import { BADGES, DIRECTORIES, FEEDS, LABELS, directoryOf } from '../../lib/look';
+import { BADGES, DIRECTORIES, FEEDS, LABELS, NAVS, SHELLS, directoryOf } from '../../lib/look';
 import { SECTIONS, move, ordered } from '../../lib/feed';
 import { MOVE_HINT, nudged, useMovable } from '../../lib/arrange';
 import { afterMove, boardLists } from '../../lib/springboard';
@@ -99,7 +99,9 @@ export function SettingsNav() {
   return (
     <SettingsPage
       screen="setNav"
-      blurb="Seven navigations and three layouts, in every combination. Nothing here hides anything — every screen stays reachable whichever you pick."
+      // Counted, for the reason `NavPicker` gives: a number in prose beside
+      // the list it counts is a number that goes stale on the next change.
+      blurb={`${NAVS.length} navigations and ${SHELLS.length} layouts, in every combination. Nothing here hides anything — every screen stays reachable whichever you pick.`}
     >
       {(lit) => (
         <>

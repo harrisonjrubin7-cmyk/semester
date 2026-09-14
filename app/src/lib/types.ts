@@ -669,14 +669,16 @@ export interface Lesson {
  * two apps running in one window.
  *
  * So the two axes are now genuinely separate and each answers one question.
- * This one answers *how you move*, and exactly one of the seven below is ever
+ * This one answers *how you move*, and exactly one of those below is ever
  * drawn. `Shell` (in `components/shell/useShell.ts`) answers *how a screen is
  * drawn*, and never adds navigation of its own. Every combination of the two
  * is a valid app, which is what makes them settings rather than forks.
  *
- * `workspace` and `browser` are the two whose chrome is at the *top* of the
- * window — a strip of tabs and a search field — which is why they are the two
- * that trade nothing against the bar or the rail. See `lib/chrome.ts`.
+ * `workspace` is the one whose chrome is at the *top* of the window — a strip
+ * of tabs and a search field — which is why it is the one that trades nothing
+ * against the bar or the rail. It was two for a while, beside a browser-shaped
+ * port of the same idea; SIMPLIFY-AUDIT.md E4 removed the second. See
+ * `lib/chrome.ts`.
  *
  * `guides` is the last of them and the one the app now opens as. It is the
  * only one that treats a *course* as the top level rather than a screen: home
@@ -689,7 +691,6 @@ export type NavMode =
   | 'springboard'
   | 'shelves'
   | 'workspace'
-  | 'browser'
   | 'guides';
 
 /** A class that repeats every week, from the syllabus meeting pattern. */

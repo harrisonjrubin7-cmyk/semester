@@ -62,15 +62,20 @@ const listeners = new Set<() => void>();
  * — rather than about whatever happens to be rendering. `forgetStrip` clears
  * it with them.
  *
- * It was a ref in `TabsFollow`, and the shell used to draw the app in one
- * parent while its home screen was up and another once it was not, so going
- * anywhere from the home remounted that component and the ref came back null.
- * The navigation that caused the remount then looked like the session's first
- * look, which is the one moment `TabsFollow` is allowed to ignore a
+ * It was a ref in `TabsFollow`, and the browser shell used to draw the app in
+ * one parent while its home screen was up and another once it was not, so
+ * going anywhere from the home remounted that component and the ref came back
+ * null. The navigation that caused the remount then looked like the session's
+ * first look, which is the one moment `TabsFollow` is allowed to ignore a
  * navigation: two tabs open and nothing you did from the home was recorded.
- * The shell mounts the app once now (`shell-remount.test.tsx`), so that
- * particular remount is gone — but a session's fact still does not belong to
- * a component, and the next remount will not cost a tab its place.
+ *
+ * That shell is gone (`SIMPLIFY-AUDIT.md` E4, `workspace` survives) and with
+ * it the remount that exposed this, so the bug is no longer reachable. The
+ * state stays here anyway, and the distinction is the reason why: where a
+ * session was last followed to is a fact about the visit, like the strip and
+ * the closed-tab list above it, and it was only ever in a component by
+ * accident. A ref would work today and cost a tab its place the next time
+ * anything remounts the strip's subtree.
  */
 let followed: string | null = null;
 

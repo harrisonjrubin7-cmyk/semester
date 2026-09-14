@@ -1,38 +1,18 @@
 /* Styles for the feature modules ported from the audited source.
-   Taken from that tree's components/workspace.css — the shell's own
-   sheet stays beside it in components/google-shell.css. Limited to the
-   rules the ported components and screens actually use.
+   Taken from that tree's components/workspace.css, limited to the rules
+   the ported components and screens actually use.
    Its shell stylesheet is deliberately not carried over: this app's
-   workspace lives in components/desk/ and owns that surface. */
+   workspace lives in components/desk/ and owns that surface. The port's
+   own shell sheet did arrive for a while, as components/google-shell.css
+   beside this one, and drew a second browser-shaped navigation from it —
+   which is the duplication SIMPLIFY-AUDIT.md E4 removed. Both are gone. */
 
 /* --- from workspace.css --- */
-.g-productivity .g-sidebar{display:none}
-.g-productivity .g-workspace-body{padding:0 12px 12px}
-.g-productivity .g-brand{min-width:190px}
-.g-productivity .g-app-content{background:var(--app-accent-wash)}
-.g-productivity .g-workspace-heading{background:var(--app-accent-wash);padding:8px 18px}
-.g-productivity .g-workspace-heading h1{font-size:22px}
-.g-productivity .g-legacy-mount .pane-body{max-width:none!important;width:100%}
-.g-productivity .g-legacy-mount .scrollarea{background:var(--app-accent-wash)}
-.g-productivity .g-workspace-heading:has(+ .g-legacy-mount .workspace-editor){position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
-/* The ink on the accent is `--chrome-ink`, which `lib/look.ts` writes per
-   ground and inverts with it. `--app-panel` was standing in for it, and
-   inside the browser shell that token is remapped to the accent wash — so
-   the primary action was a 12%-alpha near-white on a near-white ground. */
-.g-productivity .device .btn-primary{background:var(--app-accent)!important;color:var(--chrome-ink)!important;opacity:1;box-shadow:none!important}
-.g-productivity .device .btn-secondary{background:var(--app-accent-wash);color:var(--app-accent-deep);box-shadow:none!important;border:1px solid var(--app-accent-wash)}
-.g-productivity .device .btn{border-radius:9px}
-.g-productivity .workspace-text-button{padding:9px 14px;background:none;border-radius:20px;color:var(--app-accent);font-size:14px}
 .workspace-text-button:hover{background:var(--app-accent-wash)!important}
 .workspace-details .input{background:var(--app-panel)!important}
 .write-paper .write-block .input{border-color:transparent!important;background:transparent!important;border-radius:0;box-shadow:none!important;font-family:Arial,sans-serif;padding:4px!important;color:var(--app-fg)}
 .drive-main .section-label{font-size:17px!important;letter-spacing:0!important;text-transform:none!important}
-@media(min-width:1000px){
-.g-productivity .g-topbar{height:65px}
-}
 @media(max-width:800px){
-.g-productivity .g-brand{min-width:0}
-.g-productivity .g-workspace-body{padding:0 5px 5px}
 .workspace-editor .bench-top .btn{font-size:12px!important;min-width:85px!important}
 }
 @media(max-width:540px){
@@ -41,33 +21,9 @@
 @media print{
 .write-paper .input{border:0!important}
 }
-.g-tab-scroll{max-width:calc(100% - 88px)}
-.g-tab-group{display:flex;align-items:stretch;gap:3px;flex-shrink:0}
-.g-group-label{align-self:center;color:var(--app-panel)!important;padding:3px 9px;border-radius:6px;font-size:12px!important;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.g-group-label small{opacity:.8;margin-left:4px}
-.g-tab-organizer{position:relative;margin-left:auto}
-.g-organizer-panel{position:absolute;right:0;top:38px;width:345px;max-width:calc(100vw - 20px);max-height:calc(100dvh - 75px);overflow:auto;padding:20px;background:var(--app-panel);color:var(--app-fg);border:1px solid var(--app-accent-wash);border-radius:16px;box-shadow:0 8px 30px #15253e33;z-index:70;font-size:14px}
-.g-organizer-panel h2{font-size:18px;margin:0 0 15px;font-weight:500}
-.g-organizer-panel h3{font-size:14px;margin-top:24px}
-.g-organizer-panel p{font-size:12px;color:var(--app-dim)}
-.g-organizer-panel label{display:flex;flex-direction:column;gap:7px;margin:15px 0 8px}
-.g-organizer-panel :is(input,select){background:var(--app-accent-wash);border:1px solid var(--app-accent-wash);color:var(--app-fg);border-radius:6px;padding:8px;width:100%;font-size:14px}
-.g-organizer-panel button:not(.g-group-colors button){padding:8px 10px;border-radius:6px;background:var(--app-accent-wash);font-size:13px}
-.g-organizer-save{width:100%;color:var(--app-accent)!important}
-.g-group-colors{display:flex;gap:10px;margin:12px 0}
-.g-group-colors button{height:23px;width:23px;border-radius:50%}
-.g-group-colors button[aria-pressed=true]{outline:2px solid var(--app-fg);outline-offset:2px}
-.g-bookmark-row{display:flex;gap:7px;margin:7px 0;align-items:center}
-.g-bookmark-row>button:first-child{flex:1;text-align:left}
-.g-bookmark-row small{float:right}
-.g-organizer-panel details{margin:16px 0}
-.g-organizer-panel summary{cursor:pointer;color:var(--app-dim)}
 .mail-context .input{background:var(--app-panel)!important}
 .mail-compose .section-label{font-size:13px!important;text-transform:none!important;letter-spacing:0!important}
 .mail-compose .btn-block{width:auto!important;padding:0 24px;display:inline-flex!important;border-radius:24px!important;text-transform:none!important;letter-spacing:0!important}
-@media(max-width:760px){
-.g-organizer-panel{right:-3px}
-}
 /* Two tokens used to be re-declared here as themselves —
    `--app-panel:var(--app-panel)` — which reads as "keep this one" and is
    the opposite: a custom property whose value refers to itself is a cycle,
@@ -217,8 +173,6 @@
 @media(prefers-reduced-motion:reduce){
 .portal-workspace *{scroll-behavior:auto!important;transition:none!important}
 }
-.g-browser-tabs:has(.g-organizer-panel){z-index:80}
-.g-home:has(.g-organizer-panel) .g-central-search{visibility:hidden!important;pointer-events:none!important}
 .semester-primary-nav{display:flex;align-items:center;gap:4px;padding:4px 24px 8px;background:var(--app-accent-wash);overflow-x:auto;flex:none;border-bottom:1px solid var(--app-line-soft)}
 .semester-primary-nav button{color:var(--app-fg);white-space:nowrap;font-size:14px;border:0;background:transparent;border-radius:20px;min-height:40px;padding:8px 16px}
 /* The pill you are on: `--app-accent-deep` is a mid metal in this app and
@@ -226,38 +180,15 @@
    where you are was the least readable in the row. */
 .semester-primary-nav button:hover, .semester-primary-nav button[aria-current=page]{background:var(--app-accent-wash);color:var(--app-fg)}
 .semester-primary-nav .semester-search-records{margin-left:auto}
-.assignment-center{max-width:1600px;margin:auto}
 .assignment-next{display:flex;justify-content:space-between;align-items:center;gap:24px;border:1px solid var(--app-accent-wash);background:var(--app-accent-wash);border-radius:20px;padding:22px;margin:18px 0}
 .assignment-next strong{display:block;font-size:20px;margin-top:8px}
 .assignment-next p{margin:8px 0 0}
 .assignment-next button{flex:none}
-.assignment-list-row{display:flex;align-items:center;gap:22px;border-bottom:1px solid var(--app-line-soft);padding:14px 0}
-.assignment-title{flex:1;min-width:0;text-align:left;border:0;background:none;display:flex;flex-direction:column;gap:8px;color:inherit}
-.assignment-title strong{font-size:17px}
-.assignment-title small, .assignment-status small{color:var(--app-dim);font-size:13px}
-.assignment-status{min-width:110px;display:flex;flex-direction:column;gap:6px;font-size:14px}
-.assignment-open{flex:none}
-.assignment-plan{scroll-margin-top:170px;margin-top:24px}
-.assignment-plan blockquote{margin:16px 0;padding:16px;border-left:3px solid var(--app-accent-bright);background:var(--app-accent-wash)}
-.assignment-plan blockquote footer{font-size:13px;color:var(--app-dim);margin-top:12px}
-.assignment-step{display:flex;align-items:center;gap:12px;min-height:48px;padding:8px 0}
-.assignment-step input{width:20px;height:20px}
-.assignment-step small{display:block;color:var(--app-dim)}
-.assignment-load-row{padding:20px 0;border-bottom:1px solid var(--app-line-soft);display:grid;grid-template-columns:130px 1fr 1fr;gap:14px}
-.assignment-load-row>div{grid-column:2/-1;display:flex;flex-wrap:wrap;gap:10px}
-.assignment-back{margin:16px 24px;border:0;color:var(--app-accent-deep);background:none;min-height:44px}
 @media(max-width:640px){
 .semester-primary-nav{padding:4px 8px}
 .semester-primary-nav button{padding:8px 12px}
 .semester-primary-nav .semester-search-records{display:none}
 .assignment-next{align-items:stretch;flex-direction:column;padding:18px}
-.assignment-list-row{gap:10px}
-.assignment-open{display:none}
-.assignment-status{min-width:82px;max-width:95px;font-size:12px}
-.assignment-title strong{font-size:15px}
-.assignment-load-row{grid-template-columns:1fr}
-.assignment-load-row>div{grid-column:auto}
-.assignment-plan .portal-filter-row>*{max-width:100%}
 }
 .study-studio{background:var(--app-accent-wash);color:var(--app-fg);border-radius:20px;font-family:Arial,sans-serif}
 .study-studio-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}
@@ -333,16 +264,12 @@
    own #757575 was drawn — fine on the white these came from, 2.7:1 on
    this app's ground. */
 .portal-workspace input::placeholder,.portal-workspace textarea::placeholder,
-.study-studio input::placeholder,.study-studio textarea::placeholder,
-.assignment-center input::placeholder,.graph-workspace input::placeholder{color:var(--app-dim)}
+.study-studio input::placeholder,.study-studio textarea::placeholder{color:var(--app-dim)}
 
 /* `.portal-primary` is used outside `.portal-workspace` too — the study
    studio's entry card, the journal. Unscoped, so a filled button is
    filled wherever it is written, on the app's own inverse pair. */
 .portal-primary{background:var(--app-fg);color:var(--app-bg)}
-/* The bookmarks panel's own field, for the same reason as the ported
-   screens below it. */
-.g-organizer-panel input::placeholder{color:var(--app-dim)}
 
 /* The study screen's next-action row was a flex container with unstyled
    buttons in it, so they inherited the page's light ink and sat on a
