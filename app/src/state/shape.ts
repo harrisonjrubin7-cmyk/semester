@@ -2113,6 +2113,13 @@ export type Action =
    */
   | { type: 'editTask'; id: string; patch: Partial<Omit<PersonalTask, 'id' | 'created'>> }
   | { type: 'toggleTask'; id: string }
+  /*
+   * The steps inside a task, one at a time. See the note over `toggleStep` in
+   * `state/slices/mine.ts` for why these are not `editTask` with a new array.
+   */
+  | { type: 'toggleStep'; id: string; stepId: string }
+  | { type: 'addStep'; id: string; text: string }
+  | { type: 'dropStep'; id: string; stepId: string }
   | { type: 'deleteTask'; id: string }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
   /*
@@ -2140,6 +2147,7 @@ export type Action =
   | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId' | 'itemId'>> }
   | { type: 'attachFile'; noteId: string; fileId: string }
   | { type: 'detachFile'; noteId: string; fileId: string }
+  | { type: 'pinNote'; id: string }
   | { type: 'deleteNote'; id: string }
   /* ── The mailbox ─────────────────────────────────────────────────────── */
   /** Hand a message to the screen that reads announcements into dates. */

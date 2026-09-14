@@ -76,6 +76,20 @@ export function notes(state: State, action: Action): State | null {
         ),
       };
 
+    /*
+     * Pinning does not touch `updated`.
+     *
+     * `updated` is "when the writing last changed", and it is what the list
+     * is ordered by. Bumping it here would make pinning a note reorder every
+     * *other* note around it the moment it was unpinned again — and would
+     * quietly claim the note had been edited on a day nobody wrote in it.
+     */
+    case 'pinNote':
+      return {
+        ...state,
+        notes: state.notes.map((n) => (n.id === action.id ? { ...n, pinned: !n.pinned } : n)),
+      };
+
     case 'deleteNote':
       return {
         ...state,

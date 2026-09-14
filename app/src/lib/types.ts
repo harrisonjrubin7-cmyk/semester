@@ -291,6 +291,19 @@ export interface AppNotification {
 // yourself, and the app keeps the two visibly apart.
 
 /** A task you added — not something a syllabus asked for. */
+/**
+ * One piece of a task.
+ *
+ * `TaskStep` rather than `Step`, which this file already uses for a worked
+ * example's line in a study guide — a different thing in a different domain,
+ * and the collision is only in the word.
+ */
+export interface TaskStep {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
 export interface PersonalTask {
   id: string;
   title: string;
@@ -299,7 +312,33 @@ export interface PersonalTask {
   /** Free text — "6:30 PM", "before work". Never parsed. */
   time: string;
   note: string;
+  /**
+   * Whether it is finished.
+   *
+   * On a repeating task this means the *series* is finished, which happens
+   * only when the rule runs out — ticking one off before then moves `date` to
+   * the next occurrence and leaves this false. See `tick` in `lib/chores.ts`
+   * for why that is the model rather than a list of completed dates.
+   */
   done: boolean;
+  /**
+   * The rule that brings it back — a weekly reading, a Sunday reset, laundry
+   * every fortnight. Absent is once. See `lib/repeat.ts`.
+   *
+   * The same `Repeat` an appointment carries, deliberately: "every weekday
+   * until the end of term" is one idea, and a second rule engine for tasks
+   * would be the same five cases written twice and diverging on the sixth.
+   */
+  repeat?: Repeat;
+  /**
+   * The pieces it breaks into, in order. Absent or empty is a task with none.
+   *
+   * To Do calls these Steps and Google Tasks calls them subtasks; both stop
+   * at one level, and so does this. A step that could itself have steps is an
+   * outline, and an outline of work is a document — which this app already
+   * has a better editor for than a list row could ever be.
+   */
+  steps?: TaskStep[];
   created: number;
   /** Filed against a course, or null when it is nothing to do with school. */
   courseId: CourseId | null;
@@ -399,6 +438,15 @@ export interface Note {
   itemId?: string | null;
   /** Ids of files attached to this note, held in IndexedDB. */
   fileIds: string[];
+  /**
+   * Kept at the top of the list.
+   *
+   * The list is ordered by when a note was last touched, which is the right
+   * default and is exactly wrong for the one note somebody is living in for a
+   * fortnight: every other note they open pushes it down. Keep, OneNote and
+   * Apple Notes all answer this the same way, with a pin.
+   */
+  pinned?: boolean;
 }
 
 /**

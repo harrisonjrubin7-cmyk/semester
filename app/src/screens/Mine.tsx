@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -8,7 +8,7 @@ import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
 import { ActionButton, EmptyState, FilePick, SectionLabel, Segmented, TickBox } from '../components/ui';
-import { ChevronRight, Plus } from '../components/Icons';
+import { ChevronRight, Plus, StarIcon } from '../components/Icons';
 import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib/files';
 import { Drive } from './mine/Drive';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
@@ -24,6 +24,7 @@ import {
   type Every,
 } from '../lib/repeat';
 import { byDateThenTime } from '../lib/select';
+import { stepsAllDone, stepsDone, tickSays } from '../lib/chores';
 import { termEnds } from '../lib/registrar';
 import type { Appointment } from '../lib/types';
 import { CheckIt } from '../components/CheckIt';
@@ -92,11 +93,17 @@ const submitOnEnter =
  * the thing this screen is mostly for — becomes harder to hit.
  */
 function TaskRow({ task: t }: { task: PersonalTask }) {
-  const { dispatch, courseCode } = useStore();
+  const { state, dispatch, courseCode } = useStore();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(t.title);
   const [date, setDate] = useState(t.date ?? '');
   const [time, setTime] = useState(t.time);
+  const [every, setEvery] = useState<Every | ''>(t.repeat?.every ?? '');
+  const [until, setUntil] = useState(t.repeat?.until ?? '');
+  const [step, setStep] = useState('');
+  const lastDay = termEnds(state.registrar);
+  const steps = t.steps ?? [];
+  const through = stepsDone(t);
 
   const save = () => {
     if (!title.trim()) return;
@@ -106,9 +113,29 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
       // `date` is nullable on purpose: clearing the field moves a task to
       // Someday rather than leaving it stranded on an empty string, which no
       // group would have matched and which would have made it disappear.
-      patch: { title: title.trim(), date: date || null, time: time.trim() },
+      patch: {
+        title: title.trim(),
+        date: date || null,
+        time: time.trim(),
+        /*
+         * Cleared rather than left behind when the picker says Once, for the
+         * reason `AppointmentRow` gives: `editTask` merges a patch, so
+         * omitting it would leave a task repeating while the form it was
+         * edited in said it did not.
+         *
+         * A rule needs a first day to count from, so a task with no date
+         * cannot carry one — Someday plus weekly is not a series.
+         */
+        repeat: every && date ? { every, until: until || defaultUntil(date, lastDay) } : undefined,
+      },
     });
     setEditing(false);
+  };
+
+  const addStep = () => {
+    if (!step.trim()) return;
+    dispatch({ type: 'addStep', id: t.id, text: step });
+    setStep('');
   };
 
   if (editing) {
@@ -147,6 +174,89 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
           />
         </div>
+        {/* A rule counts from a first day, so there is nothing to offer a
+            task that has not got one. Said rather than shown greyed: an empty
+            select reads as a missing feature. */}
+        {date ? (
+          <HowOften
+            from={date}
+            every={every}
+            until={until}
+            lastDay={lastDay}
+            onEvery={setEvery}
+            onUntil={setUntil}
+          />
+        ) : (
+          <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-4)' }}>
+            Give it a day and it can repeat.
+          </div>
+        )}
+
+        {/*
+          Steps. Written and ticked here rather than behind another press,
+          because the whole use of breaking a task up is seeing the pieces
+          while you are deciding what the task is.
+        */}
+        <div style={{ marginTop: 'var(--sp-5)' }}>
+          <SectionLabel style={{ margin: '0 0 var(--sp-3)' }}>
+            {through.of > 0 ? `Steps · ${through.done} of ${through.of}` : 'Steps'}
+          </SectionLabel>
+          {steps.map((sp) => (
+            <div key={sp.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: 'var(--sp-2)' }}>
+              <button
+                type="button"
+                className="bare"
+                onClick={() => dispatch({ type: 'toggleStep', id: t.id, stepId: sp.id })}
+                aria-label={sp.done ? `Mark ${sp.text} not done` : `Mark ${sp.text} done`}
+                style={{ width: 'auto', flex: 'none' }}
+              >
+                <TickBox on={sp.done} size={16} />
+              </button>
+              <span
+                style={{
+                  flex: 1,
+                  minWidth: 0,
+                  fontSize: 'var(--type-sm)',
+                  // Dimmed through the audited helper rather than by hand;
+                  // `lib/dim.ts` says why a written-in opacity is the thing
+                  // that drifts below readable on a lighter ground.
+                  ...(sp.done ? secondLine() : {}),
+                  textDecoration: sp.done ? 'line-through' : 'none',
+                }}
+              >
+                {sp.text}
+              </span>
+              <button
+                type="button"
+                className="bare"
+                onClick={() => dispatch({ type: 'dropStep', id: t.id, stepId: sp.id })}
+                aria-label={`Remove ${sp.text}`}
+                style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', ...secondLine() }}
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <input
+            className="input"
+            value={step}
+            onChange={(e) => setStep(e.target.value)}
+            onKeyDown={(e) => {
+              // Enter adds the step rather than saving the task: in a list you
+              // are filling in, Enter means "and the next one".
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                addStep();
+              }
+              if (e.key === 'Escape') setEditing(false);
+            }}
+            onBlur={addStep}
+            placeholder="Add a step"
+            aria-label="Add a step"
+            style={{ height: 36, fontSize: 'var(--type-sm)', width: '100%' }}
+          />
+        </div>
+
         <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
           <button
             type="button"
@@ -205,7 +315,17 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         type="button"
         className="bare"
         onClick={() => dispatch({ type: 'toggleTask', id: t.id })}
-        aria-label={t.done ? `Mark ${t.title} not done` : `Mark ${t.title} done`}
+        /* On a repeating task the tick moves it rather than finishing it, and
+           a checkbox that does something other than tick has to say so before
+           it is pressed — `tickSays` is the sentence. */
+        title={tickSays(t)}
+        aria-label={
+          t.done
+            ? `Mark ${t.title} not done`
+            : tickSays(t)
+              ? `Mark ${t.title} done. ${tickSays(t)}`
+              : `Mark ${t.title} done`
+        }
         style={{ width: 20, flex: 'none', marginTop: 'var(--sp-1)' }}
       >
         <TickBox on={t.done} />
@@ -220,6 +340,9 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           setTitle(t.title);
           setDate(t.date ?? '');
           setTime(t.time);
+          setEvery(t.repeat?.every ?? '');
+          setUntil(t.repeat?.until ?? '');
+          setStep('');
           setEditing(true);
         }}
         aria-label={`Edit ${t.title}`}
@@ -241,7 +364,19 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           </span>
           {t.date ? longLabel(isoToDate(t.date)) : 'No date'}
           {t.time ? ` \u00b7 ${t.time}` : ''}
+          {/* Only the first letter: `describe` returns a sentence, and
+              lower-casing the whole of it turned December into december. */}
+          {t.repeat ? ` \u00b7 ${lowerFirst(describeRepeat(t.repeat))}` : ''}
+          {through.of > 0 ? ` \u00b7 ${through.done}/${through.of} steps` : ''}
         </span>
+        {/* The prompt, not the act: the steps are all ticked and the task is
+            not, which is worth saying and is not the app's decision to make.
+            See `stepsAllDone` in `lib/chores.ts`. */}
+        {stepsAllDone(t) && (
+          <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-1)' }}>
+            Every step is done.
+          </span>
+        )}
       </button>
     </Blueprint>
   );
@@ -254,15 +389,30 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
   const [date, setDate] = useState(dateToIso(now));
   const [time, setTime] = useState('');
   const [courseId, setCourseId] = useState<CourseId | null>(null);
+  const [every, setEvery] = useState<Every | ''>('');
+  const [until, setUntil] = useState('');
+  const lastDay = termEnds(state.registrar);
 
   const add = () => {
     if (!title.trim()) return;
     dispatch({
       type: 'addTask',
-      task: { title: title.trim(), date: date || null, time: time.trim(), note: '', courseId },
+      task: {
+        title: title.trim(),
+        date: date || null,
+        time: time.trim(),
+        note: '',
+        courseId,
+        // A rule counts from a first day; without one there is no series.
+        ...(every && date ? { repeat: { every, until: until || defaultUntil(date, lastDay) } } : {}),
+      },
     });
     setTitle('');
     setTime('');
+    // Cleared with the rest, or the next task written silently inherits the
+    // rule from the chore somebody added before it.
+    setEvery('');
+    setUntil('');
     setOpen(false);
   };
 
@@ -286,8 +436,13 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
     },
     { label: 'Someday', tasks: mine.filter((t) => !t.date) },
     {
+      // `mine`, like the three above it. Overdue was added after the comment
+      // over this list was written — it still names only three groups — and
+      // it read `state.tasks`, so a search filtered the list everywhere
+      // except here: typing "gym" left every overdue task on screen under a
+      // heading that looked like part of the result.
       label: 'Overdue',
-      tasks: state.tasks.filter((t) => t.date && t.date < today && !t.done),
+      tasks: mine.filter((t) => t.date && t.date < today && !t.done),
     },
   ];
 
@@ -326,6 +481,16 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
             />
           </div>
           <CoursePicker value={courseId} onChange={setCourseId} />
+          {date && (
+            <HowOften
+              from={date}
+              every={every}
+              until={until}
+              lastDay={lastDay}
+              onEvery={setEvery}
+              onUntil={setUntil}
+            />
+          )}
           <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
             <button
               type="button"
@@ -378,6 +543,11 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
       <div style={{ height: 22 }} />
     </div>
   );
+}
+
+/** A sentence made to follow a middot, without flattening the names in it. */
+function lowerFirst(text: string): string {
+  return text ? text[0].toLowerCase() + text.slice(1) : text;
 }
 
 /**
@@ -462,6 +632,103 @@ function lengthLabel(minutes: number): string {
 }
 
 /**
+ * How often, and until when — the repeat picker on its own.
+ *
+ * Split out of `HowLongAndOften` when tasks learned to repeat. The two forms
+ * want different halves: an appointment needs a length beside the rule and a
+ * task has no length to give, but "every weekday until the end of term" is
+ * one idea and the second copy of it is where the default end date, the count
+ * line, or the wording about naming a last day would have quietly diverged.
+ *
+ * Renders the select and, once a rule is chosen, the end date and a sentence
+ * saying how many times that comes to, plus whatever the caller wants on the
+ * select's own line.
+ */
+function HowOften({
+  from,
+  every,
+  until,
+  lastDay,
+  onEvery,
+  onUntil,
+  label = 'How often',
+  beside,
+}: {
+  /** The day it starts, which bounds the rule and dates its default end. */
+  from: string;
+  every: Every | '';
+  until: string;
+  lastDay: string;
+  onEvery: (next: Every | '') => void;
+  onUntil: (next: string) => void;
+  /** What the select is called, since only one of the two forms says "often". */
+  label?: string;
+  /**
+   * A control to put on the same line as the select — the appointment form's
+   * length picker.
+   *
+   * Passed in rather than the select being placed by the caller, because the
+   * end date and the count line have to come *under* that line and a caller
+   * holding only the select cannot put them there. This way the block is one
+   * thing wherever it is used, and the only thing that varies is what shares
+   * its first row.
+   */
+  beside?: ReactNode;
+}) {
+  const ends = until || defaultUntil(from, lastDay);
+  const times = every ? howMany(from, { every, until: ends }, ends) : 1;
+  return (
+    <>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
+      {beside}
+      <label style={{ flex: 1, minWidth: 0 }}>
+        <span className="sr-only">{label}</span>
+        <select
+          className="input"
+          value={every}
+          onChange={(e) => {
+            const next = e.target.value as Every | '';
+            onEvery(next);
+            // The end filled in the moment a rule is chosen, rather than left
+            // empty for somebody to discover is required.
+            if (next && !until) onUntil(defaultUntil(from, lastDay));
+          }}
+          style={{ ...inputStyle, width: '100%' }}
+          aria-label={label}
+        >
+          <option value="">Once</option>
+          {EVERY.map((e) => (
+            <option key={e.id} value={e.id}>
+              {e.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      </div>
+      {every && (
+        <>
+          <input
+            className="input"
+            type="date"
+            value={until || ends}
+            min={from}
+            onChange={(e) => onUntil(e.target.value)}
+            style={{ ...inputStyle, width: '100%' }}
+            aria-label="Repeat until"
+          />
+          <div
+            role="status"
+            style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}
+          >
+            {`${describeRepeat({ every, until: ends })} — ${times} ${times === 1 ? 'time' : 'times'}. Every repeat names its last day; this one runs to the end of term unless you change it.`}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+/**
  * How many days an all-day entry may cover, offered by name.
  *
  * The same argument as `LENGTHS`: a typed number is a field that accepts 900
@@ -524,8 +791,6 @@ function HowLongAndOften({
   onEvery: (next: Every | '') => void;
   onUntil: (next: string) => void;
 }) {
-  const ends = until || defaultUntil(from, lastDay);
-  const times = every ? howMany(from, { every, until: ends }, ends) : 1;
   return (
     <>
       {/* First, because it decides what the control beside it is asking. */}
@@ -545,10 +810,17 @@ function HowLongAndOften({
         <TickBox on={allDay} size={18} />
         <span>All day</span>
       </button>
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
-        {/* How long, as a picker rather than an end time: an end time is two
-            fields that can disagree with each other, and every one of these
-            is a length somebody would have typed anyway. */}
+      <HowOften
+        from={from}
+        every={every}
+        until={until}
+        lastDay={lastDay}
+        onEvery={onEvery}
+        onUntil={onUntil}
+        beside={
+        /* How long, as a picker rather than an end time: an end time is two
+           fields that can disagree with each other, and every one of these
+           is a length somebody would have typed anyway. */
         <label style={{ flex: 1, minWidth: 0 }}>
           <span className="sr-only">{allDay ? 'How many days' : 'How long'}</span>
           {allDay ? (
@@ -581,49 +853,8 @@ function HowLongAndOften({
             </select>
           )}
         </label>
-        <label style={{ flex: 1, minWidth: 0 }}>
-          <span className="sr-only">How often</span>
-          <select
-            className="input"
-            value={every}
-            onChange={(e) => {
-              const next = e.target.value as Every | '';
-              onEvery(next);
-              // The end filled in the moment a rule is chosen, rather than
-              // left empty for somebody to discover is required.
-              if (next && !until) onUntil(defaultUntil(from, lastDay));
-            }}
-            style={{ ...inputStyle, width: '100%' }}
-            aria-label="How often"
-          >
-            <option value="">Once</option>
-            {EVERY.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-      {every && (
-        <>
-          <input
-            className="input"
-            type="date"
-            value={until || ends}
-            min={from}
-            onChange={(e) => onUntil(e.target.value)}
-            style={{ ...inputStyle, width: '100%' }}
-            aria-label="Repeat until"
-          />
-          <div
-            role="status"
-            style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}
-          >
-            {`${describeRepeat({ every, until: ends })} — ${times} ${times === 1 ? 'time' : 'times'}. Every repeat names its last day; this one runs to the end of term unless you change it.`}
-          </div>
-        </>
-      )}
+        }
+      />
     </>
   );
 }
@@ -1066,14 +1297,29 @@ function Appointments() {
 function Notes({ rows }: { rows?: Note[] }) {
   const { state, dispatch, courseCode, allItems } = useStore();
   const rowThirteen = useRowStyle(13);
-  const all = [...state.notes].sort((a, b) => b.updated - a.updated);
+  /*
+   * Pinned first, then by when the writing last changed.
+   *
+   * One sort rather than two lists, so a search that matches a pinned note
+   * and three others still reads as one list in the order the screen is
+   * always in — and so an unpinned note never jumps a group boundary while
+   * somebody is looking at it.
+   *
+   * Applied to whichever list is drawn rather than only to `all`: the parent
+   * hands `rows` in on every render, not just while a search is running, so
+   * an ordering put on `all` alone is an ordering nothing ever sees. Measured
+   * — pinning a note flipped its star and left it exactly where it was.
+   */
+  const byPin = (a: Note, b: Note) =>
+    Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)) || b.updated - a.updated;
+  const all = [...state.notes].sort(byPin);
   /*
    * The filtered rows when the box has something in it, all of them when it
    * does not — and `all` either way for the empty state, so filtering to
    * nothing says "nothing matches" rather than "no notes yet". Those are
    * different facts and the second one is alarming when it is not true.
    */
-  const notes = rows ?? all;
+  const notes = rows ? [...rows].sort(byPin) : all;
 
   return (
     <div>
@@ -1092,8 +1338,8 @@ function Notes({ rows }: { rows?: Note[] }) {
       ) : (
         <div style={{ marginTop: 14 }}>
           {notes.map((n) => (
+            <div key={n.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
             <button
-              key={n.id}
               type="button"
               className="bare tappable"
               onClick={() => dispatch({ type: 'openNote', id: n.id })}
@@ -1129,6 +1375,23 @@ function Notes({ rows }: { rows?: Note[] }) {
               </span>
               <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
             </button>
+            {/* Beside the row rather than inside it: the row is one big button
+                and a button inside a button is not a thing HTML has. Always
+                drawn, not only on hover — there is no hover on a phone, and a
+                control that appears on a pointer is a control half the users
+                of this app never find. */}
+            <button
+              type="button"
+              className="bare"
+              onClick={() => dispatch({ type: 'pinNote', id: n.id })}
+              aria-pressed={Boolean(n.pinned)}
+              aria-label={n.pinned ? `Unpin ${n.title || 'Untitled note'}` : `Pin ${n.title || 'Untitled note'} to the top`}
+              title={n.pinned ? 'Pinned to the top' : 'Pin to the top'}
+              style={{ width: 'auto', flex: 'none', padding: 'var(--sp-2)' }}
+            >
+              <StarIcon size={17} on={Boolean(n.pinned)} />
+            </button>
+            </div>
           ))}
         </div>
       )}
