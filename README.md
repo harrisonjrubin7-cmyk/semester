@@ -1027,6 +1027,34 @@ model in it or needs a key:
   back, which is the test worth having for a pair of functions that are meant
   to undo each other.
 
+  **`dft([1, 0, -1, 0])` is the discrete transform**, and it is the only one of
+  the three Fourier objects that runs on *data*. The series wants a formula to
+  integrate and the transform wants one to look up; what somebody actually has
+  is a column of numbers — a reading each month, a price each day, forty
+  samples off a sensor — and the question they have about it is the same
+  question. It takes a list, a list defined on a line above it, or a formula
+  and how many samples: `fft(\cos(2\pi n/32) + 0.4\sin(2\pi 5n/32), 32)`.
+
+  It is finite and exact, so unlike the other two it has nothing to refuse and
+  nothing to approximate. It is also the same object as the z-transform read at
+  particular places — `X[k]` is `X(z)` at `z = e^{2\pi ik/N}`, the transform
+  sampled at N points evenly round the unit circle — which is why the pole
+  readings there and the peaks here say the same things about the same
+  sequence.
+
+  Cooley–Tukey where the count is a power of two and the plain sum otherwise,
+  with the two checked against each other, because a fast method that quietly
+  disagreed with its own definition is the one bug here that would never show
+  itself on a picture. Also checked by Parseval, by going out and coming back,
+  and against a cosine whose two bins can be named in advance.
+
+  The picture is the size of each bin in stems against its number, bounded at N
+  — the transform repeats after that, and drawing the repeat would offer a
+  reading of data nobody gave. The reading is the same numbers as the waves
+  they are, in exactly the notation the continuous series prints, because they
+  are the same statement about the same thing: the example above reads back
+  `\cos(0.19635n) + 0.4\sin(0.981748n)`, which is what went in.
+
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms
   without complaint. A bracket after a letter is a multiplication or a function
