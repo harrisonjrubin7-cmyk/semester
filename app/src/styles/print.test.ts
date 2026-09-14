@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources as walk } from './rules';
 
 /**
  * What comes off the screen and onto the page.
@@ -42,14 +42,8 @@ const CSS = readFileSync(new URL('./app.css', import.meta.url), 'utf8');
  */
 const PRINT = CSS.slice(CSS.indexOf('@media print')).replace(/\/\*[\s\S]*?\*\//g, '');
 
-const sources = (dir: string): string[] =>
-  readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
-    e.isDirectory()
-      ? sources(join(dir, e.name))
-      : e.name.endsWith('.tsx') && !e.name.includes('.test.')
-        ? [join(dir, e.name)]
-        : [],
-  );
+/** Every screen and component, tests aside. `rules.ts` walks; this names. */
+const sources = (dir: string): string[] => walk(dir, { tests: false }).map((f) => f.path);
 
 /** Every button that prints, by the class that says so. */
 const printing = (): string[] => {
