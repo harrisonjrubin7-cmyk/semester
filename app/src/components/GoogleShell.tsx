@@ -14,6 +14,7 @@ import { currentLook } from '../state/shape';
 import { DEFAULT_FAVOURITES, readFavourites, toggleFavourite } from '../lib/desk';
 import { ground, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
+import { WIDE, useMedia } from '../lib/media';
 import { GoogleTabs } from './GoogleTabs';
 import { findEverything, type Hit } from '../lib/find';
 import { actionsFor, hitKey, landingOf } from '../lib/openhit';
@@ -77,6 +78,10 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   const [group, setGroup] = useState('All apps');
   const [grid, setGrid] = useState(false);
   const [classic, setClassic] = useState(false);
+  /* The top field is about 200px on a phone, where the long prompt is cut
+     off mid-word. 760px is the shell's own breakpoint — see the media
+     query in `google-shell.css` — so the two agree about what narrow is. */
+  const roomy = useMedia(WIDE);
   const searchRef = useRef<HTMLInputElement>(null);
   const homeSearchRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -145,7 +150,7 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   const searchBox = (placement: 'top'|'home') => <div className={`g-search-wrap ${placement==='top'?'g-omnibox':'g-central-search'} ${placement==='home' && (launcher || customize || state.finder || state.quickAdd || (focused && activeSearch==='top'))?'is-suppressed':''} ${focused && activeSearch===placement ? 'is-open' : ''}`}>
     <form className="g-search" onSubmit={e => {e.preventDefault(); query.trim()?searchAll():showDirectory();}} role="search">
       {placement==='home' ? <button type="button" className="g-icon g-plus" aria-label="Add a task or appointment" onClick={() => {dispatch({type:'finder',open:false});dispatch({type:'quickAdd',open:true});}}><Plus size={24}/></button> : <Search size={23}/>}
-      <input ref={placement==='top'?searchRef:homeSearchRef} aria-label={placement==='top'?'Search Semester':'Search your semester'} aria-expanded={focused && activeSearch===placement} aria-controls={`semester-search-results-${placement}`} aria-activedescendant={focused && activeSearch===placement && selected>=0 && selected<optionCount ? `g-option-${placement}-${selected}` : undefined} role="combobox" autoComplete="off" placeholder={placement==='home' ? 'Search your semester' : 'Search apps, courses, assignments and files'} value={query} onFocus={() => {setLauncher(false);setOrganizerOpen(false);setActiveSearch(placement);setSelected(-1);setFocused(!state.finder);}} onChange={e=>{setQuery(e.target.value);if(state.finder)recordSearch(e.target.value);setSelected(-1);setFocused(!state.finder);}} onKeyDown={e=>{
+      <input ref={placement==='top'?searchRef:homeSearchRef} aria-label={placement==='top'?'Search Semester':'Search your semester'} aria-expanded={focused && activeSearch===placement} aria-controls={`semester-search-results-${placement}`} aria-activedescendant={focused && activeSearch===placement && selected>=0 && selected<optionCount ? `g-option-${placement}-${selected}` : undefined} role="combobox" autoComplete="off" placeholder={placement==='home' ? 'Search your semester' : roomy ? 'Search apps, courses, assignments and files' : 'Search Semester'} value={query} onFocus={() => {setLauncher(false);setOrganizerOpen(false);setActiveSearch(placement);setSelected(-1);setFocused(!state.finder);}} onChange={e=>{setQuery(e.target.value);if(state.finder)recordSearch(e.target.value);setSelected(-1);setFocused(!state.finder);}} onKeyDown={e=>{
         if(e.key==='ArrowDown'){e.preventDefault();setSelected(n=>optionCount?Math.min(n+1,optionCount-1):-1);}
         if(e.key==='ArrowUp'){e.preventDefault();setSelected(n=>optionCount?(n<=0?optionCount-1:n-1):-1);}
         if(e.key==='Enter' && focused && selected>=0 && selected<optionCount){e.preventDefault();if(options[selected])go(options[selected].screen);else openRecord(records[selected-options.length]);}
