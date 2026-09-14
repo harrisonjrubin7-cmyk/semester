@@ -508,8 +508,14 @@ export function Grapher() {
         in it is a transfer function, which says where its poles are and whether it settles.{' '}
         <code>{'fourier(sign(\\sin(t)), 2\\pi)'}</code> is a Fourier series — the harmonics a
         repeating thing is made of, drawn over the thing itself — and <code>{'F{e^{-2t}}'}</code>{' '}
-        is a Fourier transform, drawn as its size against <code>ω</code>. It takes the same notation
-        the Write tab draws, so a formula you kept can be pasted in as it is.
+        is a Fourier transform, drawn as its size against <code>ω</code>. <code>{'Z{0.5^n}'}</code>{' '}
+        is a z-transform — Laplace for a thing that happens on the beat — and{' '}
+        <code>{'Z^{-1}{z/(z - 0.5)}'}</code> is the sequence behind one, drawn as the beats it is.
+        And <code>{'dft([1, 0, -1, 0])'}</code> is the transform that runs on data rather than on a
+        formula — the frequencies a run of numbers is made of — while{' '}
+        <code>{'wavelet([…], 2)'}</code> says which scales it wobbles at and, unlike a spectrum,
+        where. It takes the same notation the Write tab draws, so a formula you kept can be pasted
+        in as it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
         <Toggle on={degrees} label="Work in degrees rather than radians" onChange={() => setDegrees(!degrees)} />
@@ -575,6 +581,10 @@ function Row({
     reading.kind === 'transfer' ||
     reading.kind === 'spectrum' ||
     reading.kind === 'harmonics' ||
+    reading.kind === 'ztransform' ||
+    reading.kind === 'sequence' ||
+    reading.kind === 'bins' ||
+    reading.kind === 'wavelet' ||
     reading.kind === 'surface';
   /** Whether it puts ink of its own on the picture — see the swatch below. */
   const inked = drawn && reading.kind !== 'start';
@@ -687,7 +697,10 @@ function Answer({
       {got ? (
         <>
           <div>{got.lead}</div>
-          <Wide latex={got.latex} />
+          {/* Not every answer is an equation: a wavelet's is a share per scale
+              and a place, which are sentences. An empty box under the lead
+              would read as something that failed to render. */}
+          {got.latex ? <Wide latex={got.latex} /> : null}
           <div>
             Drawn against {got.over}.{got.note ? ` ${got.note}` : ''}
           </div>

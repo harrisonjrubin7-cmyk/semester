@@ -463,3 +463,173 @@ export function sampler(body: Node, of: string, scope: Scope): (t: number) => nu
     return Array.isArray(got) ? (got[0] ?? NaN) : got;
   };
 }
+
+// ── The discrete one: the transform you actually compute ─────────────────
+
+/**
+ * The DFT, which is the only one of the three that runs on data.
+ *
+ * The series above wants a formula to integrate and the transform wants one to
+ * look up. What somebody actually has is a column of numbers — a reading each
+ * month, a price each day, forty samples off a sensor — and the question they
+ * have about it is the same question: what frequencies is this made of. That
+ * is this one, and it is finite, exact, and has nothing to refuse.
+ *
+ * It is also the same object as the z-transform, read at particular places:
+ * `X[k]` is `X(z)` at `z = e^{2\pi ik/N}`, which is to say the transform of
+ * `lib/discrete.ts` sampled at N points evenly round the unit circle. The two
+ * files are not joined in code — there would be nothing to share but a loop —
+ * but that is why the pole readings there and the peaks here say the same
+ * things about the same sequence.
+ */
+export interface Bin {
+  re: number;
+  im: number;
+}
+
+/** The sum written out: N terms for each of N answers. Slow, and the definition. */
+export function slowDft(xs: Bin[], sign = -1): Bin[] {
+  const n = xs.length;
+  const out: Bin[] = [];
+  for (let k = 0; k < n; k += 1) {
+    let re = 0;
+    let im = 0;
+    for (let i = 0; i < n; i += 1) {
+      const angle = (sign * 2 * Math.PI * k * i) / n;
+      const c = Math.cos(angle);
+      const s = Math.sin(angle);
+      re += xs[i].re * c - xs[i].im * s;
+      im += xs[i].re * s + xs[i].im * c;
+    }
+    out.push({ re, im });
+  }
+  return out;
+}
+
+/**
+ * The same answer by halves, where the count allows it.
+ *
+ * Cooley–Tukey: the even-numbered samples and the odd-numbered ones are two
+ * transforms of half the size, and the whole is those two with a turn applied
+ * to the second. That is the fast Fourier transform, and it is the reason
+ * anybody can take the spectrum of a thousand points on a phone.
+ *
+ * It only applies when the count is a power of two, so `dft` falls back to the
+ * sum above, and the two are checked against each other in the tests. A fast
+ * method that quietly disagreed with its own definition would be the worst
+ * thing in this file.
+ */
+function fastDft(xs: Bin[], sign: number): Bin[] {
+  const n = xs.length;
+  if (n === 1) return [{ ...xs[0] }];
+  const even = fastDft(xs.filter((_, i) => i % 2 === 0), sign);
+  const odd = fastDft(xs.filter((_, i) => i % 2 === 1), sign);
+  const out: Bin[] = new Array(n).fill(0).map(() => ({ re: 0, im: 0 }));
+  for (let k = 0; k < n / 2; k += 1) {
+    const angle = (sign * 2 * Math.PI * k) / n;
+    const c = Math.cos(angle);
+    const s = Math.sin(angle);
+    const turned = { re: odd[k].re * c - odd[k].im * s, im: odd[k].re * s + odd[k].im * c };
+    out[k] = { re: even[k].re + turned.re, im: even[k].im + turned.im };
+    out[k + n / 2] = { re: even[k].re - turned.re, im: even[k].im - turned.im };
+  }
+  return out;
+}
+
+const halves = (n: number) => n > 0 && (n & (n - 1)) === 0;
+
+const both = (xs: Bin[], sign: number): Bin[] => (halves(xs.length) ? fastDft(xs, sign) : slowDft(xs, sign));
+
+/** The frequencies a run of numbers is made of. */
+export function dft(xs: number[]): Bin[] {
+  return both(xs.map((v) => ({ re: v, im: 0 })), -1);
+}
+
+/**
+ * And back again.
+ *
+ * Not on the screen — there is no notation for a column of complex numbers to
+ * type in — but it is the check that the forward one is right, which is worth
+ * more here than a screen would be. It is the same sum with the turn going the
+ * other way, over N.
+ */
+export function idft(bins: Bin[]): number[] {
+  const n = bins.length;
+  return both(bins, 1).map((b) => b.re / n);
+}
+
+/** How big a bin is — the height of its line in a spectrum. */
+export const sizeOf = (b: Bin): number => Math.hypot(b.re, b.im);
+
+/**
+ * The bins written as the waves they are.
+ *
+ * A column of complex numbers is the answer and is not a reading. The same
+ * numbers as amplitudes and phases is the `Series` the rest of this file
+ * already prints and sums, so the DFT of a run of data reads out in exactly
+ * the notation the continuous series does — which is the point, since they are
+ * the same statement about the same thing.
+ *
+ * Bin k and bin N−k are one wave counted twice for real data, so the pair is
+ * folded into one harmonic. The last bin of an even-length run has no partner
+ * and is not doubled, which is the fiddly line every implementation gets wrong
+ * once.
+ */
+export function seriesOf(xs: number[]): Series {
+  const n = xs.length;
+  const bins = dft(xs);
+  const terms: Harmonic[] = [];
+  const last = Math.floor(n / 2);
+  for (let k = 1; k <= last; k += 1) {
+    const pair = n % 2 === 0 && k === last ? 1 : 2;
+    terms.push({ n: k, a: (pair * bins[k].re) / n, b: (-pair * bins[k].im) / n });
+  }
+  return { period: n, mean: bins[0].re / n, terms };
+}
+
+/** Which bin carries the most, and what that means in cycles across the run. */
+export function loudest(xs: number[]): { k: number; size: number } | null {
+  const bins = dft(xs);
+  const n = bins.length;
+  let best = -1;
+  let size = 0;
+  for (let k = 1; k <= Math.floor(n / 2); k += 1) {
+    if (sizeOf(bins[k]) > size) {
+      size = sizeOf(bins[k]);
+      best = k;
+    }
+  }
+  return best < 0 ? null : { k: best, size };
+}
+
+/** What somebody typed, as the run of numbers to transform. */
+export function samplesOf(
+  body: Node,
+  count: Node | null,
+  scope: Scope,
+): { ok: true; it: number[] } | { ok: false; fault: string } {
+  const bad = (fault: string) => ({ ok: false as const, fault });
+  if (!count) {
+    const got = value(body, scope);
+    if (!Array.isArray(got)) {
+      return bad('A transform of data wants the data: a list like [1, 0, -1, 0], or a formula and how many samples.');
+    }
+    if (got.length < 2) return bad('Two samples is the fewest there is anything to say about.');
+    if (got.length > 4096) return bad('Four thousand samples is as many as this takes at once.');
+    if (got.some((v) => !Number.isFinite(v))) return bad('Some of those are not numbers.');
+    return { ok: true, it: got };
+  }
+  const asked = value(count, scope);
+  const many = Array.isArray(asked) ? NaN : asked;
+  if (!Number.isInteger(many) || many < 2 || many > 4096) {
+    return bad('How many samples is a whole number from 2 to 4096.');
+  }
+  const f = sampler(body, 'n', scope);
+  const out: number[] = [];
+  for (let i = 0; i < many; i += 1) {
+    const v = f(i);
+    if (!Number.isFinite(v)) return bad(`There is no value at n = ${i}.`);
+    out.push(v);
+  }
+  return { ok: true, it: out };
+}

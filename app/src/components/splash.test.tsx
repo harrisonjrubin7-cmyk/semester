@@ -45,6 +45,24 @@ const curtain = () => host.querySelector('.splash');
 beforeEach(() => {
   vi.useFakeTimers();
   localStorage.clear();
+  /*
+   * And the address, which is the third thing a launch depends on.
+   *
+   * `store.tsx` reads `screenFromUrl() ?? firstScreen(nav)`, and the URL wins —
+   * deliberately, because that is how a deep link and a notification tap open
+   * the screen they name. It also writes the current screen back into the hash.
+   * So the test below that mounts on onboarding leaves `#/onboarding` in the
+   * address bar, and the next test's store reads it and starts there however
+   * clean its storage is. The splash then correctly declines to cover
+   * onboarding and draws nothing, and a test about the curtain fails with no
+   * curtain and nothing wrong.
+   *
+   * It passed on the order the tests happened to run in and failed under
+   * `--sequence.shuffle`, which is the only reason it was ever visible.
+   * `replaceState` rather than `location.hash = ''`, which leaves a bare `#`
+   * behind and fires a `hashchange` at a store that is listening for one.
+   */
+  history.replaceState(null, '', '/');
   // A new launch: what the module flag means is "this page load", and each
   // test is a page load. See `lib/splash.ts`.
   forgetSplash();

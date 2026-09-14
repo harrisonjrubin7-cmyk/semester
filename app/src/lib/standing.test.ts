@@ -32,6 +32,18 @@ describe('standingOf', () => {
     expect(standingOf(item('a', -1), {})).toBe('overdue');
   });
 
+  /*
+   * This is half the rule. `item()` above fabricates a `DatedItem`, so what
+   * is held here is what `standingOf` does *given* an `isPast` that is
+   * already right — and the promise the file makes, that a deadline due today
+   * is never called missed, only holds if `date.ts` sets `isPast` to
+   * `away < 0` rather than `away <= 0`.
+   *
+   * `lib/select.test.ts`, "dates each item against the clock it was given",
+   * is the other half: a today item out of `datedItems` with `isPast` false.
+   * Neither said so until `SIMPLIFY-AUDIT.md` J1 went looking, and nothing
+   * here would fail if `date.ts` changed.
+   */
   it('never calls today overdue, however late in the day', () => {
     expect(standingOf(item('a', 0), {})).toBe('ahead');
   });

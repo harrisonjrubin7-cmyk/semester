@@ -5,6 +5,7 @@ import { Page } from '../components/Page';
 import { ActionButton, SectionLabel } from '../components/ui';
 import { Blueprint } from '../components/Blueprint';
 import { CAMPUS_LINKS } from '../data/campus';
+import { schoolLinks } from '../lib/schoollinks';
 import type { CampusLink } from '../lib/types';
 
 
@@ -28,7 +29,7 @@ import type { CampusLink } from '../lib/types';
 const GROUPS = ['Campus', 'Books', 'Tickets', 'Social', 'Yours'] as const;
 
 export function Links() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, school } = useStore();
   const rowTwelve = useRowStyle(12);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
@@ -38,9 +39,17 @@ export function Links() {
 
   // Links you add yourself land under "Yours" rather than among the defaults,
   // so which addresses the app guessed and which you chose stays obvious.
+  //
+  // Your school's own addresses come last and come deduped: six of them live
+  // in the school profile, and for Vanderbilt four are already in the bundled
+  // list under the names the university uses. `schoolLinks` drops those and
+  // keeps what nothing else had, which is how a student at a school this app
+  // has never heard of still gets their registrar on this screen.
+  const mine: CampusLink[] = state.extraLinks.map((l) => ({ ...l, group: 'Yours' as const }));
   const links: CampusLink[] = [
     ...CAMPUS_LINKS,
-    ...state.extraLinks.map((l) => ({ ...l, group: 'Yours' as const })),
+    ...mine,
+    ...schoolLinks(school, [...CAMPUS_LINKS, ...mine]),
   ];
   const addressOf = (link: CampusLink) => state.linkUrls[link.id] ?? link.url;
 

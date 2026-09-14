@@ -169,6 +169,12 @@ describe('slicing it', () => {
   it('lists the terms newest first', () => {
     expect(terms(all)).toEqual(['2027SP', '2026FA']);
   });
+
+  it('orders the seasons of one year by when they happen', () => {
+    // Not alphabetically, which would be FA, SP, SU reversed to SU, SP, FA.
+    const all = [cost({ term: '2026SP' }), cost({ term: '2026FA' }), cost({ term: '2026SU' })];
+    expect(terms(all)).toEqual(['2026FA', '2026SU', '2026SP']);
+  });
 });
 
 describe('what the same course cost last time', () => {
@@ -199,5 +205,30 @@ describe('what the same course cost last time', () => {
   it('does not compare against a different course', () => {
     const all = [cost({ id: 'a', term: '2025FA', courseId: 'psci', cents: 8000 })];
     expect(lastTime(all, codeOf, 'econ', '2026FA')).toBeNull();
+  });
+
+  /*
+   * Every case above is one fall against another, which a string comparison
+   * gets right by luck: the years differ, so the season codes are never
+   * reached. Within one year they are all it has to go on, and the alphabet
+   * puts FA before SP — so Fall read as earlier than the Spring it follows,
+   * in both directions at once.
+   */
+  it('does not take a later term in the same year as the earlier one', () => {
+    const all = [cost({ id: 'a', term: '2026FA', courseId: 'econ-f', cents: 8000 })];
+    expect(lastTime(all, codeOf, 'econ', '2026SP')).toBeNull();
+  });
+
+  it('finds the earlier term when both are in the same year', () => {
+    const all = [cost({ id: 'a', term: '2026SP', courseId: 'econ-s', cents: 8000 })];
+    expect(lastTime(all, codeOf, 'econ', '2026FA')).toEqual({ term: '2026SP', cents: 8000 });
+  });
+
+  it('takes the nearest earlier term, not the alphabetically last', () => {
+    const all = [
+      cost({ id: 'a', term: '2026SP', courseId: 'econ-s', cents: 1000 }),
+      cost({ id: 'b', term: '2026SU', courseId: 'econ-u', cents: 2000 }),
+    ];
+    expect(lastTime(all, codeOf, 'econ', '2026FA')).toEqual({ term: '2026SU', cents: 2000 });
   });
 });

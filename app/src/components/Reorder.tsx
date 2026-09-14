@@ -21,6 +21,8 @@
  * changed is the area a thumb has to land in, from 23px tall to 44.
  */
 
+import { secondLine } from '../lib/dim';
+
 export function Reorder({
   label,
   atStart,
@@ -47,6 +49,21 @@ export function Reorder({
   width?: number;
   ways?: readonly [string, string];
 }) {
+  /*
+   * Two states, said in two places, and the order matters.
+   *
+   * These arrows carried `opacity: atStart ? 0.2 : 0.6` — the right instinct
+   * at the wrong layer. `.bare:disabled` in app.css now sets `--app-faint` on
+   * every disabled bare button, and the two multiplied: 0.42 alpha inside 0.2
+   * opacity is 0.084, far under the 3:1 that token is chosen to hold.
+   *
+   * So the resting dimness is `secondLine()`, the audited token, rather than
+   * an eyeballed 0.6 — and the *disabled* case deliberately contributes no
+   * colour at all. An inline `color` beats a stylesheet rule, so returning one
+   * here would override `.bare:disabled` and leave the arrow looking live
+   * forever. Deferring with `{}` is the same move `secondLine(rowIsDimmed)`
+   * makes when the row above it has already spoken.
+   */
   return (
     <>
       <button
@@ -55,7 +72,7 @@ export function Reorder({
         disabled={atStart}
         onClick={onUp}
         aria-label={`Move ${label} ${ways[0]}`}
-        style={{ width, flex: 'none', opacity: atStart ? 0.2 : 0.6, fontSize: 'var(--type-lg)' }}
+        style={{ width, flex: 'none', fontSize: 'var(--type-lg)', ...(atStart ? {} : secondLine()) }}
       >
         ↑
       </button>
@@ -65,7 +82,7 @@ export function Reorder({
         disabled={atEnd}
         onClick={onDown}
         aria-label={`Move ${label} ${ways[1]}`}
-        style={{ width, flex: 'none', opacity: atEnd ? 0.2 : 0.6, fontSize: 'var(--type-lg)' }}
+        style={{ width, flex: 'none', fontSize: 'var(--type-lg)', ...(atEnd ? {} : secondLine()) }}
       >
         ↓
       </button>

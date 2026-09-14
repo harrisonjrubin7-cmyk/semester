@@ -571,3 +571,202 @@ describe('Fourier on the list', () => {
     expect(of('fourier(t)')).toMatchObject({ kind: 'fault' });
   });
 });
+
+/**
+ * The z-transform on the list.
+ *
+ * `lib/discrete.test.ts` checks the arithmetic against the table. This checks
+ * the joint, and one thing that is only true here: the inverse is drawn as
+ * points on the integers, because a sequence has no value between them.
+ */
+describe('a z-transform on the list', () => {
+  it('is its own kind, and is not the Fourier one', () => {
+    expect(of('Z{0.5^n}').kind).toBe('ztransform');
+    expect(of('\\mathcal{Z}\\{0.5^n\\}').kind).toBe('ztransform');
+    expect(of('Z^{-1}{z/(z - 0.5)}').kind).toBe('sequence');
+    expect(of('F{e^{-2t}}').kind).toBe('spectrum');
+    expect(of('Z = 4')).toMatchObject({ kind: 'value', name: 'Z' });
+  });
+
+  it('says what it comes to, with what its poles mean', () => {
+    const got = answered(of('Z{0.5^n}'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toBe('\\frac{z}{z - 0.5}');
+    expect(got.over).toBe('z');
+    expect(got.note).toMatch(/inside the unit circle, so it dies away/);
+    expect(got.at(2)).toBeCloseTo(2 / 1.5, 10);
+  });
+
+  it('draws a sequence as beats with a stem to each, not as a curve', () => {
+    const line = of('Z^{-1}{z/((z - 1)(z - 2))}');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toBe('2^{n} - 1');
+    const drawn = draw(line, {}, { x0: -2, x1: 5, y0: -2, y1: 20 });
+    // Nothing before n = 0, and one point per whole number after it.
+    expect(drawn.points.map((p) => p.x)).toEqual([0, 1, 2, 3, 4, 5]);
+    // Numerical roots, so to a handful of places rather than exactly.
+    [0, 1, 3, 7, 15, 31].forEach((want, i) => expect(drawn.points[i].y).toBeCloseTo(want, 9));
+    // Every path is a stem: two points, from the axis to the value.
+    for (const path of drawn.paths) {
+      expect(path).toHaveLength(2);
+      expect(path[0].y).toBe(0);
+      expect(path[0].x).toBe(path[1].x);
+    }
+  });
+
+  it('asks for the letters it needs and no others', () => {
+    expect(missing(of('Z{0.5^n}'), {})).toEqual([]);
+    expect(missing(of('Z^{-1}{z/(z - a)}'), {})).toEqual(['a']);
+    expect(missing(of('Z{k 0.5^n}'), {})).toEqual(['k']);
+  });
+
+  it('says what it could not do rather than drawing nothing quietly', () => {
+    const got = answered(of('Z{\\ln(n)}'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/ln/);
+  });
+});
+
+/**
+ * The discrete transform on the list.
+ *
+ * `lib/fourier.test.ts` checks the arithmetic. This checks the joint, and the
+ * one thing only true here: it reads a *list* off the line, which no other
+ * kind on this list does.
+ */
+describe('a discrete transform on the list', () => {
+  it('is its own kind, told by its name', () => {
+    expect(of('dft([1, 0, -1, 0])').kind).toBe('bins');
+    expect(of('fft(\\cos(n), 16)').kind).toBe('bins');
+    expect(of('fourier(t, 2\\pi)').kind).toBe('harmonics');
+  });
+
+  it('reads the data off the line, and says what is in it', () => {
+    const line = of('dft([1, 0, -1, 0, 1, 0, -1, 0])');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toBe('8 samples, as the waves in them:');
+    expect(got.over).toBe('k');
+    expect(got.note).toMatch(/Biggest at k = 2, which is 2 cycles across the 8/);
+    // Two cycles across eight samples: bins 2 and 6, at four each.
+    expect(got.at(2)).toBeCloseTo(4, 9);
+    expect(got.at(6)).toBeCloseTo(4, 9);
+    expect(got.at(1)).toBeCloseTo(0, 9);
+  });
+
+  it('takes a formula and a count as well as a list', () => {
+    const got = answered(of('dft(\\cos(2\\pi n/8), 8)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.at(1)).toBeCloseTo(4, 9);
+  });
+
+  it('takes its data from a line above it', () => {
+    const lines = [of('a = [3, -1, 4, 1]'), of('dft(a)')];
+    const scope = scopeOf(lines);
+    const got = answered(lines[1], scope);
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toBe('4 samples, as the waves in them:');
+    expect(got.at(0)).toBeCloseTo(7, 9);
+  });
+
+  it('draws a bin per sample, as stems from the axis', () => {
+    // Four samples is four bins, and the window asking for more gets no more:
+    // the transform repeats after N, and drawing the repeat would offer a
+    // reading of data nobody gave.
+    const drawn = draw(of('dft([1, 0, -1, 0])'), {}, { x0: -1, x1: 6, y0: -1, y1: 4 });
+    expect(drawn.points.map((p) => p.x)).toEqual([0, 1, 2, 3]);
+    // [1, 0, -1, 0] is one cycle across four samples: bins 1 and 3.
+    expect(drawn.points.map((p) => Number(p.y.toFixed(9)))).toEqual([0, 2, 0, 2]);
+    for (const path of drawn.paths) {
+      expect(path).toHaveLength(2);
+      expect(path[0].y).toBe(0);
+    }
+  });
+
+  it('says what it wants rather than transforming a formula it cannot count', () => {
+    const got = answered(of('dft(\\cos(n))'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/wants the data/);
+    expect(of('dft()')).toMatchObject({ kind: 'fault' });
+  });
+});
+
+/**
+ * A wavelet on the list.
+ *
+ * `lib/wavelet.test.ts` checks the arithmetic. This checks the joint, and the
+ * one thing peculiar to reading it off a line: the same second argument means
+ * a level after a list and a count after a formula, because a list needs no
+ * count. That is settled by looking at what is there, and getting it wrong
+ * would smooth the wrong amount without saying so.
+ */
+describe('a wavelet on the list', () => {
+  const run = '[1, 1, 2, 1, 1, 9, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2]';
+
+  it('is its own kind, with the filter named by the call', () => {
+    expect(of(`wavelet(${run})`).kind).toBe('wavelet');
+    expect(of(`haar(${run})`)).toMatchObject({ kind: 'wavelet', filter: { name: 'Haar' } });
+    expect(of(`db(${run})`)).toMatchObject({ kind: 'wavelet', filter: { name: 'Daubechies-4' } });
+    expect(of(`daubechies(${run})`)).toMatchObject({ kind: 'wavelet', filter: { name: 'Daubechies-4' } });
+    // A name in this notation is letters, so `d4` is `d` times `4` and always was.
+    expect(of(`d4(${run})`).kind).toBe('curve');
+    expect(of(`dft(${run})`).kind).toBe('bins');
+  });
+
+  it('reads the second argument as a level after a list', () => {
+    const one = answered(of(`wavelet(${run}, 1)`), {});
+    const two = answered(of(`wavelet(${run}, 2)`), {});
+    if (!one || 'says' in one || !two || 'says' in two) throw new Error('no answer');
+    expect(one.lead).toMatch(/smoothed to level 1:$/);
+    expect(two.lead).toMatch(/smoothed to level 2:$/);
+    // Level 1 is pairs averaged: samples 4 and 5 are 1 and 9, so both become 5.
+    expect(one.at(4)).toBeCloseTo(5, 9);
+    expect(one.at(5)).toBeCloseTo(5, 9);
+    // Level 2 averages fours: 1, 9, 2, 1 becomes 3.25 across all four.
+    expect(two.at(4)).toBeCloseTo(3.25, 9);
+    expect(two.at(7)).toBeCloseTo(3.25, 9);
+  });
+
+  it('reads it as a count after a formula, and the level third', () => {
+    const got = answered(of('wavelet(n, 16, 2)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toMatch(/^16 samples over 4 scales, Haar, smoothed to level 2:/);
+    // A ramp averaged in fours: 0..3 all become 1.5.
+    expect(got.at(0)).toBeCloseTo(1.5, 9);
+    expect(got.at(3)).toBeCloseTo(1.5, 9);
+  });
+
+  it('says where the wobble is, which is the whole point of it', () => {
+    const got = answered(of(`wavelet(${run}, 2)`), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.note).toMatch(/Of the wobble, level 1 holds \d+%/);
+    expect(got.note).toMatch(/biggest single one is at level \d+, near sample \d+/);
+    // The 9 is at sample 5, and nothing else in the run moves much.
+    expect(got.note).toMatch(/near sample [4-7]/);
+  });
+
+  it('draws the data as dots and the smoothing as a step through them', () => {
+    const drawn = draw(of(`wavelet(${run}, 1)`), {}, { x0: -2, x1: 20, y0: -2, y1: 12 });
+    // Sixteen samples and no more, however wide the window is.
+    expect(drawn.points).toHaveLength(16);
+    expect(drawn.points[5].y).toBe(9);
+    // One step path, two points per sample, flat across each.
+    expect(drawn.paths).toHaveLength(1);
+    expect(drawn.paths[0]).toHaveLength(32);
+    expect(drawn.paths[0][10].y).toBeCloseTo(5, 9);
+    expect(drawn.paths[0][11].y).toBeCloseTo(5, 9);
+  });
+
+  it('refuses a length it cannot halve, and says which lengths it can', () => {
+    const got = answered(of('wavelet([1, 2, 3, 4, 5])'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/wants a power of two — 4 or 8, not 5/);
+  });
+
+  it('asks for the letters it needs and no others', () => {
+    expect(missing(of(`wavelet(${run})`), {})).toEqual([]);
+    expect(missing(of('wavelet(k n, 16)'), {})).toEqual(['k']);
+    expect(of('wavelet()')).toMatchObject({ kind: 'fault' });
+  });
+});

@@ -118,7 +118,7 @@ describe('replace', () => {
     const { doc: next, changed } = replaceAll(d, 'policy', 'rule');
     expect(changed).toBe(3);
     expect(next.blocks[0]).toMatchObject({ text: 'rule and rule' });
-    expect(next.blocks[1]).toMatchObject({ items: ['a rule'] });
+    expect(next.blocks[1]).toMatchObject({ items: [{ text: 'a rule', level: 0 }] });
   });
 
   it('does not touch the equation', () => {

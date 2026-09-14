@@ -21,7 +21,9 @@ export const slipping: Source = {
   id: 'slipping',
   minimum: OVERDUE_FLOOR,
   run(facts: Facts): Insight[] {
-    const late = facts.dated.filter((i) => i.isPast && !i.isToday && !facts.done[i.id]);
+    // `isPast` is `away < 0`, so today is already excluded — the rule
+    // `lib/standing.ts` argues, rather than a second guard for it here.
+    const late = facts.dated.filter((i) => i.isPast && !facts.done[i.id]);
     const byCourse = new Map<string, typeof late>();
     for (const i of late) byCourse.set(i.c, [...(byCourse.get(i.c) ?? []), i]);
 

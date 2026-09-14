@@ -368,7 +368,24 @@ feature anybody asked for.
 A result you already have open says **Switch to tab**, and pressing it goes to
 that tab instead of making a second one onto the same page — which is what an
 address bar does, and what stops the strip filling with duplicates of the
-things you look at most. The ⧉ beside it still opens another on purpose.
+things you look at most. The ⧉ beside it still opens another on purpose. If
+that tab is the one playing, the row carries the speaker too.
+
+**Lessons are searched** along with everything else — by their title and by
+what the narration actually says, since the cues are its transcript, so
+"elasticity" finds the lesson that explains it and not only the one named
+after it. They are their own group because they are their own place: the unit
+and its lesson are two results, one opening the cards and one the audio.
+
+**Resting on a tab** says what it is: the full name — which the strip cuts at
+190 pixels, and which a pinned tab does not show at all — what kind of place
+it is, the work it belongs to, whether it is the one playing, and what it last
+searched for. No thumbnail, and that is the architecture rather than a
+shortcut: a tab here is a saved place rather than a running page, so there is
+no rendered screen anywhere to take a picture of, and rendering one to
+photograph would mean going there. The keyboard gets the same card on focus,
+as one sentence; a thumb gets none, because a card under a finger covers the
+tab it describes, and the tab's own menu is the touch route to the same facts.
 
 **Bookmarks** are the other half. A tab is where you are; a bookmark is where
 you keep going back to — the ECON study guide, the essay brief, the deadline
@@ -587,6 +604,26 @@ model in it or needs a key:
   from the caption on purpose — it is what a screen reader in Word reads out,
   so it says what is *in* the picture, where a caption says what to make of
   it.
+
+  A **list can nest.** Each item has ← and → beside it, five levels deep, and
+  a sub-item exports as a sub-item: indented under its parent in Markdown, at
+  its own `ilvl` in Word with the marker cycling • ○ ▪ and 1. a. i. the way
+  Word's own lists do. Not Tab — a list here is a column of ordinary text
+  fields on a card, and Tab is how a keyboard gets out of one, so taking it
+  would trap exactly the people who cannot reach for the mouse instead. Lists
+  written before this still work: an item that is a bare string is read as a
+  line at the left margin, which is what it always was.
+
+  A paragraph, a heading or a quotation can be **aligned** — left, centred,
+  right or justified, from the toolbar or the Edit menu. It is a property of
+  that one block rather than of the document: a centred heading in a
+  left-aligned paper is the ordinary case. Pressing the alignment a block
+  already has takes it off again, which is not the same as setting it to
+  left — a block with nothing set follows the page, and one set to left says
+  *not this one* inside a justified paper. Line spacing and margins are the
+  other kind, set once for the whole document in page setup. Markdown has no
+  way to say any of this, so a Markdown export drops the alignment and keeps
+  every word.
 
   A **divider** is a line between one section and the next, and a **page
   break** starts a new page. Two blocks, one line apart on the Insert bar,
@@ -983,6 +1020,112 @@ model in it or needs a key:
   than an answer made of the part that happens to be a function. `F{e^{-|t|}}`
   is the one two-sided shape taken, because an even function is its own right
   half read twice.
+
+  **`Z{0.5^n}` is a z-transform**, which is Laplace for a thing that happens on
+  the beat rather than continuously — a balance after each month, a reading
+  each second, a series each quarter. `Z^{-1}{z/((z-1)(z-2))}` is the sequence
+  behind one, and it reads `2^n - 1`.
+
+  The family is the discrete twin of the Laplace one: `c\,n^k r^n` times a
+  cosine or a sine of `\omega n`, starting at `n = d`. Same closure, same
+  reason there is no half-solved case to fall into. The arithmetic is shared
+  outright — `app/src/lib/poly.ts` now holds the roots and the partial
+  fraction, because taking `\frac{z}{(z-2)(z-3)}` apart is the same problem as
+  taking `\frac{1}{(s+1)(s+2)}` apart, and two copies of a root finder are two
+  root finders that drift.
+
+  What differs is worth saying. The work is done in `w = z^{-1}`, where the
+  sums are geometric and a delay is a multiplication, and turned back into `z`
+  only to be written down, which is why the denominators come out as tables
+  print them. Where a Laplace pole left of the axis means a thing settles, a
+  z-transform pole *inside the unit circle* means it dies away, and the line
+  under it says which — `|p| < 1` is the whole of discrete stability.
+
+  And the answer is drawn as the beats it is: points on the integers with a
+  stem to each, nothing before `n = 0`, and no line joining them. A curve
+  through those points would claim a value at `n = 1.5`, which is not a thing
+  that exists. For the same reason a step at `u(n - 1.5)` is refused rather
+  than rounded.
+
+  Building it found a bug in the adding-up. Three terms over a denominator
+  built by multiplying — `(1-w)^3(1-0.5w)` — has a pole at 1 three times where
+  the sequence has it twice; the spare one cancels against a zero on top, and a
+  partial fraction asked to split at a pole that is not there answered with a
+  five-hundred-thousand. Caught by transforming a sequence and transforming it
+  back, which is the test worth having for a pair of functions that are meant
+  to undo each other.
+
+  **`dft([1, 0, -1, 0])` is the discrete transform**, and it is the only one of
+  the three Fourier objects that runs on *data*. The series wants a formula to
+  integrate and the transform wants one to look up; what somebody actually has
+  is a column of numbers — a reading each month, a price each day, forty
+  samples off a sensor — and the question they have about it is the same
+  question. It takes a list, a list defined on a line above it, or a formula
+  and how many samples: `fft(\cos(2\pi n/32) + 0.4\sin(2\pi 5n/32), 32)`.
+
+  It is finite and exact, so unlike the other two it has nothing to refuse and
+  nothing to approximate. It is also the same object as the z-transform read at
+  particular places — `X[k]` is `X(z)` at `z = e^{2\pi ik/N}`, the transform
+  sampled at N points evenly round the unit circle — which is why the pole
+  readings there and the peaks here say the same things about the same
+  sequence.
+
+  Cooley–Tukey where the count is a power of two and the plain sum otherwise,
+  with the two checked against each other, because a fast method that quietly
+  disagreed with its own definition is the one bug here that would never show
+  itself on a picture. Also checked by Parseval, by going out and coming back,
+  and against a cosine whose two bins can be named in advance.
+
+  The picture is the size of each bin in stems against its number, bounded at N
+  — the transform repeats after that, and drawing the repeat would offer a
+  reading of data nobody gave. The reading is the same numbers as the waves
+  they are, in exactly the notation the continuous series prints, because they
+  are the same statement about the same thing: the example above reads back
+  `\cos(0.19635n) + 0.4\sin(0.981748n)`, which is what went in.
+
+  **`wavelet([…], 2)` is a wavelet transform**, and it answers the question the
+  three before it cannot: not only which scales a run wobbles at, but *where*.
+  A spectrum has no *when* in it — a single step at week 40 and a wobble spread
+  across the year can give the same one, because a sine has no beginning — and
+  that is the honest limit of Fourier and the reason for this.
+
+  Haar is the default, and it is averages and differences: pair the samples up,
+  the average of each pair is the run at half the resolution and the difference
+  is what was lost, then repeat on the averages. Nothing is thrown away, which
+  is why it comes back exactly — the inverse is the forward transform's
+  transpose, which for an orthonormal filter bank *is* its inverse, so
+  `rebuild(analyse(x))` is `x` to the last bit of the float rather than to a
+  tolerance, and it is checked that way.
+
+  `daubechies([…])` is the four-tap one beside it, because the family is the
+  point. It is blind to a straight line: feed it a ramp and every detail comes
+  back zero, where Haar reports the slope at every scale. That difference is
+  checked directly, since it is the reason for having both. (It is written
+  `daubechies` or `db` rather than the `d4` a textbook prints, because a name
+  in this notation is letters and `d4` is `d` times four — which it has always
+  been.)
+
+  It takes the data the same three ways the discrete transform does, and the
+  second argument means a level after a list and a count after a formula,
+  because a list needs no count. The picture is the data as dots with the
+  smoothing stepped through them — a step and not a curve, because the
+  approximation is a value per sample and under Haar it is literally a
+  staircase of averages. The reading is the share of the wobble at each scale
+  and where the biggest single one is: *level 1 holds 59%, 2 holds 22%… the
+  biggest is at level 1, near sample 5*.
+
+  A length that is not a power of two is refused, naming the two nearest that
+  work, because halving is what the transform does and there is no honest way
+  to halve seventeen.
+
+  Getting the *where* right took a fix worth recording. A two-tap filter at
+  level L was made from exactly `2^L` samples, and a four-tap one from
+  `(2^L - 1)(M - 1) + 1` — each pass feeds on M of the last pass's outputs and
+  those already overlap. Reporting the second as though it were the first put
+  Daubechies' answers five samples early: it named sample 2 for a spike at 5
+  that Haar found correctly. Wrong in exactly the dimension this transform
+  exists to be right in, and now pinned by a test that asks both filters to
+  find the same step.
 
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms
