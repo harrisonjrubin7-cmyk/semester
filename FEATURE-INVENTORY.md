@@ -707,7 +707,18 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   `.xlsx` in any form. Both are on this branch now (`lib/xlsxin.ts`): a picked
   `.xlsx` or `.csv` comes in with its formulas live, its dates read as dates,
   and every worksheet as its own sheet.
-- No auto-generated grade calculator per course, no GPA planner template.
+- ~~No auto-generated grade calculator per course, no GPA planner template.~~
+  — **half of this was already wrong, and the rest is closed.** The per-course
+  calculator has existed as `lib/gradesheet.ts` the whole time: built from
+  `Course.grading`, offered on the shelf under *What do I need?*, with every
+  score blank and the syllabus's own wording beside each weight. What was
+  genuinely absent was the GPA planner, now `lib/gpasheet.ts` — this term's
+  courses and credits, what is already on the transcript, and what the rest of
+  the term would have to average to reach a target, with the sentence that says
+  when that is above what the scale can give. The grade-point table is a
+  visible block in the sheet that every lookup reads, so a school counting A+
+  as 4.3 is one cell. Both also ship as blank templates, for a syllabus written
+  in prose or a term the app does not hold.
 
 **Slides**
 - ~~No canvas editor.~~ — the slide is drawn at 16:9 and typed into in place
@@ -760,11 +771,14 @@ notes · a generated PDF, as against the browser's print-to-PDF, which is
 there · `.docx` *import* · "Open in Docs" from a study guide · a WYSIWYG
 surface (the marks are typed).
 
-**Sheets** — a per-course grade calculator and GPA planner template.
+**Sheets** — nothing. Every entry this section listed is either built or was
+already built when it was listed.
 (Cross-sheet references, the fill handle, filtering, conditional formatting,
-named ranges, pivot tables, paste-special, data validation, wrap and merge were
-all on this list and are done. Fill and borders were on it and had already been
-built when it was written.)
+named ranges, pivot tables, paste-special, data validation, wrap, merge and the
+GPA planner were all on this list and are done. Fill, borders and the
+per-course grade calculator were on it and had already been built when it was
+written — which is three of fourteen, and the reason this file says to grep for
+the thing rather than read the sentence.)
 
 **Slides** — free layout (a text box you can move) · images and charts placed
 on a slide · transitions, which are deliberate: `lib/pptx.ts` would have to

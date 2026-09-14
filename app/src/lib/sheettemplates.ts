@@ -154,6 +154,81 @@ export const TEMPLATES: Template[] = [
       B9: { num: 'number', decimals: 3 },
     },
   },
+  /*
+   * The two calculators, blank.
+   *
+   * `lib/gradesheet.ts` and `lib/gpasheet.ts` build far better versions of
+   * both out of the student's own syllabus and transcript, and the shelf
+   * offers those first. These are for the cases those cannot cover: a course
+   * whose syllabus states its weights in prose, a term the app does not hold,
+   * or somebody working out a friend's marks. A template that needs nothing
+   * loaded is the one that still works on a borrowed laptop.
+   *
+   * Both keep the promise the built ones keep: the scores and grades are
+   * blank, and the arithmetic is in the cells where it can be read.
+   */
+  {
+    id: 'grades',
+    label: 'Grade calculator',
+    says: 'Weights down one side, your scores down the other',
+    rows: [
+      ['Component', 'Weight (%)', 'Your score (%)', 'Points earned'],
+      ['Homework', '', '', '=IF(OR(B2="",C2=""),"",B2*C2/100)'],
+      ['Midterm', '', '', '=IF(OR(B3="",C3=""),"",B3*C3/100)'],
+      ['Paper', '', '', '=IF(OR(B4="",C4=""),"",B4*C4/100)'],
+      ['Final', '', '', '=IF(OR(B5="",C5=""),"",B5*C5/100)'],
+      ['Participation', '', '', '=IF(OR(B6="",C6=""),"",B6*C6/100)'],
+      ['In all', '=SUM(B2:B6)', '', '=SUM(D2:D6)'],
+      ['Weighted so far', '', '', '=IF(SUMIF(C2:C6,"<>",B2:B6)=0,"",D7/SUMIF(C2:C6,"<>",B2:B6)*100)'],
+      [
+        'The weights should add up to 100. “Weighted so far” is your average over the parts you have marks for, not out of the whole course.',
+      ],
+    ],
+    styles: {
+      ...heads(4),
+      A7: HEAD,
+      A8: HEAD,
+      B7: HEAD,
+      D7: HEAD,
+      D8: { bold: true, num: 'number', decimals: 1 },
+    },
+  },
+  {
+    id: 'gpa',
+    label: 'GPA planner',
+    says: 'Credits and grades, into a GPA and a target',
+    rows: [
+      ['Course', 'Credits', 'Grade', 'Points', 'Quality points', 'Credits counted'],
+      ['', '', '', '=IFERROR(VLOOKUP(C2,$A$13:$B$16,2,FALSE),"")', '=IF(OR(B2="",D2=""),"",B2*D2)', '=IF(OR(B2="",D2=""),"",B2)'],
+      ['', '', '', '=IFERROR(VLOOKUP(C3,$A$13:$B$16,2,FALSE),"")', '=IF(OR(B3="",D3=""),"",B3*D3)', '=IF(OR(B3="",D3=""),"",B3)'],
+      ['', '', '', '=IFERROR(VLOOKUP(C4,$A$13:$B$16,2,FALSE),"")', '=IF(OR(B4="",D4=""),"",B4*D4)', '=IF(OR(B4="",D4=""),"",B4)'],
+      ['', '', '', '=IFERROR(VLOOKUP(C5,$A$13:$B$16,2,FALSE),"")', '=IF(OR(B5="",D5=""),"",B5*D5)', '=IF(OR(B5="",D5=""),"",B5)'],
+      ['', '', '', '=IFERROR(VLOOKUP(C6,$A$13:$B$16,2,FALSE),"")', '=IF(OR(B6="",D6=""),"",B6*D6)', '=IF(OR(B6="",D6=""),"",B6)'],
+      ['This term', '=SUM(B2:B6)', '', '', '=SUM(E2:E6)', '=SUM(F2:F6)'],
+      ['Term GPA so far', '=IF(F7=0,"",E7/F7)'],
+      ['Credits before this term', ''],
+      ['GPA before this term', ''],
+      ['GPA in all', '=IF(F7+IF(B9="",0,B9)=0,"",(E7+IF(OR(B9="",B10=""),0,B9*B10))/(F7+IF(B9="",0,B9)))'],
+      ['Grade', 'Points'],
+      ['A', '4'],
+      ['B', '3'],
+      ['C', '2'],
+      ['D', '1'],
+      [
+        'Add the rest of your school’s letters to the table above — every Points cell looks a grade up in it. Term GPA counts only the credits that have a grade.',
+      ],
+    ],
+    styles: {
+      ...heads(6),
+      A7: HEAD,
+      A8: HEAD,
+      A11: HEAD,
+      A12: HEAD,
+      B12: HEAD,
+      B8: { bold: true, num: 'number', decimals: 2 },
+      B11: { bold: true, num: 'number', decimals: 2 },
+    },
+  },
 ];
 
 /**

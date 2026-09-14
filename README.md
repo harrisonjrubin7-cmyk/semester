@@ -611,8 +611,22 @@ model in it or needs a key:
   statistics screen — mean, spread, correlation, a fitted line — which until
   now could only be reached by pasting a table into it.
   It opens on **templates** — a to-do list, a monthly and a term budget, a
-  reading tracker, a lab's readings — each arriving with its totals already
-  written, beside the gradebook built from your own syllabus's weights. Out as
+  reading tracker, a lab's readings, a grade calculator and a GPA planner —
+  each arriving with its totals already written, beside the gradebook built
+  from your own syllabus's weights.
+
+  Those last two also come **built from what the app already holds**. The grade
+  calculator is weighted the way your syllabus weights it. The **GPA planner**
+  lists this term's courses with their credits, adds what is already on your
+  record, and answers the question a student actually asks in week ten: *what
+  would the rest of this term have to average for me to reach 3.6?* — and says
+  when the answer is out of reach, rather than printing 10.95 and leaving you
+  to work that out. The grade-point scale is a visible table in the sheet that
+  every lookup reads, because a GPA depends entirely on what an A is worth and
+  schools disagree; if yours counts A+ as 4.3, that is one cell to change and
+  the whole sheet follows. A term GPA counts the credits that *have* a grade,
+  not the credits taken — dividing by the latter makes one A in a ten-credit
+  term read 1.2. Out as
   a real `.xlsx` **with the formulas and the formats still in it**, colours and
   borders included — a CSV of a gradebook is the answers with the working
   thrown away — or as a CSV, a Markdown table, or a table dropped into a

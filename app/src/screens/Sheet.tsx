@@ -108,6 +108,9 @@ import { FormulaBar, Ribbon, SheetTabs, StatusBar } from '../components/Ribbon';
 import { TEMPLATES, fromTemplate } from '../lib/sheettemplates';
 import { fromSheet, sheetFileName, tabNames, widthsFor, xlsx } from '../lib/xlsx';
 import { canBuild, gradeSheet } from '../lib/gradesheet';
+import { behindOf, canPlan, gpaSheet } from '../lib/gpasheet';
+import { systemFor } from '../lib/cutoffs';
+import { COMMON_SCALE } from '../lib/degree';
 import { fromDelimited, fromXlsx, readerFor } from '../lib/xlsxin';
 import { LIMIT } from '../state/slices/made';
 import { corners } from '../lib/chart';
@@ -296,7 +299,7 @@ function whenBand(at: number, now: number): string {
 }
 
 function Shelf() {
-  const { state, dispatch, courseCode, catalog, allItems } = useStore();
+  const { state, dispatch, courseCode, catalog, allItems, school } = useStore();
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
   /*
@@ -306,6 +309,21 @@ function Shelf() {
    * a sheet that looks like it knows something and does not.
    */
   const calculable = catalog.courses.filter(canBuild);
+  /*
+   * The scale the planner counts in.
+   *
+   * A GPA is a fact about a term rather than about one course, so the school's
+   * published scale is the one that applies — a per-course override says what
+   * an A is worth *in that course*, which is not a question a GPA asks. Where
+   * the school has published none, `systemFor` answers with the common
+   * American scale and marks it assumed, and the sheet says so in row 2.
+   */
+  const { system: gpaSystem, source: gpaSource } = systemFor('', {}, school);
+  /*
+   * Whether there is a term to plan. A student with no courses loaded gets the
+   * blank template on the shelf instead, which needs nothing.
+   */
+  const plannable = canPlan(catalog.courses, gpaSystem);
   /** What the last import had to leave behind, and anything that went wrong. */
   const [notes, setNotes] = useState<string[]>([]);
   const [trouble, setTrouble] = useState('');
@@ -496,9 +514,21 @@ function Shelf() {
         </Blueprint>
       )}
 
-      {calculable.length > 0 && (
+      {/*
+        Either half is reason enough to open this.
+
+        The two are built from different things — the per-course calculators
+        from a syllabus's weights, the planner from credits and a transcript —
+        and a course whose grading is prose has the first and not the second.
+        Gating the whole section on the calculators hid the planner from
+        exactly the student whose syllabi could not be read, which is the one
+        with the most reason to be working a term out by hand.
+      */}
+      {(calculable.length > 0 || plannable) && (
         <div style={{ marginBottom: 'var(--sp-7)' }}>
         <Folding name="What do I need?">
+          {calculable.length > 0 && (
+            <>
           <SectionLabel>From your syllabus</SectionLabel>
           <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-4)' }}>
             A sheet per course, weighted the way its syllabus weights it, with the scores left for
@@ -542,6 +572,63 @@ function Shelf() {
               </Blueprint>
             ))}
           </div>
+            </>
+          )}
+
+          {plannable && (
+            <>
+              <SectionLabel>Across the whole term</SectionLabel>
+              <div
+                style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginBottom: 'var(--sp-4)' }}
+              >
+                Every course this term with its credits, into a GPA — and what the rest of it
+                would have to average to reach a number you name. The grade points are written
+                into the sheet, so a scale that is not yours is one cell to fix.
+              </div>
+              <Blueprint
+                as="button"
+                plain
+                onClick={() =>
+                  dispatch({
+                    type: 'makeSheet',
+                    sheet: gpaSheet(
+                      catalog.courses,
+                      gpaSystem,
+                      gpaSource,
+                      behindOf(state.taken, COMMON_SCALE),
+                    ).sheet,
+                    open: true,
+                  })
+                }
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-5)',
+                  padding: 'var(--sp-6)',
+                  textAlign: 'left',
+                  width: '100%',
+                }}
+              >
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 'var(--type-md)' }}>GPA planner</div>
+                  <div
+                    style={{
+                      ...secondLine(),
+                      fontSize: 'var(--type-sm)',
+                      marginTop: 'var(--sp-1)',
+                    }}
+                  >
+                    {catalog.courses.length}{' '}
+                    {catalog.courses.length === 1 ? 'course' : 'courses'} this term
+                    {state.taken.some((t) => !t.current && t.grade.trim())
+                      ? ', and what is already on your record'
+                      : ''}
+                  </div>
+                </div>
+                <ChevronRight size={16} />
+              </Blueprint>
+            </>
+          )}
         </Folding>
         </div>
       )}
