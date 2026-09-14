@@ -38,10 +38,57 @@ import { join } from 'node:path';
  *
  * The list is scanned rather than written out, so a reader added next month
  * is covered by this without anybody remembering to add it.
+ *
+ * ## What this cannot reach
+ *
+ * The values below are handed to each reader whole. A reader that only
+ * touches a field — `readIncoming` coerces `out.role` and nothing else when
+ * no `role` key is present — is therefore only shallowly exercised here, and
+ * `readIncoming` was throwing on `{ role: { toString: null } }` while passing
+ * this. Field-level poison belongs in the module's own test, next to what it
+ * knows the field is called; `lib/stored.test.ts` holds that one.
+ *
+ * So this is the floor, not the ceiling: it catches a reader that cannot
+ * survive being handed a wrong *shape*, which is the commonest form, and says
+ * nothing about a wrong value inside a right shape.
  */
 
 const ROOTS = ['src/lib', 'src/state'];
-const SIGNATURE = /^export (?:async )?function ((?:read|parse)[A-Za-z]*)\s*\(\s*\w+\s*:\s*unknown/gm;
+
+/*
+ * Two signatures, because the first one on its own missed the worst reader.
+ *
+ * `readIncoming` takes `<T extends Record<string, unknown>>(blob: T)` rather
+ * than `(value: unknown)`, so a rule written only for the plain form walked
+ * straight past the door `lib/stored.ts` itself calls the worst of the three
+ * — the one a sync arrives through, with nobody opening anything, into a
+ * reducer. It was throwing on `role: {"toString":null}` at the time.
+ *
+ * The lesson is the shape of the rule, not the one function: what makes a
+ * reader is that its argument is not trusted, and a generic parameter
+ * constrained to `Record<string, unknown>` is no more trusted than `unknown`.
+ */
+// `[^(]*` rather than `[^>]*` for the type parameters: `<T extends
+// Record<string, unknown>>` closes with two `>` and a rule that stopped at
+// the first of them matched nothing, which is how `readIncoming` stayed
+// outside this test while it was throwing.
+const SIGNATURE =
+  /^export (?:async )?function ((?:read|parse)[A-Za-z]*)\s*(?:<[^(]*>)?\s*\(\s*\w+\s*:\s*(?:unknown|T\b)/gm;
+
+/**
+ * And then narrowed by arity, because the signature alone over-matches.
+ *
+ * Two functions look like readers and are not. `readDay` in `lib/rail.ts`
+ * takes `blocks: T[]` — a typed list the caller built, not untrusted input —
+ * and `readList` in `lib/stored.ts` takes the value *and* the row reader to
+ * run over it. Handing either a bare hostile value is not a call the app can
+ * make, so failing them would be this test inventing a bug.
+ *
+ * `fn.length` is the number of parameters before the first defaulted one, so
+ * "callable with only the untrusted value" is exactly the question, and it is
+ * asked of the function rather than of its text.
+ */
+const takesOnlyTheValue = (fn: (...args: unknown[]) => unknown) => fn.length <= 1;
 
 function readers(): { module: string; name: string }[] {
   const out: { module: string; name: string }[] = [];
@@ -101,6 +148,7 @@ describe('every reader of untrusted input', () => {
       const ns = (await import(/* @vite-ignore */ module)) as Record<string, unknown>;
       const fn = ns[name];
       if (typeof fn !== 'function') continue;
+      if (!takesOnlyTheValue(fn as (...args: unknown[]) => unknown)) continue;
       for (const [label, value] of HOSTILE) {
         try {
           (fn as (v: unknown) => unknown)(value);
