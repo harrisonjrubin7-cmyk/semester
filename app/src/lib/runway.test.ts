@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MAX_LEAD_DAYS,
   bandFor,
   bookBy,
+  businessDaysBefore,
   bookingLate,
   examsAhead,
   headline,
   isExam,
   paperLine,
+  readLeadDays,
   runway,
   stageFor,
   standing,
@@ -274,6 +277,52 @@ describe('a testing-centre booking', () => {
   it('says nothing for somebody who does not use one', () => {
     expect(bookBy(item({}), 0)).toBeNull();
     expect(bookingLate(null, NOW)).toBe(false);
+  });
+
+  it.each([1e9, Number.MAX_SAFE_INTEGER])(
+    'returns rather than counting to %p a day at a time',
+    (days) => {
+      /*
+       * `businessDaysBefore` counts down by one per iteration, so its exit
+       * depends entirely on the number handed to it. `setAccessLead` clamps,
+       * but the setting is also restored — out of storage, and out of an
+       * imported backup — and nothing on that path did. A number this size is
+       * not an error anything catches: the loop simply runs, with the tab
+       * locked, and runs again on the next load because the value was saved.
+       *
+       * Asserted as a value rather than by timing it: the clamp is what makes
+       * this return at all, so a regression hangs the suite here instead of
+       * the student's browser, and the day it lands on proves the clamp is the
+       * ceiling and not merely some smaller number.
+       */
+      const exam = item({ date: new Date(2026, 8, 24) });
+      const by = bookBy(exam, days);
+      expect(by).toEqual(businessDaysBefore(exam.date, MAX_LEAD_DAYS));
+    },
+  );
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY])(
+    'reads %p as no lead time rather than as one',
+    (days) => {
+      // Neither is a number of days, and the honest answer to "how many days
+      // before" is the one every student who does not use a testing centre
+      // gets: nothing on the screen. NaN used to fail `left > 0` on the first
+      // test and fall out of the loop holding the exam's own date, so a lead
+      // time that had not survived storage read as "book this today" on an
+      // exam three weeks off.
+      expect(bookBy(item({ date: new Date(2026, 8, 24) }), days)).toBeNull();
+    },
+  );
+
+  it('clamps a restored lead time the same way the setting does', () => {
+    expect(readLeadDays(5)).toBe(5);
+    expect(readLeadDays(1e9)).toBe(MAX_LEAD_DAYS);
+    expect(readLeadDays(-3)).toBe(0);
+    // Everything a hand-edited or half-migrated copy can hold where a number
+    // was expected.
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, '5', null, undefined, {}]) {
+      expect(readLeadDays(bad)).toBe(0);
+    }
   });
 
   it('knows when the window has closed', () => {

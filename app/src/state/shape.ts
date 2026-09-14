@@ -36,6 +36,7 @@ import type { Alarm, Timer } from '../lib/clocks';
 import { readApplications, type Application, type Stage } from '../lib/apply';
 import { readProgress, type Progress, type Unit } from '../lib/progress';
 import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
+import { readLeadDays } from '../lib/runway';
 import { readSettings as readGeocode, type Settings as Geocode } from '../lib/geocode';
 import { COMMON_SCALE, readRequirements, readTaken, type Requirement, type Scale, type Taken } from '../lib/degree';
 import { readLetters, readPeople, readVisits, type Letter, type Person, type Visit } from '../lib/letters';
@@ -1606,7 +1607,11 @@ export function loadPersisted(): Persisted {
       plans: record(saved.plans),
       balances: list(saved.balances),
       residences: list(saved.residences),
-      accessLeadDays: saved.accessLeadDays ?? 0,
+      // Through the same clamp `setAccessLead` applies, because a restored
+      // copy has been through no reducer: this is the one number here that a
+      // loop counts down (`businessDaysBefore` in `lib/runway.ts`), and every
+      // other field on this screen already has a reader.
+      accessLeadDays: readLeadDays(saved.accessLeadDays),
       quiet: readQuiet(saved.quiet),
       // Through the table rather than trusted: a role this build has never
       // heard of would hide every screen it does not name, and an app that

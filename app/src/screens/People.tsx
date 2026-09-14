@@ -20,6 +20,7 @@ import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import {
   ASKS,
   NOTICE,
+  askedToday,
   daysLeft,
   known,
   knownLine,
@@ -377,9 +378,12 @@ function LettersTab() {
                             id: l.id,
                             // Asking stamps the day, so the notice figure is a
                             // fact rather than something to remember later.
+                            // The day comes from `askedToday`, which is the
+                            // same function `notice` falls back to for a
+                            // letter with no stamp — see the note beside it.
                             patch:
                               a.id === 'asked' && !l.askedOn
-                                ? { stage: a.id, askedOn: new Date(now).toISOString().slice(0, 10) }
+                                ? { stage: a.id, askedOn: askedToday(new Date(now)) }
                                 : { stage: a.id },
                           })
                         }
