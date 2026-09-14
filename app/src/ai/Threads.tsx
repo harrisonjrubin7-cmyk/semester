@@ -273,7 +273,9 @@ export function Threads({
                   onClick={() => onPin(t.id, !t.pinned)}
                   aria-pressed={Boolean(t.pinned)}
                   aria-label={t.pinned ? `Unpin "${nameOf(t)}"` : `Pin "${nameOf(t)}" so it is kept`}
-                  style={{ ...ACT, opacity: t.pinned ? 0.85 : 0.4 }}
+                  // Pinned is the state worth seeing from across the list, so
+                  // it takes the full ink rather than a brighter fraction of it.
+                  style={t.pinned ? { ...ACT, color: 'var(--app-fg)' } : ACT}
                 >
                   {t.pinned ? 'PINNED' : 'PIN'}
                 </button>
@@ -300,7 +302,7 @@ export function Threads({
                     // Named for what it deletes, so a screen reader hears which
                     // conversation is about to go rather than "delete, button".
                     aria-label={`Delete "${nameOf(t)}" for good`}
-                    style={{ ...ACT, opacity: 0.95 }}
+                    style={{ ...ACT, color: 'var(--app-fg)' }}
                   >
                     SURE?
                   </button>
@@ -405,10 +407,30 @@ const ACTIONS = {
   padding: '0 var(--sp-5) var(--sp-3)',
 } as const;
 
+/*
+ * PIN, RENAME, DELETE under each conversation.
+ *
+ * These were dimmed with `opacity: 0.4`, which is the thing `lib/dim.ts` was
+ * written to stop: an opacity no palette audit can see, picked by eye on one
+ * ground. Measured off the painted pixels at 1280×900 on Ink — the brightest
+ * pixel of the PIN label came back rgb(95,96,100) on rgb(9,10,14), **3.15:1**
+ * against the 4.5 WCAG asks for 11px text. Not the average of the anti-
+ * aliasing; the brightest part of the stroke.
+ *
+ * axe does not report it. It answers "incomplete — background color could not
+ * be determined due to a pseudo element" on all three and moves on, which is
+ * the honest answer from a tool that will not guess and the reason this had to
+ * be measured rather than audited.
+ *
+ * `--app-dim` is the token for exactly this — a control that is there without
+ * being shouted — and it is already held to 4.5:1 on every panel of every
+ * ground by `contrast.test.ts`, and rises when the device asks for more
+ * contrast, which an opacity cannot.
+ */
 const ACT = {
   fontSize: 'var(--type-xs)',
   letterSpacing: '0.08em',
-  opacity: 0.4,
+  color: 'var(--app-dim)',
   width: 'auto',
 } as const;
 

@@ -572,9 +572,26 @@ a:hover {
 .rail .rail-item:hover {
   color: var(--app-accent-bright);
 }
+/*
+ * The second group in the sidebar — Ask Claude, Add a course, Account,
+ * Connect accounts, Settings.
+ *
+ * It had `opacity: 0.75` on top of `--app-dim`, which is the multiplication
+ * `lib/dim.ts` exists to stop: 0.64 × 0.75 = 0.48, and axe measured the
+ * result at **4.42:1** on Ink against the 4.5 this repo enforces on the token
+ * itself. Nobody chose 0.48. It is what "quiet text" and "and quieter still"
+ * come to when they meet, on the five rows one of which is the only way into
+ * the assistant from this navigation.
+ *
+ * The other half of the argument in `dim.ts` applies here too: "Increase
+ * contrast" raises `--app-dim` and cannot reach an `opacity`, so the setting
+ * was lifting these rows and then dimming them back down again.
+ *
+ * What separates the two groups is `.rail-gap` — a rule and eighteen pixels
+ * of air — and the smaller size, which is what was always doing the work.
+ */
 .rail .rail-quiet {
   font-size: 11px;
-  opacity: 0.75;
   padding: 9px 20px;
 }
 .rail .rail-item:hover {
