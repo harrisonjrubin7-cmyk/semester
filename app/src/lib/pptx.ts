@@ -31,7 +31,7 @@
  */
 
 // The XML declaration and the relationships namespace all three writers share.
-import { HEAD, REL } from './ooxml';
+import { HEAD, REL, xml } from './ooxml';
 
 
 const EMU = 914_400;
@@ -120,18 +120,6 @@ export interface Deck {
   palette?: Palette;
 }
 
-/** XML text escaping. Every string that reaches the file goes through here. */
-export function xml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-    // A control character is legal in a JS string and not in XML 1.0.
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
-}
 
 
 const NS =

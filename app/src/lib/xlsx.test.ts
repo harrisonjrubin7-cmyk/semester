@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { fromSheet, parts, sheetFileName, styleTable, tabName, widthsFor, xml, type Book } from './xlsx';
+import { fromSheet, parts, sheetFileName, styleTable, tabName, widthsFor, type Book } from './xlsx';
+import { xml } from './ooxml';
 import { blankSheet, fromRows, type CellStyle, type Sheet } from './sheet';
 
 /**

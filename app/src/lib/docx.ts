@@ -42,19 +42,8 @@
 
 import { runs, type Block, type Doc } from './document';
 import { omml, parse } from './maths';
-import { HEAD, REL } from './ooxml';
+import { HEAD, REL, xml } from './ooxml';
 
-/** XML text escaping. Every string that reaches the file goes through here. */
-export function xml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
-}
 
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
