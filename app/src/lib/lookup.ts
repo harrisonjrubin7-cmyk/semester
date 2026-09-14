@@ -94,12 +94,23 @@ export const MOST_LOOKUPS = 6;
 /** The most times a question may go back for more before the answer is due. */
 export const MOST_ROUNDS = 3;
 
+/**
+ * The read-only tools, and the one thing they do not ask the API for.
+ *
+ * None of these is `strict`, and the writes in `lib/tools.ts` all are. The
+ * API takes that promise for twenty tools at a time and refuses the whole
+ * request at twenty-one, so with twenty-two offered it has to be spent where
+ * it buys something: on the calls that would change a semester, not on the
+ * ones that read it. Nothing is lost here that was not already covered —
+ * every argument below is read through `str` and `num`, which take what they
+ * recognise and fall back where they do not, and a lookup that comes back
+ * malformed costs a re-read rather than a wrong row in somebody's term.
+ */
 export const LOOKUPS: ToolSpec[] = [
   {
     name: 'find_deadlines',
     description:
       'Look up the student’s real deadlines — syllabus work, exams, readings — with their ids. Use it whenever you need a date, a weight or an id you were not given, rather than saying you do not have their schedule. Leave course empty for all of them.',
-    strict: true,
     input_schema: {
       type: 'object',
       properties: {
@@ -123,7 +134,6 @@ export const LOOKUPS: ToolSpec[] = [
     name: 'read_grades',
     description:
       'Look up what a course is graded on, what has come back, and where the student stands. Use it before doing any arithmetic about a grade — never estimate from memory of the conversation.',
-    strict: true,
     input_schema: {
       type: 'object',
       properties: { course: { type: 'string', description: 'The course code.' } },
@@ -134,7 +144,6 @@ export const LOOKUPS: ToolSpec[] = [
     name: 'read_attendance',
     description:
       'Look up how many classes the student has missed in one course, and what the syllabus policy allows.',
-    strict: true,
     input_schema: {
       type: 'object',
       properties: { course: { type: 'string', description: 'The course code.' } },
@@ -145,7 +154,6 @@ export const LOOKUPS: ToolSpec[] = [
     name: 'search_material',
     description:
       'Search a course’s own study guide — its units, cards and definitions — for something the student is asking about. This is their material, not general knowledge: prefer an answer grounded in it, and say when it holds nothing on the topic.',
-    strict: true,
     input_schema: {
       type: 'object',
       properties: {
@@ -159,7 +167,6 @@ export const LOOKUPS: ToolSpec[] = [
     name: 'read_tasks',
     description:
       'Look up the student’s own to-do list — the things they added themselves, which are not on any syllabus. Use it before proposing to add something, so you do not add a task they already have.',
-    strict: true,
     input_schema: {
       type: 'object',
       properties: {
@@ -172,7 +179,6 @@ export const LOOKUPS: ToolSpec[] = [
     name: 'read_timetable',
     description:
       'Look up which classes meet on a given day, and when. Use it for anything about the shape of a day — whether they are free at two, how early the first class is, whether a date is a teaching day at all.',
-    strict: true,
     input_schema: {
       type: 'object',
       properties: {
