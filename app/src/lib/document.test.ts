@@ -210,12 +210,28 @@ describe('markdown, in', () => {
   it('reads headings, prose and a list', () => {
     const blocks = fromMarkdown('## Findings\n\nSome prose.\n\n- one\n- two');
     expect(blocks.map((b) => b.kind)).toEqual(['heading', 'text', 'bullets']);
-    expect(blocks[2]).toEqual({ kind: 'bullets', items: ['one', 'two'], numbered: false });
+    // Read as lines rather than as strings: a list carries how far in each
+    // line sits, and one with no indentation is a list of level-0 lines.
+    expect(blocks[2]).toEqual({
+      kind: 'bullets',
+      items: [
+        { text: 'one', level: 0 },
+        { text: 'two', level: 0 },
+      ],
+      numbered: false,
+    });
   });
 
   it('knows a numbered list from a bulleted one', () => {
     const [block] = fromMarkdown('1. one\n2. two');
-    expect(block).toEqual({ kind: 'bullets', items: ['one', 'two'], numbered: true });
+    expect(block).toEqual({
+      kind: 'bullets',
+      items: [
+        { text: 'one', level: 0 },
+        { text: 'two', level: 0 },
+      ],
+      numbered: true,
+    });
   });
 
   it('reads a table and drops its rule', () => {
@@ -260,7 +276,14 @@ describe('markdown, in', () => {
       [
         { kind: 'heading', level: 1, text: 'Findings' },
         { kind: 'text', text: 'Some prose.' },
-        { kind: 'bullets', items: ['one', 'two'], numbered: false },
+        {
+          kind: 'bullets',
+          items: [
+            { text: 'one', level: 0 },
+            { text: 'two', level: 0 },
+          ],
+          numbered: false,
+        },
         { kind: 'table', rows: [['a', 'b'], ['1', '2']], header: true, caption: '' },
         { kind: 'equation', latex: 'e=mc^2', caption: '' },
       ],

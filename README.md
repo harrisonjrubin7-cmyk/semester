@@ -583,6 +583,15 @@ model in it or needs a key:
   so it says what is *in* the picture, where a caption says what to make of
   it.
 
+  A **list can nest.** Each item has ← and → beside it, five levels deep, and
+  a sub-item exports as a sub-item: indented under its parent in Markdown, at
+  its own `ilvl` in Word with the marker cycling • ○ ▪ and 1. a. i. the way
+  Word's own lists do. Not Tab — a list here is a column of ordinary text
+  fields on a card, and Tab is how a keyboard gets out of one, so taking it
+  would trap exactly the people who cannot reach for the mouse instead. Lists
+  written before this still work: an item that is a bare string is read as a
+  line at the left margin, which is what it always was.
+
   A **divider** is a line between one section and the next, and a **page
   break** starts a new page. Two blocks, one line apart on the Insert bar,
   because they are two different things — which they had not been. The page
