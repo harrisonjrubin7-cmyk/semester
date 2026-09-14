@@ -553,6 +553,16 @@ model in it or needs a key:
   Drag to move, pinch to zoom, press to read a point off it, and one button to
   fit the window to what is actually on it.
 
+  **Polar and parametric** are the same box and the same notation, told apart
+  by the letter in them: an `r =` line with the angle in it is polar —
+  `r = 2 + 2\cos(\theta)`, a cardioid — and a pair with `t` in it is the path
+  a moving point takes — `(5\sin(3t), 5\sin(2t))`, a Lissajous figure. Both
+  are walked along their own parameter rather than across the window, so a
+  curve that comes back on itself or crosses itself is drawn whole, on screen
+  or off, and how far round θ and t go is a control rather than more notation.
+  A negative radius is drawn on the opposite ray, which is what puts the other
+  four petals on a rose.
+
   Then the part a calculator leaves you to hunt with a cursor, written out
   instead: **where it crosses zero, where it turns, where two curves meet, the
   slope under your finger, and the area between two values** — bisection,

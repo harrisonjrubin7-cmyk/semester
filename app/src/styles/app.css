@@ -4506,7 +4506,24 @@ input[type='search'].input {
  * 320px window inside a 390px one is nobody's idea of writing.
  */
 .mb-compose {
-  position: fixed;
+  /*
+   * Absolute inside the screen's own box, not fixed to the window.
+   *
+   * Fixed was right when the app was a phone in a frame and wrong the moment
+   * the workspace shell arrived: its tab strip and search bar are children of
+   * `.deskwork` at z-index 20 and 21, the pane beside them is at 1, and a
+   * fixed sheet inside that pane is inside the pane's stacking context — so
+   * no z-index of its own can lift it over them. On the deployed build at
+   * phone width that ate the top of the compose sheet: its title bar, its
+   * close button and the To field were all behind the chrome, with Subject
+   * the first thing you could see.
+   *
+   * Absolute puts it in the mail screen's box instead, which is the surface
+   * the app actually owns — docked to the bottom right of the pane on a wide
+   * window, filling the pane below the chrome on a narrow one. The folder
+   * drawer and its shade were already absolute for the same reason.
+   */
+  position: absolute;
   overflow: hidden;
   inset: auto var(--sp-6) 0 auto;
   z-index: 40;
