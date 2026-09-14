@@ -36,7 +36,7 @@ export interface Shortcut {
   /** A screen to open, for the plain navigation ones. */
   screen?: Screen;
   /** A named action for the ones that are not navigation. */
-  action?: 'search' | 'back' | 'help' | 'timer' | 'capture' | 'assistant';
+  action?: 'search' | 'back' | 'help' | 'timer' | 'capture' | 'assistant' | 'bookmark';
 }
 
 /**
@@ -65,6 +65,15 @@ export const SHORTCUTS: Shortcut[] = [
   { key: 'a', does: 'Ask about this screen', action: 'assistant' },
   { key: 'n', does: 'Add a course from a syllabus', screen: 'import' },
   { key: 'q', does: 'Add something in one line', action: 'capture' },
+  /*
+   * The bookmark, on the key a browser uses for it without the modifier.
+   *
+   * ⌘D is the browser's own and is not ours to take — the rule at the top of
+   * this file. A bare `b` is free, it is the letter everybody would guess, and
+   * the thing it saves is the tab you are on rather than the screen: see
+   * `components/Bookmarks.tsx`.
+   */
+  { key: 'b', does: 'Bookmark the tab you are on', action: 'bookmark' },
   { key: '/', does: 'Search everything', action: 'search' },
   { key: 'escape', does: 'Back', action: 'back' },
   { key: '?', does: 'This list', action: 'help' },

@@ -23,6 +23,7 @@ export type Shape = { d: string } | { c: readonly [number, number, number] };
 export const SHAPES = {
   chevronRight: [{ d: 'm9 18 6-6-6-6' }],
   chevronLeft: [{ d: 'm15 18-6-6 6-6' }],
+  chevronDown: [{ d: 'm6 9 6 6 6-6' }],
   search: [{ c: [11, 11, 7] }, { d: 'm20 20-3.2-3.2' }],
   bell: [
     { d: 'M18 8a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7' },

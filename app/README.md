@@ -476,7 +476,13 @@ calendars. Files you attach are larger, so they live in IndexedDB
 (`semester-files`) instead. Tokens and any Claude key are under their own keys
 and are never bundled with the rest.
 
-Navigation state is deliberately not persisted — the app opens on Today.
+Navigation state is deliberately not persisted — the app opens on Today. The
+two things that look like exceptions are not: the workspace's open tabs
+(`semester.tabs.v1`, with their groups) and the bookmarks bar
+(`semester.bookmarks.v1`) are kept on the device under their own keys and are
+never synced, for the reason written at the top of `src/lib/bookmarks.ts` —
+a strip of tabs restored onto a phone from a laptop's backup is a row of tabs
+nobody opened.
 
 Clear it from the console with `localStorage.removeItem('semester.v1')`.
 

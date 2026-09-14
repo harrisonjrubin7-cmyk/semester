@@ -69,6 +69,16 @@ export interface AppTab {
    * nobody has typed in has nothing to remember.
    */
   query?: string;
+  /**
+   * The group this tab belongs to, if it is in one.
+   *
+   * The id of a `TabGroup` in the same strip, never the group itself: a tab
+   * is written to the device on every navigation and a group is renamed and
+   * recoloured from a menu, so a copy of the group on each of its tabs would
+   * be four places to rename and three of them stale. `tidy` below drops an
+   * id no group answers to rather than trusting it.
+   */
+  group?: string;
 }
 
 /**
@@ -145,10 +155,71 @@ export function placeFor(screen: Screen, at: Where): Action[] {
   }
 }
 
-/** The strip: what is open, and which one of them is on. */
+/**
+ * A group: several tabs under one name, in one colour.
+ *
+ * The strip solved "I was reading the guide, let me check when it is due" and
+ * created the problem every browser user already has by Wednesday — nine tabs
+ * across the top, four of them about the essay, three about the exam, and no
+ * way to tell which is which without reading all nine. A group is the answer
+ * browsers landed on: say that these four are the essay, and the strip says it
+ * for you from then on.
+ *
+ * It is worth more here than in a browser, because the tabs are not nine
+ * websites with nine favicons — they are nine screens of the same app, drawn
+ * in the same materials, and a row of them is genuinely hard to read at a
+ * glance. The colour is doing work no favicon is doing.
+ */
+export interface TabGroup {
+  /** Stable for the life of the group; what a tab's `group` points at. */
+  id: string;
+  /**
+   * What it is called, or empty.
+   *
+   * Empty is a real state and not a missing one: a browser lets you group
+   * three tabs with one gesture and name them never, and the colour alone is
+   * enough to read the strip. An unnamed group draws as its dot.
+   */
+  name: string;
+  /**
+   * Which of the reader's own twelve colours it wears, as an index.
+   *
+   * An index rather than a hex, because the palette is not fixed: every
+   * colour in this app is derived from the accent somebody chose, and the
+   * twelve a group picks from are `tintChoices` in `lib/tint.ts` — the same
+   * twelve a course is pinned to. Storing the hex would freeze a group at the
+   * colour their old accent made, and a reader who moves from Sterling to
+   * Copper would find one row of the app left behind.
+   */
+  tone: number;
+  /**
+   * Whether the strip is showing its tabs or only its name.
+   *
+   * The whole point of a group on a full strip: four tabs fold into one chip
+   * that still says what they are, and the room goes to whatever you are
+   * actually doing. Collapsing the group you are working in would hide the
+   * page you are looking at, so `collapse` below moves you out first.
+   */
+  collapsed: boolean;
+}
+
+/** How many colours a group can be, which is how many `tintChoices` gives. */
+export const GROUP_TONES = 12;
+
+/** How long a group's name may be. A strip is not a place for a sentence. */
+export const GROUP_NAME = 24;
+
+/** The strip: what is open, which one of them is on, and how they are grouped. */
 export interface Strip {
   tabs: AppTab[];
   at: number;
+  /**
+   * The groups, in no particular order — the tabs carry the order.
+   *
+   * A list rather than a map by id, so it survives `JSON.parse` as the same
+   * shape it was written in and so `load` can filter it with one pass.
+   */
+  groups: TabGroup[];
 }
 
 /** What a tab with nothing in it is called, in the strip and in the title. */
@@ -172,6 +243,12 @@ export function tabId(): string {
   return `tab-${Date.now().toString(36)}-${counter}`;
 }
 
+/** The same, for a group. Its own prefix, so a stray id is obvious in a store. */
+export function groupId(): string {
+  counter += 1;
+  return `group-${Date.now().toString(36)}-${counter}`;
+}
+
 /** A tab with nothing in it — the search page. */
 export function fresh(id: string = tabId()): AppTab {
   return { id, screen: null, title: NEW_TAB, place: [] };
@@ -179,7 +256,7 @@ export function fresh(id: string = tabId()): AppTab {
 
 /** The strip somebody who has never opened one gets. */
 export function blank(id: string = tabId()): Strip {
-  return { tabs: [fresh(id)], at: 0 };
+  return { tabs: [fresh(id)], at: 0, groups: [] };
 }
 
 /** The tab that is on, which is always one of them. */
@@ -201,7 +278,18 @@ function clamp(strip: Strip, at: number): number {
 export function add(strip: Strip, id: string = tabId()): Strip {
   const room = strip.tabs.length < MAX_TABS ? strip : evict(strip);
   const at = clamp(room, room.at) + 1;
-  return { tabs: [...room.tabs.slice(0, at), fresh(id), ...room.tabs.slice(at)], at };
+  /*
+   * And it joins the group it was opened out of.
+   *
+   * Beside a grouped tab is *inside* that group — both because it is what
+   * every browser does, and because the alternative is not available here: a
+   * group's tabs are one run in the strip, and a loose tab dropped into the
+   * middle of that run would split it in two. Opening a tab from inside the
+   * essay group is nearly always another tab about the essay anyway.
+   */
+  const from = room.tabs[clamp(room, room.at)];
+  const born = from?.group ? { ...fresh(id), group: from.group } : fresh(id);
+  return { ...room, tabs: [...room.tabs.slice(0, at), born, ...room.tabs.slice(at)], at };
 }
 
 /** Drop the oldest tab that is not the one being used. */
@@ -209,7 +297,11 @@ function evict(strip: Strip): Strip {
   const at = clamp(strip, strip.at);
   const drop = strip.tabs.findIndex((_, i) => i !== at);
   if (drop === -1) return strip;
-  return { tabs: strip.tabs.filter((_, i) => i !== drop), at: drop < at ? at - 1 : at };
+  return tidy({
+    ...strip,
+    tabs: strip.tabs.filter((_, i) => i !== drop),
+    at: drop < at ? at - 1 : at,
+  });
 }
 
 /**
@@ -226,12 +318,31 @@ export function close(strip: Strip, which: number): Strip {
   if (tabs.length === 0) return blank();
   const at = clamp(strip, strip.at);
   const next = which < at ? at - 1 : at;
-  return { tabs, at: Math.min(next, tabs.length - 1) };
+  // `tidy` because the tab that just left may have been the last one in its
+  // group, and a group with nothing in it is a name in the store nobody can
+  // see or remove.
+  return tidy({ ...strip, tabs, at: Math.min(next, tabs.length - 1) });
 }
 
-/** Go to a tab. Out-of-range is clamped rather than thrown: it is a click. */
+/**
+ * Go to a tab. Out-of-range is clamped rather than thrown: it is a click.
+ *
+ * A tab inside a collapsed group opens the group on the way. Nothing else can
+ * happen: its page is about to be the whole window, and a strip claiming it is
+ * folded away would be lying about where you are. This is also what makes the
+ * keyboard and the restored-strip cases safe, where the landing is not a click
+ * on something visible.
+ */
 export function select(strip: Strip, which: number): Strip {
-  return { ...strip, at: clamp(strip, which) };
+  const at = clamp(strip, which);
+  const held = strip.tabs[at]?.group;
+  const shut = held ? strip.groups.find((g) => g.id === held && g.collapsed) : undefined;
+  if (!shut) return { ...strip, at };
+  return {
+    ...strip,
+    at,
+    groups: strip.groups.map((g) => (g.id === shut.id ? { ...g, collapsed: false } : g)),
+  };
 }
 
 /**
@@ -254,7 +365,7 @@ export function visit(strip: Strip, screen: Screen, title: string, place: Action
   if (tab.screen === screen && tab.title === title && sameplace(tab.place, place)) return strip;
   const tabs = [...strip.tabs];
   tabs[at] = { ...tab, screen, title, place };
-  return { tabs, at };
+  return { ...strip, tabs, at };
 }
 
 /** What this tab last searched for. Empty forgets it. */
@@ -264,7 +375,7 @@ export function asked(strip: Strip, query: string): Strip {
   if (!tab || (tab.query ?? '') === query) return strip;
   const tabs = [...strip.tabs];
   tabs[at] = { ...tab, query: query || undefined };
-  return { tabs, at };
+  return { ...strip, tabs, at };
 }
 
 /** Whether two places are the same place. Shallow: an action is flat. */
@@ -281,6 +392,235 @@ export function openBeside(
   id: string = tabId(),
 ): Strip {
   return visit(add(strip, id), screen, title, place);
+}
+
+/**
+ * The strip, put back in order after anything that could have broken it.
+ *
+ * Two rules, both invisible until they are broken. **A group is one run of
+ * tabs**: its members sit next to each other, because a group drawn as two
+ * halves with somebody else's tab between them is not a group, it is a
+ * colour repeated twice. And **a group has members**: the last tab leaving
+ * takes the group with it, or the store fills up with names for rows that are
+ * not there and a colour comes back the next time that id is reused.
+ *
+ * Every structural change runs through here rather than each one remembering
+ * to hold the invariants itself — closing a tab, evicting one, joining a
+ * group, reading a strip off the device.
+ *
+ * A strip that already holds is returned as it came, by reference. This is
+ * called on paths that run on every navigation, and a new object each time is
+ * a re-render of the strip each time.
+ */
+export function tidy(strip: Strip): Strip {
+  const named = new Set(strip.groups.map((g) => g.id));
+  // An id no group answers to is dropped rather than repaired: it came from
+  // an older build or a half-written store, and the honest reading of a tab
+  // pointing at nothing is a tab in no group.
+  const tabs = strip.tabs.map((t) => (t.group && !named.has(t.group) ? loose(t) : t));
+
+  const order: AppTab[] = [];
+  const done = new Set<string>();
+  for (const tab of tabs) {
+    if (done.has(tab.id)) continue;
+    if (!tab.group) {
+      order.push(tab);
+      done.add(tab.id);
+      continue;
+    }
+    // The whole run, at the position of its first member, in the order the
+    // members were already in: a group closes up rather than jumping to the
+    // end of the strip the moment somebody adds a fifth tab to it.
+    for (const mate of tabs) {
+      if (mate.group === tab.group) {
+        order.push(mate);
+        done.add(mate.id);
+      }
+    }
+  }
+
+  const groups = strip.groups.filter((g) => order.some((t) => t.group === g.id));
+  const on = strip.tabs[clamp(strip, strip.at)];
+  const at = Math.max(0, order.findIndex((t) => t.id === on?.id));
+  const same =
+    groups.length === strip.groups.length &&
+    order.length === strip.tabs.length &&
+    order.every((t, i) => t === strip.tabs[i]) &&
+    at === strip.at;
+  return same ? strip : { tabs: order, at, groups };
+}
+
+/** The same tab, out of whatever group it was in. */
+function loose(tab: AppTab): AppTab {
+  const { group: _out, ...rest } = tab;
+  return rest;
+}
+
+/** The group a tab is in, or null. */
+export function groupAt(strip: Strip, which: number): TabGroup | null {
+  const held = strip.tabs[which]?.group;
+  return (held && strip.groups.find((g) => g.id === held)) || null;
+}
+
+/** Which tabs are in a group, as indices into the strip. */
+export function tabsIn(strip: Strip, id: string): number[] {
+  return strip.tabs.flatMap((t, i) => (t.group === id ? [i] : []));
+}
+
+/**
+ * The colour a new group gets, when nobody has picked one.
+ *
+ * The first of the twelve nothing is wearing, so three groups made in a row
+ * are three colours rather than three of the same one, and only once all
+ * twelve are out does it start again. See `tone` on `TabGroup` for why this
+ * is an index rather than a colour.
+ */
+export function freeTone(strip: Strip): number {
+  const worn = new Set(strip.groups.map((g) => g.tone));
+  for (let i = 0; i < GROUP_TONES; i += 1) if (!worn.has(i)) return i;
+  return strip.groups.length % GROUP_TONES;
+}
+
+/** Put a tab in a group of its own, and return the strip with it in. */
+export function makeGroup(
+  strip: Strip,
+  which: number,
+  name = '',
+  tone = freeTone(strip),
+  id: string = groupId(),
+): Strip {
+  if (which < 0 || which >= strip.tabs.length) return strip;
+  const group: TabGroup = { id, name, tone: ((tone % GROUP_TONES) + GROUP_TONES) % GROUP_TONES, collapsed: false };
+  const tabs = strip.tabs.map((t, i) => (i === which ? { ...t, group: id } : t));
+  return tidy({ ...strip, tabs, groups: [...strip.groups, group] });
+}
+
+/** Move a tab into a group that already exists. It joins the end of its run. */
+export function joinGroup(strip: Strip, which: number, id: string): Strip {
+  if (!strip.groups.some((g) => g.id === id)) return strip;
+  if (which < 0 || which >= strip.tabs.length) return strip;
+  const tabs = strip.tabs.map((t, i) => (i === which ? { ...t, group: id } : t));
+  return tidy({ ...strip, tabs });
+}
+
+/** Take a tab out of its group. The group goes too if it was the last one. */
+export function leaveGroup(strip: Strip, which: number): Strip {
+  const tab = strip.tabs[which];
+  if (!tab?.group) return strip;
+  const tabs = strip.tabs.map((t, i) => (i === which ? loose(t) : t));
+  return tidy({ ...strip, tabs });
+}
+
+/** What a group is called. Empty is allowed: an unnamed group is its colour. */
+export function renameGroup(strip: Strip, id: string, name: string): Strip {
+  return overGroup(strip, id, (g) => ({ ...g, name: name.slice(0, GROUP_NAME) }));
+}
+
+/** Which of the twelve it wears. */
+export function toneGroup(strip: Strip, id: string, tone: number): Strip {
+  return overGroup(strip, id, (g) => ({ ...g, tone: ((tone % GROUP_TONES) + GROUP_TONES) % GROUP_TONES }));
+}
+
+/**
+ * Fold a group down to its name, or open it again.
+ *
+ * Folding the group you are working in would hide the page in front of you,
+ * so the tab that is on moves out first — to its right-hand neighbour outside
+ * the group, the way closing a tab does, and to the left when there is no
+ * right. A strip that is nothing but this one group has nowhere to move to
+ * and gets a new tab, which is the same answer `close` gives for the same
+ * reason: the app always has a page, and the page it invents is the search
+ * page.
+ */
+export function collapse(strip: Strip, id: string, shut: boolean): Strip {
+  const group = strip.groups.find((g) => g.id === id);
+  if (!group || group.collapsed === shut) return strip;
+  const groups = strip.groups.map((g) => (g.id === id ? { ...g, collapsed: shut } : g));
+  if (!shut || strip.tabs[clamp(strip, strip.at)]?.group !== id) return { ...strip, groups };
+
+  const at = clamp(strip, strip.at);
+  const out = (from: number, step: number) => {
+    for (let i = from; i >= 0 && i < strip.tabs.length; i += step) {
+      if (strip.tabs[i].group !== id) return i;
+    }
+    return -1;
+  };
+  const to = out(at + 1, 1) === -1 ? out(at - 1, -1) : out(at + 1, 1);
+  if (to !== -1) return { ...strip, groups, at: to };
+  const room = strip.tabs.length < MAX_TABS ? strip.tabs : strip.tabs.slice(1);
+  return { tabs: [...room, fresh()], at: room.length, groups };
+}
+
+/** Undo the grouping. The tabs stay open and stay where they are. */
+export function dissolve(strip: Strip, id: string): Strip {
+  if (!strip.groups.some((g) => g.id === id)) return strip;
+  return tidy({
+    ...strip,
+    tabs: strip.tabs.map((t) => (t.group === id ? loose(t) : t)),
+    groups: strip.groups.filter((g) => g.id !== id),
+  });
+}
+
+/** Close every tab in a group, which is the point of having named them. */
+export function closeGroup(strip: Strip, id: string): Strip {
+  const tabs = strip.tabs.filter((t) => t.group !== id);
+  if (tabs.length === 0) return blank();
+  const on = strip.tabs[clamp(strip, strip.at)];
+  const kept = tabs.findIndex((t) => t.id === on?.id);
+  /*
+   * Where you land when the group you were in has gone: the first tab after
+   * the run, or the last tab there is. Counted against the strip as it was,
+   * so closing a group in the middle leaves you where the group was rather
+   * than at the far end of the strip.
+   */
+  const after = strip.tabs.findIndex((t, i) => i > clamp(strip, strip.at) && t.group !== id);
+  const at =
+    kept !== -1
+      ? kept
+      : after === -1
+        ? tabs.length - 1
+        : Math.max(0, tabs.findIndex((t) => t.id === strip.tabs[after].id));
+  return tidy({ ...strip, tabs, at, groups: strip.groups.filter((g) => g.id !== id) });
+}
+
+/** One change to one group, or the strip back unchanged. */
+function overGroup(strip: Strip, id: string, edit: (g: TabGroup) => TabGroup): Strip {
+  if (!strip.groups.some((g) => g.id === id)) return strip;
+  return { ...strip, groups: strip.groups.map((g) => (g.id === id ? edit(g) : g)) };
+}
+
+/** A tab, with where it sits — what the strip draws and clicks. */
+export interface Seat {
+  tab: AppTab;
+  at: number;
+}
+
+/** A run of the strip: one group and its tabs, or one tab on its own. */
+export interface Lane {
+  group: TabGroup | null;
+  seats: Seat[];
+}
+
+/**
+ * The strip as it is drawn: runs, left to right.
+ *
+ * Here rather than in the component because it is the shape of the strip
+ * rather than a way of rendering it — the same answer the overlay's strip and
+ * the workspace's strip both need, and a thing a test can hold without a DOM.
+ * Collapsed groups keep their tabs in the lane; whether to draw them is the
+ * component's business, and a lane that dropped them would make "four tabs"
+ * unanswerable at exactly the moment it is worth saying.
+ */
+export function lanes(strip: Strip): Lane[] {
+  const out: Lane[] = [];
+  for (let i = 0; i < strip.tabs.length; i += 1) {
+    const tab = strip.tabs[i];
+    const group = tab.group ? (strip.groups.find((g) => g.id === tab.group) ?? null) : null;
+    const last = out[out.length - 1];
+    if (group && last?.group?.id === group.id) last.seats.push({ tab, at: i });
+    else out.push({ group, seats: [{ tab, at: i }] });
+  }
+  return out;
 }
 
 /** Where the strip is kept between sessions. */
@@ -325,7 +665,7 @@ export const PLACE_ACTIONS = [
 const ALLOWED = new Set<string>(PLACE_ACTIONS);
 
 /** One stored action, if it is one of the openers and nothing but flat data. */
-function placeAction(raw: unknown): Action | null {
+export function placeAction(raw: unknown): Action | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const action = raw as Record<string, unknown>;
   if (typeof action.type !== 'string' || !ALLOWED.has(action.type)) return null;
@@ -349,7 +689,7 @@ function placeAction(raw: unknown): Action | null {
 export function load(raw: string | null, known: (screen: string) => boolean): Strip {
   try {
     if (!raw) return blank();
-    const saved = JSON.parse(raw) as { tabs?: unknown; at?: unknown };
+    const saved = JSON.parse(raw) as { tabs?: unknown; at?: unknown; groups?: unknown };
     const list = Array.isArray(saved.tabs) ? saved.tabs : [];
     const tabs: AppTab[] = [];
     for (const entry of list) {
@@ -369,6 +709,7 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
         screen,
         title: typeof tab.title === 'string' && tab.title ? tab.title : screen,
         ...(typeof tab.query === 'string' && tab.query ? { query: tab.query } : {}),
+        ...(typeof tab.group === 'string' && tab.group ? { group: tab.group } : {}),
         // A tab whose place did not survive the check still knows its screen,
         // so it lands you there rather than nowhere. Losing the deadline you
         // had open is a smaller failure than a tab that does nothing.
@@ -377,15 +718,48 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
     }
     if (tabs.length === 0) return blank();
     const at = typeof saved.at === 'number' ? saved.at : 0;
-    const strip = { tabs: tabs.slice(0, MAX_TABS), at: 0 };
-    return { ...strip, at: clamp(strip, at) };
+    const strip = { tabs: tabs.slice(0, MAX_TABS), at: 0, groups: storedGroups(saved.groups) };
+    /*
+     * `tidy` last, and it is doing real work rather than tidying.
+     *
+     * Everything above reads one entry at a time; the two things that make a
+     * strip coherent are about the whole of it — a group whose members were
+     * split by the tab cap above, a tab carrying the id of a group that was
+     * dropped. Both are ordinary here rather than exotic, because the cap
+     * cuts the list wherever it falls.
+     */
+    return tidy({ ...strip, at: clamp(strip, at) });
   } catch {
     return blank();
   }
 }
 
+/** The groups off the device, keeping only the ones that are a group. */
+function storedGroups(raw: unknown): TabGroup[] {
+  if (!Array.isArray(raw)) return [];
+  const out: TabGroup[] = [];
+  for (const entry of raw) {
+    const group = entry as Partial<TabGroup>;
+    if (typeof group?.id !== 'string' || !group.id) continue;
+    out.push({
+      id: group.id,
+      name: typeof group.name === 'string' ? group.name.slice(0, GROUP_NAME) : '',
+      // A tone off the end of the palette is wrapped rather than dropped: the
+      // palette is twelve today and an older build may have had more, and a
+      // group that comes back in the wrong colour is a smaller loss than a
+      // group that comes back as no group at all.
+      tone:
+        typeof group.tone === 'number' && Number.isFinite(group.tone)
+          ? ((Math.trunc(group.tone) % GROUP_TONES) + GROUP_TONES) % GROUP_TONES
+          : 0,
+      collapsed: group.collapsed === true,
+    });
+  }
+  return out;
+}
+
 export function dump(strip: Strip): string {
-  return JSON.stringify({ tabs: strip.tabs, at: clamp(strip, strip.at) });
+  return JSON.stringify({ tabs: strip.tabs, at: clamp(strip, strip.at), groups: strip.groups });
 }
 
 export function read(known: (screen: string) => boolean): Strip {

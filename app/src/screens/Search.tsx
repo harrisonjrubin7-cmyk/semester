@@ -43,6 +43,7 @@ import { glyphFor } from '../components/icons.pick';
 import { createElement } from 'react';
 import { useSuggesting } from '../components/desk/suggesting';
 import { longLabel } from '../lib/date';
+import { BookmarkChips } from '../components/Bookmarks';
 
 export function SearchHome() {
   const { state, dispatch, school, now, catalog } = useStore();
@@ -134,6 +135,24 @@ export function SearchHome() {
             </span>
             <span className="deskhome-shortcut-name">Add shortcut</span>
           </button>
+        </div>
+      )}
+
+      {/*
+        Saved places, under the shortcuts — and only where the bar is not.
+
+        The two rows are not the same thing and belong next to each other: a
+        shortcut is an app, and a bookmark is one place inside one of them,
+        carrying a name somebody wrote rather than the one the registry did.
+        But in the workspace the bookmarks bar is eighteen pixels above this
+        screen, and the same six chips twice on one window is the duplication
+        this app treats as a bug rather than as generosity. So the bar has
+        them there, and this has them in every other navigation — where this
+        screen is reachable and no bar exists.
+      */}
+      {state.nav !== 'workspace' && (
+        <div className="deskhome-marks">
+          <BookmarkChips said="Bookmarks" />
         </div>
       )}
 
