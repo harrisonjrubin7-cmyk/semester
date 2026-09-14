@@ -112,8 +112,29 @@ modules is a pure refactor with no behaviour to change.
 
 **P1d — the soft shell's fact registry.** `lib/softtop.ts` is a 60-case switch
 computing hero figures, and it is excellent — data, not markup, testable without
-a DOM. It is also only read when the *Soft* shell is on. `SoftTop.tsx` can take
-it through `import()` behind the same condition that decides to draw it.
+a DOM. It is also only read when the *Soft* shell is on, and the guard that
+knew that was *inside* the module: `App.tsx` renders `<SoftTop />` on all three
+shells, so every reader parsed the registry and the ten modules behind it in
+order to decide not to draw anything.
+
+**Done**, and it was worth more than this section estimated — the registry has
+grown since. Measured on the tree after `main` was merged in:
+
+```
+253 modules, 74,986 lines  →  242 modules, 71,067 lines
+initial gzipped JS: 276,032 bytes  →  262,924 bytes     (−4.7%)
+files on the critical path: 17 → 14
+```
+
+The second half is not in the byte count. `useTop()` is a hook, so it ran
+*above* the `if (!soft) return null` beneath it: every render on every shell
+built a spec — which walks the term's deadlines — and discarded it. Gating at
+the mount is what stops that, and it is the reason the fix is a second file
+rather than an `import()` inside the same one.
+
+Unlike P1a, this one does **not** prefetch on idle. A Soft reader needs the
+hero in the first paint and nobody else ever needs it, so the fetch is the
+answer to the question rather than a guess ahead of it.
 
 ### Two cuts that measure as zero, and why that matters
 
@@ -297,6 +318,23 @@ time* keeps the broken value — which is how `lib/connect.ts`, whose `TZ` is a
 module-level `const`, wrote a calendar event with no `timeZone` on it about one
 run in six, from a file that has nothing to do with timezones.
 
+### 7c — this class of split is only verifiable in a browser
+
+Both P1a and P1d hold a module in state and fetch it with `import()` from an
+effect, and **vitest cannot exercise that path**: the effect runs, and the
+promise it creates neither resolves nor rejects, through fifty macrotasks.
+Traced with a counter inside `SoftTop`'s own effect; the same `import()`
+awaited directly from a test resolves immediately, and the production build
+fetches the chunk and draws the hero.
+
+So `components/softtop.test.tsx` imports the body statically to put it in the
+registry before the gate asks, which takes the timing out of it without
+weakening what is asserted. It is worth naming as a standing limit rather than
+a quirk of one file: as more of the app moves behind this pattern, the only
+thing that can prove the fetching half works is driving the built app — which
+is what `.claude/skills/run/SKILL.md` exists for, and what both of these were
+checked with.
+
 ### 7b — two more things the stress test found, left alone
 
 Running with `--sequence.shuffle.files` eight times found no failures. Running
@@ -312,6 +350,14 @@ fixed:
   time, on roughly a third of shuffled runs — an async import that resolves
   after its environment is gone. Also present at baseline. CI does not shuffle,
   so neither reaches it today; both are real and both want their own pass.
+
+  **Since reproduced deterministically.** Any test that mounts `StoreProvider`
+  and ends without awaiting `loadSeed()` gets it every time — the provider
+  starts that on mount and it dynamically imports four course modules. It is
+  not only noise: vitest exits non-zero on unhandled errors, so it is a green
+  suite that fails anyway. `components/softtop.test.tsx` awaits the seed for
+  exactly this reason, and that is the shape of the fix wherever else it
+  bites.
 
 ### The `lib/connect.ts` capture is worth a second look
 
@@ -535,7 +581,7 @@ Ordered by measured value per unit of risk, not by size.
 | 5 | ✅ **P6** — silence the one noisy lint rule | one config edit | 155 warnings → 41 |
 | 6 | ✅ **P1a** — split the panel out behind its button | medium | −6,608 lines measured, and the panel opens no slower |
 | 7 | ✅ **P3** — two projects: 354 shared, 9 isolated | an afternoon | −51s per CI run (135s → 84s, −37%) |
-| 8 | **P1d** — lazy `softtop.ts` behind the soft shell | small | −1,518 lines |
+| 8 | ✅ **P1d** — gate the hero at its mount, not inside it | small | −3,919 lines, −4.7% of the gzipped critical path, and a spec no longer built and thrown away on every render |
 | 9 | **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | closes the 82-vs-60 findability hole |
 | 10 | **P4 proper** — one module per screen | large, own branch | adding a screen becomes adding a file |
 | 11 | **P2 proper** — split `now` out of the store context | large | the minute boundary stops being an app-wide event |
