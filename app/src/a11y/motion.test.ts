@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources as walk } from '../styles/rules';
 import { prefersLessMotion, revealKindly, scrollKindly } from '../lib/prefers';
 
 /**
@@ -95,14 +95,9 @@ describe('when the device asks for less motion', () => {
  * a raw `behavior: 'smooth'` looks correct, reads correctly, and is wrong only
  * for the people who cannot see the tests pass.
  */
-function sources(dir: string, out: string[] = []): string[] {
-  for (const e of readdirSync(dir)) {
-    const p = join(dir, e);
-    if (statSync(p).isDirectory()) sources(p, out);
-    else if (/\.tsx?$/.test(e) && !/\.test\./.test(e)) out.push(p);
-  }
-  return out;
-}
+/** Every module, tests aside — `sources` in `styles/rules` walks, this names. */
+const sources = (dir: string): string[] =>
+  walk(dir, { ext: ['.ts', '.tsx'], tests: false }).map((f) => f.path);
 
 describe('every scroll the app performs', () => {
   const files = sources('src')
