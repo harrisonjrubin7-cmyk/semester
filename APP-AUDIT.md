@@ -108,21 +108,35 @@ inputs come from.
 Static checks first, then the app itself in a real browser, because the two
 find different things and this pass was started by the suite being green.
 
+**Two kinds of number appear below, and they age differently.** A *measured*
+row is re-run and re-stated whenever this file is touched; it says what the
+repository does today. A *dated* one is a record of what this pass actually
+executed and does not move, because rewriting it would be inventing a run that
+never happened. Each is marked. This distinction is §4's own lesson applied to
+the file that reported it: a count nothing reads goes stale silently, and the
+only defence a prose number has is saying out loud which kind it is.
+
+Measured — last re-run against `main` at `9ca4788`, 14 September:
+
 | Check | Result |
 |---|---|
-| `npm test` | 8046 passed, 10 skipped, 388 files |
+| `npm test` | 8097 passed, 10 skipped, 393 files |
 | `npm run lint` (oxlint · style rule · label rule) | clean |
 | `npm run build` (`tsc -b` + vite) | clean |
 | `npm run check:university` | clean |
 | `npm run counts` | clean — and one error quieter than before, see §1 |
 | `node pipeline/validate.mjs` | 4 courses, 48 items, 8 episodes, all checks passed |
 
-Then the browser, driven per `.claude/skills/run`:
+Dated — what this pass ran in headless Chromium, driven per
+`.claude/skills/run`, on the code as it stood:
 
 - **1,560 screen loads.** Every screen in the `Screen` union — 81 of them, with
   real ids for the ones that name something — across all **6 navigations** and
   all **6 shells**, at phone width and at desktop width. **Zero `pageerror`s
-  and zero blank screens.**
+  and zero blank screens.** (`NAVS` and `SHELLS` are still six and six, and the
+  union is still 82 with `onboarding` handled before the switch, so the shape
+  of that sweep is unchanged; the count of loads is the run, not a claim about
+  today.)
 - **Every stored-state version.** A seed at each of schema 1–6, one with no
   version marker, one from the future, one of pure garbage, and five payloads
   that are not JSON at all. All ten migration paths and all five corrupt
@@ -340,8 +354,9 @@ Worth recording, so the next pass does not re-spend the time:
   markers outside tests; no empty handlers (`onClick={() => {}}`); no "coming
   soon", "not implemented" or stub text. Every `placeholder` hit is a real HTML
   input placeholder.
-- **No orphan files.** All 624 non-test sources under `app/src` are imported by
-  something.
+- **No orphan files.** Measured: all 643 non-test sources under `app/src` are
+  imported by something. Re-run at `9ca4788`; it was 624 when the audit ran,
+  and the answer is still zero orphans.
 - **Screen coverage is complete.** Every member of the `Screen` union has a
   case in `CurrentScreen` except `onboarding`, which is handled before the
   switch, as its own full-screen mode. The screens absent from `DESTINATIONS`
