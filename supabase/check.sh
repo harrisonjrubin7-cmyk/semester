@@ -25,15 +25,33 @@ set -euo pipefail
 DB="${SEMESTER_CHECK_DB:-semester_check}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Named on the command line, or all of them. Sorted so a run reads the same way
-# twice; `check.sh groups` is enough, the suffix is added here.
+say() { printf '%s\n' "$*" >&2; }
+
+# Named on the command line, or every suite in this directory.
+#
+# Read off the directory rather than listed here, because a list written down
+# is a list that has to be remembered: add a sixth `*.check.sql` and a
+# hardcoded default would skip it silently, reporting that everything passed
+# while never running it. That is the same shape as every other fault this
+# directory's history records — a written-down fact drifting from the one it
+# describes — and it is not worth repeating in the thing that checks for it.
+#
+# Globbed, so the order is the filename order and a run reads the same way
+# twice. `check.sh groups` is enough on the command line; the suffix is added
+# below.
 if [ "$#" -gt 0 ]; then
   SUITES=("$@")
 else
-  SUITES=(classmates groups records calendar sync)
+  SUITES=()
+  for f in "$HERE"/*.check.sql; do
+    [ -e "$f" ] || continue
+    SUITES+=("$(basename "$f" .check.sql)")
+  done
+  if [ "${#SUITES[@]}" -eq 0 ]; then
+    say "no *.check.sql in $HERE"
+    exit 1
+  fi
 fi
-
-say() { printf '%s\n' "$*" >&2; }
 
 say "building $DB from $(ls "$HERE"/migrations/*.sql | wc -l | tr -d ' ') migrations"
 
