@@ -4,7 +4,9 @@ import {
   NO_CONTRACT,
   dayCapacity,
   insideFloor,
+  SUGGESTED_REST,
   insideRest,
+  keeps,
   newRest,
   over,
   readContract,
@@ -185,5 +187,47 @@ describe('reading what was stored', () => {
 
   it('tidies the days a block is on', () => {
     expect(newRest({ days: [3, 1, 1, 9] }, AT).days).toEqual([1, 3]);
+  });
+});
+
+/**
+ * The way in, which is the half that was missing.
+ *
+ * Every function above this shipped and `state.rest` was empty on every
+ * device, because no screen in the app could add a block — so `insideRest`
+ * always returned zero, `kept` was always zero, and the "kept for yourself"
+ * clause in `takenLine` was a sentence that could not print. The control is in
+ * `components/Capacity.tsx` now; these are the pieces it leans on.
+ */
+describe('the blocks somebody can actually enter', () => {
+  it('suggests three that are complete enough to count', () => {
+    expect(SUGGESTED_REST.length).toBe(3);
+    for (const s of SUGGESTED_REST) {
+      expect(keeps(newRest(s, AT))).toBe(true);
+      expect(s.label).not.toBe('');
+    }
+  });
+
+  it('counts a block as nothing until it has a day and a length', () => {
+    expect(keeps(rest([], 18 * 60, 19 * 60))).toBe(false);
+    expect(keeps(rest([1], 19 * 60, 18 * 60))).toBe(false);
+    expect(keeps(rest([1], 19 * 60, 19 * 60))).toBe(false);
+    expect(keeps(rest([1], 18 * 60, 19 * 60))).toBe(true);
+  });
+
+  /*
+   * The assertion the whole gap comes down to: with a block entered, the week
+   * reports fewer real hours than without one, and says so in words.
+   */
+  it('takes the kept hours out of the week and names them', () => {
+    const windows = [win([1, 2, 3, 4, 5], 17 * 60, 22 * 60)];
+    const none = weekCapacity(windows, DEFAULT_FLOOR, []);
+    const dinner = weekCapacity(windows, DEFAULT_FLOOR, [rest([1, 2, 3, 4, 5], 18 * 60, 19 * 60)]);
+
+    expect(none.kept).toBe(0);
+    expect(dinner.kept).toBe(5);
+    expect(dinner.real).toBe(none.real - 5);
+    expect(takenLine(none)).not.toContain('kept for yourself');
+    expect(takenLine(dinner)).toContain('kept for yourself');
   });
 });

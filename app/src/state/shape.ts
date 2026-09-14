@@ -1768,6 +1768,7 @@ export type Action =
   | { type: 'dropLetter'; id: string }
   | { type: 'setFloor'; patch: Partial<Floor> }
   | { type: 'addRest'; patch: Partial<Rest> }
+  | { type: 'patchRest'; id: string; patch: Partial<Rest> }
   | { type: 'dropRest'; id: string }
   | { type: 'setContract'; hours: number }
   | { type: 'undo' }

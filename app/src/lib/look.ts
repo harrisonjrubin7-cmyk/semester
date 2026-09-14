@@ -694,8 +694,13 @@ export function feedStyleOf(id: string | undefined): string {
  *
  * `NAVS` is **how you move**: which single navigation is drawn. `SHELLS` is
  * **how a screen is drawn** once you are on it. They are independent — every
- * one of the twelve pairings is a working app — and neither may quietly do
- * the other's job.
+ * one of the six-by-six pairings is a working app — and neither may quietly
+ * do the other's job.
+ *
+ * The count is deliberately written as the two lengths rather than as the
+ * product it comes to. It said "twelve" for as long as it took both lists to
+ * double, and a stated total is a number that goes stale silently: nothing
+ * reads it, so nothing can disagree with it. The lists below are the answer.
  *
  * That last sentence is the whole reason these two lists now sit together.
  * The soft layout used to draw its own two rows of pills, so choosing it put
@@ -712,13 +717,19 @@ export function feedStyleOf(id: string | undefined): string {
  */
 
 /**
- * The four navigations. Exactly one of them is on screen at any time.
+ * The navigations. Exactly one of them is on screen at any time.
  *
- * Genuinely different habits rather than four skins: the bar suits somebody
- * who lives in four screens, the feed somebody who wants the day in one
- * scroll, the springboard somebody who has forty-six screens and would rather
+ * Genuinely different habits rather than skins over one: the bar suits
+ * somebody who lives in four screens, the feed somebody who wants the day in
+ * one scroll, the springboard somebody who has sixty screens and would rather
  * see them than remember which shelf they are on, the shelves somebody who
- * wants the shelf and its screens visible at once.
+ * wants the shelf and its screens visible at once, the workspace somebody who
+ * keeps several open and moves between them, and the guides somebody who
+ * opens this app to read one course and nothing else.
+ *
+ * Unnumbered on purpose: this sentence said "four" through two additions and
+ * described four of six, which is the same staleness the note above it warns
+ * about one paragraph earlier.
  */
 export const NAVS = [
   {

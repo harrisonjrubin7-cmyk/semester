@@ -36,7 +36,7 @@ export const BUDGET: Budget = {
   'components/Boundary.tsx': { dim: 3 },
   'components/BreakItUp.tsx': { type: 1, space: 1, shorthand: 3, dim: 5 },
   'components/CameBack.tsx': { type: 4, space: 5, shorthand: 4, dim: 4 },
-  'components/Capacity.tsx': { type: 2, space: 2, shorthand: 6, dim: 3 },
+  'components/Capacity.tsx': { type: 5, space: 3, shorthand: 10, dim: 7 },
   'components/Capture.tsx': { type: 2, space: 1, shorthand: 2, dim: 1 },
   'components/CheckIt.tsx': { type: 6, leading: 1, space: 7, shorthand: 3, dim: 5 },
   'components/Clashes.tsx': { leading: 1, space: 2, shorthand: 2, dim: 2 },

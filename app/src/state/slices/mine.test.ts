@@ -92,3 +92,55 @@ describe('an appointment of your own', () => {
     expect(fixed.appointments).toEqual(after.appointments);
   });
 });
+
+/**
+ * The hours you keep for yourself, which for a long time you could not keep.
+ *
+ * `addRest` and `dropRest` were in the reducer and nothing dispatched either,
+ * so `state.rest` was empty on every device and the whole of `lib/rest.ts`'s
+ * protected-block arithmetic ran on an empty list. `components/Capacity.tsx`
+ * has the control now, and it edits in place the way `WorkWindows` does —
+ * which is why `patchRest` had to exist too. Without it, changing the hour of
+ * a standing dinner meant deleting the block and writing it out again.
+ */
+describe('a block of time you keep', () => {
+  const dinner = { label: 'Dinner', days: [1, 2, 3], from: 18 * 60, to: 19 * 60 };
+
+  it('can be added, edited and removed', () => {
+    const added = run(start(), { type: 'addRest', patch: dinner });
+    expect(added.rest).toHaveLength(1);
+    const id = added.rest[0].id;
+
+    const moved = run(added, { type: 'patchRest', id, patch: { from: 19 * 60, to: 20 * 60 } });
+    expect(moved.rest[0].from).toBe(19 * 60);
+    expect(moved.rest[0].to).toBe(20 * 60);
+    // The fields the patch did not name survive it.
+    expect(moved.rest[0].label).toBe('Dinner');
+    expect(moved.rest[0].days).toEqual([1, 2, 3]);
+    // And the block stays the same block, so the list does not jump.
+    expect(moved.rest[0].id).toBe(id);
+
+    expect(run(moved, { type: 'dropRest', id }).rest).toEqual([]);
+  });
+
+  it('cleans a patch on the way in, the way the floor does', () => {
+    const added = run(start(), { type: 'addRest', patch: dinner });
+    const id = added.rest[0].id;
+    // Out-of-range minutes and a duplicated, unsorted day list — the two
+    // things a time field and a row of day toggles can actually send.
+    const odd = run(added, { type: 'patchRest', id, patch: { days: [3, 1, 1], to: 99 * 60 } });
+    expect(odd.rest[0].days).toEqual([1, 3]);
+    expect(odd.rest[0].to).toBe(24 * 60);
+  });
+
+  it('leaves the other blocks alone', () => {
+    const two = run(
+      start(),
+      { type: 'addRest', patch: dinner },
+      { type: 'addRest', patch: { label: 'The gym', days: [5], from: 17 * 60, to: 18 * 60 } },
+    );
+    const gym = two.rest[1];
+    const after = run(two, { type: 'patchRest', id: two.rest[0].id, patch: { label: 'Supper' } });
+    expect(after.rest[1]).toEqual(gym);
+  });
+});
