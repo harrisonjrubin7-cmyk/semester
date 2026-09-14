@@ -42,7 +42,7 @@ def read_guide(course: str) -> tuple[str, list[dict]]:
     path = ROOT / "app/src/data/courses" / course / "guide.ts"
     if not path.exists():
         raise SystemExit(f"No guide at {path}")
-    src = path.read_text()
+    src = path.read_text(encoding="utf-8")
 
     code = (re.search(r"code: '([^']+)'", src) or [None, course.upper()])[1]
 
@@ -193,10 +193,10 @@ def render(course: str, code: str, units: list[dict], only: int | None, mp4: boo
         # Merge with whatever was rendered before, so `--unit 3` re-renders one
         # lesson without dropping the other ten.
         meta = out_dir / "lessons.json"
-        merged = json.loads(meta.read_text()) if meta.exists() else {}
+        merged = json.loads(meta.read_text(encoding="utf-8")) if meta.exists() else {}
         merged.update({str(k): v for k, v in lessons.items()})
         ordered = {k: merged[k] for k in sorted(merged, key=int)}
-        meta.write_text(json.dumps(ordered, indent=2, ensure_ascii=False) + "\n")
+        meta.write_text(json.dumps(ordered, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
         write_module(course, ordered)
         print(f"\n{meta}")
@@ -215,7 +215,8 @@ def write_module(course: str, lessons: dict) -> None:
         "// Re-render with: python3 pipeline/lessons.py " + course + "\n"
         "import type { Lesson } from '../../../lib/types';\n\n"
         f"const lessons: Record<number, Lesson> = {body};\n\n"
-        "export default lessons;\n"
+        "export default lessons;\n",
+        encoding="utf-8",
     )
     print(f"{path}")
     print(f"Import it in courses/{course}/index.ts as `lessons` if it is not already.")

@@ -1,3 +1,142 @@
+# One app — the ninth pass: the guards that cannot fail
+
+Against `main` at `7cddea8`. No code in this commit.
+
+**60 destinations**, unchanged. **79 screen files, 131 components** — the app
+has roughly doubled in components since this command's own description was
+written, and none of that growth is duplication this pass can find.
+
+Two axes, both new, one of them a real null result.
+
+## Null result: no action is handled by two slices
+
+`state/reducer.ts` runs `SLICES` in order and takes the first non-null answer,
+so two slices handling one action would mean the second silently never runs —
+"one home per job", applied to the reducer. Every `case` in all ten slices,
+grouped by action: **no action appears twice.** Recorded because a null result
+that was actually measured is worth more than an axis nobody checked, and
+because this one is a standing hazard: `writeMail` moved between slices in F1
+and the move was only safe because of this property.
+
+## G1 — five of the ten source-scanning guards cannot tell "no offenders" from "nothing scanned"
+
+This repo holds a great deal of its design in census tests: rules that walk the
+source and assert the offender list is empty. Thirty of them. Ten share one
+walker, `sources()` in `styles/rules.ts`.
+
+A census of that shape has a specific failure: **if the walk returns nothing,
+the offender list is empty and the test passes.** It passes loudly, in green,
+having checked nothing.
+
+This is not hypothetical here. It has already happened twice, and both are
+recorded above in this file:
+
+- `lib/onegraph.test.ts` (E1) used `sources()` — which walks `.tsx` only — to
+  scan `lib/`, where almost nothing is `.tsx`. The rule was vacuous and passed
+  against a deliberately planted second compiler.
+- `components/notice.test.ts` (E3) could not see a class-based copy of the box
+  it guards, which is a narrower version of the same thing: a rule whose input
+  does not contain what it is looking for.
+
+### Measured, not reasoned about
+
+`sources()` was replaced with a function returning `[]` and the ten were run.
+
+| Caught it | Passed vacuously |
+| --- | --- |
+| `components/notice.test.ts` | `lib/header.test.ts` |
+| `components/onetablist.test.ts` | `lib/onecontrol.test.ts` |
+| `lib/onefile.test.ts` | `lib/onehome.test.ts` |
+| `lib/onegraph.test.ts` | `lib/onelook.test.ts` |
+| `lib/profile.test.ts` | `lib/onframe.test.ts` |
+
+**Five of ten.** The five that caught it did so by accident of having a
+companion assertion — "the component still exists to be used" — rather than by
+design; none of them asserts that the *scan* found anything. The five that
+passed are the app's central structural rules: one home per screen, one
+control per job, one look, one frame.
+
+### The fix is one line, not five
+
+`sources()` should throw when a directory yields no `.tsx` file. Every call
+site passes `src`, `src/components` or `src/screens`, each of which certainly
+contains `.tsx` files, so an empty result is *always* a bug — a wrong path, a
+moved directory, or the E1 mistake of pointing a `.tsx` walker at `lib/`.
+Throwing converts a silent green into a loud red at the one place all ten
+share, and protects the eleventh before it is written.
+
+Per-test floors would work too and are what `state/readstate.test.ts` does.
+They are the wrong shape here: five edits that each have to be remembered,
+against one that cannot be forgotten.
+
+## G2 — six directory walkers, five of them private copies
+
+Found while checking G1's blast radius. The same twenty lines — recurse a
+directory, keep the source files, read them — exist six times:
+
+| Where | Keeps |
+| --- | --- |
+| `styles/rules.ts` (shared) | `.tsx` |
+| `a11y/labels.ts` | `.tsx` |
+| `a11y/motion.test.ts` | paths only |
+| `lib/zips.test.ts` | paths only |
+| `lib/erase.test.ts` | paths only |
+| `styles/print.test.ts` | `.tsx`, minus tests |
+| `lib/onegraph.test.ts` | `.ts` **and** `.tsx` |
+
+That last one is mine, written in E1 precisely because the shared walker could
+not see `.ts`, and its own comment says so. **That is the finding**: the copies
+exist because the shared one answers exactly one question and everybody else
+needed a slightly different one. A walker taking the extensions it should keep
+would have absorbed all six.
+
+Not merged in this pass. It is a refactor across seven files whose only
+benefit is fewer copies of twenty lines, and G1 is the row with a bug behind
+it. Recorded so the next pass has it, with the note that **G1 must land
+first** — throwing on empty is worth more than tidying the things that walk.
+
+## To do, in order
+
+| # | Row | Verdict |
+| --- | --- | --- |
+| G1 | `sources()` returns nothing, three guards pass anyway | **Throw on empty** |
+| G2 | six directory walkers | **Merge — later, after G1** |
+
+### G1, done — and the census above is wrong twice
+
+`sources()` throws when a directory yields no `.tsx`. Every caller passes
+`src`, `src/components`, `src/screens`, or a temporary tree it has just
+written a `.tsx` into, so an empty result is always a wrong path or a broken
+walk — a bug in the test, not a clean bill of health for the app. Re-running
+the experiment with the walk emptied, **all eight now fail**, where five did.
+
+**Eight, not ten.** The table above counted tests that *import from*
+`styles/rules`, and `lib/header.test.ts` and `lib/onframe.test.ts` import only
+`withoutComments`. They never call the walker: they read named files with
+`readFileSync`, which throws on a missing one. So the shared-walker set is
+eight, and the number that passed vacuously was **three** — `onecontrol`,
+`onehome`, `onelook` — not five.
+
+That is the second time in two passes that a census of mine over-counted by
+reading the wrong thing: F1's dispatcher count missed a call written
+`type:'writeMail'` without the space, and this one counted an import as a use.
+**A census that counts imports is counting a different question than one that
+counts calls**, and the difference is invisible until something forces the
+issue — the typechecker there, the throw here.
+
+**The proposed fix was also justified wrongly, and the code now says so.** The
+row claimed throwing would have caught E1, "the mistake of pointing a `.tsx`
+walker at `lib/`". It would not: `lib/` holds two `.tsx` files, so `sources()`
+returned two, the census ran against two files out of two hundred, and it
+passed against a planted second compiler. A throw on *nothing* cannot see a
+walk that returns *too few*.
+
+That case needs a walker told which extensions to keep — which is G2. So G2 is
+not the tidying this pass called it. It is the other half of this row, and the
+note on `sources()` says as much where somebody will read it.
+
+---
+
 # One app — the eighth pass: state written and never read
 
 Against `main` at `0aa769c`. No code in this commit.
