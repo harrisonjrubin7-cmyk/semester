@@ -31,7 +31,7 @@
  */
 
 /** The shape this build writes. Bump it when you add a step below. */
-export const SCHEMA = 4;
+export const SCHEMA = 5;
 
 export interface Step {
   /** The version this step produces. */
@@ -109,6 +109,47 @@ export const STEPS: Step[] = [
      * a tick, not a look key, not the layout their screens are drawn in.
      */
     run: (s) => ({ ...s, nav: 'workspace' }),
+  },
+  {
+    to: 5,
+    describe: 'Open the guides, so the app starts at the courses rather than at a search bar.',
+    /*
+     * The same argument step 4 makes, for the same reason, one layout later.
+     *
+     * `nav` is persisted, so every stored copy now carries a literal
+     * `workspace` that step 4 wrote rather than anybody chose. Moving
+     * `DEFAULT_PERSISTED` alone would reach only a device that had never
+     * saved anything, which is nobody who has used this app — so the step
+     * rewrites it once.
+     *
+     * ## Why the app opens here now
+     *
+     * The workspace put a tab strip and a search field above every screen, on
+     * the model of a browser. That is the right shape for sixty screens you
+     * move between and the wrong one for the thing this app is mostly used
+     * for: four courses, and eleven ways through each. The guides make the
+     * course the top level and the study modes the navigation — see
+     * `lib/chrome.ts` and `screens/Guides.tsx`.
+     *
+     * ## What it costs
+     *
+     * The persistent top search field and the app-tab strip stop being the
+     * first thing anybody sees. That is a real loss and it is the reason this
+     * step is worth reading twice: the Screen and Implementation Guide asks
+     * for both to be kept. Nothing is removed — the workspace keeps its tabs,
+     * bookmarks and named groups, and is one row away on Layout and
+     * navigation — but it is no longer where the app opens.
+     *
+     * ## Same two guarantees as step 4
+     *
+     * The version marker makes this a change rather than a policy: it runs on
+     * the way from 4 to 5 and never again, so somebody who reads it and goes
+     * back to the workspace, or to the tab bar, keeps that on every device
+     * and every reopening after. And nothing else moves — not a course, not a
+     * tick, not a look key, not the layout screens are drawn in. All five
+     * older navigations still work and are all still one click away.
+     */
+    run: (s) => ({ ...s, nav: 'guides' }),
   },
 ];
 

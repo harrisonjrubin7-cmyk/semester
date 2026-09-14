@@ -968,23 +968,28 @@ export const SYNCED_KEY = 'semester.synced';
 
 export const DEFAULT_PERSISTED: Persisted = {
   /*
-   * The workspace is what the app opens as: a tab strip, one search bar under
-   * it, and the launcher — see `lib/chrome.ts` and `lib/desk.ts`.
+   * The guides are what the app opens as: the courses you have, and then one
+   * course's eleven ways of studying it as the navigation — see
+   * `lib/chrome.ts` and `screens/Guides.tsx`.
    *
    * This line alone only ever reached a device that had never saved anything,
    * which is nobody who has used the app: `nav` has always been persisted, so
-   * every stored copy carries a literal `tabs` written by the app rather than
-   * chosen by anybody. Step 4 of `lib/migrate.ts` is what makes it everyone's,
-   * once — and once, so that going back to the tab bar on Layout and
-   * navigation, or on the last row of Customize Semester, sticks.
+   * every stored copy carries a literal value written by the app rather than
+   * chosen by anybody. Step 5 of `lib/migrate.ts` is what makes it everyone's,
+   * once — and once, so that going back to the workspace or the tab bar on
+   * Layout and navigation, or on the last row of Customize Semester, sticks.
    *
-   * The `guides` navigation added beside it is deliberately *not* the default.
-   * It is a sixth option on Layout and navigation, and nobody's app moves to
-   * it until they choose it — the Screen and Implementation Guide requires the
-   * persistent top search field and the app-tab strip be kept, and a default
-   * that replaced them would be a removal dressed as an addition.
+   * ## What this costs, stated rather than hidden
+   *
+   * The workspace is no longer what the app opens as, so the persistent top
+   * search field and the app-tab strip are no longer the first thing anybody
+   * sees. That is a deliberate choice made against the Screen and
+   * Implementation Guide, which asks for both to be kept; it was raised and
+   * reaffirmed. Neither is removed — the workspace is one row away on Layout
+   * and navigation, keeps its tabs, bookmarks and groups, and a stored choice
+   * of it is never overwritten after step 5 has run once.
    */
-  nav: 'workspace',
+  nav: 'guides',
   done: {},
   saved: { e1: true, e16: true },
   notifs: { ...DEFAULT_NOTIFS },
@@ -1572,9 +1577,10 @@ export function pickPersisted(state: State): Persisted {
      * already run. `migrate`'s own docblock says nothing is applied twice, and
      * this is the line that decided whether that stayed true.
      *
-     * Nothing is wrong today: both steps in `STEPS` happen to be idempotent,
-     * so re-running them changes nothing. It is the next step that is not
-     * which this is for, and a step is a bad place to find out.
+     * The step that ended "every step happens to be idempotent" is 5: it and
+     * step 4 both rewrite `nav` unconditionally, so a copy saved without its
+     * marker would have a chosen navigation overruled on the next load. This
+     * line is what stops that.
      *
      * `versionOf` rather than reading the field directly, so the way out and
      * the way in agree about what counts as a version at all.

@@ -6,6 +6,20 @@ import { DEFAULT_PERSISTED } from '../state/shape';
 import type { NavMode, Screen } from './types';
 
 const MODES = NAVS.map((n) => n.id as NavMode);
+/*
+ * The navigations that carry their own way to move on the screen instead of
+ * beside it. Named, never inferred: "draws no chrome" is indistinguishable
+ * from the bug this file exists to catch — a navigation nothing draws —
+ * unless the list of deliberate ones is written down.
+ *
+ * The feed and the springboard are home screens you tap through, so away from
+ * home on a phone they have none. The guides go further and have none at
+ * either width: the grid of courses and the grid of study modes are the
+ * navigation, they wrap to whatever width they are given, and a rail beside a
+ * screen whose own navigation is already visible is the doubling this file is
+ * about. See the head of `chrome.ts`.
+ */
+const CARRIES_ITS_OWN: NavMode[] = ['feed', 'springboard', 'guides'];
 /** Every screen the registry knows, plus the ones that keep the display. */
 const SCREENS: Screen[] = [
   ...new Set<Screen>([...DESTINATIONS.map((d) => d.screen), ...FULLSCREEN, 'home']),
@@ -55,21 +69,8 @@ describe('the navigation rule', () => {
     expect(SHELLS.map((s) => s.id)).toEqual(['plain', 'grouped', 'soft']);
   });
 
-  /*
-   * The navigations that carry their own way to move on the screen instead of
-   * beside it. Named, never inferred: "draws no chrome" is indistinguishable
-   * from the bug this file exists to catch — a navigation nothing draws —
-   * unless the list of deliberate ones is written down.
-   *
-   * The feed and the springboard are home screens you tap through, so away
-   * from home on a phone they have none. The guides go further and have none
-   * at either width: the grid of courses and the grid of study modes are the
-   * navigation, they wrap to whatever width they are given, and a rail beside
-   * a screen whose own navigation is already visible is the doubling this
-   * file is about. See the head of `chrome.ts`.
-   */
-  const CARRIES_ITS_OWN: NavMode[] = ['feed', 'springboard', 'guides'];
-
+  // The exempt ones are `CARRIES_ITS_OWN` at the top of this file, with the
+  // reason each is on it.
   it('gives every navigation a way to move, on both widths', () => {
     for (const nav of MODES) {
       if (CARRIES_ITS_OWN.includes(nav)) continue;
@@ -183,23 +184,34 @@ describe('reading a navigation back', () => {
    * caught the original bug.
    */
   it('falls back to the default rather than to nothing', () => {
-    expect(navOf('soft')).toBe('workspace');
-    expect(navOf(undefined)).toBe('workspace');
-    expect(navOf('')).toBe('workspace');
-    expect(navigationsDrawn(chromeFor(navOf('nonsense'), 'home', false))).toBe(1);
+    expect(navOf('soft')).toBe('guides');
+    expect(navOf(undefined)).toBe('guides');
+    expect(navOf('')).toBe('guides');
+    // A name every branch matches, and a home screen the app knows how to
+    // draw. The line under this one is what "rather than to nothing" means
+    // now that the default draws no chrome of its own.
+    expect(MODES).toContain(navOf('nonsense'));
+    expect(homeShape(navOf('nonsense'))).toBeTruthy();
   });
 
   /*
-   * And the guides are reachable by name but are never what a bad key gives
-   * you. A navigation that draws no chrome is the right thing to *choose* and
-   * the wrong thing to be handed by a storage failure, because the person it
-   * happens to has not seen the app before and has no reason to know the grid
-   * on the screen is the way out.
+   * The fallback draws no chrome, and that is allowed — but only because its
+   * home screen is itself a way on.
+   *
+   * This replaces a `navigationsDrawn(...) === 1` on the fallback, which was
+   * the right question while every default drew a bar or a strip and the
+   * wrong one the moment the default became the guides: it would have failed
+   * on a navigation that works, and loosening it to `>= 0` would assert
+   * nothing. The bug being guarded against is *landing somebody nowhere* —
+   * so what is asserted is that the fallback's home screen exists and is the
+   * grid of courses, which is a navigation on the screen the way the
+   * springboard's icons are. See the head of `chrome.ts`.
    */
-  it('never falls back to a navigation that draws no chrome', () => {
-    expect(navOf('guides')).toBe('guides');
-    expect(navOf('nonsense')).not.toBe('guides');
-    expect(navigationsDrawn(chromeFor('guides', 'home', false))).toBe(0);
+  it('falls back somewhere with a way on, even drawing no chrome', () => {
+    const fallback = navOf('nonsense');
+    expect(navigationsDrawn(chromeFor(fallback, 'home', false))).toBe(0);
+    expect(homeShape(fallback)).toBe('guides');
+    expect(CARRIES_ITS_OWN).toContain(fallback);
   });
 
   /*
