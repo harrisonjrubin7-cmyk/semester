@@ -9,7 +9,7 @@
  * one emitter and no second copy drifting away from the first.
  *
  * Deploy:
- *     psql "$DATABASE_URL" -f supabase/calendar.sql
+ *     psql "$DATABASE_URL" -f supabase/migrations/20260901000800_calendar.sql
  *     supabase functions deploy calendar --no-verify-jwt
  *
  * `--no-verify-jwt` is not a shortcut here, it is the requirement: Apple

@@ -1,9 +1,9 @@
-# One app — the seventh pass, run twice over
+# One app — the seventh pass, run three times over
 
-Two audits of this name were written at the same time, on two branches, by two
+Three audits of this name were written at the same time, on three branches, by
 people who could not see each other's work. They looked at different things and
-agree where they overlap, so both are kept whole rather than one being folded
-into the other — and where they met is the most useful part of either.
+agree where they overlap, so all three are kept whole rather than folded into
+one — and where they met is the most useful part of any of them.
 
 **A** — *controls drawn twice in one frame*: the header repeating the
 workspace's bar, the sidebars repeating it again, two `+` glyphs meaning
@@ -12,6 +12,9 @@ different things, and the same census applied to the browser shell.
 **B** — *one job, one control*: a census of the four panels every navigation
 can open, the four settings the browser shell kept for itself, Courses offering
 *Add a course* twice, and the shell's home page that could not be clicked.
+
+**C** — *one job, two implementations*: the axis a port moves along, taken
+against the port that arrived as a single commit.
 
 Where they met, twice, is recorded in A's §4c and in the note where the browser
 shell's `DARK`/`LIGHT` constants were:
@@ -938,6 +941,266 @@ one shell's home given back its pointer.
 `src/styles/budget.ts` moves with S2 — `dim` 928 → 927, regenerated with
 `npm run lint:styles -- --fix`, which is the ledger recording that a screen
 got smaller.
+
+---
+
+# C — one job, two implementations
+
+**Three seventh passes ran at once, against the same base, without sight of
+each other** — see the preamble at the top of this file. This is the third.
+Written as "the second half" when there were two; it is kept as it was written
+apart from this paragraph, because a pass that says what it could see at the
+time is worth more than one tidied afterwards.
+
+They did not collide, and the reason is worth keeping: **they audited
+different axes.** That pass asked where one *control* has two homes — the
+browser shell keeping four of the app's settings, Courses offering Add a
+course twice — and found a bug worth more than either. This one asked where
+one *job* has two implementations, which is the axis a port moves along, and
+found the two graphing calculators below.
+
+Neither would have found the other's. A control census reads `set*` and the
+screens that dispatch it; an implementation census reads what a new file
+does against what an old one already did. The overlap between the two is
+empty, and the only thing this pass changes in the one above is that it is
+no longer the whole of the seventh.
+
+Run against `main` at `30fdcef`. Code is in a later commit; this section is
+Step 1.
+
+Counted: **60 destinations** in `lib/nav.ts`, 82 `Screen` union members, 100
+screen files, **147 components** (was 136), **7 navigations** in `NAVS` (was
+6), 8 shelves holding five to eight each. `npm run lint` exit 0.
+
+**Twenty-one commits landed since the sixth pass**, and one of them is the
+reason for this one: **#232, "Add the audited source's missing features, and
+its shell as a seventh navigation"** — 90 files and +6073 lines, arriving as a
+port from another tree. The sixth pass existed because eleven screens had
+arrived without going through this command. This is the same thing again, in
+one commit.
+
+**The headline: this port did not add a screen, it added a second
+implementation.** No destination was created — the count is still 60, and the
+new components are wired one-to-one into screens that already existed. What
+came with them is a second graphing calculator, a second expression parser, a
+second workspace shell, and a screen whose stated job is now behind a button.
+
+Two of its overlaps were already found and merged by the author, which is
+worth recording because it sets the precedent this audit follows: **#239**
+folded the shell's tab organiser into the app's own bookmarks and groups, and
+**#240** took the New button off *both* sidebars. The word "both" is the
+finding.
+
+---
+
+## 1. What the port duplicated
+
+### E1 — two graphing calculators · **MERGED**
+
+The app has had a graphing stack since Equations was written. The port brought
+another one, and neither knows about the other:
+
+| | The app's | The port's |
+| --- | --- | --- |
+| Expression parser | `lib/calc.ts` | `lib/graphing.ts` |
+| Plotting maths | `lib/plot.ts` — pure, documented, tested | inside `lib/graphing.ts` |
+| Drawing | `components/Plot.tsx` | inside `components/GraphCalculator.tsx` |
+| Expression list | `components/Grapher.tsx` | same file |
+| Keypad / calculator | `components/Calculator.tsx` | same file |
+| Where it lives | `screens/Equations.tsx` — the `equations` destination | `screens/Draw.tsx`, first of two tabs |
+
+```
+$ grep -rln "lib/plot'\|Grapher" --include=*.tsx --include=*.ts app/src | grep -v test
+components/Grapher.tsx  components/Plot.tsx  components/Calculator.tsx
+lib/plot.ts  state/slices/made.ts  state/shape.ts  screens/Equations.tsx
+$ grep -rln "lib/graphing'" --include=*.tsx --include=*.ts app/src | grep -v test
+components/GraphCalculator.tsx
+```
+
+**The survivor is `equations`, and the registry says so without being asked.**
+Its blurb is *"Write a formula properly, work it out at your own numbers, and
+draw its curve"*; its `keywords` already carry `graphing calculator`, `desmos`,
+`geogebra`, `plot`, `curve`, `asymptote`, `intercept`, `turning point`. Draw's
+blurb is *"A graph, a flow, a timeline or a matrix — drawn from what you
+describe"* and its file comment is about diagrams a paragraph explains badly —
+a curve shifting, a causal chain, a payoff matrix. Draw is the AI diagram
+screen; it is not where somebody types `y = sin(x)`.
+
+So `draw` now opens on a tab bar reading **Graphing calculator · Diagrams &
+illustrations**, where the first tab is a reimplementation of another
+destination and the second is the screen's own subject.
+
+**Three things that are not merely duplication and have to move with it:**
+
+- **`GraphCalculator` hardcodes twelve colours**, `fill="white"` among them,
+  against `Plot.tsx`'s nine `var(--app-*)` tokens. In the dark themes the
+  graph is a white square with Google-blue curves. This app holds itself to
+  WCAG thresholds in `lib/contrast.ts`; this bypasses them.
+- **It drops the frame.** `Draw()` now returns a bare
+  `<div className="drawing-workspace portal-workspace">`; the `<Page>` is
+  inside the diagram half only. One screen, two frames, one of them missing.
+- **`lib/graphing.ts` is a second expression parser** — a hand-written
+  tokeniser and recursive-descent evaluator, in an app that already has one
+  it trusts enough to compute grades with.
+
+### E2 — Work opens on a list five screens already draw · **RECORDED, needs a decision**
+
+`screens/Work.tsx` renders `<AssignmentCenter>` as its *default* view;
+"Break it down", which is what the registry says the screen is, is behind an
+"All assignments → tools" button (`Work.tsx:51`).
+
+`AssignmentCenter`'s eight views, from `lib/assignmentcenter.ts`:
+
+| View | Already answered by |
+| --- | --- |
+| Today | `home` — "What is due, what is next, and what is on today" |
+| Next 7 days | `ahead` — "The next seven days in hours" |
+| Upcoming | `courses` — "everything they are asking of you as one list" |
+| Past due | `behind` — "What has gone by, what still fits" |
+| In progress | — genuinely new |
+| Completed | `home`'s Done tab |
+| Recorded grades | `courses` — the Grades tab |
+| All work | `courses` |
+
+Six of the eight are a screen that exists. The registry's blurb for `work` is
+*"Paste an assignment and get it broken down — rubric, plan, dates, what to
+ask"*, and that is now the second thing the screen does.
+
+**Not merged in this pass, and the reason is §6 of this file.** Which of
+`work`, `home`, `ahead`, `behind` and `courses` should hold "every assignment,
+filtered" is a question about how one person uses their own app, and this
+document is a record of that class of question being answered four times from
+the code and reversed four times by the person whose app it is. The row states
+the evidence; the survivor is theirs to name.
+
+What is *not* a matter of taste, and should be fixed either way: a destination
+whose registry blurb describes the thing you reach by pressing a button on it.
+Either the blurb is wrong or the default view is.
+
+### E3 — the shared components, hand-rolled again · **SHARED COMPONENTS**
+
+The port brought its own `portal-*` and `graph-*` idioms rather than the ones
+this app spent six passes consolidating:
+
+| The port draws | The app already has |
+| --- | --- |
+| `<p role="alert" className="portal-warning">` + "Download recovery copy" | `Notice` in `components/ui.tsx` — written in the sixth pass for exactly this, across the six device-library screens |
+| `<div className="portal-empty">` with icon, heading, sentence and an action | `EmptyState`, whose whole point is the action |
+| `portal-filter-row` — a search box and a category `<select>` | `ChipRow` · `PickChips` · `Segmented` |
+| `directory-star` favourite toggles | the star in `screens/Directory.tsx` |
+| `portal-tabs` with `role="tablist"` | `Segmented` |
+
+**`notice.test.ts` did not catch the first row and could not have.** The rule
+it holds matches the box's three inline measurements, and the port's copy is a
+CSS class. That is a real limit of the guard and it is written here rather
+than quietly widened: a class-based copy of a component is still a copy, and
+the next pass should decide whether the rule can see one without failing every
+`role="alert"` in the app.
+
+### E4 — a second workspace shell · **RECORDED**
+
+`browser` is the seventh navigation, and the sixth is `workspace`. Both are
+browser-shaped: a strip of app tabs, a search field, an apps grid, a sidebar.
+
+| | Files | Lines |
+| --- | --- | --- |
+| `workspace` | `components/desk/` — TopBar, Sidebar, AppsPanel, Customize | 708 |
+| `browser` | `GoogleShell`, `GoogleTabs`, `TabMenu`, `Bookmarks` | 1213 |
+
+To its credit the port reads the one registry — `appShelves`, `destination`,
+`GROUPS`, `findEverything`, `openhit` — so the membership cannot drift. What
+is duplicated is the shell, not the contents.
+
+**The author has already merged two pieces of this**, and those merges are the
+argument for finishing it: #239 folded the shell's tab organiser into the
+app's bookmarks and groups, and #240 took the New button off *both* sidebars.
+A fix that has to be applied to both sidebars is the definition of the problem.
+
+Left recorded rather than merged for the same reason as E2 — which of two
+navigations survives is the owner's call, and `NAVS` is explicit that every
+one of them is a working app somebody may prefer.
+
+### E5 — exports with no caller · **CLEAN**
+
+One, against 26 two passes ago and 7 in the last: `lib/bookmarks.hook.ts:
+keepPlace`. Thirty-one are read only by their own test, which is the same
+figure as last pass and the same three kinds as before — dead, a contract a
+test asserts, or wiring somebody stopped halfway. The port added almost no
+dead weight, and that is worth saying plainly alongside the rest.
+
+---
+
+## 2. What has not changed
+
+- **60 destinations**, unchanged. No route was added, so §2 of the sixth pass
+  still stands and is not re-run here.
+- **Eight shelves**, five to eight each.
+- **Controls**: no `set*` action is dispatched from more than one non-`state`
+  file. But note that the port writes `localStorage` directly from components
+  — `semester.graph.expressions` in `GraphCalculator`, `semester.directory.*`
+  in `CampusDirectory` — which is the shape §3 of the sixth pass warned no
+  `set*` census can see. None of these is a *setting*, so the null result
+  holds; the method's blind spot is now occupied.
+
+---
+
+## 3. What to do, in order
+
+| # | Change | Destinations | Kind | Done |
+| --- | --- | --- | --- | --- |
+| E1 | One graphing calculator — `equations` survives, Draw goes back to diagrams | 0 | Merge | ✅ |
+| E3 | The port's `portal-*` idioms onto `Notice`, `EmptyState`, `Segmented` | 0 | Shared components | |
+| E2 | Work's default view against five screens | 0 | **Open** — survivor is the owner's call | |
+| E4 | `browser` against `workspace` | 0 | **Open** — same | |
+| E5 | One dead export | 0 | Cut | |
+
+**E1 is the one this pass would do first and alone.** It removes a whole
+second stack rather than moving a tab, it takes a dark-mode break and a
+missing `<Page>` frame out with it, and unlike E2 and E4 there is nothing to
+decide: the destination whose blurb, keywords and library are about graphing
+is the one that keeps the graph.
+
+### E1, done
+
+`components/GraphCalculator.tsx`, `lib/graphing.ts` and its test are gone;
+`Draw()` is `DiagramBuilder` again, with the `<Page>` frame back at the top of
+the screen where the port had replaced it with a bare `<div>`. Forty-eight
+orphaned `graph-*` and `drawing-workspace` rules came out of
+`styles/features.css` with them, and one media block that was left empty.
+
+**Nothing of the survivor's was touched**, and nothing of the copy's was
+carried across. Two of its features have no equivalent on `equations`, and
+both are left out on purpose rather than overlooked — the reasoning is at the
+top of `screens/Draw.tsx` so it is read by whoever wonders where they went:
+
+- **A table of values** is the opposite of what `lib/plot.ts` is for, and that
+  file says so in its first paragraph: *"the handful of facts somebody
+  actually wants off a graph — where it crosses zero, where it turns, where
+  two curves meet"*. Twenty-one rows of y is figures instead of facts.
+- **An SVG export** is a fair thing to want and is real work rather than a
+  carry-over. This app's plot is drawn in `var(--app-*)` tokens, so a file
+  saved straight out of it carries unresolved variables. The copy exported
+  cleanly only because its colours were hardcoded, which is the same defect
+  seen from the other end.
+
+`lib/onegraph.test.ts` holds it, and asks the narrower question this
+recurrence actually takes rather than the one `onehome.test.ts` asks:
+`GraphCalculator` was never a *destination*, so a rule about screens could
+never have seen it. It pins the two joints a second stack has to pass
+through — something has to render a grapher, and something has to compile an
+expression to a path — and both rules were checked by planting the regression
+and watching them name it.
+
+**Recorded against myself, twice over.** The compiler rule's first version
+scanned with `sources()` from `styles/rules.ts`, which walks `.tsx` only. It
+was therefore vacuous against a `lib/*.ts` file — exactly the shape it exists
+to catch — and passed against a deliberately planted second compiler. It has
+its own walker now. That is the second time in two passes that a guard I wrote
+would have missed the thing it was written for, and the only reason either was
+caught is that both were tested by planting the regression rather than by
+reading the rule.
+
+---
 
 ---
 
