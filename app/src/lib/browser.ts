@@ -138,6 +138,16 @@ export interface Where {
   deckId: string | null;
   mode: StudyMode;
   openUnit?: number;
+  /**
+   * Which unit's narration the lesson screen is on.
+   *
+   * Separate from `openUnit`, which is the unit the *guide* is open at, and
+   * they move independently — stepping to the next lesson does not scroll the
+   * guide. Without this a lesson tab recorded only "the lesson screen of this
+   * guide", so two lesson tabs on two units of one course were the same place
+   * and reopening either landed on whichever unit the app happened to hold.
+   */
+  lessonUnit?: number;
   callCode?: string;
 }
 
@@ -166,9 +176,29 @@ export function placeFor(screen: Screen, at: Where): Action[] {
       return at.eventId ? [{ type: 'openEvent', id: at.eventId }] : justGo(screen);
     case 'guide':
       return at.guideId ? [{ type: 'openGuide', id: at.guideId, mode: at.mode, ...(at.openUnit!==undefined?{unit:at.openUnit}:{}) }] : justGo(screen);
+    case 'lesson':
+      /*
+       * The one of the four with a unit of its own, and the one that does not
+       * carry the guide's.
+       *
+       * `openLesson` says which narration, so the tab comes back to the one
+       * it was on rather than to unit zero. The guide's `mode` and `openUnit`
+       * are left out on purpose: they are where the *guide* was scrolled to,
+       * which is not part of where the lesson screen is, and including them
+       * made this place depend on how you happened to arrive at it. Two
+       * routes to one lesson have to be one place, or the strip fills with
+       * tabs that look identical and are not — and `tabAt` could never match
+       * a search result against a lesson you already had open.
+       */
+      return at.guideId
+        ? [
+            { type: 'openGuide', id: at.guideId },
+            ...(at.lessonUnit !== undefined ? [{ type: 'openLesson' as const, unit: at.lessonUnit }] : []),
+            { type: 'go', screen },
+          ]
+        : justGo(screen);
     case 'drill':
     case 'quiz':
-    case 'lesson':
     case 'slides':
       return at.guideId
         ? [{ type: 'openGuide', id: at.guideId, mode: at.mode, ...(at.openUnit!==undefined?{unit:at.openUnit}:{}) }, { type: 'go', screen }]
@@ -565,21 +595,20 @@ export function sameplace(a: Action[], b: Action[]): boolean {
  * (nothing stops you opening the same course twice) and the one nearest the
  * front of the strip is the one a person means.
  *
- * ## Why the row this feeds carries no speaker
+ * ## The row this feeds carries a speaker, now
  *
- * It was going to. A result already open in the tab that is playing would
- * have said so, the way the strip and the tab list do — and it cannot
- * happen. Two places in this app play audio: the lesson screen, and a guide
- * in listen mode. No result lands on `lesson` at all (`landingOf` in
- * `lib/openhit.ts` has no case for it, and a `screen` hit's place is a bare
- * `justGo`, which is "the lesson screen" rather than *this* lesson), and
- * every unit hit is built with `mode: 'cards'` (`lib/find.ts`), so a unit
- * result opens the guide in a different place from the one that is playing —
- * which `sameplace` correctly refuses to match.
+ * It could not until lessons became searchable, and the reason is worth
+ * keeping: a mark saying "this is the tab making the noise" needs a result
+ * whose *place* is a place that plays, and for a while none existed. No
+ * result landed on `lesson` at all, and every unit hit is built with
+ * `mode: 'cards'` (`lib/find.ts`) while the other thing that plays is a guide
+ * in listen mode — so `sameplace` was right to refuse every comparison it was
+ * offered.
  *
- * Written down here rather than discovered twice. If lessons ever become
- * searchable, the mark is three lines and this paragraph is the reason it was
- * not three lines sooner.
+ * A lesson hit closed that: `actionsFor` builds it from the same three
+ * actions `placeFor` records for a lesson tab, which is what lets this match
+ * at all. `browser.test.ts` compares the two directly, because they are
+ * written in different files and nothing else would notice them drifting.
  */
 export function tabAt(strip: Strip, place: Action[]): AppTab | undefined {
   if (place.length === 0) return undefined;
@@ -1092,6 +1121,7 @@ export const PLACE_ACTIONS = [
   'openCourse',
   'openEvent',
   'openGuide',
+  'openLesson',
   'openNote',
   'openDocument',
   'openSheet',

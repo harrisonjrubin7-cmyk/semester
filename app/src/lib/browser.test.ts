@@ -1084,6 +1084,83 @@ describe('the tab already at a place', () => {
     expect(tabAt(econ, [{ type: 'openCourse', id: 'psci' } as never])).toBeUndefined();
   });
 
+  it('matches a lesson result against the lesson tab already open on it', () => {
+    /*
+     * The fact everything about lessons in the overlay rests on: what
+     * `actionsFor` builds for a lesson hit and what `placeFor` records for a
+     * lesson tab have to be the *same actions*, or a result can never notice
+     * the tab. They are written in two files and only this compares them.
+     */
+    const fromResult = actionsFor({
+      kind: 'lesson',
+      courseId: 'econ' as never,
+      unit: 3,
+      title: 'Optimisation',
+      sub: '',
+      tag: 'ECON 1020',
+      score: 1,
+    } as Hit);
+    const fromTab = placeFor('lesson', {
+      courseId: 'econ' as never,
+      itemId: '',
+      eventId: '',
+      guideId: 'econ' as never,
+      noteId: null,
+      documentId: null,
+      sheetId: null,
+      deckId: null,
+      mode: 'cards',
+      lessonUnit: 3,
+    });
+    expect(fromResult).toEqual(fromTab);
+
+    const open: Strip = {
+      ...strip(['home'], 0),
+      tabs: [{ id: 'L', screen: 'lesson', title: 'Optimisation', place: fromTab }],
+    };
+    expect(tabAt(open, fromResult)?.id).toBe('L');
+  });
+
+  it('is a different place for a different unit of the same course', () => {
+    // Two lessons of one course used to be one place — the tab recorded only
+    // "the lesson screen of this guide" — so reopening either landed on
+    // whichever unit the app happened to be holding.
+    const at = (lessonUnit: number) =>
+      placeFor('lesson', {
+        courseId: 'econ' as never,
+        itemId: '',
+        eventId: '',
+        guideId: 'econ' as never,
+        noteId: null,
+        documentId: null,
+        sheetId: null,
+        deckId: null,
+        mode: 'cards',
+        lessonUnit,
+      });
+    expect(at(3)).not.toEqual(at(4));
+  });
+
+  it('does not depend on how you arrived — the guide\u2019s own scroll is not part of it', () => {
+    // Reaching unit 3's lesson from a guide open at unit 7 in `read` is the
+    // same place as reaching it from a search result. If it were not, the two
+    // routes would make two tabs that look identical and are not.
+    const base = {
+      courseId: 'econ' as never,
+      itemId: '',
+      eventId: '',
+      guideId: 'econ' as never,
+      noteId: null,
+      documentId: null,
+      sheetId: null,
+      deckId: null,
+      lessonUnit: 3,
+    };
+    expect(placeFor('lesson', { ...base, mode: 'read', openUnit: 7 })).toEqual(
+      placeFor('lesson', { ...base, mode: 'cards' }),
+    );
+  });
+
   it('will not match a guide in one mode against the same guide in another', () => {
     // The reason a search result carries no speaker: a unit result always
     // opens the guide in `cards` (`find.ts`), and the mode that plays is

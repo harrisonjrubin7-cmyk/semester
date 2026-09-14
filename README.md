@@ -368,7 +368,14 @@ feature anybody asked for.
 A result you already have open says **Switch to tab**, and pressing it goes to
 that tab instead of making a second one onto the same page — which is what an
 address bar does, and what stops the strip filling with duplicates of the
-things you look at most. The ⧉ beside it still opens another on purpose.
+things you look at most. The ⧉ beside it still opens another on purpose. If
+that tab is the one playing, the row carries the speaker too.
+
+**Lessons are searched** along with everything else — by their title and by
+what the narration actually says, since the cues are its transcript, so
+"elasticity" finds the lesson that explains it and not only the one named
+after it. They are their own group because they are their own place: the unit
+and its lesson are two results, one opening the cards and one the audio.
 
 **Bookmarks** are the other half. A tab is where you are; a bookmark is where
 you keep going back to — the ECON study guide, the essay brief, the deadline

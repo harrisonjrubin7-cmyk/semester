@@ -64,12 +64,14 @@ import { actionsFor, flatten, hitKey, landingOf } from '../lib/openhit';
 import { DESKTOP, useMedia } from '../lib/media';
 import { offered, screenName } from '../lib/nav';
 import { secondLine } from '../lib/dim';
-import { AskIcon, ClocksIcon, Search as SearchIcon } from './Icons';
+import { AskIcon, ClocksIcon, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import { TabStrip } from './Tabs';
 import { BookmarkChips } from './Bookmarks';
 import { here, openInNew, pickTab, record, recordSearch, useStrip } from '../lib/browser.hook';
 import { justGo, tabAt } from '../lib/browser';
+import { sounding } from '../lib/sound';
+import { useSound } from '../lib/sound.hook';
 import { readSearches, remember, forget, suggestions, writeSearches } from '../lib/typeahead';
 import type { Screen } from '../lib/types';
 import { useModernShell } from './shell-context';
@@ -145,6 +147,13 @@ export function Command({ onClose }: { onClose: () => void }) {
    * already open says so, and which places are open is this.
    */
   const strip = useStrip();
+  /*
+   * And what is playing, so a result already open in the tab making the noise
+   * says that too. Watched here rather than per row: it changes when somebody
+   * presses Play and at no other time, while the clock inside it ticks
+   * several times a second on a subscription a list of results must not take.
+   */
+  const noise = useSound();
 
   // The field, not the first button — opening a search anywhere but in its
   // box is opening it wrong. `useModal` takes Escape and the tab ring; where
@@ -811,16 +820,14 @@ export function Command({ onClose }: { onClose: () => void }) {
                    * quietly does two different things is worse than two
                    * controls, so the row says which one it is about to be.
                    *
-                   * No speaker here, and that is a finding rather than an
-                   * omission — see the note on `tabAt` in `lib/browser.ts`.
-                   * A result's place can never be a place that plays: the two
-                   * that play are the lesson screen and a guide in listen
-                   * mode, and every unit hit is built with `mode: 'cards'`
-                   * (`lib/find.ts`) while no result lands on `lesson` at all.
-                   * A glyph that cannot be reached is worse than none: it is
-                   * code nobody can check and a promise the row cannot keep.
+                   * And the speaker, which only a lesson result can carry:
+                   * the lesson screen is one of the two places in this app
+                   * that play, and the only one a search result can land on.
+                   * Same glyph as the strip and the tab list, so it means one
+                   * thing everywhere.
                    */
                   const open = tabAt(strip, actionsFor(hit));
+                  const talking = Boolean(open && sounding(noise, open.id));
                   return (
                     <div
                       key={hitKey(hit)}
@@ -902,6 +909,21 @@ export function Command({ onClose }: { onClose: () => void }) {
                           {/* Read out with the row rather than as a control
                               of its own: this is a label on what pressing the
                               row will do, and nothing here is pressable. */}
+                          {/*
+                            * The glyph is `aria-hidden`, like every icon in
+                            * this set — the factory says so and does not take
+                            * a label. So the word goes beside it in `.sr-only`
+                            * rather than on it: a reader who cannot see the
+                            * speaker would otherwise hear "switch to tab" and
+                            * never learn this is the one making the noise,
+                            * which is the whole thing the mark is for.
+                            */}
+                          {talking && (
+                            <>
+                              {open.muted ? <SpeakerOffIcon size={13} /> : <SpeakerIcon size={13} />}
+                              <span className="sr-only">{open.muted ? 'Muted. ' : 'Playing. '}</span>
+                            </>
+                          )}
                           Switch to tab
                         </span>
                       )}
