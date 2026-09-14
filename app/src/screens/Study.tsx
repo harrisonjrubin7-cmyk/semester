@@ -2,7 +2,7 @@ import {StudyJournal} from '../components/StudyJournal';
 import { StudyStudio } from '../components/StudyStudio';
 import { allCards } from '../data/catalog';
 import { useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { TermSwitch } from '../components/TermSwitch';
@@ -71,7 +71,8 @@ const PLAN_ROWS = 8;
  * view you are on and it is the thing you want to see without looking.
  */
 export function Study() {
-  const { state, dispatch, now, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
   /**
    * Courses whose full list of ways has been asked for.
    *

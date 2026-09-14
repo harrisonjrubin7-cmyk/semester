@@ -1,4 +1,4 @@
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { useRowStyle } from './shell/useShell';
 import { SectionLabel } from './ui';
 import { isOfficeHours, nextSitting, whenLine } from '../lib/officehours';
@@ -14,7 +14,8 @@ import { Folding } from './Fold';
  * indistinguishable from a professor who holds none.
  */
 export function OfficeHours({ courseId }: { courseId: string }) {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const row = useRowStyle(9);
   const mod = catalog.modules.find((m) => m.course.id === courseId);
   const hours = (mod?.schedule ?? []).filter(isOfficeHours);

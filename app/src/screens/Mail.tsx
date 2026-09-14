@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { WIDE, useMedia } from '../lib/media';
 import { secondLine } from '../lib/dim';
 import { typing } from '../lib/keys';
@@ -77,7 +77,8 @@ const PER_PAGE = 50;
  * nobody on the day they need it.
  */
 export function Mail() {
-  const { state, dispatch, now, catalog, account, say } = useStore();
+  const { state, dispatch, catalog, account, say } = useStore();
+  const now = useNow();
   const wide = useMedia(WIDE);
   const trouble = useTrouble();
 

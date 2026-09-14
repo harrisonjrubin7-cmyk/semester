@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { EmptyState } from '../ui';
 import { Search } from '../Icons';
 import { Blueprint } from '../Blueprint';
@@ -69,7 +69,8 @@ import type { Screen } from '../../lib/types';
 
 export function ByTask() {
   const store = useStore();
-  const { dispatch, school, account, state, catalog, now } = store;
+  const { dispatch, school, account, state, catalog } = store;
+  const now = useNow();
   const caps = school.capabilities;
   const [q, setQ] = useState('');
   const [open, setOpen] = useState<string | null>(null);

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { secondLine } from '../../lib/dim';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { useRowStyle } from '../../components/shell/useShell';
 import { Blueprint } from '../../components/Blueprint';
 import { EmptyState, Meter, SectionLabel } from '../../components/ui';
@@ -79,7 +79,8 @@ interface Stat {
 }
 
 export function You() {
-  const { state, dispatch, now, catalog, courseCode, tint } = useStore();
+  const { state, dispatch, catalog, courseCode, tint } = useStore();
+  const now = useNow();
   const rowNine = useRowStyle(9);
   const rowTen = useRowStyle(10);
 

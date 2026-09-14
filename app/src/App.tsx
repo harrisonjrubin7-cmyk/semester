@@ -1,5 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
-import { useStore } from './state/store';
+import { useNow, useStore } from './state/store';
 import { useBottomChrome } from './lib/bottomchrome.hook';
 import { currentLook } from './state/shape';
 import {
@@ -244,7 +244,8 @@ function Titled() {
 
 /** The kicker and title in the header, per screen. */
 function useHeader(): { kicker: string; title: string } {
-  const { state, now, catalog, school } = useStore();
+  const { state, catalog, school } = useStore();
+  const now = useNow();
   // Not `guide.code`. Opening a study screen by its own URL — which is the
   // point of having URLs — arrives with no course chosen, and the four study
   // kickers below then read a field off `undefined` and take the whole app
@@ -537,7 +538,8 @@ function Header({
    */
   desk = false,
 }: { desk?: boolean } = {}) {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const { kicker, title } = useHeader();
   /*
    * The course this screen sits inside, when it sits inside one.

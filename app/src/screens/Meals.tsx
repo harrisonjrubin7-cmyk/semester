@@ -1,7 +1,7 @@
 import {CampusDirectory, MealPlanner} from '../components/CampusDirectory';
 import { useMemo, useState } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
@@ -45,7 +45,8 @@ export function Meals() {
  return <div className="portal-workspace campus-workspace"><TabList label="Meals portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My meal plan'],['directory','Dining & meal plans'],['plan','Plan calculator']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<MealsDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="dining" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<MealPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
 }
 function MealsDetails() {
-  const { state, dispatch, now, school } = useStore();
+  const { state, dispatch, school } = useStore();
+  const now = useNow();
 
   const [swipes, setSwipes] = useState('');
   const [cash, setCash] = useState('');

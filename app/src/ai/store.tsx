@@ -8,7 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import type { Look, ScreenContext } from './shape';
 import type { Screen } from '../lib/types';
 
@@ -95,7 +95,8 @@ const Ctx = createContext<AI | null>(null);
  * re-renders when it does.
  */
 function Bridge({ onLive, onScreen }: { onLive: (l: Look) => void; onScreen: (s: Screen) => void }) {
-  const { state, catalog, now } = useStore();
+  const { state, catalog } = useStore();
+  const now = useNow();
   /*
    * Handed up after the render commits, rather than written during it.
    *

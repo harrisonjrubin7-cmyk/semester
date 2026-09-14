@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
@@ -40,7 +40,8 @@ import {
  * in this app: it would be believed, and it cannot be known.
  */
 export function Runway() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   // See `useRowStyle`: spread rather than wrapped, so a button row stays
   // one tap target.
   const rowStyle = useRowStyle(10);

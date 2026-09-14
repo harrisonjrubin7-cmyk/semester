@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -19,7 +19,8 @@ import { ActionButton } from '../components/ui';
  * it is doing that, and nothing on it keeps a score.
  */
 export function Guess() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const { guide } = useLive(state.guideId);
 
   const unit = guide.units[state.guessUnit];

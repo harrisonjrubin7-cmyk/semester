@@ -6,7 +6,7 @@ import { ActionButton, SectionLabel } from './ui';
 import { PrintButton } from './PrintButton';
 import { ask } from '../lib/claude';
 import { download } from '../lib/deliver';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import {
   SHAPES,
   SYSTEM,
@@ -41,7 +41,8 @@ import { Folding } from './Fold';
  * the 14th" will sometimes say the 21st.
  */
 export function ProjectFile({ courseId, course }: { courseId: CourseId; course: string }) {
-  const { dispatch, now, catalog } = useStore();
+  const { dispatch, catalog } = useStore();
+  const now = useNow();
 
 
   const [shapeId, setShapeId] = useState(SHAPES[0].id as string);

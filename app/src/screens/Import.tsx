@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { HowMuch } from '../components/HowMuch';
 import { useRowStyle } from '../components/shell/useShell';
@@ -863,7 +863,7 @@ function Preview({
   onToggle: (id: string) => void;
 }) {
   const rowTen = useRowStyle(10);
-  const { now } = useStore();
+  const now = useNow();
   const [confirmed, setConfirmed] = useState(false);
   useEffect(() => setConfirmed(false), [result, dropped]);
   const { module: m, notes } = result;

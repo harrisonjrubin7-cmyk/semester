@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { Page } from '../../components/Page';
 import { Blueprint } from '../../components/Blueprint';
 import { SectionLabel } from '../../components/ui';
@@ -27,7 +27,8 @@ export function Lobby({
 }: {
   onOpen: (call: { code: string; title: string; share?: boolean }) => void;
 }) {
-  const { state, catalog, now } = useStore();
+  const { state, catalog } = useStore();
+  const now = useNow();
   const [typed, setTyped] = useState('');
   const [booking, setBooking] = useState('');
 

@@ -18,7 +18,7 @@
  */
 
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { useSitting } from '../lib/sitting.hook';
 import {
   LONGEST,
@@ -56,7 +56,8 @@ export function Timer({
   // app counts in — so the display follows it for free and there is no second
   // interval running alongside the first. Stopping uses the real moment,
   // because that is a click and not a render.
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const [sitting, setSitting] = useSitting();
   const [ended, setEnded] = useState<Ended>({ kind: 'none' });
   /**

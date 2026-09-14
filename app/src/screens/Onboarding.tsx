@@ -1,4 +1,4 @@
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { askReminders, type Tone } from '../lib/tone';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, Toggle } from '../components/ui';
@@ -98,7 +98,8 @@ function steps(cat: Catalog, tone: Tone, hasAccount: boolean) {
 
 /** Five screens: the promise, what it read, where you study, the account, the alerts. */
 export function Onboarding() {
-  const { state, dispatch, catalog, now, account } = useStore();
+  const { state, dispatch, catalog, account } = useStore();
+  const now = useNow();
   const soft = useSoft();
   const all = steps(catalog, state.tone, Boolean(account));
   const step = all[state.onb] ?? all[0];

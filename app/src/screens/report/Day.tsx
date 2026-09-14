@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { secondLine } from '../../lib/dim';
 import { Produced } from '../../components/Produced';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { Trouble } from '../../components/Trouble';
 import { useTrouble } from '../../lib/trouble';
 import { Blueprint } from '../../components/Blueprint';
@@ -44,7 +44,8 @@ import { showHours } from '../../lib/activities';
  * switch back up — the week is not somewhere else any more.
  */
 export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
 
   // Morning before four in the afternoon, evening after — the reports are
   // both always reachable, this only decides which opens.

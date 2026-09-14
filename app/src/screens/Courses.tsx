@@ -1,6 +1,6 @@
 import { CourseHub } from '../components/CourseHub';
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { draftFor } from '../lib/mail';
 import type { CourseId, CoursesTab } from '../lib/types';
 import { nameFor, renamed } from '../lib/yours';
@@ -67,7 +67,8 @@ function CoursesTabs({
  * different questions.
  */
 export function Courses() {
-  const { state, dispatch, now, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
   const soft = useSoft();
   const [query,setQuery] = useState('');
   const shownCourses=catalog.courses.filter(c=>`${c.code} ${c.name} ${c.prof}`.toLowerCase().includes(query.trim().toLowerCase()));
@@ -273,7 +274,8 @@ export function Courses() {
  * one is the one that was missing.
  */
 function ComingUp() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const [query, setQuery] = useState('');
   const [course, setCourse] = useState<CourseId | null>(null);
   /*
@@ -483,7 +485,8 @@ export function CourseDetail() {
  return course ? <CourseHub key={course.id} course={course} information={<CourseInformation/>}/> : null;
 }
 function CourseInformation() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const course = catalog.byId[state.courseId];
   // The store settles this pointer after a term switch, but there is one
   // render in between where it is still aimed at last semester.
@@ -673,7 +676,8 @@ function CourseInformation() {
 }
 
 export function ItemDetail() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const all = datedItems(catalog, now);
   const item = all.find((i) => i.id === state.itemId) ?? all[0];
   if (!item) return null;

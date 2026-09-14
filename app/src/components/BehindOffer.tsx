@@ -11,14 +11,15 @@
  * argue with; "three deadlines have gone by" is a thing to look at.
  */
 
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { catchUp } from '../lib/tone';
 import { datedItems } from '../lib/select';
 import { WAKING_HOURS, hoursOn } from '../lib/windows';
 import { behindLine, howBehind } from '../lib/behind';
 
 export function BehindOffer() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const week =
     state.windows.length > 0
       ? [0, 1, 2, 3, 4, 5, 6].reduce((n, d) => n + hoursOn(state.windows, d), 0)

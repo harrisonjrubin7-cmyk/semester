@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { railFor, datedItems } from '../lib/select';
 import { clock, minutesNow } from '../lib/date';
 import {
@@ -26,7 +26,8 @@ import {
  * of thing people switch off in the first week.
  */
 export function HomeWalk() {
-  const { state, dispatch, now, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
 
   const mine = useMemo(() => current(state.residences, state.term), [state.residences, state.term]);
 

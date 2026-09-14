@@ -1,4 +1,4 @@
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { ChipRow } from './ui';
 import { isPast } from '../lib/term';
 
@@ -14,7 +14,8 @@ import { isPast } from '../lib/term';
  * alternative is hunting for a PDF in a downloads folder.
  */
 export function TermSwitch() {
-  const { state, dispatch, now, terms } = useStore();
+  const { state, dispatch, terms } = useStore();
+  const now = useNow();
   if (terms.length < 2) return null;
 
   const current = terms.find((t) => t.id === state.term) ?? terms[0];

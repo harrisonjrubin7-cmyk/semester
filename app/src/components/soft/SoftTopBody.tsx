@@ -33,7 +33,7 @@
  */
 
 import { useMemo } from 'react';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { softTop, type TopStat } from '../../lib/softtop';
 import { fills } from '../shell/exempt';
 import { Hero, Stat, StatRow } from './Soft';
@@ -63,7 +63,8 @@ const SYNC_SAID: Record<string, string> = {
  * recomputed when something changes and not when something re-renders.
  */
 function useTop() {
-  const { state, catalog, now, school, sync } = useStore();
+  const { state, catalog, school, sync } = useStore();
+  const now = useNow();
   const caps = school.capabilities;
   // The word Settings shows, not the whole status object: the spec holds
   // strings, and a shape with a timestamp in it would recompute every tick.

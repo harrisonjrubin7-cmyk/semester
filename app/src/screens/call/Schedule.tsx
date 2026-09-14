@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { Page } from '../../components/Page';
 import { Blueprint } from '../../components/Blueprint';
 import { ActionButton, SectionLabel } from '../../components/ui';
@@ -32,7 +32,8 @@ export function Schedule({
   onDone: () => void;
   onCancel: () => void;
 }) {
-  const { catalog, dispatch, now } = useStore();
+  const { catalog, dispatch } = useStore();
+  const now = useNow();
   const [title, setTitle] = useState(nameFor(catalog.courses[0]?.code ?? ''));
   const [date, setDate] = useState(dateToIso(now));
   const [at, setAt] = useState(() => {

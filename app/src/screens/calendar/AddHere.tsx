@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { Blueprint } from '../../components/Blueprint';
 import { capture, enough, readBack } from '../../lib/capture';
 import { isoToDate, longLabel } from '../../lib/date';
@@ -47,7 +47,8 @@ export function AddHere({
   at?: number;
   onClose: () => void;
 }) {
-  const { catalog, dispatch, now, say } = useStore();
+  const { catalog, dispatch, say } = useStore();
+  const now = useNow();
   const [text, setText] = useState('');
   const [said, setSaid] = useState('');
   const box = useRef<HTMLInputElement>(null);

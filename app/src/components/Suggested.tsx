@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { FIELDS, YEARS, type Year } from '../data/fellowships';
 import { NO_DATES, emptyLine, suggest, trackPatch, whenLine } from '../lib/suggest';
 import { safeUrl } from '../lib/apply';
@@ -26,7 +26,8 @@ import { safeUrl } from '../lib/apply';
  * somebody would otherwise take for a fact.
  */
 export function Suggested() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const [open, setOpen] = useState(false);
 
   const want = state.wanted;

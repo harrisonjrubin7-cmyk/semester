@@ -14,7 +14,7 @@
 
 import { useState } from 'react';
 import { Panel } from './Produced';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { planFor, planLine } from '../lib/steps';
 import type { DatedItem } from '../lib/types';
 
@@ -24,7 +24,8 @@ function stepTitle(item: DatedItem, step: string): string {
 }
 
 export function BreakItUp({ item }: { item: DatedItem }) {
-  const { state, dispatch, now, say } = useStore();
+  const { state, dispatch, say } = useStore();
+  const now = useNow();
   const [shown, setShown] = useState(false);
 
   // `from` is the reliable half; the title prefix is how tasks made before

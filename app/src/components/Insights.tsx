@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Blueprint } from './Blueprint';
 import { SectionLabel } from './ui';
 import { forScope, insights, type Insight, type Scope } from '../insights';
@@ -49,7 +49,8 @@ export function Insights({
   /** Which surface this is. `worked` takes everything; a brief takes the day. */
   scope?: Scope | 'all';
 }) {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const ai = useAI();
 
   const found = useMemo(

@@ -1,7 +1,7 @@
 import {CampusDirectory, HousingPlanner} from '../components/CampusDirectory';
 import { useMemo, useState } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Group, ItemRow } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
@@ -46,7 +46,8 @@ export function Housing() {
  return <div className="portal-workspace campus-workspace"><TabList label="Housing portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My housing'],['directory','Find housing'],['plan','Application plan']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<HousingDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="housing" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<HousingPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
 }
 function HousingDetails() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
 
   const mine = useMemo(() => current(state.residences, state.term), [state.residences, state.term]);
 
