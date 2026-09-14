@@ -17,11 +17,14 @@
  */
 
 import type { Catalog } from '../data/catalog';
-import { dateToIso, realDate } from './date';
+import { dateToIso, isoToDate, realDate } from './date';
 import type { Appointment, DatedItem, Note, PersonalTask } from './types';
 import { standingOf, type DoneMap } from './standing';
 import { NO_TIME } from './duetime';
 import type { State } from '../state/shape';
+import { appointmentLength, spanOf } from './select';
+import { rrule } from './repeat';
+import { readTerm, yearFor } from './term';
 
 // ── CSV ──────────────────────────────────────────────────────────────────
 
@@ -180,6 +183,24 @@ export interface IcsEvent {
   at?: number;
   minutes?: number;
   /**
+   * An iCalendar `RRULE` body, for something that happens again.
+   *
+   * Written as the rule rather than as one entry per occurrence, which is the
+   * whole difference between a timetable that arrives in Google Calendar as
+   * four courses and one that arrives as two hundred and forty rows nobody
+   * can delete. `lib/repeat.ts` builds it.
+   */
+  rrule?: string;
+  /**
+   * Dates the rule skips — a cancelled class, an occurrence moved out.
+   *
+   * `EXDATE` has to name the *start instant* of the occurrence being skipped,
+   * not the day: a date-only EXDATE against a timed DTSTART is ignored by
+   * Google and by Outlook, which is how a cancelled lecture stays on the
+   * calendar in both. So these are Dates, and the hour comes from `at`.
+   */
+  except?: Date[];
+  /**
    * Minutes before the start, for a `VALARM` each. Empty or omitted for none.
    *
    * This is the part that makes a calendar file worth more than a list: the
@@ -311,6 +332,22 @@ export function toIcs(events: IcsEvent[], name = 'Semester'): string {
       lines.push(`DTSTART:${dateStamp(e.date)}T${pad(Math.floor(at / 60))}${pad(at % 60)}00`);
       lines.push(`DTEND:${dateStamp(endDate)}T${pad(Math.floor(endAt / 60))}${pad(endAt % 60)}00`);
     }
+    if (e.rrule) lines.push(`RRULE:${e.rrule}`);
+    /*
+     * One `EXDATE` line per skipped day, each carrying the occurrence's own
+     * start time. A date-only EXDATE against a timed DTSTART is silently
+     * ignored by both Google and Outlook — which is how a lecture cancelled
+     * for a holiday stays on the calendar in both, looking like the app got it
+     * wrong.
+     */
+    for (const gone of e.except ?? []) {
+      if (Number.isNaN(gone.getTime())) continue;
+      if (at === undefined) {
+        lines.push(`EXDATE;VALUE=DATE:${dateStamp(gone)}`);
+      } else {
+        lines.push(`EXDATE:${dateStamp(gone)}T${pad(Math.floor(at / 60))}${pad(at % 60)}00`);
+      }
+    }
     lines.push(`SUMMARY:${icsText(e.summary)}`);
     if (e.description) lines.push(`DESCRIPTION:${icsText(e.description)}`);
     if (e.location) lines.push(`LOCATION:${icsText(e.location)}`);
@@ -358,6 +395,137 @@ export function deadlineEvents(
 }
 
 /**
+ * The timetable, as repeating calendar entries.
+ *
+ * The one thing missing from every file this app has ever written, and the
+ * thing a student most wants in their phone: the classes. Deadlines and
+ * appointments were exported and the four courses that fill the week were
+ * not, so "put my semester in my calendar" produced a calendar with the
+ * homework on it and no lectures.
+ *
+ * ## One event per meeting pattern, not one per meeting
+ *
+ * `MWF 9:05` is a single `VEVENT` with `RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR`.
+ * Written the other way — a row per meeting — a term of four courses is about
+ * two hundred and forty entries, and nobody can move, recolour or delete them
+ * afterwards without doing it two hundred and forty times.
+ *
+ * ## Cancellations travel with it
+ *
+ * The catalogue already knows which dates a course does not meet — reading
+ * week, a holiday, a professor away — and each becomes an `EXDATE`. Without
+ * them the exported calendar says there is a lecture on Thanksgiving, which
+ * is worse than a calendar with no lectures on it: it is one that is wrong on
+ * exactly the days somebody is relying on it.
+ *
+ * A one-off class *added* by an exception — a guest lecture, a make-up
+ * session — comes out as its own entry, because that is what it is.
+ *
+ * ## Where the range comes from
+ *
+ * The caller's, and it has to be: a recurring schedule states no first or
+ * last day. `screens/Export.tsx` takes it from the term's own dated
+ * obligations, which is the same span the semester view draws.
+ */
+export function classEvents(
+  cat: Catalog,
+  from: Date,
+  to: Date,
+  opts: { officeHours?: boolean } = {},
+): IcsEvent[] {
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime()) || to < from) return [];
+  const out: IcsEvent[] = [];
+  const until = dateToIso(to);
+
+  for (const mod of cat.modules) {
+    const term = readTerm(mod.course.term);
+    const exceptions = mod.exceptions ?? [];
+    const room = mod.course.room ?? '';
+    const length = spanOf(mod.course.meets ?? '') ?? 50;
+
+    for (const [n, b] of mod.schedule.entries()) {
+      // Office hours and standing calls are on the syllabus and are not
+      // appointments; they go only when they are asked for.
+      if (b.optional && !opts.officeHours) continue;
+      if (b.days.length === 0) continue;
+
+      const first = firstOn(from, b.days);
+      if (!first || dateToIso(first) > until) continue;
+
+      /*
+       * The days named in iCalendar's own two-letter form, in week order.
+       *
+       * Sorted rather than taken in the order the syllabus happened to write
+       * them: `BYDAY=WE,MO` is legal and is read back by some clients as a
+       * week starting on Wednesday, which shifts the whole series.
+       */
+      const days = [...new Set(b.days)]
+        .filter((d) => d >= 0 && d <= 6)
+        .sort((x, y) => x - y)
+        .map((d) => BYDAY[d])
+        .join(',');
+
+      const gone = exceptions
+        .filter((e) => e.canceled && !e.extra && (e.title ? e.title === b.title : !b.optional))
+        .map((e) => new Date(yearFor(term, e.month), e.month, e.day))
+        .filter((d) => !Number.isNaN(d.getTime()) && b.days.includes(d.getDay()));
+
+      out.push({
+        // The block's position rather than its title: two blocks of one
+        // course can share a title — a lab section and its lecture often do —
+        // and a uid collision means one of them silently replaces the other
+        // in the calendar it lands in.
+        uid: `class-${mod.course.id}-${n}`,
+        summary: `${mod.course.code}${b.title ? ` ${b.title}` : ''}`,
+        description: [mod.course.name, mod.course.prof].filter(Boolean).join(' · '),
+        location: b.meta || room,
+        date: first,
+        at: b.at,
+        minutes: length,
+        rrule: `FREQ=WEEKLY;BYDAY=${days};UNTIL=${until.replace(/-/g, '')}`,
+        except: gone,
+      });
+    }
+
+    for (const e of exceptions) {
+      if (!e.extra) continue;
+      const day = new Date(yearFor(term, e.month), e.month, e.day);
+      if (Number.isNaN(day.getTime()) || day < from || day > to) continue;
+      out.push({
+        uid: `class-extra-${mod.course.id}-${e.month}-${e.day}`,
+        summary: `${mod.course.code} ${e.extra.title}`,
+        description: mod.course.name,
+        location: e.extra.meta || room,
+        date: day,
+        at: e.extra.at,
+        minutes: length,
+      });
+    }
+  }
+
+  return out;
+}
+
+/** iCalendar's two letters per weekday, Sunday first, as `Date.getDay` counts. */
+const BYDAY = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+
+/**
+ * The first date on or after `from` that falls on one of these weekdays.
+ *
+ * Which is where a weekly series has to start: `DTSTART` is itself the first
+ * occurrence in iCalendar, so a Monday/Wednesday/Friday class whose DTSTART
+ * landed on a Tuesday would be read by a strict client as meeting on Tuesdays
+ * too, and by a lenient one as starting a week late.
+ */
+function firstOn(from: Date, days: number[]): Date | null {
+  for (let n = 0; n < 7; n += 1) {
+    const day = new Date(from.getFullYear(), from.getMonth(), from.getDate() + n);
+    if (days.includes(day.getDay())) return day;
+  }
+  return null;
+}
+
+/**
  * Appointments as calendar entries — the ones that name a day.
  *
  * The date was split into three numbers and handed to `new Date` unchecked,
@@ -385,12 +553,20 @@ export function appointmentEvents(appts: Appointment[]): IcsEvent[] {
       uid: `appt-${a.id}`,
       summary: a.title,
       description: a.kind ?? '',
+      location: a.where || undefined,
       date: day,
       // -1 is how a stored appointment records that no hour was read. `toIcs`
       // turns any hour off the clock into an all-day entry anyway; this keeps
       // the sentinel from having to be understood twice.
       at: typeof a.at === 'number' ? a.at : undefined,
-      minutes: 60,
+      // Its own length, so a four-hour shift is four hours in the calendar it
+      // lands in rather than the hour every appointment used to get.
+      minutes: appointmentLength(a),
+      // And its rule, so the Tuesday shift arrives as one repeating event.
+      ...(a.repeat ? { rrule: rrule(a.repeat) } : {}),
+      except: (a.repeat?.except ?? [])
+        .map((iso) => isoToDate(iso))
+        .filter((d) => !Number.isNaN(d.getTime())),
     });
   }
   return out;

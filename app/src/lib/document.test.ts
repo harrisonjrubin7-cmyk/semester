@@ -21,20 +21,33 @@ const doc = (blocks: Block[], title = 'Memo'): Doc => ({
   blocks,
 });
 
+/**
+ * One run written the short way.
+ *
+ * `runs` returns five marks per piece and a test that spelled all five out
+ * every time would be a wall of `false` with the one interesting word buried
+ * in it. This says the marks that are on, and nothing else.
+ */
+const piece = (text: string, on: Partial<Omit<ReturnType<typeof runs>[number], 'text'>> = {}) => ({
+  text,
+  bold: false,
+  italic: false,
+  strike: false,
+  code: false,
+  link: '',
+  ...on,
+});
+
 describe('emphasis', () => {
   it('reads bold and italic', () => {
-    expect(runs('a **b** c')).toEqual([
-      { text: 'a ', bold: false, italic: false, link: '' },
-      { text: 'b', bold: true, italic: false, link: '' },
-      { text: ' c', bold: false, italic: false, link: '' },
-    ]);
+    expect(runs('a **b** c')).toEqual([piece('a '), piece('b', { bold: true }), piece(' c')]);
   });
 
   it('nests italic inside bold', () => {
     expect(runs('**a *b* c**')).toEqual([
-      { text: 'a ', bold: true, italic: false, link: '' },
-      { text: 'b', bold: true, italic: true, link: '' },
-      { text: ' c', bold: true, italic: false, link: '' },
+      piece('a ', { bold: true }),
+      piece('b', { bold: true, italic: true }),
+      piece(' c', { bold: true }),
     ]);
   });
 
@@ -44,7 +57,7 @@ describe('emphasis', () => {
 
   it('leaves arithmetic alone', () => {
     // The case a naive `\*(.+?)\*` turns into an italic 3.
-    expect(runs('2 * 3 * 4')).toEqual([{ text: '2 * 3 * 4', bold: false, italic: false, link: '' }]);
+    expect(runs('2 * 3 * 4')).toEqual([piece('2 * 3 * 4')]);
   });
 
   it('always returns at least one run', () => {
@@ -53,6 +66,52 @@ describe('emphasis', () => {
 
   it('strips the marks for a count', () => {
     expect(unmarked('**two** words')).toBe('two words');
+  });
+
+  it('reads a strike-through, which is how a draft says "cut this"', () => {
+    expect(runs('keep ~~cut~~ keep')).toEqual([
+      piece('keep '),
+      piece('cut', { strike: true }),
+      piece(' keep'),
+    ]);
+  });
+
+  it('reads backticks as code, and reads nothing inside them', () => {
+    expect(runs('the `**p**` value')).toEqual([
+      piece('the '),
+      piece('**p**', { code: true }),
+      piece(' value'),
+    ]);
+  });
+
+  it('reads a link as its words and where it points', () => {
+    expect(runs('see [the paper](https://example.edu/x.pdf) for it')).toEqual([
+      piece('see '),
+      piece('the paper', { link: 'https://example.edu/x.pdf' }),
+      piece(' for it'),
+    ]);
+  });
+
+  it('marks the words inside a link without losing where it points', () => {
+    expect(runs('[**Smith**](https://example.edu)')).toEqual([
+      // The trailing slash is `safeUrl` normalising through `new URL`, which
+      // is what stops two spellings of one address becoming two relationships
+      // in the Word file.
+      piece('Smith', { bold: true, link: 'https://example.edu/' }),
+    ]);
+  });
+
+  /*
+   * The case that makes the brackets usable at all. Prose is full of
+   * `[bracketed]` asides followed by `(parentheses)`, and reading that pair as
+   * a link would make an ordinary sentence unwritable.
+   */
+  it('leaves a bracketed aside beside a parenthesis alone', () => {
+    expect(runs('[sic] (see below)').map((r) => r.link)).toEqual(['']);
+  });
+
+  it('counts a link by its words rather than by its address', () => {
+    expect(unmarked('see [the paper](https://example.edu/x.pdf)')).toBe('see the paper');
   });
 });
 
@@ -225,5 +284,81 @@ describe('the file name', () => {
 
   it('takes the extension it is given', () => {
     expect(docFileName('Notes', 'md')).toBe('notes.md');
+  });
+});
+
+/**
+ * The three kinds a document could not hold, both ways through markdown.
+ *
+ * Markdown is how a document leaves this app and how a pasted outline comes
+ * into it, so a kind that only goes one way is a kind that loses its content
+ * the first time somebody exports and re-imports — which is what "Read
+ * something in" invites people to do.
+ */
+describe('checklists, code and contents', () => {
+  it('writes a checklist as a task list and reads one back', () => {
+    const made = doc([
+      {
+        kind: 'checks',
+        items: [
+          { text: 'Read the chapter', done: true },
+          { text: 'Write the memo', done: false },
+        ],
+      },
+    ]);
+    const md = toMarkdown(made);
+    expect(md).toContain('- [x] Read the chapter');
+    expect(md).toContain('- [ ] Write the memo');
+    expect(fromMarkdown(md).find((b) => b.kind === 'checks')).toEqual({
+      kind: 'checks',
+      items: [
+        { text: 'Read the chapter', done: true },
+        { text: 'Write the memo', done: false },
+      ],
+    });
+  });
+
+  /*
+   * The case the ordering exists for: `- [x] done` matches the bullet rule
+   * too, and read by that rule it arrives as a list item whose words begin
+   * "[x]" — which is how a task list pasted from anywhere else becomes
+   * nonsense.
+   */
+  it('does not read a ticked line as an ordinary bullet', () => {
+    expect(fromMarkdown('- [ ] a thing')[0].kind).toBe('checks');
+    expect(fromMarkdown('- a thing')[0].kind).toBe('bullets');
+  });
+
+  it('fences code with its language and reads it back unchanged', () => {
+    const md = toMarkdown(doc([{ kind: 'code', text: 'a <- b * c', language: 'r' }]));
+    expect(md).toContain('```r');
+    expect(fromMarkdown(md).find((b) => b.kind === 'code')).toEqual({
+      kind: 'code',
+      text: 'a <- b * c',
+      language: 'r',
+    });
+  });
+
+  it('writes the contents as the headings rather than as a token nothing reads', () => {
+    const md = toMarkdown(
+      doc([
+        { kind: 'toc', title: 'Contents' },
+        { kind: 'heading', level: 1, text: 'The tariff' },
+        { kind: 'heading', level: 2, text: 'The vote' },
+      ]),
+    );
+    expect(md).toContain('## Contents');
+    expect(md).toContain('- The tariff');
+    expect(md).toContain('  - The vote');
+  });
+
+  it('leaves the contents out of a document with no headings in it', () => {
+    expect(toMarkdown(doc([{ kind: 'toc', title: 'Contents' }]))).not.toContain('Contents');
+  });
+
+  it('counts a checklist’s words and does not count a contents page as content', () => {
+    expect(words(doc([{ kind: 'checks', items: [{ text: 'two words', done: false }] }]))).toBe(2);
+    expect(hasContent(doc([{ kind: 'toc', title: 'Contents' }]))).toBe(false);
+    expect(hasContent(doc([{ kind: 'code', text: 'x', language: '' }]))).toBe(true);
   });
 });

@@ -316,3 +316,107 @@ describe('the order of presentation.xml', () => {
     expect(xml.indexOf('<p:sldIdLst>')).toBeLessThan(xml.indexOf('<p:sldSz'));
   });
 });
+
+/**
+ * The three shapes a deck could not say, and the line along the bottom.
+ *
+ * What is checked is that the content reaches the file and that the slide
+ * still parses as XML — the two ways a new layout goes wrong. A box drawn at
+ * the wrong inch is a slide somebody moves; a slide that will not parse is
+ * "we found a problem with some content" and no way to find out which slide.
+ */
+describe('the layouts added after the first six', () => {
+  const only = (slide: Deck['slides'][number]) =>
+    parts(deck({ slides: [slide] }))['ppt/slides/slide1.xml'];
+
+  it('puts two columns on one slide, each with its own heading', () => {
+    const xmlText = only({
+      title: 'The argument and the objection',
+      bullets: [],
+      columns: [
+        { heading: 'For', points: ['Tariffs raised revenue'] },
+        { heading: 'Against', points: ['And they cost the export trade'] },
+      ],
+    });
+    parse(xmlText);
+    expect(xmlText).toContain('For');
+    expect(xmlText).toContain('And they cost the export trade');
+    // Two headings and two bodies, so four boxes plus the title and the ground.
+    expect(xmlText.match(/<p:sp>/g)?.length).toBe(6);
+  });
+
+  it('draws only the first two columns rather than running off the slide', () => {
+    const xmlText = only({
+      title: 'Three ways',
+      bullets: [],
+      columns: [
+        { heading: 'One', points: ['a'] },
+        { heading: 'Two', points: ['b'] },
+        { heading: 'Three', points: ['c'] },
+      ],
+    });
+    expect(xmlText).toContain('Two');
+    expect(xmlText).not.toContain('Three</a:t>');
+  });
+
+  it('sets a quotation with its attribution under it', () => {
+    const xmlText = only({
+      title: '',
+      bullets: [],
+      quote: { text: 'The tariff is a tax on exports.', source: 'Lerner, 1936' },
+    });
+    parse(xmlText);
+    expect(xmlText).toContain('The tariff is a tax on exports.');
+    expect(xmlText).toContain('— Lerner, 1936');
+  });
+
+  it('sets a figure big and what it means under it', () => {
+    const xmlText = only({ title: '', bullets: [], big: { value: '61%', says: 'never replied' } });
+    parse(xmlText);
+    expect(xmlText).toContain('sz="9600"');
+    expect(xmlText).toContain('never replied');
+  });
+
+  it('shrinks a long figure rather than letting it run off the slide', () => {
+    expect(only({ title: '', bullets: [], big: { value: '1,240,000,000', says: '' } })).toContain(
+      'sz="4800"',
+    );
+  });
+});
+
+describe('the line along the bottom', () => {
+  it('writes nothing when the deck asks for neither', () => {
+    const made = parts(deck())['ppt/slides/slide2.xml'];
+    expect(made).not.toContain('algn="r"');
+  });
+
+  it('puts the footer on every slide but the opening one', () => {
+    const made = parts(deck({ footer: 'ECON 1010 · 14 September' }));
+    expect(made['ppt/slides/slide1.xml']).not.toContain('ECON 1010');
+    expect(made['ppt/slides/slide2.xml']).toContain('ECON 1010');
+  });
+
+  /*
+   * Counted over the slides being presented, not over the rail: a deck given
+   * with slide 4 hidden must not jump from 3 to 5 in front of a room.
+   * `forExport` has already dropped the hidden ones by the time this runs,
+   * which is what makes counting the position right.
+   */
+  it('numbers the slides by their place in what is presented', () => {
+    const made = parts(
+      deck({
+        numbers: true,
+        slides: [
+          { title: 'One', bullets: [] },
+          { title: 'Two', bullets: [] },
+          { title: 'Three', bullets: [] },
+        ],
+      }),
+    );
+    expect(made['ppt/slides/slide3.xml']).toContain('<a:t>3</a:t>');
+  });
+
+  it('still parses with both a footer and a number on the slide', () => {
+    parse(parts(deck({ footer: 'PSCI 1104', numbers: true }))['ppt/slides/slide2.xml']);
+  });
+});

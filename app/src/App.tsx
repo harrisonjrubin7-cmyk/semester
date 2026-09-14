@@ -943,7 +943,14 @@ function TabBar() {
               flexDirection: 'column',
               alignItems: 'center',
               gap: 3,
-              color: on ? 'var(--app-accent)' : 'var(--app-faint)',
+              /*
+               * The tab that is not current still names a destination, so it
+               * is text and takes `--app-dim`. At `--app-faint` — the
+               * hairline strength, held to 3:1 — "Courses" read 3.64:1 on Ink
+               * and 2.98:1 on Parchment, which made the six places you are
+               * not the hardest words on the screen to read.
+               */
+              color: on ? 'var(--app-accent)' : 'var(--app-dim)',
               fontFamily: 'var(--font-heading)',
             }}
           >
@@ -1413,7 +1420,11 @@ function Rail() {
             }}
             aria-current={on ? 'page' : undefined}
             style={{
-              color: on ? 'var(--app-accent-bright)' : 'var(--app-faint)',
+              // The rail is the tab bar's wide-screen counterpart and its
+              // labels are the same words, so they take the same strength —
+              // `--app-dim`, not the hairline one. Measured at `--app-faint`:
+              // 3.64:1 on Ink, 2.98:1 on Parchment.
+              color: on ? 'var(--app-accent-bright)' : 'var(--app-dim)',
               background: on ? 'var(--app-hero)' : 'transparent',
               boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
             }}
@@ -1438,7 +1449,11 @@ function Rail() {
             title={blurb}
             aria-current={on ? 'page' : undefined}
             style={{
-              color: on ? 'var(--app-accent-bright)' : 'var(--app-faint)',
+              // The rail is the tab bar's wide-screen counterpart and its
+              // labels are the same words, so they take the same strength —
+              // `--app-dim`, not the hairline one. Measured at `--app-faint`:
+              // 3.64:1 on Ink, 2.98:1 on Parchment.
+              color: on ? 'var(--app-accent-bright)' : 'var(--app-dim)',
               background: on ? 'var(--app-hero)' : 'transparent',
               boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
             }}

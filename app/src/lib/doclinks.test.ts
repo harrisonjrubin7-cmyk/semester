@@ -54,18 +54,34 @@ describe('a URL this app will put behind words', () => {
   });
 });
 
+/**
+ * One run written the short way — the marks that are on, and nothing else.
+ *
+ * `runs` returns five of them, and spelling all five out on every line would
+ * be a wall of `false` with the one interesting word buried in it.
+ */
+const piece = (text: string, on: Partial<Omit<ReturnType<typeof runs>[number], 'text'>> = {}) => ({
+  text,
+  bold: false,
+  italic: false,
+  strike: false,
+  code: false,
+  link: '',
+  ...on,
+});
+
 describe('links in a line of text', () => {
   it('reads the words and the target apart', () => {
     expect(runs('See [the syllabus](https://example.com/s.pdf) for dates.')).toEqual([
-      { text: 'See ', bold: false, italic: false, link: '' },
-      { text: 'the syllabus', bold: false, italic: false, link: 'https://example.com/s.pdf' },
-      { text: ' for dates.', bold: false, italic: false, link: '' },
+      piece('See '),
+      piece('the syllabus', { link: 'https://example.com/s.pdf' }),
+      piece(' for dates.'),
     ]);
   });
 
   it('keeps the marks inside a link on the link', () => {
     expect(runs('[**Trounstine**](https://example.com)')).toEqual([
-      { text: 'Trounstine', bold: true, italic: false, link: 'https://example.com/' },
+      piece('Trounstine', { bold: true, link: 'https://example.com/' }),
     ]);
   });
 

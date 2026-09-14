@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, Search, StarIcon } from '../Icons';
-import { EmptyState } from '../ui';
+import { EmptyState, TabList } from '../ui';
 import { secondLine } from '../../lib/dim';
 import {
   block,
@@ -436,43 +436,33 @@ export function Talk({
       )}
 
       {/* ── The three faces of the room ────────────────────────────────── */}
-      <div
-        role="tablist"
-        aria-label="This class chat"
+      <TabList
+        label="This class chat"
+        value={tab}
+        onChange={setTab}
         style={{
           flex: 'none',
           display: 'flex',
           gap: 'var(--sp-6)',
           borderBottom: '1px solid var(--app-line-soft)',
         }}
-      >
-        {(
+        tabs={
           [
-            ['chat', 'Chat'],
-            ['files', `Files${files.length ? ` (${files.length})` : ''}`],
-            ['people', `People${people.length ? ` (${people.length})` : ''}`],
-          ] as [Tab, string][]
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            className="bare tap-y"
-            onClick={() => setTab(id)}
-            style={{
-              width: 'auto',
-              paddingTop: 'var(--sp-4)',
-              paddingBottom: 'var(--sp-4)',
-              fontSize: 'var(--type-sm)',
-              borderBottom: `2px solid ${tab === id ? 'var(--app-accent)' : 'transparent'}`,
-              ...(tab === id ? { color: 'var(--app-fg)' } : secondLine()),
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+            { id: 'chat', label: 'Chat' },
+            { id: 'files', label: `Files${files.length ? ` (${files.length})` : ''}` },
+            { id: 'people', label: `People${people.length ? ` (${people.length})` : ''}` },
+          ] as { id: Tab; label: string }[]
+        }
+        tabClassName="bare tap-y"
+        tabStyle={(on) => ({
+          width: 'auto',
+          paddingTop: 'var(--sp-4)',
+          paddingBottom: 'var(--sp-4)',
+          fontSize: 'var(--type-sm)',
+          borderBottom: `2px solid ${on ? 'var(--app-accent)' : 'transparent'}`,
+          ...(on ? { color: 'var(--app-fg)' } : secondLine()),
+        })}
+      />
 
       {/* ── The body ───────────────────────────────────────────────────── */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
@@ -671,9 +661,25 @@ export function Talk({
                     type="button"
                     className="bare tap-y"
                     onClick={() =>
-                      void block(me, person.user_id).then(() =>
-                        setMessages((all) => all.filter((x) => x.user_id !== person.user_id)),
-                      )
+                      void block(me, person.user_id)
+                        .then(() =>
+                          setMessages((all) => all.filter((x) => x.user_id !== person.user_id)),
+                        )
+                        /*
+                         * Blocking is a safety control, so a block that did
+                         * not happen must not look like one that did.
+                         *
+                         * `block` throws `explain(error.message)` — a sentence
+                         * written to be read — and this was the one call in
+                         * this file that dropped it. The `.then` never ran, so
+                         * their messages stayed on screen with nothing said,
+                         * which reads as the button doing nothing rather than
+                         * as the block having failed. Four other calls here
+                         * already end this way.
+                         */
+                        .catch((e: unknown) =>
+                          setError(e instanceof Error ? e.message : String(e)),
+                        )
                     }
                     style={{
                       flex: 'none',
