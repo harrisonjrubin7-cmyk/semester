@@ -475,6 +475,38 @@ export function sheetsBehind(cells: Cells): string[] {
   return found;
 }
 
+/**
+ * A named block's reference, moved by the same rules a formula's is.
+ *
+ * A name is not a formula, so nothing above touches one — and a name left
+ * pointing at `Marks!B2:B9` after a row is inserted on Marks is every formula
+ * using that name quietly measuring the wrong nine rows. Which is the whole
+ * hazard this file is arranged against, one level up.
+ *
+ * Done by wrapping the reference as a formula and unwrapping the answer,
+ * rather than by a second scanner. A second scanner is a second opinion about
+ * what a reference is, and the note above {@link rewrite} is a list of what
+ * happens when there are two.
+ */
+export function moveRef(
+  ref: string,
+  named: string,
+  axis: 'row' | 'col',
+  at: number,
+  by: number,
+): string {
+  return unwrap(shiftIn(`=${ref}`, named, axis, at, by));
+}
+
+/** The same, for a sheet that has been renamed. */
+export function renameRef(ref: string, from: string, to: string): string {
+  return unwrap(renameIn(`=${ref}`, from, to));
+}
+
+function unwrap(formula: string): string {
+  return formula.startsWith('=') ? formula.slice(1) : formula;
+}
+
 // ── Rows and columns ─────────────────────────────────────────────────────
 
 /**

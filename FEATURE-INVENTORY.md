@@ -625,7 +625,15 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   rather than a `#REF!`. Fixed on this branch; addresses are normalised before
   lookup. What is still genuinely absent is any *effect* of pinning: there is
   no fill handle, so nothing moves a reference and nothing needs holding still.
-- No named ranges.
+- ~~No named ranges.~~ — **closed.** `lib/names.ts` holds a name as a pointer
+  at a sheet and two corners, not as a string, so `=AVERAGE(Marks)` goes on
+  meaning the marks when rows are inserted inside the block or the sheet under
+  it is renamed — `moveRef`/`renameRef` in `lib/sheetedit.ts` move it the same
+  way a formula moves. A one-cell name reads as that cell and a block used
+  where one value is wanted says `#VALUE!` rather than picking a corner.
+  `lib/xlsx.ts` writes them as real `<definedNames>`, re-pointed at the tab
+  names the file will carry — without that last step the name named a tab the
+  file did not have, and openpyxl is what said so.
 - No fill handle — so a formula filled down in Excel arrives as the values it
   last had, not as a live formula. The import says so rather than leaving it to
   be found in a total that stopped moving.
@@ -653,8 +661,14 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   reads a range into series, `components/SheetChart.tsx` draws columns, bars,
   a line or a pie, and `lib/xlsxchart.ts` writes a *live* chart into the
   workbook — a reference, not a copy, so editing the cell in Excel moves the
-  bar. No pivot tables, and Data → Analyse hands the numbers to
-  `screens/Analyse.tsx` rather than pivoting them here.
+  bar. **Pivot tables closed** too: `lib/pivot.ts` groups a block by one field
+  and optionally a second, and counts, sums, averages or takes the extremes of
+  a third. A row or column total re-gathers the values rather than averaging
+  the averages — the arithmetic mistake a hand-built summary makes — and
+  `asCells` writes the table into the grid as live `SUMIFS`/`AVERAGEIFS`, so it
+  is still right after a mark changes, in the app and in Excel alike. Data →
+  Analyse still hands the same numbers to `screens/Analyse.tsx` for the
+  statistics a pivot does not do.
 - ~~**No XLSX or CSV import** (export only)~~ — **wrong as written.** CSV and
   TSV could always be *pasted* in: "Paste a table in" runs `readTable()` and
   dispatches `makeSheet`. What was missing was importing a **file** — and
@@ -714,10 +728,11 @@ notes · a generated PDF, as against the browser's print-to-PDF, which is
 there · `.docx` *import* · "Open in Docs" from a study guide · a WYSIWYG
 surface (the marks are typed).
 
-**Sheets** — named ranges · paste-special · data validation and dropdowns ·
-pivot tables · a per-course grade calculator and GPA planner template.
-(Cross-sheet references, the fill handle, filtering and conditional
-formatting were all on this list and are done.)
+**Sheets** — paste-special · data validation and dropdowns · cell fill,
+borders, wrap and merge · a per-course grade calculator and GPA planner
+template.
+(Cross-sheet references, the fill handle, filtering, conditional formatting,
+named ranges and pivot tables were all on this list and are done.)
 
 **Slides** — free layout (a text box you can move) · images and charts placed
 on a slide · transitions, which are deliberate: `lib/pptx.ts` would have to

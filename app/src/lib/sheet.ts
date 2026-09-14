@@ -41,8 +41,10 @@ import type { CourseId } from './types';
 // Type only, so the cycle with `chart.ts` — which reads this file's cells —
 // never exists at runtime.
 import type { SheetChart } from './chart';
+import { namesIn, type NamedRange, type Names, type Pointed } from './names';
 import type { CondRule } from './condfmt';
 import type { SheetFilter } from './filter';
+import type { Pivot } from './pivot';
 
 /** One sheet, as the store holds it. */
 export interface Sheet {
@@ -82,6 +84,21 @@ export interface Sheet {
    * on, which is nearly all of them.
    */
   rules?: CondRule[];
+  /**
+   * Blocks of cells given a name — see `lib/names.ts`.
+   *
+   * Defined on the sheet that holds the cells and looked up from every sheet,
+   * so `=SUM(Marks)` works from the term sheet. Absent on every sheet nobody
+   * has named anything on.
+   */
+  names?: NamedRange[];
+  /**
+   * The same rows asked a different question — see `lib/pivot.ts`.
+   *
+   * A view, recomputed from the cells, with a button that writes it into the
+   * grid as live formulas rather than as the numbers it happens to show.
+   */
+  pivots?: Pivot[];
   /**
    * Pictures of parts of this grid — see `lib/chart.ts`.
    *
@@ -568,6 +585,14 @@ export interface Ctx {
    * when it is an ordinary reference.
    */
   here?: string;
+  /**
+   * Blocks of cells that have been given a name — see `lib/names.ts`.
+   *
+   * Resolved before the first cell is read rather than looked up per formula:
+   * a name is a fact about the book, not about a cell, and re-deriving it
+   * inside `evaluate` would walk every sheet once per reference.
+   */
+  names?: Names;
 }
 
 /**
@@ -591,6 +616,8 @@ export function sheetKey(name: string): string {
 export interface Named {
   title: string;
   cells: Cells;
+  /** Names this sheet defines. Looked up from every sheet — see `lib/names.ts`. */
+  names?: NamedRange[];
 }
 
 /** The book a set of sheets makes. Ambiguous names resolve to nothing — see {@link Book}. */
@@ -617,7 +644,7 @@ export function clock(now: number = Date.now()): Ctx {
  * cost a `#DEEP!` where a `#CYCLE!` belongs.
  */
 export function reading(sheets: readonly Named[], current: string, now: number = Date.now()): Ctx {
-  return { now, book: bookOf(sheets), here: sheetKey(current) };
+  return { now, book: bookOf(sheets), here: sheetKey(current), names: namesIn(sheets) };
 }
 
 /**
@@ -917,6 +944,18 @@ class Parser {
   }
 
   /**
+   * What a bare word points at, when it is a name rather than a call.
+   *
+   * `undefined` for a word nothing has been named — which is the old answer,
+   * `#NAME?`, and the right one: the formula mentions something that does not
+   * exist. `null` where two sheets have claimed the same name, which is
+   * `#REF!` for the same reason a duplicate sheet title is.
+   */
+  private named(word: string): Pointed | null | undefined {
+    return this.ctx.names?.[word.toLowerCase()];
+  }
+
+  /**
    * The grid a reference names, and the context for reading it.
    *
    * Unqualified is this grid, which is every reference in every sheet that
@@ -1109,7 +1148,23 @@ class Parser {
       this.at += 1;
       if (t.value === 'TRUE') return true;
       if (t.value === 'FALSE') return false;
-      if (!this.eat('(')) return '#NAME?';
+      if (!this.eat('(')) {
+        /*
+         * A name, outside a function.
+         *
+         * One cell is a value — `=Rate*2` is the whole point of naming F1.
+         * A block is not: `=Marks` names nine numbers and has no single
+         * answer, and it is refused for exactly the reason a bare `A1:A9` is
+         * rather than quietly taken as its first cell.
+         */
+        const found = this.named(t.value);
+        if (found === undefined) return '#NAME?';
+        if (found === null) return '#REF!';
+        if (found.from !== found.to) return '#VALUE!';
+        const where = this.grid(found.sheet || undefined);
+        if (isError(where)) return where;
+        return evaluate(where.cells, found.from, this.seen, where.ctx);
+      }
       const groups = this.arguments();
       if (isError(groups)) return groups;
       return apply(t.value, groups, this.ctx);
@@ -1138,6 +1193,34 @@ class Parser {
     for (;;) {
       const t = this.peek();
       const after = this.tokens[this.at + 1];
+      /*
+       * A name standing for a block, as an argument.
+       *
+       * `=SUM(Marks)` has to arrive as nine values shaped 9×1, the same as
+       * `=SUM('Q1 marks'!B2:B9)` does — a name that flattened to one value
+       * would make every total over one wrong rather than refused. Only where
+       * the word is not a call: `SUM(` is a function however many names share
+       * its spelling.
+       */
+      if (t && t.kind === 'name' && !(after && after.kind === 'op' && after.value === '(')) {
+        const found = this.named(t.value);
+        if (found === null) return '#REF!';
+        if (found) {
+          this.at += 1;
+          const where = this.grid(found.sheet || undefined);
+          if (isError(where)) return where;
+          const block = expand(found.from, found.to);
+          if (block.length === 0) return '#REF!';
+          const shape = span(found.from, found.to);
+          out.push({
+            values: block.map((address) => evaluate(where.cells, address, this.seen, where.ctx)),
+            rows: shape.rows,
+            cols: shape.cols,
+          });
+          if (this.eat(',')) continue;
+          return this.eat(')') ? out : '#VALUE!';
+        }
+      }
       if (t && t.kind === 'ref' && after && after.kind === 'op' && after.value === ':') {
         const end = this.tokens[this.at + 2];
         if (!end || end.kind !== 'ref') return '#REF!';
@@ -1840,9 +1923,12 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       return ns.length ? mean(ns) : '#DIV/0!';
     }
     case 'COUNTIFS':
-    case 'SUMIFS': {
-      // COUNTIFS is (range, criterion) pairs from the start; SUMIFS puts the
-      // range being added up first and the pairs after it.
+    case 'SUMIFS':
+    case 'AVERAGEIFS':
+    case 'MINIFS':
+    case 'MAXIFS': {
+      // COUNTIFS is (range, criterion) pairs from the start; the other four
+      // put the range being measured first and the pairs after it.
       const counting = name === 'COUNTIFS';
       const pairs = counting ? groups : groups.slice(1);
       if (pairs.length < 2) return '#VALUE!';
@@ -1853,7 +1939,18 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       const totals = groups[0];
       if (!totals || totals.values.length !== length) return '#VALUE!';
       const ns = numbers(rows.map((r) => totals.values[r]));
-      return isError(ns) ? ns : sum(ns);
+      if (isError(ns)) return ns;
+      if (name === 'SUMIFS') return sum(ns);
+      /*
+       * Nothing matched is `#DIV/0!` for an average and `0` for a min or a
+       * max, which is Excel's answer to each and is the honest pair: an
+       * average of no numbers is a division by none, and a smallest of no
+       * numbers is a claim nobody should read as a measurement — but it is the
+       * answer people's sheets are built around.
+       */
+      if (name === 'AVERAGEIFS') return ns.length ? sum(ns) / ns.length : '#DIV/0!';
+      if (!ns.length) return 0;
+      return name === 'MINIFS' ? Math.min(...ns) : Math.max(...ns);
     }
     default:
       break;

@@ -95,7 +95,7 @@ import {
   type Body,
   type Clip,
 } from '../lib/sheetedit';
-import { reachOf, renameIn, sheetsBehind, shiftIn, wayOf } from '../lib/sheetedit';
+import { moveRef, reachOf, renameIn, renameRef, sheetsBehind, shiftIn, wayOf } from '../lib/sheetedit';
 import { ZOOMS, stepZoom, type Tab as RibbonTab } from '../lib/ribbon';
 import { FormulaBar, Ribbon, SheetTabs, StatusBar } from '../components/Ribbon';
 import { TEMPLATES, fromTemplate } from '../lib/sheettemplates';
@@ -103,6 +103,7 @@ import { fromSheet, sheetFileName, tabNames, widthsFor, xlsx } from '../lib/xlsx
 import { canBuild, gradeSheet } from '../lib/gradesheet';
 import { fromDelimited, fromXlsx, readerFor } from '../lib/xlsxin';
 import { LIMIT } from '../state/slices/made';
+import { corners } from '../lib/chart';
 import {
   CHART_KINDS,
   CHART_LABELS,
@@ -113,6 +114,27 @@ import {
 } from '../lib/chart';
 import { SheetChart as ChartPicture } from '../components/SheetChart';
 import { hides } from '../lib/filter';
+import {
+  namesOf,
+  pointAt,
+  qualified,
+  usable as nameUsable,
+  whyNot as whyNotName,
+  writeRef,
+  type NamedRange,
+} from '../lib/names';
+import {
+  AGGREGATES,
+  AGGREGATE_LABELS,
+  asCells as pivotCells,
+  headingOf as pivotHeading,
+  pivotNote,
+  pivotsOf,
+  readPivot,
+  suggest as suggestPivot,
+  type Aggregate,
+  type Pivot,
+} from '../lib/pivot';
 import {
   TEST_LABELS as FILTER_LABELS,
   TESTS as FILTER_TESTS,
@@ -714,7 +736,7 @@ function Thumb({ rows }: { rows: string[][] }) {
  * it back — see `amend` in `lib/history.ts` for the total that is quietly
  * wrong without it.
  */
-type Others = Record<string, Cells>;
+type Others = Record<string, { cells: Cells; names?: NamedRange[] }>;
 
 interface Snap {
   cells: Record<string, string>;
@@ -788,7 +810,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const [view, setView] = useState({ lines: true, heads: true, formulas: false, freeze: true });
   const [seeking, setSeeking] = useState(false);
   /** Which panel is open under the ribbon, or none. */
-  const [panel, setPanel] = useState<'filter' | 'rules' | null>(null);
+  const [panel, setPanel] = useState<'filter' | 'rules' | 'names' | null>(null);
   /** Which column the filter strip is setting a rule on. */
   const [onColumn, setOnColumn] = useState<number | null>(null);
   const [needle, setNeedle] = useState('');
@@ -858,10 +880,16 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         if (written !== text) changed = true;
         cells[address] = written;
       }
+      const theirs = namesOf(other);
+      const named = theirs.map((n) => ({ ...n, ref: renameRef(qualified(n.ref, other.title), was, title) }));
+      if (named.some((n, i) => n.ref !== theirs[i].ref)) changed = true;
       if (!changed) continue;
       moved += 1;
-      dispatch({ type: 'updateSheet', id: other.id, patch: { cells } });
+      dispatch({ type: 'updateSheet', id: other.id, patch: { cells, names: named } });
     }
+    // And this sheet's own names, which named it by its old title.
+    const mine = names.map((n) => ({ ...n, ref: renameRef(qualified(n.ref, was), was, title) }));
+    if (mine.some((n, i) => n.ref !== names[i].ref)) patch({ names: mine });
     if (moved) say(`${moved} other ${moved === 1 ? 'sheet' : 'sheets'} now say “${title}”.`);
   };
 
@@ -869,8 +897,8 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const apply = (snap: Snap) => {
     const { others, ...body } = snap;
     patch(body);
-    for (const [id, cells] of Object.entries(others ?? {})) {
-      dispatch({ type: 'updateSheet', id, patch: { cells } });
+    for (const [id, was] of Object.entries(others ?? {})) {
+      dispatch({ type: 'updateSheet', id, patch: { cells: was.cells, names: was.names } });
     }
   };
 
@@ -902,10 +930,32 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         if (written !== text) moved = true;
         cells[address] = written;
       }
+      /*
+       * And the names, which are references too.
+       *
+       * A name left pointing at `Marks!B2:B9` after a row is inserted on Marks
+       * is every formula using that name quietly measuring the wrong nine
+       * rows — the same fault as a stale formula, one level further out and
+       * harder to see, because the formula that is wrong does not mention a
+       * row number anywhere.
+       */
+      const theirs = namesOf(other);
+      const named = theirs.map((n) => ({
+        ...n,
+        ref: moveRef(qualified(n.ref, other.title), sheet.title, axis, at, by),
+      }));
+      if (named.some((n, i) => n.ref !== theirs[i].ref)) moved = true;
       if (!moved) continue;
-      before[other.id] = other.cells;
-      after[other.id] = cells;
+      before[other.id] = { cells: other.cells, names: theirs };
+      after[other.id] = { cells, names: named };
     }
+
+    // This sheet's own names move with its own rows.
+    const mine = names.map((n) => ({
+      ...n,
+      ref: moveRef(qualified(n.ref, sheet.title), sheet.title, axis, at, by),
+    }));
+    if (mine.some((n, i) => n.ref !== names[i].ref)) patch({ names: mine });
 
     const snap: Snap = { ...next, ...(Object.keys(after).length ? { others: after } : {}) };
     setHistory((h) => {
@@ -1004,7 +1054,17 @@ function Grid({ sheet }: { sheet: SheetModel }) {
           });
           cells[address] = written;
         }
-        return { ...s, title: names[i], cells };
+        // The names it defines point at sheets by title too, so they move
+        // with the formulas rather than being left naming a tab that the
+        // file no longer has.
+        const named = namesOf(s).map((n) => {
+          let ref = qualified(n.ref, s.title);
+          wanted.forEach((other, j) => {
+            ref = renameRef(ref, other.title, names[j]);
+          });
+          return { ...n, ref };
+        });
+        return { ...s, title: names[i], cells, names: named };
       });
 
       // Read under the *renamed* book, so a cached value in the file is the
@@ -1056,6 +1116,9 @@ function Grid({ sheet }: { sheet: SheetModel }) {
    * does and not when a number does.
    */
   const rules = useMemo(() => rulesOf(sheet, INKS), [sheet]);
+  /** The names this sheet defines, and the summaries drawn under it. */
+  const names = useMemo(() => namesOf(sheet), [sheet]);
+  const pivots = useMemo(() => pivotsOf(sheet), [sheet]);
   const ruleRanges = useMemo(
     () => new Map(rules.map((r) => [r.range, rangeOf(r.range)])),
     [rules],
@@ -1183,11 +1246,54 @@ function Grid({ sheet }: { sheet: SheetModel }) {
    */
   const setFilter = (next: SheetFilter | undefined) => patch({ filter: next });
   const setRules = (next: CondRule[]) => patch({ rules: next });
+  const setNames = (next: NamedRange[]) => patch({ names: next });
+  const setPivots = (next: Pivot[]) => patch({ pivots: next });
 
   /** The whole filled block, for a filter somebody opened without selecting one. */
   const fullRange = (): Range => {
     const size = extent(sheet);
     return { anchor: 'A1', focus: ref(Math.max(0, size.rows - 1), Math.max(0, size.cols - 1)) };
+  };
+
+  const addPivot = () => {
+    const where = many(sel) ? rangeLabel(sel) : rangeLabel(fullRange());
+    setPivots([...pivots, suggestPivot(sheet.cells, where, Date.now(), over)]);
+    say(`Summary of ${where} added under the grid.`);
+  };
+
+  /**
+   * A summary written into the grid, as formulas.
+   *
+   * Below everything that is filled, with a blank row between — not over the
+   * table it summarises, which is the one place it must never land. The cells
+   * go through `change` like any keystroke, so it is one step of undo.
+   */
+  const putPivot = (pivot: Pivot) => {
+    const block = pivotCells(sheet.cells, pivot, sheet.title, over);
+    if (!block.length) return;
+    const size = extent(sheet);
+    const top = size.rows + 1;
+    const wide = Math.max(...block.map((line) => line.length));
+    if (top + block.length > MAX_ROWS || wide > MAX_COLS) {
+      say('There is not enough room under the table for that.');
+      return;
+    }
+    const cells = { ...sheet.cells };
+    block.forEach((line, r) => {
+      line.forEach((text, c) => {
+        if (text !== '') cells[ref(top + r, c)] = text;
+      });
+    });
+    change(
+      {
+        cells,
+        rows: Math.min(MAX_ROWS, Math.max(sheet.rows, top + block.length)),
+        cols: Math.min(MAX_COLS, Math.max(sheet.cols, wide)),
+      },
+      `pivot:${pivot.id}`,
+    );
+    setSel({ anchor: ref(top, 0), focus: ref(top + block.length - 1, wide - 1) });
+    say(`Written into ${ref(top, 0)}, as formulas that follow the table.`);
   };
 
   /** The filter this sheet has, or one over the selection ready to take a rule. */
@@ -1683,6 +1789,18 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             run: () => sum(fn),
           })),
           {
+            id: 'insert.name',
+            label: names.length ? `Name a block (${names.length})` : 'Name a block',
+            hint: 'So a formula can say =SUM(Marks) instead of =SUM($B$2:$B$9).',
+            run: () => setPanel((was) => (was === 'names' ? null : 'names')),
+          },
+          {
+            id: 'insert.pivot',
+            label: 'Summarise the table',
+            hint: 'Group by one column and measure another, under the grid.',
+            run: nothing ? undefined : addPivot,
+          },
+          {
             id: 'insert.chart',
             label: `Chart ${rangeLabel(sel)}`,
             hint: many(sel)
@@ -2162,6 +2280,21 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               wide: true,
               run: many(sel) ? addChart : undefined,
             },
+            {
+              kind: 'button',
+              id: 'i.pivot',
+              label: 'Summarise',
+              wide: true,
+              run: nothing ? undefined : addPivot,
+            },
+            {
+              kind: 'button',
+              id: 'i.name',
+              label: 'Name a block',
+              wide: true,
+              on: panel === 'names',
+              run: () => setPanel((was) => (was === 'names' ? null : 'names')),
+            },
           ],
         },
         {
@@ -2507,6 +2640,16 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
       <Ribbon tabs={tabs} on={ribbon} onTab={setRibbon} />
 
+      {panel === 'names' && (
+        <NameStrip
+          names={names}
+          selection={many(sel) ? rangeLabel(sel) : focus}
+          sheetTitle={sheet.title}
+          onNames={setNames}
+          onClose={() => setPanel(null)}
+        />
+      )}
+
       {panel === 'filter' && filter && (
         <FilterStrip
           sheet={sheet}
@@ -2673,6 +2816,16 @@ function Grid({ sheet }: { sheet: SheetModel }) {
           </tbody>
         </table>
       </div>
+
+      <Pivots
+        sheet={sheet}
+        over={over}
+        pivots={pivots}
+        selection={many(sel) ? rangeLabel(sel) : rangeLabel(fullRange())}
+        onPivots={setPivots}
+        onPut={putPivot}
+        onAdd={nothing ? undefined : addPivot}
+      />
 
       <Charts
         sheet={sheet}
@@ -2991,6 +3144,341 @@ function Seek({
         ✕
       </button>
     </div>
+  );
+}
+
+/**
+ * The names, as a strip over the grid.
+ *
+ * A name and where it points, and a field that says why a name was refused
+ * rather than a button that stays disabled — "A1 is a cell, so it cannot also
+ * be a name" is a thing somebody can act on, and a greyed-out Add is not.
+ */
+function NameStrip({
+  names,
+  selection,
+  sheetTitle,
+  onNames,
+  onClose,
+}: {
+  names: NamedRange[];
+  /** What is selected in the grid, which is what a new name will cover. */
+  selection: string;
+  sheetTitle: string;
+  onNames: (next: NamedRange[]) => void;
+  onClose: () => void;
+}) {
+  const [word, setWord] = useState('');
+  const taken = names.some((n) => n.name.toLowerCase() === word.trim().toLowerCase());
+  const why = word.trim() === '' ? '' : taken ? `${word.trim()} is already a name here.` : whyNotName(word);
+
+  const add = () => {
+    if (!nameUsable(word) || taken) return;
+    const at = pointAt(selection, sheetTitle);
+    if (!at) return;
+    onNames([
+      ...names,
+      { name: word.trim(), ref: writeRef(sheetTitle, at.from, at.to), created: Date.now() },
+    ]);
+    setWord('');
+  };
+
+  return (
+    <div className="fx fx-wrap" aria-label="Names">
+      {names.map((named) => (
+        <span
+          key={named.name}
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 'var(--sp-3)',
+            flex: '1 1 100%',
+            alignItems: 'stretch',
+          }}
+        >
+          <input
+            className="fx-in"
+            value={named.name}
+            readOnly
+            aria-label={`The name ${named.name}`}
+            style={{ flex: '0 1 120px' }}
+          />
+          <input
+            className="fx-in"
+            value={named.ref}
+            onChange={(e) =>
+              onNames(
+                names.map((n) => (n.name === named.name ? { ...n, ref: e.target.value.toUpperCase() } : n)),
+              )
+            }
+            aria-label={`Which cells ${named.name} covers`}
+            spellCheck={false}
+          />
+          <button
+            type="button"
+            className="rib-btn"
+            aria-label={`Remove the name ${named.name}`}
+            onClick={() => onNames(names.filter((n) => n.name !== named.name))}
+          >
+            ✕
+          </button>
+        </span>
+      ))}
+
+      <input
+        className="fx-in"
+        value={word}
+        onChange={(e) => setWord(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && add()}
+        placeholder="Name this block"
+        aria-label={`A name for ${selection}`}
+        spellCheck={false}
+      />
+      <button
+        type="button"
+        className="rib-btn rib-btn-wide"
+        onClick={add}
+        disabled={!nameUsable(word) || taken}
+      >
+        Name {selection}
+      </button>
+      {why && (
+        <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: '1 1 100%' }}>{why}</span>
+      )}
+      <button type="button" className="rib-btn" aria-label="Close the names" onClick={onClose}>
+        ✕
+      </button>
+    </div>
+  );
+}
+
+/**
+ * The pivots, under the grid that makes them.
+ *
+ * Under rather than beside, and in the page's own scroll, for the same reason
+ * the charts are: a summary is read after the numbers, by somebody who has
+ * just finished typing them.
+ *
+ * **Put it in cells** writes formulas, not the figures on screen — see
+ * `lib/pivot.ts`. That is what makes the block stay live, chartable and
+ * exportable, and it is why this panel has a button rather than a copy.
+ */
+function Pivots({
+  sheet,
+  over,
+  pivots,
+  selection,
+  onPivots,
+  onPut,
+  onAdd,
+}: {
+  sheet: SheetModel;
+  over: Ctx;
+  pivots: Pivot[];
+  selection: string;
+  onPivots: (next: Pivot[]) => void;
+  onPut: (pivot: Pivot) => void;
+  /** Absent when the selection is one cell, which is not a table. */
+  onAdd?: () => void;
+}) {
+  if (!pivots.length) {
+    return onAdd ? (
+      <div style={{ marginTop: 'var(--sp-6)' }}>
+        <ActionButton onClick={onAdd}>Summarise {selection}</ActionButton>
+      </div>
+    ) : null;
+  }
+
+  const edit = (id: string, change: Partial<Pivot>) =>
+    onPivots(pivots.map((p) => (p.id === id ? { ...p, ...change } : p)));
+
+  return (
+    <div style={{ marginTop: 'var(--sp-7)' }}>
+      <SectionLabel>Summaries</SectionLabel>
+      {pivots.map((pivot) => (
+        <PivotCard
+          key={pivot.id}
+          sheet={sheet}
+          over={over}
+          pivot={pivot}
+          onEdit={(change) => edit(pivot.id, change)}
+          onPut={() => onPut(pivot)}
+          onRemove={() => onPivots(pivots.filter((p) => p.id !== pivot.id))}
+        />
+      ))}
+      {onAdd ? (
+        <div style={{ marginTop: 'var(--sp-5)' }}>
+          <ActionButton onClick={onAdd}>Summarise {selection} too</ActionButton>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function PivotCard({
+  sheet,
+  over,
+  pivot,
+  onEdit,
+  onPut,
+  onRemove,
+}: {
+  sheet: SheetModel;
+  over: Ctx;
+  pivot: Pivot;
+  onEdit: (change: Partial<Pivot>) => void;
+  onPut: () => void;
+  onRemove: () => void;
+}) {
+  const read = useMemo(() => readPivot(sheet.cells, pivot, over), [sheet.cells, pivot, over]);
+  const note = pivotNote(read);
+  const at = corners(pivot.range);
+  const columns: number[] = [];
+  if (at) for (let c = at.left; c <= at.right; c += 1) columns.push(c);
+  const shown = (n: number | null) => (n === null ? '' : show(Number(n.toFixed(10))));
+
+  return (
+    <Blueprint style={{ padding: 'var(--sp-6)', marginTop: 'var(--sp-5)' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 'var(--sp-4)',
+          alignItems: 'center',
+          marginBottom: 'var(--sp-5)',
+          fontSize: 'var(--type-xs)',
+        }}
+      >
+        <label style={secondLine()}>
+          Group{' '}
+          <select
+            className="fx-in"
+            value={String(pivot.by)}
+            onChange={(e) => onEdit({ by: Number(e.target.value) })}
+            aria-label={`Which column the summary of ${pivot.range} groups by`}
+          >
+            {columns.map((c) => (
+              <option key={c} value={c}>
+                {pivotHeading(sheet.cells, pivot, c, over)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label style={secondLine()}>
+          across{' '}
+          <select
+            className="fx-in"
+            value={pivot.across === null ? '' : String(pivot.across)}
+            onChange={(e) => onEdit({ across: e.target.value === '' ? null : Number(e.target.value) })}
+            aria-label={`Which column the summary of ${pivot.range} spreads across`}
+          >
+            <option value="">nothing</option>
+            {columns.map((c) => (
+              <option key={c} value={c}>
+                {pivotHeading(sheet.cells, pivot, c, over)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label style={secondLine()}>
+          <select
+            className="fx-in"
+            value={pivot.how}
+            onChange={(e) => onEdit({ how: e.target.value as Aggregate })}
+            aria-label={`What the summary of ${pivot.range} measures`}
+          >
+            {AGGREGATES.map((a) => (
+              <option key={a} value={a}>
+                {AGGREGATE_LABELS[a]}
+              </option>
+            ))}
+          </select>
+        </label>
+        {pivot.how !== 'count' && (
+          <label style={secondLine()}>
+            of{' '}
+            <select
+              className="fx-in"
+              value={String(pivot.of)}
+              onChange={(e) => onEdit({ of: Number(e.target.value) })}
+              aria-label={`Which column the summary of ${pivot.range} measures`}
+            >
+              {columns.map((c) => (
+                <option key={c} value={c}>
+                  {pivotHeading(sheet.cells, pivot, c, over)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+      </div>
+
+      {read.trouble ? (
+        <div style={{ fontSize: 'var(--type-sm)', ...secondLine(), textWrap: 'pretty' }}>
+          {read.trouble}
+        </div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table className="table" style={{ fontSize: 'var(--type-sm)' }}>
+            <thead>
+              <tr>
+                <th scope="col">{pivotHeading(sheet.cells, pivot, pivot.by, over)}</th>
+                {read.columns.map((c, i) => (
+                  <th key={`${c}-${i}`} scope="col" style={{ textAlign: 'right' }}>
+                    {c || AGGREGATE_LABELS[pivot.how]}
+                  </th>
+                ))}
+                {read.columns.length > 1 && <th scope="col" style={{ textAlign: 'right' }}>Total</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {read.rows.map((row, r) => (
+                <tr key={`${row}-${r}`}>
+                  <th scope="row">{row}</th>
+                  {read.cells[r].map((cell, c) => (
+                    <td key={c} style={{ textAlign: 'right' }}>
+                      {shown(cell.value)}
+                    </td>
+                  ))}
+                  {read.columns.length > 1 && (
+                    <td style={{ textAlign: 'right' }}>{shown(read.rowTotals[r])}</td>
+                  )}
+                </tr>
+              ))}
+              <tr>
+                <th scope="row">Total</th>
+                {read.columnTotals.map((t, c) => (
+                  <td key={c} style={{ textAlign: 'right' }}>
+                    {shown(t)}
+                  </td>
+                ))}
+                {read.columns.length > 1 && (
+                  <td style={{ textAlign: 'right' }}>{shown(read.total)}</td>
+                )}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {note && (
+        <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), textWrap: 'pretty' }}>{note}</div>
+      )}
+
+      <ToolRule />
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
+        <button type="button" className="btn" onClick={onPut} disabled={Boolean(read.trouble)}>
+          Put it in cells
+        </button>
+        <button type="button" className="btn" onClick={onRemove}>
+          Remove this summary
+        </button>
+      </div>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>
+        What goes in the cells is the arithmetic, not these figures — so it
+        follows the marks, a chart can read it, and Excel recalculates it.
+      </div>
+    </Blueprint>
   );
 }
 

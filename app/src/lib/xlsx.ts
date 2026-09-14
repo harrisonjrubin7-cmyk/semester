@@ -50,6 +50,7 @@ import {
   picture,
   ref,
   styleOf,
+  sheetKey,
   washPaper,
   type Ctx,
   type Sheet,
@@ -66,6 +67,7 @@ import {
 import { chartsOf, type ChartRead, type SheetChart } from './chart';
 import { autoFilterXml, conditionalFor } from './xlsxcond';
 import { rulesOf, type CondRule } from './condfmt';
+import { namesOf, pointAt, writeRef, type NamedRange } from './names';
 import { filterOf, hidden as hiddenRows } from './filter';
 
 /**
@@ -149,8 +151,18 @@ export interface Look {
 }
 
 export interface Tab {
-  /** The name on the tab at the bottom. */
+  /** The name on the tab at the bottom, already made legal and unique. */
   name: string;
+  /**
+   * The sheet's own title, before it was made legal.
+   *
+   * Kept because a *name* points at a sheet by its title — `'Q1: marks'!C2` —
+   * and by the time a tab exists that title has become `Q1 marks`. Matching
+   * the two up is the whole job of writing a defined name, and without this
+   * the name is silently left out of the file: it was, and openpyxl is what
+   * said so.
+   */
+  title?: string;
   rows: Formatted[][];
   /** Whether the first row is headings: bold, and frozen so it stays in view. */
   header: boolean;
@@ -166,6 +178,14 @@ export interface Tab {
   charts?: { chart: SheetChart; read: ChartRead }[];
   /** Rows the sheet's filter is hiding, by index. Hidden in the file, not dropped. */
   away?: Set<number>;
+  /**
+   * Blocks of cells this sheet has named — see `lib/names.ts`.
+   *
+   * Written into `workbook.xml` rather than into the sheet, because a defined
+   * name belongs to the book: that is what makes `=SUM(Marks)` work from the
+   * summary tab, which is the only reason to have named anything.
+   */
+  names?: NamedRange[];
   /** The block the filter covers, so Excel draws its own arrows on it. */
   autoFilter?: string;
   /**
@@ -607,12 +627,44 @@ export function parts(book: Book): Record<string, string> {
 
   const names = tabNames(tabs.map((tab) => tab.name));
 
+  /*
+   * The names, pointed at the tabs this file actually has.
+   *
+   * A name stores the *title* of the sheet it covers, and a title is not a tab
+   * name — `Q1: marks` becomes the tab `Q1 marks`. So each one is re-pointed
+   * through the same list of final names the sheets got, and a name whose
+   * sheet is not in this export is left out rather than written as a
+   * reference to a tab that is not there, which Excel reports as a broken
+   * workbook rather than as a missing name.
+   *
+   * `CT_Workbook` is a sequence and `definedNames` comes after `sheets`.
+   */
+  const defined = tabs
+    .flatMap((tab, i) => (tab.names ?? []).map((named) => ({ named, from: names[i] })))
+    .flatMap(({ named, from }) => {
+      const at = pointAt(named.ref, from);
+      if (!at) return [];
+      // By the title it was written against, or by the tab name it became —
+      // a name may have been re-pointed already, or not.
+      const onto = at.sheet
+        ? names.find((_, i) => sheetKey(tabs[i].title ?? tabs[i].name) === at.sheet) ??
+          names.find((name) => sheetKey(name) === at.sheet)
+        : from;
+      if (!onto) return [];
+      return [
+        `<definedName name="${xml(named.name)}">${xml(writeRef(onto, at.from, at.to))}</definedName>`,
+      ];
+    })
+    .join('');
+
   out['xl/workbook.xml'] =
     `${HEAD}<workbook xmlns="${MAIN}" xmlns:r="${REL}"><sheets>` +
     names
       .map((name, i) => `<sheet name="${xml(name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`)
       .join('') +
-    '</sheets><calcPr calcId="0" fullCalcOnLoad="1"/></workbook>';
+    '</sheets>' +
+    (defined ? `<definedNames>${defined}</definedNames>` : '') +
+    '<calcPr calcId="0" fullCalcOnLoad="1"/></workbook>';
 
   // Built once for the whole book rather than per sheet: `styles.xml` is one
   // part, and two tabs asking for `$#,##0.00` must land on the same index.
@@ -742,6 +794,7 @@ export function fromSheet(sheet: Sheet, header = true, ctx: Ctx = clock()): Tab 
 
   return {
     name: tabName(sheet.title),
+    title: sheet.title,
     rows,
     header: header && rows.length > 1,
     ...(away && away.size ? { away } : {}),
@@ -753,6 +806,7 @@ export function fromSheet(sheet: Sheet, header = true, ctx: Ctx = clock()): Tab 
      * written as an empty frame — see `readable`.
      */
     charts: readable(sheet.cells, chartsOf(sheet), ctx),
+    names: namesOf(sheet),
   };
 }
 

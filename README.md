@@ -506,6 +506,34 @@ model in it or needs a key:
   autofilter, and real conditional-formatting rules — so taking the filter off
   in Excel brings the rows back and changing a mark there changes its colour.
 
+  A block of cells can be **given a name**, and then a formula anywhere in the
+  workbook can say what it means: `=AVERAGE(Marks)` rather than
+  `=AVERAGE('Q1 marks'!$C$2:$C$40)`. A name is the only part of a spreadsheet
+  that says out loud what a range *is*, which is why the sheet somebody
+  inherits is unreadable and the one they wrote is not. It is a pointer, not a
+  copy — insert rows inside the block and the name stretches over them, rename
+  the sheet under it and the name follows, so it goes on meaning the marks
+  rather than going on meaning rows 2 to 40. A one-cell name reads as that
+  cell, so `=Rate` is a rate. Names go into the `.xlsx` as real defined names,
+  under the tab names the file will carry, so `=SUM(Mark)` still adds up in
+  Excel.
+
+  And a block can be **summarised**: pick what to group by, what to measure and
+  how — count, sum, average, smallest, largest — and the answer is a small
+  table under the grid, with a second field if you want it down one edge and
+  across the other. It is the question a spreadsheet is usually opened to
+  answer — *what is the average mark per course, per term* — and the thing
+  people do instead is sort the block, eyeball the runs and type the totals in
+  by hand, which is a figure with no working behind it. A total is gathered
+  from the values, never averaged from the averages, which is the arithmetic
+  mistake that makes a hand-built summary wrong by a little. Past sixty groups
+  it stops drawing and **says how many rows it left out of the totals**,
+  because a summary that quietly answers a narrower question than the one
+  asked is worse than one that refuses. And **Put it in cells** writes it into
+  the sheet as live `SUMIFS` and `AVERAGEIFS` rather
+  than as the answers, so it is still right after somebody changes a mark —
+  in the app and in Excel, which both compute the same formula.
+
   And the corner of the selection is a **fill handle**: drag it to pull a
   formula down a column or across a row, or press it to fill as far as the
   column beside it goes — which is what double-clicking it does in Excel, and
