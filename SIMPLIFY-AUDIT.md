@@ -66,8 +66,29 @@ Together they are complete. Separately, neither says it is half of a pair, and
 the second reads as incidental — its name is about dating items against a
 clock. Change `date.ts` to `away <= 0` and `standing.test.ts` still passes.
 
-So J1 is two deletions and two sentences: the guards go, and each half of the
-rule names the other.
+So J1 is two deletions and two notes: the guards go, and each half of the rule
+names the other.
+
+### J1, done — and two claims in the row above were wrong
+
+**"The only thing standing between `date.ts` and eight inline filters."** No.
+Measured by changing `date.ts` to `away <= 0` and running everything: **four
+files fail** — `select`, `weekly`, `brief` and `welcome`. `select.test.ts` is
+the only one that pins it *deliberately*; the other three fail through whatever
+they happened to be counting. The note in the file says that now, with the
+number, rather than the version that sounded better.
+
+**"The guards are redundant."** For correctness, yes. But the guess that
+followed — that removing them would leave `weekly` newly exposed to a `date.ts`
+change — was wrong too, and checking took one run: with the guard restored and
+`date.ts` broken, `weekly` still fails, just on a different assertion, because
+it uses `isPast` again in `slipped`. Removing them changes which line fails,
+not whether one does.
+
+Both were caught by running the thing rather than reasoning about it, which is
+this file's oldest lesson and still the one that earns its keep. **Two
+overstatements, in a row about two deletions** — the ratio is the point:
+nothing here was too small to be wrong about.
 
 ## To do
 
