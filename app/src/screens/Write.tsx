@@ -9,7 +9,13 @@ import { Equation } from '../components/Equation';
 import { ActionButton, FilePick, SectionLabel, Toggle } from '../components/ui';
 import { Bench, Tool, ToolPick, ToolRule } from '../components/Bench';
 import { Gallery, type Starter } from '../components/Gallery';
-import { WriteIcon } from '../components/Icons';
+import {
+  AlignCenterIcon,
+  AlignJustifyIcon,
+  AlignLeftIcon,
+  AlignRightIcon,
+  WriteIcon,
+} from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
@@ -29,6 +35,7 @@ import {
   words,
   type Block,
   type BlockKind,
+  type Align,
   type Doc,
   type Line,
 } from '../lib/document';
@@ -264,6 +271,34 @@ const MARK_BUTTONS: { id: Mark; label: string; glyph: string }[] = [
   { id: 'code', label: 'Monospace', glyph: '‹›' },
 ];
 
+/**
+ * The four alignments, drawn as the stack of lines each one makes.
+ *
+ * The same glyphs every toolbar since the first word processor has used, and
+ * they are read for their shape rather than their meaning — which is why each
+ * carries a real label as well. A screen reader says "Centre", not "three
+ * short lines".
+ */
+const ALIGN_BUTTONS: { id: Align; label: string; Icon: typeof AlignLeftIcon }[] = [
+  { id: 'left', label: 'Align left', Icon: AlignLeftIcon },
+  { id: 'center', label: 'Centre', Icon: AlignCenterIcon },
+  { id: 'right', label: 'Align right', Icon: AlignRightIcon },
+  { id: 'justify', label: 'Justify', Icon: AlignJustifyIcon },
+];
+
+/**
+ * Which blocks can be aligned.
+ *
+ * The paragraphs, and not the rest. A picture and an equation are centred by
+ * the exporter already and have no left-aligned form worth offering; a code
+ * block is characters in columns and centring one destroys the only thing its
+ * layout was carrying; a table sets its own width; and a list's alignment is
+ * a thing Word technically allows and nobody has ever wanted.
+ */
+function alignable(block: Block): boolean {
+  return block.kind === 'heading' || block.kind === 'text' || block.kind === 'quote';
+}
+
 function Editor({ doc }: { doc: Doc }) {
   const { state, dispatch, say } = useStore();
   const [busy, setBusy] = useState(false);
@@ -441,12 +476,37 @@ function Editor({ doc }: { doc: Doc }) {
   const restyle = (next: Style) => {
     if (openAt === null || !open || !plainText(open)) return;
     const text = open.kind === 'heading' || open.kind === 'text' ? open.text : '';
+    /* The alignment comes across. This function builds a *new* block rather
+       than patching the old one — it has to, the kind changes — and the first
+       version of that dropped a centred heading back to the margin the moment
+       somebody made it a paragraph. */
+    const align = open.kind === 'heading' || open.kind === 'text' ? open.align : undefined;
     setBlock(
       openAt,
       next === 'text'
-        ? { kind: 'text', text }
-        : { kind: 'heading', level: Number(next.slice(1)) as 1 | 2 | 3, text },
+        ? { kind: 'text', text, ...(align ? { align } : null) }
+        : {
+            kind: 'heading',
+            level: Number(next.slice(1)) as 1 | 2 | 3,
+            text,
+            ...(align ? { align } : null),
+          },
     );
+  };
+
+  /**
+   * Set — or clear — the open block's alignment.
+   *
+   * Pressing the alignment a block already has takes it off, the way every
+   * toggle in this toolbar works. That is not the same as setting it to left:
+   * a block with no alignment follows the document, and one set to left says
+   * *not this one* inside a justified paper. Both are worth being able to say.
+   */
+  const setAlign = (next: Align) => {
+    if (openAt === null || !open || !alignable(open)) return;
+    const had = 'align' in open ? open.align : undefined;
+    const { align: _was, ...rest } = open as Extract<Block, { align?: Align }>;
+    setBlock(openAt, (had === next ? rest : { ...rest, align: next }) as Block);
   };
 
   const saveWord = async () => {
@@ -554,6 +614,15 @@ function Editor({ doc }: { doc: Doc }) {
           label: m.label,
           on: markable && caret !== null && marked(caret.el.value, m.id),
           run: markable ? () => mark(m.id) : undefined,
+        })),
+        /* The same four as the toolbar, from the same list. Two lists of the
+           same controls is how a kind ends up on one surface and not the
+           other — see the note on `INSERT_GROUPS`. */
+        ALIGN_BUTTONS.map((a) => ({
+          id: `edit.align.${a.id}`,
+          label: a.label,
+          on: open !== null && 'align' in open && open.align === a.id,
+          run: open !== null && alignable(open) ? () => setAlign(a.id) : undefined,
         })),
         [
           {
@@ -758,6 +827,20 @@ function Editor({ doc }: { doc: Doc }) {
                 disabled={!markable}
                 pressed={markable && caret !== null && marked(caret.el.value, m.id)}
                 onClick={() => mark(m.id)}
+              />
+            ))}
+            <ToolRule />
+            {/* Alignment acts on the open *block*, not on the selection —
+                which is what alignment is everywhere, and why these sit after
+                the marks and behind a rule rather than among them. */}
+            {ALIGN_BUTTONS.map((a) => (
+              <Tool
+                key={a.id}
+                label={a.label}
+                icon={<a.Icon />}
+                disabled={open === null || !alignable(open)}
+                pressed={open !== null && 'align' in open && open.align === a.id}
+                onClick={() => setAlign(a.id)}
               />
             ))}
             {/* Its words rather than a glyph, like Outline and Find beside it:

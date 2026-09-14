@@ -41,7 +41,7 @@
  */
 
 import { outline } from './doctools';
-import { listed, runs, type Block, type Doc, type Line } from './document';
+import { listed, runs, type Align, type Block, type Doc, type Line } from './document';
 import { layoutOf, lineHeight, pageSize, type Layout } from './doclayout';
 import { omml, parse } from './maths';
 import { HEAD, REL, xml } from './ooxml';
@@ -348,6 +348,19 @@ class Pictures {
  * in the link's colour, with nothing behind them: visibly a link that goes
  * nowhere rather than an invalid relationship, which Word refuses to open.
  */
+/**
+ * A paragraph's alignment, as the property Word reads.
+ *
+ * `justify` is `both` in OOXML — the two edges — and `left` is written out
+ * rather than left off, because a block set to left inside a document whose
+ * style is justified means *this one is not*, and saying nothing would let
+ * the style win.
+ */
+function aligned(align?: Align): string {
+  if (!align) return '';
+  return `<w:jc w:val="${align === 'justify' ? 'both' : align}"/>`;
+}
+
 function para(text: string, style?: string, extra = '', links?: Links): string {
   const props = style || extra ? `<w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ''}${extra}</w:pPr>` : '';
   const body = runs(text)
@@ -442,9 +455,11 @@ function blockXml(
 ): string {
   switch (block.kind) {
     case 'heading':
-      return block.text.trim() ? para(block.text, `Heading${block.level}`, '', links) : '';
+      return block.text.trim()
+        ? para(block.text, `Heading${block.level}`, aligned(block.align), links)
+        : '';
     case 'text':
-      return block.text.trim() ? para(block.text, undefined, '', links) : '';
+      return block.text.trim() ? para(block.text, undefined, aligned(block.align), links) : '';
     case 'bullets':
       return listed(block.items)
         .filter((l) => l.text.trim())
@@ -456,9 +471,13 @@ function blockXml(
         .map((i) => ticked(i, links))
         .join('');
     case 'quote': {
-      const body = block.text.trim() ? para(block.text, 'Quote', '', links) : '';
+      // The attribution takes the quotation's alignment too: the two are one
+      // block on screen and one thing on the page, and a centred passage with
+      // its source hard against the left margin reads as a mistake.
+      const jc = aligned(block.align);
+      const body = block.text.trim() ? para(block.text, 'Quote', jc, links) : '';
       return block.source.trim()
-        ? `${body}${para(`— ${block.source}`, 'Caption', '', links)}`
+        ? `${body}${para(`— ${block.source}`, 'Caption', jc, links)}`
         : body;
     }
     case 'table':

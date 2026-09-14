@@ -614,6 +614,17 @@ model in it or needs a key:
   written before this still work: an item that is a bare string is read as a
   line at the left margin, which is what it always was.
 
+  A paragraph, a heading or a quotation can be **aligned** — left, centred,
+  right or justified, from the toolbar or the Edit menu. It is a property of
+  that one block rather than of the document: a centred heading in a
+  left-aligned paper is the ordinary case. Pressing the alignment a block
+  already has takes it off again, which is not the same as setting it to
+  left — a block with nothing set follows the page, and one set to left says
+  *not this one* inside a justified paper. Line spacing and margins are the
+  other kind, set once for the whole document in page setup. Markdown has no
+  way to say any of this, so a Markdown export drops the alignment and keeps
+  every word.
+
   A **divider** is a line between one section and the next, and a **page
   break** starts a new page. Two blocks, one line apart on the Insert bar,
   because they are two different things — which they had not been. The page

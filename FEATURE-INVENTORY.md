@@ -645,10 +645,27 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   its shape, because Word draws exactly the size it is told. A file binned
   from the drive is an ordinary thing rather than a corrupt document: the
   caption still exports and the picture does not.
-- ~~No links,~~ alignment, line spacing or margin controls. — links **closed**:
+- ~~No links, alignment, line spacing or margin controls.~~ — **all closed,
+  and two of them were closed before this entry was last read.** Links:
   `[words](where)` in `lib/document.ts`, checked by `safeUrl` against http,
   https and mailto, and written into the `.docx` as a real hyperlink
   relationship. A refused target keeps its brackets and stays on the page.
+  Line spacing and margins are **document-wide**, and have been since page
+  setup arrived — `lib/doclayout.ts`, with a Line spacing control on the page
+  setup panel; this entry went on listing them as absent after they were
+  built. Alignment is the one that was genuinely missing, and it is
+  **per-block** rather than per-document, because that is what alignment is:
+  a centred heading in a left-aligned paper. `align?: Align` on `heading`,
+  `text` and `quote` — the paragraphs, and not a picture or an equation (the
+  exporter centres those already), a code block (columns are the only thing
+  its layout carries), a table (it sets its own width) or a list. Absent
+  means the document decides, which is why nothing at all is written for an
+  unaligned paragraph: `left` inside a justified document means *not this
+  one*, and is a different statement from saying nothing. `justify` is
+  OOXML's `both`. A quotation's attribution takes the quotation's alignment.
+  **Markdown drops it** — markdown describes structure and has no centred
+  paragraph — which `docalign.test.ts` pins rather than leaving to be
+  discovered: the alignment goes, every word stays.
 - ~~No find-and-replace, no outline sidebar,~~ no comments/margin notes. —
   both **closed** in `lib/doctools.ts` (`findAll`, `replaceAll`, `outline`).
 - ~~**No version history and no restore.** No autosave indicator.~~ —
@@ -822,11 +839,12 @@ Everything above that is not struck through, collected — so the next person
 reading this has one short list rather than a long one to re-check. Verified
 by grepping for each, not by re-reading the sentence.
 
-**Documents** — alignment, line spacing and margins · comments and margin notes · a generated
+**Documents** — comments and margin notes · a generated
 PDF, as against the browser's print-to-PDF, which is there · `.docx` *import* ·
 "Open in Docs" from a study guide · a WYSIWYG surface (the marks are typed).
-(Code blocks, checkbox lists, images, horizontal rules and indent/outdent
-were on this list and are done.)
+(Code blocks, checkbox lists, images, horizontal rules, indent/outdent and
+alignment were on this list and are done. Line spacing and margins were on it
+and had already been built when it was written.)
 
 **Sheets** — nothing. Every entry this section listed is either built or was
 already built when it was listed.

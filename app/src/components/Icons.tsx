@@ -177,3 +177,9 @@ export const ActivitiesIcon = svg('activities');
 export const HelpIcon = svg('help');
 /** You, ringed. `Person` is anybody; this one is the reader. */
 export const ProfileIcon = svg('profile');
+
+/** The alignment toolbar's four, drawn rather than spelled. See `icons.data.ts`. */
+export const AlignLeftIcon = svg('alignLeft');
+export const AlignCenterIcon = svg('alignCenter');
+export const AlignRightIcon = svg('alignRight');
+export const AlignJustifyIcon = svg('alignJustify');
