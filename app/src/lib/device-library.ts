@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 /**
  * A store that lives on this device, for the workspaces that are not the term.
@@ -18,64 +18,89 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  *
  * The single most important line in this file. If the stored JSON cannot be
  * parsed or fails its validator, the value goes to `empty` *for display* and
- * every write is blocked from then on. The bad bytes stay exactly where they
- * are, and `recovery()` hands them back so somebody can download them.
+ * every write is refused. The bad bytes stay exactly where they are, and
+ * `recovery()` hands them back so somebody can download them.
  *
  * The alternative — start empty and save over it on the next keystroke — is
  * how a student loses a term of application notes to one malformed character.
  * It is also the behaviour that looks completely fine in testing, because in
  * testing the data is never malformed.
  *
- * ## Every write is validated before it lands
+ * ## Every write reads first
  *
- * `update` runs the same `read` over the *new* value before writing it. A bug
- * in a screen that would store something the reader will later reject is
- * caught on the write that causes it, not on the load three weeks later when
- * the cause is gone. The write returns false rather than throwing, so a caller
- * can say "that did not save" without a boundary.
+ * `update` re-reads the stored record at the moment of the change rather than
+ * trusting what this hook last saw. Two things follow, and both are the reason
+ * it is written this way:
+ *
+ * - A refusal is decided against what is *on disk now*, not a flag set at
+ *   mount. Another tab can corrupt the record a millisecond earlier and this
+ *   write still declines to flatten it.
+ * - A functional update is applied to the current record, so a save from
+ *   another tab is built on rather than silently discarded.
+ *
+ * The new value then goes through the same `read` before it lands, and the
+ * *validated* result is what is stored — a screen that hands over something
+ * the reader would later normalise stores the normal form immediately rather
+ * than a shape that only survives until the next load. The write returns false
+ * rather than throwing, so a caller can say "that did not save" without a
+ * boundary.
+ *
+ * ## Nothing from the previous key is ever shown
+ *
+ * The key carries the account and the term, and it changes while this hook
+ * stays mounted. The snapshot records which key produced it, and a snapshot
+ * from the old one is not drawn — the freshly loaded value is, on the same
+ * render that the key changed. Otherwise switching account shows the previous
+ * account's plans for a frame, which is a disclosure, not a flicker.
  *
  * ## Two tabs stay in step
  *
  * `storage` covers another tab; the `semester-device-library` event covers
  * this one, since `storage` does not fire in the tab that wrote. Without the
- * second, two views of the same library in one window silently disagree.
+ * second, two views of the same library in one window silently disagree. A
+ * `storage` event with a null key is the whole store being cleared, and counts
+ * as a change to every key.
  */
 export function useDeviceLibrary<T>(key: string, read: (value: unknown) => T, empty: T) {
-  const [initial] = useState(() => {
+  /*
+   * One read of storage, carrying the key it came from.
+   *
+   * `blocked` is derived from this read rather than latched in a ref: the
+   * question "may this write" is a question about the bytes on disk, and a
+   * ref answers it with whatever was true when it was last assigned. The
+   * refusal is no weaker for being derived — `update` calls this again before
+   * every write, so the check is against storage as it is at that moment.
+   */
+  const load = useCallback(() => {
     try {
       const raw = localStorage.getItem(key);
-      return { value: raw === null ? empty : read(JSON.parse(raw)), error: '' };
+      return { key, value: raw === null ? empty : read(JSON.parse(raw)), error: '', blocked: false };
     } catch {
       return {
+        key,
         value: empty,
         error:
           'Saved data could not be read. It has been kept exactly as it is — export a recovery copy before repairing this device’s storage.',
+        blocked: true,
       };
     }
-  });
+  }, [key, read, empty]);
 
-  const [value, setValue] = useState(initial.value);
-  const [error, setError] = useState(initial.error);
-  const current = useRef(initial.value);
-  /*
-   * Latched on a bad read, and never unlatched. See the note above.
-   *
-   * Kept twice on purpose. The ref is what `update` reads, because that check
-   * has to see a latch set moments ago by the storage listener — a state
-   * value there would still be the previous render's. The state is what the
-   * *return* carries, because a ref read during render is a value React never
-   * re-renders for, so a screen asking `blocked` would go on drawing its
-   * editable form after the latch closed.
-   */
-  const blocked = useRef(!!initial.error);
-  const [locked, setLocked] = useState(!!initial.error);
+  const initial = useMemo(() => load(), [load]);
+  const [snapshot, setSnapshot] = useState(initial);
+  // The effect below catches up a render later, and a render is long enough
+  // to show one account's work to the next. Prefer the fresh read until it does.
+  const visible = snapshot.key === key ? snapshot : initial;
 
   const update = useCallback(
     (change: T | ((old: T) => T)) => {
-      if (blocked.current) return false;
+      const before = load();
+      if (before.blocked) {
+        setSnapshot(before);
+        return false;
+      }
       try {
-        const next = typeof change === 'function' ? (change as (old: T) => T)(current.current) : change;
-        read(next);
+        const next = read(typeof change === 'function' ? (change as (old: T) => T)(before.value) : change);
         const raw = JSON.stringify(next);
         /*
          * Ahead of the quota rather than into it. `localStorage` throws when
@@ -88,48 +113,50 @@ export function useDeviceLibrary<T>(key: string, read: (value: unknown) => T, em
           throw new Error('This workspace is full. Export and archive older work first.');
         }
         localStorage.setItem(key, raw);
-        current.current = next;
-        setValue(next);
-        setError('');
+        setSnapshot({ key, value: next, error: '', blocked: false });
         window.dispatchEvent(new CustomEvent('semester-device-library', { detail: key }));
         return true;
       } catch (e) {
-        setError(`Changes could not be saved: ${(e as Error).message}`);
+        // `before`, not the attempted value: the failed write changed nothing.
+        setSnapshot({ ...before, error: `Changes could not be saved: ${e instanceof Error ? e.message : String(e)}` });
         return false;
       }
     },
-    [key, read],
+    [key, read, load],
   );
 
   useEffect(() => {
-    const refresh = () => {
-      try {
-        const raw = localStorage.getItem(key);
-        if (raw === null) return;
-        const next = read(JSON.parse(raw));
-        current.current = next;
-        setValue(next);
-      } catch {
-        blocked.current = true;
-        setLocked(true);
-        setError('Saved data changed and could not be read. It has been kept as it is.');
-      }
-    };
+    const refresh = () => setSnapshot(load());
+    // A null key is `localStorage.clear()` — every key changed, including this one.
     const storage = (e: StorageEvent) => {
-      if (e.key === key) refresh();
+      if (e.key === key || e.key === null) refresh();
     };
     const local = (e: Event) => {
       if ((e as CustomEvent).detail === key) refresh();
     };
+    refresh();
     window.addEventListener('storage', storage);
     window.addEventListener('semester-device-library', local);
     return () => {
       window.removeEventListener('storage', storage);
       window.removeEventListener('semester-device-library', local);
     };
-  }, [key, read]);
+  }, [key, load]);
 
-  return { value, update, error, blocked: locked, recovery: () => localStorage.getItem(key) || '' };
+  return {
+    value: visible.value,
+    update,
+    error: visible.error,
+    blocked: visible.blocked,
+    // Guarded too: the read that blocked this library can be the one that throws.
+    recovery: () => {
+      try {
+        return localStorage.getItem(key) || '';
+      } catch {
+        return '';
+      }
+    },
+  };
 }
 
 /*
