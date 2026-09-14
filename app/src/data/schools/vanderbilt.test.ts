@@ -38,10 +38,16 @@ describe('Vanderbilt, Fall 2026', () => {
     ]);
   });
 
-  it('carries no Meal Money figure, because none was ever found', () => {
-    // Every plan has Meal Money; no source gave an amount. Zero is how the
-    // Meals screen is told to draw the swipe count alone rather than "$0.00".
-    expect(BUNDLED.vanderbilt.data.mealPlanTiers?.every((t) => t.dollars === 0)).toBe(true);
+  it('carries the Meal Money each plan includes', () => {
+    // Both figures arrived in the same search result as the swipe counts
+    // already here, in a coherent shape — 335 meals with $225, 305 with $275
+    // — which is the first corroboration those counts have had. Dollars here
+    // is a printed reference, not an input: nothing computes from it, and the
+    // runway arithmetic runs on balances the student logs.
+    expect(BUNDLED.vanderbilt.data.mealPlanTiers?.map((t) => [t.name, t.dollars])).toEqual([
+      ['First-Year Plan', 225],
+      ['Upper-Division Plan', 275],
+    ]);
   });
 
   it('proposes the term start and both breaks, and nothing else', () => {

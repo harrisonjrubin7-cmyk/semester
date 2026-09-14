@@ -54,13 +54,13 @@
       {
         "name": "First-Year Plan",
         "swipes": 335,
-        "dollars": 0,
+        "dollars": 225,
         "period": "term"
       },
       {
         "name": "Upper-Division Plan",
         "swipes": 305,
-        "dollars": 0,
+        "dollars": 275,
         "period": "term"
       }
     ]
