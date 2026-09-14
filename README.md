@@ -365,6 +365,11 @@ navigate that tab somewhere else, and it stops. Only one thing plays at a
 time — this is a place to study, and two narrations over each other is not a
 feature anybody asked for.
 
+A result you already have open says **Switch to tab**, and pressing it goes to
+that tab instead of making a second one onto the same page — which is what an
+address bar does, and what stops the strip filling with duplicates of the
+things you look at most. The ⧉ beside it still opens another on purpose.
+
 **Bookmarks** are the other half. A tab is where you are; a bookmark is where
 you keep going back to — the ECON study guide, the essay brief, the deadline
 you are counting down to — and before this the only way to keep one to hand

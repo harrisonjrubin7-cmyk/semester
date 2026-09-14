@@ -546,6 +546,46 @@ export function sameplace(a: Action[], b: Action[]): boolean {
   return a.length === b.length && a.every((x, i) => JSON.stringify(x) === JSON.stringify(b[i]));
 }
 
+/**
+ * The tab already sitting at this place, if one is.
+ *
+ * What a search result carries is the actions that would open it — the same
+ * actions a tab keeps — so "is this already open?" is `sameplace` against
+ * every tab, and nothing cleverer. That question has an answer worth acting
+ * on: picking a result whose place is already open should go to the tab that
+ * has it rather than making a second tab onto the same page, which is what
+ * a browser's address bar does and the reason it says "Switch to tab".
+ *
+ * A blank tab is never the answer. It has no screen and no place, and an
+ * empty place would otherwise match a result whose actions had all been
+ * filtered out on the way off the device — sending you to a new tab page
+ * instead of the thing you searched for.
+ *
+ * The first match rather than all of them: two tabs on one place is allowed
+ * (nothing stops you opening the same course twice) and the one nearest the
+ * front of the strip is the one a person means.
+ *
+ * ## Why the row this feeds carries no speaker
+ *
+ * It was going to. A result already open in the tab that is playing would
+ * have said so, the way the strip and the tab list do — and it cannot
+ * happen. Two places in this app play audio: the lesson screen, and a guide
+ * in listen mode. No result lands on `lesson` at all (`landingOf` in
+ * `lib/openhit.ts` has no case for it, and a `screen` hit's place is a bare
+ * `justGo`, which is "the lesson screen" rather than *this* lesson), and
+ * every unit hit is built with `mode: 'cards'` (`lib/find.ts`), so a unit
+ * result opens the guide in a different place from the one that is playing —
+ * which `sameplace` correctly refuses to match.
+ *
+ * Written down here rather than discovered twice. If lessons ever become
+ * searchable, the mark is three lines and this paragraph is the reason it was
+ * not three lines sooner.
+ */
+export function tabAt(strip: Strip, place: Action[]): AppTab | undefined {
+  if (place.length === 0) return undefined;
+  return strip.tabs.find((t) => t.screen && t.place.length > 0 && sameplace(t.place, place));
+}
+
 /** Open a screen in a tab of its own — the middle-click, as a button. */
 export function openBeside(
   strip: Strip,
