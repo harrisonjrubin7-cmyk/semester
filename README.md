@@ -1062,6 +1062,50 @@ model in it or needs a key:
   are the same statement about the same thing: the example above reads back
   `\cos(0.19635n) + 0.4\sin(0.981748n)`, which is what went in.
 
+  **`wavelet([…], 2)` is a wavelet transform**, and it answers the question the
+  three before it cannot: not only which scales a run wobbles at, but *where*.
+  A spectrum has no *when* in it — a single step at week 40 and a wobble spread
+  across the year can give the same one, because a sine has no beginning — and
+  that is the honest limit of Fourier and the reason for this.
+
+  Haar is the default, and it is averages and differences: pair the samples up,
+  the average of each pair is the run at half the resolution and the difference
+  is what was lost, then repeat on the averages. Nothing is thrown away, which
+  is why it comes back exactly — the inverse is the forward transform's
+  transpose, which for an orthonormal filter bank *is* its inverse, so
+  `rebuild(analyse(x))` is `x` to the last bit of the float rather than to a
+  tolerance, and it is checked that way.
+
+  `daubechies([…])` is the four-tap one beside it, because the family is the
+  point. It is blind to a straight line: feed it a ramp and every detail comes
+  back zero, where Haar reports the slope at every scale. That difference is
+  checked directly, since it is the reason for having both. (It is written
+  `daubechies` or `db` rather than the `d4` a textbook prints, because a name
+  in this notation is letters and `d4` is `d` times four — which it has always
+  been.)
+
+  It takes the data the same three ways the discrete transform does, and the
+  second argument means a level after a list and a count after a formula,
+  because a list needs no count. The picture is the data as dots with the
+  smoothing stepped through them — a step and not a curve, because the
+  approximation is a value per sample and under Haar it is literally a
+  staircase of averages. The reading is the share of the wobble at each scale
+  and where the biggest single one is: *level 1 holds 59%, 2 holds 22%… the
+  biggest is at level 1, near sample 5*.
+
+  A length that is not a power of two is refused, naming the two nearest that
+  work, because halving is what the transform does and there is no honest way
+  to halve seventeen.
+
+  Getting the *where* right took a fix worth recording. A two-tap filter at
+  level L was made from exactly `2^L` samples, and a four-tap one from
+  `(2^L - 1)(M - 1) + 1` — each pass feeds on M of the last pass's outputs and
+  those already overlap. Reporting the second as though it were the first put
+  Daubechies' answers five samples early: it named sample 2 for a spike at 5
+  that Haar found correctly. Wrong in exactly the dimension this transform
+  exists to be right in, and now pinned by a test that asks both filters to
+  find the same step.
+
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms
   without complaint. A bracket after a letter is a multiplication or a function
