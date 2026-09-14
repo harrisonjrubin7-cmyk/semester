@@ -135,6 +135,56 @@ That case needs a walker told which extensions to keep — which is G2. So G2 is
 not the tidying this pass called it. It is the other half of this row, and the
 note on `sources()` says as much where somebody will read it.
 
+### G2, done for six — and the row was scoped by a name, not by the job
+
+`sources()` takes `ext` and `tests` now, defaulting to what it did before, so
+nothing that already called it changed. Six copies are retired:
+
+| Was | Now |
+| --- | --- |
+| `a11y/labels.ts` | the shared one — it was character-for-character identical |
+| `a11y/motion.test.ts` | `sources(dir, { ext: ['.ts', '.tsx'], tests: false })` |
+| `lib/zips.test.ts` | the same, and it was identical to `erase`'s |
+| `lib/erase.test.ts` | the same |
+| `styles/print.test.ts` | `sources(dir, { tests: false })` |
+| `lib/onegraph.test.ts` | `sources(dir, { ext: ['.ts', '.tsx'] })` |
+
+The last is the one that matters: E1's mistake — a census needing `lib/` and a
+walker that could only see `.tsx` — is an argument at the call site now, where
+a reader sees which files the rule actually reads. Re-verified by planting a
+second compiler in `lib/` and watching the rule name it, because rewriting
+that particular rule without re-running it against its own fault would be the
+joke this file has already told three times.
+
+`a11y/labels.ts` needed one thing worth writing down: `scripts/labels.mjs`
+loads it through a bare `await import()`, so Node resolves it, and Node ESM
+guesses no extensions. The import is `'../styles/rules.ts'`, with the
+extension, and `npm run lint` is what proves it.
+
+**The row said six walkers. Counted by shape rather than by name, there are
+fourteen more.** The census found the ones whose function was *called*
+`sources`; a `readdirSync` loop that recurses is the actual shape, and it
+appears in `a11y/dragging`, `landmarks`, `modal`, `tellings`,
+`components/marks`, `isolation`, `lib/credits`, `styles/fields`, `gutter`,
+`inset`, `taps`, `lib/counts`, and — with no more excuse than anyone else —
+`styles/deadcss` and `state/readstate`, both of which are mine from passes
+seven and eight.
+
+Not converted here, and not for lack of time: they are a second row, and at
+least one is not the same job at all — `lib/counts.ts` walks `public/` for
+lesson audio, not source for rules. Doing them needs the reading that this
+row's census skipped.
+
+**Three miscounts in one pass, all the same mistake.** F1 counted dispatchers
+by one spelling of a literal. G1 counted tests by their imports rather than
+their calls. G2 counted walkers by their name rather than their shape. Each
+time the census asked a question that was *nearly* the real one, and each time
+the difference was invisible until something forced it — the typechecker, the
+throw, and a grep for the shape. **The lesson this file already carries is
+about checks that have not been run; this pass adds its sibling: a census is a
+question, and asking a near-miss of the question you meant returns a confident
+wrong number.**
+
 ---
 
 # One app — the eighth pass: state written and never read
@@ -2970,6 +3020,131 @@ whose app it is, not a fresh reading of `Courses.tsx`.
 
 What held through all four turns is still the only part that was never in
 dispute: whatever the grade table is, it is not two things at once.
+
+---
+
+## 7. The assistant's button, and the sixty screens it rests on
+
+An axis neither half of this audit looks at. A and B both ask which *markup*
+repeats; this asks which markup **collides** — specifically with the one
+control that is not drawn by any screen and appears on all of them, the
+assistant's floating button (`ai/Assistant.tsx`).
+
+The button lifts by its own height when something tappable is beneath it, up
+to twice. Whether that is enough is not a question a unit test can answer:
+jsdom has no layout, so `elementsFromPoint` — the whole mechanism — does not
+exist there, and `ai/dock.test.ts` can only check which points get asked.
+The answer has to be measured in a browser, and this is that measurement.
+
+### The instrument
+
+Chromium at 402×874, all 60 destinations in `lib/nav.ts`, 2.6s per screen so
+the lift's own timers settle. For each visible control in `main`, its overlap
+with the button's resting rect as a fraction of the control's own area.
+
+The table below is one run, on the production build at `b5000de`. The count of
+screens *touching* moves with the content — three screens left it and one
+gained a second hit between that commit and the one before it, on changes that
+had nothing to do with the assistant — so it is the last two rows that are the
+claim, and they are what the script exits non-zero on.
+
+Three corrections to the instrument are worth more than the numbers, because
+each produced a confident wrong answer first. Two are below; the third is the
+padded tap target, which needs the census's own result to explain and is at
+the end of this section.
+
+- **Matching the button by its label caught something else.** `aria-label^="Ask
+  about"` also matches Progress's in-content "Ask about: …" affordance, so that
+  screen was measured against itself and reported as 100% covered. The button
+  is `button[aria-keyshortcuts="a"]` with `position: fixed`.
+- **Laid out is not the same as on screen.** Chrome gives content inside a
+  *closed* `<details>` a real `getBoundingClientRect` — non-zero, correctly
+  positioned, and invisible. On `study` that is 14 of 50 "controls", among them
+  `StudyJournal`'s course `<select>`, which the first run reported as covered
+  with its centre blocked. Nobody can see it: `details.open` is `false` and
+  `checkVisibility()` is `false`. The filter is `checkVisibility()`, not a
+  non-zero rect.
+
+### What it found, after all three
+
+| | |
+| --- | --- |
+| Destinations swept | 60 |
+| Button drawn | 57 — the other three are `FILLS` in `components/shell/exempt.ts` |
+| Touching any visible control | 27 |
+| Covered ≥50% (the rule's own threshold) | **0** |
+| Centre of a control unreachable | **0** |
+| Closest to the threshold | `links` EDIT at 48%, and see below |
+
+So the lift works. Every remaining overlap is a full-width row or a wide
+button with a corner clipped, which is the case `tappable()`'s proportional
+rule was written to allow: a row you can still tap has lost nothing you
+needed.
+
+### The worst of them, and a third correction to the instrument
+
+`links` draws an EDIT button at the tail of each row, 27×17. It is the closest
+thing in the census to a collision, and getting a number out of it took three
+goes.
+
+**27×17 is not what a finger aims at.** The button carries `.tap-y`, so its
+real target is the 27×44 `::after` overlay `styles/app.css` describes — the
+mark stays put and the *target* grows to 44px in the axis that has room. The
+first measurement read `getBoundingClientRect()` and so measured a different
+element than the one `elementsFromPoint` finds.
+
+**Padding it does not always help the fraction.** Measured on the border box
+the lower EDIT is 41% covered; measured on the target it is **48%**, because
+the button sits above it and the padding reaches up into the button. Higher,
+not lower, and two points off the threshold — the nearest miss in the app.
+
+**And a circle is not its bounding box.** Sampled on a 1px grid, 65% of that
+target is actually reachable: 35% covered, not 48%. The assistant is
+`border-radius: 50%` and `tappable()` compares rectangles, so its arithmetic
+claims about a fifth of the button's area that the button does not occupy.
+
+The direction of that error is the useful part. It over-reports coverage, so
+the rule lifts a little sooner than it strictly must, and a control the
+arithmetic calls half covered is less than half covered in the hand. That is
+the safe side of the threshold, and it is why nothing here is worth changing:
+correcting it would cost every probe a distance calculation to make the button
+*less* willing to move out of the way.
+
+### Verdict · **no change**
+
+Sixty screens, and the lift is right on all of them. `study` is recorded by
+name because it was reported as broken before it was checked: the select that
+finding named is inside a collapsed `<details>`, and the button rests clear of
+everything visible on that screen.
+
+The honest summary of this section is that it changed no screen. That is the
+result — the rule in `tappable()`, its 50% threshold and its two-lift cap were
+arrived at by measurement once already, and measuring again at sixty screens
+agrees with them.
+
+What it leaves behind is the instrument, committed as `app/scripts/dock.mjs`
+for the reason `scripts/baseline.mjs` gives about its pictures: a number
+nobody can regenerate is a number nobody can argue with. All three failure
+modes above are guarded in it rather than remembered, and it exits non-zero on
+anything half covered or with its centre blocked, so the next person to ask
+this question runs
+
+    npm run build && node scripts/dock.mjs
+
+rather than spending an afternoon re-discovering that a closed `<details>`
+has a rect.
+
+It is run by hand rather than by CI, and deliberately has no `check:` entry in
+the scripts block — `lib/ci.test.ts` holds the rule that a script named that
+way must have a workflow step, and it failed this one for exactly the right
+reason. A browser download and a sixty-screen walk on every pull request is
+`scripts/baseline.mjs`'s trade, already made once in this repo and made the
+same way: a script that needs a real browser is a before-a-release job, and a
+scripts-block entry that promises otherwise is the promise `ci.test.ts` exists
+to stop.
+
+---
+
 ## Appendix — the first pass, resolved
 
 Run at `ac5a2c8` against 59 destinations. Kept because the verdicts still hold

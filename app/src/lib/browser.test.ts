@@ -36,6 +36,7 @@ import {
   reopen,
   renameGroup,
   select,
+  tabAt,
   tidy,
   visit,
   whatClosed,
@@ -1047,5 +1048,70 @@ describe('muting a tab', () => {
       }),
     );
     expect(read(known).tabs[0].muted).toBeUndefined();
+  });
+});
+
+describe('the tab already at a place', () => {
+  it('finds it, so a result can offer to switch rather than open a second one', () => {
+    const s = strip(['home', 'study', 'calendar'], 0);
+    expect(tabAt(s, justGo('calendar'))?.id).toBe('t2');
+  });
+
+  it('is nobody when nothing is open there', () => {
+    expect(tabAt(strip(['home', 'study'], 0), justGo('calendar'))).toBeUndefined();
+  });
+
+  it('never answers with a blank tab, whatever it is asked', () => {
+    // A new tab has no screen and an empty place. An empty place matching
+    // would send somebody to a blank page instead of what they searched for.
+    const s = strip([null, 'home'], 0);
+    expect(tabAt(s, [])).toBeUndefined();
+    expect(tabAt(s, justGo('home'))?.id).toBe('t1');
+  });
+
+  it('tells two places on the same screen apart', () => {
+    // The whole point of matching the place rather than the screen: two
+    // courses are both `course`, and switching to the wrong one is worse
+    // than opening a new tab.
+    const econ: Strip = {
+      ...strip(['home'], 0),
+      tabs: [
+        { id: 'a', screen: 'home', title: 'Today', place: justGo('home') },
+        { id: 'b', screen: 'courses', title: 'ECON 1020', place: [{ type: 'openCourse', id: 'econ' } as never] },
+      ],
+    };
+    expect(tabAt(econ, [{ type: 'openCourse', id: 'econ' } as never])?.id).toBe('b');
+    expect(tabAt(econ, [{ type: 'openCourse', id: 'psci' } as never])).toBeUndefined();
+  });
+
+  it('will not match a guide in one mode against the same guide in another', () => {
+    // The reason a search result carries no speaker: a unit result always
+    // opens the guide in `cards` (`find.ts`), and the mode that plays is
+    // `listen`. Two modes of one guide are two places, and this is what says
+    // so — if it ever stops being true, the mark on the row becomes buildable.
+    const listening: Strip = {
+      ...strip(['home'], 0),
+      tabs: [
+        {
+          id: 'g',
+          screen: 'study',
+          title: 'ECON 1020 · Study guide',
+          place: [{ type: 'openGuide', id: 'econ', mode: 'listen', unit: 0 } as never],
+        },
+      ],
+    };
+    expect(tabAt(listening, [{ type: 'openGuide', id: 'econ', mode: 'cards', unit: 0 } as never])).toBeUndefined();
+    expect(tabAt(listening, [{ type: 'openGuide', id: 'econ', mode: 'listen', unit: 0 } as never])?.id).toBe('g');
+  });
+
+  it('answers with the one nearest the front when a place is open twice', () => {
+    const twice: Strip = {
+      ...strip(['home'], 0),
+      tabs: [
+        { id: 'a', screen: 'calendar', title: 'Calendar', place: justGo('calendar') },
+        { id: 'b', screen: 'calendar', title: 'Calendar', place: justGo('calendar') },
+      ],
+    };
+    expect(tabAt(twice, justGo('calendar'))?.id).toBe('a');
   });
 });

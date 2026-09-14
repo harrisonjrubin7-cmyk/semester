@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { sources, withoutComments } from '../styles/rules';
 
@@ -58,28 +57,16 @@ describe('one grapher', () => {
   });
 });
 
-/**
- * Every `.ts` and `.tsx` under a directory.
+/*
+ * `modules()` was here.
  *
- * `sources()` in `styles/rules.ts` walks `.tsx` only — it was written for a
- * rule about markup — and the first version of this file used it to scan
- * `lib/`, where almost nothing is `.tsx`. The rule below was therefore
- * vacuous: it passed against a deliberately planted second compiler. Caught
- * by planting one, which is the only way that class of mistake is ever
- * caught.
+ * It existed because `sources()` kept `.tsx` only, and the rule below needs
+ * `lib/`, where almost everything is `.ts` — the whole of E1's mistake. That
+ * walker takes the extensions it should keep now (`SIMPLIFY-AUDIT.md` G2), so
+ * the need is expressed as an argument at the call rather than as a seventh
+ * copy of a directory walk.
  */
-function modules(dir: string): { path: string; text: string }[] {
-  const out: { path: string; text: string }[] = [];
-  const walk = (at: string) => {
-    for (const name of readdirSync(at)) {
-      const path = join(at, name);
-      if (statSync(path).isDirectory()) walk(path);
-      else if (/\.tsx?$/.test(path)) out.push({ path, text: readFileSync(path, 'utf8') });
-    }
-  };
-  walk(dir);
-  return out;
-}
+
 
 /**
  * The names a second stack needs, whatever it calls its files.
@@ -94,8 +81,8 @@ const COMPILER = /^export (?:async )?function (compile|graphPath|plotPath|parseE
 
 describe('one thing that turns an expression into a curve', () => {
   it('has no second compiler under lib/', () => {
-    const offenders = modules(join(process.cwd(), 'src', 'lib'))
-      .concat(modules(COMPONENTS))
+    const offenders = sources(join(process.cwd(), 'src', 'lib'), { ext: ['.ts', '.tsx'] })
+      .concat(sources(COMPONENTS, { ext: ['.ts', '.tsx'] }))
       .filter((f) => !f.path.includes('.test.'))
       .filter((f) => !ALLOWED.has(f.path.slice(f.path.lastIndexOf('/') + 1)))
       .filter((f) => COMPILER.test(withoutComments(f.text)))
