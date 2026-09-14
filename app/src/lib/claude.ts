@@ -26,6 +26,7 @@
 import type { Usage } from './spend';
 import type { CaseFile, Example, Figure, Frame, StudyCard } from './types';
 import { figureShapes, readFigures } from './figure';
+import { fetchWithin, timedOut, tookTooLong } from './net';
 import { readStudyParts, studyShapes } from './study';
 import {
   DEFAULTS as NO_CONTROLS,
@@ -102,8 +103,16 @@ export function saveSettings(next: ClaudeSettings): void {
   // have fixed it. See `proxyDown`. The same for the model's grammar budget,
   // in memory only — what this device learned stays learned in `STRICT_KEY`,
   // so nothing is re-spent finding it out again.
+  //
+  // And the same for `structuredRefused`, which is the one of the three that
+  // was being left set. It is a fact about the *route*, not about this app:
+  // a gateway that will not pass `output_config` through. Somebody who has
+  // just swapped that gateway for their own key was otherwise left sending
+  // unstructured requests to an API that takes them, for the rest of the
+  // session, with nothing on any screen saying so.
   proxyDown = false;
   strictRefusedNow = '';
+  structuredRefused = false;
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
   } catch {
@@ -667,6 +676,10 @@ type Block =
  * the retry costs one round trip and then behaves exactly as the app did
  * before structured outputs existed — rather than a feature that fails on
  * every call against a gateway that does not pass the parameter through.
+ *
+ * Cleared by `saveSettings`, like `proxyDown` and `strictRefusedNow`: the
+ * refusal belongs to the route that gave it, and the settings screen is where
+ * a route is changed.
  */
 let structuredRefused = false;
 
@@ -1403,7 +1416,12 @@ export async function checkKey(apiKey: string): Promise<{ ok: boolean; detail: s
   }
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    // Bounded, because this one blocks a button: the check is the only thing
+    // the settings screen is doing while it runs, and a connection that
+    // accepts and then says nothing would spin it for the rest of the
+    // session. The streaming call above cannot take a fixed deadline — a long
+    // answer legitimately takes minutes — but a one-token key check can.
+    const res = await fetchWithin('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1432,6 +1450,7 @@ export async function checkKey(apiKey: string): Promise<{ ok: boolean; detail: s
     }
     return { ok: false, detail: said };
   } catch (e) {
+    if (timedOut(e)) return { ok: false, detail: tookTooLong('The API') };
     return {
       ok: false,
       detail: `${e instanceof Error ? e.message : String(e)}\n\nCould not reach the API to check.`,

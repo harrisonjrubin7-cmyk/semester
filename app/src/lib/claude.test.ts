@@ -168,6 +168,19 @@ beforeEach(() => {
     'semester.claude.v1',
     JSON.stringify({ provider: 'anthropic', apiKey: 'sk-ant-test', model: 'claude-opus-5' }),
   );
+  /*
+   * The module remembers two things for the life of the page rather than for
+   * the life of a call — whether the proxy has been stood down after
+   * answering as something that does not forward, and whether the model
+   * refused a strict reply shape. Neither lives in storage, so clearing
+   * storage does not clear them, and a test that stands the proxy down used
+   * to decide the route of every test that ran after it.
+   *
+   * `saveSettings` is the app's own way of clearing both — it is what the
+   * settings screen does — so this is a trip to that screen before each test
+   * rather than a reach into the module's private state.
+   */
+  saveSettings(settings());
   sent = null;
 });
 
@@ -576,6 +589,35 @@ describe('a constrained reply shape', () => {
     expect(attempt).toBe(2);
     expect(text).toBe('{"cards":[]}');
     expect(sent!.body).not.toHaveProperty('output_config');
+  });
+
+  it('asks for it again once the route has been changed', async () => {
+    /*
+     * The refusal belongs to the gateway that gave it, not to this app. It
+     * used to outlive every change to the route — so swapping a proxy that
+     * will not pass `output_config` for a key that takes it left every reply
+     * for the rest of the session parsed out of prose, with nothing anywhere
+     * saying why.
+     */
+    vi.stubGlobal('fetch', (url: string, init: RequestInit) => {
+      sent = { url: String(url), body: JSON.parse(String(init.body)) };
+      return Promise.resolve(
+        new Response(JSON.stringify({ error: { message: 'output_config: unsupported' } }), {
+          status: 400,
+        }),
+      );
+    });
+    await ask({ system: 's', messages: [{ role: 'user', content: 'q' }], format: schema }).catch(
+      () => undefined,
+    );
+    expect(sent!.body).not.toHaveProperty('output_config');
+
+    // A trip to the settings screen, which is where a route is changed.
+    saveSettings(settings());
+
+    catchRequest([said('{"cards":[]}')]);
+    await ask({ system: 's', messages: [{ role: 'user', content: 'q' }], format: schema });
+    expect(sent!.body.output_config).toEqual({ format: schema });
   });
 });
 

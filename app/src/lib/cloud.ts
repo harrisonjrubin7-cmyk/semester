@@ -26,6 +26,7 @@
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type { Seen } from '../state/shape';
+import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 const URL = env.VITE_SUPABASE_URL ?? '';
@@ -695,15 +696,28 @@ export async function fetchIcsVia(url: string): Promise<string> {
   const { data } = await db.auth.getSession();
   const token = data.session?.access_token;
   if (!token) throw new Error('Signed out.');
-  const res = await fetch(`${feedBase()}/fetchcal`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
-      apikey: KEY,
-    },
-    body: JSON.stringify({ url }),
-  });
+  // A term's calendar is a real download over whatever the phone is on, so
+  // this gets the longer of the two deadlines rather than the conversational
+  // one — but it does get one. See lib/net.ts.
+  let res: Response;
+  try {
+    res = await fetchWithin(
+      `${feedBase()}/fetchcal`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          apikey: KEY,
+        },
+        body: JSON.stringify({ url }),
+      },
+      MOVE_MS,
+    );
+  } catch (e) {
+    if (timedOut(e)) throw new Error(tookTooLong('The calendar'));
+    throw e;
+  }
   const text = await res.text();
   if (res.ok) return text;
   // The function answers a refusal as JSON and a calendar as text, so the
