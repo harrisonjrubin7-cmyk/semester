@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { sources as walk } from '../styles/rules';
 import { MOST_PACKED, tooPacked, tooPackedSaid } from './zips';
 import { unzip } from './bundle';
 import { fromXlsx } from './xlsxin';
@@ -17,15 +18,9 @@ import { extractText, fromPptx } from './extract';
 
 const SRC = join(process.cwd(), 'src');
 
-function sources(dir: string): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir)) {
-    const path = join(dir, entry);
-    if (statSync(path).isDirectory()) out.push(...sources(path));
-    else if (/\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry)) out.push(path);
-  }
-  return out;
-}
+/** Every module, tests aside — `sources` in `styles/rules` walks, this names. */
+const sources = (dir: string): string[] =>
+  walk(dir, { ext: ['.ts', '.tsx'], tests: false }).map((f) => f.path);
 
 describe('the limit itself', () => {
   it('passes an ordinary file and stops an absurd one', () => {

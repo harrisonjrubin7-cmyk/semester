@@ -14,7 +14,12 @@
  *   - Two items sharing an id means one of them is unreachable.
  *   - An audio file named in the data but missing from public/audio is a dead
  *     player with no error.
- *   - A month index off by one puts a September deadline in October.
+ *   - A month out of range: months are 0-based here, so a 9 written as a 10
+ *     is December, and a 12 is not a month at all. Only the range is checked.
+ *     An off-by-one *inside* the range — September written as October — is
+ *     invisible to this script and always will be: nothing in the data says
+ *     which month was meant, and a validator that guessed would be inventing
+ *     the answer it is supposed to be checking.
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
@@ -239,8 +244,22 @@ for (const id of courseDirs) {
     units: read1('units'),
     cards: read1('cards'),
     lessons: read1('lessons'),
+    items: read1('items'),
+    episodes: read1('episodes'),
   };
-  const got = { courses: courseDirs.length, ...totals };
+  const got = {
+    courses: courseDirs.length,
+    ...totals,
+    // Counted by the same matching that does the checking above, which is why
+    // they are declared: a pattern that stops matching finds nothing rather
+    // than finding a fault, so the item and episode checks could switch
+    // themselves off and every one of them would pass. Measured: `c:` moved
+    // onto the same line as `id:` in one course took four items out of every
+    // item check, a planted duplicate id went unreported, and this script
+    // still exited 0. These two numbers are what makes that loud.
+    items: seenItemIds.size,
+    episodes: seenEpisodeIds.size,
+  };
   for (const k of Object.keys(want)) {
     if (want[k] !== got[k]) {
       fail(`SEED_SUMMARY.${k} says ${want[k]}, the courses have ${got[k]}. Update data/seed.ts.`);

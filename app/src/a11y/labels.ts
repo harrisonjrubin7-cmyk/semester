@@ -1,5 +1,6 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+// With the extension, because `scripts/labels.mjs` loads this file through a
+// plain `await import()` and Node ESM resolves no extensions of its own.
+import { sources } from '../styles/rules.ts';
 
 /**
  * Every control a screen reader can name, as code rather than as a habit.
@@ -105,18 +106,6 @@ function withoutComments(text: string): string {
  * A shared helper would have to be reachable from both, and a `lib/` module
  * that exists only so two linters can agree on `readdirSync` is not one.
  */
-function sources(dir: string): { path: string; text: string }[] {
-  const out: { path: string; text: string }[] = [];
-  const walk = (at: string) => {
-    for (const entry of readdirSync(at, { withFileTypes: true })) {
-      const path = join(at, entry.name);
-      if (entry.isDirectory()) walk(path);
-      else if (entry.name.endsWith('.tsx')) out.push({ path, text: readFileSync(path, 'utf8') });
-    }
-  };
-  walk(dir);
-  return out;
-}
 
 /**
  * Whether a control at this offset is wrapped in a `<label>`.
