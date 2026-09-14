@@ -2093,6 +2093,22 @@ function SemesterView() {
 
   const weeks: {
     start: Date;
+    /*
+     * The week's own end, kept rather than worked out again downstream.
+     *
+     * It is `start` plus seven days *on the calendar* — `setDate`, which
+     * knows that one of those days can be 23 or 25 hours long. Every filter
+     * below buckets the week's contents against it, and the "this is the
+     * current week" test used to re-derive its own end as `getTime() + 7 ×
+     * 86,400,000`. The two agree for fifty-one weeks of the year and
+     * disagree by an hour across a daylight-saving change. Measured in
+     * America/Chicago: the millisecond end lands an hour late over the
+     * spring change (Mar 9 2026 01:00 against the calendar's 00:00), so both
+     * that week and the next read as current between them; and an hour early
+     * over the autumn one (Nov 1 23:00 against Nov 2 00:00), so for that hour
+     * neither does. Two highlighted in March, none in November.
+     */
+    end: Date;
     items: DatedItem[];
     events: DatedEvent[];
     feed: FeedEvent[];
@@ -2116,6 +2132,7 @@ function SemesterView() {
     const to = dateToIso(weekEnd);
     weeks.push({
       start: weekStart,
+      end: weekEnd,
       items: items.filter((i) => i.date >= weekStart && i.date < weekEnd),
       events: events.filter((e) => e.date >= weekStart && e.date < weekEnd),
       feed: feed.filter((e) => {
@@ -2204,7 +2221,7 @@ function SemesterView() {
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {weeks.map((w, i) => {
-          const isNow = now >= w.start && now < new Date(w.start.getTime() + 7 * 86400000);
+          const isNow = now >= w.start && now < w.end;
           const exams = w.items.filter((it) => it.kind === 'Exam');
           return (
             <div

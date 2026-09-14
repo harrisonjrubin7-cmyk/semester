@@ -417,3 +417,36 @@ describe('the three numbers at the top of every screen', () => {
     expect(hero({ wed: true, fri: true })?.foot).toBe('Nothing due this week');
   });
 });
+
+describe('the Family hero counts plans, not the contacts list', () => {
+  /*
+   * The bug: `state.people` is what People and letters holds — professors,
+   * advisors, referees. Over Family it read as the number of people a student
+   * had chosen to share something with, which it never was. Seen on the
+   * deployed build: "People — no people yet" drawn above a plan the student
+   * had written, on the one screen whose argument is that nothing is shared
+   * until you choose it.
+   */
+  const person = (id: string) =>
+    ({ id, name: 'Dr. Stromme', role: '', email: '', course: null, note: '' }) as unknown as State['people'][number];
+
+  it('ignores the contacts, however many there are', () => {
+    const top = softTop('family', { ...input({ people: [person('a'), person('b')] }), familyPlans: 0 });
+    expect(top.hero?.figure).toBe('0');
+    expect(top.hero?.label).toBe('Family plans');
+  });
+
+  it('counts the plans it is given', () => {
+    const top = softTop('family', { ...input(), familyPlans: 3 });
+    expect(top.hero?.figure).toBe('3');
+    expect(top.hero?.foot).toBe('3 plans');
+  });
+
+  it('says none rather than inventing one when nobody counted', () => {
+    // `ByTask` builds its input without the count; nought is the honest answer
+    // there, and the wording is the empty state rather than a bare zero.
+    const top = softTop('family', input({ people: [person('a')] }));
+    expect(top.hero?.figure).toBe('0');
+    expect(top.hero?.foot).toBe('No plans yet');
+  });
+});

@@ -58,6 +58,26 @@ export async function clearShared(): Promise<void> {
 }
 
 /**
+ * The filename the worker stashed, back from its header.
+ *
+ * The worker percent-encodes it, because a header value cannot hold a code
+ * point above U+00FF and a filename often has one — an en dash, a curly
+ * apostrophe, any non-Latin script. See `public/sw.js`.
+ *
+ * Decoding is tried rather than assumed: a file stashed by an older worker
+ * carries its name raw, and a raw name containing a stray `%` would make
+ * `decodeURIComponent` throw. The raw value is the right answer there.
+ */
+function readName(header: string | null): string {
+  if (!header) return 'shared';
+  try {
+    return decodeURIComponent(header) || 'shared';
+  } catch {
+    return header;
+  }
+}
+
+/**
  * Take the shared file, if there is one.
  *
  * Deletes as it reads: a share is a one-time hand-off, and a file left in the
@@ -69,7 +89,7 @@ export async function takeShared(): Promise<File[]> {
     const cache = await caches.open(SHARE_CACHE);
     const hit = await cache.match(SHARE_KEY);
     if (!hit) return [];
-    const name = hit.headers.get('x-shared-name') || 'shared';
+    const name = readName(hit.headers.get('x-shared-name'));
     const type = hit.headers.get('x-shared-type') || 'application/octet-stream';
     const blob = await hit.blob();
     await cache.delete(SHARE_KEY);

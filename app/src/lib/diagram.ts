@@ -164,6 +164,8 @@ export function unfence(text: string): string {
   return (fenced ? fenced[1] : text).trim();
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
 const BANNED_TAGS = new Set([
   'script',
   'foreignobject',
@@ -187,6 +189,28 @@ const BANNED_TAGS = new Set([
  *
  * Returns null when the text is not an SVG at all, which is the right answer
  * for a model that replied with an apology.
+ *
+ * ## Names are matched without their prefix
+ *
+ * This is parsed as XML, where an element carries a qualified name and
+ * `nodeName` gives it back with the prefix on: bind a prefix to the SVG
+ * namespace and `<s:script>` has the `nodeName` `s:script`, which matched
+ * nothing in the banned list and survived. `XMLSerializer` then wrote it back
+ * out as plain `<script>`, because the prefix and the default namespace point
+ * at the same place and it has no reason to keep both.
+ *
+ * Measured in Chromium, that landed a live `<script>` element in the page
+ * where the same payload without the prefix was correctly removed. It did not
+ * *run* — `innerHTML` never executes a script it inserts, which is the whole
+ * reason this sink is usable at all — so this was a broken promise rather than
+ * a way in. It is the kind that stops being one the day the output is written
+ * to a file, opened on its own, or appended as a node instead.
+ *
+ * So the match is on `localName`, which is the name without the prefix, and
+ * the root's prefix declarations for the SVG namespace are dropped so the
+ * serializer cannot choose one. The second of those is also why a drawing
+ * declaring such a prefix used to render as nothing: it came back as
+ * `<s:svg>`, which HTML parses as an unknown element rather than a picture.
  */
 export function cleanSvg(text: string): string | null {
   if (typeof DOMParser === 'undefined') return null;
@@ -196,11 +220,24 @@ export function cleanSvg(text: string): string | null {
   const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
   if (doc.querySelector('parsererror')) return null;
   const svg = doc.documentElement;
-  if (!svg || svg.nodeName.toLowerCase() !== 'svg') return null;
+  if (!svg || svg.localName.toLowerCase() !== 'svg') return null;
+
+  /*
+   * No prefix may point at the SVG namespace.
+   *
+   * With one declared, `XMLSerializer` is free to write every element through
+   * it — the root included — and `<s:svg>` is not an SVG to an HTML parser.
+   * Dropping the declaration leaves the default `xmlns` to do the work.
+   */
+  for (const attr of [...svg.attributes]) {
+    if (attr.name.toLowerCase().startsWith('xmlns:') && attr.value === SVG_NS) {
+      svg.removeAttribute(attr.name);
+    }
+  }
 
   const walk = (node: Element) => {
     for (const child of [...node.children]) {
-      if (BANNED_TAGS.has(child.nodeName.toLowerCase())) {
+      if (BANNED_TAGS.has(child.localName.toLowerCase())) {
         child.remove();
         continue;
       }
@@ -226,9 +263,12 @@ export function cleanSvg(text: string): string | null {
 
 function unsafeAttribute(name: string, value: string): boolean {
   const n = name.toLowerCase();
-  if (n.startsWith('on')) return true;
-  if (n === 'style' && /expression|url\s*\(/i.test(value)) return true;
-  if (n === 'href' || n === 'xlink:href' || n === 'src') {
+  // The name without its prefix, for the same reason the tags are matched
+  // that way: `xlink:href` is the usual spelling and not the only one.
+  const local = n.includes(':') ? n.slice(n.indexOf(':') + 1) : n;
+  if (n.startsWith('on') || local.startsWith('on')) return true;
+  if (local === 'style' && /expression|url\s*\(/i.test(value)) return true;
+  if (local === 'href' || local === 'src') {
     // A fragment points inside this document — a gradient, a marker. Anything
     // else reaches out, and a generated diagram has no business doing that.
     return !value.trim().startsWith('#');

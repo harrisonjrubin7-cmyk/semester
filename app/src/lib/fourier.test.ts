@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { read } from './calc';
 import { latexSpectrum, sizeAt, spectrumOf } from './fourier';
+import { dft, idft, loudest, samplesOf, seriesOf, sizeOf, slowDft } from './fourier';
 import {
   HARMONICS,
   amplitude,
@@ -207,5 +208,105 @@ describe('the transform', () => {
 
   it('passes a fault about the family straight through', () => {
     expect(fault(spectrumOf(node('\\ln(t)'), 't'))).toMatch(/ln/);
+  });
+});
+
+/**
+ * The discrete transform, against answers that can be written out by hand and
+ * against itself computed the slow way.
+ *
+ * A DFT is finite and exact, so unlike the two above there is nothing to
+ * approximate and no tolerance to argue about: an impulse transforms to a flat
+ * spectrum, a constant to a single spike, and a cosine to two. The fast method
+ * and the definition are checked against each other because a fast method that
+ * quietly disagreed with its own definition is the one bug here that would
+ * never show itself on a picture.
+ */
+describe('the discrete transform', () => {
+  const sizes = (xs: number[]) => dft(xs).map(sizeOf);
+
+  it('turns one spike into a flat spectrum, and a flat run into one spike', () => {
+    expect(sizes([1, 0, 0, 0])).toEqual([1, 1, 1, 1]);
+    expect(sizes([1, 1, 1, 1])).toEqual([4, 0, 0, 0]);
+    expect(sizes([2, 2, 2, 2, 2, 2, 2, 2])[0]).toBe(16);
+  });
+
+  it('puts a cosine in the two bins it belongs in, and nowhere else', () => {
+    // cos(2π·2n/16) is two cycles across sixteen samples: bins 2 and 14, at N/2.
+    const xs = Array.from({ length: 16 }, (_, n) => Math.cos((2 * Math.PI * 2 * n) / 16));
+    const got = sizes(xs);
+    expect(got[2]).toBeCloseTo(8, 9);
+    expect(got[14]).toBeCloseTo(8, 9);
+    got.forEach((v, k) => {
+      if (k !== 2 && k !== 14) expect(v).toBeCloseTo(0, 9);
+    });
+  });
+
+  it('is symmetric about the middle, because the data is real', () => {
+    const xs = [3, -1, 4, 1, -5, 9, 2, 6];
+    const got = sizes(xs);
+    for (let k = 1; k < xs.length / 2; k += 1) expect(got[k]).toBeCloseTo(got[xs.length - k], 12);
+  });
+
+  it('agrees with its own definition, which is what the fast one has to do', () => {
+    for (const n of [8, 16, 64]) {
+      const xs = Array.from({ length: n }, (_, i) => Math.sin(i * 1.7) + 0.3 * i - 2);
+      const fast = dft(xs);
+      const slow = slowDft(xs.map((v) => ({ re: v, im: 0 })));
+      fast.forEach((b, k) => {
+        expect(b.re).toBeCloseTo(slow[k].re, 9);
+        expect(b.im).toBeCloseTo(slow[k].im, 9);
+      });
+    }
+    // And at a count the fast one cannot take, so the fallback is exercised.
+    const odd = [1, 2, 3, 4, 5, 6];
+    expect(dft(odd).map((b) => b.re)).toEqual(slowDft(odd.map((v) => ({ re: v, im: 0 }))).map((b) => b.re));
+  });
+
+  it('goes out and comes back as what it started as', () => {
+    for (const xs of [[1, 0, -1, 0], [3, -1, 4, 1, -5, 9, 2, 6], [2, 7, 1, 8, 2, 8]]) {
+      idft(dft(xs)).forEach((v, i) => expect(v).toBeCloseTo(xs[i], 9));
+    }
+  });
+
+  it('keeps the energy it was given, which is Parseval', () => {
+    const xs = [3, -1, 4, 1, -5, 9, 2, 6];
+    const there = xs.reduce((t, v) => t + v * v, 0);
+    const back = dft(xs).reduce((t, b) => t + sizeOf(b) ** 2, 0) / xs.length;
+    expect(back).toBeCloseTo(there, 9);
+  });
+
+  it('reads out as the waves it is, in the notation the series uses', () => {
+    const xs = Array.from({ length: 8 }, (_, n) => 2 + 3 * Math.cos((2 * Math.PI * n) / 8));
+    const series = seriesOf(xs);
+    expect(series.mean).toBeCloseTo(2, 9);
+    expect(series.terms[0].a).toBeCloseTo(3, 9);
+    expect(series.terms[0].b).toBeCloseTo(0, 9);
+    for (const h of series.terms.slice(1)) expect(amplitude(h)).toBeCloseTo(0, 9);
+  });
+
+  it('sums back through the samples exactly, which a series of data must', () => {
+    const xs = [3, -1, 4, 1, -5, 9, 2, 6];
+    const series = seriesOf(xs);
+    xs.forEach((v, n) => expect(partial(series, n)).toBeCloseTo(v, 9));
+  });
+
+  it('names the biggest frequency in it', () => {
+    const xs = Array.from({ length: 32 }, (_, n) => Math.sin((2 * Math.PI * 5 * n) / 32) + 0.1 * Math.cos((2 * Math.PI * 11 * n) / 32));
+    expect(loudest(xs)?.k).toBe(5);
+    expect(loudest([1, 1, 1, 1])?.k).toBeUndefined();
+  });
+
+  it('asks for data rather than guessing at a formula', () => {
+    const say = (source: string, count: string | null) => {
+      const got = samplesOf(node(source), count ? node(count) : null, {});
+      return got.ok ? got.it : got.fault;
+    };
+    expect(say('[1, 0, -1, 0]', null)).toEqual([1, 0, -1, 0]);
+    expect(say('\\cos(n)', null)).toMatch(/wants the data/);
+    expect(say('[1]', null)).toMatch(/fewest/);
+    expect(say('\\cos(0)n', '4')).toEqual([0, 1, 2, 3]);
+    expect(say('n', '2.5')).toMatch(/whole number/);
+    expect(say('1/n', '4')).toMatch(/no value at n = 0/);
   });
 });

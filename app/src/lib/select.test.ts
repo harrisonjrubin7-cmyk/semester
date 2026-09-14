@@ -137,6 +137,18 @@ describe('datedItems', () => {
     expect(sameDay.map((i) => i.title)).toEqual(['Response 1', 'Response 2']);
   });
 
+  /*
+   * The other half of the rule `lib/standing.ts` argues: today is never
+   * overdue. That file's own test fabricates its items, so it holds what
+   * `standingOf` does *given* a correct `isPast` and would pass unchanged if
+   * `date.ts` said `away <= 0`. This is where that is actually pinned.
+   *
+   * Not the only place, and the difference was measured rather than assumed:
+   * breaking `date.ts` that way fails four files — this one, `weekly`,
+   * `brief` and `welcome`. It is the only one that pins it *on purpose*,
+   * though; the other three fail through whatever they happened to be
+   * counting. `SIMPLIFY-AUDIT.md` J1.
+   */
   it('dates each item against the clock it was given', () => {
     const found = datedItems(CAT, NOW).find((i) => i.id === 'p-r1');
     expect(found?.isToday).toBe(true);

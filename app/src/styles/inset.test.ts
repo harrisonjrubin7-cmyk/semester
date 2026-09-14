@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources } from './rules';
 
 /**
  * A `.bare` box cannot be pinned to both edges without saying `width: auto`.
@@ -24,14 +24,8 @@ import { join } from 'node:path';
  * no layout to measure it with. So the rule is held on the source: a `.bare`
  * element with an `inset` naming more than one edge must set `width` too.
  */
-function tsx(dir: string, out: string[] = []): string[] {
-  for (const e of readdirSync(dir)) {
-    const p = join(dir, e);
-    if (statSync(p).isDirectory()) tsx(p, out);
-    else if (/\.tsx$/.test(e) && !/\.test\./.test(e)) out.push(p);
-  }
-  return out;
-}
+/** The files this rule reads. `styles/rules.ts` walks; this names. */
+const tsx = (dir: string): string[] => sources(dir, { tests: false }).map((s) => s.path);
 
 /**
  * Every JSX opening tag in a file, whole.

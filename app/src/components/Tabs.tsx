@@ -44,6 +44,7 @@ import {
   Fragment,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
@@ -70,6 +71,8 @@ import type { State } from '../state/shape';
 import { secondLine } from '../lib/dim';
 import { ChevronDown, Plus, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
 import { sounding } from '../lib/sound';
+import { peekAt } from '../lib/peek';
+import { TabPeek } from './TabPeek';
 import { useSound } from '../lib/sound.hook';
 import { TabGlyph } from './TabIcon';
 import { StripMenu, type MenuOn } from './TabMenu';
@@ -156,6 +159,15 @@ function nameFor(state: State, catalog: Catalog): string {
   }
 }
 
+/**
+ * How long a pointer rests on a tab before the card appears.
+ *
+ * Long enough that sweeping the strip on the way to the New tab button shows
+ * nothing, short enough that stopping on a tab feels answered rather than
+ * waited on. The number every browser has settled near.
+ */
+const PEEK_MS = 450;
+
 export function TabsFollow() {
   const { state, catalog } = useStore();
   // Destructured, so the memo below depends on the ten ids that make a place
@@ -173,6 +185,7 @@ export function TabsFollow() {
     deckId,
     mode,
     openUnit,
+    lessonUnit,
     callCode,
   } = state;
   const at = useMemo(
@@ -190,6 +203,9 @@ export function TabsFollow() {
         /* A study tab remembers the unit it is open on and a call tab its
            room, so two study tabs come back to their own. See `placeFor`. */
         openUnit,
+        /* And a lesson tab the narration it is on, which moves independently
+           of the guide's unit — two lessons of one course are two places. */
+        lessonUnit,
         callCode,
       }),
     [
@@ -204,6 +220,7 @@ export function TabsFollow() {
       deckId,
       mode,
       openUnit,
+      lessonUnit,
       callCode,
     ],
   );
@@ -359,6 +376,42 @@ export function TabStrip({
    * when it was a right-click. Both are read here rather than in the menu: by
    * the time it renders, the strip may have scrolled the control away.
    */
+  /*
+   * The hover card: which tab, and the rectangle it hangs under.
+   *
+   * One piece of state for the whole strip rather than one per tab, because
+   * only one card is ever up and a timer per tab would be a hundred timers on
+   * a full strip. `TabPeek` draws it; `lib/peek.ts` decides what it says.
+   */
+  const [peeking, setPeeking] = useState<{ id: string; at: { left: number; bottom: number } } | null>(null);
+  const timer = useRef<number | null>(null);
+  const forget = () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+  };
+  /*
+   * A delay, because a card that appears the instant a pointer crosses a tab
+   * is a card that flashes four times on the way to the New tab button. Only
+   * resting on something is a question about it.
+   */
+  const rest = (id: string, box: DOMRect) => {
+    forget();
+    timer.current = window.setTimeout(() => setPeeking({ id, at: { left: box.left, bottom: box.bottom } }), PEEK_MS);
+  };
+  /* The keyboard has no resting: arriving is the whole gesture, so it shows
+     at once. Tabbing along a strip is deliberate in a way sweeping is not. */
+  const show = (id: string, box: DOMRect) => {
+    forget();
+    setPeeking({ id, at: { left: box.left, bottom: box.bottom } });
+  };
+  const hide = () => {
+    forget();
+    setPeeking(null);
+  };
+  // Nothing hovers while a tab is being dragged, and the card would be under
+  // the finger anyway.
+  useEffect(() => () => forget(), []);
+
   const summon = (on: MenuOn, e: ReactMouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -415,6 +468,13 @@ export function TabStrip({
                   on={seat.at === strip.at}
                   searching={searching}
                   talking={sounding(noise, seat.tab.id)}
+                  peek={{
+                    id: `peek-${seat.tab.id}`,
+                    open: peeking?.id === seat.tab.id,
+                    onRest: (box) => rest(seat.tab.id, box),
+                    onShow: (box) => show(seat.tab.id, box),
+                    onGone: hide,
+                  }}
                   hold={movable.props(seat.tab.id)}
                   onPick={() => pick(seat.at)}
                   onShut={() => shut(seat.at)}
@@ -473,6 +533,13 @@ export function TabStrip({
                     on={seat.at === strip.at}
                     searching={searching}
                     talking={sounding(noise, seat.tab.id)}
+                    peek={{
+                      id: `peek-${seat.tab.id}`,
+                      open: peeking?.id === seat.tab.id,
+                      onRest: (box) => rest(seat.tab.id, box),
+                      onShow: (box) => show(seat.tab.id, box),
+                      onGone: hide,
+                    }}
                     hold={movable.props(seat.tab.id)}
                     onPick={() => pick(seat.at)}
                     onShut={() => shut(seat.at)}
@@ -554,6 +621,30 @@ export function TabStrip({
           onNewTab={blank}
         />
       )}
+      {/*
+        * One card for the whole strip, drawn last and outside the scrolling
+        * box. It is `position: fixed`, so where it sits in the tree changes
+        * nothing about where it lands — but a card inside a box with
+        * `overflow-x: auto` is a card clipped to the height of one tab, and
+        * that is the bug this placement is avoiding rather than a preference.
+        *
+        * Not drawn while a menu is open: the menu was asked for and the card
+        * merely happened, and two panels over one tab is one of them being
+        * in the way.
+        */}
+      {peeking && !menu && (() => {
+        const seat = strip.tabs.find((t) => t.id === peeking.id);
+        if (!seat) return null;
+        const band = seat.group ? strip.groups.find((g) => g.id === seat.group) : null;
+        return (
+          <TabPeek
+            id={`peek-${seat.id}`}
+            at={peeking.at}
+            tone={band ? toneAt(tones, band.tone).fill : undefined}
+            peek={peekAt(seat, band, { talking: sounding(noise, seat.id) })}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -595,6 +686,7 @@ function Tab({
   on,
   searching,
   talking,
+  peek,
   hold,
   onPick,
   onShut,
@@ -605,6 +697,19 @@ function Tab({
   searching: string;
   /** This tab owns the player: it is the one making the noise. */
   talking: boolean;
+  /**
+   * The hover card's handlers, and what it would say.
+   *
+   * Passed down rather than kept here so that one card, one timer and one
+   * piece of state serve the whole strip — see `peeking` in `TabStrip`.
+   */
+  peek: {
+    id: string;
+    open: boolean;
+    onRest: (box: DOMRect) => void;
+    onShow: (box: DOMRect) => void;
+    onGone: () => void;
+  };
   /**
    * What makes this tab draggable: `props` from `useMovable`.
    *
@@ -643,7 +748,9 @@ function Tab({
     <div
       {...hold}
       onContextMenu={onMenu}
-      title={pinned ? title : undefined}
+      /* The native `title` is gone: the card says everything it said and more,
+         and a browser tooltip fading in over a card that is already up is two
+         answers to one question. */
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -660,6 +767,27 @@ function Tab({
         type="button"
         className="bare tappable"
         onClick={onPick}
+        /*
+         * The card, on the button rather than on the row: the row is also the
+         * drag handle, and a pointer that went down to move a tab is not
+         * asking what the tab is.
+         *
+         * `pointerenter` rather than `mouseenter` so a touch can be told from
+         * a mouse — a phone fires the mouse events too, and a card that
+         * appeared under a thumb would cover the tab it describes. The tab
+         * menu is the touch route to the same facts.
+         */
+        onPointerEnter={(e) => {
+          if (e.pointerType === 'touch') return;
+          peek.onRest(e.currentTarget.getBoundingClientRect());
+        }}
+        onPointerLeave={peek.onGone}
+        onPointerDown={peek.onGone}
+        // The keyboard gets the same card, at once: tabbing onto something is
+        // already deliberate, so there is nothing to wait to be sure of.
+        onFocus={(e) => peek.onShow(e.currentTarget.getBoundingClientRect())}
+        onBlur={peek.onGone}
+        aria-describedby={peek.open ? peek.id : undefined}
         aria-current={on ? 'page' : undefined}
         // The name is the button's text on an ordinary tab and has to be said
         // out loud on a pinned one, where the glyph is all there is to see.
