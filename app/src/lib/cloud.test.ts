@@ -321,6 +321,34 @@ describe('pull', () => {
     harness.errors.courses = 'permission denied for table courses';
     await expect(pull('user-1')).rejects.toThrow(/permission denied/);
   });
+
+  /*
+   * The per-row stamps, which are what decides whether to take rather than the
+   * newest one above. `state/shape.ts` has the two ways a single newest stamp
+   * loses work; this is the shape that replaces it.
+   */
+  it('reports every row\u2019s own stamp, exactly as the database wrote it', async () => {
+    const { pull } = await load();
+    harness.rows.state = { data: {}, updated_at: '2026-09-01T00:00:00.123456Z' };
+    harness.rows.courses = [
+      { id: 'econ', data: {}, updated_at: '2026-09-05T00:00:00Z' },
+      { id: 'psci', data: {}, updated_at: '2026-09-03T00:00:00Z' },
+    ];
+    expect((await pull('user-1')).seen).toEqual({
+      // Not parsed and not re-formatted: a value whose only job is to be
+      // compared with itself should survive the round trip byte for byte.
+      state: '2026-09-01T00:00:00.123456Z',
+      courses: { econ: '2026-09-05T00:00:00Z', psci: '2026-09-03T00:00:00Z' },
+    });
+  });
+
+  it('has no state entry at all for an account that has no state row', async () => {
+    // Absent, not empty-string: `unseen` compares it against what was last
+    // seen, and "there is no state row" has to differ from "there is one".
+    const { pull } = await load();
+    harness.rows.courses = [];
+    expect((await pull('user-1')).seen).toEqual({ courses: {} });
+  });
 });
 
 describe('push', () => {
@@ -368,6 +396,53 @@ describe('push', () => {
     const { push } = await load();
     await push('user-1', {}, [course('econ')], ['econ']);
     expect(harness.deleted()).toEqual([]);
+  });
+
+  /*
+   * What the device writes down as "taken", and where it comes from.
+   *
+   * This used to be `Date.now()` on the device, compared against `updated_at`
+   * from the database. `20260901000700_records.sql` spends a paragraph on why
+   * a device clock must never decide a sync — "a phone set five minutes fast
+   * would otherwise win every conflict forever, silently, until somebody
+   * noticed their laptop's edits never survived" — and stops a client writing
+   * the column. The watermark then put the same clock on the other side of the
+   * comparison, with the same result.
+   */
+  it('reports the stamps the database wrote, so no device clock reaches the watermark', async () => {
+    const { push } = await load();
+    harness.rows.state = { updated_at: '2026-09-14T10:00:02Z' };
+    harness.rows.courses = [
+      { id: 'econ', updated_at: '2026-09-14T10:00:02Z' },
+      { id: 'psci', updated_at: '2026-09-14T10:00:02Z' },
+    ];
+    expect(await push('user-1', {}, [course('econ'), course('psci')])).toEqual({
+      state: '2026-09-14T10:00:02Z',
+      courses: { econ: '2026-09-14T10:00:02Z', psci: '2026-09-14T10:00:02Z' },
+    });
+  });
+
+  it('asks for those stamps back on the same statement that wrote them', async () => {
+    // A second round trip to read what was just written would be a window of
+    // its own; the write already returns the row.
+    const { push } = await load();
+    harness.rows.state = { updated_at: '2026-09-14T10:00:02Z' };
+    harness.rows.courses = [{ id: 'econ', updated_at: '2026-09-14T10:00:02Z' }];
+    await push('user-1', {}, [course('econ')]);
+    const asked = harness.log.filter((l) => l.op === 'select').map((l) => l.args[0]);
+    expect(asked).toContain('updated_at');
+    expect(asked).toContain('id, updated_at');
+  });
+
+  it('claims nothing for a push that wrote no courses', async () => {
+    // Rows this device did not write are not rows it has seen. Leaving them
+    // out is what makes the next refresh take them.
+    const { push } = await load();
+    harness.rows.state = { updated_at: '2026-09-14T10:00:02Z' };
+    expect(await push('user-1', {}, [])).toEqual({
+      state: '2026-09-14T10:00:02Z',
+      courses: {},
+    });
   });
 
   it('stops and says so if the state write fails', async () => {
