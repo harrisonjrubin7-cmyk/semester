@@ -1001,7 +1001,26 @@ function localIso(date: string, minutes: number): string {
   return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:00`;
 }
 
-const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+/**
+ * The zone this device is in, asked at the moment it is needed.
+ *
+ * It was a module-level `const`, read once when the file first loaded and
+ * never again. That is wrong for the one app this is: a semester lives in an
+ * installed PWA that stays open for days, and the moment somebody is most
+ * likely to be adding things to a calendar is the moment they have just
+ * changed timezone — a flight, a term abroad, a drive across a state line.
+ * Every event written after that carried the zone the app started in, so a
+ * 10am class landed in Google an hour or three out and nothing said so.
+ *
+ * Reading it per call costs a `DateTimeFormat` construction on a request that
+ * is already crossing the network, which is nothing, and the value cannot go
+ * stale because there is no value to keep.
+ *
+ * Found by `lib/realdate.test.ts` corrupting the process clock and this const
+ * capturing the corruption for the rest of the run — a test-only failure with
+ * a real bug behind it. See `ENGINEERING-AUDIT.md` §3.
+ */
+const zone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 /** Put one thing on the calendar you actually use. */
 export async function addEvent(id: ProviderId, event: OutgoingEvent): Promise<void> {
@@ -1014,8 +1033,8 @@ export async function addEvent(id: ProviderId, event: OutgoingEvent): Promise<vo
       subject: event.title,
       body: { contentType: 'text', content: event.note },
       isAllDay: allDay,
-      start: { dateTime: allDay ? `${start}T00:00:00` : start, timeZone: TZ },
-      end: { dateTime: allDay ? `${end}T23:59:00` : end, timeZone: TZ },
+      start: { dateTime: allDay ? `${start}T00:00:00` : start, timeZone: zone() },
+      end: { dateTime: allDay ? `${end}T23:59:00` : end, timeZone: zone() },
     });
     return;
   }
@@ -1023,8 +1042,8 @@ export async function addEvent(id: ProviderId, event: OutgoingEvent): Promise<vo
     await post('google', 'https://www.googleapis.com/calendar/v3/calendars/primary/events', {
       summary: event.title,
       description: event.note,
-      start: allDay ? { date: start } : { dateTime: `${start}`, timeZone: TZ },
-      end: allDay ? { date: end } : { dateTime: `${end}`, timeZone: TZ },
+      start: allDay ? { date: start } : { dateTime: `${start}`, timeZone: zone() },
+      end: allDay ? { date: end } : { dateTime: `${end}`, timeZone: zone() },
     });
     return;
   }
@@ -1049,7 +1068,7 @@ export async function addTask(
       title: task.title,
       body: { content: task.note, contentType: 'text' },
       ...(task.date
-        ? { dueDateTime: { dateTime: `${task.date}T12:00:00`, timeZone: TZ } }
+        ? { dueDateTime: { dateTime: `${task.date}T12:00:00`, timeZone: zone() } }
         : {}),
     });
     return;
