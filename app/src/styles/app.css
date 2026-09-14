@@ -495,6 +495,31 @@ a:hover {
   }
 }
 
+/* The phone layout on something that is actually a phone-shaped device, which
+   is the other half of the note below.
+
+   `--device-max` is 402 — the artboard the app was drawn on — and on a phone
+   held upright it never comes into play, because the phone is narrower than
+   it is. Between 402 and 759 it does, and what is in that band is not only
+   the desktop browser window the cap was written for: an iPad mini held
+   upright is 744, an iPad in Split View is 507–678, and both of those are
+   hardware with a finger on it. Measured at 744×1133 before this, the app was
+   a 402px column with 171px of black down each side of it and a tab bar that
+   reached neither edge of the screen — the rule that keeps a flashcard from
+   being a phone propped up in the middle of a monitor, applied to a tablet
+   somebody is holding.
+
+   So the cap is for a window, and `pointer: coarse` is what tells the two
+   apart: a browser window dragged narrow keeps the artboard, a device fills.
+   The same sentence appears once more, in the last block of this section,
+   for a phone turned on its side — the two cannot be one query without `or`,
+   which is newer than the oldest iPad this runs on. */
+@media (max-width: 759px) and (pointer: coarse) {
+  :root {
+    --device-max: 100%;
+  }
+}
+
 /* The framed, floating column is for a desktop browser window. A tablet held
    upright — an iPad mini at 744, or any iPad in Split View — is a device, not a
    window, so the column runs the full height there instead of hovering in the
@@ -508,6 +533,51 @@ a:hover {
        one. The overflow clip is already on .device, so content follows. */
     border-radius: 14px;
     box-shadow: 0 1px 0 var(--app-line-top) inset, 0 30px 90px rgba(0, 0, 0, 0.75);
+  }
+}
+
+/* A phone on its side, which is the one thing the three widths above get
+   wrong — and the last block here, because it undoes them.
+
+   Every boundary above asks how wide the window is, and for a device held
+   upright that is the same question as which device it is. Turned the long way
+   round it stops being: an iPhone 15 Pro Max in landscape is 932pt wide, wider
+   than an iPad mini is upright, so the tablet block claimed it and the desk
+   drew the rail — a column of ten rows — into 430px of height, with its last
+   items off the bottom of a screen whose width it had already taken 220px of.
+
+   So: short *and* held. Short alone would catch a desktop window dragged down
+   to half a screen, which has a mouse in it and no business being handed a
+   phone; `pointer: coarse` is the finger, and no iPad is ever short enough to
+   answer both. `lib/media.ts` carries the same query as `HANDHELD` — it is
+   what decides the tab bar goes back under the thumb — and `tiers.test.ts`
+   asserts the two copies still say the same thing.
+
+   The values are the phone's, because at this point the app *is* the phone:
+   restated rather than inherited, since the blocks above have already run.
+   `--device-max` is the one exception — 100% rather than the phone's 402 — and
+   for the reason the narrow-and-touch block above gives at length: this is the
+   same case at the other rotation, and the 402 that never bites on a phone
+   held upright drew 265px of black down each side of one turned over. */
+@media (max-height: 599px) and (pointer: coarse) {
+  :root {
+    --page-pad: 18px;
+    --chrome-pad: 18px;
+    --measure: 100%;
+    --canvas: 100%;
+    --rail-w: 0px;
+    --device-max: 100%;
+    --cell-aspect: 1;
+  }
+
+  /* And not the floating window the 900px block just made of it. A phone is a
+     device: the app fills it, edge to edge, with no frame around itself. */
+  .device {
+    height: calc(100% - var(--kb, 0px));
+    margin-block: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 
@@ -604,6 +674,33 @@ a:hover {
 @media (max-width: 1179px) {
   .rail .rail-quiet {
     letter-spacing: 0.08em;
+  }
+}
+
+/*
+ * The rail, for the finger that is actually on it.
+ *
+ * The note over the tablet block says the touch sizes do not change when the
+ * rail arrives, because the hand holding an iPad is the hand that held the
+ * phone. That was true of everything except the navigation itself. The same
+ * five destinations are 51px tall each in the tab bar on a phone and were 41
+ * in the rail on an iPad, with the five quiet rows under them — Ask Claude,
+ * Account, Settings — at 35. A fingertip is 44, so the primary navigation was
+ * the one part of a tablet build nobody had sized for a tablet.
+ *
+ * A floor rather than a height, so larger text still grows the row, and on
+ * `pointer: coarse` rather than on a width, because it is the input that
+ * decides this and not the window: an iPad at 1194 gets it in the desktop
+ * layout too, and a laptop at 820 — a browser window dragged narrow — does
+ * not, since a mouse hits a 41px row perfectly well and a rail of 44s on a
+ * desktop is just a taller rail.
+ *
+ * The rail scrolls (`overflow-y: auto` above), so the extra height cannot
+ * push a destination out of reach on a tablet in landscape.
+ */
+@media (pointer: coarse) {
+  .rail .rail-item {
+    min-height: 44px;
   }
 }
 
@@ -1320,6 +1417,39 @@ a:hover {
 }
 .safe-bottom {
   padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+/*
+ * And the two insets nothing was asking for: the left and the right.
+ *
+ * `index.html` sets `viewport-fit=cover`, which is what puts the app behind
+ * the status bar and the home indicator rather than in a letterbox between
+ * them — and the two rules above are what then keep the header and the tab
+ * bar clear of both. Held upright that is the whole story, because upright a
+ * notch is only ever above you and the side insets are 0.
+ *
+ * Turned on its side it is not. The cut-out goes to whichever side is now the
+ * top, iOS reports 47–59px there, and with nothing reading it the header's
+ * title, the account button at the far end of it, and the first or last tab
+ * of the bar sit underneath the notch. The same query that decides a phone in
+ * landscape is a phone would be the obvious place for it, but it does not
+ * need one: `env()` is 0 in a browser tab, 0 on a desktop, 0 on an iPad and 0
+ * on any phone held upright, so this is a rule that costs nothing everywhere
+ * it does not apply.
+ *
+ * On the two outermost elements rather than on the header and the bar
+ * separately, so the rail, the pane and every screen inside them come in with
+ * it — the black either side is then the app's own ground, which is what the
+ * inset is for.
+ *
+ * Reasoned from the spec and the two insets already here rather than measured
+ * on hardware: a headless browser reports 0 for all four, so what a run in
+ * this repo can show is that nothing moves when they are 0, which is the
+ * failure mode worth checking and the one thing it can check.
+ */
+.device,
+.desk {
+  padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
 }
 
 .scrollarea {
@@ -5207,6 +5337,11 @@ input[type='search'].input {
   flex: 1;
   min-width: 0;
   width: auto;
+  /* The pill around it is 38px tall, but the pill is a div: only the input
+     itself takes a tap, and a line of `--type-md` text is 22. The floor is
+     24, and two more pixels is the whole difference between a target that
+     qualifies and one that does not. */
+  min-height: 24px;
   padding: 0;
   border: 0;
   background: transparent;

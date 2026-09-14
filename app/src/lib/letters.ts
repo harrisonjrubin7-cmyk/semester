@@ -108,6 +108,21 @@ export function daysLeft(l: Letter, now: Date): number | null {
 }
 
 /**
+ * The day to write into `askedOn` when the student marks a letter asked.
+ *
+ * Here rather than at the button, and exported, because `notice` below falls
+ * back to `dateToIso(now)` for a letter with no stamp — so the two have to be
+ * the same day or asking changes the notice figure by one the instant it is
+ * recorded. The screen wrote `toISOString().slice(0, 10)`, which is the UTC
+ * day, and for a student in Nashville asking after about six in the evening
+ * that is tomorrow: the notice shrank by a day and the date shown was one the
+ * student had not reached yet. One definition, one clock.
+ */
+export function askedToday(now: Date): string {
+  return dateToIso(now);
+}
+
+/**
  * How much notice this request gives, counted from the day it was asked — or
  * from today where it has not been asked yet, which is the number that matters
  * while there is still a choice about when to ask.

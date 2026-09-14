@@ -17,6 +17,16 @@
  * close one of three tabs and the strip falls under `ENOUGH`, taking the only
  * way back to what you just closed with it.
  *
+ * ## What it says about sound, which is more than the strip says
+ *
+ * The strip draws a speaker only on the tab that is actually playing, because
+ * the strip is short of room — that is the same argument that keeps the ⌄ off
+ * every tab but the one you are on. This list has room, so it also says which
+ * tabs are *muted and silent*: the state **Mute this tab** creates before
+ * anything has played, and otherwise a setting with no way to see it. A tab
+ * that will not make a sound when you get to it is exactly the thing you
+ * would come to a list of tabs to find out.
+ *
  * ## It lists rather than ranks
  *
  * Nothing typed shows every tab in the strip's own order — the pinned ones
@@ -29,10 +39,12 @@
 
 import { useRef, useState } from 'react';
 import { findTabs, whatClosed, type AppTab, type Found } from '../lib/browser';
-import { forgetWhatClosed, reopenTab, useStrip } from '../lib/browser.hook';
+import { forgetWhatClosed, muteTab, reopenTab, useStrip } from '../lib/browser.hook';
+import { sounding } from '../lib/sound';
+import { useSound } from '../lib/sound.hook';
 import { secondLine } from '../lib/dim';
 import { Popover, type Corner } from './Popover';
-import { ChevronDown, Search as SearchIcon } from './Icons';
+import { ChevronDown, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import { toneAt, useTones } from './tones';
 
@@ -152,6 +164,13 @@ function Finder({
    * far down the arrow keys had got. The arrow keys walk the open ones; a
    * closed tab takes a press of its own.
    */
+  /*
+   * Watched here rather than in each row, for the reason `Tabs.tsx` gives:
+   * this changes when somebody presses Play and at no other time, while the
+   * clock inside it ticks several times a second and is a different
+   * subscription. A list of a hundred rows must not take the ticking one.
+   */
+  const noise = useSound();
   const gone = whatClosed(strip, text);
   const cursor = Math.min(at, Math.max(0, found.length - 1));
 
@@ -209,6 +228,7 @@ function Finder({
               on={f.seat.at === strip.at}
               under={i === cursor}
               tone={f.group ? toneAt(tones, f.group.tone).fill : ''}
+              talking={sounding(noise, f.seat.tab.id)}
               onPick={() => go(f.seat.at)}
               onOver={() => setAt(i)}
               onShut={() => onShut(f.seat.at)}
@@ -286,6 +306,7 @@ function Row({
   on,
   under,
   tone,
+  talking,
   onPick,
   onOver,
   onShut,
@@ -293,6 +314,8 @@ function Row({
   found: Found;
   /** The tab the app is showing, which the list says rather than reorders. */
   on: boolean;
+  /** This tab owns the player: it is the one making the noise. */
+  talking: boolean;
   /** Under the arrow keys. */
   under: boolean;
   tone: string;
@@ -353,6 +376,40 @@ function Row({
           </span>
         )}
       </button>
+      {/*
+        * Playing, or muted and silent. Nothing at all when it is neither,
+        * because a row of glyphs that are mostly "no" is a row nobody reads.
+        *
+        * A sibling of the row rather than inside it: the row is an `option`
+        * in a `listbox`, and a button inside an option is a control a screen
+        * reader cannot reach — which is why the cross below is a sibling too.
+        */}
+      {(talking || tab.muted) && (
+        <button
+          type="button"
+          className="bare tappable"
+          onClick={() => muteTab(tab.id, !tab.muted)}
+          aria-label={`${tab.muted ? 'Unmute' : 'Mute'} ${tab.title}`}
+          aria-pressed={Boolean(tab.muted)}
+          title={
+            tab.muted
+              ? talking
+                ? `${tab.title} — playing, muted`
+                : `${tab.title} — muted`
+              : `${tab.title} — playing`
+          }
+          style={{
+            width: 'auto',
+            flex: 'none',
+            padding: 'var(--sp-3)',
+            // Silent either way — muted, or muted and not even playing — is
+            // the quiet state, and stands down to the list's second line.
+            ...(tab.muted ? secondLine() : {}),
+          }}
+        >
+          {tab.muted ? <SpeakerOffIcon size={14} /> : <SpeakerIcon size={14} />}
+        </button>
+      )}
       {/* A pinned tab has no cross here either — see `Tab` in `Tabs.tsx`. */}
       {!tab.pinned && (
         <button

@@ -116,7 +116,11 @@ export interface About {
  * receives it.
  */
 export function dump(about: About, log: Entry[], now = Date.now()): string {
-  const when = (at: number) => new Date(at).toISOString().replace('T', ' ').slice(0, 19);
+  // UTC, and said so. A bug report is read beside server logs, so the shared
+  // clock is the right one — but unlabelled it reads as the student's own
+  // wall clock and is wrong by the offset, which is how "this happened at
+  // 8:30" turns into a search of the wrong hour.
+  const when = (at: number) => `${new Date(at).toISOString().replace('T', ' ').slice(0, 19)} UTC`;
   const lines = [
     'Semester — diagnostics',
     `Written ${when(now)}`,

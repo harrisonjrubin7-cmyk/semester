@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useStore } from '../state/store';
+import { draftFor } from '../lib/mail';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { allCards } from '../data/catalog';
@@ -112,9 +113,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                 onClick={() =>
                   dispatch({
                     type: 'writeMail',
-                    purposeId: 'meeting',
-                    courseId: r.courseId,
-                    to: mod.course.email,
+                    draft: draftFor('meeting', { course: mod.course, to: mod.course.email }),
                   })
                 }
                 style={{ height: 36, marginTop: 'var(--sp-3)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}

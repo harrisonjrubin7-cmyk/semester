@@ -316,7 +316,12 @@ tabs as a list**: every one of them in the strip's own order, with the group
 each belongs to beside it, filtered as you type and forgiving of a typo the
 same way the rest of the app's search is. Enter opens the one under the
 cursor. It appears once there are four tabs; below that the strip is the
-search.
+search. Each row also says whether its tab has a voice: a speaker on the one
+that is playing, and a crossed one on a tab that is **muted and silent** —
+which the strip never shows, because the strip is short of room and that state
+has nothing happening to point at. It is the setting **Mute this tab** leaves
+behind, and this is the only place you can see it or undo it. Pressing either
+does what the strip's speaker does.
 
 Under them is **Recently closed**, because the cross is eight pixels from the
 name and on a phone that is inside a thumb: the last ten tabs you shut are
@@ -1183,9 +1188,17 @@ written once, in `app/src/lib/media.ts`, and repeated in the media queries of
   so every iPad in portrait (768–834pt) gets it, and landscape and Split View
   follow the window live. An iPad mini upright, and any half-width split, stay
   on the phone layout at full height. The touch sizes do not change: the finger
-  holding an iPad is the finger that held the phone. The content column fills
-  whatever the rail leaves, up to a 760px cap so a list row on a landscape iPad
-  is not a metre of hairline with its value stranded at the far end.
+  holding an iPad is the finger that held the phone — the rail's own rows
+  included, which they were not. Unrolled, the five destinations that are 51px
+  tall each in the tab bar came out at 41 in the rail, and the five under them
+  — Ask Claude, Account, Settings — at 35, so the one piece of chrome on screen
+  the whole time was the one part of a tablet build nobody had sized for a
+  tablet. They have a 44px floor now, on `pointer: coarse` rather than on a
+  width: an iPad at 1194 is in the desktop layout and still has a finger on it,
+  and a browser window dragged to 820 is in the tablet layout and does not.
+  The content column fills whatever the rail leaves, up to a 760px cap so a
+  list row on a landscape iPad is not a metre of hairline with its value
+  stranded at the far end.
 - **Desktop** (1180px and up) — a window rather than a phone propped up. A
   wider sidebar with room for its labels; the app filling the window instead of
   a 560px column with black either side; a measured reading column with the
@@ -1197,6 +1210,28 @@ written once, in `app/src/lib/media.ts`, and repeated in the media queries of
   the last week of the month falling off the bottom of a laptop screen. A
   fourth step at 1600px widens the measure again rather than stranding the
   layout in the middle of a large monitor.
+- **Held, rather than opened in a window** — which is the thing width alone
+  cannot tell you, and the three boundaries above are widths. An iPhone 15 Pro
+  Max on its side is 932pt across, wider than an iPad mini is upright, so it
+  was getting the tablet layout: a rail of ten rows down the side of 430px of
+  height, taking 220px of the width for a navigation whose last items ran off
+  the bottom. And the standalone column's 402px cap — the artboard the app was
+  drawn on, which never comes into play on a phone held upright because the
+  phone is narrower than it is — did come into play the moment the phone was
+  turned, and again on an iPad mini upright at 744 and on any iPad in Split
+  View: the app drawn as a column down the middle of the device with black
+  either side of it and a tab bar reaching neither edge.
+  Both are the same sentence — on a device the app fills the device, and a cap
+  written for a window belongs to a window. `pointer: coarse` is what tells
+  the two apart, paired with a short viewport (under 600px, which no tablet is
+  at any rotation and every phone is on its side) or a narrow one. A desktop
+  window dragged short or narrow has a mouse in it and keeps the desktop.
+  `HANDHELD` in `app/src/lib/media.ts` is the query, the last block of the
+  layout section in `app.css` is its copy, and `lib/tiers.test.ts` holds the
+  two together the way it holds the widths. The side safe-area insets are read
+  here too — a notch goes to whichever side is the top when a phone is turned,
+  and `viewport-fit=cover` means the header and the tab bar sit under it
+  unless something asks.
 - **Installed** — a manifest, PNG icons (iOS ignores an SVG tile) and a service
   worker make it a real window on macOS or Windows and an icon on a home screen,
   with the app shell and anything you have played working offline. Audio is

@@ -1809,20 +1809,28 @@ const WEEK_LIST: CSSProperties = { fontSize: 'var(--type-sm)', opacity: 0.72, li
  * it is about a fifth of a fingertip, and the thing above it is the thing you
  * hit instead.
  *
- * The cost is honest and worth stating: the term is a taller scroll now. The
- * density was buying an overview you could not safely touch, which is a poor
- * trade on the device this view is mostly read on — and none of the rows
- * lost a word, because what grows is the space around the line rather than
- * the line.
+ * Thirty-two rather than forty-four, and the number was arrived at by
+ * measuring both. At forty-four the term ran to five and a half screens
+ * against the three it was, and a view whose whole question is "how bad does
+ * October get" answers it worse the more scrolling stands between the weeks.
+ * Thirty-two clears WCAG's floor with a third to spare, is twice the target
+ * it was, and brings the term back to four and a half. That is the trade this
+ * view wants: the rows are comfortably hittable and the term is still
+ * something you take in rather than travel through.
  *
- * The text sits in one child so the row can centre it without the course code
- * and the title becoming two flex items that will not wrap together.
+ * Forty-four is what a row somewhere less dense should be. Nothing here is
+ * standing in its way should this view ever stop being a summary.
+ *
+ * None of the rows lost a word either way: what grows is the space around the
+ * line rather than the line. The text sits in one child so the row can centre
+ * it without the course code and the title becoming two flex items that will
+ * not wrap together.
  */
 const WEEK_ROW: CSSProperties = {
   width: 'auto',
   display: 'flex',
   alignItems: 'center',
-  minHeight: 44,
+  minHeight: 32,
   textAlign: 'left',
 };
 

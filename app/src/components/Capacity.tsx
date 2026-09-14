@@ -15,7 +15,7 @@ import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { forecast } from '../lib/pace';
-import { over, takenLine, verdict, weekCapacity } from '../lib/rest';
+import { SUGGESTED_REST, keeps, over, takenLine, verdict, weekCapacity } from '../lib/rest';
 import { Folding } from './Fold';
 
 function clock(minutes: number): string {
@@ -119,7 +119,192 @@ export function Capacity() {
         only fits by working at half past one does not fit. Nothing is prevented — the app takes
         those hours off its own arithmetic, not off you.
       </p>
+
+      <Kept />
     </Folding>
+  );
+}
+
+const DAYS = [
+  { day: 0, label: 'S', name: 'Sunday' },
+  { day: 1, label: 'M', name: 'Monday' },
+  { day: 2, label: 'T', name: 'Tuesday' },
+  { day: 3, label: 'W', name: 'Wednesday' },
+  { day: 4, label: 'T', name: 'Thursday' },
+  { day: 5, label: 'F', name: 'Friday' },
+  { day: 6, label: 'S', name: 'Saturday' },
+];
+
+/** "19:00" from minutes, and back — what an `<input type=time>` speaks. */
+const toField = (m: number) =>
+  `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const fromField = (v: string) => {
+  const [h, m] = v.split(':').map(Number);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+};
+
+/**
+ * The hours you keep for yourself — the half of `lib/rest.ts` that had no way in.
+ *
+ * Everything under this was already built and none of it could be reached. The
+ * `Rest` type, the two reducer cases, `insideRest`, the careful bit of
+ * `dayCapacity` that refuses to deduct a nine o'clock dinner twice on a day
+ * whose floor starts at eleven, and the clause in `takenLine` that says
+ * "N to what you have kept for yourself" — all of it shipped, and `state.rest`
+ * was empty on every device because nothing in the app could add one.
+ *
+ * So the verdict above ran with the sleep floor and nothing else, and the
+ * "kept for yourself" clause was a sentence that could not print. The file's
+ * own heading calls protected blocks "the point"; this is the control that
+ * makes them one.
+ *
+ * Shaped like `components/WorkWindows.tsx` on purpose. It is the same question
+ * asked the other way round — a label, the days, a start and an end — and two
+ * different editors for one shape is how the pair drifts.
+ */
+function Kept() {
+  const { state, dispatch } = useStore();
+  const rest = state.rest;
+
+  return (
+    <>
+      <SectionLabel style={{ margin: '22px 0 8px' }}>What you keep for yourself</SectionLabel>
+
+      {rest.map((r) => (
+        <div key={r.id} style={{ marginBottom: 'var(--sp-5)' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
+            <input
+              className="input"
+              value={r.label}
+              aria-label="What to call this block"
+              placeholder="Dinner"
+              onChange={(e) =>
+                dispatch({ type: 'patchRest', id: r.id, patch: { label: e.target.value } })
+              }
+              style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
+            />
+            <button
+              type="button"
+              className="bare"
+              aria-label={`Remove ${r.label || 'this block'}`}
+              onClick={() => dispatch({ type: 'dropRest', id: r.id })}
+              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: 'var(--sp-4)' }}>
+            {DAYS.map((d) => {
+              const on = r.days.includes(d.day);
+              return (
+                <button
+                  key={d.day}
+                  type="button"
+                  className="btn"
+                  aria-pressed={on}
+                  aria-label={d.name}
+                  onClick={() =>
+                    dispatch({
+                      type: 'patchRest',
+                      id: r.id,
+                      patch: { days: on ? r.days.filter((x) => x !== d.day) : [...r.days, d.day] },
+                    })
+                  }
+                  style={{
+                    flex: 1,
+                    padding: '6px 0',
+                    fontSize: 'var(--type-xs)',
+                    background: on ? 'var(--app-accent-wash)' : 'transparent',
+                    borderColor: on ? 'var(--app-accent-deep)' : 'var(--app-line)',
+                  }}
+                >
+                  {d.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', alignItems: 'center' }}>
+            <input
+              className="input"
+              type="time"
+              value={toField(r.from)}
+              aria-label="From"
+              onChange={(e) => {
+                const m = fromField(e.target.value);
+                if (m !== null) dispatch({ type: 'patchRest', id: r.id, patch: { from: m } });
+              }}
+              style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
+            />
+            <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, flex: 'none' }}>
+              to
+            </span>
+            <input
+              className="input"
+              type="time"
+              value={toField(r.to)}
+              aria-label="To"
+              onChange={(e) => {
+                const m = fromField(e.target.value);
+                if (m !== null) dispatch({ type: 'patchRest', id: r.id, patch: { to: m } });
+              }}
+              style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
+            />
+          </div>
+
+          {/* The same sentence `WorkWindows` says about an unfinished window,
+              and for the same reason: a block with no days silently takes no
+              hours out, which reads as the arithmetic being wrong. */}
+          {keeps(r) ? null : (
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)' }}>
+              Pick at least one day, and an end after the start. Counted as nothing until you do.
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 'var(--sp-4)' }}>
+        {SUGGESTED_REST.filter((s) => !rest.some((r) => r.label === s.label)).map((s) => (
+          <button
+            key={s.label}
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => dispatch({ type: 'addRest', patch: s })}
+            style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
+          >
+            + {s.label}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() =>
+            dispatch({
+              type: 'addRest',
+              patch: { label: '', days: [1, 2, 3, 4, 5], from: 18 * 60, to: 19 * 60 },
+            })
+          }
+          style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
+        >
+          + One of your own
+        </button>
+      </div>
+
+      <p
+        style={{
+          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          opacity: 0.6,
+          marginTop: 9,
+          lineHeight: 'var(--leading-relaxed)',
+          textWrap: 'pretty',
+        }}
+      >
+        These come out of the week the way the floor does. A club or a job is something you
+        promised somebody else and the app already knows about it; this is for the hours you
+        promised yourself, which are the ones that go first because nobody else will defend them.
+      </p>
+    </>
   );
 }
 

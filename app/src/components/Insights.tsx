@@ -132,8 +132,12 @@ export function Insights({
               */}
               <button
                 type="button"
-                // 24×17 as three caps letters. `tap-y`: it heads a row with
-                // the receipt beside it, so the room is above and below.
+                // `tap-y`: it heads a row with the receipt beside it, so the
+                // room is above and below, and the overlay takes the height to
+                // 44. The width is the drawn box, which three caps letters at
+                // `--type-xs` leave at 16.5px — under the 24px floor — so the
+                // box is given the floor directly rather than reaching
+                // sideways into the action button that can sit before it.
                 className="bare tap-y"
                 onClick={() => {
                   ai.forgetAbout();
@@ -160,6 +164,8 @@ export function Insights({
                 style={{
                   flex: 'none',
                   width: 'auto',
+                  minWidth: 24,
+                  textAlign: 'center',
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.08em',

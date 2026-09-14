@@ -177,3 +177,124 @@ export function says(p: Unnamed): string {
     `<SectionLabel> above it, or wrap it in a <label>.`
   );
 }
+
+/*
+ * ── The label CSS takes away ────────────────────────────────────────────────
+ *
+ * The rule above reads tags. This one reads the stylesheet, because the way
+ * a named control loses its name here is not visible in its own markup.
+ *
+ * `.desktop-ai` is the case it was written for. The AI Tutor button in the
+ * workspace top bar is a glyph and a `<span>AI Tutor</span>`, which is a
+ * perfectly good name — until `app.css` says
+ *
+ *     @media (max-width: 759px) { .desktop-ai span { display: none } }
+ *
+ * and below 760px the only text in the button is not rendered. `display:
+ * none` removes an element from the accessibility tree as well as from the
+ * page, so the accessible name is computed from nothing: VoiceOver on a phone
+ * announced "button" and stopped, on the one control in that bar that opens
+ * the assistant. Every viewport this app is designed for is under 760px.
+ *
+ * Nothing caught it. The tag rule does not look at buttons, the button really
+ * did have text, and the suite renders in jsdom, which parses the stylesheet
+ * but applies no media query — so the span was present in every test that
+ * asked. It took reading the rendered page at 420px to see it.
+ *
+ * The fix in the component is the one the tab bar already uses: the glyph
+ * carries the picture, `aria-label` carries the name, and the button reads the
+ * same at every width. This is what keeps it that way — and it generalises,
+ * because the trap is not that button. It is that hiding a label in CSS is
+ * invisible from the JSX, so the next person to write a responsive control
+ * cannot see what they took away.
+ */
+
+/** A class whose inner label the stylesheet hides, and the rule that hides it. */
+export interface HiddenName {
+  /** The class on the element, without the dot. */
+  cls: string;
+  /** The selector as written, for the message. */
+  selector: string;
+  /** Where the element is used without a name of its own. */
+  file: string;
+  line: number;
+  found: string;
+}
+
+/**
+ * Selectors of the shape `.something <element> { … display: none … }`.
+ *
+ * Deliberately narrow. A rule hiding a *class* — `.desktop-ai .label` — is
+ * usually hiding a decoration, and a rule hiding a bare descendant element is
+ * the one that eats text: `span`, `em`, `b`, `small`. Widening this to every
+ * `display: none` in the file would report the dozens of legitimate ones and
+ * teach the reader to skip the output, which is how `styles.mjs` next door
+ * describes its own tuning.
+ */
+function hidesText(css: string): { cls: string; selector: string }[] {
+  const out: { cls: string; selector: string }[] = [];
+  for (const m of css.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
+    const body = m[2];
+    if (!/display:\s*none/.test(body)) continue;
+    // The last line of the captured run is the selector; everything before it
+    // is the tail of the previous rule or the media query it sits in.
+    const selector = (m[1].split('\n').pop() ?? '').trim();
+    const hit = /^\.([A-Za-z0-9_-]+)\s+(span|em|b|small|strong|label)$/.exec(selector);
+    if (hit) out.push({ cls: hit[1], selector });
+  }
+  return out;
+}
+
+/**
+ * Every element that wears such a class and has no name without its text.
+ *
+ * `aria-label` and `aria-labelledby` only: a `title` is not announced
+ * reliably and the text inside is the thing being taken away, so neither can
+ * stand in for one here.
+ */
+export function hiddenNames(dir: string, css: string): HiddenName[] {
+  const out: HiddenName[] = [];
+  const risky = hidesText(css);
+  if (risky.length === 0) return out;
+
+  for (const f of sources(dir)) {
+    if (f.path.includes('.test.')) continue;
+    const rel = f.path.slice(f.path.indexOf('/src/') + 5);
+    const code = withoutComments(f.text);
+
+    for (const { cls, selector } of risky) {
+      // `className="bare desktop-ai"` and `className={'… desktop-ai'}` alike:
+      // the class name as a whole word anywhere in a className attribute.
+      const use = new RegExp(`className=[{"'\`][^>]*?\\b${cls}\\b`, 'g');
+      for (let m = use.exec(code); m; m = use.exec(code)) {
+        const open = code.lastIndexOf('<', m.index);
+        if (open === -1) continue;
+        const end = endOfTag(code, open);
+        if (end === -1) continue;
+        const written = code.slice(open, end + 1);
+        if (written.includes('aria-label') || written.includes('aria-labelledby')) continue;
+        out.push({
+          cls,
+          selector,
+          file: rel,
+          line: code.slice(0, open).split('\n').length,
+          found: written.split(/\s+/).join(' ').slice(0, 90),
+        });
+      }
+    }
+  }
+
+  return out.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+}
+
+/** What to do about one, in the words somebody fixing it needs. */
+export function saysHidden(p: HiddenName): string {
+  return (
+    `app.css hides this element's text with \`${p.selector} { display: none }\`, ` +
+    `so at that width the control has no accessible name at all — display:none ` +
+    `takes an element out of the accessibility tree, not just off the page.\n` +
+    `    Add aria-label with the words the hidden text says, the way the tab ` +
+    `bar does when its labels are off. Keep the text as well, for the widths ` +
+    `that draw it.`
+  );
+}

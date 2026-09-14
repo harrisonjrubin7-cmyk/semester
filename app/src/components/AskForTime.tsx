@@ -13,7 +13,7 @@
  */
 
 import { useStore } from '../state/store';
-import { canAskForTime } from '../lib/mail';
+import { canAskForTime, draftFor } from '../lib/mail';
 import type { DatedItem } from '../lib/types';
 
 export function AskForTime({ item }: { item: DatedItem }) {
@@ -29,10 +29,9 @@ export function AskForTime({ item }: { item: DatedItem }) {
       onClick={() =>
         dispatch({
           type: 'writeMail',
-          purposeId: 'extension',
-          courseId: item.c,
-          itemId: item.id,
-          to: course?.email ?? '',
+          // The deadline goes in, so the subject arrives as "ECON 1020 —
+          // Problem Set 4" rather than blank. See `draftFor`.
+          draft: draftFor('extension', { course: course ?? null, item, to: course?.email ?? '' }),
         })
       }
       style={{

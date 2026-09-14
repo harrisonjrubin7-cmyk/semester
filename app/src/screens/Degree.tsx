@@ -29,6 +29,7 @@ import {
   forProgramme,
   gpa,
   gpaLine,
+  isCommon,
   hours,
   progressLine,
   programmes,
@@ -36,6 +37,7 @@ import {
   rollup,
   rollupLine,
   spare,
+  type Requirement,
   type Taken,
 } from '../lib/degree';
 import { Folding } from '../components/Fold';
@@ -128,7 +130,7 @@ function WhatIsLeft() {
             <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
             <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {h.done} hours finished
-              {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g)}
+              {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g, isCommon(state.scale))}
             </div>
           </>
         ) : null}
@@ -204,7 +206,7 @@ function WhatIsLeft() {
       <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
       <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {h.done} hours finished
-        {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g)}
+        {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g, isCommon(state.scale))}
       </div>
 
       <ThisTerm />
@@ -483,50 +485,7 @@ function Transcript({ rows }: { rows?: Taken[] }) {
           <SectionLabel style={{ margin: '24px 0 8px' }}>Recorded</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {taken.map((c) => (
-              <div
-                key={c.id}
-                style={{
-                  display: 'flex',
-                  gap: 'var(--sp-5)',
-                  alignItems: 'baseline',
-                  padding: '10px 13px',
-                  borderRadius: 'var(--r-md)',
-                  border: '1px solid var(--app-line)',
-                }}
-              >
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'var(--type-base)' }}>
-                    {c.code} {c.title ? `· ${c.title}` : ''}
-                  </span>
-                  <span
-                    style={{
-                      display: 'block',
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                      opacity: 0.6,
-                      marginTop: 'var(--sp-1)',
-                      textWrap: 'pretty',
-                    }}
-                  >
-                    {[c.term, `${c.hours} hrs`, c.current ? 'in progress' : c.grade]
-                      .filter(Boolean)
-                      .join(' · ')}
-                    {countingIn(state.requirements, c).length > 0
-                      ? ` · counts in ${[
-                          ...new Set(countingIn(state.requirements, c).map((r) => r.programme)),
-                        ].join(', ')}`
-                      : ''}
-                  </span>
-                </span>
-                <button
-                  type="button"
-                  className="bare"
-                  onClick={() => dispatch({ type: 'dropTaken', id: c.id })}
-                  aria-label={`Remove ${c.code}`}
-                  style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
-                >
-                  Remove
-                </button>
-              </div>
+              <TakenRow key={c.id} course={c} />
             ))}
           </div>
         </>
@@ -623,47 +582,365 @@ function Rules() {
           <SectionLabel style={{ margin: '24px 0 8px' }}>Recorded</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
             {state.requirements.map((r) => (
-              <div
-                key={r.id}
-                style={{
-                  display: 'flex',
-                  gap: 'var(--sp-5)',
-                  alignItems: 'baseline',
-                  padding: '10px 13px',
-                  borderRadius: 'var(--r-md)',
-                  border: '1px solid var(--app-line)',
-                }}
-              >
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'var(--type-base)', textWrap: 'pretty' }}>
-                    {r.programme} · {r.name}
-                  </span>
-                  <span
-                    style={{
-                      display: 'block',
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                      opacity: 0.6,
-                      marginTop: 'var(--sp-1)',
-                      textWrap: 'pretty',
-                    }}
-                  >
-                    {r.count} {r.need} · {r.accepts.length > 0 ? r.accepts.join(', ') : 'anything'}
-                  </span>
-                </span>
-                <button
-                  type="button"
-                  className="bare"
-                  onClick={() => dispatch({ type: 'dropRequirement', id: r.id })}
-                  aria-label={`Remove ${r.name}`}
-                  style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
-                >
-                  Remove
-                </button>
-              </div>
+              <RequirementRow key={r.id} requirement={r} />
             ))}
           </div>
         </>
       ) : null}
     </Folding>
+  );
+}
+
+/**
+ * One course on the transcript, and the way to correct it.
+ *
+ * Correcting one was not possible at all. `addTaken` and `dropTaken` were the
+ * whole of it, and `patchTaken` sat in the reducer with nothing dispatching
+ * it — so a mistyped grade, a term entered as "Fall 26", or a course whose
+ * hours turned out to be four meant deleting the row and typing all six fields
+ * again. On the screen whose entire job is an audit you keep by hand, and
+ * whose GPA is arithmetic over exactly these numbers.
+ *
+ * Editing behind a press rather than always on, and saved explicitly, for the
+ * reason `Mine.tsx`'s `AppointmentRow` gives at length: a list that is also a
+ * page of live inputs is a page where a stray tap lands in a field. The draft
+ * is re-seeded when the editor opens rather than kept in sync, for the same
+ * reason it is there — a draft that follows the thing while you are typing in
+ * it is a draft that fights you.
+ *
+ * Remove stays on the row rather than moving inside the editor. On an
+ * appointment it moved because it had been a two-letter button beside Join;
+ * here it is already a worded control at the end of a row, which is not the
+ * accident that rule exists to prevent.
+ */
+function TakenRow({ course: c }: { course: Taken }) {
+  const { state, dispatch } = useStore();
+  const [editing, setEditing] = useState(false);
+  const [code, setCode] = useState(c.code);
+  const [title, setTitle] = useState(c.title);
+  const [term, setTerm] = useState(c.term);
+  const [creditHours, setCreditHours] = useState(String(c.hours));
+  const [grade, setGrade] = useState(c.grade);
+  const [current, setCurrent] = useState(c.current);
+
+  const save = () => {
+    if (!code.trim()) return;
+    dispatch({
+      type: 'patchTaken',
+      id: c.id,
+      patch: {
+        code: code.trim(),
+        title: title.trim(),
+        term: term.trim(),
+        hours: Number(creditHours) || 0,
+        // A course in progress has no grade yet, and leaving a stale letter on
+        // one would put it back into the GPA the moment it was ticked.
+        grade: current ? '' : grade.trim(),
+        current,
+      },
+    });
+    setEditing(false);
+  };
+
+  const open = () => {
+    setCode(c.code);
+    setTitle(c.title);
+    setTerm(c.term);
+    setCreditHours(String(c.hours));
+    setGrade(c.grade);
+    setCurrent(c.current);
+    setEditing(true);
+  };
+
+  if (editing) {
+    return (
+      <Blueprint style={{ padding: 'var(--sp-6)', background: 'var(--app-panel)' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
+          <input
+            className="input"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') save();
+              if (e.key === 'Escape') setEditing(false);
+            }}
+            aria-label="Course code"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus
+            style={{ width: 130, height: 40 }}
+          />
+          <input
+            className="input"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') save();
+              if (e.key === 'Escape') setEditing(false);
+            }}
+            placeholder="Title — optional"
+            aria-label="Course title"
+            style={{ flex: 1, minWidth: 0, height: 40 }}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
+          <input
+            className="input"
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder="Fall 2026"
+            aria-label="Term"
+            style={{ width: 120, height: 40 }}
+          />
+          <input
+            className="input"
+            inputMode="numeric"
+            value={creditHours}
+            onChange={(e) => setCreditHours(e.target.value)}
+            aria-label="Credit hours"
+            style={{ width: 64, height: 40, textAlign: 'center' }}
+          />
+          <input
+            className="input"
+            value={grade}
+            onChange={(e) => setGrade(e.target.value)}
+            placeholder="A-"
+            aria-label="Grade"
+            disabled={current}
+            style={{ width: 64, height: 40, textAlign: 'center' }}
+          />
+          <button
+            type="button"
+            className="bare tappable"
+            aria-pressed={current}
+            onClick={() => setCurrent(!current)}
+            style={{
+              width: 'auto',
+              paddingBlock: 'var(--sp-4)',
+              paddingInline: 'var(--sp-6)',
+              borderRadius: 'var(--r-sm)',
+              border: `1px solid ${current ? 'var(--app-accent)' : 'var(--app-line)'}`,
+              fontSize: 'var(--type-xs)',
+            }}
+          >
+            Taking it now
+          </button>
+        </div>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
+          <ActionButton tone="primary" onClick={save} disabled={!code.trim()}>
+            Save
+          </ActionButton>
+          <ActionButton onClick={() => setEditing(false)}>Cancel</ActionButton>
+        </div>
+      </Blueprint>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 'var(--sp-5)',
+        alignItems: 'baseline',
+        padding: '10px 13px',
+        borderRadius: 'var(--r-md)',
+        border: '1px solid var(--app-line)',
+      }}
+    >
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={open}
+        aria-label={`Edit ${c.code}`}
+        style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}
+      >
+        <span style={{ display: 'block', fontSize: 'var(--type-base)' }}>
+          {c.code} {c.title ? `· ${c.title}` : ''}
+        </span>
+        <span
+          style={{
+            display: 'block',
+            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            opacity: 0.6,
+            marginTop: 'var(--sp-1)',
+            textWrap: 'pretty',
+          }}
+        >
+          {[c.term, `${c.hours} hrs`, c.current ? 'in progress' : c.grade]
+            .filter(Boolean)
+            .join(' · ')}
+          {countingIn(state.requirements, c).length > 0
+            ? ` · counts in ${[
+                ...new Set(countingIn(state.requirements, c).map((r) => r.programme)),
+              ].join(', ')}`
+            : ''}
+        </span>
+      </button>
+      <button
+        type="button"
+        className="bare"
+        onClick={() => dispatch({ type: 'dropTaken', id: c.id })}
+        aria-label={`Remove ${c.code}`}
+        style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
+      >
+        Remove
+      </button>
+    </div>
+  );
+}
+
+/**
+ * One requirement, and the way to correct it.
+ *
+ * Same omission and same fix as `TakenRow` above — `addRequirement` and
+ * `dropRequirement` shipped, `patchRequirement` sat unused — and it bites
+ * harder here, because the list a requirement accepts is the field most likely
+ * to be wrong and the most tedious to retype. "ECON 3010, ECON 3012, ECON
+ * 3150" entered once and then found to be missing a fourth course meant
+ * writing all four again along with the programme, the name and the count.
+ *
+ * `readAccepts` parses the list on the way in, the same call the form above
+ * makes, so a row edited here and a row added there cannot end up holding two
+ * different shapes of the same field.
+ */
+function RequirementRow({ requirement: r }: { requirement: Requirement }) {
+  const { dispatch } = useStore();
+  const [editing, setEditing] = useState(false);
+  const [programme, setProgramme] = useState(r.programme);
+  const [name, setName] = useState(r.name);
+  const [count, setCount] = useState(String(r.count));
+  const [need, setNeed] = useState<'courses' | 'hours'>(r.need);
+  const [list, setList] = useState(r.accepts.join(', '));
+
+  const save = () => {
+    if (!programme.trim() || !name.trim()) return;
+    dispatch({
+      type: 'patchRequirement',
+      id: r.id,
+      patch: {
+        programme: programme.trim(),
+        name: name.trim(),
+        need,
+        count: Number(count) || 1,
+        accepts: readAccepts(list),
+      },
+    });
+    setEditing(false);
+  };
+
+  const open = () => {
+    setProgramme(r.programme);
+    setName(r.name);
+    setCount(String(r.count));
+    setNeed(r.need);
+    setList(r.accepts.join(', '));
+    setEditing(true);
+  };
+
+  if (editing) {
+    return (
+      <Blueprint style={{ padding: 'var(--sp-6)', background: 'var(--app-panel)' }}>
+        <input
+          className="input"
+          value={programme}
+          onChange={(e) => setProgramme(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          placeholder="Economics major"
+          aria-label="Which programme"
+          // eslint-disable-next-line jsx-a11y/no-autofocus
+          autoFocus
+          style={{ width: '100%', height: 40 }}
+        />
+        <input
+          className="input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          placeholder="Intermediate theory"
+          aria-label="What the requirement is called"
+          style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
+        />
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap' }}>
+          <input
+            className="input"
+            inputMode="numeric"
+            value={count}
+            onChange={(e) => setCount(e.target.value)}
+            aria-label="How many"
+            style={{ width: 64, height: 40, textAlign: 'center' }}
+          />
+          <PickChips options={['courses', 'hours'] as const} value={need} onChange={setNeed} />
+        </div>
+        <textarea
+          className="input"
+          value={list}
+          onChange={(e) => setList(e.target.value)}
+          placeholder="ECON 3010, ECON 3012 — or just ECON for any course in it. Blank means anything."
+          aria-label="Which courses satisfy it"
+          style={{
+            width: '100%',
+            minHeight: 64,
+            marginTop: 'var(--sp-4)',
+            resize: 'vertical',
+            fontSize: 'var(--type-base)',
+            lineHeight: 'var(--leading-relaxed)',
+          }}
+        />
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
+          <ActionButton tone="primary" onClick={save} disabled={!programme.trim() || !name.trim()}>
+            Save
+          </ActionButton>
+          <ActionButton onClick={() => setEditing(false)}>Cancel</ActionButton>
+        </div>
+      </Blueprint>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        gap: 'var(--sp-5)',
+        alignItems: 'baseline',
+        padding: '10px 13px',
+        borderRadius: 'var(--r-md)',
+        border: '1px solid var(--app-line)',
+      }}
+    >
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={open}
+        aria-label={`Edit ${r.name}`}
+        style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}
+      >
+        <span style={{ display: 'block', fontSize: 'var(--type-base)', textWrap: 'pretty' }}>
+          {r.programme} · {r.name}
+        </span>
+        <span
+          style={{
+            display: 'block',
+            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            opacity: 0.6,
+            marginTop: 'var(--sp-1)',
+            textWrap: 'pretty',
+          }}
+        >
+          {r.count} {r.need} · {r.accepts.length > 0 ? r.accepts.join(', ') : 'anything'}
+        </span>
+      </button>
+      <button
+        type="button"
+        className="bare"
+        onClick={() => dispatch({ type: 'dropRequirement', id: r.id })}
+        aria-label={`Remove ${r.name}`}
+        style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
+      >
+        Remove
+      </button>
+    </div>
   );
 }
