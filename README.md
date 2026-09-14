@@ -516,7 +516,8 @@ stayed behind. Three screens now, on the **Make** shelf, and none of them has a
 model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
-  quotations, tables, equations, page breaks — out as a real `.docx`, as
+  checklists, quotations, tables, equations, code blocks, page breaks — out as
+  a real `.docx`, as
   Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
   `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
   link becomes a real hyperlink in the Word file rather than an address typed
@@ -527,6 +528,15 @@ model in it or needs a key:
   which plans an assignment and refuses to write it. This one arranges what you
   type. Paste notes or Markdown in and it reads headings, lists, tables and
   `$$…$$` equations into blocks you can edit.
+
+  A **checklist** is a list you can tick, and each item remembers whether it is
+  done — out as `- [x]` in Markdown and as a ticked box in Word. A **code
+  block** is the one place in the app where nothing is read as markup: `**` in
+  a shell glob or a Python power operator is two asterisks somebody typed, not
+  a request for bold, and the indentation that carries half of what code means
+  survives into the Word file. Its Markdown fence grows longer than any run of
+  backticks inside it, so a snippet *about* Markdown does not quietly end its
+  own block halfway down.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
   `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It

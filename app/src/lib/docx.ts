@@ -124,6 +124,20 @@ function run(text: string, bold: boolean, italic: boolean, link = ''): string {
 }
 
 /**
+ * Text as itself: no emphasis read, no links found, every line kept.
+ *
+ * The counterpart to `run`, for the one block whose content is not prose. It
+ * splits on newlines the same way, because a `<w:t>` cannot contain one and a
+ * code block is mostly newlines.
+ */
+function raw(text: string): string {
+  return text
+    .split('\n')
+    .map((line, i) => `<w:r>${i > 0 ? '<w:br/>' : ''}<w:t xml:space="preserve">${xml(line)}</w:t></w:r>`)
+    .join('');
+}
+
+/**
  * A paragraph of marked-up text in a named style.
  *
  * `links` is optional so the two callers that cannot contain one — a table
@@ -226,6 +240,36 @@ function blockXml(block: Block, links?: Links): string {
       const body = `<w:p><w:pPr><w:jc w:val="center"/></w:pPr>${math}</w:p>`;
       return block.caption.trim() ? `${body}${para(block.caption, 'Caption')}` : body;
     }
+    /*
+     * Code, as the characters it holds.
+     *
+     * `para` puts its text through `runs()` — the inline markdown reader — and
+     * that is exactly what must not happen here: `**` in a shell glob would
+     * come out as bold with the asterisks eaten. So this builds its runs
+     * directly, with no marking up and no link parsing, and every line is a
+     * separate `<w:br/>`-joined piece so the indentation survives.
+     *
+     * `xml:space="preserve"` is doing real work: without it Word drops the
+     * leading spaces on every line, which is most of what code means.
+     */
+    case 'code': {
+      if (!block.text.trim()) return '';
+      return `<w:p><w:pPr><w:pStyle w:val="Code"/></w:pPr>${raw(block.text)}</w:p>`;
+    }
+    /*
+     * A checklist, as a list whose glyph says whether it is done.
+     *
+     * Word has no checkbox that survives being a plain paragraph — the real
+     * one is a content control, which is a great deal of XML for a tick. The
+     * ballot-box characters are what every exporter reaches for instead, they
+     * are in every font Word ships, and they read correctly to somebody who
+     * cannot see them: "ballot box with check" is what a screen reader says.
+     */
+    case 'checks':
+      return block.items
+        .filter((i) => i.text.trim())
+        .map((i) => para(`${i.done ? '☒' : '☐'} ${i.text}`, 'ListParagraph', '', links))
+        .join('');
     case 'break':
       return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
   }
@@ -277,6 +321,14 @@ const STYLES =
   // A table cell is single-spaced: the document's own 276-line spacing makes
   // every row a third taller than it needs to be, which is what turns a
   // fifteen-row table into two pages.
+  // Monospaced, a shade smaller, on a light ground — the three things that
+  // make a snippet legible as a snippet rather than as an odd paragraph.
+  '<w:style w:type="paragraph" w:styleId="Code"><w:name w:val="Code"/>' +
+  '<w:basedOn w:val="Normal"/>' +
+  '<w:pPr><w:spacing w:before="120" w:after="120" w:line="240" w:lineRule="auto"/>' +
+  '<w:ind w:left="360"/><w:shd w:val="clear" w:color="auto" w:fill="F4F4F4"/></w:pPr>' +
+  '<w:rPr><w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/>' +
+  '<w:sz w:val="19"/></w:rPr></w:style>' +
   '<w:style w:type="paragraph" w:styleId="TableText"><w:name w:val="Table Text"/>' +
   '<w:basedOn w:val="Normal"/><w:pPr><w:spacing w:before="40" w:after="40" w:line="240" w:lineRule="auto"/></w:pPr>' +
   '<w:rPr><w:sz w:val="20"/></w:rPr></w:style>' +
