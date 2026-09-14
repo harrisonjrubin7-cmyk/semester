@@ -19,6 +19,15 @@ Everything below is measured, with the command that measured it. Measured at
 `253d34f` (the baseline) and re-measured at `5f3406f` (this branch), on Node
 22.22.2.
 
+`main` moved on under this branch while it was being written — thirty commits,
+a spreadsheet function library, document layout, sound — and it has been merged
+in. **Every figure below is the pair measured at `253d34f` and `5f3406f`**,
+which is what isolates what this branch did; the numbers on the merged head are
+different because main's own work is in them. The one that moved most: first
+load is 280.3 kB gzipped after the merge, because main added about six of its
+own — the −6.6 kB this branch cut is still cut, and neither API client is in an
+eager chunk.
+
 ---
 
 ## 0. The baseline
@@ -337,6 +346,18 @@ remainder as worth keeping visible — but nothing stopped it drifting back up,
 one pull request at a time, each warning invisible among the ones already
 there. `--max-warnings=45` is the ratchet; the way past it is to fix the
 warning or raise the number in a diff, with a reason.
+
+**It found one on the way in.** Merging main took the count to 48, and the
+three new ones were `eslint(no-duplicate-case)` in `lib/sheet.ts`: `AVERAGEIFS`,
+`MAXIFS` and `MINIFS` had been implemented twice in one `switch`, and the
+second implementation — 25 lines, its own docblock, its own reading of what an
+empty match means — was unreachable behind the first. No behaviour was wrong,
+because the reachable one is right and the 207 spreadsheet tests pass either
+way. What was wrong is that a correction to that engine had a 50% chance of
+landing in the copy that does not run. Deleted, which is also why the ceiling
+is still 45 rather than 48: the ratchet's whole point is that a warning is
+fixed or the number is raised on purpose, and raising it for three true
+findings on the first merge would have been the number's first lie.
 
 **The next thing to do with the number is one hook.** 45 warnings, and 20 of
 them are the same idiom:
