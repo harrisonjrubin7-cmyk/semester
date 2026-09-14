@@ -39,6 +39,10 @@ export function useMedia(query: string): boolean {
  *   tablet   760–1179   the rail beside the column; touch sizes kept.
  *   desktop  ≥ 1180     a window: wide rail, a measured reading column, and
  *                       the screens that are grids given room to be grids.
+ *
+ * Width decides it, with one exception, which is `HANDHELD` below: a phone
+ * turned on its side is wider than an iPad is tall, and width alone called it
+ * a tablet.
  */
 export type Tier = 'phone' | 'tablet' | 'desktop';
 
@@ -47,6 +51,18 @@ export const TABLET_AT = 760;
 
 /** Where the app stops being a phone held up and becomes a desktop window. */
 export const DESKTOP_AT = 1180;
+
+/**
+ * The shortest a window may be and still be a tablet or a desktop.
+ *
+ * Nothing that holds a rail is shorter than this. An iPad on its side is the
+ * shortest tablet there is — 744pt on the mini, 810 on the 10.2-inch, 834 on
+ * the 11-inch — and a laptop window is taller again. Every phone on its side
+ * is under 450: 430 on the largest iPhone, 402 on a 15 Pro, 412 on a Pixel.
+ * 600 sits in the middle of that gap with room on both sides of it, so the
+ * boundary never lands on a real device.
+ */
+export const TALL_AT = 600;
 
 /**
  * Wide enough for the rail and a reading column beside it.
@@ -70,8 +86,42 @@ export const WIDE = `(min-width: ${TABLET_AT}px)`;
  */
 export const DESKTOP = `(min-width: ${DESKTOP_AT}px)`;
 
-/** Which of the three a given viewport width is. Pure, so it can be tested. */
-export function tierFor(width: number): Tier {
+/**
+ * A phone on its side — the one device width gets wrong.
+ *
+ * The two boundaries above ask a single question, how wide the window is, and
+ * for every device held upright that is the same question as which device it
+ * is. Turned the long way round it stops being: an iPhone 15 Pro Max in
+ * landscape is 932pt wide, wider than an iPad mini is in portrait, so width
+ * alone put a phone lying on its side into the tablet layout. What that drew
+ * was the rail — a navigation column, ten rows down the side — into 430px of
+ * height, where its own last items ran off the bottom of a screen that had
+ * 220px of its width taken by them. The tab bar is 76px across the foot and
+ * leaves the rest of the phone alone, which is what a phone in landscape is
+ * asking for.
+ *
+ * Height alone would be the wrong test in the other direction: a desktop
+ * browser window dragged short is still a desktop, with a mouse in it and no
+ * reason to be handed a bar sized for a thumb. So it is both — short *and* a
+ * finger — which between them describe a handheld and nothing else. An iPad
+ * answers the first no at every rotation; a laptop answers the second no at
+ * every size.
+ *
+ * `styles/app.css` carries the same query as the last of its layout blocks,
+ * and `tiers.test.ts` asserts the two copies agree.
+ */
+export const HANDHELD = `(max-height: ${TALL_AT - 1}px) and (pointer: coarse)`;
+
+/**
+ * Which of the three a given viewport is. Pure, so it can be tested.
+ *
+ * `handheld` is the answer to `HANDHELD` above — a short window with a finger
+ * in it — and it wins outright, because a phone on its side is a phone at any
+ * width. It defaults to false so the width-only call still reads as the
+ * question it always was.
+ */
+export function tierFor(width: number, handheld = false): Tier {
+  if (handheld) return 'phone';
   if (width >= DESKTOP_AT) return 'desktop';
   if (width >= TABLET_AT) return 'tablet';
   return 'phone';
@@ -80,13 +130,16 @@ export function tierFor(width: number): Tier {
 /**
  * The layout this window is in, as state.
  *
- * Two queries rather than a resize listener: `matchMedia` fires only when a
+ * Three queries rather than a resize listener: `matchMedia` fires only when a
  * boundary is crossed, so dragging a window edge across 900px does not
- * re-render fifty screens on every frame.
+ * re-render fifty screens on every frame. Turning a phone crosses one of them
+ * too, so the layout follows a rotation without anything listening for one.
  */
 export function useTier(): Tier {
   const desktop = useMedia(DESKTOP);
   const tablet = useMedia(WIDE);
+  const handheld = useMedia(HANDHELD);
+  if (handheld) return 'phone';
   if (desktop) return 'desktop';
   return tablet ? 'tablet' : 'phone';
 }
