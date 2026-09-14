@@ -1004,10 +1004,57 @@ exactly: the row is the way in, the fields open in place, and Delete moves
 inside the editor rather than sitting as a two-letter button next to Join.
 The form above writes new ones and nothing else.
 
+## 4d. S5 — Mine's four tabs, and the third pattern that is not one · **KEEP**
+
+Asked after S4, because a screen with two editing patterns had just been
+given one and the other two tabs had not been looked at. Notes' **+ New note**
+leaves Mine for `#/note/<id>` where Tasks and Events open their form in
+place, which reads at a glance like a third answer to the same question. It
+is not. Measured:
+
+| | Fields | Long text | Attachments | Own address |
+| --- | --- | --- | --- | --- |
+| Task | 6 scalars | no | no | none |
+| Appointment | 7 scalars | no | no | none |
+| **Note** | 4 + `body` + `fileIds[]` | **yes** | **yes**, in IndexedDB | `#/note/<id>` |
+
+Four things separate a note from a row, and each of them is the reason on its
+own:
+
+- **What the screen draws.** `NoteEditor` is a title, a `CoursePicker`, a
+  `DeadlinePicker`, a textarea for the body, and an Attachments section that
+  adds, opens and removes files. Five controls and a file list against a
+  task's three fields.
+- **Who else opens it.** `newNote` is dispatched from three places — a
+  deadline's own panel (`components/ForThis.tsx`), Study, and Mine — and
+  `openNote` from three: `ForThis`, **search** (`lib/openhit.ts`), and Mine's
+  list. The screen exists whatever the tab does, so an editor in the tab
+  would be a *second* editor for one object, which is the fault this half of
+  the file is about rather than a fix for it.
+- **How it saves.** The note editor dispatches `updateNote` on every
+  keystroke; a row commits on Save. An autosaving textarea inside a list is
+  exactly what `TaskRow`'s own note warns against — "a list that is also a
+  page of live inputs is a page where a stray tap lands in a field".
+- **The address outlives the object.** `NoteEditor` carries a "that note is
+  gone" state because `#/note/<id>` is real: bookmarked, reopened from
+  history, restored from a backup written before the note was. A row has no
+  address to outlive anything.
+
+So the rule across the four tabs is **two patterns, applied consistently** —
+rows edit in place, documents open their own screen — and Notes is a
+document. Both of Mine's routes to a note leave the tab, which is the same
+rule twice rather than a drift. Files is not a third pattern either: it is a
+small file manager (Home, My drive, Recent, Starred, Bin, a search over names
+and contents, Add files, and a line of device storage), and a file is not
+edited here at all — it is added and opened.
+
+Recorded rather than changed, and recorded because the next pass will see the
+same shape from the outside and ask the same question.
+
 ## 5. What this pass changed
 
-S1, S2, S3 and S4, one commit each. No destination was added or removed: the
-count stands at 60, because every duplicate this pass found was a *control*
+S1, S2, S3 and S4, one commit each; S5 is a keep. No destination was added or
+removed: the count stands at 60, because every duplicate this pass found was a *control*
 rather than a *screen*. −4 duplicated settings, −1 duplicated control, and
 one shell's home given back its pointer.
 
