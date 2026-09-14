@@ -19,10 +19,34 @@ describe('Vanderbilt, Fall 2026', () => {
     expect(term?.termName).toBe('Fall 2026');
   });
 
-  it('carries no registrar deadline, because none could be sourced', () => {
-    // The drop, withdrawal and pass/fail dates are the ones that cost money.
-    // If a future edit adds them, it should come with the registrar's page.
-    expect(term?.deadlines).toEqual([]);
+  it('carries the two registrar deadlines that could be sourced', () => {
+    expect(term?.deadlines).toEqual([
+      { label: 'Open enrollment ends', on: '2026-09-04' },
+      { label: 'Last day to withdraw from a course', on: '2026-10-30' },
+    ]);
+  });
+
+  it('files each of them under the landmark it actually is', () => {
+    // The one that matters. The source's own phrase for 4 September is
+    // "add/drop deadline", and `HINTS` matches "add/drop deadline" to
+    // `drop-clean` — the last day to drop WITHOUT a W, which this is not: it
+    // is the close of open enrollment, six weeks earlier. Writing the
+    // source's wording would have filed it as the deadline the app calls
+    // "the big one". The label is chosen so the landmark is right.
+    const rows = fromCalendar(term!);
+    expect(rows.find((r) => r.iso === '2026-09-04')?.id).toBe('add-deadline');
+    expect(rows.find((r) => r.iso === '2026-10-30')?.id).toBe('withdraw');
+  });
+
+  it('still has nothing for drop-without-a-W, pass/fail, registration or grades', () => {
+    // Deliberately absent, and the most consequential of the six is among
+    // them. A future edit filling these should come with the registrar's own
+    // page rather than a search result.
+    const labels = (term?.deadlines ?? []).map((d) => d.label.toLowerCase());
+    expect(labels.some((l) => /without/.test(l))).toBe(false);
+    expect(labels.some((l) => /pass|fail|audit/.test(l))).toBe(false);
+    expect(labels.some((l) => /registration/.test(l))).toBe(false);
+    expect(labels.some((l) => /grade/.test(l))).toBe(false);
   });
 
   it('leaves the last day of classes blank rather than guessing between two', () => {
@@ -50,7 +74,7 @@ describe('Vanderbilt, Fall 2026', () => {
     ]);
   });
 
-  it('proposes the term start and both breaks, and nothing else', () => {
+  it('proposes the term start, both breaks and both deadlines', () => {
     const rows = fromCalendar(term!);
     expect(rows.map((r) => [r.id, r.iso, r.until])).toEqual([
       ['classes-begin', '2026-08-26', ''],
@@ -59,6 +83,8 @@ describe('Vanderbilt, Fall 2026', () => {
       // Break" hits the `break` landmark, which is already taken by Fall
       // Break, so this one keeps the school's own words with no landmark.
       ['', '2026-11-21', '2026-11-29'],
+      ['add-deadline', '2026-09-04', ''],
+      ['withdraw', '2026-10-30', ''],
     ]);
   });
 
