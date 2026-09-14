@@ -14,6 +14,7 @@ import { currentLook } from '../state/shape';
 import { datedItems } from '../lib/select';
 import { useTrouble } from '../lib/trouble';
 import { useAI } from './store';
+import { assemble } from './assemble';
 import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, useLive,
   renameThread,
   pinThread,
@@ -300,7 +301,7 @@ export function useConversation(): Conversation {
          * decides whether it may leave. Both are needed and they are
          * different questions — see the note on `build`'s `onScreen`.
          */
-        const seen = ai.look();
+        const seen = assemble(ai);
         const drawn = buildContext(text, read.mode, state, catalog, now, state.screen, seen.text);
         /** Everything this answer drew on: what travelled, plus what it fetched. */
         const drew = new Set(drawn.used);

@@ -237,16 +237,27 @@ describe('nobody keeps a second copy', () => {
   it('and no surface reaches around it to the saved log', () => {
     // `chatlog` is for coming back tomorrow. A surface that seeded itself
     // from it directly would be reading a snapshot again.
-    for (const file of ['./Chat.tsx', './Assistant.tsx']) {
+    //
+    // Three files, not two: `Assistant.tsx` is the button that opens the
+    // panel and must not start reading the log either.
+    for (const file of ['./Chat.tsx', './Panel.tsx', './Assistant.tsx']) {
       expect(source(file)).not.toContain('chatlog');
     }
   });
 
+  /*
+   * The two surfaces are the Ask tab and the panel.
+   *
+   * The panel was `Assistant.tsx` until that file was split: the button is
+   * mounted in the shell and has to be there from the first render, and the
+   * conversation behind it is fetched on its own chunk. `Panel.tsx` is the
+   * half that draws a conversation, so it is the half these hold to the tab.
+   */
   it('and both surfaces draw a turn with the same component', () => {
     // Two implementations of a message is how the two surfaces start looking
     // like different products, which makes expanding read as going somewhere
     // else rather than as the same conversation getting more room.
-    for (const file of ['./Chat.tsx', './Assistant.tsx']) {
+    for (const file of ['./Chat.tsx', './Panel.tsx']) {
       expect(source(file)).toContain("from './Turns'");
       expect(source(file)).toContain("from './Composer'");
     }
@@ -256,7 +267,7 @@ describe('nobody keeps a second copy', () => {
     // The opening is the screen a student sees most often, and it was the
     // last piece the two surfaces drew differently: the tab greeted you with
     // a sentence about what it can see and the panel with four naked buttons.
-    for (const file of ['./Chat.tsx', './Assistant.tsx']) {
+    for (const file of ['./Chat.tsx', './Panel.tsx']) {
       expect(source(file)).toContain("from './Opening'");
     }
   });
@@ -266,7 +277,7 @@ describe('nobody keeps a second copy', () => {
     // of sight while the reader sat looking at their own question. Sticking
     // to the bottom — and letting go the moment somebody scrolls up — is one
     // rule in `Turns.tsx`, and a surface that does not use it is not a chat.
-    for (const file of ['./Chat.tsx', './Assistant.tsx']) {
+    for (const file of ['./Chat.tsx', './Panel.tsx']) {
       expect(source(file)).toContain('useFollowing(');
       // The way back down, for after you have scrolled up out of the stream.
       expect(source(file)).toContain('toEnd');
@@ -277,7 +288,7 @@ describe('nobody keeps a second copy', () => {
     // `extra` is `Reply`'s slot for the action cards. The panel used to hang
     // them under the whole transcript, which put a live "add a reminder"
     // button several screens below the sentence that offered it.
-    for (const file of ['./Chat.tsx', './Assistant.tsx']) {
+    for (const file of ['./Chat.tsx', './Panel.tsx']) {
       expect(source(file)).toMatch(/extra=\{/);
     }
   });
@@ -442,7 +453,7 @@ describe('looking something up mid-answer', () => {
     // A pause a second longer than usual with no account of why reads as a
     // stall. Both surfaces draw the same line, from the same field.
     expect(converse()).toContain('setLooking(found.saying)');
-    for (const file of ['./Chat.tsx', './Assistant.tsx']) {
+    for (const file of ['./Chat.tsx', './Panel.tsx']) {
       expect(source(file), file).toContain('doing={talk.looking}');
     }
   });

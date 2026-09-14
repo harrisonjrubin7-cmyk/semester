@@ -75,7 +75,24 @@ export async function warm(base: string): Promise<void> {
       base,
     );
     if (urls.length === 0) return;
-    worker.postMessage({ type: 'warm', urls });
+    /*
+     * The build goes with the list.
+     *
+     * Asset names are content-hashed, so a deploy renames nearly everything
+     * the worker is holding — and the old names are dead, because the server
+     * no longer serves them. Without a way to tell one build from another the
+     * worker could only keep adding, and an installed app accumulated every
+     * version of every chunk it had ever loaded.
+     *
+     * Only the page knows which build it is. `VITE_BUILD_ID` is stamped in by
+     * `vite.config.ts`; a dev server without one sends an empty string, and
+     * the worker is not registered in development anyway.
+     */
+    worker.postMessage({
+      type: 'warm',
+      build: import.meta.env.VITE_BUILD_ID ?? '',
+      urls,
+    });
   } catch {
     // See above: nothing here is worth telling anybody about.
   }

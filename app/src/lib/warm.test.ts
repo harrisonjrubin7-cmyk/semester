@@ -105,8 +105,13 @@ describe('handing the list over', () => {
       getEntriesByType: () => entries('https://x.test/assets/a.js'),
     });
     await warm('/');
+    // The build itself is whatever `vite.config.ts` stamped in for this run,
+    // so it is asserted as a string rather than as a value. What matters is
+    // that one goes: without it the worker cannot tell a deploy from a reload
+    // and can only keep adding to the cache.
     expect(postMessage).toHaveBeenCalledWith({
       type: 'warm',
+      build: expect.any(String),
       urls: ['https://x.test/assets/a.js'],
     });
     vi.unstubAllGlobals();
@@ -144,7 +149,10 @@ describe('the worker takes the list', () => {
     // headers from one the worker fetches, and a strict `Vary` match treats
     // those as different entries — so without this the same file is stored
     // again on every warm and the offline lookup still misses.
-    expect(sw.match(/ignoreVary: true/g) ?? []).toHaveLength(3);
+    // Four: the offline lookup, the warm's own "have I got this already",
+    // the stale-shell fallback, and the note saying which build the cache was
+    // filled for.
+    expect(sw.match(/ignoreVary: true/g) ?? []).toHaveLength(4);
   });
 
   it('is registered by the page, and warmed in the same breath', () => {
