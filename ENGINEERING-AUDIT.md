@@ -524,28 +524,43 @@ towards fixes both.
 
 ---
 
-## 7a. Found while splitting the assistant — focus is not given back
+## 7a. Focus was not given back · **FIXED**
 
-Not a finding of the audit, and not caused by the split: `ai/Panel.tsx` says it
-remembers what had focus and gives it back on close, and it does not. Focus
-lands on `<body>` instead.
+Found while splitting the assistant, and not caused by it: `ai/Panel.tsx` said
+it remembered what had focus and gave it back on close, and it did not — focus
+landed on `<body>`, leaving a keyboard reader the whole document to tab through
+to get anywhere.
 
-The cause is ordering. Child effects run before parent effects in the same
-commit, and `Composer` focuses itself on mount — so by the time the panel's own
-effect reads `document.activeElement`, the answer is already the composer it is
-about to unmount. Restoring focus to a detached node is the same as restoring
-nothing.
+The cause is ordering. Child effects run before the parent's, and `Composer`
+focuses itself on mount — so by the time the panel's own effect read
+`document.activeElement`, the answer was already the box it was about to
+unmount. Restoring focus to a detached node is the same as restoring nothing.
 
-**Checked against the pre-split build, not assumed**: swapped `Assistant.tsx`
-back to its committed version, drove the same probe, and focus was lost there
-too. So it predates this work by however long the composer has focused itself.
+**Checked against the pre-split build rather than assumed**: `Assistant.tsx`
+swapped back to its committed version, the same probe driven again, and focus
+was lost there too.
 
-The fix is to capture the element at the moment `show()` is called rather than
-when the panel mounts — one place, `ai/store.tsx`, which is what every opener
-goes through. It is left out of this pass deliberately: it is a behaviour
-change in a file the split does not otherwise touch, and widening a
-code-splitting commit into an accessibility fix is how neither gets reviewed
-properly.
+### The fallback turned out to be the common case
+
+The fix is to capture at `show()` — the last moment the answer is still true,
+and one place because every way in goes through it. But that on its own would
+still have failed the ordinary path, and the reason is worth keeping: **the
+button unmounts while the sheet is open**, so opening the sheet *by the button*
+leaves a detached node to go back to, and "focus what you remembered" lands on
+`<body>` every time — the same place the bug already put people. `isConnected`
+catches it, and the button React has just re-rendered is where the reader was
+standing. A shortcut pressed from elsewhere keeps the honest answer, because
+that element is still in the document.
+
+Driven on the production build, both ways in:
+
+```
+opened by the button   Escape → "Ask about Today"
+opened by Cmd+K        from "Courses" → composer → Escape → "Courses"
+```
+
+`ai/focus.test.tsx` covers both, and was checked by taking the fix back out:
+both land on `BODY` without it, which is what the browser did before.
 
 ## 8. What I checked and found healthy
 
@@ -591,6 +606,7 @@ Ordered by measured value per unit of risk, not by size.
 | 10 | **P4 proper** — one module per screen | large, own branch | adding a screen becomes adding a file |
 | 11 | **P2 proper** — split `now` out of the store context | large | the minute boundary stops being an app-wide event |
 | 12 | **P7** — keep paying the style ledger down | ongoing | the memoisation in 11 becomes worth having |
+| 14 | ✅ **§7a** — give focus back when the assistant closes | small | a dialog that takes focus returns it, both ways in |
 | 13 | ✅ **P1e** — move the assistant's context assembly off the store | medium | −7,543 lines and −12% of the gzipped critical path; `lib/sheet.ts`, `lib/maths.ts` and `lib/chart.ts` go with it |
 
 Items 1–5 are done, in that order, one commit each, with `lint`, `test`,
