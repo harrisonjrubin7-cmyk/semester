@@ -748,15 +748,22 @@ function Editor({ doc }: { doc: Doc }) {
                 onClick={() => mark(m.id)}
               />
             ))}
+            {/* Its words rather than a glyph, like Outline and Find beside it:
+                every symbol for a link is an emoji, and one coloured pictogram
+                in a row of monochrome letters reads as a mistake. */}
             <Tool
               label="Link"
-              icon="🔗"
               disabled={!markable}
               pressed={linking}
               onClick={() => setLinking(!linking)}
             />
             <ToolRule />
-            {(['heading', 'text', 'bullets'] as BlockKind[]).map((kind) => (
+            {/* The text kinds, then the things that are not prose. Every kind
+                is here rather than only the first seven: a block you can only
+                reach through a menu is a block most people never find out
+                exists, which is what the Insert menu alone was doing to the
+                table and the equation before this toolbar existed. */}
+            {(['heading', 'text', 'bullets', 'checklist'] as BlockKind[]).map((kind) => (
               <Tool
                 key={kind}
                 label={INSERT_LABEL[kind]}
@@ -765,7 +772,7 @@ function Editor({ doc }: { doc: Doc }) {
               />
             ))}
             <ToolRule />
-            {(['quote', 'table', 'equation', 'break'] as BlockKind[]).map((kind) => (
+            {(['quote', 'table', 'equation', 'code', 'toc', 'break'] as BlockKind[]).map((kind) => (
               <Tool
                 key={kind}
                 label={INSERT_LABEL[kind]}
@@ -1577,7 +1584,7 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
           className="input"
           value={block.text}
           onChange={(e) => onChange({ ...block, text: e.target.value })}
-          placeholder="Write. **Bold** and *italic* work."
+          placeholder="Write. **Bold**, *italic*, ~~struck out~~, `code` and [links](https://…) all work."
           aria-label="Paragraph"
           rows={5}
           style={{ width: '100%', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}
