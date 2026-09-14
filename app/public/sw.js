@@ -21,6 +21,20 @@ const VERSION = 'semester-v1';
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 
+/*
+ * Where a shared syllabus waits between the POST and the page that reads it.
+ *
+ * Up here with the other two because `activate` has to know about it. Its name
+ * is not derived from VERSION and must not be: `src/lib/shared.ts` opens the
+ * same cache from the page, and a worker cannot import from the app, so the
+ * string is agreed by being written the same in both places. Change one and
+ * you change both.
+ */
+const SHARE_CACHE = 'semester-shared';
+
+/** The three caches this worker owns. Anything else under this origin is not ours. */
+const OURS = [SHELL, MEDIA, SHARE_CACHE];
+
 // The worker is served from wherever the app is — '/' locally, '/semester/' on
 // GitHub Pages — so every path it holds is derived from its own location. A
 // hard-coded '/index.html' would cache the wrong page, or none.
@@ -59,9 +73,65 @@ self.addEventListener('install', (event) => {
  * match treats those as different entries — so without it the same file is
  * fetched and stored again on every warm, and the offline lookup still misses.
  */
+/*
+ * Where the build the cache was filled for is written down.
+ *
+ * A cache entry, because a worker has no storage of its own that survives the
+ * worker being stopped, and this is the one thing it has to remember between
+ * page loads. It lives in SHELL and is excluded from the prune below by name.
+ */
+const BUILD_KEY = `${BASE}__build`;
+
+async function builtFor(cache) {
+  try {
+    const hit = await cache.match(BUILD_KEY, { ignoreVary: true });
+    return hit ? await hit.text() : '';
+  } catch {
+    return '';
+  }
+}
+
+/*
+ * Throw away the last build's assets, and only when there is a last build.
+ *
+ * Everything kept here is named after a file on the server, and those names
+ * are content-hashed — so a deploy does not update these entries, it orphans
+ * them. `activate` cannot clear them: it runs when `sw.js` changes, and
+ * `sw.js` is a static file that does not change per build. So the cache only
+ * ever grew, and an installed app held every version of every chunk it had
+ * ever loaded.
+ *
+ * Pruning against the warm list on *every* load would have been the obvious
+ * fix and would have been wrong. That list is what the first load fetched; a
+ * screen opened later is cached by the fetch handler and is not in it, so
+ * pruning every time would evict precisely the screens the offline promise is
+ * about. A build change is the one moment the old entries are certainly dead.
+ *
+ * What is kept: the shell, the page's own list, and the note recording which
+ * build this now is. Deleting rather than emptying the cache, so there is no
+ * moment where an offline reload finds no index.html.
+ */
+async function pruneTo(cache, urls) {
+  const keep = new Set([...SHELL_FILES, ...urls, BUILD_KEY].map(toPath));
+  for (const req of await cache.keys()) {
+    if (!keep.has(toPath(req.url))) await cache.delete(req);
+  }
+}
+
+/** A cache key and a URL compared as the same thing: the path they name. */
+function toPath(url) {
+  try {
+    return new URL(url, self.location.origin).pathname;
+  } catch {
+    return String(url);
+  }
+}
+
 self.addEventListener('message', (event) => {
-  const urls = event.data && event.data.type === 'warm' ? event.data.urls : null;
-  if (!Array.isArray(urls)) return;
+  const said = event.data && event.data.type === 'warm' ? event.data : null;
+  const urls = said && Array.isArray(said.urls) ? said.urls : null;
+  if (!urls) return;
+  const build = typeof said.build === 'string' ? said.build : '';
   event.waitUntil(
     caches.open(SHELL).then(async (cache) => {
       for (const url of urls) {
@@ -72,6 +142,17 @@ self.addEventListener('message', (event) => {
           // One asset that will not cache must not stop the rest.
         }
       }
+      // After the adds, never before: a prune that ran first would delete the
+      // shell of the build now being warmed and have to fetch it all back.
+      if (!build) return;
+      try {
+        if ((await builtFor(cache)) !== build) {
+          await pruneTo(cache, urls);
+          await cache.put(BUILD_KEY, new Response(build));
+        }
+      } catch {
+        // A full or refusing cache. Growing is better than failing.
+      }
     }),
   );
 });
@@ -80,8 +161,22 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
+      /*
+       * Drop the caches of previous versions of this worker, and only those.
+       *
+       * It used to test `!k.startsWith(VERSION)`, which read as "anything that
+       * is not the current version" and meant something else: `semester-shared`
+       * does not start with `semester-v1`, so every activation deleted the
+       * cache holding a syllabus somebody had just shared into the app. The
+       * window is narrow — share, stash, redirect, read — but `skipWaiting()`
+       * on install is exactly what can put an activation inside it, which
+       * makes the first share after a deploy the one that loses the file.
+       *
+       * Naming what we keep rather than pattern-matching what we drop: a list
+       * of three cannot go wrong the way a prefix test did.
+       */
       .then((keys) =>
-        Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))),
+        Promise.all(keys.filter((k) => !OURS.includes(k)).map((k) => caches.delete(k))),
       )
       .then(() => self.clients.claim()),
   );
@@ -102,7 +197,6 @@ const isMedia = (url) =>
  * This is checked before the GET guard below, because it is the one POST this
  * worker has any business answering.
  */
-const SHARE_CACHE = 'semester-shared';
 const SHARE_KEY = './__shared';
 
 async function stashShared(request) {
