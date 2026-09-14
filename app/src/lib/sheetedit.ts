@@ -850,21 +850,47 @@ export interface Clip {
   /** Row-major, `rows × cols`, holding what was typed. */
   cells: string[][];
   styles: (CellStyle | undefined)[][];
+  /**
+   * What each cell *came to*, taken at the moment it was copied.
+   *
+   * Only for pasting values — see {@link pasteWay} — and absent on a clip read
+   * off the system clipboard, which is text and has no answers behind it.
+   *
+   * A snapshot rather than something worked out at paste time, because a clip
+   * can outlive the grid it came from: it can be put down on another sheet
+   * entirely, where its `=SUM(B2:B9)` would evaluate against nine cells that
+   * have nothing to do with it and produce a number that looks fine. What was
+   * copied is what gets pasted.
+   */
+  values?: string[][];
 }
 
-export function copy(body: Body, range: Range): Clip {
+/**
+ * A block taken out of the sheet.
+ *
+ * `answer` is how a cell's computed value is read, and is what makes *paste
+ * values* possible later — see {@link Clip.values} for why it is taken now
+ * rather than at paste time. Optional, so every caller that only wants the
+ * text and the formats is unchanged.
+ */
+export function copy(body: Body, range: Range, answer?: (address: string) => string): Clip {
   const b = box(range);
   const cells: string[][] = [];
   const styles: (CellStyle | undefined)[][] = [];
+  const values: string[][] = [];
   for (let r = b.top; r <= b.bottom; r += 1) {
     const row: string[] = [];
     const look: (CellStyle | undefined)[] = [];
+    const said: string[] = [];
     for (let c = b.left; c <= b.right; c += 1) {
-      row.push(body.cells[ref(r, c)] ?? '');
-      look.push(body.styles[ref(r, c)]);
+      const address = ref(r, c);
+      row.push(body.cells[address] ?? '');
+      look.push(body.styles[address]);
+      if (answer) said.push(answer(address));
     }
     cells.push(row);
     styles.push(look);
+    if (answer) values.push(said);
   }
   return {
     from: ref(b.top, b.left),
@@ -872,6 +898,7 @@ export function copy(body: Body, range: Range): Clip {
     cols: b.right - b.left + 1,
     cells,
     styles,
+    ...(answer ? { values } : {}),
   };
 }
 
@@ -931,6 +958,137 @@ export function paste(body: Body, at: string, clip: Clip, withStyles = true): Bo
     rows: Math.min(MAX_ROWS, Math.max(body.rows, target.row + clip.rows)),
     cols: Math.min(MAX_COLS, Math.max(body.cols, target.col + clip.cols)),
   };
+}
+
+/**
+ * The ways a block can be put down.
+ *
+ * Excel's Paste Special dialogue is a grid of sixteen radio buttons; this is
+ * the five of them anybody uses, as five things each of which does one
+ * describable thing:
+ *
+ *   - `everything` — what plain paste has always done.
+ *   - `values` — the formulas become the answers they had. The one that
+ *     cannot be got any other way, and the commonest reason anybody opens
+ *     the dialogue at all: it is how a computed column is frozen before the
+ *     sheet it was computed from is thrown away.
+ *   - `formulas` — the working, with none of the colours.
+ *   - `formats` — the colours, the bold and the number format, with none of
+ *     the content. What somebody means by "make this column look like that
+ *     one".
+ *   - `transpose` — a row put down as a column, or the other way round.
+ *
+ * `formats` is the one that deletes nothing: a block of formatting laid over
+ * cells that have values leaves the values alone, which is the whole point of
+ * it. The other four write what they carry and clear what they do not.
+ */
+export const PASTE_WAYS = ['everything', 'values', 'formulas', 'formats', 'transpose'] as const;
+
+export type PasteWay = (typeof PASTE_WAYS)[number];
+
+export const PASTE_LABELS: Record<PasteWay, string> = {
+  everything: 'Everything',
+  values: 'Values only',
+  formulas: 'Formulas, no formatting',
+  formats: 'Formatting only',
+  transpose: 'Transposed',
+};
+
+export const PASTE_HINTS: Record<PasteWay, string> = {
+  everything: 'The contents and the formatting, as an ordinary paste.',
+  values: 'Every formula becomes the answer it had when it was copied.',
+  formulas: 'The contents, leaving the colours and formats where they are.',
+  formats: 'The colours, bold and number format. Changes no value.',
+  transpose: 'Rows become columns and columns become rows.',
+};
+
+/**
+ * A block put down one of the {@link PASTE_WAYS}.
+ *
+ * `everything` is {@link paste} exactly, so there is one paste and four
+ * variations on it rather than two code paths that have to agree.
+ *
+ * A clip with no `values` behind it — text off the system clipboard — pastes
+ * its text under `values`, because the text *is* the value: there were never
+ * any formulas in it to resolve.
+ */
+export function pasteWay(body: Body, at: string, clip: Clip, way: PasteWay): Body {
+  if (way === 'everything') return paste(body, at, clip, true);
+  if (way === 'formulas') return paste(body, at, clip, false);
+
+  if (way === 'values') {
+    /*
+     * The answers, put down as a clip with no origin.
+     *
+     * No origin is what stops `translate` from moving anything, which is
+     * right twice over: a number has no references to move, and a value that
+     * happens to read `=SUM(B2:B9)` because somebody typed it as text is
+     * being pasted as that text.
+     */
+    const flat: Clip = {
+      ...clip,
+      from: '',
+      cells: clip.cells.map((row, r) =>
+        row.map((text, c) => (isFormula(text) ? clip.values?.[r]?.[c] ?? '' : text)),
+      ),
+    };
+    return paste(body, at, flat, false);
+  }
+
+  if (way === 'formats') {
+    const target = parseRef(at);
+    if (!target) return body;
+    const styles = { ...body.styles };
+    for (let r = 0; r < clip.rows; r += 1) {
+      for (let c = 0; c < clip.cols; c += 1) {
+        const row = target.row + r;
+        const col = target.col + c;
+        if (row >= MAX_ROWS || col >= MAX_COLS) continue;
+        const style = clip.styles[r]?.[c];
+        if (style) styles[ref(row, col)] = style;
+        else delete styles[ref(row, col)];
+      }
+    }
+    // The grid grows to hold the formatting, the same as it grows to hold
+    // content: a format pasted onto rows that are not there is not pasted.
+    return {
+      ...body,
+      styles,
+      rows: Math.min(MAX_ROWS, Math.max(body.rows, target.row + clip.rows)),
+      cols: Math.min(MAX_COLS, Math.max(body.cols, target.col + clip.cols)),
+    };
+  }
+
+  /*
+   * Flipped, and with the formulas left where they were written.
+   *
+   * `from` is dropped so nothing is translated, and that is not a shortcut: a
+   * transposed paste moves a cell by a different amount depending on where it
+   * sat in the block, so there is no single `dr`/`dc` that is right for the
+   * block — the offset for the cell at (1, 4) is not the offset for the one
+   * at (4, 1). Excel does move them, cell by cell; doing it wrong would be
+   * worse than not doing it, so what was written is what is put down.
+   */
+  const spun: Clip = {
+    from: '',
+    rows: clip.cols,
+    cols: clip.rows,
+    cells: turn(clip.cells, clip.rows, clip.cols, ''),
+    styles: turn(clip.styles, clip.rows, clip.cols, undefined),
+    ...(clip.values ? { values: turn(clip.values, clip.rows, clip.cols, '') } : {}),
+  };
+  return paste(body, at, spun, true);
+}
+
+/** A row-major block with its rows and columns swapped. */
+function turn<T>(grid: T[][], rows: number, cols: number, empty: T): T[][] {
+  const out: T[][] = [];
+  for (let c = 0; c < cols; c += 1) {
+    const row: T[] = [];
+    for (let r = 0; r < rows; r += 1) row.push(grid[r]?.[c] ?? empty);
+    out.push(row);
+  }
+  return out;
 }
 
 /**

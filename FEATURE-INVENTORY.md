@@ -644,7 +644,15 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   with `$` honoured. ~~No fill *handle* — the corner you drag~~ — **closed**:
   the corner of the selection drags to fill and presses to fill as far as the
   column beside it goes, and it is a real button with a name so it works from
-  the keyboard. No paste-special.
+  the keyboard. ~~No paste-special.~~ — **closed.** Five ways in
+  `PASTE_WAYS` (`lib/sheetedit.ts`): everything, values, formulas, formats,
+  transposed. `values` is the one that could not be had another way — it needs
+  the *answers*, which are taken at copy time and carried on the clip, because
+  a clip can be put down on another sheet where its `=SUM(B2:B9)` would
+  evaluate against nine cells that have nothing to do with it. A transposed
+  paste leaves its formulas as written: there is no single translation that is
+  right for the block, since the offset for the cell at (1, 4) is not the one
+  for (4, 1).
 - ~~No cell formatting at all: number/currency/percent/date formats, bold,
   fill, borders, alignment, wrap, merge.~~ — number, currency, percent, date
   and decimal places, bold, italic, strikethrough and alignment are on the
@@ -653,10 +661,21 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   the View tab freezes the top row, and `lib/filter.ts` hides rows on a rule
   per column — with the status bar counting only what is visible, because a
   `SUM` still adds up the hidden rows and that is the trap.
-- ~~No conditional formatting,~~ no data validation or dropdowns. —
-  **conditional formatting closed.** `lib/condfmt.ts` holds rules rather than
+- ~~No conditional formatting, no data validation or dropdowns.~~ —
+  **both closed.** `lib/condfmt.ts` holds rules rather than
   painted cells, so a colour follows the number; `lib/xlsxcond.ts` writes them
   into the file as real `cfRule`s against a book-wide `dxfs` table.
+  `lib/validate.ts` says what a block may hold — one of a list, a whole
+  number, a number, a band, a text length — and **marks rather than refuses**,
+  because the grid writes a cell on every keystroke and a rule that could
+  refuse would refuse the `8` on the way to `85`. That is also why the marking
+  earns its keep: Excel validates only what is typed and lets paste, fill and
+  import past, which is how a validated column fills with values breaking its
+  own rule. A list rule offers its values as a `datalist` — it offers, it does
+  not confine. `lib/xlsxvalid.ts` writes them as real `dataValidation`
+  elements, native types where they map and a spelled-out `custom` formula
+  where they do not, rather than inventing a floor of minus a trillion and
+  calling it unbounded.
 - ~~**No charts and no pivot tables.**~~ — **charts closed.** `lib/chart.ts`
   reads a range into series, `components/SheetChart.tsx` draws columns, bars,
   a line or a pie, and `lib/xlsxchart.ts` writes a *live* chart into the
@@ -728,11 +747,11 @@ notes · a generated PDF, as against the browser's print-to-PDF, which is
 there · `.docx` *import* · "Open in Docs" from a study guide · a WYSIWYG
 surface (the marks are typed).
 
-**Sheets** — paste-special · data validation and dropdowns · cell fill,
-borders, wrap and merge · a per-course grade calculator and GPA planner
-template.
+**Sheets** — cell fill, borders, wrap and merge · a per-course grade
+calculator and GPA planner template.
 (Cross-sheet references, the fill handle, filtering, conditional formatting,
-named ranges and pivot tables were all on this list and are done.)
+named ranges, pivot tables, paste-special and data validation were all on this
+list and are done.)
 
 **Slides** — free layout (a text box you can move) · images and charts placed
 on a slide · transitions, which are deliberate: `lib/pptx.ts` would have to

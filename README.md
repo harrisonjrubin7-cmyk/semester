@@ -534,6 +534,33 @@ model in it or needs a key:
   than as the answers, so it is still right after somebody changes a mark —
   in the app and in Excel, which both compute the same formula.
 
+  A block can be pasted **five ways**: everything, the values alone — every
+  formula becoming the answer it had, which is how a computed column is frozen
+  before the sheet it was computed from is thrown away — the formulas without
+  the colours, the colours without the contents, or transposed, so a row lands
+  as a column. Pasting formatting changes no value, which is the whole of what
+  somebody means by "make this column look like that one".
+
+  And a block can be told **what it is allowed to hold**: one of a list of
+  values, a whole number, a number, a number in a band, or text no longer than
+  so many characters. A list is also an offer — the cell drops down the values,
+  so nobody types `ECON 1O2O` with a letter O in it.
+
+  It **marks; it never refuses and never changes anything.** A cell here is
+  written on every keystroke rather than on Return, so a rule of *between 50
+  and 100* that refused bad input would refuse the `8` on the way to `85` and
+  the column could never be typed into. That turned out to be the better answer
+  anyway: a rule that can reject is a rule that can lose what somebody typed.
+  So a cell that breaks its rule is underlined, counted in the status bar, and
+  the status bar says what the rule wanted — and the number underneath is still
+  the number they typed. It is also why the marking is worth having, because
+  Excel validates only what is *typed*: paste, fill and import all walk past it
+  silently, which is exactly how a validated column fills up with values that
+  break its own rule. Here the rule is re-read on every render, so a value that
+  arrived by any road at all is checked the same way. The rules go into the
+  `.xlsx` as real `dataValidation` elements, so the dropdown is a dropdown in
+  Excel too.
+
   And the corner of the selection is a **fill handle**: drag it to pull a
   formula down a column or across a row, or press it to fill as far as the
   column beside it goes — which is what double-clicking it does in Excel, and

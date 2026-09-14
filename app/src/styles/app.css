@@ -4040,6 +4040,23 @@ input[type='search'].input {
   color: var(--app-accent-bright);
 }
 
+/*
+ * A cell holding something its rule does not allow.
+ *
+ * An underline rather than a colour, and deliberately: the colour rules in
+ * `lib/condfmt.ts` own the cell's ink and its background, and a mark that used
+ * either would be a rule fighting a rule — a mark sixty is red, so an
+ * out-of-range mark would have to be red too and would look like the same
+ * claim. The underline is the one channel nothing else is using, and it
+ * survives every combination of the two.
+ */
+.scell-breaks {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: var(--app-accent-bright);
+  text-underline-offset: 3px;
+}
+
 /* ── The tab strip and the status bar ─────────────────────────────────── */
 
 .stabs {

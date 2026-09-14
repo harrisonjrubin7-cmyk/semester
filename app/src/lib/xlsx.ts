@@ -66,6 +66,8 @@ import {
 } from './xlsxchart';
 import { chartsOf, type ChartRead, type SheetChart } from './chart';
 import { autoFilterXml, conditionalFor } from './xlsxcond';
+import { validationsFor } from './xlsxvalid';
+import { checksOf, type DataRule } from './validate';
 import { rulesOf, type CondRule } from './condfmt';
 import { namesOf, pointAt, writeRef, type NamedRange } from './names';
 import { filterOf, hidden as hiddenRows } from './filter';
@@ -186,6 +188,14 @@ export interface Tab {
    * summary tab, which is the only reason to have named anything.
    */
   names?: NamedRange[];
+  /**
+   * What the cells in a block are allowed to hold — see `lib/xlsxvalid.ts`.
+   *
+   * On screen a broken rule is a mark, which cannot be exported. The rule
+   * itself can be, so it is: a validated column written out without it is a
+   * column whose rule was silently dropped on the way.
+   */
+  checks?: DataRule[];
   /** The block the filter covers, so Excel draws its own arrows on it. */
   autoFilter?: string;
   /**
@@ -312,12 +322,14 @@ function sheetXml(tab: Tab, styles: Styles, drawing = false, conditional = ''): 
     `${view}${cols}<sheetData>${rows}</sheetData>` +
     /*
      * `CT_Worksheet` is a sequence, and this is the order it wants:
-     * `autoFilter`, then `conditionalFormatting`, then `drawing` near the very
-     * end. Any other order is a repair notice with no hint of which element,
-     * so the order lives here once rather than at each writer.
+     * `autoFilter`, then `conditionalFormatting`, then `dataValidations`,
+     * then `drawing` near the very end. Any other order is a repair notice
+     * with no hint of which element, so the order lives here once rather than
+     * at each writer.
      */
     (tab.autoFilter ? autoFilterXml(tab.autoFilter) : '') +
     conditional +
+    validationsFor(tab.checks ?? []) +
     (drawing ? '<drawing r:id="rId1"/>' : '') +
     '</worksheet>'
   );
@@ -807,6 +819,7 @@ export function fromSheet(sheet: Sheet, header = true, ctx: Ctx = clock()): Tab 
      */
     charts: readable(sheet.cells, chartsOf(sheet), ctx),
     names: namesOf(sheet),
+    checks: checksOf(sheet),
   };
 }
 

@@ -43,6 +43,7 @@ import type { CourseId } from './types';
 import type { SheetChart } from './chart';
 import { namesIn, type NamedRange, type Names, type Pointed } from './names';
 import type { CondRule } from './condfmt';
+import type { DataRule } from './validate';
 import type { SheetFilter } from './filter';
 import type { Pivot } from './pivot';
 
@@ -84,6 +85,14 @@ export interface Sheet {
    * on, which is nearly all of them.
    */
   rules?: CondRule[];
+  /**
+   * What the cells in a block are allowed to hold — see `lib/validate.ts`.
+   *
+   * Checked on every read and *shown*, never enforced: the grid writes a cell
+   * on every keystroke, so there is no commit to refuse at, and a rule that
+   * could refuse would lose what somebody typed.
+   */
+  checks?: DataRule[];
   /**
    * Blocks of cells given a name — see `lib/names.ts`.
    *

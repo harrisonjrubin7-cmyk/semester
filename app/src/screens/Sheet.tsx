@@ -96,6 +96,13 @@ import {
   type Clip,
 } from '../lib/sheetedit';
 import { moveRef, reachOf, renameIn, renameRef, sheetsBehind, shiftIn, wayOf } from '../lib/sheetedit';
+import {
+  PASTE_HINTS,
+  PASTE_LABELS,
+  PASTE_WAYS,
+  pasteWay,
+  type PasteWay,
+} from '../lib/sheetedit';
 import { ZOOMS, stepZoom, type Tab as RibbonTab } from '../lib/ribbon';
 import { FormulaBar, Ribbon, SheetTabs, StatusBar } from '../components/Ribbon';
 import { TEMPLATES, fromTemplate } from '../lib/sheettemplates';
@@ -114,6 +121,19 @@ import {
 } from '../lib/chart';
 import { SheetChart as ChartPicture } from '../components/SheetChart';
 import { hides } from '../lib/filter';
+import {
+  CHECKS,
+  CHECK_LABELS,
+  allows,
+  blankRule as blankCheck,
+  checksOf,
+  choicesOf,
+  ready as checkReady,
+  saysRule as saysCheck,
+  whyNot as whyNotValue,
+  type Check,
+  type DataRule,
+} from '../lib/validate';
 import {
   namesOf,
   pointAt,
@@ -810,7 +830,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const [view, setView] = useState({ lines: true, heads: true, formulas: false, freeze: true });
   const [seeking, setSeeking] = useState(false);
   /** Which panel is open under the ribbon, or none. */
-  const [panel, setPanel] = useState<'filter' | 'rules' | 'names' | null>(null);
+  const [panel, setPanel] = useState<'filter' | 'rules' | 'names' | 'checks' | null>(null);
   /** Which column the filter strip is setting a rule on. */
   const [onColumn, setOnColumn] = useState<number | null>(null);
   const [needle, setNeedle] = useState('');
@@ -1123,6 +1143,29 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     () => new Map(rules.map((r) => [r.range, rangeOf(r.range)])),
     [rules],
   );
+  /** What the cells are allowed to hold, and the blocks those rules cover. */
+  const checks = useMemo(() => checksOf(sheet), [sheet]);
+  const checkRanges = useMemo(
+    () => new Map(checks.map((c) => [c.id, rangeOf(c.range)])),
+    [checks],
+  );
+  /**
+   * The rule covering a cell, or none.
+   *
+   * The last one wins where two overlap, which is the same answer the colour
+   * rules give and for the same reason: a rule added on top of another is
+   * somebody saying "and this one instead".
+   */
+  const checkAt = useCallback(
+    (address: string): DataRule | undefined => {
+      for (let i = checks.length - 1; i >= 0; i -= 1) {
+        const at = checkRanges.get(checks[i].id);
+        if (at && holds(at, address) && checkReady(checks[i])) return checks[i];
+      }
+      return undefined;
+    },
+    [checks, checkRanges],
+  );
 
   const selected = useMemo(() => cellsIn(sel), [sel]);
   /**
@@ -1138,6 +1181,52 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const totals = useMemo(() => summarise(sheet.cells, visible, over), [sheet.cells, visible, over]);
   /** How many of the selected rows the filter is keeping out of the sum above. */
   const outOfSight = selected.length - visible.length;
+  /**
+   * Cells anywhere on the sheet that break the rule covering them.
+   *
+   * Counted over the whole sheet rather than the selection, because the point
+   * of a rule is to catch the cell nobody is looking at. Skipped entirely
+   * where there are no rules, which is nearly every sheet.
+   */
+  const broken = useMemo(() => {
+    if (!checks.length) return [] as string[];
+    /*
+     * Walked over each rule's own range, not over the cells that exist.
+     *
+     * A rule may say an empty cell is *not* allowed, and an empty cell is not
+     * a key in `cells` — so scanning what is there would count none of them,
+     * while the grid, which asks the question per rendered cell, underlines
+     * every one. The count in the status bar and the grid have to be the same
+     * claim, or the sheet says two things about itself.
+     */
+    const out = new Set<string>();
+    for (const rule of checks) {
+      const at = checkRanges.get(rule.id);
+      if (!at || !checkReady(rule)) continue;
+      for (const address of cellsIn(at)) {
+        // The rule that actually covers it, which where two overlap is the
+        // later one — the same answer the cell itself gets.
+        if (checkAt(address) !== rule) continue;
+        const text = sheet.cells[address] ?? '';
+        if (!allows(rule, evaluate(sheet.cells, address, new Set(), over), text)) out.add(address);
+      }
+    }
+    return [...out];
+  }, [checks, checkRanges, checkAt, sheet.cells, over]);
+  /**
+   * The rule the cursor's cell breaks, if it breaks one.
+   *
+   * Named in the status bar, which is where somebody looks when a cell is
+   * marked and they want to know what it wanted. The mark says *something is
+   * wrong here*; only this says what.
+   */
+  const cursorBreaks = useMemo(() => {
+    const rule = checks.length ? checkAt(focus) : undefined;
+    if (!rule) return undefined;
+    return allows(rule, evaluate(sheet.cells, focus, new Set(), over), sheet.cells[focus] ?? '')
+      ? undefined
+      : rule;
+  }, [checks, checkAt, focus, sheet.cells, over]);
   const spot = box(sel);
 
   /*
@@ -1247,6 +1336,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const setFilter = (next: SheetFilter | undefined) => patch({ filter: next });
   const setRules = (next: CondRule[]) => patch({ rules: next });
   const setNames = (next: NamedRange[]) => patch({ names: next });
+  const setChecks = (next: DataRule[]) => patch({ checks: next });
   const setPivots = (next: Pivot[]) => patch({ pivots: next });
 
   /** The whole filled block, for a filter somebody opened without selecting one. */
@@ -1408,7 +1498,11 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   // ── What the ribbon's buttons do ───────────────────────────────────────
 
   const cutOrCopy = (andClear: boolean) => {
-    const taken = copyOut(body(), sel);
+    // The answers come with it, so *paste values* can put down what the
+    // formulas came to — see `Clip.values` for why they are taken now.
+    const taken = copyOut(body(), sel, (address) =>
+      show(evaluate(sheet.cells, address, new Set(), over)),
+    );
     setClip(taken);
     void navigator.clipboard?.writeText(clipText(taken));
     if (andClear) change(clearOut(body(), sel), `cut:${rangeLabel(sel)}`);
@@ -1435,6 +1529,28 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     }
     change(pasteAt(body(), focus, taken), `paste:${focus}`);
     say(`Pasted into ${focus}.`);
+  };
+
+  /**
+   * Paste, one of the five ways — see `PASTE_WAYS` in `lib/sheetedit.ts`.
+   *
+   * The same two clipboards in the same order as a plain paste. A clip off the
+   * system has no formulas in it, so *values* and *formulas* both put down its
+   * text; that is not a special case in here, it is what those words mean
+   * about text.
+   */
+  const pasteSpecial = async (way: PasteWay) => {
+    let taken = clip;
+    if (!taken) {
+      const text = await navigator.clipboard?.readText?.().catch(() => '');
+      taken = text ? readClip(text) : null;
+    }
+    if (!taken) {
+      say('There is nothing to paste.');
+      return;
+    }
+    change(pasteWay(body(), focus, taken, way), `paste:${way}:${focus}`);
+    say(`${PASTE_LABELS[way]} pasted into ${focus}.`);
   };
 
   const sum = (fn: string) => {
@@ -1646,6 +1762,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             label: `Paste into ${focus}`,
             run: () => void pasteIn(),
           },
+          // `everything` is the plain paste directly above, so it is not
+          // offered twice under a second name.
+          ...PASTE_WAYS.filter((way) => way !== 'everything').map((way) => ({
+            id: `edit.paste.${way}`,
+            label: `Paste into ${focus}: ${PASTE_LABELS[way].toLowerCase()}`,
+            hint: PASTE_HINTS[way],
+            run: () => void pasteSpecial(way),
+          })),
           {
             id: 'edit.clear',
             label: `Clear ${rangeLabel(sel)}`,
@@ -1898,6 +2022,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             run: nothing ? undefined : openFilter,
           },
           {
+            id: 'data.checks',
+            label: broken.length
+              ? `Check what cells may hold (${broken.length} breaking a rule)`
+              : 'Check what cells may hold',
+            hint: 'Marks what does not match. It never refuses or changes an entry.',
+            run: () => setPanel((was) => (was === 'checks' ? null : 'checks')),
+          },
+          {
             id: 'data.analyse',
             label: many(sel) ? `Analyse ${rangeLabel(sel)}` : 'Analyse this sheet',
             hint: 'Mean, spread, correlation and a fitted line, on the Analyse screen.',
@@ -1989,6 +2121,24 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               label: 'Paste',
               glyph: '⎘',
               run: () => void pasteIn(),
+            },
+            /*
+             * The five ways, as a pick rather than five buttons.
+             *
+             * It shows `everything` as its value because that is what plain
+             * Paste beside it does — so the list reads as *and these other
+             * four*, rather than as a setting that has been left unset.
+             */
+            {
+              kind: 'pick',
+              id: 'c.paste.special',
+              label: 'Paste special',
+              value: 'everything',
+              options: PASTE_WAYS.map((way) => ({
+                id: way,
+                label: PASTE_LABELS[way],
+              })),
+              onPick: (id: string) => void pasteSpecial(id as PasteWay),
             },
             {
               kind: 'button',
@@ -2481,6 +2631,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             },
             {
               kind: 'button',
+              id: 'd.checks',
+              label: broken.length ? `Check entries (${broken.length})` : 'Check entries',
+              wide: true,
+              on: panel === 'checks',
+              run: () => setPanel((was) => (was === 'checks' ? null : 'checks')),
+            },
+            {
+              kind: 'button',
               id: 'd.analyse',
               label: 'Analyse',
               wide: true,
@@ -2640,6 +2798,20 @@ function Grid({ sheet }: { sheet: SheetModel }) {
 
       <Ribbon tabs={tabs} on={ribbon} onTab={setRibbon} />
 
+      {panel === 'checks' && (
+        <CheckStrip
+          checks={checks}
+          selection={many(sel) ? rangeLabel(sel) : focus}
+          broken={broken.length}
+          brokenFor={(rule) => {
+            const at = checkRanges.get(rule.id);
+            return at ? broken.filter((a) => holds(at, a)).length : 0;
+          }}
+          onChecks={setChecks}
+          onClose={() => setPanel(null)}
+        />
+      )}
+
       {panel === 'names' && (
         <NameStrip
           names={names}
@@ -2789,6 +2961,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
                         over={over}
                         rules={rules}
                         ruleRanges={ruleRanges}
+                        check={checks.length ? checkAt(address) : undefined}
                         handle={address === corner ? fillHandle : undefined}
                         address={address}
                         inside={holds(sel, address)}
@@ -2866,6 +3039,9 @@ function Grid({ sheet }: { sheet: SheetModel }) {
                 totals.count > 0 ? `Count ${totals.count}` : '',
                 totals.count > 0 ? `Min ${show(totals.min)} · Max ${show(totals.max)}` : '',
                 totals.wrong ? 'and something in it is an error' : '',
+                broken.length
+                  ? `${broken.length} cell${broken.length === 1 ? '' : 's'} on this sheet break a rule`
+                  : '',
               ]
                 .filter(Boolean)
                 .join(' · ')
@@ -2873,7 +3049,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
                 isFormula(raw)
                   ? ` → ${answer}${wrong ? ' — that is what is wrong, not a value' : ''}`
                   : ''
-              }`
+              }${cursorBreaks ? ` — ${whyNotValue(cursorBreaks)}` : ''}`
         }
         zoom={zoom}
         onZoom={(by) => setZoom(stepZoom(zoom, by > 0 ? 1 : -1))}
@@ -3743,6 +3919,170 @@ function RuleStrip({
 }
 
 /**
+ * What the cells in a block are allowed to hold, as a strip over the grid.
+ *
+ * It says what a rule is *for* rather than only setting it: the count of cells
+ * currently breaking it is on the row, so somebody setting a rule over a
+ * column that is already full finds out at once how much of it disagrees. A
+ * rule that turns out to say forty cells are wrong is usually the rule being
+ * wrong, and that is the moment to notice.
+ */
+function CheckStrip({
+  checks,
+  selection,
+  broken,
+  brokenFor,
+  onChecks,
+  onClose,
+}: {
+  checks: DataRule[];
+  selection: string;
+  /** How many cells on the whole sheet break any rule. */
+  broken: number;
+  /** How many break this one. */
+  brokenFor: (rule: DataRule) => number;
+  onChecks: (next: DataRule[]) => void;
+  onClose: () => void;
+}) {
+  const edit = (id: string, over: Partial<DataRule>) =>
+    onChecks(checks.map((c) => (c.id === id ? { ...c, ...over } : c)));
+
+  return (
+    <div className="fx fx-wrap" aria-label="What cells may hold">
+      {checks.map((rule) => {
+        const wrong = brokenFor(rule);
+        return (
+          <span
+            key={rule.id}
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 'var(--sp-3)',
+              flex: '1 1 100%',
+              alignItems: 'stretch',
+            }}
+          >
+            <input
+              className="fx-in"
+              value={rule.range}
+              onChange={(e) => edit(rule.id, { range: e.target.value.toUpperCase() })}
+              aria-label={`Which cells the rule ${saysCheck(rule)} covers`}
+              spellCheck={false}
+              style={{ flex: '0 1 110px' }}
+            />
+            <select
+              className="fx-in"
+              value={rule.check}
+              onChange={(e) => edit(rule.id, { check: e.target.value as Check })}
+              aria-label={`What the rule on ${rule.range} asks for`}
+            >
+              {CHECKS.map((c) => (
+                <option key={c} value={c}>
+                  {CHECK_LABELS[c]}
+                </option>
+              ))}
+            </select>
+            {rule.check === 'list' && (
+              <input
+                className="fx-in"
+                value={rule.values}
+                onChange={(e) => edit(rule.id, { values: e.target.value })}
+                placeholder="ECON, PSCI, BUS"
+                aria-label={`The values ${rule.range} may hold, separated by commas`}
+                spellCheck={false}
+                style={{ flex: '1 1 180px' }}
+              />
+            )}
+            {(rule.check === 'between' || rule.check === 'whole' || rule.check === 'decimal') && (
+              <input
+                className="fx-in"
+                value={rule.min}
+                onChange={(e) => edit(rule.id, { min: e.target.value })}
+                placeholder="from"
+                aria-label={`The lowest ${rule.range} may hold`}
+                spellCheck={false}
+                style={{ flex: '0 1 90px' }}
+              />
+            )}
+            {(rule.check === 'between' ||
+              rule.check === 'whole' ||
+              rule.check === 'decimal' ||
+              rule.check === 'length') && (
+              <input
+                className="fx-in"
+                value={rule.max}
+                onChange={(e) => edit(rule.id, { max: e.target.value })}
+                placeholder={rule.check === 'length' ? 'characters' : 'to'}
+                aria-label={
+                  rule.check === 'length'
+                    ? `The longest ${rule.range} may hold`
+                    : `The highest ${rule.range} may hold`
+                }
+                spellCheck={false}
+                style={{ flex: '0 1 90px' }}
+              />
+            )}
+            <label
+              style={{
+                ...secondLine(),
+                fontSize: 'var(--type-xs)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--sp-2)',
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={rule.blankOk}
+                onChange={(e) => edit(rule.id, { blankOk: e.target.checked })}
+                aria-label={`Whether an empty cell in ${rule.range} is allowed`}
+              />
+              Empty is fine
+            </label>
+            <button
+              type="button"
+              className="rib-btn"
+              aria-label={`Remove the rule on ${rule.range}`}
+              onClick={() => onChecks(checks.filter((c) => c.id !== rule.id))}
+            >
+              ✕
+            </button>
+            {wrong > 0 && (
+              <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: '1 1 100%' }}>
+                {wrong} cell{wrong === 1 ? '' : 's'} in {rule.range} do
+                {wrong === 1 ? 'es' : ''} not match this. Nothing has been changed — they are
+                underlined in the grid.
+              </span>
+            )}
+          </span>
+        );
+      })}
+
+      <button
+        type="button"
+        className="rib-btn rib-btn-wide"
+        onClick={() => onChecks([...checks, blankCheck(selection)])}
+      >
+        Check {selection}
+      </button>
+      {checks.length > 0 && broken === 0 && (
+        <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: '1 1 100%' }}>
+          Everything on this sheet matches its rule.
+        </span>
+      )}
+      <button
+        type="button"
+        className="rib-btn"
+        aria-label="Close what cells may hold"
+        onClick={onClose}
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
+/**
  * One cell.
  *
  * Its own component because the grid is `rows × cols` of these and the whole
@@ -3757,6 +4097,7 @@ function Cell({
   over,
   rules,
   ruleRanges,
+  check,
   handle,
   address,
   inside,
@@ -3778,6 +4119,13 @@ function Cell({
   rules: CondRule[];
   /** Their ranges, parsed once by `Grid` rather than once per cell. */
   ruleRanges: Map<string, Range>;
+  /**
+   * What this cell is allowed to hold, where a rule covers it.
+   *
+   * Undefined on every cell of every sheet nobody has set one on, which is
+   * what keeps the check off the hot path — see `lib/validate.ts`.
+   */
+  check?: DataRule;
   /** The fill handle, on the one cell that is the corner of the selection. */
   handle?: ReactNode;
   address: string;
@@ -3817,6 +4165,18 @@ function Cell({
     : own;
   const bad = isError(answer);
   /*
+   * Whether this cell breaks the rule covering it, and what it may offer.
+   *
+   * The mark is a *claim about the value*, so it is worked out from the value
+   * on every render like the colour rules are — nothing is stored, so nothing
+   * can go stale. A list rule also offers its values: a `datalist` rather than
+   * a `select`, because the cell has to stay a text box that anything can be
+   * typed into. This offers; it does not confine.
+   */
+  const offers = check ? choicesOf(check) : [];
+  const listId = offers.length ? `choices-${address}` : undefined;
+  const breaks = check ? !allows(check, answer, raw) : false;
+  /*
    * Numbers right, text left, unless somebody has said otherwise.
    *
    * The spreadsheet rule, and the reason it is the rule: a column of figures
@@ -3830,9 +4190,15 @@ function Cell({
   return (
     <td className={[frozen ? 'sfreeze' : '', handle ? 'sfill-cell' : ''].filter(Boolean).join(' ') || undefined}>
       <input
-        className={['scell', inside && !cursor ? 'scell-in' : '', bad ? 'scell-bad' : '']
+        className={[
+          'scell',
+          inside && !cursor ? 'scell-in' : '',
+          bad ? 'scell-bad' : '',
+          breaks ? 'scell-breaks' : '',
+        ]
           .filter(Boolean)
           .join(' ')}
+        list={listId}
         ref={hold}
         value={editing ? raw : value}
         onChange={(e) => onWrite(e.target.value)}
@@ -3848,7 +4214,12 @@ function Cell({
         onFocus={onFocus}
         onBlur={onBlur}
         onKeyDown={onKeyDown}
-        aria-label={`Cell ${address}`}
+        aria-label={
+          breaks && check
+            ? `Cell ${address} — ${whyNotValue(check)}`
+            : `Cell ${address}`
+        }
+        aria-invalid={breaks || undefined}
         spellCheck={false}
         style={{
           width: Math.round(92 * (zoom / 100)),
@@ -3872,6 +4243,13 @@ function Cell({
             : undefined,
         }}
       />
+      {listId && (
+        <datalist id={listId}>
+          {offers.map((choice) => (
+            <option key={choice} value={choice} />
+          ))}
+        </datalist>
+      )}
       {handle}
     </td>
   );
