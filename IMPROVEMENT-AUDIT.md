@@ -274,7 +274,7 @@ on.
 
 ---
 
-## 3. Six test files were passing on the order they ran in · **five fixed**
+## 3. Seven test files were passing on the order they ran in · **six fixed**
 
 Nobody had run the suite shuffled. It has never needed to be — one worker per
 file hides most of this — which is exactly why it is worth doing before §2 is
@@ -291,7 +291,7 @@ npx vitest run --sequence.shuffle
 | `lib/device.test.ts` | `badge()` remembers the number it last showed, so clearing is a transition; the test asked for it from a module that believed nothing was shown | fixed |
 | `lib/keys.test.ts` | a `role="dialog"` left in `document.body`; every shortcut is correctly stood down under a modal, so the tests after it were told *nothing* and failed | fixed |
 | `data/seed.test.ts` | the file added in §2a, caught by its own medicine: `vi.mock`'s factory reads a flag when Vitest chooses to evaluate it, which is once per registry rather than once per test, so the test that set the flag false could evaluate the module for the test that needed it true. A getter, read at every access, is consulted when the test means it to be | fixed |
-| `components/splash.test.tsx` | not yet found — the first render lands on `onboarding` and the splash correctly declines to cover it. Reproduces on the file alone, so it is inside the file rather than across the suite | **open** |
+| `components/splash.test.tsx` | the address bar. `store.tsx` reads `screenFromUrl() ?? firstScreen(nav)` and the URL wins — that is how a deep link opens the screen it names — and it writes the current screen back into the hash. The test that mounts on onboarding left `#/onboarding` behind, so the next test's store started there whatever its storage said, and the splash correctly declined to cover onboarding | fixed |
 
 The `claude.test.ts` fix is the one to copy: its setup now goes through
 `saveSettings`, which is the same door the app goes through and clears all
@@ -300,7 +300,27 @@ back was what made the tests depend on each other.
 
 Three shuffled runs of the full suite, at `d63507b`: 7,684 passed, one failed,
 and it is `splash.test.tsx` all three times. Three more on the merged head:
-8,080 passed, one failed, `splash.test.tsx` all three times again. Adding `--sequence.shuffle` to CI
+8,080 passed, one failed, `splash.test.tsx` all three times again — and four on
+`924d0ab`, where it is still the only file that fails.
+
+**Fixing it moved the problem rather than ending it, and that is worth stating
+plainly.** With `splash.test.tsx` clean, four shuffled runs of the full suite
+show two files that main never got far enough to reach:
+
+| File | What it is |
+| --- | --- |
+| `lib/idb.test.ts` | four tests time out at 5 s. Its fake IndexedDB never answers, which is what a leaked global — most likely a fake clock left on by whichever file ran before it — looks like from inside |
+| `screens/Calendar.keyboard.test.tsx` | `EnvironmentTeardownError` loading `data/courses/psci/lessons.ts`. The chain names `components/tabsound.test.tsx` → `TabFind.tsx` → `store.tsx` → `seed.ts`: the same unawaited `loadSeed()` as §2a, from a different file, and the suite-level error it raises is not the unhandled rejection that fix removed |
+
+Both are pre-existing and neither is caused by the splash fix — measured by
+running the pair `splash.test.tsx` + `idb.test.ts` shuffled five times each
+way: **two failures in five on `main`, none in five with the fix.** Shuffle
+picks a different pairing each run, so main's shuffle failures were the splash
+file shadowing whatever else was behind it.
+
+So `--sequence.shuffle` is two files closer to being a CI step and is not one
+yet. The two are named above with what they look like; neither diagnosis has
+been run to ground. Adding `--sequence.shuffle` to CI
 is worth doing **after** that file is fixed, and is worth doing then — it is
 the cheapest guard there is against this whole class, and it found four of
 these in one afternoon.
@@ -499,15 +519,16 @@ something once went wrong.
 | 2 | ✅ **§3** — five order-dependent test files | done | a suite that can be shuffled, which is the precondition for row 5 |
 | 3 | ✅ **§4**, **§6** — the registry guard and the lint ceiling | done | two things that cannot quietly get worse |
 | 4 | ✅ **§2a** — the unawaited, failure-cached `loadSeed()` | done | `npm test` stops being intermittently red on main, and a sample that failed once can load again |
-| 5 | **§3's last row** — run `splash.test.tsx` to ground, then put `--sequence.shuffle` in CI | half a day | the guard that would have caught all six, on every push |
+| 5 | ✅ **§3's last row** — `splash.test.tsx` run to ground | done | and it named two more behind it, in §3 |
+| 5a | **§3's two new rows** — `lib/idb.test.ts` and `screens/Calendar.keyboard.test.tsx`, then `--sequence.shuffle` in CI | half a day | the guard that would have caught all seven, on every push |
 | 6 | ✅ **§2** — `isolate: false`, with the mocking files as exceptions and a test that keeps the list honest | done, by another session | 42 s → 29.5 s a run, three runs deep |
 | 7 | ✅ **§5** — a size, a list and a clear button for downloaded media | done | an installed app that does not quietly take 200 MB of a phone with no way to see or stop it |
 | 7a | ✅ **§5, the rest** — a cap, least recently played first, and what it took said out loud | done | the same, without anybody having to go and look |
 | 8 | **§6 follow-on** — reshape `useModal`'s return | small | 20 of 45 warnings, in one change |
 | 9 | **§7** — direct tests for `rtc.ts`, `mic.ts` | medium | the part of the app that is hardest to check by hand |
 
-Items 1–4 and 6 are on `main`; item 7 is this branch. Every one went in with
-`lint`, `tsc`, `test`, `test:zones`, `build` and `check:university` green.
+Items 1–4, 6, 7 and 7a are on `main`; item 5 is this branch. Every one went in
+with `lint`, `tsc`, `test`, `test:zones`, `build` and `check:university` green.
 Item 6 arrived from another session, is on `main`, and is re-verified above
 rather than taken on trust.
 
