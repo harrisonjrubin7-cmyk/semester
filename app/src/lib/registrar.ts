@@ -28,6 +28,7 @@
  */
 
 import { dateToIso, daysBetween, isoToDate, realDate, startOfDay } from './date';
+import type { TermCalendar } from './school';
 // Lowercased for matching, derived from the one list. See `lib/date.ts`.
 import { MONTH_WORDS } from './date';
 
@@ -416,6 +417,82 @@ export function parse(text: string, year: number): Found[] {
       until,
       kind: LANDMARKS.find((l) => l.id === id)?.kind ?? (until ? 'break' : 'deadline'),
     });
+  }
+
+  return out;
+}
+
+/**
+ * A school's published calendar, offered as rows to confirm.
+ *
+ * `SchoolData.academicCalendar` holds what a registrar prints — term start
+ * and end, the deadlines, the breaks, the exam period — and until this
+ * function existed nothing anywhere read it. A profile could carry a whole
+ * term's dates and the screen that asks for those exact dates would still ask
+ * for them by hand.
+ *
+ * What it deliberately does not do is fill the sheet in. It returns the same
+ * `Found[]` the paste door returns, so a published calendar arrives the way a
+ * pasted one does: every row proposed, every row tickable, nothing saved
+ * until somebody says so. The rule that the app ships the questions and not
+ * the answers survives a school that happens to know the answers — because a
+ * profile can be out of date, and a stale drop deadline nobody confirmed is
+ * the exact failure this module exists to avoid.
+ *
+ * Deadlines are matched to a landmark by the same `HINTS` the parser uses, so
+ * a school writing "Last day to drop a course without a W" lands on
+ * `drop-clean` rather than on a row of its own. One that matches nothing is
+ * kept in the school's words, with an empty id, exactly as a pasted line is.
+ */
+export function fromCalendar(term: TermCalendar): Found[] {
+  const out: Found[] = [];
+
+  /**
+   * The three fields that name one specific thing each.
+   *
+   * A row from one of these is the school's answer for that landmark, so a
+   * later entry matching the same landmark is the same fact restated and is
+   * dropped. Anything matching a landmark a *list* already claimed is a
+   * different thing that happened to match — see below.
+   */
+  const canonical = new Set<string>();
+  const term_ = (id: string, label: string, iso: string, until: string, kind: RegistrarKind) => {
+    if (!iso) return;
+    canonical.add(id);
+    out.push({ id, label, iso, until, kind });
+  };
+
+  /**
+   * One entry from `breaks` or `deadlines`.
+   *
+   * The subtlety, and it cost a dropped row before this comment existed: a
+   * term has *two* breaks and `HINTS` matches both of them to `break`, so
+   * taking the landmark as an identity and skipping the duplicate loses
+   * Thanksgiving entirely. It is not a duplicate — it is a second break.
+   *
+   * So a landmark is proposed once, and anything else that matched it is kept
+   * in the school's own words with no landmark, exactly as an unmatched line
+   * from a pasted page is. `apply` gives those a generated id and files them
+   * beside the landmarks. Nothing the school published is silently dropped,
+   * which is the rule the paste door already keeps.
+   */
+  const listed = (id: string, label: string, iso: string, until: string, kind: RegistrarKind) => {
+    if (!iso) return;
+    if (id && canonical.has(id)) return;
+    out.push({ id: id && out.some((f) => f.id === id) ? '' : id, label, iso, until, kind });
+  };
+
+  term_('classes-begin', 'Classes begin', term.startsOn, '', 'deadline');
+  term_('last-class', 'Last day of classes', term.endsOn, '', 'deadline');
+  term_('finals', 'Final exam period', term.finalsFrom ?? '', term.finalsTo ?? '', 'exams');
+
+  for (const b of term.breaks ?? []) {
+    listed(HINTS.find((h) => h.words.test(b.label))?.id ?? '', b.label, b.from, b.to, 'break');
+  }
+
+  for (const d of term.deadlines) {
+    const id = HINTS.find((h) => h.words.test(d.label))?.id ?? '';
+    listed(id, d.label, d.on, '', LANDMARKS.find((l) => l.id === id)?.kind ?? 'deadline');
   }
 
   return out;

@@ -173,6 +173,7 @@ export function TabsFollow() {
     deckId,
     mode,
     openUnit,
+    lessonUnit,
     callCode,
   } = state;
   const at = useMemo(
@@ -190,6 +191,9 @@ export function TabsFollow() {
         /* A study tab remembers the unit it is open on and a call tab its
            room, so two study tabs come back to their own. See `placeFor`. */
         openUnit,
+        /* And a lesson tab the narration it is on, which moves independently
+           of the guide's unit — two lessons of one course are two places. */
+        lessonUnit,
         callCode,
       }),
     [
@@ -204,6 +208,7 @@ export function TabsFollow() {
       deckId,
       mode,
       openUnit,
+      lessonUnit,
       callCode,
     ],
   );
