@@ -231,6 +231,12 @@ function textOfBlock(b: Block): string {
       return `${b.caption} ${b.rows.flat().join(' ')}`;
     case 'equation':
       return `${b.caption} ${b.latex}`;
+    case 'checklist':
+      return b.items.map((i) => i.text).join(' ');
+    case 'code':
+      return b.text;
+    case 'toc':
+      return b.title;
     case 'break':
       return '';
   }

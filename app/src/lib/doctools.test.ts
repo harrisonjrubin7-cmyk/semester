@@ -4,6 +4,7 @@ import {
   emphasise,
   findAll,
   glance,
+  linked,
   marked,
   outline,
   readingMinutes,
@@ -267,5 +268,50 @@ describe('the first few lines, for a thumbnail', () => {
     expect(
       glance(doc([{ kind: 'bullets', items: ['one', 'two', 'three'], numbered: false }]), 2),
     ).toEqual(['• one', '• two']);
+  });
+});
+
+/**
+ * The marks a button puts on, and the link that is not a mark.
+ *
+ * `emphasise` was written for two marks and generalised to four; the cases
+ * that mattered for bold matter identically for the other three, so the
+ * interesting tests here are the ones about the shapes only a link has —
+ * an address with no words, words with no address, and taking one off again.
+ */
+describe('marking a selection', () => {
+  it('puts the new marks on and takes them off again', () => {
+    expect(emphasise('cut this out', 4, 8, 'strike')).toBe('cut ~~this~~ out');
+    expect(emphasise('cut ~~this~~ out', 6, 10, 'strike')).toBe('cut this out');
+    expect(emphasise('the p value', 4, 5, 'code')).toBe('the `p` value');
+  });
+
+  it('reads a line as marked only when all of it is', () => {
+    expect(marked('~~all of it~~', 'strike')).toBe(true);
+    expect(marked('some ~~of it~~', 'strike')).toBe(false);
+  });
+});
+
+describe('links', () => {
+  it('turns the chosen words into a link', () => {
+    expect(linked('see the paper here', 4, 13, 'https://e.edu')).toBe(
+      'see [the paper](https://e.edu) here',
+    );
+  });
+
+  it('leaves the spaces outside the brackets, as the marks do', () => {
+    expect(linked('a b c', 1, 4, 'https://e.edu')).toBe('a [b](https://e.edu) c');
+  });
+
+  it('takes a link off when the address is left empty', () => {
+    expect(linked('see [the paper](https://e.edu) here', 5, 14, '')).toBe('see the paper here');
+  });
+
+  it('changes the address of a link chosen whole', () => {
+    expect(linked('[x](https://a.edu)', 0, 18, 'https://b.edu')).toBe('[x](https://b.edu)');
+  });
+
+  it('does nothing when nothing is chosen', () => {
+    expect(linked('a b c', 2, 2, 'https://e.edu')).toBe('a b c');
   });
 });

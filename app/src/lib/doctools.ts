@@ -98,6 +98,13 @@ function strings(block: Block): string[] {
     return [block.text];
   }
   if (block.kind === 'bullets') return block.items;
+  if (block.kind === 'checklist') return block.items.map((i) => i.text);
+  /*
+   * A code block is skipped, for the reason a table and an equation are:
+   * renaming a variable through a search meant for prose is how a script that
+   * ran stops running, and the person doing it is thinking about their
+   * writing rather than about their code.
+   */
   return [];
 }
 
@@ -182,6 +189,9 @@ export function replaceAll(
     }
     if (block.kind === 'quote') return { ...block, text: swap(block.text) };
     if (block.kind === 'bullets') return { ...block, items: block.items.map(swap) };
+    if (block.kind === 'checklist') {
+      return { ...block, items: block.items.map((i) => ({ ...i, text: swap(i.text) })) };
+    }
     return block;
   });
 
@@ -191,24 +201,39 @@ export function replaceAll(
 // ── Emphasis, applied ────────────────────────────────────────────────────
 
 /**
- * Bold or italicise a stretch of a line, or take the marks off again.
+ * The marks a button can put on a stretch of text, and what each is written as.
  *
- * The document holds emphasis as markdown — see `runs` in `document.ts` — so
- * this wraps and unwraps the stars rather than carrying a second
- * representation. Toggling: a selection already entirely inside a mark loses
- * it, anything else gains it, which is what every editor's Ctrl+B does.
+ * Markdown, because the document holds emphasis as markdown — see `runs` in
+ * `document.ts` — so this wraps and unwraps markers rather than carrying a
+ * second representation of the same fact. A link is not here: its marker has
+ * two halves with an address between them, and it has its own function below.
  */
-export function emphasise(
-  text: string,
-  from: number,
-  to: number,
-  mark: 'bold' | 'italic',
-): string {
+export const MARKS = {
+  bold: '**',
+  italic: '*',
+  strike: '~~',
+  code: '`',
+} as const;
+
+export type Mark = keyof typeof MARKS;
+
+/**
+ * Put a mark on a stretch of a line, or take it off again.
+ *
+ * Toggling: a selection already entirely inside a mark loses it, anything
+ * else gains it, which is what every editor's Ctrl+B does.
+ *
+ * Four marks rather than two, and the generalisation is why the marker is a
+ * parameter — the code below never knew which mark it was applying beyond
+ * counting stars, so strike-through and backticks cost a lookup table and
+ * nothing else.
+ */
+export function emphasise(text: string, from: number, to: number, mark: Mark): string {
   const start = Math.max(0, Math.min(from, to));
   const end = Math.min(text.length, Math.max(from, to));
   if (start === end) return text;
 
-  const stars = mark === 'bold' ? '**' : '*';
+  const stars = MARKS[mark];
   const chosen = text.slice(start, end);
 
   // Already wrapped, exactly: take the marks off.
@@ -255,10 +280,48 @@ export function emphasise(
   );
 }
 
+/**
+ * Turn a stretch of a line into a link, or take the link off again.
+ *
+ * `[words](where)`, which is what `runs` reads. An empty address unlinks,
+ * because the button that adds a link is the button that removes one and a
+ * dialog with an empty box is how somebody says "not that after all".
+ *
+ * Nothing is validated. A half-typed address is a link that goes nowhere,
+ * which is visible and fixable; refusing it would mean a student cannot paste
+ * `doi:10.1257/aer.20190658` into their own bibliography because this file
+ * has opinions about schemes.
+ */
+export function linked(text: string, from: number, to: number, href: string): string {
+  const start = Math.max(0, Math.min(from, to));
+  const end = Math.min(text.length, Math.max(from, to));
+  if (start === end) return text;
+
+  const before = text.slice(0, start);
+  const chosen = text.slice(start, end);
+  const after = text.slice(end);
+
+  // Already a link, with the words chosen and the brackets either side of
+  // them: the address comes off and the words stay.
+  const wrapping = /^\]\(([^)\s]*)\)/.exec(after);
+  if (before.endsWith('[') && wrapping) {
+    return before.slice(0, -1) + chosen + after.slice(wrapping[0].length);
+  }
+  const whole = /^\[([^\]\n]+)\]\(([^)\s]*)\)$/.exec(chosen);
+  if (whole) return href.trim() ? `${before}[${whole[1]}](${href.trim()})${after}` : before + whole[1] + after;
+
+  if (!href.trim()) return text;
+  const lead = /^\s*/.exec(chosen)![0];
+  const tail = /\s*$/.exec(chosen)![0];
+  const core = chosen.slice(lead.length, chosen.length - tail.length);
+  if (!core) return text;
+  return `${before}${lead}[${core}](${href.trim()})${tail}${after}`;
+}
+
 /** Whether a whole line is already marked, for showing a button as pressed. */
-export function marked(text: string, mark: 'bold' | 'italic'): boolean {
+export function marked(text: string, mark: Mark): boolean {
   const parts = runs(text);
-  return parts.length > 0 && parts.every((r) => (mark === 'bold' ? r.bold : r.italic));
+  return parts.length > 0 && parts.every((r) => r[mark]);
 }
 
 /**
@@ -297,6 +360,18 @@ export function glance(doc: Pick<Doc, 'blocks'>, lines = 6): string[] {
         break;
       case 'equation':
         if (block.latex.trim()) out.push(block.latex.trim());
+        break;
+      case 'checklist':
+        for (const item of block.items) {
+          if (out.length >= lines) break;
+          if (item.text.trim()) out.push(`${item.done ? '☑' : '☐'} ${item.text.trim()}`);
+        }
+        break;
+      case 'code':
+        if (block.text.trim()) out.push(block.text.trim().split('\n')[0]);
+        break;
+      case 'toc':
+        out.push(block.title.trim() || 'Contents');
         break;
       case 'break':
         break;

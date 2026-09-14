@@ -2,6 +2,7 @@ import type { Provide } from '../shape';
 import { guideNow } from '../shape';
 import { FORMULAS } from '../../lib/maths';
 import { filled as filledRows } from '../../lib/sheet';
+import { words as docWords } from '../../lib/document';
 
 /**
  * The Make group — the screens that produce something.
@@ -90,21 +91,6 @@ export const write: Provide = (look) => {
     ],
   };
 };
-
-/** Words in a document, counted the way `lib/document.ts` counts them. */
-function docWords(doc: { blocks: { kind: string; text?: string; items?: string[] }[] }): number {
-  let n = 0;
-  const count = (text: string) => {
-    const clean = text.trim();
-    if (clean) n += clean.split(/\s+/).length;
-  };
-  for (const block of doc.blocks) {
-    if (block.kind === 'heading' || block.kind === 'text' || block.kind === 'quote') {
-      count(block.text ?? '');
-    } else if (block.kind === 'bullets') (block.items ?? []).forEach(count);
-  }
-  return n;
-}
 
 /**
  * Sheet or table — the grid, as values.
