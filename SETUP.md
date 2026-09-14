@@ -55,6 +55,13 @@ Somewhere else that holds a key — your own proxy in front of the Messages API 
 goes in `VITE_CLAUDE_PROXY`, which is an address rather than a secret and so
 does survive a build.
 
+**The two boxes on that settings screen take different things.** The first
+takes a key, beginning `sk-ant-`. The second takes the address of a proxy —
+`https://…`, or a path like `/anthropic` for something served alongside the
+page — and nothing else: a key, a workspace id or an account number pasted
+there is ignored with a line saying so, and the key above answers instead.
+Leave the second box empty unless you are running a proxy.
+
 ## 2 · Accounts and sync — Supabase
 
 1. **Create a project** at [supabase.com](https://supabase.com). Any region;

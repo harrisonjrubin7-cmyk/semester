@@ -5,10 +5,13 @@ import {
   configured,
   readCitation,
   readMaterial,
+  proxyProblem,
   route,
   routeLabel,
+  saveSettings,
   withAttachments,
   asSent,
+  strictly,
   wire,
   CUT_OFF,
 } from './claude';
@@ -301,6 +304,97 @@ describe('a tool the model wants to use', () => {
     catchRequest([said('ok')]);
     await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
     expect(sent!.body).not.toHaveProperty('tools');
+  });
+
+  it('closes a strict tool before it goes out', async () => {
+    // A strict tool whose schema does not close itself is a 400 on the whole
+    // request — not on that tool, on the question — so the closing happens on
+    // the way to the wire rather than in twenty schema literals.
+    catchRequest([said('ok')]);
+    await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      tools: [
+        {
+          name: 'tick_deadline',
+          description: 'x',
+          strict: true,
+          input_schema: {
+            type: 'object',
+            properties: { id: { type: 'string' }, title: { type: 'string' } },
+            required: ['id'],
+          },
+        },
+      ],
+    });
+
+    expect((sent!.body.tools as { input_schema: unknown }[])[0].input_schema).toEqual({
+      type: 'object',
+      properties: { id: { type: 'string' }, title: { type: 'string' } },
+      required: ['id', 'title'],
+      additionalProperties: false,
+    });
+  });
+});
+
+describe('a strict tool, as a strict API insists on it', () => {
+  const tool = (input_schema: Record<string, unknown>, strict = true) => ({
+    name: 't',
+    description: 'x',
+    ...(strict ? { strict: true as const } : {}),
+    input_schema: input_schema as never,
+  });
+
+  it('closes the object and requires everything it names', () => {
+    const [out] = strictly([
+      tool({ type: 'object', properties: { a: { type: 'string' }, b: { type: 'number' } } }),
+    ]);
+    expect(out.input_schema.additionalProperties).toBe(false);
+    expect(out.input_schema.required).toEqual(['a', 'b']);
+  });
+
+  it('closes nested objects and the objects inside a list', () => {
+    // The API walks the whole tree, so one unclosed object three levels down
+    // fails the request exactly as loudly as the top one.
+    const [out] = strictly([
+      tool({
+        type: 'object',
+        properties: {
+          who: { type: 'object', properties: { name: { type: 'string' } } },
+          rows: { type: 'array', items: { type: 'object', properties: { cell: { type: 'string' } } } },
+        },
+      }),
+    ]);
+    const props = out.input_schema.properties as Record<string, Record<string, unknown>>;
+    expect(props.who.additionalProperties).toBe(false);
+    expect(props.who.required).toEqual(['name']);
+    const items = props.rows.items as Record<string, unknown>;
+    expect(items.additionalProperties).toBe(false);
+    expect(items.required).toEqual(['cell']);
+  });
+
+  it('keeps the declared order and adds nothing twice', () => {
+    const [out] = strictly([
+      tool({
+        type: 'object',
+        properties: { a: { type: 'string' }, b: { type: 'string' }, c: { type: 'string' } },
+        required: ['c', 'a'],
+      }),
+    ]);
+    expect(out.input_schema.required).toEqual(['c', 'a', 'b']);
+  });
+
+  it('leaves a tool that is not strict exactly as it was', () => {
+    // Nothing here is a promise the API checks, so nothing needs closing —
+    // and a schema changed on its way out is a schema nobody can read back.
+    const loose = tool({ type: 'object', properties: { a: { type: 'string' } } }, false);
+    expect(strictly([loose])[0]).toBe(loose);
+  });
+
+  it('does not touch the schema it was handed', () => {
+    const schema = { type: 'object', properties: { a: { type: 'string' } } };
+    strictly([tool(schema)]);
+    expect(schema).toEqual({ type: 'object', properties: { a: { type: 'string' } } });
   });
 });
 
@@ -848,6 +942,103 @@ describe('which route a question takes', () => {
 
     on({ proxy: 'https://mine.example.com' });
     expect(routeLabel()).toBe('your proxy');
+  });
+
+  /**
+   * The box under the key takes an address, and only an address.
+   *
+   * What actually happened: a workspace id from the console went into it, the
+   * route was decided by the box being filled in rather than by what was in
+   * it, and every question in the app went to whatever serves the page —
+   * which answers a POST with 405. The key in the box above worked and was
+   * never reached. Both halves are tested here: the mistake is ignored, and
+   * a proxy that turns out not to be one hands the question on.
+   */
+  describe('when what is in the proxy box is not an address', () => {
+    it('says which mistake it is, and nothing for a real address', () => {
+      expect(proxyProblem('wrkspc_01GNUgn2xy8esod3kYbXdD3t')).toMatch(/id from the console/);
+      expect(proxyProblem('sk-ant-api03-abc')).toMatch(/a key, not a proxy/);
+      expect(proxyProblem('my proxy')).toMatch(/has to be an address/);
+
+      expect(proxyProblem('')).toBe('');
+      expect(proxyProblem('  ')).toBe('');
+      expect(proxyProblem('/anthropic')).toBe('');
+      expect(proxyProblem('https://mine.example.com')).toBe('');
+      expect(proxyProblem('http://localhost:8787')).toBe('');
+    });
+
+    it('leaves it out of the route, so the key answers', async () => {
+      on({ proxy: 'wrkspc_01GNUgn2xy8esod3kYbXdD3t', apiKey: 'sk-ant-mine' });
+      vi.stubEnv('VITE_CLAUDE_PROXY', '');
+
+      expect(route()).toBe('own');
+      expect(routeLabel()).toBe('your key');
+      catchHeaders();
+      await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+      expect(call!.url).toBe('https://api.anthropic.com/v1/messages');
+      expect(call!.headers['x-api-key']).toBe('sk-ant-mine');
+    });
+
+    it('falls back to the build\'s proxy rather than to nothing', async () => {
+      on({ proxy: 'wrkspc_01GNUgn2xy8esod3kYbXdD3t' });
+      vi.stubEnv('VITE_CLAUDE_PROXY', '/anthropic');
+
+      expect(route()).toBe('proxy');
+      expect(routeLabel()).toBe('the proxy this build points at');
+      catchHeaders();
+      await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+      expect(call!.url).toBe('/anthropic/v1/messages');
+    });
+  });
+
+  it('asks again on the key when the proxy turns out not to forward', async () => {
+    // 405 is what a static host answers a POST with. It is a permanent fact
+    // about the address, so the question goes to the key and every question
+    // after it does too — rather than the student seeing a number.
+    on({ proxy: 'https://not-a-proxy.example.com', apiKey: 'sk-ant-mine' });
+    vi.stubEnv('VITE_CLAUDE_PROXY', '');
+    expect(route()).toBe('proxy');
+
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', (url: string) => {
+      urls.push(String(url));
+      if (urls.length === 1) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ error: { message: 'Method Not Allowed' } }), {
+            status: 405,
+          }),
+        );
+      }
+      return Promise.resolve(stream([said('answered anyway')]));
+    });
+
+    const text = await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+    expect(text).toBe('answered anyway');
+    expect(urls).toEqual([
+      'https://not-a-proxy.example.com/v1/messages',
+      'https://api.anthropic.com/v1/messages',
+    ]);
+    // And stays stood down, so the next question does not spend a round trip
+    // rediscovering it.
+    expect(route()).toBe('own');
+  });
+
+  it('says what answered and how, when there is no key to fall back to', async () => {
+    on({ proxy: 'https://not-a-proxy.example.com' });
+    vi.stubEnv('VITE_CLAUDE_PROXY', '');
+    // Cleared by a trip to the settings screen, which is where a proxy is
+    // fixed — otherwise the test above would have stood this route down.
+    saveSettings({ ...JSON.parse(localStorage.getItem('semester.claude.v1')!) });
+
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(
+        new Response(JSON.stringify({ error: { message: 'Method Not Allowed' } }), { status: 405 }),
+      ),
+    );
+
+    await expect(ask({ system: 's', messages: [{ role: 'user', content: 'q' }] })).rejects.toThrow(
+      /https:\/\/not-a-proxy\.example\.com\/v1\/messages forwards to the API — it answered 405/,
+    );
   });
 
   it('is still nothing when the build was given nothing', async () => {

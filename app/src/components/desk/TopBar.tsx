@@ -46,6 +46,7 @@ import { secondLine } from '../../lib/dim';
 import { glyphFor } from '../icons.pick';
 import { recordSearch } from '../../lib/browser.hook';
 import { Avatar } from '../Avatar';
+import { BookmarkStar } from '../Bookmarks';
 import {
   AppsIcon,
   AskIcon,
@@ -194,6 +195,9 @@ export function TopBar({
               ✕
             </button>
           )}
+          {/* The star, where a browser puts it: in the field, about the page
+              the tab you are on is showing. See `components/Bookmarks.tsx`. */}
+          <BookmarkStar />
           {/*
             There was a `⌘ K` chip here, and it was not true.
 
@@ -209,6 +213,11 @@ export function TopBar({
             adding a binding is a feature rather than the removal of a false
             one. `/` opens the palette and is written where that is true — in
             the header's magnifier, on the screens that still draw it.
+
+            The star above it arrived from `main` in the same place, which
+            is where a browser keeps one — so the field ends in the control
+            that acts on what you are looking at rather than in a claim
+            about a key.
           */}
           <button
             type="button"

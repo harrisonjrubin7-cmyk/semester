@@ -283,6 +283,48 @@ where the directory on **Progress** is furthest away. The order inside a shelf
 is whatever you dragged your tiles into on **Progress → Everything**, so the
 two cannot disagree about where you put something.
 
+## Tabs, groups and bookmarks
+
+The workspace is a browser-shaped shell, and the strip across the top is what
+makes it one: a tab holds a place in the app, so "I was reading the guide, let
+me check when that is due, now where was I" costs a click rather than four
+navigations and a hunt for your place. A tab with nothing in it yet is a new
+tab, and a new tab is the search page — opening one and typing is a single
+gesture for *somewhere else, without losing this*. Ten is the ceiling; past
+that, the oldest tab you are not using gives way.
+
+**Groups** are for the Wednesday when there are nine of them. Right-click a tab
+(or press the ⌄ on the one you are on) and **New group**: it and everything you
+open out of it become one run on the strip, behind a coloured head you can
+name. **Midterm** and **Essay** are then two objects rather than seven tabs,
+and clicking the head folds the run away to its name and a count — which is
+how a strip that has reached ten gets its room back. Folding the group you are
+working in moves you out of it first, because its page is the window. The
+colour is one of twelve, and they are the same twelve a course can be pinned
+to: your accent, turned round the wheel, at a lightness measured against the
+ground you are actually reading on.
+
+**Bookmarks** are the other half. A tab is where you are; a bookmark is where
+you keep going back to — the ECON study guide, the essay brief, the deadline
+you are counting down to — and before this the only way to keep one to hand
+was to leave a tab open for a fortnight. The star in the search field saves the
+page the tab you are on is showing, `b` does the same from the keyboard, and
+what is saved is the *place*: ECON 1020 rather than "Course", the guide unit in
+the mode you were reading it in. They appear as a row under the search field,
+one click from every screen; on the other navigations they are on the new tab
+page and in the search overlay instead, because that is where those layouts
+keep their tabs. Clicking one goes there in the tab you are on, middle-clicking
+opens it beside, and the ⌄ on a chip renames it, moves it along the row or
+removes it.
+
+Neither the strip nor the bookmarks are account data. The store syncs to the
+cloud and is what a backup contains; which places you happen to have open on
+this laptop is neither, and a row of tabs restored onto a phone from a
+desktop's backup is a row nobody opened. Both live on the device, under their
+own keys, and **Erase from this device** takes them with everything else. See
+[`app/src/lib/browser.ts`](app/src/lib/browser.ts) and
+[`app/src/lib/bookmarks.ts`](app/src/lib/bookmarks.ts).
+
 ## Folding a screen down to what you came for
 
 Every section heading in the app, on every tab, is a control: tap it and that
