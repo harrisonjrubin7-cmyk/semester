@@ -118,13 +118,18 @@ shells, so every reader parsed the registry and the ten modules behind it in
 order to decide not to draw anything.
 
 **Done**, and it was worth more than this section estimated — the registry has
-grown since. Measured on the tree after `main` was merged in:
+grown since:
 
 ```
 253 modules, 74,986 lines  →  242 modules, 71,067 lines
-initial gzipped JS: 276,032 bytes  →  262,924 bytes     (−4.7%)
+initial gzipped JS: 279,323 bytes  →  266,257 bytes     (−4.7%)
 files on the critical path: 17 → 14
 ```
+
+Re-measured on `1855396` after the rebase, against a build of the same tree
+with the split taken back out. The absolute figures moved by about 3 kB
+between measurements because `main` keeps growing; the difference between them
+did not, which is the number this row is about.
 
 The second half is not in the byte count. `useTop()` is a hook, so it ran
 *above* the `if (!soft) return null` beneath it: every render on every shell
