@@ -63,7 +63,6 @@ export const BUDGET: Budget = {
   'components/KindKey.tsx': { type: 1, space: 1 },
   'components/LiveMap.tsx': { dim: 3 },
   'components/MarkClass.tsx': { type: 1, space: 2, shorthand: 1 },
-  'components/ModePicker.tsx': { type: 1, space: 1, shorthand: 1, dim: 1 },
   'components/MyRules.tsx': { type: 6, space: 2, shorthand: 2, dim: 3 },
   'components/NeedsKey.tsx': { dim: 2 },
   'components/NotYetOpened.tsx': { type: 3, leading: 1, space: 2, shorthand: 2, dim: 3 },

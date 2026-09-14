@@ -113,6 +113,13 @@ const Study = lazy(() => import('./screens/Study').then((m) => ({ default: m.Stu
 const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work })));
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
+const Guides = lazy(() => import('./screens/Guides').then((m) => ({ default: m.Guides })));
+const University = lazy(() => import('./screens/University').then((m) => ({ default: m.University })));
+const Athletics = lazy(() => import('./screens/Athletics').then((m) => ({ default: m.Athletics })));
+const Career = lazy(() => import('./screens/Career').then((m) => ({ default: m.Career })));
+const Family = lazy(() => import('./screens/Family').then((m) => ({ default: m.Family })));
+const Pathway = lazy(() => import('./screens/Pathway').then((m) => ({ default: m.Pathway })));
+const Create = lazy(() => import('./screens/Create').then((m) => ({ default: m.Create })));
 /* The workspace's own two screens — the search home a new tab opens on, and
    the directory of everything behind it. See `lib/desk.ts`. */
 const SearchHome = lazy(() => import('./screens/Search').then((m) => ({ default: m.SearchHome })));
@@ -437,6 +444,28 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Counted backwards from the exam', title: 'Exam runway' };
     case 'registrar':
       return { kicker: 'The dates the university sets', title: 'Term deadlines' };
+    /*
+     * Its own case rather than the registry fallback, which would print the
+     * tab bar's nine-character `short` — "Uni" — as the page's heading. The
+     * kicker is the screen's whole argument in six words.
+     */
+    case 'university':
+      return { kicker: 'What it does, and what it cannot', title: 'University' };
+    /*
+     * The four that outlast the term get their own cases for the reason
+     * University does: the registry fallback prints the tab bar's
+     * nine-character `short`, so Athletics would be headed "Sport".
+     */
+    case 'athletics':
+      return { kicker: 'The season, against the term', title: 'Athletics' };
+    case 'career':
+      return { kicker: 'What is open, and what you have done', title: 'Career' };
+    case 'family':
+      return { kicker: 'What somebody else would see', title: 'Family' };
+    case 'pathway':
+      return { kicker: 'The part that outlasts this term', title: 'Pathway' };
+    case 'create':
+      return { kicker: 'Whatever it is you have to hand in', title: 'Create' };
     case 'sources':
       return { kicker: 'Yours, never invented', title: 'Sources' };
     case 'account':
@@ -925,11 +954,34 @@ function CurrentScreen() {
       // The workspace is not a case here, deliberately: its home is Today
       // like everyone else's, and what it does differently is where the app
       // *lands* — see `firstScreen` in `lib/chrome.ts`.
-      return homeShape(state.nav) === 'springboard' ? <Springboard /> : <Today />;
+      //
+      // The guides are the one home that is not a reading of the day at all:
+      // the courses themselves, because opening one is what this navigation
+      // is for. See `screens/Guides.tsx`.
+      switch (homeShape(state.nav)) {
+        case 'springboard':
+          return <Springboard />;
+        case 'guides':
+          return <Guides />;
+        default:
+          return <Today />;
+      }
     case 'search':
       return <SearchHome />;
     case 'directory':
       return <Directory />;
+    case 'university':
+      return <University />;
+    case 'athletics':
+      return <Athletics />;
+    case 'career':
+      return <Career />;
+    case 'family':
+      return <Family />;
+    case 'pathway':
+      return <Pathway />;
+    case 'create':
+      return <Create />;
     case 'privacy':
       return <Privacy />;
     case 'data':

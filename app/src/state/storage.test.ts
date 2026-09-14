@@ -174,9 +174,11 @@ describe('the version written back', () => {
    * for an older shape. `pickPersisted` decides whether that survives the next
    * save, and it used to write the constant.
    *
-   * Nothing is wrong today — both steps in `STEPS` are idempotent, so
-   * re-running them changes nothing. This holds the invariant that `migrate`'s
-   * docblock states, before a step arrives that is not.
+   * This used to say nothing was wrong because every step in `STEPS` was
+   * idempotent. Step 5 is the one that ended that: steps 4 and 5 both rewrite
+   * `nav` unconditionally, so a copy whose marker never got written back
+   * would have a chosen navigation overruled on the next load. The marker is
+   * what stops it, which makes this the test holding that door shut.
    */
   const state = (over: Partial<Persisted> = {}) =>
     ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date(2026, 8, 10)), ...over }) as State;

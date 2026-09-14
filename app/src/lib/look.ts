@@ -735,6 +735,19 @@ export const NAVS = [
      */
     home: 'Today',
   },
+  {
+    id: 'guides',
+    label: 'Study guides',
+    blurb:
+      'Your courses, and nothing else at the top level. Open one and its eleven ways of studying are the navigation.',
+    /*
+     * The only navigation whose home is not a screen about the *day*. The
+     * other five open on Today, Everything or the springboard, each of which
+     * answers "what is happening now"; this one opens on the courses
+     * themselves, because the thing you came to do here is study one.
+     */
+    home: 'Guides',
+  },
 ];
 
 /**
@@ -759,17 +772,26 @@ export function homeTitle(nav: string | undefined): string {
  * the site's data. Any navigation is a worse app for a moment; no navigation
  * is not an app.
  *
- * The fallback is the workspace, and it moved there with the default. It was
- * the tab bar on the argument that landing somebody in a navigation they had
- * never seen is not a fallback — which was true while the bar was what
- * everybody had, and stopped being true the moment `migrate` step 4 opened
- * the workspace for every account. Answering a corrupt key with a navigation
- * the app no longer defaults to would strand exactly the person this function
- * exists for: the one whose stored value cannot be read, who now gets an app
- * that does not match the one on their other device.
+ * The fallback is whatever the app currently defaults to, and it has moved
+ * twice for the same reason both times. It was the tab bar, then the
+ * workspace, and it is the guides now. Answering a corrupt key with a
+ * navigation the app no longer defaults to would strand exactly the person
+ * this function exists for: the one whose stored value cannot be read, who
+ * now gets an app that does not match the one on their other device.
+ * `chrome.test.ts` holds this to `DEFAULT_PERSISTED.nav` rather than to the
+ * literal, so the two cannot drift apart again.
+ *
+ * ## The guides draw no chrome, and that is still a safe fallback
+ *
+ * Worth saying, because the bug this function exists for was *no navigation
+ * at all*. The guides draw no bar, rail or shelves — but their home screen is
+ * the course grid, which is a navigation on the screen rather than beside it,
+ * the way the springboard's icons are. So a corrupt key still lands somebody
+ * on a screen full of ways on. What must never happen is falling back to a
+ * name no branch matches, which is what this function prevents.
  */
 export function navOf(id: string | undefined): NavMode {
-  return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'workspace';
+  return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'guides';
 }
 
 /**

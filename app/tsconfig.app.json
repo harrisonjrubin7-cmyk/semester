@@ -30,8 +30,18 @@
      * apart in the first place, so it is aliased in rather than vendored.
      */
     "paths": {
-      "@semester/contract": ["../packages/contract/src/index.ts"]
+      "@semester/contract": ["../packages/contract/src/index.ts"],
+      /*
+       * The gateway contract, on the same terms and for the same reason.
+       *
+       * A separate module rather than a folder inside the one above: that one
+       * is this app's own records on the wire between its own clients, this
+       * one is what a university's server is asked and answers. Three things
+       * must agree on it exactly — the browser, `server/institution`, and the
+       * tests between them — so it is aliased in rather than copied.
+       */
+      "@semester/institution": ["../packages/institution/src/index.ts"]
     }
   },
-  "include": ["src", "../packages/contract/src"]
+  "include": ["src", "../packages/contract/src", "../packages/institution/src"]
 }

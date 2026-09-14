@@ -1,0 +1,306 @@
+import { isoDay, obj, textValue } from './device-library';
+import { safeUrl } from './apply';
+
+/**
+ * The work of getting the next thing: what is open, what you have done, who
+ * you have spoken to.
+ *
+ * Three bodies of data that are usually three products — a job board, a
+ * résumé, a CRM — and are one here because for a student they are one task,
+ * and because the second is the evidence the first and third are built from.
+ * `coverLetter` is where that pays off: it opens the letter with the student's
+ * own recorded experience rather than a blank page.
+ *
+ * ## The generated documents are scaffolds, and say so in brackets
+ *
+ * `resumeMarkdown` and `coverLetter` produce drafts with `[square brackets]`
+ * where a person has to write something themselves — the specific interest in
+ * the role, the connection between evidence and requirement. That is
+ * deliberate and should survive editing. A letter this app could finish by
+ * itself would be a letter that says nothing, sent to somebody who has read
+ * two hundred of them.
+ *
+ * ## Contacts record permission, not just a name
+ *
+ * `CareerContact.permission` moves from "Not requested" through "Invitation
+ * sent" to "Agreed to connect". It exists so a networking list cannot quietly
+ * become a list of people who never agreed to be on one.
+ */
+
+export const OPPORTUNITY_KINDS = [
+  'Internship',
+  'Job',
+  'Research',
+  'Fellowship',
+  'Campus employment',
+  'Study abroad',
+  'Career event',
+] as const;
+
+export const OPPORTUNITY_FORMATS = ['In person', 'Hybrid', 'Remote'] as const;
+
+export const EXPERIENCE_TYPES = [
+  'Experience',
+  'Education',
+  'Project',
+  'Leadership',
+  'Athletics',
+  'Service',
+  'Award',
+  'Certification',
+  'Skills',
+] as const;
+
+export const CONTACT_PERMISSIONS = ['Not requested', 'Invitation sent', 'Agreed to connect'] as const;
+
+export interface Opportunity {
+  id: string;
+  title: string;
+  organization: string;
+  kind: (typeof OPPORTUNITY_KINDS)[number];
+  location: string;
+  format: (typeof OPPORTUNITY_FORMATS)[number];
+  compensation: string;
+  deadline: string;
+  skills: string;
+  description: string;
+  requirements: string;
+  url: string;
+  country: string;
+  term: string;
+  cost: string;
+  credit: string;
+  saved: boolean;
+}
+
+export interface CareerExperience {
+  id: string;
+  category: (typeof EXPERIENCE_TYPES)[number];
+  title: string;
+  organization: string;
+  dates: string;
+  details: string;
+}
+
+export interface CareerContact {
+  id: string;
+  name: string;
+  organization: string;
+  interests: string;
+  permission: (typeof CONTACT_PERMISSIONS)[number];
+  next: string;
+  nextDate: string;
+  notes: string;
+}
+
+export interface CareerLibrary {
+  version: 1;
+  opportunities: Opportunity[];
+  name: string;
+  headline: string;
+  contact: string;
+  experiences: CareerExperience[];
+  contacts: CareerContact[];
+  abroadSteps: Record<string, boolean>;
+}
+
+export const EMPTY_CAREER: CareerLibrary = {
+  version: 1,
+  opportunities: [],
+  name: '',
+  headline: '',
+  contact: '',
+  experiences: [],
+  contacts: [],
+  abroadSteps: {},
+};
+
+export const CAREER_LIMITS = {
+  opportunities: 300,
+  experiences: 100,
+  contacts: 100,
+  description: 16_000,
+  requirements: 8000,
+  notes: 6000,
+  url: 2000,
+} as const;
+
+/**
+ * Going abroad, in the order the deadlines actually fall.
+ *
+ * Every step that touches an authority says so — "with advisor", "from
+ * official sources", "approved". Passport and visa requirements especially:
+ * this app must never be the thing a student believed about a visa.
+ */
+export const ABROAD_STEPS = [
+  'Review program requirements',
+  'Confirm credit transfer with advisor',
+  'Review official costs and funding',
+  'Prepare application materials',
+  'Confirm passport and visa requirements with official sources',
+  'Complete approved health and safety preparation',
+  'Confirm housing and travel',
+  'Record local support contacts',
+  'Request final transcript and credit review',
+];
+
+export function newOpportunity(): Opportunity {
+  return {
+    id: crypto.randomUUID(),
+    title: '',
+    organization: '',
+    kind: 'Internship',
+    location: '',
+    format: 'In person',
+    compensation: '',
+    deadline: '',
+    skills: '',
+    description: '',
+    requirements: '',
+    url: '',
+    country: '',
+    term: '',
+    cost: '',
+    credit: '',
+    saved: false,
+  };
+}
+
+/**
+ * A career library out of storage or a file, or an error.
+ *
+ * The URL check is the one that is load-bearing. An opportunity carries a link
+ * a student will click, and these arrive by import — from a spreadsheet, a
+ * careers-office export, a file somebody sent. `safeUrl` from `lib/apply.ts`
+ * is the app's single answer to "is this a link we will put on screen", and
+ * reusing it rather than writing a second one is what keeps the answer single.
+ */
+export function readCareer(v: unknown): CareerLibrary {
+  const top =
+    obj(v) &&
+    v.version === 1 &&
+    Array.isArray(v.opportunities) &&
+    v.opportunities.length <= CAREER_LIMITS.opportunities &&
+    textValue(v.name, 160) &&
+    textValue(v.headline, 300) &&
+    textValue(v.contact, 500) &&
+    Array.isArray(v.experiences) &&
+    v.experiences.length <= CAREER_LIMITS.experiences &&
+    Array.isArray(v.contacts) &&
+    v.contacts.length <= CAREER_LIMITS.contacts &&
+    obj(v.abroadSteps) &&
+    Object.values(v.abroadSteps).every((x) => typeof x === 'boolean');
+  if (!top) throw new Error('Invalid career library.');
+  const lib = v as unknown as CareerLibrary;
+
+  const ids = new Set<string>();
+  for (const o of lib.opportunities) {
+    const shaped =
+      obj(o) &&
+      textValue(o.id, 100) &&
+      !ids.has(o.id) &&
+      textValue(o.title, 160) &&
+      !!o.title.trim() &&
+      textValue(o.organization, 160) &&
+      OPPORTUNITY_KINDS.includes(o.kind) &&
+      OPPORTUNITY_FORMATS.includes(o.format) &&
+      (['location', 'compensation', 'skills', 'country', 'term', 'cost', 'credit'] as const).every((k) =>
+        textValue(o[k], 1000),
+      ) &&
+      textValue(o.description, CAREER_LIMITS.description) &&
+      textValue(o.requirements, CAREER_LIMITS.requirements) &&
+      isoDay(o.deadline) &&
+      textValue(o.url, CAREER_LIMITS.url) &&
+      (!o.url || safeUrl(o.url)) &&
+      typeof o.saved === 'boolean';
+    if (!shaped) throw new Error('Invalid opportunity. Check dates and use http(s) links.');
+    ids.add(o.id);
+  }
+
+  for (const e of lib.experiences) {
+    const shaped =
+      obj(e) &&
+      textValue(e.id, 100) &&
+      EXPERIENCE_TYPES.includes(e.category) &&
+      textValue(e.title, 160) &&
+      textValue(e.organization, 160) &&
+      textValue(e.dates, 100) &&
+      textValue(e.details, 5000);
+    if (!shaped) throw new Error('Invalid résumé entry.');
+  }
+
+  for (const c of lib.contacts) {
+    const shaped =
+      obj(c) &&
+      (['id', 'name', 'organization', 'interests', 'next'] as const).every((k) => textValue(c[k], 500)) &&
+      CONTACT_PERMISSIONS.includes(c.permission) &&
+      isoDay(c.nextDate) &&
+      textValue(c.notes, CAREER_LIMITS.notes);
+    if (!shaped) throw new Error('Invalid networking note.');
+  }
+
+  return lib;
+}
+
+/**
+ * Opportunities out of a file somebody chose.
+ *
+ * Every row gets a fresh id and `saved: false`, so an import can never
+ * overwrite something already in the library or arrive pre-starred. Validated
+ * by building a whole library around them and reading it back — one validator,
+ * rather than a second that agrees with the first until it does not.
+ */
+export function readOpportunities(text: string): Opportunity[] {
+  const v = JSON.parse(text);
+  const rows = Array.isArray(v) ? v : v.opportunities;
+  if (!Array.isArray(rows)) throw new Error('Provide a list of opportunities.');
+  const mapped = rows.map((o) => ({ ...newOpportunity(), ...o, id: crypto.randomUUID(), saved: false }));
+  return readCareer({ ...EMPTY_CAREER, opportunities: mapped }).opportunities;
+}
+
+/** The résumé as Markdown, for Write or an export. */
+export function resumeMarkdown(c: CareerLibrary): string {
+  const entries = c.experiences
+    .map((e) =>
+      [`## ${e.category} · ${e.title}`, [e.organization, e.dates].filter(Boolean).join(' · '), '', e.details].join(
+        '\n',
+      ),
+    )
+    .join('\n\n');
+  return [`# ${c.name || 'Your name'}`, '', c.contact, '', c.headline, '', entries].join('\n');
+}
+
+/**
+ * A cover letter opened for you, not written for you.
+ *
+ * The brackets are the feature. Four recorded experiences go in as evidence,
+ * and every place where a person has to say something only they can say is
+ * left as an instruction to them. See the note at the top of this file.
+ */
+export function coverLetter(c: CareerLibrary, o: Opportunity): string {
+  const evidence = c.experiences
+    .slice(0, 4)
+    .map((e) => `${e.title}${e.organization ? ` — ${e.organization}` : ''}\n${e.details}`)
+    .join('\n\n');
+
+  return [
+    `# ${o.organization} · ${o.title}`,
+    '',
+    c.name || '[Your name]',
+    c.contact,
+    '',
+    'Dear Hiring Team,',
+    '',
+    `I am applying for the ${o.title} opportunity at ${o.organization || '[organization]'}. [Explain your specific interest in this position.]`,
+    '',
+    '[Choose and explain relevant evidence from your own record below. Remove anything not relevant.]',
+    '',
+    evidence,
+    '',
+    '[Connect this evidence to the role requirements in your own words.]',
+    '',
+    'Thank you for your consideration.',
+    '',
+    c.name || '[Your name]',
+  ].join('\n');
+}

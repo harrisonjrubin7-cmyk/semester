@@ -48,6 +48,8 @@
  */
 
 import type { Catalog } from '../data/catalog';
+import { UNIVERSITY_AREAS } from '@semester/institution';
+import { gatewayConfigured } from './university';
 import type { State } from '../state/shape';
 import type { Screen } from './types';
 import type { Capabilities } from './school';
@@ -589,7 +591,70 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
     }
 
+    /*
+     * Create's own three — forms, designs and videos — are in a device
+     * library this function cannot read, so it leads with the makers the term
+     * already holds: the documents, sheets and decks the other six tiles open.
+     * A true number, and the one that says whether there is anything to come
+     * back to.
+     */
+    case 'create':
+      return holds(
+        'Things you have made',
+        state.documents.length + state.sheets.length + state.decks.length,
+        'piece',
+      );
+
+    /*
+     * ── Beyond ──────────────────────────────────────────────────────────
+     *
+     * The four that are not this term keep their work in device libraries
+     * rather than in `state`, and this function is given only `state` and the
+     * catalogue — so it cannot count what is in them without reading
+     * `localStorage` during a render, which is the wrong place for that by
+     * some distance.
+     *
+     * So each leads with the figure the *term* already has that the screen is
+     * about. Every one is a true number the reader can check, and none of
+     * them is a nought that would make a working screen look like an empty
+     * app before it has been opened.
+     */
+    case 'athletics':
+      return holds('Commitments', state.commitments.length, 'commitment');
+
+    case 'career':
+      return holds('Applications', state.applications.length, 'application');
+
+    case 'pathway':
+      return holds('Courses so far', catalog.courses.length, 'course');
+
+    case 'family':
+      return holds('People', state.people.length, 'person', 'people');
+
     // ── Campus ────────────────────────────────────────────────────────────
+    /*
+     * The university's figure is what it can reach, not what exists.
+     *
+     * Thirty-seven areas is the impressive number and the wrong one to lead
+     * with: it says the app does thirty-seven things, and it does not do any
+     * of them officially yet. So the hero counts *connected* services, which
+     * is nought until a school deploys a gateway, and the foot says what the
+     * thirty-seven actually are. A screen whose whole argument is "be honest
+     * about what is not connected" cannot open with a number that implies the
+     * opposite. See `screens/University.tsx`.
+     */
+    case 'university':
+      return {
+        hero: {
+          label: 'Connected services',
+          figure: num(0),
+          foot: gatewayConfigured
+            ? `No service verified yet, of ${UNIVERSITY_AREAS.length}`
+            : `Preparation only, across ${UNIVERSITY_AREAS.length} areas`,
+        },
+        stats: term,
+      };
+
     case 'meals':
       // The noun is the school's, not ours: "swipes" at one, "board meals" at
       // another, and "meals" where nothing has been declared.

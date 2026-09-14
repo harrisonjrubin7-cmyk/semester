@@ -555,6 +555,32 @@ export type Screen =
   | 'people'
   | 'meet'
   | 'call'
+  /*
+   * The university itself: thirty-seven service areas, and an honest account
+   * of which this app can reach. Nearly none, today — see
+   * `screens/University.tsx` and `docs/UNIVERSITY_CONNECTIONS.md`.
+   */
+  | 'university'
+  /*
+   * The four workspaces that are not this term.
+   *
+   * Each holds a body of work that is the student's own and is not academic
+   * record — a season's travel, a résumé, a plan for what a parent may see,
+   * an application to somewhere else. They keep their data in their own
+   * device libraries rather than in `state/shape.ts`, for the reasons in
+   * `lib/device-library.ts`, and `pathway` is the one that is not scoped to a
+   * term at all because applying to graduate school spans several.
+   */
+  | 'athletics'
+  | 'career'
+  | 'family'
+  | 'pathway'
+  /*
+   * One door to everything that makes something. Six of its nine tiles open
+   * a maker this app already had; the three that are its own — a form, a
+   * design, a video — had nowhere to live. See `screens/Create.tsx`.
+   */
+  | 'create'
   // The settings pages. Real screens rather than a sub-mode of one, so Back,
   // the recent list and a deep link all work the way they do everywhere else.
   | 'setLook'
@@ -647,8 +673,13 @@ export interface Lesson {
  * drawn. `Shell` (in `components/shell/useShell.ts`) answers *how a screen is
  * drawn*, and never adds navigation of its own. Every combination of the two
  * is a valid app, which is what makes them settings rather than forks.
+ *
+ * `guides` is the sixth and the one the app now opens as. It is the only one
+ * that treats a *course* as the top level rather than a screen: home is the
+ * courses you have, and opening one hands the whole display to its guide,
+ * whose eleven ways of studying are the navigation. See `lib/chrome.ts`.
  */
-export type NavMode = 'tabs' | 'feed' | 'springboard' | 'shelves' | 'workspace';
+export type NavMode = 'tabs' | 'feed' | 'springboard' | 'shelves' | 'workspace' | 'guides';
 
 /** A class that repeats every week, from the syllabus meeting pattern. */
 export interface RecurringBlock {

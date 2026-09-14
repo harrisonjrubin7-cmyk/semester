@@ -30,3 +30,8 @@ shots
 
 # What scripts/mirror.mjs fetches — a copy of the deployed site, not source.
 mirror
+
+# The gateway's action journal (server/institution/start.ts writes here by
+# default). It holds encrypted prepared actions and a cleartext audit table of
+# who did what at which school — a development copy is still somebody's data.
+work/

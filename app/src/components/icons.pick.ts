@@ -19,6 +19,11 @@ import {
   AnalyseIcon,
   AnnounceIcon,
   ApplyingIcon,
+  AthleticsIcon,
+  CareerIcon,
+  FamilyIcon,
+  PathwayIcon,
+  UniversityIcon,
   AskIcon,
   BehindIcon,
   Bell,
@@ -147,6 +152,11 @@ const OWN: Partial<Record<Screen, Glyph>> = {
   costs: CostsIcon,
   people: PeopleIcon,
   applying: ApplyingIcon,
+  university: UniversityIcon,
+  pathway: PathwayIcon,
+  career: CareerIcon,
+  family: FamilyIcon,
+  athletics: AthleticsIcon,
   clocks: ClocksIcon,
   links: LinksIcon,
   account: AccountIcon,
@@ -168,6 +178,10 @@ const SHELF: Record<Group, Glyph> = {
   // Life is the term around the coursework, and Mine is the largest thing on
   // it, so it lends its glyph the way Study and Make do.
   Life: NotesIcon,
+  // Beyond is the four things that outlast the term, and Pathway is the one
+  // that is about the whole arc of them — so it lends its glyph, the way Mine
+  // lends Life's.
+  Beyond: PathwayIcon,
   // Upkeep's glyph outlived Upkeep. Data is what that shelf actually held —
   // the accounts, the copies, the export — so it keeps the wrench.
   Data: UpkeepIcon,

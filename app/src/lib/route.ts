@@ -58,7 +58,12 @@ export interface Route {
  * Everything not listed is a screen you are simply on, and its route is its
  * name. Kept as a table so a screen cannot be routable in one direction only.
  */
-export const NAMED: Partial<Record<Screen, 'courseId' | 'itemId' | 'eventId' | 'guideId' | 'noteId' | 'callCode'>> = {
+export const NAMED: Partial<
+  Record<
+    Screen,
+    'courseId' | 'itemId' | 'eventId' | 'guideId' | 'noteId' | 'callCode' | 'documentId' | 'sheetId' | 'deckId'
+  >
+> = {
   course: 'courseId',
   edit: 'courseId',
   item: 'itemId',
@@ -69,10 +74,42 @@ export const NAMED: Partial<Record<Screen, 'courseId' | 'itemId' | 'eventId' | '
   lesson: 'guideId',
   slides: 'guideId',
   note: 'noteId',
+  /*
+   * The three makers, whose id is which file is open.
+   *
+   * Without these rows the address stays `#/write` however many documents
+   * there are, and the id of the open one lives only in memory — it is not in
+   * `pickPersisted`, deliberately, because which file somebody had open is not
+   * part of their term. So a reload landed on the library with the document
+   * still saved and no longer open, which reads as having lost it.
+   *
+   * Putting the id in the address is the fix that does not persist anything:
+   * the reload is a navigation, and the navigation now carries the file.
+   */
+  write: 'documentId',
+  sheet: 'sheetId',
+  deck: 'deckId',
   // The one address in this app somebody sends to another person on purpose.
   // A call is a code, and the link is the code — see `lib/call.ts`.
   call: 'callCode',
 };
+
+/**
+ * The screens where *no* id in the address is itself a place.
+ *
+ * A subset of `NAMED`, and it has to be a subset rather than all of it,
+ * because "no id" means three different things across that table. On `course`,
+ * `item`, `event`, `note` and `call` it is not a place at all — the screen has
+ * nothing to draw without one. On `guide` and its four study modes it means
+ * *the course you are in*, so clearing the id there would throw away the
+ * answer rather than ask the question again.
+ *
+ * On these three it means the library: `#/write` is the shelf of documents,
+ * `#/write/<id>` is one of them open. That is the only group where landing
+ * without an id has to clear the id that is there, and the reason this is a
+ * table and not a condition written into the reducer.
+ */
+export const LIBRARIES: Screen[] = ['write', 'sheet', 'deck'];
 
 /**
  * Screens that used to exist, and where their links go now.

@@ -118,6 +118,23 @@ type Label = ReactElement<LabelProps>;
  */
 function isLabel(node: ReactNode): node is Label {
   if (!isValidElement(node)) return false;
+  /*
+   * A heading that has said it is not a fold boundary.
+   *
+   * There is one caller and there should stay very few: the guide's "Ways to
+   * study this" under the `guides` navigation, where the grid below the
+   * heading is not content but *the way you move* — there is no tab bar, rail
+   * or shelf beside it. Folding it away left the screen with the header's
+   * Back button and nothing else, which is precisely the "no navigation at
+   * all" that `lib/chrome.ts` exists to prevent. Measured before this
+   * existed: pressing Collapse all on a guide took the mode grid from
+   * thirteen controls to nought.
+   *
+   * An opt-out on the heading rather than a screen name in this file, so the
+   * screen that knows why states it where the reason is legible.
+   */
+  const { fold } = node.props as { fold?: boolean };
+  if (fold === false) return false;
   if (node.type === SectionLabel) return true;
   if (node.type !== 'h2') return false;
   const { className } = node.props as { className?: string };

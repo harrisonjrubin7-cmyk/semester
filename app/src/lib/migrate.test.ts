@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SCHEMA, STEPS, migrate, migrationLine, versionOf } from './migrate';
 import { directoryOf } from './look';
+import { DEFAULT_PERSISTED } from '../state/shape';
 
 describe('what version a stored copy is', () => {
   it('treats a missing marker as the first version', () => {
@@ -91,10 +92,30 @@ describe('step 3: the directory nobody chose', () => {
 describe('step 4: the workspace, for everybody', () => {
   const at3 = (extra: Record<string, unknown> = {}) => ({ schemaVersion: 3, ...extra });
 
+  /*
+   * Step 4 in isolation, rather than through `migrate`.
+   *
+   * These two used to run the whole chain from 3 and assert the navigation it
+   * came out with, which read as a test of step 4 and was really a test of
+   * "whichever step touched `nav` last". Step 5 moves it again, so both went
+   * red for a change that has nothing to do with step 4 — and left step 4
+   * itself unasserted. What this describe block is *about* is that step 4
+   * rewrites the navigation unconditionally, so that is what it runs.
+   *
+   * The tests below that are genuinely about the chain — running once, and
+   * touching nothing else — still go through `migrate`, because that is what
+   * they are about.
+   */
+  const step4 = (nav: string) => {
+    const step = STEPS.find((s) => s.to === 4);
+    if (!step) throw new Error('step 4 is gone — steps are kept forever, see migrate.ts');
+    return step.run({ nav });
+  };
+
   it('moves a copy that has only ever had the tab bar', () => {
     // Which is every copy ever written: `nav` has always been persisted, so
     // the literal `tabs` in there was put there by the app, not chosen.
-    expect(migrate(at3({ nav: 'tabs' })).state.nav).toBe('workspace');
+    expect(step4('tabs').nav).toBe('workspace');
   });
 
   it('moves the other three as well, which is the trade it is', () => {
@@ -103,7 +124,7 @@ describe('step 4: the workspace, for everybody', () => {
     // somebody picked" is not a rule this can implement. Asserted rather than
     // left implicit: it is the part of the step worth seeing in a diff.
     for (const nav of ['feed', 'springboard', 'shelves']) {
-      expect(migrate(at3({ nav })).state.nav, nav).toBe('workspace');
+      expect(step4(nav).nav, nav).toBe('workspace');
     }
   });
 
@@ -144,6 +165,62 @@ describe('step 4: the workspace, for everybody', () => {
     // the arrays would rewrite every record in the account on the way past.
     const courses = [{ id: 'econ' }];
     expect(migrate(at3({ nav: 'tabs', courses })).state.courses).toBe(courses);
+  });
+});
+
+describe('step 5: the guides, for everybody', () => {
+  const step5 = (nav: string) => {
+    const step = STEPS.find((s) => s.to === 5);
+    if (!step) throw new Error('step 5 is gone — steps are kept forever, see migrate.ts');
+    return step.run({ nav });
+  };
+
+  it('moves a copy that step 4 put on the workspace', () => {
+    // Which is every copy opened since step 4 shipped: step 4 wrote that
+    // literal `workspace`, so it says nothing about what anybody chose — the
+    // same argument step 4 made about the `tabs` before it.
+    expect(step5('workspace').nav).toBe('guides');
+  });
+
+  it('moves the other four as well, which is the same trade step 4 made', () => {
+    for (const nav of ['tabs', 'feed', 'springboard', 'shelves']) {
+      expect(step5(nav).nav, nav).toBe('guides');
+    }
+  });
+
+  it('is where a fresh install lands too, so the two cannot drift', () => {
+    // A default that disagreed with the last step is how somebody's phone and
+    // laptop end up in different navigations. Against the constant rather than
+    // the literal, so the next move has to change both.
+    expect(DEFAULT_PERSISTED.nav).toBe('guides');
+  });
+
+  it('runs once, so going back to the workspace sticks', () => {
+    /*
+     * The same guarantee step 4 carries, asserted again because it is the
+     * whole reason this is a numbered step and not a line in the loader.
+     * Somebody reads the guides, decides they want the top search field and
+     * the tab strip back, and picks the workspace — and the app has to keep
+     * that, on this device and every reopening after.
+     */
+    const after = migrate({ schemaVersion: 4, nav: 'workspace' }).state;
+    expect(after.nav).toBe('guides');
+    const chosen = { ...after, nav: 'workspace' };
+    expect(migrate(chosen).state.nav).toBe('workspace');
+    expect(migrate(chosen).ran).toEqual([]);
+  });
+
+  it('touches nothing else in the copy', () => {
+    const after = migrate({
+      schemaVersion: 4,
+      nav: 'workspace',
+      shell: 'soft',
+      ground: 'oxide',
+      done: { 'econ-m1': true },
+    }).state;
+    expect(after.shell).toBe('soft');
+    expect(after.ground).toBe('oxide');
+    expect(after.done).toEqual({ 'econ-m1': true });
   });
 });
 

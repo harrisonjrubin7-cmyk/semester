@@ -35,6 +35,16 @@ export function SectionLabel({
    * about.
    */
   aside?: ReactNode;
+  /**
+   * Whether the section under this heading may be folded away.
+   *
+   * True everywhere but one place. Pass `false` when what follows the heading
+   * is the only way off the screen — the guide's study-mode grid under the
+   * `guides` navigation, which is that navigation. `components/Fold.tsx`
+   * reads this prop and declines to make a fold boundary of the heading; the
+   * heading itself is unchanged, so nothing about it moves on screen.
+   */
+  fold?: boolean;
   style?: CSSProperties;
 }) {
   // An <h2>, not a styled div. The screen's name is the <h1>; these are the

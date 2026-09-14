@@ -233,4 +233,62 @@ describe('what it leaves alone', () => {
     expect(heads()).toEqual([]);
     expect(host.querySelector('#a')).not.toBeNull();
   });
+
+  /*
+   * One heading that has asked not to fold, on a screen where the others do.
+   *
+   * The case this exists for is the guide under the `guides` navigation. The
+   * grid under "Ways to study this" is that navigation — no tab bar, no rail,
+   * no shelves beside it — and folding it away left the screen with the
+   * header's Back button and nothing else, which is the "no navigation at
+   * all" `lib/chrome.ts` exists to prevent. Measured before the opt-out:
+   * pressing Collapse all took the mode grid from thirteen controls to nought.
+   *
+   * Asserted here rather than in a screen test because the rule belongs to
+   * the transform: what must hold is that one heading can decline without
+   * taking the rest of the screen's folding with it.
+   */
+  it('one heading that has declined, beside others that have not', () => {
+    show(
+      <FoldScope value="home">
+        <Page>
+          <SectionLabel fold={false}>The way out</SectionLabel>
+          <p id="nav">nav</p>
+          <SectionLabel>Everything else</SectionLabel>
+          <p id="rest">rest</p>
+        </Page>
+      </FoldScope>,
+    );
+
+    // Only the second is a control. The first is still a heading, and still on
+    // screen — declining to fold changes nothing about how it draws.
+    expect(heads()).toEqual(['Everything else']);
+    expect(host.querySelector('h2')?.textContent).toBe('The way out');
+
+    // And what follows it cannot be hidden, while the section that did opt in
+    // still folds normally.
+    tap('Everything else');
+    expect(host.querySelector('#rest')).toBeNull();
+    expect(host.querySelector('#nav')).not.toBeNull();
+  });
+
+  it('folds a heading that says nothing, exactly as before', () => {
+    // The opt-out is opt-in: absent and `true` both fold. Pinned so that a
+    // future default flip has to come past this line.
+    show(
+      <FoldScope value="home">
+        <Page>
+          <SectionLabel>Silent</SectionLabel>
+          <p id="a">a</p>
+          <SectionLabel fold>Explicit</SectionLabel>
+          <p id="b">b</p>
+        </Page>
+      </FoldScope>,
+    );
+    expect(heads()).toEqual(['Silent', 'Explicit']);
+    tap('Silent');
+    expect(host.querySelector('#a')).toBeNull();
+    tap('Explicit');
+    expect(host.querySelector('#b')).toBeNull();
+  });
 });

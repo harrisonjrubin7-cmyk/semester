@@ -28,12 +28,21 @@
  * take you to another one. The bar, the rail and the shelves are the three,
  * and no two of them may be on screen together.
  *
- * The springboard and the feed are deliberately *not* in that list, and the
- * distinction is the point rather than a loophole. They are what the home
- * screen is, not something drawn beside it — you leave the springboard by
- * tapping through it, the way you leave any screen. `homeShape` below is
- * where that choice is made, and a home screen and one piece of chrome are
- * one navigation, not two.
+ * The springboard, the feed and the guides are deliberately *not* in that
+ * list, and the distinction is the point rather than a loophole. They are
+ * what the screen is, not something drawn beside it — you leave the
+ * springboard by tapping through it, the way you leave any screen.
+ * `homeShape` below is where that choice is made, and a home screen and one
+ * piece of chrome are one navigation, not two.
+ *
+ * The guides go furthest with that: they draw no chrome at any width. Home is
+ * the courses, and a course hands the display to its guide, whose grid of
+ * eleven ways to study is the thing you move by. That grid is on the screen
+ * and wraps to the width it is given, so there is nothing for a rail to add —
+ * unrolling the tab bar down the side of a screen whose own navigation is
+ * already visible is the doubling this file exists to stop. The way *back* is
+ * the header's Back button, which `App.tsx` draws on every screen in every
+ * navigation; that is what keeps "no chrome" from meaning "no way out".
  *
  * Also not counted: the header (it belongs to the screen you are on), search
  * and the command palette (they open on top and close again), and the
@@ -113,6 +122,19 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
    */
   const desk = nav === 'workspace';
 
+  /*
+   * The guides answer next, and answer with nothing.
+   *
+   * Every other navigation is chrome plus a screen. This one is the screen:
+   * the courses, then one course's eleven ways of studying it. Drawing a bar
+   * under that or a rail beside it would put a second way to move on screen
+   * — see the note at the top of this file — so the whole of `Chrome` is
+   * false here, at both widths, and the header's Back button is the way out.
+   */
+  if (nav === 'guides') {
+    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false, fab: false };
+  }
+
   return {
     tabs: nav === 'tabs' && !wide,
     // The rail is how the bar, the feed and the springboard all express
@@ -139,9 +161,10 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
  * navigation was added — and both falling through to the same default, so a
  * new mode looked finished while quietly rendering somebody else's screen.
  */
-export function homeShape(nav: NavMode): 'springboard' | 'feed' | 'today' {
+export function homeShape(nav: NavMode): 'springboard' | 'feed' | 'today' | 'guides' {
   if (nav === 'springboard') return 'springboard';
   if (nav === 'feed') return 'feed';
+  if (nav === 'guides') return 'guides';
   return 'today';
 }
 
