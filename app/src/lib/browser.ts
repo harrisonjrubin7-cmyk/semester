@@ -38,6 +38,7 @@
  * tested without a DOM and cannot be quietly broken by a storage failure.
  */
 
+import { nearAny } from './near';
 import type { CourseId, Screen, StudyMode } from './types';
 import type { Action } from '../state/shape';
 
@@ -768,6 +769,48 @@ export function lanes(strip: Strip): Lane[] {
     else out.push({ group, seats: [{ tab, at: i }] });
   }
   return out;
+}
+
+/**
+ * Finding a tab by name, which a strip of a hundred cannot do by eye.
+ *
+ * The cap is high enough now that the strip is a place to *keep* tabs rather
+ * than a place to read them all — and a row you have to scroll sideways
+ * through is not a way to get back to the thing you were reading an hour ago.
+ * This is the other half of that: type two words and go.
+ *
+ * Matched against the tab's name and the name of the group it is in, because
+ * "essay" is as likely to be the group as the tab. Exact matches come before
+ * near misses and both keep the strip's own order — the pinned ones first,
+ * then the rest as they sit — so the list reads as the strip filtered rather
+ * than as a ranking nobody asked for.
+ *
+ * Typos are the app's own `nearAny`, the same tolerance the record search has,
+ * so `calender` finds the calendar tab here exactly as it does everywhere
+ * else. An empty query is every tab: opening the list with nothing typed is
+ * how you see what you have got.
+ */
+export interface Found {
+  seat: Seat;
+  /** The group it is in, for the list to say which work it belongs to. */
+  group: TabGroup | null;
+}
+
+export function findTabs(strip: Strip, query: string): Found[] {
+  const seats: Found[] = strip.tabs.map((tab, at) => ({
+    seat: { tab, at },
+    group: tab.group ? (strip.groups.find((g) => g.id === tab.group) ?? null) : null,
+  }));
+  const typed = query.trim().toLowerCase();
+  if (!typed) return seats;
+
+  const words = typed.split(/\s+/).filter(Boolean);
+  const said = (f: Found) => `${f.seat.tab.title} ${f.group?.name ?? ''}`.toLowerCase();
+  const hits = seats.filter((f) => words.every((w) => said(f).includes(w)));
+  const near = seats.filter(
+    (f) => !hits.includes(f) && words.every((w) => said(f).includes(w) || nearAny(w, said(f))),
+  );
+  return [...hits, ...near];
 }
 
 /** Where the strip is kept between sessions. */
