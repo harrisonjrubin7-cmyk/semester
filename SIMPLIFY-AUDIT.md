@@ -135,9 +135,11 @@ next pass does not re-add it.
 ## 4. Cleared, with the reason
 
 - **`App.tsx:565` — `const showActions = true;`** A conditional that lost its
-  condition. It is not a duplicate control, but it is the kind of line that
-  invites one back. Cut, and the row it guards is drawn unconditionally in the
-  one shell that draws it at all.
+  condition, and **left alone on a second look**: the six lines above it are
+  the record of *why* the row has no condition any more — search became an
+  overlay, so there is no longer a screen it must hide on. Cutting the
+  constant cuts the anchor for that paragraph, and the paragraph is worth more
+  than the line. It is not a duplicate control either way.
 - **The registry, drawn a fourth time.** `GoogleShell` renders its own full
   directory (`.g-directory`, every app, list or grid, with a category filter)
   where the app has `screens/Directory.tsx`, which pass six chose as the
@@ -157,10 +159,13 @@ next pass does not re-add it.
 
 ## 5. What this pass changed
 
-S1 and S2, one commit each, and the `showActions` cut with S2. No destination
-was added or removed: the count stands at 60, because every duplicate this
-pass found was a *control* rather than a *screen*. −4 duplicated settings,
-−1 duplicated control.
+S1 and S2, one commit each. No destination was added or removed: the count
+stands at 60, because every duplicate this pass found was a *control* rather
+than a *screen*. −4 duplicated settings, −1 duplicated control.
+
+`src/styles/budget.ts` moves with S2 — `dim` 928 → 927, regenerated with
+`npm run lint:styles -- --fix`, which is the ledger recording that a screen
+got smaller.
 
 ---
 
