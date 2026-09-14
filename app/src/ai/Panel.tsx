@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { focusablesIn, nextInRing } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
+import { assemble } from './assemble';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { useConversation, provider } from './converse';
 import { Composer, sendHint } from './Composer';
@@ -98,7 +99,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
    * open. It used to read `ai.open ? ai.look() : null` — the file was
    * mounted all the time and the panel was a branch inside it.
    */
-  const assembled = useMemo(() => ai.look(), [ai]);
+  const assembled = useMemo(() => assemble(ai), [ai]);
 
   /** Nothing asked in this thread yet, so the opening stands in for it. */
   const empty = talk.turns.length === 0 && !talk.busy;

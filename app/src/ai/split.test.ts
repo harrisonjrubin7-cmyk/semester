@@ -102,6 +102,43 @@ describe('the assistant is a cheap half and an expensive half', () => {
     expect(button).toContain('loading = null');
   });
 
+  /*
+   * The same rule, one level up.
+   *
+   * `AIProvider` is mounted by `main.tsx`, above the router, so what
+   * `ai/store.tsx` imports is parsed before the first render — and it used to
+   * import `providerFor`, which reaches every screen's account of itself.
+   * Between them those read the spreadsheet engine, the equation library, the
+   * chart model and the whole insights tree: twenty-three modules and 7,543
+   * lines, to hold a function nothing calls until the assistant is opened.
+   *
+   * The store keeps what only it can know — which screen, the live store,
+   * what is registered — and `ai/assemble.ts` holds the part that needs the
+   * providers. It is reached from `Panel.tsx`, `Opening.tsx` and
+   * `converse.ts`, all of which are already behind a chunk.
+   */
+  it('keeps the providers out of the store that is mounted above the router', () => {
+    const store = code('./store.tsx');
+    expect(store).not.toContain("from './providers'");
+    expect(store).not.toContain('providerFor');
+    // What is left in its place: the raw inputs, which cost nothing to hand
+    // over and are what `assemble` needs.
+    expect(store).toContain('live:');
+    expect(store).toContain('registered:');
+  });
+
+  it('and the assembly is reached only from behind a chunk', () => {
+    // If a fourth caller appears in something eager, the module comes back
+    // onto the critical path and nothing here fails — so the callers are the
+    // thing to assert, not the module.
+    for (const eager of ['./store.tsx', './AskAbout.tsx', './Assistant.tsx']) {
+      expect(code(eager), `${eager} is mounted eagerly`).not.toContain("from './assemble'");
+    }
+    for (const behindAChunk of ['./Panel.tsx', './Opening.tsx', './converse.ts']) {
+      expect(code(behindAChunk)).toContain("from './assemble'");
+    }
+  });
+
   it('leaves the panel owning everything that is only true while it is open', () => {
     const panel = read('./Panel.tsx');
     expect(panel).toContain("from './converse'");
