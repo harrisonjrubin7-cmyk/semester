@@ -71,8 +71,58 @@ const PAGE = '<w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="14
  * an address block or a verse quotation is one paragraph with breaks in it,
  * and splitting it into paragraphs would space every line as if it were one.
  */
-function run(text: string, bold: boolean, italic: boolean): string {
-  const props = `${bold ? '<w:b/>' : ''}${italic ? '<w:i/>' : ''}`;
+/**
+ * The external links one document points at, in the order they were met.
+ *
+ * A hyperlink in this format is not a URL in the paragraph — it is a
+ * *relationship id*, and the URL lives in `document.xml.rels`. So writing the
+ * body and writing the relationships are the same pass, and this is what
+ * carries one to the other.
+ *
+ * Kept by target rather than per occurrence: a document citing the same page
+ * four times is one relationship, not four, which is what Word itself writes.
+ */
+class Links {
+  private readonly at = new Map<string, string>();
+
+  /** The relationship id for a target, making one if this is the first time. */
+  id(target: string): string {
+    const had = this.at.get(target);
+    if (had) return had;
+    // Numbered above the two fixed relationships this part always has —
+    // styles at rId1 and numbering at rId2. See `parts`.
+    const made = `rId${this.at.size + FIXED_RELS + 1}`;
+    this.at.set(target, made);
+    return made;
+  }
+
+  /** Every one, as the relationship elements that go beside the two fixed ones. */
+  relationships(): string {
+    return [...this.at].
+      map(
+        ([target, id]) =>
+          `<Relationship Id="${id}" Type="${REL}/hyperlink" ` +
+          `Target="${xml(target)}" TargetMode="External"/>`,
+      )
+      .join('');
+  }
+}
+
+/** How many relationships `word/document.xml.rels` has before any link. */
+const FIXED_RELS = 2;
+
+/**
+ * The blue underline a reader expects on a link.
+ *
+ * Written into the run rather than added as a `Hyperlink` character style,
+ * because a style is a second part to keep in step for one colour and one
+ * underline — and a document whose links are styled by a style that a later
+ * edit removes is a document whose links stop looking like links.
+ */
+const LINK_LOOK = '<w:color w:val="0563C1"/><w:u w:val="single"/>';
+
+function run(text: string, bold: boolean, italic: boolean, link = ''): string {
+  const props = `${bold ? '<w:b/>' : ''}${italic ? '<w:i/>' : ''}${link ? LINK_LOOK : ''}`;
   const pieces = text.split('\n');
   return pieces
     .map((piece, i) => {
@@ -85,19 +135,31 @@ function run(text: string, bold: boolean, italic: boolean): string {
     .join('');
 }
 
-/** A paragraph of marked-up text in a named style. */
-function para(text: string, style?: string, extra = ''): string {
+/**
+ * A paragraph of marked-up text in a named style.
+ *
+ * `links` is optional so the two callers that cannot contain one — a table
+ * cell measured before the collector exists, a caption built in a test —
+ * still read as they did. Where it is absent a link is written as its words
+ * in the link's colour, with nothing behind them: visibly a link that goes
+ * nowhere rather than an invalid relationship, which Word refuses to open.
+ */
+function para(text: string, style?: string, extra = '', links?: Links): string {
   const props = style || extra ? `<w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ''}${extra}</w:pPr>` : '';
   const body = runs(text)
-    .map((r) => run(r.text, r.bold, r.italic))
+    .map((r) => {
+      const piece = run(r.text, r.bold, r.italic, r.link);
+      if (!r.link || !links) return piece;
+      return `<w:hyperlink r:id="${links.id(r.link)}">${piece}</w:hyperlink>`;
+    })
     .join('');
   return `<w:p>${props}${body}</w:p>`;
 }
 
 /** A list item, at the numbering definition the list's kind points at. */
-function item(text: string, numbered: boolean): string {
+function item(text: string, numbered: boolean, links?: Links): string {
   const numbering = `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="${numbered ? 2 : 1}"/></w:numPr>`;
-  return para(text, 'ListParagraph', numbering);
+  return para(text, 'ListParagraph', numbering, links);
 }
 
 /**
@@ -151,20 +213,22 @@ function table(block: Extract<Block, { kind: 'table' }>): string {
   return block.caption.trim() ? `${tbl}${para(block.caption, 'Caption')}` : `${tbl}<w:p/>`;
 }
 
-function blockXml(block: Block): string {
+function blockXml(block: Block, links?: Links): string {
   switch (block.kind) {
     case 'heading':
-      return block.text.trim() ? para(block.text, `Heading${block.level}`) : '';
+      return block.text.trim() ? para(block.text, `Heading${block.level}`, '', links) : '';
     case 'text':
-      return block.text.trim() ? para(block.text) : '';
+      return block.text.trim() ? para(block.text, undefined, '', links) : '';
     case 'bullets':
       return block.items
         .filter((i) => i.trim())
-        .map((i) => item(i, block.numbered))
+        .map((i) => item(i, block.numbered, links))
         .join('');
     case 'quote': {
-      const body = block.text.trim() ? para(block.text, 'Quote') : '';
-      return block.source.trim() ? `${body}${para(`— ${block.source}`, 'Caption')}` : body;
+      const body = block.text.trim() ? para(block.text, 'Quote', '', links) : '';
+      return block.source.trim()
+        ? `${body}${para(`— ${block.source}`, 'Caption', '', links)}`
+        : body;
     }
     case 'table':
       return table(block);
@@ -270,16 +334,23 @@ export function parts(doc: Doc): Record<string, string> {
     `<Relationship Id="rId3" Type="${REL}/extended-properties" Target="docProps/app.xml"/>` +
     '</Relationships>';
 
+  /*
+   * The body is written before the relationships, because writing it is what
+   * discovers them. A link is a relationship id in the paragraph and a URL in
+   * the rels part, so the two cannot be built in the order they are read.
+   */
+  const links = new Links();
+  const heading =
+    (doc.title.trim() ? para(doc.title, 'Title', '', links) : '') +
+    (doc.subtitle.trim() ? para(doc.subtitle, 'Subtitle', '', links) : '');
+  const body = doc.blocks.map((block) => blockXml(block, links)).join('');
+
   out['word/_rels/document.xml.rels'] =
     `${HEAD}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
     `<Relationship Id="rId1" Type="${REL}/styles" Target="styles.xml"/>` +
     `<Relationship Id="rId2" Type="${REL}/numbering" Target="numbering.xml"/>` +
+    links.relationships() +
     '</Relationships>';
-
-  const heading =
-    (doc.title.trim() ? para(doc.title, 'Title') : '') +
-    (doc.subtitle.trim() ? para(doc.subtitle, 'Subtitle') : '');
-  const body = doc.blocks.map(blockXml).join('');
 
   out['word/document.xml'] =
     `${HEAD}<w:document xmlns:w="${W}" xmlns:m="${M}" xmlns:r="${REL}">` +
