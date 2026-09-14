@@ -8,7 +8,8 @@ import { Blueprint } from '../../components/Blueprint';
 import { Group, ItemRow } from '../../components/shell/Rows';
 import { Insights } from '../../components/Insights';
 import { ActionButton, Segmented } from '../../components/ui';
-import { ask, configured, provider } from '../../lib/claude';
+import { ask } from '../../lib/claude';
+import { configured, provider } from '../../lib/assistant';
 import {
   EVENING_SYSTEM,
   MORNING_SYSTEM,

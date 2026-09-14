@@ -813,7 +813,6 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   controls: 'which controls the editors show',
   geocode: 'whether place lookup is switched on, which is off until you say so',
   notifs: 'which reminders are on, which the browser grants per device',
-  picked: 'which parts of a syllabus the import reads',
   quiet: 'the hours reminders are held back',
   role: 'which role the app is being used as',
   showAll: 'whether the screens held back on a first morning are shown',

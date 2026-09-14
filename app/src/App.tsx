@@ -168,7 +168,7 @@ import { Fresh } from './components/Fresh';
 import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
-import { provider } from './lib/claude';
+import { provider } from './lib/assistant';
 import type { Screen } from './lib/types';
 
 /**

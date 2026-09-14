@@ -243,6 +243,7 @@ function textOfBlock(b: Block): string {
       return `${b.alt} ${b.caption} ${b.name}`;
     case 'toc':
       return b.title;
+    case 'rule':
     case 'break':
       return '';
   }

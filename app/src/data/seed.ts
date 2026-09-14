@@ -37,7 +37,27 @@ export function loadSeed(): Promise<CourseModule[]> {
     import('./courses/psci'),
     import('./courses/core'),
     import('./courses/bus'),
-  ]).then((mods) => mods.map((m) => m.default));
+  ])
+    .then((mods) => mods.map((m) => m.default))
+    /*
+     * A failure is not cached, which is the difference between "not yet" and
+     * "never".
+     *
+     * These are four dynamic imports, so they fail in exactly the two ways
+     * `components/Boundary.tsx` is written about: there is no connection and
+     * these chunks were never fetched, or the app was updated underneath an
+     * installed copy and the files it is asking for are no longer served.
+     * Both are temporary. Holding the rejected promise made them permanent —
+     * the toggle would go on, nothing would appear, and flicking it off and
+     * on again returned the same rejection for the rest of the session,
+     * because `??=` is satisfied by a promise whatever it settled to.
+     *
+     * Clearing it means the next attempt is a real one.
+     */
+    .catch((e: unknown) => {
+      pending = null;
+      throw e;
+    });
   return pending;
 }
 

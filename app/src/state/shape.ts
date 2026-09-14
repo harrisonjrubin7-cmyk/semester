@@ -29,7 +29,7 @@ import type {
   Screen,
   StudyMode,
 } from '../lib/types';
-import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
+import { DEFAULT_NOTIFS, type NotifKey } from '../data/misc';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
@@ -625,7 +625,6 @@ export interface Persisted {
   done: Record<string, boolean>;
   saved: Record<string, boolean>;
   notifs: Record<NotifKey, boolean>;
-  picked: Record<string, boolean>;
   seenOnboarding: boolean;
   /**
    * Whether an account has ever been made or signed into on this device.
@@ -1148,10 +1147,6 @@ export const DEFAULT_PERSISTED: Persisted = {
   done: {},
   saved: { e1: true, e16: true },
   notifs: { ...DEFAULT_NOTIFS },
-  picked: EXTRACT.reduce<Record<string, boolean>>((a, x) => {
-    a[x.id] = true;
-    return a;
-  }, {}),
   seenOnboarding: false,
   registered: false,
   // Vanderbilt by default, because that is who this was built for and a fresh
@@ -1445,7 +1440,6 @@ export function loadPersisted(): Persisted {
       notifs: { ...DEFAULT_PERSISTED.notifs, ...record(saved.notifs) },
       done: record(saved.done),
       saved: record(saved.saved ?? DEFAULT_PERSISTED.saved),
-      picked: { ...DEFAULT_PERSISTED.picked, ...record(saved.picked) },
       tasks: list(saved.tasks),
       appointments: list(saved.appointments),
       notes: list(saved.notes),
@@ -1626,7 +1620,6 @@ export function pickPersisted(state: State): Persisted {
     done: state.done,
     saved: state.saved,
     notifs: state.notifs,
-    picked: state.picked,
     seenOnboarding: state.seenOnboarding,
     registered: state.registered,
     cleared: state.cleared,
@@ -1797,7 +1790,6 @@ export type Action =
   | { type: 'toggleDone'; id: string }
   | { type: 'toggleSaved'; id: string }
   | { type: 'toggleNotif'; k: NotifKey }
-  | { type: 'togglePick'; id: string }
   | { type: 'setNav'; nav: NavMode }
   | { type: 'toggleWays' }
   | { type: 'toggleKey' }

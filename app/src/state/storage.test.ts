@@ -131,7 +131,16 @@ describe('opening the app on damaged storage', () => {
     ['a term that is an object', '{"term":{"deep":null}}'],
   ])('survives %s', (_name, raw) => {
     const state = withStorage(raw, () => loadPersisted());
-    for (const field of ['done', 'saved', 'picked', 'linkUrls', 'reviews', 'grades', 'notifs'] as const) {
+    /*
+     * `picked` is deliberately absent from this list and deliberately still in
+     * the payloads above. It was a persisted field no build ever read, removed
+     * in the whole-app audit — so every copy written before that still has it,
+     * and the case worth keeping is that a stale key this build has never
+     * heard of is ignored rather than breaking the load. `lib/migrate.ts` says
+     * the same of a copy from a newer build: "the app reads what it recognises
+     * and ignores the rest."
+     */
+    for (const field of ['done', 'saved', 'linkUrls', 'reviews', 'grades', 'notifs'] as const) {
       const rows = state[field] as Record<string, unknown>;
       expect(rows, `${field} came back something other than a record`).toBeTypeOf('object');
       expect(Array.isArray(rows), `${field} came back an array`).toBe(false);

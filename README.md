@@ -545,8 +545,8 @@ stayed behind. Three screens now, on the **Make** shelf, and none of them has a
 model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
-  checklists, quotations, tables, pictures, equations, code blocks, page
-  breaks — out as a real `.docx`, as
+  checklists, quotations, tables, pictures, equations, code blocks, a contents
+  page, dividers, page breaks — out as a real `.docx`, as
   Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
   `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
   link becomes a real hyperlink in the Word file rather than an address typed
@@ -582,6 +582,20 @@ model in it or needs a key:
   from the caption on purpose — it is what a screen reader in Word reads out,
   so it says what is *in* the picture, where a caption says what to make of
   it.
+
+  A **divider** is a line between one section and the next, and a **page
+  break** starts a new page. Two blocks, one line apart on the Insert bar,
+  because they are two different things — which they had not been. The page
+  break used to write `---` to Markdown, and `---` is Markdown's *thematic
+  break*: a divider. So a document exported from here said divider and meant
+  page break, and re-importing it only worked because both ends were wrong in
+  the same direction. The divider has `---` now, which was always its
+  spelling, and the page break is written as an HTML comment — invisible in
+  GitHub, Obsidian, Pandoc and anything else that reads Markdown, so there is
+  no noise where the page breaks were. One thing this costs, worth knowing
+  rather than finding out: a Markdown file exported from this app *before*
+  now will re-import its page breaks as dividers. That is the right reading
+  of `---` and the wrong answer for that file, and it is visible on the page.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
   `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It
@@ -917,6 +931,53 @@ model in it or needs a key:
   by `Q` is what solving the equation *is*, once it is transformed. It carries
   no initial conditions, which is also right. A transfer function is the system
   and not the run, so it is there before anybody has written a `y(0) =`.
+
+  **`fourier(sign(\sin(t)), 2\pi)` is a Fourier series** — the harmonics a
+  repeating thing is made of — drawn over the thing itself, faint, which is the
+  whole picture: the partial sum climbing towards the square wave, ringing
+  where the jumps are. It prints what it found,
+  `1.27324\sin(t) + 0.424413\sin(3t) + \cdots`, which is `4/n\pi` to six
+  figures.
+
+  This one is not in the family above and does not need to be. A series is an
+  integral per coefficient, and the functions people take the series *of* are
+  the ones with corners and jumps in them — a square wave, a sawtooth, a
+  rectified sine — none of which is a shape any table has. So the coefficients
+  are integrated rather than looked up, which makes this work on anything the
+  calculator can evaluate: `|t|`, `\text{sign}`, `\text{floor}`, a formula
+  somebody wrote this morning.
+
+  The honest difficulty is that Simpson's rule across a jump is bad arithmetic
+  — the error is first order in the step, so a square wave's `b_1` would come
+  out to four figures rather than twelve. So the jumps are found first, sampled
+  and then bisected to the last bit of the float, and each smooth piece is
+  integrated on its own with its ends read from inside. That last part was
+  worth three ten-thousandths on its own: `\text{sign}(\sin(t))` is zero at
+  `t = 0`, which is neither of its two values, and Simpson's rule gives that
+  one sample a third of a panel's weight.
+
+  The overshoot at each jump is Gibbs and is not a mistake: the first peak
+  settles on `1.178980`, however many harmonics are taken, and a series that
+  did not overshoot would be the wrong series. Checked at thirty, sixty and a
+  hundred and twenty terms.
+
+  **`F{e^{-2t}}` is a Fourier transform**, drawn against `ω`. For a signal that
+  starts at zero and settles, this is the Laplace transform read up the
+  imaginary axis — `F(\omega) = F_L(i\omega)` — which is not a shortcut but
+  the definition, the two integrals being the same integral once `s = i\omega`.
+  So the whole of the Laplace engine is the engine here and there is no second
+  table. `F{e^{-0.4t}\sin(6t)}` draws the twin peaks at `\pm 6` that say where
+  a dying wobble keeps its energy.
+
+  What comes back is complex, so what is drawn is its size, and the line says
+  so rather than leaving somebody to assume the picture is the transform. And
+  it follows from the definition that the transform exists only where the
+  signal settles: `F{1}` and `F{\sin(t)}` have poles on the axis and their
+  transforms are impulses in frequency rather than functions, so they are
+  refused with the sentence that says exactly that — which is a better lesson
+  than an answer made of the part that happens to be a function. `F{e^{-|t|}}`
+  is the one two-sided shape taken, because an even function is its own right
+  half read twice.
 
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms
