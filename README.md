@@ -604,6 +604,19 @@ model in it or needs a key:
   corner turns every other arrow into a dot, so length is the magnitude against
   the largest under a square root, and the ink carries the rest.
 
+  **`y' = x + y` is a differential equation**, and it is solved by walking it:
+  the slope field underneath, and the solution through every `y(0) = 1` written
+  under it — as many as you like, each its own curve, and none at all draws the
+  whole family. Runge–Kutta, fourth order, checked against `y' = y` to ten
+  places of *e*; Euler's method is a line shorter and drifts off the true
+  solution smoothly enough to read as the answer. Nothing is solved
+  symbolically and nothing pretends to be: `y' = y` will never print `Ce^x`
+  here, because symbolic algebra is the different program this app has always
+  said it is. What it draws is the picture that answer is usually wanted for.
+  A solution that runs to infinity — `y' = y^2` from `y(0) = 1`, at x = 1 —
+  stops where it stops, and the reading says so rather than letting a steep
+  line stand in for a thing that has no value. See `app/src/lib/ode.ts`.
+
   **Polar and parametric** are the same box and the same notation, told apart
   by the letter in them: an `r =` line with the angle in it is polar —
   `r = 2 + 2\cos(\theta)`, a cardioid — and a pair with `t` in it is the path

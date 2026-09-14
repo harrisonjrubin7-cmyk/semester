@@ -99,6 +99,15 @@ export type Line =
    * makes it the fixed point it looks like.
    */
   | { kind: 'field'; x: Node; y: Node }
+  /**
+   * `y' = x + y` — how fast y changes at every point, rather than what it is.
+   *
+   * Drawn as the slope field and the solutions through it. Solved by walking,
+   * never symbolically: see `lib/ode.ts`.
+   */
+  | { kind: 'ode'; body: Node }
+  /** `y(0) = 1` — where a solution is known to pass, which picks one out of the family. */
+  | { kind: 'start'; at: Node; value: Node }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -119,6 +128,19 @@ export const TURNS: readonly number[] = [1, 2, 4, 6, 12];
 // ── Reading a line of the list ───────────────────────────────────────────
 
 const INEQUALITY = /(<=|>=|≤|≥|≠|<|>|\\le\b|\\ge\b|\\neq?\b|\\lt\b|\\gt\b)/;
+
+/**
+ * `y'`, `dy/dx` and `\frac{dy}{dx}` on the left of an `=`: a rate, not a product.
+ *
+ * Read off the text rather than through the expression parser, because none of
+ * the three is an expression: an apostrophe is not an operator, and `dy/dx`
+ * through the parser is d times y over d times x, which is 1 and is not what
+ * anybody wrote.
+ */
+const RATE = /^\s*(?:y\s*'|dy\s*\/\s*dx|\\frac\s*\{\s*dy\s*\}\s*\{\s*dx\s*\})\s*$/;
+
+/** `y(0)` on the left of an `=`: where a solution is known to pass. */
+const START = /^\s*y\s*\(([^()]*)\)\s*$/;
 
 /** `f(x)` and `g(x, y)` on the left of an `=`: a definition, not a product. */
 const DEFINES = /^\s*([A-Za-z][A-Za-z0-9]*)\s*\(\s*([A-Za-z][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z][A-Za-z0-9_]*)*)\s*\)\s*$/;
@@ -239,6 +261,15 @@ export function readLine(source: string): Line {
   const rhs = node(right);
   if ('says' in rhs) return { kind: 'fault', says: rhs.says };
 
+  if (RATE.test(left)) return { kind: 'ode', body: rhs.node };
+
+  const start = START.exec(left);
+  if (start) {
+    const at = node(start[1]);
+    if ('says' in at) return { kind: 'fault', says: at.says };
+    return { kind: 'start', at: at.node, value: rhs.node };
+  }
+
   if (defines) {
     return {
       kind: 'fun',
@@ -298,7 +329,10 @@ export function missing(line: Line, scope: Scope): string[] {
       return free(line.body, scope).filter((n) => !has(n));
     case 'polar':
     case 'surface':
+    case 'ode':
       return free(line.body, scope).filter((n) => !has(n));
+    case 'start':
+      return [...free(line.at, scope), ...free(line.value, scope)].filter((n) => !has(n));
     case 'parametric':
     case 'field':
     case 'point':
@@ -933,6 +967,16 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'A saddle',
     says: 'A surface: a height over every point of the floor, turned with a finger.',
     lines: ['z = x^2 - y^2'],
+  },
+  {
+    name: 'A differential equation',
+    says: 'The slope field, and the one solution through a point you name.',
+    lines: ["y' = y - x", 'y(0) = 1'],
+  },
+  {
+    name: 'Growth that levels off',
+    says: 'The logistic curve: fast while there is room, then flat.',
+    lines: ["y' = 0.6 y (1 - y/40)", 'y(0) = 2'],
   },
   {
     name: 'A flow',
