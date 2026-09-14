@@ -83,6 +83,21 @@ export interface AppTab {
    */
   pinned?: boolean;
   /**
+   * Silenced, whatever it plays.
+   *
+   * On the tab rather than on the player, because that is what makes it a
+   * *tab* setting: a lesson tab you muted on the bus is still muted when you
+   * come back to it an hour later and start a different unit in it. The
+   * player is one element shared by everything (`lib/sound.ts`); a mute kept
+   * there would be a mute on the app, and would be forgotten the moment
+   * anything else claimed it.
+   *
+   * Present-or-absent like `pinned`, so a strip written by this build and
+   * read by an older one loses a mute rather than gaining a field it cannot
+   * read.
+   */
+  muted?: boolean;
+  /**
    * The group this tab belongs to, if it is in one.
    *
    * The id of a `TabGroup` in the same strip, never the group itself: a tab
@@ -647,6 +662,36 @@ function unpinned(tab: AppTab): AppTab {
   return rest;
 }
 
+/**
+ * Silence this tab, or let it speak again.
+ *
+ * Nothing else moves: not the order, not the tab you are on, not what is
+ * playing. Muting is not stopping — the lesson goes on running and keeps its
+ * place, which is the difference between turning a tab down and closing it,
+ * and the reason a browser offers both.
+ *
+ * No `tidy`, because no invariant of the strip mentions this: a muted tab may
+ * be pinned, grouped, first, last or the one you are on.
+ */
+export function mute(strip: Strip, which: number, muted = true): Strip {
+  const tab = strip.tabs[which];
+  if (!tab || Boolean(tab.muted) === muted) return strip;
+  const tabs = [...strip.tabs];
+  tabs[which] = muted ? { ...tab, muted: true } : unmuted(tab);
+  return { ...strip, tabs };
+}
+
+/** The same tab, no longer muted — the key removed rather than set false. */
+function unmuted(tab: AppTab): AppTab {
+  const { muted: _out, ...rest } = tab;
+  return rest;
+}
+
+/** Is the tab with this id muted? For the player, which knows an id. */
+export function mutedTab(strip: Strip, id: string): boolean {
+  return Boolean(strip.tabs.find((t) => t.id === id)?.muted);
+}
+
 /** How many tabs are pinned, which is where the working strip begins. */
 export function pinnedCount(strip: Strip): number {
   return strip.tabs.filter((t) => t.pinned).length;
@@ -1108,6 +1153,10 @@ function storedTabs(raw: unknown, known: (screen: string) => boolean, blanks: bo
       ...(typeof tab.query === 'string' && tab.query ? { query: tab.query } : {}),
       ...(typeof tab.group === 'string' && tab.group ? { group: tab.group } : {}),
       ...(tab.pinned === true ? { pinned: true } : {}),
+      // Strictly `true`, like `pinned`: this object is built field by field
+      // precisely so that a stored tab can carry nothing the app did not ask
+      // for, and "truthy" is how that guarantee gets lost.
+      ...(tab.muted === true ? { muted: true } : {}),
       // A tab whose place did not survive the check still knows its screen,
       // so it lands you there rather than nowhere. Losing the deadline you
       // had open is a smaller failure than a tab that does nothing.
