@@ -145,11 +145,21 @@
   --scrim: color-mix(in srgb, var(--app-bg) 72%, transparent);
 
   /* The assistant's button is fixed over the bottom-right of every screen —
-     52px square, 18px in from the right, 12px above the tab bar. This is its
-     footprint with the room around it, named once, because two rules now have
-     to agree about it: the space reserved under a screen so nothing sits
-     behind it, and the space the soft shell's pinned bar keeps clear on its
-     right so the button lands beside the primary action rather than on it. */
+     52px square, 18px in from the right, 12px above the tab bar where there
+     is one and 12px above the window's edge where there is not. This is its
+     footprint with the room around it — 12 + 52 + 12 — named once, because
+     two rules now have to agree about it: the space reserved under a screen
+     so nothing sits behind it, and the space the soft shell's pinned bar
+     keeps clear on its right so the button lands beside the primary action
+     rather than on it.
+
+     The number only works while the button is placed from the same two
+     numbers. It briefly was not: `ai/Assistant.tsx` fell back to a bar's own
+     height when `--bottom-chrome` was unset, which put the button 140px up in
+     a shell that has nothing along its bottom while this went on reserving 76
+     — so 64px of the last card on Today sat under an opaque circle with no
+     scroll left to bring it clear. The fallback is zero now. Change one of
+     these and the other has to move. */
   --assistant-strip: 76px;
 
   /* Leading. Distinct from --line-height, which is the reader's own setting
