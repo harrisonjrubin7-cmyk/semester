@@ -984,6 +984,40 @@ model in it or needs a key:
   is the one two-sided shape taken, because an even function is its own right
   half read twice.
 
+  **`Z{0.5^n}` is a z-transform**, which is Laplace for a thing that happens on
+  the beat rather than continuously — a balance after each month, a reading
+  each second, a series each quarter. `Z^{-1}{z/((z-1)(z-2))}` is the sequence
+  behind one, and it reads `2^n - 1`.
+
+  The family is the discrete twin of the Laplace one: `c\,n^k r^n` times a
+  cosine or a sine of `\omega n`, starting at `n = d`. Same closure, same
+  reason there is no half-solved case to fall into. The arithmetic is shared
+  outright — `app/src/lib/poly.ts` now holds the roots and the partial
+  fraction, because taking `\frac{z}{(z-2)(z-3)}` apart is the same problem as
+  taking `\frac{1}{(s+1)(s+2)}` apart, and two copies of a root finder are two
+  root finders that drift.
+
+  What differs is worth saying. The work is done in `w = z^{-1}`, where the
+  sums are geometric and a delay is a multiplication, and turned back into `z`
+  only to be written down, which is why the denominators come out as tables
+  print them. Where a Laplace pole left of the axis means a thing settles, a
+  z-transform pole *inside the unit circle* means it dies away, and the line
+  under it says which — `|p| < 1` is the whole of discrete stability.
+
+  And the answer is drawn as the beats it is: points on the integers with a
+  stem to each, nothing before `n = 0`, and no line joining them. A curve
+  through those points would claim a value at `n = 1.5`, which is not a thing
+  that exists. For the same reason a step at `u(n - 1.5)` is refused rather
+  than rounded.
+
+  Building it found a bug in the adding-up. Three terms over a denominator
+  built by multiplying — `(1-w)^3(1-0.5w)` — has a pole at 1 three times where
+  the sequence has it twice; the spare one cancels against a zero on top, and a
+  partial fraction asked to split at a pole that is not there answered with a
+  five-hundred-thousand. Caught by transforming a sequence and transforming it
+  back, which is the test worth having for a pair of functions that are meant
+  to undo each other.
+
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms
   without complaint. A bracket after a letter is a multiplication or a function

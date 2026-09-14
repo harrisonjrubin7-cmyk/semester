@@ -571,3 +571,59 @@ describe('Fourier on the list', () => {
     expect(of('fourier(t)')).toMatchObject({ kind: 'fault' });
   });
 });
+
+/**
+ * The z-transform on the list.
+ *
+ * `lib/discrete.test.ts` checks the arithmetic against the table. This checks
+ * the joint, and one thing that is only true here: the inverse is drawn as
+ * points on the integers, because a sequence has no value between them.
+ */
+describe('a z-transform on the list', () => {
+  it('is its own kind, and is not the Fourier one', () => {
+    expect(of('Z{0.5^n}').kind).toBe('ztransform');
+    expect(of('\\mathcal{Z}\\{0.5^n\\}').kind).toBe('ztransform');
+    expect(of('Z^{-1}{z/(z - 0.5)}').kind).toBe('sequence');
+    expect(of('F{e^{-2t}}').kind).toBe('spectrum');
+    expect(of('Z = 4')).toMatchObject({ kind: 'value', name: 'Z' });
+  });
+
+  it('says what it comes to, with what its poles mean', () => {
+    const got = answered(of('Z{0.5^n}'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toBe('\\frac{z}{z - 0.5}');
+    expect(got.over).toBe('z');
+    expect(got.note).toMatch(/inside the unit circle, so it dies away/);
+    expect(got.at(2)).toBeCloseTo(2 / 1.5, 10);
+  });
+
+  it('draws a sequence as beats with a stem to each, not as a curve', () => {
+    const line = of('Z^{-1}{z/((z - 1)(z - 2))}');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toBe('2^{n} - 1');
+    const drawn = draw(line, {}, { x0: -2, x1: 5, y0: -2, y1: 20 });
+    // Nothing before n = 0, and one point per whole number after it.
+    expect(drawn.points.map((p) => p.x)).toEqual([0, 1, 2, 3, 4, 5]);
+    // Numerical roots, so to a handful of places rather than exactly.
+    [0, 1, 3, 7, 15, 31].forEach((want, i) => expect(drawn.points[i].y).toBeCloseTo(want, 9));
+    // Every path is a stem: two points, from the axis to the value.
+    for (const path of drawn.paths) {
+      expect(path).toHaveLength(2);
+      expect(path[0].y).toBe(0);
+      expect(path[0].x).toBe(path[1].x);
+    }
+  });
+
+  it('asks for the letters it needs and no others', () => {
+    expect(missing(of('Z{0.5^n}'), {})).toEqual([]);
+    expect(missing(of('Z^{-1}{z/(z - a)}'), {})).toEqual(['a']);
+    expect(missing(of('Z{k 0.5^n}'), {})).toEqual(['k']);
+  });
+
+  it('says what it could not do rather than drawing nothing quietly', () => {
+    const got = answered(of('Z{\\ln(n)}'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/ln/);
+  });
+});
