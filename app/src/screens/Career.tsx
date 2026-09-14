@@ -216,6 +216,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'discover' && (
         <>
           <input
+            className="input"
             aria-label="Search opportunities"
             placeholder="Role, employer, location, skills or country"
             value={query}
@@ -224,7 +225,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           />
           <label style={field}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Type</span>
-            <select value={kind} onChange={(e) => setKind(e.target.value)} style={input}>
+            <select className="input" value={kind} onChange={(e) => setKind(e.target.value)} style={input}>
               <option>All types</option>
               {OPPORTUNITY_KINDS.map((k) => (
                 <option key={k}>{k}</option>
@@ -233,7 +234,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           </label>
           <label style={field}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Format</span>
-            <select value={format} onChange={(e) => setFormat(e.target.value)} style={input}>
+            <select className="input" value={format} onChange={(e) => setFormat(e.target.value)} style={input}>
               {['All formats', ...OPPORTUNITY_FORMATS].map((k) => (
                 <option key={k}>{k}</option>
               ))}
@@ -288,6 +289,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <label key={k} style={field}>
                     <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>{FIELD_LABELS[k]}</span>
                     <input
+                      className="input"
                       required={k === 'title'}
                       maxLength={k === 'title' || k === 'organization' ? 160 : 1000}
                       value={edit[k]}
@@ -300,6 +302,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Type</span>
                 <select
+                  className="input"
                   value={edit.kind}
                   onChange={(e) => setEdit({ ...edit, kind: e.target.value as Opportunity['kind'] })}
                   style={input}
@@ -312,6 +315,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Format</span>
                 <select
+                  className="input"
                   value={edit.format}
                   onChange={(e) => setEdit({ ...edit, format: e.target.value as Opportunity['format'] })}
                   style={input}
@@ -324,6 +328,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Deadline</span>
                 <input
+                  className="input"
                   type="date"
                   value={edit.deadline}
                   onChange={(e) => setEdit({ ...edit, deadline: e.target.value })}
@@ -333,6 +338,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Official listing link</span>
                 <input
+                  className="input"
                   type="url"
                   maxLength={CAREER_LIMITS.url}
                   value={edit.url}
@@ -343,6 +349,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Description</span>
                 <textarea
+                  className="input"
                   rows={4}
                   maxLength={CAREER_LIMITS.description}
                   value={edit.description}
@@ -353,6 +360,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>What it asks for</span>
                 <textarea
+                  className="input"
                   rows={4}
                   maxLength={CAREER_LIMITS.requirements}
                   value={edit.requirements}
@@ -504,6 +512,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 {k === 'contact' ? 'Contact line you want on it' : k === 'headline' ? 'Profile or objective' : 'Name'}
               </span>
               <input
+                className="input"
                 maxLength={k === 'name' ? 160 : k === 'headline' ? 300 : 500}
                 value={lib.value[k]}
                 onChange={(e) => lib.update((old) => ({ ...old, [k]: e.target.value }))}
@@ -550,6 +559,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Category</span>
                 <select
+                  className="input"
                   value={experience.category}
                   onChange={(e) =>
                     setExperience({ ...experience, category: e.target.value as CareerExperience['category'] })
@@ -565,6 +575,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <label key={k} style={field}>
                   <span style={{ fontSize: 'var(--type-sm)', ...secondLine(), textTransform: 'capitalize' }}>{k}</span>
                   <input
+                    className="input"
                     required={k === 'title'}
                     maxLength={k === 'dates' ? 100 : 160}
                     value={experience[k]}
@@ -576,6 +587,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>What you actually did</span>
                 <textarea
+                  className="input"
                   rows={6}
                   maxLength={5000}
                   value={experience.details}
@@ -716,6 +728,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                     {k === 'next' ? 'Next step' : k}
                   </span>
                   <input
+                    className="input"
                     required={k === 'name'}
                     maxLength={500}
                     value={person[k]}
@@ -727,6 +740,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Have they agreed?</span>
                 <select
+                  className="input"
                   value={person.permission}
                   onChange={(e) =>
                     setPerson({ ...person, permission: e.target.value as CareerContact['permission'] })
@@ -741,6 +755,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Follow up on</span>
                 <input
+                  className="input"
                   type="date"
                   value={person.nextDate}
                   onChange={(e) => setPerson({ ...person, nextDate: e.target.value })}
@@ -750,6 +765,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Private notes</span>
                 <textarea
+                  className="input"
                   rows={5}
                   maxLength={CAREER_LIMITS.notes}
                   value={person.notes}

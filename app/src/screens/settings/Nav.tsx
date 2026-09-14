@@ -8,7 +8,7 @@ import { countHidden, revealLine } from '../../lib/reveal';
 import { TabChooser } from '../../components/TabChooser';
 import { Reorder } from '../../components/Reorder';
 import { LayoutPicker, NavPicker } from '../../components/Appearance';
-import { BADGES, DIRECTORIES, FEEDS, LABELS, directoryOf } from '../../lib/look';
+import { BADGES, DIRECTORIES, FEEDS, LABELS, NAVS, SHELLS, directoryOf } from '../../lib/look';
 import { SECTIONS, move, ordered } from '../../lib/feed';
 import { MOVE_HINT, nudged, useMovable } from '../../lib/arrange';
 import { afterMove, boardLists } from '../../lib/springboard';
@@ -17,6 +17,7 @@ import { readOrder, shelfLists, writeOrder } from '../../lib/launcher';
 import type { Group as Shelf } from '../../lib/nav';
 import type { Screen } from '../../lib/types';
 import { currentLook } from '../../state/shape';
+import { usesBar } from '../../lib/chrome';
 
 const HINT = {
   fontSize: 'calc(11.5px * var(--text-scale, 1))',
@@ -98,7 +99,9 @@ export function SettingsNav() {
   return (
     <SettingsPage
       screen="setNav"
-      blurb="Five navigations and three layouts, in every combination. Nothing here hides anything — every screen stays reachable whichever you pick."
+      // Counted, for the reason `NavPicker` gives: a number in prose beside
+      // the list it counts is a number that goes stale on the next change.
+      blurb={`${NAVS.length} navigations and ${SHELLS.length} layouts, in every combination. Nothing here hides anything — every screen stays reachable whichever you pick.`}
     >
       {(lit) => (
         <>
@@ -112,9 +115,12 @@ export function SettingsNav() {
           >
             <CustomRow>
               <NavPicker />
-              {/* Only where there is a bar to arrange. Offering it in the
-                  other three would be a control that does nothing. */}
-              {state.nav === 'tabs' && <TabChooser />}
+              {/* Only where there is a bar to arrange — but that is every
+                  navigation that draws one, not just the one named after it.
+                  The feed and the springboard draw the same list as the rail
+                  on a wide window, and asking `chromeFor` is what keeps this
+                  in step with them. See `usesBar`. */}
+              {usesBar(state.nav) && <TabChooser />}
             </CustomRow>
           </Group>
 

@@ -209,3 +209,54 @@ describe('the version written back', () => {
     expect(read.ran).toEqual([]);
   });
 });
+
+/**
+ * One unreadable field costs that field, and nothing else.
+ *
+ * `loadPersisted` wraps the whole read in one `try`, and its `catch` returns
+ * `DEFAULT_PERSISTED` with the note "A private window, or storage disabled."
+ * For that case defaults are exactly right. The catch cannot tell that case
+ * from a save that is present, readable, and wrong in one place — so any
+ * reader that throws takes the entire term with it.
+ *
+ * Measured, before `readDrop` was made total: a save holding three ticked
+ * deadlines, a chosen navigation, three recents and a five-hour day budget,
+ * plus `drops: {"ECON": {"toString": null}}` — valid JSON, and the shape
+ * `Number()` refuses to coerce — came back as defaults on every one of them.
+ * The next dispatch then wrote those defaults back over the real save, so it
+ * was not hidden, it was gone.
+ *
+ * `lib/readers.test.ts` holds the general rule this is the consequence of: a
+ * reader of untrusted input may refuse with a sentence or fall back, and may
+ * never throw a `TypeError`. This one holds the cost of breaking it, in the
+ * fields a student would actually miss.
+ */
+describe('a save that is wrong in one place', () => {
+  const SOUND = {
+    schemaVersion: SCHEMA,
+    nav: 'shelves',
+    done: { 'econ-1': true, 'econ-2': true, 'psci-9': true },
+    recent: ['courses', 'calendar', 'study'],
+    dayBudget: 5,
+  };
+
+  it('keeps everything the bad field is not', () => {
+    const kept = withStorage(
+      JSON.stringify({ ...SOUND, drops: { ECON: JSON.parse('{"toString":null}') } }),
+      () => loadPersisted(),
+    );
+    expect(Object.keys(kept.done).length, 'the ticked deadlines').toBe(3);
+    expect(kept.recent.length, 'where you have been').toBe(3);
+    expect(kept.dayBudget, 'the day budget').toBe(5);
+    expect(kept.nav, 'the chosen navigation').toBe('shelves');
+  });
+
+  it('falls back on the bad field itself rather than keeping nonsense', () => {
+    const kept = withStorage(
+      JSON.stringify({ ...SOUND, drops: { ECON: JSON.parse('{"toString":null}'), PSCI: 2 } }),
+      () => loadPersisted(),
+    );
+    expect(kept.drops.ECON, 'unreadable, so no drops').toBe(0);
+    expect(kept.drops.PSCI, 'and its neighbour is untouched').toBe(2);
+  });
+});

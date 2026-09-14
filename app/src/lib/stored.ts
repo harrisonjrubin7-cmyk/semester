@@ -329,7 +329,24 @@ export function readIncoming<T extends Record<string, unknown>>(blob: T): T {
    * By name, unlike the structural pass below, because "what counts as a
    * value" is exactly the thing a structural rule cannot know.
    */
-  if ('role' in out) (out as Record<string, unknown>).role = roleOf(String(out.role)).id;
+  /*
+   * `String(out.role)`, until this: the same coercion that took a whole saved
+   * term through `readDrop`. `String()` on an object runs its `toString`, and
+   * `{"toString":null}` is valid JSON, so a synced or restored blob carrying
+   * one threw `TypeError` here — on the door this file's own note calls the
+   * worst of the three, because nobody has to open anything for a sync to
+   * arrive, and the `hydrate` that consumes it is a reducer.
+   *
+   * A role has only ever been written as a string. Anything else is not a
+   * role this build has heard of, which is the question `roleOf` already
+   * answers with `student`. The two readers below guard their input the same
+   * way — `readControls` with `plain`, `readQuiet` with its own — and
+   * survived this shape; only the coercion did not.
+   */
+  if ('role' in out) {
+    const role = out.role;
+    (out as Record<string, unknown>).role = roleOf(typeof role === 'string' ? role : '').id;
+  }
   if ('controls' in out) (out as Record<string, unknown>).controls = readControls(out.controls);
   if ('quiet' in out) (out as Record<string, unknown>).quiet = readQuiet(out.quiet);
   /*

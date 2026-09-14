@@ -390,6 +390,30 @@ export default defineConfig(({ command, mode }) => {
   const anthropicKey = process.env.ANTHROPIC_API_KEY ?? local.ANTHROPIC_API_KEY ?? ''
 
   /*
+   * Which build this is, so the service worker can throw the last one away.
+   *
+   * The worker keeps every asset the page tells it about, and asset names are
+   * content-hashed, so each deploy contributed a fresh set to a cache that was
+   * never pruned — `activate` only runs when `sw.js` itself changes, and
+   * `sw.js` is a static file that does not. An installed app therefore held
+   * every version of every chunk it had ever loaded, for ever.
+   *
+   * The worker cannot tell one build from another by looking; only the page
+   * knows. So the page is told here, and passes it on with the list of what it
+   * used. See `src/lib/warm.ts` and `public/sw.js`.
+   *
+   * Pruning against that list alone would have been wrong, and worth saying
+   * why: the list is what the *first* load fetched, and a screen opened later
+   * is cached by the fetch handler and is not in it. Pruning on every warm
+   * would evict exactly the screens the offline promise is about. Only a build
+   * change makes old entries genuinely dead — they are named after files the
+   * server no longer serves — so only a build change prunes.
+   *
+   * Set it in the environment to pin it; otherwise the moment of the build.
+   */
+  process.env.VITE_BUILD_ID ??= Date.now().toString(36)
+
+  /*
    * With a key on the server, point the app at the proxy holding it — unless
    * whoever is running this named a proxy of their own, which is the production
    * shape and wins.

@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
+import type {
+  ButtonHTMLAttributes,
+  CSSProperties,
+  KeyboardEvent as ReactKeyboardEvent,
+  ReactNode,
+} from 'react';
 import { useRowStyle } from './shell/useShell';
 import { longhandMargins } from '../lib/margins';
 
@@ -330,6 +335,119 @@ export function Segmented<T extends string>({
   );
 }
 
+/**
+ * A row of tabs, with the keyboard behaviour the role promises.
+ *
+ * ## The fault this exists to fix
+ *
+ * `role="tablist"` was written out in ten files — the ribbon, the mail
+ * categories, the shelf nav, the springboard's page dots, the class chat, and
+ * the five ported campus screens. Every one of them declared the role and the
+ * `role="tab"` children correctly, and **not one of them implemented the
+ * pattern**: no arrow keys, no roving tabindex, no Home or End.
+ *
+ * That is worse than plain buttons rather than merely incomplete. A `<button>`
+ * row makes no promise; a tablist tells a screen-reader user "tab, 2 of 4",
+ * at which point they press Right and nothing happens. Ten separate
+ * half-implementations is also ten places to not fix it, which is why this is
+ * a component rather than ten patches — `SIMPLIFY-AUDIT.md` records the census
+ * under E3, where the row that found it named the wrong survivor.
+ *
+ * ## What it does not do
+ *
+ * It does not style anything. Each caller passes its own `className` or
+ * `style` and keeps the look it had — four different tab stylings were in use
+ * and settling them is a design question, not this one. What is shared here
+ * is the semantics and the keyboard, which have exactly one right answer.
+ *
+ * Nor does it own the panel. Most of these callers switch a whole screen
+ * rather than a labelled region, and inventing an `aria-controls` target for
+ * each would be this component asserting a relationship its callers do not
+ * have.
+ *
+ * ## Roving tabindex
+ *
+ * One stop for the whole strip: the selected tab is `tabIndex={0}` and the
+ * rest are `-1`, so Tab moves *past* the group rather than through it and the
+ * arrows move within it. That is what the pattern asks for, and it is also
+ * why the keyboard handler has to move focus itself — the browser will not,
+ * because the other tabs are not tab stops.
+ */
+export function TabList<T extends string>({
+  label,
+  tabs,
+  value,
+  onChange,
+  className,
+  style,
+  tabClassName,
+  tabStyle,
+}: {
+  /** Names the group. What a screen reader reads before "tab, 2 of 4". */
+  label: string;
+  tabs: readonly { id: T; label: ReactNode; ariaLabel?: string }[];
+  value: T;
+  onChange: (next: T) => void;
+  className?: string;
+  style?: CSSProperties;
+  /** Per-tab class. A function when the look depends on being the chosen one. */
+  tabClassName?: string | ((selected: boolean) => string);
+  tabStyle?: (selected: boolean) => CSSProperties;
+}) {
+  const strip = useRef<HTMLDivElement>(null);
+
+  /*
+   * Arrow keys wrap, which is what the pattern specifies and is also the
+   * kinder behaviour: the alternative is a key that silently does nothing at
+   * one end, and "nothing happened" is indistinguishable from "this widget is
+   * broken" when you cannot see the row.
+   */
+  const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    const at = tabs.findIndex((t) => t.id === value);
+    if (at === -1) return;
+    const to =
+      e.key === 'ArrowRight' || e.key === 'ArrowDown'
+        ? (at + 1) % tabs.length
+        : e.key === 'ArrowLeft' || e.key === 'ArrowUp'
+          ? (at - 1 + tabs.length) % tabs.length
+          : e.key === 'Home'
+            ? 0
+            : e.key === 'End'
+              ? tabs.length - 1
+              : -1;
+    if (to === -1) return;
+    e.preventDefault();
+    onChange(tabs[to].id);
+    // The newly chosen tab is the only tab stop, so focus has to be carried
+    // to it by hand; left alone it stays on a button that is now `-1` and the
+    // next arrow press has nothing to move from.
+    strip.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[to]?.focus();
+  };
+
+  return (
+    <div ref={strip} role="tablist" aria-label={label} className={className} style={style} onKeyDown={onKeyDown}>
+      {tabs.map((t) => {
+        const on = t.id === value;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            role="tab"
+            aria-selected={on}
+            aria-label={t.ariaLabel}
+            tabIndex={on ? 0 : -1}
+            className={typeof tabClassName === 'function' ? tabClassName(on) : tabClassName}
+            style={tabStyle?.(on)}
+            onClick={() => onChange(t.id)}
+          >
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function Toggle({
   on,
   label,
@@ -508,11 +626,34 @@ export function Meter({
  * button inside the box — the recovery download, and University's undo for a
  * removed draft — and a component that takes a string would have sent those
  * back to drawing their own.
+ *
+ * ## `alert`, and why it is a prop rather than a second component
+ *
+ * `role="status"` is polite: a screen reader finishes its sentence and then
+ * reads it. That is right for "Added to your tracker" and wrong for "your
+ * saved copy could not be read — here is a recovery download", which is the
+ * one thing on the screen the reader needs to hear before they carry on
+ * typing into it. The ported campus screens knew this and said
+ * `role="alert"`, which is assertive; they just said it on a hand-rolled box
+ * (`SIMPLIFY-AUDIT.md` E3).
+ *
+ * So the politeness is the prop and the box is shared, rather than a second
+ * component that would drift from this one in every other respect. The
+ * default stays `status`: assertive interrupts, so it has to be asked for.
  */
-export function Notice({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+export function Notice({
+  children,
+  style,
+  alert = false,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+  /** Interrupt the reader. For a failure the student has to know about now. */
+  alert?: boolean;
+}) {
   return (
     <p
-      role="status"
+      role={alert ? 'alert' : 'status'}
       style={{
         fontSize: 'var(--type-sm)',
         lineHeight: 'var(--leading-normal)',

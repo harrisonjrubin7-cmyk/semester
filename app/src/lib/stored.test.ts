@@ -273,6 +273,31 @@ describe('the settings whose bad values are worse than their absence', () => {
     expect(readIncoming({ role: 'faculty' }).role).toBe('faculty');
   });
 
+  /*
+   * The shape `String()` will not look at, on the door that opens itself.
+   *
+   * This read `roleOf(String(out.role)).id`. `String()` on an object runs its
+   * `toString`, and `{"toString":null}` is valid JSON — so a synced or
+   * restored blob carrying one threw `TypeError` out of `readIncoming`. The
+   * two settings beside it survived the same value, because `readControls`
+   * guards with `plain` and `readQuiet` with its own check; only the bare
+   * coercion did not.
+   *
+   * Where that lands is the point. `hydrate` in `state/slices/library.ts` is
+   * a reducer, and the database path in `state/persist/index.ts` is awaited
+   * by a `.then` with no `.catch` — so the throw was an unhandled rejection
+   * and the hydrate simply never happened, with nothing said. The same
+   * coercion in `readDrop` took a whole saved term; see `lib/drop.ts`.
+   */
+  it('normalises a role whose own toString is unusable', () => {
+    const poisoned = JSON.parse('{"toString":null}') as unknown;
+    expect(() => readIncoming({ role: poisoned } as Record<string, unknown>)).not.toThrow();
+    expect(readIncoming({ role: poisoned } as Record<string, unknown>).role).toBe('student');
+    // And the two beside it, which were already safe and must stay so.
+    expect(() => readIncoming({ controls: poisoned } as Record<string, unknown>)).not.toThrow();
+    expect(() => readIncoming({ quiet: poisoned } as Record<string, unknown>)).not.toThrow();
+  });
+
   it('normalises controls field by field, so one bad value does not take the others', () => {
     const out = readIncoming({ controls: { depth: 'bad', level: 'harder', cards: 12 } });
     expect(out.controls).toEqual({ depth: 'standard', level: 'harder', cards: 12 });

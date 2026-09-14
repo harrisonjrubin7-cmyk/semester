@@ -24,7 +24,16 @@
 .mail-context .input{background:var(--app-panel)!important}
 .mail-compose .section-label{font-size:13px!important;text-transform:none!important;letter-spacing:0!important}
 .mail-compose .btn-block{width:auto!important;padding:0 24px;display:inline-flex!important;border-radius:24px!important;text-transform:none!important;letter-spacing:0!important}
-.portal-workspace{max-width:1500px;margin:0 auto;padding:20px 28px 40px;color:var(--app-fg);--app-panel:var(--app-panel);--app-line:var(--app-line)}
+/* Two tokens used to be re-declared here as themselves —
+   `--app-panel:var(--app-panel)` — which reads as "keep this one" and is
+   the opposite: a custom property whose value refers to itself is a cycle,
+   and a cycle computes to the guaranteed-invalid value. So both were
+   *deleted* for this element and everything under it, and every rule below
+   that asked for them silently lost its value: the primary action's ink
+   (`color:var(--app-panel)`, invalid, so it inherited the page's near-white
+   onto the light accent at 1.2:1) and every field's ground and border.
+   Keeping a token is what happens when nothing is said about it. */
+.portal-workspace{max-width:1500px;margin:0 auto;padding:20px 28px 40px;color:var(--app-fg)}
 .portal-workspace :is(h2,h3,h4){font-family:Arial,sans-serif;letter-spacing:normal;text-transform:none;font-weight:500;color:var(--app-fg)}
 .portal-workspace h2{font-size:30px;line-height:1.25;margin:8px 0 12px}
 .portal-workspace h3{font-size:20px;line-height:1.35;margin:10px 0 16px}
@@ -185,7 +194,9 @@
 .study-studio-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .study-studio fieldset{border:0;padding:0;margin:0;min-width:0}
 .study-studio label{font-size:14px}
-.study-studio input:not([type=checkbox]), .study-studio textarea, .study-studio select, .studio-course-picker select{color:var(--app-fg);background:white;border:1px solid var(--app-line);border-radius:8px;min-height:40px;padding:8px;max-width:100%;box-sizing:border-box}
+/* The ink follows the theme, so the paper has to as well: a literal white
+   here put light text on a white field on every dark theme. */
+.study-studio input:not([type=checkbox]), .study-studio textarea, .study-studio select, .studio-course-picker select{color:var(--app-fg);background:var(--app-panel);border:1px solid var(--app-line);border-radius:8px;min-height:40px;padding:8px;max-width:100%;box-sizing:border-box}
 .study-studio textarea{width:100%;line-height:1.6;resize:vertical}
 .study-studio input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:var(--app-accent)}
 .study-source-list, .study-format-list{display:flex;flex-direction:column;gap:8px;max-height:430px;overflow:auto}

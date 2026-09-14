@@ -429,8 +429,11 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         style={{ width: '100%', height: 42, marginTop: 'var(--sp-7)' }}
       />
 
+      {/* Off until one of the two `add` guards on is filled in. */}
       <ActionButton
         onClick={add}
+        disabled={!org.trim() && !role.trim()}
+        title={org.trim() || role.trim() ? undefined : 'Enter the organisation or the role first'}
         spacing="0.09em"
         style={{ marginTop: 14 }}
       >
