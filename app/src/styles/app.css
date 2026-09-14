@@ -1787,6 +1787,29 @@ a:hover {
   background: var(--app-accent-wash);
   color: var(--app-accent);
 }
+/*
+ * Not a second time, on a row that already carries it.
+ *
+ * `--app-accent-wash` is the accent at a tenth of itself over whatever is
+ * behind, and `.portal-workspace button` paints it on every row in the
+ * workspace. A tag inside one painted the same tenth again: two tenths
+ * compound, the surface came out darker than either rule intended, and the
+ * accent text on it read 4.40:1 on Fog against the 4.5:1 it needs. One wash
+ * is 5.03:1.
+ *
+ * The tint is already on the row, so dropping the tag's own is what keeps
+ * the surface the one tenth both rules were written for — the chip reads as
+ * accent text on the row's tint rather than a tint on a tint, which is what
+ * it nearly looked like anyway at a tenth over a tenth.
+ *
+ * Found by measuring what the browser painted: the wash is composited at
+ * paint time, so neither the token audit nor a reading of either rule on its
+ * own can see what the two of them do together.
+ */
+.device .portal-workspace button .tag-accent,
+.device .portal-button .tag-accent {
+  background: transparent;
+}
 .device .tag-neutral {
   background: rgba(233, 235, 239, 0.07);
   color: var(--app-dim);
