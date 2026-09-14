@@ -29,13 +29,14 @@ import type {
   Screen,
   StudyMode,
 } from '../lib/types';
-import { DEFAULT_NOTIFS, type NotifKey, EXTRACT } from '../data/misc';
+import { DEFAULT_NOTIFS, type NotifKey } from '../data/misc';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
 import { readApplications, type Application, type Stage } from '../lib/apply';
 import { readProgress, type Progress, type Unit } from '../lib/progress';
 import { readReturned, readWindows, type RegradeWindow, type Returned } from '../lib/returned';
+import { readLeadDays } from '../lib/runway';
 import { readSettings as readGeocode, type Settings as Geocode } from '../lib/geocode';
 import { COMMON_SCALE, readRequirements, readTaken, type Requirement, type Scale, type Taken } from '../lib/degree';
 import { readLetters, readPeople, readVisits, type Letter, type Person, type Visit } from '../lib/letters';
@@ -624,7 +625,6 @@ export interface Persisted {
   done: Record<string, boolean>;
   saved: Record<string, boolean>;
   notifs: Record<NotifKey, boolean>;
-  picked: Record<string, boolean>;
   seenOnboarding: boolean;
   /**
    * Whether an account has ever been made or signed into on this device.
@@ -748,7 +748,6 @@ export interface Ephemeral {
   episodeId: string | null;
   filter: string;
   evFilter: string;
-  calTab: 'deadlines' | 'campus';
   /**
    * Which grain the report screen is showing — the day, the week, the term.
    *
@@ -797,8 +796,6 @@ export interface Ephemeral {
   mathTab: 'write' | 'calculate' | 'graph' | 'library' | 'kept';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'task';
-  /** Which shelf of the directory is showing under Everything. */
-  meGroup: string;
   /**
    * A paper the guide's Quiz mode asked for, read once by the Exam screen.
    *
@@ -821,20 +818,6 @@ export interface Ephemeral {
   /** Which standing the Coming-up list is showing: ahead, missed or finished. */
   /** `working` is a filter over the other three, not a fourth bucket. */
   dueTab: 'ahead' | 'working' | 'overdue' | 'done';
-  /**
-   * What the Email screen should open already filled in.
-   *
-   * Set by whoever sent you there — a course page knows the professor, a
-   * message in the Mail tab knows what you are replying to — and read once.
-   */
-  mailSeed: {
-    purposeId: string;
-    courseId: CourseId | '';
-    to: string;
-    incoming: string;
-    /** The deadline the email is about, when it was opened from one. */
-    itemId: string;
-  } | null;
   /**
    * An announcement handed to the Changes screen, read once.
    *
@@ -893,7 +876,6 @@ export interface Ephemeral {
   updateUnit: number | null;
   query: string;
   onb: number;
-  loadStep: number;
   selDate: string | null;
   calMonth: number;
   calYear: number;
@@ -1165,10 +1147,6 @@ export const DEFAULT_PERSISTED: Persisted = {
   done: {},
   saved: { e1: true, e16: true },
   notifs: { ...DEFAULT_NOTIFS },
-  picked: EXTRACT.reduce<Record<string, boolean>>((a, x) => {
-    a[x.id] = true;
-    return a;
-  }, {}),
   seenOnboarding: false,
   registered: false,
   // Vanderbilt by default, because that is who this was built for and a fresh
@@ -1354,7 +1332,6 @@ export function initialEphemeral(now: Date): Ephemeral {
     episodeId: null,
     filter: 'All',
     evFilter: 'All',
-    calTab: 'deadlines',
     report: 'day',
     changes: 'told',
     calView: 'month',
@@ -1366,11 +1343,9 @@ export function initialEphemeral(now: Date): Ephemeral {
     coursesTab: 'courses',
     costsTab: 'bill',
     meTab: 'you',
-    meGroup: 'Study',
     examPreset: null,
     roomDraft: '',
     dueTab: 'ahead',
-    mailSeed: null,
     changeText: '',
     mailFolder: 'inbox',
     mailOpen: null,
@@ -1388,7 +1363,6 @@ export function initialEphemeral(now: Date): Ephemeral {
     updateUnit: null,
     query: '',
     onb: 0,
-    loadStep: 0,
     selDate: null,
     calMonth: now.getMonth(),
     calYear: now.getFullYear(),
@@ -1466,7 +1440,6 @@ export function loadPersisted(): Persisted {
       notifs: { ...DEFAULT_PERSISTED.notifs, ...record(saved.notifs) },
       done: record(saved.done),
       saved: record(saved.saved ?? DEFAULT_PERSISTED.saved),
-      picked: { ...DEFAULT_PERSISTED.picked, ...record(saved.picked) },
       tasks: list(saved.tasks),
       appointments: list(saved.appointments),
       notes: list(saved.notes),
@@ -1610,7 +1583,11 @@ export function loadPersisted(): Persisted {
       plans: record(saved.plans),
       balances: list(saved.balances),
       residences: list(saved.residences),
-      accessLeadDays: saved.accessLeadDays ?? 0,
+      // Through the same clamp `setAccessLead` applies, because a restored
+      // copy has been through no reducer: this is the one number here that a
+      // loop counts down (`businessDaysBefore` in `lib/runway.ts`), and every
+      // other field on this screen already has a reader.
+      accessLeadDays: readLeadDays(saved.accessLeadDays),
       quiet: readQuiet(saved.quiet),
       // Through the table rather than trusted: a role this build has never
       // heard of would hide every screen it does not name, and an app that
@@ -1643,7 +1620,6 @@ export function pickPersisted(state: State): Persisted {
     done: state.done,
     saved: state.saved,
     notifs: state.notifs,
-    picked: state.picked,
     seenOnboarding: state.seenOnboarding,
     registered: state.registered,
     cleared: state.cleared,
@@ -1814,7 +1790,6 @@ export type Action =
   | { type: 'toggleDone'; id: string }
   | { type: 'toggleSaved'; id: string }
   | { type: 'toggleNotif'; k: NotifKey }
-  | { type: 'togglePick'; id: string }
   | { type: 'setNav'; nav: NavMode }
   | { type: 'toggleWays' }
   | { type: 'toggleKey' }
@@ -1893,6 +1868,7 @@ export type Action =
   | { type: 'dropLetter'; id: string }
   | { type: 'setFloor'; patch: Partial<Floor> }
   | { type: 'addRest'; patch: Partial<Rest> }
+  | { type: 'patchRest'; id: string; patch: Partial<Rest> }
   | { type: 'dropRest'; id: string }
   | { type: 'setContract'; hours: number }
   | { type: 'undo' }
@@ -1924,7 +1900,6 @@ export type Action =
   | { type: 'setLook'; look: Partial<Look> }
   | { type: 'setFilter'; filter: string }
   | { type: 'setEvFilter'; filter: string }
-  | { type: 'setCalTab'; tab: 'deadlines' | 'campus' }
   | { type: 'setQuery'; query: string }
   | { type: 'selectDate'; date: string | null }
   | { type: 'stepMonth'; delta: number }
@@ -1956,7 +1931,6 @@ export type Action =
   | { type: 'onbNext' }
   | { type: 'restartOnboarding' }
   | { type: 'finishOnboarding' }
-  | { type: 'setLoadStep'; step: number }
   /**
    * Start a run of cards.
    *
@@ -2005,7 +1979,6 @@ export type Action =
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: CoursesTab }
   | { type: 'setMeTab'; tab: 'you' | 'task' }
-  | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
   /**
    * Take the shipped semester on as your own courses.
@@ -2098,14 +2071,20 @@ export type Action =
   | { type: 'writeRoomDraft'; text: string }
   | { type: 'clearRoomDraft' }
   | { type: 'setDueTab'; tab: 'ahead' | 'working' | 'overdue' | 'done' }
-  | {
-      type: 'writeMail';
-      purposeId: string;
-      courseId?: CourseId | '';
-      itemId?: string;
-      to?: string;
-      incoming?: string;
-    }
+  /**
+   * Go to the mailbox and open a composer on this draft.
+   *
+   * `composeMail` opens a composer without moving, for the buttons already on
+   * the mail screen. This is the same thing from somewhere else in the app,
+   * and the navigation is the only difference.
+   *
+   * It used to carry four loose facts — purpose, course, recipient, deadline
+   * — into a `mailSeed` field that nothing read, so the three buttons that
+   * dispatch it arrived at the mailbox with no composer open. It carries a
+   * draft now, built by `draftFor` in `lib/mail.ts`, because a draft is what
+   * the mailbox opens. See `SIMPLIFY-AUDIT.md` F1.
+   */
+  | { type: 'writeMail'; draft: Partial<MailDraft> }
   | { type: 'setStudyTab'; tab: 'guides' | 'revise' | 'ask' }
   | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
   /**

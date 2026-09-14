@@ -1,9 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
-import { hushed, says, silenced, unnamed } from './labels';
+import { hiddenNames, says, saysHidden, unnamed } from './labels';
 
 /**
  * The label rule, from the test suite's side.
@@ -162,90 +161,67 @@ export const toField = (m: number) => m;`,
 });
 
 /**
- * The second rule: a name a stylesheet takes away.
+ * The other way a control loses its name: the stylesheet takes it.
  *
- * Found by running axe over the app in a browser rather than by reading it.
- * `.desktop-ai span { display: none }` under 760px left the AI Tutor button —
- * the way into the assistant in the workspace and browser navigations — with
- * no accessible name on a phone, on every screen those navigations draw. The
- * markup had the words; the stylesheet had no idea they were the only name
- * the control had. Neither file is wrong on its own, which is why the check
- * has to read both.
+ * `.desktop-ai span { display: none }` in a media query left the AI Tutor
+ * button in the workspace top bar with no accessible name at all below 760px
+ * — which is every viewport this app is designed for. The markup was fine;
+ * the button really did contain the words. Nothing in the suite saw it,
+ * because jsdom parses the stylesheet and applies no media query, so the span
+ * was present in every test that asked for it.
+ *
+ * So this rule reads the CSS rather than the render, and these are the two
+ * cases it has to get right: the class that hides its text and is named
+ * anyway, and the one that is not.
  */
-describe('a name a stylesheet hides', () => {
-  const css = readFileSync(join(src, 'styles', 'app.css'), 'utf8');
+describe('the label CSS takes away', () => {
+  const HIDES = '@media (max-width: 759px) { .desktop-ai span { display: none } }';
 
-  it('passes on the app as it stands', () => {
-    expect(silenced(src, css).map((p) => `${p.file}:${p.line} .${p.className}`)).toEqual([]);
-  });
-
-  it('still finds the rule it was written for', () => {
-    // If this stops matching, the check above is passing on nothing — the
-    // failure mode the tap test next door calls "a test that cannot fail".
-    expect(hushed(css).map((r) => r.rule)).toContain('.desktop-ai span');
-  });
-
-  it('reads the rule out of the stylesheet rather than knowing it', () => {
-    expect(hushed('.thing b { display: none; }')).toEqual([
-      { className: 'thing', rule: '.thing b' },
-    ]);
-    // A media query around it changes the width, not the answer.
-    expect(hushed('@media (max-width: 500px) { .thing em { display: none } }')).toEqual([
-      { className: 'thing', rule: '.thing em' },
-    ]);
-    // Hiding the control itself is not hiding its name.
-    expect(hushed('.thing { display: none }')).toEqual([]);
-    expect(hushed('.thing span { opacity: 0 }')).toEqual([]);
-  });
-
-  it('catches a control whose only words the stylesheet hides', () => {
+  it('reports a control whose only text the stylesheet hides', () => {
     const dir = withFile(
-      'Eight.tsx',
+      'Bar.tsx',
       `export const A = () => (
-  <button type="button" className="bare quiet-one" onClick={go}>
-    <Icon size={15} />
-    <span>Ask</span>
+  <button type="button" className="bare desktop-ai" onClick={go}>
+    <AskIcon size={15} />
+    <span>AI Tutor</span>
   </button>
 );`,
     );
-    const found = silenced(dir, '.quiet-one span { display: none }');
+    const found = hiddenNames(dir, HIDES);
     expect(found).toHaveLength(1);
-    expect(found[0].className).toBe('quiet-one');
-    expect(found[0].line).toBe(2);
+    expect(found[0].cls).toBe('desktop-ai');
+    expect(found[0].selector).toBe('.desktop-ai span');
+    expect(saysHidden(found[0])).toContain('no accessible name');
   });
 
-  it('is satisfied by a name of the control’s own', () => {
+  it('leaves it alone once aria-label carries the name', () => {
     const dir = withFile(
-      'Nine.tsx',
+      'Bar.tsx',
       `export const A = () => (
-  <button type="button" className="bare quiet-one" aria-label="Ask" onClick={go}>
-    <span>Ask</span>
+  <button type="button" className="bare desktop-ai" aria-label="AI Tutor" onClick={go}>
+    <AskIcon size={15} />
+    <span>AI Tutor</span>
   </button>
 );`,
     );
-    expect(silenced(dir, '.quiet-one span { display: none }')).toEqual([]);
+    expect(hiddenNames(dir, HIDES)).toEqual([]);
   });
 
-  it('is not fooled by a > inside an attribute before the label', () => {
-    // The same trap the rule above fell into once: a scan that stops at the
-    // first `>` never reaches the aria-label after it.
+  it('says nothing when no rule hides a label', () => {
     const dir = withFile(
-      'Ten.tsx',
-      `export const A = () => (
-  <button className="quiet-one" onClick={(e) => go(e)} aria-label="Ask">
-    <span>Ask</span>
-  </button>
-);`,
+      'Bar.tsx',
+      `export const A = () => <button className="bare desktop-ai"><span>AI Tutor</span></button>;`,
     );
-    expect(silenced(dir, '.quiet-one span { display: none }')).toEqual([]);
+    expect(hiddenNames(dir, '.desktop-ai { display: flex }')).toEqual([]);
   });
 
-  it('does not read a control out of a comment', () => {
-    const dir = withFile(
-      'Eleven.tsx',
-      `/* <button className="quiet-one"><span>Ask</span></button> */
-export const A = () => null;`,
-    );
-    expect(silenced(dir, '.quiet-one span { display: none }')).toEqual([]);
+  /*
+   * The rule against the app, which is the assertion that matters: this is the
+   * same call `scripts/labels.mjs` makes, so the suite and the linter cannot
+   * disagree about whether the app is clean.
+   */
+  it('finds nothing in the app as it stands', () => {
+    const css = readFileSync(join(src, 'styles', 'app.css'), 'utf8');
+    expect(hiddenNames(src, css)).toEqual([]);
   });
 });

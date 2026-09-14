@@ -99,7 +99,10 @@ export function notesMarkdown(
 ): string {
   if (notes.length === 0 && drafts.length === 0) return '# Notes\n\nNothing written yet.\n';
   const parts = notes.map((n) => {
-    const when = new Date(n.updated || n.created).toISOString().slice(0, 10);
+    // The day the student wrote it, on their clock. `toISOString` would give
+    // the UTC day, which is tomorrow's date for anything written in the
+    // evening west of Greenwich — see `dateToIso`.
+    const when = dateToIso(new Date(n.updated || n.created));
     const tag = n.courseId ? ` · ${code(n.courseId)}` : '';
     return `## ${n.title || 'Untitled'}\n\n_${when}${tag}_\n\n${n.body.trim() || '(empty)'}\n`;
   });
@@ -269,9 +272,20 @@ export const ALARMS = [16 * 60, 60];
  */
 export function toIcs(events: IcsEvent[], name = 'Semester'): string {
   const now = new Date();
+  /*
+   * DTSTAMP is the one field in this file that is a moment rather than a day,
+   * and the `Z` on the end promises it is in UTC. It was built out of
+   * `dateStamp` — which reads the *local* year, month and day, correctly, for
+   * the DTSTART lines below — glued to UTC hours and minutes. West of
+   * Greenwich after about six in the evening those two disagree, so the stamp
+   * named yesterday and still claimed to be UTC. A client that compares
+   * DTSTAMPs to decide which copy of an event is newer would then read a
+   * fresh export as a day older than the one it already had, and keep the old
+   * one. All six fields come from the same clock now.
+   */
   const stamp =
-    `${dateStamp(now)}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}` +
-    `${pad(now.getUTCSeconds())}Z`;
+    `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}` +
+    `T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
 
   const lines: string[] = [
     'BEGIN:VCALENDAR',
@@ -799,7 +813,6 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   controls: 'which controls the editors show',
   geocode: 'whether place lookup is switched on, which is off until you say so',
   notifs: 'which reminders are on, which the browser grants per device',
-  picked: 'which parts of a syllabus the import reads',
   quiet: 'the hours reminders are held back',
   role: 'which role the app is being used as',
   showAll: 'whether the screens held back on a first morning are shown',

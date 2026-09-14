@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useStore } from '../state/store';
-import { ask, provider, settings, type ToolCall, type Turn } from '../lib/claude';
+import { ask, type ToolCall, type Turn } from '../lib/claude';
+import { provider, settings } from '../lib/assistant';
 import type { Usage } from '../lib/spend';
 import { build as buildContext } from '../lib/context';
 import { readMode, type Mode } from '../lib/mode';

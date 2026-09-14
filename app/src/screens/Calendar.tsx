@@ -1809,20 +1809,28 @@ const WEEK_LIST: CSSProperties = { fontSize: 'var(--type-sm)', opacity: 0.72, li
  * it is about a fifth of a fingertip, and the thing above it is the thing you
  * hit instead.
  *
- * The cost is honest and worth stating: the term is a taller scroll now. The
- * density was buying an overview you could not safely touch, which is a poor
- * trade on the device this view is mostly read on — and none of the rows
- * lost a word, because what grows is the space around the line rather than
- * the line.
+ * Thirty-two rather than forty-four, and the number was arrived at by
+ * measuring both. At forty-four the term ran to five and a half screens
+ * against the three it was, and a view whose whole question is "how bad does
+ * October get" answers it worse the more scrolling stands between the weeks.
+ * Thirty-two clears WCAG's floor with a third to spare, is twice the target
+ * it was, and brings the term back to four and a half. That is the trade this
+ * view wants: the rows are comfortably hittable and the term is still
+ * something you take in rather than travel through.
  *
- * The text sits in one child so the row can centre it without the course code
- * and the title becoming two flex items that will not wrap together.
+ * Forty-four is what a row somewhere less dense should be. Nothing here is
+ * standing in its way should this view ever stop being a summary.
+ *
+ * None of the rows lost a word either way: what grows is the space around the
+ * line rather than the line. The text sits in one child so the row can centre
+ * it without the course code and the title becoming two flex items that will
+ * not wrap together.
  */
 const WEEK_ROW: CSSProperties = {
   width: 'auto',
   display: 'flex',
   alignItems: 'center',
-  minHeight: 44,
+  minHeight: 32,
   textAlign: 'left',
 };
 
@@ -2018,6 +2026,22 @@ function SemesterView() {
 
   const weeks: {
     start: Date;
+    /*
+     * The week's own end, kept rather than worked out again downstream.
+     *
+     * It is `start` plus seven days *on the calendar* — `setDate`, which
+     * knows that one of those days can be 23 or 25 hours long. Every filter
+     * below buckets the week's contents against it, and the "this is the
+     * current week" test used to re-derive its own end as `getTime() + 7 ×
+     * 86,400,000`. The two agree for fifty-one weeks of the year and
+     * disagree by an hour across a daylight-saving change. Measured in
+     * America/Chicago: the millisecond end lands an hour late over the
+     * spring change (Mar 9 2026 01:00 against the calendar's 00:00), so both
+     * that week and the next read as current between them; and an hour early
+     * over the autumn one (Nov 1 23:00 against Nov 2 00:00), so for that hour
+     * neither does. Two highlighted in March, none in November.
+     */
+    end: Date;
     items: DatedItem[];
     events: DatedEvent[];
     feed: FeedEvent[];
@@ -2041,6 +2065,7 @@ function SemesterView() {
     const to = dateToIso(weekEnd);
     weeks.push({
       start: weekStart,
+      end: weekEnd,
       items: items.filter((i) => i.date >= weekStart && i.date < weekEnd),
       events: events.filter((e) => e.date >= weekStart && e.date < weekEnd),
       feed: feed.filter((e) => {
@@ -2129,7 +2154,7 @@ function SemesterView() {
 
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {weeks.map((w, i) => {
-          const isNow = now >= w.start && now < new Date(w.start.getTime() + 7 * 86400000);
+          const isNow = now >= w.start && now < w.end;
           const exams = w.items.filter((it) => it.kind === 'Exam');
           return (
             <div

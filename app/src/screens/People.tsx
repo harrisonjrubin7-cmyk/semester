@@ -14,12 +14,14 @@
 
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { secondLine } from '../lib/dim';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import {
   ASKS,
   NOTICE,
+  askedToday,
   daysLeft,
   known,
   knownLine,
@@ -173,6 +175,8 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
 
               {open === p.id ? (
                 <div style={{ marginTop: 'var(--sp-6)' }}>
+                  <Correct person={p} />
+
                   <div className="kicker">After a conversation</div>
                   <textarea
                     className="input"
@@ -208,16 +212,40 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                         <div
                           key={v.id}
                           style={{
+                            display: 'flex',
+                            gap: 'var(--sp-4)',
+                            alignItems: 'baseline',
                             fontSize: 'var(--type-sm)',
                             lineHeight: 'var(--leading-normal)',
                             opacity: 0.8,
                             textWrap: 'pretty',
                           }}
                         >
-                          <span style={{ opacity: 0.6 }}>
-                            {new Date(v.at).toDateString().slice(4).replace(/\s\d{4}$/, '')}
-                          </span>{' '}
-                          — {v.what}
+                          <span style={{ flex: 1, minWidth: 0 }}>
+                            <span style={{ opacity: 0.6 }}>
+                              {new Date(v.at).toDateString().slice(4).replace(/\s\d{4}$/, '')}
+                            </span>{' '}
+                            — {v.what}
+                          </span>
+                          {/*
+                            One line, removable. `addVisit` shipped without a
+                            `dropVisit` anywhere on screen, so a conversation
+                            recorded against the wrong person, or typed twice,
+                            or pasted half-finished, stayed in the record for
+                            good — and this record is what `knownLine` reads to
+                            say how well somebody knows you, and what a letter
+                            is drafted from. A wrong line here is worse than a
+                            missing one.
+                          */}
+                          <button
+                            type="button"
+                            className="bare"
+                            onClick={() => dispatch({ type: 'dropVisit', id: v.id })}
+                            aria-label={`Remove what you recorded on ${new Date(v.at).toDateString().slice(4)}`}
+                            style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-lg)', ...secondLine() }}
+                          >
+                            ×
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -243,6 +271,118 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
         })}
       </div>
     </>
+  );
+}
+
+/**
+ * Correcting who somebody is.
+ *
+ * `addPerson` and `dropPerson` were the whole of it, and `patchPerson` sat in
+ * the reducer with nothing dispatching it — so a name typed wrong, a role that
+ * changed when they went from your TA to your thesis supervisor, or an email
+ * you finally learned meant deleting the person and losing every conversation
+ * recorded against them. `dropPerson` takes the visits and the letters with it
+ * on purpose (an orphan row is worse than a gap, says `slices/mine.ts`), which
+ * is exactly what made delete-and-retype the wrong repair here: the record is
+ * the valuable part and retyping the name destroys it.
+ *
+ * Inside the panel that already opens on a press, not on the row. The row is a
+ * summary you read; this is the drawer you opened on purpose, which is where
+ * the destructive control beneath it already lives.
+ *
+ * Saved explicitly rather than on every keystroke. `knownLine` and the letter
+ * drafts read these fields, and a name half-typed is a name that briefly reads
+ * as somebody else.
+ */
+function Correct({ person: p }: { person: Person }) {
+  const { dispatch } = useStore();
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(p.name);
+  const [role, setRole] = useState(p.role);
+  const [email, setEmail] = useState(p.email);
+
+  const save = () => {
+    if (!name.trim()) return;
+    dispatch({
+      type: 'patchPerson',
+      id: p.id,
+      patch: { name: name.trim(), role: role.trim(), email: email.trim() },
+    });
+    setEditing(false);
+  };
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        className="bare"
+        onClick={() => {
+          // Re-seeded on open rather than kept in sync — see `AppointmentRow`
+          // in `screens/Mine.tsx`.
+          setName(p.name);
+          setRole(p.role);
+          setEmail(p.email);
+          setEditing(true);
+        }}
+        style={{
+          width: 'auto',
+          marginBottom: 'var(--sp-6)',
+          fontSize: 'var(--type-xs)',
+          ...secondLine(),
+        }}
+      >
+        Correct their name or role
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ marginBottom: 'var(--sp-6)' }}>
+      <input
+        className="input"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') save();
+          if (e.key === 'Escape') setEditing(false);
+        }}
+        aria-label="Their name"
+        // eslint-disable-next-line jsx-a11y/no-autofocus
+        autoFocus
+        style={{ width: '100%', height: 40 }}
+      />
+      <input
+        className="input"
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') save();
+          if (e.key === 'Escape') setEditing(false);
+        }}
+        placeholder="Professor, ECON 1020 — optional"
+        aria-label="Their role"
+        style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
+      />
+      <input
+        className="input"
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') save();
+          if (e.key === 'Escape') setEditing(false);
+        }}
+        placeholder="stromme@vanderbilt.edu — optional"
+        aria-label="Their email"
+        style={{ width: '100%', height: 40, marginTop: 'var(--sp-4)' }}
+      />
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
+        <ActionButton tone="primary" onClick={save} disabled={!name.trim()}>
+          Save
+        </ActionButton>
+        <ActionButton onClick={() => setEditing(false)}>Cancel</ActionButton>
+      </div>
+    </div>
   );
 }
 
@@ -377,9 +517,12 @@ function LettersTab() {
                             id: l.id,
                             // Asking stamps the day, so the notice figure is a
                             // fact rather than something to remember later.
+                            // The day comes from `askedToday`, which is the
+                            // same function `notice` falls back to for a
+                            // letter with no stamp — see the note beside it.
                             patch:
                               a.id === 'asked' && !l.askedOn
-                                ? { stage: a.id, askedOn: new Date(now).toISOString().slice(0, 10) }
+                                ? { stage: a.id, askedOn: askedToday(new Date(now)) }
                                 : { stage: a.id },
                           })
                         }

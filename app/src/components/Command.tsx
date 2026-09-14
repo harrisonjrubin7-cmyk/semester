@@ -68,8 +68,8 @@ import { AskIcon, ClocksIcon, Search as SearchIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import { TabStrip } from './Tabs';
 import { BookmarkChips } from './Bookmarks';
-import { here, openInNew, record, recordSearch, useStrip } from '../lib/browser.hook';
-import { justGo } from '../lib/browser';
+import { here, openInNew, pickTab, record, recordSearch, useStrip } from '../lib/browser.hook';
+import { justGo, tabAt } from '../lib/browser';
 import { readSearches, remember, forget, suggestions, writeSearches } from '../lib/typeahead';
 import type { Screen } from '../lib/types';
 import { useModernShell } from './shell-context';
@@ -139,11 +139,12 @@ export function Command({ onClose }: { onClose: () => void }) {
    * first time either was touched. Keeping the app and the strip in step as
    * you navigate is `TabsFollow`'s job, next to where this is mounted.
    *
-   * Subscribed for its own sake: nothing here needs the list itself — the
-   * strip draws itself — but the line under the box names the tab this is
-   * sitting on, and `here()` is a plain read React cannot see changing.
+   * It was subscribed for its own sake — the line under the box names the
+   * tab this is sitting on, and `here()` is a plain read React cannot see
+   * changing. The list itself is wanted now too: a result whose place is
+   * already open says so, and which places are open is this.
    */
-  useStrip();
+  const strip = useStrip();
 
   // The field, not the first button — opening a search anywhere but in its
   // box is opening it wrong. `useModal` takes Escape and the tab ring; where
@@ -308,6 +309,25 @@ export function Command({ onClose }: { onClose: () => void }) {
     // The actions that open it are also what the tab keeps, so picking that
     // tab next week reopens this deadline rather than the deadline screen.
     const place = actionsFor(hit);
+    /*
+     * Already open? Then go to the tab that has it.
+     *
+     * A browser's address bar does exactly this and says so on the row, and
+     * the alternative here was worse than merely redundant: opening a course
+     * you already had open made a second tab onto the same page, so the strip
+     * filled with duplicates of the things you look at most — which is the
+     * failure a strip of a hundred makes cheap to reach and expensive to
+     * unpick. `always` is the ⧉, which is somebody asking for another one
+     * on purpose, so it is left alone.
+     */
+    const already = always ? undefined : tabAt(strip, place);
+    if (already) {
+      const at = strip.tabs.indexOf(already);
+      const back = pickTab(at);
+      for (const action of back.place) dispatch(action);
+      onClose();
+      return;
+    }
     if (always || here().screen) openInNew(landingOf(hit), hit.title, place, sent.trim());
     else record(landingOf(hit), hit.title, place);
     for (const action of place) dispatch(action);
@@ -782,6 +802,25 @@ export function Command({ onClose }: { onClose: () => void }) {
                 {group.hits.map((hit) => {
                   const i = hits.indexOf(hit);
                   const on = i === cursor;
+                  /*
+                   * Already open?
+                   *
+                   * Said on the row because the row behaves differently: this
+                   * is the only kind of result that goes somewhere you
+                   * already have rather than making a tab. A control that
+                   * quietly does two different things is worse than two
+                   * controls, so the row says which one it is about to be.
+                   *
+                   * No speaker here, and that is a finding rather than an
+                   * omission — see the note on `tabAt` in `lib/browser.ts`.
+                   * A result's place can never be a place that plays: the two
+                   * that play are the lesson screen and a guide in listen
+                   * mode, and every unit hit is built with `mode: 'cards'`
+                   * (`lib/find.ts`) while no result lands on `lesson` at all.
+                   * A glyph that cannot be reached is worse than none: it is
+                   * code nobody can check and a promise the row cannot keep.
+                   */
+                  const open = tabAt(strip, actionsFor(hit));
                   return (
                     <div
                       key={hitKey(hit)}
@@ -845,6 +884,27 @@ export function Command({ onClose }: { onClose: () => void }) {
                           {hit.sub}
                         </span>
                       </button>
+                      {open && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 'var(--sp-2)',
+                            flex: 'none',
+                            fontSize: 'var(--type-xs)',
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            fontFamily: 'var(--font-heading)',
+                            whiteSpace: 'nowrap',
+                            ...secondLine(),
+                          }}
+                        >
+                          {/* Read out with the row rather than as a control
+                              of its own: this is a label on what pressing the
+                              row will do, and nothing here is pressable. */}
+                          Switch to tab
+                        </span>
+                      )}
                       <button
                         type="button"
                         className="bare tappable"

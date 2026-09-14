@@ -4,6 +4,7 @@ import { CustomRow, NavRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { Cutoffs } from '../../components/Cutoffs';
 import { Attendance } from '../../components/Attendance';
+import { GpaScale } from '../../components/GpaScale';
 import { FirstRun } from '../FirstRun';
 
 /**
@@ -13,6 +14,18 @@ import { FirstRun } from '../FirstRun';
  * preferences — two courses at the same university routinely disagree about
  * where a B+ starts, and an app that made you pick one answer for all of them
  * would be wrong about at least one.
+ *
+ * ## What a letter is worth, which is not per course
+ *
+ * The GPA scale is the one thing on this screen that is a fact about the
+ * *school* rather than about a syllabus — letter to grade points, the same for
+ * every course on a transcript. It is here anyway, because somebody looking
+ * for "what the app thinks a B+ is" looks at grading, and a second settings
+ * screen holding one table would be the split this app keeps merging away.
+ *
+ * It had no control at all until an audit went looking: `setScale` was in the
+ * reducer, nothing dispatched it, and The degree printed a GPA against the
+ * common American table without saying so. See `components/GpaScale.tsx`.
  *
  * ## What is not here, and why
  *
@@ -47,6 +60,16 @@ export function SettingsGrading() {
               </CustomRow>
             </Group>
           ))}
+
+          <Group
+            header="The GPA scale"
+            footer="Letter to grade points, for the whole transcript rather than per course. The app assumes the common American table until you change it, and universities disagree about it more than they let on."
+            lit={lights('gpa scale letter grade points quality honor a+ 4.0 transcript', lit)}
+          >
+            <CustomRow>
+              <GpaScale />
+            </CustomRow>
+          </Group>
 
           <Group
             header="Dropped pieces"

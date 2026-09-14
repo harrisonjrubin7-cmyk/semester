@@ -14,7 +14,7 @@ import { skip } from '../../lib/repeat';
 import { newAlarm, newTimer } from '../../lib/clocks';
 import { moveTo, newApplication } from '../../lib/apply';
 import { mark, newProgress } from '../../lib/progress';
-import { newReturned } from '../../lib/returned';
+import { newReturned, readWindowDays } from '../../lib/returned';
 import { newRequirement, newTaken } from '../../lib/degree';
 import { newLetter, newPerson, newVisit } from '../../lib/letters';
 import { newRest, readFloor } from '../../lib/rest';
@@ -398,6 +398,28 @@ export function mine(state: State, action: Action): State | null {
     case 'addRest':
       return { ...state, rest: [...state.rest, newRest(action.patch, Date.now())] };
 
+    /*
+     * Edited in place, the way a window is.
+     *
+     * There was no case here for a long time, and the omission was invisible
+     * because nothing dispatched the two beside it either — a block could be
+     * added and removed by a screen that did not exist. Once `Capacity` grew
+     * the control, add-and-drop alone would have meant changing the hour of a
+     * standing dinner by deleting it and adding it back.
+     *
+     * Read back through `newRest` so the bounds and the day list are cleaned
+     * in one place, exactly as `setFloor` above leans on `readFloor` — a patch
+     * arriving from a `<input type="time">` is as much outside input as a
+     * value arriving from storage.
+     */
+    case 'patchRest':
+      return {
+        ...state,
+        rest: state.rest.map((r) =>
+          r.id === action.id ? { ...newRest({ ...r, ...action.patch }, Date.now()), id: r.id } : r,
+        ),
+      };
+
     case 'dropRest':
       return { ...state, rest: state.rest.filter((r) => r.id !== action.id) };
 
@@ -408,9 +430,16 @@ export function mine(state: State, action: Action): State | null {
       };
 
     case 'setRegradeWindow':
+      // Clamped on the way in, by the same `readWindowDays` that reads it back
+      // out of storage. This was the one door of the two that was open, and
+      // the field behind it is a text input whose number `closesOn` counts
+      // down a day at a time.
       return {
         ...state,
-        regradeWindows: { ...state.regradeWindows, [action.courseId]: action.window },
+        regradeWindows: {
+          ...state.regradeWindows,
+          [action.courseId]: { ...action.window, days: readWindowDays(action.window.days) },
+        },
       };
 
     // The hours you actually work in. See `lib/windows.ts` — these make every

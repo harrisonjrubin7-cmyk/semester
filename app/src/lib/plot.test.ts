@@ -505,3 +505,125 @@ describe('a transfer function on the list', () => {
     expect(away.note).toMatch(/runs away/);
   });
 });
+
+/**
+ * The two Fourier lines, off the same list.
+ *
+ * `lib/fourier.test.ts` checks the arithmetic against coefficients a textbook
+ * prints. This checks the joint: that the two are told apart from each other
+ * and from everything else by what is written, that the picture is drawn from
+ * the same numbers the sentence reports, and that a signal with no transform
+ * is refused rather than half-answered.
+ */
+describe('Fourier on the list', () => {
+  it('tells a transform from a series from a letter called F', () => {
+    expect(of('F{e^{-2t}}').kind).toBe('spectrum');
+    expect(of('\\mathcal{F}\\{e^{-2t}\\}').kind).toBe('spectrum');
+    expect(of('fourier(sign(\\sin(t)), 2\\pi)').kind).toBe('harmonics');
+    expect(of('F = 4')).toMatchObject({ kind: 'value', name: 'F' });
+  });
+
+  it('takes the period, and the count of harmonics where one is given', () => {
+    const line = of('fourier(t, 2\\pi, 20)');
+    if (line.kind !== 'harmonics') throw new Error('not harmonics');
+    expect(line.count).not.toBeNull();
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toMatch(/^20 harmonics/);
+    expect(got.over).toBe('t');
+  });
+
+  it('says what the series comes to, and draws that same sum', () => {
+    const line = of('fourier(sign(\\sin(t)), 2\\pi)');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toMatch(/^1\.27324\\sin\(t\)/);
+    const drawn = draw(line, {}, { x0: -6, x1: 6, y0: -2, y1: 2 });
+    // Two drawings in one: the wave faint underneath, the sum full over it.
+    expect(new Set(drawn.shades)).toEqual(new Set([0.5, 1]));
+    const full = drawn.paths.filter((_, i) => drawn.shades?.[i] === 1).flat();
+    for (const p of full) expect(p.y).toBeCloseTo(got.at(p.x), 10);
+  });
+
+  it('draws a spectrum from the size the sentence is about', () => {
+    const line = of('F{e^{-2t}}');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.over).toBe('ω');
+    expect(got.latex).toBe('\\frac{1}{i\\omega + 2}');
+    const drawn = draw(line, {}, { x0: -8, x1: 8, y0: -1, y1: 1 });
+    for (const p of drawn.paths.flat()) expect(p.y).toBeCloseTo(got.at(p.x), 10);
+  });
+
+  it('refuses a signal with no transform, on the line rather than silently', () => {
+    const got = answered(of('F{\\sin(t)}'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/impulse in frequency/);
+  });
+
+  it('asks for the letters it needs and no others', () => {
+    expect(missing(of('F{e^{-2t}}'), {})).toEqual([]);
+    expect(missing(of('fourier(sign(\\sin(t)), T)'), {})).toEqual(['T']);
+    expect(missing(of('fourier(k \\sin(t), 2\\pi)'), {})).toEqual(['k']);
+  });
+
+  it('says so rather than guessing at one argument', () => {
+    expect(of('fourier(t)')).toMatchObject({ kind: 'fault' });
+  });
+});
+
+/**
+ * The z-transform on the list.
+ *
+ * `lib/discrete.test.ts` checks the arithmetic against the table. This checks
+ * the joint, and one thing that is only true here: the inverse is drawn as
+ * points on the integers, because a sequence has no value between them.
+ */
+describe('a z-transform on the list', () => {
+  it('is its own kind, and is not the Fourier one', () => {
+    expect(of('Z{0.5^n}').kind).toBe('ztransform');
+    expect(of('\\mathcal{Z}\\{0.5^n\\}').kind).toBe('ztransform');
+    expect(of('Z^{-1}{z/(z - 0.5)}').kind).toBe('sequence');
+    expect(of('F{e^{-2t}}').kind).toBe('spectrum');
+    expect(of('Z = 4')).toMatchObject({ kind: 'value', name: 'Z' });
+  });
+
+  it('says what it comes to, with what its poles mean', () => {
+    const got = answered(of('Z{0.5^n}'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toBe('\\frac{z}{z - 0.5}');
+    expect(got.over).toBe('z');
+    expect(got.note).toMatch(/inside the unit circle, so it dies away/);
+    expect(got.at(2)).toBeCloseTo(2 / 1.5, 10);
+  });
+
+  it('draws a sequence as beats with a stem to each, not as a curve', () => {
+    const line = of('Z^{-1}{z/((z - 1)(z - 2))}');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toBe('2^{n} - 1');
+    const drawn = draw(line, {}, { x0: -2, x1: 5, y0: -2, y1: 20 });
+    // Nothing before n = 0, and one point per whole number after it.
+    expect(drawn.points.map((p) => p.x)).toEqual([0, 1, 2, 3, 4, 5]);
+    // Numerical roots, so to a handful of places rather than exactly.
+    [0, 1, 3, 7, 15, 31].forEach((want, i) => expect(drawn.points[i].y).toBeCloseTo(want, 9));
+    // Every path is a stem: two points, from the axis to the value.
+    for (const path of drawn.paths) {
+      expect(path).toHaveLength(2);
+      expect(path[0].y).toBe(0);
+      expect(path[0].x).toBe(path[1].x);
+    }
+  });
+
+  it('asks for the letters it needs and no others', () => {
+    expect(missing(of('Z{0.5^n}'), {})).toEqual([]);
+    expect(missing(of('Z^{-1}{z/(z - a)}'), {})).toEqual(['a']);
+    expect(missing(of('Z{k 0.5^n}'), {})).toEqual(['k']);
+  });
+
+  it('says what it could not do rather than drawing nothing quietly', () => {
+    const got = answered(of('Z{\\ln(n)}'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/ln/);
+  });
+});

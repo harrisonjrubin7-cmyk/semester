@@ -1,8 +1,22 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { SHORTCUTS, keyLabel, shortcutFor, typing, underModal } from './keys';
 
 const field = (tag: string) => document.createElement(tag);
+
+/*
+ * The dialog the test below puts up does not belong to the test after it.
+ *
+ * `shortcutFor` stands every shortcut down while a modal is open, and the
+ * describe that checks this leaves one in the body. The tests that follow call
+ * `shortcutFor` against the real `document`, so under `--sequence.shuffle`
+ * they asked what `t` means with a dialog still up, were correctly told
+ * nothing, and failed. Clearing it is what makes each test start on an app
+ * with nothing over it.
+ */
+afterEach(() => {
+  document.body.innerHTML = '';
+});
 
 describe('where a keystroke is a character, not a command', () => {
   it('knows the fields a person types in', () => {

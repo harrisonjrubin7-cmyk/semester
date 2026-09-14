@@ -6,6 +6,7 @@ import {
   forProgramme,
   gpa,
   gpaLine,
+  isCommon,
   hours,
   newRequirement,
   newTaken,
@@ -235,5 +236,45 @@ describe('reading what was typed and what was stored', () => {
   it('takes anything that is not a list as nothing', () => {
     expect(readRequirements(null)).toEqual([]);
     expect(readTaken('x')).toEqual([]);
+  });
+});
+
+/**
+ * The scale the GPA is computed against, which nobody could set.
+ *
+ * `setScale` was in the reducer with nothing dispatching it, so every account
+ * used `COMMON_SCALE` and `gpaLine` said "this is your arithmetic" over a
+ * table the reader had never seen, let alone chosen. The editor is
+ * `components/GpaScale.tsx`; this is the pair of facts it and `gpaLine` both
+ * lean on.
+ */
+describe('an assumed scale, said out loud', () => {
+  it('knows the shipped table from a changed one', () => {
+    expect(isCommon({ ...COMMON_SCALE })).toBe(true);
+    // A different value for one letter.
+    expect(isCommon({ ...COMMON_SCALE, 'A+': 4.3 })).toBe(false);
+    // A school that awards no minus grades — fewer keys, every shared one equal.
+    const noMinus = { ...COMMON_SCALE };
+    delete noMinus['A-'];
+    expect(isCommon(noMinus)).toBe(false);
+    // An extra letter, same count as the common table is impossible, but an
+    // added one on top of it must not read as unchanged either.
+    expect(isCommon({ ...COMMON_SCALE, S: 4 })).toBe(false);
+  });
+
+  it('says the number rests on an assumption while the table is untouched', () => {
+    const g = gpa(TAKEN, COMMON_SCALE);
+    expect(gpaLine(g, true)).toContain('the common table');
+    expect(gpaLine(g, true)).toContain('Settings → Grading');
+    // And claims it as the reader's own once it is.
+    expect(gpaLine(g, false)).toContain('not the registrar');
+    expect(gpaLine(g, false)).not.toContain('the common table');
+  });
+
+  it('still reports the courses it could not count, either way', () => {
+    const withPass = [...TAKEN, { id: 'x', code: 'X 1', name: 'X', grade: 'P', hours: 3 }];
+    for (const assumed of [true, false]) {
+      expect(gpaLine(gpa(withPass as never, COMMON_SCALE), assumed)).toContain('left out');
+    }
   });
 });

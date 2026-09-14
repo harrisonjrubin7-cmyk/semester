@@ -2,7 +2,8 @@ import { useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Blueprint } from './Blueprint';
 import { SectionLabel } from './ui';
-import { ask, configured } from '../lib/claude';
+import { ask } from '../lib/claude';
+import { configured } from '../lib/assistant';
 import {
   SYSTEM,
   SYSTEM_ONE,

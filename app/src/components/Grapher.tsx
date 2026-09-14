@@ -505,8 +505,14 @@ export function Grapher() {
         <code>s</code>, and <code>{'L^{-1}{1/(s^2 + 4)}'}</code> is the way back.{' '}
         <code>{'conv(t, e^{-t})'}</code> convolves two functions — the awkward integral, done as
         the product it is in <code>s</code> — and an <code>H =</code> line with an <code>s</code>{' '}
-        in it is a transfer function, which says where its poles are and whether it settles. It
-        takes the same notation the Write tab draws, so a formula you kept can be pasted in as it is.
+        in it is a transfer function, which says where its poles are and whether it settles.{' '}
+        <code>{'fourier(sign(\\sin(t)), 2\\pi)'}</code> is a Fourier series — the harmonics a
+        repeating thing is made of, drawn over the thing itself — and <code>{'F{e^{-2t}}'}</code>{' '}
+        is a Fourier transform, drawn as its size against <code>ω</code>. <code>{'Z{0.5^n}'}</code>{' '}
+        is a z-transform — Laplace for a thing that happens on the beat — and{' '}
+        <code>{'Z^{-1}{z/(z - 0.5)}'}</code> is the sequence behind one, drawn as the beats it is.
+        It takes the same notation the Write tab draws, so a formula you kept can be pasted in as
+        it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
         <Toggle on={degrees} label="Work in degrees rather than radians" onChange={() => setDegrees(!degrees)} />
@@ -570,6 +576,10 @@ function Row({
     reading.kind === 'inverse' ||
     reading.kind === 'convolution' ||
     reading.kind === 'transfer' ||
+    reading.kind === 'spectrum' ||
+    reading.kind === 'harmonics' ||
+    reading.kind === 'ztransform' ||
+    reading.kind === 'sequence' ||
     reading.kind === 'surface';
   /** Whether it puts ink of its own on the picture — see the swatch below. */
   const inked = drawn && reading.kind !== 'start';

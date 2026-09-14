@@ -9,9 +9,14 @@
  *
  * ## A term is a label and a year, and that is all
  *
- * `2026FA`. Six characters, sortable as a string, and readable by a person
- * looking at saved data — which matters more than it sounds, because this id
- * ends up in an exported file and in a shared paper's code.
+ * `2026FA`. Six characters, readable by a person looking at saved data —
+ * which matters more than it sounds, because this id ends up in an exported
+ * file and in a shared paper's code.
+ *
+ * It sorts as a string by year and *not* by season: the season codes run
+ * FA, SP, SU, WI in the alphabet and SP, SU, FA, WI in the year. Use
+ * `compareTerms` rather than `<`, which is a rule this file used to get
+ * wrong by describing the id as sortable and leaving it there.
  *
  * A course belongs to a term. An item takes its year from its course's term,
  * stamped on at catalogue-build time so that every screen downstream keeps
@@ -102,11 +107,31 @@ export function termNow(now: Date): Term {
   return readTerm(termId(year, season.code));
 }
 
+/**
+ * A term as one number, so two of them can be compared with a subtraction.
+ *
+ * `startMonth` is 0, 4, 7 or 11, so twelve per year keeps every season of
+ * every year distinct and in order.
+ */
+const order = (t: Term): number => t.year * 12 + t.startMonth;
+
+/**
+ * Two term ids in the order they happen. Negative when `a` is the earlier.
+ *
+ * This exists because `a < b` looks like it would do and does not. A term id
+ * sorts as a string by its year and then by its season *code*, and the codes
+ * are not in season order: the alphabet gives FA, SP, SU, WI, while the year
+ * runs SP, SU, FA, WI. So a string comparison reads Fall as earlier than the
+ * Spring it follows, and every same-year comparison comes out backwards —
+ * which is invisible for as long as everything being compared is a fall.
+ */
+export function compareTerms(a: string, b: string): number {
+  return order(readTerm(a)) - order(readTerm(b));
+}
+
 /** Newest first, which is the order somebody wants a term picker in. */
 export function sortTerms(ids: string[]): Term[] {
-  return [...new Set(ids)]
-    .map(readTerm)
-    .sort((a, b) => b.year - a.year || b.startMonth - a.startMonth);
+  return [...new Set(ids)].map(readTerm).sort((a, b) => order(b) - order(a));
 }
 
 /**

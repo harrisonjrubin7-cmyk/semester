@@ -1,5 +1,6 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+// With the extension, because `scripts/labels.mjs` loads this file through a
+// plain `await import()` and Node ESM resolves no extensions of its own.
+import { sources } from '../styles/rules.ts';
 
 /**
  * Every control a screen reader can name, as code rather than as a habit.
@@ -105,18 +106,6 @@ function withoutComments(text: string): string {
  * A shared helper would have to be reachable from both, and a `lib/` module
  * that exists only so two linters can agree on `readdirSync` is not one.
  */
-function sources(dir: string): { path: string; text: string }[] {
-  const out: { path: string; text: string }[] = [];
-  const walk = (at: string) => {
-    for (const entry of readdirSync(at, { withFileTypes: true })) {
-      const path = join(at, entry.name);
-      if (entry.isDirectory()) walk(path);
-      else if (entry.name.endsWith('.tsx')) out.push({ path, text: readFileSync(path, 'utf8') });
-    }
-  };
-  walk(dir);
-  return out;
-}
 
 /**
  * Whether a control at this offset is wrapped in a `<label>`.
@@ -179,90 +168,105 @@ export function says(p: Unnamed): string {
 }
 
 /*
- * ── The second rule: a name that a stylesheet takes away ───────────────────
+ * ── The label CSS takes away ────────────────────────────────────────────────
  *
- * The rule above asks whether a control was given a name. This one asks
- * whether it still has the one it was written with at every width.
+ * The rule above reads tags. This one reads the stylesheet, because the way
+ * a named control loses its name here is not visible in its own markup.
  *
- * The case it was written for: the AI Tutor button in the workspace and
- * browser shells is an icon and the words "AI Tutor". Under 760px `app.css`
- * has `.desktop-ai span { display: none }`, and `display: none` does not just
- * hide pixels — it takes the element out of the accessibility tree. The icon
- * beside it is `aria-hidden`, like every icon in `Icons.tsx`. So on a phone,
- * on every screen of the two navigations that draw that bar, the control that
- * opens the assistant announced itself as "button".
+ * `.desktop-ai` is the case it was written for. The AI Tutor button in the
+ * workspace top bar is a glyph and a `<span>AI Tutor</span>`, which is a
+ * perfectly good name — until `app.css` says
  *
- * Nothing could have caught that from one side. The markup has the words in
- * it; the stylesheet has no idea it is looking at the only name a control
- * has. It takes both files at once, which is what this does.
+ *     @media (max-width: 759px) { .desktop-ai span { display: none } }
+ *
+ * and below 760px the only text in the button is not rendered. `display:
+ * none` removes an element from the accessibility tree as well as from the
+ * page, so the accessible name is computed from nothing: VoiceOver on a phone
+ * announced "button" and stopped, on the one control in that bar that opens
+ * the assistant. Every viewport this app is designed for is under 760px.
+ *
+ * Nothing caught it. The tag rule does not look at buttons, the button really
+ * did have text, and the suite renders in jsdom, which parses the stylesheet
+ * but applies no media query — so the span was present in every test that
+ * asked. It took reading the rendered page at 420px to see it.
+ *
+ * The fix in the component is the one the tab bar already uses: the glyph
+ * carries the picture, `aria-label` carries the name, and the button reads the
+ * same at every width. This is what keeps it that way — and it generalises,
+ * because the trap is not that button. It is that hiding a label in CSS is
+ * invisible from the JSX, so the next person to write a responsive control
+ * cannot see what they took away.
  */
 
-/** Inline elements that are usually a control's visible name. */
-const NAMING = ['span', 'b', 'i', 'em', 'strong', 'small'];
-
-export interface Silenced {
+/** A class whose inner label the stylesheet hides, and the rule that hides it. */
+export interface HiddenName {
+  /** The class on the element, without the dot. */
+  cls: string;
+  /** The selector as written, for the message. */
+  selector: string;
+  /** Where the element is used without a name of its own. */
   file: string;
   line: number;
-  /** The class whose text the stylesheet hides. */
-  className: string;
-  /** The rule that hides it, for the message. */
-  rule: string;
   found: string;
 }
 
 /**
- * Every class whose inline text a stylesheet sets to `display: none`.
+ * Selectors of the shape `.something <element> { … display: none … }`.
  *
- * Deliberately blunt about which selectors it reads: the last class in the
- * selector before the inline tag, which is the element the rule is about.
- * `@media` wrappers are not parsed, because the width a rule applies at does
- * not change the answer — a name that is gone at any width is gone.
+ * Deliberately narrow. A rule hiding a *class* — `.desktop-ai .label` — is
+ * usually hiding a decoration, and a rule hiding a bare descendant element is
+ * the one that eats text: `span`, `em`, `b`, `small`. Widening this to every
+ * `display: none` in the file would report the dozens of legitimate ones and
+ * teach the reader to skip the output, which is how `styles.mjs` next door
+ * describes its own tuning.
  */
-export function hushed(css: string): { className: string; rule: string }[] {
-  const out: { className: string; rule: string }[] = [];
-  for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    const selector = m[1].replace(/\s+/g, ' ').trim();
-    if (!/display\s*:\s*none/.test(m[2])) continue;
-    const said = new RegExp(`\\.([A-Za-z0-9_-]+)\\s+(?:${NAMING.join('|')})$`).exec(selector);
-    if (said) out.push({ className: said[1], rule: selector });
+function hidesText(css: string): { cls: string; selector: string }[] {
+  const out: { cls: string; selector: string }[] = [];
+  for (const m of css.matchAll(/([^{}]*)\{([^{}]*)\}/g)) {
+    const body = m[2];
+    if (!/display:\s*none/.test(body)) continue;
+    // The last line of the captured run is the selector; everything before it
+    // is the tail of the previous rule or the media query it sits in.
+    const selector = (m[1].split('\n').pop() ?? '').trim();
+    const hit = /^\.([A-Za-z0-9_-]+)\s+(span|em|b|small|strong|label)$/.exec(selector);
+    if (hit) out.push({ cls: hit[1], selector });
   }
   return out;
 }
 
 /**
- * Controls whose only visible name a stylesheet hides, with nothing else to
- * fall back on.
+ * Every element that wears such a class and has no name without its text.
  *
- * A control wearing one of those classes needs a name of its own — an
- * `aria-label`, or an `aria-labelledby` — because at the width the rule
- * applies it has nothing else.
+ * `aria-label` and `aria-labelledby` only: a `title` is not announced
+ * reliably and the text inside is the thing being taken away, so neither can
+ * stand in for one here.
  */
-export function silenced(dir: string, css: string): Silenced[] {
-  const rules = hushed(css);
-  if (rules.length === 0) return [];
-  const out: Silenced[] = [];
+export function hiddenNames(dir: string, css: string): HiddenName[] {
+  const out: HiddenName[] = [];
+  const risky = hidesText(css);
+  if (risky.length === 0) return out;
 
   for (const f of sources(dir)) {
     if (f.path.includes('.test.')) continue;
     const rel = f.path.slice(f.path.indexOf('/src/') + 5);
     const code = withoutComments(f.text);
 
-    for (const { className, rule } of rules) {
-      // `className="bare desktop-ai"` and `className={\`… desktop-ai\`}` alike:
-      // the class as a whole word anywhere in a className value.
-      const worn = new RegExp(`className[=:]\\s*[{]?["'\`][^"'\`]*\\b${className}\\b`, 'g');
-      for (let m = worn.exec(code); m; m = worn.exec(code)) {
+    for (const { cls, selector } of risky) {
+      // `className="bare desktop-ai"` and `className={'… desktop-ai'}` alike:
+      // the class name as a whole word anywhere in a className attribute.
+      const use = new RegExp(`className=[{"'\`][^>]*?\\b${cls}\\b`, 'g');
+      for (let m = use.exec(code); m; m = use.exec(code)) {
         const open = code.lastIndexOf('<', m.index);
         if (open === -1) continue;
         const end = endOfTag(code, open);
         if (end === -1) continue;
         const written = code.slice(open, end + 1);
-        if (/aria-label(ledby)?[=:]/.test(written)) continue;
+        if (written.includes('aria-label') || written.includes('aria-labelledby')) continue;
         out.push({
+          cls,
+          selector,
           file: rel,
           line: code.slice(0, open).split('\n').length,
-          className,
-          rule,
           found: written.split(/\s+/).join(' ').slice(0, 90),
         });
       }
@@ -272,12 +276,14 @@ export function silenced(dir: string, css: string): Silenced[] {
   return out.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
 }
 
-/** What to do about one. */
-export function saysSilenced(p: Silenced): string {
+/** What to do about one, in the words somebody fixing it needs. */
+export function saysHidden(p: HiddenName): string {
   return (
-    `\`${p.rule}\` hides this control's own words, and \`display: none\` takes ` +
-    `them out of the accessibility tree as well as off the screen — so at that ` +
-    `width it has no name at all.\n    Add aria-label with the same words as ` +
-    `the text inside it.`
+    `app.css hides this element's text with \`${p.selector} { display: none }\`, ` +
+    `so at that width the control has no accessible name at all — display:none ` +
+    `takes an element out of the accessibility tree, not just off the page.\n` +
+    `    Add aria-label with the words the hidden text says, the way the tab ` +
+    `bar does when its labels are off. Keep the text as well, for the widths ` +
+    `that draw it.`
   );
 }

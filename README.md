@@ -316,7 +316,12 @@ tabs as a list**: every one of them in the strip's own order, with the group
 each belongs to beside it, filtered as you type and forgiving of a typo the
 same way the rest of the app's search is. Enter opens the one under the
 cursor. It appears once there are four tabs; below that the strip is the
-search.
+search. Each row also says whether its tab has a voice: a speaker on the one
+that is playing, and a crossed one on a tab that is **muted and silent** —
+which the strip never shows, because the strip is short of room and that state
+has nothing happening to point at. It is the setting **Mute this tab** leaves
+behind, and this is the only place you can see it or undo it. Pressing either
+does what the strip's speaker does.
 
 Under them is **Recently closed**, because the cross is eight pixels from the
 name and on a phone that is inside a thumb: the last ten tabs you shut are
@@ -359,6 +364,11 @@ A sound ends the way it would in a browser: close the tab that owns it, or
 navigate that tab somewhere else, and it stops. Only one thing plays at a
 time — this is a place to study, and two narrations over each other is not a
 feature anybody asked for.
+
+A result you already have open says **Switch to tab**, and pressing it goes to
+that tab instead of making a second one onto the same page — which is what an
+address bar does, and what stops the strip filling with duplicates of the
+things you look at most. The ⧉ beside it still opens another on purpose.
 
 **Bookmarks** are the other half. A tab is where you are; a bookmark is where
 you keep going back to — the ECON study guide, the essay brief, the deadline
@@ -540,8 +550,8 @@ stayed behind. Three screens now, on the **Make** shelf, and none of them has a
 model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
-  checklists, quotations, tables, pictures, equations, code blocks, page
-  breaks — out as a real `.docx`, as
+  checklists, quotations, tables, pictures, equations, code blocks, a contents
+  page, dividers, page breaks — out as a real `.docx`, as
   Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
   `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
   link becomes a real hyperlink in the Word file rather than an address typed
@@ -577,6 +587,29 @@ model in it or needs a key:
   from the caption on purpose — it is what a screen reader in Word reads out,
   so it says what is *in* the picture, where a caption says what to make of
   it.
+
+  A **list can nest.** Each item has ← and → beside it, five levels deep, and
+  a sub-item exports as a sub-item: indented under its parent in Markdown, at
+  its own `ilvl` in Word with the marker cycling • ○ ▪ and 1. a. i. the way
+  Word's own lists do. Not Tab — a list here is a column of ordinary text
+  fields on a card, and Tab is how a keyboard gets out of one, so taking it
+  would trap exactly the people who cannot reach for the mouse instead. Lists
+  written before this still work: an item that is a bare string is read as a
+  line at the left margin, which is what it always was.
+
+  A **divider** is a line between one section and the next, and a **page
+  break** starts a new page. Two blocks, one line apart on the Insert bar,
+  because they are two different things — which they had not been. The page
+  break used to write `---` to Markdown, and `---` is Markdown's *thematic
+  break*: a divider. So a document exported from here said divider and meant
+  page break, and re-importing it only worked because both ends were wrong in
+  the same direction. The divider has `---` now, which was always its
+  spelling, and the page break is written as an HTML comment — invisible in
+  GitHub, Obsidian, Pandoc and anything else that reads Markdown, so there is
+  no noise where the page breaks were. One thing this costs, worth knowing
+  rather than finding out: a Markdown file exported from this app *before*
+  now will re-import its page breaks as dividers. That is the right reading
+  of `---` and the wrong answer for that file, and it is visible on the page.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
   `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It
@@ -913,6 +946,87 @@ model in it or needs a key:
   no initial conditions, which is also right. A transfer function is the system
   and not the run, so it is there before anybody has written a `y(0) =`.
 
+  **`fourier(sign(\sin(t)), 2\pi)` is a Fourier series** — the harmonics a
+  repeating thing is made of — drawn over the thing itself, faint, which is the
+  whole picture: the partial sum climbing towards the square wave, ringing
+  where the jumps are. It prints what it found,
+  `1.27324\sin(t) + 0.424413\sin(3t) + \cdots`, which is `4/n\pi` to six
+  figures.
+
+  This one is not in the family above and does not need to be. A series is an
+  integral per coefficient, and the functions people take the series *of* are
+  the ones with corners and jumps in them — a square wave, a sawtooth, a
+  rectified sine — none of which is a shape any table has. So the coefficients
+  are integrated rather than looked up, which makes this work on anything the
+  calculator can evaluate: `|t|`, `\text{sign}`, `\text{floor}`, a formula
+  somebody wrote this morning.
+
+  The honest difficulty is that Simpson's rule across a jump is bad arithmetic
+  — the error is first order in the step, so a square wave's `b_1` would come
+  out to four figures rather than twelve. So the jumps are found first, sampled
+  and then bisected to the last bit of the float, and each smooth piece is
+  integrated on its own with its ends read from inside. That last part was
+  worth three ten-thousandths on its own: `\text{sign}(\sin(t))` is zero at
+  `t = 0`, which is neither of its two values, and Simpson's rule gives that
+  one sample a third of a panel's weight.
+
+  The overshoot at each jump is Gibbs and is not a mistake: the first peak
+  settles on `1.178980`, however many harmonics are taken, and a series that
+  did not overshoot would be the wrong series. Checked at thirty, sixty and a
+  hundred and twenty terms.
+
+  **`F{e^{-2t}}` is a Fourier transform**, drawn against `ω`. For a signal that
+  starts at zero and settles, this is the Laplace transform read up the
+  imaginary axis — `F(\omega) = F_L(i\omega)` — which is not a shortcut but
+  the definition, the two integrals being the same integral once `s = i\omega`.
+  So the whole of the Laplace engine is the engine here and there is no second
+  table. `F{e^{-0.4t}\sin(6t)}` draws the twin peaks at `\pm 6` that say where
+  a dying wobble keeps its energy.
+
+  What comes back is complex, so what is drawn is its size, and the line says
+  so rather than leaving somebody to assume the picture is the transform. And
+  it follows from the definition that the transform exists only where the
+  signal settles: `F{1}` and `F{\sin(t)}` have poles on the axis and their
+  transforms are impulses in frequency rather than functions, so they are
+  refused with the sentence that says exactly that — which is a better lesson
+  than an answer made of the part that happens to be a function. `F{e^{-|t|}}`
+  is the one two-sided shape taken, because an even function is its own right
+  half read twice.
+
+  **`Z{0.5^n}` is a z-transform**, which is Laplace for a thing that happens on
+  the beat rather than continuously — a balance after each month, a reading
+  each second, a series each quarter. `Z^{-1}{z/((z-1)(z-2))}` is the sequence
+  behind one, and it reads `2^n - 1`.
+
+  The family is the discrete twin of the Laplace one: `c\,n^k r^n` times a
+  cosine or a sine of `\omega n`, starting at `n = d`. Same closure, same
+  reason there is no half-solved case to fall into. The arithmetic is shared
+  outright — `app/src/lib/poly.ts` now holds the roots and the partial
+  fraction, because taking `\frac{z}{(z-2)(z-3)}` apart is the same problem as
+  taking `\frac{1}{(s+1)(s+2)}` apart, and two copies of a root finder are two
+  root finders that drift.
+
+  What differs is worth saying. The work is done in `w = z^{-1}`, where the
+  sums are geometric and a delay is a multiplication, and turned back into `z`
+  only to be written down, which is why the denominators come out as tables
+  print them. Where a Laplace pole left of the axis means a thing settles, a
+  z-transform pole *inside the unit circle* means it dies away, and the line
+  under it says which — `|p| < 1` is the whole of discrete stability.
+
+  And the answer is drawn as the beats it is: points on the integers with a
+  stem to each, nothing before `n = 0`, and no line joining them. A curve
+  through those points would claim a value at `n = 1.5`, which is not a thing
+  that exists. For the same reason a step at `u(n - 1.5)` is refused rather
+  than rounded.
+
+  Building it found a bug in the adding-up. Three terms over a denominator
+  built by multiplying — `(1-w)^3(1-0.5w)` — has a pole at 1 three times where
+  the sequence has it twice; the spare one cancels against a zero on top, and a
+  partial fraction asked to split at a pole that is not there answered with a
+  five-hundred-thousand. Caught by transforming a sequence and transforming it
+  back, which is the test worth having for a pair of functions that are meant
+  to undo each other.
+
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms
   without complaint. A bracket after a letter is a multiplication or a function
@@ -1183,9 +1297,17 @@ written once, in `app/src/lib/media.ts`, and repeated in the media queries of
   so every iPad in portrait (768–834pt) gets it, and landscape and Split View
   follow the window live. An iPad mini upright, and any half-width split, stay
   on the phone layout at full height. The touch sizes do not change: the finger
-  holding an iPad is the finger that held the phone. The content column fills
-  whatever the rail leaves, up to a 760px cap so a list row on a landscape iPad
-  is not a metre of hairline with its value stranded at the far end.
+  holding an iPad is the finger that held the phone — the rail's own rows
+  included, which they were not. Unrolled, the five destinations that are 51px
+  tall each in the tab bar came out at 41 in the rail, and the five under them
+  — Ask Claude, Account, Settings — at 35, so the one piece of chrome on screen
+  the whole time was the one part of a tablet build nobody had sized for a
+  tablet. They have a 44px floor now, on `pointer: coarse` rather than on a
+  width: an iPad at 1194 is in the desktop layout and still has a finger on it,
+  and a browser window dragged to 820 is in the tablet layout and does not.
+  The content column fills whatever the rail leaves, up to a 760px cap so a
+  list row on a landscape iPad is not a metre of hairline with its value
+  stranded at the far end.
 - **Desktop** (1180px and up) — a window rather than a phone propped up. A
   wider sidebar with room for its labels; the app filling the window instead of
   a 560px column with black either side; a measured reading column with the
@@ -1197,6 +1319,28 @@ written once, in `app/src/lib/media.ts`, and repeated in the media queries of
   the last week of the month falling off the bottom of a laptop screen. A
   fourth step at 1600px widens the measure again rather than stranding the
   layout in the middle of a large monitor.
+- **Held, rather than opened in a window** — which is the thing width alone
+  cannot tell you, and the three boundaries above are widths. An iPhone 15 Pro
+  Max on its side is 932pt across, wider than an iPad mini is upright, so it
+  was getting the tablet layout: a rail of ten rows down the side of 430px of
+  height, taking 220px of the width for a navigation whose last items ran off
+  the bottom. And the standalone column's 402px cap — the artboard the app was
+  drawn on, which never comes into play on a phone held upright because the
+  phone is narrower than it is — did come into play the moment the phone was
+  turned, and again on an iPad mini upright at 744 and on any iPad in Split
+  View: the app drawn as a column down the middle of the device with black
+  either side of it and a tab bar reaching neither edge.
+  Both are the same sentence — on a device the app fills the device, and a cap
+  written for a window belongs to a window. `pointer: coarse` is what tells
+  the two apart, paired with a short viewport (under 600px, which no tablet is
+  at any rotation and every phone is on its side) or a narrow one. A desktop
+  window dragged short or narrow has a mouse in it and keeps the desktop.
+  `HANDHELD` in `app/src/lib/media.ts` is the query, the last block of the
+  layout section in `app.css` is its copy, and `lib/tiers.test.ts` holds the
+  two together the way it holds the widths. The side safe-area insets are read
+  here too — a notch goes to whichever side is the top when a phone is turned,
+  and `viewport-fit=cover` means the header and the tab bar sit under it
+  unless something asks.
 - **Installed** — a manifest, PNG icons (iOS ignores an SVG tile) and a service
   worker make it a real window on macOS or Windows and an icon on a home screen,
   with the app shell and anything you have played working offline. Audio is

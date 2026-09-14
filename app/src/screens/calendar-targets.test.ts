@@ -22,7 +22,16 @@ import { readFileSync } from 'node:fs';
  */
 const SOURCE = readFileSync(new URL('./Calendar.tsx', import.meta.url), 'utf8');
 
-/** WCAG 2.5.8 Target Size (Minimum), which is the floor rather than the aim. */
+/**
+ * WCAG 2.5.8 Target Size (Minimum), which is the floor rather than the aim.
+ *
+ * Asserted as a floor rather than as the exact number the rows use, because
+ * the exact number is a judgement about this view's density that has already
+ * been made twice — sixteen to forty-four, then forty-four to thirty-two when
+ * measuring showed the taller row cost the term two and a half screens. What
+ * must not move again is the floor. `WEEK_ROW`'s own comment carries the
+ * reasoning for whichever number is in it.
+ */
 const WCAG_MINIMUM = 24;
 
 describe('a row in the semester view', () => {

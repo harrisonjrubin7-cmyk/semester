@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint src && node scripts/styles.mjs && node scripts/labels.mjs",
+    "lint": "oxlint --max-warnings=45 src && node scripts/styles.mjs && node scripts/labels.mjs",
     "lint:styles": "node scripts/styles.mjs",
     "counts": "node scripts/counts.mjs",
     "mirror": "node scripts/mirror.mjs",

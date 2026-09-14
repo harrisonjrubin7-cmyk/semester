@@ -232,6 +232,19 @@ describe('the number on the icon', () => {
     const clearAppBadge = vi.fn().mockResolvedValue(undefined);
     give('setAppBadge', setAppBadge);
     give('clearAppBadge', clearAppBadge);
+    /*
+     * A number on the icon first, because clearing is a *transition*.
+     *
+     * `badge` remembers what it last showed and skips a call that would set
+     * the same number again — that is the point of the test above. So asking
+     * for -3 from a module that already believes nothing is shown correctly
+     * calls nothing, and this test passed only because the tests before it
+     * happened to leave a number behind. Under `--sequence.shuffle` it failed.
+     * Setting one here is what makes the clamp to zero observable, whatever
+     * ran first.
+     */
+    badge(4);
+    setAppBadge.mockClear();
     badge(-3);
     expect(clearAppBadge).toHaveBeenCalled();
     badge(2.7);
