@@ -197,6 +197,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Name</span>
               <input
+                className="input"
                 required
                 maxLength={FAMILY_LIMITS.name}
                 value={member.name}
@@ -207,6 +208,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Email — optional, never contacted</span>
               <input
+                className="input"
                 type="email"
                 maxLength={FAMILY_LIMITS.email}
                 value={member.email}
@@ -217,6 +219,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Relationship</span>
               <input
+                className="input"
                 maxLength={100}
                 value={member.relationship}
                 onChange={(e) => setMember((m) => ({ ...m, relationship: e.target.value }))}
@@ -226,6 +229,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Planned through</span>
               <input
+                className="input"
                 type="date"
                 value={member.expires}
                 onChange={(e) => setMember((m) => ({ ...m, expires: e.target.value }))}
@@ -242,6 +246,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label key={c} style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>{FAMILY_LABELS[c]}</span>
                 <select
+                  className="input"
                   value={member.permissions[c]}
                   onChange={(e) =>
                     setMember((m) => ({
@@ -348,6 +353,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <label style={field}>
                   <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Title</span>
                   <input
+                    className="input"
                     required
                     maxLength={FAMILY_LIMITS.title}
                     value={item.title}
@@ -358,6 +364,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <label style={field}>
                   <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Category</span>
                   <select
+                    className="input"
                     value={item.category}
                     onChange={(e) => setItem((i) => ({ ...i, category: e.target.value as FamilyCategory }))}
                     style={input}
@@ -372,6 +379,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <label style={field}>
                   <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Kind</span>
                   <select
+                    className="input"
                     value={item.kind}
                     onChange={(e) => setItem((i) => ({ ...i, kind: e.target.value as FamilyItem['kind'] }))}
                     style={input}
@@ -386,6 +394,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <label style={field}>
                   <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Target date</span>
                   <input
+                    className="input"
                     type="date"
                     value={item.due}
                     onChange={(e) => setItem((i) => ({ ...i, due: e.target.value }))}
@@ -396,6 +405,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <label style={field}>
                     <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Estimate, USD</span>
                     <input
+                      className="input"
                       type="number"
                       min={0}
                       max={FAMILY_LIMITS.amount}
@@ -411,6 +421,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                     Only what you mean to share
                   </span>
                   <textarea
+                    className="input"
                     rows={6}
                     maxLength={FAMILY_LIMITS.body}
                     value={item.body}

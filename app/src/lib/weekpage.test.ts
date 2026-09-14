@@ -33,6 +33,54 @@ describe('the seven days', () => {
   });
 });
 
+describe('three days, on a phone', () => {
+  /*
+   * The same functions, a shorter span. Seven columns at 390px gave each day
+   * about fifty pixels and wrapped a block's title to one character a line, so
+   * the phone shows three days — and the heading, the campus list and the
+   * deadlines under the grid all have to agree with the grid about which three.
+   */
+  it('returns three dates from the day it is given, not from Sunday', () => {
+    const days = weekDates(new Date(2026, 8, 9), 3);
+    expect(days).toHaveLength(3);
+    expect(days.map((d) => d.getDate())).toEqual([9, 10, 11]);
+  });
+
+  it('crosses a month on three days as readily as on seven', () => {
+    expect(weekDates(new Date(2026, 8, 30), 3).map((d) => d.getMonth())).toEqual([8, 9, 9]);
+  });
+
+  it('labels the span it is actually showing', () => {
+    expect(weekLabel(MON, 3)).toBe('Sep 7 – 9');
+    expect(weekLabel(MON)).toBe('Sep 7 – 13');
+    expect(weekLabel(new Date(2026, 8, 30), 3)).toBe('Sep 30 – Oct 2');
+  });
+
+  it('groups the deadlines over three days and no more', () => {
+    const days = dueByDay(
+      [item(new Date(2026, 8, 9), 'Problem Set 2'), item(new Date(2026, 8, 12), 'Later')],
+      MON,
+      [],
+      3,
+    );
+    expect(days).toHaveLength(3);
+    expect(days[2].items.map((i) => i.title)).toEqual(['Problem Set 2']);
+    expect(days.some((d) => d.items.some((i) => i.title === 'Later'))).toBe(false);
+  });
+
+  it('ends its line with what is on screen rather than always "this week"', () => {
+    const days = dueByDay([item(new Date(2026, 8, 9), 'Problem Set 2')], MON, [], 3);
+    expect(weekLine(days, 2, 'these three days')).toBe(
+      '2 classes and 1 deadline these three days.',
+    );
+    expect(weekLine(dueByDay([], MON, [], 3), 0, 'these three days')).toBe(
+      'Nothing on these three days.',
+    );
+    // And the default is unchanged, which is what every other caller relies on.
+    expect(weekLine(dueByDay([], MON), 0)).toBe('Nothing on this week.');
+  });
+});
+
 describe('deadlines by day', () => {
   it('groups them onto the day they fall on', () => {
     const days = dueByDay(

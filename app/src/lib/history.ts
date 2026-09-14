@@ -82,6 +82,26 @@ export function push<T>(h: History<T>, state: T, tag: string, when: number): His
   return { past: past.slice(over), at: past.length - 1 - over, tag, when };
 }
 
+/**
+ * The entry showing, replaced in place.
+ *
+ * Not a change — the finger does not move and nothing after it is dropped.
+ * It exists for one thing: a step that alters state the *earlier* entries
+ * never recorded, which has to be written onto the entry undo will land on or
+ * undo cannot put it back.
+ *
+ * The case is a row inserted in a sheet that another sheet's formulas point
+ * into. Those formulas are rewritten to follow, and the entry before the
+ * insert has no idea they ever said anything else — so undo would restore
+ * this grid's rows and leave the other sheet pointing one row off, which is a
+ * total that is quietly wrong on a screen that looks right.
+ */
+export function amend<T>(h: History<T>, fn: (state: T) => T): History<T> {
+  const past = [...h.past];
+  past[h.at] = fn(past[h.at]);
+  return { ...h, past };
+}
+
 export function undo<T>(h: History<T>): History<T> {
   if (!canUndo(h)) return h;
   // The tag is cleared on a move, so the next change starts its own step

@@ -22,7 +22,7 @@ import { Rail } from '../components/mail/Rail';
 import { List } from '../components/mail/List';
 import { Reader } from '../components/mail/Reader';
 import { Compose } from '../components/mail/Compose';
-import { readMail, tokens, describe as explain, type ProviderId } from '../lib/connect';
+import { readMail, readableMail, tokens, describe as explain, type ProviderId } from '../lib/connect';
 import {
   conversations,
   draftAsMail,
@@ -42,8 +42,6 @@ import {
 /** How many conversations a page holds. Gmail's number, and it is a good one. */
 const PER_PAGE = 50;
 
-/** The accounts that have a mailbox this app can read. */
-const MAIL_PROVIDERS: ProviderId[] = ['google', 'microsoft'];
 
 /**
  * Email.
@@ -100,7 +98,7 @@ export function Mail() {
   const list = useRef<HTMLDivElement>(null);
 
   const held = tokens();
-  const accounts = MAIL_PROVIDERS.filter((id) => held[id]);
+  const accounts = readableMail(held);
   const me = useMemo(
     () => ({ name: state.myName || 'You', address: account?.email ?? '' }),
     [state.myName, account?.email],
@@ -330,12 +328,28 @@ export function Mail() {
           </button>
         )}
 
+        {/*
+          Off when there is no mailbox to check.
+
+          `pull` opens with `if (accounts.length === 0) return`, which is right
+          — there is nothing to ask — and left this button enabled, pressable,
+          and completely silent. The folder underneath already says "No account
+          connected" and offers Connect; the one control up here that looks
+          like it would go and get something did nothing and said nothing about
+          why. The same `disabled` the four actions beside it already use, and
+          the title carries the reason so the answer is on the control rather
+          than only in the empty state below it.
+        */}
         <button
           type="button"
           className="mb-ico"
           aria-label="Check for new mail"
-          title="Check for new mail"
-          disabled={busy}
+          title={
+            accounts.length === 0
+              ? 'Connect an account before checking for new mail'
+              : 'Check for new mail'
+          }
+          disabled={busy || accounts.length === 0}
           onClick={() => void pull(folder, query)}
         >
           <RefreshIcon size={18} />
@@ -605,11 +619,19 @@ export function Mail() {
             position: 'absolute',
             right: 'var(--sp-6)',
             /*
-             * Above the assistant's button rather than under it. That one is
-             * fixed over the bottom right of every screen in the app, and two
-             * round buttons in the same corner is one of them unreachable.
+             * On the bottom edge, because the corner is empty here.
+             *
+             * This used to lift by `--assistant-strip` to clear the
+             * assistant's own round button, which is fixed over the bottom
+             * right of nearly every screen — two round buttons in one corner
+             * is one of them unreachable. It is not drawn on this one:
+             * `ai/Assistant.tsx` skips the button on every screen `fills()`
+             * names, because those end at the bottom edge with a control you
+             * use there, and the mailbox joined that list when it was built.
+             * So the lift was reserving a corner for something that never
+             * arrives, and left the button floating 82px up a blank screen.
              */
-            bottom: 'calc(var(--assistant-strip) + var(--sp-3))',
+            bottom: 'var(--sp-6)',
             zIndex: 10,
             display: 'flex',
             alignItems: 'center',

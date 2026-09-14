@@ -1,4 +1,6 @@
 import { dateToIso, realDate } from './date';
+// Lowercased for matching, derived from the one list. See `lib/date.ts`.
+import { MONTH_WORDS as MONTHS } from './date';
 /**
  * One box: "econ ps4 friday 5pm".
  *
@@ -59,20 +61,6 @@ export interface Caught {
 
 const DAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 const SHORT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-const MONTHS = [
-  'january',
-  'february',
-  'march',
-  'april',
-  'may',
-  'june',
-  'july',
-  'august',
-  'september',
-  'october',
-  'november',
-  'december',
-];
 
 /**
  * Kinds, in the words people actually type.

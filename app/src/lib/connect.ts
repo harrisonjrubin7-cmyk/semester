@@ -784,6 +784,29 @@ export function gmailAttachments(part: GmailPart | undefined): number {
 }
 
 /**
+ * Which accounts have a mailbox this app can read.
+ *
+ * The same rule as `WRITABLE` above, for the other question, and kept here
+ * for the same reason its comment gives: beside the function whose branches
+ * actually decide it. `readMail` has a `microsoft` branch and a `google`
+ * branch and throws for anything else, so those two are the answer — and
+ * `screens/Mail.tsx` wrote the pair out for itself, which is precisely the
+ * "filter written out on a screen" that `WRITABLE` exists to have stopped.
+ *
+ * Note that this is a different question from `WRITABLE`, not the same one
+ * twice: that is whose calendar can be written to, this is whose mail can be
+ * read. They happen to have the same answer today. A provider that published
+ * a readable mailbox and no writable calendar would separate them, and the
+ * two lists are already where the two branches are.
+ */
+export const MAIL_READABLE: ProviderId[] = ['google', 'microsoft'];
+
+/** Which of those are actually connected, in the order they are offered. */
+export function readableMail(held: TokenStore = tokens()): ProviderId[] {
+  return MAIL_READABLE.filter((id) => held[id]);
+}
+
+/**
  * A folder of mail, from whichever account this is.
  *
  * Gmail lists ids and then wants a request per message, which is why the

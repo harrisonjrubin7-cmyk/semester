@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FULLSCREEN, chromeFor, firstScreen, homeShape, navigationsDrawn } from './chrome';
+import { FULLSCREEN, chromeFor, firstScreen, homeShape, navigationsDrawn, usesBar } from './chrome';
 import { NAVS, SHELLS, navOf } from './look';
 import { DESTINATIONS } from './nav';
 import { DEFAULT_PERSISTED } from '../state/shape';
@@ -45,7 +45,7 @@ describe('the navigation rule', () => {
             doubled.push(
               `${nav} on ${screen} (${wide ? 'wide' : 'phone'}): ${
                 Object.entries(chrome)
-                  .filter(([k, v]) => v && k !== 'fab' && k !== 'sidebar')
+                  .filter(([k, v]) => v && k !== 'sidebar')
                   .map(([k]) => k)
                   .join(' + ')
               }`,
@@ -130,12 +130,41 @@ describe('the navigation rule', () => {
     }
   });
 
-  it('puts the import button on the feed’s home screen and nowhere else', () => {
-    expect(chromeFor('feed', 'home', false).fab).toBe(true);
-    expect(chromeFor('feed', 'courses', false).fab).toBe(false);
-    expect(chromeFor('feed', 'home', true).fab).toBe(false);
-    for (const nav of MODES.filter((n) => n !== 'feed')) {
-      expect(chromeFor(nav, 'home', false).fab, nav).toBe(false);
+  /*
+   * There was a test here for the import button on the feed's home screen.
+   *
+   * The button is gone — it drew a `Plus` under a header that draws a `Plus`,
+   * two of the same mark on one screen meaning different things, and the note
+   * where `fab` used to be in `chrome.ts` has the argument. What replaces the
+   * test is the opposite claim, held here because this is the file that knows
+   * every combination: `Chrome` is now navigation and nothing else, so every
+   * member of it is counted by the invariant rather than exempt from it.
+   */
+  it('has no member that is not a navigation', () => {
+    /*
+     * Every member, and every one of them counted by `navigationsDrawn` —
+     * except `sidebar`, which is the wide expression of `desk` rather than a
+     * navigation of its own, cannot be on without it, and is documented as
+     * the exception in `chrome.ts`.
+     *
+     * Written as the key list rather than as a `fab` check so that it holds
+     * the rule and not one member's absence. It has already earned that once:
+     * `browser` arrived as a seventh navigation while this branch was open,
+     * and this test is what said so. `browser` has since gone again —
+     * `SIMPLIFY-AUDIT.md` E4 — which is the same rule read the other way, and
+     * the list is still the thing being kept rather than either event.
+     */
+    const COUNTED = ['desk', 'rail', 'shelves', 'tabs'];
+    for (const nav of MODES) {
+      for (const wide of [true, false]) {
+        const c = chromeFor(nav, 'home', wide);
+        expect(Object.keys(c).sort(), `${nav} ${wide}`).toEqual([...COUNTED, 'sidebar'].sort());
+        if (c.sidebar) expect(c.desk, `${nav} ${wide}`).toBe(true);
+        // The list above is the invariant's list, not a second copy of it:
+        // anything counted must be here, and anything here must be counted.
+        const on = COUNTED.filter((k) => c[k as keyof typeof c]).length;
+        expect(navigationsDrawn(c), `${nav} ${wide}`).toBe(on);
+      }
     }
   });
 });
@@ -159,10 +188,15 @@ describe('the home screen', () => {
     for (const nav of MODES) expect(homeShape(nav)).toBeTruthy();
   });
 
-  it('lands the two top-chrome navigations on their search page and everything else on home', () => {
-    // Both open the way a browser opens on a new tab, rather than on the last
-    // page you read. Every other navigation opens on the day.
-    const onSearch: NavMode[] = ['workspace', 'browser'];
+  it('lands the top-chrome navigation on its search page and everything else on home', () => {
+    // The workspace opens the way a browser opens on a new tab, rather than on
+    // the last page you read. Every other navigation opens on the day.
+    //
+    // There were two of these until the seventh pass. `browser` was a second
+    // shell of the same shape — see E4 in `SIMPLIFY-AUDIT.md` — and the list
+    // is a list rather than an equality so that a third would read as an
+    // addition here rather than as a rewrite.
+    const onSearch: NavMode[] = ['workspace'];
     for (const nav of onSearch) expect(firstScreen(nav), nav).toBe('search');
     for (const nav of MODES.filter((n) => !onSearch.includes(n))) {
       expect(firstScreen(nav), nav).toBe('home');
@@ -171,17 +205,38 @@ describe('the home screen', () => {
 });
 
 describe('reading a navigation back', () => {
-  it('keeps the seven the app has', () => {
+  it('keeps the six the app has', () => {
     expect(MODES).toEqual([
       'tabs',
       'feed',
       'springboard',
       'shelves',
       'workspace',
-      'browser',
       'guides',
     ]);
     for (const nav of MODES) expect(navOf(nav)).toBe(nav);
+  });
+
+  it('lands a saved navigation that no longer exists on the workspace', () => {
+    /*
+     * The migration this removal did not need.
+     *
+     * `browser` was a seventh navigation until the seventh pass — a second
+     * browser-shaped shell beside `workspace`, 1213 lines against 708 (E4 in
+     * `SIMPLIFY-AUDIT.md`). Somebody using it has `nav: 'browser'` in their
+     * saved copy, and the survivor is the one they should land on rather than
+     * the tab bar, because it is the same shape: chrome at the top, a tab
+     * strip, a search field that owns the window.
+     *
+     * `navOf` already did that — its fallback is the workspace, not the bar —
+     * so no migration step was written. That is worth a test rather than a
+     * comment: the fallback is the only thing standing between a retired
+     * navigation and an app that opens somewhere the person did not choose,
+     * and it would be an easy line to "simplify" to `'tabs'` one day.
+     */
+    expect(navOf('browser')).toBe('workspace');
+    expect(navOf('a navigation that never existed')).toBe('workspace');
+    expect(navOf(undefined)).toBe('workspace');
   });
 
   /*
@@ -244,5 +299,23 @@ describe('reading a navigation back', () => {
    */
   it('falls back to whatever the app actually defaults to', () => {
     expect(navOf('nonsense')).toBe(DEFAULT_PERSISTED.nav);
+  });
+
+  /*
+   * And whoever offers to arrange the bar offers it wherever there is one.
+   *
+   * Settings asked `nav === 'tabs'`, which is the navigation named after the
+   * bar rather than the set of navigations that draw one. The feed and the
+   * springboard draw the same list as the rail on a wide window, so those two
+   * had a rail built out of a list they were given no way to arrange — and a
+   * control that would plainly have worked was simply missing. Asked of
+   * `chromeFor` here, so it cannot drift from the rule again.
+   */
+  it('offers the bar\u2019s own list to every navigation that draws one', () => {
+    for (const nav of MODES) {
+      const draws = chromeFor(nav, 'home', false).tabs || chromeFor(nav, 'home', true).rail;
+      expect(usesBar(nav), `${nav} disagrees about whether it has a bar`).toBe(draws);
+    }
+    expect(MODES.filter(usesBar)).toEqual(['tabs', 'feed', 'springboard']);
   });
 });

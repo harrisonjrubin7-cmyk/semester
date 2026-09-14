@@ -38,6 +38,14 @@
  */
 
 import type { CourseId } from './types';
+// Type only, so the cycle with `chart.ts` — which reads this file's cells —
+// never exists at runtime.
+import type { SheetChart } from './chart';
+import { namesIn, type NamedRange, type Names, type Pointed } from './names';
+import type { CondRule } from './condfmt';
+import type { DataRule } from './validate';
+import type { SheetFilter } from './filter';
+import type { Pivot } from './pivot';
 // The two factories that moved out of this file, so it can still use them —
 // and re-export them, below, beside the note saying why they left.
 import { NEW_COLS, NEW_ROWS, blankSheet } from './blank';
@@ -64,6 +72,64 @@ export interface Sheet {
   /** How far the grid has been dragged out. Never smaller than what is in it. */
   rows: number;
   cols: number;
+  /**
+   * Rows out of sight — see `lib/filter.ts`.
+   *
+   * A view over the grid and nothing more: the cells it hides are still
+   * there, still named by every formula that named them, and still counted by
+   * every `SUM` over them. Absent on every sheet nobody has filtered.
+   */
+  filter?: SheetFilter;
+  /**
+   * Colours that follow the numbers — see `lib/condfmt.ts`.
+   *
+   * Stored as rules rather than as painted cells, so a mark that changes
+   * changes its colour with it. Absent on every sheet nobody has put a rule
+   * on, which is nearly all of them.
+   */
+  rules?: CondRule[];
+  /**
+   * Blocks of cells drawn as one — see `lib/joined.ts`.
+   *
+   * Ranges rather than a flag on a cell, because a join is a claim about
+   * several cells at once and no one of them owns it. The covered cells are
+   * cleared when the join is made: what is shown has to be what is summed.
+   */
+  joins?: string[];
+  /**
+   * What the cells in a block are allowed to hold — see `lib/validate.ts`.
+   *
+   * Checked on every read and *shown*, never enforced: the grid writes a cell
+   * on every keystroke, so there is no commit to refuse at, and a rule that
+   * could refuse would lose what somebody typed.
+   */
+  checks?: DataRule[];
+  /**
+   * Blocks of cells given a name — see `lib/names.ts`.
+   *
+   * Defined on the sheet that holds the cells and looked up from every sheet,
+   * so `=SUM(Marks)` works from the term sheet. Absent on every sheet nobody
+   * has named anything on.
+   */
+  names?: NamedRange[];
+  /**
+   * The same rows asked a different question — see `lib/pivot.ts`.
+   *
+   * A view, recomputed from the cells, with a button that writes it into the
+   * grid as live formulas rather than as the numbers it happens to show.
+   */
+  pivots?: Pivot[];
+  /**
+   * Pictures of parts of this grid — see `lib/chart.ts`.
+   *
+   * Each holds a *range* and never a copy of the numbers, so a chart is
+   * redrawn from the cells on every render and cannot go stale. Absent on
+   * every sheet nobody has charted, which is most of them.
+   *
+   * The type is imported rather than declared here because the reading, the
+   * drawing and the `.xlsx` all need it and none of them is this file.
+   */
+  charts?: SheetChart[];
   created: number;
   updated: number;
   /**
@@ -121,6 +187,16 @@ export interface CellStyle {
    * combination — sixteen names for four facts.
    */
   edge?: string;
+  /**
+   * Whether long text folds onto more lines instead of running past the edge.
+   *
+   * The one piece of formatting the grid could not simply *style* into place:
+   * a cell is an `<input>`, and an input is a single line by definition — no
+   * CSS makes one wrap. A wrapped cell is drawn as a `<textarea>` instead, and
+   * only a wrapped one, so every other cell on every other sheet keeps exactly
+   * the element it had. See `Cell` in `screens/Sheet.tsx`.
+   */
+  wrap?: boolean;
   /**
    * Type size in points, on Excel's own scale, where 11 is the default.
    *
@@ -413,6 +489,43 @@ export function parseRef(text: string): { row: number; col: number } | null {
 }
 
 /**
+ * A sheet name in front of a reference — `Sheet2!`, `'Q1 marks'!`.
+ *
+ * Two spellings, because one of them cannot carry a space: bare where the
+ * name is an identifier, quoted otherwise, with an apostrophe in the name
+ * doubled. The same two Excel writes, so a formula pasted from a workbook
+ * reads here and a formula written here opens there.
+ *
+ * Exported because `lib/sheetedit.ts` has to recognise one to *leave it
+ * alone*: a row inserted in this grid moves this grid's references and must
+ * not touch a reference into another sheet, and a second pattern over there
+ * would be a second opinion about what a qualifier is.
+ */
+export const QUALIFIER = /^(?:'((?:[^']|'')+)'|([A-Za-z_][A-Za-z0-9_.]*))!/;
+
+/** The sheet named in front of a reference, and how many characters it took. */
+export function readQualifier(text: string): { name: string; length: number } | null {
+  const m = QUALIFIER.exec(text);
+  if (!m) return null;
+  const name = m[1] !== undefined ? m[1].replace(/''/g, "'") : m[2];
+  return { name, length: m[0].length };
+}
+
+/**
+ * The other way, quoted exactly when it has to be.
+ *
+ * A name that is not an identifier needs quotes, and so does one that reads
+ * as a cell address: a sheet somebody called `A1` written bare gives
+ * `A1!B2`, which is a sheet called A1 to this reader and to Excel — but it is
+ * the shape a typo in `A1:B2` takes, and a formula nobody can tell apart from
+ * a mistake is one nobody will trust. Quoted, it is unambiguous on the page.
+ */
+export function writeQualifier(name: string): string {
+  const plain = /^[A-Za-z_][A-Za-z0-9_.]*$/.test(name) && !parseRef(name);
+  return plain ? `${name}!` : `'${name.replace(/'/g, "''")}'!`;
+}
+
+/**
  * How many rows and columns a range covers.
  *
  * `expand` flattens `A1:C4` to twelve addresses reading across then down, and
@@ -488,11 +601,86 @@ export type Cells = Record<string, string>;
 export interface Ctx {
   /** Milliseconds since the Unix epoch — the instant this sheet is read at. */
   now: number;
+  /**
+   * The other sheets a formula here may reach, by name. Absent means none.
+   *
+   * A sheet read on its own — a test, an export of one tab, the thumbnail on
+   * the shelf — has no book, and `Sheet2!A1` in it answers `#REF!`. That is
+   * the right answer for a reading that genuinely cannot see Sheet2, and it
+   * is why the book is passed in rather than reached for: nothing in this
+   * file knows what other sheets exist, and the day it does is the day the
+   * engine stops being a function of its arguments.
+   */
+  book?: Book;
+  /**
+   * Which sheet is being read, normalised. Empty outside a book.
+   *
+   * Only the cycle check uses it, and it is the whole of what makes the cycle
+   * check right across sheets: `A1` on two sheets is two cells, and a path
+   * keyed by the address alone reports `Sheet1!A1 → Sheet2!A1` as a cycle
+   * when it is an ordinary reference.
+   */
+  here?: string;
+  /**
+   * Blocks of cells that have been given a name — see `lib/names.ts`.
+   *
+   * Resolved before the first cell is read rather than looked up per formula:
+   * a name is a fact about the book, not about a cell, and re-deriving it
+   * inside `evaluate` would walk every sheet once per reference.
+   */
+  names?: Names;
+}
+
+/**
+ * Every sheet a formula may reach, by the name it is reached under.
+ *
+ * `null` rather than a grid where **two sheets answer to one name**. Tab names
+ * in a workbook are unique; titles here are free text, and two sheets called
+ * "Budget" is an ordinary accident rather than a thing to forbid. Picking one
+ * of them would be a reference that silently reads the wrong grid, which is
+ * the fault this whole file is arranged against — so the name resolves to
+ * nothing and the formula says `#REF!`, which is a thing somebody can see and
+ * fix by renaming a tab.
+ */
+export type Book = Record<string, Cells | null>;
+
+/** A sheet name as the book keys it: trimmed, and case-insensitive as in Excel. */
+export function sheetKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+export interface Named {
+  title: string;
+  cells: Cells;
+  /** Names this sheet defines. Looked up from every sheet — see `lib/names.ts`. */
+  names?: NamedRange[];
+}
+
+/** The book a set of sheets makes. Ambiguous names resolve to nothing — see {@link Book}. */
+export function bookOf(sheets: readonly Named[]): Book {
+  const out: Book = {};
+  for (const sheet of sheets) {
+    const k = sheetKey(sheet.title);
+    if (!k) continue;
+    out[k] = k in out ? null : sheet.cells;
+  }
+  return out;
 }
 
 /** A context around one instant. Called once per render, not once per cell. */
 export function clock(now: number = Date.now()): Ctx {
   return { now };
+}
+
+/**
+ * The context for reading one sheet of several.
+ *
+ * One call, so a caller cannot set the book and forget `here` — which would
+ * cost nothing visible until a sheet referred to itself by name, and then
+ * cost a `#DEEP!` where a `#CYCLE!` belongs.
+ */
+export function reading(sheets: readonly Named[], current: string, now: number = Date.now()): Ctx {
+  return { now, book: bookOf(sheets), here: sheetKey(current), names: namesIn(sheets) };
 }
 
 /**
@@ -566,6 +754,23 @@ function key(address: string): string {
   return where ? ref(where.row, where.col) : address.toUpperCase();
 }
 
+/**
+ * The same address, as a step on the path the cycle check walks.
+ *
+ * Deliberately *not* {@link key}, which is how the cell map is keyed — and
+ * writing them as one function was a real bug for the length of one test run:
+ * the qualified form went to `cells[...]`, every lookup missed, and every
+ * formula in the app came back as an empty cell. Two jobs, two functions.
+ *
+ * Qualified only inside a book. Outside one there is a single grid, the prefix
+ * would be the same on every entry, and leaving it off keeps the set exactly
+ * what it has always been.
+ */
+function step(address: string, here = ''): string {
+  const local = key(address);
+  return here ? `${here}!${local}` : local;
+}
+
 export function evaluate(
   cells: Cells,
   address: string,
@@ -573,7 +778,8 @@ export function evaluate(
   ctx: Ctx = clock(),
 ): Value {
   const key_ = key(address);
-  if (seen.has(key_)) return '#CYCLE!';
+  const path = step(address, ctx.here);
+  if (seen.has(path)) return '#CYCLE!';
   // Not a cycle, just a chain longer than this can safely stand on. Said in
   // the cell, because the alternative is the screen.
   if (seen.size >= DEEPEST) return '#DEEP!';
@@ -601,7 +807,7 @@ export function evaluate(
     return raw;
   }
   const next = new Set(seen);
-  next.add(key_);
+  next.add(path);
   return run(raw.trimStart().slice(1), cells, next, ctx);
 }
 
@@ -661,7 +867,8 @@ export interface Group {
 type Token =
   | { kind: 'num'; value: number }
   | { kind: 'str'; value: string }
-  | { kind: 'ref'; value: string }
+  /** `sheet` is the name written in front of it, or absent for this grid. */
+  | { kind: 'ref'; value: string; sheet?: string }
   | { kind: 'name'; value: string }
   /** An error written into the formula itself — `=#REF!+1`. See {@link lex}. */
   | { kind: 'err'; value: Err }
@@ -708,6 +915,29 @@ function lex(text: string): Token[] | null {
       i += num[0].length;
       continue;
     }
+    /*
+     * A reference into another sheet, taken whole.
+     *
+     * Before the word rule and not after it, because the word rule would take
+     * `Sheet2` as a function name, leave `!` to the operator table, find it is
+     * not there and refuse the whole formula — which is what `=Sheet2!A1`
+     * used to do: `#VALUE!`, for a formula that is not malformed.
+     *
+     * The address after the `!` has to parse, so `Sheet2!hello` is not a
+     * qualified reference and falls through to the word rule, where `Sheet2`
+     * becomes a name and the formula is refused as it was before. A qualifier
+     * on its own is not a value.
+     */
+    const qualifier = readQualifier(text.slice(i));
+    if (qualifier) {
+      const rest = text.slice(i + qualifier.length);
+      const address = /^\$?[A-Za-z]{1,2}\$?\d{1,4}/.exec(rest);
+      if (address && parseRef(address[0])) {
+        out.push({ kind: 'ref', value: address[0], sheet: qualifier.name });
+        i += qualifier.length + address[0].length;
+        continue;
+      }
+    }
     const word = /^\$?[A-Za-z][A-Za-z0-9_.]*\$?\d*/.exec(text.slice(i));
     if (word) {
       const w = word[0];
@@ -747,6 +977,38 @@ class Parser {
 
   private peek(): Token | undefined {
     return this.tokens[this.at];
+  }
+
+  /**
+   * What a bare word points at, when it is a name rather than a call.
+   *
+   * `undefined` for a word nothing has been named — which is the old answer,
+   * `#NAME?`, and the right one: the formula mentions something that does not
+   * exist. `null` where two sheets have claimed the same name, which is
+   * `#REF!` for the same reason a duplicate sheet title is.
+   */
+  private named(word: string): Pointed | null | undefined {
+    return this.ctx.names?.[word.toLowerCase()];
+  }
+
+  /**
+   * The grid a reference names, and the context for reading it.
+   *
+   * Unqualified is this grid, which is every reference in every sheet that
+   * does not reach across and is why this returns the same two objects it was
+   * given in that case. A qualifier is looked up in the book, and three things
+   * answer `#REF!` rather than a value: no book at all (a sheet being read on
+   * its own), a name no sheet has, and a name two sheets have — see
+   * {@link Book} for why the third is not resolved by picking one.
+   */
+  private grid(sheet: string | undefined): { cells: Cells; ctx: Ctx } | Err {
+    if (sheet === undefined) return { cells: this.cells, ctx: this.ctx };
+    const book = this.ctx.book;
+    if (!book) return '#REF!';
+    const k = sheetKey(sheet);
+    const found = book[k];
+    if (!found) return '#REF!';
+    return { cells: found, ctx: { ...this.ctx, here: k } };
   }
 
   private eat(value: string): boolean {
@@ -914,13 +1176,31 @@ class Parser {
         this.at += 1;
         return '#VALUE!';
       }
-      return evaluate(this.cells, t.value, this.seen, this.ctx);
+      const where = this.grid(t.sheet);
+      if (isError(where)) return where;
+      return evaluate(where.cells, t.value, this.seen, where.ctx);
     }
     if (t.kind === 'name') {
       this.at += 1;
       if (t.value === 'TRUE') return true;
       if (t.value === 'FALSE') return false;
-      if (!this.eat('(')) return '#NAME?';
+      if (!this.eat('(')) {
+        /*
+         * A name, outside a function.
+         *
+         * One cell is a value — `=Rate*2` is the whole point of naming F1.
+         * A block is not: `=Marks` names nine numbers and has no single
+         * answer, and it is refused for exactly the reason a bare `A1:A9` is
+         * rather than quietly taken as its first cell.
+         */
+        const found = this.named(t.value);
+        if (found === undefined) return '#NAME?';
+        if (found === null) return '#REF!';
+        if (found.from !== found.to) return '#VALUE!';
+        const where = this.grid(found.sheet || undefined);
+        if (isError(where)) return where;
+        return evaluate(where.cells, found.from, this.seen, where.ctx);
+      }
       const groups = this.arguments();
       if (isError(groups)) return groups;
       return apply(t.value, groups, this.ctx);
@@ -949,15 +1229,57 @@ class Parser {
     for (;;) {
       const t = this.peek();
       const after = this.tokens[this.at + 1];
+      /*
+       * A name standing for a block, as an argument.
+       *
+       * `=SUM(Marks)` has to arrive as nine values shaped 9×1, the same as
+       * `=SUM('Q1 marks'!B2:B9)` does — a name that flattened to one value
+       * would make every total over one wrong rather than refused. Only where
+       * the word is not a call: `SUM(` is a function however many names share
+       * its spelling.
+       */
+      if (t && t.kind === 'name' && !(after && after.kind === 'op' && after.value === '(')) {
+        const found = this.named(t.value);
+        if (found === null) return '#REF!';
+        if (found) {
+          this.at += 1;
+          const where = this.grid(found.sheet || undefined);
+          if (isError(where)) return where;
+          const block = expand(found.from, found.to);
+          if (block.length === 0) return '#REF!';
+          const shape = span(found.from, found.to);
+          out.push({
+            values: block.map((address) => evaluate(where.cells, address, this.seen, where.ctx)),
+            rows: shape.rows,
+            cols: shape.cols,
+          });
+          if (this.eat(',')) continue;
+          return this.eat(')') ? out : '#VALUE!';
+        }
+      }
       if (t && t.kind === 'ref' && after && after.kind === 'op' && after.value === ':') {
         const end = this.tokens[this.at + 2];
         if (!end || end.kind !== 'ref') return '#REF!';
+        /*
+         * One sheet per range, named once at the front.
+         *
+         * `Sheet2!A1:A5` is how a workbook writes it and the only spelling
+         * Excel accepts. `Sheet2!A1:Sheet3!A5` is not a range — it is two
+         * corners on two grids, which names no rectangle — and repeating the
+         * same name on both ends is harmless and is allowed. Anything else is
+         * `#REF!` rather than a guess about which sheet was meant.
+         */
+        if (end.sheet !== undefined && sheetKey(end.sheet) !== sheetKey(t.sheet ?? '')) {
+          return '#REF!';
+        }
         this.at += 3;
+        const where = this.grid(t.sheet);
+        if (isError(where)) return where;
         const range = expand(t.value, end.value);
         if (range.length === 0) return '#REF!';
         const shape = span(t.value, end.value);
         out.push({
-          values: range.map((address) => evaluate(this.cells, address, this.seen, this.ctx)),
+          values: range.map((address) => evaluate(where.cells, address, this.seen, where.ctx)),
           rows: shape.rows,
           cols: shape.cols,
         });
@@ -1637,9 +1959,12 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       return ns.length ? mean(ns) : '#DIV/0!';
     }
     case 'COUNTIFS':
-    case 'SUMIFS': {
-      // COUNTIFS is (range, criterion) pairs from the start; SUMIFS puts the
-      // range being added up first and the pairs after it.
+    case 'SUMIFS':
+    case 'AVERAGEIFS':
+    case 'MINIFS':
+    case 'MAXIFS': {
+      // COUNTIFS is (range, criterion) pairs from the start; the other four
+      // put the range being measured first and the pairs after it.
       const counting = name === 'COUNTIFS';
       const pairs = counting ? groups : groups.slice(1);
       if (pairs.length < 2) return '#VALUE!';
@@ -1650,7 +1975,18 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       const totals = groups[0];
       if (!totals || totals.values.length !== length) return '#VALUE!';
       const ns = numbers(rows.map((r) => totals.values[r]));
-      return isError(ns) ? ns : sum(ns);
+      if (isError(ns)) return ns;
+      if (name === 'SUMIFS') return sum(ns);
+      /*
+       * Nothing matched is `#DIV/0!` for an average and `0` for a min or a
+       * max, which is Excel's answer to each and is the honest pair: an
+       * average of no numbers is a division by none, and a smallest of no
+       * numbers is a claim nobody should read as a measurement — but it is the
+       * answer people's sheets are built around.
+       */
+      if (name === 'AVERAGEIFS') return ns.length ? sum(ns) / ns.length : '#DIV/0!';
+      if (!ns.length) return 0;
+      return name === 'MINIFS' ? Math.min(...ns) : Math.max(...ns);
     }
     default:
       break;
@@ -1959,20 +2295,27 @@ export function weighted(scores: string, weights: string): string {
 
 // ── The sheet as a whole ─────────────────────────────────────────────────
 
-/** Every cell's displayed value, as a grid of strings the size of the sheet. */
-export function grid(sheet: Sheet): string[][] {
+/**
+ * Every cell's displayed value, as a grid of strings the size of the sheet.
+ *
+ * The context is worth passing where the sheet may reach into another: without
+ * it `Sheet2!B1` reads `#REF!` here while reading a number on the screen, and
+ * an export or a thumbnail that disagrees with the grid it is a picture of is
+ * worse than one that is merely plain.
+ */
+export function grid(sheet: Sheet, ctx: Ctx = clock()): string[][] {
   const out: string[][] = [];
   for (let r = 0; r < sheet.rows; r += 1) {
     const row: string[] = [];
-    for (let c = 0; c < sheet.cols; c += 1) row.push(display(sheet.cells, ref(r, c)));
+    for (let c = 0; c < sheet.cols; c += 1) row.push(display(sheet.cells, ref(r, c), ctx));
     out.push(row);
   }
   return out;
 }
 
 /** The same, trimmed to what is actually filled — what an export should carry. */
-export function filled(sheet: Sheet): string[][] {
-  const rows = grid(sheet);
+export function filled(sheet: Sheet, ctx: Ctx = clock()): string[][] {
+  const rows = grid(sheet, ctx);
   let lastRow = -1;
   let lastCol = -1;
   rows.forEach((row, r) => {

@@ -73,10 +73,11 @@ import type { School } from '../lib/school';
 import { said as refreshSaid } from '../lib/refresh';
 import {
   STORAGE_KEY,
-  SYNCED_KEY,
   initialEphemeral,
   loadPersisted,
+  markSynced,
   pickPersisted,
+  syncedAt,
   type Action,
   type Persisted,
   type State,
@@ -667,7 +668,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
     try {
       const remote = await pull(account.id);
-      const localStamp = Number(localStorage.getItem(SYNCED_KEY) ?? 0);
+      const localStamp = syncedAt();
       const hasRemote = remote.state !== null || remote.courses.length > 0;
 
       /*
@@ -707,7 +708,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             courses: remote.courses.map((c) => c.data as CourseModule),
           },
         });
-        localStorage.setItem(SYNCED_KEY, String(remote.updated));
+        markSynced(remote.updated);
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
@@ -754,7 +755,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         removed,
       )
         .then(() => {
-          localStorage.setItem(SYNCED_KEY, String(Date.now()));
+          markSynced(Date.now());
           setSync({ status: 'synced', at: Date.now(), error: '' });
           if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
         })
@@ -1103,7 +1104,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (choice === 'device') {
         // Nothing to take. The push effect sends this device up on its next
         // run, which is what makes it the account's copy too.
-        localStorage.setItem(SYNCED_KEY, String(Date.now()));
+        markSynced(Date.now());
       } else {
         if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
         dispatch({
@@ -1113,7 +1114,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             courses: remote.courses.map((c) => c.data as CourseModule),
           },
         });
-        localStorage.setItem(SYNCED_KEY, String(remote.updated));
+        markSynced(remote.updated);
       }
       setAsking(null);
     },

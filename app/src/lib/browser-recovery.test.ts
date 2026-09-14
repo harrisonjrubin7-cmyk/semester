@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import {beforeEach,expect,it} from 'vitest';
 import {MAX_TABS,dump,load,placeFor,type Where} from './browser';
-import {forgetStrip,strip,here,openTab,openInNew,closeTab,reopenClosed,lastClosed,record,recordSearch,pickTab} from './browser.hook';
+import {forgetStrip,strip,here,openTab,openInNew,closeTab,reopenClosed,lastClosed,record,recordSearch,pickTab,groupTab,openTabIn} from './browser.hook';
 
 beforeEach(()=>{localStorage.clear();forgetStrip();});
 it('restores a closed document with its identity, destination, search and original position',()=>{
@@ -62,4 +62,45 @@ it('restores a call room without starting a different room',()=>{
   const place=placeFor('call',where);expect(place).toEqual([{type:'openCall',code:'study-room'}]);
   openInNew('call','Call',place);expect(load(dump(strip()),()=>true).tabs[1].place).toEqual(place);
   expect(placeFor('call',{...where,callCode:''})).toEqual([{type:'go',screen:'call'}]);
+});
+
+it('puts a reopened tab back without splitting a group it lands in the middle of',()=>{
+  // The strip moves on while a tab is closed, so the seat it left from can be
+  // the middle of somebody else's run by the time it comes back. A group is
+  // one unbroken run or it is a colour drawn twice with somebody else's tab
+  // between the halves.
+  record('home','Today',[{type:'go',screen:'home'}]);
+  openInNew('write','A',[{type:'openDocument',id:'a'}]);
+  openInNew('write','B',[{type:'openDocument',id:'b'}]);
+  openInNew('write','C',[{type:'openDocument',id:'c'}]);
+  closeTab(2); // B, from seat two
+  pickTab(1);groupTab(1,'Essay');
+  const id=strip().groups[0].id;
+  openTabIn(id);openTabIn(id); // the run now covers seats one to three
+  expect(reopenClosed()?.title).toBe('B');
+  const run=strip().tabs.flatMap((t,i)=>t.group===id?[i]:[]);
+  expect(run).toEqual(run.map((_,i)=>run[0]+i));
+  expect(strip().tabs.map(t=>t.title)).toContain('B');
+});
+it('reopens a tab whose group has since gone, without a dead group id',()=>{
+  record('home','Today',[{type:'go',screen:'home'}]);
+  openInNew('write','My paper',[{type:'openDocument',id:'paper'}]);
+  groupTab(strip().at,'Essay');
+  closeTab(strip().at);
+  expect(strip().groups).toHaveLength(0);
+  const back=reopenClosed();
+  expect(back?.title).toBe('My paper');
+  expect(strip().tabs.every(t=>!t.group||strip().groups.some(g=>g.id===t.group))).toBe(true);
+  expect(strip().tabs.find(t=>t.title==='My paper')?.group).toBeUndefined();
+});
+it('refuses a new tab in a group when the strip is full, rather than moving the one you are on',()=>{
+  record('home','Today',[{type:'go',screen:'home'}]);
+  openTab();groupTab(strip().at,'Essay');
+  const id=strip().groups[0].id;
+  while(strip().tabs.length<MAX_TABS)openTab();
+  pickTab(0);
+  const before=strip();
+  expect(openTabIn(id)).toBe(false);
+  expect(strip()).toBe(before);
+  expect(here().group).toBeUndefined();
 });

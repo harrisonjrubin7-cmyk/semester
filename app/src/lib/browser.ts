@@ -38,6 +38,7 @@
  * tested without a DOM and cannot be quietly broken by a storage failure.
  */
 
+import { nearAny } from './near';
 import type { CourseId, Screen, StudyMode } from './types';
 import type { Action } from '../state/shape';
 
@@ -69,6 +70,18 @@ export interface AppTab {
    * nobody has typed in has nothing to remember.
    */
   query?: string;
+  /**
+   * Kept at the front of the strip, as its glyph alone.
+   *
+   * The four or five places somebody is in every day — Today, the calendar,
+   * the guide they are working through — are not "open" in the sense the rest
+   * of the strip means it: they are never finished with, and they are what
+   * everything else is opened *next to*. A pinned tab says so: it takes a
+   * glyph's width rather than a name's, it sits before everything, and it has
+   * no cross on it, because closing one by a thumb landing an inch left of
+   * where it meant to is the whole reason browsers took the cross away.
+   */
+  pinned?: boolean;
   /**
    * The group this tab belongs to, if it is in one.
    *
@@ -309,7 +322,10 @@ export function add(strip: Strip, id: string = tabId()): Strip {
    * essay group is nearly always another tab about the essay anyway.
    */
   const from = strip.tabs[clamp(strip, strip.at)];
-  const born = from?.group ? { ...fresh(id), group: from.group } : fresh(id);
+  // Beside a *pinned* tab is not pinned, and is in no group either: a new tab
+  // is a place nobody has decided about yet, and pinning is a decision.
+  // `tidy` puts it at the head of the working strip.
+  const born = from?.group && !from.pinned ? { ...fresh(id), group: from.group } : fresh(id);
   return { ...strip, tabs: [...strip.tabs.slice(0, at), born, ...strip.tabs.slice(at)], at };
 }
 
@@ -334,24 +350,48 @@ export function close(strip: Strip, which: number): Strip {
 }
 
 /**
+ * The tab you are on is never folded away.
+ *
+ * A strip whose current tab sits inside a collapsed group is a strip that
+ * draws nothing for the page filling the window — the run is its name and a
+ * count, and the tab it is counting is the one you are reading. That is not a
+ * fold, it is the strip losing track of where you are.
+ *
+ * It is easier to reach than it looks. Put the tab you are on into a group
+ * that is already folded, close a tab and land inside one, or read back a
+ * strip an older build wrote: none of those is `select`, and all three used to
+ * end here. So the rule is held about the strip rather than at each of the
+ * ways in — `tidy` runs it, and `tidy` is what every structural change goes
+ * through.
+ *
+ * `collapse` is the one operation that must not run it, and does not: folding
+ * the group you are working in moves you *out* first, which is the same rule
+ * answered the other way round.
+ *
+ * A strip that already holds comes back by reference, so this can sit on the
+ * paths that run on every navigation.
+ */
+function reveal(strip: Strip): Strip {
+  const held = strip.tabs[clamp(strip, strip.at)]?.group;
+  const shut = held ? strip.groups.find((g) => g.id === held && g.collapsed) : undefined;
+  if (!shut) return strip;
+  return {
+    ...strip,
+    groups: strip.groups.map((g) => (g.id === shut.id ? { ...g, collapsed: false } : g)),
+  };
+}
+
+/**
  * Go to a tab. Out-of-range is clamped rather than thrown: it is a click.
  *
- * A tab inside a collapsed group opens the group on the way. Nothing else can
- * happen: its page is about to be the whole window, and a strip claiming it is
- * folded away would be lying about where you are. This is also what makes the
- * keyboard and the restored-strip cases safe, where the landing is not a click
- * on something visible.
+ * A tab inside a collapsed group opens the group on the way — `reveal`, which
+ * is the same rule the rest of the strip is held to. Nothing else can happen:
+ * its page is about to be the whole window, and a strip claiming it is folded
+ * away would be lying about where you are.
  */
 export function select(strip: Strip, which: number): Strip {
   const at = clamp(strip, which);
-  const held = strip.tabs[at]?.group;
-  const shut = held ? strip.groups.find((g) => g.id === held && g.collapsed) : undefined;
-  if (!shut) return { ...strip, at };
-  return {
-    ...strip,
-    at,
-    groups: strip.groups.map((g) => (g.id === shut.id ? { ...g, collapsed: false } : g)),
-  };
+  return reveal(at === strip.at ? strip : { ...strip, at });
 }
 
 /**
@@ -426,11 +466,25 @@ export function tidy(strip: Strip): Strip {
   const named = new Set(strip.groups.map((g) => g.id));
   // An id no group answers to is dropped rather than repaired: it came from
   // an older build or a half-written store, and the honest reading of a tab
-  // pointing at nothing is a tab in no group.
-  const tabs = strip.tabs.map((t) => (t.group && !named.has(t.group) ? loose(t) : t));
+  // pointing at nothing is a tab in no group. A pinned tab is in none either:
+  // it is kept apart from the working strip, and a group with one end in the
+  // pinned run would be a group drawn in two places.
+  const tabs = strip.tabs.map((t) =>
+    t.group && (t.pinned || !named.has(t.group)) ? loose(t) : t,
+  );
 
   const order: AppTab[] = [];
   const done = new Set<string>();
+  // The pinned ones first, in the order they were pinned in. This is the
+  // second invariant the strip holds: everything pinned is before everything
+  // that is not, so the four places you are always in stay where your eye
+  // goes for them however the rest of the strip churns.
+  for (const tab of tabs) {
+    if (tab.pinned) {
+      order.push(tab);
+      done.add(tab.id);
+    }
+  }
   for (const tab of tabs) {
     if (done.has(tab.id)) continue;
     if (!tab.group) {
@@ -457,13 +511,46 @@ export function tidy(strip: Strip): Strip {
     order.length === strip.tabs.length &&
     order.every((t, i) => t === strip.tabs[i]) &&
     at === strip.at;
-  return same ? strip : { tabs: order, at, groups };
+  // And the third rule, which is about where you are standing rather than
+  // about the order: **the tab you are on is never folded away**. See
+  // `reveal`. Last, because it reads the strip as this function leaves it.
+  return reveal(same ? strip : { tabs: order, at, groups });
 }
 
 /** The same tab, out of whatever group it was in. */
 function loose(tab: AppTab): AppTab {
   const { group: _out, ...rest } = tab;
   return rest;
+}
+
+/**
+ * Pin a tab, or let it go back to the working strip.
+ *
+ * Pinning takes a tab out of its group on the way — a group is a piece of
+ * work with several tabs in it, and a pinned tab is the opposite of that, one
+ * place kept to hand. `tidy` would do it anyway; doing it here is what makes
+ * the reason legible at the call rather than inferred from an invariant.
+ *
+ * Nothing else moves. The tab that is on is still on, wherever `tidy` has put
+ * it: pinning the thing you are looking at must not take you somewhere else.
+ */
+export function pin(strip: Strip, which: number, pinned = true): Strip {
+  const tab = strip.tabs[which];
+  if (!tab || Boolean(tab.pinned) === pinned) return strip;
+  const tabs = [...strip.tabs];
+  tabs[which] = pinned ? { ...loose(tab), pinned: true } : unpinned(tab);
+  return tidy({ ...strip, tabs });
+}
+
+/** The same tab, no longer pinned — the key removed rather than set false. */
+function unpinned(tab: AppTab): AppTab {
+  const { pinned: _out, ...rest } = tab;
+  return rest;
+}
+
+/** How many tabs are pinned, which is where the working strip begins. */
+export function pinnedCount(strip: Strip): number {
+  return strip.tabs.filter((t) => t.pinned).length;
 }
 
 /**
@@ -502,6 +589,12 @@ function loose(tab: AppTab): AppTab {
  * `lib/arrange.ts` hands back — the one implementation of "it moved" this app
  * has. Ids it does not name keep their places behind the ones it does, so a
  * stale order cannot lose a tab.
+ *
+ * Pinning is not something a drag decides. A pinned tab dragged along the
+ * strip stays pinned and `tidy` keeps it among the pinned ones; an unpinned
+ * one let go among them lands at the head of the working strip instead, which
+ * is the nearest place it can be. Pinning is a decision with a menu item on
+ * it, and one a thumb should not be able to make by sliding an inch too far.
  */
 export function rearrange(strip: Strip, order: string[], moved: string): Strip {
   const by = new Map(strip.tabs.map((t) => [t.id, t]));
@@ -520,7 +613,7 @@ export function rearrange(strip: Strip, order: string[], moved: string): Strip {
   for (const tab of strip.tabs) if (!seen.has(tab.id)) tabs.push(tab);
 
   const at = tabs.findIndex((t) => t.id === moved);
-  if (at !== -1) {
+  if (at !== -1 && !tabs[at].pinned) {
     const own = tabs[at].group;
     const left = tabs[at - 1]?.group;
     const right = tabs[at + 1]?.group;
@@ -612,7 +705,8 @@ export function toneGroup(strip: Strip, id: string, tone: number): Strip {
  * right. A strip that is nothing but this one group has nowhere to move to
  * and gets a new tab, which is the same answer `close` gives for the same
  * reason: the app always has a page, and the page it invents is the search
- * page.
+ * page. Unless the strip is full, in which case the fold does not happen:
+ * there is no page to invent and no tab this may take instead.
  */
 export function collapse(strip: Strip, id: string, shut: boolean): Strip {
   const group = strip.groups.find((g) => g.id === id);
@@ -627,10 +721,18 @@ export function collapse(strip: Strip, id: string, shut: boolean): Strip {
     }
     return -1;
   };
-  const to = out(at + 1, 1) === -1 ? out(at - 1, -1) : out(at + 1, 1);
+  const right = out(at + 1, 1);
+  const to = right === -1 ? out(at - 1, -1) : right;
   if (to !== -1) return { ...strip, groups, at: to };
-  const room = strip.tabs.length < MAX_TABS ? strip.tabs : strip.tabs.slice(1);
-  return { tabs: [...room, fresh()], at: room.length, groups };
+  /*
+   * Nowhere to stand, so the strip invents a page — and a full strip refuses
+   * instead, which is the answer `add` gives for the same reason. It used to
+   * drop the leftmost tab to make room here, which is deletion wearing the
+   * word "fold": the tab that went was a page somebody opened, and folding a
+   * group is not consent to lose one.
+   */
+  if (strip.tabs.length >= MAX_TABS) return strip;
+  return { tabs: [...strip.tabs, fresh()], at: strip.tabs.length, groups };
 }
 
 /** Undo the grouping. The tabs stay open and stay where they are. */
@@ -703,6 +805,48 @@ export function lanes(strip: Strip): Lane[] {
     else out.push({ group, seats: [{ tab, at: i }] });
   }
   return out;
+}
+
+/**
+ * Finding a tab by name, which a strip of a hundred cannot do by eye.
+ *
+ * The cap is high enough now that the strip is a place to *keep* tabs rather
+ * than a place to read them all — and a row you have to scroll sideways
+ * through is not a way to get back to the thing you were reading an hour ago.
+ * This is the other half of that: type two words and go.
+ *
+ * Matched against the tab's name and the name of the group it is in, because
+ * "essay" is as likely to be the group as the tab. Exact matches come before
+ * near misses and both keep the strip's own order — the pinned ones first,
+ * then the rest as they sit — so the list reads as the strip filtered rather
+ * than as a ranking nobody asked for.
+ *
+ * Typos are the app's own `nearAny`, the same tolerance the record search has,
+ * so `calender` finds the calendar tab here exactly as it does everywhere
+ * else. An empty query is every tab: opening the list with nothing typed is
+ * how you see what you have got.
+ */
+export interface Found {
+  seat: Seat;
+  /** The group it is in, for the list to say which work it belongs to. */
+  group: TabGroup | null;
+}
+
+export function findTabs(strip: Strip, query: string): Found[] {
+  const seats: Found[] = strip.tabs.map((tab, at) => ({
+    seat: { tab, at },
+    group: tab.group ? (strip.groups.find((g) => g.id === tab.group) ?? null) : null,
+  }));
+  const typed = query.trim().toLowerCase();
+  if (!typed) return seats;
+
+  const words = typed.split(/\s+/).filter(Boolean);
+  const said = (f: Found) => `${f.seat.tab.title} ${f.group?.name ?? ''}`.toLowerCase();
+  const hits = seats.filter((f) => words.every((w) => said(f).includes(w)));
+  const near = seats.filter(
+    (f) => !hits.includes(f) && words.every((w) => said(f).includes(w) || nearAny(w, said(f))),
+  );
+  return [...hits, ...near];
 }
 
 /** Where the strip is kept between sessions. */
@@ -793,6 +937,7 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
         title: typeof tab.title === 'string' && tab.title ? tab.title : screen,
         ...(typeof tab.query === 'string' && tab.query ? { query: tab.query } : {}),
         ...(typeof tab.group === 'string' && tab.group ? { group: tab.group } : {}),
+        ...(tab.pinned === true ? { pinned: true } : {}),
         // A tab whose place did not survive the check still knows its screen,
         // so it lands you there rather than nowhere. Losing the deadline you
         // had open is a smaller failure than a tab that does nothing.

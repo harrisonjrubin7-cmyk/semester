@@ -90,6 +90,28 @@ export type Line =
    * one list takes every kind of thing somebody writes, whatever draws it.
    */
   | { kind: 'surface'; body: Node }
+  /**
+   * `(y, -x)` — a vector at every point of the window.
+   *
+   * The same brackets as a point and as a parametric curve, told apart by the
+   * same rule: the letters in it. `t` makes it a path, `x` or `y` makes it a
+   * field — which is the picture a phase diagram and a flow are — and neither
+   * makes it the fixed point it looks like.
+   */
+  | { kind: 'field'; x: Node; y: Node }
+  /**
+   * `y' = x + y` — how fast y changes at every point, rather than what it is.
+   *
+   * Drawn as the slope field and the solutions through it. Solved by walking,
+   * never symbolically: see `lib/ode.ts`.
+   */
+  | { kind: 'ode'; body: Node; of: 'x' | 'y'; order: 1 | 2 }
+  /**
+   * `y(0) = 1` — where a solution is known to pass, which picks one out of the
+   * family. `y'(0) = 0` is the same thing for the rate, which is the second
+   * condition a second-order equation needs.
+   */
+  | { kind: 'start'; of: 'x' | 'y'; rate: boolean; at: Node; value: Node }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -110,6 +132,20 @@ export const TURNS: readonly number[] = [1, 2, 4, 6, 12];
 // ── Reading a line of the list ───────────────────────────────────────────
 
 const INEQUALITY = /(<=|>=|≤|≥|≠|<|>|\\le\b|\\ge\b|\\neq?\b|\\lt\b|\\gt\b)/;
+
+/**
+ * `y'`, `dy/dx` and `\frac{dy}{dx}` on the left of an `=`: a rate, not a product.
+ *
+ * Read off the text rather than through the expression parser, because none of
+ * the three is an expression: an apostrophe is not an operator, and `dy/dx`
+ * through the parser is d times y over d times x, which is 1 and is not what
+ * anybody wrote.
+ */
+const RATE =
+  /^\s*(?:([xy])\s*('{1,2})|d(\^?2\s*)?([xy])\s*\/\s*d\s*[xt](\^?2)?|\\frac\s*\{\s*d(?:\^?2)?\s*([xy])\s*\}\s*\{\s*d\s*[xt](?:\^?2)?\s*\})\s*$/;
+
+/** `y(0)`, and `y'(0)` for the rate: where a solution is known to pass. */
+const START = /^\s*([xy])\s*('?)\s*\(([^()]*)\)\s*$/;
 
 /** `f(x)` and `g(x, y)` on the left of an `=`: a definition, not a product. */
 const DEFINES = /^\s*([A-Za-z][A-Za-z0-9]*)\s*\(\s*([A-Za-z][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z][A-Za-z0-9_]*)*)\s*\)\s*$/;
@@ -197,11 +233,20 @@ export function readLine(source: string): Line {
     const y = node(point[1]);
     if ('says' in x) return { kind: 'fault', says: x.says };
     if ('says' in y) return { kind: 'fault', says: y.says };
-    // A pair that mentions t is a point that moves, which is a curve. Same
-    // notation as a fixed point, and the t is what tells them apart — which is
-    // how it is written on paper and in every other graphing calculator.
-    const moving = [...free(x.node), ...free(y.node)].includes(TIME);
-    return moving ? { kind: 'parametric', x: x.node, y: y.node } : { kind: 'point', x: x.node, y: y.node };
+    /*
+     * Three things wear these brackets, and the letters inside decide which.
+     *
+     * `t` is a path — a point that moves. `x` or `y` is a field — a vector at
+     * every point of the window, which is the picture a phase diagram and a
+     * flow are. Neither is a fixed point, which is what is left.
+     *
+     * `t` wins where both appear: a path drawn at each point of a field is not
+     * a picture of anything, and the moving point is what was written.
+     */
+    const letters = [...free(x.node), ...free(y.node)];
+    if (letters.includes(TIME)) return { kind: 'parametric', x: x.node, y: y.node };
+    if (letters.includes('x') || letters.includes('y')) return { kind: 'field', x: x.node, y: y.node };
+    return { kind: 'point', x: x.node, y: y.node };
   }
 
   const at = equals(text);
@@ -220,6 +265,27 @@ export function readLine(source: string): Line {
   const defines = DEFINES.exec(left);
   const rhs = node(right);
   if ('says' in rhs) return { kind: 'fault', says: rhs.says };
+
+  const rate = RATE.exec(left);
+  if (rate) {
+    const of = (rate[1] ?? rate[4] ?? rate[6] ?? 'y') as 'x' | 'y';
+    // `y''` and `d^2y/dx^2` are second order; everything else here is first.
+    const order = rate[2] === "''" || rate[3] !== undefined || rate[5] !== undefined || /\^?2/.test(left) ? 2 : 1;
+    return { kind: 'ode', body: rhs.node, of, order: order === 2 ? 2 : 1 };
+  }
+
+  const start = START.exec(left);
+  if (start) {
+    const at = node(start[3]);
+    if ('says' in at) return { kind: 'fault', says: at.says };
+    return {
+      kind: 'start',
+      of: start[1] as 'x' | 'y',
+      rate: start[2] === "'",
+      at: at.node,
+      value: rhs.node,
+    };
+  }
 
   if (defines) {
     return {
@@ -281,7 +347,21 @@ export function missing(line: Line, scope: Scope): string[] {
     case 'polar':
     case 'surface':
       return free(line.body, scope).filter((n) => !has(n));
+    case 'ode':
+      /*
+       * A second-order equation supplies its own rate.
+       *
+       * `y'' = -y - 0.15y'` has `y'` in it as an ordinary quantity and the
+       * walk binds it at every step — so asking somebody to give it a value
+       * would be asking them to fill in the thing being solved for. A
+       * first-order equation supplies no such thing, and a `y'` on its
+       * right-hand side there is a genuine mistake worth reporting.
+       */
+      return free(line.body, scope).filter((n) => !has(n) && !(line.order === 2 && n === "y'"));
+    case 'start':
+      return [...free(line.at, scope), ...free(line.value, scope)].filter((n) => !has(n));
     case 'parametric':
+    case 'field':
     case 'point':
       return [...free(line.x, scope), ...free(line.y, scope)].filter((n) => !has(n));
     case 'value':
@@ -301,6 +381,26 @@ const flat = (v: Val): number[] => (Array.isArray(v) ? v : [v]);
 export interface Drawn {
   paths: Point[][];
   points: Point[];
+  /** A field's arrows, where the line is one. See `lib/fields.ts`. */
+  arrows?: Arrow[];
+  /**
+   * How strongly to draw each path, where they are not all equal.
+   *
+   * Contour lines want this and nothing else does: twelve levels of one
+   * function in one colour are unreadable unless the line says which level it
+   * is. Absent means every path is drawn at full strength.
+   */
+  shades?: number[];
+}
+
+/** One arrow of a field: where it starts, where it points, and the two barbs. */
+export interface Arrow {
+  from: Point;
+  to: Point;
+  /** The two barb ends; the head is drawn as barb → tip → barb. */
+  head: [Point, Point];
+  /** How long this one is against the longest, 0 to 1 — what the ink says. */
+  strength: number;
 }
 
 const EMPTY: Drawn = { paths: [], points: [] };
@@ -894,6 +994,36 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'A saddle',
     says: 'A surface: a height over every point of the floor, turned with a finger.',
     lines: ['z = x^2 - y^2'],
+  },
+  {
+    name: 'A differential equation',
+    says: 'The slope field, and the one solution through a point you name.',
+    lines: ["y' = y - x", 'y(0) = 1'],
+  },
+  {
+    name: 'Growth that levels off',
+    says: 'The logistic curve: fast while there is room, then flat.',
+    lines: ["y' = 0.6 y (1 - y/40)", 'y(0) = 2'],
+  },
+  {
+    name: 'A spring',
+    says: 'Second order: a value and a speed, and the swing they make.',
+    lines: ["y'' = -y - 0.15 y'", 'y(0) = 4', "y'(0) = 0"],
+  },
+  {
+    name: 'Predator and prey',
+    says: 'A system: two quantities driving each other round a loop.',
+    lines: ["x' = x - x y", "y' = x y - y", 'x(0) = 1', 'y(0) = 0.5'],
+  },
+  {
+    name: 'A flow',
+    says: 'A field: which way it pushes at every point, and how hard.',
+    lines: ['(-y, x)'],
+  },
+  {
+    name: 'Supply, demand and where they move',
+    says: 'A phase diagram: prices rise where demand beats supply.',
+    lines: ['(20 - 2x - y, x - 2)'],
   },
   {
     name: 'Discounting',

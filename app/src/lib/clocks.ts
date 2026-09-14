@@ -1,4 +1,4 @@
-import { dateToIso } from './date';
+import { DOW, dateToIso } from './date';
 /**
  * Timers and alarms — the ordinary kind, for anything.
  *
@@ -299,7 +299,6 @@ export function timeLine(minutes: number): string {
   return `${hour}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
 }
 
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 /** "Weekdays", "Every day", "Mon, Wed, Fri", "Once". */
 export function daysLine(days: number[]): string {
@@ -308,7 +307,7 @@ export function daysLine(days: number[]): string {
   if (set.size === 7) return 'Every day';
   if (set.size === 5 && [1, 2, 3, 4, 5].every((d) => set.has(d))) return 'Weekdays';
   if (set.size === 2 && set.has(0) && set.has(6)) return 'Weekends';
-  return [...set].sort().map((d) => DAY_NAMES[d]).join(', ');
+  return [...set].sort().map((d) => DOW[d]).join(', ');
 }
 
 /** "In 7 hours", "In 12 minutes", "Tomorrow, 6:40 AM". */
@@ -328,7 +327,7 @@ export function untilLine(a: Alarm, now: Date): string {
   const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const when = timeLine(a.at);
   if (dateToIso(next) === dateToIso(tomorrow)) return `Tomorrow, ${when}`;
-  return `${DAY_NAMES[next.getDay()]}, ${when}`;
+  return `${DOW[next.getDay()]}, ${when}`;
 }
 
 /** Stop it: rung for today, silent, and off if it was only ever for once. */

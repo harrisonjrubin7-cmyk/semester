@@ -22,18 +22,15 @@ const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 
 /*
- * Where a shared syllabus waits between the POST and the page that reads it.
+ * Where a shared file waits between the worker and the page.
  *
- * Up here with the other two because `activate` has to know about it. Its name
- * is not derived from VERSION and must not be: `src/lib/shared.ts` opens the
- * same cache from the page, and a worker cannot import from the app, so the
- * string is agreed by being written the same in both places. Change one and
- * you change both.
+ * Declared up here rather than beside `stashShared` because `activate` has to
+ * know about it, and `activate` is written above that. It is not one of this
+ * worker's own caches — it is a handover — and the sweep below has to leave it
+ * alone.
  */
 const SHARE_CACHE = 'semester-shared';
-
-/** The three caches this worker owns. Anything else under this origin is not ours. */
-const OURS = [SHELL, MEDIA, SHARE_CACHE];
+const SHARE_KEY = './__shared';
 
 // The worker is served from wherever the app is — '/' locally, '/semester/' on
 // GitHub Pages — so every path it holds is derived from its own location. A
@@ -157,27 +154,26 @@ self.addEventListener('message', (event) => {
   );
 });
 
+/*
+ * Drop the caches a previous version of this worker left, and nothing else.
+ *
+ * `semester-shared` is not one of them. It is the handover slot for a file
+ * somebody shared into the app, it does not carry the version in its name, and
+ * the sweep used to delete it — which matters because `install` calls
+ * `skipWaiting`, so a deploy activates the moment it installs. Share a PDF into
+ * the app while a new build is going out and the worker stashed the file, the
+ * new worker activated, the file was deleted, and the importer opened with its
+ * empty file picker as if nothing had been shared. The same sweep also threw
+ * away a share that was opened and never collected, which `lib/shared.ts`
+ * treats as somebody else's file this device is still holding.
+ */
+const KEEP_CACHES = (key) => key.startsWith(VERSION) || key === SHARE_CACHE;
+
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      /*
-       * Drop the caches of previous versions of this worker, and only those.
-       *
-       * It used to test `!k.startsWith(VERSION)`, which read as "anything that
-       * is not the current version" and meant something else: `semester-shared`
-       * does not start with `semester-v1`, so every activation deleted the
-       * cache holding a syllabus somebody had just shared into the app. The
-       * window is narrow — share, stash, redirect, read — but `skipWaiting()`
-       * on install is exactly what can put an activation inside it, which
-       * makes the first share after a deploy the one that loses the file.
-       *
-       * Naming what we keep rather than pattern-matching what we drop: a list
-       * of three cannot go wrong the way a prefix test did.
-       */
-      .then((keys) =>
-        Promise.all(keys.filter((k) => !OURS.includes(k)).map((k) => caches.delete(k))),
-      )
+      .then((keys) => Promise.all(keys.filter((k) => !KEEP_CACHES(k)).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -197,8 +193,6 @@ const isMedia = (url) =>
  * This is checked before the GET guard below, because it is the one POST this
  * worker has any business answering.
  */
-const SHARE_KEY = './__shared';
-
 async function stashShared(request) {
   try {
     const form = await request.formData();

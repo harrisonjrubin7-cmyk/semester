@@ -14,6 +14,7 @@ import {
   current,
   dissolve,
   dump,
+  findTabs,
   fresh,
   freeTone,
   joinGroup,
@@ -23,6 +24,8 @@ import {
   load,
   makeGroup,
   openBeside,
+  pin,
+  pinnedCount,
   placeFor,
   read,
   rearrange,
@@ -433,6 +436,61 @@ describe('collapsing a group', () => {
     const shut = collapse(grouped(['home', 'calendar', 'study'], [0, 1], 2), 'g', true);
     expect(select(shut, 0).groups[0].collapsed).toBe(false);
   });
+
+  it('refuses rather than dropping somebody\u2019s tab to stand on', () => {
+    // The group is the whole strip and the strip is full, so there is nowhere
+    // to move to and no room for the new tab that would be invented. It used
+    // to take the leftmost tab to pay for one, which is deletion wearing the
+    // word "fold". See `collapse`.
+    const screens = Array.from({ length: MAX_TABS }, () => 'home' as Screen);
+    const whole = grouped(screens, screens.map((_, i) => i), 0);
+    const s = collapse(whole, 'g', true);
+    expect(s).toBe(whole);
+    expect(s.groups[0].collapsed).toBe(false);
+  });
+});
+
+/**
+ * The third invariant: the tab you are on is never folded away.
+ *
+ * Every one of these is a way into the same broken strip — a run drawn as a
+ * name and a count, where the thing being counted is the page filling the
+ * window. It was held in one of the two components that draw the strip and in
+ * neither of the four operations that can cause it. See `reveal`.
+ */
+describe('the tab you are on', () => {
+  it('opens the group it is put into, when that group was folded', () => {
+    const shut = collapse(grouped(['home', 'calendar', 'study'], [0], 2), 'g', true);
+    const s = joinGroup(shut, shut.at, 'g');
+    expect(current(s).screen).toBe('study');
+    expect(s.groups[0].collapsed).toBe(false);
+  });
+
+  it('is not folded away by a tab closing beside it', () => {
+    const shut = collapse(grouped(['home', 'calendar', 'study', 'mine'], [1, 2], 0), 'g', true);
+    const s = close(shut, 0);
+    expect(s.groups[0].collapsed).toBe(false);
+  });
+
+  it('comes back visible from a store that folded it away', () => {
+    const raw = JSON.stringify({
+      tabs: [
+        { id: 'a', screen: 'home', title: 'home', place: justGo('home'), group: 'g' },
+        { id: 'b', screen: 'study', title: 'study', place: justGo('study') },
+      ],
+      at: 0,
+      groups: [{ id: 'g', name: 'Essay', tone: 0, collapsed: true }],
+    });
+    const s = load(raw, known);
+    expect(current(s).screen).toBe('home');
+    expect(s.groups[0].collapsed).toBe(false);
+  });
+
+  it('leaves a folded group you are not standing in folded', () => {
+    const shut = collapse(grouped(['home', 'calendar', 'study'], [0, 1], 2), 'g', true);
+    expect(tidy(shut).groups[0].collapsed).toBe(true);
+    expect(tidy(shut)).toBe(shut);
+  });
 });
 
 describe('the strip as it is drawn', () => {
@@ -601,5 +659,156 @@ describe('dragging a tab', () => {
     // Everything the order did not name keeps its place behind what it did,
     // so a stale drop rearranges oddly at worst and never loses a tab.
     expect(names(s)).toEqual(['study', 'home', 'calendar']);
+  });
+});
+
+/*
+ * Pinned tabs: the four or five places somebody is in every day.
+ *
+ * They are not "open" in the sense the rest of the strip means it — they are
+ * never finished with, and everything else is opened beside them. So the
+ * strip holds a third invariant for them: everything pinned is before
+ * everything that is not, and a pinned tab is in no group, because a group is
+ * a piece of work with several tabs in it and this is the opposite of that.
+ */
+describe('a pinned tab', () => {
+  const pinnedAt = (s: Strip) => s.tabs.map((t) => (t.pinned ? 'P' : '—'));
+
+  it('goes to the front of the strip, before everything that is not pinned', () => {
+    const s = pin(strip(['home', 'calendar', 'study']), 2);
+    expect(names(s)).toEqual(['study', 'home', 'calendar']);
+    expect(pinnedAt(s)).toEqual(['P', '—', '—']);
+  });
+
+  it('keeps you on the tab you were looking at when you pinned it', () => {
+    const s = pin(strip(['home', 'calendar', 'study'], 2), 2);
+    expect(current(s).screen).toBe('study');
+  });
+
+  it('holds the order they were pinned in', () => {
+    let s = pin(strip(['home', 'calendar', 'study']), 2);
+    s = pin(s, s.tabs.findIndex((t) => t.screen === 'calendar'));
+    expect(names(s)).toEqual(['study', 'calendar', 'home']);
+  });
+
+  it('leaves its group on the way, and takes an empty group with it', () => {
+    const s = pin(grouped(['home', 'calendar'], [1]), 1);
+    expect(pinnedAt(s)).toEqual(['P', '—']);
+    expect(s.tabs[0].group).toBeUndefined();
+    expect(s.groups).toEqual([]);
+  });
+
+  it('is let go again, back into the working strip', () => {
+    const s = pin(pin(strip(['home', 'calendar']), 1), 0, false);
+    expect(pinnedAt(s)).toEqual(['—', '—']);
+    // Unpinning is not a move: it stays where the pinned run left it, which
+    // is the front of a strip with nothing else pinned.
+    expect(names(s)).toEqual(['calendar', 'home']);
+  });
+
+  it('answers the same strip when it is already in the state asked for', () => {
+    const was = pin(strip(['home', 'calendar']), 0);
+    expect(pin(was, 0, true)).toBe(was);
+    expect(pin(strip(['home']), 0, false)).toEqual(strip(['home']));
+  });
+
+  it('says how many there are, which is where the working strip begins', () => {
+    expect(pinnedCount(pin(pin(strip(['home', 'calendar', 'study']), 0), 2))).toBe(2);
+  });
+
+  it('does not hand its pin to a tab opened beside it', () => {
+    const s = add(pin(strip(['home', 'calendar']), 0), 'new');
+    expect(s.tabs.find((t) => t.id === 'new')?.pinned).toBeUndefined();
+    // And it lands at the head of the working strip rather than among the
+    // pinned ones, which is where `tidy` puts anything that is not pinned.
+    expect(s.tabs.findIndex((t) => t.id === 'new')).toBe(1);
+  });
+
+  it('stays pinned through a drag, and nothing is pinned by one', () => {
+    const was = pin(strip(['home', 'calendar', 'study']), 0);
+    // The whole order upended: the pinned tab is still first and still the
+    // only pinned one.
+    const s = rearrange(was, ['t1', 't2', 't0'], 't1');
+    expect(pinnedAt(s)).toEqual(['P', '—', '—']);
+    expect(names(s)).toEqual(['home', 'calendar', 'study']);
+  });
+
+  it('comes back pinned off the device', () => {
+    const was = pin(grouped(['home', 'calendar', 'study'], [1, 2], 0), 0);
+    write(was);
+    expect(read(known)).toEqual(was);
+  });
+
+  it('is not pinned by a stored value that is not true', () => {
+    const saved = JSON.stringify({
+      tabs: [{ id: 'a', screen: 'home', title: 'Today', pinned: 'yes' }],
+      at: 0,
+    });
+    expect(load(saved, known).tabs[0].pinned).toBeUndefined();
+  });
+});
+
+/*
+ * Finding a tab by name.
+ *
+ * The strip holds a hundred now, which makes it a place to keep tabs rather
+ * than a row anybody reads end to end. Every rule here is about the list
+ * reading as *the strip, filtered* — same order, same groups, same pinned
+ * ones first — rather than as a ranking of its own.
+ */
+describe('searching the open tabs', () => {
+  const named = (s: Strip, titles: string[]): Strip => ({
+    ...s,
+    tabs: s.tabs.map((t, i) => ({ ...t, title: titles[i] ?? t.title })),
+  });
+  const titles = (found: ReturnType<typeof findTabs>) => found.map((f) => f.seat.tab.title);
+
+  it('is every tab when nothing is typed, in the strip’s own order', () => {
+    const s = named(strip(['home', 'calendar', 'study']), ['Today', 'Calendar', 'Study']);
+    expect(titles(findTabs(s, ''))).toEqual(['Today', 'Calendar', 'Study']);
+    expect(titles(findTabs(s, '   '))).toEqual(['Today', 'Calendar', 'Study']);
+  });
+
+  it('matches part of a name, however it is cased', () => {
+    const s = named(strip(['home', 'calendar', 'study']), ['Today', 'Calendar', 'ECON 1020 · Quiz']);
+    expect(titles(findTabs(s, 'econ'))).toEqual(['ECON 1020 · Quiz']);
+    expect(titles(findTabs(s, 'CAL'))).toEqual(['Calendar']);
+  });
+
+  it('wants every word, in any order', () => {
+    const s = named(strip(['home', 'calendar']), ['ECON 1020 · Quiz', 'PSCI 1104 · Quiz']);
+    expect(titles(findTabs(s, 'quiz econ'))).toEqual(['ECON 1020 · Quiz']);
+    expect(titles(findTabs(s, 'quiz'))).toEqual(['ECON 1020 · Quiz', 'PSCI 1104 · Quiz']);
+  });
+
+  it('finds a tab by the name of the group it is in', () => {
+    const s = named(grouped(['home', 'calendar', 'study'], [1, 2]), ['Today', 'Reading', 'Cards']);
+    // 'Essay' is the group's name, and belongs to two of the three tabs.
+    expect(titles(findTabs(s, 'essay'))).toEqual(['Reading', 'Cards']);
+  });
+
+  it('forgives a typo, the same way the rest of the app’s search does', () => {
+    const s = named(strip(['home', 'calendar']), ['Today', 'Calendar']);
+    expect(titles(findTabs(s, 'calender'))).toEqual(['Calendar']);
+  });
+
+  it('puts what matches exactly before what only nearly does', () => {
+    const s = named(strip(['home', 'calendar']), ['Calender Club', 'Calendar']);
+    expect(titles(findTabs(s, 'calendar'))).toEqual(['Calendar', 'Calender Club']);
+  });
+
+  it('keeps the pinned ones first, because that is where they are', () => {
+    const s = pin(named(strip(['home', 'calendar', 'study']), ['Quiz A', 'Quiz B', 'Quiz C']), 2);
+    expect(titles(findTabs(s, 'quiz'))).toEqual(['Quiz C', 'Quiz A', 'Quiz B']);
+  });
+
+  it('says which seat each answer is, so picking one goes to the right tab', () => {
+    const s = named(strip(['home', 'calendar', 'study']), ['Today', 'Calendar', 'Study']);
+    expect(findTabs(s, 'study')[0].seat.at).toBe(2);
+  });
+
+  it('answers with nothing rather than everything when nothing matches', () => {
+    const s = named(strip(['home', 'calendar']), ['Today', 'Calendar']);
+    expect(findTabs(s, 'zzzzq')).toEqual([]);
   });
 });

@@ -3,7 +3,9 @@ import { readFileSync } from 'node:fs';
 import { appCount, appShelves } from './apps';
 import { glyphFor } from '../components/icons.pick';
 import { GROUPS, offered, saysFor, shortFor } from './nav';
+import { headerRow } from './header';
 import { writeOrder } from './launcher';
+import type { Role } from './role';
 import type { Capabilities } from './school';
 import type { Screen } from './types';
 
@@ -23,14 +25,46 @@ import type { Screen } from './types';
 const CAPS: Capabilities = { mealPlan: 'none', housing: false, campusMap: false };
 const FULL: Capabilities = { mealPlan: 'swipes', housing: true, campusMap: true };
 
-const flat = (caps: Capabilities, saved?: string) =>
-  appShelves(caps, saved).flatMap((shelf) => shelf.apps.map((d) => d.screen));
+const flat = (caps: Capabilities, saved?: string, role?: Role) =>
+  appShelves(caps, saved, role).flatMap((shelf) => shelf.apps.map((d) => d.screen));
 
 describe('the app launcher', () => {
   it('holds every screen this school offers, once each', () => {
     const shown = flat(FULL);
     expect([...shown].sort()).toEqual(offered(FULL).map((d) => d.screen).sort());
     expect(new Set(shown).size).toBe(shown.length);
+  });
+
+  /*
+   * The third gate, which this grid used not to carry.
+   *
+   * `offered` takes a role and `destinationsFor` defaults one, so
+   * `appShelves` could omit it and still compile — and did. Search, the
+   * favourites row and Lately all went through the role-aware path; only the
+   * grid did not, so a teacher's launcher held Housing, Costs, The degree and
+   * five more that every other surface had already stopped offering them. The
+   * assertion is deliberately the same shape as the one above: the grid shows
+   * exactly what the app offers *this person*, not what it offers a student.
+   */
+  it('holds what this role is offered, not what a student is', () => {
+    for (const role of ['student', 'faculty'] as Role[]) {
+      const shown = flat(FULL, undefined, role);
+      expect([...shown].sort(), `the ${role} launcher`).toEqual(
+        offered(FULL, role).map((d) => d.screen).sort(),
+      );
+    }
+  });
+
+  it('drops the student-only screens for a teacher', () => {
+    const student = new Set(flat(FULL, undefined, 'student'));
+    const faculty = new Set(flat(FULL, undefined, 'faculty'));
+    // Named rather than counted: a screen leaving the student list for an
+    // unrelated reason should not quietly satisfy this.
+    for (const screen of ['degree', 'costs', 'housing', 'applying'] as Screen[]) {
+      expect(student.has(screen), `${screen} is a student's`).toBe(true);
+      expect(faculty.has(screen), `${screen} is not a teacher's`).toBe(false);
+    }
+    expect(faculty.size).toBeLessThan(student.size);
   });
 
   it('leaves out what the school has no equivalent of', () => {
@@ -194,18 +228,25 @@ describe('the button in the header', () => {
     const button = /aria-label="All apps"/.exec(src());
     expect(button, 'the All apps button has gone from the header').not.toBeNull();
     /*
-     * The three action buttons that are always drawn sit before the `atRoot`
-     * block; the two gated ones after it. This one must be in the first half.
+     * Asked of the rule rather than inferred from where the button sits in
+     * the file. This used to compare the button's offset against the offset
+     * of the `{atRoot &&` that gated the alerts bell — All apps had to come
+     * first — which held the right thing by the wrong means and stopped
+     * holding anything the moment those conditions moved out of the markup
+     * and into `lib/header.ts`. The rule is the thing to ask.
      *
-     * `{atRoot` rather than the whole condition: the alerts bell is gated on
-     * being at a root *and* on not being in the workspace, whose bar carries
-     * its own bell — see `slim` in `App.tsx`. What is held here is that All
-     * apps is before whatever that gate says, not what it says.
+     * Still not asked of the workspace: there the bar carries its own nine
+     * dots, so `apps` is false for the same reason the bell is, and that is
+     * `headerRow`'s business rather than this one's. What is held here is
+     * that being three levels into a course — which is exactly the case this
+     * button exists for — does not take it away.
      */
-    const at = src().indexOf('aria-label="All apps"');
-    const gate = src().indexOf('{atRoot &&');
-    expect(gate).toBeGreaterThan(-1);
-    expect(at, 'All apps must not be gated on being at a root screen').toBeLessThan(gate);
+    for (const phone of [true, false]) {
+      expect(
+        headerRow({ atRoot: false, phone, counting: false, desk: false }).apps,
+        'All apps must not be gated on being at a root screen',
+      ).toBe(true);
+    }
   });
 
   it('is mounted wherever the search overlay is', () => {

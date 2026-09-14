@@ -38,6 +38,7 @@
 
 import { readOrder, tilesFor } from './launcher';
 import { GROUPS, type Destination, type Group } from './nav';
+import { DEFAULT_ROLE, type Role } from './role';
 import type { Capabilities } from './school';
 
 export interface AppShelf {
@@ -51,10 +52,24 @@ export interface AppShelf {
  * `saved` is the `groupOrder` look key — the arrangement dragged on the
  * launcher's folders. Passing it through means the two grids cannot disagree
  * about where a student put something.
+ *
+ * `role` is the third gate, and it used to be missing here. `destinationsFor`
+ * defaults it, so leaving it off did not fail to compile — it silently asked
+ * for the student's app list on every shelf. A teacher therefore got a
+ * launcher holding Housing, Costs, The degree and five more the directory's
+ * own search had already stopped offering them, because search goes through
+ * `offered`, which takes the role. Two answers to "what can this person
+ * open", and the grid had the wrong one. Last and defaulted, the way
+ * `lately` and `destinationsFor` take it, so a caller with no role behaves
+ * exactly as before.
  */
-export function appShelves(caps: Capabilities, saved: string | undefined): AppShelf[] {
+export function appShelves(
+  caps: Capabilities,
+  saved: string | undefined,
+  role: Role = DEFAULT_ROLE,
+): AppShelf[] {
   const order = readOrder(saved);
-  return GROUPS.map((group) => ({ group, apps: tilesFor(group, caps, order) })).filter(
+  return GROUPS.map((group) => ({ group, apps: tilesFor(group, caps, order, role) })).filter(
     (shelf) => shelf.apps.length > 0,
   );
 }

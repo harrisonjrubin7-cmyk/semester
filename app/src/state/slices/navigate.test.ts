@@ -104,3 +104,42 @@ describe('a panel over the screen does not outlive it', () => {
     expect(run(open, { type: 'finder', open: false }).apps).toBe(true);
   });
 });
+
+/**
+ * Every navigation dismisses the overlays, not just the one that was watching.
+ *
+ * `dismiss()` in `navigate.ts` closes the search overlay and the apps sheet on
+ * the way past, so a landing does not leave one of them over the screen it
+ * just opened. It is the reducer's job rather than a panel's — the note there
+ * says why: there are three ways to navigate, and a panel listening for one is
+ * a panel that survives the other two.
+ *
+ * This test lived in `components/shell-overlap.test.tsx`, which was otherwise
+ * about the browser shell and went with it in the seventh pass (E4). The test
+ * is not about that shell at all: it touches no DOM and asserts a reducer
+ * rule that holds for every navigation. Moved rather than deleted, because
+ * deleting a rule with the file that happened to hold it is how a rule stops
+ * being kept.
+ */
+describe('the overlays close on the way past', () => {
+  it('dismisses the search overlay and the apps sheet on go, landed and back', () => {
+    const open = {
+      ...DEFAULT_PERSISTED,
+      ...initialEphemeral(new Date()),
+      screen: 'home',
+      finder: true,
+      apps: true,
+    } as State;
+
+    for (const action of [
+      { type: 'go', screen: 'home' },
+      { type: 'landed', screen: 'home' },
+      { type: 'back' },
+    ] as const) {
+      const next = reducer(open, action as Action);
+      expect(next.finder, action.type).toBe(false);
+      expect(next.apps, action.type).toBe(false);
+    }
+  });
+});
+

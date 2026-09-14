@@ -3,12 +3,14 @@ import { useStore } from '../state/store';
 import { Plot, type Drawing } from './Plot';
 import { Surface } from './Surface';
 import { heightOf, heights, range } from '../lib/surface';
+import { asArrows, asContours } from '../lib/fields';
+import { asOde, asSecond, asSystem, rateOf, through } from '../lib/ode';
 import { ActionButton, PickChips, SectionLabel, Toggle } from './ui';
 import { secondLine } from '../lib/dim';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
 import { anchorHue, tintAt } from '../lib/tint';
-import { text as showValue, type Val } from '../lib/calc';
+import { text as showValue, value, type Val } from '../lib/calc';
 import {
   DETAIL,
   EXAMPLES,
@@ -76,6 +78,15 @@ export function Grapher() {
    * a control in the way.
    */
   const [turns, setTurns] = useState<number>(DETAIL.turns);
+  /**
+   * How a `z =` line is drawn: as the solid thing, or as its contour lines.
+   *
+   * A control rather than notation, because it is a choice about the drawing
+   * and not about the function. A surface is the better picture of a shape;
+   * contours are the better one for reading values off, which is why a map has
+   * them and an artist's impression does not.
+   */
+  const [view, setView] = useState<'surface' | 'contours'>('surface');
   const [from, setFrom] = useState('0');
   const [to, setTo] = useState('1');
 
@@ -91,17 +102,133 @@ export function Grapher() {
     return lines.map((_, i) => tintAt(anchor + (i * 360) / spread, light).fill);
   }, [lines, state.accent, state.hue, light]);
 
+  /*
+   * Every `y(a) = b` on the list, as points.
+   *
+   * Gathered for the whole list rather than per equation: a student writing
+   * two initial conditions under one `y' =` means two solutions of the same
+   * equation, which is the picture a textbook draws, and nothing about the
+   * order they were typed in should change that.
+   */
+  const said = useMemo(
+    () =>
+      read
+        .filter((line, at) => line.kind === 'start' && lines[at].on)
+        .map((line) => {
+          if (line.kind !== 'start') return null;
+          const one = (node: Parameters<typeof value>[0]) => {
+            const got = value(node, scope);
+            return Array.isArray(got) ? (got[0] ?? NaN) : got;
+          };
+          const at = one(line.at);
+          const to = one(line.value);
+          return Number.isFinite(at) && Number.isFinite(to)
+            ? { of: line.of, rate: line.rate, at, to }
+            : null;
+        })
+        .filter((c): c is { of: 'x' | 'y'; rate: boolean; at: number; to: number } => c !== null),
+    [read, lines, scope],
+  );
+
+  /** `y(a) = b` — where a solution passes, which is a point on the picture. */
+  const starts = useMemo(
+    () => said.filter((c) => c.of === 'y' && !c.rate).map((c) => ({ x: c.at, y: c.to })),
+    [said],
+  );
+
+  /**
+   * The two halves of a system, where both are on the list.
+   *
+   * `x' = …` and `y' = …` together are one picture in the plane they share;
+   * either on its own is the ordinary first-order kind. Both have to be first
+   * order — a second-order equation paired with a first is not a system, it is
+   * two equations somebody is part-way through writing.
+   */
+  const pair = useMemo(() => {
+    const across = read.find((line, at) => line.kind === 'ode' && line.of === 'x' && line.order === 1 && lines[at].on);
+    const up = read.find((line, at) => line.kind === 'ode' && line.of === 'y' && line.order === 1 && lines[at].on);
+    return across && across.kind === 'ode' && up ? { dx: across.body } : null;
+  }, [read, lines]);
+
+  /** Where a system starts: `x(0) = a` and `y(0) = b`, or nothing and it fills the plane. */
+  const together = useMemo(() => {
+    const across = said.find((c) => c.of === 'x' && !c.rate);
+    const up = said.find((c) => c.of === 'y' && !c.rate);
+    return across && up ? [{ x: across.to, y: up.to }] : [];
+  }, [said]);
+
+  /** Where a second-order equation starts: the value and the rate, at the same x. */
+  const second = useMemo(() => {
+    const at = said.find((c) => c.of === 'y' && !c.rate);
+    const speed = said.find((c) => c.of === 'y' && c.rate);
+    if (!at) return [];
+    return [{ x: at.at, y: at.to, v: speed?.to ?? 0 }];
+  }, [said]);
+
+  /*
+   * The contour map, and the levels it was cut at.
+   *
+   * Worked once and read twice: the lines go on the picture, and the levels go
+   * under it in a sentence. A map whose spacing is not stated is a picture
+   * rather than a reading — the whole reason to draw contours is to be able to
+   * say "every twenty, and this one is zero".
+   */
+  const flat = useMemo(() => {
+    const line = read.find((l, at) => l.kind === 'surface' && lines[at].on);
+    if (!line || line.kind !== 'surface' || view !== 'contours') return null;
+    return asContours(line.body, scope, frame);
+  }, [read, lines, scope, frame, view]);
+
   const drawings: Drawing[] = useMemo(
     () =>
       lines
         .map((line, i) => ({ line, at: i }))
         .filter(({ line, at }) => line.on && read[at].kind !== 'blank')
-        .map(({ line, at }) => ({
-          id: line.id,
-          colour: colours[at],
-          drawn: draw(read[at], scope, frame, { ...DETAIL, turns }),
-        })),
-    [lines, read, scope, frame, colours, turns],
+        .map(({ line, at }) => {
+          const reading = read[at];
+          if (reading.kind === 'ode') {
+            /*
+             * Three pictures wear the same notation, and what else is on the
+             * list decides which: an `x' =` beside a `y' =` is a system, drawn
+             * in the plane the two quantities share; `y'' =` is a second-order
+             * equation; a lone `y' =` is the slope field it has always been.
+             *
+             * The system is drawn by the `y' =` line of the pair so that it is
+             * drawn once — the `x' =` line is half of one picture, not a
+             * picture of its own, and it says so in the list.
+             */
+            if (pair) {
+              if (reading.of === 'x') return { id: line.id, colour: colours[at], drawn: { paths: [], points: [] } };
+              return {
+                id: line.id,
+                colour: colours[at],
+                drawn: asSystem(pair.dx, reading.body, together, scope, frame),
+              };
+            }
+            if (reading.order === 2) {
+              return {
+                id: line.id,
+                colour: colours[at],
+                drawn: asSecond(reading.body, second, scope, frame),
+              };
+            }
+            return { id: line.id, colour: colours[at], drawn: asOde(reading.body, starts, scope, frame) };
+          }
+          if (reading.kind === 'field') {
+            return { id: line.id, colour: colours[at], drawn: asArrows(reading.x, reading.y, scope, frame) };
+          }
+          if (reading.kind === 'surface') {
+            // Nothing on the flat picture while the surface has it; drawn as
+            // contours only when the view asks for them.
+            return {
+              id: line.id,
+              colour: colours[at],
+              drawn: view === 'contours' && flat ? flat.drawn : { paths: [], points: [] },
+            };
+          }
+          return { id: line.id, colour: colours[at], drawn: draw(reading, scope, frame, { ...DETAIL, turns }) };
+        }),
+    [lines, read, scope, frame, colours, turns, view, flat, starts, pair, together, second],
   );
 
   /** Whether anything on the list is drawn by turning or running, rather than across x. */
@@ -119,7 +246,10 @@ export function Grapher() {
    */
   const solid = lines
     .map((line, at) => ({ line, at }))
-    .find(({ line, at }) => line.on && read[at].kind === 'surface');
+    .find(({ line, at }) => line.on && read[at].kind === 'surface' && view === 'surface');
+  /** Whether a `z =` line is on the list at all, which is what the view chips are for. */
+  const hasSurface = read.some((line, at) => line.kind === 'surface' && lines[at].on);
+
   const solidLine = solid ? read[solid.at] : null;
   // Held still across renders that are not about the surface — every new
   // identity here re-samples the whole mesh, and a trace on the flat picture
@@ -163,8 +293,17 @@ export function Grapher() {
 
       {solidLine ? (
         <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
-          A <code>z =</code> line is a surface, so it is drawn on its own. Turn it off to get the flat
-          picture and the curves back.
+          A <code>z =</code> line is a surface, so it is drawn on its own. Turn it off, or draw it as
+          contours below, to get the flat picture and the curves back.
+        </div>
+      ) : null}
+
+      {flat && flat.cuts.length > 1 ? (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+          A line every {showValue(neat(flat.cuts[1] - flat.cuts[0], 1))}, from{' '}
+          {showValue(flat.cuts[0])} to {showValue(flat.cuts[flat.cuts.length - 1])}
+          {flat.cuts.includes(0) ? ', with zero drawn heaviest' : ''}. Where they crowd together it is
+          steep.
         </div>
       ) : null}
 
@@ -233,6 +372,22 @@ export function Grapher() {
         </>
       ) : null}
 
+      {hasSurface ? (
+        <>
+          <SectionLabel>How to draw it</SectionLabel>
+          <PickChips
+            options={['surface', 'contours'] as const}
+            value={view}
+            onChange={setView}
+            labels={(id) => (id === 'surface' ? 'As a surface' : 'As contours')}
+          />
+          <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+            The same <code>z =</code> line, two pictures: the shape of it, or the lines where it is
+            level — which is the one you read values off, and the one a map uses.
+          </div>
+        </>
+      ) : null}
+
       {winding ? (
         <>
           <SectionLabel>How far round</SectionLabel>
@@ -255,6 +410,13 @@ export function Grapher() {
         <Heights body={solidLine.body} scope={scope} frame={frame} />
       ) : null}
 
+      {(() => {
+        const ode = read.find((line, at) => line.kind === 'ode' && lines[at].on);
+        return ode && ode.kind === 'ode' ? (
+          <Solutions body={ode.body} starts={starts} scope={scope} frame={frame} />
+        ) : null;
+      })()}
+
       <Readings
         lines={lines}
         read={read}
@@ -276,8 +438,15 @@ export function Grapher() {
         slider, and <code>(2, 3)</code> is a point. An <code>r =</code> line with the angle in it is a polar
         curve — <code>{'r = 2 + 2\\cos(\\theta)'}</code> — and a pair with <code>t</code> in it is the
         path a moving point takes — <code>{'(\\cos(t), \\sin(t))'}</code>. A <code>z =</code> line is a
-        surface — <code>z = x^2 - y^2</code> — drawn over the window the axes are set to. It takes the
-        same notation the Write tab draws, so a formula you kept can be pasted in as it is.
+        surface — <code>z = x^2 - y^2</code> — drawn over the window the axes are set to, as the solid
+        thing or as its contour lines. A pair with <code>x</code> or <code>y</code> in it is a field
+        of arrows — <code>(y, -x)</code>, which is every phase diagram. And{' '}
+        <code>{"y' = x + y"}</code> is a differential equation: the slope field, and the solution
+        through every <code>y(0) = 1</code> you write under it. <code>{"y'' = -y"}</code> is a
+        second-order one, which wants a <code>{"y'(0) = 0"}</code> as well; an{' '}
+        <code>{"x' = …"}</code> beside a <code>{"y' = …"}</code> is a system, drawn as the path the
+        two make in the plane they share. It takes the same notation the Write
+        tab draws, so a formula you kept can be pasted in as it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
         <Toggle on={degrees} label="Work in degrees rather than radians" onChange={() => setDegrees(!degrees)} />
@@ -328,7 +497,15 @@ function Row({
     reading.kind === 'point' ||
     reading.kind === 'polar' ||
     reading.kind === 'parametric' ||
+    reading.kind === 'field' ||
+    reading.kind === 'ode' ||
+    // An initial condition draws no line of its own — it picks which solution
+    // the equation above it draws — but its switch is live, because turning it
+    // off is how you get the whole family back.
+    reading.kind === 'start' ||
     reading.kind === 'surface';
+  /** Whether it puts ink of its own on the picture — see the swatch below. */
+  const inked = drawn && reading.kind !== 'start';
 
   return (
     <div
@@ -351,8 +528,16 @@ function Row({
             height: 22,
             flex: '0 0 auto',
             borderRadius: '50%',
-            border: `2px solid ${drawn ? colour : 'var(--app-line)'}`,
-            background: on && drawn ? colour : 'transparent',
+            /*
+             * Filled where the line has ink of its own on the picture.
+             *
+             * An initial condition switches on and off like anything else —
+             * turning it off gets the family back — but it draws nothing in
+             * its own colour, and a filled swatch would promise a curve
+             * somewhere on the picture that nobody can find.
+             */
+            border: `2px solid ${inked ? colour : 'var(--app-line)'}`,
+            background: on && inked ? colour : 'transparent',
           }}
         />
         <input
@@ -703,6 +888,76 @@ function Heights({
           value={place(found.lowest)}
           note="Over the window the axes are set to — drag or zoom the flat view to change it."
         />
+      </div>
+    </>
+  );
+}
+
+/**
+ * What a differential equation's picture says.
+ *
+ * Where the solution has got to by the edge of the window, which is the
+ * question asked of one: how much is left after ten years, how big does the
+ * population get, where does it settle. And where it *stops*, when it stops
+ * early — a solution that runs to infinity before the edge is the interesting
+ * case and the one a picture alone makes look like a steep line.
+ */
+function Solutions({
+  body,
+  starts,
+  scope,
+  frame,
+}: {
+  body: Parameters<typeof rateOf>[0];
+  starts: Point[];
+  scope: Parameters<typeof rateOf>[1];
+  frame: Frame;
+}) {
+  const ends = useMemo(() => {
+    const f = rateOf(body, scope);
+    return starts.slice(0, 3).map((start) => {
+      const curve = through(f, start, frame);
+      const last = curve[curve.length - 1];
+      return { start, last, whole: !!last && last.x >= frame.x1 - (frame.x1 - frame.x0) / 200 };
+    });
+  }, [body, starts, scope, frame]);
+
+  if (starts.length === 0) {
+    return (
+      <>
+        <SectionLabel>What it says</SectionLabel>
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}>
+          Every point has a solution through it, so the whole family is drawn over the slope field.
+          Write <code>y(0) = 1</code> on a line of its own to pick one out — as many as you like, and
+          each gets its own curve.
+        </div>
+      </>
+    );
+  }
+
+  const span = frame.x1 - frame.x0;
+  return (
+    <>
+      <SectionLabel>What it says</SectionLabel>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
+        {ends.map(({ start, last, whole }) =>
+          !last ? null : (
+            <Fact
+              key={`${start.x},${start.y}`}
+              says={`From y(${showValue(neat(start.x, span))}) = ${showValue(neat(start.y, span))}`}
+              value={
+                whole
+                  ? `y = ${showValue(neat(last.y, Math.abs(last.y) || 1))} at x = ${showValue(neat(last.x, span))}`
+                  : `runs away before the edge — last a number at x = ${showValue(neat(last.x, span))}`
+              }
+              note={
+                whole
+                  ? 'Solved by walking the equation, not by rearranging it — see lib/ode.ts.'
+                  : 'The curve ends there because the solution does, rather than being drawn past it.'
+              }
+            />
+          ),
+        )}
       </div>
     </>
   );
