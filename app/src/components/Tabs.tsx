@@ -44,7 +44,6 @@ import {
   Fragment,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
@@ -53,7 +52,9 @@ import { strip as stripNow } from '../lib/browser.hook';
 import {
   closeTab,
   foldGroup,
+  follow,
   here,
+  lastFollowed,
   moveTab,
   openTab,
   pickTab,
@@ -69,6 +70,7 @@ import { secondLine } from '../lib/dim';
 import { ChevronDown, Plus, Search as SearchIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import { StripMenu, type MenuOn } from './TabMenu';
+import { TabFind } from './TabFind';
 import type { Corner } from './Popover';
 import { toneAt, useTones } from './tones';
 import type { CourseTint } from '../lib/tint';
@@ -151,26 +153,6 @@ function nameFor(state: State, catalog: Catalog): string {
   }
 }
 
-/**
- * Whether the app has looked at where it is yet, since the page loaded.
- *
- * The guard below is about the *reload* — a strip coming back off the device
- * must not have its blank tab silently filled in with whatever screen the
- * address happened to name. That is a fact about the page, and it was kept as
- * a ref, which made it a fact about this component's mounting instead.
- *
- * The two came apart the moment a shell moved this between two positions in
- * its tree: every navigation remounted it, every remount looked like a reload,
- * and the guard then fired on every navigation rather than once. The strip
- * stopped recording anything at all — see `BrowserShell` in `App.tsx`, which
- * is where that happened and is now also mounted so it cannot.
- *
- * Module state, because that is what "since the page loaded" means. It is only
- * ever set, so there is nothing to reset between tests: a second mount in one
- * page is not a reload and should not behave like one.
- */
-let looked = false;
-
 export function TabsFollow() {
   const { state, catalog } = useStore();
   // Destructured, so the memo below depends on the ten ids that make a place
@@ -222,14 +204,17 @@ export function TabsFollow() {
       callCode,
     ],
   );
-  const seen = useRef<string | null>(null);
-
   useEffect(() => {
     const key = JSON.stringify(at);
-    const firstLook = !looked;
-    looked = true;
-    if (seen.current === key) return;
-    seen.current = key;
+    /*
+     * Both of these are the session's, not this component's — see `followed`
+     * in `lib/browser.hook.ts`. A ref here would answer "first look" again
+     * every time this component was remounted, and the rule below would then
+     * discard the navigation that remounted it.
+     */
+    const firstLook = lastFollowed() === null;
+    if (lastFollowed() === key) return;
+    follow(key);
     const tab = here();
     /*
      * On the first look the strip adopts the app only if the tab it is on is
@@ -504,6 +489,10 @@ export function TabStrip({
         >
           <Plus size={15} />
         </button>
+        {/* And the way back to a tab when the strip has stopped being one
+            glance. It draws nothing until there are enough tabs to look
+            for — see `ENOUGH` in `components/TabFind.tsx`. */}
+        <TabFind onPick={pick} onClose={shut} />
       </div>
       {onDismiss && (
         <button

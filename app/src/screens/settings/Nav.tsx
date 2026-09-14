@@ -235,7 +235,7 @@ export function SettingsNav() {
             footer="Where each screen sits on its shelf — the same order the apps sheet and the workspace apps panel are dragged into."
             lit={lights('shelves shelf order rearrange move up down directory tiles arrange', lit)}
           >
-            {shelfLists(school.capabilities, currentLook(state).groupOrder).map((list) => (
+            {shelfLists(school.capabilities, currentLook(state).groupOrder, state.role).map((list) => (
               <CustomRow key={list.group}>
                 <SectionLabel style={LABEL_STYLE}>{list.label}</SectionLabel>
                 {list.items.map((item, i, all) => (

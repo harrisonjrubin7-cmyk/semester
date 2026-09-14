@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { bodySize, deckFileName, parts, xml, type Deck } from './pptx';
+import { bodySize, deckFileName, parts, type Deck } from './pptx';
+import { xml } from './ooxml';
 
 const deck = (over: Partial<Deck> = {}): Deck => ({
   title: 'Federalism',

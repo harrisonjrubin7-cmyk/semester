@@ -24,17 +24,17 @@ const doc = (blocks: Block[], title = 'Memo'): Doc => ({
 describe('emphasis', () => {
   it('reads bold and italic', () => {
     expect(runs('a **b** c')).toEqual([
-      { text: 'a ', bold: false, italic: false },
-      { text: 'b', bold: true, italic: false },
-      { text: ' c', bold: false, italic: false },
+      { text: 'a ', bold: false, italic: false, link: '' },
+      { text: 'b', bold: true, italic: false, link: '' },
+      { text: ' c', bold: false, italic: false, link: '' },
     ]);
   });
 
   it('nests italic inside bold', () => {
     expect(runs('**a *b* c**')).toEqual([
-      { text: 'a ', bold: true, italic: false },
-      { text: 'b', bold: true, italic: true },
-      { text: ' c', bold: true, italic: false },
+      { text: 'a ', bold: true, italic: false, link: '' },
+      { text: 'b', bold: true, italic: true, link: '' },
+      { text: ' c', bold: true, italic: false, link: '' },
     ]);
   });
 
@@ -44,7 +44,7 @@ describe('emphasis', () => {
 
   it('leaves arithmetic alone', () => {
     // The case a naive `\*(.+?)\*` turns into an italic 3.
-    expect(runs('2 * 3 * 4')).toEqual([{ text: '2 * 3 * 4', bold: false, italic: false }]);
+    expect(runs('2 * 3 * 4')).toEqual([{ text: '2 * 3 * 4', bold: false, italic: false, link: '' }]);
   });
 
   it('always returns at least one run', () => {

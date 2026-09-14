@@ -63,6 +63,17 @@ export interface Draft {
   text: string;
   /** Milliseconds, last written. */
   at: number;
+  /**
+   * Where the text came from, when it was not typed here.
+   *
+   * Absent for every draft anybody has actually typed, which is nearly all of
+   * them. Set when one screen fills another's field on the way to it — see
+   * `handOver` in `draft.hook.ts` — because "picked up where you left off" is
+   * the wrong sentence for text the spreadsheet just sent, and the whole
+   * reason a line is shown at all is that the right sentence matters. See
+   * {@link restoredLine}.
+   */
+  from?: string;
 }
 
 export type Drafts = Record<string, Draft>;
@@ -88,7 +99,11 @@ export function readDrafts(raw: string | null): Drafts {
       if (!value || typeof value !== 'object') continue;
       const row = value as Record<string, unknown>;
       if (typeof row.text !== 'string' || typeof row.at !== 'number') continue;
-      out[key] = { text: row.text, at: row.at };
+      out[key] = {
+        text: row.text,
+        at: row.at,
+        ...(typeof row.from === 'string' && row.from ? { from: row.from } : {}),
+      };
     }
     return out;
   } catch {
@@ -108,7 +123,13 @@ function weigh(drafts: Drafts): number {
  * written is never the one thrown away — somebody typing right now is the
  * person least willing to lose anything.
  */
-export function withDraft(drafts: Drafts, key: string, text: string, now: number): Drafts {
+export function withDraft(
+  drafts: Drafts,
+  key: string,
+  text: string,
+  now: number,
+  from = '',
+): Drafts {
   const fresh: Drafts = {};
   for (const [k, d] of Object.entries(drafts)) {
     if (k === key) continue;
@@ -120,7 +141,7 @@ export function withDraft(drafts: Drafts, key: string, text: string, now: number
   if (text.trim() === '') return fresh;
 
   const kept = text.length > MOST_ONE ? text.slice(0, MOST_ONE) : text;
-  let out: Drafts = { ...fresh, [key]: { text: kept, at: now } };
+  let out: Drafts = { ...fresh, [key]: { text: kept, at: now, ...(from ? { from } : {}) } };
 
   while (weigh(out) > MOST_BYTES) {
     const oldest = Object.entries(out)
@@ -146,7 +167,10 @@ export function withoutDraft(drafts: Drafts, key: string): Drafts {
  * into, on a screen they thought was blank, is unsettling in a way that is
  * worth one line to avoid.
  */
-export function restoredLine(at: number, now: Date): string {
+export function restoredLine(at: number, now: Date, from = ''): string {
+  // Text another screen sent explains itself, and the timing is beside the
+  // point: it arrived on the way here, a moment ago, by definition.
+  if (from) return from;
   const mins = Math.floor((now.getTime() - at) / 60_000);
   if (mins < 2) return 'Picked up where you left off.';
   if (mins < 60) return `Picked up where you left off, ${mins} minutes ago.`;

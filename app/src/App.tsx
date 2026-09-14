@@ -1385,15 +1385,17 @@ function BrowserShell({ trouble }: { trouble: React.ReactNode }) {
      * `GoogleShell` mounts what it is given in two different places — inside
      * the workspace body on a screen, and in `.g-home-legacy` on the search
      * home — so anything handed to it as a child is unmounted and remounted on
-     * every navigation into or out of that home. `TabsFollow` keeps a ref for
-     * what it has already recorded and a guard against adopting the screen the
-     * app happened to reload on; remounted, both reset, and the guard then
-     * matched on every navigation once a second tab existed. The strip stopped
-     * following the app: tabs stayed "New tab" whatever you opened in them, and
-     * a reload put you back on the search page rather than where you were.
+     * every navigation into or out of that home. As a child, `TabsFollow` was
+     * remounted on every one of them, and what it knows about where the strip
+     * has already been used to reset with it: tabs stayed "New tab" whatever
+     * you opened in them, and a reload put you back on the search page rather
+     * than where you were.
      *
-     * Out here it is mounted once for the life of the navigation, which is what
-     * it is for and how every other layout mounts it.
+     * What it knows is the session's now rather than the component's — see
+     * `followed` in `lib/browser.hook.ts` — so that particular failure cannot
+     * happen wherever this is mounted. It stays out here anyway: remounting a
+     * component on every navigation to re-derive what it just derived is churn
+     * with nothing to gain, and this is where every other layout mounts it.
      */
     <>
       <TabsFollow />

@@ -22,7 +22,7 @@ import { Rail } from '../components/mail/Rail';
 import { List } from '../components/mail/List';
 import { Reader } from '../components/mail/Reader';
 import { Compose } from '../components/mail/Compose';
-import { readMail, tokens, describe as explain, type ProviderId } from '../lib/connect';
+import { readMail, readableMail, tokens, describe as explain, type ProviderId } from '../lib/connect';
 import {
   conversations,
   draftAsMail,
@@ -42,8 +42,6 @@ import {
 /** How many conversations a page holds. Gmail's number, and it is a good one. */
 const PER_PAGE = 50;
 
-/** The accounts that have a mailbox this app can read. */
-const MAIL_PROVIDERS: ProviderId[] = ['google', 'microsoft'];
 
 /**
  * Email.
@@ -100,7 +98,7 @@ export function Mail() {
   const list = useRef<HTMLDivElement>(null);
 
   const held = tokens();
-  const accounts = MAIL_PROVIDERS.filter((id) => held[id]);
+  const accounts = readableMail(held);
   const me = useMemo(
     () => ({ name: state.myName || 'You', address: account?.email ?? '' }),
     [state.myName, account?.email],

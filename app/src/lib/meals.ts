@@ -29,6 +29,8 @@
  */
 
 import { money, readMoney } from './cost';
+// Day and month names come from `lib/date.ts`; see the note there.
+import { MONTHS } from './date';
 
 export interface Balance {
   id: string;
@@ -150,8 +152,6 @@ export function paceLine(latest: Balance | undefined, p: Pace): string {
   }
   return `${head} You have been using ${p.rate} a day, which runs out on ${dayLabel(p.dry)}.`;
 }
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export function dayLabel(d: Date): string {
   return `${MONTHS[d.getMonth()]} ${d.getDate()}`;

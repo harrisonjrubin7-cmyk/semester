@@ -32,6 +32,7 @@ import type { CourseId, Figure, Term } from '../lib/types';
 const NO_PARTS: StudyParts = { frames: [], selfTest: [], cases: [], examples: [] };
 import { describeFigure } from '../lib/figure';
 import { describeStudyParts, type StudyParts } from '../lib/study';
+import { DOCUMENTS } from '../lib/extract';
 
 /** Handled by the camera path above, which can see them. */
 const IMAGE = /\.(png|jpe?g|webp|gif|heic|heif)$/i;
@@ -43,9 +44,9 @@ const IMAGE = /\.(png|jpe?g|webp|gif|heic|heif)$/i;
  * board, which `addFile` stores and the camera path reads. Keep it in step
  * with `READABLE` in `lib/bundle.ts`.
  */
-const ACCEPT =
-  '.pdf,.docx,.pptx,.txt,.md,.markdown,.csv,.tsv,.rtf,.html,.htm,.zip,' +
-  '.png,.jpg,.jpeg,.webp,.heic,text/*,image/*,application/pdf,application/zip';
+// The formats `lib/extract.ts` can read, plus the images only this screen
+// takes — a photo of a whiteboard or a notice pinned to a door.
+const ACCEPT = `${DOCUMENTS}.png,.jpg,.jpeg,.webp,.heic,text/*,image/*,application/pdf,application/zip`;
 
 /**
  * Enough text to be worth a request.

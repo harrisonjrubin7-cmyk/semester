@@ -33,6 +33,7 @@
 
 import { arranged, readLists, writeLists } from './arrange';
 import { destinationsFor, GROUPS, saysFor, type Group } from './nav';
+import { DEFAULT_ROLE, type Role } from './role';
 import type { Capabilities } from './school';
 import type { Destination } from './nav';
 import type { Screen } from './types';
@@ -94,20 +95,38 @@ export interface ShelfList {
   items: { id: Screen; label: string }[];
 }
 
-export function shelfLists(caps: Capabilities, saved: string | undefined): ShelfList[] {
+export function shelfLists(
+  caps: Capabilities,
+  saved: string | undefined,
+  role: Role = DEFAULT_ROLE,
+): ShelfList[] {
   const order = readOrder(saved);
   return GROUPS.map((group) => ({
     group,
     label: group,
-    items: tilesFor(group, caps, order).map((d) => ({
+    items: tilesFor(group, caps, order, role).map((d) => ({
       id: d.screen,
       label: saysFor(d, caps).label,
     })),
   })).filter((l) => l.items.length > 1);
 }
 
-export function tilesFor(group: Group, caps: Capabilities, order: ShelfOrder): Destination[] {
-  const real = destinationsFor(group, caps);
+/**
+ * The tiles on one shelf, in the order this student dragged them into.
+ *
+ * `role` is passed to `destinationsFor` rather than left to its default. It
+ * was left to its default once, which is how the launcher came to offer a
+ * teacher eight screens the rest of the app had already stopped offering
+ * them — see the note over `appShelves` in `lib/apps.ts`. The three gates
+ * only hold if every path through them carries all three.
+ */
+export function tilesFor(
+  group: Group,
+  caps: Capabilities,
+  order: ShelfOrder,
+  role: Role = DEFAULT_ROLE,
+): Destination[] {
+  const real = destinationsFor(group, caps, role);
   const byScreen = new Map(real.map((d) => [d.screen, d]));
   return arranged(
     real.map((d) => d.screen),

@@ -221,7 +221,10 @@
 .g-home:has(.g-organizer-panel) .g-central-search{visibility:hidden!important;pointer-events:none!important}
 .semester-primary-nav{display:flex;align-items:center;gap:4px;padding:4px 24px 8px;background:var(--app-accent-wash);overflow-x:auto;flex:none;border-bottom:1px solid var(--app-line-soft)}
 .semester-primary-nav button{color:var(--app-fg);white-space:nowrap;font-size:14px;border:0;background:transparent;border-radius:20px;min-height:40px;padding:8px 16px}
-.semester-primary-nav button:hover, .semester-primary-nav button[aria-current=page]{background:var(--app-accent-wash);color:var(--app-accent-deep)}
+/* The pill you are on: `--app-accent-deep` is a mid metal in this app and
+   sat at 3.29:1 on the accent wash behind it, so the one pill naming
+   where you are was the least readable in the row. */
+.semester-primary-nav button:hover, .semester-primary-nav button[aria-current=page]{background:var(--app-accent-wash);color:var(--app-fg)}
 .semester-primary-nav .semester-search-records{margin-left:auto}
 .assignment-center{max-width:1600px;margin:auto}
 .assignment-next{display:flex;justify-content:space-between;align-items:center;gap:24px;border:1px solid var(--app-accent-wash);background:var(--app-accent-wash);border-radius:20px;padding:22px;margin:18px 0}

@@ -70,6 +70,9 @@ const TIMEOUT_MS = 15_000;
 /**
  * Hosts nothing on the public internet is called, refused by name.
  *
+ * The same list as `app/src/lib/publichost.ts`, which is where its tests are:
+ * this copy is deployed alone to Deno and cannot import from the app.
+ *
  * Names rather than resolved addresses: an Edge Function cannot resolve a
  * hostname before fetching it, so this cannot catch a public name pointed at a
  * private address. What it does catch is every form somebody would actually
@@ -81,7 +84,11 @@ function privateHost(host: string): boolean {
   if (h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local')) return true;
   if (h.endsWith('.internal') || h.endsWith('.home.arpa')) return true;
   // IPv6: loopback, and the unique-local and link-local blocks.
-  if (h === '::1' || /^f[cd][0-9a-f]{2}:/i.test(h) || /^fe80:/i.test(h)) return true;
+  if (h === '::1' || h === '::' || /^f[cd][0-9a-f]{2}:/i.test(h) || /^fe80:/i.test(h)) return true;
+  // An IPv4 address written inside IPv6, which is the same machine by another
+  // spelling: ::ffff:127.0.0.1.
+  const mapped = /^::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$/.exec(h);
+  if (mapped) return privateHost(mapped[1]);
   const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
   if (v4) {
     const [a, b] = [Number(v4[1]), Number(v4[2])];
@@ -106,6 +113,47 @@ function allowed(raw: string): { ok: true; url: URL } | { ok: false; why: string
   if (url.protocol !== 'https:') return { ok: false, why: 'Calendar links have to be https.' };
   if (privateHost(url.hostname)) return { ok: false, why: 'That address is not on the public internet.' };
   return { ok: true, url };
+}
+
+/**
+ * The body, up to the cap, and nothing past it.
+ *
+ * Read through the stream rather than with `.arrayBuffer()`. This used to
+ * buffer the whole response and *then* compare its length to `MAX_BYTES`,
+ * which is not a cap at all: an address answering with a gigabyte had the
+ * gigabyte held in the function's memory before the check that was supposed to
+ * refuse it ever ran, so the limit was a way to spend memory rather than a way
+ * to protect it. Cancelling the stream is what actually stops the transfer.
+ *
+ * Returns null when the body is over the cap, so the caller can say so without
+ * having to distinguish that from an empty calendar.
+ */
+async function readCapped(response: Response): Promise<string | null> {
+  const declared = Number(response.headers.get('content-length') ?? '');
+  if (Number.isFinite(declared) && declared > MAX_BYTES) {
+    await response.body?.cancel();
+    return null;
+  }
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let bytes = 0;
+  let out = '';
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > MAX_BYTES) {
+        await reader.cancel();
+        return null;
+      }
+      out += decoder.decode(value, { stream: true });
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  return out + decoder.decode();
 }
 
 Deno.serve(async (req) => {
@@ -157,15 +205,20 @@ Deno.serve(async (req) => {
   // Where a redirect actually landed, checked with the same rule as the
   // address that was asked for.
   const landed = allowed(upstream.url || target.url.toString());
-  if (!landed.ok) return json({ error: 'That link redirects somewhere this will not follow.' }, 400);
+  if (!landed.ok) {
+    await upstream.body?.cancel();
+    return json({ error: 'That link redirects somewhere this will not follow.' }, 400);
+  }
 
-  if (!upstream.ok) return json({ error: `The calendar answered ${upstream.status}.` }, 502);
+  if (!upstream.ok) {
+    await upstream.body?.cancel();
+    return json({ error: `The calendar answered ${upstream.status}.` }, 502);
+  }
 
-  const body = await upstream.arrayBuffer();
-  if (body.byteLength > MAX_BYTES) {
+  const text = await readCapped(upstream);
+  if (text === null) {
     return json({ error: 'That calendar is larger than this will fetch.' }, 413);
   }
-  const text = new TextDecoder().decode(body);
   if (!/BEGIN:VCALENDAR/i.test(text.slice(0, 4096))) {
     return json(
       { error: 'That address answered with something that is not a calendar — usually a sign-in page, which means the link is the one you open in a browser rather than the feed.' },

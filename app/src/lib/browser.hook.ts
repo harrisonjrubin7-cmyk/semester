@@ -54,6 +54,25 @@ let held: Strip | null = null;
 const REOPENABLE = 10;
 const closed: {tab: AppTab; at: number}[]=[];
 const listeners = new Set<() => void>();
+/*
+ * The place the strip was last followed to.
+ *
+ * Here rather than in the component that does the following, because it is a
+ * fact about this visit — like the strip itself and the closed-tab list above
+ * — rather than about whatever happens to be rendering. `forgetStrip` clears
+ * it with them.
+ *
+ * It was a ref in `TabsFollow`, and the shell used to draw the app in one
+ * parent while its home screen was up and another once it was not, so going
+ * anywhere from the home remounted that component and the ref came back null.
+ * The navigation that caused the remount then looked like the session's first
+ * look, which is the one moment `TabsFollow` is allowed to ignore a
+ * navigation: two tabs open and nothing you did from the home was recorded.
+ * The shell mounts the app once now (`shell-remount.test.tsx`), so that
+ * particular remount is gone — but a session's fact still does not belong to
+ * a component, and the next remount will not cost a tab its place.
+ */
+let followed: string | null = null;
 
 /**
  * A screen this build still has.
@@ -104,6 +123,22 @@ export function here(): AppTab {
 /** The tab you are on is now showing this place. */
 export function record(screen: Screen, title: string, place: Action[]): void {
   put(visit(strip(), screen, title, place));
+}
+
+/**
+ * The place the app was last followed to, or null before anything has been.
+ *
+ * Null means "the strip has not looked yet this visit", which is the state
+ * the adoption rule in `TabsFollow` turns on — not "the component mounted",
+ * which is a different and much commoner event. See `followed` above.
+ */
+export function lastFollowed(): string | null {
+  return followed;
+}
+
+/** Remember that the strip has now been followed to this place. */
+export function follow(key: string): void {
+  followed = key;
 }
 
 /** Remember what this tab searched for, so it can be come back to. */
@@ -277,4 +312,5 @@ export function reopenClosed(): AppTab | null {
 export function forgetStrip(): void {
   held = null;
   closed.length = 0;
+  followed = null;
 }

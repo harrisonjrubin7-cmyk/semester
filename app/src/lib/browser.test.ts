@@ -14,6 +14,7 @@ import {
   current,
   dissolve,
   dump,
+  findTabs,
   fresh,
   freeTone,
   joinGroup,
@@ -744,5 +745,70 @@ describe('a pinned tab', () => {
       at: 0,
     });
     expect(load(saved, known).tabs[0].pinned).toBeUndefined();
+  });
+});
+
+/*
+ * Finding a tab by name.
+ *
+ * The strip holds a hundred now, which makes it a place to keep tabs rather
+ * than a row anybody reads end to end. Every rule here is about the list
+ * reading as *the strip, filtered* — same order, same groups, same pinned
+ * ones first — rather than as a ranking of its own.
+ */
+describe('searching the open tabs', () => {
+  const named = (s: Strip, titles: string[]): Strip => ({
+    ...s,
+    tabs: s.tabs.map((t, i) => ({ ...t, title: titles[i] ?? t.title })),
+  });
+  const titles = (found: ReturnType<typeof findTabs>) => found.map((f) => f.seat.tab.title);
+
+  it('is every tab when nothing is typed, in the strip’s own order', () => {
+    const s = named(strip(['home', 'calendar', 'study']), ['Today', 'Calendar', 'Study']);
+    expect(titles(findTabs(s, ''))).toEqual(['Today', 'Calendar', 'Study']);
+    expect(titles(findTabs(s, '   '))).toEqual(['Today', 'Calendar', 'Study']);
+  });
+
+  it('matches part of a name, however it is cased', () => {
+    const s = named(strip(['home', 'calendar', 'study']), ['Today', 'Calendar', 'ECON 1020 · Quiz']);
+    expect(titles(findTabs(s, 'econ'))).toEqual(['ECON 1020 · Quiz']);
+    expect(titles(findTabs(s, 'CAL'))).toEqual(['Calendar']);
+  });
+
+  it('wants every word, in any order', () => {
+    const s = named(strip(['home', 'calendar']), ['ECON 1020 · Quiz', 'PSCI 1104 · Quiz']);
+    expect(titles(findTabs(s, 'quiz econ'))).toEqual(['ECON 1020 · Quiz']);
+    expect(titles(findTabs(s, 'quiz'))).toEqual(['ECON 1020 · Quiz', 'PSCI 1104 · Quiz']);
+  });
+
+  it('finds a tab by the name of the group it is in', () => {
+    const s = named(grouped(['home', 'calendar', 'study'], [1, 2]), ['Today', 'Reading', 'Cards']);
+    // 'Essay' is the group's name, and belongs to two of the three tabs.
+    expect(titles(findTabs(s, 'essay'))).toEqual(['Reading', 'Cards']);
+  });
+
+  it('forgives a typo, the same way the rest of the app’s search does', () => {
+    const s = named(strip(['home', 'calendar']), ['Today', 'Calendar']);
+    expect(titles(findTabs(s, 'calender'))).toEqual(['Calendar']);
+  });
+
+  it('puts what matches exactly before what only nearly does', () => {
+    const s = named(strip(['home', 'calendar']), ['Calender Club', 'Calendar']);
+    expect(titles(findTabs(s, 'calendar'))).toEqual(['Calendar', 'Calender Club']);
+  });
+
+  it('keeps the pinned ones first, because that is where they are', () => {
+    const s = pin(named(strip(['home', 'calendar', 'study']), ['Quiz A', 'Quiz B', 'Quiz C']), 2);
+    expect(titles(findTabs(s, 'quiz'))).toEqual(['Quiz C', 'Quiz A', 'Quiz B']);
+  });
+
+  it('says which seat each answer is, so picking one goes to the right tab', () => {
+    const s = named(strip(['home', 'calendar', 'study']), ['Today', 'Calendar', 'Study']);
+    expect(findTabs(s, 'study')[0].seat.at).toBe(2);
+  });
+
+  it('answers with nothing rather than everything when nothing matches', () => {
+    const s = named(strip(['home', 'calendar']), ['Today', 'Calendar']);
+    expect(findTabs(s, 'zzzzq')).toEqual([]);
   });
 });

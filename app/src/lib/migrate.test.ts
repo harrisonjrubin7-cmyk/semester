@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { SCHEMA, STEPS, migrate, migrationLine, versionOf } from './migrate';
 import { directoryOf } from './look';
@@ -324,5 +326,46 @@ describe('rubbish in storage', () => {
       expect(() => migrate(bad)).not.toThrow();
       expect(migrate(bad).state.schemaVersion).toBe(SCHEMA);
     }
+  });
+});
+
+/**
+ * The skill that drives this app in a browser, held to the schema.
+ *
+ * `.claude/skills/run/SKILL.md` tells the next session to seed a layout and a
+ * navigation into `localStorage` before the first load. A seed with no
+ * `schemaVersion` on it is a *version 1* copy — see `versionOf` — so it is
+ * walked through every step here on the way in, and three of those steps
+ * rewrite `nav` outright. The seeded navigation is gone, with no error: the
+ * app opens on whatever the last of those steps decided, and the run reads as
+ * "the tab bar is broken" rather than as "the seed was overwritten".
+ *
+ * So the skill carries the current `SCHEMA` in its snippet, and the number in
+ * a document is the kind of thing that is right when it is written and wrong
+ * two months later. This is what stops the next step here from quietly
+ * breaking the tool used to check the next change.
+ */
+describe('the browser-driving skill', () => {
+  const SKILL = join(process.cwd(), '..', '.claude', 'skills', 'run', 'SKILL.md');
+
+  it('seeds the version this build writes', () => {
+    const text = readFileSync(SKILL, 'utf8');
+    const seeds = [...text.matchAll(/schemaVersion:\s*(\d+)/g)].map((m) => Number(m[1]));
+    expect(seeds.length, 'the skill no longer seeds a schemaVersion at all').toBeGreaterThan(0);
+    for (const seeded of seeds) {
+      expect(seeded, `the skill seeds schemaVersion ${seeded}; this build writes ${SCHEMA}`).toBe(
+        SCHEMA,
+      );
+    }
+  });
+
+  /*
+   * The reason, not only the number. A snippet that is right today and
+   * unexplained is one somebody simplifies back to the broken form.
+   */
+  it('says why it is there', () => {
+    const text = readFileSync(SKILL, 'utf8');
+    expect(text).toMatch(/migrate/);
+    expect(text).toMatch(/version 1|legacy/i);
   });
 });

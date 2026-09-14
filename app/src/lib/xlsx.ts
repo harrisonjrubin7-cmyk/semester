@@ -40,17 +40,42 @@
 
 import {
   BASE_SIZE,
+  INKS,
   asNumber,
   asPercent,
+  clock,
   filled,
   inkPaper,
   isFormula,
   picture,
   ref,
   styleOf,
+  sheetKey,
   washPaper,
+  type Ctx,
   type Sheet,
 } from './sheet';
+import {
+  CHART_TYPE,
+  DRAWING_TYPE,
+  chartXml,
+  drawingRels,
+  drawingXml,
+  readable,
+  sheetRels,
+} from './xlsxchart';
+import { chartsOf, type ChartRead, type SheetChart } from './chart';
+import { autoFilterXml, conditionalFor } from './xlsxcond';
+import { validationsFor } from './xlsxvalid';
+import { checksOf, type DataRule } from './validate';
+import { joinsOf, spanOf } from './joined';
+import { rulesOf, type CondRule } from './condfmt';
+import { namesOf, pointAt, writeRef, type NamedRange } from './names';
+import { filterOf, hidden as hiddenRows } from './filter';
+// `xml`, `HEAD` and `REL` moved out to `./ooxml` on main while this branch was
+// building the sheet out. They were defined in this file before; they are the
+// same three, in one place now that more than one writer needs them.
+import { HEAD, REL, xml } from './ooxml';
 
 /**
  * A look with nothing on it is no look at all.
@@ -63,22 +88,9 @@ function dropEmpty(look: Look): Look | undefined {
   return Object.keys(look).length ? look : undefined;
 }
 
-/** XML text escaping. Every string that reaches the file goes through here. */
-export function xml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
-}
 
-const HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 
 const MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
-const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 /** One cell. What it is, rather than what it looks like. */
 export type Cell =
@@ -128,18 +140,75 @@ export interface Look {
   wash?: string;
   /** Which sides are ruled, as any of `t`, `b`, `l`, `r`. */
   edge?: string;
+  /** Whether long text folds onto more lines rather than running past the edge. */
+  wrap?: boolean;
   /** Type size in points. Absent is 11, which is Excel's own default. */
   size?: number;
 }
 
 export interface Tab {
-  /** The name on the tab at the bottom. */
+  /** The name on the tab at the bottom, already made legal and unique. */
   name: string;
+  /**
+   * The sheet's own title, before it was made legal.
+   *
+   * Kept because a *name* points at a sheet by its title — `'Q1: marks'!C2` —
+   * and by the time a tab exists that title has become `Q1 marks`. Matching
+   * the two up is the whole job of writing a defined name, and without this
+   * the name is silently left out of the file: it was, and openpyxl is what
+   * said so.
+   */
+  title?: string;
   rows: Formatted[][];
   /** Whether the first row is headings: bold, and frozen so it stays in view. */
   header: boolean;
   /** Column widths in characters, where the caller has an opinion. */
   widths?: number[];
+  /**
+   * Charts over this tab's own cells, already read.
+   *
+   * Read rather than raw so the addresses behind a series are worked out once,
+   * by the file that owns the rule about which row is a heading — see
+   * `ChartRead.at` in `lib/chart.ts`.
+   */
+  charts?: { chart: SheetChart; read: ChartRead }[];
+  /** Rows the sheet's filter is hiding, by index. Hidden in the file, not dropped. */
+  away?: Set<number>;
+  /**
+   * Blocks of cells this sheet has named — see `lib/names.ts`.
+   *
+   * Written into `workbook.xml` rather than into the sheet, because a defined
+   * name belongs to the book: that is what makes `=SUM(Marks)` work from the
+   * summary tab, which is the only reason to have named anything.
+   */
+  names?: NamedRange[];
+  /**
+   * Blocks drawn as one cell, as normalised ranges — see `lib/joined.ts`.
+   *
+   * Written into the sheet rather than baked into the cells, because that is
+   * what a join *is* in this format too: the covered cells stay in the file as
+   * the blanks they are, and Excel draws the block from this list.
+   */
+  joins?: string[];
+  /**
+   * What the cells in a block are allowed to hold — see `lib/xlsxvalid.ts`.
+   *
+   * On screen a broken rule is a mark, which cannot be exported. The rule
+   * itself can be, so it is: a validated column written out without it is a
+   * column whose rule was silently dropped on the way.
+   */
+  checks?: DataRule[];
+  /** The block the filter covers, so Excel draws its own arrows on it. */
+  autoFilter?: string;
+  /**
+   * The colour rules on this sheet.
+   *
+   * The rules rather than the XML they become, because the `dxfId` each one
+   * points at depends on how many rules the tabs *before* it have — see
+   * `conditionalFor`. Rendering them here would mean every tab numbering from
+   * zero.
+   */
+  rules?: CondRule[];
 }
 
 export interface Book {
@@ -157,6 +226,28 @@ export interface Book {
 export function tabName(title: string, fallback = 'Sheet1'): string {
   const clean = title.replace(/[[\]:*?/\\]/g, ' ').replace(/\s+/g, ' ').trim();
   return clean ? clean.slice(0, 31) : fallback;
+}
+
+/**
+ * The names the tabs will actually carry, in order.
+ *
+ * Legal *and* unique, or the workbook opens with a repair notice — two courses
+ * called "Sheet" is an ordinary accident. Exported because a cross-sheet
+ * formula has to name the tab it will find in the finished file: a sheet
+ * titled `Q1: marks` becomes the tab `Q1 marks`, and `='Q1: marks'!B1` written
+ * beside it points at nothing. `screens/Sheet.tsx` rewrites the qualifiers
+ * through this, so the two cannot disagree about what a tab ends up called.
+ */
+export function tabNames(titles: readonly string[]): string[] {
+  const used = new Set<string>();
+  return titles.map((title, i) => {
+    const wanted = tabName(title, `Sheet${i + 1}`);
+    let name = wanted;
+    let n = 2;
+    while (used.has(name.toLowerCase())) name = `${wanted.slice(0, 28)} ${n++}`;
+    used.add(name.toLowerCase());
+    return name;
+  });
 }
 
 function cellXml(address: string, cell: Formatted, style: number, styles: Styles): string {
@@ -199,7 +290,7 @@ function cellXml(address: string, cell: Formatted, style: number, styles: Styles
   );
 }
 
-function sheetXml(tab: Tab, styles: Styles): string {
+function sheetXml(tab: Tab, styles: Styles, drawing = false, conditional = ''): string {
   const cols = tab.widths?.length
     ? `<cols>${tab.widths
         .map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`)
@@ -217,13 +308,33 @@ function sheetXml(tab: Tab, styles: Styles): string {
     .map((row, r) => {
       const style = tab.header && r === 0 ? 1 : 0;
       const cells = row.map((cell, c) => cellXml(ref(r, c), cell, style, styles)).join('');
-      return cells ? `<row r="${r + 1}">${cells}</row>` : '';
+      /*
+       * A filtered row is hidden, never left out. Dropping it would make the
+       * export a picture of the screen rather than the sheet — the rows would
+       * be gone rather than out of sight, and taking the filter off in Excel
+       * would bring back nothing.
+       */
+      const away = tab.away?.has(r) ? ' hidden="1"' : '';
+      return cells ? `<row r="${r + 1}"${away}>${cells}</row>` : '';
     })
     .join('');
 
   return (
     `${HEAD}<worksheet xmlns="${MAIN}" xmlns:r="${REL}">` +
-    `${view}${cols}<sheetData>${rows}</sheetData></worksheet>`
+    `${view}${cols}<sheetData>${rows}</sheetData>` +
+    /*
+     * `CT_Worksheet` is a sequence, and this is the order it wants:
+     * `autoFilter`, then `mergeCells`, then `conditionalFormatting`, then
+     * `dataValidations`, then `drawing` near the very end. Any other order is
+     * a repair notice with no hint of which element, so the order lives here
+     * once rather than at each writer.
+     */
+    (tab.autoFilter ? autoFilterXml(tab.autoFilter) : '') +
+    mergesXml(tab.joins ?? []) +
+    conditional +
+    validationsFor(tab.checks ?? []) +
+    (drawing ? '<drawing r:id="rId1"/>' : '') +
+    '</worksheet>'
   );
 }
 
@@ -268,6 +379,7 @@ function lookKey(look: Look): string {
     look.ink ?? '',
     look.wash ?? '',
     look.edge ?? '',
+    look.wrap ? 'w' : '',
     look.size ?? '',
   ].join('|');
 }
@@ -332,6 +444,18 @@ function fontXmlFor(look: Look): string {
   );
 }
 
+/**
+ * The blocks drawn as one cell.
+ *
+ * `count` is not optional, and a `mergeCells` element with no children is
+ * invalid rather than empty — so the whole element is left out where there is
+ * nothing to say, which is every sheet nobody has joined anything on.
+ */
+function mergesXml(joins: readonly string[]): string {
+  const made = joins.filter((range) => spanOf(range)).map((range) => `<mergeCell ref="${xml(range)}"/>`);
+  return made.length ? `<mergeCells count="${made.length}">${made.join('')}</mergeCells>` : '';
+}
+
 /** A fill is a solid patch of one colour, or nothing at all. */
 function fillXmlFor(wash: string): string {
   return `<fill><patternFill patternType="solid"><fgColor rgb="${xml(wash)}"/><bgColor indexed="64"/></patternFill></fill>`;
@@ -364,7 +488,7 @@ export interface Styles {
   index: (look: Look | undefined) => number;
 }
 
-export function styleTable(tabs: Tab[]): Styles {
+export function styleTable(tabs: Tab[], dxfs: string[] = []): Styles {
   const looks: Look[] = [...FIXED];
   const seen = new Set(looks.map(lookKey));
   for (const tab of tabs) {
@@ -436,10 +560,20 @@ export function styleTable(tabs: Tab[]): Styles {
         (font ? ' applyFont="1"' : '') +
         (fill ? ' applyFill="1"' : '') +
         (border ? ' applyBorder="1"' : '') +
-        (look.align ? ' applyAlignment="1"' : '');
-      return look.align
-        ? `<xf ${attrs}><alignment horizontal="${look.align}"/></xf>`
-        : `<xf ${attrs}/>`;
+        (look.align || look.wrap ? ' applyAlignment="1"' : '');
+      /*
+       * Wrapping is an *alignment* in this format, not a font or a fill, so it
+       * shares the one child element with `horizontal` — and a cell that wraps
+       * without being aligned still needs the element, which is why the test
+       * below is on either rather than on `align` alone.
+       */
+      const alignment =
+        look.align || look.wrap
+          ? `<alignment${look.align ? ` horizontal="${look.align}"` : ''}${
+              look.wrap ? ' wrapText="1"' : ''
+            }/>`
+          : '';
+      return alignment ? `<xf ${attrs}>${alignment}</xf>` : `<xf ${attrs}/>`;
     })
     .join('');
 
@@ -454,6 +588,9 @@ export function styleTable(tabs: Tab[]): Styles {
       '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
       `<cellXfs count="${looks.length}">${xfs}</cellXfs>` +
       '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>' +
+      // After `cellStyles` and before `tableStyles`, which is where the
+      // sequence puts them.
+      (dxfs.length ? `<dxfs count="${dxfs.length}">${dxfs.join('')}</dxfs>` : '') +
       '</styleSheet>',
     index: (look) => (look ? (at.get(lookKey(look)) ?? 0) : 0),
   };
@@ -463,6 +600,25 @@ export function styleTable(tabs: Tab[]): Styles {
 export function parts(book: Book): Record<string, string> {
   const tabs = book.tabs.length ? book.tabs : [{ name: 'Sheet1', rows: [], header: false }];
   const out: Record<string, string> = {};
+
+  /*
+   * Which tabs have charts, and which chart part each one's charts are.
+   *
+   * Worked out before anything is written because four parts have to agree
+   * about it — the content types, the worksheet's own relationships, the
+   * drawing and the chart itself — and each of them numbers from a different
+   * base. `chartAt` is the number of the first chart part belonging to a tab,
+   * counted across the whole book, because the chart parts are one flat series
+   * (`chart1.xml`, `chart2.xml`) however many tabs they are spread over.
+   */
+  let sofar = 1;
+  const drawn = tabs.map((tab, i) => {
+    const charts = tab.charts ?? [];
+    const from = sofar;
+    sofar += charts.length;
+    return { tab, index: i, charts, chartAt: from, drawing: i + 1 };
+  });
+  const withCharts = drawn.filter((d) => d.charts.length > 0);
 
   out['[Content_Types].xml'] =
     `${HEAD}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
@@ -475,6 +631,18 @@ export function parts(book: Book): Record<string, string> {
         (_, i) =>
           `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ` +
           'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>',
+      )
+      .join('') +
+    withCharts
+      .map(
+        (d) =>
+          `<Override PartName="/xl/drawings/drawing${d.drawing}.xml" ContentType="${DRAWING_TYPE}"/>` +
+          d.charts
+            .map(
+              (_, n) =>
+                `<Override PartName="/xl/charts/chart${d.chartAt + n}.xml" ContentType="${CHART_TYPE}"/>`,
+            )
+            .join(''),
       )
       .join('') +
     '</Types>';
@@ -495,31 +663,79 @@ export function parts(book: Book): Record<string, string> {
     `<Relationship Id="rId${tabs.length + 1}" Type="${REL}/styles" Target="styles.xml"/>` +
     '</Relationships>';
 
-  // Names have to be unique as well as legal, or the workbook opens with a
-  // repair notice — two courses called "Sheet" is an ordinary accident.
-  const used = new Set<string>();
-  const names = tabs.map((tab, i) => {
-    const wanted = tabName(tab.name, `Sheet${i + 1}`);
-    let name = wanted;
-    let n = 2;
-    while (used.has(name.toLowerCase())) name = `${wanted.slice(0, 28)} ${n++}`;
-    used.add(name.toLowerCase());
-    return name;
-  });
+  const names = tabNames(tabs.map((tab) => tab.name));
+
+  /*
+   * The names, pointed at the tabs this file actually has.
+   *
+   * A name stores the *title* of the sheet it covers, and a title is not a tab
+   * name — `Q1: marks` becomes the tab `Q1 marks`. So each one is re-pointed
+   * through the same list of final names the sheets got, and a name whose
+   * sheet is not in this export is left out rather than written as a
+   * reference to a tab that is not there, which Excel reports as a broken
+   * workbook rather than as a missing name.
+   *
+   * `CT_Workbook` is a sequence and `definedNames` comes after `sheets`.
+   */
+  const defined = tabs
+    .flatMap((tab, i) => (tab.names ?? []).map((named) => ({ named, from: names[i] })))
+    .flatMap(({ named, from }) => {
+      const at = pointAt(named.ref, from);
+      if (!at) return [];
+      // By the title it was written against, or by the tab name it became —
+      // a name may have been re-pointed already, or not.
+      const onto = at.sheet
+        ? names.find((_, i) => sheetKey(tabs[i].title ?? tabs[i].name) === at.sheet) ??
+          names.find((name) => sheetKey(name) === at.sheet)
+        : from;
+      if (!onto) return [];
+      return [
+        `<definedName name="${xml(named.name)}">${xml(writeRef(onto, at.from, at.to))}</definedName>`,
+      ];
+    })
+    .join('');
 
   out['xl/workbook.xml'] =
     `${HEAD}<workbook xmlns="${MAIN}" xmlns:r="${REL}"><sheets>` +
     names
       .map((name, i) => `<sheet name="${xml(name)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`)
       .join('') +
-    '</sheets><calcPr calcId="0" fullCalcOnLoad="1"/></workbook>';
+    '</sheets>' +
+    (defined ? `<definedNames>${defined}</definedNames>` : '') +
+    '<calcPr calcId="0" fullCalcOnLoad="1"/></workbook>';
 
   // Built once for the whole book rather than per sheet: `styles.xml` is one
   // part, and two tabs asking for `$#,##0.00` must land on the same index.
-  const styles = styleTable(tabs);
+  /*
+   * The colour rules of every tab, numbered into one table.
+   *
+   * `dxfId` indexes a table that belongs to the workbook, not to a sheet, so
+   * the ids are handed out here — the only place that can see how many rules
+   * came before this tab's.
+   */
+  let dxfAt = 0;
+  const conditional = tabs.map((tab) => {
+    const made = conditionalFor(tab.rules ?? [], dxfAt);
+    dxfAt += made.dxfs.length;
+    return made;
+  });
+
+  const styles = styleTable(tabs, conditional.flatMap((c) => c.dxfs));
   out['xl/styles.xml'] = styles.xml;
-  tabs.forEach((tab, i) => {
-    out[`xl/worksheets/sheet${i + 1}.xml`] = sheetXml(tab, styles);
+  drawn.forEach((d) => {
+    out[`xl/worksheets/sheet${d.index + 1}.xml`] = sheetXml(
+      d.tab,
+      styles,
+      d.charts.length > 0,
+      conditional[d.index].blocks,
+    );
+    if (!d.charts.length) return;
+    out[`xl/worksheets/_rels/sheet${d.index + 1}.xml.rels`] = sheetRels(d.drawing);
+    out[`xl/drawings/drawing${d.drawing}.xml`] = drawingXml(d.charts.length, d.tab.rows.length);
+    out[`xl/drawings/_rels/drawing${d.drawing}.xml.rels`] = drawingRels(d.charts.length, d.chartAt);
+    d.charts.forEach(({ chart, read }, n) => {
+      out[`xl/charts/chart${d.chartAt + n}.xml`] = chartXml(names[d.index], chart, read);
+    });
   });
 
   return out;
@@ -544,8 +760,8 @@ export async function xlsx(book: Book): Promise<Blob> {
  * a number if it reads as one and text otherwise — which is what keeps `007`
  * from becoming 7 and a date-shaped course code from becoming a date.
  */
-export function fromSheet(sheet: Sheet, header = true): Tab {
-  const shown = filled(sheet);
+export function fromSheet(sheet: Sheet, header = true, ctx: Ctx = clock()): Tab {
+  const shown = filled(sheet, ctx);
   const rows: Formatted[][] = shown.map((row, r) =>
     row.map((value, c) => {
       const address = ref(r, c);
@@ -581,6 +797,7 @@ export function fromSheet(sheet: Sheet, header = true): Tab {
             ...(style.ink ? { ink: inkPaper(style.ink) } : {}),
             ...(style.wash ? { wash: washPaper(style.wash) } : {}),
             ...(style.edge ? { edge: style.edge } : {}),
+            ...(style.wrap ? { wrap: true } : {}),
             ...(style.size && style.size !== BASE_SIZE ? { size: style.size } : {}),
           })
         : undefined;
@@ -602,7 +819,36 @@ export function fromSheet(sheet: Sheet, header = true): Tab {
       return n === null ? worn({ kind: 'text', value }) : worn({ kind: 'number', value: n });
     }),
   );
-  return { name: tabName(sheet.title), rows, header: header && rows.length > 1 };
+  /*
+   * The filter and the rules come out with the numbers.
+   *
+   * Both as what they are — hidden rows with an `autoFilter` over them, and
+   * `cfRule`s — rather than as their effect. Baking either in would produce a
+   * file that looks like the screen and stops being true on the first edit:
+   * the hidden rows gone rather than hidden, and a mark changed from 45 to 95
+   * still red.
+   */
+  const filter = filterOf(sheet);
+  const away = filter ? hiddenRows(sheet.cells, filter, ctx) : undefined;
+
+  return {
+    name: tabName(sheet.title),
+    title: sheet.title,
+    rows,
+    header: header && rows.length > 1,
+    ...(away && away.size ? { away } : {}),
+    ...(filter ? { autoFilter: filter.range } : {}),
+    rules: rulesOf(sheet, INKS),
+    /*
+     * The charts come out with the numbers, or the export is half the thing
+     * the student made. One that cannot be read is left out rather than
+     * written as an empty frame — see `readable`.
+     */
+    charts: readable(sheet.cells, chartsOf(sheet), ctx),
+    names: namesOf(sheet),
+    checks: checksOf(sheet),
+    joins: joinsOf(sheet).map((span) => span.range),
+  };
 }
 
 /**

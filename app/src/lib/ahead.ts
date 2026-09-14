@@ -29,7 +29,7 @@ import type { Catalog } from '../data/catalog';
 import { blocksFor } from '../data/catalog';
 import type { Commitment } from './activities';
 import { blocksOn, sharePerDay } from './activities';
-import { dateToIso, decorateItem } from './date';
+import { DOW, dateToIso, decorateItem } from './date';
 import { lengthOf } from './select';
 import type { DoneMap } from './standing';
 import { weekShape, type WeekShape, type Window } from './windows';
@@ -75,7 +75,6 @@ export interface Week {
 }
 
 
-const SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 /**
  * Minutes of things that state their own length — commitments, which do.
@@ -170,7 +169,7 @@ export function week(input: WeekInput): Week {
 
     days.push({
       date,
-      name: SHORT[date.getDay()],
+      name: DOW[date.getDay()],
       classes: round(classes),
       commitments: round(commitments),
       appointments,
