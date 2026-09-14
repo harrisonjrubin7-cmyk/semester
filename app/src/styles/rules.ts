@@ -227,6 +227,63 @@ export function check(dir: string): Problem[] {
   return out;
 }
 
+/** Every stylesheet under `src`, for the rules that are about CSS itself. */
+export function sheets(dir: string): { path: string; text: string }[] {
+  const out: { path: string; text: string }[] = [];
+  const walk = (at: string) => {
+    for (const entry of readdirSync(at, { withFileTypes: true })) {
+      const path = join(at, entry.name);
+      if (entry.isDirectory()) walk(path);
+      else if (entry.name.endsWith('.css')) out.push({ path, text: readFileSync(path, 'utf8') });
+    }
+  };
+  walk(dir);
+  return out;
+}
+
+/**
+ * A token may not be defined as itself.
+ *
+ * `--app-panel: var(--app-panel)` reads as "keep this one as it is" and is the
+ * exact opposite. A custom property whose value refers to itself is a cycle,
+ * and the spec's answer to a cycle is the guaranteed-invalid value: the token
+ * is *deleted* for that element and everything inside it. So is anything
+ * remapped from it in the same block, because substitution resolves against
+ * the element the declarations are on.
+ *
+ * Eight of these had accumulated in two blocks. Between them they emptied the
+ * palette for two whole families of screens — seventeen of the twenty tokens
+ * were undefined inside the browser shell's `.device`, so every screen drawn
+ * in that navigation had no card surfaces, no field grounds and no borders,
+ * and the primary action was a twelve-percent white on a white ground.
+ *
+ * Nothing is lost by forbidding it, because carrying a token through is what
+ * happens when a block says nothing about it at all.
+ */
+export function cycles(dir: string): Problem[] {
+  const out: Problem[] = [];
+  const self = /(--[a-z0-9-]+)\s*:\s*var\(\s*\1\s*[,)]/g;
+  for (const f of sheets(dir)) {
+    const rel = f.path.slice(f.path.indexOf('/src/') + 5);
+    // Comments blanked for the same reason `check` blanks them: this rule's
+    // own explanation names the shape it forbids.
+    const code = withoutComments(f.text);
+    for (const m of code.matchAll(self)) {
+      out.push({
+        file: rel,
+        line: lineOf(code, m.index),
+        found: m[0],
+        says:
+          `\`${m[1]}\` is defined as itself, which is a cycle: it and everything ` +
+          `remapped from it in the same block compute to the guaranteed-invalid ` +
+          `value, so the token is gone for this element and every one inside it. ` +
+          `Delete the declaration — a token carries through when nothing is said about it.`,
+      });
+    }
+  }
+  return out;
+}
+
 /** The multipliers, read straight out of the stylesheet. */
 export function multipliers(css: string): Problem[] {
   const out: Problem[] = [];

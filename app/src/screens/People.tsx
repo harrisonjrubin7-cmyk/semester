@@ -83,9 +83,14 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
           aria-label="Their name"
           style={{ flex: 1, height: 42 }}
         />
+        {/* Off until there is a name. The guard below is right — there is
+            nobody to add — and left this pressable and silent, which is the
+            one thing a person does first with an empty field. */}
         <button
           type="button"
           className="btn btn-secondary"
+          disabled={!name.trim()}
+          title={name.trim() ? undefined : 'Enter their name first'}
           onClick={() => {
             if (!name.trim()) return;
             dispatch({ type: 'addPerson', patch: { name, role } });
