@@ -437,6 +437,10 @@ export function Springboard() {
           it. What is in it does: four icons, and which four in what order is
           the only thing the dock is for. */}
       <div
+        /* The assistant's button rests in this corner, and a dock tile is
+           small enough that any overlap costs its label. See `tappable` in
+           `ai/Assistant.tsx`. */
+        data-dock=""
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${Math.max(1, dock.length)}, 1fr)`,

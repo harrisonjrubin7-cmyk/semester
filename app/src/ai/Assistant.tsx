@@ -147,6 +147,24 @@ function tappable(el: Element | null, self: Element | null, at: DOMRect | null):
    */
   if (node.hasAttribute('data-danger')) return true;
 
+  /*
+   * And a control in a dock, for the mirror-image reason.
+   *
+   * The proportional rule reasons about how much of a control you can still
+   * see, which is right for a full-width row. A dock tile is not that shape:
+   * it is about as wide as this button, its label is the bottom third of it,
+   * and the corner this button sits in is exactly where the last tile is. On
+   * the springboard at 390px the assistant covered 32% of Progress — under
+   * the bar, so the button stayed put, and what the 32% was is the word
+   * "Progress". The icon above it was still tappable; the tile had still
+   * lost the half that says what it does.
+   *
+   * The tab bar escapes this above by being cleared by construction — the
+   * button is positioned off `--tabbar-h`. A dock that is a screen's own
+   * element has no such measurement, so it asks to be lifted over instead.
+   */
+  if (node.closest('[data-dock]')) return true;
+
   if (!at) return true;
   const r = node.getBoundingClientRect();
   const area = r.width * r.height;

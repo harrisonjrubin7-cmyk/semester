@@ -175,6 +175,29 @@ describe('the assistant button, and what it sits on', () => {
     expect(assistant()).toContain("node.hasAttribute('data-danger')");
   });
 
+  /*
+   * The same exemption, for the opposite kind of control.
+   *
+   * A dock tile is about as wide as this button and its label is the bottom
+   * third of it, so the proportional rule — which is right for a full-width
+   * row with a clipped corner — reads a covered label as an acceptable
+   * overlap. Measured on the springboard at 390px: the button covered 32% of
+   * the last tile, under the 50% bar, and the 32% was the word "Progress".
+   */
+  it('treats a dock tile as covered at any overlap', () => {
+    expect(assistant()).toContain("node.closest('[data-dock]')");
+  });
+
+  it('is what the springboard marks its dock with', () => {
+    const board = src('../screens/Springboard.tsx');
+    // One dock, and it is the row that does not move between pages.
+    expect(board.match(/data-dock=""/g) ?? []).toHaveLength(1);
+    const at = board.indexOf('data-dock=""');
+    expect(board.slice(at, at + 400), 'the marker is on the grid of dock icons').toContain(
+      'gridTemplateColumns: `repeat(${Math.max(1, dock.length)}, 1fr)`',
+    );
+  });
+
   it('is what the delete buttons in Mine are marked with', () => {
     const mine = src('../screens/Mine.tsx');
     // One per row editor — a task's and an appointment's.
