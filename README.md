@@ -304,6 +304,15 @@ colour is one of twelve, and they are the same twelve a course can be pinned
 to: your accent, turned round the wheel, at a lightness measured against the
 ground you are actually reading on.
 
+**Pinning** is the other half of a strip that has got long. The four or five
+places you are in every day — Today, the calendar, the guide you are working
+through — are never finished with, and everything else is opened beside them.
+Pin one from its menu and it keeps its place at the front of the strip as its
+glyph alone: five of them cost the width of a name rather than half the row,
+a line separates them from what you merely have open, and they carry no cross,
+because a target that small with a close on it is a tab you lose to a thumb
+landing an inch out. Closing one is in the same menu, where it takes saying so.
+
 Tabs are dragged into the order you want them in, the same hold-move-let-go
 the rest of the app uses for anything with an order — and on the strip the
 drop means something as well: let a tab go among a group's tabs and it joins

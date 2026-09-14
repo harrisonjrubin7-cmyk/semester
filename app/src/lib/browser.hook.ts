@@ -13,6 +13,7 @@ import {
   leaveGroup,
   makeGroup,
   openBeside,
+  pin,
   read,
   rearrange,
   renameGroup,
@@ -200,6 +201,11 @@ export function foldGroup(id: string, shut: boolean): AppTab | null {
 /** Undo the grouping, keeping every tab open. */
 export function dissolveGroup(id: string): void {
   put(dissolve(strip(), id));
+}
+
+/** Keep a tab at the front of the strip, as its glyph. Or let it go. */
+export function pinTab(which: number, pinned: boolean): void {
+  put(pin(strip(), which, pinned));
 }
 
 /**

@@ -70,6 +70,18 @@ export interface AppTab {
    */
   query?: string;
   /**
+   * Kept at the front of the strip, as its glyph alone.
+   *
+   * The four or five places somebody is in every day — Today, the calendar,
+   * the guide they are working through — are not "open" in the sense the rest
+   * of the strip means it: they are never finished with, and they are what
+   * everything else is opened *next to*. A pinned tab says so: it takes a
+   * glyph's width rather than a name's, it sits before everything, and it has
+   * no cross on it, because closing one by a thumb landing an inch left of
+   * where it meant to is the whole reason browsers took the cross away.
+   */
+  pinned?: boolean;
+  /**
    * The group this tab belongs to, if it is in one.
    *
    * The id of a `TabGroup` in the same strip, never the group itself: a tab
@@ -309,7 +321,10 @@ export function add(strip: Strip, id: string = tabId()): Strip {
    * essay group is nearly always another tab about the essay anyway.
    */
   const from = strip.tabs[clamp(strip, strip.at)];
-  const born = from?.group ? { ...fresh(id), group: from.group } : fresh(id);
+  // Beside a *pinned* tab is not pinned, and is in no group either: a new tab
+  // is a place nobody has decided about yet, and pinning is a decision.
+  // `tidy` puts it at the head of the working strip.
+  const born = from?.group && !from.pinned ? { ...fresh(id), group: from.group } : fresh(id);
   return { ...strip, tabs: [...strip.tabs.slice(0, at), born, ...strip.tabs.slice(at)], at };
 }
 
@@ -426,11 +441,25 @@ export function tidy(strip: Strip): Strip {
   const named = new Set(strip.groups.map((g) => g.id));
   // An id no group answers to is dropped rather than repaired: it came from
   // an older build or a half-written store, and the honest reading of a tab
-  // pointing at nothing is a tab in no group.
-  const tabs = strip.tabs.map((t) => (t.group && !named.has(t.group) ? loose(t) : t));
+  // pointing at nothing is a tab in no group. A pinned tab is in none either:
+  // it is kept apart from the working strip, and a group with one end in the
+  // pinned run would be a group drawn in two places.
+  const tabs = strip.tabs.map((t) =>
+    t.group && (t.pinned || !named.has(t.group)) ? loose(t) : t,
+  );
 
   const order: AppTab[] = [];
   const done = new Set<string>();
+  // The pinned ones first, in the order they were pinned in. This is the
+  // second invariant the strip holds: everything pinned is before everything
+  // that is not, so the four places you are always in stay where your eye
+  // goes for them however the rest of the strip churns.
+  for (const tab of tabs) {
+    if (tab.pinned) {
+      order.push(tab);
+      done.add(tab.id);
+    }
+  }
   for (const tab of tabs) {
     if (done.has(tab.id)) continue;
     if (!tab.group) {
@@ -464,6 +493,36 @@ export function tidy(strip: Strip): Strip {
 function loose(tab: AppTab): AppTab {
   const { group: _out, ...rest } = tab;
   return rest;
+}
+
+/**
+ * Pin a tab, or let it go back to the working strip.
+ *
+ * Pinning takes a tab out of its group on the way — a group is a piece of
+ * work with several tabs in it, and a pinned tab is the opposite of that, one
+ * place kept to hand. `tidy` would do it anyway; doing it here is what makes
+ * the reason legible at the call rather than inferred from an invariant.
+ *
+ * Nothing else moves. The tab that is on is still on, wherever `tidy` has put
+ * it: pinning the thing you are looking at must not take you somewhere else.
+ */
+export function pin(strip: Strip, which: number, pinned = true): Strip {
+  const tab = strip.tabs[which];
+  if (!tab || Boolean(tab.pinned) === pinned) return strip;
+  const tabs = [...strip.tabs];
+  tabs[which] = pinned ? { ...loose(tab), pinned: true } : unpinned(tab);
+  return tidy({ ...strip, tabs });
+}
+
+/** The same tab, no longer pinned — the key removed rather than set false. */
+function unpinned(tab: AppTab): AppTab {
+  const { pinned: _out, ...rest } = tab;
+  return rest;
+}
+
+/** How many tabs are pinned, which is where the working strip begins. */
+export function pinnedCount(strip: Strip): number {
+  return strip.tabs.filter((t) => t.pinned).length;
 }
 
 /**
@@ -502,6 +561,12 @@ function loose(tab: AppTab): AppTab {
  * `lib/arrange.ts` hands back — the one implementation of "it moved" this app
  * has. Ids it does not name keep their places behind the ones it does, so a
  * stale order cannot lose a tab.
+ *
+ * Pinning is not something a drag decides. A pinned tab dragged along the
+ * strip stays pinned and `tidy` keeps it among the pinned ones; an unpinned
+ * one let go among them lands at the head of the working strip instead, which
+ * is the nearest place it can be. Pinning is a decision with a menu item on
+ * it, and one a thumb should not be able to make by sliding an inch too far.
  */
 export function rearrange(strip: Strip, order: string[], moved: string): Strip {
   const by = new Map(strip.tabs.map((t) => [t.id, t]));
@@ -520,7 +585,7 @@ export function rearrange(strip: Strip, order: string[], moved: string): Strip {
   for (const tab of strip.tabs) if (!seen.has(tab.id)) tabs.push(tab);
 
   const at = tabs.findIndex((t) => t.id === moved);
-  if (at !== -1) {
+  if (at !== -1 && !tabs[at].pinned) {
     const own = tabs[at].group;
     const left = tabs[at - 1]?.group;
     const right = tabs[at + 1]?.group;
@@ -793,6 +858,7 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
         title: typeof tab.title === 'string' && tab.title ? tab.title : screen,
         ...(typeof tab.query === 'string' && tab.query ? { query: tab.query } : {}),
         ...(typeof tab.group === 'string' && tab.group ? { group: tab.group } : {}),
+        ...(tab.pinned === true ? { pinned: true } : {}),
         // A tab whose place did not survive the check still knows its screen,
         // so it lands you there rather than nowhere. Losing the deadline you
         // had open is a smaller failure than a tab that does nothing.
