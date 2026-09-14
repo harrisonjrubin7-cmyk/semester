@@ -121,25 +121,62 @@ end $$;
 
 
 -- ── A pull for "everything since" ─────────────────────────────────────────
+--
+-- What a device does on waking: ask for every row whose `updated_at` is newer
+-- than the moment it last synced.
+--
+-- This block used to take a mark, sleep ten milliseconds, write a row, and
+-- expect the new row to sort after the mark. It could not ever pass, and the
+-- reason is worth keeping rather than quietly deleting. `touch_updated_at`
+-- stamps rows with `now()`, and `now()` is the time the *transaction* began.
+-- It does not move while the transaction runs. So every row this file writes
+-- carries the same instant, and `pg_sleep` advances the wall clock without
+-- advancing the one the rows are stamped from. The assertion was asking the
+-- database to tell apart two rows it had, correctly, recorded as simultaneous.
+--
+-- Two writes in one transaction being simultaneous is right rather than a
+-- thing to work around, which is why the fix is here and not in the trigger. A
+-- transaction is one instant; nothing in the app depends on ordering within
+-- one, because each device write is its own transaction and a later
+-- transaction gets a later `now()`.
+--
+-- So the contract is asserted against marks this block controls, on either
+-- side of the transaction's own instant — and the invariant that defeated the
+-- old version is pinned as a check of its own, so that reintroducing the sleep
+-- fails loudly instead of looking reasonable.
 
 do $$
 declare
-  you  uuid := 'cccccccc-0000-0000-0000-000000000001';
-  mark timestamptz;
-  n    bigint;
+  you   uuid := 'cccccccc-0000-0000-0000-000000000001';
+  began timestamptz;
+  n     bigint;
 begin
   perform pg_temp.become(you);
 
-  select max(updated_at) into mark from public.notes where user_id = you;
-  perform pg_sleep(0.01);
-
+  began := now();
   insert into public.tasks (user_id, id, data) values (you, 't1', '{"title":"New"}');
 
-  select count(*) into n from public.notes where user_id = you and updated_at > mark;
-  perform pg_temp.checkn('nothing unchanged comes back on an incremental pull', n, 0::bigint);
+  perform pg_sleep(0.01);
+  perform pg_temp.check('the clock rows are stamped from does not move inside a transaction',
+                        now() = began, true);
 
-  select count(*) into n from public.tasks where user_id = you and updated_at > mark;
-  perform pg_temp.checkn('the new row does', n, 1::bigint);
+  -- A device whose last sync predates this transaction asks for everything
+  -- since, and is given the notes and the task.
+  select count(*) into n from public.notes
+   where user_id = you and updated_at > began - interval '1 second';
+  perform pg_temp.checkn('an incremental pull returns every note written since the mark', n, 3::bigint);
+
+  select count(*) into n from public.tasks
+   where user_id = you and updated_at > began - interval '1 second';
+  perform pg_temp.checkn('and the task written with them', n, 1::bigint);
+
+  -- A device already current asks again and is given nothing, rather than the
+  -- whole account back on every wake.
+  select count(*) into n from public.notes where user_id = you and updated_at > began;
+  perform pg_temp.checkn('a device already up to date pulls no notes', n, 0::bigint);
+
+  select count(*) into n from public.tasks where user_id = you and updated_at > began;
+  perform pg_temp.checkn('and no tasks', n, 0::bigint);
 end $$;
 
 
@@ -195,22 +232,23 @@ begin
 
   update public.tasks set deleted_at = now() where user_id = you and id = 't1';
 
-  -- The sweep is not the app's to run, and the revoke that says so is the
-  -- thing to check first. `records.sql` revokes it from PUBLIC as well as from
-  -- the two roles, because a function carries a default EXECUTE grant to
-  -- PUBLIC that both roles inherit — revoking from the roles alone leaves it
-  -- callable, which is the mistake that comment was written about.
+  -- A student cannot run the sweep, and that is the point of it being
+  -- revoked. `records.sql` takes EXECUTE away from anon and authenticated
+  -- deliberately — it is a maintenance job for whoever operates the project,
+  -- and a function that deletes rows in bulk is not something a signed-in
+  -- device should be able to call. This file used to call it *as* a student
+  -- and so never exercised the rule; it asserts it now.
   begin
-    perform public.sweep_tombstones('90 days');
-    raise exception 'FAILED: a signed-in account could run the sweep';
+    removed := public.sweep_tombstones('90 days');
+    raise exception 'FAILED: a signed-in student ran the tombstone sweep';
   exception
     when insufficient_privilege then
-      raise notice 'ok  the sweep is not callable from the API';
+      raise notice 'ok  a signed-in student cannot run the tombstone sweep';
   end;
 
-  -- Run it as whoever owns the schema, which is who the comment says runs it.
-  -- `security invoker` is deliberate: the sweep crosses every account, so it
-  -- has to be the owner's row-level access rather than a caller's.
+  -- The operator can. `reset role` drops back to whoever is running this
+  -- file, which is who runs the sweep in life: a scheduled job or a person in
+  -- the SQL Editor, not a device.
   reset role;
   removed := public.sweep_tombstones('90 days');
   perform pg_temp.check('the sweep removed something', removed > 0, true);
@@ -227,6 +265,10 @@ begin
 end $$;
 
 
--- Nothing above is kept. If you reached here with no exception, every check
--- above printed `ok:` and the schema does what its comments claim.
+-- Nothing above is kept. Every check raises on failure, so reaching this line
+-- is the result — said out loud rather than left to be inferred from the
+-- absence of an error, which is how the other four suites in this directory
+-- end and how somebody skimming a long log decides it went well.
+do $$ begin raise notice 'ALL CHECKS PASSED'; end $$;
+
 rollback;

@@ -172,12 +172,7 @@ begin
    where user_id = auth.uid();
 
   select updated_at into after from public.calendar_feeds where user_id = auth.uid();
-  -- `clock_timestamp()` and not `now()`, which is the instant this transaction
-  -- began and so is already in the past by the time the trigger runs. The
-  -- claim being checked is "the stamp is not in the future", and the future
-  -- starts at the current reading of the clock — a check script is one long
-  -- transaction, so `now()` here would call every correct stamp a violation.
-  if after > clock_timestamp() then
+  if after > now() then
     raise exception 'FAILED: a device set the feed timestamp to %', after;
   end if;
   if after < before then

@@ -294,10 +294,38 @@ export function Plot({
                   d={path(points)}
                   fill="none"
                   stroke={d.colour}
-                  strokeWidth={1.9}
+                  // A contour map hands over a strength per line — see
+                  // `shades` in `lib/plot.ts`. Everything else is drawn whole.
+                  strokeOpacity={d.drawn.shades?.[i] ?? 1}
+                  strokeWidth={d.drawn.shades ? 1.3 : 1.9}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
+              ))}
+              {/*
+                A field's arrows: the shaft and its two barbs, in one stroke
+                each. The ink carries the strength the length could not — see
+                `arrows` in `lib/fields.ts` for why the lengths are flattened.
+              */}
+              {(d.drawn.arrows ?? []).map((arrow, i) => (
+                <g key={`a${i}`} stroke={d.colour} strokeOpacity={0.35 + 0.65 * arrow.strength} fill="none">
+                  <line
+                    x1={px(arrow.from.x)}
+                    y1={py(arrow.from.y)}
+                    x2={px(arrow.to.x)}
+                    y2={py(arrow.to.y)}
+                    strokeWidth={1.3}
+                    strokeLinecap="round"
+                  />
+                  <polyline
+                    points={[arrow.head[0], arrow.to, arrow.head[1]]
+                      .map((p) => `${px(p.x).toFixed(1)},${py(p.y).toFixed(1)}`)
+                      .join(' ')}
+                    strokeWidth={1.3}
+                    strokeLinejoin="round"
+                    strokeLinecap="round"
+                  />
+                </g>
               ))}
               {d.drawn.points.map((p, i) => (
                 <circle key={`p${i}`} cx={px(p.x)} cy={py(p.y)} r={3.6} fill={d.colour} />

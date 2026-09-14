@@ -58,12 +58,17 @@ port and touches nothing you have running. Needs a Postgres *server* installed,
 not just `psql`.
 
 Before it existed the only way to run one was to paste it into a live project's
-SQL Editor, against real data, by hand — so they were not run, and two of them
-had been failing on their first block since the migration that broke them
-landed. A failed block aborts the transaction, so everything after it is
-skipped: thirteen of the twenty checks in `records.check.sql` and all
-twenty-four in `classmates.check.sql` had never executed. That is the whole
-argument for a script.
+SQL Editor by hand, which is why `classmates.check.sql` says at its top to run
+it against an empty database and not against production — one real enrolment in
+the room it counts turns a correct suite red. `check.sh` *is* that empty
+database, made and thrown away each time, so the caveat stops being something
+to remember.
+
+The cost of there being no way to run them was two suites that had been failing
+on their first block since the migrations that broke them landed, and a failed
+block aborts the transaction, so every check after it was skipped. Both are
+fixed (#258, #265); the script is what keeps the next one from going unnoticed
+for as long.
 
 You can still paste one into the SQL Editor. It is the same file.
 

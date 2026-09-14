@@ -8,14 +8,22 @@
 -- with a Vanderbilt address and a spare afternoon.
 --
 -- They do not. Postgres will impersonate anybody you like. This script makes
--- four synthetic users, walks them through the things a real pair would do,
+-- five synthetic users, walks them through the things a real pair would do,
 -- and asserts what each of them is allowed to see. Every check raises on
 -- failure, so a clean run is the whole result.
 --
---   How to run it: open the Supabase SQL Editor, paste this file's CONTENTS —
---   not its path — and run. It creates its own users and rolls the entire
---   thing back at the end, so it leaves nothing behind and is safe against a
---   project with real data in it.
+--   How to run it: open the SQL Editor, paste this file's CONTENTS — not its
+--   path — and run. It creates its own users and rolls the entire thing back
+--   at the end, so it leaves nothing behind.
+--
+--   Run it against an empty database, not against production. It is *safe*
+--   anywhere — the rollback sees to that — but it is only *correct* where the
+--   rooms it uses are otherwise empty: it counts who is in `2026FA
+--   vanderbilt/PSCI 1104`, and one real person enrolled there turns "a member
+--   sees both people in their room" into three. That is not a hypothetical.
+--   The live project has exactly that enrolment, so this suite fails there for
+--   a reason that says nothing about the policies. A preview branch, or a
+--   local Postgres built from `migrations/`, is the place for it.
 --
 -- The one thing it cannot check is the realtime subscription, which is a
 -- websocket rather than a policy. Realtime honours the same select policy, so
@@ -24,25 +32,10 @@
 
 begin;
 
--- ── Five people ───────────────────────────────────────────────────────────
+-- ── Four people ───────────────────────────────────────────────────────────
 -- Ana and Ben share a class. Cara is at the university but takes something
--- else. Dan is at a different university altogether, and Eve has signed up
--- without confirming her address.
---
--- Dan used to be the outsider here, on the grounds that the gate was a
--- vanderbilt.edu address. It is not, and has not been since
--- classmates-schools.sql: that migration redefined `verified_student()` to ask
--- only whether an address is confirmed, and says at length why a per-school
--- restriction in a policy is the wrong shape — every school after the first
--- would need its own copy of every policy. What separates one campus from
--- another is the room key, `vanderbilt/PSCI 1104`, which is what every code
--- below now carries and what the check constraint has required since.
---
--- So Dan is a student who cannot see this class's rooms, and Eve is the one
--- who is not a student at all. This file asserted the opposite and had done
--- since that migration landed — it failed on its first block, which in one
--- transaction meant every check after it was skipped. Nothing in classmates.sql
--- was being verified by the script written to verify it.
+-- else. Dan is not at the university at all, and Eve has not confirmed her
+-- address — which is now the only one of those four facts the server acts on.
 
 do $$
 declare
@@ -61,11 +54,13 @@ begin
      'ben.test@vanderbilt.edu',  now(), now(), now()),
     (cara, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
      'cara.test@vanderbilt.edu', now(), now(), now()),
-    -- Confirmed, at another university. A student — of somewhere else.
+    -- Confirmed, at a domain the university does not own. He is the case that
+    -- says what the server gate actually is, and it is not the domain.
     (dan,  '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
-     'dan.test@example.edu',     now(), now(), now()),
-    -- Signed up and never clicked the link. Confirmation is the whole gate,
-    -- so this is the account that is not a student.
+     'dan.test@example.com',     now(), now(), now()),
+    -- Eve has never clicked the link. She is the gate that is actually left:
+    -- since the domain check went, `email_confirmed_at` is the whole of what
+    -- `verified_student()` asks, and nothing here tested it until now.
     (eve,  '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
      'eve.test@vanderbilt.edu',  null,  now(), now())
   on conflict (id) do nothing;
@@ -102,22 +97,42 @@ end $$;
 
 -- ── Who counts as a student ───────────────────────────────────────────────
 
+--
+-- Dan's line below asserts a *weakening*, deliberately, and it is worth saying
+-- so where somebody reading a red build will look.
+--
+-- This file used to assert that a confirmed address at another domain was not
+-- a student, because `verified_student()` required `@vanderbilt.edu`.
+-- `…0300_classmates_schools` removed that on purpose: a per-school domain
+-- check inside a row-level-security policy refuses the feature outright to
+-- every student at every other university, and the ground rules for school
+-- support say never to gate on an email domain. The server now checks that
+-- the address is confirmed and stops.
+--
+-- What that costs is written down in the migration and is not restated
+-- cheerfully here: a room used to be people who hold a vanderbilt.edu mailbox
+-- and now is people who say they are in the class. The domain check still
+-- happens in `eligible()` on the client, which is a courtesy and not a
+-- defence — this file has always said the policies are the security.
+--
+-- So the assertion is inverted rather than deleted. Deleting it would leave
+-- nothing to notice if somebody restored the domain gate, and the case is
+-- worth pinning in its new direction. It is not a licence to weaken the gate
+-- further: restoring server-side strength needs a `schools` table and a
+-- `school_id` on `profiles`, so a policy can compare an address against that
+-- school's own domains. When that lands, this expectation changes back — per
+-- school rather than per Vanderbilt — and that is the change to make, not a
+-- quiet loosening somewhere else.
 do $$
 begin
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');
-  perform pg_temp.check('a confirmed address is a student',
+  perform pg_temp.check('a confirmed vanderbilt.edu address is a student',
                         private.verified_student(), true);
 
-  -- The gate is confirmation, not the domain. Somebody at another university
-  -- is a student; what keeps them out of this class is the room key, checked
-  -- further down, not this function.
   perform pg_temp.become('44444444-4444-4444-4444-444444444444');
-  perform pg_temp.check('so is a confirmed address at another university',
+  perform pg_temp.check('a confirmed address at any other domain is one too — '
+                        'the server asks whether the mailbox is confirmed, not whose it is',
                         private.verified_student(), true);
-
-  perform pg_temp.become('55555555-5555-5555-5555-555555555555');
-  perform pg_temp.check('an unconfirmed address is not',
-                        private.verified_student(), false);
 end $$;
 
 -- ── Enrolling ─────────────────────────────────────────────────────────────
@@ -146,28 +161,33 @@ end $$;
 do $$
 declare n bigint;
 begin
-  -- Eve has not confirmed her address, so joining must fail outright rather
-  -- than quietly inserting a row nobody can see.
+  -- Dan can join, and that is the cost of the change written out as a row.
+  --
+  -- He used to be refused here because his address is not `@vanderbilt.edu`.
+  -- `…0300_classmates_schools` gave that up deliberately — see the note above
+  -- his fixture — so the honest assertion is that he gets in. Into his own
+  -- school's room, not Ana's: the room key carries the school, so a confirmed
+  -- stranger joining `rice-university/HIST 1010` tells us the gate opened
+  -- without disturbing what anybody sees in `vanderbilt/PSCI 1104`.
+  perform pg_temp.become('44444444-4444-4444-4444-444444444444');
+  insert into public.enrollments (user_id, term, code)
+  values (auth.uid(), '2026FA', 'rice-university/HIST 1010');
+  select count(*) into n from public.enrollments
+   where user_id = auth.uid() and code = 'rice-university/HIST 1010';
+  perform pg_temp.counted('a confirmed address at any domain can join a class', n, 1);
+
+  -- Eve cannot, and this is the gate that is left. If this line ever passes
+  -- for the wrong reason the feature is open to anybody who can type an
+  -- address, confirmed or not.
   perform pg_temp.become('55555555-5555-5555-5555-555555555555');
   begin
     insert into public.enrollments (user_id, term, code)
     values (auth.uid(), '2026FA', 'vanderbilt/PSCI 1104');
-    raise exception 'FAILED: an unconfirmed account was allowed to join a class';
+    raise exception 'FAILED: an unconfirmed address was allowed to join a class';
   exception
     when insufficient_privilege or check_violation then
-      raise notice 'ok  an unconfirmed account cannot join a class';
+      raise notice 'ok  an unconfirmed address cannot join a class';
   end;
-
-  -- Dan is a student, and joins his own university's room. Verified is not
-  -- the same as in the room: his enrolment is real and gets him nothing here,
-  -- which is the whole job the school prefix does.
-  perform pg_temp.become('44444444-4444-4444-4444-444444444444');
-  insert into public.enrollments (user_id, term, code)
-  values (auth.uid(), '2026FA', 'elsewhere/PSCI 1104')
-  on conflict do nothing;
-  select count(*) into n from public.enrollments
-   where term = '2026FA' and code = 'vanderbilt/PSCI 1104';
-  perform pg_temp.counted('another university''s room is not this one', n, 0);
 
   -- Ana may not enrol Ben. The policy is on the row, not on the request.
   perform pg_temp.become('11111111-1111-1111-1111-111111111111');

@@ -74,6 +74,16 @@ export const SHORTCUTS: Shortcut[] = [
    * `components/Bookmarks.tsx`.
    */
   { key: 'b', does: 'Bookmark the tab you are on', action: 'bookmark' },
+  /*
+   * One meaning, two expressions — see the `search` arm in `components/Keys.tsx`.
+   *
+   * The workspace draws a search field across the top of every screen, so this
+   * puts the cursor in it. The other five navigations draw none, so it opens
+   * the palette over whatever you were reading. Both are "search everything",
+   * which is why the sheet says that and not a sentence with an "or" in it: a
+   * shortcut list is read once, and a binding somebody has to case-split in
+   * their head is one they stop reaching for.
+   */
   { key: '/', does: 'Search everything', action: 'search' },
   { key: 'escape', does: 'Back', action: 'back' },
   { key: '?', does: 'This list', action: 'help' },

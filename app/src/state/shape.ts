@@ -1989,7 +1989,21 @@ export type Action =
   | { type: 'toggleTask'; id: string }
   | { type: 'deleteTask'; id: string }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
-  | { type: 'setAppointmentKind'; id: string; kind: string }
+  /*
+   * The same shape as `editTask`, and here for the same reason it is.
+   *
+   * `moveAppointment` changed when it is and `deleteAppointment` took it
+   * away, and between them was the whole of what you could do to one you had
+   * already written: a typo in the title, the wrong room or the wrong kind
+   * meant deleting it and adding it again. The calendar has said for longer
+   * than that has been true that tapping your own appointment "opens the list
+   * it lives in, which is where it can be edited" — this is the action that
+   * makes the sentence true.
+   *
+   * Not in `lib/undo.ts`, by the rule written there: an edit leaves the thing
+   * on screen to edit back, and only a drag and a delete take that away.
+   */
+  | { type: 'editAppointment'; id: string; patch: Partial<Omit<Appointment, 'id' | 'created'>> }
   | { type: 'deleteAppointment'; id: string }
   | { type: 'setMathTab'; tab: State['mathTab'] }
   | { type: 'newNote'; courseId: CourseId | null; itemId?: string | null }
