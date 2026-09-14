@@ -92,10 +92,15 @@ Three consequences, each checkable:
   move. Pin one in Settings and the browser shell ignores it.
 - **The light switch does not switch the app.** The panel is titled
   *Customize Semester* and its first heading is *Appearance*, but its Dark /
-  Light pair sets a class on the shell's own home (`g-home-light`) and leaves
-  the app's ground where it was. `desk/Customize` has the considered answer
-  to this exact control and wrote it down: the two buttons move the ground,
-  to Indigo or Paper, and somebody who chose Oxide or Fog keeps it.
+  Light pair only sets a class on this shell's own root (`g-home-light`) and
+  leaves the app's ground where it was. It is the wider half of the app that
+  gives that away rather than the shell itself: press **Light** in the browser
+  navigation and then switch to the workspace, and the app is still on its
+  dark ground — measured, `rgb(4, 5, 7)` before this change and
+  `rgb(223, 226, 232)` after. Settings goes on saying dark, too.
+  `desk/Customize` has the considered answer to this exact control and wrote
+  it down: the two buttons move the ground, to Indigo or Paper, and somebody
+  who chose Oxide or Fog keeps it.
 - **None of it is in a backup.** `backupOf(state)` carries the look keys;
   `semester.google.*` is outside the store, so it does not export, does not
   restore and does not merge. (It *is* erased — `lib/erase.ts` clears
@@ -148,6 +153,18 @@ next pass does not re-add it.
   the shell's own body rather than a destination, the fix is a port of
   `Directory` into it rather than a deletion, and it is larger than the class
   this pass is about. Next pass's first item.
+- **The Customize button cannot be pressed with a pointer.** Found while
+  photographing the panel this pass changes, and **older than this pass** —
+  it reproduces identically on `main`. `.g-home-legacy` is laid over the
+  browser shell's home with `pointer-events: none`, and the rule under it,
+  `.g-home-legacy .device > * { pointer-events: auto }`, hands them back to
+  the legacy pane, which is full-window and covers the footer. At the centre
+  of `.g-customize`, `document.elementFromPoint` returns
+  `.device-pane.deskwork-pane`, on this branch and on `main` alike. A
+  keyboard still reaches the button, and every other entry into the panel
+  still works. It is the same family as #238 — one piece of shell chrome
+  laid over another — and not this pass's class, so it is recorded here and
+  left for its own change rather than folded into a settings merge.
 - **`Today.tsx:456` and `Today.tsx:1511`** render the same task row, styles
   and `setMineTab` and all, in two branches. Duplicated UI, not a duplicated
   pathway — it belongs with the 74 hand-rolled rows `GROUPED-AUDIT.md`
