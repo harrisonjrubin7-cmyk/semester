@@ -25,6 +25,7 @@ import {
   openBeside,
   placeFor,
   read,
+  rearrange,
   renameGroup,
   select,
   tidy,
@@ -35,6 +36,7 @@ import {
   type Where,
 } from './browser';
 import { actionsFor } from './openhit';
+import { dropped } from './arrange';
 import type { Hit } from './find';
 import type { Screen } from './types';
 
@@ -498,5 +500,106 @@ describe('a strip with groups, through the store and back', () => {
     const s = load(saved, known);
     expect(s.groups).toHaveLength(1);
     expect(s.groups[0]).toEqual({ id: 'g', name: '', tone: 99 % GROUP_TONES, collapsed: false });
+  });
+});
+
+/*
+ * Dragging a tab, which on a strip with groups on it is two questions.
+ *
+ * Where it goes is `dropped` in `lib/arrange.ts` and is the same arithmetic
+ * every ordered list in this app uses. What the new position *means* is here:
+ * a tab dropped among a group's tabs has joined that group, and one dragged
+ * out from among them has left it. Every case below is a gesture somebody
+ * makes without thinking about it, and would notice immediately if it were
+ * wrong.
+ */
+describe('dragging a tab', () => {
+  /** The ids, in the order the strip draws them. */
+  const ids = (s: Strip) => s.tabs.map((t) => t.id);
+  /*
+   * The order a drop produces, from the app's own arithmetic rather than from
+   * a hand-written list. `dropped` is the one implementation of "it moved"
+   * this app has, and it is what the strip is wired to — a test that spliced
+   * its own array would be testing a second one.
+   */
+  const onto = (s: Strip, moved: string, target: string) => dropped(ids(s), moved, target);
+
+  it('moves a loose tab along the strip and leaves it loose', () => {
+    const was = strip(['home', 'calendar', 'study']);
+    const s = rearrange(was, onto(was, 't2', 't0'), 't2');
+    expect(names(s)).toEqual(['study', 'home', 'calendar']);
+    expect(held(s)).toEqual(['—', '—', '—']);
+  });
+
+  it('keeps you on the tab you were on, wherever it has moved to', () => {
+    const was = strip(['home', 'calendar', 'study'], 0);
+    const s = rearrange(was, onto(was, 't0', 't2'), 't0');
+    expect(current(s).screen).toBe('home');
+    expect(names(s)).toEqual(['calendar', 'study', 'home']);
+  });
+
+  it('joins the group it is dropped inside', () => {
+    // Between two of its tabs, which is the only place that can mean "in it".
+    const was = grouped(['home', 'calendar', 'study', 'mine'], [1, 2]);
+    const s = rearrange(was, ['t0', 't1', 't3', 't2'], 't3');
+    expect(held(s)).toEqual(['—', 'g', 'g', 'g']);
+    expect(names(s)).toEqual(['home', 'calendar', 'mine', 'study']);
+  });
+
+  it('stays out of a group it is only dropped beside', () => {
+    // The edge of a run is where somebody drops a tab they want next to a
+    // group rather than in it, so both sides have to agree before it joins.
+    const was = grouped(['home', 'calendar', 'study'], [1, 2]);
+    expect(held(rearrange(was, ['t1', 't2', 't0'], 't0'))).toEqual(['g', 'g', '—']);
+  });
+
+  it('leaves its group when it lands clear of every tab in it', () => {
+    const was = grouped(['home', 'calendar', 'study', 'mine'], [0, 1], 0);
+    const s = rearrange(was, ['t1', 't2', 't3', 't0'], 't0');
+    expect(held(s)).toEqual(['g', '—', '—', '—']);
+    expect(names(s)).toEqual(['calendar', 'study', 'mine', 'home']);
+  });
+
+  it('stays in its group when it is only moved about inside it', () => {
+    // The case a rule reading both neighbours would get wrong: at the front
+    // of its own run, the tab on its left is a stranger.
+    const was = grouped(['home', 'calendar', 'study'], [0, 1, 2]);
+    const s = rearrange(was, ['t2', 't0', 't1'], 't2');
+    expect(held(s)).toEqual(['g', 'g', 'g']);
+    expect(names(s)).toEqual(['study', 'home', 'calendar']);
+  });
+
+  it('does not pull a tab out of a group for passing its edge', () => {
+    /*
+     * Deliberate, and the one place this differs from a browser — which knows
+     * the group as a rectangle on screen and can tell "just outside" from
+     * "just inside" by a few pixels. A strip of tab ids cannot: the slot past
+     * the last member of a run is also the slot beside it. Between silently
+     * dropping a tab out of the work it belongs to and keeping it in, this
+     * keeps it in, and "Remove from Midterm" in the tab's own menu is the way
+     * out that never has to guess.
+     */
+    const was = grouped(['home', 'calendar', 'study'], [0, 1], 0);
+    expect(held(rearrange(was, ['t1', 't0', 't2'], 't0'))).toEqual(['g', 'g', '—']);
+  });
+
+  it('moves from one group straight into another', () => {
+    const two = strip(['home', 'calendar', 'study', 'mine', 'me'], 0, [
+      { id: 'g', name: 'Midterm', tone: 0, collapsed: false },
+      { id: 'h', name: 'Essay', tone: 1, collapsed: false },
+    ]);
+    two.tabs = two.tabs.map((t, i) =>
+      i < 2 ? { ...t, group: 'g' } : i < 4 ? { ...t, group: 'h' } : t,
+    );
+    const s = rearrange(two, ['t1', 't2', 't0', 't3', 't4'], 't0');
+    expect(held(s)).toEqual(['g', 'h', 'h', 'h', '—']);
+  });
+
+  it('is left alone by an order that names a tab twice or one that is gone', () => {
+    const was = strip(['home', 'calendar', 'study']);
+    const s = rearrange(was, ['t2', 't2', 'ghost'], 't2');
+    // Everything the order did not name keeps its place behind what it did,
+    // so a stale drop rearranges oddly at worst and never loses a tab.
+    expect(names(s)).toEqual(['study', 'home', 'calendar']);
   });
 });

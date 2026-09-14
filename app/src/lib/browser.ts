@@ -466,6 +466,78 @@ function loose(tab: AppTab): AppTab {
   return rest;
 }
 
+/**
+ * The strip, reordered by a drag — and what the new position means.
+ *
+ * Dragging a tab is not only "put it there". On a strip with groups on it,
+ * where a tab lands says which work it belongs to, and a browser answers that
+ * without being asked: dropped between two tabs of a group it joins the
+ * group, dragged out from among them it leaves. Anything else makes `tidy`
+ * fight the finger — a tab dropped inside a run would be pulled straight back
+ * out of it, and the drag would look broken rather than considered.
+ *
+ * The rule, in the order it is asked:
+ *
+ * 1. **Still touching its own group?** Then it stays in it. This is what makes
+ *    reordering *within* a group work: a tab dragged to the front of its own
+ *    run has a stranger on its left and its own group on its right, and a rule
+ *    that only looked at both sides would throw it out of the group for
+ *    arriving at the front of it.
+ * 2. **Strictly inside another group** — the tabs on both sides are in one
+ *    group — then it joins that one. Both sides, because the edge of a run is
+ *    exactly where somebody drops a tab they want *beside* a group rather
+ *    than in it.
+ * 3. Otherwise it is a loose tab, wherever it came from.
+ *
+ * Rule 1 costs one thing, and it is the right thing to pay: a tab dragged one
+ * slot past the end of its own run is still touching it, so it stays in the
+ * group. A browser can tell that gesture from the one beside it because it
+ * knows the group as a rectangle and the pointer as a point; a strip of ids
+ * cannot, since the slot past the last member is also the slot beside it.
+ * Between silently dropping a tab out of the work it belongs to and keeping
+ * it in, this keeps it in — and "Remove from Midterm", in the tab's own menu,
+ * is the way out that never has to guess.
+ *
+ * `order` is the ids as they are now drawn, which is what `dropped` in
+ * `lib/arrange.ts` hands back — the one implementation of "it moved" this app
+ * has. Ids it does not name keep their places behind the ones it does, so a
+ * stale order cannot lose a tab.
+ */
+export function rearrange(strip: Strip, order: string[], moved: string): Strip {
+  const by = new Map(strip.tabs.map((t) => [t.id, t]));
+  const seen = new Set<string>();
+  const tabs: AppTab[] = [];
+  for (const id of order) {
+    const tab = by.get(id);
+    if (tab && !seen.has(id)) {
+      tabs.push(tab);
+      seen.add(id);
+    }
+  }
+  // Anything the order did not name, in the order it already had. A drop can
+  // land while a tab is closing in another window; losing it would be worse
+  // than putting it at the end.
+  for (const tab of strip.tabs) if (!seen.has(tab.id)) tabs.push(tab);
+
+  const at = tabs.findIndex((t) => t.id === moved);
+  if (at !== -1) {
+    const own = tabs[at].group;
+    const left = tabs[at - 1]?.group;
+    const right = tabs[at + 1]?.group;
+    const joins =
+      own && (left === own || right === own) ? own
+      : left && left === right ? left
+      : undefined;
+    tabs[at] = joins ? { ...tabs[at], group: joins } : loose(tabs[at]);
+  }
+
+  // The tab that was on is still the tab that is on: a drag rearranges the
+  // strip, it does not go anywhere.
+  const on = strip.tabs[clamp(strip, strip.at)];
+  const now = Math.max(0, tabs.findIndex((t) => t.id === on?.id));
+  return tidy({ ...strip, tabs, at: now });
+}
+
 /** The group a tab is in, or null. */
 export function groupAt(strip: Strip, which: number): TabGroup | null {
   const held = strip.tabs[which]?.group;
