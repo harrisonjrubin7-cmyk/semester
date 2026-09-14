@@ -66,6 +66,16 @@ enrolments in the very rooms `classmates.check.sql` counts. `local.stub.sql`
 stands in for what the platform supplies, so a bare Postgres will do and
 nothing live is touched.
 
+    supabase/check.sh              # all five
+    supabase/check.sh groups       # or just one
+
+which is the sequence below with the failures reported rather than left in the
+log. It drops and rebuilds the database every run, so a suite that somehow left
+rows behind cannot quietly change the next run's answer, and it exits non-zero
+on a failure with the database kept for you to look at.
+
+By hand, which is worth reading once because the order matters:
+
     createdb semester_check
     psql -1 -v ON_ERROR_STOP=1 -d semester_check -f supabase/local.stub.sql
     for f in supabase/migrations/*.sql; do
