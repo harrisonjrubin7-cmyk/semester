@@ -48,5 +48,22 @@ export function loadSeed(): Promise<CourseModule[]> {
  * exists to avoid — the numbers are on a screen that offers the sample, so
  * computing them would download the sample to describe it. `pipeline/validate.mjs`
  * checks these against the real modules on every build, so they cannot drift.
+ *
+ * `items` and `episodes` are here for a second reason, and it is the stronger
+ * one. The validator finds them by matching the shape of the source, and a
+ * pattern that stops matching finds nothing rather than finding a fault — so
+ * the item checks could switch themselves off and the run would still say
+ * "all checks passed". Measured: putting `c:` on the same line as `id:` in one
+ * course dropped four items out of every item check, a planted duplicate id
+ * went unreported, and the exit code stayed 0. The only trace was a count in
+ * a success line nobody diffs. A declared number turns that silence into a
+ * failure, which is what it already did for the four above.
  */
-export const SEED_SUMMARY = { courses: 4, units: 44, cards: 278, lessons: 44 };
+export const SEED_SUMMARY = {
+  courses: 4,
+  units: 44,
+  cards: 278,
+  lessons: 44,
+  items: 48,
+  episodes: 8,
+};
