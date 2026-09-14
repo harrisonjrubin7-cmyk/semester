@@ -10,7 +10,7 @@ import {
   Search as SearchIcon,
 } from './components/Icons';
 import { Avatar } from './components/Avatar';
-import { showsAvatar } from './lib/header';
+import { headerRow } from './lib/header';
 import { useSitting } from './lib/sitting.hook';
 import { running } from './lib/session';
 import { creditHoursOr0 } from './lib/credits';
@@ -157,6 +157,7 @@ import { Sidebar } from './components/desk/Sidebar';
 import { AppsPanel } from './components/desk/AppsPanel';
 import { Customize } from './components/desk/Customize';
 import { SuggestingProvider } from './components/desk/suggesting';
+import { FocusBarProvider } from './components/desk/barfocus';
 import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
 import { Tapped } from './components/Tapped';
@@ -516,17 +517,25 @@ function fallbackHeader(screen: Screen, today: string): { kicker: string; title:
 
 function Header({
   /**
-   * Drawn beside chrome that already carries the icons.
+   * Drawn beside chrome that already carries these controls.
    *
-   * The workspace's bar holds the nine dots, the alerts bell and the avatar
-   * across the top of the window, on every screen — so a header underneath it
-   * repeating all three is two rows of the same four controls, which is the
-   * duplication this release exists to remove. What stays is what the bar
-   * does not have: the way back, the screen's own name, a running timer, the
-   * one-line capture and the record search.
+   * This was one flag called `slim`, and the list behind it was written
+   * against the workspace bar's *tools cluster* — the nine dots, the bell and
+   * the avatar — and never checked against the rest of that layout. The bar
+   * also draws a permanent search field, and the sidebar draws New, so the
+   * header went on repeating both: on Alerts in the workspace you got a
+   * magnifier directly under a search box and a `+` directly beside a New
+   * button.
+   *
+   * One fact now rather than a list: is this the workspace, whose bar carries
+   * these controls. It was briefly two — the sidebar was the second, because
+   * that column drew New and this header's `+` stood down for it. The column
+   * no longer draws New, so the `+` is unconditional again; `headerRow` in
+   * `lib/header.ts` has that argument. What always stays is what no other
+   * chrome has: the way back, the screen's own name, and a running timer.
    */
-  slim = false,
-}: { slim?: boolean } = {}) {
+  desk = false,
+}: { desk?: boolean } = {}) {
   const { state, dispatch, now, catalog } = useStore();
   const { kicker, title } = useHeader();
   /*
@@ -556,16 +565,9 @@ function Header({
   // Back appears whenever there is somewhere to go back to, which in feed mode
   // includes the root screens the tab bar would otherwise have covered.
   const canGoBack = state.history.length > 0;
-  // Search used to appear on two screens out of twenty-five, so the one tool
-  // that finds anything was itself the hardest thing to find. It is now on
-  // every screen, with no exception to make: search is an overlay over the
-  // screen you are on rather than a screen of its own, so there is no longer
-  // one it must hide on. Alerts stay at the top level, where a header is not
-  // already competing with a Back button and a long title.
-  const showActions = true;
   const atRoot = rootOf(state.screen) === state.screen;
   /*
-   * The two things the action row's width depends on, for `showsAvatar`.
+   * The two things the action row's width depends on.
    *
    * `useSitting` rather than a prop: `components/Running.tsx` reads the same
    * hook to decide whether to draw the pill at all, so the row and the rule
@@ -573,6 +575,18 @@ function Header({
    */
   const phone = useTier() === 'phone';
   const counting = running(useSitting()[0]);
+  /*
+   * Which of the five the row draws, decided in one place.
+   *
+   * There was a `const showActions = true` here, with a paragraph explaining
+   * that search no longer has a screen to hide on. True, and it had stopped
+   * being the question: a constant `true` is not a rule, and while it sat
+   * there the five controls under it each carried a condition of their own —
+   * which is how two of them came to be drawn on top of the workspace's copy
+   * of the same control. `lib/header.ts` answers for all five now, and the
+   * markup below asks rather than decides.
+   */
+  const row = headerRow({ atRoot, phone, counting, desk });
 
   /*
    * Move focus into the new screen's heading whenever the screen changes.
@@ -679,30 +693,42 @@ function Header({
         </h1>
       </div>
 
-      {showActions && (
-        /*
-         * The gap is load-bearing, not taste. `.btn-icon` draws 36px, and the
-         * `.tap` overlay on each of these grows the *hit* area to 44px — 4px
-         * past the button on each side. At the 2px gap this row used to have,
-         * the pitch was 38px and those overlays ran into each other: the later
-         * button won the overlap, so a thumb landing on the right of Search
-         * pressed Alerts. Eight puts the pitch at 44 and the overlays exactly
-         * meet. Tightening this re-breaks the targets without changing
-         * anything you can see, so `lib/header.test.ts` holds it.
-         */
-        <div style={{ display: 'flex', gap: 'var(--sp-4)', flex: 'none', alignItems: 'center' }}>
-          {/* Before the icons, because it is the only thing here that is
-              counting. Renders nothing at all unless a timer is running. */}
-          <Running />
-          {/* One line, from anywhere. The alternative to this button is four
-              taps through two pickers, which is why nobody adds the thing
-              they were told about walking out of a lecture.
+      {/*
+        Always drawn, because the timer pill lives in it and a running timer is
+        the one thing in this row that is *counting*. In the wide workspace
+        every one of the five icons below is off — the bar and the sidebar have
+        them all — so this is the pill's row and nothing else, and it collapses
+        to nothing when no timer is going.
 
-              The same thing on every screen, deliberately. It briefly opened
-              the importer on the courses list — the + adding what the screen
-              lists — and that made the one control whose meaning you can rely
-              on into one you have to check. Adding a course has its own
-              routes: by name in search, `n`, and the soft layout's bar. */}
+        The gap is load-bearing, not taste. `.btn-icon` draws 36px, and the
+        `.tap` overlay on each of these grows the *hit* area to 44px — 4px past
+        the button on each side. At the 2px gap this row used to have, the
+        pitch was 38px and those overlays ran into each other: the later button
+        won the overlap, so a thumb landing on the right of Search pressed
+        Alerts. Eight puts the pitch at 44 and the overlays exactly meet.
+        Tightening this re-breaks the targets without changing anything you can
+        see, so `lib/header.test.ts` holds it.
+      */}
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', flex: 'none', alignItems: 'center' }}>
+        {/* Before the icons, because it is the only thing here that is
+            counting. Renders nothing at all unless a timer is running. */}
+        <Running />
+        {/* One line, from anywhere. The alternative to this button is four
+            taps through two pickers, which is why nobody adds the thing they
+            were told about walking out of a lecture.
+
+            The same thing on every screen it is drawn on, deliberately. It
+            briefly opened the importer on the courses list — the + adding what
+            the screen lists — and that made the one control whose meaning you
+            can rely on into one you have to check. Adding a course has its own
+            routes: by name in search, `n`, and the soft layout's bar.
+
+            Off where the workspace's sidebar is drawn, because that column's
+            New button is this button, at the top of it. `headerRow` has the
+            argument, and the narrow workspace — no sidebar, and no + in the
+            bar — is why the question it asks is about the sidebar rather than
+            about the workspace. */}
+        {row.add && (
           <button
             type="button"
             className="btn btn-ghost btn-icon tap"
@@ -711,21 +737,30 @@ function Header({
           >
             <Plus size={19} />
           </button>
-          {/*
-            The one search, opened over whatever you were reading.
+        )}
+        {/*
+          The one search, opened over whatever you were reading.
 
-            This used to navigate to a `search` screen that ran the same
-            `findEverything` over the same `openHit` and drew the same tagged
-            rows as `components/Command.tsx` — one search behind two doors,
-            and which one you got depended on the width of your window. `/`
-            opened the overlay, and `Keys` is mounted only on the wide layout,
-            so a phone could reach the screen and never the overlay.
+          This used to navigate to a `search` screen that ran the same
+          `findEverything` over the same `openHit` and drew the same tagged
+          rows as `components/Command.tsx` — one search behind two doors, and
+          which one you got depended on the width of your window. `/` opened
+          the overlay, and `Keys` is mounted only on the wide layout, so a
+          phone could reach the screen and never the overlay.
 
-            The overlay is the one that survives, for the reason its own file
-            gives: looking something up should not cost you the page you were
-            reading, and a lookup you can abandon is one people actually make.
-            The screen it replaced could only be left by going back.
-          */}
+          The overlay is the one that survives, for the reason its own file
+          gives: looking something up should not cost you the page you were
+          reading, and a lookup you can abandon is one people actually make.
+          The screen it replaced could only be left by going back.
+
+          And the same argument, a second time, against this magnifier: in the
+          workspace the palette is already behind a search field drawn across
+          the whole top of the window, at every width, on every screen. Two
+          doors again — one of them a box you can type into and one of them an
+          icon one row below it — so the icon goes and the box stays, which is
+          the direction the first paragraph settled. `/` and ⌘K are unchanged.
+        */}
+        {row.search && (
           <button
             type="button"
             className="btn btn-ghost btn-icon tap"
@@ -735,6 +770,7 @@ function Header({
           >
             <SearchIcon size={19} />
           </button>
+        )}
           {/*
             All apps: the nine squares, and the other half of the button
             beside it.
@@ -763,7 +799,7 @@ function Header({
             and still do not overlap. `lib/header.test.ts` holds the second
             half of that.
           */}
-          {!slim && (
+        {row.apps && (
           <button
             type="button"
             className="btn btn-ghost btn-icon tap"
@@ -774,8 +810,8 @@ function Header({
           >
             <AppsIcon size={19} />
           </button>
-          )}
-          {atRoot && !slim && (
+        )}
+        {row.alerts && (
           <button
             type="button"
             className="btn btn-ghost btn-icon tap"
@@ -797,8 +833,8 @@ function Header({
               />
             )}
           </button>
-          )}
-          {/*
+        )}
+        {/*
             You, last in the row, on every navigation.
 
             This was the feed layout's own button and it went to Progress — a
@@ -807,8 +843,9 @@ function Header({
             phone puts at this exact corner: your picture, opening you.
 
             When it is drawn is `lib/header.ts`, measured rather than
-            guessed: at a root, and on a phone only while the timer pill is not
-            also in the row. Six controls and an 83px pill do not fit across
+            guessed: at a root, on a phone only while the timer pill is not
+            also in the row, and never in the workspace, whose bar draws this
+            same avatar across the top of the window. Six controls and an 83px pill do not fit across
             320px — the row was overflowing and clipping this very button — and
             the avatar is the one of the six with another route from a root
             screen, through the Progress tab, the All apps grid and the search
@@ -818,18 +855,17 @@ function Header({
             saying "Profile, Harrison" is the same information the letters in
             the box carry, and "HR" read out as letters is not.
           */}
-          {!slim && showsAvatar({ atRoot, phone, counting }) && (
-            <button
-              type="button"
-              className="btn btn-ghost btn-icon tap"
-              onClick={() => dispatch({ type: 'go', screen: 'profile' })}
-              aria-label={state.myName.trim() ? `Profile — ${state.myName.trim()}` : 'Profile'}
-            >
-              <Avatar name={state.myName} size={22} />
-            </button>
-          )}
-        </div>
-      )}
+        {row.avatar && (
+          <button
+            type="button"
+            className="btn btn-ghost btn-icon tap"
+            onClick={() => dispatch({ type: 'go', screen: 'profile' })}
+            aria-label={state.myName.trim() ? `Profile — ${state.myName.trim()}` : 'Profile'}
+          >
+            <Avatar name={state.myName} size={22} />
+          </button>
+        )}
+      </div>
     </header>
   );
 }
@@ -1184,11 +1220,23 @@ function Workspace({
   // Stable, or the effect in `TopBar` that reports the state would re-run on
   // every render of this component and report it again.
   const onSuggesting = useCallback((open: boolean) => setSuggesting(open), []);
+  /*
+   * The bar's search field, held here so the search home's centre box can put
+   * the cursor in it.
+   *
+   * The same shape as `suggesting` above and for the same reason: the bar and
+   * the screen are siblings, so anything that passes between them passes
+   * through here. See `components/desk/barfocus.ts` for why the centre box
+   * focuses this field rather than opening a search of its own.
+   */
+  const barBox = useRef<HTMLInputElement>(null);
+  const focusBar = useCallback(() => barBox.current?.focus(), []);
   /** The shell's own two screens, which are their own titles. See above. */
   const ownTitle = state.screen === 'search' || state.screen === 'directory';
 
   return (
     <SuggestingProvider value={suggesting}>
+      <FocusBarProvider value={focusBar}>
       {/*
         `.device` as well as `.deskwork`, and it is load-bearing rather than
         tidy. Every control primitive in `app.css` is scoped `.device .btn`,
@@ -1218,7 +1266,7 @@ function Workspace({
             navigation's top edge: a bar that appeared on the second tab would
             push the whole app down a row the first time you opened one. */}
         <TabStrip alwaysOn onBlank={() => dispatch({ type: 'go', screen: 'search' })} />
-        <TopBar onSuggesting={onSuggesting} />
+        <TopBar onSuggesting={onSuggesting} boxRef={barBox} />
         {/* And the bookmarks under the field, which is where the browser this
             layout is shaped like keeps them. It draws nothing at all until
             something has been starred. */}
@@ -1233,7 +1281,7 @@ function Workspace({
                 : 'device-pane deskwork-pane'
             }
           >
-            {!ownTitle && <Header slim />}
+            {!ownTitle && <Header desk />}
             <Said />
             {/* The sample banner belongs over records, which is what it is
                 about. The search home says the same thing in its own foot
@@ -1301,6 +1349,7 @@ function Workspace({
           <Customize onClose={() => dispatch({ type: 'customize', open: false })} />
         )}
       </div>
+      </FocusBarProvider>
     </SuggestingProvider>
   );
 }
@@ -1898,29 +1947,6 @@ export default function App() {
         </Suspense>
       </ScrollArea>
       {chrome.tabs && <TabBar />}
-      {chrome.fab && (
-        <button
-          type="button"
-          className="bare"
-          onClick={() => dispatch({ type: 'go', screen: 'import' })}
-          aria-label="Import a syllabus"
-          style={{
-            position: 'absolute',
-            right: 20,
-            bottom: 48,
-            width: 56,
-            height: 56,
-            background: 'var(--chrome)',
-            border: '1px solid rgba(255,255,255,.5)',
-            display: 'grid',
-            placeItems: 'center',
-            color: 'var(--chrome-ink)',
-            boxShadow: 'var(--glow)',
-          }}
-        >
-          <Plus size={24} />
-        </button>
-      )}
     </div>
   );
 }

@@ -126,7 +126,7 @@ later.
    most is the `anon` one: the publishable key is in the JavaScript every
    visitor downloads, so if `anon` can select from `calendar_feeds`, every
    calendar in the project is public. It should print `ALL CHECKS PASSED`.
-3. `psql "$DATABASE_URL" -f supabase/calendar.sql`
+3. `psql "$DATABASE_URL" -f supabase/migrations/20260901000800_calendar.sql`
 4. `supabase functions deploy calendar --no-verify-jwt`
 5. Publish a feed by hand for one account and open the URL in a browser. You
    should get an `.ics`. Then change one character of the token and confirm you

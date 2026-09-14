@@ -217,20 +217,34 @@ export function useMovable<T extends string>({
   disabled,
 }: {
   items: readonly T[];
-  onMove: (next: T[]) => void;
+  /**
+   * The new order, and which row moved to make it.
+   *
+   * Most lists need only the first: the order *is* the answer, and a course
+   * or a tile means the same thing wherever it sits. The tab strip needs the
+   * second, because where a tab lands says something about it — dropped
+   * between two tabs of a group it joins that group, dragged out of one it
+   * leaves — and that question cannot be answered from the order alone.
+   *
+   * Passed rather than derived by the caller: both paths into `settle` below
+   * already know the answer, and working it back out of two arrays is
+   * ambiguous exactly where it matters (two adjacent rows swapped are two
+   * readings of the same result).
+   */
+  onMove: (next: T[], moved: T) => void;
   disabled?: boolean;
 }): Movable<T> {
-  const settle = (next: T[]) => {
+  const settle = (next: T[], moved: T) => {
     // Never the same array: `dropped` and `nudged` hand back what they were
     // given when the move is a no-op, which is what makes this cheap.
-    if (next !== items) onMove(next);
+    if (next !== items) onMove(next, moved);
   };
 
   const { handlers, held, over, tookDrop } = useDragToMove<T>({
     disabled,
     onDrop: ({ payload, target }) => {
       if (!target) return;
-      settle(dropped(items, payload, target as T));
+      settle(dropped(items, payload, target as T), payload);
     },
   });
 
@@ -252,7 +266,7 @@ export function useMovable<T extends string>({
       : 0;
     if (step === 0) return;
     e.preventDefault();
-    settle(nudged(items, id, step));
+    settle(nudged(items, id, step), id);
   };
 
   const merged = (extra: RowExtras | undefined, own: CSSProperties | undefined) =>

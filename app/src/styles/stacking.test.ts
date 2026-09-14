@@ -102,51 +102,48 @@ describe('the workspace overlays', () => {
 });
 
 /**
- * The browser shell's home overlay must not swallow the shell under it.
+ * The browser shell's home, and the sheet of glass that lay over it.
  *
- * The same shape of bug as the one above, and invisible in the same way. On
- * the browser shell's search home, the legacy home is mounted in
- * `.g-home-legacy` — `position: fixed`, `inset: 0`, `z-index: 50`, drawn
- * across the whole window *over* the shell's own wordmark, field, shortcuts
- * and footer. `pointer-events: none` on it is what makes that survivable:
- * the overlay is there to draw, not to catch.
+ * That shell draws the app's own screen behind its home — `.g-home-legacy`,
+ * fixed over the window — so that what the app mounts over a screen (the
+ * undo toast, a dialog, the capture box) still reaches the student. The
+ * mount is `pointer-events: none` and hands them back with
+ * `.g-home-legacy .device > *`.
  *
- * `.g-home-legacy .device > *` then puts pointer events back, so that what
- * the legacy home actually draws — a toast, the undo bar, a dialog — is still
- * clickable. Two of those direct children are `.deskwork-body` and, under it,
- * `.device-pane`: full-window layout containers that on this overlay draw
- * nothing at all, because `.g-home-legacy .scrollarea` is `display: none`.
+ * Between `.device` and the screen sit two wrappers that are the size of the
+ * window, and that rule handed *them* the pointer too. Nothing on the home
+ * could be clicked: not the tab strip, not the search field, not the
+ * shortcuts, not Customize — measured with `elementFromPoint`, which
+ * returned `.device-pane` at the centre of all twenty of them.
  *
- * So the app had two invisible window-sized blocks catching every press at
- * z-index 50. Measured in a real browser: `document.elementFromPoint` over
- * the Customize Semester button returned `DIV.device-pane deskwork-pane`, and
- * the button — visible, hovering, the only control in the corner — could not
- * be clicked at all.
- *
- * jsdom has no layout and no hit-testing, so nothing about that is reachable
- * from a rendering test. The rule is held on the stylesheet instead: if the
- * blanket `> *` rule is there, the two containers have to be excused from it.
+ * jsdom has no layout, so the hit test cannot live in a test. The rule that
+ * decides it can: the wrappers give the pointer up, and the pane's own
+ * children — the only overlays inside it, the body being `display: none`
+ * here — take it back.
  */
-describe('the browser shell home overlay', () => {
-  const shell = readFileSync('src/components/google-shell.css', 'utf8');
+describe('the browser shell over the legacy mount', () => {
+  const css = readFileSync('src/components/google-shell.css', 'utf8');
+  const at = (rule: string) => {
+    const i = css.indexOf(rule);
+    expect(i, `${rule} is still in google-shell.css`).toBeGreaterThan(-1);
+    return i;
+  };
 
-  it('lets presses through to the shell it is drawn over', () => {
-    expect(shell, 'the overlay itself still passes presses through').toMatch(
-      /\.g-home-legacy\{[^}]*pointer-events:none/,
+  it('does not let the window-sized wrappers take the pointer', () => {
+    const hands = at('.g-home-legacy .device>*{pointer-events:auto}');
+    const gives = at('.g-home-legacy .deskwork-body,.g-home-legacy .deskwork-pane{pointer-events:none}');
+    // Same specificity, so the later one wins and the order is the rule.
+    expect(gives, 'the wrappers give the pointer up after the mount hands it out').toBeGreaterThan(
+      hands,
     );
   });
 
-  it('excuses the full-window containers from the blanket rule', () => {
-    // Only required while the blanket rule exists. If somebody removes it,
-    // nothing re-enables hit-testing and this has nothing to guard.
-    if (!shell.includes('.g-home-legacy .device>*{pointer-events:auto}')) return;
-    expect(shell, '.deskwork-body and .device-pane still catch nothing').toMatch(
-      /\.g-home-legacy \.deskwork-body,\.g-home-legacy \.device-pane\{pointer-events:none\}/,
+  it('keeps the overlays inside the pane live', () => {
+    expect(at('.g-home-legacy .deskwork-pane>*{pointer-events:auto}')).toBeGreaterThan(
+      at('.g-home-legacy .deskwork-body,.g-home-legacy .deskwork-pane{pointer-events:none}'),
     );
-    // And what they contain has to stay clickable, or a toast on this screen
-    // would be the thing that cannot be pressed instead.
-    expect(shell, 'a toast inside the pane is still clickable').toMatch(
-      /\.g-home-legacy \.device-pane>\*\{pointer-events:auto\}/,
+    expect(at('.g-home-legacy [role=dialog]{pointer-events:auto}')).toBeGreaterThan(
+      at('.g-home-legacy .deskwork-body,.g-home-legacy .deskwork-pane{pointer-events:none}'),
     );
   });
 });

@@ -42,8 +42,13 @@
 -- Every row that exists was written under the old policy, so every one of them
 -- is a Vanderbilt row by construction — this is a rename, not a guess.
 -- ═══════════════════════════════════════════════════════════════════════════
-
-begin;
+--
+-- The `begin;`/`commit;` this file used to carry are gone, and their absence
+-- is the point rather than an omission: as a migration it is already inside a
+-- transaction the runner opened, and a nested `begin` there is either an error
+-- or — worse — a `commit` halfway through that ends the runner's transaction
+-- and leaves the rest of the file running unprotected. The atomicity the
+-- original wanted is still there; it is just no longer this file's to ask for.
 
 -- ── 1. The eligibility check ──────────────────────────────────────────────
 -- Confirmed, not Vanderbilt.
@@ -109,8 +114,6 @@ alter table public.enrollments
 -- distribution.
 reindex index enrollments_by_class;
 reindex index messages_by_room;
-
-commit;
 
 -- ═══════════════════════════════════════════════════════════════════════════
 -- Rolling back

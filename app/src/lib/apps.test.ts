@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { appCount, appShelves } from './apps';
 import { glyphFor } from '../components/icons.pick';
 import { GROUPS, offered, saysFor, shortFor } from './nav';
+import { headerRow } from './header';
 import { writeOrder } from './launcher';
 import type { Role } from './role';
 import type { Capabilities } from './school';
@@ -227,18 +228,25 @@ describe('the button in the header', () => {
     const button = /aria-label="All apps"/.exec(src());
     expect(button, 'the All apps button has gone from the header').not.toBeNull();
     /*
-     * The three action buttons that are always drawn sit before the `atRoot`
-     * block; the two gated ones after it. This one must be in the first half.
+     * Asked of the rule rather than inferred from where the button sits in
+     * the file. This used to compare the button's offset against the offset
+     * of the `{atRoot &&` that gated the alerts bell — All apps had to come
+     * first — which held the right thing by the wrong means and stopped
+     * holding anything the moment those conditions moved out of the markup
+     * and into `lib/header.ts`. The rule is the thing to ask.
      *
-     * `{atRoot` rather than the whole condition: the alerts bell is gated on
-     * being at a root *and* on not being in the workspace, whose bar carries
-     * its own bell — see `slim` in `App.tsx`. What is held here is that All
-     * apps is before whatever that gate says, not what it says.
+     * Still not asked of the workspace: there the bar carries its own nine
+     * dots, so `apps` is false for the same reason the bell is, and that is
+     * `headerRow`'s business rather than this one's. What is held here is
+     * that being three levels into a course — which is exactly the case this
+     * button exists for — does not take it away.
      */
-    const at = src().indexOf('aria-label="All apps"');
-    const gate = src().indexOf('{atRoot &&');
-    expect(gate).toBeGreaterThan(-1);
-    expect(at, 'All apps must not be gated on being at a root screen').toBeLessThan(gate);
+    for (const phone of [true, false]) {
+      expect(
+        headerRow({ atRoot: false, phone, counting: false, desk: false }).apps,
+        'All apps must not be gated on being at a root screen',
+      ).toBe(true);
+    }
   });
 
   it('is mounted wherever the search overlay is', () => {

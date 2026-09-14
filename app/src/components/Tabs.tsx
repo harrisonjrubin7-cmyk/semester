@@ -40,19 +40,28 @@
  * buys back the room on a strip that has reached ten.
  */
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from 'react';
 import { useStore } from '../state/store';
 import { strip as stripNow } from '../lib/browser.hook';
 import {
   closeTab,
   foldGroup,
   here,
+  moveTab,
   openTab,
   pickTab,
   record,
   useStrip,
 } from '../lib/browser.hook';
-import { NEW_TAB, lanes, placeFor, sameplace } from '../lib/browser';
+import { NEW_TAB, lanes, pinnedCount, placeFor, sameplace } from '../lib/browser';
+import { useMovable, type Movable } from '../lib/arrange';
 import { screenName } from '../lib/nav';
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
@@ -254,9 +263,41 @@ export function TabStrip({
   const { dispatch } = useStore();
   const strip = useStrip();
   const tones = useTones();
+  /*
+   * Dragging a tab along the strip.
+   *
+   * The same hook every ordered list in this app is arranged with, so the
+   * gesture is the one that already moves a course, a shelf tile and the
+   * bottom bar — hold, drag, let go — and Alt with the arrow keys is the
+   * keyboard's version of it, which is the half a strip of small targets on a
+   * phone most needs. `lib/arrange.ts` is the whole of it.
+   *
+   * The ids are every tab, including the ones folded inside a collapsed
+   * group: they are not drawn, so nothing can be dropped on them, but they
+   * still hold their places in the order — dragging a tab past a folded group
+   * lands it past all of it rather than in the middle of it.
+   */
+  const rows = useMemo(() => strip.tabs.map((t) => t.id), [strip.tabs]);
+  const movable = useMovable<string>({
+    items: rows,
+    onMove: (order, moved) => moveTab(order, moved),
+  });
   /** The tab or group menu, and where it was summoned from. See `TabMenu`. */
   const [menu, setMenu] = useState<{ on: MenuOn; corner: Corner } | null>(null);
   const modern = useModernShell();
+
+  /**
+   * Picking a tab, unless the click is the tail of a drag.
+   *
+   * A pointer sequence that moved a tab still ends in a click on the tab it
+   * was dropped on, and without this every rearrangement would also navigate
+   * — usually to the tab that was in the way. `tookDrop` is `arrange.ts`'s
+   * answer to exactly that, and reading it clears it.
+   */
+  const pick = (at: number) => {
+    if (movable.tookDrop()) return;
+    land(pickTab(at));
+  };
 
   /** Put the app where a tab says, or hand a new tab to the search page. */
   const land = (tab: AppTab) => {
@@ -293,7 +334,8 @@ export function TabStrip({
   if (modern) return null;
   if (!inOverlay && !alwaysOn && strip.tabs.length < 2) return null;
 
-  const rows = lanes(strip);
+  const runs = lanes(strip);
+  const pins = pinnedCount(strip);
 
   return (
     <div
@@ -315,26 +357,39 @@ export function TabStrip({
       }}
     >
       <div style={{ display: 'flex', gap: 'var(--sp-1)', overflowX: 'auto', flex: 1, minWidth: 0 }}>
-        {rows.map((lane) => {
+        {runs.map((lane) => {
           const group = lane.group;
           if (!group) {
             const seat = lane.seats[0];
+            /*
+             * The line where the pinned run ends.
+             *
+             * Without it the strip reads as one row whose first few tabs have
+             * lost their names. With it there are two things: the places you
+             * keep, and what you happen to have open — which is what pinning
+             * is *for*, and it costs one pixel to say.
+             */
+            const edge = pins > 0 && seat.at === pins;
             return (
-              <Tab
-                key={seat.tab.id}
-                seat={seat}
-                on={seat.at === strip.at}
-                searching={searching}
-                onPick={() => land(pickTab(seat.at))}
-                onShut={() => shut(seat.at)}
-                onMenu={(e) => summon({ kind: 'tab', at: seat.at }, e)}
-              />
+              <Fragment key={seat.tab.id}>
+                {edge && <PinEdge />}
+                <Tab
+                  seat={seat}
+                  on={seat.at === strip.at}
+                  searching={searching}
+                  hold={movable.props(seat.tab.id)}
+                  onPick={() => pick(seat.at)}
+                  onShut={() => shut(seat.at)}
+                  onMenu={(e) => summon({ kind: 'tab', at: seat.at }, e)}
+                />
+              </Fragment>
             );
           }
           const tint = toneAt(tones, group.tone);
           return (
+            <Fragment key={group.id}>
+            {pins > 0 && lane.seats[0].at === pins && <PinEdge />}
             <div
-              key={group.id}
               /*
                * The run, drawn as one object.
                *
@@ -379,12 +434,14 @@ export function TabStrip({
                     seat={seat}
                     on={seat.at === strip.at}
                     searching={searching}
-                    onPick={() => land(pickTab(seat.at))}
+                    hold={movable.props(seat.tab.id)}
+                    onPick={() => pick(seat.at)}
                     onShut={() => shut(seat.at)}
                     onMenu={(e) => summon({ kind: 'tab', at: seat.at }, e)}
                   />
                 ))}
             </div>
+            </Fragment>
           );
         })}
         <button
@@ -456,6 +513,22 @@ export function TabStrip({
   );
 }
 
+/** The hairline between the tabs you keep and the ones you happen to have. */
+function PinEdge() {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        flex: 'none',
+        alignSelf: 'stretch',
+        width: 1,
+        margin: 'var(--sp-2) var(--sp-3)',
+        background: 'var(--app-line)',
+      }}
+    />
+  );
+}
+
 /**
  * One tab: its glyph, its name, its cross, and the ⌄ when it is the one on.
  *
@@ -468,6 +541,7 @@ function Tab({
   seat,
   on,
   searching,
+  hold,
   onPick,
   onShut,
   onMenu,
@@ -475,6 +549,16 @@ function Tab({
   seat: Seat;
   on: boolean;
   searching: string;
+  /**
+   * What makes this tab draggable: `props` from `useMovable`.
+   *
+   * The whole tab is the handle and the whole tab is what a drop lands on,
+   * which is right here for the reason `arrange.ts` gives — a row that is a
+   * row. The close cross inside it is not: a pointer that went down on ✕ is
+   * closing a tab, not picking one up, and `stopPropagation` there is what
+   * keeps those two gestures apart.
+   */
+  hold: ReturnType<Movable<string>['props']>;
   onPick: () => void;
   onShut: () => void;
   onMenu: (e: ReactMouseEvent) => void;
@@ -488,19 +572,32 @@ function Tab({
    * nobody asked twice.
    */
   const title = (on && searching.trim() ? searching : tab.title) || NEW_TAB;
+  /*
+   * A pinned tab is its glyph, and it has no cross.
+   *
+   * Both halves matter. The width is the point of pinning — five places kept
+   * to hand cost five glyphs rather than half the strip — and the missing
+   * cross is what makes that safe: a target this small with a close on it is
+   * a tab you lose to a thumb landing an inch from where it meant to. Closing
+   * one is in the menu, where it takes a deliberate press.
+   */
+  const pinned = Boolean(tab.pinned);
 
   return (
     <div
+      {...hold}
       onContextMenu={onMenu}
+      title={pinned ? title : undefined}
       style={{
         display: 'flex',
         alignItems: 'center',
         flex: 'none',
-        maxWidth: 190,
+        maxWidth: pinned ? undefined : 190,
         borderRadius: 'var(--r-lg) var(--r-lg) 0 0',
         background: on ? 'var(--app-panel)' : 'transparent',
         border: `1px solid ${on ? 'var(--app-line)' : 'transparent'}`,
         borderBottom: 'none',
+        ...hold.style,
       }}
     >
       <button
@@ -508,6 +605,9 @@ function Tab({
         className="bare tappable"
         onClick={onPick}
         aria-current={on ? 'page' : undefined}
+        // The name is the button's text on an ordinary tab and has to be said
+        // out loud on a pinned one, where the glyph is all there is to see.
+        aria-label={pinned ? title : undefined}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -515,27 +615,32 @@ function Tab({
           minWidth: 0,
           width: 'auto',
           textAlign: 'left',
-          padding: 'var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-4)',
+          padding: pinned
+            ? 'var(--sp-3) var(--sp-4)'
+            : 'var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-4)',
           fontSize: 'var(--type-sm)',
           ...(on ? {} : secondLine()),
         }}
       >
         {tab.screen ? <TabGlyph screen={tab.screen} size={15} /> : <SearchIcon size={15} />}
-        <span
-          style={{
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {title}
-        </span>
+        {!pinned && (
+          <span
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {title}
+          </span>
+        )}
       </button>
       {on && (
         <button
           type="button"
           className="bare tappable"
           onClick={onMenu}
+          onPointerDown={(e) => e.stopPropagation()}
           aria-label={`What this tab can do — ${title}`}
           aria-haspopup="dialog"
           style={{
@@ -548,10 +653,14 @@ function Tab({
           <ChevronDown size={13} />
         </button>
       )}
+      {!pinned && (
       <button
         type="button"
         className="bare tappable"
         onClick={onShut}
+        // A press on the cross is a close, not the start of a drag — see the
+        // note on `hold` above.
+        onPointerDown={(e) => e.stopPropagation()}
         aria-label={`Close ${title}`}
         style={{
           width: 'auto',
@@ -563,6 +672,7 @@ function Tab({
       >
         ✕
       </button>
+      )}
     </div>
   );
 }

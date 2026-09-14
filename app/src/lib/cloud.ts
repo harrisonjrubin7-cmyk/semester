@@ -287,7 +287,8 @@ export function explainSyncError(message: string): string {
   if (/schema cache|does not exist|relation .* does not exist/i.test(message)) {
     return (
       `${message}\n\nThe database tables have not been created yet. Whoever runs this ` +
-      `deployment needs to run supabase/schema.sql once in the SQL Editor — and if the ` +
+      `deployment needs to apply the migrations in supabase/migrations/ — this one ` +
+      `wants the first, 20260901000100_schema.sql — and if the ` +
       `tables are already there, the API's schema cache is stale: run ` +
       `NOTIFY pgrst, 'reload schema'; or restart the project.`
     );
@@ -396,7 +397,7 @@ export async function push(
 //
 // Four small writes, kept here with the rest of the account traffic rather
 // than in `lib/push.ts`, which stays free of Supabase so it can be tested
-// without one. What each row means is in `supabase/push.sql`.
+// without one. What each row means is in `supabase/migrations/20260901000600_push.sql`.
 
 /** This device, so the sender knows where to post. */
 export async function saveDevice(device: {

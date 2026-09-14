@@ -82,7 +82,7 @@ a different app, and it should be a decision rather than a default.
 
 | File | What it is |
 |---|---|
-| `supabase/records.sql` | The migration. Additive, guarded, safe to run twice, with the rollback written at the bottom. |
+| `supabase/migrations/20260901000700_records.sql` | The migration. Additive, guarded, safe to run twice, with the rollback written at the bottom. |
 | `supabase/records.check.sql` | Proves the migration does what its comments claim. Makes its own users, rolls back, leaves nothing. |
 | `app/src/lib/records.ts` | The merge semantics: newer wins, ties go to the tombstone. No network. |
 | `app/src/lib/records.test.ts` | 24 tests over those semantics. |
@@ -110,7 +110,7 @@ schedule this file switches on for you.
 ## Running it
 
 ```
-1. Read supabase/records.sql.
+1. Read supabase/migrations/20260901000700_records.sql.
 2. Supabase dashboard → SQL Editor → New query → paste its CONTENTS → Run.
 3. Same again with supabase/records.check.sql. Every line should print `ok:`.
    It rolls itself back, so it is safe against a project with real data.
