@@ -36,7 +36,7 @@ Three places, and only one of them reaches a screen.
 | Where | What it holds | Reaches a screen? |
 | --- | --- | --- |
 | `data/campus.ts` | `CAMPUS_LINKS` — the addresses | **Yes.** Links, and by id from Meals, Costs, Bill, Housing, Runway |
-| `data/schools/vanderbilt.json` | the school profile — capabilities and a data pack | **Partly.** See below |
+| `data/schools/vanderbilt.json` | the school profile — capabilities and a data pack | **Now yes.** It did not when this pass began — see below |
 | `lib/maps.ts`, `lib/findplace.ts` | the campus map: `CAMPUS_MAP`, and the bounding box campus search is biased towards | Yes |
 
 ## What was wrong
@@ -44,18 +44,26 @@ Three places, and only one of them reaches a screen.
 ### 1. Half the school profile is written down and never read
 
 `lib/school.ts` declares the profile, `data/schools/vanderbilt.json` fills it
-in, and seven of its fields are read by nothing. Grepped across `app/src`,
-excluding the declaration itself and the tests:
+in, and when this pass began ten of its fields were read by nothing. Grepped
+across `app/src`, excluding the declaration itself and the tests:
 
-| Field | Set in `vanderbilt.json`? | Read by |
-| --- | --- | --- |
-| `capabilities.libraryUrl` | yes — `library.vanderbilt.edu` | nothing |
-| `capabilities.healthUrl` | yes — `vanderbilt.edu/student-health` | nothing |
-| `capabilities.advisingUrl` | yes — `vanderbilt.edu/academic-advising` | nothing |
-| `data.academicCalendar` | no | nothing |
-| `data.buildings` | no | nothing |
-| `data.mealPlanTiers` | no | nothing |
-| `data.athleticsFeedUrl` | no | nothing |
+| Field | Set in `vanderbilt.json`? | Was read by | Now rendered on |
+| --- | --- | --- | --- |
+| `capabilities.registrarUrl` | yes — `yes.vanderbilt.edu` | nothing | Links |
+| `capabilities.lmsUrl` | yes — `brightspace.vanderbilt.edu` | nothing | Links |
+| `capabilities.orgPortalUrl` | yes — `anchorlink.vanderbilt.edu` | nothing | Links |
+| `capabilities.libraryUrl` | yes — `library.vanderbilt.edu` | nothing | Links |
+| `capabilities.healthUrl` | yes — `vanderbilt.edu/student-health` | nothing | Links |
+| `capabilities.advisingUrl` | yes — `vanderbilt.edu/academic-advising` | nothing | Links |
+| `data.academicCalendar` | no | nothing | Term deadlines |
+| `data.mealPlanTiers` | no | nothing | Meal plan |
+| `data.athleticsFeedUrl` | no | nothing | Connect |
+| `data.buildings` | no | nothing | —, and rightly |
+
+The first three were not in the original count and belong in it: they are
+addresses the profile carries, they were read by nothing either, and for
+Vanderbilt they were invisible only because `CAMPUS_LINKS` names YES,
+Brightspace and AnchorLink itself.
 
 This is the finding that decided the shape of the rest of the pass. The
 obvious reading of "put the university's data in the relevant field" is to
@@ -64,21 +72,47 @@ service addresses — and it would have changed nothing on any screen, because
 no screen asks for either. A populated field that renders nowhere is worse
 than an empty one: it reads as done.
 
-The three `*Url` capabilities are the sharper half of it, because they are
+The six `*Url` capabilities are the sharper half of it, because they are
 populated. Somebody filled them in expecting them to appear.
 
-Two of the seven are not really missing work:
+One of the ten is not missing work at all:
 
 - **`data.buildings`** is unused because the map does not need it. `findplace.ts`
   searches OpenStreetMap live, biased to a box drawn around campus
   (`[-86.812, 36.155, -86.788, 36.136]`), so `capabilities.campusMap: true` is
   honest — the capability is backed by the map, not by a bundled list.
-- **`lib/campusdirectory.ts`** is a parser for a directory a student supplies,
-  not bundled data, so it is not a gap either.
+`lib/campusdirectory.ts` is not on the list for the same kind of reason: it
+is a parser for a directory a student supplies, not a profile field.
 
-The other five are a decision nobody has made yet: render them, or delete
-them from the type. This pass did neither — it is a change to the app's
-screens, not to its data, and it should be made deliberately.
+The decision was to render them, and the second half of this branch does.
+Where each one went, and why there:
+
+- **The six addresses → Links**, through `lib/schoollinks.ts`, which turns a
+  profile into ordinary `CampusLink` rows and drops any address the screen
+  is drawing already. That dedupe is the whole reason this is not visible
+  duplication: for Vanderbilt it suppresses four of the six, and what
+  survives is Student health and Academic advising, which nothing had. For
+  a school somebody added themselves all six survive, which is the case it
+  is really for.
+- **`academicCalendar` → Term deadlines**, as a third door beside "Fill them
+  in" and "Paste the page". `fromCalendar` in `lib/registrar.ts` turns a
+  published term into the same `Found[]` the paste door produces, so it
+  arrives the same way: every row proposed, every row tickable, nothing
+  saved until somebody says so. A school's own wording is matched to a
+  landmark by the same `HINTS` the parser uses, so "Last day to drop a
+  course without a W" lands on `drop-clean` rather than on a row of its own.
+  The screen's promise — the app ships the questions, not the answers —
+  survives a school that happens to know the answers, because a profile can
+  be a year stale.
+- **`mealPlanTiers` → Meal plan**, as what the school says a plan holds
+  against what you have left. It is the one number the balance page never
+  shows you.
+- **`athleticsFeedUrl` → Connect**, as one button beside the paste field.
+
+Every one of them is gated on the field being there: absent, and there is no
+heading, no tab and no empty state apologising for somebody's university.
+That is the rule `lib/school.ts` already states for screens, applied to the
+rows inside them.
 
 ### 2. The links screen had the portals and none of the institution
 
@@ -148,8 +182,9 @@ Everything here needs a page actually read, which this session could not do:
 
 1. **The 2026–27 undergraduate academic calendar.** The pages exist —
    `registrar.vanderbilt.edu/calendars/2026-27-academic.php` and
-   `…/2026-27.php` — and would fill `data.academicCalendar` properly, once
-   something reads that field.
+   `…/2026-27.php` — and `data.academicCalendar` now has a screen waiting
+   for it: fill it in and the third door on Term deadlines appears, with
+   every date offered for confirmation.
 2. **Undergraduate meal plan tiers** — the swipe and dollar figures per plan,
    for `data.mealPlanTiers`, from `vanderbilt.edu/dining/meal-plans/undergraduate-plans/`.
 3. **Whether `healthUrl` and `advisingUrl` still resolve.** Both were in the

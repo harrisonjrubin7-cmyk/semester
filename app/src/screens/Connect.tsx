@@ -57,7 +57,7 @@ import type { FeedSource } from '../lib/types';
  * send one to.
  */
 export function Connect() {
-  const { state, dispatch, now, catalog, account } = useStore();
+  const { state, dispatch, now, catalog, account, school } = useStore();
   const rowTen = useRowStyle(10);
   const rowEleven = useRowStyle(11);
   const [busy, setBusy] = useState<string>('');
@@ -166,8 +166,8 @@ export function Connect() {
    * published it from the address, and the connected list is labelled with what
    * it found.
    */
-  const subscribe = async () => {
-    const read = readLink(url);
+  const subscribe = async (from: string = url) => {
+    const read = readLink(from);
     if (!read.ok) {
       setNote(read.why);
       return;
@@ -445,6 +445,25 @@ export function Connect() {
             {busy === 'file' ? 'Reading…' : 'Add an .ics file'}
           </FilePick>
         </div>
+        {/*
+          The one feed a school can hand over without anybody pasting
+          anything. `SchoolData.athleticsFeedUrl` sat in the profile unread
+          until this button; where a school has not given one — Vanderbilt
+          has not — there is no button and no empty promise of one.
+        */}
+        {school.data.athleticsFeedUrl && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            disabled={busy === 'feed'}
+            onClick={() => void subscribe(school.data.athleticsFeedUrl)}
+            style={{ height: 42, marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm)' }}
+          >
+            {busy === 'feed'
+              ? 'Reading…'
+              : `Add the ${school.capabilities.athleticsName || school.shortName || 'athletics'} fixtures`}
+          </button>
+        )}
         <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
           {dropping
             ? 'Let go to read it.'

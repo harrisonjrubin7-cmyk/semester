@@ -45,7 +45,7 @@ export function Meals() {
  return <div className="portal-workspace campus-workspace"><TabList label="Meals portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My meal plan'],['directory','Dining & meal plans'],['plan','Plan calculator']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<MealsDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="dining" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<MealPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
 }
 function MealsDetails() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch, now, school } = useStore();
 
   const [swipes, setSwipes] = useState('');
   const [cash, setCash] = useState('');
@@ -137,6 +137,43 @@ function MealsDetails() {
           Open the balance page →
         </a>
       ) : null}
+
+      {/*
+        What the school says a plan holds, against what you have left.
+        `SchoolData.mealPlanTiers` was in the profile and read by nothing;
+        here it is the one number the balance page never shows you — where
+        you started — so "forty-one swipes" can mean something. Absent for
+        Vanderbilt, and absent means no heading rather than an empty one.
+      */}
+      {(school.data.mealPlanTiers ?? []).length > 0 && (
+        <>
+          <SectionLabel>What {school.shortName || school.name} publishes</SectionLabel>
+          <div style={{ fontSize: 'var(--type-sm)', ...secondLine(), marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+            The plans as your school lists them, not your balance. Yours is whichever one you are
+            enrolled in — the balance page above is the only place that knows which.
+          </div>
+          <Group framed={false}>
+            {(school.data.mealPlanTiers ?? []).map((tier) => (
+              <CustomRow key={tier.name}>
+                <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>{tier.name}</span>
+                  <span style={{ flex: 'none', fontSize: 'var(--type-xs)', ...secondLine() }}>
+                    {[
+                      tier.swipes > 0
+                        ? `${tier.swipes} ${school.capabilities.swipeUnit || 'swipes'}`
+                        : '',
+                      tier.dollars > 0 ? money(tier.dollars * 100) : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                    {tier.period === 'week' ? ' a week' : ' a term'}
+                  </span>
+                </div>
+              </CustomRow>
+            ))}
+          </Group>
+        </>
+      )}
 
       <SectionLabel>Log what it says</SectionLabel>
       <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 9, lineHeight: 'var(--leading-relaxed)' }}>

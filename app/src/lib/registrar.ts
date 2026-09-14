@@ -28,6 +28,7 @@
  */
 
 import { dateToIso, daysBetween, isoToDate, realDate, startOfDay } from './date';
+import type { TermCalendar } from './school';
 // Lowercased for matching, derived from the one list. See `lib/date.ts`.
 import { MONTH_WORDS } from './date';
 
@@ -416,6 +417,56 @@ export function parse(text: string, year: number): Found[] {
       until,
       kind: LANDMARKS.find((l) => l.id === id)?.kind ?? (until ? 'break' : 'deadline'),
     });
+  }
+
+  return out;
+}
+
+/**
+ * A school's published calendar, offered as rows to confirm.
+ *
+ * `SchoolData.academicCalendar` holds what a registrar prints — term start
+ * and end, the deadlines, the breaks, the exam period — and until this
+ * function existed nothing anywhere read it. A profile could carry a whole
+ * term's dates and the screen that asks for those exact dates would still ask
+ * for them by hand.
+ *
+ * What it deliberately does not do is fill the sheet in. It returns the same
+ * `Found[]` the paste door returns, so a published calendar arrives the way a
+ * pasted one does: every row proposed, every row tickable, nothing saved
+ * until somebody says so. The rule that the app ships the questions and not
+ * the answers survives a school that happens to know the answers — because a
+ * profile can be out of date, and a stale drop deadline nobody confirmed is
+ * the exact failure this module exists to avoid.
+ *
+ * Deadlines are matched to a landmark by the same `HINTS` the parser uses, so
+ * a school writing "Last day to drop a course without a W" lands on
+ * `drop-clean` rather than on a row of its own. One that matches nothing is
+ * kept in the school's words, with an empty id, exactly as a pasted line is.
+ */
+export function fromCalendar(term: TermCalendar): Found[] {
+  const out: Found[] = [];
+  const add = (id: string, label: string, iso: string, until: string, kind: RegistrarKind) => {
+    if (!iso) return;
+    // First writer wins, so a school listing "Classes begin" both as its term
+    // start and again among its deadlines contributes one row, not two.
+    if (id && out.some((f) => f.id === id)) return;
+    out.push({ id, label, iso, until, kind });
+  };
+
+  add('classes-begin', 'Classes begin', term.startsOn, '', 'deadline');
+  add('last-class', 'Last day of classes', term.endsOn, '', 'deadline');
+  add('finals', 'Final exam period', term.finalsFrom ?? '', term.finalsTo ?? '', 'exams');
+
+  for (const b of term.breaks ?? []) {
+    const id = HINTS.find((h) => h.words.test(b.label))?.id ?? '';
+    add(id, b.label, b.from, b.to, 'break');
+  }
+
+  for (const d of term.deadlines) {
+    const id = HINTS.find((h) => h.words.test(d.label))?.id ?? '';
+    const known = LANDMARKS.find((l) => l.id === id);
+    add(id, d.label, d.on, '', known?.kind ?? 'deadline');
   }
 
   return out;
