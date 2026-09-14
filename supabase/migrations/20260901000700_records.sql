@@ -191,6 +191,34 @@ $$;
 --
 -- A pull asks for rows newer than the last one it saw, which is what makes
 -- this cheaper than the blob it replaces rather than merely more correct.
+--
+-- **`updated_at > cursor` is not a safe way to ask that, and the index below
+-- is not an invitation to.** These tables are still empty and no client reads
+-- them, so this is a warning rather than a bug report — but the client that
+-- fills them will reach for exactly that query, and it loses rows.
+--
+-- `updated_at` is set by a `before` trigger, so it is the moment the
+-- transaction *started*. The row becomes visible to anybody else when that
+-- transaction *commits*. Between the two, a pull can read the table, not see
+-- the row, and move its cursor past the stamp the row is carrying — after
+-- which `> cursor` never matches it again. One slow write, one quick one, a
+-- pull in between, and the slow one is invisible for good. Widening the
+-- trigger to `clock_timestamp()` narrows that gap to the length of the commit
+-- and does not close it.
+--
+-- The app hit this on the `state` and `courses` rows and fixed it by keeping
+-- the stamps it has actually taken rather than the newest one — see `Seen` and
+-- `unseen` in `app/src/state/shape.ts`, which is the shape to copy. It scales
+-- to one state row and a handful of courses; a table of notes wants one of:
+--
+--   * a cursor that is a commit-ordered sequence rather than a clock, or
+--   * an overlap — re-read a window either side of the cursor and let the
+--     merge discard what it already has, which is cheap because the merge is
+--     idempotent, or
+--   * the same trick as the app: remember the stamps taken, per row.
+--
+-- Whichever it is, it is a decision to make before the client ships, not a
+-- `where updated_at > $1` written because the index was already here.
 
 create index if not exists notes_changed        on public.notes        (user_id, updated_at);
 create index if not exists tasks_changed        on public.tasks        (user_id, updated_at);

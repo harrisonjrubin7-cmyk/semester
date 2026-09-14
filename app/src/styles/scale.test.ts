@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ALLOWED, check, counts, countsByFile, multipliers, overBudget, render } from './rules';
+import { ALLOWED, check, counts, countsByFile, cycles, multipliers, overBudget, render } from './rules';
 import { BUDGET } from './budget';
 
 /**
@@ -33,6 +33,12 @@ describe('the style rule', () => {
     expect(multipliers(css).map((p) => `${p.found} ${p.says}`)).toEqual([]);
   });
 
+  it('defines no token as itself', () => {
+    // The rule that matters most and shows least: a cycle does not fail, it
+    // silently deletes the token for a whole subtree. See `cycles`.
+    expect(cycles(src).map((p) => `${p.file}:${p.line} ${p.found}`)).toEqual([]);
+  });
+
   it('holds every file to its own count, with no slack to spend', () => {
     // Named, not counted, and per file rather than four totals: a failure has
     // to say which screen grew, because "type 675" said only that somebody,
@@ -61,6 +67,21 @@ describe('the style rule', () => {
  * message it produces is checked, not just the fact that it produced one.
  */
 describe('what it catches', () => {
+  it('a token defined as itself, naming the token and what it costs', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'cycle-'));
+    mkdirSync(join(dir, 'styles'), { recursive: true });
+    writeFileSync(
+      join(dir, 'styles', 'x.css'),
+      '/* --app-fg:var(--app-fg) in a comment is prose, not a cycle */\n' +
+        '.a{color:red;--app-panel:var(--app-panel);--app-line:var(--app-line-soft)}\n',
+    );
+    const found = cycles(dir);
+    // The self-referential one, and not the honest remapping beside it.
+    expect(found.map((p) => p.found)).toEqual(['--app-panel:var(--app-panel)']);
+    expect(found[0].line).toBe(2);
+    expect(found[0].says).toContain('guaranteed-invalid');
+  });
+
   const on = (text: string) => {
     // `check` reads from disk, so this exercises the same regexes through a
     // temporary file rather than duplicating them here — the alternative is a

@@ -312,6 +312,15 @@ same way the rest of the app's search is. Enter opens the one under the
 cursor. It appears once there are four tabs; below that the strip is the
 search.
 
+Under them is **Recently closed**, because the cross is eight pixels from the
+name and on a phone that is inside a thumb: the last ten tabs you shut are
+there to be put back, with what they were — the screen, the name, the group —
+into the seat they were closed from, and one press does it. It is the same
+list the Browser navigation's own reopen reads, and it survives a reload. Ten, and no more: a list of everything closed this term
+is a history of your term, which is a different thing to keep and not one this
+app decided to. **Clear** is beside the list, where somebody is when they want
+it gone.
+
 **Pinning** is the other half of a strip that has got long. The four or five
 places you are in every day — Today, the calendar, the guide you are working
 through — are never finished with, and everything else is opened beside them.
@@ -507,7 +516,8 @@ stayed behind. Three screens now, on the **Make** shelf, and none of them has a
 model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
-  quotations, tables, equations, page breaks — out as a real `.docx`, as
+  checklists, quotations, tables, equations, code blocks, page breaks — out as
+  a real `.docx`, as
   Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
   `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
   link becomes a real hyperlink in the Word file rather than an address typed
@@ -518,6 +528,15 @@ model in it or needs a key:
   which plans an assignment and refuses to write it. This one arranges what you
   type. Paste notes or Markdown in and it reads headings, lists, tables and
   `$$…$$` equations into blocks you can edit.
+
+  A **checklist** is a list you can tick, and each item remembers whether it is
+  done — out as `- [x]` in Markdown and as a ticked box in Word. A **code
+  block** is the one place in the app where nothing is read as markup: `**` in
+  a shell glob or a Python power operator is two asterisks somebody typed, not
+  a request for bold, and the indentation that carries half of what code means
+  survives into the Word file. Its Markdown fence grows longer than any run of
+  backticks inside it, so a snippet *about* Markdown does not quietly end its
+  own block halfway down.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
   `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It

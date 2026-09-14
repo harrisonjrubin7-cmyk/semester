@@ -25,6 +25,7 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import type { Seen } from '../state/shape';
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 const URL = env.VITE_SUPABASE_URL ?? '';
@@ -315,8 +316,18 @@ export interface CloudState {
 export interface Snapshot {
   state: CloudState | null;
   courses: { id: string; data: unknown }[];
-  /** Newest updated_at across the account's rows, as epoch ms. 0 when empty. */
+  /**
+   * Newest updated_at across the account's rows, as epoch ms. 0 when empty.
+   *
+   * For saying so on screen — "took the account's copy, updated at …" — and
+   * nothing else. It used to decide whether to take at all, by being compared
+   * with a number this device had written down, and `state/shape.ts` has the
+   * long version of why a single newest-stamp cannot answer that question.
+   * `seen` answers it now.
+   */
   updated: number;
+  /** Every row's stamp, for `unseen` to compare against what was last taken. */
+  seen: Seen;
 }
 
 export async function pull(userId: string): Promise<Snapshot> {
@@ -329,15 +340,18 @@ export async function pull(userId: string): Promise<Snapshot> {
   if (stateRow.error) throw new Error(stateRow.error.message);
   if (courseRows.error) throw new Error(courseRows.error.message);
 
-  const stamps = [
-    stateRow.data?.updated_at,
-    ...(courseRows.data ?? []).map((r) => r.updated_at as string),
-  ].filter(Boolean) as string[];
+  const rows = (courseRows.data ?? []) as { id: string; data: unknown; updated_at: string }[];
+  const stateAt = stateRow.data?.updated_at as string | undefined;
+  const stamps = [stateAt, ...rows.map((r) => r.updated_at)].filter(Boolean) as string[];
 
   return {
     state: (stateRow.data?.data as CloudState) ?? null,
-    courses: (courseRows.data ?? []).map((r) => ({ id: r.id as string, data: r.data })),
+    courses: rows.map((r) => ({ id: r.id, data: r.data })),
     updated: stamps.length ? Math.max(...stamps.map((s) => new Date(s).getTime())) : 0,
+    seen: {
+      ...(stateAt ? { state: stateAt } : {}),
+      courses: Object.fromEntries(rows.map((r) => [r.id, r.updated_at])),
+    },
   };
 }
 
@@ -361,22 +375,39 @@ export async function push(
   state: CloudState,
   courses: { id: string; data: unknown }[],
   removed: string[] = [],
-): Promise<void> {
+): Promise<Seen> {
   const db = (await cloud());
 
-  const { error: stateError } = await db
+  /*
+   * `.select('updated_at')` on the way out, and it is the point of this
+   * function returning anything at all.
+   *
+   * The device has to write down what it has now taken, and the only honest
+   * value is the stamp the database just wrote. This used to be `Date.now()`
+   * on the device — see `state/shape.ts` for what that cost — and reading the
+   * stamp back costs nothing, because the row is already being returned by the
+   * statement that wrote it.
+   */
+  const { data: stateRow, error: stateError } = await db
     .from('state')
-    .upsert({ user_id: userId, data: state }, { onConflict: 'user_id' });
+    .upsert({ user_id: userId, data: state }, { onConflict: 'user_id' })
+    .select('updated_at')
+    .maybeSingle();
   if (stateError) throw new Error(stateError.message);
 
+  const stamps: Record<string, string> = {};
   if (courses.length > 0) {
-    const { error } = await db
+    const { data, error } = await db
       .from('courses')
       .upsert(
         courses.map((c) => ({ user_id: userId, id: c.id, data: c.data })),
         { onConflict: 'user_id,id' },
-      );
+      )
+      .select('id, updated_at');
     if (error) throw new Error(error.message);
+    for (const row of (data ?? []) as { id: string; updated_at: string }[]) {
+      stamps[row.id] = row.updated_at;
+    }
   }
 
   // A course deleted on this device has to be deleted there too, or the next
@@ -390,6 +421,18 @@ export async function push(
       .in('id', gone);
     if (pruneError) throw new Error(pruneError.message);
   }
+
+  /*
+   * What this device has taken, as of this push: its own rows at the stamps
+   * the database gave them.
+   *
+   * Rows belonging to another device are deliberately not in here. This device
+   * has not seen them, so the next refresh finds them missing from the set,
+   * takes them, and records them — which is exactly the behaviour that used to
+   * depend on their stamp beating a clock reading.
+   */
+  const at = (stateRow as { updated_at?: string } | null)?.updated_at;
+  return { ...(at ? { state: at } : {}), courses: stamps };
 }
 
 

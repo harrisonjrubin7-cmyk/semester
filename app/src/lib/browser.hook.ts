@@ -9,6 +9,7 @@ import {
   collapse,
   current,
   dissolve,
+  forgetClosed,
   joinGroup,
   leaveGroup,
   makeGroup,
@@ -17,6 +18,7 @@ import {
   read,
   rearrange,
   renameGroup,
+  reopen,
   select,
   toneGroup,
   visit,
@@ -45,13 +47,21 @@ import type { Screen } from './types';
 
 let held: Strip | null = null;
 /*
- * The tabs closed this visit, most recent last.
+ * What was closed lately is on the strip, not beside it.
  *
- * Bounded on its own rather than by `MAX_TABS`: this is a short undo for a
- * mis-click, not a second strip, and it was ten when the cap was ten.
+ * It was a module-level array here — `closed`, most recent last, bounded at
+ * ten — and the strip grew its own list at the same time. Two lists for one
+ * question is the bug this codebase treats as fatal, and this one had the
+ * usual shape of it: closing a tab pushed onto both, reopening from one left
+ * the other holding a tab that was already back, and the browser shell's
+ * "Recently closed" and the tab list's disagreed about what there was.
+ *
+ * So the list lives on `Strip` (see `closed` in `lib/browser.ts`), which is
+ * where every other rule about tabs already lives — and which is what lets it
+ * survive a reload and be checked on the way back in, neither of which a
+ * module array could do. `lastClosed` and `reopenClosed` below keep their
+ * names and their behaviour, and read from it.
  */
-const REOPENABLE = 10;
-const closed: {tab: AppTab; at: number}[]=[];
 const listeners = new Set<() => void>();
 /*
  * The place the strip was last followed to.
@@ -178,11 +188,15 @@ export function pickTab(which: number): AppTab {
   return here();
 }
 
-/** Close one. Returns the tab that is now on — its neighbour, or a new tab. */
+/**
+ * Close one. Returns the tab that is now on — its neighbour, or a new tab.
+ *
+ * The closing *and* the remembering are both `close` in `lib/browser.ts`: a
+ * tab that has been closed and a tab that can be put back are one fact, and
+ * two lines here that had to agree about it were two lines that did not.
+ */
 export function closeTab(which: number): AppTab {
-  const before=strip();
-  if(before.tabs[which]){closed.push({tab:before.tabs[which],at:which});if(closed.length>REOPENABLE)closed.shift();}
-  put(close(before, which));
+  put(close(strip(), which));
   return here();
 }
 
@@ -243,6 +257,24 @@ export function dissolveGroup(id: string): void {
   put(dissolve(strip(), id));
 }
 
+/**
+ * Open a closed tab again. Answers with it, for the caller to land on.
+ *
+ * Null when there was nothing to reopen — an id that has aged out of the
+ * list, or a strip already at the cap — so a key that does nothing says so
+ * rather than pretending.
+ */
+export function reopenTab(id: string): AppTab | null {
+  const was = strip();
+  put(reopen(was, id));
+  return strip() === was ? null : here();
+}
+
+/** Forget what was closed. */
+export function forgetWhatClosed(): void {
+  put(forgetClosed(strip()));
+}
+
 /** Keep a tab at the front of the strip, as its glyph. Or let it go. */
 export function pinTab(which: number, pinned: boolean): void {
   put(pin(strip(), which, pinned));
@@ -259,16 +291,24 @@ export function moveTab(order: string[], moved: string): void {
 }
 
 /**
- * A new tab, in a group that already exists.
+ * A new tab, in a group that already exists. False when there was no room.
  *
  * Two steps rather than one: `add` puts it beside the tab you are on, which
  * may be anywhere, and `joinGroup` moves it to the end of the group's run. The
  * strip holds its own invariants through both, so there is no moment where a
  * group is two runs with something else between them.
+ *
+ * The cap is checked here rather than left to `add`, which answers a full
+ * strip by handing back the strip it was given. That is the right answer for
+ * `add` and the wrong one for these two steps together: the second would then
+ * move the tab *you are on* into the group, so asking for a new tab at the cap
+ * would have swallowed the page in front of you into somebody else's run.
  */
-export function openTabIn(id: string): void {
+export function openTabIn(id: string): boolean {
+  if (strip().tabs.length >= MAX_TABS) return false;
   put(add(strip()));
   put(joinGroup(strip(), strip().at, id));
+  return true;
 }
 
 /** Close every tab in a group. Returns the tab now on, or null — as above. */
@@ -278,28 +318,25 @@ export function shutGroup(id: string): AppTab | null {
   return here().id === was ? null : here();
 }
 
-/** Last closed tab from this visit, including its original per-tab workspace identity. */
-export function lastClosed(): AppTab | undefined { return closed.at(-1)?.tab; }
+/** The last tab closed, for the shell's one-press undo. */
+export function lastClosed(): AppTab | undefined {
+  return strip().closed[0]?.tab;
+}
+
+/** Put the last closed tab back, in the seat it had. Null when there is none. */
 export function reopenClosed(): AppTab | null {
-  const current=strip();
-  if(!closed.length || current.tabs.length>=MAX_TABS)return null;
-  const entry=closed.pop()!;
-  const at=Math.min(entry.at,current.tabs.length);
-  /* Spread the strip rather than rebuilding it: it carries the groups too,
-     and a reopened tab must not take them down with it. */
-  put({...current,tabs:[...current.tabs.slice(0,at),entry.tab,...current.tabs.slice(at)],at});
-  return here();
+  const last = strip().closed[0];
+  return last ? reopenTab(last.tab.id) : null;
 }
 
 /**
  * For tests: forget everything read from the device.
  *
  * Cut on main as an export nothing read; `browser-recovery.test.ts` reads it
- * again, and it now clears the closed-tab history too — that history is
- * module state, so without this one test's closes are visible to the next.
+ * again. The closed-tab list needs no line of its own here any more: it is
+ * part of the strip, so dropping the strip drops it.
  */
 export function forgetStrip(): void {
   held = null;
-  closed.length = 0;
   followed = null;
 }

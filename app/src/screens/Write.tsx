@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -149,7 +149,23 @@ function Paper({ doc }: { doc: Pick<Doc, 'blocks'> }) {
 
 // ── The editor ───────────────────────────────────────────────────────────
 
-const KINDS: BlockKind[] = ['heading', 'text', 'bullets', 'quote', 'table', 'equation', 'break'];
+/**
+ * The insert toolbar's groups, in the order it draws them.
+ *
+ * The source of truth for *both* places a block kind can be reached from, and
+ * the reason it exists: the toolbar used to hold two hard-coded arrays while
+ * the command palette read a third list, so adding a kind put it in the
+ * palette and silently not on the toolbar. Two of the three agreed and the one
+ * people actually press did not. `blocks.test.ts` asserts every kind is in a
+ * group, so the next one cannot go missing the same way.
+ */
+const INSERT_GROUPS: BlockKind[][] = [
+  ['heading', 'text', 'bullets', 'checks'],
+  ['quote', 'table', 'equation', 'code', 'break'],
+];
+
+/** Every kind the screen can insert, flattened out of the groups above. */
+export const KINDS: BlockKind[] = INSERT_GROUPS.flat();
 
 /**
  * What the toolbar's insert buttons are called.
@@ -165,6 +181,8 @@ const INSERT_LABEL: Record<BlockKind, string> = {
   quote: 'Insert a quotation',
   table: 'Insert a table',
   equation: 'Insert an equation',
+  code: 'Insert a code block',
+  checks: 'Insert a checklist',
   break: 'Insert a page break',
 };
 
@@ -526,24 +544,19 @@ function Editor({ doc }: { doc: Doc }) {
               onChange={restyle}
             />
             <ToolRule />
-            {(['heading', 'text', 'bullets'] as BlockKind[]).map((kind) => (
-              <Tool
-                key={kind}
-                label={INSERT_LABEL[kind]}
-                icon={BLOCK_LABEL[kind]}
-                onClick={() => addBlock(kind)}
-              />
+            {INSERT_GROUPS.map((group, at) => (
+              <Fragment key={at}>
+                {group.map((kind) => (
+                  <Tool
+                    key={kind}
+                    label={INSERT_LABEL[kind]}
+                    icon={BLOCK_LABEL[kind]}
+                    onClick={() => addBlock(kind)}
+                  />
+                ))}
+                <ToolRule />
+              </Fragment>
             ))}
-            <ToolRule />
-            {(['quote', 'table', 'equation', 'break'] as BlockKind[]).map((kind) => (
-              <Tool
-                key={kind}
-                label={INSERT_LABEL[kind]}
-                icon={BLOCK_LABEL[kind]}
-                onClick={() => addBlock(kind)}
-              />
-            ))}
-            <ToolRule />
             <Tool
               label="Outline"
               pressed={showing.outline}
@@ -1071,6 +1084,127 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
             <ActionButton onClick={() => onChange({ ...block, numbered: !block.numbered })}>
               {block.numbered ? 'Make it bulleted' : 'Make it numbered'}
             </ActionButton>
+          </div>
+        </>
+      );
+
+    /*
+     * A snippet, in a box that does not help.
+     *
+     * `spellCheck` off and the autocorrect attributes with it: a phone that
+     * capitalises the first letter of every line turns `def` into `Def`, and
+     * the smart-quote substitution turns `"x"` into something no parser
+     * accepts. On the one block where the characters are the content, every
+     * convenience the platform offers is damage.
+     */
+    case 'code':
+      return (
+        <>
+          <input
+            className="input"
+            value={block.language}
+            onChange={(e) => onChange({ ...block, language: e.target.value })}
+            placeholder="Language — python, sql, r. Optional."
+            aria-label="What language the code is in"
+            spellCheck={false}
+            style={{ width: '100%', height: 34, marginBottom: 'var(--sp-4)' }}
+          />
+          <textarea
+            className="input"
+            value={block.text}
+            onChange={(e) => onChange({ ...block, text: e.target.value })}
+            placeholder="Paste or type it. Nothing in here is read as markdown."
+            aria-label="Code"
+            rows={6}
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            autoComplete="off"
+            style={{
+              width: '100%',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+              fontSize: 'var(--type-sm)',
+              lineHeight: 'var(--leading-snug)',
+              whiteSpace: 'pre',
+              overflowX: 'auto',
+            }}
+          />
+        </>
+      );
+
+    case 'checks':
+      return (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+            {block.items.map((line, i) => (
+              <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
+                <input
+                  type="checkbox"
+                  checked={line.done}
+                  onChange={(e) =>
+                    onChange({
+                      ...block,
+                      items: block.items.map((x, j) =>
+                        j === i ? { ...x, done: e.target.checked } : x,
+                      ),
+                    })
+                  }
+                  aria-label={`${line.text.trim() || `Item ${i + 1}`} — done`}
+                />
+                <input
+                  className="input"
+                  value={line.text}
+                  onChange={(e) =>
+                    onChange({
+                      ...block,
+                      items: block.items.map((x, j) =>
+                        j === i ? { ...x, text: e.target.value } : x,
+                      ),
+                    })
+                  }
+                  aria-label={`Item ${i + 1}`}
+                  style={{
+                    flex: 1,
+                    height: 38,
+                    // Struck through when it is done, which is the whole
+                    // reason somebody ticks one rather than deleting it.
+                    textDecoration: line.done ? 'line-through' : undefined,
+                  }}
+                />
+                <SmallButton
+                  label={`Remove item ${i + 1}`}
+                  onClick={() =>
+                    onChange({
+                      ...block,
+                      items:
+                        block.items.length > 1
+                          ? block.items.filter((_, j) => j !== i)
+                          : [{ text: '', done: false }],
+                    })
+                  }
+                >
+                  ×
+                </SmallButton>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+            <ActionButton
+              onClick={() =>
+                onChange({ ...block, items: [...block.items, { text: '', done: false }] })
+              }
+            >
+              Add item
+            </ActionButton>
+            {block.items.some((i) => i.done) && (
+              <ActionButton
+                onClick={() =>
+                  onChange({ ...block, items: block.items.map((i) => ({ ...i, done: false })) })
+                }
+              >
+                Untick everything
+              </ActionButton>
+            )}
           </div>
         </>
       );

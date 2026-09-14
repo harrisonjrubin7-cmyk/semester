@@ -107,7 +107,16 @@ interface Raw {
 export function readResults(raw: unknown): Found[] {
   if (!Array.isArray(raw)) return [];
   const out: Found[] = [];
-  for (const item of raw as Raw[]) {
+  for (const row of raw) {
+    /*
+     * The element, not just the array. `[null]` is valid JSON and this reads
+     * a live response, so `item.lat` on a null row threw `TypeError` where
+     * every other clause here degrades quietly. `readNominatim` in
+     * `lib/geocode.ts` parses the same service and has always had this
+     * check — the two had drifted, and this was the half without it.
+     */
+    if (!row || typeof row !== 'object') continue;
+    const item = row as Raw;
     const lat = Number(item.lat);
     const lon = Number(item.lon);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;

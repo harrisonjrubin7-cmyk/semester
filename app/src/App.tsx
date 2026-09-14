@@ -943,7 +943,14 @@ function TabBar() {
               flexDirection: 'column',
               alignItems: 'center',
               gap: 3,
-              color: on ? 'var(--app-accent)' : 'var(--app-faint)',
+              /*
+               * The tab that is not current still names a destination, so it
+               * is text and takes `--app-dim`. At `--app-faint` — the
+               * hairline strength, held to 3:1 — "Courses" read 3.64:1 on Ink
+               * and 2.98:1 on Parchment, which made the six places you are
+               * not the hardest words on the screen to read.
+               */
+              color: on ? 'var(--app-accent)' : 'var(--app-dim)',
               fontFamily: 'var(--font-heading)',
             }}
           >

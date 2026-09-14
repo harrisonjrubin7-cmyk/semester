@@ -586,7 +586,21 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
 - No rich-text editing surface. The editor is block-structured, not WYSIWYG: no
   bold/italic toolbar, font family/size, text or highlight colour. (`**bold**`
   and `*italic*` are typed as marks and do reach the `.docx`.)
-- No checkbox lists, no indent/outdent, no horizontal rules, no code blocks.
+- ~~No checkbox lists,~~ no indent/outdent, no horizontal rules, ~~no code
+  blocks.~~ — **checklists and code blocks closed.** Horizontal rules are still
+  absent, and worth one sentence because it looks as though they are not: the
+  `break` kind writes `---` to markdown, which is markdown's *thematic break*,
+  but it emits `<w:br w:type="page"/>` to the `.docx` and is called Page break
+  on screen. It is a page break that borrows a horizontal rule's spelling, so a
+  document round-trips through markdown while meaning something different in
+  each. A checklist is its
+  own block rather than a flag on `bullets`, because the ticked state belongs
+  to each *item* and a parallel array of booleans is two lists that have to
+  stay the same length — the first reorder would tick the wrong line. A code
+  block is the one kind whose text is **not** marked up: `**` in a shell glob
+  is two asterisks somebody typed, and `runs()` would eat them. Its markdown
+  fence grows longer than any run of backticks inside it, so a snippet about
+  markdown does not end its own block halfway through.
 - No images in documents at all.
 - ~~No links,~~ alignment, line spacing or margin controls. — links **closed**:
   `[words](where)` in `lib/document.ts`, checked by `safeUrl` against http,
@@ -765,11 +779,12 @@ Everything above that is not struck through, collected — so the next person
 reading this has one short list rather than a long one to re-check. Verified
 by grepping for each, not by re-reading the sentence.
 
-**Documents** — code blocks · checkbox lists · horizontal rules · indent and
-outdent · images · alignment, line spacing and margins · comments and margin
-notes · a generated PDF, as against the browser's print-to-PDF, which is
-there · `.docx` *import* · "Open in Docs" from a study guide · a WYSIWYG
-surface (the marks are typed).
+**Documents** — horizontal rules (distinct from the page break, which exists
+and borrows their markdown spelling) · indent and outdent · images ·
+alignment, line spacing and margins · comments and margin notes · a generated
+PDF, as against the browser's print-to-PDF, which is there · `.docx` *import* ·
+"Open in Docs" from a study guide · a WYSIWYG surface (the marks are typed).
+(Code blocks and checkbox lists were on this list and are done.)
 
 **Sheets** — nothing. Every entry this section listed is either built or was
 already built when it was listed.

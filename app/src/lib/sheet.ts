@@ -46,6 +46,9 @@ import type { CondRule } from './condfmt';
 import type { DataRule } from './validate';
 import type { SheetFilter } from './filter';
 import type { Pivot } from './pivot';
+// The two factories that moved out of this file, so it can still use them —
+// and re-export them, below, beside the note saying why they left.
+import { NEW_COLS, NEW_ROWS, blankSheet } from './blank';
 
 /** One sheet, as the store holds it. */
 export interface Sheet {
@@ -410,9 +413,15 @@ export function restyle(
   return out;
 }
 
-/** The size a new sheet opens at: enough to look like a sheet, small enough to read. */
-export const NEW_ROWS = 12;
-export const NEW_COLS = 6;
+/*
+ * The size a new sheet opens at, and the factory that uses it, now live in
+ * `lib/blank.ts` and are re-exported here so every caller is unchanged.
+ *
+ * They moved because the reducer needs `blankSheet` and does not need this
+ * file: importing a fifteen-line factory pulled the whole engine onto the
+ * first render. See `lib/blank.ts` for the measurement.
+ */
+export { NEW_COLS, NEW_ROWS, blankSheet };
 
 /** As far as the grid may be dragged. A phone is not a data warehouse. */
 export const MAX_ROWS = 200;
@@ -2325,23 +2334,6 @@ export function filled(sheet: Sheet, ctx: Ctx = clock()): string[][] {
 export function extent(sheet: Sheet): { rows: number; cols: number } {
   const body = filled(sheet);
   return { rows: body.length, cols: body[0]?.length ?? 0 };
-}
-
-export function blankSheet(
-  title: string,
-  courseId: CourseId | null = null,
-  itemId: string | null = null,
-): Omit<Sheet, 'id'> {
-  return {
-    title: title.trim() || 'Untitled sheet',
-    courseId,
-    itemId,
-    cells: {},
-    rows: NEW_ROWS,
-    cols: NEW_COLS,
-    created: Date.now(),
-    updated: Date.now(),
-  };
 }
 
 /** A sheet built from rows of text — what a paste, an import or a tool call produces. */

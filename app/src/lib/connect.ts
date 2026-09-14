@@ -43,6 +43,7 @@
 import type { Course, FeedEvent } from './types';
 import { matchCourse } from './ics';
 import { parseAddress, parseAddresses, type FolderId, type Mail } from './mailbox';
+import { PENDING_KEY } from './redirected';
 
 export type ProviderId = 'microsoft' | 'google' | 'zoom' | 'apple';
 
@@ -152,7 +153,8 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
 const PROXY = env.VITE_OAUTH_PROXY ?? '';
 
 const TOKEN_KEY = 'semester.tokens.v1';
-const PENDING_KEY = 'semester.oauth.pending';
+// Declared in `lib/redirected.ts`, beside the guard in `main.tsx` that reads
+// the same key to decide whether this module is worth loading at all.
 
 export interface Token {
   provider: ProviderId;

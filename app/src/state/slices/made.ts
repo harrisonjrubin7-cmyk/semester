@@ -21,11 +21,19 @@
 
 import { newId } from '../../lib/idb';
 import { blankDoc, type Doc } from '../../lib/document';
-import { blankSheet, type Sheet } from '../../lib/sheet';
+import type { Sheet } from '../../lib/sheet';
 import type { SavedEquation } from '../../lib/maths';
 import type { PlotLine } from '../../lib/plot';
 import { subtree, withCourses, type Folder } from '../../lib/folders';
-import { blankDeck, type StoredDeck } from '../../lib/decks';
+import type { StoredDeck } from '../../lib/decks';
+/*
+ * The two factories, from the leaf they were moved to rather than from the
+ * engines they used to live in. The reducer is reached on the way to the
+ * first render, so what it imports, everybody downloads — and `lib/sheet.ts`
+ * and `lib/pptx.ts` are two of the three largest files in the app. See
+ * `lib/blank.ts`.
+ */
+import { blankDeck, blankSheet } from '../../lib/blank';
 import type { Action, State } from '../shape';
 import { push } from './navigate';
 

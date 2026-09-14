@@ -174,6 +174,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           <label style={field}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Title</span>
             <input
+              className="input"
               value={project.title}
               maxLength={160}
               onChange={(e) => update({ title: e.target.value })}
@@ -183,6 +184,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           <label style={field}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Course</span>
             <select
+              className="input"
               value={project.courseId}
               onChange={(e) => update({ courseId: e.target.value, itemId: '' })}
               style={input}
@@ -197,7 +199,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           </label>
           <label style={field}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>For</span>
-            <select value={project.itemId} onChange={(e) => update({ itemId: e.target.value })} style={input}>
+            <select className="input" value={project.itemId} onChange={(e) => update({ itemId: e.target.value })} style={input}>
               <option value="">No deadline</option>
               {catalog.items
                 .filter((i) => !project.courseId || i.c === project.courseId)
@@ -224,6 +226,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           <label style={field}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>For which course</span>
             <select
+              className="input"
               value={courseId}
               onChange={(e) => {
                 setCourseId(e.target.value);
@@ -241,7 +244,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           </label>
           <label style={field}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>For which deadline</span>
-            <select value={itemId} onChange={(e) => setItemId(e.target.value)} style={input}>
+            <select className="input" value={itemId} onChange={(e) => setItemId(e.target.value)} style={input}>
               <option value="">No deadline</option>
               {catalog.items
                 .filter((i) => !courseId || i.c === courseId)
@@ -278,6 +281,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             {archive ? 'Archived' : 'Yours'}
           </SectionLabel>
           <input
+            className="input"
             aria-label="Search your projects"
             placeholder="Search forms, designs and videos"
             value={query}

@@ -186,6 +186,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           <label style={field}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Where you are</span>
             <select
+              className="input"
               value={lib.value.stage}
               onChange={(e) => lib.update((old) => ({ ...old, stage: e.target.value as PathwayLibrary['stage'] }))}
               style={input}
@@ -199,7 +200,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           <SectionLabel style={{ marginBlock: 'var(--sp-6) var(--sp-4)' }}>Start something</SectionLabel>
           <label style={field}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Checklist</span>
-            <select value={template} onChange={(e) => setTemplate(e.target.value)} style={input}>
+            <select className="input" value={template} onChange={(e) => setTemplate(e.target.value)} style={input}>
               {Object.keys(PATHWAY_TEMPLATES).map((k) => (
                 <option key={k}>{k}</option>
               ))}
@@ -256,6 +257,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'programs' && (
         <>
           <input
+            className="input"
             aria-label="Search saved programs"
             placeholder="School, program, degree or location"
             value={query}
@@ -321,6 +323,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <label key={m.id} style={field}>
                   <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>{m.title}</span>
                   <select
+                    className="input"
                     value={m.status}
                     onChange={(e) =>
                       lib.update((old) => ({
@@ -368,6 +371,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 style={{ display: 'flex', gap: 'var(--sp-4)' }}
               >
                 <input
+                  className="input"
                   aria-label="New required material"
                   placeholder="Something else it asks for"
                   maxLength={250}
@@ -452,6 +456,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label key={k} style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine(), textTransform: 'capitalize' }}>{k}</span>
                 <input
+                  className="input"
                   required={k === 'school' || k === 'program'}
                   maxLength={200}
                   value={program[k]}
@@ -463,6 +468,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Deadline</span>
               <input
+                className="input"
                 type="date"
                 value={program.deadline}
                 onChange={(e) => setProgram((p) => ({ ...p, deadline: e.target.value }))}
@@ -472,6 +478,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Where you think it stands</span>
               <select
+                className="input"
                 value={program.status}
                 onChange={(e) => setProgram((p) => ({ ...p, status: e.target.value as Program['status'] }))}
                 style={input}
@@ -484,6 +491,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Official source link</span>
               <input
+                className="input"
                 type="url"
                 maxLength={2000}
                 value={program.url}
@@ -496,6 +504,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 Requirements, prompts and word limits
               </span>
               <textarea
+                className="input"
                 rows={5}
                 maxLength={10_000}
                 value={program.requirements}
@@ -506,6 +515,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Notes</span>
               <textarea
+                className="input"
                 rows={5}
                 maxLength={10_000}
                 value={program.notes}
@@ -526,6 +536,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label key={k} style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>{label}</span>
                 <input
+                  className="input"
                   type="number"
                   min={0}
                   max={PATHWAY_LIMITS.money}
@@ -545,6 +556,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label key={k} style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>{label}</span>
                 <input
+                  className="input"
                   maxLength={200}
                   value={program[k]}
                   onChange={(e) => setProgram((p) => ({ ...p, [k]: e.target.value }))}
@@ -655,6 +667,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label key={k} style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>{label}</span>
               <textarea
+                className="input"
                 rows={k === 'name' ? 1 : 5}
                 maxLength={10_000}
                 value={lib.value.profile[k]}
@@ -682,7 +695,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
         <>
           <label style={field}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Template</span>
-            <select value={template} onChange={(e) => setTemplate(e.target.value)} style={input}>
+            <select className="input" value={template} onChange={(e) => setTemplate(e.target.value)} style={input}>
               {Object.keys(PATHWAY_TEMPLATES).map((k) => (
                 <option key={k}>{k}</option>
               ))}
@@ -719,6 +732,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={{ ...field, marginTop: 'var(--sp-6)' }}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Title</span>
                 <input
+                  className="input"
                   maxLength={200}
                   value={project.title}
                   onChange={(e) => patchProject({ title: e.target.value })}
@@ -732,6 +746,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={field}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Notes</span>
                 <textarea
+                  className="input"
                   rows={4}
                   maxLength={20_000}
                   value={project.notes}
@@ -754,6 +769,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <label style={{ ...field, marginTop: 'var(--sp-4)' }}>
                     <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Step</span>
                     <input
+                      className="input"
                       maxLength={300}
                       value={s.title}
                       onChange={(e) =>
@@ -765,6 +781,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <label style={field}>
                     <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Who to ask</span>
                     <input
+                      className="input"
                       maxLength={200}
                       value={s.owner}
                       onChange={(e) =>
@@ -776,6 +793,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <label style={field}>
                     <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>By when</span>
                     <input
+                      className="input"
                       type="date"
                       value={s.due}
                       onChange={(e) =>
@@ -787,6 +805,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <label style={field}>
                     <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Notes and references</span>
                     <textarea
+                      className="input"
                       rows={3}
                       maxLength={5000}
                       value={s.notes}
@@ -827,6 +846,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}
               >
                 <input
+                  className="input"
                   aria-label="Add a step"
                   placeholder="Something else this needs"
                   maxLength={300}
