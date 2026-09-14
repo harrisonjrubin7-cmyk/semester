@@ -77,7 +77,11 @@ export function KindKey({ compact = false, lead }: { compact?: boolean; lead?: R
     <div style={{ marginTop: compact ? 8 : 10 }}>
       <button
         type="button"
-        className="bare tappable"
+        // `--sp-2` above and below a 12px line leaves the row half a pixel
+        // under the 24px floor, so `tap-y` takes it the rest of the way. The
+        // row is full width in a vertical stack, so up and down is the only
+        // direction there is.
+        className="bare tappable tap-y"
         onClick={() => dispatch({ type: 'toggleKey' })}
         aria-expanded={open}
         style={{
