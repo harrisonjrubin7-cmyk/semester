@@ -31,7 +31,7 @@
  */
 
 /** The shape this build writes. Bump it when you add a step below. */
-export const SCHEMA = 5;
+export const SCHEMA = 6;
 
 export interface Step {
   /** The version this step produces. */
@@ -150,6 +150,46 @@ export const STEPS: Step[] = [
      * older navigations still work and are all still one click away.
      */
     run: (s) => ({ ...s, nav: 'guides' }),
+  },
+  {
+    to: 6,
+    describe: 'Open the workspace again: the search field and the app tabs are back on top.',
+    /*
+     * Step 5, undone.
+     *
+     * The guides were asked for, built, shipped as the default, and then
+     * asked to be undone. That is the whole of it, and it is worth leaving
+     * written down rather than quietly reverting: the shape somebody wants
+     * the app to open as is not a thing that can be settled by argument, and
+     * this one was settled by seeing it.
+     *
+     * ## Nothing was lost in the round trip
+     *
+     * Step 4 had already put every stored copy on `workspace`, so step 5
+     * overwrote a value nobody had chosen — which means this step puts back
+     * exactly what was there rather than guessing at it. Had step 5 landed on
+     * a genuinely chosen value, that value would be gone now and this step
+     * could not recover it. It is the argument against rewriting a persisted
+     * preference in a migration at all, and the reason this is the last one
+     * of these three that should ever need writing.
+     *
+     * ## What comes back
+     *
+     * The tab strip, the one search field under it, and the launcher, with
+     * `search` as the screen the app opens on — the field with the shortcut
+     * row beneath it. The Screen and Implementation Guide asked for both to
+     * be kept on top; step 5 was knowingly written against that, and this
+     * puts it back.
+     *
+     * ## Same guarantee as steps 4 and 5
+     *
+     * The version marker makes this a change rather than a policy: it runs on
+     * the way from 5 to 6 and never again, so somebody who prefers the guides
+     * and picks them on Layout and navigation keeps them, on every device and
+     * every reopening after. `#/guide/<course>` is untouched either way, and
+     * all six navigations still work and are all still one click away.
+     */
+    run: (s) => ({ ...s, nav: 'workspace' }),
   },
 ];
 

@@ -188,32 +188,72 @@ describe('step 5: the guides, for everybody', () => {
     }
   });
 
-  it('is where a fresh install lands too, so the two cannot drift', () => {
-    // A default that disagreed with the last step is how somebody's phone and
-    // laptop end up in different navigations. Against the constant rather than
-    // the literal, so the next move has to change both.
-    expect(DEFAULT_PERSISTED.nav).toBe('guides');
-  });
-
-  it('runs once, so going back to the workspace sticks', () => {
-    /*
-     * The same guarantee step 4 carries, asserted again because it is the
-     * whole reason this is a numbered step and not a line in the loader.
-     * Somebody reads the guides, decides they want the top search field and
-     * the tab strip back, and picks the workspace — and the app has to keep
-     * that, on this device and every reopening after.
-     */
-    const after = migrate({ schemaVersion: 4, nav: 'workspace' }).state;
-    expect(after.nav).toBe('guides');
-    const chosen = { ...after, nav: 'workspace' };
-    expect(migrate(chosen).state.nav).toBe('workspace');
-    expect(migrate(chosen).ran).toEqual([]);
+  it('is still in the list, because steps are kept forever', () => {
+    // Step 6 undoes it, which is not the same as deleting it: a copy stored
+    // at 4 has to walk through 5 to reach 6, and a gap in the list is how a
+    // step stops running for the people who never got it.
+    expect(STEPS.map((s) => s.to)).toEqual([...STEPS.map((s) => s.to)].sort((a, b) => a - b));
+    expect(STEPS.some((s) => s.to === 5)).toBe(true);
   });
 
   it('touches nothing else in the copy', () => {
     const after = migrate({
       schemaVersion: 4,
       nav: 'workspace',
+      shell: 'soft',
+      ground: 'oxide',
+      done: { 'econ-m1': true },
+    }).state;
+    expect(after.shell).toBe('soft');
+    expect(after.ground).toBe('oxide');
+    expect(after.done).toEqual({ 'econ-m1': true });
+  });
+});
+
+describe('step 6: the workspace again', () => {
+  const step6 = (nav: string) => {
+    const step = STEPS.find((s) => s.to === 6);
+    if (!step) throw new Error('step 6 is gone — steps are kept forever, see migrate.ts');
+    return step.run({ nav });
+  };
+
+  it('puts back what step 5 overwrote', () => {
+    expect(step6('guides').nav).toBe('workspace');
+  });
+
+  it('lands a copy coming all the way from 4 on the workspace it started on', () => {
+    // The round trip, asserted end to end: step 4 wrote `workspace`, step 5
+    // wrote `guides` over it, step 6 puts it back. Nothing was chosen at any
+    // point in that, which is the only reason undoing it loses nothing.
+    expect(migrate({ schemaVersion: 4, nav: 'tabs' }).state.nav).toBe('workspace');
+  });
+
+  it('is where a fresh install lands too, so the two cannot drift', () => {
+    // A default that disagreed with the last step is how somebody's phone and
+    // laptop end up in different navigations. Against the constant rather than
+    // the literal, so the next move has to change both.
+    expect(DEFAULT_PERSISTED.nav).toBe('workspace');
+  });
+
+  it('runs once, so choosing the guides sticks', () => {
+    /*
+     * The same guarantee steps 4 and 5 carry, and the one that matters most
+     * here: this step is a reversal, and a reversal that reapplied itself
+     * would take the guides away from somebody every time they reopened the
+     * app. Somebody picks the guides on Layout and navigation, and the app
+     * has to keep that, on this device and every reopening after.
+     */
+    const after = migrate({ schemaVersion: 5, nav: 'guides' }).state;
+    expect(after.nav).toBe('workspace');
+    const chosen = { ...after, nav: 'guides' };
+    expect(migrate(chosen).state.nav).toBe('guides');
+    expect(migrate(chosen).ran).toEqual([]);
+  });
+
+  it('touches nothing else in the copy', () => {
+    const after = migrate({
+      schemaVersion: 5,
+      nav: 'guides',
       shell: 'soft',
       ground: 'oxide',
       done: { 'econ-m1': true },

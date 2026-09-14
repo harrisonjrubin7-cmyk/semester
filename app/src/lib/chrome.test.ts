@@ -184,9 +184,9 @@ describe('reading a navigation back', () => {
    * caught the original bug.
    */
   it('falls back to the default rather than to nothing', () => {
-    expect(navOf('soft')).toBe('guides');
-    expect(navOf(undefined)).toBe('guides');
-    expect(navOf('')).toBe('guides');
+    expect(navOf('soft')).toBe('workspace');
+    expect(navOf(undefined)).toBe('workspace');
+    expect(navOf('')).toBe('workspace');
     // A name every branch matches, and a home screen the app knows how to
     // draw. The line under this one is what "rather than to nothing" means
     // now that the default draws no chrome of its own.
@@ -195,23 +195,31 @@ describe('reading a navigation back', () => {
   });
 
   /*
-   * The fallback draws no chrome, and that is allowed — but only because its
-   * home screen is itself a way on.
+   * The fallback lands somebody somewhere with a way on. Written so it stays
+   * true whichever navigation the default is next.
    *
-   * This replaces a `navigationsDrawn(...) === 1` on the fallback, which was
-   * the right question while every default drew a bar or a strip and the
-   * wrong one the moment the default became the guides: it would have failed
-   * on a navigation that works, and loosening it to `>= 0` would assert
-   * nothing. The bug being guarded against is *landing somebody nowhere* —
-   * so what is asserted is that the fallback's home screen exists and is the
-   * grid of courses, which is a navigation on the screen the way the
-   * springboard's icons are. See the head of `chrome.ts`.
+   * This assertion has now been rewritten twice by a default moving under it,
+   * which is the argument for its present shape. It began as
+   * `navigationsDrawn(...) === 1`, correct while every default drew a bar or
+   * a strip and wrong the moment the default became the guides, which draw
+   * none. It was then pinned to the guides — and the default moved back to
+   * the workspace, breaking it again in the other direction.
+   *
+   * So it asserts neither shape. A navigation is a way on if it draws chrome
+   * *or* its home screen is itself the navigation, the way the guides' course
+   * grid and the springboard's icons are. Exactly one of those must hold —
+   * `or` rather than `>= 0`, which would assert nothing, and exclusive
+   * because drawing chrome beside a screen that is already a navigation is
+   * the doubling `chrome.ts` exists to stop. The bug being guarded against is
+   * landing somebody nowhere, on a phone, with no way off the screen.
    */
-  it('falls back somewhere with a way on, even drawing no chrome', () => {
+  it('falls back somewhere with a way on, whatever the default is', () => {
     const fallback = navOf('nonsense');
-    expect(navigationsDrawn(chromeFor(fallback, 'home', false))).toBe(0);
-    expect(homeShape(fallback)).toBe('guides');
-    expect(CARRIES_ITS_OWN).toContain(fallback);
+    const drawn = navigationsDrawn(chromeFor(fallback, 'home', false)) > 0;
+    const carriesItsOwn = CARRIES_ITS_OWN.includes(fallback);
+    expect(drawn || carriesItsOwn, `${fallback} offers no way on`).toBe(true);
+    expect(drawn && carriesItsOwn, `${fallback} draws a navigation twice`).toBe(false);
+    expect(homeShape(fallback)).toBeTruthy();
   });
 
   /*

@@ -968,28 +968,35 @@ export const SYNCED_KEY = 'semester.synced';
 
 export const DEFAULT_PERSISTED: Persisted = {
   /*
-   * The guides are what the app opens as: the courses you have, and then one
-   * course's eleven ways of studying it as the navigation — see
-   * `lib/chrome.ts` and `screens/Guides.tsx`.
+   * The workspace is what the app opens as: a tab strip, one search field
+   * under it, and the launcher — `firstScreen` puts you on `search`, which is
+   * the field with the shortcut row beneath it. See `lib/chrome.ts`.
    *
-   * This line alone only ever reached a device that had never saved anything,
+   * This line alone only ever reaches a device that has never saved anything,
    * which is nobody who has used the app: `nav` has always been persisted, so
    * every stored copy carries a literal value written by the app rather than
-   * chosen by anybody. Step 5 of `lib/migrate.ts` is what makes it everyone's,
-   * once — and once, so that going back to the workspace or the tab bar on
-   * Layout and navigation, or on the last row of Customize Semester, sticks.
+   * chosen by anybody. A step of `lib/migrate.ts` is what makes a change to
+   * this line everyone's — step 4 for the workspace, step 5 for the guides,
+   * and step 6 back again.
    *
-   * ## What this costs, stated rather than hidden
+   * ## Which is a reversal, and worth reading as one
    *
-   * The workspace is no longer what the app opens as, so the persistent top
-   * search field and the app-tab strip are no longer the first thing anybody
-   * sees. That is a deliberate choice made against the Screen and
-   * Implementation Guide, which asks for both to be kept; it was raised and
-   * reaffirmed. Neither is removed — the workspace is one row away on Layout
-   * and navigation, keeps its tabs, bookmarks and groups, and a stored choice
-   * of it is never overwritten after step 5 has run once.
+   * Step 5 opened on the guides instead, on the argument that four courses
+   * and eleven ways through each is what this app is mostly used for, and
+   * that a browser's tab strip is the wrong shape for it. That was asked for,
+   * built, and then asked to be undone — the top search field and the app
+   * tabs were wanted first after all, which is what the Screen and
+   * Implementation Guide asked for in the first place and what step 5 was
+   * knowingly written against.
+   *
+   * Nothing was lost in the round trip. Step 4 had already put every stored
+   * copy on `workspace`, so step 5 overwrote a value nobody had chosen, and
+   * step 6 puts back exactly what was there. The guides are not removed:
+   * `#/guide/<course>` is the same screen it was, and the navigation is one
+   * row away on Layout and navigation, or on the last row of Customize
+   * Semester. A stored choice made after step 6 has run is never overwritten.
    */
-  nav: 'guides',
+  nav: 'workspace',
   done: {},
   saved: { e1: true, e16: true },
   notifs: { ...DEFAULT_NOTIFS },
