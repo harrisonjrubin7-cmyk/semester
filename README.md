@@ -559,6 +559,20 @@ model in it or needs a key:
   Drag to move, pinch to zoom, press to read a point off it, and one button to
   fit the window to what is actually on it.
 
+  **A `z =` line is a surface**, in three dimensions: `z = x^2 - y^2` is the
+  saddle, drawn over whatever window the axes are set to and turned with a
+  finger. No WebGL and no 3D library — a surface plot of a formula is a few
+  hundred quadrilaterals sorted back to front, which is the painter's
+  algorithm, and it draws in the same SVG as everything else, prints, and
+  costs nothing to ship. The camera is orthographic on purpose: a perspective
+  one makes the far side of a symmetric bowl smaller than the near side, which
+  reads as asymmetry in the function. Everything is worked in a unit cube, so
+  a function reaching 10,000 and one reaching 0.001 are both a shape rather
+  than a spike or a sheet; a piece with a corner that has no height is left
+  out rather than drawn across, which is the hole in a dome; and the height,
+  the depth and where each of them is are written out under the picture. See
+  `app/src/lib/surface.ts`.
+
   **Polar and parametric** are the same box and the same notation, told apart
   by the letter in them: an `r =` line with the angle in it is polar —
   `r = 2 + 2\cos(\theta)`, a cardioid — and a pair with `t` in it is the path

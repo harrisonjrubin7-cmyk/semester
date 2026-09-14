@@ -82,6 +82,14 @@ export type Line =
   | { kind: 'polar'; body: Node }
   /** `(\cos(t), \sin(t))` — a point that moves, drawn as the path it takes. */
   | { kind: 'parametric'; x: Node; y: Node }
+  /**
+   * `z = x^2 - y^2` — a height over every point of the floor.
+   *
+   * Not a curve and not drawn as one: the picture of it has a camera in it,
+   * and the whole of that lives in `lib/surface.ts`. It is read here because
+   * one list takes every kind of thing somebody writes, whatever draws it.
+   */
+  | { kind: 'surface'; body: Node }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -228,6 +236,7 @@ export function readLine(source: string): Line {
   if (lhs.node.kind === 'name') {
     const name = lhs.node.name;
     if (name === 'y' || name === 'x') return { kind: 'curve', of: name, body: rhs.node };
+    if (name === 'z') return { kind: 'surface', body: rhs.node };
     if (name === 'r' && free(rhs.node).includes(ANGLE)) return { kind: 'polar', body: rhs.node };
     return { kind: 'value', name, body: rhs.node };
   }
@@ -270,6 +279,7 @@ export function missing(line: Line, scope: Scope): string[] {
     case 'relation':
       return free(line.body, scope).filter((n) => !has(n));
     case 'polar':
+    case 'surface':
       return free(line.body, scope).filter((n) => !has(n));
     case 'parametric':
     case 'point':
@@ -879,6 +889,11 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'A Lissajous figure',
     says: 'A point that moves — x and y each written in t.',
     lines: ['a = 3', '(5\\sin(a t), 5\\sin(2t))'],
+  },
+  {
+    name: 'A saddle',
+    says: 'A surface: a height over every point of the floor, turned with a finger.',
+    lines: ['z = x^2 - y^2'],
   },
   {
     name: 'Discounting',
