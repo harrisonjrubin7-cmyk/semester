@@ -53,6 +53,38 @@ function store(drafts: Drafts): void {
   }
 }
 
+/**
+ * Fill another screen's field before sending somebody to it.
+ *
+ * The long fields in this app are drafts — see `lib/draft.ts` — and a draft is
+ * read once, when the screen holding it mounts. That is exactly the moment a
+ * hand-off happens: the spreadsheet writes its numbers here, dispatches, and
+ * the analysis screen comes up with them already in the box.
+ *
+ * The alternative was a field in the store for every such hand-off, each one
+ * needing a reducer, a persisted field and a rule about when it is cleared.
+ * This needs none: the text is a draft like any other from the moment it
+ * lands, so it survives a reload, ages out on the same fourteen days, and is
+ * typed over by whoever receives it without anything having to forget it.
+ *
+ * The receiving screen must not be mounted when this is called, or it will
+ * not read it. Every caller navigates immediately afterwards, which is what
+ * makes that true.
+ */
+export function handOver(
+  screen: string,
+  field: string,
+  text: string,
+  { from = '', about = '' }: { from?: string; about?: string } = {},
+): void {
+  try {
+    store(withDraft(load(), draftKey(screen, field, about), text, Date.now(), from));
+  } catch {
+    // The same silence as `store` above, for the same reason: a hand-off that
+    // will not fit is a screen that opens empty, not a screen that throws.
+  }
+}
+
 export function useDraft(screen: string, field: string, about = ''): DraftField {
   const key = draftKey(screen, field, about);
 
@@ -61,7 +93,7 @@ export function useDraft(screen: string, field: string, about = ''): DraftField 
   const [first] = useState(() => {
     const saved = load()[key];
     return saved
-      ? { text: saved.text, said: restoredLine(saved.at, new Date()) }
+      ? { text: saved.text, said: restoredLine(saved.at, new Date(), saved.from) }
       : { text: '', said: '' };
   });
 

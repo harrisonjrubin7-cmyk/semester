@@ -106,6 +106,7 @@ import {
 } from '../lib/chart';
 import { SheetChart as ChartPicture } from '../components/SheetChart';
 import { pictureFileName, standalone } from '../lib/svgout';
+import { handOver } from '../lib/draft.hook';
 import type { Menu } from '../lib/menus';
 
 /**
@@ -837,6 +838,37 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const charts = useMemo(() => chartsOf(sheet), [sheet]);
   const setCharts = (next: ChartSpec[]) => patch({ charts: next });
 
+  /**
+   * The numbers, handed to the screen whose job is reading them.
+   *
+   * `screens/Analyse.tsx` does the statistics this grid deliberately does not
+   * — describe a column, correlate two, fit a line, count the categories —
+   * and it could only be reached by pasting a table into it. So a sheet full
+   * of the student's own figures was the one body of data in the app that had
+   * to go out through the clipboard and back in.
+   *
+   * The *displayed* values rather than the cells, so a column of `=B2*C2`
+   * arrives as the products. `display` is what the grid itself draws through,
+   * which is what makes "what I am looking at" and "what gets analysed" the
+   * same thing.
+   */
+  const analyseThis = () => {
+    const b = box(sel);
+    const rows = many(sel)
+      ? Array.from({ length: b.bottom - b.top + 1 }, (_, r) =>
+          Array.from({ length: b.right - b.left + 1 }, (_, c) =>
+            display(sheet.cells, ref(b.top + r, b.left + c)),
+          ),
+        )
+      : filled(sheet);
+    if (!rows.length) return;
+    handOver('analyse', 'text', toCsv(rows), {
+      from: `From ${sheet.title}${many(sel) ? `, ${rangeLabel(sel)}` : ''}.`,
+    });
+    dispatch({ type: 'go', screen: 'analyse' });
+    say(`${many(sel) ? rangeLabel(sel) : sheet.title} sent to Analyse data.`);
+  };
+
   const addChart = () => {
     const where = rangeLabel(sel);
     setCharts([...charts, suggestChart(sheet.cells, where)]);
@@ -1315,6 +1347,12 @@ function Grid({ sheet }: { sheet: SheetModel }) {
              * searches what was *typed*, which is the same promise the other
              * two keep about formulas.
              */
+            id: 'data.analyse',
+            label: many(sel) ? `Analyse ${rangeLabel(sel)}` : 'Analyse this sheet',
+            hint: 'Mean, spread, correlation and a fitted line, on the Analyse screen.',
+            run: nothing ? undefined : analyseThis,
+          },
+          {
             id: 'data.find',
             label: 'Find and replace',
             hint: 'Searches the formulas, not the answers they produced.',
@@ -1656,6 +1694,13 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               wide: true,
               run: weightedHere() ? () => write(focus, weightedHere() as string) : undefined,
             },
+            {
+              kind: 'button',
+              id: 'i.chart',
+              label: 'Chart',
+              wide: true,
+              run: many(sel) ? addChart : undefined,
+            },
           ],
         },
         {
@@ -1831,6 +1876,13 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               label: 'Fill right',
               wide: true,
               run: many(sel) ? () => change(fill(body(), sel, 'right'), 'fill:right') : undefined,
+            },
+            {
+              kind: 'button',
+              id: 'd.analyse',
+              label: 'Analyse',
+              wide: true,
+              run: nothing ? undefined : analyseThis,
             },
           ],
         },
