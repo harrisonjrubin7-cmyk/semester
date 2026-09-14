@@ -252,7 +252,7 @@ describe('the marks that are not just a run property', () => {
     const made = parts(
       doc([
         {
-          kind: 'checklist',
+          kind: 'checks',
           items: [
             { text: 'Read the chapter', done: true },
             { text: 'Write the memo', done: false },

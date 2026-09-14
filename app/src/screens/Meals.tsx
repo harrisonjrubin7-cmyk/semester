@@ -5,7 +5,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
-import { SectionLabel } from '../components/ui';
+import { SectionLabel, TabList } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
 import { CAMPUS_LINKS } from '../data/campus';
 import { readTerm } from '../lib/term';
@@ -42,7 +42,7 @@ import {
 export function Meals() {
  const {state}=useStore();
  const [tab,setTab]=useState('mine');const [choice,setChoice]=useState('');
- return <div className="portal-workspace campus-workspace"><div className="portal-tabs" role="tablist" aria-label="Meals portal">{[['mine','My meal plan'],['directory','Dining & meal plans'],['plan','Plan calculator']].map(([id,label])=><button key={id} role="tab" aria-selected={tab===id} onClick={()=>{setChoice('');setTab(id);}}>{label}</button>)}</div>{tab==='mine'?<MealsDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="dining" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<MealPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
+ return <div className="portal-workspace campus-workspace"><TabList label="Meals portal" className="portal-tabs" value={tab} onChange={id=>{setChoice('');setTab(id);}} tabs={([['mine','My meal plan'],['directory','Dining & meal plans'],['plan','Plan calculator']] as [typeof tab,string][]).map(([id,label])=>({id,label}))}/>{tab==='mine'?<MealsDetails key={state.term}/>:tab==='directory'?<CampusDirectory kind="dining" onPlan={item=>{setChoice(item.name);setTab('plan');}}/>:<MealPlanner key={state.term} choice={choice} term={state.term}/>}</div>;
 }
 function MealsDetails() {
   const { state, dispatch, now } = useStore();

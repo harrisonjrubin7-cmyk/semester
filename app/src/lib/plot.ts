@@ -43,6 +43,16 @@
  */
 
 import { free, read, value, type Node, type Scope, type Val } from './calc';
+import {
+  at as timeAt,
+  atS,
+  inverse,
+  latexFn,
+  latexTransform,
+  readRat,
+  transform,
+  type Fn as TimeFn,
+} from './laplace';
 
 export interface Point {
   x: number;
@@ -112,11 +122,23 @@ export type Line =
    * condition a second-order equation needs.
    */
   | { kind: 'start'; of: 'x' | 'y'; rate: boolean; at: Node; value: Node }
+  /**
+   * `L{t^2}` — the Laplace transform of what is in the brackets.
+   *
+   * Read against s rather than x, and drawn there: the pole of `\frac{1}{s-2}`
+   * is a thing to see, and a transform nobody can look at is a table entry
+   * rather than a picture. See `lib/laplace.ts`.
+   */
+  | { kind: 'transform'; body: Node }
+  /** `L^{-1}{1/(s^2 + 4)}` — the way back, read and drawn against t. */
+  | { kind: 'inverse'; body: Node }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
 export const ANGLE = 'θ';
 export const TIME = 't';
+/** What a transform is a function of — the other axis `L{}` and `L^{-1}{}` share. */
+export const FREQUENCY = 's';
 
 /**
  * How far round θ and t go, in half-turns.
@@ -146,6 +168,18 @@ const RATE =
 
 /** `y(0)`, and `y'(0)` for the rate: where a solution is known to pass. */
 const START = /^\s*([xy])\s*('?)\s*\(([^()]*)\)\s*$/;
+
+/**
+ * `L{f(t)}` and `L^{-1}{F(s)}`, in the four ways somebody writes them.
+ *
+ * Off the text, like `RATE` above and for the same reason: `L{t^2}` through
+ * the expression parser is a letter beside a group, which is a multiplication,
+ * and the braces of `\mathcal{L}\{…\}` are LaTeX's rather than the
+ * expression's. The `^{-1}` is the only thing separating the two directions,
+ * so it is what the first group catches.
+ */
+const LAPLACE =
+  /^\s*(?:\\mathcal\s*\{\s*L\s*\}|L|laplace)\s*(\^\s*\{?\s*-\s*1\s*\}?)?\s*\\?\{([\s\S]*?)\\?\}\s*$/;
 
 /** `f(x)` and `g(x, y)` on the left of an `=`: a definition, not a product. */
 const DEFINES = /^\s*([A-Za-z][A-Za-z0-9]*)\s*\(\s*([A-Za-z][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z][A-Za-z0-9_]*)*)\s*\)\s*$/;
@@ -225,6 +259,13 @@ export function readLine(source: string): Line {
   if (!text) return { kind: 'blank' };
   if (INEQUALITY.test(text)) {
     return { kind: 'fault', says: 'Inequalities are not drawn yet — write it with an = and read the line it gives.' };
+  }
+
+  const laplace = LAPLACE.exec(text);
+  if (laplace) {
+    const inner = node(laplace[2]);
+    if ('says' in inner) return { kind: 'fault', says: inner.says };
+    return laplace[1] ? { kind: 'inverse', body: inner.node } : { kind: 'transform', body: inner.node };
   }
 
   const point = pointParts(text);
@@ -339,7 +380,20 @@ export function missing(line: Line, scope: Scope): string[] {
   // the turn, t along the run. Reporting those as unset would ask somebody to
   // give a value to the very thing being varied.
   const has = (name: string) => name === 'x' || name === 'y' || name === ANGLE || name === TIME;
+  /*
+   * A step and an impulse look like unset letters and are not.
+   *
+   * `u(t - 2)` is `u` beside a bracket to everything that reads the notation,
+   * which is the right reading everywhere else — `lib/laplace.ts` is the one
+   * place that knows better. Reporting `u` as a letter with no value would ask
+   * somebody to give the step function a number.
+   */
+  const table = (name: string) => ['u', 'step', 'heaviside', 'δ', 'delta', 'dirac', 'impulse'].includes(name);
   switch (line.kind) {
+    case 'transform':
+      return free(line.body, scope).filter((n) => n !== TIME && !table(n));
+    case 'inverse':
+      return free(line.body, scope).filter((n) => n !== FREQUENCY && !table(n));
     case 'curve':
       return free(line.body, scope).filter((n) => !has(n));
     case 'relation':
@@ -371,6 +425,38 @@ export function missing(line: Line, scope: Scope): string[] {
     default:
       return [];
   }
+}
+
+/**
+ * What a transform line comes to: the answer, and the function to draw it by.
+ *
+ * One place rather than two, because the sentence under the line and the curve
+ * beside it are the same piece of arithmetic and a picture that disagreed with
+ * the reading over it would be the worst of the three outcomes.
+ */
+export function answered(
+  line: Line,
+  scope: Scope,
+): { latex: string; over: string; at: (v: number) => number; note?: string } | { says: string } | null {
+  if (line.kind === 'transform') {
+    const got = transform(line.body, TIME, scope);
+    if (!got.ok) return { says: got.fault };
+    return { latex: latexTransform(got.it, FREQUENCY), over: FREQUENCY, at: (s: number) => atS(got.it, s) };
+  }
+  if (line.kind === 'inverse') {
+    const rat = readRat(line.body, FREQUENCY, scope);
+    if (!rat.ok) return { says: rat.fault };
+    const got = inverse(rat.it);
+    if (!got.ok) return { says: got.fault };
+    const fn: TimeFn = got.it;
+    return {
+      latex: latexFn(fn, TIME),
+      over: TIME,
+      at: (t: number) => timeAt(fn, t),
+      note: fn.impulses.length ? 'The impulse in it is not drawn — an impulse has no height to draw.' : undefined,
+    };
+  }
+  return null;
 }
 
 // ── Turning it into lines on a page ──────────────────────────────────────
@@ -631,6 +717,13 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
         return { xs: flat(value(line.x, { ...scope, vars })), ys: flat(value(line.y, { ...scope, vars })) };
       };
       return { paths: along(at, 0, turns, Math.round(detail.steps * detail.turns)), points: [] };
+    }
+    case 'transform':
+    case 'inverse': {
+      const got = answered(line, scope);
+      if (!got || 'says' in got) return EMPTY;
+      const window = frame.y1 - frame.y0;
+      return { paths: series(got.at, frame.x0, frame.x1, detail.columns, window), points: [] };
     }
     case 'point': {
       const xs = flat(value(line.x, scope));
@@ -1014,6 +1107,16 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'Predator and prey',
     says: 'A system: two quantities driving each other round a loop.',
     lines: ["x' = x - x y", "y' = x y - y", 'x(0) = 1', 'y(0) = 0.5'],
+  },
+  {
+    name: 'A transform',
+    says: 'Laplace: a function of t, read as a function of s.',
+    lines: ['L{t^2 e^{-t}}'],
+  },
+  {
+    name: 'The way back',
+    says: 'The same table read the other way — a fraction in s, as the wave it was.',
+    lines: ['L^{-1}{1/(s^2 + 2s + 5)}'],
   },
   {
     name: 'A flow',

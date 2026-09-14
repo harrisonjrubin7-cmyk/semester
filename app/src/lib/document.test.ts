@@ -299,7 +299,7 @@ describe('checklists, code and contents', () => {
   it('writes a checklist as a task list and reads one back', () => {
     const made = doc([
       {
-        kind: 'checklist',
+        kind: 'checks',
         items: [
           { text: 'Read the chapter', done: true },
           { text: 'Write the memo', done: false },
@@ -309,8 +309,8 @@ describe('checklists, code and contents', () => {
     const md = toMarkdown(made);
     expect(md).toContain('- [x] Read the chapter');
     expect(md).toContain('- [ ] Write the memo');
-    expect(fromMarkdown(md).find((b) => b.kind === 'checklist')).toEqual({
-      kind: 'checklist',
+    expect(fromMarkdown(md).find((b) => b.kind === 'checks')).toEqual({
+      kind: 'checks',
       items: [
         { text: 'Read the chapter', done: true },
         { text: 'Write the memo', done: false },
@@ -325,7 +325,7 @@ describe('checklists, code and contents', () => {
    * nonsense.
    */
   it('does not read a ticked line as an ordinary bullet', () => {
-    expect(fromMarkdown('- [ ] a thing')[0].kind).toBe('checklist');
+    expect(fromMarkdown('- [ ] a thing')[0].kind).toBe('checks');
     expect(fromMarkdown('- a thing')[0].kind).toBe('bullets');
   });
 
@@ -357,7 +357,7 @@ describe('checklists, code and contents', () => {
   });
 
   it('counts a checklist’s words and does not count a contents page as content', () => {
-    expect(words(doc([{ kind: 'checklist', items: [{ text: 'two words', done: false }] }]))).toBe(2);
+    expect(words(doc([{ kind: 'checks', items: [{ text: 'two words', done: false }] }]))).toBe(2);
     expect(hasContent(doc([{ kind: 'toc', title: 'Contents' }]))).toBe(false);
     expect(hasContent(doc([{ kind: 'code', text: 'x', language: '' }]))).toBe(true);
   });

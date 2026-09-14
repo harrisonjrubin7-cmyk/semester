@@ -1,5 +1,5 @@
 import { ArchiveIcon, ClockIcon, OpenedIcon, Paperclip, StarIcon, TrashIcon } from '../Icons';
-import { TickBox } from '../ui';
+import { TabList, TickBox } from '../ui';
 import { CourseTag } from '../CourseTag';
 import {
   CATEGORIES,
@@ -71,21 +71,14 @@ export function List({
   return (
     <div className="mb-list">
       {category !== null && folder === 'inbox' && (
-        <div className="mb-tabs" role="tablist" aria-label="Inbox categories">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              role="tab"
-              className="mb-tab"
-              aria-current={category === c.id}
-              aria-selected={category === c.id}
-              onClick={() => onCategory(c.id)}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
+        <TabList
+          label="Inbox categories"
+          className="mb-tabs"
+          tabClassName="mb-tab"
+          tabs={CATEGORIES}
+          value={category}
+          onChange={onCategory}
+        />
       )}
 
       {threads.length === 0 && empty}

@@ -312,6 +312,15 @@ same way the rest of the app's search is. Enter opens the one under the
 cursor. It appears once there are four tabs; below that the strip is the
 search.
 
+Under them is **Recently closed**, because the cross is eight pixels from the
+name and on a phone that is inside a thumb: the last ten tabs you shut are
+there to be put back, with what they were — the screen, the name, the group —
+into the seat they were closed from, and one press does it. It is the same
+list the Browser navigation's own reopen reads, and it survives a reload. Ten, and no more: a list of everything closed this term
+is a history of your term, which is a different thing to keep and not one this
+app decided to. **Clear** is beside the list, where somebody is when they want
+it gone.
+
 **Pinning** is the other half of a strip that has got long. The four or five
 places you are in every day — Today, the calendar, the guide you are working
 through — are never finished with, and everything else is opened beside them.
@@ -507,7 +516,8 @@ stayed behind. Three screens now, on the **Make** shelf, and none of them has a
 model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
-  quotations, tables, equations, page breaks — out as a real `.docx`, as
+  checklists, quotations, tables, equations, code blocks, page breaks — out as
+  a real `.docx`, as
   Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
   `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
   link becomes a real hyperlink in the Word file rather than an address typed
@@ -518,6 +528,15 @@ model in it or needs a key:
   which plans an assignment and refuses to write it. This one arranges what you
   type. Paste notes or Markdown in and it reads headings, lists, tables and
   `$$…$$` equations into blocks you can edit.
+
+  A **checklist** is a list you can tick, and each item remembers whether it is
+  done — out as `- [x]` in Markdown and as a ticked box in Word. A **code
+  block** is the one place in the app where nothing is read as markup: `**` in
+  a shell glob or a Python power operator is two asterisks somebody typed, not
+  a request for bold, and the indentation that carries half of what code means
+  survives into the Word file. Its Markdown fence grows longer than any run of
+  backticks inside it, so a snippet *about* Markdown does not quietly end its
+  own block halfway down.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
   `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It
@@ -752,10 +771,11 @@ model in it or needs a key:
   under it — as many as you like, each its own curve, and none at all draws the
   whole family. Runge–Kutta, fourth order, checked against `y' = y` to ten
   places of *e*; Euler's method is a line shorter and drifts off the true
-  solution smoothly enough to read as the answer. Nothing is solved
-  symbolically and nothing pretends to be: `y' = y` will never print `Ce^x`
-  here, because symbolic algebra is the different program this app has always
-  said it is. What it draws is the picture that answer is usually wanted for.
+  solution smoothly enough to read as the answer. The curve is always walked,
+  whatever else is printed beside it — where an equation is linear with
+  constant coefficients its formula is printed under it too, by the Laplace
+  transform below, and that is an addition to the picture rather than a
+  replacement for it.
   A solution that runs to infinity — `y' = y^2` from `y(0) = 1`, at x = 1 —
   stops where it stops, and the reading says so rather than letting a steep
   line stand in for a thing that has no value. See `app/src/lib/ode.ts`.
@@ -777,6 +797,62 @@ model in it or needs a key:
   is slow in one place and fast in another comes out evenly drawn; a closed
   loop is drawn once rather than a hundred times; and a trajectory that starts
   at an equilibrium stays there, as a point.
+
+  **`L{t^2 e^{-t}}` is a Laplace transform**, read and drawn against `s`, and
+  `L^{-1}{1/(s^2 + 2s + 5)}` is the way back, read and drawn against `t`. Both
+  are lines of the same list as everything else, so a transform sits above the
+  equation it came from. The pole of a transform is worth seeing, which is why
+  it is drawn rather than only printed.
+
+  This is the one piece of symbolic work in the app, and the line it does not
+  cross is worth saying precisely. `app/src/lib/calc.ts` still does not
+  rearrange, and a program that half-solved would still be worse than none.
+  What makes this different is that it is not general — it works over one
+  family and is *closed* over it, so there is no half-solved case to fall into.
+  The family is `c (t - d)^n e^{a(t - d)}` times a sine or a cosine of
+  `b(t - d)`, switched on at `d`: a constant, a power, an exponential, a wave
+  and a delay. Sums of those are exactly the functions whose transforms are
+  rational in `s`, and rational functions of `s` are exactly what comes back.
+  Everything outside it is refused by name — `\ln(t)` has a transform and it
+  is not in this family, so the answer is a sentence saying so rather than an
+  approximation nobody asked for. The step and the impulse are in, which is
+  most of why the transform is taught: `L{t\,u(t - 2)}` is not `e^{-2s}/s^2`,
+  because the ramp is already two high when it switches on, and the shift is
+  done properly rather than by moving the exponent about.
+
+  **And an equation with constant coefficients gets its formula under it.**
+  `y'' = -4y` with `y(0) = 1` and `y'(0) = 0` prints `y = \cos(2x)` beside the
+  curve the walk drew; `y'' = -y - 0.3y' + \sin(x)` from rest prints the four
+  terms it actually is, transient and steady state, which is the thing a
+  numerical walk has and cannot say. The coefficients are read off the
+  right-hand side by sampling rather than by matching a shape — `-4y`,
+  `-(y + 3y')/2` and `k^2 y - c y'` are the same equation written three ways —
+  and then put back together and checked at points nobody used to build them.
+  A logistic equation fails that check and is told so: it draws exactly as it
+  did before, with no line of text under it.
+
+  Coming back needs the denominator's roots and there is no formula for them
+  past the quartic, so they are found numerically, and the honest part is what
+  happens next. A repeated root is never found exactly — `(s+1)^3` comes back
+  as three roots in a ring — so nearby roots are gathered, sharpened by
+  Newton's step multiplied by the count, and then the factors are multiplied
+  back out and compared with the polynomial they came from. If they do not
+  reproduce it, a tighter radius is tried, down to no gathering at all. A wrong
+  multiplicity is a wrong answer, and guessing one is worse than a clumsier
+  partial fraction that is right. Every result is checked against a closed form
+  worked by hand, and the solved equations are checked a second way as well —
+  against the Runge–Kutta walk, which shares no code with any of this and
+  agrees to six places. See `app/src/lib/laplace.ts`.
+
+  It also found a bug that had been there all along. `s(s + 2)^2` was read as
+  `(s(s + 2))^2` — a different function, which works out, draws and transforms
+  without complaint. A bracket after a letter is a multiplication or a function
+  call and is not decided until there is a scope; a power after that bracket is
+  the same question again, and it was being answered before the question was
+  asked. The power is now held inside the undecided node and applied to
+  whichever reading wins, so `f(x)^2` is still the square of what `f` gives and
+  `x(x - 1)^3` is `x` times a cube — which is what `y = x(x-2)^2` has always
+  meant on every graph anybody has drawn here.
 
   **Polar and parametric** are the same box and the same notation, told apart
   by the letter in them: an `r =` line with the angle in it is polar —

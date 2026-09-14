@@ -46,28 +46,28 @@ export type Block =
   | { kind: 'table'; rows: string[][]; header: boolean; caption: string }
   | { kind: 'equation'; latex: string; caption: string }
   /**
-   * A list with boxes to tick.
+   * Text that is not prose — a snippet, a command, a formula as it is typed.
    *
-   * Word and Docs both have one and they are used for the same thing: the
-   * last page of a group project, where the list is who is doing what. A
-   * bulleted list cannot say "done", and a person who wants to say it in a
-   * document reaches for a table with an X column.
+   * The one block whose words are *not* marked up. `**` inside code is two
+   * asterisks somebody meant to type, and putting it through `runs()` would
+   * turn a Python decorator or a shell glob into bold text with the marks
+   * eaten. So this is the one kind that reaches the page and the `.docx` as
+   * exactly the characters it holds, whitespace included.
+   */
+  | { kind: 'code'; text: string; language: string }
+  /**
+   * A list whose items can be ticked off.
+   *
+   * Its own kind rather than a flag on `bullets`, because the state belongs to
+   * each *item* and `bullets` holds plain strings. Bolting a parallel array of
+   * booleans onto it would be two lists that have to stay the same length, and
+   * the first reorder would silently tick the wrong line.
    *
    * The ticks survive the export — Word gets ☒ and ☐ in front of the words
    * rather than a live control, because a Word content control opens as a
    * grey box in Pages and as nothing at all in Google Docs.
    */
-  | { kind: 'checklist'; items: { text: string; done: boolean }[] }
-  /**
-   * Code, monospaced and left exactly as typed.
-   *
-   * No emphasis inside it and no smart anything: a block whose stars became
-   * italics is a block that cannot hold an R script, and an R script in a
-   * methods appendix is the reason this kind exists. The language is a label
-   * for the reader, not a syntax highlighter — this app is not going to ship
-   * one, and a wrong highlight is worse than none.
-   */
-  | { kind: 'code'; text: string; language: string }
+  | { kind: 'checks'; items: { text: string; done: boolean }[] }
   /**
    * The table of contents, built from the headings rather than typed.
    *
@@ -138,7 +138,7 @@ export const BLOCK_LABEL: Record<BlockKind, string> = {
   heading: 'Heading',
   text: 'Paragraph',
   bullets: 'List',
-  checklist: 'Checklist',
+  checks: 'Checklist',
   quote: 'Quotation',
   table: 'Table',
   equation: 'Equation',
@@ -168,10 +168,10 @@ export function blankBlock(kind: BlockKind): Block {
       };
     case 'equation':
       return { kind: 'equation', latex: '', caption: '' };
-    case 'checklist':
-      return { kind: 'checklist', items: [{ text: '', done: false }] };
     case 'code':
       return { kind: 'code', text: '', language: '' };
+    case 'checks':
+      return { kind: 'checks', items: [{ text: '', done: false }] };
     case 'toc':
       return { kind: 'toc', title: 'Contents' };
     case 'break':
@@ -384,8 +384,14 @@ export function words(doc: Doc): number {
   for (const block of doc.blocks) {
     if (block.kind === 'heading' || block.kind === 'text') count(block.text);
     else if (block.kind === 'bullets') block.items.forEach(count);
-    else if (block.kind === 'checklist') block.items.forEach((i) => count(i.text));
+    else if (block.kind === 'checks') block.items.forEach((i) => count(i.text));
     else if (block.kind === 'quote') count(block.text);
+    /*
+     * Code is not counted, and neither are tables or equations — the rule this
+     * function already kept before there was code to apply it to. A word count
+     * on a piece of writing is a count of its *prose*: nobody submitting three
+     * thousand words means three thousand including a shell script.
+     */
   }
   return n;
 }
@@ -398,7 +404,7 @@ export function summary(blocks: Block[]): string {
     'heading',
     'text',
     'bullets',
-    'checklist',
+    'checks',
     'quote',
     'table',
     'equation',
@@ -421,7 +427,11 @@ export function hasContent(doc: Partial<Doc> & Pick<Doc, 'blocks'>): boolean {
     if (b.kind === 'break') return false;
     if (b.kind === 'table') return b.rows.some((r) => r.some((c) => c.trim() !== ''));
     if (b.kind === 'bullets') return b.items.some((i) => i.trim() !== '');
-    if (b.kind === 'checklist') return b.items.some((i) => i.text.trim() !== '');
+    // Said out loud because the fall-through below reads `b.text`, and a
+    // checklist has not got one: without this an empty checklist would answer
+    // `undefined !== ''` — true — and a blank document would claim to hold
+    // something.
+    if (b.kind === 'checks') return b.items.some((i) => i.text.trim() !== '');
     if (b.kind === 'equation') return b.latex.trim() !== '';
     if (b.kind === 'code') return b.text.trim() !== '';
     /*
@@ -463,6 +473,31 @@ export function toMarkdown(doc: Doc): string {
             .join('\n'),
         );
         break;
+      /*
+       * A fence long enough that the code cannot end it early.
+       *
+       * Three backticks is the usual fence, and a snippet *about* markdown
+       * contains three backticks — which would close the block at that line
+       * and leave the rest of the code as prose, silently. So the fence is one
+       * longer than the longest run of backticks the code starts a line with,
+       * which is what CommonMark specifies for exactly this reason.
+       */
+      case 'code': {
+        if (!block.text.trim()) break;
+        const runs = block.text.match(/^`{3,}/gm) ?? [];
+        const longest = runs.reduce((n, f) => Math.max(n, f.length), 0);
+        const fence = '`'.repeat(Math.max(3, longest + 1));
+        parts.push(`${fence}${block.language.trim()}\n${block.text}\n${fence}`);
+        break;
+      }
+      case 'checks':
+        parts.push(
+          block.items
+            .filter((i) => i.text.trim())
+            .map((i) => `- [${i.done ? 'x' : ' '}] ${i.text}`)
+            .join('\n'),
+        );
+        break;
       case 'quote': {
         const body = block.text
           .split('\n')
@@ -484,7 +519,7 @@ export function toMarkdown(doc: Doc): string {
         parts.push(block.caption.trim() ? `${lines.join('\n')}\n\n*${block.caption}*` : lines.join('\n'));
         break;
       }
-      case 'checklist':
+      case 'checks':
         parts.push(
           block.items
             .filter((i) => i.text.trim())
@@ -626,24 +661,46 @@ export function fromMarkdown(text: string): Block[] {
     }
 
     /*
-     * A list with boxes in front of it is a checklist, not a bulleted list.
+     * A fenced block, and everything to its closing fence taken literally.
      *
-     * Checked first, because `- [x] done` matches the bullet rule too and
-     * would come in as a list item whose words begin "[x]" — which is how a
-     * task list pasted from anywhere else arrives as nonsense.
+     * Before the bullet and paragraph branches on purpose: a line of code can
+     * look like anything, and `- x` inside a snippet is a line of the snippet.
+     * The closing fence has to be at least as long as the opening one, so a
+     * shorter run of backticks inside the code does not end it.
      */
-    const ticked = /^\s*[-*+]\s+\[([ xX])\]\s*(.*)$/.exec(line);
-    if (ticked) {
+    const fenced = /^\s*(`{3,}|~{3,})\s*(\S*)\s*$/.exec(line);
+    if (fenced) {
+      flush();
+      const [, fence, language] = fenced;
+      const body: string[] = [];
+      i += 1;
+      const closes = new RegExp(`^\\s*${fence[0]}{${fence.length},}\\s*$`);
+      while (i < lines.length && !closes.test(lines[i])) {
+        body.push(lines[i]);
+        i += 1;
+      }
+      blocks.push({ kind: 'code', text: body.join('\n'), language: language.trim() });
+      continue;
+    }
+
+    /*
+     * A task list, before the bullet branch it would otherwise be read by.
+     *
+     * `- [ ] thing` matches the bullet pattern perfectly well, and would come
+     * through as a bullet whose text begins with a literal `[ ]` — the ticks
+     * silently demoted to punctuation.
+     */
+    if (/^\s*[-*+]\s+\[[ xX]\]\s/.test(line)) {
       flush();
       const items: { text: string; done: boolean }[] = [];
       while (i < lines.length) {
-        const m = /^\s*[-*+]\s+\[([ xX])\]\s*(.*)$/.exec(lines[i]);
+        const m = /^\s*[-*+]\s+\[([ xX])\]\s+(.*)$/.exec(lines[i]);
         if (!m) break;
         items.push({ text: m[2].trim(), done: m[1].toLowerCase() === 'x' });
         i += 1;
       }
       i -= 1;
-      blocks.push({ kind: 'checklist', items });
+      blocks.push({ kind: 'checks', items });
       continue;
     }
 

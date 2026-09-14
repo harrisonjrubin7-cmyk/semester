@@ -11,11 +11,14 @@ import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
 import { anchorHue, tintAt } from '../lib/tint';
 import { text as showValue, value, type Val } from '../lib/calc';
+import { Equation } from './Equation';
+import { exactly, latexFn } from '../lib/laplace';
 import {
   DETAIL,
   EXAMPLES,
   HOME,
   TURNS,
+  answered,
   area,
   asFunction,
   draw,
@@ -164,6 +167,44 @@ export function Grapher() {
     if (!at) return [];
     return [{ x: at.at, y: at.to, v: speed?.to ?? 0 }];
   }, [said]);
+
+  /**
+   * The closed form, where the equation on the line has one.
+   *
+   * The curve beside it is walked and always has been — `lib/ode.ts` will
+   * solve anything that has a slope, which is most of what somebody types. The
+   * formula is what a methods course asks for on the page and a walk cannot
+   * produce, so where Laplace can get it, it goes under the line as well. It is
+   * an addition to the picture and never a replacement for it: an equation
+   * that is not linear with constant coefficients simply has no line of text
+   * under it, and draws exactly as it did before.
+   *
+   * Only a lone equation with its conditions at zero. A system is two lines
+   * making one picture, and Laplace starts at t = 0 by construction — a
+   * `y(3) = 1` is a different problem, and quietly sliding it to zero would be
+   * an answer to a question nobody asked.
+   */
+  const closed = useMemo(() => {
+    const out: Record<number, string> = {};
+    if (pair) return out;
+    read.forEach((line, index) => {
+      if (line.kind !== 'ode' || line.of !== 'y' || !lines[index].on) return;
+      const start = said.find((c) => c.of === 'y' && !c.rate);
+      const speed = said.find((c) => c.of === 'y' && c.rate);
+      if (!start || Math.abs(start.at) > 1e-9) return;
+      if (line.order === 2 && !speed) return;
+      const got = exactly({
+        body: line.body,
+        of: 'x',
+        order: line.order,
+        y0: start.to,
+        v0: speed?.to ?? 0,
+        scope,
+      });
+      if (got.ok && got.it.terms.length) out[index] = latexFn(got.it, 'x');
+    });
+    return out;
+  }, [read, lines, said, scope, pair]);
 
   /*
    * The contour map, and the levels it was cut at.
@@ -317,6 +358,7 @@ export function Grapher() {
             on={line.on}
             reading={read[i]}
             scope={scope}
+            exact={closed[i]}
             onText={(text) => dispatch({ type: 'writePlot', id: line.id, patch: { text } })}
             onShow={() => dispatch({ type: 'writePlot', id: line.id, patch: { on: !line.on } })}
             onDrop={() => dispatch({ type: 'dropPlot', id: line.id })}
@@ -445,8 +487,11 @@ export function Grapher() {
         through every <code>y(0) = 1</code> you write under it. <code>{"y'' = -y"}</code> is a
         second-order one, which wants a <code>{"y'(0) = 0"}</code> as well; an{' '}
         <code>{"x' = …"}</code> beside a <code>{"y' = …"}</code> is a system, drawn as the path the
-        two make in the plane they share. It takes the same notation the Write
-        tab draws, so a formula you kept can be pasted in as it is.
+        two make in the plane they share — and where an equation is linear with
+        constant coefficients, the exact solution is printed under it as well.{' '}
+        <code>{'L{t^2 e^{-t}}'}</code> is a Laplace transform, read and drawn against{' '}
+        <code>s</code>, and <code>{'L^{-1}{1/(s^2 + 4)}'}</code> is the way back. It takes the
+        same notation the Write tab draws, so a formula you kept can be pasted in as it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
         <Toggle on={degrees} label="Work in degrees rather than radians" onChange={() => setDegrees(!degrees)} />
@@ -470,6 +515,7 @@ function Row({
   on,
   reading,
   scope,
+  exact,
   onText,
   onShow,
   onDrop,
@@ -480,6 +526,8 @@ function Row({
   on: boolean;
   reading: Line;
   scope: ReturnType<typeof scopeOf>;
+  /** The closed form, where the equation on this line has one. */
+  exact?: string;
   onText: (text: string) => void;
   onShow: () => void;
   onDrop: () => void;
@@ -503,6 +551,8 @@ function Row({
     // the equation above it draws — but its switch is live, because turning it
     // off is how you get the whole family back.
     reading.kind === 'start' ||
+    reading.kind === 'transform' ||
+    reading.kind === 'inverse' ||
     reading.kind === 'surface';
   /** Whether it puts ink of its own on the picture — see the swatch below. */
   const inked = drawn && reading.kind !== 'start';
@@ -576,7 +626,57 @@ function Row({
           {unset.join(', ')} {unset.length === 1 ? 'has' : 'have'} no value yet — add a line like{' '}
           <code>{unset[0]} = 1</code>.
         </div>
-      ) : null}
+      ) : (
+        <Answer reading={reading} scope={scope} exact={exact} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * What a line comes to, under it.
+ *
+ * A transform has an answer rather than only a curve — the whole reason to
+ * write `L{t^2}` is to read `\frac{2}{s^3}` — and an equation that Laplace can
+ * solve has one too. Both are drawn as equations rather than printed as text,
+ * by the same component the Write tab uses, because `\frac{2}{s^{3}}` in a
+ * monospace line is the thing this screen exists to stop people writing.
+ */
+function Answer({
+  reading,
+  scope,
+  exact,
+}: {
+  reading: Line;
+  scope: ReturnType<typeof scopeOf>;
+  exact?: string;
+}) {
+  const got = answered(reading, scope);
+  if (got && 'says' in got) {
+    return (
+      <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-warn)', marginTop: 'var(--sp-2)' }}>
+        {got.says}
+      </div>
+    );
+  }
+  if (!got && !exact) return null;
+  const latex = got ? got.latex : `y = ${exact}`;
+  return (
+    <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-2)' }}>
+      <div>{got ? 'It comes to' : 'Exactly, by Laplace:'}</div>
+      {/*
+        An answer is as long as it is.
+        
+        A forced spring's solution is four terms and runs past the width of a
+        phone twice over, and there is no shortening it that is still the
+        answer. So the equation scrolls sideways inside its own box — the one
+        place in this app that is allowed to — rather than pushing the page out
+        from under everything else on it.
+      */}
+      <div style={{ overflowX: 'auto', maxWidth: '100%', paddingBottom: 'var(--sp-1)' }}>
+        <Equation latex={latex} inline />
+      </div>
+      {got ? <div>Drawn against {got.over}.{got.note ? ` ${got.note}` : ''}</div> : null}
     </div>
   );
 }

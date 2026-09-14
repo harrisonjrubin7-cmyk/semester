@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { value } from './calc';
 import {
+  answered,
   area,
   asFunction,
   contour,
@@ -377,5 +378,76 @@ describe('what the graph and the renderer agree on', () => {
     const line = of('y = x^2');
     if (line.kind !== 'curve') throw new Error('not a curve');
     expect(value(line.body, { vars: { x: 3 } })).toBe(9);
+  });
+});
+
+/**
+ * The two transform lines, off the same list as everything else.
+ *
+ * `lib/laplace.test.ts` checks the arithmetic against closed forms. This
+ * checks the joint: that `L{…}` is recognised as its own kind rather than read
+ * as a letter beside a bracket, that what the picture is drawn from is what
+ * the sentence under the line says, and that the step function is not reported
+ * as a letter somebody forgot to give a value to.
+ */
+describe('a Laplace transform on the list', () => {
+  it('is its own kind, in every way it is written', () => {
+    expect(of('L{t^2}').kind).toBe('transform');
+    expect(of('\\mathcal{L}\\{t^2\\}').kind).toBe('transform');
+    expect(of('laplace{t^2}').kind).toBe('transform');
+    expect(of('L^{-1}{1/s}').kind).toBe('inverse');
+    expect(of('L^-1{1/s}').kind).toBe('inverse');
+  });
+
+  it('leaves a letter beside a bracket alone', () => {
+    expect(of('L (t + 1)').kind).toBe('curve');
+    expect(of('y = a(x + 1)').kind).toBe('curve');
+  });
+
+  it('says what it comes to, and the letter it is drawn against', () => {
+    const got = answered(of('L{t^2}'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toBe('\\frac{2}{s^{3}}');
+    expect(got.over).toBe('s');
+    expect(got.at(2)).toBeCloseTo(2 / 8, 12);
+  });
+
+  it('comes back the other way too', () => {
+    const got = answered(of('L^{-1}{1/(s^2 + 4)}'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toBe('0.5\\sin(2t)');
+    expect(got.at(1)).toBeCloseTo(Math.sin(2) / 2, 10);
+  });
+
+  it('draws the curve the sentence describes, rather than a second one', () => {
+    const line = of('L{e^{-t}}');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    const drawn = draw(line, {}, { x0: 1, x1: 5, y0: -2, y1: 2 });
+    const points = drawn.paths.flat();
+    expect(points.length).toBeGreaterThan(100);
+    for (const p of points) expect(p.y).toBeCloseTo(got.at(p.x), 10);
+  });
+
+  it('breaks the line at the pole rather than joining the two sides of it', () => {
+    const drawn = draw(of('L{e^{2t}}'), {}, { x0: 0, x1: 4, y0: -10, y1: 10 });
+    expect(drawn.paths.length).toBeGreaterThan(1);
+  });
+
+  it('does not ask for a value for the step function', () => {
+    expect(missing(of('L{u(t - 2)}'), {})).toEqual([]);
+    expect(missing(of('L{δ(t - 1)}'), {})).toEqual([]);
+    expect(missing(of('L{k e^{-t}}'), {})).toEqual(['k']);
+  });
+
+  it('says what it could not do rather than drawing nothing and staying quiet', () => {
+    const got = answered(of('L{\\ln(t)}'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/ln/);
+  });
+
+  it('is nothing to do with any other kind of line', () => {
+    expect(answered(of('y = x^2'), {})).toBeNull();
+    expect(answered(of("y' = y"), {})).toBeNull();
   });
 });

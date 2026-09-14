@@ -231,10 +231,12 @@ function textOfBlock(b: Block): string {
       return `${b.caption} ${b.rows.flat().join(' ')}`;
     case 'equation':
       return `${b.caption} ${b.latex}`;
-    case 'checklist':
-      return b.items.map((i) => i.text).join(' ');
+    // The language too: somebody looking for the Python in their notes is
+    // searching for "python" as often as for anything in the snippet.
     case 'code':
-      return b.text;
+      return `${b.language} ${b.text}`;
+    case 'checks':
+      return b.items.map((i) => i.text).join(' ');
     case 'toc':
       return b.title;
     case 'break':

@@ -122,7 +122,7 @@ function Drawn({ block, headings }: { block: Block; headings: ReturnType<typeof 
           ))}
         </ul>
       );
-    case 'checklist':
+    case 'checks':
       return (
         <ul className="docpaper-list docpaper-ticks">
           {block.items.map((item, i) => (

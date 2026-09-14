@@ -2,7 +2,17 @@ import type { Provide } from '../shape';
 import { guideNow } from '../shape';
 import { FORMULAS } from '../../lib/maths';
 import { filled as filledRows } from '../../lib/sheet';
-import { words as docWords } from '../../lib/document';
+/*
+ * The document's own word count, rather than a second one kept here.
+ *
+ * This file used to carry a copy, under a comment saying it counted "the way
+ * `lib/document.ts` counts them" — which is a promise a copy cannot keep. It
+ * had already drifted: the real one strips the markdown before counting, so
+ * `**emphasis**` was one word there and one word plus two asterisks here. Then
+ * a new kind of block was added and the copy did not know about it, which is
+ * how this came to be noticed.
+ */
+import { words } from '../../lib/document';
 
 /**
  * The Make group — the screens that produce something.
@@ -63,7 +73,7 @@ export const write: Provide = (look) => {
       summary: `Documents — ${state.documents.length} written. None open.`,
       visible: state.documents.slice(0, 20).map((d) => ({
         title: d.title || 'Untitled',
-        words: docWords(d),
+        words: words(d),
         ...(d.courseId ? { course: catalog.byId[d.courseId]?.code } : {}),
       })),
       actions: ['make_document', 'open_screen'],
@@ -79,7 +89,7 @@ export const write: Provide = (look) => {
   });
   return {
     summary:
-      `Writing “${doc.title || 'Untitled'}” — ${docWords(doc)} words, ${doc.blocks.length} blocks` +
+      `Writing “${doc.title || 'Untitled'}” — ${words(doc)} words, ${doc.blocks.length} blocks` +
       `${doc.courseId ? `, filed under ${catalog.byId[doc.courseId]?.code ?? 'a course'}` : ''}. ` +
       'The paragraphs themselves are not sent; the headings and the shape are.',
     visible: shape,
@@ -91,6 +101,8 @@ export const write: Provide = (look) => {
     ],
   };
 };
+
+
 
 /**
  * Sheet or table — the grid, as values.

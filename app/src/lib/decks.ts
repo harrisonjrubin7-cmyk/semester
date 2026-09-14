@@ -117,25 +117,16 @@ export function themeOf(deck: Pick<StoredDeck, 'theme'>): Theme {
   return THEMES.find((t) => t.id === deck.theme) ?? THEMES[0];
 }
 
-export function blankDeck(
-  title: string,
-  courseId: CourseId | null = null,
-  itemId: string | null = null,
-): Omit<StoredDeck, 'id'> {
-  const now = Date.now();
-  return {
-    title: title.trim() || 'Untitled deck',
-    subtitle: '',
-    slides: [{ title: title.trim() || 'Untitled deck', bullets: [], opening: true }],
-    courseId,
-    itemId,
-    created: now,
-    updated: now,
-    hidden: [],
-    theme: 'ink',
-    numbers: false,
-  };
-}
+/*
+ * `blankDeck` lives in `lib/blank.ts` now, and is re-exported here so every
+ * caller is unchanged.
+ *
+ * It left for the same reason `blankSheet` did: the reducer creates decks and
+ * has no business loading this file, which imports the palette out of
+ * `lib/pptx.ts` — so a fourteen-line factory was putting a .pptx serialiser on
+ * the first render. See `lib/blank.ts`.
+ */
+export { blankDeck } from './blank';
 
 /** A blank slide of a given shape. The layouts a class presentation actually uses. */
 export type Layout =

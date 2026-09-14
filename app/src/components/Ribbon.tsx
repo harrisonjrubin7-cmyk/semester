@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ZOOMS, live, showing, tidy, type Control, type Tab } from '../lib/ribbon';
+import { TabList } from './ui';
 
 /**
  * The spreadsheet's chrome: a ribbon, a formula bar, a tab strip, a status bar.
@@ -50,20 +51,14 @@ export function Ribbon({
   if (!open) return null;
   return (
     <div className="rib">
-      <div className="rib-tabs" role="tablist" aria-label="Ribbon">
-        {drawn.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            className="rib-tab"
-            aria-selected={tab.id === open.id}
-            onClick={() => onTab(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <TabList
+        label="Ribbon"
+        className="rib-tabs"
+        tabClassName="rib-tab"
+        tabs={drawn.map((tab) => ({ id: tab.id, label: tab.label }))}
+        value={open.id}
+        onChange={onTab}
+      />
       <div className="rib-body" role="tabpanel" aria-label={`${open.label} tools`}>
         {open.groups.map((group) => (
           <div key={group.id} className="rib-group">

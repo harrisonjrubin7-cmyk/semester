@@ -98,7 +98,7 @@ function strings(block: Block): string[] {
     return [block.text];
   }
   if (block.kind === 'bullets') return block.items;
-  if (block.kind === 'checklist') return block.items.map((i) => i.text);
+  if (block.kind === 'checks') return block.items.map((i) => i.text);
   /*
    * A code block is skipped, for the reason a table and an equation are:
    * renaming a variable through a search meant for prose is how a script that
@@ -189,7 +189,7 @@ export function replaceAll(
     }
     if (block.kind === 'quote') return { ...block, text: swap(block.text) };
     if (block.kind === 'bullets') return { ...block, items: block.items.map(swap) };
-    if (block.kind === 'checklist') {
+    if (block.kind === 'checks') {
       return { ...block, items: block.items.map((i) => ({ ...i, text: swap(i.text) })) };
     }
     return block;
@@ -361,7 +361,7 @@ export function glance(doc: Pick<Doc, 'blocks'>, lines = 6): string[] {
       case 'equation':
         if (block.latex.trim()) out.push(block.latex.trim());
         break;
-      case 'checklist':
+      case 'checks':
         for (const item of block.items) {
           if (out.length >= lines) break;
           if (item.text.trim()) out.push(`${item.done ? '☑' : '☐'} ${item.text.trim()}`);
