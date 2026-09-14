@@ -22,7 +22,10 @@ export function readRegistration(value:unknown):RegistrationData {
  return {catalog,cart:readIds(value.cart),plans};
 }
 export function readStoredDirectory(value:unknown):CampusDirectoryData|null {
- if(value===null)return null;
+ // `== null`, not `=== null`: nothing stored arrives as undefined as readily
+ // as null, and `JSON.stringify(undefined)` is undefined rather than a
+ // string, so `parseDirectory` read `.length` off it and threw.
+ if(value==null)return null;
  const directory=parseDirectory(JSON.stringify(value));
  if(obj(value)&&typeof value.updated==='string')directory.updated=value.updated;
  return directory;
