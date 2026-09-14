@@ -27,6 +27,7 @@ import { arrivedByShare, forgetShare, takeShared } from '../lib/shared';
 import { blankCourse } from '../lib/edit';
 import { Folding } from '../components/Fold';
 import { NeedsKey } from '../components/NeedsKey';
+import { reviewReady } from '../lib/import-review';
 
 /**
  * What the picker will offer.
@@ -609,6 +610,7 @@ export function Import() {
         <Preview
           result={result}
           onSave={save}
+          onRevise={setResult}
           replacing={Boolean(existing)}
           dropped={dropped}
           onToggle={(id) =>
@@ -846,25 +848,31 @@ function Rediff({
 function Preview({
   result,
   onSave,
+  onRevise,
   replacing = false,
   dropped,
   onToggle,
 }: {
   result: GenerationResult;
   onSave: () => void;
+  onRevise: (result: GenerationResult) => void;
   replacing?: boolean;
   /** Dates taken off the import. See the state in `Import`. */
   dropped: Set<string>;
   onToggle: (id: string) => void;
 }) {
   const rowTen = useRowStyle(10);
+  const { now } = useStore();
+  const [confirmed, setConfirmed] = useState(false);
+  useEffect(() => setConfirmed(false), [result, dropped]);
   const { module: m, notes } = result;
+  const ready = reviewReady(m.items, dropped, confirmed, now.getFullYear());
   const [summary, ...warnings] = notes;
   const keeping = m.items.filter((i) => !dropped.has(i.id)).length;
 
   return (
-    <Folding name="Preview">
-      <SectionLabel>What came back</SectionLabel>
+    <Folding name="Review extracted information">
+      <SectionLabel>Review your course</SectionLabel>
       <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
         <div className="chrome-text" style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.1 }}>
           {m.course.code}
@@ -924,8 +932,8 @@ function Preview({
       {m.items.map((i) => {
         const off = dropped.has(i.id);
         return (
+          <div key={i.id} className="import-review-item">
           <button
-            key={i.id}
             type="button"
             className="bare tappable"
             onClick={() => onToggle(i.id)}
@@ -975,6 +983,12 @@ function Preview({
               </span>
             )}
           </button>
+          {!i.quote && <p className="import-evidence-note">No source excerpt supplied. Check this date in the original syllabus.</p>}
+          <details className="import-correction"><summary>Edit title or date</summary><div>
+            <label>Title<input className="input" aria-label={`Title for ${i.title}`} value={i.title} onChange={e => onRevise({...result,module:{...m,items:m.items.map(row=>row.id===i.id?{...row,title:e.target.value}:row)}})}/></label>
+            <label>Date<input className="input" type="date" aria-label={`Date for ${i.title}`} value={`${i.year??now.getFullYear()}-${String(i.month+1).padStart(2,'0')}-${String(i.day).padStart(2,'0')}`} onChange={e=>{if(!/^\d{4}-\d{2}-\d{2}$/.test(e.target.value))return;const [year,month,day]=e.target.value.split('-').map(Number);onRevise({...result,module:{...m,items:m.items.map(row=>row.id===i.id?{...row,year,month:month-1,day}:row)}});}}/></label>
+          </div></details>
+          </div>
         );
       })}
 
@@ -987,8 +1001,11 @@ function Preview({
         </div>
       ))}
 
+      <label className="import-confirmation"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/><span>I checked the course information and selected dates against my syllabus. Add only the dates I approved.</span></label>
+      <p className="import-evidence-note" role="status">{ready ? 'Verified dates are ready to add.' : 'Review the dates above before adding this course. Reminders begin only after you approve and save.'}</p>
       <ActionButton
-        onClick={onSave}
+        onClick={() => { if (ready) onSave(); }}
+        disabled={!ready}
         tone="primary"
         style={{ fontSize: 'var(--type-lg)', marginTop: 18 }}
       >

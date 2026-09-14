@@ -64,6 +64,7 @@ import type { Corner } from './Popover';
 import { toneAt, useTones } from './tones';
 import type { CourseTint } from '../lib/tint';
 import type { AppTab, Seat, TabGroup } from '../lib/browser';
+import { useModernShell } from './shell-context';
 
 /**
  * The strip follows the app, wherever the app is driven from.
@@ -157,6 +158,8 @@ export function TabsFollow() {
     sheetId,
     deckId,
     mode,
+    openUnit,
+    callCode,
   } = state;
   const at = useMemo(
     () =>
@@ -170,8 +173,25 @@ export function TabsFollow() {
         sheetId,
         deckId,
         mode,
+        /* A study tab remembers the unit it is open on and a call tab its
+           room, so two study tabs come back to their own. See `placeFor`. */
+        openUnit,
+        callCode,
       }),
-    [screen, courseId, itemId, eventId, guideId, noteId, documentId, sheetId, deckId, mode],
+    [
+      screen,
+      courseId,
+      itemId,
+      eventId,
+      guideId,
+      noteId,
+      documentId,
+      sheetId,
+      deckId,
+      mode,
+      openUnit,
+      callCode,
+    ],
   );
   const seen = useRef<string | null>(null);
 
@@ -236,6 +256,7 @@ export function TabStrip({
   const tones = useTones();
   /** The tab or group menu, and where it was summoned from. See `TabMenu`. */
   const [menu, setMenu] = useState<{ on: MenuOn; corner: Corner } | null>(null);
+  const modern = useModernShell();
 
   /** Put the app where a tab says, or hand a new tab to the search page. */
   const land = (tab: AppTab) => {
@@ -267,7 +288,9 @@ export function TabStrip({
     const pointer = e.detail > 0 && e.clientY > 0;
     setMenu({ on, corner: { x: pointer ? e.clientX : box.left, y: pointer ? e.clientY : box.bottom + 2 } });
   };
-
+  /* Inside the browser shell the strip is the shell's, not ours — drawing
+     this one too is the doubling `lib/chrome.ts` exists to stop. */
+  if (modern) return null;
   if (!inOverlay && !alwaysOn && strip.tabs.length < 2) return null;
 
   const rows = lanes(strip);
@@ -390,10 +413,27 @@ export function TabStrip({
           type="button"
           className="bare"
           onClick={onDismiss}
+          /*
+           * A gutter, and a rule, because the row beside this one scrolls.
+           *
+           * The tabs sit in a `overflow-x: auto` box whose right edge was two
+           * pixels from this word. A row that has overflowed is cut wherever
+           * it is cut — mid-name, mid-letter — so on a phone with four tabs
+           * open the strip read "…Practice pap CLOSE", one string, and the
+           * cut looked like the app had broken rather than like a row that
+           * scrolls. The gutter separates them and the hairline says which
+           * side of it a thing belongs to: everything left of the line is a
+           * place you can go, and this is not.
+           */
           style={{
             width: 'auto',
             flex: 'none',
-            padding: 'var(--sp-4) var(--sp-2)',
+            marginLeft: 'var(--sp-4)',
+            paddingLeft: 'var(--sp-5)',
+            paddingRight: 'var(--sp-2)',
+            paddingTop: 'var(--sp-4)',
+            paddingBottom: 'var(--sp-4)',
+            borderLeft: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',
             letterSpacing: '0.12em',
             ...secondLine(),

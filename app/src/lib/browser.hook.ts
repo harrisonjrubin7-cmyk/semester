@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import {
+  MAX_TABS,
   add,
   asked,
   blank,
@@ -41,6 +42,14 @@ import type { Screen } from './types';
  */
 
 let held: Strip | null = null;
+/*
+ * The tabs closed this visit, most recent last.
+ *
+ * Bounded on its own rather than by `MAX_TABS`: this is a short undo for a
+ * mis-click, not a second strip, and it was ten when the cap was ten.
+ */
+const REOPENABLE = 10;
+const closed: {tab: AppTab; at: number}[]=[];
 const listeners = new Set<() => void>();
 
 /**
@@ -100,8 +109,10 @@ export function recordSearch(query: string): void {
 }
 
 /** A new tab, beside the one you are on, and you are now on it. */
-export function openTab(): void {
+export function openTab(): boolean {
+  if(strip().tabs.length>=MAX_TABS)return false;
   put(add(strip()));
+  return true;
 }
 
 /**
@@ -112,9 +123,11 @@ export function openTab(): void {
  * thing anybody does with a page of results, and the tab you landed in is
  * where you are when you want it.
  */
-export function openInNew(screen: Screen, title: string, place: Action[], query = ''): void {
+export function openInNew(screen: Screen, title: string, place: Action[], query = ''): boolean {
+  if(strip().tabs.length>=MAX_TABS)return false;
   put(openBeside(strip(), screen, title, place));
   if (query) put(asked(strip(), query));
+  return true;
 }
 
 /** Go to a tab. Returns the tab you are now on, for the caller to open. */
@@ -125,7 +138,9 @@ export function pickTab(which: number): AppTab {
 
 /** Close one. Returns the tab that is now on — its neighbour, or a new tab. */
 export function closeTab(which: number): AppTab {
-  put(close(strip(), which));
+  const before=strip();
+  if(before.tabs[which]){closed.push({tab:before.tabs[which],at:which});if(closed.length>REOPENABLE)closed.shift();}
+  put(close(before, which));
   return here();
 }
 
@@ -206,3 +221,27 @@ export function shutGroup(id: string): AppTab | null {
   return here().id === was ? null : here();
 }
 
+/** Last closed tab from this visit, including its original per-tab workspace identity. */
+export function lastClosed(): AppTab | undefined { return closed.at(-1)?.tab; }
+export function reopenClosed(): AppTab | null {
+  const current=strip();
+  if(!closed.length || current.tabs.length>=MAX_TABS)return null;
+  const entry=closed.pop()!;
+  const at=Math.min(entry.at,current.tabs.length);
+  /* Spread the strip rather than rebuilding it: it carries the groups too,
+     and a reopened tab must not take them down with it. */
+  put({...current,tabs:[...current.tabs.slice(0,at),entry.tab,...current.tabs.slice(at)],at});
+  return here();
+}
+
+/**
+ * For tests: forget everything read from the device.
+ *
+ * Cut on main as an export nothing read; `browser-recovery.test.ts` reads it
+ * again, and it now clears the closed-tab history too — that history is
+ * module state, so without this one test's closes are visible to the next.
+ */
+export function forgetStrip(): void {
+  held = null;
+  closed.length = 0;
+}

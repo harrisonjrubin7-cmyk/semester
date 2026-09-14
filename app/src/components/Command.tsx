@@ -72,6 +72,7 @@ import { here, openInNew, record, recordSearch, useStrip } from '../lib/browser.
 import { justGo } from '../lib/browser';
 import { readSearches, remember, forget, suggestions, writeSearches } from '../lib/typeahead';
 import type { Screen } from '../lib/types';
+import { useModernShell } from './shell-context';
 
 /**
  * Every size on this page, at the two scales it is drawn at.
@@ -91,6 +92,9 @@ const SHORTCUTS = 7;
 export function Command({ onClose }: { onClose: () => void }) {
   const { state, dispatch, now, catalog, school } = useStore();
   const ai = useAI();
+  /* The shell owns search when it is the navigation: two search fields on
+     screen at once was the audit's fix #10. */
+  const modern = useModernShell();
   const wide = useMedia(DESKTOP);
   const size = wide ? SIZES.desk : SIZES.phone;
   // Empty every time. It used to open seeded from a screen's own filter box,
@@ -342,6 +346,10 @@ export function Command({ onClose }: { onClose: () => void }) {
   const onSearchPage = sent.trim() === '';
   /** The tab the strip is on, which is what the app behind this is showing. */
   const tab = here();
+
+  /* After every hook, so the palette keeps its place in the hook order on the
+     render where the shell takes search off it. */
+  if (modern) return null;
 
   return (
     <div

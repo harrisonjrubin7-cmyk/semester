@@ -463,6 +463,7 @@ doing the second's job, and having both named makes that hard to repeat.
 | W5 | The search home drops its AI Tutor button | `TopBar`'s, drawn on every screen | nothing — the bar's is inches above it |
 | W7 | The centre box focuses the bar instead of opening a second search; both `⌘ K` chips go | `TopBar`'s field — the only one now | nothing; the front door has one search field, reachable from two places |
 | W8 | `/` focuses that field where one is drawn, and opens the palette where none is | one search key, as before | nothing; the keyboard now gives the same answer as the pointer |
+| W9 | — | — | recorded only; a seventh navigation landed on `main` mid-branch and repeats four of these rows. See §4b. |
 
 **Eight controls go, one is renamed, one stops being a search and becomes a way
 into the one that is. No destination goes**, which is why the screen count
@@ -492,6 +493,45 @@ to the one piece of chrome `lib/chrome.ts` deliberately does not cover.
 
 ---
 
+## 4b. W9 — a seventh navigation arrived after this census, and repeats it · **OPEN**
+
+Not a finding about this branch's work. It is what the census says about code
+that landed on `main` while the branch was open, and it is recorded here
+because the next pass should not have to rediscover it.
+
+`#232` ported a **browser shell** — a seventh navigation, `chrome.browser`,
+drawn by `components/GoogleShell.tsx`. It is one navigation by
+`navigationsDrawn`'s reckoning and the invariant at the top of `lib/chrome.ts`
+still holds. What it repeats is everything below that line:
+
+| This pass removed | The browser shell has |
+| --- | --- |
+| **W7** — two search fields in one frame | two `<input>`s from one component, `placement` `top` and `home`, both drawn on its home |
+| **W5** — the assistant offered twice | an `AI Tutor` button in the bar, and `ask` again in the launcher as "AI Tutor" (`GoogleShell.tsx:35,137`) — its own note says so: *"This shell already offers the tutor twice"* |
+| **§3.1 `ground`** — one writer per preference | its own Dark/Light pair, writing `usePreference('lightHome')` — a third place light and dark are chosen, and a key that can disagree with `ground` |
+| **W8** — `/` lands in the search on screen | `/` opens the palette over its search field, because `barfocus` is not wired here |
+
+Two things keep this off this branch's plate rather than on it.
+
+It is **not a regression**. `/` opened the palette everywhere before W8; the
+browser shell simply does not benefit yet. And the tutor pair and the theme
+pair arrived with the port, not from anything here.
+
+And it is **not a merge**. `GoogleShell.tsx` is 179 lines in the style of the
+source it came from, with its own preference keys (`lightHome`, `classic`) and
+its own overlays. Reaching into a navigation that landed hours ago to apply
+four of this pass's conclusions is a pass of its own, with its own audit — and
+this one is already eight rows long and open on a branch. The honest thing is
+to say so.
+
+What would make it a merge rather than a rewrite, when somebody does it:
+`ModernShellContext` already exists so the app's own chrome stands down inside
+this shell, and `components/desk/barfocus.ts` is the shape the `/` half wants —
+a provider mounted by whichever shell draws a field, so `Keys` keeps asking one
+question and gets the right answer in both.
+
+---
+
 ## 5. Resolved
 
 Every row above is closed. Three commits, each green.
@@ -508,10 +548,17 @@ Every row above is closed. Three commits, each green.
 
 ### The claim, checked rather than asserted
 
-`npm run lint` exit 0. `npm test` **316 files / 6793 tests**, all passing, on a
-head merged with `main` at `ce94c15` — so the count carries that branch's own
+`npm run lint` exit 0. `npm test` **334 files / 6888 tests**, all passing, on a
+head merged with `main` at `9512384` — so the count carries two other branches'
 new tests as well as this pass's. `npm run build` clean, `test:zones` green in
 two other timezones, and `pipeline/validate.mjs` clean.
+
+The second merge is worth a line of its own, because a test written here earned
+its keep during it. `chrome.test.ts`'s "has no member that is not a navigation"
+— written when `fab` was cut, to hold the rule rather than one member's absence
+— failed the moment `browser` arrived, which is exactly what it is for. It now
+checks the member list against `navigationsDrawn` in both directions, so a
+navigation that is added and not counted, or counted and not added, fails.
 
 And driven in a browser, because an absent control is easy to claim and hard to
 see. Chromium at two widths, four navigations, `pageerror` empty throughout:

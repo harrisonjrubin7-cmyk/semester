@@ -91,7 +91,9 @@ export function countsOf(data: Record<string, unknown>): Record<string, number> 
   const out: Record<string, number> = {};
   for (const section of BACKUP_SECTIONS) {
     const value = data[section.key];
-    if (section.array) {
+    if (section.valueType) {
+      if (typeof value === section.valueType) out[section.key] = 1;
+    } else if (section.array) {
       if (Array.isArray(value)) out[section.key] = value.length;
     } else if (value && typeof value === 'object' && !Array.isArray(value)) {
       out[section.key] = Object.keys(value).length;

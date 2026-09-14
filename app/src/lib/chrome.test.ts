@@ -141,17 +141,27 @@ describe('the navigation rule', () => {
    * member of it is counted by the invariant rather than exempt from it.
    */
   it('has no member that is not a navigation', () => {
+    /*
+     * Every member, and every one of them counted by `navigationsDrawn` —
+     * except `sidebar`, which is the wide expression of `desk` rather than a
+     * navigation of its own, cannot be on without it, and is documented as
+     * the exception in `chrome.ts`.
+     *
+     * Written as the key list rather than as a `fab` check so that it holds
+     * the rule and not one member's absence. It has already earned that once:
+     * `browser` arrived as a seventh navigation while this branch was open,
+     * and this test is what said so.
+     */
+    const COUNTED = ['browser', 'desk', 'rail', 'shelves', 'tabs'];
     for (const nav of MODES) {
       for (const wide of [true, false]) {
         const c = chromeFor(nav, 'home', wide);
-        // `sidebar` is the wide expression of `desk` rather than a navigation
-        // of its own — the one documented exception, and it cannot be on
-        // without `desk`, which is what makes it an expression and not a
-        // fifth thing.
-        expect(Object.keys(c).sort(), `${nav} ${wide}`).toEqual(
-          ['desk', 'rail', 'shelves', 'sidebar', 'tabs'],
-        );
+        expect(Object.keys(c).sort(), `${nav} ${wide}`).toEqual([...COUNTED, 'sidebar'].sort());
         if (c.sidebar) expect(c.desk, `${nav} ${wide}`).toBe(true);
+        // The list above is the invariant's list, not a second copy of it:
+        // anything counted must be here, and anything here must be counted.
+        const on = COUNTED.filter((k) => c[k as keyof typeof c]).length;
+        expect(navigationsDrawn(c), `${nav} ${wide}`).toBe(on);
       }
     }
   });
@@ -176,17 +186,28 @@ describe('the home screen', () => {
     for (const nav of MODES) expect(homeShape(nav)).toBeTruthy();
   });
 
-  it('lands the workspace on its search page and everything else on home', () => {
-    expect(firstScreen('workspace')).toBe('search');
-    for (const nav of MODES.filter((n) => n !== 'workspace')) {
+  it('lands the two top-chrome navigations on their search page and everything else on home', () => {
+    // Both open the way a browser opens on a new tab, rather than on the last
+    // page you read. Every other navigation opens on the day.
+    const onSearch: NavMode[] = ['workspace', 'browser'];
+    for (const nav of onSearch) expect(firstScreen(nav), nav).toBe('search');
+    for (const nav of MODES.filter((n) => !onSearch.includes(n))) {
       expect(firstScreen(nav), nav).toBe('home');
     }
   });
 });
 
 describe('reading a navigation back', () => {
-  it('keeps the six the app has', () => {
-    expect(MODES).toEqual(['tabs', 'feed', 'springboard', 'shelves', 'workspace', 'guides']);
+  it('keeps the seven the app has', () => {
+    expect(MODES).toEqual([
+      'tabs',
+      'feed',
+      'springboard',
+      'shelves',
+      'workspace',
+      'browser',
+      'guides',
+    ]);
     for (const nav of MODES) expect(navOf(nav)).toBe(nav);
   });
 
