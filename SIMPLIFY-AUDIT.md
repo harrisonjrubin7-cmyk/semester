@@ -1,4 +1,318 @@
-# One app — the audit, sixth pass
+# One app — the audit, seventh pass
+
+Step 1 of `/simplify`, run again. No code in this commit.
+
+Counted against `app/src` at `71f8c10`: **60 destinations** in `lib/nav.ts`, 74
+members of the `Screen` union, 100 screen files, 134 components. Baseline before
+any change: `npm run lint` exit 0, `npm test` 314 files / 6691 tests passing.
+
+**The screen count is not the problem this time, and no screen is merged or
+cut.** The six passes before this one all counted the same three things —
+screens that answer one question twice, destinations reachable more than one
+way, and settings written from two places. By the sixth the first two were
+clean; the third was reported clean and was not, which §3.1 corrects — though
+all three of the settings it missed turn out to be keeps. The fault that is
+actually left is on an axis none of the six looked at.
+
+## The axis: two controls, one job, on screen at the same time
+
+A route census counts pathways *over time*: you can get to Settings from here,
+and also from there. It says nothing about two buttons that do the identical
+thing while both are visible in one frame. That is a different and worse fault,
+because a route you have to remember costs you nothing when you are not using
+it, and a second button sitting four inches from the first costs you a decision
+every time you look at the screen.
+
+This pass was opened by a screenshot of **Alerts in the workspace navigation**:
+a header carrying `+` and a magnifier, with the workspace's own search field
+drawn directly above it and the workspace's own New button drawn directly
+beside it. Three of those four controls do two jobs between them.
+
+The census below is of *chrome* only — the bars, rails, sidebars and headers
+that are drawn beside every screen. A button inside a screen's own body is that
+screen's business and is out of scope here.
+
+---
+
+## 1. The control census
+
+### What is on screen at once, per navigation
+
+`lib/chrome.ts` guarantees no two *navigations* are drawn together. It says
+nothing about the header, which it explicitly excludes ("the header belongs to
+the screen you are on"), nor about the workspace's bar and sidebar, which it
+counts as one navigation expressed at two widths. So the workspace draws three
+pieces of chrome at once — `TopBar`, `Sidebar`, and the slim `Header` inside the
+pane — and nothing has ever compared their contents.
+
+Read out of `App.tsx:1218-1256`, `components/desk/TopBar.tsx:258-296`,
+`components/desk/Sidebar.tsx:75-99` and `App.tsx:696-828`:
+
+| Job | `TopBar` | `Sidebar` (wide) | slim `Header` | On screen at once |
+| --- | --- | --- | --- | --- |
+| Open the capture box (`quickAdd`) | — | **New** (`Plus`) | **`+`** | **2** (wide) |
+| Open the palette (`finder`) | **the search field** | — | **magnifier** | **2** (every width) |
+| Go to `search` | **the wordmark** | **Search home** row | — | **2** (wide) |
+| Go to `settings` | **gear** | **Settings** row | — | **2** (wide) |
+| Go to `ask` | **AI Tutor** | — | — | 2 with `Assistant`'s corner button |
+| Open the launcher (`apps`) | nine dots | — | — | 1 |
+| Go to `notifs` | bell | — | — | 1 |
+| Go to `profile` | avatar | — | — | 1 |
+| Go to `connect` | — | Connect row | — | 1 |
+
+The last four rows are the point. `Header`'s `slim` prop already exists to stop
+exactly this: it drops the launcher, the bell and the avatar because `TopBar`
+carries all three.
+
+```
+$ grep -n "slim" app/src/App.tsx
+526:  slim = false,
+764:          {!slim && (          # the launcher
+776:          {atRoot && !slim && (# the bell
+819:          {!slim && showsAvatar# the avatar
+1230:            {!ownTitle && <Header slim />}
+```
+
+**`slim` suppressed three of the five duplicates and missed two.** It was
+written against the three controls `TopBar` has in its `.desktop-tools` cluster
+and never checked against `TopBar`'s search field or `Sidebar`'s New button.
+That is the whole of W1 and W2 below — not a design decision anybody made, an
+unfinished list.
+
+### W1 — the palette, twice · **CUT the header's magnifier in the workspace**
+
+`TopBar` draws a permanent search field at every width — `.desktop-search` has
+no `display: none` at any breakpoint (`styles/app.css:4750`) — and its own file
+opens by saying that being permanent is the entire point:
+
+> A search field that is *always there* is the whole of what this adds. […] it
+> was behind a magnifier in a row of four icons, which is the difference between
+> a thing people use fifty times a day and a thing people use when they remember
+> it exists. — `components/desk/TopBar.tsx:3-9`
+
+The magnifier that sentence is about is still there, one row below the field,
+opening the same `finder`. The bar's argument for existing is the argument for
+removing it.
+
+### W2 — the capture box, twice · **CUT the header's `+` where the sidebar is drawn**
+
+`Sidebar`'s New button and the header's `+` both dispatch
+`{ type: 'quickAdd', open: true }`, four inches apart, and `Sidebar` says so:
+
+> **New** is the capture box, not a menu. […] at the top of the column in the
+> position every workspace puts its primary action, it is the first thing the
+> eye lands on. — `components/desk/Sidebar.tsx:10-14`
+
+It is the first thing the eye lands on and then the eye lands on a second one.
+
+**Not an unconditional cut.** `sidebar: desk && wide` (`lib/chrome.ts`), so a
+narrow workspace has no New button, and `TopBar` has no `+`. There the header's
+`+` is the only pointing route to the capture box. It stays there.
+
+### W3 — the search home, twice · **CUT the sidebar's Search home row**
+
+`TopBar`'s wordmark and `Sidebar`'s second row both `go` to `search`:
+
+```
+$ grep -rn "screen: 'search'" app/src --include=*.tsx | grep -v test
+components/desk/TopBar.tsx:117:  onClick={() => dispatch({ type: 'go', screen: 'search' })}   # the wordmark
+App.tsx:1218:  <TabStrip alwaysOn onBlank={() => dispatch(…'search')} />                  # blank tab
+App.tsx:1246:  <ScreenTrouble … onLeave={() => dispatch(…'search')} />                    # crash exit
+$ grep -n "row('search'" app/src/components/desk/Sidebar.tsx
+85:      {row('search', 'Search home', SearchIcon)}
+```
+
+The wordmark survives: it is drawn at every width in this navigation (only
+`.desktop-word` is hidden under 760px — the `S` mark stays,
+`styles/app.css:4740`), and a wordmark that returns you to the front door is the
+one navigation convention every browser and every workspace app already taught.
+The row is wide-only and second.
+
+### W4 — Settings, twice · **CUT the sidebar's Settings row**
+
+Same shape, same survivor, for the stronger reason. `TopBar`'s gear is one of
+the four `.desktop-tools`; `Sidebar`'s last row goes to the same screen.
+`Sidebar`'s own charter is against itself here:
+
+> a sidebar earns its width by holding the handful of places somebody returns to
+> *between everything else* — `components/desk/Sidebar.tsx:5-8`
+
+Settings is not a place you return to between everything else. Nothing is lost
+at either width: the gear is drawn wide, and narrow — where the sidebar does not
+exist at all — settings is in the launcher and in the bar's own app search,
+which is what `styles/app.css:4859` already says out loud.
+
+### W5 — `ask`, twice · **RECORD, do not fix here**
+
+`TopBar`'s AI Tutor button and `ai/Assistant.tsx`'s corner button are two
+surfaces over one conversation, and `SearchHome` adds a third AI Tutor control
+on the `search` screen. This is the `ask`/`chat`/assistant cluster the fifth
+pass logged, and `/simplify` is explicit that `/ask-tab` owns it. Counted here so
+the census is complete; untouched.
+
+---
+
+## 2. The same fault outside the workspace
+
+### F1 — two `Plus` glyphs, two meanings · **CUT the FAB**
+
+The feed navigation draws a floating action button on the home screen of a
+phone:
+
+```
+$ grep -n "fab:" app/src/lib/chrome.ts
+150:    fab: nav === 'feed' && screen === 'home' && !wide,
+$ sed -n '1792,1812p' app/src/App.tsx
+    onClick={() => dispatch({ type: 'go', screen: 'import' })}
+    aria-label="Import a syllabus"
+    …
+    <Plus size={24} />
+```
+
+The header above it is drawing a `Plus` too, and `showActions` is unconditional
+(`App.tsx:563`), so on the feed home on a phone there are **two `Plus` buttons on
+screen, and they do different things** — one opens the capture box, one opens the
+syllabus importer. The header's own comment is the argument against the one
+below it:
+
+> It briefly opened the importer on the courses list — the `+` adding what the
+> screen lists — and that made the one control whose meaning you can rely on
+> into one you have to check. — `App.tsx:698-702`
+
+That is precisely the state the FAB restores, from the other direction. And the
+FAB is the narrowest control in the app: one nav, one screen, one width.
+`import` keeps seven routes without it —
+
+```
+$ grep -rn "screen: 'import'" app/src --include=*.tsx --include=*.ts | grep -v test
+lib/keys.ts:66        # the `n` shortcut
+screens/Courses.tsx:253
+screens/FirstRun.tsx:34
+screens/Gap.tsx:135
+screens/Runway.tsx:118
+screens/Yes.tsx:205
+screens/me/You.tsx:214
+```
+
+— plus its own registry row, so search finds it by "syllabus", and the directory
+and the launcher both list it. Six of those seven are empty-state offers on the
+screen that noticed the gap, which is not a pathway competing for attention; the
+FAB is.
+
+Cutting it removes a field from `Chrome` as well as a button, which is the part
+that makes this a simplification rather than a deletion: `chromeFor` stops
+answering a question about a button while claiming, in its own words, to be only
+about navigation.
+
+### F2 — the rail and the header, checked and clear · **KEEP**
+
+The wide non-workspace layout draws `Rail` and a full (non-slim) `Header`. The
+rail's rows are the tab list plus `ask`, `import`, `account`, `connect`,
+`settings`, filtered against the tabs so nothing is listed twice
+(`App.tsx:1321-1332`). The header's five are `quickAdd`, `finder`, `apps`,
+`notifs`, `profile`. **The two sets are disjoint** — no overlap, at any width —
+apart from `ask`, which is W5's business. Nothing to do.
+
+### F3 — the phone layout, checked and clear · **KEEP**
+
+`TabBar` draws `barFor(state.tabs, …)`; the header draws the same five as F2.
+`profile` is not a tab and cannot become one — `PINNED` is `me`
+(`lib/tabbar.ts:66`) and `me` is a different screen. Disjoint apart from the FAB,
+which is F1. Nothing else to do.
+
+---
+
+## 3. Re-checks: the axes the first six passes owned
+
+| Axis | State at `71f8c10` |
+| --- | --- |
+| **Screen overlap** | No new destination since the sixth pass. Its D1 (the application tracker) and the Progress → Everything merge are both landed; `screens/Directory.tsx` is the one directory and `screens/Me.tsx:145` is a row into it, not a second copy. Nothing to add. |
+| **Routes per destination** | Re-run. The only destination that gained a pathway is `search`, via `Sidebar`, and that is W3. |
+| **Duplicated controls (settings writes)** | Re-run, and it is **not** the null result the sixth pass recorded. Three settings are written from two places each. See §3.1 — one of the three is this pass's axis again, and none of the three is a disagreement. |
+| **Findability** | Unaffected by this pass: nothing here removes a destination, a `blurb`, a `keyword` or a `taskTag`. Every control cut below has another control, on screen, doing its job. |
+
+
+### 3.1 — the settings census, re-run and corrected
+
+The sixth pass reported a null result here. It is not one. Every `set*` action in
+`state/slices/settings.ts`, against every production file that dispatches it:
+
+```
+$ for a in $(grep -o "case '[a-zA-Z]*':" app/src/state/slices/settings.ts | …); do
+>   grep -rln "type: '$a'" app/src --include=*.tsx --include=*.ts \
+>     | grep -v '\.test\.' | grep -v 'state/'
+> done
+```
+
+Eight actions come back with more than one writer. Five of them are not settings
+at all — `markAttendance`, `toggleDone`, `timeSpent`, `setDayBudget` and
+`toggleNotif` are *data* written from the object it is about and again from
+`lib/tools.ts`, which is the assistant's tool surface and is supposed to be able
+to do what a person can do. The remaining three are real, and they split two to
+one:
+
+| Setting | Written from | Verdict |
+| --- | --- | --- |
+| `feedOrder` | `screens/Today.tsx:1327` (drag the section itself) and `screens/settings/Nav.tsx:71,319` (a list with arrows) | **KEEP** |
+| `boardOrder` | `screens/Springboard.tsx` (drag the tile itself) and `screens/settings/Nav.tsx:95` (the same list with arrows) | **KEEP** |
+| `ground` | `screens/settings/Look.tsx:298,331` (ten grounds) and `components/desk/Customize.tsx:47` (dark / light) | **KEEP — and this is the one I am least sure of** |
+
+The first two are kept because they are not two copies of a control, they are
+**the object and the index of the object**. Dragging the checklist above the
+rail on Today is the thing itself moving; the arrows in Settings are the only
+way to move a section without a pointer and the only visible sign the list has
+an order at all. Both write the same key through the same resolver — `ordered()`
+and `afterMove()` — so they cannot disagree, and the comment at `Today.tsx:1322`
+already says why there are two: *"Two places, one order — this is the one you
+are looking at when you decide."* `/simplify`'s own rule about direct
+manipulation is the argument for keeping them, not against.
+
+`ground` is different and is the one thing this pass leaves alone knowingly.
+`Customize` writes it too, and its own file opens by defending that:
+
+> It is a shortcut to settings, not a second settings. […] The temptation with a
+> panel like this is to grow it until it is the settings screen in a drawer, at
+> which point there are two settings screens that disagree.
+> — `components/desk/Customize.tsx:4-13`
+
+The defence is honest as far as it goes — the panel offers two grounds where
+Settings offers ten, and switching only ever moves you to the other side's
+default — but it is still a second place a preference is changed, which is the
+thing step 3 of `/simplify` says not to have. Resolving it means either turning
+the pair of buttons into a row that opens Colour and type, or accepting the
+shortcut. That is a judgement about the workspace's front door rather than a
+duplicate to delete, it is not what this pass was opened to fix, and a control
+somebody uses at the front door is a bad place to be wrong. **Recorded, not
+changed.**
+
+---
+
+## 4. What to do, in order
+
+| # | Change | Survivor | Lost |
+| --- | --- | --- | --- |
+| W1 | Header drops the magnifier in the workspace | `TopBar`'s field | nothing — the field is on screen at every width |
+| W2 | Header drops `+` where `Sidebar` is drawn | `Sidebar`'s New | nothing wide; the `+` stays narrow, where it is the only one |
+| W3 | `Sidebar` drops the Search home row | `TopBar`'s wordmark | nothing — the mark is drawn at every width |
+| W4 | `Sidebar` drops the Settings row | `TopBar`'s gear | nothing — gear wide, launcher narrow |
+| F1 | Cut `chrome.fab` and the button | the header's `+` for adding, seven routes for importing | one shortcut on one screen; the glyph stops meaning two things |
+| W5 | — | — | recorded only; `/ask-tab` owns it |
+
+**Five controls go. No destination goes**, which is why the screen count stays
+at 60 and why nothing in this pass needs a state migration — no saved `screen`
+can become invalid when no screen is removed.
+
+The rule the five share gets written down rather than left as five edits:
+`lib/header.ts` already owns "how many things the action row can carry and which
+one yields", and it gains the rest of the row's arithmetic so that the answer to
+"does the header draw this control" is one tested function instead of five
+conditions in the markup — the shape `lib/chrome.ts` exists to enforce, applied
+to the one piece of chrome `lib/chrome.ts` deliberately does not cover.
+
+
+---
+
+# Appendix — the audit, sixth pass
 
 Step 1 of `/simplify`, run again against the app as it is now. No code in this
 commit.
