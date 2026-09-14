@@ -1230,6 +1230,58 @@ that a name-based census produced and a file-based one dissolves. The lesson
 is the same shape as E5's — *the tempting next step after finding a duplicate
 is to follow the name rather than the behaviour.*
 
+### E3a — the tab strip the app never had · **SHARED COMPONENT**
+
+The finding E3's `portal-tabs` row was standing on, done as its own pass.
+
+`role="tablist"` was written out in **ten files** — `Ribbon`, `mail/List`,
+`nav/ShelfNav`, `Springboard`'s page dots, `room/Talk`, and the five ported
+campus screens. Every one of them declared the role and its `role="tab"`
+children correctly. **Not one implemented the pattern**: no arrow keys, no
+roving tabindex, no Home or End. There was no shared helper to have used; the
+grep for one comes back empty.
+
+**Why that is a fault and not an omission.** A row of plain buttons promises
+nothing and is navigated with Tab, which works. A tablist *announces* "tab, 2
+of 4" and then ignores the arrow keys that announcement invites — so ten
+correct-looking declarations left every one of these strips worse for a
+screen-reader user than no role at all would have. This is the one row in the
+whole audit where the duplication was costing something a student could feel
+rather than costing a maintainer a second place to edit.
+
+**`TabList` in `components/ui.tsx`** owns the roles, the roving tabindex
+(`tabIndex={0}` on the chosen tab, `-1` on the rest) and the keys, including
+carrying focus itself — the browser will not, because the other tabs are no
+longer tab stops, and without that an arrow press leaves focus on a `-1`
+button with nothing to move from.
+
+**It deliberately owns no styling.** Four tab stylings were in use —
+`rib-tabs`, `shelf-nav-row`, `mb-tabs`, `portal-tabs` — and which should win
+is a design question, not this one. Each caller passes its own `className` and
+keeps the look it had, so nothing moved on screen. That is also what made a
+ten-file change safe to do in one pass: it is a semantics-and-keyboard merge,
+and the semantics have exactly one right answer where the styling does not.
+
+One thing the conversion turned up that a census could not: `.mb-tab` was
+styled off **`aria-current`**, not `aria-selected`. The mail tabs carried both
+attributes and the stylesheet had picked the wrong one to depend on, so
+dropping the redundant attribute would have taken the selected inbox
+category's highlight with it. The rule moved to `[aria-selected='true']`,
+which is the attribute a tab actually has.
+
+Incidental: `.tabstrip`, `.tabstrip-tab` and `.tabstrip-tab[aria-current]` in
+`app.css` have no `.tsx` user at all. Left alone here rather than swept into a
+pass about something else, and recorded so the next dead-CSS sweep has it.
+
+**Two guards, both run against the fault before being believed.**
+`onetablist.test.ts` fails if any file spells the role by hand again *or* if
+`TabList`'s keyboard handler is gutted — the second half checked by deleting
+the `ArrowRight` branch and watching it fail. `tablist.test.tsx` presses the
+keys in jsdom: wrapping at both ends, Home and End, the one tab stop, and the
+focus move — that last one checked by removing the `.focus()` call and
+watching the test go red. A source rule alone would have passed a handler that
+read the keys and did the wrong thing with them.
+
 ### E4 — a second workspace shell · **MERGED — `workspace` survives**
 
 `browser` is the seventh navigation, and the sixth is `workspace`. Both are

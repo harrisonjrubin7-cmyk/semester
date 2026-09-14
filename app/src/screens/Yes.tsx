@@ -4,7 +4,7 @@ import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
-import { ActionButton, SectionLabel, TickBox } from '../components/ui';
+import { ActionButton, SectionLabel, TabList, TickBox } from '../components/ui';
 import { ChevronRight } from '../components/Icons';
 import { byCourse, clock, idFor, meetsLine, readSchedule } from '../lib/yes';
 import type { CourseId, CourseModule } from '../lib/types';
@@ -50,7 +50,7 @@ const LINKS = [
  */
 export function Yes() {
  const [view,setView]=useState('plan');
- return <div className="portal-workspace registration-workspace"><div className="portal-tabs" role="tablist" aria-label="Registration tools">{[['plan','Search & plan'],['import','Enrolled schedule & official portal']].map(([id,label])=><button key={id} role="tab" aria-selected={view===id} onClick={()=>setView(id)}>{label}</button>)}</div>{view==='plan'?<RegistrationPortal/>:<EnrolledSchedule/>}</div>;
+ return <div className="portal-workspace registration-workspace"><TabList label="Registration tools" className="portal-tabs" value={view} onChange={setView} tabs={([['plan','Search & plan'],['import','Enrolled schedule & official portal']] as [typeof view,string][]).map(([id,label])=>({id,label}))}/>{view==='plan'?<RegistrationPortal/>:<EnrolledSchedule/>}</div>;
 }
 function EnrolledSchedule() {
   const { state, dispatch, catalog } = useStore();

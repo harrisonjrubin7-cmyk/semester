@@ -4392,7 +4392,7 @@ input[type='search'].input {
   color: var(--app-fg);
 }
 
-.mb-tab[aria-current='true'] {
+.mb-tab[aria-selected='true'] {
   color: var(--app-accent-bright);
   border-bottom-color: var(--app-accent);
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, Search, StarIcon } from '../Icons';
-import { EmptyState } from '../ui';
+import { EmptyState, TabList } from '../ui';
 import { secondLine } from '../../lib/dim';
 import {
   block,
@@ -436,43 +436,33 @@ export function Talk({
       )}
 
       {/* ── The three faces of the room ────────────────────────────────── */}
-      <div
-        role="tablist"
-        aria-label="This class chat"
+      <TabList
+        label="This class chat"
+        value={tab}
+        onChange={setTab}
         style={{
           flex: 'none',
           display: 'flex',
           gap: 'var(--sp-6)',
           borderBottom: '1px solid var(--app-line-soft)',
         }}
-      >
-        {(
+        tabs={
           [
-            ['chat', 'Chat'],
-            ['files', `Files${files.length ? ` (${files.length})` : ''}`],
-            ['people', `People${people.length ? ` (${people.length})` : ''}`],
-          ] as [Tab, string][]
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            aria-selected={tab === id}
-            className="bare tap-y"
-            onClick={() => setTab(id)}
-            style={{
-              width: 'auto',
-              paddingTop: 'var(--sp-4)',
-              paddingBottom: 'var(--sp-4)',
-              fontSize: 'var(--type-sm)',
-              borderBottom: `2px solid ${tab === id ? 'var(--app-accent)' : 'transparent'}`,
-              ...(tab === id ? { color: 'var(--app-fg)' } : secondLine()),
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+            { id: 'chat', label: 'Chat' },
+            { id: 'files', label: `Files${files.length ? ` (${files.length})` : ''}` },
+            { id: 'people', label: `People${people.length ? ` (${people.length})` : ''}` },
+          ] as { id: Tab; label: string }[]
+        }
+        tabClassName="bare tap-y"
+        tabStyle={(on) => ({
+          width: 'auto',
+          paddingTop: 'var(--sp-4)',
+          paddingBottom: 'var(--sp-4)',
+          fontSize: 'var(--type-sm)',
+          borderBottom: `2px solid ${on ? 'var(--app-accent)' : 'transparent'}`,
+          ...(on ? { color: 'var(--app-fg)' } : secondLine()),
+        })}
+      />
 
       {/* ── The body ───────────────────────────────────────────────────── */}
       <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
