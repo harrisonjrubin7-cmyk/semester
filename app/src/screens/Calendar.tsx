@@ -325,7 +325,7 @@ function DayView() {
              */
             canMove={(b) => Boolean(b.from)}
             onMove={(b, minutes) => {
-              const what = movableOf(b, catalog);
+              const what = movableOf(b, catalog, dateToIso(day));
               if (!what) {
                 // A campus event and a class both refuse, and for different
                 // reasons — one is somebody else's date, the other is the
@@ -740,7 +740,11 @@ function WeekView() {
           // `lib/calsource.ts` so the day rail and this grid cannot disagree.
         ),
         ...campusHours(campus, feedWeek, date),
-      ].filter((b) => keepBlock(b, on)),
+      ]
+        .filter((b) => keepBlock(b, on))
+        // Which day each block came from, so a drop knows what it moved as
+        // well as where it landed — see `on` on `HourBlock`.
+        .map((b) => ({ ...b, on: dateToIso(date) })),
       onOpen: () => {
         dispatch({ type: 'setCalDay', date: dateToIso(date) });
         dispatch({ type: 'setCalView', view: 'day' });
@@ -857,7 +861,7 @@ function WeekView() {
             onMove={(b, dayIndex, minutes) => {
               const to = days[dayIndex]?.date;
               if (!to) return;
-              const what = movableOf(b, catalog);
+              const what = movableOf(b, catalog, b.on);
               if (!what) {
                 // A campus event and a class both refuse, and for different
                 // reasons — one is somebody else's date, the other is the
@@ -1099,8 +1103,23 @@ function MonthView() {
     campus.forEach((e) => add(e.date, { c: null, kind: 'event', title: e.title }));
     feedAll.forEach((e) => add(isoToDate(e.date), { c: e.courseId, kind: 'feed', title: e.title }));
   }
-  if (calSource === 'classes') {
-    // Mark every day that has a class on it, so a term's teaching days show up.
+  /*
+   * Every day that has a class on it, so a term's teaching days show up.
+   *
+   * This asked `calSource === 'classes'` rather than the bucket, which made
+   * All the one chip that hid your classes: a Monday with a nine o'clock
+   * lecture was a blank cell under Everything and a marked one under Classes,
+   * so the chip that promises the most showed less than a subset of itself.
+   * `lib/calsource.ts` is explicit that a view asks that file rather than
+   * writing the condition out again — a local copy is how the four views came
+   * to disagree in the first place — and this was the last copy left.
+   *
+   * Added last on purpose. The cell draws four marks at most, so a day with
+   * three deadlines and a class still leads with the deadlines; it is the
+   * class that falls off the end, which is the right way round for a grid
+   * somebody scans to find what is due.
+   */
+  if (on.classes) {
     for (let d = 1; d <= new Date(calYear, calMonth + 1, 0).getDate(); d++) {
       const date = new Date(calYear, calMonth, d);
       railFor(catalog, date, []).forEach((b) => add(date, { c: b.c, kind: 'class' }));
@@ -1135,6 +1154,15 @@ function MonthView() {
    * appointments off the grid takes them out of the panel too.
    */
   const selAppts = on.classes ? appointmentsOn(state.appointments, selDate) : [];
+  /*
+   * And the classes themselves, for the same reason.
+   *
+   * The grid marks a teaching day now, so the panel has to know about one, or
+   * tapping a marked Monday answers "Nothing due this day" — the exact
+   * disagreement the two comments above record fixing for campus events and
+   * for appointments. Gated on `on.classes` to match the marks exactly.
+   */
+  const selClasses = on.classes ? railFor(catalog, selDate, []) : [];
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
@@ -1553,6 +1581,37 @@ function MonthView() {
         </div>
       )}
 
+      {/*
+        What meets that day, which is what the cell's marks now promise.
+
+        A plain row rather than a button: a class is the timetable repeating
+        and there is no single record behind it to open, and the control for
+        going further is already at the foot of this panel — one button to the
+        day itself, where the hours are drawn and everything can be acted on.
+        Inventing a destination per row would be two ways to the same screen.
+      */}
+      {selClasses.length > 0 && (
+        <>
+          <SectionLabel>Classes</SectionLabel>
+          {selClasses.map((b) => (
+            <div
+              key={`c:${b.at}:${b.title}`}
+              style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline', ...monthTaskRow }}
+            >
+              <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: 'none' }}>{b.time}</span>
+              <span style={{ flex: 1, minWidth: 0 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
+                  {b.title}
+                </span>
+                {b.meta && (
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine() }}>{b.meta}</span>
+                )}
+              </span>
+            </div>
+          ))}
+        </>
+      )}
+
       {/* Your own appointments that day, in the row the campus list uses: a
           kind, a title, the hour and the place. Tapping one opens the list it
           lives in, which is where it can be edited. */}
@@ -1702,6 +1761,7 @@ function MonthView() {
       {selItems.length === 0 &&
         selTasks.length === 0 &&
         selAppts.length === 0 &&
+        selClasses.length === 0 &&
         selEvents.length === 0 &&
         selFeed.length === 0 && (
           <EmptyState inline title="Nothing due this day" body="Double-tap it to put something there." />
@@ -1713,8 +1773,9 @@ function MonthView() {
         <AddHere date={iso(adding)} onClose={() => setAdding(null)} />
       )}
 
-      {/* Always offered, including on an empty day: this list is deadlines
-          only, and classes and anything of your own live in the day view. */}
+      {/* Always offered, including on an empty day: this panel names what is
+          on, and the day view is where the hours are drawn and a thing can be
+          acted on. */}
       <ActionButton
         onClick={() => {
         dispatch({
@@ -1739,6 +1800,33 @@ function MonthView() {
 const WEEK_LIST: CSSProperties = { fontSize: 'var(--type-sm)', opacity: 0.72, lineHeight: 1.35 };
 
 /**
+ * One nameable thing in a week, as something a finger can hit.
+ *
+ * These rows are the view's whole interaction — fifty-three of the sixty-one
+ * controls on a phone are one of these — and they were sixteen pixels tall,
+ * stacked with nothing between them. Sixteen is below WCAG's twenty-four and
+ * a long way below the forty-four every touch guideline asks for; on a phone
+ * it is about a fifth of a fingertip, and the thing above it is the thing you
+ * hit instead.
+ *
+ * The cost is honest and worth stating: the term is a taller scroll now. The
+ * density was buying an overview you could not safely touch, which is a poor
+ * trade on the device this view is mostly read on — and none of the rows
+ * lost a word, because what grows is the space around the line rather than
+ * the line.
+ *
+ * The text sits in one child so the row can centre it without the course code
+ * and the title becoming two flex items that will not wrap together.
+ */
+const WEEK_ROW: CSSProperties = {
+  width: 'auto',
+  display: 'flex',
+  alignItems: 'center',
+  minHeight: 44,
+  textAlign: 'left',
+};
+
+/**
  * The whole term on one screen, week by week.
  *
  * A month grid answers "what is this week"; this answers "how bad does October
@@ -1750,6 +1838,42 @@ function SemesterView() {
   const { state, dispatch, now, catalog, tint } = useStore();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<string | null>(null);
+  /*
+   * Which "+n more" have been opened.
+   *
+   * It was a `<div>`: a count of the things a heavy week holds, rendered as
+   * plain text with nothing to press. So the week this view exists to warn you
+   * about was the one week whose contents it would not show — "+3 more" on the
+   * fortnight before finals, and the only way to read those three was to leave
+   * for the month or the day. A count you cannot open is worse than no count,
+   * because it tells you something is there and then declines to say what.
+   *
+   * Keyed by week and list rather than one flag per week, so the label stays
+   * true to the button under it: opening the deadlines does not silently
+   * unfold the campus events beside them.
+   */
+  const [opened, setOpened] = useState<Record<string, boolean>>({});
+  const showsAll = (key: string) => opened[key] === true;
+  /**
+   * The control that count became.
+   *
+   * `aria-expanded` rather than a bare label, because the thing it opens is
+   * the list directly above it and a screen reader should be told that this
+   * closes again rather than loading more. The label says how many and of
+   * what, so three buttons stacked under one week are told apart by their
+   * words rather than by which list they happen to sit under.
+   */
+  const moreButton = (key: string, n: number, whose: string) => (
+    <button
+      type="button"
+      className="bare"
+      aria-expanded={showsAll(key)}
+      onClick={() => setOpened((was) => ({ ...was, [key]: !was[key] }))}
+      style={{ ...WEEK_ROW, opacity: 0.5 }}
+    >
+      <span>{showsAll(key) ? `Fewer${whose}` : `+${n} more${whose}`}</span>
+    </button>
+  );
   const source = state.calSource;
 
   /*
@@ -2143,7 +2267,7 @@ function SemesterView() {
 
                 {w.items.length > 0 && (
                   <div style={WEEK_LIST}>
-                    {w.items.slice(0, 3).map((it) => (
+                    {(showsAll(`d:${i}`) ? w.items : w.items.slice(0, 3)).map((it) => (
                       <button
                         key={it.id}
                         type="button"
@@ -2160,20 +2284,15 @@ function SemesterView() {
                           if (drag.tookDrop()) return;
                           dispatch({ type: 'openItem', id: it.id });
                         }}
-                        style={{
-                          width: 'auto',
-                          display: 'block',
-                          textAlign: 'left',
-                          opacity: drag.held?.id === it.id ? 0.4 : 1,
-                        }}
+                        style={{ ...WEEK_ROW, opacity: drag.held?.id === it.id ? 0.4 : 1 }}
                       >
-                        <span style={{ opacity: 0.55 }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
-                        {it.title.length > 42 ? `${it.title.slice(0, 40)}…` : it.title}
+                        <span>
+                          <span style={{ opacity: 0.55 }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
+                          {it.title.length > 42 ? `${it.title.slice(0, 40)}…` : it.title}
+                        </span>
                       </button>
                     ))}
-                    {w.items.length > 3 && (
-                      <div style={{ opacity: 0.5 }}>+{w.items.length - 3} more</div>
-                    )}
+                    {w.items.length > 3 && moreButton(`d:${i}`, w.items.length - 3, '')}
                   </div>
                 )}
 
@@ -2189,36 +2308,44 @@ function SemesterView() {
                   */}
                 {w.events.length + w.feed.length > 0 && (
                   <div style={WEEK_LIST}>
-                    {w.events.slice(0, 3).map((e) => (
+                    {(showsAll(`e:${i}`) ? w.events : w.events.slice(0, 3)).map((e) => (
                       <button
                         key={e.id}
                         type="button"
                         className="bare"
                         onClick={() => dispatch({ type: 'openEvent', id: e.id })}
-                        style={{ width: 'auto', display: 'block', textAlign: 'left' }}
+                        style={WEEK_ROW}
                       >
-                        <span style={{ opacity: 0.55 }}>{e.dow}</span>{' '}
-                        {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
+                        <span>
+                          <span style={{ opacity: 0.55 }}>{e.dow}</span>{' '}
+                          {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
+                        </span>
                       </button>
                     ))}
-                    {w.events.length < 3 &&
-                      w.feed.slice(0, 3 - w.events.length).map((e) => (
-                        <div key={e.id}>
+                    {/* The feed fills whatever the listings left of the three,
+                        and all of it once the week is open. A feed entry is
+                        not a button: there is no listing behind it to show. */}
+                    {(showsAll(`e:${i}`)
+                      ? w.feed
+                      : w.events.length < 3
+                        ? w.feed.slice(0, 3 - w.events.length)
+                        : []
+                    ).map((e) => (
+                      <div key={e.id} style={{ ...WEEK_ROW, display: 'flex' }}>
+                        <span>
                           <span style={{ opacity: 0.55 }}>{DOW[isoToDate(e.date).getDay()]}</span>{' '}
                           {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
-                        </div>
-                      ))}
-                    {w.events.length + w.feed.length > 3 && (
-                      <div style={{ opacity: 0.5 }}>
-                        +{w.events.length + w.feed.length - 3} more
+                        </span>
                       </div>
-                    )}
+                    ))}
+                    {w.events.length + w.feed.length > 3 &&
+                      moreButton(`e:${i}`, w.events.length + w.feed.length - 3, '')}
                   </div>
                 )}
 
                 {w.tasks.length > 0 && (
                   <div style={WEEK_LIST}>
-                    {w.tasks.slice(0, 3).map((t) => (
+                    {(showsAll(`t:${i}`) ? w.tasks : w.tasks.slice(0, 3)).map((t) => (
                       <button
                         key={t.id}
                         type="button"
@@ -2238,20 +2365,19 @@ function SemesterView() {
                           dispatch({ type: 'go', screen: 'mine' });
                         }}
                         style={{
-                          width: 'auto',
-                          display: 'block',
-                          textAlign: 'left',
+                          ...WEEK_ROW,
                           opacity: drag.held?.id === t.id ? 0.4 : 1,
                           textDecoration: t.done ? 'line-through' : 'none',
                         }}
                       >
-                        <span style={{ opacity: 0.55 }}>Yours</span>{' '}
-                        {t.title.length > 42 ? `${t.title.slice(0, 40)}…` : t.title}
+                        <span>
+                          <span style={{ opacity: 0.55 }}>Yours</span>{' '}
+                          {t.title.length > 42 ? `${t.title.slice(0, 40)}…` : t.title}
+                        </span>
                       </button>
                     ))}
-                    {w.tasks.length > 3 && (
-                      <div style={{ opacity: 0.5 }}>+{w.tasks.length - 3} more of your own</div>
-                    )}
+                    {w.tasks.length > 3 &&
+                      moreButton(`t:${i}`, w.tasks.length - 3, ' of your own')}
                   </div>
                 )}
 
@@ -2260,7 +2386,7 @@ function SemesterView() {
                     choice and an appointment's is somebody else's. */}
                 {w.appts.length > 0 && (
                   <div style={WEEK_LIST}>
-                    {w.appts.slice(0, 3).map((a) => (
+                    {(showsAll(`a:${i}`) ? w.appts : w.appts.slice(0, 3)).map((a) => (
                       <button
                         key={a.id}
                         type="button"
@@ -2269,20 +2395,21 @@ function SemesterView() {
                           dispatch({ type: 'setMineTab', tab: 'appointments' });
                           dispatch({ type: 'go', screen: 'mine' });
                         }}
-                        style={{ width: 'auto', display: 'block', textAlign: 'left' }}
+                        style={WEEK_ROW}
                       >
                         {/* `secondLine` rather than an opacity — main's
                             contrast pass landed while this was open, and new
                             dimmed text answers to the audit now. The task rows
                             above keep the old shape; converting those is that
                             pass's to finish. */}
-                        <span style={secondLine()}>Yours</span>{' '}
-                        {a.title.length > 42 ? `${a.title.slice(0, 40)}…` : a.title}
+                        <span>
+                          <span style={secondLine()}>Yours</span>{' '}
+                          {a.title.length > 42 ? `${a.title.slice(0, 40)}…` : a.title}
+                        </span>
                       </button>
                     ))}
-                    {w.appts.length > 3 && (
-                      <div style={secondLine()}>+{w.appts.length - 3} more of your own</div>
-                    )}
+                    {w.appts.length > 3 &&
+                      moreButton(`a:${i}`, w.appts.length - 3, ' of your own')}
                   </div>
                 )}
 

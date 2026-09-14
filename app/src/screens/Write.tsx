@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -6,14 +6,16 @@ import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
 import { Equation } from '../components/Equation';
-import { ActionButton, SectionLabel, Toggle } from '../components/ui';
+import { ActionButton, FilePick, SectionLabel, Toggle } from '../components/ui';
 import { Bench, Tool, ToolPick, ToolRule } from '../components/Bench';
 import { Gallery, type Starter } from '../components/Gallery';
 import { WriteIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
-import { docx } from '../lib/docx';
+import { docx, type Picture } from '../lib/docx';
+import { addFile, getFile, listFiles, settled, type Settled } from '../lib/files';
+import { pictureLike, sizeOf } from '../lib/imagesize';
 import {
   BLOCK_LABEL,
   blankBlock,
@@ -29,7 +31,33 @@ import {
 } from '../lib/document';
 import { filled } from '../lib/sheet';
 import { TEMPLATES, fromTemplate } from '../lib/doctemplates';
-import { characters, findAll, glance, outline, readingMinutes, replaceAll } from '../lib/doctools';
+import {
+  characters,
+  findAll,
+  glance,
+  linked,
+  marked,
+  outline,
+  readingMinutes,
+  replaceAll,
+  emphasise,
+  type Mark,
+} from '../lib/doctools';
+import {
+  DEFAULT_LAYOUT,
+  PAGE_STYLES,
+  FONTS,
+  SPACINGS,
+  adjusted,
+  fromStyle,
+  layoutOf,
+  pages,
+  type Layout,
+  type PageStyleId,
+  type Paper as PaperSize,
+  type Spacing,
+} from '../lib/doclayout';
+import { Paper as Sheet } from './write/Paper';
 import type { Menu } from '../lib/menus';
 import { revealKindly } from '../lib/prefers';
 import { change, forget, keep, restored, versionsOf, type Version } from '../lib/docversions';
@@ -104,7 +132,7 @@ function Shelf() {
   ];
 
   return (
-    <Page blurb="Headings, tables and equations, arranged into a real Word file — or printed straight from here as a PDF. The shapes are headings and blanks: none of them contains a sentence you could hand in, because the app does not write coursework.">
+    <Page blurb="Headings, tables, equations, checklists and code, arranged into a real Word file — double-spaced 12-point Times if that is what the syllabus said — or printed straight from here as a PDF. The shapes are headings and blanks: none of them contains a sentence you could hand in, because the app does not write coursework.">
       <Gallery
         startLabel="Start a new document"
         starters={starters}
@@ -149,7 +177,23 @@ function Paper({ doc }: { doc: Pick<Doc, 'blocks'> }) {
 
 // ── The editor ───────────────────────────────────────────────────────────
 
-const KINDS: BlockKind[] = ['heading', 'text', 'bullets', 'quote', 'table', 'equation', 'break'];
+/**
+ * The insert toolbar's groups, in the order it draws them.
+ *
+ * The source of truth for *both* places a block kind can be reached from, and
+ * the reason it exists: the toolbar used to hold two hard-coded arrays while
+ * the command palette read a third list, so adding a kind put it in the
+ * palette and silently not on the toolbar. Two of the three agreed and the one
+ * people actually press did not. `blocks.test.ts` asserts every kind is in a
+ * group, so the next one cannot go missing the same way.
+ */
+const INSERT_GROUPS: BlockKind[][] = [
+  ['heading', 'text', 'bullets', 'checks'],
+  ['quote', 'table', 'image', 'equation', 'code', 'toc', 'break'],
+];
+
+/** Every kind the screen can insert, flattened out of the groups above. */
+export const KINDS: BlockKind[] = INSERT_GROUPS.flat();
 
 /**
  * What the toolbar's insert buttons are called.
@@ -162,9 +206,13 @@ const INSERT_LABEL: Record<BlockKind, string> = {
   heading: 'Insert a heading',
   text: 'Insert a paragraph',
   bullets: 'Insert a list',
+  checks: 'Insert a checklist',
   quote: 'Insert a quotation',
   table: 'Insert a table',
+  image: 'Insert a picture',
   equation: 'Insert an equation',
+  code: 'Insert a code block',
+  toc: 'Insert a contents page',
   break: 'Insert a page break',
 };
 
@@ -178,12 +226,39 @@ const STYLES = [
 
 type Style = (typeof STYLES)[number]['id'];
 
-/** The three panels the View menu turns on and off. */
+/** The panels the View menu turns on and off. */
 interface Showing {
   outline: boolean;
   find: boolean;
   history: boolean;
+  /** The page setup, which is a panel rather than a dialog for the same reason. */
+  setup: boolean;
 }
+
+/**
+ * Where the caret is, across the whole editor.
+ *
+ * A mark button acts on the selection, and the selection lives inside one of
+ * a hundred fields spread over as many block cards. React has no way to ask
+ * "what is focused and what is selected in it" after the fact — by the time a
+ * toolbar button is pressed, the button is what is focused — so the field
+ * reports itself on the way in and the toolbar reads this.
+ *
+ * `item` is which line of a list, or −1 for a block with one string in it.
+ */
+interface Caret {
+  at: number;
+  item: number;
+  el: HTMLTextAreaElement | HTMLInputElement;
+}
+
+/** The marks a button offers, in the order Word puts them. */
+const MARK_BUTTONS: { id: Mark; label: string; glyph: string }[] = [
+  { id: 'bold', label: 'Bold', glyph: 'B' },
+  { id: 'italic', label: 'Italic', glyph: 'I' },
+  { id: 'strike', label: 'Strike through', glyph: 'S' },
+  { id: 'code', label: 'Monospace', glyph: '‹›' },
+];
 
 function Editor({ doc }: { doc: Doc }) {
   const { state, dispatch, say } = useStore();
@@ -207,6 +282,36 @@ function Editor({ doc }: { doc: Doc }) {
     outline: true,
     find: false,
     history: false,
+    setup: false,
+  });
+  /*
+   * Which of the two ways of looking at the document is in front of you.
+   *
+   * Word calls it Print Layout and Docs calls it Print layout; both mean the
+   * same thing and both default to it. This app cannot, because the page is
+   * read-only here — the editing is the cards — so it starts on the cards and
+   * the page is one press away. What prints is always the page: see
+   * `screens/write/Paper.tsx`.
+   */
+  const [onPage, setOnPage] = useState(false);
+  /** The field the caret is in, reported by whichever one has it. */
+  const [caret, setCaret] = useState<Caret | null>(null);
+  /*
+   * A selection to put back after the text is rewritten.
+   *
+   * Marking a selection replaces the whole string, React re-renders the
+   * field, and the caret lands at the end — so pressing Bold twice in a row
+   * marked the word and then unmarked nothing. Restored after the render
+   * that carries the new text.
+   */
+  const putBack = useRef<{ el: HTMLTextAreaElement | HTMLInputElement; start: number; end: number } | null>(null);
+
+  useEffect(() => {
+    const want = putBack.current;
+    if (!want) return;
+    putBack.current = null;
+    want.el.focus();
+    want.el.setSelectionRange(want.start, want.end);
   });
   const show = (which: keyof Showing) =>
     setShowing((was) => ({ ...was, [which]: !was[which] }));
@@ -250,6 +355,68 @@ function Editor({ doc }: { doc: Doc }) {
     dispatch({ type: 'editBlock', at: null });
   };
 
+  const layout = layoutOf(doc);
+  const setLayout = (change: Partial<Omit<Layout, 'style'>>) =>
+    patch({ layout: adjusted(layout, change) });
+
+  /**
+   * One string of a block, replaced — whichever kind of block it is.
+   *
+   * The mark buttons act on "the line the caret is in", and that line is a
+   * heading's text, a list item, a checklist item's words or a quotation
+   * depending on where the caret went. Written once here rather than as four
+   * branches inside the toolbar, because the toolbar should not have to know
+   * the shape of every block there is.
+   *
+   * A table cell and a code block are deliberately not reachable: a cell has
+   * its own grid of fields and marking one from a toolbar that cannot show
+   * you which cell it means is a guess, and a code block holds no marks by
+   * definition. The buttons are disabled on both.
+   */
+  const rewrite = (where: Caret, next: string) => {
+    const block = doc.blocks[where.at];
+    if (!block) return;
+    if (block.kind === 'heading' || block.kind === 'text' || block.kind === 'quote') {
+      setBlock(where.at, { ...block, text: next });
+    } else if (block.kind === 'bullets') {
+      setBlock(where.at, {
+        ...block,
+        items: block.items.map((line, i) => (i === where.item ? next : line)),
+      });
+    } else if (block.kind === 'checks') {
+      setBlock(where.at, {
+        ...block,
+        items: block.items.map((line, i) => (i === where.item ? { ...line, text: next } : line)),
+      });
+    }
+  };
+
+  /** Whether the caret is somewhere a mark means anything. */
+  const markable = (() => {
+    if (!caret) return false;
+    const kind = doc.blocks[caret.at]?.kind;
+    return kind === 'heading' || kind === 'text' || kind === 'quote' || kind === 'bullets' || kind === 'checks';
+  })();
+
+  const mark = (which: Mark) => {
+    if (!caret || !markable) return;
+    const { el } = caret;
+    const from = el.selectionStart ?? 0;
+    const to = el.selectionEnd ?? 0;
+    if (from === to) {
+      say('Select the words first — a mark goes on something.');
+      return;
+    }
+    const next = emphasise(el.value, from, to, which);
+    // The selection moves by however much the markers added or removed.
+    const grew = next.length - el.value.length;
+    putBack.current = { el, start: from, end: to + grew };
+    rewrite(caret, next);
+  };
+
+  const [linking, setLinking] = useState(false);
+  const [href, setHref] = useState('');
+
   const count = words(doc);
   const empty = !hasContent(doc);
   const headings = outline(doc);
@@ -281,7 +448,7 @@ function Editor({ doc }: { doc: Doc }) {
   const saveWord = async () => {
     setBusy(true);
     try {
-      const blob = await docx(doc);
+      const blob = await docx(doc, await pictureOf(doc));
       download({
         name: docFileName(doc.title),
         body: blob,
@@ -341,7 +508,17 @@ function Editor({ doc }: { doc: Doc }) {
           {
             id: 'file.print',
             label: 'Print, or save as PDF',
+            hint: 'The page, not the editor — set it up below.',
             run: () => window.print(),
+          },
+        ],
+        [
+          {
+            id: 'file.setup',
+            label: 'Page setup…',
+            hint: 'Font, size, spacing, margins, page numbers.',
+            on: showing.setup,
+            run: () => show('setup'),
           },
         ],
         [
@@ -368,6 +545,21 @@ function Editor({ doc }: { doc: Doc }) {
       id: 'edit',
       label: 'Edit',
       groups: [
+        MARK_BUTTONS.map((m) => ({
+          id: `edit.${m.id}`,
+          label: m.label,
+          on: markable && caret !== null && marked(caret.el.value, m.id),
+          run: markable ? () => mark(m.id) : undefined,
+        })),
+        [
+          {
+            id: 'edit.link',
+            label: 'Link…',
+            hint: 'Turns the words you have chosen into a link.',
+            on: linking,
+            run: markable ? () => setLinking(!linking) : undefined,
+          },
+        ],
         [
           {
             id: 'edit.find',
@@ -389,6 +581,15 @@ function Editor({ doc }: { doc: Doc }) {
       id: 'view',
       label: 'View',
       groups: [
+        [
+          {
+            id: 'view.page',
+            label: 'Page view',
+            hint: 'The document as the page it will print as.',
+            on: onPage,
+            run: () => setOnPage(!onPage),
+          },
+        ],
         [
           {
             id: 'view.outline',
@@ -492,6 +693,22 @@ function Editor({ doc }: { doc: Doc }) {
                 'Nothing here writes for you. There is no model on this screen and no key needed — you type, and it arranges.',
               ),
           },
+          {
+            id: 'help.styles',
+            label: 'What MLA and APA do here',
+            run: () =>
+              say(
+                'They set the page — font, size, spacing, margins and what goes in the corner. They do not format your citations: a bibliography is still yours, and half a citation engine would produce something that looks right and is wrong where a marker checks.',
+              ),
+          },
+          {
+            id: 'help.marks',
+            label: 'How to mark a few words',
+            run: () =>
+              say(
+                'Choose the words, then press B, I, S or ‹›. They are markdown underneath — **bold**, *italic*, ~~struck out~~, `code` — so what you type by hand works too, and [words](https://…) becomes a real link in the Word file.',
+              ),
+          },
         ],
       ],
     },
@@ -526,30 +743,49 @@ function Editor({ doc }: { doc: Doc }) {
               onChange={restyle}
             />
             <ToolRule />
-            {(['heading', 'text', 'bullets'] as BlockKind[]).map((kind) => (
+            {/* The marks, where every editor since 1985 has put them: on the
+                left, before anything that inserts. They act on the selection
+                in whichever field the caret is in — see `Caret`. */}
+            {MARK_BUTTONS.map((m) => (
               <Tool
-                key={kind}
-                label={INSERT_LABEL[kind]}
-                icon={BLOCK_LABEL[kind]}
-                onClick={() => addBlock(kind)}
+                key={m.id}
+                label={m.label}
+                icon={m.glyph}
+                disabled={!markable}
+                pressed={markable && caret !== null && marked(caret.el.value, m.id)}
+                onClick={() => mark(m.id)}
               />
             ))}
+            {/* Its words rather than a glyph, like Outline and Find beside it:
+                every symbol for a link is an emoji, and one coloured pictogram
+                in a row of monochrome letters reads as a mistake. */}
+            <Tool
+              label="Link"
+              disabled={!markable}
+              pressed={linking}
+              onClick={() => setLinking(!linking)}
+            />
             <ToolRule />
-            {(['quote', 'table', 'equation', 'break'] as BlockKind[]).map((kind) => (
-              <Tool
-                key={kind}
-                label={INSERT_LABEL[kind]}
-                icon={BLOCK_LABEL[kind]}
-                onClick={() => addBlock(kind)}
-              />
+            {INSERT_GROUPS.map((group, at) => (
+              <Fragment key={at}>
+                {group.map((kind) => (
+                  <Tool
+                    key={kind}
+                    label={INSERT_LABEL[kind]}
+                    icon={BLOCK_LABEL[kind]}
+                    onClick={() => addBlock(kind)}
+                  />
+                ))}
+                <ToolRule />
+              </Fragment>
             ))}
-            <ToolRule />
             <Tool
               label="Outline"
               pressed={showing.outline}
               onClick={() => show('outline')}
             />
             <Tool label="Find and replace" pressed={showing.find} onClick={() => show('find')} />
+            <Tool label="Page view" icon="▤" pressed={onPage} onClick={() => setOnPage(!onPage)} />
           </>
         }
       />
@@ -583,6 +819,36 @@ function Editor({ doc }: { doc: Doc }) {
       />
 
       <Saved doc={doc} words={count} />
+      {linking && (
+        <LinkBar
+          href={href}
+          onHref={setHref}
+          onGo={() => {
+            if (!caret || !markable) return;
+            const { el } = caret;
+            const from = el.selectionStart ?? 0;
+            const to = el.selectionEnd ?? 0;
+            if (from === to) {
+              say('Select the words the link goes on first.');
+              return;
+            }
+            const next = linked(el.value, from, to, href);
+            putBack.current = { el, start: from, end: to + (next.length - el.value.length) };
+            rewrite(caret, next);
+            setLinking(false);
+            setHref('');
+          }}
+          onClose={() => setLinking(false)}
+        />
+      )}
+      {showing.setup && (
+        <Setup
+          layout={layout}
+          words={count}
+          onStyle={(id) => patch({ layout: fromStyle(id) })}
+          onChange={setLayout}
+        />
+      )}
       {showing.outline && headings.length > 1 && <Outline headings={headings} />}
       {showing.find && <FindReplace doc={doc} onReplace={(next) => patch({ blocks: next.blocks })} />}
       {showing.history && <History doc={doc} onRestore={(version) => patch(restored(doc, version))} />}
@@ -627,8 +893,35 @@ function Editor({ doc }: { doc: Doc }) {
         </>
       )}
 
-      <SectionLabel>The document</SectionLabel>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
+      <SectionLabel>
+        {onPage
+          ? `The page · about ${pages(count, layout)} ${pages(count, layout) === 1 ? 'page' : 'pages'}`
+          : 'The document'}
+      </SectionLabel>
+
+      {/*
+        Both halves are always in the DOM and one of them is hidden.
+        The page is what prints — `app.css` hides `.docedit` and shows
+        `.docpage` under `@media print` — so printing produces the document on
+        its own paper rather than a picture of the editor's cards, which is
+        what it produced before.
+      */}
+      <div className="docpage" hidden={!onPage}>
+        <Sheet
+          doc={doc}
+          onGo={(at) => {
+            setOnPage(false);
+            dispatch({ type: 'editBlock', at });
+            revealKindly(document.getElementById(`block-${at}`), { block: 'center' });
+          }}
+        />
+      </div>
+
+      <div
+        className="docedit"
+        hidden={onPage}
+        style={{ display: onPage ? 'none' : 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}
+      >
         {doc.blocks.map((block, index) => (
           <BlockCard
             key={index}
@@ -636,6 +929,7 @@ function Editor({ doc }: { doc: Doc }) {
             at={index}
             of={doc.blocks.length}
             onOpen={() => dispatch({ type: 'editBlock', at: index })}
+            onField={(el, item) => setCaret({ at: index, item, el })}
             onChange={(next) => setBlock(index, next)}
             onRemove={() => removeBlock(index)}
             onMove={(to) => {
@@ -646,6 +940,52 @@ function Editor({ doc }: { doc: Doc }) {
         ))}
       </div>
     </Page>
+  );
+}
+
+/**
+ * The address bar for a link.
+ *
+ * A bar rather than a dialog, for the reason find and replace is a bar: the
+ * words the link goes on are selected in a field behind it, and a modal that
+ * takes focus is a modal that loses the selection — which is the one thing
+ * this control needs.
+ */
+function LinkBar({
+  href,
+  onHref,
+  onGo,
+  onClose,
+}: {
+  href: string;
+  onHref: (next: string) => void;
+  onGo: () => void;
+  onClose: () => void;
+}) {
+  return (
+    <Blueprint plain style={{ padding: 'var(--sp-5)', marginTop: 'var(--sp-4)' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap' }}>
+        <input
+          className="input"
+          value={href}
+          onChange={(e) => onHref(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && onGo()}
+          placeholder="https://…"
+          aria-label="Where the link goes"
+          spellCheck={false}
+          style={{ flex: 1, minWidth: 180, height: 38 }}
+        />
+        <ActionButton tone="primary" onClick={onGo} style={{ width: 'auto', padding: '0 var(--sp-6)', flex: 'none' }}>
+          Link it
+        </ActionButton>
+        <ActionButton onClick={onClose} style={{ width: 'auto', padding: '0 var(--sp-6)', flex: 'none' }}>
+          Cancel
+        </ActionButton>
+      </div>
+      <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+        Leave it empty and press Link it to take an existing link off the chosen words.
+      </div>
+    </Blueprint>
   );
 }
 
@@ -707,6 +1047,196 @@ function Saved({ doc, words: count }: { doc: Doc; words: number }) {
             minute: '2-digit',
           })}.`}
     </div>
+  );
+}
+
+/**
+ * The page setup: what the .docx and the printed PDF will actually be.
+ *
+ * The one thing the app could not do and every syllabus asks for. A course
+ * that says *double-spaced, 12-point Times New Roman, one-inch margins* was
+ * answered by a file that was 11-point Calibri, so the last step of every
+ * submission was opening Word and selecting all.
+ *
+ * ## Presets first, and they are not a style guide
+ *
+ * MLA, APA and Chicago as three buttons, because nobody reads a style guide
+ * twice and the page setup half of one is four numbers. What they do *not*
+ * do is format citations: a style is a bibliography and a set of in-text
+ * rules, and half a citation engine produces something that looks right and
+ * is wrong in the details a marker checks. Said out loud below the buttons,
+ * because a button labelled MLA that silently did less than it seemed to
+ * would be worse than no button.
+ *
+ * ## Everything below the presets is the preset, editable
+ *
+ * Change the font of an MLA paper and it is still an MLA paper, but it is no
+ * longer *the preset* — `adjusted` in `lib/doclayout.ts` lets go of the name
+ * so the picker cannot show MLA highlighted over a page that is 14-point
+ * Arial.
+ */
+function Setup({
+  layout,
+  words: count,
+  onStyle,
+  onChange,
+}: {
+  layout: Layout;
+  words: number;
+  onStyle: (id: PageStyleId) => void;
+  onChange: (change: Partial<Omit<Layout, 'style'>>) => void;
+}) {
+  const chosen = PAGE_STYLES.find((p) => p.id === layout.style) ?? PAGE_STYLES[0];
+  return (
+    <Folding name="Page setup">
+      <SectionLabel>What the Word file and the printed page will be</SectionLabel>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
+        {PAGE_STYLES.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            className="bare tappable"
+            aria-pressed={layout.style === p.id}
+            onClick={() => onStyle(p.id)}
+            style={{
+              width: 'auto',
+              padding: 'var(--sp-3) var(--sp-6)',
+              borderRadius: 'var(--r-sm)',
+              border: `1px solid ${layout.style === p.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
+              fontSize: 'var(--type-sm)',
+            }}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+      <div
+        role="status"
+        style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}
+      >
+        {layout.style === 'own' ? 'Your own settings.' : chosen.says}
+      </div>
+      <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-2)' }}>
+        These set the page, not the citations — a bibliography is still yours to format.
+      </div>
+
+      <div className="docsetup">
+        <label className="docsetup-field">
+          <span className="docsetup-name">Font</span>
+          <select
+            className="input"
+            value={layout.font}
+            onChange={(e) => onChange({ font: e.target.value })}
+          >
+            {FONTS.map((f) => (
+              <option key={f.name} value={f.name}>
+                {f.name} — {f.says}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="docsetup-field">
+          <span className="docsetup-name">Size</span>
+          <select
+            className="input"
+            value={String(layout.size)}
+            onChange={(e) => onChange({ size: Number(e.target.value) })}
+          >
+            {[10, 11, 12, 13, 14].map((n) => (
+              <option key={n} value={String(n)}>
+                {n} point
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="docsetup-field">
+          <span className="docsetup-name">Line spacing</span>
+          <select
+            className="input"
+            value={layout.spacing}
+            onChange={(e) => onChange({ spacing: e.target.value as Spacing })}
+          >
+            {SPACINGS.map((sp) => (
+              <option key={sp.id} value={sp.id}>
+                {sp.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="docsetup-field">
+          <span className="docsetup-name">Margins</span>
+          <select
+            className="input"
+            value={String(layout.margin)}
+            onChange={(e) => onChange({ margin: Number(e.target.value) })}
+          >
+            {[0.75, 1, 1.25, 1.5].map((n) => (
+              <option key={n} value={String(n)}>
+                {n} inch
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="docsetup-field">
+          <span className="docsetup-name">Paper</span>
+          <select
+            className="input"
+            value={layout.paper}
+            onChange={(e) => onChange({ paper: e.target.value as PaperSize })}
+          >
+            <option value="letter">US Letter</option>
+            <option value="a4">A4</option>
+          </select>
+        </label>
+
+        <label className="docsetup-field">
+          <span className="docsetup-name">Beside the page number</span>
+          <input
+            className="input"
+            value={layout.runningHead}
+            onChange={(e) => onChange({ runningHead: e.target.value })}
+            placeholder="Your surname — MLA asks for it"
+          />
+        </label>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-5)', marginTop: 'var(--sp-5)' }}>
+        <Toggle
+          on={layout.numbers}
+          onChange={() => onChange({ numbers: !layout.numbers })}
+          label="Page numbers"
+        />
+        <Toggle
+          on={layout.titlePage}
+          onChange={() => onChange({ titlePage: !layout.titlePage })}
+          label="Title on a page of its own"
+        />
+      </div>
+
+      {/*
+        An estimate, said as one. It is not a promise about Word's line
+        breaking — nothing in a browser can be — but "about four pages"
+        against a five-page minimum is the question being asked, and silence
+        is not a better answer than an estimate.
+      */}
+      <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-5)' }}>
+        {`About ${pages(count, layout)} ${pages(count, layout) === 1 ? 'page' : 'pages'} at this setting, from ${count} ${count === 1 ? 'word' : 'words'}.`}
+      </div>
+      {layout.style !== 'own' && (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+          {`Matches ${chosen.label}. Change anything and it becomes your own settings — nothing is lost, it just stops claiming to be ${chosen.label}.`}
+        </div>
+      )}
+      {layout.style === 'own' && layout.font === DEFAULT_LAYOUT.font && layout.size === DEFAULT_LAYOUT.size && (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+          This is the app's own page, which is right for a handout and wrong for most coursework.
+        </div>
+      )}
+    </Folding>
   );
 }
 
@@ -883,6 +1413,7 @@ function BlockCard({
   at,
   of,
   onOpen,
+  onField,
   onChange,
   onRemove,
   onMove,
@@ -900,6 +1431,15 @@ function BlockCard({
    * anybody was looking at.
    */
   onOpen: () => void;
+  /**
+   * Which field inside this card the caret just landed in.
+   *
+   * What makes the mark buttons act on a selection: the toolbar cannot ask
+   * after the fact — by the time a button is pressed the button is what is
+   * focused — so the field says so on the way in. `item` is which line of a
+   * list, or −1 where the block holds one string.
+   */
+  onField: (el: HTMLTextAreaElement | HTMLInputElement, item: number) => void;
   onChange: (next: Block) => void;
   onRemove: () => void;
   onMove: (to: number) => void;
@@ -909,7 +1449,27 @@ function BlockCard({
     // `onFocusCapture` rather than `onFocus`: focus lands on the field inside,
     // and capture is what lets the card hear about it without every editor
     // having to forward an event it has no other use for.
-    <Blueprint plain id={`block-${at}`} onFocusCapture={onOpen} style={{ padding: 'var(--sp-6)' }}>
+    <Blueprint
+      plain
+      id={`block-${at}`}
+      onFocusCapture={(e: React.FocusEvent<HTMLElement>) => {
+        onOpen();
+        const el = e.target;
+        if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
+          onField(el, Number(el.dataset.item ?? -1));
+        }
+      }}
+      /* The caret moving inside one field is not a focus event, and a
+         selection made with the mouse produces no focus event at all after
+         the first — so the selection is reported again whenever it changes. */
+      onSelectCapture={(e: React.SyntheticEvent<HTMLElement>) => {
+        const el = e.target;
+        if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
+          onField(el, Number(el.dataset.item ?? -1));
+        }
+      }}
+      style={{ padding: 'var(--sp-6)' }}
+    >
       <div
         style={{
           display: 'flex',
@@ -1022,7 +1582,7 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
           className="input"
           value={block.text}
           onChange={(e) => onChange({ ...block, text: e.target.value })}
-          placeholder="Write. **Bold**, *italic* and [a link](vanderbilt.edu) all work."
+          placeholder="Write. **Bold**, *italic*, ~~struck out~~, `code` and [a link](vanderbilt.edu) all work."
           aria-label="Paragraph"
           rows={5}
           style={{ width: '100%', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}
@@ -1040,6 +1600,7 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
                 </div>
                 <input
                   className="input"
+                  data-item={i}
                   value={line}
                   onChange={(e) =>
                     onChange({
@@ -1098,8 +1659,80 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
         </>
       );
 
+    case 'checks':
+      return <ChecklistEditor block={block} onChange={onChange} />;
+
+    /*
+     * `spellCheck` off, and the three autocorrect attributes with it.
+     *
+     * A phone that capitalises the first letter of every line turns `def`
+     * into `Def`, and the smart-quote substitution turns `"x"` into something
+     * no parser accepts. On the one block where the characters *are* the
+     * content, every convenience the platform offers is damage.
+     */
+    case 'code':
+      return (
+        <>
+          <textarea
+            className="input"
+            value={block.text}
+            onChange={(e) => onChange({ ...block, text: e.target.value })}
+            placeholder={'lm(mark ~ hours, data = class)'}
+            aria-label="Code"
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            autoComplete="off"
+            rows={6}
+            style={{
+              width: '100%',
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+              fontSize: 'var(--type-sm)',
+              lineHeight: 'var(--leading-normal)',
+              whiteSpace: 'pre',
+              // A long line scrolls rather than wrapping, because a wrapped
+              // line of code reads as two statements.
+              overflowX: 'auto',
+            }}
+          />
+          <input
+            className="input"
+            value={block.language}
+            onChange={(e) => onChange({ ...block, language: e.target.value })}
+            placeholder="What it is written in — optional"
+            aria-label="Language"
+            style={{ width: '100%', height: 38, marginTop: 'var(--sp-4)' }}
+          />
+          <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+            Nothing in here is read as a mark — stars stay stars and backticks stay backticks.
+          </div>
+        </>
+      );
+
+    case 'toc':
+      return (
+        <>
+          <input
+            className="input"
+            value={block.title}
+            onChange={(e) => onChange({ ...block, title: e.target.value })}
+            placeholder="Contents"
+            aria-label="What the contents page is called"
+            style={{ width: '100%', height: 40 }}
+          />
+          <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
+            The headings in this document, listed here every time it is drawn, printed or
+            exported — so it cannot go out of date. No page numbers: nothing here knows where
+            Word will break a page, and confident wrong numbers are worse than none.
+          </div>
+        </>
+      );
+
     case 'table':
       return <TableEditor block={block} onChange={onChange} />;
+
+    case 'image':
+      return <PictureEditor block={block} onChange={onChange} />;
 
     case 'equation':
       return <EquationEditor block={block} onChange={onChange} />;
@@ -1111,6 +1744,269 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
         </div>
       );
   }
+}
+
+/**
+/**
+ * The bytes for every picture the document points at, read before the export.
+ *
+ * `docx` takes a plain synchronous lookup rather than doing the reads itself,
+ * which is what keeps it a pure function its tests can call without a
+ * browser. So the reads happen here, all of them, before a byte of the
+ * package is written.
+ *
+ * A file that is gone, or whose header `sizeOf` cannot read, is left out
+ * rather than throwing: one binned screenshot is not a reason a twelve-page
+ * paper fails to save. The block writes its caption and no picture; see the
+ * `image` case in `lib/docx.ts`.
+ */
+async function pictureOf(doc: Doc): Promise<(fileId: string) => Picture | undefined> {
+  const ids = [...new Set(doc.blocks.flatMap((b) => (b.kind === 'image' && b.fileId ? [b.fileId] : [])))];
+  const found = new Map<string, Picture>();
+  for (const id of ids) {
+    const file = await getFile(id);
+    if (!file) continue;
+    const bytes = new Uint8Array(await file.blob.arrayBuffer());
+    const size = sizeOf(bytes);
+    if (size) found.set(id, { bytes, size });
+  }
+  return (id: string) => found.get(id);
+}
+
+/**
+ * Choosing a picture, describing it, and captioning it.
+ *
+ * The picture itself is not held in the block — the block holds the id of a
+ * file in the drive, and the bytes stay in IndexedDB where the rest of the
+ * drive is. A document is saved in localStorage with everything else, and a
+ * single phone screenshot base64'd into it would spend the whole 5MB budget
+ * on one figure.
+ *
+ * Which means a picture can go missing: the file it points at can be binned
+ * from the Files screen without the document knowing. That is said here
+ * plainly rather than papered over, because the fix — put it back, or pick
+ * another — is one the person has to make. See the `image` case in
+ * `lib/docx.ts` for what the export does with a block whose file is gone.
+ */
+function PictureEditor({
+  block,
+  onChange,
+}: {
+  block: Extract<Block, { kind: 'image' }>;
+  onChange: (next: Block) => void;
+}) {
+  const [pictures, setPictures] = useState<Settled[] | null>(null);
+  const [preview, setPreview] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  const load = () => {
+    void listFiles().then((all) => setPictures(all.filter(pictureLike)));
+  };
+  useEffect(load, []);
+
+  /*
+   * The preview is an object URL over the stored blob, and it is revoked when
+   * the block changes or the editor closes. Left unrevoked, every picture
+   * opened in a writing session stays in memory until the tab is closed.
+   */
+  useEffect(() => {
+    let url = '';
+    let dropped = false;
+    // One path whether or not there is a file to read, so clearing the
+    // preview happens after the render rather than during the effect.
+    const reading = block.fileId ? getFile(block.fileId) : Promise.resolve(undefined);
+    void reading.then((file) => {
+      if (dropped) return;
+      if (!file) {
+        setPreview('');
+        return;
+      }
+      url = URL.createObjectURL(file.blob);
+      setPreview(url);
+    });
+    return () => {
+      dropped = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [block.fileId]);
+
+  const pick = (id: string) => {
+    const chosen = pictures?.find((f) => f.id === id);
+    onChange({ ...block, fileId: id, name: chosen?.name ?? '' });
+  };
+
+  const addFromDevice = async (file: File) => {
+    setAdding(true);
+    try {
+      const saved = await addFile(file, null);
+      setPictures((was) => [settled(saved), ...(was ?? [])]);
+      onChange({ ...block, fileId: saved.id, name: saved.name });
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  // Chosen, but the drive has no such file: binned, or on another device.
+  const missing = block.fileId !== '' && pictures !== null && !pictures.some((f) => f.id === block.fileId);
+
+  return (
+    <>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', alignItems: 'center' }}>
+        <select
+          className="input"
+          value={block.fileId}
+          onChange={(e) => pick(e.target.value)}
+          aria-label="Which picture"
+          style={{ flex: 1, minWidth: 180, height: 38 }}
+        >
+          <option value="">Choose a picture…</option>
+          {(pictures ?? []).map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.name}
+            </option>
+          ))}
+          {missing && <option value={block.fileId}>{block.name || 'The file this used'}</option>}
+        </select>
+        <FilePick
+          accept="image/png,image/jpeg,image/gif"
+          multiple={false}
+          block={false}
+          disabled={adding}
+          onPick={(picked) => {
+            if (picked[0]) void addFromDevice(picked[0]);
+          }}
+          style={{ width: 'auto' }}
+        >
+          {adding ? 'Adding…' : 'Add from this device'}
+        </FilePick>
+      </div>
+
+      {missing && (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
+          That file is not in your drive any more. The caption still exports; the picture will
+          not. Choose another, or put the file back from the bin.
+        </div>
+      )}
+
+      {preview !== '' && (
+        <img
+          src={preview}
+          alt={block.alt || 'The picture this block holds'}
+          style={{
+            display: 'block',
+            maxWidth: '100%',
+            maxHeight: 260,
+            marginTop: 'var(--sp-5)',
+            borderRadius: 'var(--r-sm)',
+            border: '1px solid var(--app-line)',
+          }}
+        />
+      )}
+
+      <input
+        className="input"
+        value={block.alt}
+        onChange={(e) => onChange({ ...block, alt: e.target.value })}
+        placeholder="What it shows, for somebody who cannot see it"
+        aria-label="Alt text"
+        style={{ width: '100%', height: 38, marginTop: 'var(--sp-5)' }}
+      />
+      <input
+        className="input"
+        value={block.caption}
+        onChange={(e) => onChange({ ...block, caption: e.target.value })}
+        placeholder="Caption — printed under it. Optional."
+        aria-label="Caption"
+        style={{ width: '100%', height: 38, marginTop: 'var(--sp-4)' }}
+      />
+      <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
+        The alt text is what a screen reader reads out in Word, and it is not the caption — a
+        caption says what to make of the picture, alt text says what is in it.
+      </div>
+    </>
+  );
+}
+
+/**
+ * A list with boxes to tick.
+ *
+ * The one block whose state is not text, and the reason it earns a kind of
+ * its own: a list that can say "done" is what the last page of a group
+ * project actually is, and the alternative people reach for is a two-column
+ * table with an X in it, which exports as a table of Xs.
+ *
+ * The box is a real checkbox rather than a character you press, so it is
+ * reachable by keyboard and announced as a checkbox — and the count under it
+ * is the thing anybody opening the document wants to know first.
+ */
+function ChecklistEditor({
+  block,
+  onChange,
+}: {
+  block: Extract<Block, { kind: 'checks' }>;
+  onChange: (next: Block) => void;
+}) {
+  const done = block.items.filter((i) => i.done && i.text.trim()).length;
+  const all = block.items.filter((i) => i.text.trim()).length;
+
+  const set = (i: number, next: Partial<{ text: string; done: boolean }>) =>
+    onChange({
+      ...block,
+      items: block.items.map((item, j) => (j === i ? { ...item, ...next } : item)),
+    });
+
+  return (
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        {block.items.map((item, i) => (
+          <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
+            <input
+              type="checkbox"
+              checked={item.done}
+              onChange={() => set(i, { done: !item.done })}
+              aria-label={`${item.text.trim() || `Item ${i + 1}`} — done`}
+            />
+            <input
+              className="input"
+              data-item={i}
+              value={item.text}
+              onChange={(e) => set(i, { text: e.target.value })}
+              aria-label={`Item ${i + 1}`}
+              style={{
+                flex: 1,
+                height: 38,
+                textDecoration: item.done ? 'line-through' : 'none',
+              }}
+            />
+            <SmallButton
+              label={`Remove item ${i + 1}`}
+              onClick={() =>
+                onChange({
+                  ...block,
+                  items:
+                    block.items.length > 1
+                      ? block.items.filter((_, j) => j !== i)
+                      : [{ text: '', done: false }],
+                })
+              }
+            >
+              ×
+            </SmallButton>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', marginTop: 'var(--sp-5)' }}>
+        <ActionButton
+          onClick={() => onChange({ ...block, items: [...block.items, { text: '', done: false }] })}
+        >
+          Add item
+        </ActionButton>
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>
+          {all === 0 ? 'Nothing on it yet' : `${done} of ${all} done`}
+        </div>
+      </div>
+    </>
+  );
 }
 
 function TableEditor({

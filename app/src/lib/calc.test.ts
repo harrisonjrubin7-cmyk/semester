@@ -314,3 +314,36 @@ describe('primes in a name', () => {
     expect(got.ok).toBe(false);
   });
 });
+
+/**
+ * `a(x + 1)^2` — whose power belongs to which reading.
+ *
+ * A bracket after a letter is a multiplication or a function call and is not
+ * decided until there is a scope. A power after that bracket is the same
+ * question again, and getting it wrong is silent: `s(s + 2)^2` read as
+ * `(s(s + 2))^2` is a different function that works out, draws, and
+ * transforms, with nothing to say it is not the one that was typed. Found by
+ * a partial fraction coming back wrong.
+ */
+describe('a power after an undecided bracket', () => {
+  it('belongs to the bracket where the letter is a multiplier', () => {
+    // s(s+2)² at s = 2 is 2·16 = 32, not (2·4)² = 64.
+    expect(calculate('s(s + 2)^2', { vars: { s: 2 } })).toEqual({ value: 32 });
+    expect(calculate('x(x - 1)^3', { vars: { x: 3 } })).toEqual({ value: 24 });
+  });
+
+  it('belongs to the answer where the letter is a function', () => {
+    const body = read('x + 1');
+    if (!body.ok) throw new Error(body.fault);
+    expect(calculate('f(2)^2', { funs: { f: { params: ['x'], body: body.node } } })).toEqual({ value: 9 });
+  });
+
+  it('reads the same with a space, which is what multiplies', () => {
+    expect(calculate('s (s + 2)^2', { vars: { s: 2 } })).toEqual({ value: 32 });
+  });
+
+  it('leaves an ordinary bracket alone', () => {
+    expect(calculate('2(x + 1)^2', { vars: { x: 2 } })).toEqual({ value: 18 });
+    expect(calculate('(x + 1)^2', { vars: { x: 2 } })).toEqual({ value: 9 });
+  });
+});

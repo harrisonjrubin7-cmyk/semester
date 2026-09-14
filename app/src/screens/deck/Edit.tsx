@@ -83,6 +83,8 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
   const [picking, setPicking] = useState<'add' | 'layout' | 'theme' | null>(null);
   /** A layout change that would lose something, waiting to be confirmed. */
   const [losing, setLosing] = useState<{ layout: Layout; gone: string[] } | null>(null);
+  /** Whether the footer field is open. A field, not a dialog — it is one line. */
+  const [footing, setFooting] = useState(false);
   const tier = useTier();
 
   const patch = (next: Partial<Omit<StoredDeck, 'id'>>) =>
@@ -241,8 +243,33 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
         LAYOUTS.map((l) => ({
           id: `insert.${l.id}`,
           label: `New slide — ${l.label}`,
+          hint: l.says,
           run: () => add(l.id as Layout),
         })),
+        /*
+         * Where PowerPoint puts them — Insert · Header & Footer, Insert ·
+         * Slide Number — rather than under a Deck menu of our own. The menu
+         * bar's order is fixed (`ORDER` in `lib/menus.ts`) and is fixed
+         * because it is already in the muscle memory of anybody who has
+         * opened a presentation program; a seventh menu nobody else has is
+         * not worth the one line it would save.
+         */
+        [
+          {
+            id: 'insert.footer',
+            label: 'Header and footer…',
+            hint: 'A line along the bottom of every slide but the opening one.',
+            on: footing,
+            run: () => setFooting(!footing),
+          },
+          {
+            id: 'insert.numbers',
+            label: 'Slide numbers',
+            hint: 'Bottom right, counted over the slides actually presented.',
+            on: deck.numbers === true,
+            run: () => patch({ numbers: !deck.numbers }),
+          },
+        ],
       ],
     },
     {
@@ -259,6 +286,7 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
         LAYOUTS.map((l) => ({
           id: `format.layout.${l.id}`,
           label: `Make this slide ${l.label.toLowerCase()}`,
+          hint: l.says,
           on: slide ? layoutOf(slide) === l.id : false,
           // `reshape` asks first where the change would throw something away.
           run: slide ? () => reshape(l.id as Layout) : undefined,
@@ -399,7 +427,7 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
       {picking === 'add' && (
         <Choices
           name="What shape is the new slide?"
-          options={LAYOUTS.map((l) => ({ id: l.id, label: l.label }))}
+          options={LAYOUTS.map((l) => ({ id: l.id, label: l.label, says: l.says }))}
           value={null}
           onPick={(id) => add(id as Layout)}
         />
@@ -407,7 +435,7 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
       {picking === 'layout' && slide && (
         <Choices
           name="Change this slide to"
-          options={LAYOUTS.map((l) => ({ id: l.id, label: l.label }))}
+          options={LAYOUTS.map((l) => ({ id: l.id, label: l.label, says: l.says }))}
           value={layoutOf(slide)}
           onPick={(id) => reshape(id as Layout)}
         />
@@ -422,6 +450,23 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
             setPicking(null);
           }}
         />
+      )}
+
+      {footing && (
+        <Blueprint plain style={{ padding: 'var(--sp-5)', marginTop: 'var(--sp-4)' }}>
+          <input
+            className="input"
+            value={deck.footer ?? ''}
+            onChange={(e) => patch({ footer: e.target.value })}
+            placeholder="ECON 1010 · 14 September"
+            aria-label="The line along the bottom of every slide"
+            style={{ width: '100%', height: 38 }}
+          />
+          <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+            On every slide but the opening one — six decks in a marker's pile with a name on
+            only the first is how one gets attributed to the wrong person.
+          </div>
+        </Blueprint>
       )}
 
       {losing && (
@@ -860,7 +905,15 @@ function Presenter({
       */}
       <div style={{ flex: 1, position: 'relative', display: 'flex' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Still slide={here.slide} theme={themeOf(deck)} />
+          <Still
+            slide={here.slide}
+            theme={themeOf(deck)}
+            foot={
+              (deck.footer ?? '').trim() || deck.numbers
+                ? { footer: deck.footer ?? '', number: deck.numbers ? String(i + 1) : '' }
+                : undefined
+            }
+          />
         </div>
         <button
           type="button"

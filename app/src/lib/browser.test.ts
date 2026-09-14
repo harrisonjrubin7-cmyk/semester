@@ -25,6 +25,8 @@ import {
   leaveGroup,
   load,
   makeGroup,
+  mute,
+  mutedTab,
   openBeside,
   pin,
   pinnedCount,
@@ -975,5 +977,75 @@ describe('the one closed-tab list', () => {
     // entry and one only.
     const back = reopen(s, s.closed[0].tab.id);
     expect(back.closed.map((c) => c.tab.screen)).toEqual(['calendar']);
+  });
+});
+
+describe('muting a tab', () => {
+  it('silences it and lets it speak again', () => {
+    const one = mute(strip(['home', 'study'], 0), 1);
+    expect(one.tabs[1].muted).toBe(true);
+    expect(mute(one, 1, false).tabs[1].muted).toBeUndefined();
+  });
+
+  it('removes the key rather than setting it false, like pinned', () => {
+    // `dump` writes whole tabs, so `muted: false` would be a field written to
+    // every device for a setting nobody chose.
+    const back = mute(mute(strip(['home'], 0), 0), 0, false);
+    expect('muted' in back.tabs[0]).toBe(false);
+  });
+
+  it('is the same strip back when it would change nothing', () => {
+    const s = strip(['home', 'study'], 0);
+    expect(mute(s, 1, false)).toBe(s);
+    expect(mute(mute(s, 1), 1)).toEqual(mute(s, 1));
+    expect(mute(s, 99)).toBe(s);
+  });
+
+  it('moves nothing — not the order, not the tab you are on', () => {
+    const s = strip(['home', 'study', 'calendar'], 2);
+    const m = mute(s, 0);
+    expect(names(m)).toEqual(names(s));
+    expect(m.at).toBe(2);
+  });
+
+  it('is orthogonal to pinning and grouping — a tab may be any of them', () => {
+    // By id, because pinning reorders: `tidy` moves the pinned tab to the
+    // front, so the index that named it a moment ago names its neighbour.
+    const pinned = pin(strip(['home', 'study'], 0), 1);
+    const both = mute(pinned, pinned.tabs.findIndex((t) => t.id === 't1'));
+    const kept = both.tabs.find((t) => t.id === 't1');
+    expect(kept?.pinned).toBe(true);
+    expect(kept?.muted).toBe(true);
+
+    const grouped = makeGroup(strip(['home', 'study'], 1), 1, 'Midterm');
+    const g = mute(grouped, grouped.tabs.findIndex((t) => t.group));
+    expect(g.tabs.find((t) => t.muted)?.group).toBeTruthy();
+  });
+
+  it('answers by id, for a player that knows one', () => {
+    const s = mute(strip(['home', 'study'], 0), 1);
+    expect(mutedTab(s, 't1')).toBe(true);
+    expect(mutedTab(s, 't0')).toBe(false);
+    expect(mutedTab(s, 'gone')).toBe(false);
+  });
+
+  it('survives a reload, because a mute is a setting rather than a session', () => {
+    write(mute(strip(['home', 'study'], 0), 1));
+    expect(read(known).tabs[1].muted).toBe(true);
+  });
+
+  it('is only ever exactly true off the device', () => {
+    // The stored reader builds each tab field by field so that a hand-edited
+    // store cannot smuggle anything in. A truthy test would give that up.
+    localStorage.setItem(
+      TABS_KEY,
+      JSON.stringify({
+        tabs: [{ id: 'a', screen: 'home', title: 'Home', place: justGo('home'), muted: 'yes' }],
+        at: 0,
+        groups: [],
+        closed: [],
+      }),
+    );
+    expect(read(known).tabs[0].muted).toBeUndefined();
   });
 });

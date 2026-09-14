@@ -132,7 +132,7 @@ export function tierFor(width: number, handheld = false): Tier {
  *
  * Three queries rather than a resize listener: `matchMedia` fires only when a
  * boundary is crossed, so dragging a window edge across 900px does not
- * re-render fifty screens on every frame. Turning a phone crosses one of them
+ * re-render sixty screens on every frame. Turning a phone crosses one of them
  * too, so the layout follows a rotation without anything listening for one.
  */
 export function useTier(): Tier {

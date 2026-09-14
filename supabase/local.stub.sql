@@ -1,6 +1,6 @@
 -- The parts Supabase provides, for a plain Postgres.
 --
--- The five `*.check.sql` suites need an empty database — their counts are
+-- The six `*.check.sql` suites need an empty database — their counts are
 -- wrong anywhere real rows exist, which their own headers explain. This builds
 -- one out of a bare Postgres, so the checks can be run without a preview
 -- branch and without touching anything live.

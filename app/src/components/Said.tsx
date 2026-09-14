@@ -8,7 +8,7 @@ import { destination } from '../lib/nav';
  * The app's one live region, and the strip that shows the same sentence.
  *
  * Two existed before this — the undo toast and one status line — which covers
- * two of the fifty screens. Everywhere else, an outcome was communicated by
+ * two of the sixty screens. Everywhere else, an outcome was communicated by
  * something on the page changing: a card advancing, a tick appearing, a sync
  * time updating. A screen reader is told about none of that, so the answer to
  * "did that work" was to go and look, which is the thing a screen reader user

@@ -34,6 +34,7 @@
  * above.
  */
 
+import type { Layout } from './doclayout';
 import type { CourseId } from './types';
 
 export type Block =
@@ -44,6 +45,64 @@ export type Block =
   | { kind: 'quote'; text: string; source: string }
   | { kind: 'table'; rows: string[][]; header: boolean; caption: string }
   | { kind: 'equation'; latex: string; caption: string }
+  /**
+   * Text that is not prose — a snippet, a command, a formula as it is typed.
+   *
+   * The one block whose words are *not* marked up. `**` inside code is two
+   * asterisks somebody meant to type, and putting it through `runs()` would
+   * turn a Python decorator or a shell glob into bold text with the marks
+   * eaten. So this is the one kind that reaches the page and the `.docx` as
+   * exactly the characters it holds, whitespace included.
+   */
+  | { kind: 'code'; text: string; language: string }
+  /**
+   * A list whose items can be ticked off.
+   *
+   * Its own kind rather than a flag on `bullets`, because the state belongs to
+   * each *item* and `bullets` holds plain strings. Bolting a parallel array of
+   * booleans onto it would be two lists that have to stay the same length, and
+   * the first reorder would silently tick the wrong line.
+   *
+   * The ticks survive the export — Word gets ☒ and ☐ in front of the words
+   * rather than a live control, because a Word content control opens as a
+   * grey box in Pages and as nothing at all in Google Docs.
+   */
+  | { kind: 'checks'; items: { text: string; done: boolean }[] }
+  /**
+   * A picture, held in IndexedDB and pointed at from here.
+   *
+   * The bytes are not in the block, and could not be: a document lives in
+   * localStorage with the rest of the app's state, and one screenshot would
+   * spend the whole budget. `fileId` is a key into `lib/files.ts`, the same
+   * store the drive uses.
+   *
+   * `name` is what the file was called when it was put in, kept beside the id
+   * rather than looked up. It is what markdown has to write — `![alt](id)` is
+   * a reference to nothing outside this app — and keeping it means the export
+   * still says something useful about a picture whose file has since been
+   * renamed or deleted. It is a label, never the way the picture is found.
+   *
+   * `alt` is separate from `caption` because they are different sentences: a
+   * caption is read by everybody and says what the picture is *for*; alt text
+   * is read instead of the picture and says what is *in* it. A document that
+   * uses one for both leaves somebody with neither.
+   */
+  | { kind: 'image'; fileId: string; name: string; alt: string; caption: string }
+  /**
+   * The table of contents, built from the headings rather than typed.
+   *
+   * Word's is a field that has to be updated and Docs' is a live block; both
+   * are the same promise, which is that the contents page cannot drift from
+   * the document. Held here as a marker with no content of its own — what it
+   * lists is computed from the headings above and below it every time it is
+   * drawn, printed or exported, so it is never stale.
+   *
+   * No page numbers. Nothing here knows where a page break will fall in Word
+   * — that depends on the reader's font substitution and paper size — and a
+   * contents page with confidently wrong numbers on it is worse than one with
+   * none.
+   */
+  | { kind: 'toc'; title: string }
   | { kind: 'break' };
 
 export type BlockKind = Block['kind'];
@@ -82,6 +141,16 @@ export interface Doc {
    * `opened` on `Sheet` in `lib/sheet.ts`.
    */
   opened?: number;
+  /**
+   * How it is set up as a page — font, size, spacing, margins, the corner.
+   *
+   * Absent on everything written before this existed and read as the app's
+   * own: see `layoutOf` in `lib/doclayout.ts`. Held on the document rather
+   * than as a setting because it belongs to the document — an MLA essay and a
+   * one-page memo are both open in the same app in the same afternoon, and a
+   * preference shared between them would be wrong for one of them.
+   */
+  layout?: Layout;
 }
 
 /** What each kind is called where somebody has to choose one. */
@@ -89,9 +158,13 @@ export const BLOCK_LABEL: Record<BlockKind, string> = {
   heading: 'Heading',
   text: 'Paragraph',
   bullets: 'List',
+  checks: 'Checklist',
   quote: 'Quotation',
   table: 'Table',
   equation: 'Equation',
+  code: 'Code',
+  image: 'Picture',
+  toc: 'Contents',
   break: 'Page break',
 };
 
@@ -116,6 +189,14 @@ export function blankBlock(kind: BlockKind): Block {
       };
     case 'equation':
       return { kind: 'equation', latex: '', caption: '' };
+    case 'code':
+      return { kind: 'code', text: '', language: '' };
+    case 'checks':
+      return { kind: 'checks', items: [{ text: '', done: false }] };
+    case 'image':
+      return { kind: 'image', fileId: '', name: '', alt: '', caption: '' };
+    case 'toc':
+      return { kind: 'toc', title: 'Contents' };
     case 'break':
       return { kind: 'break' };
     default:
@@ -145,6 +226,9 @@ export interface Run {
   text: string;
   bold: boolean;
   italic: boolean;
+  strike: boolean;
+  /** Monospaced and literal — nothing inside it is a mark. */
+  code: boolean;
   /**
    * Where this run points, or empty when it points nowhere.
    *
@@ -153,6 +237,15 @@ export interface Run {
    */
   link: string;
 }
+
+/** A run with nothing on it, which is what every walk starts from. */
+const PLAIN: Omit<Run, 'text'> = {
+  bold: false,
+  italic: false,
+  strike: false,
+  code: false,
+  link: '',
+};
 
 /**
  * A URL this app is willing to put behind words, or nothing.
@@ -195,64 +288,97 @@ export function safeUrl(raw: string): string {
 const LINK = /\[([^\]\n]+)\]\((\S+?)\)/;
 
 /**
- * A paragraph split into its emphasised pieces.
+ * A paragraph split into its marked pieces.
  *
- * Bold first, then italic inside it, so `**a *b* c**` comes out right. The
- * markers have to be adjacent to the words they mark — `2 * 3 * 4` is
+ * Five marks, all of them markdown's own, because markdown is what people
+ * type without being told to:
+ *
+ *     **bold**  *italic*  ~~struck out~~  `code`  [a link](https://…)
+ *
+ * The first two were the whole set for a long time and the argument for
+ * stopping there was that anything more needs a toolbar. It does, and there
+ * is one now — but the three added here are not decoration. A link is the
+ * commonest thing in a document written this decade and the .docx had no way
+ * to carry one; struck-out text is how a shared draft says "cut this" without
+ * deleting it; and backticks are what stops a variable name in a methods
+ * section turning into italics.
+ *
+ * ## How it walks
+ *
+ * Earliest mark of the five, in that precedence, then the text either side is
+ * walked again from the top — so the order below decides *nesting* only, and
+ * text before and after a mark is fully parsed either way. Code comes first
+ * and its contents are never parsed, which is what makes `**not bold**`
+ * inside backticks come out as stars.
+ *
+ * ## What is left out, and why
+ *
+ * The markers have to be adjacent to the words they mark — `2 * 3 * 4` is
  * arithmetic and stays arithmetic, which is the case a naive `\*(.+?)\*`
  * turns into an italic 3.
  *
  * `***both at once***` is not handled, and is the one shape left out on
  * purpose. Three stars in a row are ambiguous — markdown's own parsers
  * disagree about them — and resolving it here would mean a real parser rather
- * than two passes. What comes out is the words with a star beside them, which
- * is visible and fixable; a wrong guess about which star closed which mark is
- * neither.
+ * than a chain of passes. What comes out is the words with a star beside
+ * them, which is visible and fixable; a wrong guess about which star closed
+ * which mark is neither.
  */
 export function runs(text: string): Run[] {
   const out: Run[] = [];
-  const walk = (part: string, bold: boolean, italic: boolean, link: string) => {
+  const walk = (part: string, on: Omit<Run, 'text'>) => {
+    if (!part) return;
+
     /*
-     * Links first, and only outside a link.
+     * Five marks, earliest one first, and the two rules that decide nesting.
      *
-     * First because the marks inside one belong to it — `[**Title**](url)` is
-     * a bold link and not a link beside a bold word. Only outside one because
-     * a link inside a link has no meaning and the recursion has to end.
+     * **A link is only read outside a link**, because a link inside a link
+     * has no meaning and the recursion has to end. A target this app will not
+     * follow keeps its brackets and is pushed as it was typed — visible and
+     * fixable, which is the same choice this file makes about
+     * `***three stars***`; silently dropping the words, or silently keeping
+     * the link, are both worse.
      *
-     * A target this app will not follow keeps its brackets and is pushed as
-     * it was typed. Visible and fixable, which is the same choice this file
-     * makes about `***three stars***`; silently dropping the words, or
-     * silently keeping the link, are both worse.
+     * **Backticks are literal**, so what is between them is pushed rather
+     * than walked: otherwise `` `**p**` `` is a bold p in a sentence about
+     * markdown. Earliest-first is what keeps that from fighting the link
+     * rule — `[`x`](url)` starts with the bracket, so it is a link whose
+     * words happen to be code, which is what it looks like.
      */
-    if (!link) {
-      const found = LINK.exec(part);
-      if (found) {
-        if (found.index > 0) walk(part.slice(0, found.index), bold, italic, link);
-        const url = safeUrl(found[2]);
-        if (url) walk(found[1], bold, italic, url);
-        else out.push({ text: found[0], bold, italic, link: '' });
-        walk(part.slice(found.index + found[0].length), bold, italic, link);
-        return;
-      }
-    }
+    const link = on.link ? null : LINK.exec(part);
+    const code = on.code ? null : /`([^`\n]+)`/.exec(part);
     const strong = /\*\*(\S(?:(?!\*\*)[\s\S])*?\S|\S)\*\*/.exec(part);
-    if (strong) {
-      if (strong.index > 0) walk(part.slice(0, strong.index), bold, italic, link);
-      walk(strong[1], true, italic, link);
-      walk(part.slice(strong.index + strong[0].length), bold, italic, link);
-      return;
-    }
+    const struck = /~~(\S(?:(?!~~)[\s\S])*?\S|\S)~~/.exec(part);
     const em = /\*(\S(?:[^*]*\S)?)\*/.exec(part);
-    if (em) {
-      if (em.index > 0) walk(part.slice(0, em.index), bold, italic, link);
-      walk(em[1], bold, true, link);
-      walk(part.slice(em.index + em[0].length), bold, italic, link);
+
+    const found = [
+      {
+        at: link,
+        take: () => {
+          const url = safeUrl(link![2]);
+          if (url) walk(link![1], { ...on, link: url });
+          else out.push({ text: link![0], ...on });
+        },
+      },
+      { at: code, take: () => out.push({ text: code![1], ...on, code: true }) },
+      { at: strong, take: () => walk(strong![1], { ...on, bold: true }) },
+      { at: struck, take: () => walk(struck![1], { ...on, strike: true }) },
+      { at: em, take: () => walk(em![1], { ...on, italic: true }) },
+    ].filter((f): f is { at: RegExpExecArray; take: () => void } => f.at !== null);
+
+    if (found.length === 0) {
+      out.push({ text: part, ...on });
       return;
     }
-    if (part) out.push({ text: part, bold, italic, link });
+    // Earliest wins; ties go to whichever is listed first above, which is
+    // what keeps `**bold**` from being read as an italic star either side.
+    const first = found.reduce((best, f) => (f.at.index < best.at.index ? f : best));
+    if (first.at.index > 0) walk(part.slice(0, first.at.index), on);
+    first.take();
+    walk(part.slice(first.at.index + first.at[0].length), on);
   };
-  walk(text, false, false, '');
-  return out.length ? out : [{ text: '', bold: false, italic: false, link: '' }];
+  walk(text, PLAIN);
+  return out.length ? out : [{ text: '', ...PLAIN }];
 }
 
 /** The same text with the marks taken off — for a word count or a plain export. */
@@ -281,7 +407,14 @@ export function words(doc: Doc): number {
   for (const block of doc.blocks) {
     if (block.kind === 'heading' || block.kind === 'text') count(block.text);
     else if (block.kind === 'bullets') block.items.forEach(count);
+    else if (block.kind === 'checks') block.items.forEach((i) => count(i.text));
     else if (block.kind === 'quote') count(block.text);
+    /*
+     * Code is not counted, and neither are tables or equations — the rule this
+     * function already kept before there was code to apply it to. A word count
+     * on a piece of writing is a count of its *prose*: nobody submitting three
+     * thousand words means three thousand including a shell script.
+     */
   }
   return n;
 }
@@ -290,7 +423,18 @@ export function words(doc: Doc): number {
 export function summary(blocks: Block[]): string {
   const counted = new Map<BlockKind, number>();
   for (const b of blocks) counted.set(b.kind, (counted.get(b.kind) ?? 0) + 1);
-  const order: BlockKind[] = ['heading', 'text', 'bullets', 'quote', 'table', 'equation'];
+  const order: BlockKind[] = [
+    'heading',
+    'text',
+    'bullets',
+    'checks',
+    'quote',
+    'table',
+    'image',
+    'equation',
+    'code',
+    'toc',
+  ];
   const said = order
     .filter((kind) => counted.get(kind))
     .map((kind) => {
@@ -302,12 +446,28 @@ export function summary(blocks: Block[]): string {
 }
 
 /** Whether there is anything in it at all — an empty paragraph is not something. */
-export function hasContent(doc: Doc): boolean {
+export function hasContent(doc: Partial<Doc> & Pick<Doc, 'blocks'>): boolean {
   return doc.blocks.some((b) => {
     if (b.kind === 'break') return false;
     if (b.kind === 'table') return b.rows.some((r) => r.some((c) => c.trim() !== ''));
     if (b.kind === 'bullets') return b.items.some((i) => i.trim() !== '');
+    // Said out loud because the fall-through below reads `b.text`, and a
+    // checklist has not got one: without this an empty checklist would answer
+    // `undefined !== ''` — true — and a blank document would claim to hold
+    // something.
+    if (b.kind === 'checks') return b.items.some((i) => i.text.trim() !== '');
     if (b.kind === 'equation') return b.latex.trim() !== '';
+    // A picture is content once it points at one, whatever it is captioned.
+    if (b.kind === 'image') return b.fileId.trim() !== '';
+    if (b.kind === 'code') return b.text.trim() !== '';
+    /*
+     * A contents block is not content.
+     *
+     * It lists the headings, so a document holding nothing but one is a
+     * contents page of nothing — and `hasContent` is what the File menu reads
+     * to decide whether there is anything worth exporting.
+     */
+    if (b.kind === 'toc') return false;
     return b.text.trim() !== '';
   });
 }
@@ -339,6 +499,48 @@ export function toMarkdown(doc: Doc): string {
             .join('\n'),
         );
         break;
+      /*
+       * A fence long enough that the code cannot end it early.
+       *
+       * Three backticks is the usual fence, and a snippet *about* markdown
+       * contains three backticks — which would close the block at that line
+       * and leave the rest of the code as prose, silently. So the fence is one
+       * longer than the longest run of backticks the code starts a line with,
+       * which is what CommonMark specifies for exactly this reason.
+       */
+      case 'code': {
+        if (!block.text.trim()) break;
+        const runs = block.text.match(/^`{3,}/gm) ?? [];
+        const longest = runs.reduce((n, f) => Math.max(n, f.length), 0);
+        const fence = '`'.repeat(Math.max(3, longest + 1));
+        parts.push(`${fence}${block.language.trim()}\n${block.text}\n${fence}`);
+        break;
+      }
+      case 'checks':
+        parts.push(
+          block.items
+            .filter((i) => i.text.trim())
+            .map((i) => `- [${i.done ? 'x' : ' '}] ${i.text}`)
+            .join('\n'),
+        );
+        break;
+      /*
+       * `![alt](name)`, with the caption as its own line under it.
+       *
+       * Markdown has nowhere to put a caption — `![alt](src "title")` is a
+       * tooltip, which is not what a caption is — so it goes underneath in
+       * italics, which is what it looks like on the page anyway and what every
+       * markdown-to-anything converter does with it.
+       */
+      case 'image': {
+        if (!block.fileId.trim()) break;
+        const alt = block.alt.trim() || block.name.trim() || 'Picture';
+        parts.push(
+          `![${alt.replace(/[[\]]/g, '')}](${block.name.trim() || block.fileId})` +
+            (block.caption.trim() ? `\n\n*${block.caption.trim()}*` : ''),
+        );
+        break;
+      }
       case 'quote': {
         const body = block.text
           .split('\n')
@@ -358,6 +560,30 @@ export function toMarkdown(doc: Doc): string {
             ]
           : block.rows.map((r) => tableRow(r, width));
         parts.push(block.caption.trim() ? `${lines.join('\n')}\n\n*${block.caption}*` : lines.join('\n'));
+        break;
+      }
+      /*
+       * The contents, written out as the list it is rather than as a marker.
+       *
+       * Markdown has no table of contents and inventing a `[[toc]]` of our own
+       * would be a token that means nothing anywhere else. What goes in the
+       * file is the headings, linked the way every markdown renderer links
+       * them — which is a working contents page in anything that reads the
+       * file, and reads back in as a list if it comes home again.
+       */
+      case 'toc': {
+        const headings = doc.blocks.filter((b) => b.kind === 'heading' && b.text.trim());
+        if (headings.length === 0) break;
+        parts.push(
+          `## ${block.title.trim() || 'Contents'}\n\n` +
+            headings
+              .map((h) =>
+                h.kind === 'heading'
+                  ? `${'  '.repeat(h.level - 1)}- ${h.text.trim()}`
+                  : '',
+              )
+              .join('\n'),
+        );
         break;
       }
       case 'equation':
@@ -417,6 +643,19 @@ export function fromMarkdown(text: string): Block[] {
       continue;
     }
 
+    const fence = /^\s*```\s*([A-Za-z0-9+#-]*)\s*$/.exec(line);
+    if (fence) {
+      flush();
+      const body: string[] = [];
+      i += 1;
+      while (i < lines.length && !/^\s*```/.test(lines[i])) {
+        body.push(lines[i]);
+        i += 1;
+      }
+      blocks.push({ kind: 'code', text: body.join('\n'), language: fence[1] });
+      continue;
+    }
+
     if (/^\s*\$\$\s*$/.test(line)) {
       flush();
       const body: string[] = [];
@@ -447,6 +686,50 @@ export function fromMarkdown(text: string): Block[] {
       }
       i -= 1;
       if (rows.length) blocks.push({ kind: 'table', rows, header: true, caption: '' });
+      continue;
+    }
+
+    /*
+     * A fenced block, and everything to its closing fence taken literally.
+     *
+     * Before the bullet and paragraph branches on purpose: a line of code can
+     * look like anything, and `- x` inside a snippet is a line of the snippet.
+     * The closing fence has to be at least as long as the opening one, so a
+     * shorter run of backticks inside the code does not end it.
+     */
+    const fenced = /^\s*(`{3,}|~{3,})\s*(\S*)\s*$/.exec(line);
+    if (fenced) {
+      flush();
+      const [, fence, language] = fenced;
+      const body: string[] = [];
+      i += 1;
+      const closes = new RegExp(`^\\s*${fence[0]}{${fence.length},}\\s*$`);
+      while (i < lines.length && !closes.test(lines[i])) {
+        body.push(lines[i]);
+        i += 1;
+      }
+      blocks.push({ kind: 'code', text: body.join('\n'), language: language.trim() });
+      continue;
+    }
+
+    /*
+     * A task list, before the bullet branch it would otherwise be read by.
+     *
+     * `- [ ] thing` matches the bullet pattern perfectly well, and would come
+     * through as a bullet whose text begins with a literal `[ ]` — the ticks
+     * silently demoted to punctuation.
+     */
+    if (/^\s*[-*+]\s+\[[ xX]\]\s/.test(line)) {
+      flush();
+      const items: { text: string; done: boolean }[] = [];
+      while (i < lines.length) {
+        const m = /^\s*[-*+]\s+\[([ xX])\]\s+(.*)$/.exec(lines[i]);
+        if (!m) break;
+        items.push({ text: m[2].trim(), done: m[1].toLowerCase() === 'x' });
+        i += 1;
+      }
+      i -= 1;
+      blocks.push({ kind: 'checks', items });
       continue;
     }
 
@@ -485,6 +768,28 @@ export function fromMarkdown(text: string): Block[] {
         body.pop();
       }
       blocks.push({ kind: 'quote', text: body.join('\n').trim(), source });
+      continue;
+    }
+
+    /*
+     * A picture, where the whole line is one.
+     *
+     * The file is not here — a markdown document brings a *reference*, and the
+     * bytes it points at are wherever the person kept them. So this comes in
+     * with no `fileId`: the alt text and the name survive, the block says it
+     * has no picture, and the screen offers to attach one. Inventing an id
+     * would be a block pointing confidently at nothing.
+     */
+    const picture = /^\s*!\[([^\]]*)\]\(([^)]*)\)\s*$/.exec(line);
+    if (picture) {
+      flush();
+      blocks.push({
+        kind: 'image',
+        fileId: '',
+        name: picture[2].trim(),
+        alt: picture[1].trim(),
+        caption: '',
+      });
       continue;
     }
 

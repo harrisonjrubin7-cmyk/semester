@@ -8,6 +8,13 @@ Built first for one Vanderbilt semester (Fall 2026, four courses, by hand), then
 generalised: anyone can sign in, upload their own syllabus and readings, and get
 the same thing for their own courses.
 
+It has since grown past the term it started as. Alongside the coursework there
+is a place to make things that are not documents, the university's own services
+with an honest account of which parts this app can do anything about, and four
+workspaces for the parts of a degree that outlast a semester — the season you
+train for, the job you are applying to, the people at home, and the degree after
+this one. Those are the three sections near the end of this file.
+
 **Live: https://harrisonjrubin7-cmyk.github.io/semester/** · running your own
 copy: [SETUP.md](SETUP.md)
 
@@ -290,8 +297,7 @@ makes it one: a tab holds a place in the app, so "I was reading the guide, let
 me check when that is due, now where was I" costs a click rather than four
 navigations and a hunt for your place. A tab with nothing in it yet is a new
 tab, and a new tab is the search page — opening one and typing is a single
-gesture for *somewhere else, without losing this*. Ten is the ceiling; past
-that, the oldest tab you are not using gives way.
+gesture for *somewhere else, without losing this*.
 
 **Groups** are for the Wednesday when there are nine of them. Right-click a tab
 (or press the ⌄ on the one you are on) and **New group**: it and everything you
@@ -315,8 +321,9 @@ search.
 Under them is **Recently closed**, because the cross is eight pixels from the
 name and on a phone that is inside a thumb: the last ten tabs you shut are
 there to be put back, with what they were — the screen, the name, the group —
-into the seat they were closed from, and one press does it. It is the same
-list the Browser navigation's own reopen reads, and it survives a reload. Ten, and no more: a list of everything closed this term
+into the seat they were closed from, and one press does it. It survives a reload, which is
+what a list kept on the strip can do and a list kept in a variable cannot.
+Ten, and no more: a list of everything closed this term
 is a history of your term, which is a different thing to keep and not one this
 app decided to. **Clear** is beside the list, where somebody is when they want
 it gone.
@@ -335,6 +342,23 @@ the rest of the app uses for anything with an order — and on the strip the
 drop means something as well: let a tab go among a group's tabs and it joins
 the group, drag it clear of them and it leaves. Alt with the left and right
 arrows does the same without a pointer.
+
+**Muting** is for the tab that is talking. A lesson is forty minutes of
+narration and the thing you put on walking across campus, so it keeps playing
+when you go and look at something else — the player is one element that lives
+above every screen, and the *tab* owns it rather than the page. Whichever tab
+is playing grows a speaker, and it is a button: press it and that tab goes
+quiet without you having to go to it, which is the question every browser
+added this control to answer. Muting is not stopping. The lesson runs on and
+keeps its place, the way turning a tab down differs from closing it, and the
+mute is remembered — a tab you silenced on the bus is still silent when you
+come back to it, and **Mute this tab** in the menu silences one before it has
+played anything at all, which is what you want in a library.
+
+A sound ends the way it would in a browser: close the tab that owns it, or
+navigate that tab somewhere else, and it stops. Only one thing plays at a
+time — this is a place to study, and two narrations over each other is not a
+feature anybody asked for.
 
 **Bookmarks** are the other half. A tab is where you are; a bookmark is where
 you keep going back to — the ECON study guide, the essay brief, the deadline
@@ -516,7 +540,8 @@ stayed behind. Three screens now, on the **Make** shelf, and none of them has a
 model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
-  quotations, tables, equations, page breaks — out as a real `.docx`, as
+  checklists, quotations, tables, pictures, equations, code blocks, page
+  breaks — out as a real `.docx`, as
   Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
   `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
   link becomes a real hyperlink in the Word file rather than an address typed
@@ -527,6 +552,31 @@ model in it or needs a key:
   which plans an assignment and refuses to write it. This one arranges what you
   type. Paste notes or Markdown in and it reads headings, lists, tables and
   `$$…$$` equations into blocks you can edit.
+
+  A **checklist** is a list you can tick, and each item remembers whether it is
+  done — out as `- [x]` in Markdown and as a ticked box in Word. A **code
+  block** is the one place in the app where nothing is read as markup: `**` in
+  a shell glob or a Python power operator is two asterisks somebody typed, not
+  a request for bold, and the indentation that carries half of what code means
+  survives into the Word file. Its Markdown fence grows longer than any run of
+  backticks inside it, so a snippet *about* Markdown does not quietly end its
+  own block halfway down.
+
+  A **picture** is one of your own files — a PNG, a JPEG or a GIF, chosen from
+  the drive or added from the device on the spot — with alt text and a caption
+  beside it. The block holds the file's id and not its bytes: a document is
+  saved in the browser's local storage with everything else, and a single
+  phone screenshot written into it would spend the whole budget on one figure,
+  so the picture stays in the drive and the export goes and fetches it. Two
+  consequences worth knowing. A screenshot 1200 pixels wide is twelve and a
+  half inches at the size Word reads pixels, so it is brought down to the
+  6.5-inch text column — Word draws exactly the size it is told, and a picture
+  written out at its natural size runs off the paper. And a file you later bin
+  is not a broken document: the caption still exports, the picture does not,
+  and the editor says so and offers to find another. The alt text is separate
+  from the caption on purpose — it is what a screen reader in Word reads out,
+  so it says what is *in* the picture, where a caption says what to make of
+  it.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
   `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It
@@ -761,10 +811,11 @@ model in it or needs a key:
   under it — as many as you like, each its own curve, and none at all draws the
   whole family. Runge–Kutta, fourth order, checked against `y' = y` to ten
   places of *e*; Euler's method is a line shorter and drifts off the true
-  solution smoothly enough to read as the answer. Nothing is solved
-  symbolically and nothing pretends to be: `y' = y` will never print `Ce^x`
-  here, because symbolic algebra is the different program this app has always
-  said it is. What it draws is the picture that answer is usually wanted for.
+  solution smoothly enough to read as the answer. The curve is always walked,
+  whatever else is printed beside it — where an equation is linear with
+  constant coefficients its formula is printed under it too, by the Laplace
+  transform below, and that is an addition to the picture rather than a
+  replacement for it.
   A solution that runs to infinity — `y' = y^2` from `y(0) = 1`, at x = 1 —
   stops where it stops, and the reading says so rather than letting a steep
   line stand in for a thing that has no value. See `app/src/lib/ode.ts`.
@@ -786,6 +837,91 @@ model in it or needs a key:
   is slow in one place and fast in another comes out evenly drawn; a closed
   loop is drawn once rather than a hundred times; and a trajectory that starts
   at an equilibrium stays there, as a point.
+
+  **`L{t^2 e^{-t}}` is a Laplace transform**, read and drawn against `s`, and
+  `L^{-1}{1/(s^2 + 2s + 5)}` is the way back, read and drawn against `t`. Both
+  are lines of the same list as everything else, so a transform sits above the
+  equation it came from. The pole of a transform is worth seeing, which is why
+  it is drawn rather than only printed.
+
+  This is the one piece of symbolic work in the app, and the line it does not
+  cross is worth saying precisely. `app/src/lib/calc.ts` still does not
+  rearrange, and a program that half-solved would still be worse than none.
+  What makes this different is that it is not general — it works over one
+  family and is *closed* over it, so there is no half-solved case to fall into.
+  The family is `c (t - d)^n e^{a(t - d)}` times a sine or a cosine of
+  `b(t - d)`, switched on at `d`: a constant, a power, an exponential, a wave
+  and a delay. Sums of those are exactly the functions whose transforms are
+  rational in `s`, and rational functions of `s` are exactly what comes back.
+  Everything outside it is refused by name — `\ln(t)` has a transform and it
+  is not in this family, so the answer is a sentence saying so rather than an
+  approximation nobody asked for. The step and the impulse are in, which is
+  most of why the transform is taught: `L{t\,u(t - 2)}` is not `e^{-2s}/s^2`,
+  because the ramp is already two high when it switches on, and the shift is
+  done properly rather than by moving the exponent about.
+
+  **And an equation with constant coefficients gets its formula under it.**
+  `y'' = -4y` with `y(0) = 1` and `y'(0) = 0` prints `y = \cos(2x)` beside the
+  curve the walk drew; `y'' = -y - 0.3y' + \sin(x)` from rest prints the four
+  terms it actually is, transient and steady state, which is the thing a
+  numerical walk has and cannot say. The coefficients are read off the
+  right-hand side by sampling rather than by matching a shape — `-4y`,
+  `-(y + 3y')/2` and `k^2 y - c y'` are the same equation written three ways —
+  and then put back together and checked at points nobody used to build them.
+  A logistic equation fails that check and is told so: it draws exactly as it
+  did before, with no line of text under it.
+
+  Coming back needs the denominator's roots and there is no formula for them
+  past the quartic, so they are found numerically, and the honest part is what
+  happens next. A repeated root is never found exactly — `(s+1)^3` comes back
+  as three roots in a ring — so nearby roots are gathered, sharpened by
+  Newton's step multiplied by the count, and then the factors are multiplied
+  back out and compared with the polynomial they came from. If they do not
+  reproduce it, a tighter radius is tried, down to no gathering at all. A wrong
+  multiplicity is a wrong answer, and guessing one is worse than a clumsier
+  partial fraction that is right. Every result is checked against a closed form
+  worked by hand, and the solved equations are checked a second way as well —
+  against the Runge–Kutta walk, which shares no code with any of this and
+  agrees to six places. See `app/src/lib/laplace.ts`.
+
+  **`conv(t, e^{-t})` is a convolution** — the integral of `f(τ)g(t - τ)` from
+  0 to t — done as the product it is in `s`. That is the whole reason the
+  convolution theorem is worth knowing, and it is what makes it cheap here: the
+  family is closed in both directions, so the work is three steps that already
+  exist, and the answer is exact rather than a quadrature over a grid. It comes
+  out `t - 1 + e^{-t}`, which is what the integral comes to. Delays add, as
+  they should: a thing switched on at two convolved with a thing switched on at
+  three is switched on at five. Checked against the integral itself, worked by
+  Simpson's rule inside the test rather than in the app, so the two methods
+  share nothing.
+
+  **An `H =` line with an `s` in it is a transfer function** —
+  `H = \frac{1}{s^2 + 0.3s + 1}` — told apart from the letter H with a value by
+  the same rule that tells `r = 5` from a polar curve: what is written in it.
+  It is drawn as its impulse response, which is `H` itself read the other way,
+  and the sentence under it is the part worth having: *poles at
+  -0.15 ± 0.988686i — all left of the axis, so it settles*. Every term of the
+  answer is `e^{(pole)t}` times something slower, so the poles are the whole of
+  how a thing behaves without solving anything, which is why an engineer reads
+  them before reading the curve.
+
+  And an equation on the list gets the same treatment: under `y'' = -y - 0.3y'`
+  the app prints `H(s) = \frac{1}{s^2 + 0.3s + 1}` and where its poles are,
+  beside the exact solution. The transfer function is the same `Q(s)` the
+  solution divides by, read on its own — which is not a coincidence: dividing
+  by `Q` is what solving the equation *is*, once it is transformed. It carries
+  no initial conditions, which is also right. A transfer function is the system
+  and not the run, so it is there before anybody has written a `y(0) =`.
+
+  It also found a bug that had been there all along. `s(s + 2)^2` was read as
+  `(s(s + 2))^2` — a different function, which works out, draws and transforms
+  without complaint. A bracket after a letter is a multiplication or a function
+  call and is not decided until there is a scope; a power after that bracket is
+  the same question again, and it was being answered before the question was
+  asked. The power is now held inside the undecided node and applied to
+  whichever reading wins, so `f(x)^2` is still the square of what `f` gives and
+  `x(x - 1)^3` is `x` times a cube — which is what `y = x(x-2)^2` has always
+  meant on every graph anybody has drawn here.
 
   **Polar and parametric** are the same box and the same notation, told apart
   by the letter in them: an `r =` line with the angle in it is polar —
@@ -963,6 +1099,76 @@ one, and the id is left on the work rather than scrubbed, so re-importing the
 course brings the filing back. `app/src/lib/forwork.ts` is the only module that
 reads it; `app/src/lib/clips.ts` is what makes asking "how much is filed against
 this" affordable on forty rows at once.
+
+## One door to making things
+
+The app could already write a document, build a deck and fill a spreadsheet, on
+three screens you had to know the names of. **Create** is the screen you open
+when you know what you want to make and not which screen makes it: nine tiles,
+six of which hand straight over to the editor that already exists — documents,
+decks, spreadsheets, maths activities, study guides, notes — and three that are
+its own. Forms, designs and videos share one project shape and one device
+library (`app/src/lib/creations.ts`).
+
+The asymmetry is deliberate. A second document editor behind a tile would be a
+second place documents could live, which is the thing the rest of this app
+spends its effort not doing. A project is told which course and which deadline
+it belongs to before it is created, so its export lands in Files against the
+right one without anybody filing it afterwards.
+
+The three it owns are basic editors and say so: a form with nine question
+types, response windows and CSV out; a design surface with text, shapes,
+images, layers and SVG, PNG or JPG export; a video editor that trims, splits,
+orders, re-times and renders 720p WebM in the browser. No transcription, no
+multi-track mixing, no MP4, no real-time collaboration.
+
+## The university itself
+
+**University** is thirty-seven service areas — registration, the bursar,
+dining, advising, accessibility, the library, health, transport, the ID card —
+each saying plainly what this app can do for it. For nearly all of them the
+answer is the same: it can help you *prepare*. It holds the questions for an
+advising appointment, the checklist before a form is filed, the draft of an
+appeal, and it reuses the course, study, registration, degree, billing, meal,
+housing and map tools that are already here rather than growing copies of them.
+
+It cannot file, register, pay or submit anything. Behind the screen there is a
+real gateway — verified identity, per-school and per-record permission
+boundaries, per-service capabilities, preview-then-confirm, an encrypted action
+journal, receipts and reconciliation (`packages/institution/`, `app/server/`) —
+and the production adapter registry is deliberately empty until a school
+approves one. The hero on that screen counts *connected* services rather than
+the thirty-seven, because thirty-seven is the impressive number and the wrong
+one: it is nought until a school deploys something.
+
+## Beyond the term
+
+Four workspaces for the parts of a degree a semester does not contain. Each
+keeps its work on the device, apart from the term, so none of it disappears when
+the term is archived — and none of it reaches an institution.
+
+- **Athletics** — the practices, the training and the travel, against the
+  classes and deadlines they collide with. The conflict list is the screen; the
+  absence request, the travel study pack and the calendar entries are all built
+  from it. A roster, eligibility, medical clearance and an authorised absence
+  belong to an athletics office, and the screen says so.
+- **Career** — what is open, what you have done and who you have spoken to, in
+  one place because for a student they are one job. There is no job board
+  behind it: every opportunity was typed in or imported from a file, and the
+  link goes to the official source. "Track it" hands the opportunity to the
+  app's one applications tracker rather than starting a second.
+- **Family** — deciding what a parent sees, item by item, with nothing shared
+  by default. The version everybody builds is a parent login, which hands over
+  the grades, the health administration and where somebody is at nine on a
+  Tuesday. This is the opposite shape: a person, a category, the individual
+  things chosen for them, an expiry, and a preview that shows exactly that and
+  nothing else. No invitation is sent and no account is created.
+- **Pathway** — applying somewhere, arriving, transferring, a thesis,
+  graduating, leaving: eleven milestone templates that are the order the
+  deadlines actually fall in, for somebody meeting each exactly once. Every
+  status on it is what you typed, and every place one is drawn says whose claim
+  it is. The cost table refuses to rank, convert currencies or subtract loans
+  as aid.
 
 ## Phone, iPad, laptop, or its own window
 

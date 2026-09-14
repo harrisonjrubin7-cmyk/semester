@@ -68,6 +68,32 @@ export function mailbox(state: State, action: Action): State | null {
     case 'markMail':
       return { ...state, mailMarks: applied(state.mailMarks, action.ids, action.mark) };
 
+    /*
+     * Labelling, one message at a time rather than as one patch.
+     *
+     * `applied` writes the same fields to every id, and a label is the one
+     * mark that depends on what is already there: toggling it over a
+     * selection where some are labelled and some are not has to add to the
+     * ones without and remove from the ones with. Written per id for that
+     * reason, and `mergeMark` still sweeps out the rows that end up empty.
+     */
+    case 'labelMail': {
+      const marks = { ...state.mailMarks };
+      for (const id of action.ids) {
+        const was = marks[id]?.labels ?? [];
+        const labels = was.includes(action.label)
+          ? was.filter((l) => l !== action.label)
+          : [...was, action.label];
+        const next = mergeMark(marks[id], { labels });
+        // An empty list is no labels, which should leave no row behind — the
+        // same rule `mergeMark` applies to a snooze of zero.
+        if (next && labels.length === 0) delete next.labels;
+        if (next && Object.keys(next).length > 0) marks[id] = next;
+        else delete marks[id];
+      }
+      return { ...state, mailMarks: marks };
+    }
+
     case 'moveMail': {
       const marks = applied(state.mailMarks, action.ids, {
         // No folder is a snooze, which is a date rather than a filing: the

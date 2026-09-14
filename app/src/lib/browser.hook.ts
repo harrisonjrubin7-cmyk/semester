@@ -13,6 +13,7 @@ import {
   joinGroup,
   leaveGroup,
   makeGroup,
+  mute,
   openBeside,
   pin,
   read,
@@ -273,6 +274,18 @@ export function reopenTab(id: string): AppTab | null {
 /** Forget what was closed. */
 export function forgetWhatClosed(): void {
   put(forgetClosed(strip()));
+}
+
+/**
+ * Silence a tab, or let it speak again.
+ *
+ * By id rather than by index, because the caller is the strip drawing a
+ * speaker on a tab that may not be the one you are on — and an index read
+ * from a row and used after a navigation is the oldest bug in this file.
+ */
+export function muteTab(id: string, muted: boolean): void {
+  const at = strip().tabs.findIndex((t) => t.id === id);
+  if (at >= 0) put(mute(strip(), at, muted));
 }
 
 /** Keep a tab at the front of the strip, as its glyph. Or let it go. */

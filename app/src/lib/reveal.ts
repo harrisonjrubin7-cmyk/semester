@@ -1,5 +1,5 @@
 /**
- * Not showing somebody forty-six screens on their first morning.
+ * Not showing somebody sixty screens on their first morning.
  *
  * The directory is the app's best feature and its worst first impression. A
  * student three weeks in, looking for the thing that tells them which paper to

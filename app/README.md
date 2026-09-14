@@ -485,11 +485,18 @@ and are never bundled with the rest.
 
 Navigation state is deliberately not persisted — the app opens on Today. The
 two things that look like exceptions are not: the workspace's open tabs
-(`semester.tabs.v1`, with their groups) and the bookmarks bar
+(`semester.tabs.v1`, with their groups, which of them are pinned or muted, and
+the last ten closed) and the bookmarks bar
 (`semester.bookmarks.v1`) are kept on the device under their own keys and are
 never synced, for the reason written at the top of `src/lib/bookmarks.ts` —
 a strip of tabs restored onto a phone from a laptop's backup is a row of tabs
 nobody opened.
+
+What is *playing* is not persisted at all, deliberately: a reload is silence,
+the way it is in a browser. The tab's mute is persisted, because it is a
+setting rather than a session — see `src/lib/sound.ts`, which also explains
+why the one `<audio>` element is mounted above every layout frame rather than
+in the screen that started it.
 
 Clear it from the console with `localStorage.removeItem('semester.v1')`.
 
