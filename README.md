@@ -316,7 +316,12 @@ tabs as a list**: every one of them in the strip's own order, with the group
 each belongs to beside it, filtered as you type and forgiving of a typo the
 same way the rest of the app's search is. Enter opens the one under the
 cursor. It appears once there are four tabs; below that the strip is the
-search.
+search. Each row also says whether its tab has a voice: a speaker on the one
+that is playing, and a crossed one on a tab that is **muted and silent** —
+which the strip never shows, because the strip is short of room and that state
+has nothing happening to point at. It is the setting **Mute this tab** leaves
+behind, and this is the only place you can see it or undo it. Pressing either
+does what the strip's speaker does.
 
 Under them is **Recently closed**, because the cross is eight pixels from the
 name and on a phone that is inside a thumb: the last ten tabs you shut are
