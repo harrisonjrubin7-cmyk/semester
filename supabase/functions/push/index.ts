@@ -57,6 +57,18 @@ interface Device {
   user_id: string;
   p256dh: string;
   auth: string;
+  /**
+   * When a gateway last said this subscription was gone.
+   *
+   * The column has been in the schema since the table shipped, with a comment
+   * saying a subscription is kept for one pass so a transient 404 does not
+   * silently unsubscribe somebody — and nothing read it or wrote it. A single
+   * 404 deleted the device outright, which is exactly the behaviour the column
+   * exists to prevent, and it is invisible when it happens: the student's
+   * phone simply stops getting reminders and no screen has anything to say
+   * about it. Two passes now, as written.
+   */
+  gone_at: string | null;
 }
 
 Deno.serve(async (req) => {
@@ -89,7 +101,7 @@ Deno.serve(async (req) => {
   const users = [...new Set(rows.map((r) => r.user_id))];
   const { data: deviceRows } = await db
     .from('push_devices')
-    .select('endpoint, user_id, p256dh, auth')
+    .select('endpoint, user_id, p256dh, auth, gone_at')
     .in('user_id', users);
 
   const byUser = new Map<string, Device[]>();
@@ -98,7 +110,14 @@ Deno.serve(async (req) => {
   }
 
   let sent = 0;
-  const dead: string[] = [];
+  /** Gone twice running: retired. */
+  const dead = new Set<string>();
+  /** Gone for the first time: marked, and given one more run to come back. */
+  const failing = new Set<string>();
+  /** Answered at any point in this run. */
+  const answered = new Set<string>();
+  /** Answered after having been marked: the mark comes off. */
+  const revived = new Set<string>();
 
   for (const row of rows) {
     for (const device of byUser.get(row.user_id) ?? []) {
@@ -119,30 +138,70 @@ Deno.serve(async (req) => {
           }),
         );
         sent += 1;
+        answered.add(device.endpoint);
+        if (device.gone_at) revived.add(device.endpoint);
       } catch (e) {
-        // 404 and 410 mean the subscription is gone for good — the app was
-        // uninstalled, or the browser rotated it. Anything else is transient
-        // and the row stays for the next run.
+        // 404 and 410 mean the subscription is gone — the app was uninstalled,
+        // or the browser rotated it. Gateways also answer them during their own
+        // outages, so the first one only marks the device; a device that is
+        // still gone on the next run is the one that is retired. Anything else
+        // is transient and nothing is recorded at all.
         const status = (e as { statusCode?: number })?.statusCode;
-        if (status === 404 || status === 410) dead.push(device.endpoint);
+        if (status !== 404 && status !== 410) continue;
+        (device.gone_at ? dead : failing).add(device.endpoint);
       }
     }
   }
 
-  // Delivered, so the queue forgets it. The text of a reminder should not sit
-  // on a server any longer than it has to.
-  await db
-    .from('push_queue')
-    .delete()
-    .in(
-      'id',
-      rows.map((r) => r.id),
-    )
-    .in('user_id', users);
-
-  if (dead.length > 0) {
-    await db.from('push_devices').delete().in('endpoint', dead);
+  /*
+   * Delivered, so the queue forgets it — this account's row, and only this
+   * account's.
+   *
+   * It used to be `.in('id', everyId).in('user_id', everyUser)`, which is not
+   * the list of rows that were just sent: it is every combination of them. A
+   * reminder id is not unique across accounts and was never meant to be —
+   * `lib/notify.ts` builds `today:2026-09-14` and `sun:2026-09-14` from the
+   * date alone, so every account in the batch has the same handful of ids. Two
+   * students in one run meant each of them deleting the other's reminders,
+   * including ones not due for hours and never sent. The symptom is a
+   * notification that silently never arrives, on the days when somebody else
+   * happened to be in the same batch, which is every day once there are two
+   * users.
+   *
+   * Composite keys are not something PostgREST can filter on in one call, so
+   * this deletes per account: each account's own ids, scoped to that account.
+   */
+  const queuedByUser = new Map<string, string[]>();
+  for (const row of rows) queuedByUser.set(row.user_id, [...(queuedByUser.get(row.user_id) ?? []), row.id]);
+  for (const [userId, ids] of queuedByUser) {
+    await db.from('push_queue').delete().eq('user_id', userId).in('id', ids);
   }
 
-  return Response.json({ sent, devices: byUser.size, dropped: dead.length });
+  /*
+   * A device is looked at once per reminder, so one run can have both a
+   * success and a 410 for the same endpoint — a gateway rejecting one payload,
+   * or rotating the subscription part-way through the batch. Proof that it is
+   * alive outranks proof that it is not, in both directions: an endpoint that
+   * answered at any point in this run is neither marked nor retired.
+   */
+  const mark = [...failing].filter((e) => !answered.has(e));
+  const retire = [...dead].filter((e) => !answered.has(e));
+  const clear = [...revived];
+
+  if (mark.length > 0) {
+    await db.from('push_devices').update({ gone_at: new Date().toISOString() }).in('endpoint', mark);
+  }
+  if (clear.length > 0) {
+    await db.from('push_devices').update({ gone_at: null }).in('endpoint', clear);
+  }
+  if (retire.length > 0) {
+    await db.from('push_devices').delete().in('endpoint', retire);
+  }
+
+  return Response.json({
+    sent,
+    devices: byUser.size,
+    dropped: retire.length,
+    marked: mark.length,
+  });
 });

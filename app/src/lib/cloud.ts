@@ -411,7 +411,12 @@ export async function saveDevice(device: {
   if (!userId) throw new Error('Sign in first — a reminder has to belong to an account.');
   const { error } = await db
     .from('push_devices')
-    .upsert({ ...device, user_id: userId }, { onConflict: 'endpoint' });
+    // `gone_at: null` because registering is proof the subscription is alive.
+    // The sender retires a device that answers 404 or 410 twice running and
+    // marks it the first time; without this clear, a device that was marked,
+    // went quiet, and has now come back would be retired by its next single
+    // transient failure rather than given the pass the mark exists to give it.
+    .upsert({ ...device, user_id: userId, gone_at: null }, { onConflict: 'endpoint' });
   if (error) throw new Error(error.message);
 }
 
