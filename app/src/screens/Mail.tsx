@@ -5,12 +5,14 @@ import { secondLine } from '../lib/dim';
 import { typing } from '../lib/keys';
 import { EmptyState, TickBox } from '../components/ui';
 import { Trouble } from '../components/Trouble';
+import { MenuLabel, MenuRow, MenuRule, Popover, type Corner } from '../components/Popover';
 import { useTrouble } from '../lib/trouble';
 import {
   ArchiveIcon,
   ChevronLeft,
   ClockIcon,
   EditIcon,
+  FolderIcon,
   MenuIcon,
   OpenedIcon,
   PaneIcon,
@@ -26,6 +28,7 @@ import { readMail, tokens, describe as explain, type ProviderId } from '../lib/c
 import {
   conversations,
   draftAsMail,
+  FOLDERS,
   folder as folderById,
   listing,
   pageLabel,
@@ -97,7 +100,18 @@ export function Mail() {
   const [picked, setPicked] = useState<string[]>([]);
   const [page, setPage] = useState(0);
   const [drawer, setDrawer] = useState(false);
+  /*
+   * Which of the two menus is open, and where.
+   *
+   * Snooze and Move were a button each that did one thing — snooze meant
+   * "tomorrow morning" and move meant "archive" — while `snoozeOptions` in
+   * `lib/mailbox.ts` had four answers nothing called and the eight folders
+   * had no way back to the inbox at all. A message wrongly in spam could be
+   * read here and not rescued.
+   */
+  const [menu, setMenu] = useState<{ which: 'snooze' | 'move'; corner: Corner } | null>(null);
   const list = useRef<HTMLDivElement>(null);
+  const search = useRef<HTMLInputElement>(null);
 
   const held = tokens();
   const accounts = MAIL_PROVIDERS.filter((id) => held[id]);
@@ -250,6 +264,18 @@ export function Mail() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      /*
+       * `/` puts the caret in the search box, which is the one shortcut that
+       * has to work *while* something else has focus and the one every client
+       * and every website binds. It is still refused inside a field, or it
+       * would swallow the slash of a URL somebody is typing into a reply.
+       */
+      if (!typing(e.target) && e.key === '/') {
+        search.current?.focus();
+        search.current?.select();
+        e.preventDefault();
+        return;
+      }
       if (typing(e.target)) return;
       const rows = Array.from(list.current?.querySelectorAll<HTMLButtonElement>('.mb-lines') ?? []);
       const at = rows.findIndex((r) => r === document.activeElement);
@@ -272,8 +298,16 @@ export function Mail() {
         move(ids(target), 'archive', 'Archived here.');
       } else if (key === '#') {
         move(ids(target), 'trash', 'Moved to trash here.');
+      } else if (key === '!') {
+        // Gmail's, and the one that was missing on a screen whose whole
+        // reason for existing is a student's inbox of announcements.
+        move(ids(target), 'spam', 'Marked as spam here.');
+      } else if (key === 's') {
+        markThem(ids(target), { star: !target.starred });
       } else if (key === 'r') {
         reply(target.last, 'reply');
+      } else if (key === 'a') {
+        reply(target.last, 'replyAll');
       } else if (key === 'f') {
         reply(target.last, 'forward');
       } else if (key === 'x') {
@@ -288,6 +322,19 @@ export function Mail() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   });
+
+  /*
+   * Opened at the button's own bottom-left corner, read at the moment of the
+   * click — the toolbar scrolls sideways on a phone, and a corner captured
+   * any later is a corner that has moved. `Popover` clamps it to the window.
+   */
+  const openMenu = (which: 'snooze' | 'move', from: HTMLElement) => {
+    const box = from.getBoundingClientRect();
+    setMenu((was) => (was?.which === which ? null : { which, corner: { x: box.left, y: box.bottom + 4 } }));
+  };
+
+  /** Where a message can be put, given where it is now. */
+  const destinations = FOLDERS.filter((f) => !f.view && f.id !== 'drafts' && f.id !== 'sent' && f.id !== folder);
 
   const allPicked = here.length > 0 && picked.length === here.length;
   const acting = chosen.length > 0 ? chosen : open ? ids(open) : [];
@@ -366,10 +413,22 @@ export function Mail() {
             <button
               type="button"
               className="mb-ico"
-              aria-label="Snooze"
-              title="Snooze until tomorrow morning"
+              aria-label="Move to"
+              title="Move to a folder"
+              aria-expanded={menu?.which === 'move'}
               disabled={acting.length === 0}
-              onClick={() => snooze(acting)}
+              onClick={(e) => openMenu('move', e.currentTarget)}
+            >
+              <FolderIcon size={18} />
+            </button>
+            <button
+              type="button"
+              className="mb-ico"
+              aria-label="Snooze"
+              title="Snooze until…"
+              aria-expanded={menu?.which === 'snooze'}
+              disabled={acting.length === 0}
+              onClick={(e) => openMenu('snooze', e.currentTarget)}
             >
               <ClockIcon size={18} />
             </button>
@@ -402,10 +461,12 @@ export function Mail() {
         >
           <Search size={16} style={{ flex: 'none', color: 'var(--app-dim)' }} />
           <input
+            ref={search}
             className="input"
             aria-label="Search your mail"
             value={typed}
-            placeholder="from:stromme is:unread"
+            placeholder="from:stromme course:econ -is:read"
+            title="from: to: subject: label: course: has:attachment is:unread before: after: — and a minus in front of any of them to leave it out. Press / to come here."
             onChange={(e) => setTyped(e.target.value)}
             style={{ flex: 1, minWidth: 0 }}
           />
@@ -466,6 +527,82 @@ export function Mail() {
           </>
         )}
       </div>
+
+      {menu?.which === 'snooze' && (
+        <Popover label="Snooze until" corner={menu.corner} onClose={() => setMenu(null)}>
+          <MenuLabel>Snooze until</MenuLabel>
+          {snoozeOptions(now).map((option) => (
+            <MenuRow
+              key={option.label}
+              onPress={() => {
+                dispatch({ type: 'moveMail', ids: acting, snooze: option.at });
+                setPicked([]);
+                setMenu(null);
+                say(`Snoozed until ${option.label.toLowerCase()}.`);
+              }}
+            >
+              {option.label}
+            </MenuRow>
+          ))}
+          {folder === 'snoozed' && (
+            <>
+              <MenuRule />
+              <MenuRow
+                onPress={() => {
+                  // A snooze of zero is a waking, which `mergeMark` drops
+                  // rather than storing an hour in the past for the term.
+                  dispatch({ type: 'moveMail', ids: acting, snooze: 0 });
+                  setPicked([]);
+                  setMenu(null);
+                  say('Back in the inbox.');
+                }}
+              >
+                Bring it back now
+              </MenuRow>
+            </>
+          )}
+        </Popover>
+      )}
+
+      {menu?.which === 'move' && (
+        <Popover label="Move to" corner={menu.corner} onClose={() => setMenu(null)}>
+          <MenuLabel>Move to</MenuLabel>
+          {destinations.map((f) => (
+            <MenuRow
+              key={f.id}
+              onPress={() => {
+                move(acting, f.id, `Moved to ${f.label.toLowerCase()} here.`);
+                setMenu(null);
+              }}
+            >
+              {/* "Not spam" rather than "Inbox" when that is what pressing it
+                  means. A message wrongly in spam could be read on this screen
+                  and not rescued from it, which is the one filing mistake a
+                  mailbox has to be able to undo. */}
+              {folder === 'spam' && f.id === 'inbox' ? 'Not spam' : f.label}
+            </MenuRow>
+          ))}
+          {catalog.courses.length > 0 && (
+            <>
+              <MenuRule />
+              <MenuLabel>Label it</MenuLabel>
+              {catalog.courses.map((c) => (
+                <MenuRow
+                  key={c.id}
+                  onPress={() => {
+                    dispatch({ type: 'labelMail', ids: acting, label: c.code });
+                    setPicked([]);
+                    setMenu(null);
+                    say(`Labelled ${c.code}.`);
+                  }}
+                >
+                  {c.code}
+                </MenuRow>
+              ))}
+            </>
+          )}
+        </Popover>
+      )}
 
       <div className="mb-body">
         {(wide || drawer) && (
@@ -546,7 +683,7 @@ export function Mail() {
               }}
               onArchive={() => move(ids(open), 'archive', 'Archived here.')}
               onTrash={() => move(ids(open), 'trash', 'Moved to trash here.')}
-              onSnooze={() => snooze(ids(open))}
+              onMenu={openMenu}
               onReply={reply}
               onTask={(mail) => {
                 dispatch({

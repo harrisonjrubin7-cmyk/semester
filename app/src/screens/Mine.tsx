@@ -13,6 +13,7 @@ import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib
 import { Drive } from './mine/Drive';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import { codeOf } from '../lib/call';
+import { termEnds } from '../lib/registrar';
 import { secondLine } from '../lib/dim';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
@@ -397,6 +398,14 @@ function Appointments() {
    * fifteen rows typed one at a time.
    */
   const [minutes, setMinutes] = useState(60);
+  /*
+   * When the term ends, so a repeat's last day defaults to it.
+   *
+   * Out of the registrar sheet where it has been filled in, which is where
+   * every other "how long is left" in this app reads it from. Empty is fine:
+   * `defaultUntil` falls back to a term's length from the day it starts.
+   */
+  const lastDay = termEnds(state.registrar);
   const [every, setEvery] = useState<Every | ''>('');
   const [until, setUntil] = useState('');
 
@@ -414,7 +423,7 @@ function Appointments() {
         where: where.trim(),
         note: '',
         kind,
-        ...(every ? { repeat: { every, until: until || defaultUntil(date) } } : {}),
+        ...(every ? { repeat: { every, until: until || defaultUntil(date, lastDay) } } : {}),
       },
     });
     setTitle('');
@@ -498,7 +507,7 @@ function Appointments() {
                 setEvery(next);
                 // The end filled in the moment a rule is chosen, rather than
                 // left empty for somebody to discover is required.
-                if (next && !until) setUntil(defaultUntil(date));
+                if (next && !until) setUntil(defaultUntil(date, lastDay));
               }}
               style={{ ...inputStyle, flex: 1 }}
               aria-label="How often"
@@ -527,7 +536,11 @@ function Appointments() {
               role="status"
               style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}
             >
-              {`${describeRepeat({ every, until: until || defaultUntil(date) })} — ${howMany(date, { every, until: until || defaultUntil(date) }, until || defaultUntil(date))} times. Every repeat names its last day; this one is a semester long unless you change it.`}
+              {(() => {
+                const ends = until || defaultUntil(date, lastDay);
+                const n = howMany(date, { every, until: ends }, ends);
+                return `${describeRepeat({ every, until: ends })} — ${n} ${n === 1 ? 'time' : 'times'}. Every repeat names its last day; this one runs to the end of term unless you change it.`;
+              })()}
             </div>
           )}
 
@@ -639,7 +652,9 @@ function Appointments() {
                   kindOf(a.kind).label,
                   a.where,
                   lengthLabel(a.minutes ?? 60),
-                  a.repeat ? describeRepeat(a.repeat).toLowerCase() : '',
+                  // Not lower-cased: "until 5 january" reads as a typo, and
+                  // a capital in the middle of a dotted line does not.
+                  a.repeat ? describeRepeat(a.repeat) : '',
                 ]
                   .filter(Boolean)
                   .join(' · ')}

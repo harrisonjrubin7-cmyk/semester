@@ -311,6 +311,13 @@ export function participants(mails: Mail[], limit = 3): string {
  * student already types works: `from:`, `to:`, `subject:`, `label:`, `has:`,
  * `is:`, `in:`, quoted phrases, and everything else as free text.
  */
+/**
+ * A search, taken apart.
+ *
+ * The operators are Gmail's, because they are the ones a student has already
+ * typed somewhere else, plus one of this app's own. Every list is "all of
+ * these must hold"; `not` is the same list negated.
+ */
 export interface Query {
   text: string[];
   from: string[];
@@ -320,16 +327,79 @@ export interface Query {
   has: string[];
   is: string[];
   in: string[];
+  /**
+   * `course:econ` — the operator no mail client has and this app can.
+   *
+   * Every message already carries the course it is about: `lib/connect.ts`
+   * matches it on the way in, and the rail filters by it. What was missing
+   * was the way to say it in the box beside everything else, so "the ECON
+   * mail about the midterm" was two controls instead of one search.
+   */
+  course: string[];
+  /** `after:2026-09-01` — messages from that day onwards. */
+  after: string[];
+  /** `before:2026-10-01` — messages up to the day before. */
+  before: string[];
+  /**
+   * `-from:noreply`, `-promotions` — everything the search must *not* match.
+   *
+   * Held as the raw terms and parsed again on use, so a negation nests
+   * exactly what a positive term means and cannot drift from it: `-is:unread`
+   * is the opposite of `is:unread` by construction rather than by a second
+   * rule written beside it.
+   */
+  not: string[];
 }
 
-const EMPTY: Query = { text: [], from: [], to: [], subject: [], label: [], has: [], is: [], in: [] };
+const EMPTY: Query = {
+  text: [],
+  from: [],
+  to: [],
+  subject: [],
+  label: [],
+  has: [],
+  is: [],
+  in: [],
+  course: [],
+  after: [],
+  before: [],
+  not: [],
+};
 
 export function parseQuery(raw: string): Query {
-  const q: Query = { text: [], from: [], to: [], subject: [], label: [], has: [], is: [], in: [] };
+  /*
+   * Fresh arrays every time, not a spread of `EMPTY` — a spread copies the
+   * reference to each of its arrays, so every search would push into the
+   * same twelve lists and the second query would carry the first one's terms.
+   */
+  const q: Query = {
+    text: [],
+    from: [],
+    to: [],
+    subject: [],
+    label: [],
+    has: [],
+    is: [],
+    in: [],
+    course: [],
+    after: [],
+    before: [],
+    not: [],
+  };
   // Quoted phrases first, so `subject:"problem set"` stays one term.
-  const tokens = raw.match(/(?:[a-z]+:)?"[^"]*"|\S+/gi) ?? [];
+  const tokens = raw.match(/-?(?:[a-z_]+:)?"[^"]*"|\S+/gi) ?? [];
   for (const token of tokens) {
-    const op = /^([a-z]+):(.*)$/i.exec(token);
+    /*
+     * A leading minus negates, as it does in Gmail — and a bare `-` is not a
+     * negation of nothing, it is somebody typing a dash. The negated term is
+     * kept whole and parsed again in `matches`, so it can never mean
+     * something different from the positive form of itself.
+     */
+    if (token.length > 1 && token.startsWith('-')) {
+      q.not.push(token.slice(1));
+      continue;
+    }
+    const op = /^([a-z_]+):(.*)$/i.exec(token);
     const value = (op ? op[2] : token).replace(/^"(.*)"$/, '$1').trim().toLowerCase();
     if (!value) continue;
     const name = op ? op[1].toLowerCase() : '';
@@ -340,9 +410,28 @@ export function parseQuery(raw: string): Query {
     else if (name === 'has') q.has.push(value);
     else if (name === 'is') q.is.push(value);
     else if (name === 'in') q.in.push(value);
+    else if (name === 'course') q.course.push(value);
+    else if (name === 'after' || name === 'newer_than') q.after.push(value);
+    else if (name === 'before' || name === 'older_than') q.before.push(value);
     else q.text.push(value);
   }
   return q;
+}
+
+/**
+ * A date written in a search box, as the instant the day begins.
+ *
+ * `2026-09-01` and `2026/09/01` are both accepted, because Gmail writes the
+ * second and every other field in this app writes the first. Anything else is
+ * no date at all and the term is ignored rather than matching nothing — a
+ * typo in one operator should not empty the whole search.
+ */
+export function searchDay(value: string): number | null {
+  const m = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/.exec(value.trim());
+  if (!m) return null;
+  const at = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (Number.isNaN(at.getTime()) || at.getMonth() !== Number(m[2]) - 1) return null;
+  return at.getTime();
 }
 
 export function isEmptyQuery(q: Query): boolean {
@@ -359,6 +448,21 @@ export function matches(mail: Mail, q: Query): boolean {
   if (!q.label.every((v) => mail.labels.some((l) => hit(l, v)))) return false;
   if (!q.has.every((v) => (v === 'attachment' ? mail.attachments > 0 : hit(mail.body, v)))) return false;
   if (!q.in.every((v) => mail.folder === v)) return false;
+  if (!q.course.every((v) => hit(mail.courseId ?? '', v))) return false;
+  /*
+   * A date this cannot read is ignored rather than matched against.
+   *
+   * `after:soon` is a typo, and a typo in one operator emptying the whole
+   * search is how somebody concludes the mailbox has lost their mail.
+   */
+  for (const v of q.after) {
+    const day = searchDay(v);
+    if (day !== null && mail.at < day) return false;
+  }
+  for (const v of q.before) {
+    const day = searchDay(v);
+    if (day !== null && mail.at >= day) return false;
+  }
   for (const flag of q.is) {
     if (flag === 'unread' && !mail.unread) return false;
     if (flag === 'read' && mail.unread) return false;
@@ -366,7 +470,16 @@ export function matches(mail: Mail, q: Query): boolean {
     if (flag === 'unstarred' && mail.starred) return false;
   }
   const all = `${shown(mail.from)} ${mail.from.address} ${mail.subject} ${mail.snippet} ${mail.body}`;
-  return q.text.every((v) => hit(all, v));
+  if (!q.text.every((v) => hit(all, v))) return false;
+  /*
+   * Then everything it must not be, run through this same function.
+   *
+   * Parsed rather than re-implemented so `-is:unread` cannot come to mean
+   * something other than the opposite of `is:unread`; the recursion is one
+   * level deep because `parseQuery` strips the minus before it stores the
+   * term, so a `--x` is a search for the literal `-x`.
+   */
+  return q.not.every((term) => !matches(mail, parseQuery(term)));
 }
 
 /**

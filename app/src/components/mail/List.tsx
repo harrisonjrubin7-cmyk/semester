@@ -213,7 +213,16 @@ function Row({
         <button type="button" className="mb-ico" aria-label={`Delete ${last.subject}`} onClick={onTrash}>
           <TrashIcon size={17} />
         </button>
-        <button type="button" className="mb-ico" aria-label={`Snooze ${last.subject}`} onClick={onSnooze}>
+        {/* The row's own snooze is the one-press one — tomorrow morning, which
+            is the answer four times out of five. The toolbar's opens the four
+            `snoozeOptions` offers, and the row has no width for a menu. */}
+        <button
+          type="button"
+          className="mb-ico"
+          aria-label={`Snooze ${last.subject} until tomorrow morning`}
+          title="Snooze until tomorrow morning"
+          onClick={onSnooze}
+        >
           <ClockIcon size={17} />
         </button>
         <button

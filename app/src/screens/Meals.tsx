@@ -9,7 +9,7 @@ import { SectionLabel } from '../components/ui';
 import { TermSwitch } from '../components/TermSwitch';
 import { CAMPUS_LINKS } from '../data/campus';
 import { readTerm } from '../lib/term';
-import { filled } from '../lib/registrar';
+import { termEnds as lastDayOfTerm } from '../lib/registrar';
 import { isoToDate } from '../lib/date';
 import {
   cashLine,
@@ -57,8 +57,8 @@ function MealsDetails() {
 
   // The term's last day, from the registrar sheet if it has been filled in.
   const termEnds = useMemo(() => {
-    const last = filled(state.registrar).find((d) => d.id === 'finals' || d.id === 'last-class');
-    return last ? isoToDate(last.until || last.iso) : null;
+    const iso = lastDayOfTerm(state.registrar);
+    return iso ? isoToDate(iso) : null;
   }, [state.registrar]);
 
   const p = useMemo(() => pace(mine, termEnds, now), [mine, termEnds, now]);

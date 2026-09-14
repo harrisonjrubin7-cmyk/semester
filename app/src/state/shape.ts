@@ -1992,6 +1992,15 @@ export type Action =
    * the screen, and therefore the ones worth an undo.
    */
   | { type: 'moveMail'; ids: string[]; to?: FolderId; snooze?: number }
+  /**
+   * A label of your own, put on or taken off.
+   *
+   * `Mark.labels` has existed since the mailbox did and nothing ever wrote to
+   * it: the rail could filter by a course label the provider happened to send
+   * and there was no way to add one. Toggling, because a label button that
+   * only ever adds is a label you cannot take off.
+   */
+  | { type: 'labelMail'; ids: string[]; label: string }
   /** Open the composer on a new draft, or `null` to shut it. */
   | { type: 'composeMail'; draft: Partial<MailDraft> | null }
   | { type: 'openMailDraft'; id: string }
