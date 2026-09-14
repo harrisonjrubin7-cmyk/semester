@@ -262,6 +262,21 @@ export function pressing(dates: TermDate[], now: Date): TermDate[] {
     .sort((a, b) => daysTo(a.iso, now) - daysTo(b.iso, now));
 }
 
+/**
+ * The last day of the term, as the registrar sheet has it.
+ *
+ * Finals if they are filled in, the last day of class otherwise, and nothing
+ * where neither is. Two screens worked this out for themselves — Meals, to
+ * pace a swipe balance, and the appointment form, to say how long a repeat
+ * should run — which is one copy too many of a rule about which of two rows
+ * wins.
+ */
+export function termEnds(dates: TermDate[]): string {
+  const rows = filled(dates);
+  const last = rows.find((d) => d.id === 'finals') ?? rows.find((d) => d.id === 'last-class');
+  return last ? last.until || last.iso : '';
+}
+
 /** Everything still to come, soonest first. For the screen's own list. */
 export function ahead(dates: TermDate[], now: Date): TermDate[] {
   return filled(dates)

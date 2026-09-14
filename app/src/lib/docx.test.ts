@@ -3,6 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { parts } from './docx';
 import { xml } from './ooxml';
 import { blankDoc, type Block, type Doc } from './document';
+import { fromStyle } from './doclayout';
+
+/** The relationship-type prefix, as the package writes it. */
+const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 /**
  * The parts of a Word file, checked without opening Word.
@@ -196,5 +200,93 @@ describe('what each block becomes', () => {
   it('sets the page up, or Word decides for itself', () => {
     expect(documentXml(doc([]))).toContain('<w:sectPr>');
     expect(documentXml(doc([]))).toContain('<w:pgSz');
+  });
+});
+
+/**
+ * The three things a .docx could not carry before, and the one that would
+ * corrupt the file if it were carried wrong.
+ *
+ * A hyperlink is the interesting one. It is not a run property — Word holds
+ * it as an element pointing at a relationship in a second file — so a link
+ * written with the id and without the relationship, or with the relationship
+ * and without `TargetMode="External"`, produces a document Word reports as
+ * unreadable rather than as a broken link. Both halves are asserted together
+ * for that reason.
+ */
+describe('the marks that are not just a run property', () => {
+  /*
+   * A link's id is counted from the relationships the part already has, and
+   * that number stops being a constant the moment a page header exists:
+   * styles and numbering are always there, and `header1.xml` is a third.
+   *
+   * Hand a link the header's own id and Word does not report a broken link —
+   * it reports the document as unreadable. Both shapes are asserted here
+   * because the bug only appears when the two features meet, which is
+   * exactly the case neither of them tests on its own.
+   */
+  it('numbers a link above the header, when there is one', () => {
+    const plain = parts(doc([{ kind: 'text', text: '[x](https://e.edu/a)' }])).text;
+    expect(plain['word/document.xml']).toContain('<w:hyperlink r:id="rId3">');
+
+    const headed = parts({
+      ...doc([{ kind: 'text', text: '[x](https://e.edu/a)' }]),
+      layout: fromStyle('apa'),
+    }).text;
+    expect(headed['word/document.xml']).toContain('<w:hyperlink r:id="rId4">');
+    const rels = headed['word/_rels/document.xml.rels'];
+    expect(rels).toContain('<Relationship Id="rId3" Type="' + REL + '/header"');
+    expect(rels).toContain('Id="rId4"');
+    expect(rels).toContain('TargetMode="External"');
+  });
+
+  it('writes strike-through and monospace as run properties', () => {
+    const made = parts(doc([{ kind: 'text', text: 'keep ~~cut~~ and `code`' }])).text[
+      'word/document.xml'
+    ];
+    expect(made).toContain('<w:strike/>');
+    expect(made).toContain('w:val="CodeChar"');
+  });
+
+  it('puts a box in front of each line of a checklist', () => {
+    const made = parts(
+      doc([
+        {
+          kind: 'checks',
+          items: [
+            { text: 'Read the chapter', done: true },
+            { text: 'Write the memo', done: false },
+          ],
+        },
+      ]),
+    ).text['word/document.xml'];
+    expect(made).toContain('☒ Read the chapter');
+    expect(made).toContain('☐ Write the memo');
+  });
+
+  it('leaves a code block exactly as typed, marks and all', () => {
+    const made = parts(doc([{ kind: 'code', text: 'a <- b * c * d', language: 'R' }])).text[
+      'word/document.xml'
+    ];
+    expect(made).toContain('a &lt;- b * c * d');
+    expect(made).not.toContain('<w:i/>');
+  });
+
+  /*
+   * A contents page is written out as real paragraphs rather than as Word's
+   * TOC field, which arrives unpopulated and reads "Right-click to update
+   * field" until somebody does — which is what gets handed in.
+   */
+  it('writes the contents as the headings themselves', () => {
+    const made = parts(
+      doc([
+        { kind: 'toc', title: 'Contents' },
+        { kind: 'heading', level: 1, text: 'The tariff' },
+        { kind: 'heading', level: 2, text: 'The vote' },
+      ]),
+    ).text['word/document.xml'];
+    expect(made).toContain('w:val="TOC1"');
+    expect(made).toContain('The tariff');
+    expect(made).not.toContain('instrText xml:space="preserve"> TOC');
   });
 });

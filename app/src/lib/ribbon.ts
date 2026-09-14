@@ -57,6 +57,15 @@ interface Named {
    * which is what the wider buttons do.
    */
   glyph?: string;
+  /**
+   * The line the pointer sits on, under the name.
+   *
+   * What a tooltip is for in Excel and what a two-character glyph cannot say
+   * on its own — `ƒx` is a button and "Search every function the sheet knows"
+   * is what it does. Absent leaves the name as the whole tooltip, which is
+   * what it was before this existed.
+   */
+  hint?: string;
 }
 
 /** One thing on the ribbon. */

@@ -1,5 +1,5 @@
 import { allCards, weakestUnit } from '../data/catalog';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useKeepAwake } from '../lib/awake';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
@@ -16,6 +16,9 @@ import { modeInfo, modesFor } from '../lib/modes';
 import { worthGuessing } from '../lib/pretest';
 import { FieldGuide } from './Field';
 import { ChevronRight, Plus } from '../components/Icons';
+import { ask, mine, playHere, seekTo, usePlayback } from '../lib/sound.hook';
+import { clock, through } from '../lib/sound';
+import { secondLine } from '../lib/dim';
 import { FigureCard } from '../components/FigureCard';
 import { buildQuiz } from '../lib/quiz';
 import { asset } from '../lib/asset';
@@ -1398,7 +1401,17 @@ function Listen() {
   const { guide, updates } = useLive(state.guideId);
   const addedSince = updates.reduce((n, u) => n + u.cards.length, 0);
   const pod = catalog.podcast[state.guideId];
-  const audioRef = useRef<HTMLAudioElement>(null);
+  /*
+   * Drawn rather than native, and the element is not here.
+   *
+   * This used to be `<audio controls>`, which cost nothing to write and meant
+   * the episode stopped the instant you looked at another tab — the element
+   * was inside this screen, and a screen is unmounted on a tab switch. It is
+   * `components/Sound.tsx` now, mounted above every screen, so an episode
+   * plays on while you read the syllabus it is about. The price is these two
+   * buttons and a clock, which the browser used to draw.
+   */
+  const { time, duration, going } = usePlayback();
 
   const episode = useMemo(() => {
     if (pod.editions.length === 0) return null;
@@ -1417,12 +1430,16 @@ function Listen() {
     );
   }
 
-  const seek = (seconds: number) => {
-    const el = audioRef.current;
-    if (!el) return;
-    el.currentTime = seconds;
-    void el.play();
+  const ours = mine(episode.file);
+  const at = ours ? time : 0;
+  const playing = ours && going;
+  const press = () => {
+    if (!ours) {
+      playHere({ src: episode.file, title: episode.label, course: guide.code, album: guide.name });
+      ask('play');
+    } else ask(playing ? 'pause' : 'play');
   };
+  const seek = (seconds: number) => seekTo(Math.max(0, seconds));
 
   return (
     <Folding name="Listen">
@@ -1469,13 +1486,49 @@ function Listen() {
         </div>
 
         {episode.ready ? (
-          <audio
-            ref={audioRef}
-            controls
-            preload="metadata"
-            src={asset(episode.file)}
-            style={{ width: '100%', marginTop: 14, height: 36 }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)', marginTop: 14 }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={press}
+              style={{ height: 36, minWidth: 96, fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            >
+              {playing ? 'Pause' : at > 0 ? 'Resume' : 'Play'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary btn-icon"
+              onClick={() => seek(at - 15)}
+              disabled={!ours}
+              aria-label="Back fifteen seconds"
+              style={{ height: 36 }}
+            >
+              15
+            </button>
+            <div
+              aria-hidden
+              style={{ flex: 1, height: 3, background: 'var(--app-line)', borderRadius: 2, overflow: 'hidden' }}
+            >
+              <div
+                style={{
+                  width: `${through(at, duration) * 100}%`,
+                  height: '100%',
+                  background: 'var(--app-accent)',
+                }}
+              />
+            </div>
+            <div
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'var(--type-xs)',
+                letterSpacing: '0.08em',
+                fontVariantNumeric: 'tabular-nums',
+                ...secondLine(),
+              }}
+            >
+              {clock(at)}
+            </div>
+          </div>
         ) : (
           <div
             style={{

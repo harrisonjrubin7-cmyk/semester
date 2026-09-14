@@ -13,8 +13,17 @@ import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib
 import { Drive } from './mine/Drive';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import { codeOf } from '../lib/call';
+import { secondLine } from '../lib/dim';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
+import {
+  EVERY,
+  defaultUntil,
+  describe as describeRepeat,
+  howMany,
+  type Every,
+} from '../lib/repeat';
+import { termEnds } from '../lib/registrar';
 import type { Appointment } from '../lib/types';
 import { CheckIt } from '../components/CheckIt';
 import { Dictate } from '../components/Dictate';
@@ -403,14 +412,135 @@ function clockFromInput(value: string): { at: number; time: string } {
  * Join, which is the accident `TaskRow` avoids by keeping the destructive act
  * inside the editor you had to open on purpose.
  */
+/**
+ * The lengths offered for something you add.
+ *
+ * Not a free field. A minute count typed by hand is a field that accepts 4321
+ * and a form that has to say why it will not; these are the lengths somebody
+ * would have typed anyway, and the list is short enough to read at a glance.
+ * Four hours is the top of it because that is a shift, and anything longer is
+ * a day rather than an appointment.
+ */
+const LENGTHS = [15, 30, 45, 60, 90, 120, 180, 240];
+
+function lengthLabel(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = minutes / 60;
+  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} ${hours === 1 ? 'hour' : 'hours'}`;
+}
+
+/**
+ * How long and how often, as two controls.
+ *
+ * Drawn by both the form that writes an appointment and the row that edits
+ * one, which is the whole reason it is a component: main made the row
+ * editable and this branch gave an appointment a length and a rule, and two
+ * copies of these five fields is how one of them ends up knowing about a
+ * third.
+ */
+function HowLongAndOften({
+  from,
+  minutes,
+  every,
+  until,
+  lastDay,
+  onMinutes,
+  onEvery,
+  onUntil,
+}: {
+  /** The day it starts, which bounds the repeat and dates its default end. */
+  from: string;
+  minutes: number;
+  every: Every | '';
+  until: string;
+  lastDay: string;
+  onMinutes: (next: number) => void;
+  onEvery: (next: Every | '') => void;
+  onUntil: (next: string) => void;
+}) {
+  const ends = until || defaultUntil(from, lastDay);
+  const times = every ? howMany(from, { every, until: ends }, ends) : 1;
+  return (
+    <>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
+        {/* How long, as a picker rather than an end time: an end time is two
+            fields that can disagree with each other, and every one of these
+            is a length somebody would have typed anyway. */}
+        <label style={{ flex: 1, minWidth: 0 }}>
+          <span className="sr-only">How long</span>
+          <select
+            className="input"
+            value={String(minutes)}
+            onChange={(e) => onMinutes(Number(e.target.value))}
+            style={{ ...inputStyle, width: '100%' }}
+            aria-label="How long"
+          >
+            {LENGTHS.map((m) => (
+              <option key={m} value={String(m)}>
+                {lengthLabel(m)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label style={{ flex: 1, minWidth: 0 }}>
+          <span className="sr-only">How often</span>
+          <select
+            className="input"
+            value={every}
+            onChange={(e) => {
+              const next = e.target.value as Every | '';
+              onEvery(next);
+              // The end filled in the moment a rule is chosen, rather than
+              // left empty for somebody to discover is required.
+              if (next && !until) onUntil(defaultUntil(from, lastDay));
+            }}
+            style={{ ...inputStyle, width: '100%' }}
+            aria-label="How often"
+          >
+            <option value="">Once</option>
+            {EVERY.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {every && (
+        <>
+          <input
+            className="input"
+            type="date"
+            value={until || ends}
+            min={from}
+            onChange={(e) => onUntil(e.target.value)}
+            style={{ ...inputStyle, width: '100%' }}
+            aria-label="Repeat until"
+          />
+          <div
+            role="status"
+            style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}
+          >
+            {`${describeRepeat({ every, until: ends })} — ${times} ${times === 1 ? 'time' : 'times'}. Every repeat names its last day; this one runs to the end of term unless you change it.`}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
-  const { dispatch } = useStore();
+  const { state, dispatch } = useStore();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(a.title);
   const [date, setDate] = useState(a.date);
   const [when, setWhen] = useState(inputFromClock(a.at));
   const [where, setWhere] = useState(a.where);
   const [kind, setKind] = useState<EventKindId>((a.kind as EventKindId) ?? 'other');
+  const [minutes, setMinutes] = useState(a.minutes ?? 60);
+  const [every, setEvery] = useState<Every | ''>(a.repeat?.every ?? '');
+  const [until, setUntil] = useState(a.repeat?.until ?? '');
+  const lastDay = termEnds(state.registrar);
 
   const save = () => {
     if (!title.trim()) return;
@@ -418,7 +548,22 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
     dispatch({
       type: 'editAppointment',
       id: a.id,
-      patch: { title: title.trim(), date, at, time, where: where.trim(), kind },
+      patch: {
+        title: title.trim(),
+        date,
+        at,
+        time,
+        where: where.trim(),
+        kind,
+        minutes,
+        /*
+         * `undefined` rather than a left-behind rule when the picker says
+         * Once: `editAppointment` is a patch, so writing nothing would leave
+         * the old repeat in place and the row would keep repeating while the
+         * form it was edited in said it did not.
+         */
+        repeat: every ? { every, until: until || defaultUntil(date, lastDay), ...(a.repeat?.except ? { except: a.repeat.except } : {}) } : undefined,
+      },
     });
     setEditing(false);
   };
@@ -468,6 +613,16 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
           placeholder="Where?"
           aria-label="Where it is"
           style={{ height: 40, fontSize: 'var(--type-base)', width: '100%', marginTop: 'var(--sp-4)' }}
+        />
+        <HowLongAndOften
+          from={date}
+          minutes={minutes}
+          every={every}
+          until={until}
+          lastDay={lastDay}
+          onMinutes={setMinutes}
+          onEvery={setEvery}
+          onUntil={setUntil}
         />
         {/* The same chips the form above draws, and the only place the kind of
             an appointment could be changed at all before this. */}
@@ -568,7 +723,18 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
       >
         <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</span>
         <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
-          {[kindOf(a.kind).label, a.where].filter(Boolean).join(' \u00b7 ')}
+          {/* How long and how often, on the row: a shelf of appointments that
+              all read alike is a shelf where the four-hour shift and the
+              coffee are indistinguishable. The repeat is not lower-cased —
+              "until 5 january" reads as a typo. */}
+          {[
+            kindOf(a.kind).label,
+            a.where,
+            lengthLabel(a.minutes ?? 60),
+            a.repeat ? describeRepeat(a.repeat) : '',
+          ]
+            .filter(Boolean)
+            .join(' \u00b7 ')}
         </span>
       </button>
       {/*
@@ -602,11 +768,24 @@ function Appointments() {
   const [when, setWhen] = useState('09:00');
   const [where, setWhere] = useState('');
   const [kind, setKind] = useState<EventKindId>('social');
+  const [minutes, setMinutes] = useState(60);
+  const [every, setEvery] = useState<Every | ''>('');
+  const [until, setUntil] = useState('');
+  /*
+   * When the term ends, so a repeat's last day defaults to it.
+   *
+   * Out of the registrar sheet where it has been filled in, which is where
+   * every other "how long is left" in this app reads it from. Empty is fine:
+   * `defaultUntil` falls back to a term's length from the day it starts.
+   */
+  const lastDay = termEnds(state.registrar);
 
   const shut = () => {
     setOpen(false);
     setTitle('');
     setWhere('');
+    setEvery('');
+    setUntil('');
   };
 
   /*
@@ -619,7 +798,17 @@ function Appointments() {
     const { at, time } = clockFromInput(when);
     dispatch({
       type: 'addAppointment',
-      appointment: { title: title.trim(), date, at, time, where: where.trim(), note: '', kind },
+      appointment: {
+        title: title.trim(),
+        date,
+        at,
+        time,
+        minutes,
+        where: where.trim(),
+        note: '',
+        kind,
+        ...(every ? { repeat: { every, until: until || defaultUntil(date, lastDay) } } : {}),
+      },
     });
     shut();
   };
@@ -669,6 +858,16 @@ function Appointments() {
             placeholder="Where?"
             style={inputStyle}
             aria-label="Place"
+          />
+          <HowLongAndOften
+            from={date}
+            minutes={minutes}
+            every={every}
+            until={until}
+            lastDay={lastDay}
+            onMinutes={setMinutes}
+            onEvery={setEvery}
+            onUntil={setUntil}
           />
 
           {/* What it is for, so the hour grid can colour it and a glance at the

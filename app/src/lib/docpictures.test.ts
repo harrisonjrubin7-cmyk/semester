@@ -6,6 +6,7 @@ import { blankDoc, fromMarkdown, hasContent, summary, toMarkdown, words, type Bl
 import { parts, type Picture } from './docx';
 import { EMU_PER_INCH, emus, sizeOf } from './imagesize';
 import { findEverything } from './find';
+import { fromStyle } from './doclayout';
 import { buildCatalog } from '../data/catalog';
 
 /**
@@ -205,6 +206,31 @@ describe('the picture in the exported .docx', () => {
     // are written links-then-pictures and read by id, so the picture holding
     // rId3 while the link after it holds rId4 is exactly right.
     expect([...ids].sort()).toEqual(['rId1', 'rId2', 'rId3', 'rId4']);
+  });
+
+  /*
+   * A page header is a third fixed relationship, and it is written before the
+   * body is walked — so a picture that numbered from two would take the
+   * header's own id. Word opens a document whose relationship points at the
+   * wrong part as unreadable, not as a missing picture, which is why this is
+   * checked on the header case specifically and not left to the plain one.
+   */
+  it('numbers above the page header, when the layout asks for one', () => {
+    const made = parts(
+      {
+        ...doc([image(), { kind: 'text', text: 'See [the brief](https://a.com).' }]),
+        layout: fromStyle('apa'),
+      },
+      drive({ f1: 'eleven-by-four.png' }),
+    );
+    expect(made.text['word/header1.xml']).toBeDefined();
+    const rels = [...parse(made.text['word/_rels/document.xml.rels']).querySelectorAll('Relationship')];
+    const ids = rels.map((r) => r.getAttribute('Id'));
+    expect(new Set(ids).size).toBe(ids.length);
+    const header = rels.find((r) => r.getAttribute('Target') === 'header1.xml');
+    const picture = rels.find((r) => r.getAttribute('Target') === 'media/image1.png');
+    expect(header?.getAttribute('Id')).toBe('rId3');
+    expect(picture?.getAttribute('Id')).not.toBe('rId3');
   });
 
   /*

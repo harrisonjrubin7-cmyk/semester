@@ -140,3 +140,77 @@ describe('where you are', () => {
     expect(after.changeText).toContain('cancelled');
   });
 });
+
+/**
+ * Labels of your own, which the mailbox has had a field for since it existed
+ * and no way to write to.
+ *
+ * `Mark.labels` is on the type, `marked()` merges it over the provider's
+ * labels, and `listing` filters by it — so the rail could narrow to a course
+ * label Gmail happened to send and there was no control anywhere that put one
+ * on. The interesting part is the toggle over a mixed selection: adding to the
+ * ones without and removing from the ones with is not one patch, which is why
+ * this is the only mark written per message rather than through `applied`.
+ */
+describe('labels', () => {
+  it('puts one on and takes it off again', () => {
+    const on = run(start(), { type: 'labelMail', ids: ['m1'], label: 'ECON 1020' });
+    expect(on.mailMarks.m1.labels).toEqual(['ECON 1020']);
+
+    const off = run(on, { type: 'labelMail', ids: ['m1'], label: 'ECON 1020' });
+    // And leaves no row behind — an empty mark syncs and persists for ever.
+    expect(off.mailMarks.m1).toBeUndefined();
+  });
+
+  it('keeps the other labels when one comes off', () => {
+    const both = run(
+      start(),
+      { type: 'labelMail', ids: ['m1'], label: 'ECON 1020' },
+      { type: 'labelMail', ids: ['m1'], label: 'PSCI 1104' },
+    );
+    const one = run(both, { type: 'labelMail', ids: ['m1'], label: 'ECON 1020' });
+    expect(one.mailMarks.m1.labels).toEqual(['PSCI 1104']);
+  });
+
+  it('adds to the ones without it and removes from the ones with', () => {
+    const mixed = run(start(), { type: 'labelMail', ids: ['m1'], label: 'ECON 1020' });
+    const after = run(mixed, { type: 'labelMail', ids: ['m1', 'm2'], label: 'ECON 1020' });
+    expect(after.mailMarks.m1).toBeUndefined();
+    expect(after.mailMarks.m2.labels).toEqual(['ECON 1020']);
+  });
+
+  it('leaves the rest of a mark alone', () => {
+    const starred = run(
+      start(),
+      { type: 'markMail', ids: ['m1'], mark: { star: true } },
+      { type: 'labelMail', ids: ['m1'], label: 'ECON 1020' },
+    );
+    expect(starred.mailMarks.m1.star).toBe(true);
+    expect(starred.mailMarks.m1.labels).toEqual(['ECON 1020']);
+
+    const unlabelled = run(starred, { type: 'labelMail', ids: ['m1'], label: 'ECON 1020' });
+    expect(unlabelled.mailMarks.m1).toEqual({ star: true });
+  });
+});
+
+/**
+ * Waking a snoozed message, which the screen had no control for.
+ *
+ * A snooze of zero is what `mergeMark` reads as "woken" and drops, rather
+ * than storing an hour in the past for the rest of the term. Worth a test
+ * because the alternative — a mark row per snoozed message, for ever — is
+ * invisible on screen and shows up as a store that only grows.
+ */
+describe('waking a snooze', () => {
+  it('leaves nothing behind', () => {
+    const asleep = run(start(), {
+      type: 'moveMail',
+      ids: ['m1'],
+      snooze: new Date(2026, 8, 12).getTime(),
+    });
+    expect(asleep.mailMarks.m1.snooze).toBeGreaterThan(0);
+
+    const awake = run(asleep, { type: 'moveMail', ids: ['m1'], snooze: 0 });
+    expect(awake.mailMarks.m1).toBeUndefined();
+  });
+});

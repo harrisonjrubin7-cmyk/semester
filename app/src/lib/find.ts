@@ -241,6 +241,8 @@ function textOfBlock(b: Block): string {
     // nothing else somebody wrote.
     case 'image':
       return `${b.alt} ${b.caption} ${b.name}`;
+    case 'toc':
+      return b.title;
     case 'break':
       return '';
   }
