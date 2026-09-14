@@ -551,6 +551,29 @@ dismiss the search overlay and the apps sheet — and touches no DOM. It is in
 `state/slices/navigate.test.ts` now. Deleting a rule along with the file that
 happened to hold it is how a rule stops being kept.
 
+**And one the base branch added while this was open.** Merging main landed a
+modify/delete on `google-shell.css`: two commits had gone in fixing the
+shell's contrast — #255 and #257 — one of them adding
+`components/browser-strip.test.ts`, a guard that reads that sheet and holds
+the strip's colours on the palette. Both are about the shell being *inverted*,
+`--app-fg` as a ground. The workspace's strip is not: `.deskwork .deskstrip`
+is `--app-void`, an ordinary surface, so the pair that guard checks no longer
+occurs anywhere, and the pairs that do occur are already held by
+`lib/contrast.test.ts` across every ground. So the guard goes with the sheet
+rather than being pointed at a strip it was not written about.
+
+The same merge found a third orphan the census had missed:
+`components/GlobalSearchResults.tsx`, the shell's full-page results view, 27
+lines rendered by `GoogleShell` and nothing else. It was invisible to the
+E4 census because that census read `NAVS` and the chrome — a component with
+exactly one caller looks wired until you delete the caller. The workspace
+answers the same question through the palette. The other half of #257, the
+placeholder and filled-button colours in `features.css`, is kept, minus four
+selectors naming screens these two rows removed: `.assignment-center`,
+`.graph-workspace`, `.assignment-plan` and `.g-organizer-panel`. **A merge
+that keeps a fix for a deleted screen is how dead CSS gets a reason to look
+alive.**
+
 ### Recorded against myself, again
 
 The first CSS strip in E4 split selectors on every comma, including the one
