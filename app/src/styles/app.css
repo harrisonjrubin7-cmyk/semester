@@ -2133,6 +2133,34 @@ a:hover {
   -webkit-tap-highlight-color: transparent;
 }
 
+/*
+ * A disabled `.bare` looked exactly like an available one.
+ *
+ * `.bare` strips a button back to its text and keeps `cursor: pointer`, and
+ * nothing here answered `:disabled` — so a control the code had switched off
+ * still read as a control you could press, and still showed the hand cursor
+ * saying so. Found in the move picker on `screens/mine/Drive.tsx`: offering to
+ * move *Problem sets*, the rows for *Problem sets* and *Drive* are disabled,
+ * because a folder cannot go inside itself or stay where it already is. That
+ * guard works. It just could not be seen, so the only way to learn a row was
+ * unavailable was to tap it and watch nothing happen.
+ *
+ * It is not one picker. Around twenty `.bare` buttons in this app are disabled
+ * in some state — the reorder arrows at the ends of a list, a tab strip that
+ * is full, a drill question already answered, every `busy` guard on a form —
+ * and all of them were silent in the same way.
+ *
+ * The same answer `.bench-item:disabled` and `.desktop-star:disabled` already
+ * give, for the reason written there: `--app-faint` is held to 3:1, which is
+ * the contrast bar for a disabled control and is what makes it read as
+ * unavailable rather than merely quiet. `cursor: default` withdraws the other
+ * half of the claim.
+ */
+.bare:disabled {
+  color: var(--app-faint);
+  cursor: default;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
