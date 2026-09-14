@@ -118,17 +118,7 @@ describe('there is one h1', () => {
       if (file.endsWith('App.tsx')) return false;
       // Same exception, for the same reason.
       if (file.endsWith('Onboarding.tsx')) return false;
-      /*
-       * And the browser shell, which is a shell in the sense this rule means:
-       * it draws the frame for its own navigation the way `App.tsx` draws it
-       * for the other three, and `BrowserShell` mounts no `Header` behind it.
-       * Its three h1s — the wordmark, the directory title and the workspace
-       * heading — are the three views of that one frame and never render
-       * together, so the page still has exactly one. `lib/chrome.ts`
-       * guarantees no other layout is up at the same time.
-       */
-      if (file.endsWith('GoogleShell.tsx')) return false;
-      return /<h1[\s>]/.test(src);
+            return /<h1[\s>]/.test(src);
     });
     expect(extra.map(({ file }) => file), 'a second h1 under the header’s').toEqual([]);
   });

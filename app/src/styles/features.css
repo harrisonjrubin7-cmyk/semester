@@ -6,29 +6,11 @@
    workspace lives in components/desk/ and owns that surface. */
 
 /* --- from workspace.css --- */
-.g-productivity .g-sidebar{display:none}
-.g-productivity .g-workspace-body{padding:0 12px 12px}
-.g-productivity .g-brand{min-width:190px}
-.g-productivity .g-app-content{background:var(--app-accent-wash)}
-.g-productivity .g-workspace-heading{background:var(--app-accent-wash);padding:8px 18px}
-.g-productivity .g-workspace-heading h1{font-size:22px}
-.g-productivity .g-legacy-mount .pane-body{max-width:none!important;width:100%}
-.g-productivity .g-legacy-mount .scrollarea{background:var(--app-accent-wash)}
-.g-productivity .g-workspace-heading:has(+ .g-legacy-mount .workspace-editor){position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
-.g-productivity .device .btn-primary{background:var(--app-accent)!important;color:var(--app-panel)!important;opacity:1;box-shadow:none!important}
-.g-productivity .device .btn-secondary{background:var(--app-accent-wash);color:var(--app-accent-deep);box-shadow:none!important;border:1px solid var(--app-accent-wash)}
-.g-productivity .device .btn{border-radius:9px}
-.g-productivity .workspace-text-button{padding:9px 14px;background:none;border-radius:20px;color:var(--app-accent);font-size:14px}
 .workspace-text-button:hover{background:var(--app-accent-wash)!important}
 .workspace-details .input{background:var(--app-panel)!important}
 .write-paper .write-block .input{border-color:transparent!important;background:transparent!important;border-radius:0;box-shadow:none!important;font-family:Arial,sans-serif;padding:4px!important;color:var(--app-fg)}
 .drive-main .section-label{font-size:17px!important;letter-spacing:0!important;text-transform:none!important}
-@media(min-width:1000px){
-.g-productivity .g-topbar{height:65px}
-}
 @media(max-width:800px){
-.g-productivity .g-brand{min-width:0}
-.g-productivity .g-workspace-body{padding:0 5px 5px}
 .workspace-editor .bench-top .btn{font-size:12px!important;min-width:85px!important}
 }
 @media(max-width:540px){
@@ -37,33 +19,9 @@
 @media print{
 .write-paper .input{border:0!important}
 }
-.g-tab-scroll{max-width:calc(100% - 88px)}
-.g-tab-group{display:flex;align-items:stretch;gap:3px;flex-shrink:0}
-.g-group-label{align-self:center;color:var(--app-panel)!important;padding:3px 9px;border-radius:6px;font-size:12px!important;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.g-group-label small{opacity:.8;margin-left:4px}
-.g-tab-organizer{position:relative;margin-left:auto}
-.g-organizer-panel{position:absolute;right:0;top:38px;width:345px;max-width:calc(100vw - 20px);max-height:calc(100dvh - 75px);overflow:auto;padding:20px;background:var(--app-panel);color:var(--app-fg);border:1px solid var(--app-accent-wash);border-radius:16px;box-shadow:0 8px 30px #15253e33;z-index:70;font-size:14px}
-.g-organizer-panel h2{font-size:18px;margin:0 0 15px;font-weight:500}
-.g-organizer-panel h3{font-size:14px;margin-top:24px}
-.g-organizer-panel p{font-size:12px;color:var(--app-dim)}
-.g-organizer-panel label{display:flex;flex-direction:column;gap:7px;margin:15px 0 8px}
-.g-organizer-panel :is(input,select){background:var(--app-accent-wash);border:1px solid var(--app-accent-wash);color:var(--app-fg);border-radius:6px;padding:8px;width:100%;font-size:14px}
-.g-organizer-panel button:not(.g-group-colors button){padding:8px 10px;border-radius:6px;background:var(--app-accent-wash);font-size:13px}
-.g-organizer-save{width:100%;color:var(--app-accent)!important}
-.g-group-colors{display:flex;gap:10px;margin:12px 0}
-.g-group-colors button{height:23px;width:23px;border-radius:50%}
-.g-group-colors button[aria-pressed=true]{outline:2px solid var(--app-fg);outline-offset:2px}
-.g-bookmark-row{display:flex;gap:7px;margin:7px 0;align-items:center}
-.g-bookmark-row>button:first-child{flex:1;text-align:left}
-.g-bookmark-row small{float:right}
-.g-organizer-panel details{margin:16px 0}
-.g-organizer-panel summary{cursor:pointer;color:var(--app-dim)}
 .mail-context .input{background:var(--app-panel)!important}
 .mail-compose .section-label{font-size:13px!important;text-transform:none!important;letter-spacing:0!important}
 .mail-compose .btn-block{width:auto!important;padding:0 24px;display:inline-flex!important;border-radius:24px!important;text-transform:none!important;letter-spacing:0!important}
-@media(max-width:760px){
-.g-organizer-panel{right:-3px}
-}
 .portal-workspace{max-width:1500px;margin:0 auto;padding:20px 28px 40px;color:var(--app-fg);--app-panel:var(--app-panel);--app-line:var(--app-line)}
 .portal-workspace :is(h2,h3,h4){font-family:Arial,sans-serif;letter-spacing:normal;text-transform:none;font-weight:500;color:var(--app-fg)}
 .portal-workspace h2{font-size:30px;line-height:1.25;margin:8px 0 12px}
@@ -204,8 +162,6 @@
 @media(prefers-reduced-motion:reduce){
 .portal-workspace *{scroll-behavior:auto!important;transition:none!important}
 }
-.g-browser-tabs:has(.g-organizer-panel){z-index:80}
-.g-home:has(.g-organizer-panel) .g-central-search{visibility:hidden!important;pointer-events:none!important}
 .semester-primary-nav{display:flex;align-items:center;gap:4px;padding:4px 24px 8px;background:var(--app-accent-wash);overflow-x:auto;flex:none;border-bottom:1px solid var(--app-line-soft)}
 .semester-primary-nav button{color:var(--app-fg);white-space:nowrap;font-size:14px;border:0;background:transparent;border-radius:20px;min-height:40px;padding:8px 16px}
 .semester-primary-nav button:hover, .semester-primary-nav button[aria-current=page]{background:var(--app-accent-wash);color:var(--app-accent-deep)}

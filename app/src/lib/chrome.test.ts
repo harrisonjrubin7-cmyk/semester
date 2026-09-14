@@ -159,10 +159,15 @@ describe('the home screen', () => {
     for (const nav of MODES) expect(homeShape(nav)).toBeTruthy();
   });
 
-  it('lands the two top-chrome navigations on their search page and everything else on home', () => {
-    // Both open the way a browser opens on a new tab, rather than on the last
-    // page you read. Every other navigation opens on the day.
-    const onSearch: NavMode[] = ['workspace', 'browser'];
+  it('lands the top-chrome navigation on its search page and everything else on home', () => {
+    // The workspace opens the way a browser opens on a new tab, rather than on
+    // the last page you read. Every other navigation opens on the day.
+    //
+    // There were two of these until the seventh pass. `browser` was a second
+    // shell of the same shape — see E4 in `SIMPLIFY-AUDIT.md` — and the list
+    // is a list rather than an equality so that a third would read as an
+    // addition here rather than as a rewrite.
+    const onSearch: NavMode[] = ['workspace'];
     for (const nav of onSearch) expect(firstScreen(nav), nav).toBe('search');
     for (const nav of MODES.filter((n) => !onSearch.includes(n))) {
       expect(firstScreen(nav), nav).toBe('home');
@@ -171,17 +176,38 @@ describe('the home screen', () => {
 });
 
 describe('reading a navigation back', () => {
-  it('keeps the seven the app has', () => {
+  it('keeps the six the app has', () => {
     expect(MODES).toEqual([
       'tabs',
       'feed',
       'springboard',
       'shelves',
       'workspace',
-      'browser',
       'guides',
     ]);
     for (const nav of MODES) expect(navOf(nav)).toBe(nav);
+  });
+
+  it('lands a saved navigation that no longer exists on the workspace', () => {
+    /*
+     * The migration this removal did not need.
+     *
+     * `browser` was a seventh navigation until the seventh pass — a second
+     * browser-shaped shell beside `workspace`, 1213 lines against 708 (E4 in
+     * `SIMPLIFY-AUDIT.md`). Somebody using it has `nav: 'browser'` in their
+     * saved copy, and the survivor is the one they should land on rather than
+     * the tab bar, because it is the same shape: chrome at the top, a tab
+     * strip, a search field that owns the window.
+     *
+     * `navOf` already did that — its fallback is the workspace, not the bar —
+     * so no migration step was written. That is worth a test rather than a
+     * comment: the fallback is the only thing standing between a retired
+     * navigation and an app that opens somewhere the person did not choose,
+     * and it would be an easy line to "simplify" to `'tabs'` one day.
+     */
+    expect(navOf('browser')).toBe('workspace');
+    expect(navOf('a navigation that never existed')).toBe('workspace');
+    expect(navOf(undefined)).toBe('workspace');
   });
 
   /*
