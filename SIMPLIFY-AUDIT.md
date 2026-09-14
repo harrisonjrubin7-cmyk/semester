@@ -153,18 +153,42 @@ next pass does not re-add it.
   the shell's own body rather than a destination, the fix is a port of
   `Directory` into it rather than a deletion, and it is larger than the class
   this pass is about. Next pass's first item.
-- **The Customize button cannot be pressed with a pointer.** Found while
-  photographing the panel this pass changes, and **older than this pass** —
-  it reproduces identically on `main`. `.g-home-legacy` is laid over the
-  browser shell's home with `pointer-events: none`, and the rule under it,
-  `.g-home-legacy .device > * { pointer-events: auto }`, hands them back to
-  the legacy pane, which is full-window and covers the footer. At the centre
-  of `.g-customize`, `document.elementFromPoint` returns
-  `.device-pane.deskwork-pane`, on this branch and on `main` alike. A
-  keyboard still reaches the button, and every other entry into the panel
-  still works. It is the same family as #238 — one piece of shell chrome
-  laid over another — and not this pass's class, so it is recorded here and
-  left for its own change rather than folded into a settings merge.
+## 4a. S3 — nothing on the browser shell's home could be clicked · **FIXED**
+
+Found while photographing the panel S1 changes, **older than this pass** — it
+reproduced identically on `main` — and much larger than the button it was
+found on.
+
+`.g-home-legacy` lays the app's own screen over the browser shell's home, so
+that what the app mounts over a screen still reaches the student. The mount
+is `pointer-events: none` and hands them back with
+`.g-home-legacy .device > * { pointer-events: auto }`. Between `.device` and
+the screen sit `.deskwork-body` and `.device-pane`, both the size of the
+window, and that rule handed the pointer to them as well.
+
+So the home had a sheet of glass over it. Counted with `elementFromPoint` at
+the centre of every control on it, **twenty of twenty** returned
+`.device-pane.deskwork-pane`: the tab strip and its New tab, the omnibox, AI
+Tutor, the launcher, the profile, the capture +, the home search field, all
+six shortcuts, Explore all 60 apps, and Customize. A real pointer click on
+Customize timed out against the pane; the keyboard still reached everything,
+which is why the shell looked usable in a test.
+
+**Fixed with the pattern six rules further down the same file** —
+`.g-home-legacy .google-global` already gives the pointer up and hands it
+back on its children. The two wrappers do the same now, and the pane's own
+children (Said, Replaced, Undone) and the dialogs keep it; the screen body
+inside them is `display: none` in this mount already, so nothing that was
+reachable has become unreachable. After: **zero of twenty** blocked, and the
+real click that timed out lands.
+
+jsdom has no layout, so the hit test cannot be a test. The rule is held in
+`styles/stacking.test.ts` instead, next to the workspace's own
+overlay-stacking rules, by order and specificity.
+
+This is not the class this pass is about — it is the family of #238, one
+piece of shell chrome laid over another — and it was recorded rather than
+fixed until the person whose app it is asked for it.
 - **`Today.tsx:456` and `Today.tsx:1511`** render the same task row, styles
   and `setMineTab` and all, in two branches. Duplicated UI, not a duplicated
   pathway — it belongs with the 74 hand-rolled rows `GROUPED-AUDIT.md`
@@ -176,9 +200,10 @@ next pass does not re-add it.
 
 ## 5. What this pass changed
 
-S1 and S2, one commit each. No destination was added or removed: the count
-stands at 60, because every duplicate this pass found was a *control* rather
-than a *screen*. −4 duplicated settings, −1 duplicated control.
+S1, S2 and S3, one commit each. No destination was added or removed: the
+count stands at 60, because every duplicate this pass found was a *control*
+rather than a *screen*. −4 duplicated settings, −1 duplicated control, and
+one shell's home given back its pointer.
 
 `src/styles/budget.ts` moves with S2 — `dim` 928 → 927, regenerated with
 `npm run lint:styles -- --fix`, which is the ledger recording that a screen
