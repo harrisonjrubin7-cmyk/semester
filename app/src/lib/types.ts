@@ -337,9 +337,31 @@ export interface Appointment {
    * to know about the rule.
    */
   date: string;
-  /** Minutes past midnight, so it sorts into the rail with classes. */
-  at: number;
-  /** How the time is written — "6:30p". */
+  /**
+   * Minutes past midnight, so it sorts into the rail with classes — or `null`
+   * when it is an all-day entry.
+   *
+   * `null` rather than a separate `allDay` flag, because that is already what
+   * "no hour" means everywhere else in this app: `FeedEvent.at` is nullable
+   * for exactly this, `campusHours` reads `at !== null` to decide whether a
+   * thing can be drawn on a grid at all, and a listing whose time is "TBD"
+   * takes the same route. A boolean beside a number would be a second way to
+   * say one thing, and the two would disagree the first time something wrote
+   * one without the other.
+   */
+  at: number | null;
+  /**
+   * How many days it covers, counting the first. Absent is one.
+   *
+   * Only meaningful when `at` is null. A timed entry that ran past midnight
+   * would have to be drawn as a block in two different hour columns, and
+   * neither Google Calendar nor Outlook does that either — both move anything
+   * spanning days up into the all-day banner, which is where this puts it too.
+   * So the rule is the one those clients already taught everybody: **a span is
+   * an all-day span.**
+   */
+  days?: number;
+  /** How the time is written — "6:30p", or "All day". */
   time: string;
   /**
    * How long it runs, in minutes.

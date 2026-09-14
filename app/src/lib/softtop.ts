@@ -54,7 +54,7 @@ import type { State } from '../state/shape';
 import type { Screen } from './types';
 import type { Capabilities } from './school';
 import { swipeUnit } from './school';
-import { appointmentsOn, datedItems, nextClass, upcomingItems } from './select';
+import { appointmentsOn, byDateThenTime, datedItems, nextClass, upcomingItems } from './select';
 import { occurrences } from './repeat';
 import { overdueCount } from './standing';
 import { termProgress } from './you';
@@ -694,7 +694,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
        */
       const scheduled = state.appointments
         .filter((a) => codeOf(a) && a.date >= iso)
-        .sort((a, b) => (a.date === b.date ? a.at - b.at : a.date < b.date ? -1 : 1));
+        .sort(byDateThenTime);
       const next = scheduled[0];
       return {
         hero: next

@@ -11,9 +11,11 @@ import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { CallIcon, ChevronLeft, ChevronRight } from '../components/Icons';
 import { codeOf } from '../lib/call';
-import { HourGrid } from '../components/HourGrid';
+import { HourGrid, GUTTER as DAY_GUTTER } from '../components/HourGrid';
+import { AllDayBand } from '../components/AllDayBand';
+import { bandRows } from '../lib/band';
 import { KindKey } from '../components/KindKey';
-import { WeekGrid } from '../components/WeekGrid';
+import { WeekGrid, GUTTER as WEEK_GUTTER } from '../components/WeekGrid';
 import { WeekDue } from '../components/WeekDue';
 import { weekLabel, type Span } from '../lib/weekpage';
 import { WIDE, useMedia } from '../lib/media';
@@ -34,6 +36,8 @@ import {
 } from '../lib/date';
 import {
   appointmentsOn,
+  bannersOn,
+  byDateThenTime,
   campusHours,
   datedEvents,
   datedItems,
@@ -233,8 +237,20 @@ function DayView() {
     })),
   ];
 
+  /*
+   * The all-day band, above the first hour.
+   *
+   * Filtered by the same two chips the grid is: an all-day entry of yours is
+   * one of your classes-and-commitments, and one off a connected calendar
+   * rides with the rest of the feed. A band that ignored the source chips
+   * would be the one row of the day that "just my classes" could not turn
+   * off.
+   */
+  const band = bannersOn(on.classes ? state.appointments : [], feedToday, day);
+
   const empty =
     rail.length === 0 &&
+    band.length === 0 &&
     gridBlocks.length === 0 &&
     due.length === 0 &&
     events.length === 0 &&
@@ -306,6 +322,21 @@ function DayView() {
         and the list gives each thing room for its detail. Neither replaces the
         other, and the grid is the one you want first.
       */}
+      {band.length > 0 && (
+        <AllDayBand
+          columns={[band]}
+          gutter={DAY_GUTTER}
+          style={{ marginTop: 'var(--sp-7)' }}
+          onOpen={(run) => {
+            // Straight to the row that edits it. A bar is a thing you own or
+            // a thing a feed says; only the first has somewhere to go.
+            if (!run.appointmentId) return;
+            dispatch({ type: 'setMineTab', tab: 'appointments' });
+            dispatch({ type: 'go', screen: 'mine' });
+          }}
+        />
+      )}
+
       {gridBlocks.length > 0 && (
         <>
           <SectionLabel style={{ margin: '0 0 6px' }}>By the hour</SectionLabel>
@@ -752,6 +783,16 @@ function WeekView() {
     };
   });
 
+  /*
+   * The all-day band across the whole window.
+   *
+   * One array per column, in the order the columns are drawn, because that is
+   * what `bandRows` packs: a break running Wednesday to Sunday has to be one
+   * bar over five columns, and no per-day call could know that. The same two
+   * source chips the grid reads, for the reason the day view's band gives.
+   */
+  const band = days.map((d) => bannersOn(on.classes ? state.appointments : [], feedWeek, d.date));
+
   /** The campus events this week that the grid could give an hour to. */
   const drawn = days.reduce((n, d) => n + d.blocks.filter((b) => b.kind === CAMPUS_KIND).length, 0);
 
@@ -768,7 +809,21 @@ function WeekView() {
   // count above the week and the empty state below it agree with each other.
   // An event with an hour on it is in both halves and is one thing, not two,
   // which is what `drawn` is subtracted for.
-  const anything = total + campus.length + feedWeek.length - drawn;
+  /*
+   * Your all-day entries, counted as runs rather than as days.
+   *
+   * They are in none of the three terms above — not a block, not a campus
+   * listing, not a feed entry — so a week whose only entry was "Reading week,
+   * Monday to Friday" reported itself empty and drew the "nothing on" panel
+   * over the band saying otherwise. Counted through `bandRows` so a five-day
+   * break is the one thing it is and not five, and filtered to the ones you
+   * own because an all-day feed entry is already in `feedWeek`.
+   */
+  const bandRuns = bandRows(band).reduce(
+    (n, row) => n + row.filter((r) => r.appointmentId).length,
+    0,
+  );
+  const anything = total + campus.length + feedWeek.length + bandRuns - drawn;
   /*
    * Class meetings this week, counted from the syllabi rather than from the
    * grid.
@@ -850,6 +905,18 @@ function WeekView() {
         />
       ) : (
         <>
+          {band.some((c) => c.length > 0) && (
+            <AllDayBand
+              columns={band}
+              gutter={WEEK_GUTTER}
+              style={{ marginTop: 'var(--sp-7)' }}
+              onOpen={(run) => {
+                if (!run.appointmentId) return;
+                dispatch({ type: 'setMineTab', tab: 'appointments' });
+                dispatch({ type: 'go', screen: 'mine' });
+              }}
+            />
+          )}
           {total > 0 && (
           <WeekGrid
             days={days}
@@ -2002,7 +2069,7 @@ function SemesterView() {
        */
       appts: appts
         .filter((a) => a.date >= from && a.date < to)
-        .sort((a, b) => a.date.localeCompare(b.date) || a.at - b.at),
+        .sort(byDateThenTime),
       classes,
     });
   }

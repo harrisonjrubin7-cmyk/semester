@@ -142,8 +142,16 @@ describe('what the semester view refuses to draw', () => {
   });
 
   it('puts a week’s appointments in the order they happen', () => {
-    // `at` is minutes past midnight, so it sorts as a number. Every other list
-    // on this screen is in time order; this one was in store order.
-    expect(MONTH).toMatch(/\.sort\(\(a, b\) => a\.date\.localeCompare\(b\.date\) \|\| a\.at - b\.at\)/);
+    /*
+     * Every other list on this screen is in time order; this one was in store
+     * order. It is checked as a call to the shared comparator rather than as
+     * the comparator written out, because that is where it now lives: four
+     * screens had the same two lines and a fifth had them spelled with
+     * `localeCompare`, which is identical for ISO dates and does not look it.
+     * What the order *is* — all-day first, then by the hour — is asserted
+     * against `byDateThenTime` itself in `lib/select.test.ts`.
+     */
+    expect(MONTH).toMatch(/\.sort\(byDateThenTime\)/);
+    expect(MONTH).not.toMatch(/a\.at - b\.at/);
   });
 });

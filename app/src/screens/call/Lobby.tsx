@@ -7,6 +7,7 @@ import { CallIcon, ChevronRight, Plus, ScreenShareIcon } from '../../components/
 import { secondLine } from '../../lib/dim';
 import { codeOf, nameFor, newCode, normaliseCode } from '../../lib/call';
 import { isoToDate, longLabel } from '../../lib/date';
+import { byDateThenTime } from '../../lib/select';
 import { cloudConfigured } from '../../lib/cloud';
 import { canShare, relayed, supported } from '../../lib/rtc';
 import { Schedule } from './Schedule';
@@ -35,7 +36,7 @@ export function Lobby({
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const booked = state.appointments
     .filter((a) => codeOf(a) && isoToDate(a.date) >= today)
-    .sort((a, b) => (a.date === b.date ? a.at - b.at : a.date < b.date ? -1 : 1))
+    .sort(byDateThenTime)
     .slice(0, 6);
 
   if (booking) {

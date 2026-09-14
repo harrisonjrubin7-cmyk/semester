@@ -23,6 +23,7 @@ import {
   howMany,
   type Every,
 } from '../lib/repeat';
+import { byDateThenTime } from '../lib/select';
 import { termEnds } from '../lib/registrar';
 import type { Appointment } from '../lib/types';
 import { CheckIt } from '../components/CheckIt';
@@ -379,8 +380,15 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
   );
 }
 
-/** Back the other way: "18:30" for the field, from the minutes we store. */
-function inputFromClock(at: number): string {
+/**
+ * Back the other way: "18:30" for the field, from the minutes we store.
+ *
+ * Empty for an all-day entry, which has no hour to put in a time field. The
+ * form hides the field entirely in that case; this still has to answer,
+ * because the state is seeded before the toggle is read.
+ */
+function inputFromClock(at: number | null): string {
+  if (at === null) return '';
   const h = Math.floor(at / 60);
   return `${String(h).padStart(2, '0')}:${String(at % 60).padStart(2, '0')}`;
 }
@@ -413,6 +421,30 @@ function clockFromInput(value: string): { at: number; time: string } {
  * inside the editor you had to open on purpose.
  */
 /**
+ * The time half of an appointment, from what the form is holding.
+ *
+ * One function because both forms answer the same four fields and an all-day
+ * entry is the case where they are not independent: it has no `at`, so it can
+ * have no `minutes` either, and only it can have `days`. Written out twice,
+ * the second copy is the one that leaves a stale `minutes: 240` on an entry
+ * that no longer has a start hour — harmless until something divides by it.
+ *
+ * The clears are explicit `undefined`s rather than omissions, because
+ * `editAppointment` merges a patch: a field left out keeps its old value, so
+ * turning a four-hour shift into a day off has to say that the four hours
+ * are gone.
+ */
+function whenFrom(
+  allDay: boolean,
+  when: string,
+  minutes: number,
+  days: number,
+): Pick<Appointment, 'at' | 'time' | 'minutes' | 'days'> {
+  if (allDay) return { at: null, time: 'All day', minutes: undefined, days };
+  return { ...clockFromInput(when), minutes, days: undefined };
+}
+
+/**
  * The lengths offered for something you add.
  *
  * Not a free field. A minute count typed by hand is a field that accepts 4321
@@ -430,30 +462,64 @@ function lengthLabel(minutes: number): string {
 }
 
 /**
- * How long and how often, as two controls.
+ * How many days an all-day entry may cover, offered by name.
+ *
+ * The same argument as `LENGTHS`: a typed number is a field that accepts 900
+ * and a form that then has to explain itself. These are the spans a semester
+ * actually contains — a long weekend, a week off, a fortnight between terms —
+ * and the list is short enough to read. `LONGEST_SPAN` is the cap the
+ * selector enforces; this is the shorter list of what anybody picks.
+ */
+const SPANS = [1, 2, 3, 4, 5, 7, 10, 14];
+
+function spanLabel(days: number): string {
+  return days === 1 ? 'Just that day' : `${days} days`;
+}
+
+/**
+ * How long and how often, as two controls — or how many days, when there is
+ * no hour to be long for.
  *
  * Drawn by both the form that writes an appointment and the row that edits
  * one, which is the whole reason it is a component: main made the row
  * editable and this branch gave an appointment a length and a rule, and two
  * copies of these five fields is how one of them ends up knowing about a
- * third.
+ * third. The all-day toggle went in here for the same reason, and it is worth
+ * saying what it replaces: the comment on `LENGTHS` above stops at four hours
+ * because "anything longer is a day rather than an appointment" — which was
+ * true, and left the day with nowhere to be written down.
+ *
+ * All day swaps the length picker for a span picker rather than adding a
+ * field beside it. The two are the same question at two grains — how much of
+ * the calendar does this take — and only one of them can have an answer at a
+ * time: minutes mean nothing without a start hour, and an entry with a start
+ * hour is not all day. Both callers hide their own time field on the same
+ * flag, so the form never shows a field whose value is about to be discarded.
  */
 function HowLongAndOften({
   from,
+  allDay,
+  days,
   minutes,
   every,
   until,
   lastDay,
+  onAllDay,
+  onDays,
   onMinutes,
   onEvery,
   onUntil,
 }: {
   /** The day it starts, which bounds the repeat and dates its default end. */
   from: string;
+  allDay: boolean;
+  days: number;
   minutes: number;
   every: Every | '';
   until: string;
   lastDay: string;
+  onAllDay: (next: boolean) => void;
+  onDays: (next: number) => void;
   onMinutes: (next: number) => void;
   onEvery: (next: Every | '') => void;
   onUntil: (next: string) => void;
@@ -462,25 +528,58 @@ function HowLongAndOften({
   const times = every ? howMany(from, { every, until: ends }, ends) : 1;
   return (
     <>
+      {/* First, because it decides what the control beside it is asking. */}
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={() => onAllDay(!allDay)}
+        aria-pressed={allDay}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--sp-3)',
+          marginTop: 'var(--sp-4)',
+          fontSize: 'var(--type-sm)',
+        }}
+      >
+        <TickBox on={allDay} size={18} />
+        <span>All day</span>
+      </button>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
         {/* How long, as a picker rather than an end time: an end time is two
             fields that can disagree with each other, and every one of these
             is a length somebody would have typed anyway. */}
         <label style={{ flex: 1, minWidth: 0 }}>
-          <span className="sr-only">How long</span>
-          <select
-            className="input"
-            value={String(minutes)}
-            onChange={(e) => onMinutes(Number(e.target.value))}
-            style={{ ...inputStyle, width: '100%' }}
-            aria-label="How long"
-          >
-            {LENGTHS.map((m) => (
-              <option key={m} value={String(m)}>
-                {lengthLabel(m)}
-              </option>
-            ))}
-          </select>
+          <span className="sr-only">{allDay ? 'How many days' : 'How long'}</span>
+          {allDay ? (
+            <select
+              className="input"
+              value={String(days)}
+              onChange={(e) => onDays(Number(e.target.value))}
+              style={{ ...inputStyle, width: '100%' }}
+              aria-label="How many days"
+            >
+              {SPANS.map((d) => (
+                <option key={d} value={String(d)}>
+                  {spanLabel(d)}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <select
+              className="input"
+              value={String(minutes)}
+              onChange={(e) => onMinutes(Number(e.target.value))}
+              style={{ ...inputStyle, width: '100%' }}
+              aria-label="How long"
+            >
+              {LENGTHS.map((m) => (
+                <option key={m} value={String(m)}>
+                  {lengthLabel(m)}
+                </option>
+              ))}
+            </select>
+          )}
         </label>
         <label style={{ flex: 1, minWidth: 0 }}>
           <span className="sr-only">How often</span>
@@ -538,24 +637,23 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
   const [where, setWhere] = useState(a.where);
   const [kind, setKind] = useState<EventKindId>((a.kind as EventKindId) ?? 'other');
   const [minutes, setMinutes] = useState(a.minutes ?? 60);
+  const [allDay, setAllDay] = useState(a.at === null);
+  const [days, setDays] = useState(a.days ?? 1);
   const [every, setEvery] = useState<Every | ''>(a.repeat?.every ?? '');
   const [until, setUntil] = useState(a.repeat?.until ?? '');
   const lastDay = termEnds(state.registrar);
 
   const save = () => {
     if (!title.trim()) return;
-    const { at, time } = clockFromInput(when);
     dispatch({
       type: 'editAppointment',
       id: a.id,
       patch: {
         title: title.trim(),
         date,
-        at,
-        time,
+        ...whenFrom(allDay, when, minutes, days),
         where: where.trim(),
         kind,
-        minutes,
         /*
          * `undefined` rather than a left-behind rule when the picker says
          * Once: `editAppointment` is a patch, so writing nothing would leave
@@ -593,14 +691,19 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             aria-label="The day it is on"
             style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
           />
-          <input
-            className="input"
-            type="time"
-            value={when}
-            onChange={(e) => setWhen(e.target.value)}
-            aria-label="The time it starts"
-            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
-          />
+          {/* Gone rather than disabled when the entry is all day: there is
+              no hour, so a greyed field still showing one would be showing a
+              value that is about to be thrown away. */}
+          {!allDay && (
+            <input
+              className="input"
+              type="time"
+              value={when}
+              onChange={(e) => setWhen(e.target.value)}
+              aria-label="The time it starts"
+              style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
+            />
+          )}
         </div>
         <input
           className="input"
@@ -616,6 +719,10 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
         />
         <HowLongAndOften
           from={date}
+          allDay={allDay}
+          days={days}
+          onAllDay={setAllDay}
+          onDays={setDays}
           minutes={minutes}
           every={every}
           until={until}
@@ -769,6 +876,8 @@ function Appointments() {
   const [where, setWhere] = useState('');
   const [kind, setKind] = useState<EventKindId>('social');
   const [minutes, setMinutes] = useState(60);
+  const [allDay, setAllDay] = useState(false);
+  const [days, setDays] = useState(1);
   const [every, setEvery] = useState<Every | ''>('');
   const [until, setUntil] = useState('');
   /*
@@ -786,6 +895,10 @@ function Appointments() {
     setWhere('');
     setEvery('');
     setUntil('');
+    // Cleared with the rest, or the next thing written would silently inherit
+    // "all day, four days" from the break somebody put in before it.
+    setAllDay(false);
+    setDays(1);
   };
 
   /*
@@ -795,15 +908,12 @@ function Appointments() {
    */
   const add = () => {
     if (!title.trim()) return;
-    const { at, time } = clockFromInput(when);
     dispatch({
       type: 'addAppointment',
       appointment: {
         title: title.trim(),
         date,
-        at,
-        time,
-        minutes,
+        ...whenFrom(allDay, when, minutes, days),
         where: where.trim(),
         note: '',
         kind,
@@ -813,9 +923,7 @@ function Appointments() {
     shut();
   };
 
-  const upcoming = [...state.appointments].sort((a, b) =>
-    a.date === b.date ? a.at - b.at : a.date < b.date ? -1 : 1,
-  );
+  const upcoming = [...state.appointments].sort(byDateThenTime);
 
   return (
     <div>
@@ -841,14 +949,17 @@ function Appointments() {
               style={{ ...inputStyle, flex: 1 }}
               aria-label="Date"
             />
-            <input
-              className="input"
-              type="time"
-              value={when}
-              onChange={(e) => setWhen(e.target.value)}
-              style={{ ...inputStyle, flex: 1 }}
-              aria-label="Time"
-            />
+            {/* See the note on the same field in the row that edits one. */}
+            {!allDay && (
+              <input
+                className="input"
+                type="time"
+                value={when}
+                onChange={(e) => setWhen(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+                aria-label="Time"
+              />
+            )}
           </div>
           <input
             className="input"
@@ -861,6 +972,10 @@ function Appointments() {
           />
           <HowLongAndOften
             from={date}
+            allDay={allDay}
+            days={days}
+            onAllDay={setAllDay}
+            onDays={setDays}
             minutes={minutes}
             every={every}
             until={until}

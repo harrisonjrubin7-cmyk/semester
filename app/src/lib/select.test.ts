@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { buildCatalog, EMPTY_CATALOG } from '../data/catalog';
 import { hops } from './rooms';
+import { isoToDate } from './date';
 import type { Commitment } from './activities';
 import {
+  LONGEST_SPAN,
+  appointmentDays,
   appointmentsOn,
+  bannersOn,
+  byDateThenTime,
+  byTime,
   campusCalendar,
   campusHours,
   datedEvents,
@@ -482,11 +488,12 @@ describe('tasksOn, appointmentsOn and feedEventsOn', () => {
     courseId: null,
   });
 
-  const appt = (id: string, date: string, at: number): Appointment => ({
+  const appt = (id: string, date: string, at: number | null, days?: number): Appointment => ({
     id,
     title: id,
     date,
     at,
+    days,
     time: '',
     where: '',
     note: '',
@@ -524,6 +531,96 @@ describe('tasksOn, appointmentsOn and feedEventsOn', () => {
     // hour rather than burying them under the afternoon.
     const list = [feedEvent('timed', '2026-09-09', 600), feedEvent('allday', '2026-09-09', null)];
     expect(feedEventsOn(list, NOW).map((e) => e.id)).toEqual(['allday', 'timed']);
+  });
+
+  it('keeps an all-day appointment out of the rail and in the band', () => {
+    /*
+     * The two halves of the same decision. An entry with no hour cannot be
+     * drawn on an hour grid, so `railFor` must not carry it — and it is not
+     * thereby lost, because `bannersOn` does.
+     */
+    const list = [appt('holiday', '2026-09-09', null), appt('seminar', '2026-09-09', 600)];
+    expect(railFor(EMPTY_CATALOG, NOW, list).map((b) => b.title)).toEqual(['seminar']);
+    expect(bannersOn(list, [], NOW).map((b) => b.title)).toEqual(['holiday']);
+  });
+
+  it('carries a span across every day it covers, and stops', () => {
+    // Thursday to Sunday: four days, drawn on four of them and on no fifth.
+    const trip = appt('trip', '2026-09-10', null, 4);
+    const days = ['2026-09-09', '2026-09-10', '2026-09-11', '2026-09-12', '2026-09-13', '2026-09-14'];
+    expect(days.map((d) => bannersOn([trip], [], isoToDate(d)).length)).toEqual([0, 1, 1, 1, 1, 0]);
+  });
+
+  it('tells a view which end of the bar it is drawing', () => {
+    const trip = appt('trip', '2026-09-10', null, 3);
+    const ends = ['2026-09-10', '2026-09-11', '2026-09-12'].map((d) => {
+      const [b] = bannersOn([trip], [], isoToDate(d));
+      return [b.day, b.first, b.last];
+    });
+    expect(ends).toEqual([
+      [1, true, false],
+      [2, false, false],
+      [3, false, true],
+    ]);
+  });
+
+  it('spans a repeat without a second rule for it', () => {
+    /*
+     * A fortnightly Thursday-to-Saturday: the repeat says which Thursdays and
+     * the span says how far each one reaches. The two compose because the
+     * lookback asks `occursOn` about each candidate start rather than about
+     * the day being drawn.
+     */
+    const shift = {
+      ...appt('away', '2026-09-10', null, 3),
+      repeat: { every: 'fortnightly' as const, until: '2026-10-30' },
+    };
+    const on = (iso: string) => bannersOn([shift], [], isoToDate(iso)).length === 1;
+    expect([on('2026-09-12'), on('2026-09-13'), on('2026-09-24'), on('2026-09-26')]).toEqual([
+      true,
+      false,
+      true,
+      true,
+    ]);
+  });
+
+  it('draws one bar a day when a rule outruns its own span', () => {
+    // Daily and three days long: every occurrence overlaps the two before it,
+    // and the row still gets one bar — the run that started most recently.
+    const rolling = {
+      ...appt('rolling', '2026-09-09', null, 3),
+      repeat: { every: 'daily' as const, until: '2026-09-20' },
+    };
+    const drawn = bannersOn([rolling], [], isoToDate('2026-09-15'));
+    expect(drawn).toHaveLength(1);
+    expect(drawn[0].day).toBe(1);
+  });
+
+  it('will not let one entry span a year', () => {
+    // The lookback is bounded, so a bad number costs a cap and not a walk.
+    expect(appointmentDays(appt('x', '2026-09-09', null, 4000))).toBe(LONGEST_SPAN);
+    expect(appointmentDays(appt('x', '2026-09-09', null, 0))).toBe(1);
+    // A timed entry is one day whatever the field says: a span is all-day.
+    expect(appointmentDays(appt('x', '2026-09-09', 600, 5))).toBe(1);
+  });
+
+  it('puts an all-day feed entry in the band beside your own', () => {
+    const list = [feedEvent('allday', '2026-09-09', null), feedEvent('timed', '2026-09-09', 600)];
+    expect(bannersOn([], list, NOW).map((b) => b.title)).toEqual(['allday']);
+  });
+
+  it('sorts all-day above timed, and dates before hours', () => {
+    // The two comparators five screens had written out by hand between them.
+    expect([{ at: 600 }, { at: null }].sort(byTime).map((x) => x.at)).toEqual([null, 600]);
+    expect(
+      [
+        { date: '2026-09-10', at: 540 },
+        { date: '2026-09-09', at: 900 },
+        { date: '2026-09-09', at: null },
+      ]
+        .sort(byDateThenTime)
+        .map((x) => `${x.date}/${x.at}`),
+    ).toEqual(['2026-09-09/null', '2026-09-09/900', '2026-09-10/540']);
   });
 
   it('reads the day in local time, not UTC', () => {
