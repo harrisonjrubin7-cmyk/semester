@@ -16,6 +16,7 @@
     "test:zones": "TZ=America/Chicago vitest run && TZ=Pacific/Kiritimati vitest run",
     "lint:labels": "node scripts/labels.mjs",
     "transcripts": "node scripts/transcripts.mjs",
+    "check:dock": "node scripts/dock.mjs",
     "check:university": "tsc -p tsconfig.university.json",
     "dev:university": "node --env-file=server/institution/.env server/institution/start.ts"
   },
