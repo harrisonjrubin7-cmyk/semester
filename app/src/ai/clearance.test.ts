@@ -37,7 +37,27 @@ describe('the assistant button', () => {
     expect(Number(strip![1])).toBeGreaterThanOrEqual(12 + 52 + 12);
   });
 
-  it('spends that strip under every screen that ends', () => {
-    expect(SHEET).toMatch(/\.scrollarea \{[^}]*padding-bottom: var\(--assistant-strip\)/s);
+  /*
+   * And spends it somewhere it is actually counted.
+   *
+   * This asserted `padding-bottom` on `.scrollarea` and passed while the
+   * reservation did nothing at all. `.pane-body` takes `height: 100%` to keep
+   * the percentage-height chain intact, so a screen taller than the window
+   * overflows it rather than sitting in the scroller's flow — and a scroll
+   * container's end padding is not applied below content that overflows a
+   * descendant. The rule was there, it computed 76px, and the space was
+   * absent: at the bottom of Study the last line sat under the button with no
+   * scroll left to bring it clear.
+   *
+   * Deleting the padding changed no measurement on any screen, which is what
+   * proved it dead. So both halves are pinned here: the reservation is a box
+   * after the content, and it is not padding on the scroller.
+   */
+  it('spends that strip under every screen that ends, where it is counted', () => {
+    expect(SHEET).toMatch(/\.pane-body::after \{[^}]*height: var\(--assistant-strip\)/s);
+  });
+
+  it('and not as padding on the scroller, which the overflow walks straight past', () => {
+    expect(SHEET).not.toMatch(/\.scrollarea \{[^}]*padding-bottom: var\(--assistant-strip\)/s);
   });
 });
