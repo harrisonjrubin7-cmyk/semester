@@ -169,7 +169,7 @@ export function Insights({
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.08em',
-                  opacity: 'var(--app-text-dim)',
+                  color: 'var(--app-dim)',
                 }}
               >
                 ASK

@@ -2936,7 +2936,9 @@ input[type='search'].input {
  * it was, so the outline on the target is the only thing that moves.
  */
 .movable.is-held {
-  opacity: var(--app-text-dim);
+  /* The row's own state, which is the one job an opacity is still for — the
+     tag and the coloured edge have to go with it. See `lib/dim.ts`. */
+  opacity: var(--app-row-dim);
 }
 
 .movable.is-over {
@@ -5927,7 +5929,7 @@ input[type='search'].input {
 }
 
 .deskhome-box-say {
-  opacity: var(--app-text-dim);
+  color: var(--app-dim);
 }
 
 /* `.deskhome-keys` and `.desktop-keys` drew a `⌘ K` chip in each of the two

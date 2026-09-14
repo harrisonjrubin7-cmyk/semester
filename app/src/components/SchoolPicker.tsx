@@ -88,7 +88,7 @@ export function SchoolPicker() {
           </div>
         )}
 
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', margin: '12px 0 4px', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', margin: '12px 0 4px', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
           Every question below is optional. Anything left alone stays switched off, and nothing here
           is permanent.
         </div>

@@ -387,7 +387,7 @@ function Alarms() {
       <div
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 'var(--app-text-dim)',
+          color: 'var(--app-dim)',
           margin: '7px 0 0',
         }}
       >

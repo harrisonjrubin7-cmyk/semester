@@ -185,7 +185,7 @@ export function Group({
             margin: `0 0 calc(5px * var(--density, 1)) ${SIDE}px`,
             fontSize: 'var(--type-xs)',
             fontWeight: 'inherit',
-            opacity: 'var(--app-text-dim)',
+            color: 'var(--app-dim)',
           }}
         >
           {foldable ? (
@@ -217,7 +217,7 @@ export function Group({
           style={{
             margin: `calc(7px * var(--density, 1)) ${SIDE}px 0`,
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 'var(--app-text-dim)',
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -307,7 +307,7 @@ function Label({ label, sub }: { label: ReactNode; sub?: ReactNode }) {
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 'var(--app-text-dim)',
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
             lineHeight: 1.4,
           }}
@@ -325,7 +325,7 @@ function Value({ children }: { children: ReactNode }) {
     <span
       style={{
         fontSize: 'calc(12.5px * var(--text-scale, 1))',
-        opacity: 'var(--app-text-dim)',
+        color: 'var(--app-dim)',
         maxWidth: '45%',
         overflow: 'hidden',
         textOverflow: 'ellipsis',

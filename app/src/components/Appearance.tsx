@@ -89,7 +89,7 @@ function Choice({
         style={{
           display: 'block',
           fontSize: 'var(--type-xs)',
-          opacity: 'var(--app-text-dim)',
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-1)',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',

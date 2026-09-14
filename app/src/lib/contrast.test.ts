@@ -400,12 +400,6 @@ describe('“Increase contrast”, which cannot be done in a media query', () =>
       expect(Number(loud['--app-row-dim']), `${g.id} --app-row-dim`).toBeGreaterThan(
         Number(plain['--app-row-dim']),
       );
-      // The same for secondary text, which is the other dimming that has to
-      // stay an opacity. It sits at 0.55 on a dark ground and at that
-      // ground's own `dimAlpha` on a light one, and this setting lifts both.
-      expect(Number(loud['--app-text-dim']), `${g.id} --app-text-dim`).toBeGreaterThan(
-        Number(plain['--app-text-dim']),
-      );
     }
   });
 
@@ -423,7 +417,6 @@ describe('“Increase contrast”, which cannot be done in a media query', () =>
       '--app-line-soft',
       '--app-track',
       '--app-row-dim',
-      '--app-text-dim',
     ]);
     for (const [name, value] of Object.entries(plain)) {
       if (moved.has(name)) continue;

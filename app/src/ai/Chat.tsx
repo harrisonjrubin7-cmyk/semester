@@ -440,7 +440,7 @@ const QUIET = {
   flex: 'none',
   fontSize: 'var(--type-xs)',
   letterSpacing: '0.1em',
-  opacity: 'var(--app-text-dim)',
+  color: 'var(--app-dim)',
 } as const;
 
 /** The separator between two of those. Decoration, so no reader hears it. */

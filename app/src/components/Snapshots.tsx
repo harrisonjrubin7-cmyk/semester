@@ -88,7 +88,7 @@ export function Snapshots() {
         </div>
 
         {list === null ? null : list.length === 0 ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {NONE_LINE}
           </div>
         ) : (
@@ -119,7 +119,7 @@ export function Snapshots() {
               >
                 <span style={{ fontSize: 'var(--type-base)' }}>
                   {reasonLabel(s.reason)}
-                  <span style={{ opacity: 'var(--app-text-dim)' }}> · {whenLine(s.at, now)}</span>
+                  <span style={{ color: 'var(--app-dim)' }}> · {whenLine(s.at, now)}</span>
                 </span>
                 <span
                   style={{

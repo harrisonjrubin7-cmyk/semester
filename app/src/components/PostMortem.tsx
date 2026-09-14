@@ -35,7 +35,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
             {doneLine(done, units.map((u) => unitName(u.name)))}
           </div>
         ) : (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {OFFER}
           </div>
         )}
@@ -124,7 +124,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
             style={{ ...chip(draft.kinds.includes(k.id)), textAlign: 'left', width: '100%' }}
           >
             <span style={{ display: 'block' }}>{k.label}</span>
-            <span style={{ display: 'block', fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-1)' }}>
+            <span style={{ display: 'block', fontSize: 'calc(10.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
               {k.blurb}
             </span>
           </button>

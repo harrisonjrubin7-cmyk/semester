@@ -570,7 +570,7 @@ function LettersTab() {
       <p
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 'var(--app-text-dim)',
+          color: 'var(--app-dim)',
           marginTop: 22,
           lineHeight: 1.55,
           textWrap: 'pretty',

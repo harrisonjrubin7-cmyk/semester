@@ -268,7 +268,7 @@ export function TabChooser() {
                       fontSize: 'calc(12.5px * var(--text-scale, 1))',
                     }}
                   >
-                    <span style={{ opacity: 'var(--app-text-dim)', display: 'flex' }}>
+                    <span style={{ color: 'var(--app-dim)', display: 'flex' }}>
                       <TabGlyph screen={d.screen} size={14} />
                     </span>
                     {/* The directory's own label, not the short one: there is

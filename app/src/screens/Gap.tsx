@@ -214,7 +214,7 @@ function Run({ win }: { win: GapWindow }) {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
-          opacity: 'var(--app-text-dim)',
+          color: 'var(--app-dim)',
           marginTop: 9,
         }}
       >

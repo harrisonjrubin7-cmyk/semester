@@ -259,7 +259,7 @@ export function ReviewSheet({
         <div
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 'var(--app-text-dim)',
+            color: 'var(--app-dim)',
             marginBottom: 'var(--sp-6)',
             lineHeight: 'var(--leading-normal)',
           }}

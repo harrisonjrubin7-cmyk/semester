@@ -216,7 +216,7 @@ export function Ahead() {
                 {p.item.title}
                 <span style={{ opacity: 0.5 }}> · {code(p.item.c)}</span>
               </span>
-              <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)' }}>
+              <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                 {p.minutes >= 60 ? `${Math.round((p.minutes / 60) * 10) / 10}h` : `${p.minutes}m`}
               </span>
             </button>
@@ -272,7 +272,7 @@ export function Ahead() {
                   flex: 'none',
                   width: 66,
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 'var(--app-text-dim)',
+                  color: 'var(--app-dim)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >

@@ -200,7 +200,7 @@ export function Credentials({
       <div
         style={{
           fontSize: 'var(--type-xs)',
-          opacity: 'var(--app-text-dim)',
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-4)',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',

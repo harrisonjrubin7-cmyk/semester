@@ -93,7 +93,7 @@ function EnrolledSchedule() {
           >
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 'var(--type-lg)' }}>{l.name}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {l.blurb}
               </span>
             </span>
@@ -166,7 +166,7 @@ function EnrolledSchedule() {
                   {c.lines.map((line) => (
                     <div
                       key={`${line.at}-${line.days.join('')}`}
-                      style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 3 }}
+                      style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 3 }}
                     >
                       {meetsLine(line)}
                       {line.room ? ` · ${line.room}` : ''}
@@ -184,7 +184,7 @@ function EnrolledSchedule() {
           >
             Add them to the semester
           </ActionButton>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 9, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 9, lineHeight: 'var(--leading-normal)' }}>
             They arrive with their timetable and no deadlines. YES knows when your classes meet and
             nothing about when your essays are due — that comes from the syllabus.
           </div>

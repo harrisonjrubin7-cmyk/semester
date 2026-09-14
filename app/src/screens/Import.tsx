@@ -578,7 +578,7 @@ export function Import() {
               type="button"
               className="bare"
               onClick={() => abort.current?.abort()}
-              style={{ fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)', letterSpacing: '0.1em', marginTop: 'var(--sp-5)' }}
+              style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', marginTop: 'var(--sp-5)' }}
             >
               STOP
             </button>
@@ -950,7 +950,7 @@ function Preview({
                 style={{
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'var(--type-sm)',
-                  opacity: 'var(--app-text-dim)',
+                  color: 'var(--app-dim)',
                   width: 54,
                   flex: 'none',
                 }}
@@ -1016,7 +1016,7 @@ function Preview({
           ? `Replace ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`
           : `Add ${m.course.code} — ${keeping} ${keeping === 1 ? 'date' : 'dates'}`}
       </ActionButton>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
         {replacing
           ? 'The changes above are what this replaces. Your ticks and your drill history stay where they are.'
           : 'You can add readings to it later, and everything you add flows into the cards, the quiz and the slides at once.'}

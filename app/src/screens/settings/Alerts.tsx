@@ -153,7 +153,7 @@ export function SettingsAlerts() {
                 <div
                   style={{
                     fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                    opacity: 'var(--app-text-dim)',
+                    color: 'var(--app-dim)',
                     marginTop: 9,
                     lineHeight: 'var(--leading-normal)',
                   }}

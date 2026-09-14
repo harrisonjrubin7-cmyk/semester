@@ -351,7 +351,7 @@ export function Runway() {
                   flex: 'none',
                   width: 58,
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 'var(--app-text-dim)',
+                  color: 'var(--app-dim)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >

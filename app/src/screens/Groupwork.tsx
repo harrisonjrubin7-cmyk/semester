@@ -259,7 +259,7 @@ export function Groupwork() {
               >
                 <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.35 }}>{g.name}</span>
                 {g.due ? (
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 3 }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 3 }}>
                     due {g.due}
                   </span>
                 ) : null}
@@ -327,7 +327,7 @@ export function Groupwork() {
             ) : null}
             {iAmIn && (
               <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 11, alignItems: 'center' }}>
-                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', flex: 'none' }}>Due</span>
+                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', flex: 'none' }}>Due</span>
                 <input
                   className="input"
                   type="date"
@@ -408,7 +408,7 @@ export function Groupwork() {
           {unclaimed(parts.map(asPart)).length > 0 && (
             <>
               <SectionLabel>Nobody has these</SectionLabel>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginBottom: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 The list a group actually has to divide.
               </div>
             </>
@@ -462,7 +462,7 @@ export function Groupwork() {
                     {p.title}
                     {p.due ? (
                       <span
-                        style={{ opacity: 'var(--app-text-dim)', color: isLate(p, now) ? 'var(--app-warn)' : undefined }}
+                        style={{ color: isLate(p, now) ? 'var(--app-warn)' : 'var(--app-dim)' }}
                       >
                         {' · '}
                         {p.due}

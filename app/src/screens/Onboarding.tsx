@@ -353,7 +353,7 @@ export function Onboarding() {
       <ActionButton
         onClick={() => dispatch({ type: 'finishOnboarding' })}
         tone="ghost" spacing="0.14em"
-        style={{ fontSize: 'var(--type-sm)', opacity: 'var(--app-text-dim)' }}
+        style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
       >
         Skip
       </ActionButton>

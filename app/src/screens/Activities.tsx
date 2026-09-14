@@ -228,7 +228,7 @@ function Row({ commitment }: { commitment: Commitment }) {
           />
           <span style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))', minWidth: 0 }}>{commitment.name}</span>
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-1)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
           {[kind.label, commitment.role, when, commitment.where].filter(Boolean).join(' · ')}
         </div>
       </div>
@@ -494,7 +494,7 @@ function FindThings() {
           >
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 'var(--type-lg)' }}>{l.name}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {l.blurb}
               </span>
             </span>
@@ -533,7 +533,7 @@ function FindThings() {
       {found.length > 0 && (
         <>
           <SectionLabel>Found {found.length} — check them</SectionLabel>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             An involvement page has no reliable shape, so this is a loose read. The kind beside each
             is a guess from the name and you can change it after adding.
           </div>
@@ -552,7 +552,7 @@ function FindThings() {
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{f.name}</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {[activityKind(guessKind(f.name)).label, f.role].filter(Boolean).join(' · ')}
                   </span>
                 </span>
@@ -586,7 +586,7 @@ function FindThings() {
               </div>
             );
           })}
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             They arrive with no hours and no meeting time, because an involvement page carries
             neither. Open one under Yours to say when it meets and what it costs you.
           </div>
