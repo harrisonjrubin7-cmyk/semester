@@ -117,3 +117,23 @@ describe('two controls in one frame never share a name', () => {
     expect(SIDE()).toContain("'App directory'");
   });
 });
+/**
+ * And the same fault outside the workspace: one glyph, two meanings.
+ *
+ * The feed's floating button drew a `Plus` that opened the syllabus importer
+ * while the header above it drew a `Plus` that opened the capture box — two
+ * of the same mark on one screen doing different things. The header's own
+ * note had already made the argument, about an earlier version of exactly
+ * this: a `+` whose meaning depends on the screen is "the one control whose
+ * meaning you can rely on" turned into one you have to check.
+ */
+describe('the + means one thing', () => {
+  it('leaves no second Plus on the screen the header draws one on', () => {
+    const app = read('src/App.tsx');
+    const pluses = [...app.matchAll(/<Plus size=\{\d+\} \/>/g)];
+    expect(pluses.length, 'one + in the chrome, and it is the capture box').toBe(1);
+    const at = app.indexOf('<Plus size=');
+    const opening = app.slice(0, at).split('<button').pop() ?? '';
+    expect(opening, 'and it opens the capture box').toContain("type: 'quickAdd'");
+  });
+});

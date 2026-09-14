@@ -1825,29 +1825,6 @@ export default function App() {
         </Suspense>
       </ScrollArea>
       {chrome.tabs && <TabBar />}
-      {chrome.fab && (
-        <button
-          type="button"
-          className="bare"
-          onClick={() => dispatch({ type: 'go', screen: 'import' })}
-          aria-label="Import a syllabus"
-          style={{
-            position: 'absolute',
-            right: 20,
-            bottom: 48,
-            width: 56,
-            height: 56,
-            background: 'var(--chrome)',
-            border: '1px solid rgba(255,255,255,.5)',
-            display: 'grid',
-            placeItems: 'center',
-            color: 'var(--chrome-ink)',
-            boxShadow: 'var(--glow)',
-          }}
-        >
-          <Plus size={24} />
-        </button>
-      )}
     </div>
   );
 }

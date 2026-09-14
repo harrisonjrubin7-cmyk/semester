@@ -45,7 +45,7 @@ describe('the navigation rule', () => {
             doubled.push(
               `${nav} on ${screen} (${wide ? 'wide' : 'phone'}): ${
                 Object.entries(chrome)
-                  .filter(([k, v]) => v && k !== 'fab' && k !== 'sidebar')
+                  .filter(([k, v]) => v && k !== 'sidebar')
                   .map(([k]) => k)
                   .join(' + ')
               }`,
@@ -130,12 +130,29 @@ describe('the navigation rule', () => {
     }
   });
 
-  it('puts the import button on the feed’s home screen and nowhere else', () => {
-    expect(chromeFor('feed', 'home', false).fab).toBe(true);
-    expect(chromeFor('feed', 'courses', false).fab).toBe(false);
-    expect(chromeFor('feed', 'home', true).fab).toBe(false);
-    for (const nav of MODES.filter((n) => n !== 'feed')) {
-      expect(chromeFor(nav, 'home', false).fab, nav).toBe(false);
+  /*
+   * There was a test here for the import button on the feed's home screen.
+   *
+   * The button is gone — it drew a `Plus` under a header that draws a `Plus`,
+   * two of the same mark on one screen meaning different things, and the note
+   * where `fab` used to be in `chrome.ts` has the argument. What replaces the
+   * test is the opposite claim, held here because this is the file that knows
+   * every combination: `Chrome` is now navigation and nothing else, so every
+   * member of it is counted by the invariant rather than exempt from it.
+   */
+  it('has no member that is not a navigation', () => {
+    for (const nav of MODES) {
+      for (const wide of [true, false]) {
+        const c = chromeFor(nav, 'home', wide);
+        // `sidebar` is the wide expression of `desk` rather than a navigation
+        // of its own — the one documented exception, and it cannot be on
+        // without `desk`, which is what makes it an expression and not a
+        // fifth thing.
+        expect(Object.keys(c).sort(), `${nav} ${wide}`).toEqual(
+          ['desk', 'rail', 'shelves', 'sidebar', 'tabs'],
+        );
+        if (c.sidebar) expect(c.desk, `${nav} ${wide}`).toBe(true);
+      }
     }
   });
 });
