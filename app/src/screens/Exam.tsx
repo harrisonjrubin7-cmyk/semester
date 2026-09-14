@@ -9,7 +9,8 @@ import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
-import { ask, configured } from '../lib/claude';
+import { ask } from '../lib/claude';
+import { configured } from '../lib/assistant';
 import { download, shareOut } from '../lib/deliver';
 import { cardsFrom, missedFrom, pctOf } from '../lib/sitting';
 import {

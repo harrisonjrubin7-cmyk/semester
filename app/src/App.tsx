@@ -1,5 +1,6 @@
-import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from './state/store';
+import { useBottomChrome } from './lib/bottomchrome.hook';
 import { currentLook } from './state/shape';
 import {
   AppsIcon,
@@ -168,7 +169,7 @@ import { Fresh } from './components/Fresh';
 import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
-import { provider } from './lib/claude';
+import { provider } from './lib/assistant';
 import type { Screen } from './lib/types';
 
 /**
@@ -870,38 +871,10 @@ function Header({
   );
 }
 
-/**
- * The tab bar's real height, written to the root as `--tabbar-h`.
- *
- * Nothing else in the app needed to know it — the bar is a flex child and
- * everything above it just takes the remaining space. The assistant's button
- * is fixed to the viewport, so it does need to know, and the height is not a
- * constant: the bar grows with the text-size and density settings, and a
- * hard-coded number sits on top of it at the largest one.
- */
-function useTabBarHeight(ref: React.RefObject<HTMLElement | null>) {
-  useLayoutEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const write = () => {
-      document.documentElement.style.setProperty('--tabbar-h', `${Math.round(node.getBoundingClientRect().height)}px`);
-    };
-    write();
-    const watch = new ResizeObserver(write);
-    watch.observe(node);
-    return () => {
-      watch.disconnect();
-      // Left set would strand the button above a bar that is no longer there
-      // — the fullscreen screens hide it entirely.
-      document.documentElement.style.removeProperty('--tabbar-h');
-    };
-  }, [ref]);
-}
-
 function TabBar() {
   const { state, dispatch, school } = useStore();
   const bar = useRef<HTMLElement>(null);
-  useTabBarHeight(bar);
+  useBottomChrome(bar);
   // The seven that shipped are still the default; this is whichever seven the
   // student arranged, minus anything the school or the role has since taken
   // off the table — see `barFor`. `litTab` rather than `rootOf` because a

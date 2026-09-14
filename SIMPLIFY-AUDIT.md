@@ -1,3 +1,499 @@
+# One app — the tenth pass: read but never written, and the rest of the walkers
+
+Against `main` at `f0a2368`. No code in this commit.
+
+**60 destinations**, unchanged. 79 screen files, 132 components. Fifty-two
+commits since the ninth pass and none of the growth is duplication.
+
+## Null result: nothing is read but never written
+
+The mirror of the eighth pass. That one asked which state is **written and
+never read** and found four, one of which was three broken buttons. This asks
+the other side: **which state is read but never written** — a field pinned at
+its default for the life of the app, a feature that cannot turn on.
+
+**None.** All 184 fields of `Persisted` and `Ephemeral` are written somewhere.
+
+### The census was wrong three ways first, and this time that was caught
+
+The first cut returned **nineteen**. Every one was a false positive, for three
+distinct reasons, and finding them before reporting them is the ninth pass's
+lesson working rather than being re-learned:
+
+1. **Eighteen are written by a spread.** `setLook` does
+   `{ ...state, ...readLook({ ...currentLook(state), ...action.look }) }`, so
+   `ground`, `textSize`, `density` and the rest of the `Look` are assigned
+   wholesale and never named in a reducer. A rule looking for `field:` sees
+   nothing.
+2. **One is written by assignment, not a key.** `lib/migrate.ts` ends with
+   `out.schemaVersion = SCHEMA`. A rule that only knows object literals cannot
+   see a statement.
+3. **And it was looking in the wrong place anyway** — the census scanned
+   `state/` for writers, and `migrate.ts` is in `lib/`.
+
+Three shapes of write, one of which the eighth pass's own guard also assumes:
+`state/readstate.test.ts` calls a write "a key in an object literal". That is
+safe there, because it only ever asks about *reads* — but it is worth knowing
+that the sentence is not the whole truth about this codebase.
+
+## H1 — the fourteen walkers, and the three that are not the same job
+
+The ninth pass's G2 merged six directory walks into `sources()` and recorded
+that counting by *name* had missed the rest. Counted by shape — a `readdirSync`
+loop that recurses — fourteen private walkers remain beside the shared one.
+
+**Twelve are the same job** and differ only in what `sources()` already takes
+as arguments:
+
+| File | Wants |
+| --- | --- |
+| `a11y/dragging.test.ts` | `.ts` + `.tsx`, no tests |
+| `a11y/landmarks.test.ts` | `.tsx`, no tests |
+| `a11y/modal.test.ts` | `.tsx`, no tests |
+| `a11y/tellings.test.ts` | `.tsx` |
+| `components/marks.test.ts` | `.tsx` |
+| `isolation.test.ts` | `.ts` + `.tsx` |
+| `lib/credits.test.ts` | `.ts` + `.tsx` |
+| `state/readstate.test.ts` | `.ts` + `.tsx` |
+| `styles/fields.test.ts` | `.tsx`, no tests |
+| `styles/gutter.test.ts` | `.tsx`, no tests |
+| `styles/inset.test.ts` | `.tsx` |
+| `styles/taps.test.ts` | `.tsx` |
+
+**Two are not**, and this is the half the ninth pass guessed at rather than
+read:
+
+- `lib/counts.ts` walks `public/` for **`.mp3`**. It is app code counting
+  lesson audio, not a census reading source. Nothing about it belongs in a
+  walker built for rules.
+- `styles/deadcss.test.ts` keeps **every file, whatever its extension** — its
+  haystack has to include `.css` and `.html`, because a class can be written
+  anywhere. `sources()` filters by extension by definition, so serving this
+  would mean an "everything" mode that makes the extension argument a lie.
+
+### Why this is worth doing at all
+
+Not "fewer copies of twenty lines". Every one of the twelve is a census that
+asserts an empty offender list, which is exactly the shape G1 found passing
+vacuously when its walk returns nothing — and none of the twelve has the throw,
+because none of them uses the walker that has it. Converting them is how G1's
+protection reaches the other twelve rules rather than just the ten it started
+with.
+
+## To do
+
+| # | Row | Verdict |
+| --- | --- | --- |
+| H1 | eleven private walkers, eleven censuses without the throw | **Merge into `sources()`** |
+| — | `lib/counts.ts`, `styles/deadcss.test.ts`, `isolation.test.ts` | **Keep, with the reason written down** |
+
+### H1, done — eleven, and the table above said twelve
+
+Retired: `a11y/dragging`, `landmarks`, `modal`, `tellings`,
+`components/marks`, `lib/credits`, `state/readstate`, `styles/fields`,
+`gutter`, `inset`, `taps`. Each is now one line naming what it reads —
+`sources(dir, { ext: ['.ts', '.tsx'], tests: false })` and the like — over the
+one walker.
+
+**`isolation.test.ts` is the third exception, not the twelfth conversion.** It
+keeps *only* `.test.` files and returns paths relative to the repo root, both
+of which `sources()` would have to grow a mode for. A `tests: 'only'` and a
+`relative:` option would make the API about its callers rather than about
+walking, which is the shape `lib/counts.ts` and `styles/deadcss.test.ts` were
+already excluded for.
+
+**And `tellings` was in the table on the wrong row.** It was listed as keeping
+tests; it excludes them, like the other three a11y rules. The characterisation
+grepped for markers rather than reading the bodies, and printing all fourteen
+bodies before touching any of them is what caught both this and `isolation`.
+
+That is the fourth near-miss in two passes, and the first two that cost
+nothing: they were found *before* the conversion rather than by the
+typechecker afterwards. **The ninth pass's lesson is cheap to apply and
+expensive to skip** — read the thing, do not grep for a marker that stands in
+for it.
+
+### What this was for
+
+Not fewer copies. The walk was emptied again, and **all eleven files now
+fail**, where every one of them would have passed before: `sources()` throws
+on a walk that finds nothing, and these eleven censuses now inherit that
+instead of quietly reporting no offenders. G1 protected ten rules; it protects
+twenty-one.
+
+---
+
+# One app — the ninth pass: the guards that cannot fail
+
+Against `main` at `7cddea8`. No code in this commit.
+
+**60 destinations**, unchanged. **79 screen files, 131 components** — the app
+has roughly doubled in components since this command's own description was
+written, and none of that growth is duplication this pass can find.
+
+Two axes, both new, one of them a real null result.
+
+## Null result: no action is handled by two slices
+
+`state/reducer.ts` runs `SLICES` in order and takes the first non-null answer,
+so two slices handling one action would mean the second silently never runs —
+"one home per job", applied to the reducer. Every `case` in all ten slices,
+grouped by action: **no action appears twice.** Recorded because a null result
+that was actually measured is worth more than an axis nobody checked, and
+because this one is a standing hazard: `writeMail` moved between slices in F1
+and the move was only safe because of this property.
+
+## G1 — five of the ten source-scanning guards cannot tell "no offenders" from "nothing scanned"
+
+This repo holds a great deal of its design in census tests: rules that walk the
+source and assert the offender list is empty. Thirty of them. Ten share one
+walker, `sources()` in `styles/rules.ts`.
+
+A census of that shape has a specific failure: **if the walk returns nothing,
+the offender list is empty and the test passes.** It passes loudly, in green,
+having checked nothing.
+
+This is not hypothetical here. It has already happened twice, and both are
+recorded above in this file:
+
+- `lib/onegraph.test.ts` (E1) used `sources()` — which walks `.tsx` only — to
+  scan `lib/`, where almost nothing is `.tsx`. The rule was vacuous and passed
+  against a deliberately planted second compiler.
+- `components/notice.test.ts` (E3) could not see a class-based copy of the box
+  it guards, which is a narrower version of the same thing: a rule whose input
+  does not contain what it is looking for.
+
+### Measured, not reasoned about
+
+`sources()` was replaced with a function returning `[]` and the ten were run.
+
+| Caught it | Passed vacuously |
+| --- | --- |
+| `components/notice.test.ts` | `lib/header.test.ts` |
+| `components/onetablist.test.ts` | `lib/onecontrol.test.ts` |
+| `lib/onefile.test.ts` | `lib/onehome.test.ts` |
+| `lib/onegraph.test.ts` | `lib/onelook.test.ts` |
+| `lib/profile.test.ts` | `lib/onframe.test.ts` |
+
+**Five of ten.** The five that caught it did so by accident of having a
+companion assertion — "the component still exists to be used" — rather than by
+design; none of them asserts that the *scan* found anything. The five that
+passed are the app's central structural rules: one home per screen, one
+control per job, one look, one frame.
+
+### The fix is one line, not five
+
+`sources()` should throw when a directory yields no `.tsx` file. Every call
+site passes `src`, `src/components` or `src/screens`, each of which certainly
+contains `.tsx` files, so an empty result is *always* a bug — a wrong path, a
+moved directory, or the E1 mistake of pointing a `.tsx` walker at `lib/`.
+Throwing converts a silent green into a loud red at the one place all ten
+share, and protects the eleventh before it is written.
+
+Per-test floors would work too and are what `state/readstate.test.ts` does.
+They are the wrong shape here: five edits that each have to be remembered,
+against one that cannot be forgotten.
+
+## G2 — six directory walkers, five of them private copies
+
+Found while checking G1's blast radius. The same twenty lines — recurse a
+directory, keep the source files, read them — exist six times:
+
+| Where | Keeps |
+| --- | --- |
+| `styles/rules.ts` (shared) | `.tsx` |
+| `a11y/labels.ts` | `.tsx` |
+| `a11y/motion.test.ts` | paths only |
+| `lib/zips.test.ts` | paths only |
+| `lib/erase.test.ts` | paths only |
+| `styles/print.test.ts` | `.tsx`, minus tests |
+| `lib/onegraph.test.ts` | `.ts` **and** `.tsx` |
+
+That last one is mine, written in E1 precisely because the shared walker could
+not see `.ts`, and its own comment says so. **That is the finding**: the copies
+exist because the shared one answers exactly one question and everybody else
+needed a slightly different one. A walker taking the extensions it should keep
+would have absorbed all six.
+
+Not merged in this pass. It is a refactor across seven files whose only
+benefit is fewer copies of twenty lines, and G1 is the row with a bug behind
+it. Recorded so the next pass has it, with the note that **G1 must land
+first** — throwing on empty is worth more than tidying the things that walk.
+
+## To do, in order
+
+| # | Row | Verdict |
+| --- | --- | --- |
+| G1 | `sources()` returns nothing, three guards pass anyway | **Throw on empty** |
+| G2 | six directory walkers | **Merge — later, after G1** |
+
+### G1, done — and the census above is wrong twice
+
+`sources()` throws when a directory yields no `.tsx`. Every caller passes
+`src`, `src/components`, `src/screens`, or a temporary tree it has just
+written a `.tsx` into, so an empty result is always a wrong path or a broken
+walk — a bug in the test, not a clean bill of health for the app. Re-running
+the experiment with the walk emptied, **all eight now fail**, where five did.
+
+**Eight, not ten.** The table above counted tests that *import from*
+`styles/rules`, and `lib/header.test.ts` and `lib/onframe.test.ts` import only
+`withoutComments`. They never call the walker: they read named files with
+`readFileSync`, which throws on a missing one. So the shared-walker set is
+eight, and the number that passed vacuously was **three** — `onecontrol`,
+`onehome`, `onelook` — not five.
+
+That is the second time in two passes that a census of mine over-counted by
+reading the wrong thing: F1's dispatcher count missed a call written
+`type:'writeMail'` without the space, and this one counted an import as a use.
+**A census that counts imports is counting a different question than one that
+counts calls**, and the difference is invisible until something forces the
+issue — the typechecker there, the throw here.
+
+**The proposed fix was also justified wrongly, and the code now says so.** The
+row claimed throwing would have caught E1, "the mistake of pointing a `.tsx`
+walker at `lib/`". It would not: `lib/` holds two `.tsx` files, so `sources()`
+returned two, the census ran against two files out of two hundred, and it
+passed against a planted second compiler. A throw on *nothing* cannot see a
+walk that returns *too few*.
+
+That case needs a walker told which extensions to keep — which is G2. So G2 is
+not the tidying this pass called it. It is the other half of this row, and the
+note on `sources()` says as much where somebody will read it.
+
+### G2, done for six — and the row was scoped by a name, not by the job
+
+`sources()` takes `ext` and `tests` now, defaulting to what it did before, so
+nothing that already called it changed. Six copies are retired:
+
+| Was | Now |
+| --- | --- |
+| `a11y/labels.ts` | the shared one — it was character-for-character identical |
+| `a11y/motion.test.ts` | `sources(dir, { ext: ['.ts', '.tsx'], tests: false })` |
+| `lib/zips.test.ts` | the same, and it was identical to `erase`'s |
+| `lib/erase.test.ts` | the same |
+| `styles/print.test.ts` | `sources(dir, { tests: false })` |
+| `lib/onegraph.test.ts` | `sources(dir, { ext: ['.ts', '.tsx'] })` |
+
+The last is the one that matters: E1's mistake — a census needing `lib/` and a
+walker that could only see `.tsx` — is an argument at the call site now, where
+a reader sees which files the rule actually reads. Re-verified by planting a
+second compiler in `lib/` and watching the rule name it, because rewriting
+that particular rule without re-running it against its own fault would be the
+joke this file has already told three times.
+
+`a11y/labels.ts` needed one thing worth writing down: `scripts/labels.mjs`
+loads it through a bare `await import()`, so Node resolves it, and Node ESM
+guesses no extensions. The import is `'../styles/rules.ts'`, with the
+extension, and `npm run lint` is what proves it.
+
+**The row said six walkers. Counted by shape rather than by name, there are
+fourteen more.** The census found the ones whose function was *called*
+`sources`; a `readdirSync` loop that recurses is the actual shape, and it
+appears in `a11y/dragging`, `landmarks`, `modal`, `tellings`,
+`components/marks`, `isolation`, `lib/credits`, `styles/fields`, `gutter`,
+`inset`, `taps`, `lib/counts`, and — with no more excuse than anyone else —
+`styles/deadcss` and `state/readstate`, both of which are mine from passes
+seven and eight.
+
+Not converted here, and not for lack of time: they are a second row, and at
+least one is not the same job at all — `lib/counts.ts` walks `public/` for
+lesson audio, not source for rules. Doing them needs the reading that this
+row's census skipped.
+
+**Three miscounts in one pass, all the same mistake.** F1 counted dispatchers
+by one spelling of a literal. G1 counted tests by their imports rather than
+their calls. G2 counted walkers by their name rather than their shape. Each
+time the census asked a question that was *nearly* the real one, and each time
+the difference was invisible until something forced it — the typechecker, the
+throw, and a grep for the shape. **The lesson this file already carries is
+about checks that have not been run; this pass adds its sibling: a census is a
+question, and asking a near-miss of the question you meant returns a confident
+wrong number.**
+
+---
+
+# One app — the eighth pass: state written and never read
+
+Against `main` at `0aa769c`. No code in this commit.
+
+**60 destinations**, unchanged. Routes per destination re-checked and
+unchanged. The previous seven passes have taken the axes this command names —
+screen overlap, route count, duplicated controls, duplicated implementations,
+shared components — and this one deliberately does not re-walk them. It asks a
+question none of them could answer, because each of them reads what the code
+*does* and this one asks what the code's results are *for*:
+
+> Which pieces of state are written and never read?
+
+## Why no earlier census could see this
+
+A control census reads `set*` and finds the screens that dispatch it — and
+finds these, because they *are* dispatched. An implementation census reads what
+a new file does against what an old one already did — and finds nothing,
+because there is only one implementation. A route census counts arrivals, and
+these all arrive.
+
+Every one of those asks about the write. A field's deadness lives at the other
+end: the reducer case is correct, the action is typed, the value is stored, and
+**nothing ever asks for it back**. Nothing throws, nothing fails a type check,
+no pixel moves. It is the same shape as the dead CSS in E3b one layer up, and
+it has the same symptom, which is none.
+
+## The census
+
+Every field of `Persisted` and `Ephemeral` in `state/shape.ts` — 189 — against
+every reference outside `state/` itself.
+
+One false positive, worth recording because it is the shape of the mistake:
+`removedCourses` came back with no reference, and it is thoroughly alive — a
+tombstone list that `state/slices/library.ts` reads on every import so a course
+you deleted does not walk back in. Its readers are *in* `state/`, which the
+filter excluded. A census that excludes a directory has to be asked whether
+that directory is where the readers live.
+
+## The four
+
+| Field | Action | Dispatched? | Read? |
+| --- | --- | --- | --- |
+| `calTab` | `setCalTab` | no | no |
+| `meGroup` | `setMeGroup` | no | no |
+| `loadStep` | `setLoadStep` | no | no |
+| `mailSeed` | `writeMail` | **yes — three places** | **no** |
+
+The first three are closed loops with nothing attached at either end: a field,
+a default, a reducer case and a member of the action union, all four of them
+maintained, none of them reachable. **Cut.**
+
+### `mailSeed` is not dead state. It is three buttons that do not work.
+
+`writeMail` is dispatched from three live controls:
+
+- `components/AskForTime.tsx` — asking for more time on a deadline
+- `components/DropBy.tsx` — office hours
+- `screens/Courses.tsx:571` — asking a question about a course
+
+Each one navigates to `mail` and stores a seed: the purpose, the course, the
+recipient, the incoming message, and the deadline the mail is about.
+`screens/Mail.tsx` never reads it. Mail opens its composer from a *different*
+action, `composeMail`, which carries a `draft` — and `writeMail` does not set
+one, so pressing any of those three buttons lands you on the mailbox with **no
+composer open at all**, let alone a filled one.
+
+The comment on the field says exactly what was intended, and is the reason this
+row matters more than its line count:
+
+> *Carried so an email opened from a deadline arrives with that deadline
+> already named. Naming the assignment and its date is most of what turns a
+> vague email into an answerable one, and re-picking it from a list of
+> thirty-eight is the step at which people gave up.*
+
+The feature was designed against a known failure, and the failure is what
+ships. This is the same class as #252's "five controls that did nothing" and
+#233's two `+` glyphs — a control whose meaning you cannot rely on — arrived at
+from the opposite direction.
+
+**Merge**, not cut: `writeMail` should build a `composeMail` draft from the
+seed and open the composer, and `mailSeed` should stop existing as a separate
+fact. Two actions that both mean "start writing an email" is the duplication
+this command exists to remove; that they disagree about whether the composer
+opens is the bug it caused.
+
+## What this pass deliberately leaves
+
+**Shared components, recounted.** `EmptyState` 23 files, `Segmented` 35,
+`TabList` 11, `Notice` 9 — all up, none complete. Fourteen files still write
+their own "nothing here yet" line. **Not a row**, and the reason is E3's
+lesson: most of those fourteen are one-line inline statuses inside a populated
+screen, not empty screens, and `EmptyState`'s own note says the `action` is its
+point. Converting a status line into a component with an action would be
+following the name again.
+
+**`industry.css`'s seventeen unused classes**, for the reason in E3b: a design
+system's vocabulary is meant to be wider than today's usage.
+
+## To do, in order
+
+| # | Row | Verdict |
+| --- | --- | --- |
+| F1 | `mailSeed` / `writeMail` — three controls that open nothing | **Merge into `composeMail`** |
+| F2 | `calTab`, `meGroup`, `loadStep` — closed loops | **Cut** |
+| F3 | a guard so write-only state cannot come back | **Add** |
+
+F1 first: it is a bug, and the other two are tidying.
+
+### F1, done — and the census undercounted it
+
+`writeMail` carries a `Partial<MailDraft>` now and the mailbox slice opens a
+composer on it. `mailSeed` is gone: the field, its default, and the four loose
+payload members of the action. `draftFor` in `lib/mail.ts` is the one place
+that turns a purpose, a course and a deadline into a draft, so the callers do
+not each grow their own copy — they are the ones holding the catalogue the
+reducer cannot see, which is why the conversion happens at the call and not in
+the reducer.
+
+The case moved from `slices/navigate.ts` to `slices/mailbox.ts`, beside the
+`composeMail` it is now a variant of, and both go through one `started()`
+helper. Two actions that both mean "start an email" differ in exactly one
+thing — whether the app moves to the mailbox first — and that is now the only
+difference in the code.
+
+**There were four dispatchers, not three.** `components/CourseHub.tsx` has a
+fourth, and the census missed it because it is written `type:'writeMail'`
+without the space, in the dense style the ported files use, while the grep
+asked for `type: 'writeMail'`. The typechecker found it the moment the action
+changed shape — which is the useful part: **a census over source text is only
+as good as its spelling, and this repo has two spellings.** Earlier rows in
+this file searched both forms; this one did not, and the count in the table
+above is wrong by one.
+
+**The suite passed on the broken version**, which is why this shipped at all.
+Nothing asserted what happened *after* the action, so the reducer was correct
+in the sense that it did what it said — and what it said had no reader.
+`slices/writemail.test.ts` asserts the end state a person would see: a
+composer open, on a draft, with "ECON 1020 — Problem Set 4" in the subject.
+Checked by restoring the old reducer and watching five of its six cases fail;
+the one that still passed is "goes to the mailbox", which is the only thing
+the old code did right.
+
+### F2 and F3, done — and F3 could not land without F2
+
+`calTab`, `meGroup` and `loadStep` are gone: the field, the default, the
+reducer case and the member of the action union, four places each. Nothing
+dispatched them and nothing read them, so nothing else changes.
+
+They had to go as part of F3 rather than after it, because the guard is a rule
+about the whole state and three known offenders would have failed it on the
+first run. A guard that lands with an allowlist of its own findings is a guard
+nobody trusts.
+
+**`state/readstate.test.ts` asks the question no other check asks.** The
+reducer was correct, the action was typed, the value was stored — and `tsc` is
+satisfied by a field that is *assigned*, because being read is not part of what
+a type says. Nothing threw and the suite passed on the broken version. So the
+rule is: **is there a reader at the other end?**
+
+Reads and writes are told apart exactly rather than by heuristic. A write is a
+key in an object literal — the declaration, the default, or
+`{ ...state, calTab: action.tab }` — and a read is a member access,
+`state.calTab`, or a name pulled out of `= state`. The colon is what makes a
+key a key, and that is the whole distinction.
+
+185 fields, none of them write-only. Verified the way this file now insists
+on: a field was planted with a declaration and a default and no reader, and
+the rule named it.
+
+**One claim in that test was wrong when written, and is corrected in it.** The
+note said both halves of the read rule were needed, citing the calendar's
+`calYear`, `calMonth` and `calSource` as destructured-and-nothing-else.
+Deleting the destructure half left the test green — all three are
+member-accessed elsewhere too. The half is kept, because the field that is
+destructured and nothing else is the false positive this rule cannot afford,
+but the note now says it catches nothing today and that this was measured
+rather than assumed. *Writing a justification for a rule is not the same as
+checking it, and this file is four rows deep in that lesson.*
+
+---
+
 # One app — the seventh pass, run three times over
 
 Three audits of this name were written at the same time, on three branches, by
@@ -2649,6 +3145,131 @@ whose app it is, not a fresh reading of `Courses.tsx`.
 
 What held through all four turns is still the only part that was never in
 dispute: whatever the grade table is, it is not two things at once.
+
+---
+
+## 7. The assistant's button, and the sixty screens it rests on
+
+An axis neither half of this audit looks at. A and B both ask which *markup*
+repeats; this asks which markup **collides** — specifically with the one
+control that is not drawn by any screen and appears on all of them, the
+assistant's floating button (`ai/Assistant.tsx`).
+
+The button lifts by its own height when something tappable is beneath it, up
+to twice. Whether that is enough is not a question a unit test can answer:
+jsdom has no layout, so `elementsFromPoint` — the whole mechanism — does not
+exist there, and `ai/dock.test.ts` can only check which points get asked.
+The answer has to be measured in a browser, and this is that measurement.
+
+### The instrument
+
+Chromium at 402×874, all 60 destinations in `lib/nav.ts`, 2.6s per screen so
+the lift's own timers settle. For each visible control in `main`, its overlap
+with the button's resting rect as a fraction of the control's own area.
+
+The table below is one run, on the production build at `b5000de`. The count of
+screens *touching* moves with the content — three screens left it and one
+gained a second hit between that commit and the one before it, on changes that
+had nothing to do with the assistant — so it is the last two rows that are the
+claim, and they are what the script exits non-zero on.
+
+Three corrections to the instrument are worth more than the numbers, because
+each produced a confident wrong answer first. Two are below; the third is the
+padded tap target, which needs the census's own result to explain and is at
+the end of this section.
+
+- **Matching the button by its label caught something else.** `aria-label^="Ask
+  about"` also matches Progress's in-content "Ask about: …" affordance, so that
+  screen was measured against itself and reported as 100% covered. The button
+  is `button[aria-keyshortcuts="a"]` with `position: fixed`.
+- **Laid out is not the same as on screen.** Chrome gives content inside a
+  *closed* `<details>` a real `getBoundingClientRect` — non-zero, correctly
+  positioned, and invisible. On `study` that is 14 of 50 "controls", among them
+  `StudyJournal`'s course `<select>`, which the first run reported as covered
+  with its centre blocked. Nobody can see it: `details.open` is `false` and
+  `checkVisibility()` is `false`. The filter is `checkVisibility()`, not a
+  non-zero rect.
+
+### What it found, after all three
+
+| | |
+| --- | --- |
+| Destinations swept | 60 |
+| Button drawn | 57 — the other three are `FILLS` in `components/shell/exempt.ts` |
+| Touching any visible control | 27 |
+| Covered ≥50% (the rule's own threshold) | **0** |
+| Centre of a control unreachable | **0** |
+| Closest to the threshold | `links` EDIT at 48%, and see below |
+
+So the lift works. Every remaining overlap is a full-width row or a wide
+button with a corner clipped, which is the case `tappable()`'s proportional
+rule was written to allow: a row you can still tap has lost nothing you
+needed.
+
+### The worst of them, and a third correction to the instrument
+
+`links` draws an EDIT button at the tail of each row, 27×17. It is the closest
+thing in the census to a collision, and getting a number out of it took three
+goes.
+
+**27×17 is not what a finger aims at.** The button carries `.tap-y`, so its
+real target is the 27×44 `::after` overlay `styles/app.css` describes — the
+mark stays put and the *target* grows to 44px in the axis that has room. The
+first measurement read `getBoundingClientRect()` and so measured a different
+element than the one `elementsFromPoint` finds.
+
+**Padding it does not always help the fraction.** Measured on the border box
+the lower EDIT is 41% covered; measured on the target it is **48%**, because
+the button sits above it and the padding reaches up into the button. Higher,
+not lower, and two points off the threshold — the nearest miss in the app.
+
+**And a circle is not its bounding box.** Sampled on a 1px grid, 65% of that
+target is actually reachable: 35% covered, not 48%. The assistant is
+`border-radius: 50%` and `tappable()` compares rectangles, so its arithmetic
+claims about a fifth of the button's area that the button does not occupy.
+
+The direction of that error is the useful part. It over-reports coverage, so
+the rule lifts a little sooner than it strictly must, and a control the
+arithmetic calls half covered is less than half covered in the hand. That is
+the safe side of the threshold, and it is why nothing here is worth changing:
+correcting it would cost every probe a distance calculation to make the button
+*less* willing to move out of the way.
+
+### Verdict · **no change**
+
+Sixty screens, and the lift is right on all of them. `study` is recorded by
+name because it was reported as broken before it was checked: the select that
+finding named is inside a collapsed `<details>`, and the button rests clear of
+everything visible on that screen.
+
+The honest summary of this section is that it changed no screen. That is the
+result — the rule in `tappable()`, its 50% threshold and its two-lift cap were
+arrived at by measurement once already, and measuring again at sixty screens
+agrees with them.
+
+What it leaves behind is the instrument, committed as `app/scripts/dock.mjs`
+for the reason `scripts/baseline.mjs` gives about its pictures: a number
+nobody can regenerate is a number nobody can argue with. All three failure
+modes above are guarded in it rather than remembered, and it exits non-zero on
+anything half covered or with its centre blocked, so the next person to ask
+this question runs
+
+    npm run build && node scripts/dock.mjs
+
+rather than spending an afternoon re-discovering that a closed `<details>`
+has a rect.
+
+It is run by hand rather than by CI, and deliberately has no `check:` entry in
+the scripts block — `lib/ci.test.ts` holds the rule that a script named that
+way must have a workflow step, and it failed this one for exactly the right
+reason. A browser download and a sixty-screen walk on every pull request is
+`scripts/baseline.mjs`'s trade, already made once in this repo and made the
+same way: a script that needs a real browser is a before-a-release job, and a
+scripts-block entry that promises otherwise is the promise `ci.test.ts` exists
+to stop.
+
+---
+
 ## Appendix — the first pass, resolved
 
 Run at `ac5a2c8` against 59 destinations. Kept because the verdicts still hold

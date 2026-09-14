@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DESKTOP, DESKTOP_AT, TABLET_AT, WIDE, tierFor } from './media';
+import { DESKTOP, DESKTOP_AT, HANDHELD, TABLET_AT, TALL_AT, WIDE, tierFor } from './media';
 
 /**
  * The three layouts, and the one thing that can break them silently.
@@ -36,6 +36,46 @@ describe('the three layouts', () => {
   it('writes the same two numbers into the queries the components read', () => {
     expect(WIDE).toBe(`(min-width: ${TABLET_AT}px)`);
     expect(DESKTOP).toBe(`(min-width: ${DESKTOP_AT}px)`);
+  });
+
+  it('keeps a phone on its side a phone, however wide it is', () => {
+    // The widest phone there is, lying down: an iPhone 15 Pro Max is 932pt
+    // across in landscape — wider than an iPad mini is upright — and width
+    // alone handed it the tablet layout and the rail with it.
+    expect(tierFor(932, true)).toBe('phone');
+    expect(tierFor(1194, true)).toBe('phone');
+    // And the same widths held by anything that is not short: the exception
+    // is the pair of conditions, never the width on its own.
+    expect(tierFor(932)).toBe('tablet');
+    expect(tierFor(1194)).toBe('desktop');
+  });
+
+  it('puts the boundary in the gap between a phone and a tablet, not on a device', () => {
+    // Nothing that holds a rail is shorter than this on its shortest side,
+    // and no phone is taller than it on its shortest side, so the number can
+    // move within the gap without a device changing layout underneath it.
+    const phonesOnTheirSide = [375, 390, 402, 412, 430];
+    const tabletsOnTheirSide = [744, 810, 834, 1024];
+    for (const h of phonesOnTheirSide) expect(h).toBeLessThan(TALL_AT);
+    for (const h of tabletsOnTheirSide) expect(h).toBeGreaterThanOrEqual(TALL_AT);
+  });
+
+  it('agrees with the stylesheet about what a handheld is', () => {
+    // The same two copies as the boundaries above, and the same failure if
+    // they drift: the components would draw the tab bar while the sheet kept
+    // the tablet's gutters and the floating frame around them.
+    expect(HANDHELD).toBe(`(max-height: ${TALL_AT - 1}px) and (pointer: coarse)`);
+    // Its pair: the same sentence for the rotation where the device is narrow
+    // rather than short — an iPad mini upright, an iPad in Split View — which
+    // has to move with `TABLET_AT` because that is the band it covers.
+    expect(css).toContain(`@media (max-width: ${TABLET_AT - 1}px) and (pointer: coarse)`);
+    expect(css).toContain(`@media (max-height: ${TALL_AT - 1}px) and (pointer: coarse)`);
+    // Whatever else the sheet does with height, it does not introduce a
+    // second short-window boundary beside this one.
+    const heights = [...css.matchAll(/@media[^{]*\(max-height:\s*(\d+)px\)/g)].map((m) =>
+      Number(m[1]),
+    );
+    for (const h of heights) expect(h).toBe(TALL_AT - 1);
   });
 
   it('agrees with the stylesheet about where each layout starts', () => {

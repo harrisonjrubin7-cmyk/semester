@@ -3,9 +3,10 @@ import { SettingsPage } from './Page';
 import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { secondLine } from '../../lib/dim';
+import { checkKey } from '../../lib/claude';
 import {
   MODELS,
-  checkKey,
+  OPENAI_MODELS,
   configured,
   envProxy,
   modelLabel,
@@ -14,8 +15,7 @@ import {
   routeLabel,
   saveSettings,
   settings,
-} from '../../lib/claude';
-import { OPENAI_MODELS } from '../../lib/openai';
+} from '../../lib/assistant';
 import { money, monthStart, read as readSpend, since, total, RATES_READ } from '../../lib/spend';
 import { ActionButton } from '../../components/ui';
 

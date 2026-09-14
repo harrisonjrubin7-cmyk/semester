@@ -22,6 +22,7 @@
  */
 
 import type { Course, DatedItem } from './types';
+import type { MailDraft } from './mailbox';
 
 import { normalKind } from './pace';
 
@@ -293,6 +294,51 @@ export function fallbackSubject(p: Purpose, ctx: MailContext): string {
   const code = ctx.course?.code ?? '';
   const what = ctx.item?.title ?? p.label.replace(/^Ask (for |about )?/i, '');
   return [code, what].filter(Boolean).join(' — ');
+}
+
+/**
+ * The draft a button outside the mailbox starts.
+ *
+ * Three controls open a composer from somewhere else in the app — the *ask
+ * for more time* line under a deadline, the *write to them first* button in
+ * office hours, and *ask a question* on a course. Each knows something the
+ * mailbox cannot work out for itself: which purpose, which course, whose
+ * address, and which deadline it is about.
+ *
+ * Before this, each of them dispatched `writeMail`, which carried all four
+ * facts into a `mailSeed` field that **nothing ever read**
+ * (`SIMPLIFY-AUDIT.md` F1). The mailbox opens its composer from a `MailDraft`,
+ * and a seed is not one, so all three buttons landed on the mailbox with no
+ * composer at all — and the subject they exist to pre-fill was never written.
+ *
+ * So the conversion happens here, once, rather than in each of the three
+ * callers. `fallbackSubject` is what turns the deadline into "ECON 1020 —
+ * Problem Set 4", which is the whole of what the old field's comment
+ * promised: *naming the assignment and its date is most of what turns a vague
+ * email into an answerable one, and re-picking it from a list of thirty-eight
+ * is the step at which people gave up.*
+ *
+ * The body is deliberately left empty. Every purpose whose `needsFacts` is
+ * true would have to invent a reason, and inventing the reason is the one
+ * thing `SYSTEM` above forbids — the draft is started, not written.
+ */
+export function draftFor(
+  purposeId: string,
+  ctx: { course: Course | null; item?: DatedItem | null; to?: string },
+): Partial<MailDraft> {
+  const item = ctx.item ?? null;
+  return {
+    purposeId,
+    courseId: ctx.course?.id ?? '',
+    to: ctx.to ?? ctx.course?.email ?? '',
+    subject: fallbackSubject(purpose(purposeId), {
+      course: ctx.course,
+      item,
+      from: '',
+      incoming: '',
+      facts: '',
+    }),
+  };
 }
 
 /**

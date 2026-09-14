@@ -33,6 +33,19 @@ export function actionsFor(hit: Hit): Action[] {
       return [{ type: 'openCourse', id: hit.id }];
     case 'unit':
       return [{ type: 'openGuide', id: hit.courseId, mode: hit.mode, unit: hit.unit }];
+    /*
+     * Three actions, and the order is the point: open the guide, say which
+     * unit's narration, then go to the screen. The same three `placeFor`
+     * writes for a lesson tab — deliberately, because that is what lets the
+     * search overlay notice a lesson you already have open and switch to it
+     * rather than opening a second one onto the same audio.
+     */
+    case 'lesson':
+      return [
+        { type: 'openGuide', id: hit.courseId },
+        { type: 'openLesson', unit: hit.unit },
+        { type: 'go', screen: 'lesson' },
+      ];
     case 'note':
       return [{ type: 'openNote', id: hit.id }];
     case 'task':
@@ -87,6 +100,8 @@ export function landingOf(hit: Hit): Screen {
       return 'course';
     case 'unit':
       return 'guide';
+    case 'lesson':
+      return 'lesson';
     case 'note':
       return 'note';
     // Neither a task nor an appointment has a screen of its own; the tab that

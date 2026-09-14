@@ -64,12 +64,14 @@ import { actionsFor, flatten, hitKey, landingOf } from '../lib/openhit';
 import { DESKTOP, useMedia } from '../lib/media';
 import { offered, screenName } from '../lib/nav';
 import { secondLine } from '../lib/dim';
-import { AskIcon, ClocksIcon, Search as SearchIcon } from './Icons';
+import { AskIcon, ClocksIcon, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import { TabStrip } from './Tabs';
 import { BookmarkChips } from './Bookmarks';
-import { here, openInNew, record, recordSearch, useStrip } from '../lib/browser.hook';
-import { justGo } from '../lib/browser';
+import { here, openInNew, pickTab, record, recordSearch, useStrip } from '../lib/browser.hook';
+import { justGo, tabAt } from '../lib/browser';
+import { sounding } from '../lib/sound';
+import { useSound } from '../lib/sound.hook';
 import { readSearches, remember, forget, suggestions, writeSearches } from '../lib/typeahead';
 import type { Screen } from '../lib/types';
 import { useModernShell } from './shell-context';
@@ -139,11 +141,19 @@ export function Command({ onClose }: { onClose: () => void }) {
    * first time either was touched. Keeping the app and the strip in step as
    * you navigate is `TabsFollow`'s job, next to where this is mounted.
    *
-   * Subscribed for its own sake: nothing here needs the list itself — the
-   * strip draws itself — but the line under the box names the tab this is
-   * sitting on, and `here()` is a plain read React cannot see changing.
+   * It was subscribed for its own sake — the line under the box names the
+   * tab this is sitting on, and `here()` is a plain read React cannot see
+   * changing. The list itself is wanted now too: a result whose place is
+   * already open says so, and which places are open is this.
    */
-  useStrip();
+  const strip = useStrip();
+  /*
+   * And what is playing, so a result already open in the tab making the noise
+   * says that too. Watched here rather than per row: it changes when somebody
+   * presses Play and at no other time, while the clock inside it ticks
+   * several times a second on a subscription a list of results must not take.
+   */
+  const noise = useSound();
 
   // The field, not the first button — opening a search anywhere but in its
   // box is opening it wrong. `useModal` takes Escape and the tab ring; where
@@ -308,6 +318,25 @@ export function Command({ onClose }: { onClose: () => void }) {
     // The actions that open it are also what the tab keeps, so picking that
     // tab next week reopens this deadline rather than the deadline screen.
     const place = actionsFor(hit);
+    /*
+     * Already open? Then go to the tab that has it.
+     *
+     * A browser's address bar does exactly this and says so on the row, and
+     * the alternative here was worse than merely redundant: opening a course
+     * you already had open made a second tab onto the same page, so the strip
+     * filled with duplicates of the things you look at most — which is the
+     * failure a strip of a hundred makes cheap to reach and expensive to
+     * unpick. `always` is the ⧉, which is somebody asking for another one
+     * on purpose, so it is left alone.
+     */
+    const already = always ? undefined : tabAt(strip, place);
+    if (already) {
+      const at = strip.tabs.indexOf(already);
+      const back = pickTab(at);
+      for (const action of back.place) dispatch(action);
+      onClose();
+      return;
+    }
     if (always || here().screen) openInNew(landingOf(hit), hit.title, place, sent.trim());
     else record(landingOf(hit), hit.title, place);
     for (const action of place) dispatch(action);
@@ -782,6 +811,23 @@ export function Command({ onClose }: { onClose: () => void }) {
                 {group.hits.map((hit) => {
                   const i = hits.indexOf(hit);
                   const on = i === cursor;
+                  /*
+                   * Already open?
+                   *
+                   * Said on the row because the row behaves differently: this
+                   * is the only kind of result that goes somewhere you
+                   * already have rather than making a tab. A control that
+                   * quietly does two different things is worse than two
+                   * controls, so the row says which one it is about to be.
+                   *
+                   * And the speaker, which only a lesson result can carry:
+                   * the lesson screen is one of the two places in this app
+                   * that play, and the only one a search result can land on.
+                   * Same glyph as the strip and the tab list, so it means one
+                   * thing everywhere.
+                   */
+                  const open = tabAt(strip, actionsFor(hit));
+                  const talking = Boolean(open && sounding(noise, open.id));
                   return (
                     <div
                       key={hitKey(hit)}
@@ -845,6 +891,42 @@ export function Command({ onClose }: { onClose: () => void }) {
                           {hit.sub}
                         </span>
                       </button>
+                      {open && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 'var(--sp-2)',
+                            flex: 'none',
+                            fontSize: 'var(--type-xs)',
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            fontFamily: 'var(--font-heading)',
+                            whiteSpace: 'nowrap',
+                            ...secondLine(),
+                          }}
+                        >
+                          {/* Read out with the row rather than as a control
+                              of its own: this is a label on what pressing the
+                              row will do, and nothing here is pressable. */}
+                          {/*
+                            * The glyph is `aria-hidden`, like every icon in
+                            * this set — the factory says so and does not take
+                            * a label. So the word goes beside it in `.sr-only`
+                            * rather than on it: a reader who cannot see the
+                            * speaker would otherwise hear "switch to tab" and
+                            * never learn this is the one making the noise,
+                            * which is the whole thing the mark is for.
+                            */}
+                          {talking && (
+                            <>
+                              {open.muted ? <SpeakerOffIcon size={13} /> : <SpeakerIcon size={13} />}
+                              <span className="sr-only">{open.muted ? 'Muted. ' : 'Playing. '}</span>
+                            </>
+                          )}
+                          Switch to tab
+                        </span>
+                      )}
                       <button
                         type="button"
                         className="bare tappable"

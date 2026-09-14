@@ -41,7 +41,7 @@
  */
 
 import { outline } from './doctools';
-import { runs, type Block, type Doc } from './document';
+import { listed, runs, type Block, type Doc, type Line } from './document';
 import { layoutOf, lineHeight, pageSize, type Layout } from './doclayout';
 import { omml, parse } from './maths';
 import { HEAD, REL, xml } from './ooxml';
@@ -361,9 +361,11 @@ function para(text: string, style?: string, extra = '', links?: Links): string {
 }
 
 /** A list item, at the numbering definition the list's kind points at. */
-function item(text: string, numbered: boolean, links?: Links): string {
-  const numbering = `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="${numbered ? 2 : 1}"/></w:numPr>`;
-  return para(text, 'ListParagraph', numbering, links);
+function item(line: Line, numbered: boolean, links?: Links): string {
+  const numbering =
+    `<w:numPr><w:ilvl w:val="${line.level}"/>` +
+    `<w:numId w:val="${numbered ? 2 : 1}"/></w:numPr>`;
+  return para(line.text, 'ListParagraph', numbering, links);
 }
 
 /**
@@ -444,9 +446,9 @@ function blockXml(
     case 'text':
       return block.text.trim() ? para(block.text, undefined, '', links) : '';
     case 'bullets':
-      return block.items
-        .filter((i) => i.trim())
-        .map((i) => item(i, block.numbered, links))
+      return listed(block.items)
+        .filter((l) => l.text.trim())
+        .map((l) => item(l, block.numbered, links))
         .join('');
     case 'checks':
       return block.items
@@ -528,6 +530,23 @@ function blockXml(
           : '';
       return block.caption.trim() ? `${body}${para(block.caption, 'Caption', '', links)}` : body;
     }
+    /*
+     * A divider, as an empty paragraph with a line under it.
+     *
+     * Word has no horizontal-rule element — what the Borders button draws is
+     * exactly this, a paragraph whose bottom border is on — so this is not a
+     * workaround but the format's own answer. `w:sz` is in eighths of a
+     * point, so 6 is the three-quarter-point hairline Word itself uses.
+     *
+     * The empty run is there on purpose: a `w:p` with no run at all is legal
+     * and some readers collapse it away, taking the border with it.
+     */
+    case 'rule':
+      return (
+        '<w:p><w:pPr><w:pBdr>' +
+        '<w:bottom w:val="single" w:sz="6" w:space="1" w:color="auto"/>' +
+        '</w:pBdr></w:pPr><w:r><w:t xml:space="preserve"></w:t></w:r></w:p>'
+      );
     case 'break':
       return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
   }
@@ -648,15 +667,53 @@ function stylesXml(layout: Layout): string {
 }
 
 /** Bullets at `numId` 1, decimals at 2 — what `item()` above points at. */
+/**
+ * The numbering part, one definition per level a list may reach.
+ *
+ * A `w:ilvl` in a paragraph is a *reference*: Word looks the level up here for
+ * its glyph, its indent and — for a numbered list — where its counter
+ * restarts. Point at a level this part does not define and Word draws the
+ * item at the left margin with no marker at all, which reads as a paragraph
+ * that lost its bullet rather than as anything wrong with the file.
+ *
+ * The glyphs and formats cycle the way Word's own defaults do, so a nested
+ * list looks like one a person made in Word: • ○ ▪ down the bullets, and
+ * 1. a. i. down the numbers. `%1` through `%5` name the counters, and each
+ * level shows only its own, which is the "1." "a." style rather than the
+ * "1.a.i." legal one.
+ *
+ * `w:start` and `w:lvlRestart` are left at their defaults on purpose: Word
+ * restarts a sub-list's numbering each time its parent advances, which is
+ * what a reader expects and what `listMarkdown` writes on the other side.
+ */
+const BULLET_GLYPHS = ['\u2022', '\u25CB', '\u25AA', '\u2022', '\u25CB'];
+const NUMBER_FORMATS = ['decimal', 'lowerLetter', 'lowerRoman', 'decimal', 'lowerLetter'];
+
+/** Half an inch a level, which is Word's own step, in twips. */
+const LEVEL_STEP = 720;
+
+function levels(numbered: boolean): string {
+  return Array.from({ length: 5 }, (_, at) => {
+    const left = LEVEL_STEP * (at + 1);
+    const format = numbered
+      ? `<w:numFmt w:val="${NUMBER_FORMATS[at]}"/><w:lvlText w:val="%${at + 1}."/>`
+      : `<w:numFmt w:val="bullet"/><w:lvlText w:val="${BULLET_GLYPHS[at]}"/>`;
+    // Symbol is the font Word writes its own bullets in, and is what makes
+    // the hollow and filled marks render as marks rather than as boxes.
+    const font = numbered
+      ? ''
+      : '<w:rPr><w:rFonts w:ascii="Symbol" w:hAnsi="Symbol" w:hint="default"/></w:rPr>';
+    return (
+      `<w:lvl w:ilvl="${at}"><w:start w:val="1"/>${format}<w:lvlJc w:val="left"/>` +
+      `<w:pPr><w:ind w:left="${left}" w:hanging="360"/></w:pPr>${font}</w:lvl>`
+    );
+  }).join('');
+}
+
 const NUMBERING =
   `${HEAD}<w:numbering xmlns:w="${W}">` +
-  '<w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0">' +
-  '<w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/>' +
-  '<w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr>' +
-  '<w:rPr><w:rFonts w:ascii="Symbol" w:hAnsi="Symbol" w:hint="default"/></w:rPr></w:lvl></w:abstractNum>' +
-  '<w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0">' +
-  '<w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:lvlJc w:val="left"/>' +
-  '<w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>' +
+  `<w:abstractNum w:abstractNumId="0">${levels(false)}</w:abstractNum>` +
+  `<w:abstractNum w:abstractNumId="1">${levels(true)}</w:abstractNum>` +
   '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>' +
   '<w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num>' +
   '</w:numbering>';

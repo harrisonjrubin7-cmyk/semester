@@ -2,7 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { ALLOWED, check, counts, countsByFile, cycles, multipliers, overBudget, render } from './rules';
+import {
+  ALLOWED,
+  check,
+  counts,
+  countsByFile,
+  cycles,
+  multipliers,
+  overBudget,
+  render,
+  sources,
+} from './rules';
 import { BUDGET } from './budget';
 
 /**
@@ -283,5 +293,35 @@ describe('the per-file ledger', () => {
     // Sorted by path, so the line a branch changes is the file it touched.
     expect(written).toContain("  'A.tsx': { space: 3 },\n  'a/B.tsx': { type: 2, shorthand: 1 },");
     expect(written).toContain('do not edit');
+  });
+});
+
+/**
+ * The walk that finds nothing.
+ *
+ * `SIMPLIFY-AUDIT.md` G1. Ten tests hold a rule by walking the source and
+ * asserting no offenders, and every one of them passes when the walk returns
+ * nothing — five of the ten had no other assertion that would notice. The
+ * throw is at the walker so that none of the ten has to remember, and this is
+ * what says the throw is there.
+ */
+describe('sources(), given nothing to read', () => {
+  it('throws rather than answering with an empty list', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'empty-'));
+    mkdirSync(join(dir, 'src'));
+    // A directory with files, none of which this walker keeps: the shape a
+    // wrong path takes in practice, rather than a directory that is bare.
+    writeFileSync(join(dir, 'src', 'notes.ts'), 'export const x = 1;');
+    expect(() => sources(join(dir, 'src'))).toThrow(/no \.tsx under/);
+  });
+
+  it('still answers normally when there is something to read', () => {
+    // The other half: a throw that fired on everything would be caught by the
+    // suite at once, so this is less about the rule than about not trusting
+    // the first half alone.
+    const dir = mkdtempSync(join(tmpdir(), 'full-'));
+    mkdirSync(join(dir, 'src'));
+    writeFileSync(join(dir, 'src', 'Probe.tsx'), 'export const x = <i />;');
+    expect(sources(join(dir, 'src'))).toHaveLength(1);
   });
 });

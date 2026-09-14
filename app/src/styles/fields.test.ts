@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources } from './rules';
 
 /**
  * A field on a touch device is never smaller than 16px.
@@ -75,15 +75,7 @@ describe('form fields on a touch device', () => {
     // The reason the rule has to exist, asserted rather than assumed: if a
     // later pass ever gets every field onto 16px by hand, this fails and the
     // rule above can be reconsidered on purpose instead of by accident.
-    const files: string[] = [];
-    const walk = (dir: string) => {
-      for (const e of readdirSync(dir)) {
-        const p = join(dir, e);
-        if (statSync(p).isDirectory()) walk(p);
-        else if (/\.tsx$/.test(e) && !/\.test\./.test(e)) files.push(p);
-      }
-    };
-    walk('src');
+    const files = sources('src', { tests: false }).map((x) => x.path);
 
     const small = files.filter((f) => {
       const text = readFileSync(f, 'utf8');

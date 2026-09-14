@@ -145,11 +145,21 @@
   --scrim: color-mix(in srgb, var(--app-bg) 72%, transparent);
 
   /* The assistant's button is fixed over the bottom-right of every screen —
-     52px square, 18px in from the right, 12px above the tab bar. This is its
-     footprint with the room around it, named once, because two rules now have
-     to agree about it: the space reserved under a screen so nothing sits
-     behind it, and the space the soft shell's pinned bar keeps clear on its
-     right so the button lands beside the primary action rather than on it. */
+     52px square, 18px in from the right, 12px above the tab bar where there
+     is one and 12px above the window's edge where there is not. This is its
+     footprint with the room around it — 12 + 52 + 12 — named once, because
+     two rules now have to agree about it: the space reserved under a screen
+     so nothing sits behind it, and the space the soft shell's pinned bar
+     keeps clear on its right so the button lands beside the primary action
+     rather than on it.
+
+     The number only works while the button is placed from the same two
+     numbers. It briefly was not: `ai/Assistant.tsx` fell back to a bar's own
+     height when `--bottom-chrome` was unset, which put the button 140px up in
+     a shell that has nothing along its bottom while this went on reserving 76
+     — so 64px of the last card on Today sat under an opaque circle with no
+     scroll left to bring it clear. The fallback is zero now. Change one of
+     these and the other has to move. */
   --assistant-strip: 76px;
 
   /* Leading. Distinct from --line-height, which is the reader's own setting
@@ -495,6 +505,31 @@ a:hover {
   }
 }
 
+/* The phone layout on something that is actually a phone-shaped device, which
+   is the other half of the note below.
+
+   `--device-max` is 402 — the artboard the app was drawn on — and on a phone
+   held upright it never comes into play, because the phone is narrower than
+   it is. Between 402 and 759 it does, and what is in that band is not only
+   the desktop browser window the cap was written for: an iPad mini held
+   upright is 744, an iPad in Split View is 507–678, and both of those are
+   hardware with a finger on it. Measured at 744×1133 before this, the app was
+   a 402px column with 171px of black down each side of it and a tab bar that
+   reached neither edge of the screen — the rule that keeps a flashcard from
+   being a phone propped up in the middle of a monitor, applied to a tablet
+   somebody is holding.
+
+   So the cap is for a window, and `pointer: coarse` is what tells the two
+   apart: a browser window dragged narrow keeps the artboard, a device fills.
+   The same sentence appears once more, in the last block of this section,
+   for a phone turned on its side — the two cannot be one query without `or`,
+   which is newer than the oldest iPad this runs on. */
+@media (max-width: 759px) and (pointer: coarse) {
+  :root {
+    --device-max: 100%;
+  }
+}
+
 /* The framed, floating column is for a desktop browser window. A tablet held
    upright — an iPad mini at 744, or any iPad in Split View — is a device, not a
    window, so the column runs the full height there instead of hovering in the
@@ -508,6 +543,51 @@ a:hover {
        one. The overflow clip is already on .device, so content follows. */
     border-radius: 14px;
     box-shadow: 0 1px 0 var(--app-line-top) inset, 0 30px 90px rgba(0, 0, 0, 0.75);
+  }
+}
+
+/* A phone on its side, which is the one thing the three widths above get
+   wrong — and the last block here, because it undoes them.
+
+   Every boundary above asks how wide the window is, and for a device held
+   upright that is the same question as which device it is. Turned the long way
+   round it stops being: an iPhone 15 Pro Max in landscape is 932pt wide, wider
+   than an iPad mini is upright, so the tablet block claimed it and the desk
+   drew the rail — a column of ten rows — into 430px of height, with its last
+   items off the bottom of a screen whose width it had already taken 220px of.
+
+   So: short *and* held. Short alone would catch a desktop window dragged down
+   to half a screen, which has a mouse in it and no business being handed a
+   phone; `pointer: coarse` is the finger, and no iPad is ever short enough to
+   answer both. `lib/media.ts` carries the same query as `HANDHELD` — it is
+   what decides the tab bar goes back under the thumb — and `tiers.test.ts`
+   asserts the two copies still say the same thing.
+
+   The values are the phone's, because at this point the app *is* the phone:
+   restated rather than inherited, since the blocks above have already run.
+   `--device-max` is the one exception — 100% rather than the phone's 402 — and
+   for the reason the narrow-and-touch block above gives at length: this is the
+   same case at the other rotation, and the 402 that never bites on a phone
+   held upright drew 265px of black down each side of one turned over. */
+@media (max-height: 599px) and (pointer: coarse) {
+  :root {
+    --page-pad: 18px;
+    --chrome-pad: 18px;
+    --measure: 100%;
+    --canvas: 100%;
+    --rail-w: 0px;
+    --device-max: 100%;
+    --cell-aspect: 1;
+  }
+
+  /* And not the floating window the 900px block just made of it. A phone is a
+     device: the app fills it, edge to edge, with no frame around itself. */
+  .device {
+    height: calc(100% - var(--kb, 0px));
+    margin-block: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 }
 
@@ -607,6 +687,33 @@ a:hover {
   }
 }
 
+/*
+ * The rail, for the finger that is actually on it.
+ *
+ * The note over the tablet block says the touch sizes do not change when the
+ * rail arrives, because the hand holding an iPad is the hand that held the
+ * phone. That was true of everything except the navigation itself. The same
+ * five destinations are 51px tall each in the tab bar on a phone and were 41
+ * in the rail on an iPad, with the five quiet rows under them — Ask Claude,
+ * Account, Settings — at 35. A fingertip is 44, so the primary navigation was
+ * the one part of a tablet build nobody had sized for a tablet.
+ *
+ * A floor rather than a height, so larger text still grows the row, and on
+ * `pointer: coarse` rather than on a width, because it is the input that
+ * decides this and not the window: an iPad at 1194 gets it in the desktop
+ * layout too, and a laptop at 820 — a browser window dragged narrow — does
+ * not, since a mouse hits a 41px row perfectly well and a rail of 44s on a
+ * desktop is just a taller rail.
+ *
+ * The rail scrolls (`overflow-y: auto` above), so the extra height cannot
+ * push a destination out of reach on a tablet in landscape.
+ */
+@media (pointer: coarse) {
+  .rail .rail-item {
+    min-height: 44px;
+  }
+}
+
 /* On a desktop the rail is a sidebar rather than a strip: more air at the
    top, a heavier mark, and rows tall enough to aim at with a mouse without
    being the 48px a thumb needs. */
@@ -683,6 +790,43 @@ a:hover {
    */
   height: 100%;
 }
+
+/*
+ * And the room reserved for the assistant's button is reserved *here*.
+ *
+ * `.scrollarea` has a `padding-bottom` for it, and on this shell that padding
+ * was doing nothing at all. The reason is the `height: 100%` above: it makes
+ * this box exactly one screenful, so on any screen with more than a
+ * screenful the content overflows it rather than being laid out inside it —
+ * which the comment above says, and treats as harmless because the scroller
+ * counts what overflows its descendants.
+ *
+ * It is harmless for scrolling and not for the reservation. A scroll
+ * container's end padding sits after its *in-flow* content, and the in-flow
+ * content here ends at one screenful; the overflowing part runs past it to
+ * the true bottom of the scroll. Measured on Today at 390x844: `.pane-body`
+ * 552px tall, the feed inside it 1,288px and overflowing, and the last line
+ * of the last card at the very bottom of the scroll range with the button on
+ * top of it.
+ *
+ * A pseudo-element is the fix that does not touch the height chain. It is a
+ * child of this box rather than a sibling of it, so it comes after the
+ * overflowing content in the same flow and carries the reservation out to
+ * wherever that content actually ends. The padding on `.scrollarea` stays for
+ * the screens that do fit, where this sits inside the box and adds nothing.
+ *
+ * Not on a screen that is the whole box: the button is not drawn there — see
+ * `ai/Assistant.tsx` and `shell/exempt.ts` — and 76px of nothing under a
+ * composer meant to sit on the bottom edge is the fault `.is-filled` exists
+ * to avoid.
+ */
+.pane-body::after {
+  content: '';
+  display: block;
+  height: var(--assistant-strip);
+}
+
+
 .pane-body.is-canvas {
   max-width: var(--canvas);
 }
@@ -1322,6 +1466,39 @@ a:hover {
   padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
 
+/*
+ * And the two insets nothing was asking for: the left and the right.
+ *
+ * `index.html` sets `viewport-fit=cover`, which is what puts the app behind
+ * the status bar and the home indicator rather than in a letterbox between
+ * them — and the two rules above are what then keep the header and the tab
+ * bar clear of both. Held upright that is the whole story, because upright a
+ * notch is only ever above you and the side insets are 0.
+ *
+ * Turned on its side it is not. The cut-out goes to whichever side is now the
+ * top, iOS reports 47–59px there, and with nothing reading it the header's
+ * title, the account button at the far end of it, and the first or last tab
+ * of the bar sit underneath the notch. The same query that decides a phone in
+ * landscape is a phone would be the obvious place for it, but it does not
+ * need one: `env()` is 0 in a browser tab, 0 on a desktop, 0 on an iPad and 0
+ * on any phone held upright, so this is a rule that costs nothing everywhere
+ * it does not apply.
+ *
+ * On the two outermost elements rather than on the header and the bar
+ * separately, so the rail, the pane and every screen inside them come in with
+ * it — the black either side is then the app's own ground, which is what the
+ * inset is for.
+ *
+ * Reasoned from the spec and the two insets already here rather than measured
+ * on hardware: a headless browser reports 0 for all four, so what a run in
+ * this repo can show is that nothing moves when they are 0, which is the
+ * failure mode worth checking and the one thing it can check.
+ */
+.device,
+.desk {
+  padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+}
+
 .scrollarea {
   flex: 1;
   min-height: 0;
@@ -1417,13 +1594,35 @@ a:hover {
  *
  * The button is fixed above the tab bar on every screen, and a screen whose
  * last element is a primary action put that action underneath it — on Costs,
- * "Add it" sat directly behind it. Reserving the space here fixes it once for
- * every screen rather than sixty times: the padding makes even a
- * short screen scrollable by exactly the button's footprint, so anything at
- * the bottom can always be brought clear of it.
+ * "Add it" sat directly behind it. Reserving the space once here fixes it for
+ * every screen rather than sixty times: the reservation makes even a short
+ * screen scrollable by exactly the button's footprint, so anything at the
+ * bottom can always be brought clear of it.
+ *
+ * ## Why this is a box after the content and not padding on the scroller
+ *
+ * It was `padding-bottom` on `.scrollarea`, and it had stopped doing
+ * anything at all. `.pane-body` above takes `height: 100%` — deliberately,
+ * to keep the percentage-height chain intact — so every screen taller than
+ * the window overflows it rather than sitting in the scroller's own flow,
+ * and a scroll container's end padding is not applied below content that
+ * overflows a descendant. The scroll extent came from the overflowing box
+ * and stopped exactly where the text did.
+ *
+ * Nothing said so. The rule was still there, still computed 76px, and the
+ * space it claimed was simply absent: at the bottom of Study the last line
+ * ran under the button with no scroll left to bring it clear, and the same
+ * on a guide and on Me at the larger text sizes. Removing the padding
+ * changed no measurement on any screen, which is the proof it was dead.
+ *
+ * A block after the content is counted wherever the content ends, because it
+ * overflows alongside it. `::after` rather than a real element so no screen
+ * has to remember to render one.
  */
-.scrollarea {
-  padding-bottom: var(--assistant-strip);
+.scrollarea:not(.is-filled) .pane-body::after {
+  content: '';
+  display: block;
+  height: var(--assistant-strip);
 }
 
 /*
@@ -1448,8 +1647,18 @@ a:hover {
  * step with them.
  */
 .scrollarea.is-filled {
-  padding-bottom: 0;
   overflow: hidden;
+}
+
+/*
+ * And the same for the reservation `.pane-body` carries past its own
+ * overflow. Here rather than beside that rule so both of the things
+ * `.is-filled` takes back are in one place, and so the guard in
+ * `ai/dock.test.ts` — which reads the first `.scrollarea.is-filled` rule in
+ * this sheet — still finds the one it is about.
+ */
+.scrollarea.is-filled .pane-body::after {
+  content: none;
 }
 
 .app-tabs {
@@ -1966,6 +2175,34 @@ a:hover {
   width: 100%;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+/*
+ * A disabled `.bare` looked exactly like an available one.
+ *
+ * `.bare` strips a button back to its text and keeps `cursor: pointer`, and
+ * nothing here answered `:disabled` — so a control the code had switched off
+ * still read as a control you could press, and still showed the hand cursor
+ * saying so. Found in the move picker on `screens/mine/Drive.tsx`: offering to
+ * move *Problem sets*, the rows for *Problem sets* and *Drive* are disabled,
+ * because a folder cannot go inside itself or stay where it already is. That
+ * guard works. It just could not be seen, so the only way to learn a row was
+ * unavailable was to tap it and watch nothing happen.
+ *
+ * It is not one picker. Around twenty `.bare` buttons in this app are disabled
+ * in some state — the reorder arrows at the ends of a list, a tab strip that
+ * is full, a drill question already answered, every `busy` guard on a form —
+ * and all of them were silent in the same way.
+ *
+ * The same answer `.bench-item:disabled` and `.desktop-star:disabled` already
+ * give, for the reason written there: `--app-faint` is held to 3:1, which is
+ * the contrast bar for a disabled control and is what makes it read as
+ * unavailable rather than merely quiet. `cursor: default` withdraws the other
+ * half of the claim.
+ */
+.bare:disabled {
+  color: var(--app-faint);
+  cursor: default;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -4052,6 +4289,16 @@ input[type='search'].input {
   margin: 1.2em 0;
   border-top: 1px dashed #bfbfbf;
   break-after: page;
+}
+
+/* A divider: solid where the page break is dashed, and it does not break the
+   page. The two are one line apart on screen and must not look alike, because
+   telling them apart is the whole reason they are separate blocks. */
+.docpaper-rule {
+  height: 0;
+  margin: 1.2em 0;
+  border: 0;
+  border-top: 1px solid #bfbfbf;
 }
 
 /* ── Page setup ───────────────────────────────────────────────────────── */

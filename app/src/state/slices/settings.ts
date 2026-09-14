@@ -17,6 +17,7 @@ import { readTabs } from '../../lib/tabbar';
 import { readRules } from '../../lib/myrules';
 import { mark as markAttendance, readPolicy } from '../../lib/attend';
 import { readDrop } from '../../lib/drop';
+import { readLeadDays } from '../../lib/runway';
 import { readSettings as readGeocode } from '../../lib/geocode';
 import { toggle as toggleStarted } from '../../lib/underway';
 
@@ -252,7 +253,10 @@ export function settings(state: State, action: Action): State | null {
     }
 
     case 'setAccessLead':
-      return { ...state, accessLeadDays: Math.max(0, Math.min(30, Math.round(action.days))) };
+      // The clamp is `readLeadDays` in `lib/runway.ts`, shared with the reader
+      // that restores this from storage — the two were separate, and the
+      // restoring side had none at all.
+      return { ...state, accessLeadDays: readLeadDays(action.days) };
 
     /*
      * The hours nothing may interrupt you in. Null clears it.
@@ -279,9 +283,6 @@ export function settings(state: State, action: Action): State | null {
 
     case 'toggleNotif':
       return { ...state, notifs: { ...state.notifs, [action.k]: !state.notifs[action.k] } };
-
-    case 'togglePick':
-      return { ...state, picked: { ...state.picked, [action.id]: !state.picked[action.id] } };
 
     case 'clearNotifs':
       return { ...state, cleared: true };

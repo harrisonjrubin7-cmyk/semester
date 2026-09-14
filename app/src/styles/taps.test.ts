@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources } from './rules';
 
 /**
  * Small controls declare which way their target may grow.
@@ -30,14 +30,8 @@ import { join } from 'node:path';
  */
 const css = readFileSync('src/styles/app.css', 'utf8');
 
-function tsx(dir: string, out: string[] = []): string[] {
-  for (const e of readdirSync(dir)) {
-    const p = join(dir, e);
-    if (statSync(p).isDirectory()) tsx(p, out);
-    else if (/\.tsx$/.test(e) && !/\.test\./.test(e)) out.push(p);
-  }
-  return out;
-}
+/** The files this rule reads. `styles/rules.ts` walks; this names. */
+const tsx = (dir: string): string[] => sources(dir, { tests: false }).map((s) => s.path);
 
 describe('tap targets', () => {
   it('defines the three, and each grows one way or both', () => {
@@ -116,6 +110,38 @@ describe('tap targets', () => {
     ]) {
       expect(used, `${must} lost its tap class`).toContain(must);
     }
+  });
+
+  /*
+   * The navigation is the one control that changes shape with the layout, and
+   * so the one that can be the right size on a phone and the wrong size on a
+   * tablet without anybody touching it.
+   *
+   * The five destinations are 51px tall each in the tab bar under a phone's
+   * thumb. Unrolled into the rail on an iPad they were 41, with the five
+   * quiet rows below them — Ask Claude, Account, Settings — at 35, measured
+   * in a browser at 820×1180 and 1194×834. Same hand, same finger, two thirds
+   * of the target, on the one piece of chrome that is on screen the whole
+   * time.
+   *
+   * The floor is on `pointer: coarse` rather than on a width, because it is
+   * the input that decides it: an iPad at 1194 is in the desktop layout and
+   * still has a finger on it, and a laptop window dragged to 820 is in the
+   * tablet layout and does not.
+   */
+  it('gives the rail a finger-sized row wherever there is a finger', () => {
+    // There is more than one coarse-pointer block in the sheet — the other
+    // one is the 16px floor on fields, which is what stops iOS zooming when
+    // one is focused — so this finds the block the rail is in rather than
+    // the first one it meets.
+    const blocks = [...css.matchAll(/@media \(pointer: coarse\) \{([\s\S]*?)\n\}/g)].map(
+      (m) => m[1],
+    );
+    const rail = blocks.find((b) => b.includes('.rail .rail-item'));
+    expect(rail, 'the rail is not sized for touch anywhere').toBeDefined();
+    // A floor, not a height: the text-size setting still grows the row.
+    expect(rail).toMatch(/\.rail \.rail-item \{[^}]*min-height: 44px/);
+    expect(rail).not.toMatch(/\.rail \.rail-item \{[^}]*[^-]height: 44px/);
   });
 
   /*

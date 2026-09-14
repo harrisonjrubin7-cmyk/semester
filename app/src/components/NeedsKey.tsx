@@ -2,7 +2,7 @@ import { useStore } from '../state/store';
 import { Blueprint } from './Blueprint';
 import { ActionButton } from './ui';
 import { Page } from './Page';
-import { provider } from '../lib/claude';
+import { provider } from '../lib/assistant';
 
 /**
  * The eight places that told you where the key lives, and now take you there.

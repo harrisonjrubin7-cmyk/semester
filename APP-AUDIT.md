@@ -108,21 +108,35 @@ inputs come from.
 Static checks first, then the app itself in a real browser, because the two
 find different things and this pass was started by the suite being green.
 
+**Two kinds of number appear below, and they age differently.** A *measured*
+row is re-run and re-stated whenever this file is touched; it says what the
+repository does today. A *dated* one is a record of what this pass actually
+executed and does not move, because rewriting it would be inventing a run that
+never happened. Each is marked. This distinction is §4's own lesson applied to
+the file that reported it: a count nothing reads goes stale silently, and the
+only defence a prose number has is saying out loud which kind it is.
+
+Measured — last re-run against `main` at `9ca4788`, 14 September:
+
 | Check | Result |
 |---|---|
-| `npm test` | 7511 passed, 10 skipped, 359 files |
+| `npm test` | 8097 passed, 10 skipped, 393 files |
 | `npm run lint` (oxlint · style rule · label rule) | clean |
 | `npm run build` (`tsc -b` + vite) | clean |
 | `npm run check:university` | clean |
 | `npm run counts` | clean — and one error quieter than before, see §1 |
 | `node pipeline/validate.mjs` | 4 courses, 48 items, 8 episodes, all checks passed |
 
-Then the browser, driven per `.claude/skills/run`:
+Dated — what this pass ran in headless Chromium, driven per
+`.claude/skills/run`, on the code as it stood:
 
 - **1,560 screen loads.** Every screen in the `Screen` union — 81 of them, with
   real ids for the ones that name something — across all **6 navigations** and
   all **6 shells**, at phone width and at desktop width. **Zero `pageerror`s
-  and zero blank screens.**
+  and zero blank screens.** (`NAVS` and `SHELLS` are still six and six, and the
+  union is still 82 with `onboarding` handled before the switch, so the shape
+  of that sweep is unchanged; the count of loads is the run, not a claim about
+  today.)
 - **Every stored-state version.** A seed at each of schema 1–6, one with no
   version marker, one from the future, one of pure garbage, and five payloads
   that are not JSON at all. All ten migration paths and all five corrupt
@@ -340,8 +354,9 @@ Worth recording, so the next pass does not re-spend the time:
   markers outside tests; no empty handlers (`onClick={() => {}}`); no "coming
   soon", "not implemented" or stub text. Every `placeholder` hit is a real HTML
   input placeholder.
-- **No orphan files.** All 624 non-test sources under `app/src` are imported by
-  something.
+- **No orphan files.** Measured: all 643 non-test sources under `app/src` are
+  imported by something. Re-run at `9ca4788`; it was 624 when the audit ran,
+  and the answer is still zero orphans.
 - **Screen coverage is complete.** Every member of the `Screen` union has a
   case in `CurrentScreen` except `onboarding`, which is handled before the
   switch, as its own full-screen mode. The screens absent from `DESTINATIONS`
@@ -442,28 +457,61 @@ once a row can be edited there are **two** fields carrying each label, the add
 form's and the editor's, so `querySelector` takes the form and the assertion
 then reports the edit as not having happened.
 
-## Still open, and deliberately not fixed here
+## The four dead fields, deleted — three of them twice
 
-Found by tracing every `Action` variant to its sender. These are reported
-rather than changed:
+Reported in the first pass and left alone, on the grounds that removing a
+persisted field touches storage for no user-visible gain. Each had a state
+field, a default, an action variant and a reducer case, and **no consumer on
+either side in any commit in this repository**. They were added beside
+siblings that *are* used (`setHomeTab`, `setCoursesTab`, `setMeTab`,
+`setCostsTab`) and nothing ever reached for them.
 
-**Dead state — never read, never written, in any commit in this repository:**
-
-| Field | Action | Where |
+| Field | Action | Who removed it |
 |---|---|---|
-| `calTab` | `setCalTab` | `state/shape.ts`, `slices/navigate.ts` |
-| `loadStep` | `setLoadStep` | same |
-| `meGroup` | `setMeGroup` | same |
-| `picked` | `togglePick` | `slices/settings.ts` — persisted, and read by nothing |
+| `calTab` | `setCalTab` | main's #318, independently |
+| `loadStep` | `setLoadStep` | main's #318, independently |
+| `meGroup` | `setMeGroup` | main's #318, independently |
+| `picked` | `togglePick` | here — with its persistence and `EXTRACT` in `data/misc.ts` |
 
-Each has a state field, a default, an action variant and a reducer case, and no
-consumer on either side. They were added beside siblings that *are* used
-(`setHomeTab`, `setCoursesTab`, `setMeTab`, `setCostsTab`) and nothing ever
-reached for them.
+**Three of the four were found and deleted on `main` while this was being
+written**, by #318 — "The university's own services, and the fields nobody
+reads". That is the second time in one week this audit and `main` landed on
+the same thing from opposite ends, after the `lib/look.ts` sentence, and it is
+the same lesson: dead weight that nothing reads is invisible until somebody
+goes looking, and then two people find it at once. Rebasing onto #318 left
+this commit holding only what it had not done.
 
-**Operations the reducer supports and no screen offers.** None left — the
-seven are the section above, and `setScale` is §5. Every `Action` variant in
-`state/shape.ts` now has a sender in the app.
+`picked` is the one it did not do, and the one that cost the most to pull out
+— which is the useful part of the exercise, because everything that resisted
+was a guard doing its job.
+
+**`EXTRACT` fell with it.** A nine-row hardcoded list in `data/misc.ts`
+labelled "what the syllabus importer finds — the ECON schedule, resolved to
+dates", left over from when the importer was a mock. Its only reader was
+`picked`'s default. Nothing else in the app had referenced it for a long time.
+
+**Three other tables named the field, and three tests said so.** Removing
+`picked` from the store broke `lib/export.test.ts`, `lib/merge.test.ts` and
+`lib/privacy.test.ts` — the app keeps a per-field decision in each about what a
+backup holds, how two devices merge it, and what the privacy page claims is
+uploaded, and each has a test that fails when the store and the table disagree.
+Exactly the drift-catcher this audit kept writing about, working unprompted:
+the field is now absent from all four places or none.
+
+**A stale key in storage is not a crash.** `state/storage.test.ts` asserted
+over every keyed record field, `picked` among them. It keeps `picked` in its
+*payloads* and drops it from the assertions, because the case worth testing has
+inverted: every copy written before this still carries the field, so what
+matters now is that a key this build has never heard of is ignored rather than
+breaking the load. Verified in the browser as well — copies seeded with all
+four fields, with `picked` holed (`{"x1":null}`), with `picked` as a number,
+and with no `schemaVersion` at all, each opened and drew Calendar, Progress,
+Everything, Import and Settings without a throw.
+
+## Still open
+
+Nothing found by this audit is left unaddressed. Every `Action` variant in
+`state/shape.ts` has a sender, and no state field is read by nothing.
 
 **Out of scope by design.** `docs/IMPLEMENTATION_STATUS.md` lists the work that
 needs a real institutional integration — SIS transactions, official

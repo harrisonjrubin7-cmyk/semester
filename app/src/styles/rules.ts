@@ -90,17 +90,74 @@ export interface Problem {
   says: string;
 }
 
-/** Every `.tsx` under a directory, with comments and imports stripped. */
-export function sources(dir: string): { path: string; text: string }[] {
+/**
+ * Every `.tsx` under a directory, with comments and imports stripped.
+ *
+ * ## Why it throws on nothing
+ *
+ * Ten tests hold a rule about the app by walking the source and asserting the
+ * offender list is empty. That shape has one failure mode, and it is silent:
+ * **if the walk returns nothing, there are no offenders and the test passes**
+ * — green, having checked nothing at all.
+ *
+ * `SIMPLIFY-AUDIT.md` G1 measured it rather than assuming it. This function
+ * was replaced with one returning `[]` and the ten were run: five failed, and
+ * five passed. The five that passed are the app's central structural rules —
+ * one home per screen (`onehome`), one control per job (`onecontrol`), one
+ * look (`onelook`), one frame (`onframe`), one header. The five that failed
+ * did so by accident of having a companion "the component still exists"
+ * assertion, not because anything checked the scan.
+ *
+ * So the check belongs here, at the one place all ten share, rather than as
+ * five floors that each have to be remembered. Every caller passes `src`,
+ * `src/components` or `src/screens`, or a temporary tree it has just written a
+ * `.tsx` into; there is no directory in this repo where finding none is the
+ * right answer. An empty result means a wrong path or a broken walk, and both
+ * are bugs in the test rather than a clean bill of health for the app.
+ *
+ * ## What it still cannot catch
+ *
+ * A walk that returns *too few* files rather than none — which is what E1
+ * actually did, pointing this walker at `lib/` when it kept `.tsx` only.
+ * `lib/` holds two `.tsx` files and about two hundred `.ts` modules, so the
+ * census ran against two files and passed against a planted second compiler.
+ * The throw cannot see that, and the audit row proposing it said otherwise
+ * and was wrong.
+ *
+ * ## `ext` and `tests`, which are the answer to that
+ *
+ * `SIMPLIFY-AUDIT.md` G2. Six copies of this walk existed, and they existed
+ * because this one answered exactly one question — `.tsx`, tests included —
+ * and everybody who needed a slightly different one wrote their own. Two were
+ * character-for-character identical to it.
+ *
+ * So the question is a parameter now. `ext` is the reason E1's mistake is
+ * expressible as an argument rather than as a second walker, and a census
+ * that wants `.ts` says so at the call where a reader can see it. `tests`
+ * drops `.test.` files, which four of the six copies did and this one could
+ * not. The defaults are what this function did before, so nothing that
+ * already called it changed.
+ */
+export function sources(
+  dir: string,
+  { ext = ['.tsx'], tests = true }: { ext?: readonly string[]; tests?: boolean } = {},
+): { path: string; text: string }[] {
   const out: { path: string; text: string }[] = [];
   const walk = (at: string) => {
     for (const entry of readdirSync(at, { withFileTypes: true })) {
       const path = join(at, entry.name);
       if (entry.isDirectory()) walk(path);
-      else if (entry.name.endsWith('.tsx')) out.push({ path, text: readFileSync(path, 'utf8') });
+      else if (ext.some((e) => entry.name.endsWith(e)) && (tests || !entry.name.includes('.test.')))
+        out.push({ path, text: readFileSync(path, 'utf8') });
     }
   };
   walk(dir);
+  if (out.length === 0) {
+    throw new Error(
+      `sources(): no ${ext.join(' or ')} under ${dir}. A census over an empty list passes ` +
+        'without checking anything, so this is an error rather than a result. See the note above.',
+    );
+  }
   return out;
 }
 

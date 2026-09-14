@@ -91,17 +91,4 @@ export const SOURCES = [
   { label: 'Top Hat', meta: 'Join code 782449', state: 'Link' },
 ];
 
-/** What the syllabus importer finds — the ECON schedule, resolved to dates. */
-export const EXTRACT = [
-  { id: 'x1', title: 'Problem Set 1', when: 'Fri Sep 4, 11:59 PM', kind: 'Problem set' },
-  { id: 'x2', title: 'Problem Set 2', when: 'Fri Sep 11, 11:59 PM', kind: 'Problem set' },
-  { id: 'x3', title: 'Problem Set 3', when: 'Fri Sep 18, 11:59 PM', kind: 'Problem set' },
-  { id: 'x4', title: 'Midterm 1 — in class', when: 'Wed Sep 30', kind: 'Exam · 25–30%' },
-  { id: 'x5', title: 'Midterm 2 — in class', when: 'Wed Nov 4', kind: 'Exam · 25–30%' },
-  { id: 'x6', title: 'Fall break — no class', when: 'Oct 22–23', kind: 'Break' },
-  { id: 'x7', title: 'Thanksgiving break', when: 'Nov 21–29', kind: 'Break' },
-  { id: 'x8', title: 'Midterm 3 / Final exam', when: 'Tue Dec 15, 3:00–5:00p', kind: 'Exam' },
-  { id: 'x9', title: 'Top Hat participation', when: 'Every class', kind: 'Extra credit' },
-];
-
 /** The three onboarding screens. */

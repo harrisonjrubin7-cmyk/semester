@@ -585,9 +585,20 @@ export function here(
         .on('presence', { event: 'sync' }, () => onHere(Object.keys(channel.presenceState())))
         .subscribe((status) => {
           if (status === 'SUBSCRIBED') void channel.track({ at: new Date().toISOString() });
-          // Anything else — a refusal, a closed socket — leaves the room with
-          // nobody marked present, which is what it looked like before.
-          else if (status !== 'CHANNEL_ERROR') onHere([]);
+          // Anything else clears them, `CHANNEL_ERROR` included, and that last
+          // one is the whole point. A dot says somebody is in this room *now*;
+          // the moment the channel is errored nobody is telling us when they
+          // leave, so what is on screen stops being presence and becomes the
+          // last thing we happened to hear. Leaving it up is the lie this
+          // feature was built not to tell — the reason presence is a channel
+          // and not a table is that a row saying "here" is wrong as soon as a
+          // phone goes in a pocket.
+          //
+          // It costs a blink and not the dots: the client rejoins with backoff
+          // and its join handler fires again on success, so `track` runs again
+          // and the next sync repopulates. During a real outage the room shows
+          // nobody, which is the truth available.
+          else onHere([]);
         });
       close = () => void db.removeChannel(channel);
     })

@@ -138,6 +138,16 @@ export interface Where {
   deckId: string | null;
   mode: StudyMode;
   openUnit?: number;
+  /**
+   * Which unit's narration the lesson screen is on.
+   *
+   * Separate from `openUnit`, which is the unit the *guide* is open at, and
+   * they move independently — stepping to the next lesson does not scroll the
+   * guide. Without this a lesson tab recorded only "the lesson screen of this
+   * guide", so two lesson tabs on two units of one course were the same place
+   * and reopening either landed on whichever unit the app happened to hold.
+   */
+  lessonUnit?: number;
   callCode?: string;
 }
 
@@ -166,9 +176,29 @@ export function placeFor(screen: Screen, at: Where): Action[] {
       return at.eventId ? [{ type: 'openEvent', id: at.eventId }] : justGo(screen);
     case 'guide':
       return at.guideId ? [{ type: 'openGuide', id: at.guideId, mode: at.mode, ...(at.openUnit!==undefined?{unit:at.openUnit}:{}) }] : justGo(screen);
+    case 'lesson':
+      /*
+       * The one of the four with a unit of its own, and the one that does not
+       * carry the guide's.
+       *
+       * `openLesson` says which narration, so the tab comes back to the one
+       * it was on rather than to unit zero. The guide's `mode` and `openUnit`
+       * are left out on purpose: they are where the *guide* was scrolled to,
+       * which is not part of where the lesson screen is, and including them
+       * made this place depend on how you happened to arrive at it. Two
+       * routes to one lesson have to be one place, or the strip fills with
+       * tabs that look identical and are not — and `tabAt` could never match
+       * a search result against a lesson you already had open.
+       */
+      return at.guideId
+        ? [
+            { type: 'openGuide', id: at.guideId },
+            ...(at.lessonUnit !== undefined ? [{ type: 'openLesson' as const, unit: at.lessonUnit }] : []),
+            { type: 'go', screen },
+          ]
+        : justGo(screen);
     case 'drill':
     case 'quiz':
-    case 'lesson':
     case 'slides':
       return at.guideId
         ? [{ type: 'openGuide', id: at.guideId, mode: at.mode, ...(at.openUnit!==undefined?{unit:at.openUnit}:{}) }, { type: 'go', screen }]
@@ -544,6 +574,45 @@ export function asked(strip: Strip, query: string): Strip {
 /** Whether two places are the same place. Shallow: an action is flat. */
 export function sameplace(a: Action[], b: Action[]): boolean {
   return a.length === b.length && a.every((x, i) => JSON.stringify(x) === JSON.stringify(b[i]));
+}
+
+/**
+ * The tab already sitting at this place, if one is.
+ *
+ * What a search result carries is the actions that would open it — the same
+ * actions a tab keeps — so "is this already open?" is `sameplace` against
+ * every tab, and nothing cleverer. That question has an answer worth acting
+ * on: picking a result whose place is already open should go to the tab that
+ * has it rather than making a second tab onto the same page, which is what
+ * a browser's address bar does and the reason it says "Switch to tab".
+ *
+ * A blank tab is never the answer. It has no screen and no place, and an
+ * empty place would otherwise match a result whose actions had all been
+ * filtered out on the way off the device — sending you to a new tab page
+ * instead of the thing you searched for.
+ *
+ * The first match rather than all of them: two tabs on one place is allowed
+ * (nothing stops you opening the same course twice) and the one nearest the
+ * front of the strip is the one a person means.
+ *
+ * ## The row this feeds carries a speaker, now
+ *
+ * It could not until lessons became searchable, and the reason is worth
+ * keeping: a mark saying "this is the tab making the noise" needs a result
+ * whose *place* is a place that plays, and for a while none existed. No
+ * result landed on `lesson` at all, and every unit hit is built with
+ * `mode: 'cards'` (`lib/find.ts`) while the other thing that plays is a guide
+ * in listen mode — so `sameplace` was right to refuse every comparison it was
+ * offered.
+ *
+ * A lesson hit closed that: `actionsFor` builds it from the same three
+ * actions `placeFor` records for a lesson tab, which is what lets this match
+ * at all. `browser.test.ts` compares the two directly, because they are
+ * written in different files and nothing else would notice them drifting.
+ */
+export function tabAt(strip: Strip, place: Action[]): AppTab | undefined {
+  if (place.length === 0) return undefined;
+  return strip.tabs.find((t) => t.screen && t.place.length > 0 && sameplace(t.place, place));
 }
 
 /** Open a screen in a tab of its own — the middle-click, as a button. */
@@ -1052,6 +1121,7 @@ export const PLACE_ACTIONS = [
   'openCourse',
   'openEvent',
   'openGuide',
+  'openLesson',
   'openNote',
   'openDocument',
   'openSheet',

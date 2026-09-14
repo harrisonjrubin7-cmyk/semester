@@ -385,19 +385,23 @@ const claudeProxy = (key: string) => ({
  * which file ran first in that worker, which is how a suite passes twice and
  * fails the third time.
  *
- * Nine files, and each is here for the same reason rather than nine reasons:
- * it replaces something the real version of would reach the network, a
- * database, a PDF worker or the store. Kept as a list rather than inferred at
+ * Each is here for the same reason rather than one reason each: it replaces
+ * something the real version of would reach the network, a database, a PDF
+ * worker or the store. The list grows with the app — `downloads.test.tsx`
+ * joined it by replacing the store to name a course. Kept as a list rather than inferred at
  * startup because a config that greps the tree to configure itself is a config
  * nobody can read — and `src/isolation.test.ts` does the grep instead, and
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
   'src/components/credentials.test.tsx',
+  'src/components/downloads.test.tsx',
+  'src/data/seed.test.ts',
   'src/components/rework.test.tsx',
   'src/components/StudyStudio.test.tsx',
   'src/lib/extract.test.ts',
   'src/lib/generate.test.ts',
+  'src/lib/presence.test.ts',
   'src/screens/pathway.test.tsx',
   'src/screens/university.test.tsx',
   'src/state/persist/firstrun.test.ts',
@@ -489,15 +493,17 @@ export default defineConfig(({ command, mode }) => {
      *
      * `isolate: false` reuses a worker across files instead of starting one
      * per file. What it gives up is the guarantee that each file gets a fresh
-     * module registry, and nine files here need exactly that: they call
+     * module registry, and a handful of files here need exactly that: they call
      * `vi.mock`, which can only rebind a module that has not already been
      * evaluated in that worker. Whether it has depends on which file ran
      * first, so the failure is real but intermittent — `components/rework`
      * got the real `state/store` and threw "useStore must be used inside
      * StoreProvider" on one run in three, and passed on the others.
      *
-     * So: two projects. Everything runs in shared workers, and the nine that
-     * mock run isolated, which is 2.5% of the suite paying for what it needs.
+     * So: two projects. Everything runs in shared workers, and the files that
+     * mock run isolated — a few per cent of the suite paying for what it
+     * needs. The count is deliberately not written here: it moves, and a
+     * number in a comment that moves is a number that goes stale.
      * `src/isolation.test.ts` keeps the list honest — it reads this file and
      * the tree, and fails if a new `vi.mock` appears in a file that is not
      * listed.

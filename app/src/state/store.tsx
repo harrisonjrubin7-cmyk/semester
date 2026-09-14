@@ -22,7 +22,7 @@ import type { CourseModule, Screen } from '../lib/types';
 import { buildCatalog, type Catalog } from '../data/catalog';
 import type { Named } from '../lib/forwork';
 import { arrange } from '../lib/yours';
-import { setSessionToken } from '../lib/claude';
+import { setSessionToken } from '../lib/token';
 import {
   accountOf,
   cloudConfigured,
@@ -789,9 +789,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!state.sample || seed.length > 0) return;
     let live = true;
-    void loadSeed().then((mods) => {
-      if (live) setSeed(mods);
-    });
+    void loadSeed()
+      .then((mods) => {
+        if (live) setSeed(mods);
+      })
+      /*
+       * Caught, because an uncaught one is worse than the failure.
+       *
+       * `loadSeed` is four dynamic imports and they reject for the two honest
+       * reasons in `data/seed.ts` — no connection, or a deploy since this copy
+       * opened. Without this that is an unhandled rejection: noise in a
+       * browser console, and a red test run whenever a test unmounts before
+       * the imports land, which `npm test` was hitting intermittently on main.
+       *
+       * There is nothing to show. The sample is an offer, the courses the
+       * account actually holds are unaffected, and the next time the toggle is
+       * touched the fetch is tried again for real.
+       */
+      .catch(() => {});
     return () => {
       live = false;
     };
@@ -903,7 +918,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           done: state.done,
           classes: classesToNudge(railFor(catalog, at, state.appointments)),
           registrar: state.registrar,
-          bill: nextPayment(state, state.term, at),
+          /*
+           * The four lists `nextPayment` reads, named rather than passed as
+           * the whole store. `Held` in `lib/bill.ts` is structural, so this
+           * satisfies it — and it is the difference between a dependency
+           * array that can be checked and one that says `state` and so
+           * re-creates this interval on every keystroke anywhere in the app.
+           */
+          bill: nextPayment(
+            {
+              charges: state.charges,
+              aid: state.aid,
+              payments: state.payments,
+              plans: state.plans,
+            },
+            state.term,
+            at,
+          ),
           quiet: state.quiet,
           atRisk: atRiskToday(
             railFor(catalog, at, state.appointments),
@@ -933,7 +964,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // until something else in this list changed, and the reminders would keep
     // naming work already handed in. Re-creating the interval is free — the
     // list of what has already fired lives in storage, not in this closure.
-  }, [catalog, state.notifs, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, courseCode]);
+    //
+    // The same reasoning covers the six below, which were missing.
+    // `state.quiet` is the worst of them: quiet hours gate whether anything
+    // fires at all, so a student who set them at eleven at night went on
+    // being notified through the night — the interval was still holding the
+    // window as it stood when the effect last ran. `state.term` and the four
+    // it reads through `nextPayment` — charges, aid, payments and plans — are
+    // the same failure one screen over: a bill paid in full kept being
+    // nudged about until an unrelated part of this list happened to change.
+  }, [catalog, state.notifs, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, state.quiet, state.term, state.charges, state.aid, state.payments, state.plans, courseCode]);
 
   // The number on the installed icon: things due today and not ticked. In the
   // provider rather than on Today, because the count has to be right whatever

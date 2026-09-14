@@ -37,10 +37,92 @@
 import type { Layout } from './doclayout';
 import type { CourseId } from './types';
 
+/**
+ * One line of a list, and how far in it sits.
+ *
+ * `level` is steps of indentation, not a measurement: 0 is the left margin, 1
+ * is a sub-item of the line above it. What that is worth in inches is the
+ * exporter's business and differs between Word and the screen.
+ */
+export interface Line {
+  text: string;
+  level: number;
+}
+
+/** How deep a list may go. */
+export const DEEPEST = 4;
+
+/**
+ * A list's lines, however they were stored, with the levels made sensible.
+ *
+ * Two jobs, and they belong together because both are about a list arriving
+ * from somewhere this app does not control. A bare string is a line written
+ * before nesting existed and is read at level 0. And a level is clamped to at
+ * most one deeper than the line above it, because a sub-item of nothing is
+ * not a shape any of the three exporters can draw — markdown, Word and the
+ * page all describe a *tree*, and `[level 2, level 0]` is not one. A pasted
+ * list is exactly where that turns up.
+ */
+export function listed(items: (string | Line)[]): Line[] {
+  const out: Line[] = [];
+  for (const item of items) {
+    const raw = typeof item === 'string' ? { text: item, level: 0 } : item;
+    const above = out.length === 0 ? -1 : out[out.length - 1].level;
+    const level = Math.max(0, Math.min(DEEPEST, Math.floor(raw.level) || 0, above + 1));
+    out.push({ text: raw.text, level });
+  }
+  return out;
+}
+
+/**
+ * A list's lines as the tree the levels describe.
+ *
+ * The flat form is right for storage and for editing — a list is a column of
+ * rows on screen and Tab moves one of them — and wrong for drawing. HTML says
+ * a sub-list is a `<ul>` *inside* the parent `<li>`, and it means it: a flat
+ * list with padding on some rows announces "list, six items" to a screen
+ * reader when what is there is three items and three sub-items.
+ *
+ * Built on `listed`, so it is impossible to hand this a list whose levels do
+ * not make a tree.
+ */
+export interface Branch {
+  line: Line;
+  under: Branch[];
+}
+
+export function nested(items: (string | Line)[]): Branch[] {
+  const roots: Branch[] = [];
+  // The open branch at each level, so a line finds its parent in one step.
+  const open: Branch[] = [];
+  for (const line of listed(items)) {
+    const made: Branch = { line, under: [] };
+    if (line.level === 0) roots.push(made);
+    else open[line.level - 1].under.push(made);
+    open[line.level] = made;
+    open.length = line.level + 1;
+  }
+  return roots;
+}
+
 export type Block =
   | { kind: 'heading'; level: 1 | 2 | 3; text: string }
   | { kind: 'text'; text: string }
-  | { kind: 'bullets'; items: string[]; numbered: boolean }
+  /**
+   * A list, whose items carry how far in they sit.
+   *
+   * `items` is a union because both shapes are on disk. Lists were plain
+   * strings until nesting arrived, and a document written before that is in
+   * somebody's browser, in a backup file, and in a `.json` they exported in
+   * March. `lines()` below reads either, a bare string being a line at the
+   * left margin — which is what it always was.
+   *
+   * Read rather than migrated, following `settled` in `lib/files.ts` and for
+   * its reason: a migration only fixes the copy in localStorage, and a
+   * document also arrives by restore, by sync and by paste. A reader is
+   * correct on every road in; a migration is correct on one of them.
+   */
+  | { kind: 'bullets'; items: (string | Line)[]; numbered: boolean }
   /** A pulled quotation, with where it came from — the app never quotes blind. */
   | { kind: 'quote'; text: string; source: string }
   | { kind: 'table'; rows: string[][]; header: boolean; caption: string }
@@ -103,6 +185,23 @@ export type Block =
    * none.
    */
   | { kind: 'toc'; title: string }
+  /**
+   * A line across the page, and nothing else.
+   *
+   * Its own kind rather than a mode of `break`, because the two look alike in
+   * markdown and are not alike anywhere else. `---` is markdown's *thematic
+   * break* — a divider between sections, on the same page — and this app
+   * wrote it for a page break, which is a different thing that happens to be
+   * spelled the same way. A document exported and re-imported came back with
+   * its page breaks intact only because both ends made the same mistake.
+   *
+   * So `rule` takes the `---` that was never the page break's to use, and
+   * `break` writes what it actually is. One consequence worth knowing: a
+   * markdown file this app exported *before* this will re-import its page
+   * breaks as rules. That is the correct reading of `---` and the wrong
+   * answer for that file, and it is visible on the page rather than silent.
+   */
+  | { kind: 'rule' }
   | { kind: 'break' };
 
 export type BlockKind = Block['kind'];
@@ -165,6 +264,7 @@ export const BLOCK_LABEL: Record<BlockKind, string> = {
   code: 'Code',
   image: 'Picture',
   toc: 'Contents',
+  rule: 'Divider',
   break: 'Page break',
 };
 
@@ -197,6 +297,8 @@ export function blankBlock(kind: BlockKind): Block {
       return { kind: 'image', fileId: '', name: '', alt: '', caption: '' };
     case 'toc':
       return { kind: 'toc', title: 'Contents' };
+    case 'rule':
+      return { kind: 'rule' };
     case 'break':
       return { kind: 'break' };
     default:
@@ -406,7 +508,7 @@ export function words(doc: Doc): number {
   };
   for (const block of doc.blocks) {
     if (block.kind === 'heading' || block.kind === 'text') count(block.text);
-    else if (block.kind === 'bullets') block.items.forEach(count);
+    else if (block.kind === 'bullets') listed(block.items).forEach((l) => count(l.text));
     else if (block.kind === 'checks') block.items.forEach((i) => count(i.text));
     else if (block.kind === 'quote') count(block.text);
     /*
@@ -448,9 +550,11 @@ export function summary(blocks: Block[]): string {
 /** Whether there is anything in it at all — an empty paragraph is not something. */
 export function hasContent(doc: Partial<Doc> & Pick<Doc, 'blocks'>): boolean {
   return doc.blocks.some((b) => {
-    if (b.kind === 'break') return false;
+    // Neither a divider nor a page break is something a document holds — both
+    // are marks about where other things go.
+    if (b.kind === 'break' || b.kind === 'rule') return false;
     if (b.kind === 'table') return b.rows.some((r) => r.some((c) => c.trim() !== ''));
-    if (b.kind === 'bullets') return b.items.some((i) => i.trim() !== '');
+    if (b.kind === 'bullets') return listed(b.items).some((l) => l.text.trim() !== '');
     // Said out loud because the fall-through below reads `b.text`, and a
     // checklist has not got one: without this an empty checklist would answer
     // `undefined !== ''` — true — and a blank document would claim to hold
@@ -474,6 +578,59 @@ export function hasContent(doc: Partial<Doc> & Pick<Doc, 'blocks'>): boolean {
 
 // ── Markdown, both directions ────────────────────────────────────────────
 
+/**
+ * What a page break is written as, since markdown has no way to say it.
+ *
+ * Exported so the round-trip test can name it rather than re-typing it, which
+ * is how the two halves of a convention drift apart.
+ */
+export const PAGE_BREAK_MARK = '<!-- pagebreak -->';
+
+/**
+ * A list as markdown, nesting and all.
+ *
+ * Indented to the *content* column of the line above, which is what
+ * CommonMark asks for and is why the two markers use different widths: a
+ * nested item under `- ` starts at column 2, and under `1. ` at column 3.
+ * Indent a numbered sub-item by two and half the renderers on earth read it
+ * as part of the paragraph above instead.
+ *
+ * Numbers restart inside each sub-list and carry on where they left off when
+ * the list comes back out — which is what the numbers mean, and what every
+ * renderer will draw whatever digits are written here. They are written
+ * correctly anyway, because the markdown file is also something a person
+ * reads.
+ */
+function listMarkdown(items: Line[], numbered: boolean): string {
+  const at: number[] = [];
+  const out: string[] = [];
+  for (const line of items) {
+    if (!line.text.trim()) continue;
+    at.length = line.level + 1;
+    at[line.level] = (at[line.level] ?? 0) + 1;
+    const marker = numbered ? `${at[line.level]}.` : '-';
+    const step = numbered ? 3 : 2;
+    out.push(`${' '.repeat(line.level * step)}${marker} ${line.text}`);
+  }
+  return out.join('\n');
+}
+
+/**
+ * How far in a list line is, from the whitespace in front of its marker.
+ *
+ * A tab is a level. Spaces are read at two to a level and rounded down, which
+ * takes the two conventions that exist — two spaces and four — and lands both
+ * on something sensible: four spaces is level 2 under the first and level 1
+ * under the second, and `lines()` then clamps it to one deeper than the line
+ * above, so the four-space file comes out right and the two-space file comes
+ * out right.
+ */
+function levelOf(before: string): number {
+  const tabs = (before.match(/\t/g) ?? []).length;
+  const spaces = before.replace(/\t/g, '').length;
+  return tabs + Math.floor(spaces / 2);
+}
+
 /** One markdown table row, with pipes inside cells escaped. */
 function tableRow(row: string[], width: number): string {
   return `| ${Array.from({ length: width }, (_, i) => (row[i] ?? '').replace(/\|/g, '\\|')).join(' | ')} |`;
@@ -492,12 +649,7 @@ export function toMarkdown(doc: Doc): string {
         if (block.text.trim()) parts.push(block.text);
         break;
       case 'bullets':
-        parts.push(
-          block.items
-            .filter((i) => i.trim())
-            .map((item, i) => (block.numbered ? `${i + 1}. ${item}` : `- ${item}`))
-            .join('\n'),
-        );
+        parts.push(listMarkdown(listed(block.items), block.numbered));
         break;
       /*
        * A fence long enough that the code cannot end it early.
@@ -596,8 +748,27 @@ export function toMarkdown(doc: Doc): string {
             : `$$\n${block.latex}\n$$`,
         );
         break;
-      case 'break':
+      // The thematic break, which is what `---` has always meant.
+      case 'rule':
         parts.push('---');
+        break;
+      /*
+       * A page break, as an HTML comment.
+       *
+       * Markdown has no page break — it describes a document, not a printed
+       * one — so whatever goes here is a convention, and the choice is
+       * between one that is invisible elsewhere and one that is wrong
+       * elsewhere. `---` was the second: it is the thematic break, it now
+       * belongs to `rule`, and writing it here made every exported page break
+       * read as a divider in every other tool.
+       *
+       * An HTML comment renders as nothing in GitHub, Obsidian, Pandoc and
+       * anything else that reads markdown, so a document exported from here
+       * and read elsewhere has no noise in it where the page breaks were —
+       * and comes home again with them intact.
+       */
+      case 'break':
+        parts.push(PAGE_BREAK_MARK);
         break;
     }
   }
@@ -637,9 +808,23 @@ export function fromMarkdown(text: string): Block[] {
       continue;
     }
 
-    if (/^\s*(?:---|\*\*\*|___)\s*$/.test(line)) {
+    /*
+     * A page break, in the spelling above and in the two a person is likely
+     * to have typed by hand. `\pagebreak` and `\newpage` are what Pandoc
+     * takes, so a document that came from there keeps its breaks; they are
+     * read and not written, because what this app writes is the comment.
+     */
+    if (/^\s*(?:<!--\s*page-?break\s*-->|\\pagebreak|\\newpage)\s*$/i.test(line)) {
       flush();
       blocks.push({ kind: 'break' });
+      continue;
+    }
+
+    // `---`, `***` and `___` are all the same thing in markdown: a thematic
+    // break. Which is a divider, and was read as a page break until now.
+    if (/^\s*(?:---|\*\*\*|___)\s*$/.test(line)) {
+      flush();
+      blocks.push({ kind: 'rule' });
       continue;
     }
 
@@ -733,19 +918,22 @@ export function fromMarkdown(text: string): Block[] {
       continue;
     }
 
-    const bullet = /^\s*([-*+]|\d+[.)])\s+(.*)$/.exec(line);
+    const bullet = /^(\s*)([-*+]|\d+[.)])\s+(.*)$/.exec(line);
     if (bullet) {
       flush();
-      const numbered = /\d/.test(bullet[1]);
-      const items: string[] = [];
+      const numbered = /\d/.test(bullet[2]);
+      const items: Line[] = [];
       while (i < lines.length) {
-        const m = /^\s*(?:[-*+]|\d+[.)])\s+(.*)$/.exec(lines[i]);
+        const m = /^(\s*)(?:[-*+]|\d+[.)])\s+(.*)$/.exec(lines[i]);
         if (!m) break;
-        items.push(m[1].trim());
+        items.push({ text: m[2].trim(), level: levelOf(m[1]) });
         i += 1;
       }
       i -= 1;
-      blocks.push({ kind: 'bullets', items, numbered });
+      // Through `listed`, so a list indented in a way no tree can hold — a
+      // sub-item as the first line, a jump from one level to three — comes in
+      // as the nearest shape that is one.
+      blocks.push({ kind: 'bullets', items: listed(items), numbered });
       continue;
     }
 

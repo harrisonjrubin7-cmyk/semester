@@ -594,20 +594,44 @@ export function Assistant() {
             position: 'fixed',
             [side]: 18,
             /*
-             * Above the tab bar, measured rather than guessed.
+             * Above whatever is along the bottom, measured rather than
+             * guessed.
              *
-             * The bar has no fixed height — it is a flex child sized by its
-             * own content, and it grows with the text-size setting. A
-             * hard-coded 64 left a two-pixel gap at the default size and would
-             * have sat on top of the bar at the largest one, so the shell
-             * measures it and writes `--tabbar-h`.
+             * Nothing down there has a fixed height — a bottom bar is a flex
+             * child sized by its own content, and it grows with the text-size
+             * setting. A hard-coded 64 left a two-pixel gap at the default
+             * size and would have sat on top of the bar at the largest one,
+             * so whatever is drawn along the bottom reports itself and the
+             * shell writes `--bottom-chrome`. See `lib/bottomchrome.hook.ts`
+             * for why that is an inset up from the edge rather than a height:
+             * the springboard's dock is drawn in the page's own flow and
+             * stops short of the edge, and reading its height put this button
+             * across the word "Progress".
              */
             /*
-             * A wide window has no tab bar — the rail replaces it and the
-             * shell removes `--tabbar-h` — so the fallback would strand the
-             * button 76px above nothing.
+             * A wide window has no bar along the bottom — the rail replaces
+             * it and the shell removes `--bottom-chrome` — so a fallback of a
+             * bar's own height would strand the button 76px above nothing.
+             *
+             * The fallback is zero for the same reason, and that is the case
+             * the `wide` branch missed: a *narrow* window can have nothing
+             * along its bottom either. The workspace shell is one, and there
+             * the 76px fallback put the button 140px above the window's
+             * bottom while `.scrollarea` went on reserving the 76px that
+             * clears a button sitting 12px above a bar. The gap between those
+             * two numbers was 64px of the last card, with an opaque circle on
+             * top of it — and because that card is the last thing on Today,
+             * the covered words could not be scrolled out from under it.
+             *
+             * `bottomchrome.hook.ts` says the old fallback was "wrong by the
+             * least when it is wrong". That reads as true of the button's
+             * position alone and is not true of the pair: the reservation in
+             * `app.css` is written from the same two numbers, and 76 puts the
+             * button outside it. Nothing is lost by zero — the hook writes in
+             * a layout effect, so a bar that exists has been measured before
+             * the button is ever painted.
              */
-            bottom: wide ? 20 + lift : `calc(var(--tabbar-h, 76px) + ${12 + lift}px)`,
+            bottom: wide ? 20 + lift : `calc(var(--bottom-chrome, 0px) + ${12 + lift}px)`,
             width: 52,
             height: 52,
             borderRadius: '50%',
