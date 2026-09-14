@@ -141,7 +141,7 @@ export function Proof() {
       <div
         style={{
           fontSize: 'var(--type-xs)',
-          opacity: 0.55,
+          opacity: 'var(--app-text-dim)',
           marginBottom: 'var(--sp-4)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
@@ -171,7 +171,7 @@ export function Proof() {
         >
           {reading ? 'Reading…' : 'Add the reading itself'}
         </FilePick>
-        <span style={{ fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+        <span style={{ fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)' }}>
           {dropped.length > 0
             ? `${dropped.map((d) => d.label).join(', ')} — kept only while this screen is open`
             : 'A PDF or Word file, read here and stored nowhere'}
@@ -246,7 +246,7 @@ export function Proof() {
           <p
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: 0.55,
+              opacity: 'var(--app-text-dim)',
               marginTop: 9,
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',

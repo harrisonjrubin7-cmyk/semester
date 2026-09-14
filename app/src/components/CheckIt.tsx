@@ -132,7 +132,7 @@ export function CheckIt({
       <p
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.55,
+          opacity: 'var(--app-text-dim)',
           marginTop: 13,
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',

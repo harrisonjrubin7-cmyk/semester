@@ -316,7 +316,7 @@ export function SettingsNav() {
                       style={{ flex: 1, minWidth: 0, padding: '11px 0', opacity: on ? 1 : 0.5 }}
                     >
                       <div style={{ fontSize: 'var(--type-md)' }}>{section?.label ?? id}</div>
-                      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>{section?.blurb}</div>
+                      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-1)' }}>{section?.blurb}</div>
                     </div>
                     <Reorder
                       label={section?.label ?? id}

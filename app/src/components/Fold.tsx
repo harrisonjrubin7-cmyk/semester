@@ -412,7 +412,7 @@ export function FoldHead({
         size={12}
         style={{
           flex: 'none',
-          opacity: 0.55,
+          opacity: 'var(--app-text-dim)',
           transform: shut ? 'none' : 'rotate(90deg)',
           transition: 'transform 160ms ease',
         }}
@@ -479,7 +479,7 @@ export function FoldAll({ style }: { style?: CSSProperties }) {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
-          opacity: 0.55,
+          opacity: 'var(--app-text-dim)',
         }}
       >
         {said}

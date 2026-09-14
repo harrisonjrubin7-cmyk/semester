@@ -234,7 +234,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         >
           {t.title}
         </span>
-        <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 3 }}>
+        <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)', marginTop: 3 }}>
           <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
             {t.courseId ? courseCode(t.courseId) : 'Personal'}
           </span>
@@ -997,7 +997,7 @@ function Notes({ rows }: { rows?: Note[] }) {
                   style={{
                     display: 'block',
                     fontSize: 'var(--type-xs)',
-                    opacity: 0.55,
+                    opacity: 'var(--app-text-dim)',
                     marginTop: 3,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -1202,7 +1202,7 @@ export function NoteEditor() {
 
       <SectionLabel>Attachments</SectionLabel>
       {attached.length === 0 && (
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, marginBottom: 'var(--sp-5)' }}>
+        <div style={{ fontSize: 'var(--type-base)', opacity: 'var(--app-text-dim)', marginBottom: 'var(--sp-5)' }}>
           Nothing attached yet.
         </div>
       )}
@@ -1226,7 +1226,7 @@ export function NoteEditor() {
               >
                 {f.name}
               </span>
-              <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)' }}>
                 {formatBytes(f.size)}
               </span>
             </button>

@@ -170,7 +170,7 @@ export function RecordButton({
       )}
 
       {state === 'idle' && !liveSupported() && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', opacity: 'var(--app-text-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           This browser has no speech recognition, so this records audio only. Chrome and Safari
           will write it down as it goes; Firefox will not.
         </div>

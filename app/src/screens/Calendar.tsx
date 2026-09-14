@@ -464,7 +464,7 @@ function DayView() {
               <span className="tag tag-outline">{e.kind}</span>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{e.title}</span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)' }}>
                   {e.time} · {e.where}
                 </span>
               </span>
@@ -503,7 +503,7 @@ function DayView() {
                   <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>
                     {e.title}
                   </span>
-                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)' }}>
                     {feed?.name ?? 'Calendar'}
                     {e.where ? ` · ${e.where}` : ''}
                   </span>
@@ -628,7 +628,7 @@ const CARRY = {
   fontFamily: 'var(--font-heading)',
   fontSize: 'var(--type-xs)',
   letterSpacing: '0.08em',
-  opacity: 0.55,
+  opacity: 'var(--app-text-dim)',
 } as const;
 
 const arrow = {
@@ -637,7 +637,7 @@ const arrow = {
   fontFamily: 'var(--font-heading)',
   fontSize: 'var(--type-xs)',
   letterSpacing: '0.06em',
-  opacity: 0.55,
+  opacity: 'var(--app-text-dim)',
 } as const;
 
 // ── Week ──
@@ -908,7 +908,7 @@ function WeekView() {
                       fontSize: 'var(--type-xs)',
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
-                      opacity: 0.55,
+                      opacity: 'var(--app-text-dim)',
                     }}
                   >
                     {DOW_INITIALS[e.date.getDay()]} {e.date.getDate()}
@@ -917,7 +917,7 @@ function WeekView() {
                     <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
                       {e.title}
                     </span>
-                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-1)' }}>
                       {e.time} · {e.where}
                     </span>
                   </span>
@@ -937,7 +937,7 @@ function WeekView() {
                       fontSize: 'var(--type-xs)',
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
-                      opacity: 0.55,
+                      opacity: 'var(--app-text-dim)',
                     }}
                   >
                     {DOW_INITIALS[isoToDate(e.date).getDay()]} {isoToDate(e.date).getDate()}
@@ -948,7 +948,7 @@ function WeekView() {
                     </span>
                     {/* Said out loud, every time: a feed is what somebody
                         else's calendar claims, not what a syllabus stated. */}
-                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-1)' }}>
                       From a connected calendar
                     </span>
                   </span>
@@ -1562,7 +1562,7 @@ function MonthView() {
           <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
             {t.title}
           </span>
-          <span style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+          <span style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)' }}>
             {t.courseId ? (catalog.byId[t.courseId]?.code ?? '') : 'Yours'}
           </span>
         </button>
@@ -1727,7 +1727,7 @@ function MonthView() {
                 <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
                   {e.title}
                 </span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)' }}>
                   {e.time} · {e.where}
                 </span>
               </span>
@@ -1742,7 +1742,7 @@ function MonthView() {
                 </span>
                 {/* Said out loud, every time: a feed is what somebody else's
                     calendar claims, not what a syllabus stated. */}
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)' }}>
                   {[e.time, e.where].filter(Boolean).join(' · ') || 'From a connected calendar'}
                 </span>
               </span>
@@ -2295,7 +2295,7 @@ function SemesterView() {
                         style={{ ...WEEK_ROW, opacity: drag.held?.id === it.id ? 0.4 : 1 }}
                       >
                         <span>
-                          <span style={{ opacity: 0.55 }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
+                          <span style={{ opacity: 'var(--app-text-dim)' }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
                           {it.title.length > 42 ? `${it.title.slice(0, 40)}…` : it.title}
                         </span>
                       </button>
@@ -2325,7 +2325,7 @@ function SemesterView() {
                         style={WEEK_ROW}
                       >
                         <span>
-                          <span style={{ opacity: 0.55 }}>{e.dow}</span>{' '}
+                          <span style={{ opacity: 'var(--app-text-dim)' }}>{e.dow}</span>{' '}
                           {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
                         </span>
                       </button>
@@ -2341,7 +2341,7 @@ function SemesterView() {
                     ).map((e) => (
                       <div key={e.id} style={{ ...WEEK_ROW, display: 'flex' }}>
                         <span>
-                          <span style={{ opacity: 0.55 }}>{DOW[isoToDate(e.date).getDay()]}</span>{' '}
+                          <span style={{ opacity: 'var(--app-text-dim)' }}>{DOW[isoToDate(e.date).getDay()]}</span>{' '}
                           {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
                         </span>
                       </div>
@@ -2379,7 +2379,7 @@ function SemesterView() {
                         }}
                       >
                         <span>
-                          <span style={{ opacity: 0.55 }}>Yours</span>{' '}
+                          <span style={{ opacity: 'var(--app-text-dim)' }}>Yours</span>{' '}
                           {t.title.length > 42 ? `${t.title.slice(0, 40)}…` : t.title}
                         </span>
                       </button>
@@ -2564,7 +2564,7 @@ function CampusList() {
                     <span
                       style={{
                         fontSize: 'var(--type-xs)',
-                        opacity: 0.55,
+                        opacity: 'var(--app-text-dim)',
                         fontFamily: 'var(--font-heading)',
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',

@@ -173,7 +173,7 @@ export function Essay() {
               }}
             >
               <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-1)' }}>
                 {option.blurb}
               </span>
             </button>
@@ -301,7 +301,7 @@ export function Essay() {
         placeholder="Everything true about you it is allowed to say: what you have done, where, when, with whom, what came of it."
         style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         This list is the fence. Anything not on it comes back as a blank in square brackets rather
         than a guess — a letter that invents an internship reads exactly like one that does not.
       </div>

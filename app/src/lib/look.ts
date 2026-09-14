@@ -1244,6 +1244,32 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
      */
     '--app-row-dim': String(moreContrast ? Math.max(g.dimAlpha, LOUD.dim) : g.dimAlpha),
 
+    /*
+     * And the same figure for secondary text, which had picked its own.
+     *
+     * `opacity: 0.55` was written out at 195 call sites — the line under a
+     * heading, an empty state's explanation, the count beside a section,
+     * "Collapse all". One number, chosen once on a dark ground and then
+     * copied, and the note on `--app-row-dim` above says why that cannot
+     * hold: dark ink on a light page fades faster than light ink on a dark
+     * one, so the same alpha is not the same legibility.
+     *
+     * Measured, on twenty screens at 390x844: at 0.55 that text is 5.4:1 to
+     * 5.5:1 on the eight dark grounds and 3.64:1 to 3.85:1 on the five light
+     * ones, against the 4.5:1 that 10-13px text has to meet. Twenty-one runs
+     * of text on Parchment alone, none of them reachable by a suite that
+     * cannot see a rendered pixel.
+     *
+     * So the dark grounds keep the 0.55 they were tuned on and nothing moves
+     * for them, and the light grounds take `dimAlpha` — the figure already
+     * audited per ground for exactly this question, which clears 4.5:1 on
+     * every one of them with room to spare. Both rise with the contrast
+     * setting, which a hand-written 0.55 never did.
+     */
+    '--app-text-dim': String(
+      moreContrast ? Math.max(g.dimAlpha, LOUD.dim) : g.light ? g.dimAlpha : 0.55,
+    ),
+
     // On a light ground the accent has to darken to stay legible as text —
     // the same metal, three steps down — and the wash has to be mixed from
     // that darker shade or it is a selection state you cannot see.

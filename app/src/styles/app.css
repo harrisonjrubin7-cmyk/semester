@@ -2936,7 +2936,7 @@ input[type='search'].input {
  * it was, so the outline on the target is the only thing that moves.
  */
 .movable.is-held {
-  opacity: 0.55;
+  opacity: var(--app-text-dim);
 }
 
 .movable.is-over {
@@ -5927,7 +5927,7 @@ input[type='search'].input {
 }
 
 .deskhome-box-say {
-  opacity: 0.55;
+  opacity: var(--app-text-dim);
 }
 
 /* `.deskhome-keys` and `.desktop-keys` drew a `⌘ K` chip in each of the two

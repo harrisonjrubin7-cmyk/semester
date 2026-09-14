@@ -417,7 +417,7 @@ export function Maps() {
       >
         <span style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
           {stop.time && (
-            <span style={{ fontSize: 'var(--type-sm)', opacity: 0.55, flex: 'none' }}>{stop.time}</span>
+            <span style={{ fontSize: 'var(--type-sm)', opacity: 'var(--app-text-dim)', flex: 'none' }}>{stop.time}</span>
           )}
           <span style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', flex: 1, minWidth: 0 }}>
             {stop.label}
@@ -427,7 +427,7 @@ export function Maps() {
           style={{
             display: 'block',
             fontSize: 'var(--type-xs)',
-            opacity: 0.55,
+            opacity: 'var(--app-text-dim)',
             marginTop: 'var(--sp-1)',
           }}
         >
@@ -897,7 +897,7 @@ export function Maps() {
           >
             Not a place you have named
           </div>
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-2)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-2)' }}>
             Accurate to about {far(you.accuracy)}.
           </div>
           <input
@@ -1026,7 +1026,7 @@ export function Maps() {
         <div
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 0.55,
+            opacity: 'var(--app-text-dim)',
             marginTop: 'var(--sp-7)',
             lineHeight: 'var(--leading-relaxed)',
           }}

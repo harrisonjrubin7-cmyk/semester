@@ -144,7 +144,7 @@ export function Draw() {
               }}
             >
               <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>
                 {option.blurb}
               </span>
             </button>
@@ -165,7 +165,7 @@ export function Draw() {
         }
         style={{ width: '100%', minHeight: 100, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 'var(--app-text-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         Give it the numbers if you have them — they go in exactly as typed. Leave them out and the
         drawing is labelled rather than guessed.
       </div>

@@ -13,7 +13,7 @@ import { Folding } from '../components/Fold';
 /** The note under a heading saying part of what follows arrived later. */
 const SINCE = {
   fontSize: 'var(--type-sm)',
-  opacity: 0.55,
+  opacity: 'var(--app-text-dim)',
   lineHeight: 'var(--leading-relaxed)',
   marginBottom: 'var(--sp-4)',
 } as const;
@@ -108,7 +108,7 @@ export function FieldGuide() {
             fontSize: 'calc(10.5px * var(--text-scale, 1))',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
-            opacity: 0.55,
+            opacity: 'var(--app-text-dim)',
           }}
         >
           {meta}
@@ -184,7 +184,7 @@ export function FieldGuide() {
             >
               <div
                 className="chrome-text"
-                style={{ fontSize: 'var(--type-xl)', lineHeight: 1, flex: 'none', opacity: 0.55 }}
+                style={{ fontSize: 'var(--type-xl)', lineHeight: 1, flex: 'none', opacity: 'var(--app-text-dim)' }}
               >
                 {String(i + 1).padStart(2, '0')}
               </div>
