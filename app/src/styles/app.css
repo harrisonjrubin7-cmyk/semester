@@ -4050,6 +4050,37 @@ input[type='search'].input {
  * claim. The underline is the one channel nothing else is using, and it
  * survives every combination of the two.
  */
+/*
+ * A cell whose text folds rather than running past the edge.
+ *
+ * It is a `<textarea>` — no CSS makes an `<input>` wrap — so what is needed
+ * here is only to stop it looking like one: no resize grip, no scrollbar, and
+ * the same line height the rest of the grid uses, or a wrapped row would sit
+ * a pixel off from its neighbours.
+ */
+.scell-wrap {
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  line-height: 1.25;
+  padding-block: 2px;
+  vertical-align: middle;
+}
+
+/*
+ * A block drawn as one cell.
+ *
+ * It carries no alignment of its own on purpose. Excel's most-pressed button
+ * here is *Merge and Center*, and it is two things because they are two
+ * things: joining a block and centring what is in it. Centring silently would
+ * be this rule changing formatting nobody asked it to change — and the cell's
+ * own `text-align` is an inline style, so a rule here would lose to it anyway
+ * and be dead code that reads as a decision.
+ *
+ * The class stays because the `<td>` is the only place a join is visible in
+ * the DOM, and both the tests and anybody reading the grid need to find one.
+ */
+
 .scell-breaks {
   text-decoration-line: underline;
   text-decoration-style: wavy;

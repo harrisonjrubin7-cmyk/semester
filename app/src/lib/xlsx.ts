@@ -68,6 +68,7 @@ import { chartsOf, type ChartRead, type SheetChart } from './chart';
 import { autoFilterXml, conditionalFor } from './xlsxcond';
 import { validationsFor } from './xlsxvalid';
 import { checksOf, type DataRule } from './validate';
+import { joinsOf, spanOf } from './joined';
 import { rulesOf, type CondRule } from './condfmt';
 import { namesOf, pointAt, writeRef, type NamedRange } from './names';
 import { filterOf, hidden as hiddenRows } from './filter';
@@ -148,6 +149,8 @@ export interface Look {
   wash?: string;
   /** Which sides are ruled, as any of `t`, `b`, `l`, `r`. */
   edge?: string;
+  /** Whether long text folds onto more lines rather than running past the edge. */
+  wrap?: boolean;
   /** Type size in points. Absent is 11, which is Excel's own default. */
   size?: number;
 }
@@ -188,6 +191,14 @@ export interface Tab {
    * summary tab, which is the only reason to have named anything.
    */
   names?: NamedRange[];
+  /**
+   * Blocks drawn as one cell, as normalised ranges — see `lib/joined.ts`.
+   *
+   * Written into the sheet rather than baked into the cells, because that is
+   * what a join *is* in this format too: the covered cells stay in the file as
+   * the blanks they are, and Excel draws the block from this list.
+   */
+  joins?: string[];
   /**
    * What the cells in a block are allowed to hold — see `lib/xlsxvalid.ts`.
    *
@@ -322,12 +333,13 @@ function sheetXml(tab: Tab, styles: Styles, drawing = false, conditional = ''): 
     `${view}${cols}<sheetData>${rows}</sheetData>` +
     /*
      * `CT_Worksheet` is a sequence, and this is the order it wants:
-     * `autoFilter`, then `conditionalFormatting`, then `dataValidations`,
-     * then `drawing` near the very end. Any other order is a repair notice
-     * with no hint of which element, so the order lives here once rather than
-     * at each writer.
+     * `autoFilter`, then `mergeCells`, then `conditionalFormatting`, then
+     * `dataValidations`, then `drawing` near the very end. Any other order is
+     * a repair notice with no hint of which element, so the order lives here
+     * once rather than at each writer.
      */
     (tab.autoFilter ? autoFilterXml(tab.autoFilter) : '') +
+    mergesXml(tab.joins ?? []) +
     conditional +
     validationsFor(tab.checks ?? []) +
     (drawing ? '<drawing r:id="rId1"/>' : '') +
@@ -376,6 +388,7 @@ function lookKey(look: Look): string {
     look.ink ?? '',
     look.wash ?? '',
     look.edge ?? '',
+    look.wrap ? 'w' : '',
     look.size ?? '',
   ].join('|');
 }
@@ -438,6 +451,18 @@ function fontXmlFor(look: Look): string {
     (look.ink ? `<color rgb="${xml(look.ink)}"/>` : '') +
     `<sz val="${look.size ?? 11}"/><name val="Calibri"/></font>`
   );
+}
+
+/**
+ * The blocks drawn as one cell.
+ *
+ * `count` is not optional, and a `mergeCells` element with no children is
+ * invalid rather than empty — so the whole element is left out where there is
+ * nothing to say, which is every sheet nobody has joined anything on.
+ */
+function mergesXml(joins: readonly string[]): string {
+  const made = joins.filter((range) => spanOf(range)).map((range) => `<mergeCell ref="${xml(range)}"/>`);
+  return made.length ? `<mergeCells count="${made.length}">${made.join('')}</mergeCells>` : '';
 }
 
 /** A fill is a solid patch of one colour, or nothing at all. */
@@ -544,10 +569,20 @@ export function styleTable(tabs: Tab[], dxfs: string[] = []): Styles {
         (font ? ' applyFont="1"' : '') +
         (fill ? ' applyFill="1"' : '') +
         (border ? ' applyBorder="1"' : '') +
-        (look.align ? ' applyAlignment="1"' : '');
-      return look.align
-        ? `<xf ${attrs}><alignment horizontal="${look.align}"/></xf>`
-        : `<xf ${attrs}/>`;
+        (look.align || look.wrap ? ' applyAlignment="1"' : '');
+      /*
+       * Wrapping is an *alignment* in this format, not a font or a fill, so it
+       * shares the one child element with `horizontal` — and a cell that wraps
+       * without being aligned still needs the element, which is why the test
+       * below is on either rather than on `align` alone.
+       */
+      const alignment =
+        look.align || look.wrap
+          ? `<alignment${look.align ? ` horizontal="${look.align}"` : ''}${
+              look.wrap ? ' wrapText="1"' : ''
+            }/>`
+          : '';
+      return alignment ? `<xf ${attrs}>${alignment}</xf>` : `<xf ${attrs}/>`;
     })
     .join('');
 
@@ -771,6 +806,7 @@ export function fromSheet(sheet: Sheet, header = true, ctx: Ctx = clock()): Tab 
             ...(style.ink ? { ink: inkPaper(style.ink) } : {}),
             ...(style.wash ? { wash: washPaper(style.wash) } : {}),
             ...(style.edge ? { edge: style.edge } : {}),
+            ...(style.wrap ? { wrap: true } : {}),
             ...(style.size && style.size !== BASE_SIZE ? { size: style.size } : {}),
           })
         : undefined;
@@ -820,6 +856,7 @@ export function fromSheet(sheet: Sheet, header = true, ctx: Ctx = clock()): Tab 
     charts: readable(sheet.cells, chartsOf(sheet), ctx),
     names: namesOf(sheet),
     checks: checksOf(sheet),
+    joins: joinsOf(sheet).map((span) => span.range),
   };
 }
 

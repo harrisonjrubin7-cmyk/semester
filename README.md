@@ -561,6 +561,22 @@ model in it or needs a key:
   `.xlsx` as real `dataValidation` elements, so the dropdown is a dropdown in
   Excel too.
 
+  Long text can **wrap** rather than running off past the edge — which cost
+  more than a line of CSS, because a cell is an `<input>` and no CSS folds
+  one; a wrapped cell is drawn as a text box that can hold lines, and only a
+  wrapped one, so every other cell is what it always was. Alt-Return puts a
+  break in by hand.
+
+  And a block can be **joined into one cell**, which is what a title across the
+  top of a gradebook needs. Joining keeps the top-left value and clears the
+  rest, and says how many it cleared. Keeping them hidden instead would have
+  been the tempting thing and the wrong one: `=SUM(A1:C1)` would then add up
+  two values nobody can see, on a sheet that shows one — the hidden-row trap
+  again, with no filter visible to explain it. So what is shown is what is
+  summed, and undo takes back the block and the values together. Both go into
+  the `.xlsx` as what they are: a real `mergeCell`, and a real `wrapText`
+  alignment.
+
   And the corner of the selection is a **fill handle**: drag it to pull a
   formula down a column or across a row, or press it to fill as far as the
   column beside it goes — which is what double-clicking it does in Excel, and

@@ -86,6 +86,14 @@ export interface Sheet {
    */
   rules?: CondRule[];
   /**
+   * Blocks of cells drawn as one — see `lib/joined.ts`.
+   *
+   * Ranges rather than a flag on a cell, because a join is a claim about
+   * several cells at once and no one of them owns it. The covered cells are
+   * cleared when the join is made: what is shown has to be what is summed.
+   */
+  joins?: string[];
+  /**
    * What the cells in a block are allowed to hold — see `lib/validate.ts`.
    *
    * Checked on every read and *shown*, never enforced: the grid writes a cell
@@ -176,6 +184,16 @@ export interface CellStyle {
    * combination — sixteen names for four facts.
    */
   edge?: string;
+  /**
+   * Whether long text folds onto more lines instead of running past the edge.
+   *
+   * The one piece of formatting the grid could not simply *style* into place:
+   * a cell is an `<input>`, and an input is a single line by definition — no
+   * CSS makes one wrap. A wrapped cell is drawn as a `<textarea>` instead, and
+   * only a wrapped one, so every other cell on every other sheet keeps exactly
+   * the element it had. See `Cell` in `screens/Sheet.tsx`.
+   */
+  wrap?: boolean;
   /**
    * Type size in points, on Excel's own scale, where 11 is the default.
    *

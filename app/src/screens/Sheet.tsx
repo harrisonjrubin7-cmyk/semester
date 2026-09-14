@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
+import { forwardRef, useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -121,6 +121,20 @@ import {
 } from '../lib/chart';
 import { SheetChart as ChartPicture } from '../components/SheetChart';
 import { hides } from '../lib/filter';
+import {
+  coveredBy,
+  joinAt,
+  joinsOf,
+  landOn,
+  cellsOf,
+  saysJoin,
+  spanOf,
+  spansAt,
+  whyNotJoin,
+  withJoin,
+  withoutJoin,
+  type Span,
+} from '../lib/joined';
 import {
   CHECKS,
   CHECK_LABELS,
@@ -763,6 +777,18 @@ interface Snap {
   styles: Record<string, CellStyle>;
   rows: number;
   cols: number;
+  /**
+   * The blocks drawn as one cell, where this step changed them.
+   *
+   * In the snapshot rather than patched beside it, because joining does two
+   * things at once — it makes the block *and* clears the cells under it — and
+   * an undo that put back only the values would put them back underneath a
+   * block that is still there. They would be restored and invisible, which is
+   * the hidden-data fault `lib/joined.ts` exists to avoid, reintroduced by the
+   * one step meant to be the way out of it. Measured: the toast said "undo
+   * brings them back" and undo did not.
+   */
+  joins?: string[];
   /** Other sheets this step rewrote. Absent on every step that rewrote none. */
   others?: Others;
 }
@@ -835,7 +861,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const [onColumn, setOnColumn] = useState<number | null>(null);
   const [needle, setNeedle] = useState('');
   const [instead, setInstead] = useState('');
-  const boxes = useRef<Record<string, HTMLInputElement | null>>({});
+  /**
+   * The box in each cell, for putting the cursor back after a change.
+   *
+   * A wrapped cell is a `<textarea>` and every other cell an `<input>` — see
+   * `CellStyle.wrap`. Both answer `focus`, `value` and `selectionStart`, which
+   * is all of what this map is asked for.
+   */
+  const boxes = useRef<Record<string, HTMLInputElement | HTMLTextAreaElement | null>>({});
 
   /*
    * The editor's own undo, which is not the app's.
@@ -845,7 +878,18 @@ function Grid({ sheet }: { sheet: SheetModel }) {
    * See `lib/history.ts`.
    */
   const [history, setHistory] = useState<History<Snap>>(() =>
-    start({ cells: sheet.cells, styles: sheet.styles ?? {}, rows: sheet.rows, cols: sheet.cols }),
+    start({
+      cells: sheet.cells,
+      styles: sheet.styles ?? {},
+      rows: sheet.rows,
+      cols: sheet.cols,
+      // The joins too, or the first entry is the one snapshot that cannot put
+      // a block back: `apply` patches what the snapshot has, so a missing key
+      // leaves the sheet's joins exactly as they are — and undoing a join
+      // would restore the cleared values underneath a block still covering
+      // them. Every other entry carries them; this one is made by hand.
+      joins: sheet.joins ?? [],
+    }),
   );
 
   const patch = useCallback(
@@ -867,6 +911,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
       styles: next.styles ?? sheet.styles ?? {},
       rows: next.rows ?? sheet.rows,
       cols: next.cols ?? sheet.cols,
+      joins: next.joins ?? sheet.joins ?? [],
     };
     setHistory((h) => remember(h, after, tag, Date.now()));
     patch(after);
@@ -977,7 +1022,27 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     }));
     if (mine.some((n, i) => n.ref !== names[i].ref)) patch({ names: mine });
 
-    const snap: Snap = { ...next, ...(Object.keys(after).length ? { others: after } : {}) };
+    /*
+     * And the joined blocks, which are ranges too.
+     *
+     * A heading joined across `A1:C1` with a column inserted inside it has to
+     * become `A1:D1`, or it goes on spanning three columns while the thing it
+     * heads is four wide — a caption that has quietly stopped being over what
+     * it names. Moved through `moveRef`, the same one every formula and every
+     * name goes through, rather than by arithmetic written a second time here.
+     */
+    const spun = joins
+      .map((span) => moveRef(qualified(span.range, sheet.title), sheet.title, axis, at, by))
+      .map((moved) => spanOf(moved.replace(/^.*!/, '').replace(/\$/g, '')))
+      .filter((span): span is Span => span !== null);
+    const moved =
+      spun.length !== joins.length || spun.some((span, i) => span.range !== joins[i].range);
+
+    const snap: Snap = {
+      ...next,
+      ...(moved ? { joins: spun.map((span) => span.range) } : {}),
+      ...(Object.keys(after).length ? { others: after } : {}),
+    };
     setHistory((h) => {
       const kept = Object.keys(before).length
         ? amend(h, (was) => ({ ...was, others: { ...was.others, ...before } }))
@@ -1143,6 +1208,16 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     () => new Map(rules.map((r) => [r.range, rangeOf(r.range)])),
     [rules],
   );
+  /**
+   * The blocks drawn as one cell, and the two questions the grid asks of them.
+   *
+   * Both maps built once a render rather than per cell: the grid is
+   * `rows × cols` components and each one needs to know whether it is drawn at
+   * all, which is a `Map.has` here and was a walk of every join without it.
+   */
+  const joins = useMemo(() => joinsOf(sheet), [sheet]);
+  const covered = useMemo(() => coveredBy(joins), [joins]);
+  const spans = useMemo(() => spansAt(joins), [joins]);
   /** What the cells are allowed to hold, and the blocks those rules cover. */
   const checks = useMemo(() => checksOf(sheet), [sheet]);
   const checkRanges = useMemo(
@@ -1386,6 +1461,56 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     say(`Written into ${ref(top, 0)}, as formulas that follow the table.`);
   };
 
+  /**
+   * The selection drawn as one cell.
+   *
+   * The covered cells are cleared, and the sentence says how many held
+   * something — see the head of `lib/joined.ts` for why they cannot simply be
+   * hidden. It is one step of undo, so the count is a thing somebody can act
+   * on rather than a warning they had to read first.
+   */
+  const joinCells = () => {
+    const where = rangeLabel(sel);
+    const why = whyNotJoin(joins, where);
+    if (why) {
+      say(why);
+      return;
+    }
+    const span = spanOf(where);
+    if (!span) return;
+    const cells = { ...sheet.cells };
+    const styles = { ...(sheet.styles ?? {}) };
+    let lost = 0;
+    for (const address of cellsOf(span)) {
+      if (address === span.anchor) continue;
+      if ((cells[address] ?? '') !== '') lost += 1;
+      delete cells[address];
+      delete styles[address];
+    }
+    // One step: the block and the clearing it caused, so undo takes back both.
+    change(
+      { cells, styles, joins: withJoin(joins, where).map((j) => j.range) },
+      `join:${where}`,
+    );
+    setSel(oneCell(span.anchor));
+    say(
+      lost
+        ? `${saysJoin(span)}. ${lost} ${lost === 1 ? 'value' : 'values'} under it cleared — undo brings ${lost === 1 ? 'it' : 'them'} back.`
+        : `${saysJoin(span)}.`,
+    );
+  };
+
+  /** The block under the cursor, given its cells back. */
+  const splitCells = () => {
+    const had = joins.find((span) => cellsOf(span).includes(focus));
+    if (!had) {
+      say('Nothing here is joined.');
+      return;
+    }
+    change({ joins: withoutJoin(joins, focus).map((j) => j.range) }, `split:${had.range}`);
+    say(`${had.range} split back into ${had.rows * had.cols} cells.`);
+  };
+
   /** The filter this sheet has, or one over the selection ready to take a rule. */
   const openFilter = () => {
     setPanel((was) => (was === 'filter' ? null : 'filter'));
@@ -1485,7 +1610,16 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   );
 
   /** Move the cursor, and take the browser's focus with it. */
-  const go = (address: string, extend = false) => {
+  const go = (where: string, extend = false) => {
+    /*
+     * A cursor moving onto a covered cell lands on the cell that draws it.
+     *
+     * A covered cell has no box to focus, so without this an arrow key into a
+     * joined block moves the selection somewhere invisible and the grid stops
+     * answering the keyboard at all. Done here rather than at each caller
+     * because this is the one funnel every move goes through.
+     */
+    const address = landOn(covered, where);
     setSel((was) => (extend ? { ...was, focus: address } : oneCell(address)));
     if (!extend) {
       setTyping(null);
@@ -1587,7 +1721,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
     say(`Sorted by column ${colName(spot.left)}.`);
   };
 
-  const onKey = (e: React.KeyboardEvent<HTMLInputElement>, address: string) => {
+  const onKey = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>, address: string) => {
     const input = e.currentTarget;
     const ends = input.selectionStart === input.selectionEnd;
     const atStart = ends && input.selectionStart === 0;
@@ -1630,6 +1764,26 @@ function Grid({ sheet }: { sheet: SheetModel }) {
      * of a cell goes to the next cell, which is what the hand doing data entry
      * expects.
      */
+    /*
+     * A line break inside a wrapped cell, on the chord Excel uses for it.
+     *
+     * Plain Enter still moves down — it has to, or a wrapped column could not
+     * be typed down the way every other column is. Without this there would be
+     * no way to put a break in at all, and a cell that wraps but cannot be
+     * given a line is half the feature.
+     */
+    if (e.key === 'Enter' && (e.altKey || e.shiftKey) && styleOf(sheet, address)?.wrap) {
+      e.preventDefault();
+      const cut = input.selectionStart ?? input.value.length;
+      const to = input.selectionEnd ?? cut;
+      write(address, `${input.value.slice(0, cut)}\n${input.value.slice(to)}`);
+      queueMicrotask(() => {
+        const box = boxes.current[address];
+        if (box) box.selectionStart = box.selectionEnd = cut + 1;
+      });
+      return;
+    }
+
     const moves: Record<string, [number, number] | undefined> = {
       ArrowUp: [-1, 0],
       ArrowDown: [1, 0],
@@ -1970,6 +2124,29 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         })),
         [
           {
+            id: 'format.wrap',
+            label: 'Wrap text',
+            hint: 'Long text folds onto more lines instead of running past the edge. Alt-Enter puts a break in by hand.',
+            on: style.wrap === true,
+            run: () =>
+              restyleSelection(
+                (was) => ({ ...was, wrap: was.wrap ? undefined : true }),
+                `wrap:${rangeLabel(sel)}`,
+              ),
+          },
+          {
+            id: 'format.join',
+            label: joinAt(joins, focus)
+              ? `Split ${joinAt(joins, focus)!.range} apart`
+              : `Join ${rangeLabel(sel)} into one cell`,
+            hint: joinAt(joins, focus)
+              ? 'Gives the block its cells back. Nothing that was cleared comes back with them.'
+              : 'Keeps the top-left value and clears the rest, so what is shown is what is summed.',
+            run: joinAt(joins, focus) ? splitCells : many(sel) ? joinCells : undefined,
+          },
+        ],
+        [
+          {
             id: 'format.rules',
             label: rules.length ? `Colour by value (${rules.length})` : 'Colour by value',
             hint: 'A colour that follows the number, rather than one painted on and left behind.',
@@ -2230,18 +2407,44 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         {
           id: 'g.align',
           label: 'Alignment',
-          controls: ALIGNS.map((a) => ({
-            kind: 'button' as const,
-            id: `a.${a.id}`,
-            label: `Align ${a.label.toLowerCase()}`,
-            glyph: a.glyph,
-            on: style.align === a.id,
-            run: () =>
-              restyleSelection(
-                (was) => ({ ...was, align: was.align === a.id ? undefined : a.id }),
-                `align:${rangeLabel(sel)}`,
-              ),
-          })),
+          controls: [
+            ...ALIGNS.map((a) => ({
+              kind: 'button' as const,
+              id: `a.${a.id}`,
+              label: `Align ${a.label.toLowerCase()}`,
+              glyph: a.glyph,
+              on: style.align === a.id,
+              run: () =>
+                restyleSelection(
+                  (was) => ({ ...was, align: was.align === a.id ? undefined : a.id }),
+                  `align:${rangeLabel(sel)}`,
+                ),
+            })),
+            {
+              kind: 'button' as const,
+              id: 'a.wrap',
+              label: 'Wrap text',
+              glyph: '↵',
+              on: style.wrap === true,
+              run: () =>
+                restyleSelection(
+                  (was) => ({ ...was, wrap: was.wrap ? undefined : true }),
+                  `wrap:${rangeLabel(sel)}`,
+                ),
+            },
+            {
+              kind: 'button' as const,
+              id: 'a.join',
+              label: joinAt(joins, focus) ? 'Split apart' : 'Join cells',
+              wide: true,
+              on: Boolean(joinAt(joins, focus)),
+              run: joinAt(joins, focus)
+                ? splitCells
+                : many(sel)
+                  ? joinCells
+                  : undefined,
+            },
+          ],
         },
         {
           id: 'g.number',
@@ -2954,9 +3157,21 @@ function Grid({ sheet }: { sheet: SheetModel }) {
                   )}
                   {Array.from({ length: sheet.cols }, (_, c) => {
                     const address = ref(r, c);
+                    /*
+                     * A covered cell is not drawn at all.
+                     *
+                     * Not drawn rather than drawn empty: a `<td>` left in
+                     * place would push the anchor's `colSpan` along and the
+                     * row would be too wide, and an input inside it would be
+                     * focusable — the same fault a zero-height hidden row has,
+                     * a cursor landing somewhere nobody can see.
+                     */
+                    if (covered.has(address)) return null;
+                    const span = spans.get(address);
                     return (
                       <Cell
                         key={c}
+                        span={span}
                         sheet={sheet}
                         over={over}
                         rules={rules}
@@ -4083,6 +4298,58 @@ function CheckStrip({
 }
 
 /**
+ * The box inside a cell: an input, or a textarea where the cell wraps.
+ *
+ * This is the whole of what wrapping cost. An `<input>` is a single line by
+ * definition — there is no CSS that makes one fold — so a cell that wraps has
+ * to be a different element, and the two take all the same props except that
+ * one has a `value` attribute the browser writes and the other has a child.
+ *
+ * Only a wrapped cell pays for it. Every other cell in the app is the same
+ * `<input>` it was, which matters because this component is `rows × cols` of
+ * them and swapping the element type on a whole grid would remount every box
+ * in it.
+ *
+ * `list` is dropped on the textarea rather than passed: a `datalist` does
+ * nothing for one, and React would write an attribute the browser ignores.
+ */
+const Box = forwardRef<
+  HTMLInputElement | HTMLTextAreaElement,
+  {
+    wrap: boolean;
+    className: string;
+    list?: string;
+    value: string;
+    onChange: (e: { target: { value: string } }) => void;
+    onMouseDown: (e: React.MouseEvent) => void;
+    onFocus: () => void;
+    onBlur: () => void;
+    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    'aria-label': string;
+    'aria-invalid'?: true;
+    spellCheck: false;
+    style: React.CSSProperties;
+  }
+>(function Box({ wrap, list, 'aria-label': label, ...rest }, ref) {
+  /*
+   * The name is written out on each element rather than carried in the spread.
+   *
+   * `src/a11y/labels.ts` reads the source to find a control with no accessible
+   * name, and it cannot see through `{...rest}` — so a label passed that way
+   * is a real label the rule has to be told to ignore. Writing it here keeps
+   * the rule honest about a component that is two elements.
+   */
+  if (wrap) {
+    return (
+      <textarea {...rest} aria-label={label} ref={ref as React.Ref<HTMLTextAreaElement>} />
+    );
+  }
+  return (
+    <input {...rest} aria-label={label} list={list} ref={ref as React.Ref<HTMLInputElement>} />
+  );
+});
+
+/**
  * One cell.
  *
  * Its own component because the grid is `rows × cols` of these and the whole
@@ -4098,6 +4365,7 @@ function Cell({
   rules,
   ruleRanges,
   check,
+  span,
   handle,
   address,
   inside,
@@ -4126,6 +4394,13 @@ function Cell({
    * what keeps the check off the hot path — see `lib/validate.ts`.
    */
   check?: DataRule;
+  /**
+   * How far this cell reaches, where it is the anchor of a joined block.
+   *
+   * Undefined on every ordinary cell, which is nearly all of them — see
+   * `lib/joined.ts`.
+   */
+  span?: Span;
   /** The fill handle, on the one cell that is the corner of the selection. */
   handle?: ReactNode;
   address: string;
@@ -4135,12 +4410,12 @@ function Cell({
   /** In the row held under the headings, so it is drawn sticky. */
   frozen: boolean;
   zoom: number;
-  hold: (el: HTMLInputElement | null) => void;
+  hold: (el: HTMLInputElement | HTMLTextAreaElement | null) => void;
   onWrite: (value: string) => void;
   onFocus: () => void;
   onExtend: () => void;
   onBlur: () => void;
-  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 }) {
   const raw = sheet.cells[address] ?? '';
   const own = styleOf(sheet, address);
@@ -4188,13 +4463,23 @@ function Cell({
   const line = '1px solid var(--app-accent-deep)';
   const edge = style?.edge ?? '';
   return (
-    <td className={[frozen ? 'sfreeze' : '', handle ? 'sfill-cell' : ''].filter(Boolean).join(' ') || undefined}>
-      <input
+    <td
+      className={
+        [frozen ? 'sfreeze' : '', handle ? 'sfill-cell' : '', span ? 'sjoin' : '']
+          .filter(Boolean)
+          .join(' ') || undefined
+      }
+      colSpan={span && span.cols > 1 ? span.cols : undefined}
+      rowSpan={span && span.rows > 1 ? span.rows : undefined}
+    >
+      <Box
+        wrap={style?.wrap ?? false}
         className={[
           'scell',
           inside && !cursor ? 'scell-in' : '',
           bad ? 'scell-bad' : '',
           breaks ? 'scell-breaks' : '',
+          style?.wrap ? 'scell-wrap' : '',
         ]
           .filter(Boolean)
           .join(' ')}
@@ -4222,8 +4507,11 @@ function Cell({
         aria-invalid={breaks || undefined}
         spellCheck={false}
         style={{
-          width: Math.round(92 * (zoom / 100)),
-          height: Math.round(26 * (zoom / 100)),
+          // A joined block is one box as wide and as tall as the cells it
+          // covers, so the text sits in the middle of the block rather than in
+          // the corner of the cell that happens to anchor it.
+          width: Math.round(92 * (span?.cols ?? 1) * (zoom / 100)),
+          height: Math.round(26 * (span?.rows ?? 1) * (zoom / 100)),
           fontSize: `calc(var(--type-sm) * ${scale})`,
           textAlign: style?.align ?? (numeric ? 'right' : 'left'),
           fontWeight: style?.bold ? 600 : undefined,

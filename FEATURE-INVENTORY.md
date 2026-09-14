@@ -654,9 +654,22 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   right for the block, since the offset for the cell at (1, 4) is not the one
   for (4, 1).
 - ~~No cell formatting at all: number/currency/percent/date formats, bold,
-  fill, borders, alignment, wrap, merge.~~ — number, currency, percent, date
-  and decimal places, bold, italic, strikethrough and alignment are on the
-  toolbar and go into the `.xlsx`. Still no fill, borders, wrap or merge.
+  fill, borders, alignment, wrap, merge.~~ — **closed, and the correction that
+  closed it was itself out of date twice.** Number, currency, percent, date and
+  decimal places, bold, italic, strikethrough and alignment went in first. The
+  sentence then said *still no fill, borders, wrap or merge* — and **fill and
+  borders were already there** when it was written: `CellStyle.wash` and
+  `CellStyle.edge`, a swatch and a pick on the Format tab, written out as real
+  `<fill>` and `<border>` elements. Only wrap and merge were genuinely absent.
+  Both are in now: `CellStyle.wrap` (a wrapped cell is drawn as a `<textarea>`,
+  because no CSS makes an `<input>` fold, and only a wrapped one, so every
+  other cell keeps the element it had) and `lib/joined.ts` for blocks drawn as
+  one cell — named `joined` and not `merge` because `lib/merge.ts` is this
+  app's *sync*. Joining clears the cells it covers and says how many it
+  cleared: `=SUM(A1:C1)` must not add up values nobody can see, which is the
+  hidden-row trap with no filter visible to explain it. Undo takes back the
+  block and the values together — it did not at first, and put them back
+  underneath a block still covering them.
 - ~~No sort, no filter, no freeze panes.~~ — **closed.** Sort is `sortRange`,
   the View tab freezes the top row, and `lib/filter.ts` hides rows on a rule
   per column — with the status bar counting only what is visible, because a
@@ -747,11 +760,11 @@ notes · a generated PDF, as against the browser's print-to-PDF, which is
 there · `.docx` *import* · "Open in Docs" from a study guide · a WYSIWYG
 surface (the marks are typed).
 
-**Sheets** — cell fill, borders, wrap and merge · a per-course grade
-calculator and GPA planner template.
+**Sheets** — a per-course grade calculator and GPA planner template.
 (Cross-sheet references, the fill handle, filtering, conditional formatting,
-named ranges, pivot tables, paste-special and data validation were all on this
-list and are done.)
+named ranges, pivot tables, paste-special, data validation, wrap and merge were
+all on this list and are done. Fill and borders were on it and had already been
+built when it was written.)
 
 **Slides** — free layout (a text box you can move) · images and charts placed
 on a slide · transitions, which are deliberate: `lib/pptx.ts` would have to
