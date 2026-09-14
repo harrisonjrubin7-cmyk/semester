@@ -65,7 +65,7 @@ weight on the critical path is the app's own code, and four edges put it there.
 
 | # | The edge | What it drags in | Why it is there |
 | --- | --- | --- | --- |
-| P1a | `App.tsx` → `ai/Assistant.tsx` | **20 modules, 7,287 lines** | `<Assistant />` is mounted unconditionally in all three shells |
+| P1a ✅ | `App.tsx` → `ai/Assistant.tsx` | **20 modules, 7,287 lines** | `<Assistant />` is mounted unconditionally in all three shells |
 | P1b | `main.tsx` → `lib/connect.ts` | **2 modules, 1,616 lines** | to read `?code=` off the URL |
 | P1c | `state/slices/made.ts` → `lib/decks.ts` → `lib/pptx.ts` | **2 modules, 1,001 lines** | for `blankDeck()`, a 14-line factory |
 | P1d | `components/soft/SoftTop.tsx` → `lib/softtop.ts` | **3 modules, 1,518 lines** | needed only when `shell === 'soft'`, one of three |
@@ -77,12 +77,22 @@ critical path**, with no feature removed and no screen changed.
 
 **P1a — the assistant is mounted, not opened.** `App.tsx:1294`, `:1741` and
 `:1863` render `<Assistant />` in every shell so there is exactly one of it,
-which is right. But the component is statically imported at `App.tsx:149`, so
-the whole conversation stack — `converse.ts`, `Turns`, `Composer`, `Actions`,
-`lib/tools.ts` (939 lines), the provider tree — is parsed on first paint for a
-panel that opens on a tap. The button is small; the panel is not. Split them:
-the floating button stays eager, the panel becomes `lazy()` behind the same
-`open` state it already has.
+which is right. But the component was statically imported, so the whole
+conversation stack — `converse.ts`, `Turns`, `Composer`, `Actions`,
+`lib/tools.ts` (939 lines) — was parsed on first paint for a panel that opens
+on a tap. The button is small; the panel is not.
+
+**Done**, and one word of the recommendation was wrong. "The panel becomes
+`lazy()`" is the obvious shape and it made opening the panel **twenty times
+slower** — 14–28ms to a flat 314ms on the production build, with the chunk
+already fetched and in memory. The flatness is the clue: `lazy` calls its
+factory only at the first render that needs it, so even a loaded module
+suspends for a tick, the fallback is committed, and React then throttles
+un-showing a fallback it has just shown. Not suspending is the way not to pay
+it — the module is held in state and fetched on `requestIdleCallback`, and
+opening is back to 17–18ms. `ai/split.test.ts` holds it there, because the
+`lazy()` version reads as a simplification and costs a third of a second that
+nothing in the code would say it costs.
 
 **P1b — an OAuth redeemer loaded for everyone who is not redeeming.**
 `completeAuth()` returns `null` on line 280 of `lib/connect.ts` when there is no
@@ -117,18 +127,42 @@ measurement, not a guess.
 
 ### What landed
 
-P1b and P1c are done. Measured after, the same way:
+P1a, P1b and P1c are done. Measured after, the same way:
 
 ```
-287 modules, 86,319 lines  →  285 modules, 83,903 lines
-initial gzipped JS: 346,504 bytes  →  335,358 bytes
+287 modules, 86,319 lines  →  267 modules, 77,295 lines   (−7% modules, −10% lines)
+initial gzipped JS: 346,504 bytes  →  308,688 bytes       (−11%)
 ```
 
-`lib/connect.ts`, `lib/decks.ts` and `lib/pptx.ts` are off the critical path
-entirely. `lib/sheet.ts` is still on it, and the trace says why: after the
-reducer stopped importing it, `ai/providers/make.ts` is the remaining eager
-path — so it leaves with P1a, not before. That is the shape of this work, and
-the reason each edge is measured rather than argued.
+`lib/connect.ts`, `lib/decks.ts`, `lib/pptx.ts` and `lib/tools.ts` are off the
+critical path entirely.
+
+**`lib/sheet.ts` is not, and this section said it would be.** "It leaves with
+P1a" was wrong: the remaining eager path is `ai/providers/make.ts`, and what
+reaches that is `ai/store.tsx`, which `main.tsx` mounts as `AIProvider` — not
+`ai/Assistant.tsx`. Splitting the panel could never have moved it. The
+correction matters more than the line it corrects: every eager path has to be
+traced to its own root, and a module with two of them only leaves when both go.
+
+### P1e — the providers, which are now the biggest edge left
+
+With the panel split, the largest single cut in the app is one line:
+
+```
+ai/store.tsx -> ai/providers/index.ts    −23 modules, −7,074 lines
+```
+
+That is bigger than P1a was. `ai/providers/*` assembles what the assistant can
+see on each screen, and it is reached only through `ai.look()` and
+`ai.suggestions()` — both of which are called from exactly two places,
+`ai/Panel.tsx` and `ai/Opening.tsx`, and both of those are now behind the
+panel's chunk. The obstacle is that `look()` is synchronous and lives on the
+provider, so the fix is not another `import()`: the assembly has to move to the
+panel side, leaving the store holding the raw inputs it already has (`screen`,
+the live look, the registered extras).
+
+It also takes `lib/sheet.ts` and `lib/maths.ts` with it, which is the rest of
+the answer to the paragraph above.
 
 > **How to reproduce.** Walk the graph from `src/main.tsx`, following every
 > non-`type` `import … from` / `export … from` and bare `import '…'`, and
@@ -358,6 +392,29 @@ towards fixes both.
 
 ---
 
+## 7a. Found while splitting the assistant — focus is not given back
+
+Not a finding of the audit, and not caused by the split: `ai/Panel.tsx` says it
+remembers what had focus and gives it back on close, and it does not. Focus
+lands on `<body>` instead.
+
+The cause is ordering. Child effects run before parent effects in the same
+commit, and `Composer` focuses itself on mount — so by the time the panel's own
+effect reads `document.activeElement`, the answer is already the composer it is
+about to unmount. Restoring focus to a detached node is the same as restoring
+nothing.
+
+**Checked against the pre-split build, not assumed**: swapped `Assistant.tsx`
+back to its committed version, drove the same probe, and focus was lost there
+too. So it predates this work by however long the composer has focused itself.
+
+The fix is to capture the element at the moment `show()` is called rather than
+when the panel mounts — one place, `ai/store.tsx`, which is what every opener
+goes through. It is left out of this pass deliberately: it is a behaviour
+change in a file the split does not otherwise touch, and widening a
+code-splitting commit into an accessibility fix is how neither gets reviewed
+properly.
+
 ## 8. What I checked and found healthy
 
 Recorded so the next pass does not re-derive it:
@@ -395,13 +452,14 @@ Ordered by measured value per unit of risk, not by size.
 | 3 | ✅ **P1c** — move `blankSheet`/`blankDeck` to `lib/blank.ts` | ~30 lines | −1,001 lines, and a reducer that no longer imports a `.pptx` writer |
 | 4 | ✅ **P5** — prune the shell cache on a build change; keep the share cache | small | an installed app that does not grow without bound |
 | 5 | ✅ **P6** — silence the one noisy lint rule | one config edit | 155 warnings → 41 |
-| 6 | **P1a** — lazy the assistant panel behind its button | medium | −7,287 lines, the single largest cut |
+| 6 | ✅ **P1a** — split the panel out behind its button | medium | −6,608 lines measured, and the panel opens no slower |
 | 7 | **P3** — `isolate: false`, then fix what breaks | an afternoon | ~80s per CI run, three runs deep |
 | 8 | **P1d** — lazy `softtop.ts` behind the soft shell | small | −1,518 lines |
 | 9 | **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | closes the 82-vs-60 findability hole |
 | 10 | **P4 proper** — one module per screen | large, own branch | adding a screen becomes adding a file |
 | 11 | **P2 proper** — split `now` out of the store context | large | the minute boundary stops being an app-wide event |
 | 12 | **P7** — keep paying the style ledger down | ongoing | the memoisation in 11 becomes worth having |
+| 13 | **P1e** — move the assistant's context assembly to the panel side | medium | −7,074 lines: the largest edge left, and it takes `lib/sheet.ts` and `lib/maths.ts` with it |
 
 Items 1–5 are done, in that order, one commit each, with `lint`, `test`,
 `test:zones` and `build` green after every one. They touch nothing a student
