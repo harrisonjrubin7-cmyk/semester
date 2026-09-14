@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { parts, xml } from './docx';
+import { parts } from './docx';
+import { xml } from './ooxml';
 import { blankDoc, type Block, type Doc } from './document';
 
 /**

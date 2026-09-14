@@ -53,7 +53,6 @@ export function AppBadge({ app, small = false }: { app: Destination; small?: boo
 
 export function GoogleShell({ children, title }: { children: ReactNode; title: string }) {
   const { state, dispatch, school, catalog, now } = useStore();
-  const apps = useMemo(() => appShelves(school.capabilities, undefined).flatMap(s => s.apps), [school.capabilities]);
   /*
    * Pinned apps, the shortcut row's switch, light and dark, and where you
    * have been: four preferences this shell used to keep for itself under
@@ -74,6 +73,19 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   const lightHome = ground(resolveGround(look.ground, prefersDark)).light;
   const showFavorites = look.shortcuts !== 'off';
   const recent = state.recent;
+  /*
+   * `groupOrder` and the role, rather than `undefined` and the default.
+   *
+   * Without the first this grid holds the apps in a different order from the
+   * launcher's, against the promise `appShelves` makes in its own comment;
+   * without the second it asks what a *student* may open, which is a
+   * different set from what the search field beside it offers a teacher. See
+   * the note over `appShelves` in `lib/apps.ts`.
+   */
+  const apps = useMemo(
+    () => appShelves(school.capabilities, look.groupOrder, state.role).flatMap(s => s.apps),
+    [school.capabilities, look.groupOrder, state.role],
+  );
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const [selected, setSelected] = useState(-1);
