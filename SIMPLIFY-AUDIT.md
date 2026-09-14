@@ -84,8 +84,42 @@ with.
 
 | # | Row | Verdict |
 | --- | --- | --- |
-| H1 | twelve private walkers, twelve censuses without the throw | **Merge into `sources()`** |
-| — | `lib/counts.ts`, `styles/deadcss.test.ts` | **Keep, with the reason written down** |
+| H1 | eleven private walkers, eleven censuses without the throw | **Merge into `sources()`** |
+| — | `lib/counts.ts`, `styles/deadcss.test.ts`, `isolation.test.ts` | **Keep, with the reason written down** |
+
+### H1, done — eleven, and the table above said twelve
+
+Retired: `a11y/dragging`, `landmarks`, `modal`, `tellings`,
+`components/marks`, `lib/credits`, `state/readstate`, `styles/fields`,
+`gutter`, `inset`, `taps`. Each is now one line naming what it reads —
+`sources(dir, { ext: ['.ts', '.tsx'], tests: false })` and the like — over the
+one walker.
+
+**`isolation.test.ts` is the third exception, not the twelfth conversion.** It
+keeps *only* `.test.` files and returns paths relative to the repo root, both
+of which `sources()` would have to grow a mode for. A `tests: 'only'` and a
+`relative:` option would make the API about its callers rather than about
+walking, which is the shape `lib/counts.ts` and `styles/deadcss.test.ts` were
+already excluded for.
+
+**And `tellings` was in the table on the wrong row.** It was listed as keeping
+tests; it excludes them, like the other three a11y rules. The characterisation
+grepped for markers rather than reading the bodies, and printing all fourteen
+bodies before touching any of them is what caught both this and `isolation`.
+
+That is the fourth near-miss in two passes, and the first two that cost
+nothing: they were found *before* the conversion rather than by the
+typechecker afterwards. **The ninth pass's lesson is cheap to apply and
+expensive to skip** — read the thing, do not grep for a marker that stands in
+for it.
+
+### What this was for
+
+Not fewer copies. The walk was emptied again, and **all eleven files now
+fail**, where every one of them would have passed before: `sources()` throws
+on a walk that finds nothing, and these eleven censuses now inherit that
+instead of quietly reporting no offenders. G1 protected ten rules; it protects
+twenty-one.
 
 ---
 
