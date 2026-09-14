@@ -161,45 +161,12 @@
 .portal-material summary small{display:block;margin:7px 0 0;color:var(--app-dim);font-weight:400}
 .course-hub .portal-mode:hover{border-color:var(--app-accent-bright);background:var(--app-accent-wash)}
 .course-hub>.portal-panel{margin-top:20px}
-.graph-workspace{display:grid;grid-template-columns:300px minmax(0,1fr);background:var(--app-panel);border:1px solid var(--app-line);border-radius:15px;overflow:hidden;color:var(--app-fg)}
-.graph-expressions{padding:20px 15px;background:var(--app-accent-wash);border-right:1px solid var(--app-line)}
-.graph-title{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.graph-title h2{font-size:20px;font-weight:500;letter-spacing:normal;margin:0}
-.graph-expressions p, .graph-expressions details{font-size:12px;line-height:1.6;color:var(--app-dim)}
-.graph-expression{display:flex;align-items:flex-start;gap:6px;padding:15px 0;border-bottom:1px solid var(--app-accent-wash)}
-.graph-expression>div{flex:1;min-width:0}
-.graph-expression input{width:100%;font-size:17px;padding:10px 3px;border:0;background:transparent;color:var(--app-accent-deep);font-family:Georgia,serif}
-.graph-expression input[aria-invalid=true]{border-bottom:1px solid var(--app-warn)}
-.graph-expression small{display:block;font-size:12px;line-height:1.5;color:var(--app-warn);padding-top:5px}
-.graph-workspace button{color:var(--app-accent);background:var(--app-accent-wash);border:0;padding:9px 11px;border-radius:7px;min-height:38px;font-size:13px;cursor:pointer}
-.graph-workspace button:disabled{opacity:.4}
-.graph-expression>button{padding:8px 5px;background:none;font-size:20px;flex-shrink:0}
-.graph-presets{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0}
-.graph-presets button{font-size:12px}
-.graph-slider{display:flex;flex-direction:column;gap:10px;padding:12px 0;font-size:14px;color:var(--app-accent)}
-.graph-slider input{width:100%}
-.graph-stage{min-width:0;position:relative;padding-bottom:8px}
-.graph-toolbar{display:flex;align-items:center;flex-wrap:wrap;padding:10px;gap:6px;border-bottom:1px solid var(--app-line)}
-.graph-toolbar>div{display:flex;gap:3px;margin-right:auto}
-.graph-toolbar [aria-selected=true]{background:var(--app-accent-wash);color:var(--app-accent-deep)}
-.graph-plot{display:block;width:100%;max-height:65vh;min-height:320px;aspect-ratio:1;touch-action:pan-y}
-.graph-table{height:65vh;overflow:auto;padding:15px}
-.graph-table table{border-collapse:collapse;width:100%;font-size:14px}
-.graph-table th, .graph-table td{padding:8px 15px;border:1px solid var(--app-accent-wash);text-align:right}
-.graph-table th{background:var(--app-accent-wash)}
-.graph-table p{font-size:12px;color:var(--app-dim)}
-.graph-pan{display:flex;justify-content:center;gap:5px;flex-wrap:wrap;border-top:1px solid var(--app-accent-wash);padding:7px}
-.graph-pan button{background:none;font-size:12px}
-.graph-trace{font-size:12px;min-height:24px;text-align:center;color:var(--app-dim)}
-.graph-keypad{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:10px 15px;background:var(--app-accent-wash)}
-.graph-keypad button{font-size:17px;background:var(--app-panel);border:1px solid var(--app-accent-wash)}
 .maps-sidebar .btn{font-size:12px!important;letter-spacing:normal!important;text-transform:none!important}
 .maps-sidebar .kicker{font-size:12px!important;letter-spacing:.02em}
 .maps-sidebar .section-label{font-size:14px!important;letter-spacing:normal!important}
 .maps-sidebar>form .input{border-radius:24px!important;padding-left:16px;font-size:14px;background:var(--app-accent-wash)}
 @media(min-width:1300px){
 .portal-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
-.graph-workspace{grid-template-columns:350px minmax(0,1fr)}
 }
 @media(max-width:950px){
 .portal-workspace{padding:15px 20px 30px}
@@ -215,8 +182,6 @@
 .portal-stats strong{font-size:26px}
 .course-banner{padding:23px}
 .course-banner h2{font-size:27px}
-.graph-workspace{grid-template-columns:250px minmax(0,1fr)}
-.graph-plot{min-height:280px}
 }
 @media(max-width:640px){
 .portal-workspace{padding:12px 14px 25px}
@@ -235,26 +200,12 @@
 .portal-empty{padding:27px 18px}
 .portal-empty h3{font-size:21px}
 .course-banner h2{font-size:25px}
-.graph-workspace{display:block}
-.graph-expressions{border-right:0;border-bottom:1px solid var(--app-line);padding:16px}
-.graph-expressions>p{margin:7px 0}
-.graph-expression{padding:5px 0}
-.graph-presets{margin:12px 0}
-.graph-expressions details{display:none}
-.graph-plot{max-height:none;width:100%;aspect-ratio:1;min-height:0}
-.graph-table{height:450px}
 }
 @media(prefers-reduced-motion:reduce){
-.portal-workspace *, .graph-workspace *{scroll-behavior:auto!important;transition:none!important}
+.portal-workspace *{scroll-behavior:auto!important;transition:none!important}
 }
 .g-browser-tabs:has(.g-organizer-panel){z-index:80}
 .g-home:has(.g-organizer-panel) .g-central-search{visibility:hidden!important;pointer-events:none!important}
-.graph-plot{width:min(100%,65vh);margin-inline:auto;min-height:0;max-height:none}
-.drawing-workspace .portal-tabs button{border:0;border-bottom:3px solid transparent;border-radius:7px 7px 0 0;background:transparent;padding:13px 20px;font-size:14px;color:var(--app-dim)}
-.drawing-workspace .portal-tabs button[aria-selected=true]{background:var(--app-accent-wash);color:var(--app-accent);border-bottom-color:var(--app-accent)}
-@media(max-width:640px){
-.graph-plot{width:100%}
-}
 .semester-primary-nav{display:flex;align-items:center;gap:4px;padding:4px 24px 8px;background:var(--app-accent-wash);overflow-x:auto;flex:none;border-bottom:1px solid var(--app-line-soft)}
 .semester-primary-nav button{color:var(--app-fg);white-space:nowrap;font-size:14px;border:0;background:transparent;border-radius:20px;min-height:40px;padding:8px 16px}
 .semester-primary-nav button:hover, .semester-primary-nav button[aria-current=page]{background:var(--app-accent-wash);color:var(--app-accent-deep)}

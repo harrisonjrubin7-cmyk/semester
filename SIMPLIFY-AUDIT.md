@@ -29,7 +29,7 @@ finding.
 
 ## 1. What the port duplicated
 
-### E1 — two graphing calculators · **MERGE**
+### E1 — two graphing calculators · **MERGED**
 
 The app has had a graphing stack since Equations was written. The port brought
 another one, and neither knows about the other:
@@ -180,19 +180,59 @@ dead weight, and that is worth saying plainly alongside the rest.
 
 ## 3. What to do, in order
 
-| # | Change | Destinations | Kind |
-| --- | --- | --- | --- |
-| E1 | One graphing calculator — `equations` survives, Draw goes back to diagrams | 0 | Merge |
-| E3 | The port's `portal-*` idioms onto `Notice`, `EmptyState`, `Segmented` | 0 | Shared components |
-| E2 | Work's default view against five screens | 0 | **Open** — survivor is the owner's call |
-| E4 | `browser` against `workspace` | 0 | **Open** — same |
-| E5 | One dead export | 0 | Cut |
+| # | Change | Destinations | Kind | Done |
+| --- | --- | --- | --- | --- |
+| E1 | One graphing calculator — `equations` survives, Draw goes back to diagrams | 0 | Merge | ✅ |
+| E3 | The port's `portal-*` idioms onto `Notice`, `EmptyState`, `Segmented` | 0 | Shared components | |
+| E2 | Work's default view against five screens | 0 | **Open** — survivor is the owner's call | |
+| E4 | `browser` against `workspace` | 0 | **Open** — same | |
+| E5 | One dead export | 0 | Cut | |
 
 **E1 is the one this pass would do first and alone.** It removes a whole
 second stack rather than moving a tab, it takes a dark-mode break and a
 missing `<Page>` frame out with it, and unlike E2 and E4 there is nothing to
 decide: the destination whose blurb, keywords and library are about graphing
 is the one that keeps the graph.
+
+### E1, done
+
+`components/GraphCalculator.tsx`, `lib/graphing.ts` and its test are gone;
+`Draw()` is `DiagramBuilder` again, with the `<Page>` frame back at the top of
+the screen where the port had replaced it with a bare `<div>`. Forty-eight
+orphaned `graph-*` and `drawing-workspace` rules came out of
+`styles/features.css` with them, and one media block that was left empty.
+
+**Nothing of the survivor's was touched**, and nothing of the copy's was
+carried across. Two of its features have no equivalent on `equations`, and
+both are left out on purpose rather than overlooked — the reasoning is at the
+top of `screens/Draw.tsx` so it is read by whoever wonders where they went:
+
+- **A table of values** is the opposite of what `lib/plot.ts` is for, and that
+  file says so in its first paragraph: *"the handful of facts somebody
+  actually wants off a graph — where it crosses zero, where it turns, where
+  two curves meet"*. Twenty-one rows of y is figures instead of facts.
+- **An SVG export** is a fair thing to want and is real work rather than a
+  carry-over. This app's plot is drawn in `var(--app-*)` tokens, so a file
+  saved straight out of it carries unresolved variables. The copy exported
+  cleanly only because its colours were hardcoded, which is the same defect
+  seen from the other end.
+
+`lib/onegraph.test.ts` holds it, and asks the narrower question this
+recurrence actually takes rather than the one `onehome.test.ts` asks:
+`GraphCalculator` was never a *destination*, so a rule about screens could
+never have seen it. It pins the two joints a second stack has to pass
+through — something has to render a grapher, and something has to compile an
+expression to a path — and both rules were checked by planting the regression
+and watching them name it.
+
+**Recorded against myself, twice over.** The compiler rule's first version
+scanned with `sources()` from `styles/rules.ts`, which walks `.tsx` only. It
+was therefore vacuous against a `lib/*.ts` file — exactly the shape it exists
+to catch — and passed against a deliberately planted second compiler. It has
+its own walker now. That is the second time in two passes that a guard I wrote
+would have missed the thing it was written for, and the only reason either was
+caught is that both were tested by planting the regression rather than by
+reading the rule.
 
 ---
 
@@ -960,8 +1000,8 @@ named above.
 
 ## 4. What to do, in order
 
-| # | Change | Destinations | Kind |
-| --- | --- | --- | --- |
+| # | Change | Destinations | Kind | Done |
+| --- | --- | --- | --- | --- |
 | S1 | The directory drawn twice — `everything`'s By-area and Not-tried views against Me's Everything tab | −1 | ✅ Merged into Progress, which gains a By-task tab |
 | S2 | Settings → Storage becomes a row that opens `data` | 0 | ✅ Merged |
 | S3 | 76 exports with no caller — 26 dead outright, 50 read only by their own test | 0 | ✅ Cut: 62 gone, 14 kept with reasons |
