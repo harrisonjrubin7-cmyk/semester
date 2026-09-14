@@ -284,9 +284,6 @@ export function settings(state: State, action: Action): State | null {
     case 'toggleNotif':
       return { ...state, notifs: { ...state.notifs, [action.k]: !state.notifs[action.k] } };
 
-    case 'togglePick':
-      return { ...state, picked: { ...state.picked, [action.id]: !state.picked[action.id] } };
-
     case 'clearNotifs':
       return { ...state, cleared: true };
 
