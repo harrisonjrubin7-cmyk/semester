@@ -573,6 +573,20 @@ model in it or needs a key:
   the depth and where each of them is are written out under the picture. See
   `app/src/lib/surface.ts`.
 
+  The same `z =` line draws **as contours** as well: the level curves, one per
+  round number, with zero heaviest and the spacing said in a sentence under the
+  picture — because the whole reason to draw contours rather than the solid
+  shape is to read values off, and a map whose spacing is not stated is a
+  picture rather than a reading. It is a control on the screen rather than new
+  notation, since which picture to draw is a choice about the drawing.
+
+  **A pair with `x` or `y` in it is a field of arrows** — `(y, -x)` is a
+  rotation, `(20 - 2x - y, x - 2)` is a phase diagram — drawn at every point of
+  the window: which way it pushes, and how hard. The lengths are the honest
+  difficulty and the choice is stated rather than hidden: drawn true, one fast
+  corner turns every other arrow into a dot, so length is the magnitude against
+  the largest under a square root, and the ink carries the rest.
+
   **Polar and parametric** are the same box and the same notation, told apart
   by the letter in them: an `r =` line with the angle in it is polar —
   `r = 2 + 2\cos(\theta)`, a cardioid — and a pair with `t` in it is the path
