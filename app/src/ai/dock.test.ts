@@ -151,6 +151,26 @@ describe('the assistant button, and what it sits on', () => {
     expect(code, 'and is disconnected with the rest').toContain('watch.disconnect()');
   });
 
+  it('stands down while a row is its own editor', () => {
+    const code = assistant();
+    expect(code, 'the flag is read from the document').toContain(
+      "document.querySelector('[data-editing]')",
+    );
+    expect(code, 'and gates the button with the other two').toContain(
+      '{!ai.open && !fills(state.screen) && !editing && (',
+    );
+    expect(code, 'and re-measures the layout it comes back to').toContain(
+      '[ai.open, state.screen, state.mode, wide, lift, editing]',
+    );
+  });
+
+  it('is what the row editors in Mine raise', () => {
+    const mine = src('../screens/Mine.tsx');
+    // One per row editor — a task's and an appointment's — on the frame that
+    // replaces the row, so it is there exactly while the form is.
+    expect(mine.match(/<Blueprint data-editing=""/g) ?? []).toHaveLength(2);
+  });
+
   it('treats a destructive control as covered at any overlap', () => {
     expect(assistant()).toContain("node.hasAttribute('data-danger')");
   });

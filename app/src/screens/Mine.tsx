@@ -103,7 +103,9 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
 
   if (editing) {
     return (
-      <Blueprint style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
+      /* `data-editing`: the assistant's floating button stands down while a
+         row is a form. See the note on `editing` in `ai/Assistant.tsx`. */
+      <Blueprint data-editing="" style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
         <input
           className="input"
           value={title}
@@ -423,7 +425,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
 
   if (editing) {
     return (
-      <Blueprint style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
+      <Blueprint data-editing="" style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
         <input
           className="input"
           value={title}
