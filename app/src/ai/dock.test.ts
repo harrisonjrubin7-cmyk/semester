@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fills, FILLS } from '../components/shell/exempt';
+import { probes } from './Assistant';
 
 /**
  * The chat ends at the bottom of the window.
@@ -99,5 +100,69 @@ describe('and it rides above the keyboard', () => {
 
   it('and the chat is the screen that asks for it', () => {
     expect(src('./Chat.tsx')).toContain('useKeyboardInset()');
+  });
+});
+
+/**
+ * What the floating button is asked about, and what it will not sit on.
+ *
+ * Two faults, one shape: the button measured what was under it by asking
+ * about a single point, its centre, and it only re-measured when you scrolled
+ * or the window resized. So a control that sat entirely inside one of its
+ * corners was invisible to the measurement however completely it was covered,
+ * and a screen that grew a control where the button was standing — a row in
+ * Mine becoming its own editor on a press — was never re-measured at all.
+ *
+ * jsdom has no layout and no `elementsFromPoint`, so the running of this
+ * cannot be a test. Three things can: which points get asked, that the
+ * measurement is wired to mutations as well as to scrolling, and that the
+ * destructive controls carry the marker the rule reads.
+ */
+describe('the assistant button, and what it sits on', () => {
+  const assistant = () => src('./Assistant.tsx');
+  /* A rect without a DOM: this file runs in node, where `DOMRect` does not
+     exist, and `probes` reads the six numbers rather than the class. */
+  const rect = (x: number, y: number, w: number, h: number) =>
+    ({ left: x, top: y, right: x + w, bottom: y + h, width: w, height: h }) as DOMRect;
+
+  it('asks about its corners as well as its centre', () => {
+    const rest = rect(300, 700, 52, 52);
+    const points = probes(rest);
+    expect(points).toHaveLength(5);
+    expect(points[0]).toEqual([326, 726]);
+    // The four corners, inset so they land inside the button's own box.
+    expect(points.slice(1)).toEqual([
+      [301, 701],
+      [351, 701],
+      [301, 751],
+      [351, 751],
+    ]);
+  });
+
+  it('asks about where it would be once lifted, not where it is', () => {
+    const rest = rect(300, 700, 52, 52);
+    expect(probes(rest, 58).map(([, y]) => y)).toEqual([668, 643, 643, 693, 693]);
+  });
+
+  it('re-measures when the pane changes shape without a scroll', () => {
+    const code = assistant();
+    expect(code, 'a MutationObserver watches the scroll area').toContain('new MutationObserver(soon)');
+    expect(code).toContain("watch.observe(area, { childList: true, subtree: true })");
+    expect(code, 'and is disconnected with the rest').toContain('watch.disconnect()');
+  });
+
+  it('treats a destructive control as covered at any overlap', () => {
+    expect(assistant()).toContain("node.hasAttribute('data-danger')");
+  });
+
+  it('is what the delete buttons in Mine are marked with', () => {
+    const mine = src('../screens/Mine.tsx');
+    // One per row editor — a task's and an appointment's.
+    expect(mine.match(/data-danger=""/g) ?? []).toHaveLength(2);
+    for (const label of ['`Delete ${t.title}`', '`Delete ${a.title}`']) {
+      const at = mine.indexOf(label);
+      expect(at, `${label} is still there`).toBeGreaterThan(-1);
+      expect(mine.slice(at, at + 400), `${label} carries the marker`).toContain('data-danger');
+    }
   });
 });
