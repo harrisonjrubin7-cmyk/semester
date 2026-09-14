@@ -90,7 +90,42 @@ export interface Problem {
   says: string;
 }
 
-/** Every `.tsx` under a directory, with comments and imports stripped. */
+/**
+ * Every `.tsx` under a directory, with comments and imports stripped.
+ *
+ * ## Why it throws on nothing
+ *
+ * Ten tests hold a rule about the app by walking the source and asserting the
+ * offender list is empty. That shape has one failure mode, and it is silent:
+ * **if the walk returns nothing, there are no offenders and the test passes**
+ * — green, having checked nothing at all.
+ *
+ * `SIMPLIFY-AUDIT.md` G1 measured it rather than assuming it. This function
+ * was replaced with one returning `[]` and the ten were run: five failed, and
+ * five passed. The five that passed are the app's central structural rules —
+ * one home per screen (`onehome`), one control per job (`onecontrol`), one
+ * look (`onelook`), one frame (`onframe`), one header. The five that failed
+ * did so by accident of having a companion "the component still exists"
+ * assertion, not because anything checked the scan.
+ *
+ * So the check belongs here, at the one place all ten share, rather than as
+ * five floors that each have to be remembered. Every caller passes `src`,
+ * `src/components` or `src/screens`, or a temporary tree it has just written a
+ * `.tsx` into; there is no directory in this repo where finding none is the
+ * right answer. An empty result means a wrong path or a broken walk, and both
+ * are bugs in the test rather than a clean bill of health for the app.
+ *
+ * ## What it still cannot catch
+ *
+ * A walk that returns *too few* files rather than none. That is the mistake
+ * E1 actually made — pointing this `.tsx`-only walker at `lib/`, which holds
+ * two `.tsx` files and about two hundred `.ts` modules, so the census ran
+ * against two files and passed against a planted second compiler. This throw
+ * would not have fired on that, and the audit row that proposed it said
+ * otherwise and was wrong. The fix for *that* is a walker told which
+ * extensions to keep, which is G2, and it is the reason G2 is worth doing
+ * rather than tidying.
+ */
 export function sources(dir: string): { path: string; text: string }[] {
   const out: { path: string; text: string }[] = [];
   const walk = (at: string) => {
@@ -101,6 +136,12 @@ export function sources(dir: string): { path: string; text: string }[] {
     }
   };
   walk(dir);
+  if (out.length === 0) {
+    throw new Error(
+      `sources(): no .tsx under ${dir}. A census over an empty list passes without ` +
+        'checking anything, so this is an error rather than a result. See the note above.',
+    );
+  }
   return out;
 }
 
