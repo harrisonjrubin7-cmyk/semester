@@ -553,6 +553,39 @@ export function Assistant() {
     };
   }, [ai.open]);
 
+  /*
+   * Give focus back when the sheet closes.
+   *
+   * A dialog that takes focus has to return it, and this one did not: a
+   * keyboard reader who opened the assistant and pressed Escape was put on
+   * `<body>` and had to tab from the top of the document to get anywhere.
+   *
+   * The panel used to try, and could not. It captured `document.activeElement`
+   * when it mounted, and child effects run before the parent's — so the
+   * composer inside it had already focused itself, and what the panel
+   * remembered was the box it was about to unmount. `ai/store.tsx` records the
+   * answer at `show()` instead, which is the last moment it is still true.
+   *
+   * Then the fallback, which is not an edge case but the common path: the
+   * button unmounts while the sheet is open, so opening the sheet *by the
+   * button* leaves a detached node to go back to. `isConnected` catches that,
+   * and the button React has just re-rendered is the right place to land —
+   * it is where the reader was. Cmd+K from somewhere else keeps the honest
+   * answer, because that element is still in the document.
+   *
+   * Runs on the close, not on the open: `was` is the previous value, so this
+   * fires exactly once per open-and-shut and never on a first render.
+   */
+  const was = useRef(false);
+  useEffect(() => {
+    if (was.current && !ai.open) {
+      const back = ai.cameFrom();
+      if (back?.isConnected) back.focus();
+      else fab.current?.focus();
+    }
+    was.current = ai.open;
+  }, [ai]);
+
   return (
     <>
       {/* Select a sentence anywhere and ask about that instead of the page. */}

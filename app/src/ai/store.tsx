@@ -41,6 +41,25 @@ interface AI {
   /** Open the sheet, optionally with a question already in the box. */
   show: (seed?: string) => void;
   hide: () => void;
+  /**
+   * Whatever had focus when the sheet was opened, for giving it back.
+   *
+   * Recorded here rather than by the panel, and the difference is the whole
+   * bug. The panel captured `document.activeElement` when it mounted — by
+   * which time the composer inside it had already focused itself, because
+   * child effects run before the parent's. So the panel remembered the box it
+   * was about to unmount, restoring focus to a detached node put it on
+   * `<body>`, and a keyboard reader who pressed Escape was returned to the top
+   * of the document.
+   *
+   * `show()` is the only moment the answer is still true, and it is one place
+   * because every way in goes through it: the button, Cmd+K, and a selection.
+   *
+   * It may be detached by the time it is wanted — the button unmounts while
+   * the sheet is open, so the common case *is* a dead node. `Assistant.tsx`
+   * checks `isConnected` and falls back to the button it has just re-rendered.
+   */
+  cameFrom: () => HTMLElement | null;
   /** The screen the assistant is currently on, for the button's own name. */
   screen: Screen;
   /**
@@ -106,6 +125,8 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [screen, setScreen] = useState<Screen>('home');
   /** What a caller asked to start with — a long-press, a suggestion chip. */
   const [seeded, setSeeded] = useState('');
+  /** What had focus when the sheet was opened. See `cameFrom` on the type. */
+  const cameFrom = useRef<HTMLElement | null>(null);
   /** Context registered by components that are mounted right now. */
   const extra = useRef(new Map<string, ScreenContext>());
 
@@ -114,6 +135,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
     live.current = l;
   }, []);
 
+  const readCameFrom = useCallback(() => cameFrom.current, []);
   const readLive = useCallback(() => live.current, []);
   const readRegistered = useCallback(() => [...extra.current.values()], []);
 
@@ -147,6 +169,9 @@ export function AIProvider({ children }: { children: ReactNode }) {
     () => ({
       open,
       show: (seed?: string) => {
+        // Before the state change, because the state change is what unmounts
+        // the button that is usually the answer.
+        cameFrom.current = document.activeElement as HTMLElement | null;
         if (seed !== undefined) setSeeded(seed);
         setOpen(true);
       },
@@ -155,12 +180,13 @@ export function AIProvider({ children }: { children: ReactNode }) {
         setOpen(false);
       },
       forgetAbout,
+      cameFrom: readCameFrom,
       screen,
       live: readLive,
       registered: readRegistered,
       register,
     }),
-    [open, screen, readLive, readRegistered, register, forgetAbout],
+    [open, screen, readCameFrom, readLive, readRegistered, register, forgetAbout],
   );
 
   return (
