@@ -46,37 +46,14 @@ your room, can one member throw another out — without needing a second person.
 
 **They must never be migrations.** They write to `auth.users`.
 
-### Running them
+See **Running the checks, without a project** below.
 
-    supabase/check.sh
+## `local.stub.sql` and `check.sh` — not deployed anywhere
 
-That is the whole thing. It initialises a throwaway Postgres in a temporary
-directory, applies `local.sql` (the parts of a Supabase project that are not in
-this repo — the `auth` schema, `auth.uid()`, the three roles), applies every
-migration in order, runs every check, and deletes the cluster. It binds no TCP
-port and touches nothing you have running. Needs a Postgres *server* installed,
-not just `psql`.
-
-Before it existed the only way to run one was to paste it into a live project's
-SQL Editor by hand, which is why `classmates.check.sql` says at its top to run
-it against an empty database and not against production — one real enrolment in
-the room it counts turns a correct suite red. `check.sh` *is* that empty
-database, made and thrown away each time, so the caveat stops being something
-to remember.
-
-The cost of there being no way to run them was two suites that had been failing
-on their first block since the migrations that broke them landed, and a failed
-block aborts the transaction, so every check after it was skipped. Both are
-fixed (#258, #265); the script is what keeps the next one from going unnoticed
-for as long.
-
-You can still paste one into the SQL Editor. It is the same file.
-
-## `local.sql` — not deployed anywhere
-
-The furniture a real Supabase project already has and a bare Postgres does not.
-Read only by `check.sh`. It is not a reimplementation of Supabase and nothing
-should grow in it that the checks do not need.
+The furniture a real Supabase project already has and a bare Postgres does not,
+and the script that builds a database out of it. Neither is a migration and
+neither reaches a project; nothing should grow in the stub that the suites do
+not need. See **Running the checks, without a project** below.
 
 ## `scheduler.sql` — infrastructure, applied once by hand
 
@@ -96,6 +73,18 @@ counts are wrong wherever real rows already exist, and the live project has
 enrolments in the very rooms `classmates.check.sql` counts. `local.stub.sql`
 stands in for what the platform supplies, so a bare Postgres will do and
 nothing live is touched.
+
+    supabase/check.sh
+
+That runs all of it: a throwaway cluster in a temporary directory, the stub,
+every migration in order, the grants, then every suite — and deletes the
+cluster on the way out. It binds no TCP port and never touches a configured
+PGHOST or a real project. It needs a Postgres *server* installed, not just
+`psql`.
+
+It automates the sequence below rather than replacing it, and the sequence is
+worth keeping because it is what the script is doing and the thing to reach for
+when only one suite matters:
 
     createdb semester_check
     psql -1 -v ON_ERROR_STOP=1 -d semester_check -f supabase/local.stub.sql

@@ -64,8 +64,8 @@ done
 
 psql() { command psql -X -q -h "$work" -p "$port" -U postgres "$@"; }
 
-echo "· the parts of Supabase that are not in this repo"
-psql -v ON_ERROR_STOP=1 -f "$here/local.sql" >/dev/null
+echo "· the parts Supabase provides, for a plain Postgres"
+psql -v ON_ERROR_STOP=1 -f "$here/local.stub.sql" >/dev/null
 
 echo "· migrations"
 for m in "$here"/migrations/*.sql; do
@@ -76,6 +76,16 @@ for m in "$here"/migrations/*.sql; do
   fi
   echo "  ✓ $(basename "$m")"
 done
+
+# After the migrations, because they are `on all tables` and there are no
+# tables until the migrations have run. Supabase applies the equivalent as
+# default privileges on `public`, which is why nothing in `migrations/` grants
+# them itself and why `local.stub.sql` cannot either. See its header.
+psql -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
+grant usage on schema auth, public to anon, authenticated;
+grant select, insert on auth.users to anon, authenticated;
+grant all on all tables in schema public to anon, authenticated;
+SQL
 
 echo "· checks"
 failed=0
