@@ -1,4 +1,5 @@
 import { useAI } from './store';
+import { assemble, suggestionsFor } from './assemble';
 
 /**
  * A new conversation, which is not a blank page.
@@ -34,7 +35,7 @@ export function Opening({
   big?: boolean;
 }) {
   const ai = useAI();
-  const suggestions = ai.suggestions().slice(0, 4);
+  const suggestions = suggestionsFor(ai).slice(0, 4);
 
   /*
    * What it is looking at — unless the answer is this page.
@@ -47,7 +48,7 @@ export function Opening({
    * rather than where you are, which is the thing that was actually worth
    * saying.
    */
-  const seen = ai.screen === 'ask' ? null : ai.look().label;
+  const seen = ai.screen === 'ask' ? null : assemble(ai).label;
 
   return (
     <div style={{ marginBottom: tight ? 'var(--sp-7)' : 'calc(var(--sp-7) * 1.6)' }}>
