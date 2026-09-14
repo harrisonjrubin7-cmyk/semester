@@ -6368,3 +6368,138 @@ button.adband-bar {
   text-overflow: ellipsis;
   opacity: 0.85;
 }
+
+/* ── Mail rules ────────────────────────────────────────────────────────────
+
+   The rules list and the form that writes one, in the mail screen's main
+   pane. See `components/mail/Rules.tsx` for why it takes the pane rather than
+   floating over it. */
+.mb-rules {
+  min-width: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.mb-rules-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.mb-rules-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--type-lg);
+}
+
+.mb-rules-said {
+  margin: 0;
+  max-width: 60ch;
+  font-size: var(--type-sm);
+  line-height: 1.45;
+  opacity: 0.72;
+}
+
+.mb-rules-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.mb-rules-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+}
+
+/* `width: auto` because `.bare` sets `width: 100%` and these are flex items.
+   With `flex: none` the basis comes from the width, so the tick took the whole
+   row — 610 of its 628 pixels — and squeezed the text beside it to nothing,
+   which `overflow-wrap: anywhere` then rendered one letter per line. */
+.mb-rules-onoff {
+  flex: none;
+  width: auto;
+  padding-top: 2px;
+}
+
+.mb-rules-what {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  text-align: left;
+}
+
+.mb-rules-name {
+  font-weight: 600;
+  font-size: var(--type-base);
+  overflow-wrap: anywhere;
+}
+
+.mb-rules-does {
+  font-size: var(--type-xs);
+  line-height: 1.4;
+  opacity: 0.7;
+  overflow-wrap: anywhere;
+}
+
+.mb-rules-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  max-width: 56ch;
+  padding: var(--sp-5);
+  border: 1px solid var(--app-line);
+}
+
+.mb-rules-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.mb-rules-legend {
+  font-family: var(--font-heading);
+  font-size: calc(10px * var(--text-scale, 1));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  padding: 0;
+}
+
+.mb-rules-does-set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Same reason as `.mb-rules-onoff`: a `.bare` button in a wrapping flex row
+   has to give up its 100% or the first one takes the line. */
+.mb-rules-tick {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: auto;
+  font-size: var(--type-sm);
+}
+
+.mb-rules-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
+}
