@@ -8,6 +8,8 @@ import { loadSeed } from '../data/seed';
 import { Quiz } from './Drill';
 import { Mine, NoteEditor } from './Mine';
 import { Mail } from './Mail';
+import { Degree } from './Degree';
+import { Applying } from './Applying';
 
 /**
  * The screens somebody can arrive at cold, and whether there is a way on.
@@ -234,5 +236,54 @@ describe('a control that cannot do its job', () => {
     // Writing an email needs no mailbox, and connecting one is the way out.
     expect(pressable().join(' | ')).toMatch(/compose/i);
     expect(host.textContent).toMatch(/no account connected/i);
+  });
+
+  /*
+   * The same shape, three more times: a handler that opens with a guard and a
+   * button that did not carry it.
+   *
+   *   Degree     `if (!code.trim()) return`
+   *   Degree     `if (!programme.trim() || !name.trim()) return`
+   *   Applying   `if (!org.trim() && !role.trim()) return`
+   *
+   * Each is correct in the handler and left its control pressable, so the one
+   * thing a person does first on an empty form — press the button to see what
+   * happens — did nothing at all. Off until the field the guard reads has
+   * something in it, and on again the moment it does, which is the half that
+   * matters: a control that never comes back is worse than one that did
+   * nothing.
+   */
+  const named = (label: string) =>
+    [...host.querySelectorAll('button')].find(
+      (b) => (b.textContent ?? '').trim().toLowerCase() === label.toLowerCase(),
+    ) as HTMLButtonElement | undefined;
+
+  it('turns Degree\u2019s two Add buttons off until their fields say something', () => {
+    show(<Degree />);
+    press(/^taken$/i);
+    const course = named('Add the course');
+    expect(course, `no Add the course — saw ${JSON.stringify(pressable())}`).toBeDefined();
+    expect(course!.disabled).toBe(true);
+    type('Course code', 'ECON 2010');
+    expect(named('Add the course')!.disabled).toBe(false);
+  });
+
+  it('adds the course once the code is there, so the button is not merely off', () => {
+    show(<Degree />);
+    press(/^taken$/i);
+    type('Course code', 'ECON 2010');
+    press(/^add the course$/i);
+    expect(host.textContent).toContain('ECON 2010');
+  });
+
+  it('turns Applying\u2019s Add it off until one of the two it reads is filled', () => {
+    show(<Applying />);
+    press(/^add one$/i);
+    const add = named('Add it');
+    expect(add, `no Add it — saw ${JSON.stringify(pressable())}`).toBeDefined();
+    expect(add!.disabled).toBe(true);
+    // Either one satisfies the guard, so either one must turn it on.
+    type('What the post is', 'Research assistant');
+    expect(named('Add it')!.disabled).toBe(false);
   });
 });
