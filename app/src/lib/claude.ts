@@ -721,11 +721,45 @@ function closed(node: unknown): unknown {
   return schema;
 }
 
-/** Every strict tool, ready for the wire. Anything else is passed through. */
+/**
+ * How many tools the API will make that promise for at once.
+ *
+ * Twenty. The twenty-first is not a warning: the whole request is refused —
+ * "Too many strict tools (22). The maximum number of strict tools supported
+ * is 20" — which is the same afternoon as the schemas that did not close
+ * themselves. Every question in the app failing, on a limit that none of the
+ * twenty-two tool definitions can see from where it is written.
+ */
+const MOST_STRICT = 20;
+
+/**
+ * Every strict tool, ready for the wire. Anything else is passed through.
+ *
+ * Past the cap the *guarantee* is dropped and the tool is still offered,
+ * which is the right way round: a tool the model cannot see is a thing the
+ * app can no longer do, while a tool whose arguments were not checked by the
+ * API is one whose arguments are checked here — `readProposal` re-reads every
+ * proposal against what the app actually holds, and `runLookups` reads each
+ * argument with a fallback. Nothing downstream ever trusted a tool argument
+ * anyway, which is what makes this safe to spend.
+ *
+ * Which twenty keep it is the caller's order, and `ai/converse.ts` sends the
+ * writes first on purpose: a write changes the student's semester, so it is
+ * the one worth the promise, and a lookup that comes back malformed costs a
+ * re-read.
+ */
 export function strictly(tools: ToolSpec[]): ToolSpec[] {
-  return tools.map((t) =>
-    t.strict ? { ...t, input_schema: closed(t.input_schema) as ToolSpec['input_schema'] } : t,
-  );
+  let promised = 0;
+  return tools.map((t) => {
+    if (!t.strict) return t;
+    if (promised >= MOST_STRICT) {
+      const loosened = { ...t };
+      delete loosened.strict;
+      return loosened;
+    }
+    promised += 1;
+    return { ...t, input_schema: closed(t.input_schema) as ToolSpec['input_schema'] };
+  });
 }
 
 /** A tool the model wants to use, with the arguments it chose. */

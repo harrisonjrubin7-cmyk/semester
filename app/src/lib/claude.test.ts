@@ -385,6 +385,28 @@ describe('a strict tool, as a strict API insists on it', () => {
     expect(out.input_schema.required).toEqual(['c', 'a', 'b']);
   });
 
+  it('stops promising at twenty, and still offers the rest', () => {
+    // Twenty-one strict tools is not a warning: the request is refused whole.
+    // So the twenty-first goes out as an ordinary tool — the model can still
+    // call it, and every argument is re-read here anyway — rather than not
+    // going out at all, which would quietly take something the app can do.
+    const many = Array.from({ length: 24 }, (_, i) => ({
+      name: `t${i}`,
+      description: 'x',
+      strict: true as const,
+      input_schema: { type: 'object' as const, properties: { a: { type: 'string' } } },
+    }));
+
+    const wire = strictly(many);
+    expect(wire.length).toBe(24);
+    expect(wire.filter((t) => t.strict).length).toBe(20);
+    // In order, so a caller can decide which twenty are worth the promise.
+    expect(wire.map((t) => Boolean(t.strict)).lastIndexOf(true)).toBe(19);
+    // And the ones past the cap are whole tools, not stubs.
+    expect(wire[23].name).toBe('t23');
+    expect(wire[23].input_schema.properties).toEqual({ a: { type: 'string' } });
+  });
+
   it('leaves a tool that is not strict exactly as it was', () => {
     // Nothing here is a promise the API checks, so nothing needs closing —
     // and a schema changed on its way out is a schema nobody can read back.
