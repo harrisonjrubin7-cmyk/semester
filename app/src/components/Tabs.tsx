@@ -70,6 +70,7 @@ import { secondLine } from '../lib/dim';
 import { ChevronDown, Plus, Search as SearchIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import { StripMenu, type MenuOn } from './TabMenu';
+import { TabFind } from './TabFind';
 import type { Corner } from './Popover';
 import { toneAt, useTones } from './tones';
 import type { CourseTint } from '../lib/tint';
@@ -469,6 +470,10 @@ export function TabStrip({
         >
           <Plus size={15} />
         </button>
+        {/* And the way back to a tab when the strip has stopped being one
+            glance. It draws nothing until there are enough tabs to look
+            for — see `ENOUGH` in `components/TabFind.tsx`. */}
+        <TabFind onPick={pick} onClose={shut} />
       </div>
       {onDismiss && (
         <button
