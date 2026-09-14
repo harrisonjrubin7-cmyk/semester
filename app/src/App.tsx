@@ -115,6 +115,10 @@ const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes }))
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 const Guides = lazy(() => import('./screens/Guides').then((m) => ({ default: m.Guides })));
 const University = lazy(() => import('./screens/University').then((m) => ({ default: m.University })));
+const Athletics = lazy(() => import('./screens/Athletics').then((m) => ({ default: m.Athletics })));
+const Career = lazy(() => import('./screens/Career').then((m) => ({ default: m.Career })));
+const Family = lazy(() => import('./screens/Family').then((m) => ({ default: m.Family })));
+const Pathway = lazy(() => import('./screens/Pathway').then((m) => ({ default: m.Pathway })));
 /* The workspace's own two screens — the search home a new tab opens on, and
    the directory of everything behind it. See `lib/desk.ts`. */
 const SearchHome = lazy(() => import('./screens/Search').then((m) => ({ default: m.SearchHome })));
@@ -446,6 +450,19 @@ function useHeader(): { kicker: string; title: string } {
      */
     case 'university':
       return { kicker: 'What it does, and what it cannot', title: 'University' };
+    /*
+     * The four that outlast the term get their own cases for the reason
+     * University does: the registry fallback prints the tab bar's
+     * nine-character `short`, so Athletics would be headed "Sport".
+     */
+    case 'athletics':
+      return { kicker: 'The season, against the term', title: 'Athletics' };
+    case 'career':
+      return { kicker: 'What is open, and what you have done', title: 'Career' };
+    case 'family':
+      return { kicker: 'What somebody else would see', title: 'Family' };
+    case 'pathway':
+      return { kicker: 'The part that outlasts this term', title: 'Pathway' };
     case 'sources':
       return { kicker: 'Yours, never invented', title: 'Sources' };
     case 'account':
@@ -952,6 +969,14 @@ function CurrentScreen() {
       return <Directory />;
     case 'university':
       return <University />;
+    case 'athletics':
+      return <Athletics />;
+    case 'career':
+      return <Career />;
+    case 'family':
+      return <Family />;
+    case 'pathway':
+      return <Pathway />;
     case 'privacy':
       return <Privacy />;
     case 'data':

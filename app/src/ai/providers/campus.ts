@@ -367,3 +367,87 @@ export const university: Provide = () => {
     ],
   };
 };
+
+/**
+ * Athletics — the season, and what it costs academically.
+ *
+ * The events themselves live in a device library this provider cannot reach,
+ * so what it hands over is the commitments the term already records and the
+ * one thing the assistant must not get wrong: an absence is something an
+ * athletics office authorizes, and nothing here has authorized one.
+ */
+export const athletics: Provide = (look) => {
+  const { state } = look;
+  const teams = state.commitments.filter((c) => c.kind === 'varsity');
+  return {
+    summary: `Athletics — ${teams.length} varsity commitments recorded this term. Practices, training and travel are planned on this device; this app cannot authorize an absence or verify eligibility.`,
+    focus: {
+      varsity_commitments: teams.length,
+      can_authorize_absence: false,
+      absence_letters_are: 'drafts for the student to review and send themselves',
+    },
+    visible: teams.slice(0, 25).map((c) => ({ name: c.name, role: c.role })),
+    actions: ['open_screen', 'add_task'],
+    suggestions: [
+      'What should I sort out before a four-day away trip?',
+      'Help me word an absence request to a professor.',
+    ],
+  };
+};
+
+/** Career — what is being applied for, and what stage each one is at. */
+export const career: Provide = (look) => {
+  const { state } = look;
+  const live = state.applications.filter((a) => a.stage !== 'closed');
+  return {
+    summary: `Career — ${live.length} live applications. Opportunities and résumé entries are the student's own records, not verified listings, and nothing here submits an application.`,
+    focus: { live_applications: live.length, submits_applications: false },
+    visible: live.slice(0, 25).map((a) => ({ org: a.org, role: a.role, stage: a.stage, due: a.due })),
+    actions: ['open_screen', 'add_task'],
+    suggestions: [
+      'Which application deadline is closest?',
+      'What should go in a cover letter for this one?',
+    ],
+  };
+};
+
+/**
+ * Pathway — the arc past this term.
+ *
+ * Deliberately thin. The programmes, costs and milestones are in a device
+ * library, and the one thing worth saying is the thing a status here does not
+ * mean: nothing on that screen enrols anybody or reflects a decision an
+ * institution has made.
+ */
+export const pathway: Provide = () => ({
+  summary:
+    'Pathway — applications, arrival, research milestones and graduation, planned on this device. Every stage and status is what the student believes is happening, not an institutional record, and cost figures are their own estimates.',
+  focus: { statuses_are: 'self-reported', changes_enrollment: false, costs_are: 'student estimates, loans not counted as aid' },
+  visible: [],
+  actions: ['open_screen'],
+  suggestions: [
+    'What should I have ready before a graduate application deadline?',
+    'Help me compare two programs on the same assumptions.',
+  ],
+});
+
+/**
+ * Family — and the one provider that deliberately hands over nothing.
+ *
+ * The plans, the selected items and the preview are exactly the material a
+ * student chose to share with one specific person, and handing them to a
+ * model is a second disclosure they did not choose. So `visible` is empty and
+ * stays empty. What the assistant gets is what the screen is for, which is
+ * enough to answer a question about how to use it.
+ */
+export const family: Provide = () => ({
+  summary:
+    'Family — a plan for what one person would be shown, prepared on this device. It grants no access to anybody, sends no invitation, and the items in it are private to the student.',
+  focus: { grants_access: false, sends_invitations: false, items_shared_with_assistant: false },
+  visible: [],
+  actions: ['open_screen'],
+  suggestions: [
+    'What should I share with a parent helping me with the bill?',
+    'How do I set an expiry on what someone can see?',
+  ],
+});

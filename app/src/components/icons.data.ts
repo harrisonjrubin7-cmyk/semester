@@ -383,6 +383,53 @@ export const SHAPES = {
     { d: 'M15.5 9.5h2.5M15.5 13h2.5' },
   ],
 
+  /** University — a pediment on four columns. The building, not the brand. */
+  university: [
+    { d: 'M2.5 9 12 4l9.5 5' },
+    { d: 'M4.5 9v9M9 9v9M15 9v9M19.5 9v9' },
+    { d: 'M3 20.5h18' },
+  ],
+
+  /*
+   * Pathway — a route that forks and carries on.
+   *
+   * Not a signpost and not a graduation cap: this screen is applying,
+   * arriving, a thesis and leaving, and a cap would claim it is only the last
+   * one. A path with a branch in it is the shape of having a choice.
+   */
+  pathway: [
+    { d: 'M6 21c0-5 4-5 4-9s-4-4-4-8' },
+    { d: 'M10 8h4.5a3 3 0 0 1 0 6H13' },
+    { c: [6, 4, 1.5] },
+    { c: [6, 20, 1.5] },
+  ],
+
+  /** Career — steps going up, with the next one drawn open. */
+  career: [
+    { d: 'M3.5 20.5h4v-5h4v-5h4v-5h5' },
+    { d: 'M17 3.5h3.5V7' },
+  ],
+
+  /*
+   * Family — two figures, one smaller, side by side.
+   *
+   * Deliberately not a house (that is Housing) and not the single person
+   * glyph (that is you). Two people of different sizes, standing apart, is
+   * the honest drawing for a screen about what one person shows another.
+   */
+  family: [
+    { c: [8, 7.5, 3] },
+    { d: 'M2.5 20c0-3.2 2.5-5 5.5-5s5.5 1.8 5.5 5' },
+    { c: [17, 10, 2.2] },
+    { d: 'M13.5 20c0-2.4 1.6-3.8 3.5-3.8s3.5 1.4 3.5 3.8' },
+  ],
+
+  /** Athletics — a running track, with the inside lane drawn. */
+  athletics: [
+    { d: 'M8 5.5h8a5.5 5.5 0 0 1 0 11H8a5.5 5.5 0 0 1 0-11z' },
+    { d: 'M9.5 9h5a2 2 0 0 1 0 4h-5a2 2 0 0 1 0-4z' },
+  ],
+
   /** Apply — a briefcase. */
   applying: [
     { d: 'M3.5 7.5h17v12h-17z' },

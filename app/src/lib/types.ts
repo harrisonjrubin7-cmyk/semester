@@ -561,6 +561,20 @@ export type Screen =
    * `screens/University.tsx` and `docs/UNIVERSITY_CONNECTIONS.md`.
    */
   | 'university'
+  /*
+   * The four workspaces that are not this term.
+   *
+   * Each holds a body of work that is the student's own and is not academic
+   * record — a season's travel, a résumé, a plan for what a parent may see,
+   * an application to somewhere else. They keep their data in their own
+   * device libraries rather than in `state/shape.ts`, for the reasons in
+   * `lib/device-library.ts`, and `pathway` is the one that is not scoped to a
+   * term at all because applying to graduate school spans several.
+   */
+  | 'athletics'
+  | 'career'
+  | 'family'
+  | 'pathway'
   // The settings pages. Real screens rather than a sub-mode of one, so Back,
   // the recent list and a deep link all work the way they do everywhere else.
   | 'setLook'

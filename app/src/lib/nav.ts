@@ -81,6 +81,7 @@ export type Group =
   | 'Make'
   | 'Campus'
   | 'Life'
+  | 'Beyond'
   | 'Data';
 
 /**
@@ -92,6 +93,22 @@ export type Group =
  * A regrouping is exactly the change that finds that bug, so the copies are
  * gone and this is the order.
  */
+/*
+ * ## Eight, because four workspaces arrived that are not this term
+ *
+ * Athletics, Career, Family and Pathway came in together, and none of them
+ * fitted. Every shelf was at or near eight — the most a row of pills draws —
+ * so there was no room, and the reason there was no room is that all seven
+ * shelves are about the term: what is due, what to study, what to make, the
+ * campus around it. These four are about the season, the next job, the people
+ * supporting you and the next degree. They outlast the term, which is a
+ * different thing to be doing and so a different shelf.
+ *
+ * Applications moved onto it with them, from Life. It is the tracker Career
+ * embeds, it is the one screen on Life that was never about this term, and
+ * without it Beyond would have been four — under the floor below, and a shelf
+ * that thin should fold rather than exist.
+ */
 export const GROUPS: Group[] = [
   'Semester',
   'Courses',
@@ -99,6 +116,7 @@ export const GROUPS: Group[] = [
   'Make',
   'Campus',
   'Life',
+  'Beyond',
   'Data',
 ];
 
@@ -616,12 +634,71 @@ export const DESTINATIONS: Destination[] = [
     root: 'home',
   },
   {
+    screen: 'pathway',
+    label: 'Pathway',
+    short: 'Pathway',
+    blurb: 'Applying somewhere, arriving, a thesis, graduating — the projects that outlast a term.',
+    keywords:
+      'pathway program programs application applications apply graduate grad school masters doctoral phd thesis dissertation research publication transfer credit admission admissions arrival orientation graduation alumni milestone milestones tuition cost compare shortlist deadline personal statement essay recommendation',
+    group: 'Beyond',
+    taskTags: ['ahead'],
+    root: 'mine',
+  },
+  {
+    screen: 'career',
+    label: 'Career',
+    short: 'Career',
+    blurb: 'What is open, what you have done, and who you have spoken to — with the letters drafted from it.',
+    keywords:
+      'career job jobs internship opportunity opportunities resume cv cover letter networking contact contacts mentor mentorship alumni employer employers study abroad exchange skills portfolio experience interview',
+    group: 'Beyond',
+    taskTags: ['ahead', 'make'],
+    root: 'mine',
+  },
+  {
+    screen: 'family',
+    label: 'Family',
+    short: 'Family',
+    blurb: 'Decide what somebody else sees, item by item — and look at exactly what that would be.',
+    /*
+     * No "housing", "dining" or "aid" here, for the reason University's list
+     * says: naming another screen's subject makes this one shadow it in
+     * search, including for a reader whose own screen the directory hides.
+     * These are the words for *this* screen — somebody else, and what they
+     * would be shown.
+     */
+    keywords:
+      'family parent parents guardian relative support access permission permissions share sharing consent expiry expire revoke preview private payer separate account invitation',
+    group: 'Beyond',
+    taskTags: ['ahead', 'campus'],
+    root: 'mine',
+  },
+  {
+    screen: 'athletics',
+    label: 'Athletics',
+    short: 'Sport',
+    blurb: 'Practice, training and travel beside the classes and deadlines they run over.',
+    keywords:
+      'athletics sport sports team varsity club intramural practice training competition meet game travel trip away absence letter professor conflict conflicts season roster coach eligibility',
+    group: 'Beyond',
+    taskTags: ['campus', 'week'],
+    root: 'mine',
+  },
+  {
     screen: 'applying',
     label: 'Applications',
     short: 'Apply',
     blurb: 'Internships, jobs and research posts — the deadlines that land on the same days as your coursework.',
     keywords: 'internship internships job jobs application applications apply applied recruiting recruitment career careers offer interview interviews resume cv cover letter fellowship scholarship grad school research assistant ra summer analyst deadline pipeline tracker handshake linkedin networking coffee chat referral',
-    group: 'Life',
+    /*
+     * Beyond, not Life, and it moved when Beyond was created.
+     *
+     * It is the one screen on Life that was never about this term — a
+     * September deadline for a job that starts in June — and it is the
+     * tracker Career embeds, so it belongs beside it rather than beside the
+     * meal plan and the alarm clock.
+     */
+    group: 'Beyond',
     taskTags: ['ahead', 'due'],
     root: 'mine',
   },

@@ -174,9 +174,15 @@ describe('the shelves the directory is arranged on', () => {
     }
   });
 
-  it('holds the seven shelves in the order they are shown', () => {
+  it('holds the eight shelves in the order they are shown', () => {
     // Order is the thing a student learns by position, so it is asserted
     // rather than left to however the registry happens to be written.
+    //
+    // Beyond is the eighth and the newest: the four workspaces that are not
+    // about this term — the season, the next job, the people supporting you,
+    // the next degree — plus the application tracker that was never about
+    // this term either. It sits after Life and before Data because it is
+    // still about the student rather than about the app.
     expect(GROUPS).toEqual([
       'Semester',
       'Courses',
@@ -184,6 +190,7 @@ describe('the shelves the directory is arranged on', () => {
       'Make',
       'Campus',
       'Life',
+      'Beyond',
       'Data',
     ]);
   });

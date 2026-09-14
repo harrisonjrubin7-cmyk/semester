@@ -266,3 +266,134 @@ export function validateActionFields(input: ActionInput, action: RecordAction): 
     if (v && f.kind === 'number' && !Number.isFinite(Number(v))) throw new Error(`${f.label} must be a number.`);
   }
 }
+
+/* ── Authorized family access ───────────────────────────────────────────── */
+
+/**
+ * What a student can let somebody else see, and the rule that decides.
+ *
+ * A parent paying a bill is the ordinary case and the dangerous one. The easy
+ * version gives the payer "the account", and the account is everything — the
+ * grades, the health administration, the calendar showing where somebody is
+ * at nine on a Tuesday. So access here is per *category*, per *named
+ * resource*, with an expiry, and none of it exists until the recipient has
+ * accepted.
+ *
+ * ## This is the server's rule, not the browser's
+ *
+ * `lib/family.ts` and the Family screen let a student *plan* a grant: choose
+ * the categories, the items, the expiry. That plan grants nothing. A real
+ * grant lives in verified server storage, and every resource operation is
+ * checked against it by `allowsFamilyRequest` below. A permission object that
+ * arrived from a browser is a request, never an authority.
+ */
+export const FAMILY_CATEGORIES = [
+  'finances',
+  'aid',
+  'housing',
+  'calendar',
+  'academic',
+  'emergency',
+  'travel',
+  'health-admin',
+  'career',
+  'communication',
+] as const;
+
+export type FamilyCategory = (typeof FAMILY_CATEGORIES)[number];
+
+/**
+ * How much of a category somebody has.
+ *
+ * `payment` is the one that is not a level of reading. It lets a payer pay and
+ * lets them read nothing — see the last line of `allowsFamilyRequest`, which
+ * is the whole reason the four are not an ordinal scale.
+ */
+export type FamilyAccess = 'none' | 'selected' | 'view' | 'payment';
+
+export interface FamilyGrant {
+  id: string;
+  institutionId: string;
+  studentId: string;
+  recipientId: string;
+  category: FamilyCategory;
+  access: FamilyAccess;
+  /** The individual things named. A category alone grants nothing. */
+  resourceIds: string[];
+  /** Null until the recipient has accepted. A grant nobody accepted is not one. */
+  acceptedAt: number | null;
+  expiresAt: number;
+  revokedAt: number | null;
+}
+
+export interface FamilyRequest {
+  institutionId: string;
+  studentId: string;
+  recipientId: string;
+  category: FamilyCategory;
+  resourceId: string;
+  operation: 'read' | 'pay';
+}
+
+/**
+ * Whether one grant permits one operation on one resource, right now.
+ *
+ * Written as a single predicate with no partial results on purpose: an
+ * authorization that can be half-computed is one a caller can use half of.
+ * Every condition is a reason to refuse, and the default at the end of each
+ * branch is refusal.
+ *
+ * The order matters less than the completeness, but the checks are, in words:
+ * the grant is live (accepted, not expired, not revoked, and not accepted in
+ * the future); it names a real triangle of institution, student and recipient,
+ * and the student is not the recipient; it is *this* triangle and *this*
+ * category; the category is real, the access is not `none`, and the specific
+ * resource is one of the ones named.
+ *
+ * Then the two operations, and the asymmetry between them is the point.
+ * Paying requires `finances` *and* `payment` exactly. Reading requires
+ * `selected` or `view` — which `payment` is not, so **payment-only access
+ * discloses nothing**: a parent who can pay the bill cannot read the
+ * statement, the transaction history, or anything else.
+ */
+export function allowsFamilyRequest(
+  grant: FamilyGrant,
+  request: FamilyRequest,
+  now = Date.now(),
+): boolean {
+  const live =
+    Number.isFinite(now) &&
+    Number.isFinite(grant.expiresAt) &&
+    grant.expiresAt > now &&
+    grant.acceptedAt !== null &&
+    Number.isFinite(grant.acceptedAt) &&
+    grant.acceptedAt <= now &&
+    grant.revokedAt === null;
+  if (!live) return false;
+
+  const named =
+    !!grant.institutionId &&
+    !!grant.studentId &&
+    !!grant.recipientId &&
+    grant.studentId !== grant.recipientId &&
+    !!request.resourceId;
+  if (!named) return false;
+
+  const same =
+    grant.institutionId === request.institutionId &&
+    grant.studentId === request.studentId &&
+    grant.recipientId === request.recipientId &&
+    grant.category === request.category;
+  if (!same) return false;
+
+  const scoped =
+    FAMILY_CATEGORIES.includes(grant.category) &&
+    grant.access !== 'none' &&
+    grant.resourceIds.includes(request.resourceId);
+  if (!scoped) return false;
+
+  if (request.operation === 'pay') return grant.category === 'finances' && grant.access === 'payment';
+  if (request.operation !== 'read') return false;
+  // Payment-only access cannot disclose statements or transaction history.
+  return grant.access === 'selected' || grant.access === 'view';
+}

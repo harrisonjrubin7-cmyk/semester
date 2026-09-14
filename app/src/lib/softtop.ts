@@ -591,6 +591,32 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
       };
     }
 
+    /*
+     * ── Beyond ──────────────────────────────────────────────────────────
+     *
+     * The four that are not this term keep their work in device libraries
+     * rather than in `state`, and this function is given only `state` and the
+     * catalogue — so it cannot count what is in them without reading
+     * `localStorage` during a render, which is the wrong place for that by
+     * some distance.
+     *
+     * So each leads with the figure the *term* already has that the screen is
+     * about. Every one is a true number the reader can check, and none of
+     * them is a nought that would make a working screen look like an empty
+     * app before it has been opened.
+     */
+    case 'athletics':
+      return holds('Commitments', state.commitments.length, 'commitment');
+
+    case 'career':
+      return holds('Applications', state.applications.length, 'application');
+
+    case 'pathway':
+      return holds('Courses so far', catalog.courses.length, 'course');
+
+    case 'family':
+      return holds('People', state.people.length, 'person', 'people');
+
     // ── Campus ────────────────────────────────────────────────────────────
     /*
      * The university's figure is what it can reach, not what exists.
