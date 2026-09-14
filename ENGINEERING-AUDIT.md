@@ -127,11 +127,11 @@ measurement, not a guess.
 
 ### What landed
 
-P1a, P1b and P1c are done. Measured after, the same way:
+P1a, P1b, P1c and P1e are done. Measured after, the same way:
 
 ```
-287 modules, 86,319 lines  →  267 modules, 77,295 lines   (−7% modules, −10% lines)
-initial gzipped JS: 346,504 bytes  →  308,688 bytes       (−11%)
+287 modules, 86,319 lines  →  243 modules, 71,221 lines   (−15% modules, −17% lines)
+initial gzipped JS: 346,504 bytes  →  268,164 bytes       (−23%)
 ```
 
 `lib/connect.ts`, `lib/decks.ts`, `lib/pptx.ts` and `lib/tools.ts` are off the
@@ -144,25 +144,53 @@ reaches that is `ai/store.tsx`, which `main.tsx` mounts as `AIProvider` — not
 correction matters more than the line it corrects: every eager path has to be
 traced to its own root, and a module with two of them only leaves when both go.
 
-### P1e — the providers, which are now the biggest edge left
+### P1e — the providers · **DONE**
 
-With the panel split, the largest single cut in the app is one line:
+With the panel split, the largest single edge left in the app was one line:
 
 ```
-ai/store.tsx -> ai/providers/index.ts    −23 modules, −7,074 lines
+ai/store.tsx -> ai/providers/index.ts    −23 modules, −7,543 lines
 ```
 
-That is bigger than P1a was. `ai/providers/*` assembles what the assistant can
-see on each screen, and it is reached only through `ai.look()` and
-`ai.suggestions()` — both of which are called from exactly two places,
-`ai/Panel.tsx` and `ai/Opening.tsx`, and both of those are now behind the
-panel's chunk. The obstacle is that `look()` is synchronous and lives on the
-provider, so the fix is not another `import()`: the assembly has to move to the
-panel side, leaving the store holding the raw inputs it already has (`screen`,
-the live look, the registered extras).
+Bigger than P1a was. `ai/providers/*` assembles what the assistant can see on
+each screen, and `AIProvider` is mounted by `main.tsx` above the router — so
+every student parsed it, and between them those providers read the spreadsheet
+engine, the equation library, the chart model, the names and the whole
+`insights/` tree.
 
-It also takes `lib/sheet.ts` and `lib/maths.ts` with it, which is the rest of
-the answer to the paragraph above.
+`look()` and `suggestions()` had exactly three callers — `ai/Panel.tsx`,
+`ai/Opening.tsx` and `ai/converse.ts` — and all three are already behind the
+panel's chunk or the Ask tab's. So the store keeps what only it can know
+(which screen, the live store, what is registered) and `ai/assemble.ts` holds
+the part that needs the providers. `assemble` stays a *function* rather than a
+hook: the reasoning in `ai/store.tsx` about not re-rendering is the whole
+design, and what moved is where the context is computed, not when.
+
+```
+eager import graph  267 modules / 78,971 lines  →  243 / 71,221
+initial gzipped JS  305,452 bytes               →  268,164        (−12%)
+files on the critical path  25 → 15
+```
+
+`lib/sheet.ts`, `lib/maths.ts` and `lib/chart.ts` are off the critical path,
+which finishes answering the correction above: they were never the panel's to
+take with it, because what reached them was mounted above the router rather
+than imported by the assistant's button.
+
+### Where the critical path stands
+
+Four edges, measured end to end:
+
+```
+287 modules, 86,319 lines, 346,504 bytes gzip   ← where this audit started
+243 modules, 71,221 lines, 268,164 bytes gzip   ← now
+       −15%        −17%           −23%
+```
+
+The heavy third-party code was already lazy before any of this and still is.
+What came off was the app's own: the OAuth redeemer, the spreadsheet engine,
+the `.pptx` writer, the conversation stack, and the assistant's context
+assembly — none of which a student needs to see Today.
 
 > **How to reproduce.** Walk the graph from `src/main.tsx`, following every
 > non-`type` `import … from` / `export … from` and bare `import '…'`, and
@@ -459,7 +487,7 @@ Ordered by measured value per unit of risk, not by size.
 | 10 | **P4 proper** — one module per screen | large, own branch | adding a screen becomes adding a file |
 | 11 | **P2 proper** — split `now` out of the store context | large | the minute boundary stops being an app-wide event |
 | 12 | **P7** — keep paying the style ledger down | ongoing | the memoisation in 11 becomes worth having |
-| 13 | **P1e** — move the assistant's context assembly to the panel side | medium | −7,074 lines: the largest edge left, and it takes `lib/sheet.ts` and `lib/maths.ts` with it |
+| 13 | ✅ **P1e** — move the assistant's context assembly off the store | medium | −7,543 lines and −12% of the gzipped critical path; `lib/sheet.ts`, `lib/maths.ts` and `lib/chart.ts` go with it |
 
 Items 1–5 are done, in that order, one commit each, with `lint`, `test`,
 `test:zones` and `build` green after every one. They touch nothing a student
@@ -485,3 +513,11 @@ findings.
   number — but the README and `lib/nav.ts` argue for them on purpose, and "this
   is expensive" is not the same claim as "this is wrong". If it is ever revisited
   it should be as a product decision with usage data, not as a tidy-up.
+
+  **That figure is already stale**, and it is the one number in this document
+  that has moved on its own: `main` has since removed the browser shell, and
+  with it `GoogleShell.tsx`, `GoogleTabs.tsx` and their tests. Everything else
+  here was measured at `b251d04` and re-measured where it was acted on; this
+  was measured and then left alone, which is exactly the row most likely to be
+  quoted later. Re-derive it from `NAVS` and `SHELLS` in `lib/look.ts` before
+  acting on it.
