@@ -443,7 +443,12 @@ model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
   quotations, tables, equations, page breaks — out as a real `.docx`, as
-  Markdown, or printed to PDF from the browser. It is not **Draft it**, which
+  Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
+  `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
+  link becomes a real hyperlink in the Word file rather than an address typed
+  out dead on the page. Three schemes are allowed behind words — http, https
+  and mailto — and anything else keeps its brackets and stays on the page as
+  text, because a document is as often somebody else's writing pasted in. It is not **Draft it**, which
   writes prose and is fenced off from coursework, and it is not **Work on it**,
   which plans an assignment and refuses to write it. This one arranges what you
   type. Paste notes or Markdown in and it reads headings, lists, tables and
@@ -481,6 +486,18 @@ model in it or needs a key:
   beside the pictures — percentages, money, decimal places, bold, alignment —
   none of which change the number underneath. **Undo and redo** cover all of
   it, one step per thing you did.
+  And it can **chart** what is in it: select a block, Insert → Chart, and
+  columns, bars, a line or a pie are drawn under the grid in your own accent,
+  from the *answers* rather than from the text, so a column of `=B2*C2` charts
+  as the products. A bar starts at zero and a line does not have to — the
+  first is how a chart lies and the second is how one stops saying anything —
+  and a chart says what it is leaving out, because a pie draws one series and
+  a column of grade letters cannot be drawn at all. The chart goes into the
+  `.xlsx` as a live one, pointing at `'Term marks'!$B$2:$B$5`, so editing the
+  cell in Excel moves the bar; the picture saves on its own as an `.svg` with
+  its colours resolved. Data → **Analyse** sends the same numbers to the
+  statistics screen — mean, spread, correlation, a fitted line — which until
+  now could only be reached by pasting a table into it.
   It opens on **templates** — a to-do list, a monthly and a term budget, a
   reading tracker, a lab's readings — each arriving with its totals already
   written, beside the gradebook built from your own syllabus's weights. Out as

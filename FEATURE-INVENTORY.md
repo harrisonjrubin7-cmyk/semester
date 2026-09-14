@@ -535,15 +535,48 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
 
 ## 9. What the prompt asks for that genuinely does **not** exist
 
-This is the real gap list — the honest version of §2 of the build prompt.
+> ### Re-checked against the code on 2026-09-14, and most of it was wrong
+>
+> This section was written on 2026-09-10 and read as the repository's own map
+> of itself for four days, during which a great deal of it was built. Every
+> claim below was put back against `app/src` one at a time — by grepping for
+> the thing rather than by reading the sentence — and **most of the Drive,
+> Docs and Sheets entries were already closed**.
+>
+> They are struck through rather than deleted, in the style this section
+> already used for the two entries that were wrong when it was written,
+> because the pattern is the finding: *a hand-written gap list is a snapshot,
+> and a snapshot of a repository this active is stale in days.* Anybody using
+> this to decide what to build next should check the claim before acting on
+> it; three of these sent work at things that already existed.
+>
+> What is genuinely absent today is collected at the end of the section.
+>
+> Closed since it was written, and verified: folders, star, trash and restore,
+> recents, search inside file contents, a grid/list toggle, document templates,
+> find and replace, an outline, version history, plain-text export, every
+> named spreadsheet function (`VLOOKUP` … `RATE`), fill, sort, frozen panes,
+> `.xlsx` import, charts on the screen and in the file, a slide canvas and a
+> presenter view.
+>
+> Images on a slide are *not* among them, and the way that nearly got written
+> here is worth the line: `lib/pptx.ts` matches "image" twice, and both are
+> the notes slide's own placeholder. Grepping for a word is not checking for a
+> feature, which is the same mistake at one remove as reading the sentence.
 
 **Drive**
-- No folders or nested subfolders. Files are a flat list tagged by `courseId`.
-- No drag-and-drop to move, no grid/list toggle, no sort by type or course.
+- ~~No folders or nested subfolders. Files are a flat list tagged by `courseId`.~~
+  — **closed.** `folderId` on `StoredFile`, `moveFile`, and `readFolder` in
+  `lib/stored.ts`.
+- ~~No drag-and-drop to move, no grid/list toggle, no sort by type or course.~~
+  — **half closed.** The grid/list toggle and the sorts are in
+  `screens/mine/Drive.tsx`; drag-and-drop is not.
 - No auto-created folder per course.
-- No search across file *contents*.
-- No star/favourite, no recents view, **no trash and no restore** (delete is
-  immediate and final).
+- ~~No search across file *contents*.~~ — **closed.** `search()` in
+  `lib/files.ts` reads the text inside and says which matched on it.
+- ~~No star/favourite, no recents view, **no trash and no restore** (delete is
+  immediate and final).~~ — **closed.** `starFile`, `touchFile`, `trashFile`,
+  `restoreFile`, `emptyTrash` and a thirty-day `sweepTrash`.
 - ~~No link between a file and an *assignment* — only to a course and to notes.~~
   — **closed.** `StoredFile.itemId`, set from the drive's own **For** button or
   from the deadline's *Work for this* panel, and shown on the file's row.
@@ -551,14 +584,22 @@ This is the real gap list — the honest version of §2 of the build prompt.
 
 **Docs**
 - No rich-text editing surface. The editor is block-structured, not WYSIWYG: no
-  bold/italic toolbar, font family/size, text or highlight colour.
+  bold/italic toolbar, font family/size, text or highlight colour. (`**bold**`
+  and `*italic*` are typed as marks and do reach the `.docx`.)
 - No checkbox lists, no indent/outdent, no horizontal rules, no code blocks.
 - No images in documents at all.
-- No links, alignment, line spacing or margin controls.
-- No find-and-replace, no outline sidebar, no comments/margin notes.
-- **No version history and no restore.** No autosave indicator.
-- No PDF export, no DOCX *import* (Markdown import exists), no plain-text export.
-- No templates (essay/MLA/APA, lab report, reading response, etc.).
+- ~~No links,~~ alignment, line spacing or margin controls. — links **closed**:
+  `[words](where)` in `lib/document.ts`, checked by `safeUrl` against http,
+  https and mailto, and written into the `.docx` as a real hyperlink
+  relationship. A refused target keeps its brackets and stays on the page.
+- ~~No find-and-replace, no outline sidebar,~~ no comments/margin notes. —
+  both **closed** in `lib/doctools.ts` (`findAll`, `replaceAll`, `outline`).
+- ~~**No version history and no restore.** No autosave indicator.~~ —
+  **closed.** `lib/docversions.ts`, and the History panel in `screens/Write.tsx`.
+- No PDF export, no DOCX *import* (Markdown import exists). ~~No plain-text
+  export.~~ — Markdown out is `toMarkdown`.
+- ~~No templates (essay/MLA/APA, lab report, reading response, etc.).~~ —
+  **closed.** Seven, in `lib/doctemplates.ts`.
 - No "Open in Docs" from a study guide.
 
 **Sheets**
@@ -567,9 +608,11 @@ This is the real gap list — the honest version of §2 of the build prompt.
   account's sheets rather than between tabs inside one workbook: an imported
   workbook's worksheets each arrive as a sheet of their own, so a formula can
   never reach across one.
-- Missing functions the prompt names: `IFS IFERROR VLOOKUP HLOOKUP XLOOKUP INDEX
+- ~~Missing functions the prompt names: `IFS IFERROR VLOOKUP HLOOKUP XLOOKUP INDEX
   MATCH LEFT RIGHT MID TEXT SPLIT TODAY NOW DATE DATEDIF WEEKDAY EOMONTH MODE
-  CORREL COUNTIF SUMIF COUNTIFS SUMIFS AVERAGEIF NPV IRR PMT FV PV RATE`.
+  CORREL COUNTIF SUMIF COUNTIFS SUMIFS AVERAGEIF NPV IRR PMT FV PV RATE`.~~ —
+  **closed.** Every one of the thirty is in `lib/sheet.ts`, alongside the
+  fitted line (`SLOPE`, `INTERCEPT`, `RSQ`, `FORECAST`).
 - ~~No absolute references (`$A$1`)~~ — **wrong as written, and correcting it
   found a bug.** `parseRef` has always accepted `$A$1`, `$A1` and `A$1`, and a
   range end was rebuilt through `ref()` so `SUM($A$1:$B$2)` was right. But a
@@ -584,16 +627,24 @@ This is the real gap list — the honest version of §2 of the build prompt.
   be found in a total that stopped moving.
 - ~~No fill handle, no paste-special, no undo/redo inside the grid.~~ — undo
   and redo are in the grid now (`lib/history.ts`), coalesced by cell so a run
-  of typing is one step rather than one per keystroke. No fill handle and no
-  paste-special still.
+  of typing is one step rather than one per keystroke. **Fill down and fill
+  right** are on the Data tab and on ⌘D/⌘R (`fill` in `lib/sheetedit.ts`),
+  with `$` honoured. No fill *handle* — the corner you drag — and no
+  paste-special.
 - ~~No cell formatting at all: number/currency/percent/date formats, bold,
   fill, borders, alignment, wrap, merge.~~ — number, currency, percent, date
   and decimal places, bold, italic, strikethrough and alignment are on the
   toolbar and go into the `.xlsx`. Still no fill, borders, wrap or merge.
-- No sort, no filter, no freeze panes. (A `.xlsx` export freezes the header
-  row; nothing on the screen does.)
+- ~~No sort, no filter, no freeze panes.~~ — sort is `sortRange`, and the
+  View tab freezes the top row on the screen as well as in the file. **No
+  filter** is still true.
 - No conditional formatting, no data validation or dropdowns.
-- **No charts and no pivot tables.**
+- ~~**No charts and no pivot tables.**~~ — **charts closed.** `lib/chart.ts`
+  reads a range into series, `components/SheetChart.tsx` draws columns, bars,
+  a line or a pie, and `lib/xlsxchart.ts` writes a *live* chart into the
+  workbook — a reference, not a copy, so editing the cell in Excel moves the
+  bar. No pivot tables, and Data → Analyse hands the numbers to
+  `screens/Analyse.tsx` rather than pivoting them here.
 - ~~**No XLSX or CSV import** (export only)~~ — **wrong as written.** CSV and
   TSV could always be *pasted* in: "Paste a table in" runs `readTable()` and
   dispatches `makeSheet`. What was missing was importing a **file** — and
@@ -640,6 +691,39 @@ This is the real gap list — the honest version of §2 of the build prompt.
   something, a paperclip and a count on every deadline row, and a *for Quiz #1*
   line on a file in the drive. A link whose deadline has been edited away reads
   as no link rather than as a broken one.
+
+### Genuinely absent, 2026-09-14
+
+Everything above that is not struck through, collected — so the next person
+reading this has one short list rather than a long one to re-check. Verified
+by grepping for each, not by re-reading the sentence.
+
+**Documents** — code blocks · checkbox lists · horizontal rules · indent and
+outdent · images · alignment, line spacing and margins · comments and margin
+notes · PDF export · `.docx` *import* · "Open in Docs" from a study guide · a
+WYSIWYG surface (the marks are typed).
+
+**Sheets** — cross-sheet references (`Sheet2!A1`) · named ranges · a fill
+*handle* · paste-special · filter · conditional formatting · data validation ·
+pivot tables · a per-course grade calculator and GPA planner template.
+
+**Slides** — free layout (a text box you can move) · images and charts placed
+on a slide · transitions, which are deliberate: `lib/pptx.ts` would have to
+write them into the file for the promise to be real · PDF and PNG export ·
+`.pptx` import · whole-deck templates.
+
+**Drive** — drag-and-drop to move · an auto-created folder per course · the
+quota shown over the files rather than on the Data screen.
+
+**Cross-app** — a ＋ New row on a *folder* · paste-a-range-into-Docs-as-a-table.
+
+Two of these carry a warning worth writing down. **Cross-sheet references** is
+the largest by a distance and the most dangerous: `evaluate` takes one grid,
+and widening it to several touches the code where a wrong answer is silent and
+looks right — "a total that quietly adds up the wrong nine rows" is this
+repository's own words for its worst failure. **A fill handle** is small on the
+screen and is what finally makes `$A$1` mean something, since nothing else
+moves a lone reference.
 
 > **Two entries above were wrong when this was written**, and are struck
 > through rather than deleted so the correction is visible. Both were found by
