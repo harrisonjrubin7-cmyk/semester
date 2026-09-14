@@ -1,30 +1,16 @@
-import { useState, type HTMLAttributes } from 'react';
+import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { permission, requestPermission, type Permission } from '../lib/notify';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, EmptyState, Segmented } from '../components/ui';
-import { NotYetOpened } from '../components/NotYetOpened';
 import { Group as Panel, NavRow } from '../components/shell/Rows';
 import { Bell } from '../components/Icons';
 import { NOTIFICATIONS } from '../data/misc';
-import {
-  GROUPS,
-  destinationsIn,
-  lately,
-  listed,
-  saysFor,
-  type Group as Shelves,
-} from '../lib/nav';
-import { arranged, useMovable } from '../lib/arrange';
-import { readOrder, tilesFor, writeOrder } from '../lib/launcher';
-import { currentLook } from '../state/shape';
-import { Launcher } from '../components/nav/Launcher';
 import { ByTask } from '../components/nav/ByTask';
-import { directoryOf } from '../lib/look';
 
-import type { CourseModule, Screen } from '../lib/types';
+import type { CourseModule } from '../lib/types';
 import { cardKey } from '../lib/review';
 import { TypeToConfirm } from '../components/TypeToConfirm';
 import { You } from './me/You';
@@ -41,111 +27,7 @@ import { You } from './me/You';
  */
 
 
-/** Already a tab on the phone, so listing them again is noise. */
-// Settings is not hidden: it is a screen of its own, and this row is the one
-// way in from here. It used to be a third tab of this screen as well, which
-// meant the same index existed twice — once inline, once as the screen the
-// Settings button opens — and the tab was the copy that had to go.
-const HIDE_IN_ME: Screen[] = ['home', 'me', 'notifs'];
 
-/**
- * One row of the directory.
- *
- * Pulled out so the Lately list and the shelves are the same object rather
- * than two copies of the same markup that drift — the second copy is where
- * the account's "synced" label would have been forgotten.
- */
-function Destination({
-  to,
-  account,
-  drag,
-  tookDrop,
-}: {
-  to: ReturnType<typeof destinationsIn>[number];
-  account: { email: string } | null;
-  /** Its place on the shelf, on the shelves where that is the student's. */
-  drag?: HTMLAttributes<HTMLElement> & { 'data-drop'?: string };
-  tookDrop?: () => boolean;
-}) {
-  const { dispatch, school } = useStore();
-  // The directory in the school's own words. See `lib/nav.ts` — the meal row
-  // promised everyone "Commodore Cash" until this existed.
-  const said = saysFor(to, school.capabilities);
-  return (
-    <NavRow
-      label={to.screen === 'account' && account ? 'Account · synced' : said.label}
-      sub={to.screen === 'account' && !account ? 'Not signed in — this device only.' : said.blurb}
-      drag={drag}
-      // A drop ends in a click on the row it started from, so without this
-      // the row you have just moved also opens.
-      onClick={() => {
-        if (tookDrop?.()) return;
-        dispatch({ type: 'go', screen: to.screen });
-      }}
-    />
-  );
-}
-
-/**
- * One shelf of the directory, in the order the student put it in.
- *
- * The same look key the launcher's tiles and the Everything screen's rows are
- * dragged into — one arrangement, honoured wherever the shelf is drawn. Three
- * lists of the same shelf that disagreed about its order would be the app
- * arguing with itself.
- *
- * Its own component because a drag is a hook, and a hook cannot be set up
- * inside a loop over the shelves.
- *
- * ## What is dropped on is not always all there is
- *
- * `reveal.ts` hides rows that are real but not useful yet, so this list can be
- * a subset of the shelf. The drop is worked out against the *whole* shelf and
- * only drawn from the visible part: moving Costs above Books then leaves
- * anything hidden between them where it was, rather than silently sending it
- * to the end of the shelf the moment it comes back.
- */
-function Shelf({
-  group,
-  rows,
-  account,
-}: {
-  group: Shelves;
-  rows: ReturnType<typeof destinationsIn>;
-  account: { email: string } | null;
-}) {
-  const { state, dispatch, school } = useStore();
-  const order = readOrder(currentLook(state).groupOrder);
-  const whole = tilesFor(group, school.capabilities, order).map((d) => d.screen);
-  const shown = arranged(
-    rows.map((d) => d.screen),
-    whole,
-  );
-
-  const drag = useMovable<Screen>({
-    items: whole,
-    onMove: (moved) =>
-      dispatch({
-        type: 'setLook',
-        look: { groupOrder: writeOrder({ ...order, [group]: moved }) },
-      }),
-  });
-
-  const byScreen = new Map(rows.map((d) => [d.screen, d]));
-  return (
-    <Panel header={group}>
-      {shown.map((screen) => (
-        <Destination
-          key={screen}
-          to={byScreen.get(screen)!}
-          account={account}
-          drag={drag.props(screen)}
-          tookDrop={drag.tookDrop}
-        />
-      ))}
-    </Panel>
-  );
-}
 
 /**
  * One course in the list, with the one question the app still asks.
@@ -219,15 +101,9 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
 }
 
 export function Me() {
-  const { state, dispatch, account, school, facts } = useStore();
+  const { state, dispatch } = useStore();
 
   const tab = state.meTab;
-
-  // The rule lives in `lib/nav.ts` so the springboard applies exactly the same
-  // one against its own dock. It also gates on the school, which this did not:
-  // a screen visited before somebody changed university could come back here
-  // after the directory had already dropped it.
-  const recent = lately(state.recent, state.tabs, school.capabilities, HIDE_IN_ME, 4, state.role);
 
   return (
     <Page>
@@ -242,10 +118,39 @@ export function Me() {
         Settings button landed on the same list, so the app had two homes for
         one thing. The screen kept its own — this keeps the row that opens it.
       */}
+      {/*
+        Where the Everything tab was, as a row rather than a second directory.
+
+        This screen's own note about the Settings tab, two comments up, is the
+        rule and this is it applied a second time: the tab drew the index that
+        `screens/Directory.tsx` *is*, so pressing Everything and pressing All
+        apps landed on the same list of the same registry, gated the same way
+        through the same `offered`. The screen keeps its own; this keeps the
+        row that opens it.
+
+        Directory was the survivor because it is the better drawing of the
+        registry — a category rail, a filter, favourites you pin, and a
+        sentence per row — and because the workspace sidebar and the launcher
+        already pointed at it. What it did not have was Lately and Not tried,
+        and those moved across with this row rather than dying with the tab.
+
+        The keywords stay on this screen's registry row on purpose: "sitemap",
+        "what can this app do", "never opened" all still land here, and here
+        is one tap from there. `directory` is not a destination — it is the
+        shell looking at itself, the way a browser's new-tab page is not a
+        bookmark — so it cannot carry them itself.
+      */}
+      <Panel>
+        <NavRow
+          label="All apps"
+          sub="Every screen in the app, what each is for, and the ones you have never opened"
+          onClick={() => dispatch({ type: 'go', screen: 'directory' })}
+        />
+      </Panel>
+
       <Segmented
         options={[
           { id: 'you', label: 'You' },
-          { id: 'all', label: 'Everything' },
           { id: 'task', label: 'By task' },
         ]}
         value={tab}
@@ -255,117 +160,24 @@ export function Me() {
 
       {tab === 'you' && <You />}
 
-      {tab === 'all' && (
-        <>
-      {/*
-        This used to be seven identical grey buttons in a column, each labelled
-        with two words and explaining nothing. "Files & mail" and "Connect
-        accounts" sounded like the same thing until you had opened both — and
-        largely were, which is why only Connect accounts is left. Now
-        everything is grouped and says what it is for, which is most of what
-        made the app hard to find your way around.
-      */}
-      {/*
-        Recency above taxonomy. Five shelves fixed "which heading was that
-        under", but Take it with you and Connect accounts were still Me →
-        Everything → Yours → row. Nobody remembers a shelf for the three
-        things they actually revisit; the app already knows what those are.
-      */}
-      {/*
-        Grouped, always, and every shelf at once.
-
-        This was a chip row over one shelf at a time — six chips, and whichever
-        you were not on was hidden. That solved the wrong half of the problem.
-        The reason a long directory is hard is not that it is long; it is that
-        nothing tells you where one kind of thing stops and the next begins, so
-        a chip row traded "I cannot see the boundaries" for "I cannot see the
-        other five shelves", which is worse: you now have to guess a shelf
-        before you are allowed to look at it.
-
-        Drawn panels with headers give the boundaries without hiding anything,
-        which is exactly what the settings index does, and what iOS Settings
-        does. One scroll, six headed panels, no chip to get wrong. It is the
-        same set of rows either way — nothing has been dropped.
-
-        Drawn in whichever layout the app is set to, like everything else.
-        This used to force `grouped` on itself, on the argument that a
-        directory is findable because every row looks like every other row —
-        which it does in all three layouts, because `Panel` and `Destination`
-        are the same components either way. Settings forced itself for the
-        same reason and has stopped; a directory of the app that does not look
-        like the app is one more thing that does not match.
-      */}
-      {/*
-        Tiles or panels — a choice, not a consequence of the layout.
-
-        The two are the same fifty-five rows arranged two ways, and showing
-        both would be a directory with a directory on top of it. So one of
-        them is drawn, and which one is `state.directory`, chosen on **Layout
-        and navigation** beside everything else about the shape of the app.
-
-        It arrived gated on `shell === 'soft'`, which meant the only way to
-        get the tiles was to accept a different set of colours, cards and
-        type with them, and the only way to keep the drawn look was to give
-        the tiles up. Two good ideas soldered together, and unsoldering them
-        is what the setting is.
-
-        Read through `directoryOf` rather than off the state, because the
-        setting has three states and only two of them are choices. Empty is
-        nobody having chosen, and there the layout answers: soft draws the
-        tiles, which is the arrangement it was designed alongside. Choosing
-        either one ends that for good, in every layout.
-
-        `Lately` and `NotYetOpened` go with the panels. Both are answers to
-        "where was that", and the grid answers it by position instead — a
-        Lately panel above a grid whose whole claim is that Data is always
-        bottom-left would be arguing with the thing under it.
-      */}
-      {directoryOf(state.directory, state.shell) === 'tiles' ? (
-        <Launcher />
-      ) : (
-        <>
-        <nav aria-label="Everything" style={{ margin: '0 -18px' }}>
-          {recent.length > 0 && (
-            <Panel header="Lately">
-              {recent.map((d) => (
-                <Destination key={d.screen} to={d} account={account} />
-              ))}
-            </Panel>
-          )}
-
-          {/* Silent for anybody who has been round the app. See `lib/unseen.ts`. */}
-          <NotYetOpened />
-
-          {GROUPS.map((group) => {
-            // Two gates, and they are different things. `school.ts` hides what
-            // this university has no equivalent of — absent, not pending.
-            // `reveal.ts` hides what is real and not useful yet, and gives it
-            // back the moment there is something for it to work on.
-            const rows = listed(group, school.capabilities, facts, state.visited, state.showAll, state.role).filter(
-              (d) => !HIDE_IN_ME.includes(d.screen),
-            );
-            if (rows.length === 0) return null;
-            return <Shelf key={group} group={group} rows={rows} account={account} />;
-          })}
-        </nav>
-        </>
-      )}
-        </>
-      )}
-
       {/*
         The same screens, filed under what somebody is trying to do.
 
         This was a screen of its own — Everything — whose four views were
-        these task headings, the shelves above, the never-opened list that
-        `NotYetOpened` already draws, and the shortcut sheet that `?` and the
-        guide already carry. Three of the four were this tab with different
-        headings, so the screen went and the one view that was genuinely its
-        own came here.
+        these task headings, the shelves, the never-opened list and the
+        shortcut sheet that `?` and the guide already carry. Three of the four
+        were tabs of this screen with different headings, so the screen went
+        and the one view that was genuinely its own came here.
+
+        The other two have since moved on again, to `screens/Directory.tsx`,
+        when the tab holding them turned out to be a second directory beside
+        the workspace's. This one did not go with them: a task index is not a
+        directory — a screen sits on exactly one shelf and answers as many
+        intentions as it serves, so several appear here more than once.
 
         Its own component now rather than fifty lines inline, because it is a
         grid of tiles with a filter and a sheet that opens over it, and none
-        of that is anything the You tab or the Everything tab has a use for.
+        of that is anything the You tab has a use for.
         `components/nav/ByTask.tsx` says what each is for. A screen appears
         under every task it serves, so several appear more than once — that is
         the difference from the shelves, where a screen sits on exactly one: a

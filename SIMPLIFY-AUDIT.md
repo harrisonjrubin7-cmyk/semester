@@ -155,7 +155,7 @@ SYNCED_FIELDS, NEVER_SYNCED` (what may and may not leave the device — and
 database is opened that erase does not clear) are all of that kind. Deleting
 them deletes the rule, not the dead code. They stay, and this paragraph is why.
 
-### D7 — the directory, drawn twice again · **OPEN — one instruction needed**
+### D7 — the directory, drawn twice again · **MERGED — `directory` survives**
 
 The fifth pass's S1 merged the `everything` screen into Progress, on the
 grounds that two screens must not both draw the registry. Then the workspace
@@ -176,7 +176,7 @@ clears `import` and `edit` in §2 does not apply: `me` is a destination, so it
 is reachable in the workspace navigation too, and a student there can open two
 full directories without leaving it.
 
-**This pass records it and does not merge it**, and the reason is §6 of this
+**Recorded first and merged second**, and the reason for the gap is §6 of this
 file rather than any doubt about the finding. The survivor question here is
 which of two things a person *navigates by* should survive, and that depends
 on which navigation they actually use — `directory` is the better screen and
@@ -185,20 +185,64 @@ world and works in all five. §6 is a record of exactly this question being
 answered four times from the code and reversed four times by the person whose
 app it is, at the cost of a migration each way.
 
-So this is the row to take to them, and the two shapes it could take are:
+It was taken to them, and the answer is **`directory` survives**. So Me's
+Everything tab becomes a row that opens it — precisely the rule `Me.tsx`
+already states for itself about the Settings tab it dropped: *"pressing the tab
+and pressing the Settings button landed on the same list, so the app had two
+homes for one thing. The screen kept its own — this keeps the row that opens
+it."*
 
-1. **`directory` survives.** Me's Everything tab becomes a row that opens it —
-   which is precisely the rule `Me.tsx` already states for itself about the
-   Settings tab it dropped: *"pressing the tab and pressing the Settings button
-   landed on the same list, so the app had two homes for one thing. The screen
-   kept its own — this keeps the row that opens it."* Costs: `directory` needs
-   a `rootOf` answer and a registry row so the other navigations can reach it.
-2. **`me` survives.** The sidebar's "All apps" and the launcher point at
-   `me` on its Everything tab, and `Directory.tsx` is deleted — losing the
-   category rail, the two views and the per-row star, which are real and are
-   this app's best drawing of the registry.
+### What the merge carried
 
-Recorded as open, with the evidence, rather than decided from `Directory.tsx`.
+**Two lists, which were the only things the tab had that the screen did not.**
+**Lately** (the four places you were) and **Not opened yet** (three you have
+never been, from `lib/unseen.ts`) are on `directory` now. Nothing else in the
+app drew either, so losing them was the whole risk in this merge, and
+`screens/directory.test.tsx` mounts the screen and reads them off it rather
+than grepping for the import — a static check passes on a screen that imports
+a list and never renders it, which is exactly the failure a merge introduces.
+Both stand aside the moment a filter or category is on: they answer "where was
+that", and a list ignoring the filter above one obeying it reads as a bug.
+
+**One card, not two.** Favourites drew its own; Lately would have been a second
+copy of it in the same file, which is the thing this pass exists to remove.
+
+**`directory` did not become a destination**, and that is deliberate rather
+than an omission. Every shelf but two is already at `MOST_ON_A_SHELF`, and the
+`Screen` union's own note is right that this is the shell looking at itself,
+the way a browser's new-tab page is not a bookmark. So `me` keeps the
+Everything keywords — "sitemap", "what can this app do", "never opened" — and
+search still lands there, one tap from the row. Reachable from the Progress
+row in every navigation, and from the sidebar, the launcher and the search
+home in the workspace.
+
+**`#/everything` is retired a second time**, now onto `directory`. It first
+went to the Progress tab that had duplicated the Everything *screen*; a link
+written when Everything was a screen is on a screen again. `opens.meTab` went
+with it — it had exactly one setter — and `meTab` narrows to `'you' | 'task'`.
+No state migration: `meTab` is `Ephemeral` (`state/shape.ts`), never read back
+out of a save.
+
+### Two things the merge found that the audit had not
+
+**`Launcher` and `nav/Folder` were the tab's other half.** The tab drew shelves
+at `directory: 'list'` and eight shelf tiles at `'tiles'`; the screen draws
+rows and cards for the same two. Both launcher files had exactly one caller —
+the tab — so they go with it. `lib/launcher.ts` stays: `groupOrder` still
+orders the apps sheet and the workspace apps panel through `lib/apps.ts`, which
+is why the ordering board in Settings → Navigation still has something to
+order. Its copy said "the tiles inside a folder, and the directory rows on Me",
+which was true of neither afterwards, and now names the two surfaces that read
+it.
+
+**One setting was being read two ways — a §3 finding the §3 method could not
+see.** `directoryOf` resolves the unchosen state at the point of use (soft
+draws tiles); Progress' tab resolved it and `Directory.tsx` compared the raw
+key to `'tiles'`. So an unchosen soft-layout account got the list on the
+directory while **Layout and navigation** showed Tiles selected. It could
+disagree only because there were two renderers; there is one now, and it
+resolves. The `DIRECTORIES` blurbs described the launcher's nine shelf tiles
+and now describe what the setting actually draws.
 
 ### D5 — three springboards over existing screens · **KEEP, recorded**
 
@@ -329,7 +373,7 @@ because every previous pass in this file needed one.
 | D4 | 7 dead exports — **5 cut, 2 wired**, plus the `isUrl` that only routed to one of them | 0 | 0 | Cut | ✅ `41c1607` |
 | D5 | Three springboards | 0 | 0 | Keep, recorded | ✅ recorded |
 | D6 | Previous clusters | 0 | 0 | Keep, re-checked | ✅ recorded |
-| D7 | The directory drawn twice — `directory` against Progress → Everything | −1 if merged | 0 | **Open** | ◐ evidence recorded, survivor needs one instruction |
+| D7 | The directory drawn twice — `directory` against Progress → Everything | 0 | −1 | Merge | ✅ survivor `directory`, on the app owner's instruction |
 
 ### What each turned out to be, once done
 

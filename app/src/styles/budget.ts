@@ -144,7 +144,7 @@ export const BUDGET: Budget = {
   'screens/Lesson.tsx': { type: 5, leading: 7, space: 5, dim: 5 },
   'screens/Links.tsx': { type: 6, space: 4, shorthand: 1, dim: 6 },
   'screens/Maps.tsx': { dim: 19 },
-  'screens/Me.tsx': { type: 2, leading: 1, shorthand: 2, dim: 5 },
+  'screens/Me.tsx': { type: 2, leading: 1, shorthand: 1, dim: 5 },
   'screens/Meals.tsx': { type: 5, leading: 1, space: 2, shorthand: 1, dim: 4 },
   'screens/Meet.tsx': { dim: 6 },
   'screens/Mine.tsx': { type: 6, leading: 4, space: 10, shorthand: 10, dim: 11 },

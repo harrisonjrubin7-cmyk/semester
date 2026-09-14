@@ -41,12 +41,26 @@
 import { createElement, useState } from 'react';
 import { useStore } from '../state/store';
 import { currentLook } from '../state/shape';
+import { directoryOf } from '../lib/look';
 import { allApps, categories, isFavourite, narrowApps, readFavourites, toggleFavourite } from '../lib/desk';
-import { saysFor } from '../lib/nav';
+import type { Destination } from '../lib/nav';
+import { lately, saysFor } from '../lib/nav';
 import { secondLine } from '../lib/dim';
 import { glyphFor } from '../components/icons.pick';
 import { AppsIcon, NotesIcon, Search as SearchIcon, StarIcon } from '../components/Icons';
+import { NotYetOpened } from '../components/NotYetOpened';
 import type { Screen } from '../lib/types';
+
+/**
+ * Already reachable without this list, so repeating them here is noise.
+ *
+ * Carried across from `screens/Me.tsx` with the Lately list, where the
+ * comment beside it said "already a tab on the phone". It is the same three
+ * for the same reason, and `lately` also gates on the school and the role, so
+ * a screen visited before somebody changed university or switched to teaching
+ * cannot come back here after this list has stopped offering it.
+ */
+const HIDE_IN_LATELY: Screen[] = ['home', 'me', 'notifs'];
 
 export function Directory() {
   const { state, dispatch, school } = useStore();
@@ -60,14 +74,27 @@ export function Directory() {
    * navigation. The toggle in the corner writes that key rather than a state
    * of its own, so choosing the grid here is the same choice made there — one
    * preference, three doors, which is the rule this workspace is built on.
+   *
+   * Read through `directoryOf`, not off the key, and that is a fix rather
+   * than a flourish. The key has three states and only two are choices: empty
+   * means nobody has chosen, and there the layout answers — soft draws tiles.
+   * This screen compared the raw key to `'tiles'`, so an unchosen soft-layout
+   * account got the list here while **Layout and navigation** showed Tiles
+   * selected, because that screen has always resolved it. One setting, two
+   * readings, disagreeing about what it said.
+   *
+   * It could disagree because there were two renderers. Progress → Everything
+   * was the other, and it resolved correctly; now that its tab has merged in
+   * here this is the only screen the key drives, so this is the reading.
    */
-  const grid = look.directory === 'tiles';
+  const grid = directoryOf(look.directory, state.shell) === 'tiles';
   const [category, setCategory] = useState('');
   const [query, setQuery] = useState('');
 
   const apps = allApps(caps, state.role);
   const shown = narrowApps(apps, category, query, caps);
   const favourites = readFavourites(look.favourites, caps, state.role);
+  const recent = lately(state.recent, state.tabs, caps, HIDE_IN_LATELY, 4, state.role);
   const chips = categories(caps, state.role);
 
   const star = (screen: Screen) =>
@@ -75,6 +102,31 @@ export function Directory() {
       type: 'setLook',
       look: { favourites: toggleFavourite(look.favourites, screen, caps, state.role) },
     });
+
+  /** One app as a card. Favourites and Lately are the same object. */
+  const card = (d: Destination) => {
+    const said = saysFor(d, caps);
+    return (
+      <button
+        key={d.screen}
+        type="button"
+        className="bare deskdir-favcard"
+        onClick={() => dispatch({ type: 'go', screen: d.screen })}
+        title={said.blurb}
+      >
+        <span className="deskdir-favtile">{createElement(glyphFor(d.screen), { size: 21 })}</span>
+        <span className="deskdir-favsays">
+          <span className="deskdir-favname">{said.label}</span>
+          <span className="deskdir-favgroup" style={secondLine()}>
+            {d.group}
+          </span>
+        </span>
+        <span aria-hidden="true" className="deskdir-favgo">
+          ↗
+        </span>
+      </button>
+    );
+  };
 
   const starButton = (screen: Screen, label: string) => {
     const on = isFavourite(look.favourites, screen, caps, state.role);
@@ -100,36 +152,38 @@ export function Directory() {
         </div>
       </div>
 
-      {favourites.length > 0 && !query && !category && (
+      {/*
+        Three lists above the index, and only when you are not filtering.
+
+        Favourites are what you chose, Lately is where you have just been, and
+        Not opened yet is what you never have — three answers to "where was
+        that" which the index below cannot give, because a list of sixty in
+        registry order has no answer to any of them. They came from Progress →
+        Everything when that tab merged into this screen; the alternative was
+        losing them, since nothing else in the app drew either.
+
+        Hidden the moment a filter or a category is on. Somebody typing into
+        the box has stopped asking "where was that" and started asking "where
+        is the thing called this", and three lists that ignore the filter
+        sitting above a list that obeys it reads as a bug.
+      */}
+      {!query && !category && (
         <>
-          <div className="deskdir-label">Your favourites</div>
-          <div className="deskdir-fav">
-            {favourites.map((d) => {
-              const said = saysFor(d, caps);
-              return (
-                <button
-                  key={d.screen}
-                  type="button"
-                  className="bare deskdir-favcard"
-                  onClick={() => dispatch({ type: 'go', screen: d.screen })}
-                  title={said.blurb}
-                >
-                  <span className="deskdir-favtile">
-                    {createElement(glyphFor(d.screen), { size: 21 })}
-                  </span>
-                  <span className="deskdir-favsays">
-                    <span className="deskdir-favname">{said.label}</span>
-                    <span className="deskdir-favgroup" style={secondLine()}>
-                      {d.group}
-                    </span>
-                  </span>
-                  <span aria-hidden="true" className="deskdir-favgo">
-                    ↗
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          {favourites.length > 0 && (
+            <>
+              <div className="deskdir-label">Your favourites</div>
+              <div className="deskdir-fav">{favourites.map(card)}</div>
+            </>
+          )}
+
+          {recent.length > 0 && (
+            <>
+              <div className="deskdir-label">Lately</div>
+              <div className="deskdir-fav">{recent.map(card)}</div>
+            </>
+          )}
+
+          <NotYetOpened />
         </>
       )}
 
