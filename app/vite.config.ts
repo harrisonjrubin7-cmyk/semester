@@ -394,6 +394,7 @@ const claudeProxy = (key: string) => ({
  */
 const MOCKS_MODULES = [
   'src/components/credentials.test.tsx',
+  'src/data/seed.test.ts',
   'src/components/rework.test.tsx',
   'src/components/StudyStudio.test.tsx',
   'src/lib/extract.test.ts',
