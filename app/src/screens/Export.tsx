@@ -6,6 +6,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Snapshots } from '../components/Snapshots';
 import { Subscribe } from '../components/Subscribe';
+import { WorkspaceBackup } from '../components/WorkspaceBackup';
 import { ActionButton, FilePick, SectionLabel, TickBox } from '../components/ui';
 import { PROVIDERS, tokens, type ProviderId } from '../lib/connect';
 import { datedItems } from '../lib/select';
@@ -377,6 +378,10 @@ export function Export() {
           </div>
         </Blueprint>
       )}
+
+      <div style={{ marginTop: 'var(--sp-7)' }}>
+        <WorkspaceBackup />
+      </div>
 
       <Blueprint style={{ padding: '13px 14px', marginTop: 18 }}>
         <div className="kicker">The backup file</div>
