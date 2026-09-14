@@ -115,6 +115,9 @@ function chromeStops(g: (typeof GROUNDS)[number], panel: string): string[] {
 
     const panel = t['--app-panel'];
     const bg = t['--app-bg'];
+    /** A surface with `--app-accent-wash` painted over it, as the app does. */
+    const washed = (surface: string): string =>
+      over(g.light ? a.shade : a.base, surface, g.light ? 0.1 : 0.12) ?? surface;
 
     return [
       // Section labels and kickers: small uppercase text.
@@ -136,6 +139,38 @@ function chromeStops(g: (typeof GROUNDS)[number], panel: string): string[] {
         what: `${where} · faint text on panel`,
         ratio: contrast(over(g.fg, panel, g.faintAlpha) ?? '', panel) ?? 0,
         needs: AA_LARGE,
+      },
+
+      /*
+       * The accent read against its own wash.
+       *
+       * `--app-accent-wash` is the accent itself at a tenth or an eighth
+       * (`fade(a.shade, 0.1)` on a light ground, `fade(a.base, 0.12)` on a
+       * dark one), and `.device .tag-accent` sets `--app-accent` *on* that
+       * wash — so the text and the surface behind it are drawn from one
+       * colour, and whether that is readable is the wash's alpha arguing with
+       * the accent's own contrast.
+       *
+       * The eight above measure the accent against the panel and the ground.
+       * They cannot see this one: the washed surface is composited at paint
+       * time and is not a token, so a token-against-token audit passes it
+       * while a browser draws 4.14:1. Found by measuring what Chromium
+       * actually painted, on grounds this test had covered for months.
+       */
+      {
+        what: `${where} · accent-deep on the accent wash over panel`,
+        ratio: contrast(t['--app-accent-deep'], washed(panel)) ?? 0,
+        needs: AA_TEXT,
+      },
+      {
+        what: `${where} · a tag's accent text on the accent wash over panel`,
+        ratio: contrast(t['--app-accent'], washed(panel)) ?? 0,
+        needs: AA_TEXT,
+      },
+      {
+        what: `${where} · a tag's accent text on the accent wash over the ground`,
+        ratio: contrast(t['--app-accent'], washed(bg)) ?? 0,
+        needs: AA_TEXT,
       },
 
       /*

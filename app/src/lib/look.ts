@@ -59,17 +59,27 @@ export interface Accent {
  * accent-and-ground combination to the ratio — eleven accents across thirteen
  * grounds, 143 pairings, all but a couple of which nobody has ever looked at.
  *
+ * All eleven were lightened a second time, and the reason is worth keeping:
+ * the first pass measured `deep` against the *panel*, and the app also draws
+ * it on a panel with `--app-accent-wash` over it. That washed surface is
+ * composited when the browser paints and is not a token, so measuring tokens
+ * against tokens could not see it — twenty-eight of the 143 were between
+ * 3.84:1 and 4.44:1 there while passing every check this file had. Found by
+ * measuring what Chromium actually painted; each `deep` then moved the
+ * smallest step toward its own `base` that clears the washed panel as well as
+ * the bare one, so the hue is unchanged and only the lightness moved.
+ *
  * Metals and stones. The look depends on the accent not being a colour — a
  * saturated one turns a drawn interface into a dashboard — so every one of
  * these is desaturated enough to sit under text without fighting it.
  */
 export const ACCENTS: Accent[] = [
-  { id: 'sterling', label: 'Sterling', base: '#d4d9e2', bright: '#f6f8fb', deep: '#949cab', shade: '#4c5561' },
-  { id: 'brass', label: 'Brass', base: '#d8c79a', bright: '#f2e7c8', deep: '#a3936a', shade: '#6b5c34' },
-  { id: 'copper', label: 'Copper', base: '#d6a98d', bright: '#f0d3c0', deep: '#b18c76', shade: '#7a4c33' },
-  { id: 'jade', label: 'Jade', base: '#a8ccbd', bright: '#d3e9e0', deep: '#7a9a8d', shade: '#3d5f52' },
-  { id: 'slate', label: 'Slate', base: '#aebdd0', bright: '#d8e2ee', deep: '#8894a4', shade: '#445466' },
-  { id: 'pewter', label: 'Pewter', base: '#b9b9bd', bright: '#e2e2e6', deep: '#929298', shade: '#55555a' },
+  { id: 'sterling', label: 'Sterling', base: '#d4d9e2', bright: '#f6f8fb', deep: '#9ca3b2', shade: '#4c5561' },
+  { id: 'brass', label: 'Brass', base: '#d8c79a', bright: '#f2e7c8', deep: '#b09f76', shade: '#695a33' },
+  { id: 'copper', label: 'Copper', base: '#d6a98d', bright: '#f0d3c0', deep: '#bc957d', shade: '#7a4c33' },
+  { id: 'jade', label: 'Jade', base: '#a8ccbd', bright: '#d3e9e0', deep: '#86a799', shade: '#3d5f52' },
+  { id: 'slate', label: 'Slate', base: '#aebdd0', bright: '#d8e2ee', deep: '#929fb0', shade: '#445466' },
+  { id: 'pewter', label: 'Pewter', base: '#b9b9bd', bright: '#e2e2e6', deep: '#9e9ea3', shade: '#55555a' },
   /*
    * Industry's blue, taken off its own ramp at the steps that pass.
    *
@@ -92,11 +102,11 @@ export const ACCENTS: Accent[] = [
    * ground and 3.24:1 on the lightest. It is the one step of this ramp the app
    * cannot use, which is why the stated accent is the value not present here.
    */
-  { id: 'industry', label: 'Industry', base: '#94bce3', bright: '#b5d9fd', deep: '#749dc4', shade: '#416180' },
-  { id: 'oxblood', label: 'Oxblood', base: '#c99a9a', bright: '#e8cdcd', deep: '#ab8d8c', shade: '#6f3f3f' },
-  { id: 'moss', label: 'Moss', base: '#b6c39b', bright: '#dde5c9', deep: '#8d9776', shade: '#4f5a37' },
-  { id: 'ink', label: 'Indigo', base: '#a9aed6', bright: '#d5d8ee', deep: '#8d91b1', shade: '#454a72' },
-  { id: 'gold', label: 'Old gold', base: '#d6c089', bright: '#efe1bc', deep: '#a3906a', shade: '#695a2f' },
+  { id: 'industry', label: 'Industry', base: '#94bce3', bright: '#b5d9fd', deep: '#79a2c9', shade: '#3f5e7c' },
+  { id: 'oxblood', label: 'Oxblood', base: '#c99a9a', bright: '#e8cdcd', deep: '#b69291', shade: '#6f3f3f' },
+  { id: 'moss', label: 'Moss', base: '#b6c39b', bright: '#dde5c9', deep: '#98a380', shade: '#4f5a37' },
+  { id: 'ink', label: 'Indigo', base: '#a9aed6', bright: '#d5d8ee', deep: '#969bbd', shade: '#454a72' },
+  { id: 'gold', label: 'Old gold', base: '#d6c089', bright: '#efe1bc', deep: '#b19d72', shade: '#695a2f' },
 ];
 
 export function accent(id: string | undefined): Accent {
@@ -304,10 +314,21 @@ export const GROUNDS: Ground[] = [
     light: true,
     ramp: ['#e4e0d9', '#ece9e3', '#faf9f7', '#ffffff', '#ffffff'],
     fg: '#1a1a18',
-    // 0.62 puts dim text at #6b6862 over the card, which is the muted ink the
-    // references name — derived rather than written down twice, so it stays
-    // true if the ground is ever retuned.
-    dimAlpha: 0.62,
+    /*
+     * 0.64, for the surfaces under the card.
+     *
+     * This was 0.62, chosen for the muted ink the references name, and over
+     * the card it is comfortable either way — 4.80:1 at 0.62. The measurement
+     * that moved it was taken where dim text sits on the *void* rather than
+     * on a card: 4.41:1 there, and 4.31:1 on the step between, both under AA.
+     * Bone lifts its cards off a warm ground, so that is not a rare placement
+     * — it is the search home and every course row.
+     *
+     * 0.64 carries all four surfaces (4.57:1 at the worst) and lands nearer
+     * the reference than 0.62 did: the ink over the card is #6b6a68, where
+     * the note above claimed #6b6862 and 0.62 actually gave #6f6f6d.
+     */
+    dimAlpha: 0.64,
     faintAlpha: 0.47,
   },
   /*
