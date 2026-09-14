@@ -12,6 +12,7 @@ import './google-shell.css';
    in `styles/features.css` in this app, loaded once from `main.tsx` — they
    are the ported screens' own styling and are not this shell's to carry. */
 import { hasOpenModal, useModal } from '../a11y/modal';
+import { WIDE, useMedia } from '../lib/media';
 import { GoogleTabs } from './GoogleTabs';
 import { findEverything, type Hit } from '../lib/find';
 import { actionsFor, hitKey, landingOf } from '../lib/openhit';
@@ -76,6 +77,10 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   const [group, setGroup] = useState('All apps');
   const [grid, setGrid] = useState(false);
   const [classic, setClassic] = useState(false);
+  /* The top field is about 200px on a phone, where the long prompt is cut
+     off mid-word. 760px is the shell's own breakpoint — see the media
+     query in `google-shell.css` — so the two agree about what narrow is. */
+  const roomy = useMedia(WIDE);
   const searchRef = useRef<HTMLInputElement>(null);
   /* What `/` reaches, through `components/desk/barfocus.ts`. Stable, so a
      keystroke does not re-subscribe the listener that reads it. */
@@ -161,7 +166,7 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   const searchBox = () => <div className={`g-search-wrap g-omnibox ${focused ? 'is-open' : ''}`}>
     <form className="g-search" onSubmit={e => {e.preventDefault(); query.trim()?searchAll():showDirectory();}} role="search">
       <Search size={23}/>
-      <input ref={searchRef} aria-label="Search Semester" aria-expanded={focused} aria-controls="semester-search-results" aria-activedescendant={focused && selected>=0 && selected<optionCount ? `g-option-${selected}` : undefined} role="combobox" autoComplete="off" placeholder="Search apps, courses, assignments and files" value={query} onFocus={() => {setLauncher(false);setOrganizerOpen(false);setSelected(-1);setFocused(!state.finder);}} onChange={e=>{setQuery(e.target.value);if(state.finder)recordSearch(e.target.value);setSelected(-1);setFocused(!state.finder);}} onKeyDown={e=>{
+      <input ref={searchRef} aria-label="Search Semester" aria-expanded={focused} aria-controls="semester-search-results" aria-activedescendant={focused && selected>=0 && selected<optionCount ? `g-option-${selected}` : undefined} role="combobox" autoComplete="off" placeholder={roomy ? 'Search apps, courses, assignments and files' : 'Search Semester'} value={query} onFocus={() => {setLauncher(false);setOrganizerOpen(false);setSelected(-1);setFocused(!state.finder);}} onChange={e=>{setQuery(e.target.value);if(state.finder)recordSearch(e.target.value);setSelected(-1);setFocused(!state.finder);}} onKeyDown={e=>{
         if(e.key==='ArrowDown'){e.preventDefault();setSelected(n=>optionCount?Math.min(n+1,optionCount-1):-1);}
         if(e.key==='ArrowUp'){e.preventDefault();setSelected(n=>optionCount?(n<=0?optionCount-1:n-1):-1);}
         if(e.key==='Enter' && focused && selected>=0 && selected<optionCount){e.preventDefault();if(options[selected])go(options[selected].screen);else openRecord(records[selected-options.length]);}
