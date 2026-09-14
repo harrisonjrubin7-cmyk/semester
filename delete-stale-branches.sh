@@ -23,6 +23,16 @@
 # Branches with an open pull request are excluded: deleting the head branch of
 # an open PR closes it.
 #
+# That exclusion is asked of GitHub rather than inferred from the merge test,
+# because the merge test cannot see it. A branch whose work reached main by
+# another route — a second pull request carrying the same change, which is a
+# thing that happens here — matches main's tree exactly while its own pull
+# request is still open. It is precisely the branch this check is for, and
+# precisely the one the tree comparison calls safe.
+#
+# If the open pull requests cannot be established, this refuses to run rather
+# than carrying on without the exclusion it promises.
+#
 # Verified 2026-09-14 against main @ 1855396.
 #
 set -euo pipefail
@@ -67,6 +77,23 @@ BRANCHES=(
 git fetch origin --prune
 main=$(git rev-parse "origin/main^{tree}")
 
+# The head branch of every open pull request.
+#
+# `gh` rather than a bare API call so this uses whatever credentials the person
+# running it already has. No `gh`, or a `gh` that cannot answer, is a refusal:
+# the alternative is deleting branches while claiming an exclusion that did not
+# happen, and the cost of being wrong here is somebody's open pull request
+# closing silently.
+if ! command -v gh >/dev/null; then
+  echo "refusing to run: gh is not installed, so open pull requests cannot be checked" >&2
+  exit 1
+fi
+if ! open_prs=$(gh pr list --state open --limit 500 --json headRefName --jq '.[].headRefName' 2>&1); then
+  echo "refusing to run: could not list open pull requests" >&2
+  printf '%s\n' "$open_prs" >&2
+  exit 1
+fi
+
 deleted=0
 skipped=0
 failed=()
@@ -74,6 +101,14 @@ failed=()
 for br in "${BRANCHES[@]}"; do
   if ! git rev-parse --verify --quiet "origin/$br" >/dev/null; then
     echo "gone already:                  $br"
+    continue
+  fi
+  # Before the merge test, not after: a branch with an open pull request is out
+  # whatever its tree says, and the tree saying "already merged" is the case
+  # this guards.
+  if printf '%s\n' "$open_prs" | grep -qxF "$br"; then
+    echo "SKIP, has an open pull request: $br" >&2
+    skipped=$((skipped + 1))
     continue
   fi
   t=$(git merge-tree --write-tree origin/main "origin/$br" 2>/dev/null || true)
