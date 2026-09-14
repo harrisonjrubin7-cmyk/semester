@@ -58,7 +58,15 @@ export function TabFind({
   const strip = useStrip();
   const [corner, setCorner] = useState<Corner | null>(null);
 
-  if (strip.tabs.length < ENOUGH) return null;
+  /*
+   * Enough tabs to look through, *or* something to put back.
+   *
+   * The second half arrived with the closed list and is not a nicety: close
+   * one of three tabs and the strip would have fallen under the threshold,
+   * taking the only way back to what you just closed with it — at exactly the
+   * moment somebody wants it.
+   */
+  if (strip.tabs.length < ENOUGH && strip.closed.length === 0) return null;
 
   return (
     <>
@@ -74,7 +82,7 @@ export function TabFind({
           // rather than at the clamp.
           setCorner({ x: box.right - WIDE, y: box.bottom + 2 });
         }}
-        aria-label={`Search the ${strip.tabs.length} open tabs`}
+        aria-label={`Search the ${strip.tabs.length} open tabs, and what was closed`}
         aria-haspopup="dialog"
         title="Search open tabs"
         style={{
@@ -232,7 +240,7 @@ function Finder({
               Clear
             </button>
           </div>
-          {gone.map((tab) => (
+          {gone.map(({ tab }) => (
             <button
               key={tab.id}
               type="button"

@@ -780,23 +780,33 @@ describe('reopening a closed tab', () => {
     let s = strip(['home', 'calendar', 'study']);
     s = shut(s, 'calendar');
     s = shut(s, 'home');
-    expect(s.closed.map((t) => t.screen)).toEqual(['home', 'calendar']);
+    expect(s.closed.map((c) => c.tab.screen)).toEqual(['home', 'calendar']);
   });
 
-  it('does not keep a new tab, which has nothing to reopen', () => {
-    expect(close(strip([null, 'home']), 0).closed).toEqual([]);
+  it('keeps a new tab for the undo, and keeps it out of the list', () => {
+    /*
+     * Two answers, and both are right. The shell's one-press undo gives back
+     * whatever was just closed, a blank included — `browser-recovery.test.ts`
+     * holds that a blank must not consume an older pending tab. The list is
+     * places to go back to, and a page nobody went to is not one.
+     */
+    const s = close(strip([null, 'home']), 0);
+    expect(s.closed).toHaveLength(1);
+    expect(whatClosed(s, '')).toEqual([]);
   });
 
   it('keeps it even when it was the last tab on the strip', () => {
     const s = close(strip(['home']), 0);
     expect(current(s).screen).toBeNull();
-    expect(s.closed.map((t) => t.screen)).toEqual(['home']);
+    expect(s.closed.map((c) => c.tab.screen)).toEqual(['home']);
   });
 
   it('puts one back on the end, and goes to it', () => {
     const was = shut(strip(['home', 'calendar', 'study']), 'calendar');
-    const s = reopen(was, was.closed[0].id);
-    expect(names(s)).toEqual(['home', 'study', 'calendar']);
+    const s = reopen(was, was.closed[0].tab.id);
+    // Back in the seat it was closed from, which is what makes an undo feel
+    // like one rather than like opening the thing again.
+    expect(names(s)).toEqual(['home', 'calendar', 'study']);
     expect(current(s).screen).toBe('calendar');
     // And it is no longer something to reopen.
     expect(s.closed).toEqual([]);
@@ -804,7 +814,7 @@ describe('reopening a closed tab', () => {
 
   it('brings its group back with it, when the group is still there', () => {
     const was = close(grouped(['home', 'calendar', 'study'], [1, 2]), 1);
-    const s = reopen(was, was.closed[0].id);
+    const s = reopen(was, was.closed[0].tab.id);
     expect(held(s)).toEqual(['—', 'g', 'g']);
   });
 
@@ -813,18 +823,18 @@ describe('reopening a closed tab', () => {
     // back cannot rejoin a name nobody can see.
     const was = close(grouped(['home', 'calendar'], [1]), 1);
     expect(was.groups).toEqual([]);
-    expect(reopen(was, was.closed[0].id).tabs.every((t) => !t.group)).toBe(true);
+    expect(reopen(was, was.closed[0].tab.id).tabs.every((t) => !t.group)).toBe(true);
   });
 
   it('comes back pinned if it was pinned', () => {
     const was = close(pin(strip(['home', 'calendar']), 0), 0);
-    const s = reopen(was, was.closed[0].id);
+    const s = reopen(was, was.closed[0].tab.id);
     expect(s.tabs[0].pinned).toBe(true);
   });
 
   it('keeps every tab of a group closed whole, oldest last', () => {
     const s = closeGroup(grouped(['home', 'calendar', 'study'], [1, 2]), 'g');
-    expect(s.closed.map((t) => t.screen)).toEqual(['study', 'calendar']);
+    expect(s.closed.map((c) => c.tab.screen)).toEqual(['study', 'calendar']);
   });
 
   it('holds only the last few, because this is not a history', () => {
@@ -834,7 +844,7 @@ describe('reopening a closed tab', () => {
       s = close(s, s.at);
     }
     expect(s.closed).toHaveLength(MAX_CLOSED);
-    expect(s.closed[0].title).toBe(`Tab ${MAX_CLOSED + 4}`);
+    expect(s.closed[0].tab.title).toBe(`Tab ${MAX_CLOSED + 4}`);
   });
 
   it('answers the same strip for an id that is not there', () => {
@@ -851,8 +861,8 @@ describe('reopening a closed tab', () => {
   it('is searched the same way the open ones are, typos and all', () => {
     let s = strip(['home', 'calendar', 'study']);
     s = shut(s, 'calendar');
-    s.closed[0].title = 'Calendar';
-    expect(whatClosed(s, 'calender').map((t) => t.title)).toEqual(['Calendar']);
+    s.closed[0].tab.title = 'Calendar';
+    expect(whatClosed(s, 'calender').map((c) => c.tab.title)).toEqual(['Calendar']);
     expect(whatClosed(s, 'zzz')).toEqual([]);
     expect(whatClosed(s, '')).toHaveLength(1);
   });
@@ -866,8 +876,49 @@ describe('reopening a closed tab', () => {
     const saved = JSON.stringify({
       tabs: [{ id: 'a', screen: 'home', title: 'Today', place: [{ type: 'go', screen: 'home' }] }],
       at: 0,
-      closed: [{ id: 'b', screen: 'home', title: 'Gone', place: [{ type: 'eraseEverything' }] }],
+      closed: [
+        { at: 0, tab: { id: 'b', screen: 'home', title: 'Gone', place: [{ type: 'eraseEverything' }] } },
+      ],
     });
-    expect(load(saved, known).closed[0].place).toEqual([{ type: 'go', screen: 'home' }]);
+    expect(load(saved, known).closed[0].tab.place).toEqual([{ type: 'go', screen: 'home' }]);
+  });
+});
+
+/*
+ * One list, not two.
+ *
+ * The strip grew a closed-tab list here while the hook kept its own module
+ * array with the same job — so closing pushed onto both, and reopening from
+ * one left the other holding a tab that was already back. The rules below are
+ * what the one list has to do for both of the things that read it: the tab
+ * list's **Recently closed**, and the browser shell's one-press undo.
+ */
+describe('the one closed-tab list', () => {
+  it('puts a tab back in the seat it was closed from', () => {
+    const was = close(strip(['home', 'calendar', 'study']), 1);
+    expect(names(was)).toEqual(['home', 'study']);
+    expect(reopen(was, was.closed[0].tab.id).tabs.map((t) => t.screen)).toEqual([
+      'home',
+      'calendar',
+      'study',
+    ]);
+  });
+
+  it('lands at the end when the strip has shrunk under that seat since', () => {
+    let s = close(strip(['home', 'calendar', 'study']), 2);
+    s = close(s, 1);
+    // `study` was seat 2; the strip is one tab long now.
+    const study = s.closed.find((c) => c.tab.screen === 'study');
+    expect(names(reopen(s, study!.tab.id))).toEqual(['home', 'study']);
+  });
+
+  it('is what the shell’s undo reads, newest first', () => {
+    let s = close(strip(['home', 'calendar', 'study']), 1);
+    s = close(s, 1);
+    expect(s.closed.map((c) => c.tab.screen)).toEqual(['study', 'calendar']);
+    // `lastClosed` in the hook is `closed[0].tab`; reopening it empties one
+    // entry and one only.
+    const back = reopen(s, s.closed[0].tab.id);
+    expect(back.closed.map((c) => c.tab.screen)).toEqual(['calendar']);
   });
 });
