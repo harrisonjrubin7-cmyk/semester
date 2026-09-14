@@ -969,10 +969,11 @@ export function destination(screen: Screen): Destination | undefined {
 /**
  * What to call a screen the registry does not list.
  *
- * Twenty of the sixty-nine screens are not destinations, on purpose: eight
- * settings pages, which are pages *under* Settings, and twelve you reach from
- * something rather than go to — a course, a deadline, a study guide, the
- * slides. Their names live in the header switch and in `lib/settings.ts`,
+ * Twenty-two of the eighty-two screens are not destinations, on purpose:
+ * eight settings pages, which are pages *under* Settings, and fourteen you
+ * reach from something rather than go to — a course, a deadline, a study
+ * guide, the slides, and the two the workspace shell is made of. Their names
+ * live in the header switch and in `lib/settings.ts`,
  * neither of which is importable from a component that only has a `Screen`.
  *
  * So callers that needed a name did `DESTINATIONS.find(…)?.label ?? screen`,

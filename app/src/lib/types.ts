@@ -657,7 +657,7 @@ export interface Lesson {
  * screen of icons; `shelves` is the two rows of pills, the shelf you are on
  * and the screens on it. Four genuinely different habits rather than four
  * skins — the bar suits somebody who lives in four screens, the springboard
- * somebody who has forty-six and would rather see them than remember which
+ * somebody who has sixty and would rather see them than remember which
  * shelf they are on, the shelves somebody who wants both at once.
  *
  * ## One navigation, always

@@ -55,10 +55,21 @@ const PARTS: { id: PartId; label: string; blurb: string; format: string }[] = [
     blurb: 'The PDFs, photos and recordings themselves. Zip only.',
     format: 'Files',
   },
+  /*
+   * "The whole account" was the blurb, and it is the store rather than the
+   * app: Athletics, Career, Family and Pathway keep their work in device
+   * libraries of their own — deliberately, because none of it is academic
+   * record and none of it syncs (`lib/device-library.ts`) — and each exports
+   * from its own screen. A file described as everything, restored onto a new
+   * phone without them, is the kind of surprise this screen exists to stop.
+   */
   {
     id: 'backup',
     label: 'Everything, as data',
-    blurb: 'The whole account in one file — the one to keep if you keep one.',
+    blurb:
+      'Your whole term in one file — the one to keep if you keep one. Athletics, Career, ' +
+      'Family and Pathway keep their own libraries on this device and each exports from its ' +
+      'own screen.',
     format: 'JSON',
   },
 ];
@@ -131,7 +142,7 @@ export function Export() {
     if (picked.notes) {
       out.push({
         name: `${stem}-notes.md`,
-        body: notesMarkdown(state.notes, code),
+        body: notesMarkdown(state.notes, code, state.mailDrafts),
         mime: 'text/markdown',
       });
     }

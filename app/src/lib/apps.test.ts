@@ -153,7 +153,7 @@ describe('the app launcher', () => {
  * being true.
  *
  * Icons earn their place by being told apart at a glance — that is the whole
- * of the argument for drawing fifty screens rather than listing them. Half
+ * of the argument for drawing sixty screens rather than listing them. Half
  * the app used to borrow its shelf's glyph, which was invisible while nothing
  * showed them all at once and became five identical pairs of rectangles under
  * five different words the moment something did.

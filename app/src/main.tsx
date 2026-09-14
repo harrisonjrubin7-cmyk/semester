@@ -121,7 +121,7 @@ finishAnyRedirect()
       <StrictMode>
         <StoreProvider>
           {/* The assistant's own state sits above the router, so it is one
-              thing across all fifty screens rather than a thing each screen
+              thing across all sixty screens rather than a thing each screen
               mounts. See `ai/store.tsx`. */}
           <AIProvider>
             {/* The curtain over the first half-second, mounted beside the app

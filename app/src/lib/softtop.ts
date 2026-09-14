@@ -169,7 +169,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
    * `overdue`. This did not, so the three numbers in the same row answered
    * different questions: finish every deadline in the week and "Due today"
    * fell to nothing while "This week" sat where it was. That row is carried
-   * at the top of twenty-three screens.
+   * at the top of every screen whose hero counts the term's work.
    *
    * It also reaches the "Work on it" hero, whose "Nothing due this week"
    * could never appear for somebody who had done the week's work — which is

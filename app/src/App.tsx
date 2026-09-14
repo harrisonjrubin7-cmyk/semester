@@ -25,9 +25,9 @@ import { DRAWN_AT, ground, homeTitle, resolveGround, scaleFrom, scaleOf, tokensF
 /**
  * Every screen but the first, fetched when it is opened.
  *
- * All forty-six used to be imported statically, which put every one of them
+ * All sixty used to be imported statically, which put every one of them
  * — and everything they pull in — into one 1,047 kB chunk that had to arrive
- * before anything painted. Nobody opens forty-six screens. They open Today.
+ * before anything painted. Nobody opens sixty screens. They open Today.
  *
  * The heavy leaves are the ones nobody loads on a normal day: Draw brings
  * cytoscape at 435 kB, the guide brings KaTeX at 259 kB, the importer brings
@@ -1800,7 +1800,7 @@ export default function App() {
     <div className="device" data-tier={tier}>
       {/*
         The first focusable thing on the page, and invisible until it has
-        focus. With fifty screens behind a header and a tab bar, a keyboard
+        focus. With sixty screens behind a header and a tab bar, a keyboard
         user's only route into the content was to tab through the whole of
         both, on every screen, every time.
 
