@@ -16,17 +16,27 @@
  * palette on what has been typed, so nothing is lost and the two are never
  * mixed into one undifferentiated list.
  *
- * The palette is still the record search, and every route into it still
- * works: `/`, the row at the bottom of these suggestions, and the header's
- * magnifier where that is still drawn. What is new is that the first thing
- * you type in now answers the question people actually have most often, which
- * is "where is the thing that does X".
+ * The palette is still the record search, and in this navigation it is
+ * reached from here: the row at the bottom of these suggestions opens it on
+ * whatever has been typed. What is new is that the first thing you type in
+ * now answers the question people actually have most often, which is "where
+ * is the thing that does X", and the records are one key further on rather
+ * than in front of them.
  *
- * This list used to begin "⌘K" and end "and the field on the search home".
- * Neither was true. ⌘K opens the assistant — `lib/keys.ts` ignores modifiers
- * on principle, so the app's only ⌘K listener is `ai/Assistant.tsx`'s — and
- * the search home's field is no longer a search at all: it focuses this one.
- * See `components/desk/barfocus.ts`.
+ * This list used to begin "⌘K", name `/`, and end "and the field on the
+ * search home". None of the three is right now:
+ *
+ * - **⌘K** never opened the palette. `lib/keys.ts` ignores modifiers on
+ *   principle, so the app's only ⌘K listener is `ai/Assistant.tsx`'s, and it
+ *   opens the assistant.
+ * - **`/`** opens the palette on the five navigations that have no bar. Here
+ *   it puts the cursor in *this field*, because the search is already on
+ *   screen and covering it with an overlay would be two searches in one frame.
+ * - **The search home's field** is no longer a search at all: it focuses this
+ *   one.
+ *
+ * The last two are the same change seen from the keyboard and from the
+ * pointer. See `components/desk/barfocus.ts`.
  *
  * ## Keyboard
  *
@@ -208,11 +218,12 @@ export function TopBar({
             this chip sat inside a *search field* advertising a key that opens
             a chat, and the search home drew an identical one a row below it.
 
-            Removed rather than corrected, because there is no key to correct
-            it to: nothing focuses this field from the keyboard today, and
-            adding a binding is a feature rather than the removal of a false
-            one. `/` opens the palette and is written where that is true — in
-            the header's magnifier, on the screens that still draw it.
+            Removed rather than corrected, and then the key it should have
+            named arrived: `/` focuses this field in this navigation. It is
+            still not written here. A chip inside a field is a hint for
+            somebody who is already looking at the field — which is the one
+            person who does not need a way to reach it — and the `?` sheet is
+            where every other binding in the app is listed.
 
             The star above it arrived from `main` in the same place, which
             is where a browser keeps one — so the field ends in the control

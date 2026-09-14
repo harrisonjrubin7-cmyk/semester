@@ -229,11 +229,49 @@ and two file headers asserted the same thing in prose: `TopBar.tsx`'s "every
 route into it still works: ⌘K, `/`…" and `Search.tsx`'s "⌘K still opens the
 palette". Four wrong statements about one key.
 
-Both chips are **removed rather than corrected**, because there is no key to
-correct them to: nothing focuses the bar's field from the keyboard today, and
-adding a binding is a feature rather than the removal of a false claim. Both
-prose notes are fixed where they stand. Giving the bar a real focus shortcut is
-a reasonable follow-up and is deliberately not done here.
+Both chips are **removed rather than corrected**, because at the time there was
+no key to correct them to: nothing focused the bar's field from the keyboard,
+and inventing a binding is a feature rather than the removal of a false claim.
+Both prose notes are fixed where they stand.
+
+#### W8 — and then the key, on a second pass
+
+Adding the shortcut turned out not to mean adding a binding. `lib/keys.ts`
+refuses modifiers on principle and names ⌘L as the reason, so the browser's own
+address-bar key is out by rule; and the bar exists only in the workspace, so a
+new letter would be dead in five navigations out of six and would give the app
+*two* search keys — the duplication this whole pass removes, moved to the
+keyboard.
+
+So `/` does it. It already means "search everything"; it now puts the cursor in
+the search that is on screen, and opens the palette where there is none. One
+key, one meaning, expressed by whatever the navigation actually draws — which
+is how `lib/chrome.ts` already treats the navigation itself.
+
+That also makes the keyboard agree with the pointer. The centre box focuses the
+bar; a `/` that opened the palette instead would have laid an overlay over a
+search field already in front of you — two searches in one frame, reachable one
+way and not the other.
+
+**How it asks.** Not `state.nav === 'workspace'`, which would be a second copy
+of a rule `lib/chrome.ts` owns and would be *wrong*: a drill is in the
+workspace navigation and `FULLSCREEN` gives it the whole display, so there is
+no bar on it. It asks the `barfocus` context instead — mounted by the same
+branch that draws the bar, so "is this set" and "is there a bar" cannot
+disagree. Driven in a browser across the cases that distinguish the two rules:
+
+| Frame | `/` does | |
+| --- | --- | --- |
+| Workspace, inner screen | focuses the bar | palette stays shut |
+| Workspace, search home | focuses the bar | palette stays shut |
+| Workspace, **a drill** | opens the palette | no chrome, so no bar — the case a nav check gets wrong |
+| Tab bar, inner screen | opens the palette | unchanged |
+| Tab bar, `#/search` | opens the palette | `fromHash` takes any screen name, so this screen is reachable with no bar |
+
+The last row is why the centre box keeps a fallback: a `#/search` bookmarked in
+the workspace still opens under the tab bar, where there is nothing to focus.
+Clicking it there opens the palette rather than doing nothing. Verified, not
+assumed.
 
 #### How the centre box focuses the bar
 
@@ -424,6 +462,7 @@ doing the second's job, and having both named makes that hard to repeat.
 | W6 | `Sidebar`'s directory row is renamed, not cut | both — they are different places | the shared name, which was the fault |
 | W5 | The search home drops its AI Tutor button | `TopBar`'s, drawn on every screen | nothing — the bar's is inches above it |
 | W7 | The centre box focuses the bar instead of opening a second search; both `⌘ K` chips go | `TopBar`'s field — the only one now | nothing; the front door has one search field, reachable from two places |
+| W8 | `/` focuses that field where one is drawn, and opens the palette where none is | one search key, as before | nothing; the keyboard now gives the same answer as the pointer |
 
 **Eight controls go, one is renamed, one stops being a search and becomes a way
 into the one that is. No destination goes**, which is why the screen count
@@ -469,9 +508,10 @@ Every row above is closed. Three commits, each green.
 
 ### The claim, checked rather than asserted
 
-`npm run lint` exit 0. `npm test` **315 files / 6731 tests**, all passing —
-thirty more than the baseline, all of them new checks on this pass's
-invariants. `npm run build` clean.
+`npm run lint` exit 0. `npm test` **316 files / 6793 tests**, all passing, on a
+head merged with `main` at `ce94c15` — so the count carries that branch's own
+new tests as well as this pass's. `npm run build` clean, `test:zones` green in
+two other timezones, and `pipeline/validate.mjs` clean.
 
 And driven in a browser, because an absent control is easy to claim and hard to
 see. Chromium at two widths, four navigations, `pageerror` empty throughout:

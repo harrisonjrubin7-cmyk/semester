@@ -23,9 +23,10 @@
  *
  * Nothing is lost while it is away: the bar above this screen carries the same
  * search on every screen in this navigation — it *is* the search this centre
- * box reaches — `/` still opens the palette, and whatever is covering the
- * centre is itself a way of finding something. That is what makes hiding it
- * outright the right answer rather than dimming it.
+ * box reaches, and `/` puts the cursor in it from anywhere in the workspace —
+ * and whatever is covering the centre is itself a way of finding something.
+ * That is what makes hiding it outright the right answer rather than dimming
+ * it.
  *
  * This paragraph used to say "⌘K still opens the palette". It does not, and
  * never did in this build: `lib/keys.ts` ignores anything carrying a modifier
@@ -125,7 +126,19 @@ export function SearchHome() {
           <button
             type="button"
             className="bare deskhome-box"
-            onClick={focusBar}
+            /*
+              The palette is the fallback, and it is reachable — not defensive
+              padding.
+
+              This screen is the workspace's own: it is not in the registry and
+              no chrome outside that navigation points at it. But `fromHash`
+              accepts any screen name in the address, so `#/search` bookmarked
+              from the workspace still opens this screen after somebody
+              switches to the tab bar — and there is no bar there to focus. The
+              box falls back to the search it used to open rather than doing
+              nothing, which is the one behaviour worse than either.
+            */
+            onClick={() => (focusBar ? focusBar() : dispatch({ type: 'finder', open: true }))}
           >
             <span className="deskhome-box-say">Search your semester</span>
           </button>

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { headerRow } from './header';
-import { chromeFor } from './chrome';
+import { FULLSCREEN, chromeFor } from './chrome';
+import { SHORTCUTS } from './keys';
 import { withoutComments } from '../styles/rules';
 import { MATCH_DEVICE, MATCH_DEVICE_LABEL, ground, groundName, resolveGround } from './look';
 
@@ -188,11 +189,20 @@ describe('the workspace has one search field', () => {
   const HOME = () => read('src/screens/Search.tsx');
 
   it('leaves the search home’s centre no search of its own', () => {
-    expect(withoutComments(HOME()), 'the centre box must not open the palette').not.toContain(
-      "type: 'finder'",
-    );
-    expect(HOME(), 'it focuses the bar instead').toContain('onClick={focusBar}');
     expect(HOME()).toContain('useFocusBar()');
+    /*
+     * The bar first, the palette only where there is no bar. Written as one
+     * expression so the order is the assertion: a centre box that opened the
+     * palette and *then* thought about the bar would be the second search
+     * again, and would read as a passing test.
+     *
+     * The fallback is reachable rather than defensive — `fromHash` takes any
+     * screen name, so `#/search` bookmarked in the workspace still opens this
+     * screen under the tab bar, where no bar is drawn.
+     */
+    expect(withoutComments(HOME()), 'the bar first, the palette only without one').toContain(
+      "onClick={() => (focusBar ? focusBar() : dispatch({ type: 'finder', open: true }))}",
+    );
   });
 
   it('gives the bar the only text input in the front door', () => {
@@ -222,6 +232,66 @@ describe('the workspace has one search field', () => {
     expect(read('src/lib/keys.ts')).toContain(
       'if (e.metaKey || e.ctrlKey || e.altKey) return null;',
     );
+  });
+});
+
+/**
+ * `/` lands in the search that is already on screen.
+ *
+ * The pointer and the keyboard have to give the same answer, or the fix above
+ * is half a fix. The search home's centre box focuses the bar rather than
+ * opening a second search; a `/` that opened the palette instead would put an
+ * overlay over a search field that is already in front of you — two searches
+ * in one frame, reachable one way and not the other.
+ *
+ * So `/` asks whether a bar is drawn, and it asks the only thing that knows:
+ * the provider `Workspace` mounts, which `App` renders only when `chromeFor`
+ * says `desk`. A `state.nav === 'workspace'` check here would be a second
+ * copy of that rule, and it would be wrong on exactly the screens
+ * `FULLSCREEN` names — a drill is in the workspace navigation and has no bar
+ * in it.
+ */
+describe('the search key goes where the search is', () => {
+  const KEYS = () => read('src/components/Keys.tsx');
+
+  it('focuses the bar when one is drawn, and opens the palette when none is', () => {
+    const src = withoutComments(KEYS());
+    expect(src, 'the key asks for the bar first').toMatch(
+      /if \(focusBar\) \{\s*focusBar\(\);\s*break;\s*\}/,
+    );
+    expect(src, 'and falls through to the palette').toContain("dispatch({ type: 'finder', open: true })");
+  });
+
+  it('asks the provider rather than re-deriving which navigation is on', () => {
+    const src = withoutComments(KEYS());
+    expect(src, 'the bar is read from the context that only the bar mounts').toContain(
+      'useFocusBar()',
+    );
+    // The second copy that would be wrong on a drill: FULLSCREEN screens are
+    // in the workspace navigation and draw no chrome at all.
+    expect(src, 'no second opinion about which navigation is on').not.toContain(
+      "state.nav === 'workspace'",
+    );
+  });
+
+  /*
+   * And the rule that makes that safe, held where it is decided: a screen the
+   * whole display belongs to draws no bar, so the provider is not mounted and
+   * `/` correctly falls back to the palette there.
+   */
+  it('draws no bar on the screens that take the whole display', () => {
+    for (const screen of FULLSCREEN) {
+      expect(chromeFor('workspace', screen, true).desk, screen).toBe(false);
+    }
+  });
+
+  it('keeps one entry in the sheet, because it is one meaning', () => {
+    const search = SHORTCUTS.filter((k) => k.action === 'search');
+    expect(search.length, 'one binding').toBe(1);
+    expect(search[0].key).toBe('/');
+    // No "or" in the help sheet: a shortcut somebody has to case-split in
+    // their head is one they stop reaching for.
+    expect(search[0].does).toBe('Search everything');
   });
 });
 
