@@ -364,14 +364,29 @@ fixed:
   exactly this reason, and that is the shape of the fix wherever else it
   bites.
 
-### The `lib/connect.ts` capture is worth a second look
+### The `lib/connect.ts` capture · **FIXED**
 
-Not a test problem. `const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone`
-is read once when the module loads and never again, so a PWA left open across a
-timezone change — a flight, which is exactly when somebody adds calendar events
-— writes them with the zone it started in. An app whose CI runs in three
-timezones because of an off-by-one should probably read it at the call site.
-Out of scope here, and named so it is not lost.
+Not a test problem, and the only one of its kind in the app —
+`resolvedOptions` appears in exactly one place.
+
+`const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone` was read once
+when the module loaded and never again, and five writes used it: both
+calendars and the Microsoft task due date. A PWA stays open for days, and the
+moment somebody is most likely to be adding calendar events is the moment they
+have just changed timezone — a flight, a term abroad, a drive across a state
+line. Every event after that carried the zone the app started in, an hour or
+three out, with nothing to say so.
+
+Read per call now. It costs a `DateTimeFormat` construction on a request
+already crossing the network, and there is no kept value to go stale.
+
+**How it was found is the part worth keeping.** `lib/realdate.test.ts` was
+corrupting `process.env.TZ` process-wide (§3), and this const captured the
+corruption for the rest of the run — which made it look like a test-only
+problem. Fixing the test would have closed the symptom and left the bug. The
+test that now guards it stubs `Intl.DateTimeFormat` rather than setting
+`process.env.TZ`, because a process-wide clock change is exactly the leak that
+caused the thing it is testing.
 
 ## 4. P4 — a screen is registered in eight places
 
@@ -607,6 +622,7 @@ Ordered by measured value per unit of risk, not by size.
 | 11 | **P2 proper** — split `now` out of the store context | large | the minute boundary stops being an app-wide event |
 | 12 | **P7** — keep paying the style ledger down | ongoing | the memoisation in 11 becomes worth having |
 | 14 | ✅ **§7a** — give focus back when the assistant closes | small | a dialog that takes focus returns it, both ways in |
+| 15 | ✅ **§3's aside** — read the timezone at the call site, not at module load | tiny | calendar events written in the zone you are in |
 | 13 | ✅ **P1e** — move the assistant's context assembly off the store | medium | −7,543 lines and −12% of the gzipped critical path; `lib/sheet.ts`, `lib/maths.ts` and `lib/chart.ts` go with it |
 
 Items 1–5 are done, in that order, one commit each, with `lint`, `test`,
