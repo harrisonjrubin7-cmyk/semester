@@ -596,8 +596,9 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   both **closed** in `lib/doctools.ts` (`findAll`, `replaceAll`, `outline`).
 - ~~**No version history and no restore.** No autosave indicator.~~ —
   **closed.** `lib/docversions.ts`, and the History panel in `screens/Write.tsx`.
-- No PDF export, no DOCX *import* (Markdown import exists). ~~No plain-text
-  export.~~ — Markdown out is `toMarkdown`.
+- No *generated* PDF — though File → "Print, or save as PDF" is there and is
+  how a browser makes one. No DOCX *import* (Markdown import exists).
+  ~~No plain-text export.~~ — Markdown out is `toMarkdown`.
 - ~~No templates (essay/MLA/APA, lab report, reading response, etc.).~~ —
   **closed.** Seven, in `lib/doctemplates.ts`.
 - No "Open in Docs" from a study guide.
@@ -700,8 +701,9 @@ by grepping for each, not by re-reading the sentence.
 
 **Documents** — code blocks · checkbox lists · horizontal rules · indent and
 outdent · images · alignment, line spacing and margins · comments and margin
-notes · PDF export · `.docx` *import* · "Open in Docs" from a study guide · a
-WYSIWYG surface (the marks are typed).
+notes · a generated PDF, as against the browser's print-to-PDF, which is
+there · `.docx` *import* · "Open in Docs" from a study guide · a WYSIWYG
+surface (the marks are typed).
 
 **Sheets** — cross-sheet references (`Sheet2!A1`) · named ranges · a fill
 *handle* · paste-special · filter · conditional formatting · data validation ·
