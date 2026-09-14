@@ -1174,6 +1174,15 @@ figure as last pass and the same three kinds as before — dead, a contract a
 test asserts, or wiring somebody stopped halfway. The port added almost no
 dead weight, and that is worth saying plainly alongside the rest.
 
+**Cut.** `keepPlace` had no caller anywhere, not even a test — it was the
+"save, and leave an existing one alone" half of a pair whose other half,
+`star`, is what the star in the search field actually calls. Nothing else is
+removed with it: the `keep` it wrapped lives in `lib/bookmarks.ts` and is
+still reached through `toggle`, which is how `star` saves. So this is the
+wrapper going, not the behaviour — which is the distinction worth checking
+before cutting a one-line export, because the tempting next step is to follow
+it down and take a function three other things depend on.
+
 ---
 
 ## 2. What has not changed
