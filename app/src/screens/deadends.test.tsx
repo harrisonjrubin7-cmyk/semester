@@ -10,6 +10,7 @@ import { Mine, NoteEditor } from './Mine';
 import { Mail } from './Mail';
 import { Degree } from './Degree';
 import { Applying } from './Applying';
+import { People } from './People';
 
 /**
  * The screens somebody can arrive at cold, and whether there is a way on.
@@ -274,6 +275,17 @@ describe('a control that cannot do its job', () => {
     type('Course code', 'ECON 2010');
     press(/^add the course$/i);
     expect(host.textContent).toContain('ECON 2010');
+  });
+
+  it('turns People\u2019s Add off until there is a name to add', () => {
+    show(<People />);
+    const add = named('Add');
+    expect(add, `no Add — saw ${JSON.stringify(pressable())}`).toBeDefined();
+    expect(add!.disabled).toBe(true);
+    type('Their name', 'Dr. Stromme');
+    expect(named('Add')!.disabled).toBe(false);
+    press(/^add$/i);
+    expect(host.textContent).toContain('Dr. Stromme');
   });
 
   it('turns Applying\u2019s Add it off until one of the two it reads is filled', () => {
