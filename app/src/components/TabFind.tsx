@@ -12,6 +12,11 @@
  * search: under `ENOUGH` tabs the strip *is* the search, and a second way to
  * do what one glance already does is a control people learn to look past.
  *
+ * Or once there is something to put back. The closed list lives in here too,
+ * and the threshold alone would have hidden it exactly when it is wanted:
+ * close one of three tabs and the strip falls under `ENOUGH`, taking the only
+ * way back to what you just closed with it.
+ *
  * ## It lists rather than ranks
  *
  * Nothing typed shows every tab in the strip's own order — the pinned ones
