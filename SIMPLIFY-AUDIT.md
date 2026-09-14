@@ -135,6 +135,56 @@ That case needs a walker told which extensions to keep — which is G2. So G2 is
 not the tidying this pass called it. It is the other half of this row, and the
 note on `sources()` says as much where somebody will read it.
 
+### G2, done for six — and the row was scoped by a name, not by the job
+
+`sources()` takes `ext` and `tests` now, defaulting to what it did before, so
+nothing that already called it changed. Six copies are retired:
+
+| Was | Now |
+| --- | --- |
+| `a11y/labels.ts` | the shared one — it was character-for-character identical |
+| `a11y/motion.test.ts` | `sources(dir, { ext: ['.ts', '.tsx'], tests: false })` |
+| `lib/zips.test.ts` | the same, and it was identical to `erase`'s |
+| `lib/erase.test.ts` | the same |
+| `styles/print.test.ts` | `sources(dir, { tests: false })` |
+| `lib/onegraph.test.ts` | `sources(dir, { ext: ['.ts', '.tsx'] })` |
+
+The last is the one that matters: E1's mistake — a census needing `lib/` and a
+walker that could only see `.tsx` — is an argument at the call site now, where
+a reader sees which files the rule actually reads. Re-verified by planting a
+second compiler in `lib/` and watching the rule name it, because rewriting
+that particular rule without re-running it against its own fault would be the
+joke this file has already told three times.
+
+`a11y/labels.ts` needed one thing worth writing down: `scripts/labels.mjs`
+loads it through a bare `await import()`, so Node resolves it, and Node ESM
+guesses no extensions. The import is `'../styles/rules.ts'`, with the
+extension, and `npm run lint` is what proves it.
+
+**The row said six walkers. Counted by shape rather than by name, there are
+fourteen more.** The census found the ones whose function was *called*
+`sources`; a `readdirSync` loop that recurses is the actual shape, and it
+appears in `a11y/dragging`, `landmarks`, `modal`, `tellings`,
+`components/marks`, `isolation`, `lib/credits`, `styles/fields`, `gutter`,
+`inset`, `taps`, `lib/counts`, and — with no more excuse than anyone else —
+`styles/deadcss` and `state/readstate`, both of which are mine from passes
+seven and eight.
+
+Not converted here, and not for lack of time: they are a second row, and at
+least one is not the same job at all — `lib/counts.ts` walks `public/` for
+lesson audio, not source for rules. Doing them needs the reading that this
+row's census skipped.
+
+**Three miscounts in one pass, all the same mistake.** F1 counted dispatchers
+by one spelling of a literal. G1 counted tests by their imports rather than
+their calls. G2 counted walkers by their name rather than their shape. Each
+time the census asked a question that was *nearly* the real one, and each time
+the difference was invisible until something forced it — the typechecker, the
+throw, and a grep for the shape. **The lesson this file already carries is
+about checks that have not been run; this pass adds its sibling: a census is a
+question, and asking a near-miss of the question you meant returns a confident
+wrong number.**
+
 ---
 
 # One app — the eighth pass: state written and never read
