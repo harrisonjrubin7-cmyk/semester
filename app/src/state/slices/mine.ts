@@ -398,6 +398,28 @@ export function mine(state: State, action: Action): State | null {
     case 'addRest':
       return { ...state, rest: [...state.rest, newRest(action.patch, Date.now())] };
 
+    /*
+     * Edited in place, the way a window is.
+     *
+     * There was no case here for a long time, and the omission was invisible
+     * because nothing dispatched the two beside it either — a block could be
+     * added and removed by a screen that did not exist. Once `Capacity` grew
+     * the control, add-and-drop alone would have meant changing the hour of a
+     * standing dinner by deleting it and adding it back.
+     *
+     * Read back through `newRest` so the bounds and the day list are cleaned
+     * in one place, exactly as `setFloor` above leans on `readFloor` — a patch
+     * arriving from a `<input type="time">` is as much outside input as a
+     * value arriving from storage.
+     */
+    case 'patchRest':
+      return {
+        ...state,
+        rest: state.rest.map((r) =>
+          r.id === action.id ? { ...newRest({ ...r, ...action.patch }, Date.now()), id: r.id } : r,
+        ),
+      };
+
     case 'dropRest':
       return { ...state, rest: state.rest.filter((r) => r.id !== action.id) };
 

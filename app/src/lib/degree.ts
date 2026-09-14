@@ -238,6 +238,22 @@ export const COMMON_SCALE: Scale = {
   F: 0,
 };
 
+/**
+ * Whether a table is still the one the app ships as a starting point.
+ *
+ * Here rather than beside the editor because it is a statement about
+ * `COMMON_SCALE`, which is here — and because two callers that are not each
+ * other's neighbours ask it: the editor, to decide whether to offer a way
+ * back, and `gpaLine`, to decide whether the number it is about to say rests
+ * on an assumption or on an answer.
+ */
+export function isCommon(scale: Scale): boolean {
+  const mine = Object.keys(scale);
+  const common = Object.keys(COMMON_SCALE);
+  if (mine.length !== common.length) return false;
+  return common.every((k) => scale[k] === COMMON_SCALE[k]);
+}
+
 export interface Gpa {
   points: number;
   hours: number;
@@ -272,12 +288,32 @@ export function gpa(taken: Taken[], scale: Scale): Gpa | null {
  * because a GPA that quietly dropped three pass/fail courses is a GPA somebody
  * will compare against their transcript and not be able to explain.
  */
-export function gpaLine(g: Gpa | null): string {
+/**
+ * The GPA said out loud, with what it is assuming.
+ *
+ * `assumed` is the sentence that was missing. This line has always ended "this
+ * is your arithmetic, not the registrar’s" and has always said a left-out
+ * course "is not in **your** scale" — both of which quietly claim the table is
+ * one the reader chose. It was not: `COMMON_SCALE` is what every account got,
+ * `setScale` was in the reducer with nothing dispatching it, and a student at
+ * a school that caps an A+ at 4.0 saw a wrong number worn exactly as
+ * confidently as a right one. That is the failure this file opens by naming.
+ *
+ * The scale is editable now (`components/GpaScale.tsx`), which makes the
+ * possessive true — and makes the untouched case worth saying, because the
+ * default is the one state where the number rests on an assumption rather than
+ * on an answer. Passing it is optional so the sentence stays available to a
+ * caller that has no scale to hand.
+ */
+export function gpaLine(g: Gpa | null, assumed = false): string {
   if (!g) return 'No finished course has both a grade and credit hours yet.';
   const head = `${g.gpa.toFixed(3)} across ${g.hours} hours.`;
-  if (g.uncounted.length === 0) return `${head} This is your arithmetic, not the registrar’s.`;
+  const mine = assumed
+    ? 'This is the common table, which your university may not use — check it in Settings → Grading.'
+    : 'This is your arithmetic, not the registrar’s.';
+  if (g.uncounted.length === 0) return `${head} ${mine}`;
   const n = g.uncounted.length;
-  return `${head} ${n} ${n === 1 ? 'course is' : 'courses are'} left out — the grade is not in your scale. This is your arithmetic, not the registrar’s.`;
+  return `${head} ${n} ${n === 1 ? 'course is' : 'courses are'} left out — the grade is not in your scale. ${mine}`;
 }
 
 /** Credit hours finished, and finished plus in progress. */

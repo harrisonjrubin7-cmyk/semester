@@ -364,6 +364,89 @@ describe('practice papers', () => {
     s = reducer(s, { type: 'keepSitting', sitting: sitting(70) });
     expect(s.sittings[0].id).not.toBe(s.sittings[1].id);
   });
+
+  /*
+   * Taking one back, which no screen could do.
+   *
+   * `dropSitting` was in the reducer with nothing dispatching it, and that is
+   * worse than a stray row usually is because of what a sitting feeds: `trend`
+   * averages them into the line on Grades, `against` compares that average to
+   * the mark the rest of the term needs, and the drill deck is built from the
+   * questions they say you missed. A paper abandoned after two questions drags
+   * all three, and `lib/sitting.ts` opens by saying the trend is the useful
+   * part. `PaperTag` in `screens/Grades.tsx` is the way in now.
+   */
+  it('lets one be taken back without touching the others', () => {
+    let s = reducer(blank(), { type: 'keepSitting', sitting: sitting(70) });
+    s = reducer(s, { type: 'keepSitting', sitting: sitting(12) });
+    const abandoned = s.sittings[0];
+    const kept = s.sittings[1];
+
+    const after = reducer(s, { type: 'dropSitting', id: abandoned.id });
+    expect(after.sittings).toHaveLength(1);
+    expect(after.sittings[0]).toEqual(kept);
+  });
+
+  it('ignores an id that is not there rather than emptying the pile', () => {
+    const s = reducer(blank(), { type: 'keepSitting', sitting: sitting(70) });
+    expect(reducer(s, { type: 'dropSitting', id: 'never-existed' }).sittings).toHaveLength(1);
+  });
+});
+
+/**
+ * A registrar date of your own, which the sheet could not add.
+ *
+ * `addTermDate` sat unreachable while `dropTermDate` one line below it in
+ * `slices/library.ts` said "a landmark is emptied rather than removed — it is
+ * part of the sheet and will be asked for again. One of your own goes for
+ * good." There were none of your own, because nothing could make one.
+ * `YourOwn` in `screens/Registrar.tsx` is the form.
+ */
+describe('a registrar date of your own', () => {
+  it('joins the sheet and counts down like the rest', () => {
+    const s = reducer(blank(), {
+      type: 'addTermDate',
+      label: 'Thesis filing deadline',
+      iso: '2026-11-13',
+    });
+    const mine = s.registrar.find((d) => d.label === 'Thesis filing deadline');
+    expect(mine).toBeDefined();
+    expect(mine?.iso).toBe('2026-11-13');
+    expect(mine?.kind).toBe('deadline');
+    expect(mine?.id).toBeTruthy();
+  });
+
+  it('is a window when it has an end, and a deadline when it does not', () => {
+    const open = reducer(blank(), {
+      type: 'addTermDate',
+      label: 'Study abroad applications',
+      iso: '2026-10-01',
+      until: '2026-10-31',
+    });
+    expect(open.registrar.find((d) => d.label === 'Study abroad applications')?.kind).toBe('break');
+  });
+
+  it('names an unnamed one rather than adding a blank row', () => {
+    const s = reducer(blank(), { type: 'addTermDate', label: '   ', iso: '2026-11-13' });
+    expect(s.registrar.some((d) => d.label === 'A date of your own')).toBe(true);
+  });
+
+  /*
+   * The asymmetry the reducer is explicit about, now that both halves exist.
+   */
+  it('goes for good when dropped, where a landmark is only emptied', () => {
+    const s = reducer(blank(), {
+      type: 'addTermDate',
+      label: 'Thesis filing deadline',
+      iso: '2026-11-13',
+    });
+    const mine = s.registrar.find((d) => d.label === 'Thesis filing deadline');
+    const landmark = s.registrar.find((d) => d.id !== mine?.id && d.label !== 'Thesis filing deadline');
+
+    const after = reducer(s, { type: 'dropTermDate', id: mine?.id ?? '' });
+    expect(after.registrar.some((d) => d.label === 'Thesis filing deadline')).toBe(false);
+    expect(after.registrar.some((d) => d.id === landmark?.id)).toBe(true);
+  });
 });
 
 describe('drilling', () => {
