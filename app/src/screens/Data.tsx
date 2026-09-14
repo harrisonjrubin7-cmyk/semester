@@ -5,11 +5,12 @@ import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { useStore } from '../state/store';
 import { pickPersisted } from '../state/shape';
-import { bytesOf, inventory, space, type Row, type Space } from '../lib/inventory';
+import { bytesOf, elsewhere, inventory, space, type Elsewhere, type Row, type Space } from '../lib/inventory';
 import { formatBytes, totalSize } from '../lib/files';
 import { weigh } from '../lib/keep';
 import { allVersions } from '../lib/docversions';
 import { DRAFTS_KEY } from '../lib/draft';
+import { STORAGE_KEY } from '../state/shape';
 
 /**
  * What data exists, and whether the app is healthy.
@@ -54,6 +55,17 @@ export function DataScreen() {
       return 0;
     }
   });
+  /*
+   * And everything else this app has put in the browser.
+   *
+   * The store is one key; the assistant's conversations, the open tabs and
+   * their groups, the bookmarks, the recent searches, the error log and what
+   * the shared key has been spent on are a dozen more, each written by the
+   * feature that needed it and none of them on this screen before. Measured
+   * by prefix in `lib/inventory.ts`, so a feature that starts writing a new
+   * key appears here without anybody adding a row for it.
+   */
+  const [other] = useState<Elsewhere>(() => elsewhere([STORAGE_KEY, DRAFTS_KEY]));
   const [files, setFiles] = useState<number | null>(null);
   const [history, setHistory] = useState<number | null>(null);
 
@@ -150,9 +162,13 @@ export function DataScreen() {
             These are not collections and must not be added into the total
             above, which is the size of one string this app writes. Kept
             beside it because the question people arrive with is "what is
-            this app taking up", and the answer is all four. Document history
-            was the one missing: its own database, so none of the others could
-            see it, and up to twenty full copies of every document in it.
+            this app taking up", and the answer is all five. Document history
+            was one of the two missing: its own database, so none of the
+            others could see it, and up to twenty full copies of every
+            document in it. The other was everything the app writes that is
+            not the store — the assistant's conversations most of all — which
+            is measured by prefix rather than by a list, so the next feature
+            to write a key of its own is counted the day it does.
           */}
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
             <span>Drafts in progress</span>
@@ -164,6 +180,15 @@ export function DataScreen() {
             <span>Attachments</span>
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>
               {files === null ? 'Not available' : formatBytes(files)}
+            </span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-2)', fontSize: 'var(--type-sm)', ...secondLine() }}>
+            <span>
+              Everything else the app has written
+              {other.keys > 0 ? ` (${other.keys} ${other.keys === 1 ? 'store' : 'stores'})` : ''}
+            </span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {other.bytes ? formatBytes(other.bytes) : 'None'}
             </span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-2)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
@@ -219,9 +244,17 @@ export function DataScreen() {
           <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
             <div className="kicker">How it is stored</div>
             <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
+              {/*
+                What is where, which had fallen a rewrite behind: the store
+                moved into IndexedDB and stopped being the one localStorage
+                key this sentence described, and the app has been writing a
+                dozen smaller keys beside it ever since — the row above counts
+                them, and a line saying "one key" over that count is a line
+                that reads as a bug in one of the two.
+              */}
               {room?.backend === 'indexeddb'
-                ? 'Files are in IndexedDB; everything else is in localStorage under one key.'
-                : 'localStorage only — this browser has no IndexedDB, so files cannot be kept.'}
+                ? 'Your records, your files, the document history and the daily copies are in IndexedDB. The smaller stores counted above — drafts, the assistant’s conversations, open tabs, bookmarks — are keys in localStorage.'
+                : 'localStorage only — this browser has no IndexedDB, so the records are one key there, and files cannot be kept at all.'}
             </div>
             <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
               {room?.persisted === true

@@ -816,8 +816,8 @@ a:hover {
 /*
  * ── The task index ────────────────────────────────────────────────────────
  *
- * Progress → By task files forty-nine screens under nine headings, and a
- * screen appears under every intention it serves, so there are eighty-four
+ * Progress → By task files sixty screens under nine headings, and a screen
+ * appears under every intention it serves, so there are a hundred and two
  * entries. Drawn as rows that was five screenfuls under headings you met one
  * at a time; drawn as nine tiles it is one screenful you can point at, and
  * the screens under an intention open over it. See `components/nav/ByTask.tsx`.
@@ -1415,10 +1415,10 @@ a:hover {
 /*
  * Room under every screen for the assistant's button.
  *
- * The button is fixed above the tab bar on all fifty screens, and a screen
- * whose last element is a primary action put that action underneath it — on
- * Costs, "Add it" sat directly behind it. Reserving the space here fixes it
- * once for every screen rather than fifty times: the padding makes even a
+ * The button is fixed above the tab bar on every screen, and a screen whose
+ * last element is a primary action put that action underneath it — on Costs,
+ * "Add it" sat directly behind it. Reserving the space here fixes it once for
+ * every screen rather than sixty times: the padding makes even a
  * short screen scrollable by exactly the button's footprint, so anything at
  * the bottom can always be brought clear of it.
  */

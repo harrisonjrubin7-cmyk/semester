@@ -10,7 +10,7 @@
  * A context rather than a field on the store because it is neither persisted
  * nor meaningful to anything outside the workspace shell, and putting it in
  * the reducer would mean every keystroke in the bar dispatched an action that
- * re-rendered fifty screens' worth of subscribers.
+ * re-rendered sixty screens' worth of subscribers.
  *
  * `false` by default, so a screen rendered outside the workspace — the same
  * screens are drawn in four other navigations — behaves as though nothing is

@@ -3,7 +3,7 @@
  *
  * An alternate way in, chosen in Settings, not a replacement for the tab bar.
  * The bar is right for somebody who lives in four screens; this is right for
- * somebody who has forty-six and would rather see them than remember which
+ * somebody who has sixty and would rather see them than remember which
  * shelf they are on. Which is better genuinely depends on the person.
  *
  * The arrangement, the folders and the gating are in `lib/springboard.ts` and
@@ -361,7 +361,7 @@ export function Springboard() {
           {/*
             The four you keep coming back to, on the first page only.
 
-            A launcher is a grid of forty-six things arranged by category, and
+            A launcher is a grid of sixty things arranged by category, and
             a category is the thing nobody remembers. Repeating this on every
             page would be four icons of chrome on each; the first page is where
             somebody lands.

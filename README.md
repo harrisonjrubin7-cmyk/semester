@@ -8,6 +8,13 @@ Built first for one Vanderbilt semester (Fall 2026, four courses, by hand), then
 generalised: anyone can sign in, upload their own syllabus and readings, and get
 the same thing for their own courses.
 
+It has since grown past the term it started as. Alongside the coursework there
+is a place to make things that are not documents, the university's own services
+with an honest account of which parts this app can do anything about, and four
+workspaces for the parts of a degree that outlast a semester — the season you
+train for, the job you are applying to, the people at home, and the degree after
+this one. Those are the three sections near the end of this file.
+
 **Live: https://harrisonjrubin7-cmyk.github.io/semester/** · running your own
 copy: [SETUP.md](SETUP.md)
 
@@ -1063,6 +1070,76 @@ one, and the id is left on the work rather than scrubbed, so re-importing the
 course brings the filing back. `app/src/lib/forwork.ts` is the only module that
 reads it; `app/src/lib/clips.ts` is what makes asking "how much is filed against
 this" affordable on forty rows at once.
+
+## One door to making things
+
+The app could already write a document, build a deck and fill a spreadsheet, on
+three screens you had to know the names of. **Create** is the screen you open
+when you know what you want to make and not which screen makes it: nine tiles,
+six of which hand straight over to the editor that already exists — documents,
+decks, spreadsheets, maths activities, study guides, notes — and three that are
+its own. Forms, designs and videos share one project shape and one device
+library (`app/src/lib/creations.ts`).
+
+The asymmetry is deliberate. A second document editor behind a tile would be a
+second place documents could live, which is the thing the rest of this app
+spends its effort not doing. A project is told which course and which deadline
+it belongs to before it is created, so its export lands in Files against the
+right one without anybody filing it afterwards.
+
+The three it owns are basic editors and say so: a form with nine question
+types, response windows and CSV out; a design surface with text, shapes,
+images, layers and SVG, PNG or JPG export; a video editor that trims, splits,
+orders, re-times and renders 720p WebM in the browser. No transcription, no
+multi-track mixing, no MP4, no real-time collaboration.
+
+## The university itself
+
+**University** is thirty-seven service areas — registration, the bursar,
+dining, advising, accessibility, the library, health, transport, the ID card —
+each saying plainly what this app can do for it. For nearly all of them the
+answer is the same: it can help you *prepare*. It holds the questions for an
+advising appointment, the checklist before a form is filed, the draft of an
+appeal, and it reuses the course, study, registration, degree, billing, meal,
+housing and map tools that are already here rather than growing copies of them.
+
+It cannot file, register, pay or submit anything. Behind the screen there is a
+real gateway — verified identity, per-school and per-record permission
+boundaries, per-service capabilities, preview-then-confirm, an encrypted action
+journal, receipts and reconciliation (`packages/institution/`, `app/server/`) —
+and the production adapter registry is deliberately empty until a school
+approves one. The hero on that screen counts *connected* services rather than
+the thirty-seven, because thirty-seven is the impressive number and the wrong
+one: it is nought until a school deploys something.
+
+## Beyond the term
+
+Four workspaces for the parts of a degree a semester does not contain. Each
+keeps its work on the device, apart from the term, so none of it disappears when
+the term is archived — and none of it reaches an institution.
+
+- **Athletics** — the practices, the training and the travel, against the
+  classes and deadlines they collide with. The conflict list is the screen; the
+  absence request, the travel study pack and the calendar entries are all built
+  from it. A roster, eligibility, medical clearance and an authorised absence
+  belong to an athletics office, and the screen says so.
+- **Career** — what is open, what you have done and who you have spoken to, in
+  one place because for a student they are one job. There is no job board
+  behind it: every opportunity was typed in or imported from a file, and the
+  link goes to the official source. "Track it" hands the opportunity to the
+  app's one applications tracker rather than starting a second.
+- **Family** — deciding what a parent sees, item by item, with nothing shared
+  by default. The version everybody builds is a parent login, which hands over
+  the grades, the health administration and where somebody is at nine on a
+  Tuesday. This is the opposite shape: a person, a category, the individual
+  things chosen for them, an expiry, and a preview that shows exactly that and
+  nothing else. No invitation is sent and no account is created.
+- **Pathway** — applying somewhere, arriving, transferring, a thesis,
+  graduating, leaving: eleven milestone templates that are the order the
+  deadlines actually fall in, for somebody meeting each exactly once. Every
+  status on it is what you typed, and every place one is drawn says whose claim
+  it is. The cost table refuses to rank, convert currencies or subtract loans
+  as aid.
 
 ## Phone, iPad, laptop, or its own window
 
