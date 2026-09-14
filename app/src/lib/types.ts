@@ -1,3 +1,5 @@
+import type { Repeat } from './repeat';
+
 /**
  * A course's short slug — 'econ', 'psci', and so on.
  *
@@ -326,12 +328,34 @@ export interface Appointment {
    * missing kind reads as "other" rather than breaking. See `lib/kinds.ts`.
    */
   kind?: string;
-  /** ISO date, YYYY-MM-DD. */
+  /**
+   * ISO date, YYYY-MM-DD.
+   *
+   * On a repeating appointment this is the first occurrence. `appointmentsOn`
+   * in `lib/select.ts` hands back a copy with `date` set to the day being
+   * drawn, so everything downstream reads the occurrence rather than having
+   * to know about the rule.
+   */
   date: string;
   /** Minutes past midnight, so it sorts into the rail with classes. */
   at: number;
   /** How the time is written — "6:30p". */
   time: string;
+  /**
+   * How long it runs, in minutes.
+   *
+   * Absent on everything added before this existed, and read as an hour where
+   * it is — see `LONG_ENOUGH` in `lib/select.ts`. Before this, every
+   * appointment was drawn as fifty minutes: a four-hour shift and a coffee
+   * were the same block, which is the one thing an hour grid exists to tell
+   * apart.
+   */
+  minutes?: number;
+  /**
+   * The rule that makes this happen again — a shift, a society, a standing
+   * hour with a tutor. Absent is once. See `lib/repeat.ts`.
+   */
+  repeat?: Repeat;
   where: string;
   note: string;
   created: number;

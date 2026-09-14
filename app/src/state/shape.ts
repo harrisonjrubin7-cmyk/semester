@@ -1822,7 +1822,15 @@ export type Action =
    * own action, and its own action is what the undo table can name.
    */
   | { type: 'moveTask'; id: string; date: string; time?: string }
-  | { type: 'moveAppointment'; id: string; date: string; at: number; time: string }
+  /**
+   * `from` is the occurrence being dragged, for a repeating appointment.
+   *
+   * Absent is "the whole thing", which is what a one-off is and what every
+   * caller written before repeats existed sends. See the note on the case in
+   * `state/slices/mine.ts` for why one occurrence detaches rather than
+   * dragging fifteen weeks of shifts with it.
+   */
+  | { type: 'moveAppointment'; id: string; date: string; at: number; time: string; from?: string }
   | { type: 'moveItem'; courseId: CourseId; itemId: string; month: number; day: number; year: number }
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
@@ -1950,7 +1958,9 @@ export type Action =
   | { type: 'deleteTask'; id: string }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
   | { type: 'setAppointmentKind'; id: string; kind: string }
-  | { type: 'deleteAppointment'; id: string }
+  /** `date` deletes just that occurrence of a repeating one. */
+  | { type: 'deleteAppointment'; id: string; date?: string }
+  | { type: 'patchAppointment'; id: string; patch: Partial<Omit<Appointment, 'id' | 'created'>> }
   | { type: 'setMathTab'; tab: State['mathTab'] }
   | { type: 'newNote'; courseId: CourseId | null; itemId?: string | null }
   /** Save a finished piece of text as a note without leaving the screen. */

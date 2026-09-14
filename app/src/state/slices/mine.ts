@@ -10,6 +10,7 @@
  */
 
 import { newId } from '../../lib/idb';
+import { skip } from '../../lib/repeat';
 import { newAlarm, newTimer } from '../../lib/clocks';
 import { moveTo, newApplication } from '../../lib/apply';
 import { mark, newProgress } from '../../lib/progress';
@@ -55,13 +56,62 @@ export function mine(state: State, action: Action): State | null {
         ),
       };
 
-    case 'moveAppointment':
+    /*
+     * An appointment, dragged to another day or hour.
+     *
+     * A one-off moves. A *repeating* one is the case every calendar has to
+     * answer and none of them can answer silently: dragging the Tuesday shift
+     * to Wednesday either moves every Tuesday or moves that one. Google asks;
+     * this takes the answer Google's dialog defaults to — **this event** —
+     * because a drag is a statement about the block under the finger, and
+     * moving fifteen weeks of shifts on one drag is the kind of surprise
+     * there is no undoing by hand.
+     *
+     * So the series skips that date and an ordinary one-off appears at the
+     * new time. What is on the screen afterwards is either the rule or a row,
+     * never a half-detached third thing — see `lib/repeat.ts`.
+     *
+     * `from` is which occurrence was dragged. Absent means the whole thing,
+     * which is what a one-off is and what an older caller sends.
+     */
+    case 'moveAppointment': {
+      const found = state.appointments.find((a) => a.id === action.id);
+      /*
+       * The first day is the rule's anchor, so dragging *it* moves the series.
+       *
+       * Not "the occurrence differs from where it landed" — that is true of
+       * every drag, the anchor's included, and detaching the anchor would
+       * leave a rule starting on a day it no longer happens. Dragging the
+       * first Tuesday of a standing shift to Wednesday is the one gesture
+       * that plainly means "the shift is on Wednesdays now".
+       */
+      const detach = Boolean(found?.repeat && action.from && action.from !== found?.date);
+      if (!found || !detach) {
+        return {
+          ...state,
+          appointments: state.appointments.map((a) =>
+            a.id === action.id ? { ...a, date: action.date, at: action.at, time: action.time } : a,
+          ),
+        };
+      }
+      const { id: _id, repeat: _repeat, created: _created, ...rest } = found;
       return {
         ...state,
-        appointments: state.appointments.map((a) =>
-          a.id === action.id ? { ...a, date: action.date, at: action.at, time: action.time } : a,
-        ),
+        appointments: [
+          ...state.appointments.map((a) =>
+            a.id === action.id ? { ...a, repeat: skip(a.repeat, action.from!) } : a,
+          ),
+          {
+            ...rest,
+            date: action.date,
+            at: action.at,
+            time: action.time,
+            id: newId(),
+            created: Date.now(),
+          },
+        ],
       };
+    }
 
     case 'toggleTask':
       return {
@@ -89,10 +139,36 @@ export function mine(state: State, action: Action): State | null {
         ),
       };
 
-    case 'deleteAppointment':
+    /*
+     * One occurrence, or the whole series.
+     *
+     * `date` names the occurrence being deleted and is how the screen says
+     * "just this one": the rule keeps its place and skips that day. Without
+     * it — or on something that does not repeat — the appointment goes.
+     */
+    case 'deleteAppointment': {
+      const found = state.appointments.find((a) => a.id === action.id);
+      if (action.date && found?.repeat && found.date !== action.date) {
+        return {
+          ...state,
+          appointments: state.appointments.map((a) =>
+            a.id === action.id ? { ...a, repeat: skip(a.repeat, action.date!) } : a,
+          ),
+        };
+      }
       return {
         ...state,
         appointments: state.appointments.filter((a) => a.id !== action.id),
+      };
+    }
+
+    /** Anything about one, edited in place — the length, the rule, the words. */
+    case 'patchAppointment':
+      return {
+        ...state,
+        appointments: state.appointments.map((a) =>
+          a.id === action.id ? { ...a, ...action.patch } : a,
+        ),
       };
 
     case 'addCommitment':

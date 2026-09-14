@@ -196,3 +196,126 @@ describe('moving a deadline that came out of a syllabus', () => {
     expect(back.courses[0].items[0].movedFrom).toBeUndefined();
   });
 });
+
+/**
+ * A series, and the question every calendar has to answer out loud: does
+ * dragging one Tuesday move one Tuesday, or all fifteen?
+ *
+ * The answer is one — what Google's own dialog defaults to — because a drag
+ * is a statement about the block under the finger, and moving a term of
+ * shifts on one gesture is a mistake nobody can undo by hand. What the store
+ * must end up holding is either the rule or a row, never a half-detached
+ * third thing: the series skips that date and an ordinary one-off appears at
+ * the new time.
+ */
+describe('one occurrence of a repeating appointment', () => {
+  const withSeries = () =>
+    act(fresh(), {
+      type: 'addAppointment',
+      appointment: {
+        title: 'shift',
+        kind: 'work',
+        date: '2026-09-15',
+        at: 16 * 60,
+        time: '4p',
+        minutes: 240,
+        where: 'Rand',
+        note: '',
+        repeat: { every: 'weekly', until: '2026-12-11' },
+      },
+    } as Action);
+
+  it('detaches when one is dragged, leaving the rest where they were', () => {
+    const before = withSeries();
+    const id = before.appointments[0].id;
+    const after = act(before, {
+      type: 'moveAppointment',
+      id,
+      date: '2026-09-23',
+      at: 17 * 60,
+      time: '5p',
+      from: '2026-09-22',
+    });
+
+    expect(after.appointments).toHaveLength(2);
+    const series = after.appointments.find((a) => a.id === id)!;
+    expect(series.date).toBe('2026-09-15');
+    expect(series.repeat?.except).toEqual(['2026-09-22']);
+
+    const one = after.appointments.find((a) => a.id !== id)!;
+    expect(one.date).toBe('2026-09-23');
+    expect(one.at).toBe(17 * 60);
+    expect(one.repeat).toBeUndefined();
+    // Everything else about it comes with it — a detached shift is still a
+    // four-hour shift at Rand, not a bare title on a new day.
+    expect(one.minutes).toBe(240);
+    expect(one.where).toBe('Rand');
+    expect(one.kind).toBe('work');
+  });
+
+  it('moves the whole series when the first day itself is dragged', () => {
+    const before = withSeries();
+    const after = act(before, {
+      type: 'moveAppointment',
+      id: before.appointments[0].id,
+      date: '2026-09-16',
+      at: 16 * 60,
+      time: '4p',
+      from: '2026-09-15',
+    });
+    expect(after.appointments).toHaveLength(1);
+    expect(after.appointments[0].date).toBe('2026-09-16');
+    expect(after.appointments[0].repeat?.except ?? []).toEqual([]);
+  });
+
+  it('moves the whole thing when no occurrence is named, as an older caller sends', () => {
+    const before = withSeries();
+    const after = act(before, {
+      type: 'moveAppointment',
+      id: before.appointments[0].id,
+      date: '2026-09-16',
+      at: 16 * 60,
+      time: '4p',
+    });
+    expect(after.appointments).toHaveLength(1);
+    expect(after.appointments[0].date).toBe('2026-09-16');
+  });
+
+  it('takes one out when a date is named, and the whole series when none is', () => {
+    const before = withSeries();
+    const id = before.appointments[0].id;
+
+    const skipped = act(before, { type: 'deleteAppointment', id, date: '2026-09-29' });
+    expect(skipped.appointments).toHaveLength(1);
+    expect(skipped.appointments[0].repeat?.except).toEqual(['2026-09-29']);
+
+    expect(act(before, { type: 'deleteAppointment', id }).appointments).toHaveLength(0);
+  });
+
+  /*
+   * Deleting the day the series starts on cannot be an exception: the first
+   * day is the series' own anchor, and a rule whose start is skipped is a
+   * rule with nothing left to anchor to.
+   */
+  it('deletes the series when the day named is the day it starts', () => {
+    const before = withSeries();
+    const after = act(before, {
+      type: 'deleteAppointment',
+      id: before.appointments[0].id,
+      date: '2026-09-15',
+    });
+    expect(after.appointments).toHaveLength(0);
+  });
+
+  it('edits one in place without disturbing the rule', () => {
+    const before = withSeries();
+    const after = act(before, {
+      type: 'patchAppointment',
+      id: before.appointments[0].id,
+      patch: { minutes: 180, where: 'Commons' },
+    });
+    expect(after.appointments[0].minutes).toBe(180);
+    expect(after.appointments[0].where).toBe('Commons');
+    expect(after.appointments[0].repeat?.every).toBe('weekly');
+  });
+});

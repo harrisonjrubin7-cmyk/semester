@@ -13,8 +13,16 @@ import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib
 import { Drive } from './mine/Drive';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import { codeOf } from '../lib/call';
+import { secondLine } from '../lib/dim';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
+import {
+  EVERY,
+  defaultUntil,
+  describe as describeRepeat,
+  howMany,
+  type Every,
+} from '../lib/repeat';
 import { CheckIt } from '../components/CheckIt';
 import { Dictate } from '../components/Dictate';
 import { RecordButton } from '../components/RecordButton';
@@ -380,16 +388,39 @@ function Appointments() {
   const [when, setWhen] = useState('09:00');
   const [where, setWhere] = useState('');
   const [kind, setKind] = useState<EventKindId>('social');
+  /*
+   * How long, and how often.
+   *
+   * The two fields every calendar has had for thirty years and this form did
+   * not: every appointment was an hour-shaped point in time, so a four-hour
+   * shift was drawn the same as a coffee, and a standing Tuesday shift was
+   * fifteen rows typed one at a time.
+   */
+  const [minutes, setMinutes] = useState(60);
+  const [every, setEvery] = useState<Every | ''>('');
+  const [until, setUntil] = useState('');
 
   const add = () => {
     if (!title.trim()) return;
     const { at, time } = clockFromInput(when);
     dispatch({
       type: 'addAppointment',
-      appointment: { title: title.trim(), date, at, time, where: where.trim(), note: '', kind },
+      appointment: {
+        title: title.trim(),
+        date,
+        at,
+        time,
+        minutes,
+        where: where.trim(),
+        note: '',
+        kind,
+        ...(every ? { repeat: { every, until: until || defaultUntil(date) } } : {}),
+      },
     });
     setTitle('');
     setWhere('');
+    setEvery('');
+    setUntil('');
     setOpen(false);
   };
 
@@ -430,15 +461,75 @@ function Appointments() {
               aria-label="Time"
             />
           </div>
-          <input
-            className="input"
-            value={where}
-            onChange={(e) => setWhere(e.target.value)}
-            onKeyDown={submitOnEnter(add, () => setOpen(false))}
-            placeholder="Where?"
-            style={inputStyle}
-            aria-label="Place"
-          />
+          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
+            <input
+              className="input"
+              value={where}
+              onChange={(e) => setWhere(e.target.value)}
+              onKeyDown={submitOnEnter(add, () => setOpen(false))}
+              placeholder="Where?"
+              style={{ ...inputStyle, flex: 2 }}
+              aria-label="Place"
+            />
+            {/* How long, as a picker rather than an end time: an end time is
+                two fields that can disagree with each other, and every one of
+                these is a length somebody would have typed anyway. */}
+            <select
+              className="input"
+              value={String(minutes)}
+              onChange={(e) => setMinutes(Number(e.target.value))}
+              style={{ ...inputStyle, flex: 1 }}
+              aria-label="How long"
+            >
+              {LENGTHS.map((m) => (
+                <option key={m} value={String(m)}>
+                  {lengthLabel(m)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
+            <select
+              className="input"
+              value={every}
+              onChange={(e) => {
+                const next = e.target.value as Every | '';
+                setEvery(next);
+                // The end filled in the moment a rule is chosen, rather than
+                // left empty for somebody to discover is required.
+                if (next && !until) setUntil(defaultUntil(date));
+              }}
+              style={{ ...inputStyle, flex: 1 }}
+              aria-label="How often"
+            >
+              <option value="">Once</option>
+              {EVERY.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.label}
+                </option>
+              ))}
+            </select>
+            {every && (
+              <input
+                className="input"
+                type="date"
+                value={until}
+                min={date}
+                onChange={(e) => setUntil(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+                aria-label="Repeat until"
+              />
+            )}
+          </div>
+          {every && (
+            <div
+              role="status"
+              style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}
+            >
+              {`${describeRepeat({ every, until: until || defaultUntil(date) })} — ${howMany(date, { every, until: until || defaultUntil(date) }, until || defaultUntil(date))} times. Every repeat names its last day; this one is a semester long unless you change it.`}
+            </div>
+          )}
 
           {/* What it is for, so the hour grid can colour it and a glance at the
               day tells you what kind of day it is. */}
@@ -541,7 +632,17 @@ function Appointments() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</div>
               <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
-                {[kindOf(a.kind).label, a.where].filter(Boolean).join(' · ')}
+                {/* How long and how often, on the row: a shelf of appointments
+                    that all read alike is a shelf where the four-hour shift
+                    and the coffee are indistinguishable. */}
+                {[
+                  kindOf(a.kind).label,
+                  a.where,
+                  lengthLabel(a.minutes ?? 60),
+                  a.repeat ? describeRepeat(a.repeat).toLowerCase() : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </div>
             </div>
             {/*
@@ -563,11 +664,21 @@ function Appointments() {
                 Join
               </button>
             ) : null}
+            {/*
+              Deleting a series here deletes the series.
+
+              This shelf lists the stored appointment — one row for the rule,
+              on the day it starts — rather than its occurrences, so "Del" on
+              it can only mean all of them, and the label says so. Taking one
+              Tuesday out is done where that Tuesday is: on the calendar,
+              where the block you mean is the one under your finger.
+            */}
             <button
               type="button"
               className="btn btn-ghost"
               onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
-              aria-label={`Delete ${a.title}`}
+              aria-label={a.repeat ? `Delete every ${a.title}` : `Delete ${a.title}`}
+              title={a.repeat ? 'Deletes the whole series' : undefined}
               style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
             >
               Del
@@ -669,6 +780,23 @@ function Files() {
       </Folding>
     </div>
   );
+}
+
+/**
+ * The lengths offered for something you add.
+ *
+ * Not a free field. A minute count typed by hand is a field that accepts 4321
+ * and a form that has to say why it will not; these are the lengths somebody
+ * would have typed anyway, and the list is short enough to read at a glance.
+ * Four hours is the top of it because that is a shift, and anything longer is
+ * a day rather than an appointment.
+ */
+const LENGTHS = [15, 30, 45, 60, 90, 120, 180, 240];
+
+function lengthLabel(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = minutes / 60;
+  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} ${hours === 1 ? 'hour' : 'hours'}`;
 }
 
 export function Mine() {

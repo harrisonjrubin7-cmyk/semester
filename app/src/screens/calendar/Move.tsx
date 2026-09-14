@@ -34,7 +34,15 @@ import type { CourseId } from '../../lib/types';
  */
 export type Movable =
   | { kind: 'task'; id: string; title: string }
-  | { kind: 'appointment'; id: string; title: string; minutes: number }
+  /**
+   * `on` is the day the block being dragged was drawn on.
+   *
+   * Which matters only for a repeating appointment, and matters completely
+   * there: the id names the *series* and this names the occurrence. Without
+   * it a drag of one Tuesday shift moves every Tuesday shift — see the note
+   * on `moveAppointment` in `state/slices/mine.ts`.
+   */
+  | { kind: 'appointment'; id: string; title: string; minutes: number; on?: string }
   | { kind: 'item'; id: string; courseId: CourseId; title: string; code: string };
 
 /**
@@ -54,11 +62,13 @@ export function movableOf(
     from?: { kind: 'appointment' | 'item' | 'task'; id: string };
   },
   catalog: Catalog,
+  /** The day this block was drawn on, so one occurrence of a series can move alone. */
+  on?: string,
 ): Movable | null {
   const from = block.from;
   if (!from) return null;
   if (from.kind === 'appointment') {
-    return { kind: 'appointment', id: from.id, title: block.title, minutes: block.at };
+    return { kind: 'appointment', id: from.id, title: block.title, minutes: block.at, on };
   }
   if (from.kind === 'task') return { kind: 'task', id: from.id, title: block.title };
   return {
@@ -156,14 +166,33 @@ export function useCalendarMove() {
 
     if (what.kind === 'appointment') {
       const at = to.at ?? what.minutes;
+      const series = what.on
+        ? state.appointments.find((a) => a.id === what.id && a.repeat && a.date !== what.on)
+        : undefined;
       dispatch({
         type: 'moveAppointment',
         id: what.id,
         date: to.date,
         at,
         time: timeLabel(at),
+        ...(what.on ? { from: what.on } : {}),
       });
-      say(`Moved · ${what.title} to ${when}, ${timeLabel(at)}.`, 'calendar');
+      /*
+       * Said out loud when a series has just been broken apart.
+       *
+       * Dragging one Tuesday of a standing shift takes that Tuesday out of
+       * the rule and leaves an ordinary appointment at the new time — which
+       * is what Google's dialog means by "this event", and is the right
+       * default for a gesture aimed at one block. It is also a thing nobody
+       * would guess happened, so the line says it rather than leaving it to
+       * be discovered next week.
+       */
+      say(
+        series
+          ? `Moved · just this ${what.title} to ${when}, ${timeLabel(at)}. The rest of the series is where it was.`
+          : `Moved · ${what.title} to ${when}, ${timeLabel(at)}.`,
+        'calendar',
+      );
       return;
     }
 

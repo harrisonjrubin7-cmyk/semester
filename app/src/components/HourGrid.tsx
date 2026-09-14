@@ -52,6 +52,15 @@ export interface HourBlock {
    * a fact about the data rather than a guess about the title.
    */
   from?: { kind: 'appointment' | 'item' | 'task'; id: string };
+  /**
+   * The day this block was drawn on, as an ISO date.
+   *
+   * Only the week grid needs it and only for one thing: a drop reports the
+   * column it landed *in*, and moving one occurrence of a repeating
+   * appointment needs the one it came *from*. Set by whatever builds the
+   * day's blocks, which is the only place that knows.
+   */
+  on?: string;
 }
 
 const ROW = 54;
