@@ -10,7 +10,7 @@
  */
 
 import type { Screen } from '../../lib/types';
-import { NAMED } from '../../lib/route';
+import { LIBRARIES, NAMED } from '../../lib/route';
 import { ROOTS, type Action, type State } from '../shape';
 import { ONB_STEPS } from '../../data/misc';
 import { firstScreen } from '../../lib/chrome';
@@ -30,8 +30,27 @@ function remember(recent: Screen[], screen: Screen): Screen[] {
   return [screen, ...recent.filter((s) => s !== screen)].slice(0, 12);
 }
 
+/**
+ * The two panels that must never outlive the screen they were opened over.
+ *
+ * `finder` and `apps` are drawn above everything, are not persisted, and have
+ * no idea the app moved underneath them — so without this a search opened on
+ * Today was still covering Courses a moment later, and the browser's Back
+ * button left it there too. Closing them belongs here, in the funnel every
+ * route goes through, rather than in an effect inside each panel: there are
+ * three ways to navigate and a panel that listens for one of them is a panel
+ * that survives the other two.
+ *
+ * Returns the same object when neither is open, so the ordinary navigation
+ * allocates nothing.
+ */
+function dismiss(state: State): State {
+  return state.finder || state.apps ? { ...state, finder: false, apps: false } : state;
+}
+
 /** Go somewhere, and leave a way back. Used by four of the eight slices. */
 export function push(state: State, screen: Screen): State {
+  state = dismiss(state);
   if (screen === state.screen) return state;
   // In tab mode a root screen is a destination, so the back stack resets. In
   // feed mode there is no tab bar, so every screen except the feed itself has
@@ -56,14 +75,23 @@ export function push(state: State, screen: Screen): State {
 
 export function navigate(state: State, action: Action): State | null {
   switch (action.type) {
+    /*
+     * One shared panel at a time.
+     *
+     * All three of these cover the screen, and opening one over another left
+     * two stacked with only the top one dismissable — the app launcher opened
+     * from behind the search panel could not be reached to close it. Opening
+     * any one closes the others; closing one is left alone, because a close
+     * is never ambiguous.
+     */
     case 'quickAdd':
-      return { ...state, quickAdd: action.open };
+      return { ...state, quickAdd: action.open, ...(action.open ? { finder: false, apps: false } : {}) };
 
     case 'finder':
-      return { ...state, finder: action.open };
+      return { ...state, finder: action.open, ...(action.open ? { apps: false } : {}) };
 
     case 'apps':
-      return { ...state, apps: action.open };
+      return { ...state, apps: action.open, ...(action.open ? { finder: false } : {}) };
 
     case 'customize':
       return { ...state, customize: action.open };
@@ -83,7 +111,19 @@ export function navigate(state: State, action: Action): State | null {
      * chevron and the browser button keep saying the same thing.
      */
     case 'landed': {
-      if (action.screen === state.screen && !action.id && !action.mode) return state;
+      /*
+       * A library screen is never a no-op landing.
+       *
+       * `#/write` and `#/write/<id>` are the same screen with different
+       * contents, so the early return below — right for every screen whose id
+       * cannot change without the screen changing — would drop the whole
+       * point of the address. It is what made opening a second document from
+       * a bookmark leave the first one on screen.
+       */
+      // The browser moved, which is a navigation like any other. See `dismiss`.
+      state = dismiss(state);
+      const library = LIBRARIES.includes(action.screen);
+      if (action.screen === state.screen && !action.id && !action.mode && !library) return state;
       const back = state.history[state.history.length - 1] === action.screen;
       /*
        * Which field the id in the address belongs in.
@@ -95,12 +135,14 @@ export function navigate(state: State, action: Action): State | null {
        * code in it. `lib/route.ts` imports nothing at runtime, so reading the
        * one table here costs nothing and cannot drift.
        */
-      const field = action.id ? NAMED[action.screen] : undefined;
+      const field = action.id || library ? NAMED[action.screen] : undefined;
       return {
         ...state,
         screen: action.screen,
         history: back ? state.history.slice(0, -1) : state.history,
-        ...(field ? { [field]: action.id } : {}),
+        // `|| null` for the library case: landing on the shelf means no file
+        // is open, and leaving the old id in place would reopen it instead.
+        ...(field ? { [field]: action.id || null } : {}),
         ...(action.mode ? { mode: action.mode } : {}),
       };
     }
@@ -108,7 +150,7 @@ export function navigate(state: State, action: Action): State | null {
     case 'back': {
       const history = [...state.history];
       const prev = history.pop();
-      return { ...state, screen: prev ?? 'home', history };
+      return { ...dismiss(state), screen: prev ?? 'home', history };
     }
 
     case 'openItem':
