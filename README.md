@@ -508,7 +508,12 @@ model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
   quotations, tables, equations, page breaks — out as a real `.docx`, as
-  Markdown, or printed to PDF from the browser. It is not **Draft it**, which
+  Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
+  `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
+  link becomes a real hyperlink in the Word file rather than an address typed
+  out dead on the page. Three schemes are allowed behind words — http, https
+  and mailto — and anything else keeps its brackets and stays on the page as
+  text, because a document is as often somebody else's writing pasted in. It is not **Draft it**, which
   writes prose and is fenced off from coursework, and it is not **Work on it**,
   which plans an assignment and refuses to write it. This one arranges what you
   type. Paste notes or Markdown in and it reads headings, lists, tables and
@@ -532,6 +537,118 @@ model in it or needs a key:
   - a **tab strip** along the bottom, so the gradebook and the budget beside it
     are one tap apart.
 
+  A formula can **read another sheet**: `=Marks!B2`, or
+  `=SUM('Q1 marks'!B2:B9)` where the name has a space in it. That is the half
+  of a spreadsheet that turns four separate grids into one model — a term
+  sheet that totals a gradebook, a budget that reads a plan — and it comes
+  with the two things that make it safe to rely on. **Rename a sheet** and
+  every formula naming it follows, re-quoted if the new name needs quotes.
+  **Insert or delete rows on it** and every formula on every other sheet
+  pointing into it moves with them, undo included: the alternative is a total
+  that quietly adds up the wrong nine rows with nothing on either screen
+  looking wrong. A name no sheet has, or one that two sheets share, reads
+  `#REF!` rather than guessing which grid was meant. Saving as Excel brings
+  the sheets a formula reads along with it, under the names the tabs will
+  actually carry.
+
+  A **filter** hides the rows you are not looking at — pick a column, a test
+  and a value, and set one on as many columns as you like. It hides rows and
+  changes no number: `=SUM(B2:B20)` still adds up what is hidden, exactly as
+  it does in Excel. That is the trap every spreadsheet has, so the figure
+  people actually read for *so what does this come to* — the status bar's sum,
+  average and count under the selection — counts only the rows you can see,
+  and says how many it left out.
+
+  And cells can **colour themselves**: a rule like *C2:C20, less than 60, red*
+  paints the marks that are under sixty and keeps painting the right ones when
+  a mark changes. A rule, not a colour: painting three cells red by hand and
+  then editing one leaves the red where it was, which is worse than no colour
+  at all because it is a claim about a figure that is no longer true. An empty
+  cell is never painted by a numeric rule — a column of marks nobody has
+  entered yet is not a column of zeroes.
+
+  Both go into the `.xlsx` as what they are — hidden rows under a real
+  autofilter, and real conditional-formatting rules — so taking the filter off
+  in Excel brings the rows back and changing a mark there changes its colour.
+
+  A block of cells can be **given a name**, and then a formula anywhere in the
+  workbook can say what it means: `=AVERAGE(Marks)` rather than
+  `=AVERAGE('Q1 marks'!$C$2:$C$40)`. A name is the only part of a spreadsheet
+  that says out loud what a range *is*, which is why the sheet somebody
+  inherits is unreadable and the one they wrote is not. It is a pointer, not a
+  copy — insert rows inside the block and the name stretches over them, rename
+  the sheet under it and the name follows, so it goes on meaning the marks
+  rather than going on meaning rows 2 to 40. A one-cell name reads as that
+  cell, so `=Rate` is a rate. Names go into the `.xlsx` as real defined names,
+  under the tab names the file will carry, so `=SUM(Mark)` still adds up in
+  Excel.
+
+  And a block can be **summarised**: pick what to group by, what to measure and
+  how — count, sum, average, smallest, largest — and the answer is a small
+  table under the grid, with a second field if you want it down one edge and
+  across the other. It is the question a spreadsheet is usually opened to
+  answer — *what is the average mark per course, per term* — and the thing
+  people do instead is sort the block, eyeball the runs and type the totals in
+  by hand, which is a figure with no working behind it. A total is gathered
+  from the values, never averaged from the averages, which is the arithmetic
+  mistake that makes a hand-built summary wrong by a little. Past sixty groups
+  it stops drawing and **says how many rows it left out of the totals**,
+  because a summary that quietly answers a narrower question than the one
+  asked is worse than one that refuses. And **Put it in cells** writes it into
+  the sheet as live `SUMIFS` and `AVERAGEIFS` rather
+  than as the answers, so it is still right after somebody changes a mark —
+  in the app and in Excel, which both compute the same formula.
+
+  A block can be pasted **five ways**: everything, the values alone — every
+  formula becoming the answer it had, which is how a computed column is frozen
+  before the sheet it was computed from is thrown away — the formulas without
+  the colours, the colours without the contents, or transposed, so a row lands
+  as a column. Pasting formatting changes no value, which is the whole of what
+  somebody means by "make this column look like that one".
+
+  And a block can be told **what it is allowed to hold**: one of a list of
+  values, a whole number, a number, a number in a band, or text no longer than
+  so many characters. A list is also an offer — the cell drops down the values,
+  so nobody types `ECON 1O2O` with a letter O in it.
+
+  It **marks; it never refuses and never changes anything.** A cell here is
+  written on every keystroke rather than on Return, so a rule of *between 50
+  and 100* that refused bad input would refuse the `8` on the way to `85` and
+  the column could never be typed into. That turned out to be the better answer
+  anyway: a rule that can reject is a rule that can lose what somebody typed.
+  So a cell that breaks its rule is underlined, counted in the status bar, and
+  the status bar says what the rule wanted — and the number underneath is still
+  the number they typed. It is also why the marking is worth having, because
+  Excel validates only what is *typed*: paste, fill and import all walk past it
+  silently, which is exactly how a validated column fills up with values that
+  break its own rule. Here the rule is re-read on every render, so a value that
+  arrived by any road at all is checked the same way. The rules go into the
+  `.xlsx` as real `dataValidation` elements, so the dropdown is a dropdown in
+  Excel too.
+
+  Long text can **wrap** rather than running off past the edge — which cost
+  more than a line of CSS, because a cell is an `<input>` and no CSS folds
+  one; a wrapped cell is drawn as a text box that can hold lines, and only a
+  wrapped one, so every other cell is what it always was. Alt-Return puts a
+  break in by hand.
+
+  And a block can be **joined into one cell**, which is what a title across the
+  top of a gradebook needs. Joining keeps the top-left value and clears the
+  rest, and says how many it cleared. Keeping them hidden instead would have
+  been the tempting thing and the wrong one: `=SUM(A1:C1)` would then add up
+  two values nobody can see, on a sheet that shows one — the hidden-row trap
+  again, with no filter visible to explain it. So what is shown is what is
+  summed, and undo takes back the block and the values together. Both go into
+  the `.xlsx` as what they are: a real `mergeCell`, and a real `wrapText`
+  alignment.
+
+  And the corner of the selection is a **fill handle**: drag it to pull a
+  formula down a column or across a row, or press it to fill as far as the
+  column beside it goes — which is what double-clicking it does in Excel, and
+  is a real button with a name, so it works from the keyboard too. It is also
+  what finally makes `$` mean something on the screen: until something moved a
+  reference, nothing needed holding still.
+
   What it can now do to a sheet, none of which it could before: **rows and
   columns inserted and deleted in the middle**, with every formula rewritten to
   follow — a range a deletion reached into *shrinks* rather than breaking, and
@@ -546,9 +663,35 @@ model in it or needs a key:
   beside the pictures — percentages, money, decimal places, bold, alignment —
   none of which change the number underneath. **Undo and redo** cover all of
   it, one step per thing you did.
+  And it can **chart** what is in it: select a block, Insert → Chart, and
+  columns, bars, a line or a pie are drawn under the grid in your own accent,
+  from the *answers* rather than from the text, so a column of `=B2*C2` charts
+  as the products. A bar starts at zero and a line does not have to — the
+  first is how a chart lies and the second is how one stops saying anything —
+  and a chart says what it is leaving out, because a pie draws one series and
+  a column of grade letters cannot be drawn at all. The chart goes into the
+  `.xlsx` as a live one, pointing at `'Term marks'!$B$2:$B$5`, so editing the
+  cell in Excel moves the bar; the picture saves on its own as an `.svg` with
+  its colours resolved. Data → **Analyse** sends the same numbers to the
+  statistics screen — mean, spread, correlation, a fitted line — which until
+  now could only be reached by pasting a table into it.
   It opens on **templates** — a to-do list, a monthly and a term budget, a
-  reading tracker, a lab's readings — each arriving with its totals already
-  written, beside the gradebook built from your own syllabus's weights. Out as
+  reading tracker, a lab's readings, a grade calculator and a GPA planner —
+  each arriving with its totals already written, beside the gradebook built
+  from your own syllabus's weights.
+
+  Those last two also come **built from what the app already holds**. The grade
+  calculator is weighted the way your syllabus weights it. The **GPA planner**
+  lists this term's courses with their credits, adds what is already on your
+  record, and answers the question a student actually asks in week ten: *what
+  would the rest of this term have to average for me to reach 3.6?* — and says
+  when the answer is out of reach, rather than printing 10.95 and leaving you
+  to work that out. The grade-point scale is a visible table in the sheet that
+  every lookup reads, because a GPA depends entirely on what an A is worth and
+  schools disagree; if yours counts A+ as 4.3, that is one cell to change and
+  the whole sheet follows. A term GPA counts the credits that *have* a grade,
+  not the credits taken — dividing by the latter makes one A in a ten-credit
+  term read 1.2. Out as
   a real `.xlsx` **with the formulas and the formats still in it**, colours and
   borders included — a CSV of a gradebook is the answers with the working
   thrown away — or as a CSV, a Markdown table, or a table dropped into a
