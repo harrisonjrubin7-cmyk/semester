@@ -41,3 +41,44 @@ describe('the assistant button', () => {
     expect(SHEET).toMatch(/\.scrollarea \{[^}]*padding-bottom: var\(--assistant-strip\)/s);
   });
 });
+
+/**
+ * And the strip reaches the bottom of a screen that is taller than one.
+ *
+ * `.pane-body` is `height: 100%` on purpose — it is what lets the chat's
+ * column, the springboard and the slide frame resolve their own percentage
+ * heights — so on any screen with more than a screenful in it the content
+ * overflows that box rather than being laid out inside it. A scroll
+ * container's end padding sits after its *in-flow* content, and the in-flow
+ * content there ends at one screenful; the overflowing part runs past it.
+ *
+ * So the padding on `.scrollarea` was reserving nothing at all on exactly
+ * the screens that need it. Measured on Today at 390x844 before the fix:
+ * `.pane-body` 552px, the feed inside it 1,288px and overflowing, and the
+ * last line of the last card under the button with no scroll left to bring
+ * it clear.
+ *
+ * The pseudo-element is a child of `.pane-body` rather than a sibling, so it
+ * follows the overflowing content in the same flow and carries the
+ * reservation out to wherever that content really ends.
+ */
+describe('a screen taller than the window', () => {
+  it('carries the reservation past what overflows the pane', () => {
+    expect(SHEET).toMatch(/\.pane-body::after \{[^}]*height: var\(--assistant-strip\)/s);
+    expect(SHEET).toMatch(/\.pane-body::after \{[^}]*content: ''/s);
+  });
+
+  it('does not reserve it on a screen that is the whole box', () => {
+    // The button is not drawn on those — see `fills()` in `shell/exempt.ts` —
+    // and 76px of nothing under a composer meant to sit on the bottom edge is
+    // the fault `.is-filled` exists to avoid.
+    expect(SHEET).toMatch(/\.scrollarea\.is-filled \.pane-body::after \{[^}]*content: none/s);
+  });
+
+  it('leaves the height that the percentage chain hangs off', () => {
+    // `min-height` here instead would be the tempting fix and the wrong one:
+    // a percentage height resolves against a definite parent, and this is
+    // what makes it definite.
+    expect(SHEET).toMatch(/\.pane-body \{[^}]*height: 100%/s);
+  });
+});
