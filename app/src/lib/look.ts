@@ -773,25 +773,26 @@ export function homeTitle(nav: string | undefined): string {
  * is not an app.
  *
  * The fallback is whatever the app currently defaults to, and it has moved
- * twice for the same reason both times. It was the tab bar, then the
- * workspace, and it is the guides now. Answering a corrupt key with a
- * navigation the app no longer defaults to would strand exactly the person
- * this function exists for: the one whose stored value cannot be read, who
- * now gets an app that does not match the one on their other device.
- * `chrome.test.ts` holds this to `DEFAULT_PERSISTED.nav` rather than to the
- * literal, so the two cannot drift apart again.
+ * three times for the same reason every time. It was the tab bar, then the
+ * workspace, then the guides, and it is the workspace again. Answering a
+ * corrupt key with a navigation the app no longer defaults to would strand
+ * exactly the person this function exists for: the one whose stored value
+ * cannot be read, who now gets an app that does not match the one on their
+ * other device. `chrome.test.ts` holds this to `DEFAULT_PERSISTED.nav` rather
+ * than to the literal, so the two cannot drift apart again.
  *
- * ## The guides draw no chrome, and that is still a safe fallback
+ * ## Whatever it falls back to has to draw a way on
  *
  * Worth saying, because the bug this function exists for was *no navigation
- * at all*. The guides draw no bar, rail or shelves — but their home screen is
- * the course grid, which is a navigation on the screen rather than beside it,
- * the way the springboard's icons are. So a corrupt key still lands somebody
- * on a screen full of ways on. What must never happen is falling back to a
- * name no branch matches, which is what this function prevents.
+ * at all*. The workspace is the easy case — it draws a tab strip and a search
+ * field. The guides were the case worth checking: no bar, no rail, no
+ * shelves, but a home screen that is the course grid, which is a navigation
+ * on the screen rather than beside it, the way the springboard's icons are.
+ * Either is safe. What must never happen is falling back to a name no branch
+ * matches, which is what this function prevents.
  */
 export function navOf(id: string | undefined): NavMode {
-  return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'guides';
+  return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'workspace';
 }
 
 /**
