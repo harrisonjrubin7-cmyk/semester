@@ -14,6 +14,9 @@
  * that needs the time is handed it.
  */
 
+// Day and month names come from `lib/date.ts`; see the note there.
+import { DOW, MONTHS } from './date';
+
 /** A message, as little of one as any of this needs. */
 export interface Say {
   id: string;
@@ -51,9 +54,6 @@ export const FACES = ['👍', '🙏', '🎯', '😄', '😮', '😕'] as const;
 const sameDay = (a: Date, b: Date) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
 /** "3:42p" — the clock on a message, in the app's own short form. */
 export function clockAt(iso: string): string {
   const at = new Date(iso);
@@ -79,7 +79,7 @@ export function listStamp(iso: string, now: Date): string {
   if (sameDay(at, yesterday)) return 'Yesterday';
   const week = new Date(now);
   week.setDate(now.getDate() - 6);
-  if (at.getTime() >= week.setHours(0, 0, 0, 0)) return DAYS[at.getDay()];
+  if (at.getTime() >= week.setHours(0, 0, 0, 0)) return DOW[at.getDay()];
   return `${at.getDate()} ${MONTHS[at.getMonth()]}`;
 }
 
@@ -91,7 +91,7 @@ export function dayLabel(iso: string, now: Date): string {
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
   if (sameDay(at, yesterday)) return 'Yesterday';
-  return `${DAYS[at.getDay()]}, ${at.getDate()} ${MONTHS[at.getMonth()]}`;
+  return `${DOW[at.getDay()]}, ${at.getDate()} ${MONTHS[at.getMonth()]}`;
 }
 
 // ── Mentions ──────────────────────────────────────────────────────────────

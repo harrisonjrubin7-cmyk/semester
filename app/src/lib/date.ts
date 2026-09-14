@@ -26,9 +26,65 @@ export const MONTHS = [
   'Dec',
 ];
 
+/*
+ * The calendar's vocabulary, and the only copy of it.
+ *
+ * `MONTHS` above and these two were exported here all along, and five other
+ * files had grown their own copy anyway, under five different names:
+ * `SHORT` in `lib/ahead.ts`, `DAY_NAMES` in `lib/clocks.ts`, `DAYS` in
+ * `lib/mailbox.ts` and `lib/roomchat.ts`, `DAY_LETTERS` in
+ * `screens/Clocks.tsx`, and `MONTHS` again in four places. Every one of them
+ * was indexed by `getDay()` or `getMonth()` and every one said the same
+ * thing, so nothing was visibly wrong — which is the problem. Nine copies is
+ * nine chances for one to drift, and the drift would show up as one screen
+ * saying Tues where the rest say Tue, in whichever week somebody edited.
+ */
 export const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const DOW_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+/**
+ * The months written out, and the same list lowercased for matching.
+ *
+ * `MONTHS` above is the three-letter form a date is *drawn* with;
+ * `MONTH_NAMES` is the form it is *said* with, and `MONTH_WORDS` is what a
+ * parser compares against after lowercasing whatever it was handed. Four
+ * files had one of the latter two under their own name — `MONTH_NAMES` in
+ * `lib/monthgrid.ts`, `MONTHS` in `lib/suggest.ts`, `MONTHS` in
+ * `lib/capture.ts`, `MONTH_WORDS` in `lib/registrar.ts` — which is the same
+ * drift risk as the short forms, one layer up.
+ *
+ * `MONTH_WORDS` is derived rather than typed out a second time: two lists of
+ * twelve that must stay in the same order is exactly the thing that goes
+ * wrong silently.
+ */
+export const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
+
+export const MONTH_WORDS = MONTH_NAMES.map((m) => m.toLowerCase());
+
+/** Weekday names in full — for a label read aloud, where `DOW` is for the eye. */
+export const DAY_NAMES = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
 
 /**
  * YYYY-MM-DD in local time.

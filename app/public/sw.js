@@ -21,6 +21,17 @@ const VERSION = 'semester-v1';
 const SHELL = `${VERSION}-shell`;
 const MEDIA = `${VERSION}-media`;
 
+/*
+ * Where a shared file waits between the worker and the page.
+ *
+ * Declared up here rather than beside `stashShared` because `activate` has to
+ * know about it, and `activate` is written above that. It is not one of this
+ * worker's own caches — it is a handover — and the sweep below has to leave it
+ * alone.
+ */
+const SHARE_CACHE = 'semester-shared';
+const SHARE_KEY = './__shared';
+
 // The worker is served from wherever the app is — '/' locally, '/semester/' on
 // GitHub Pages — so every path it holds is derived from its own location. A
 // hard-coded '/index.html' would cache the wrong page, or none.
@@ -76,13 +87,26 @@ self.addEventListener('message', (event) => {
   );
 });
 
+/*
+ * Drop the caches a previous version of this worker left, and nothing else.
+ *
+ * `semester-shared` is not one of them. It is the handover slot for a file
+ * somebody shared into the app, it does not carry the version in its name, and
+ * the sweep used to delete it — which matters because `install` calls
+ * `skipWaiting`, so a deploy activates the moment it installs. Share a PDF into
+ * the app while a new build is going out and the worker stashed the file, the
+ * new worker activated, the file was deleted, and the importer opened with its
+ * empty file picker as if nothing had been shared. The same sweep also threw
+ * away a share that was opened and never collected, which `lib/shared.ts`
+ * treats as somebody else's file this device is still holding.
+ */
+const KEEP_CACHES = (key) => key.startsWith(VERSION) || key === SHARE_CACHE;
+
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))),
-      )
+      .then((keys) => Promise.all(keys.filter((k) => !KEEP_CACHES(k)).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -102,9 +126,6 @@ const isMedia = (url) =>
  * This is checked before the GET guard below, because it is the one POST this
  * worker has any business answering.
  */
-const SHARE_CACHE = 'semester-shared';
-const SHARE_KEY = './__shared';
-
 async function stashShared(request) {
   try {
     const form = await request.formData();

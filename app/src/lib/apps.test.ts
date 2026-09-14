@@ -5,6 +5,7 @@ import { glyphFor } from '../components/icons.pick';
 import { GROUPS, offered, saysFor, shortFor } from './nav';
 import { headerRow } from './header';
 import { writeOrder } from './launcher';
+import type { Role } from './role';
 import type { Capabilities } from './school';
 import type { Screen } from './types';
 
@@ -24,14 +25,46 @@ import type { Screen } from './types';
 const CAPS: Capabilities = { mealPlan: 'none', housing: false, campusMap: false };
 const FULL: Capabilities = { mealPlan: 'swipes', housing: true, campusMap: true };
 
-const flat = (caps: Capabilities, saved?: string) =>
-  appShelves(caps, saved).flatMap((shelf) => shelf.apps.map((d) => d.screen));
+const flat = (caps: Capabilities, saved?: string, role?: Role) =>
+  appShelves(caps, saved, role).flatMap((shelf) => shelf.apps.map((d) => d.screen));
 
 describe('the app launcher', () => {
   it('holds every screen this school offers, once each', () => {
     const shown = flat(FULL);
     expect([...shown].sort()).toEqual(offered(FULL).map((d) => d.screen).sort());
     expect(new Set(shown).size).toBe(shown.length);
+  });
+
+  /*
+   * The third gate, which this grid used not to carry.
+   *
+   * `offered` takes a role and `destinationsFor` defaults one, so
+   * `appShelves` could omit it and still compile — and did. Search, the
+   * favourites row and Lately all went through the role-aware path; only the
+   * grid did not, so a teacher's launcher held Housing, Costs, The degree and
+   * five more that every other surface had already stopped offering them. The
+   * assertion is deliberately the same shape as the one above: the grid shows
+   * exactly what the app offers *this person*, not what it offers a student.
+   */
+  it('holds what this role is offered, not what a student is', () => {
+    for (const role of ['student', 'faculty'] as Role[]) {
+      const shown = flat(FULL, undefined, role);
+      expect([...shown].sort(), `the ${role} launcher`).toEqual(
+        offered(FULL, role).map((d) => d.screen).sort(),
+      );
+    }
+  });
+
+  it('drops the student-only screens for a teacher', () => {
+    const student = new Set(flat(FULL, undefined, 'student'));
+    const faculty = new Set(flat(FULL, undefined, 'faculty'));
+    // Named rather than counted: a screen leaving the student list for an
+    // unrelated reason should not quietly satisfy this.
+    for (const screen of ['degree', 'costs', 'housing', 'applying'] as Screen[]) {
+      expect(student.has(screen), `${screen} is a student's`).toBe(true);
+      expect(faculty.has(screen), `${screen} is not a teacher's`).toBe(false);
+    }
+    expect(faculty.size).toBeLessThan(student.size);
   });
 
   it('leaves out what the school has no equivalent of', () => {

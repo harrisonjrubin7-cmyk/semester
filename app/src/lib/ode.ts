@@ -36,6 +36,7 @@
  */
 
 import { value, type Node, type Scope } from './calc';
+import { asArrows } from './fields';
 import type { Drawn, Frame, Point } from './plot';
 
 /** How the walk is taken: the smaller the step, the longer it takes and the less it drifts. */
@@ -167,12 +168,253 @@ export function slopes(
   return out;
 }
 
+/**
+ * Two quantities walked together, which is what both of the harder kinds are.
+ *
+ * A second-order equation is a pair: `y'' = f(x, y, y')` is `y' = v` and
+ * `v' = f`, with x running along. A system is a pair too — `x' = f(x, y)`,
+ * `y' = g(x, y)` — with t running along instead. Same arithmetic, same
+ * Runge–Kutta, one implementation, so the two cannot drift apart in accuracy
+ * or in where they stop.
+ */
+export function stepPair(
+  f: (t: number, a: number, b: number) => number,
+  g: (t: number, a: number, b: number) => number,
+  t: number,
+  a: number,
+  b: number,
+  h: number,
+): { a: number; b: number } {
+  const a1 = f(t, a, b);
+  const b1 = g(t, a, b);
+  const a2 = f(t + h / 2, a + (h * a1) / 2, b + (h * b1) / 2);
+  const b2 = g(t + h / 2, a + (h * a1) / 2, b + (h * b1) / 2);
+  const a3 = f(t + h / 2, a + (h * a2) / 2, b + (h * b2) / 2);
+  const b3 = g(t + h / 2, a + (h * a2) / 2, b + (h * b2) / 2);
+  const a4 = f(t + h, a + h * a3, b + h * b3);
+  const b4 = g(t + h, a + h * a3, b + h * b3);
+  return {
+    a: a + (h / 6) * (a1 + 2 * a2 + 2 * a3 + a4),
+    b: b + (h / 6) * (b1 + 2 * b2 + 2 * b3 + b4),
+  };
+}
+
+/**
+ * A second-order equation, drawn as y against x.
+ *
+ * `y'' = -y` is a spring and `y'' = -y - 0.2y'` is a spring in treacle, and
+ * both need two conditions to pin down: where it starts and how fast it is
+ * going. The rate is carried alongside but not drawn — the picture is still
+ * y against x, which is what was asked for.
+ */
+export function second(
+  rate: (x: number, y: number, v: number) => number,
+  start: { x: number; y: number; v: number },
+  frame: Frame,
+  steps = STEPS,
+): Point[] {
+  const height = frame.y1 - frame.y0;
+  const band = { low: frame.y0 - height * STRAY, high: frame.y1 + height * STRAY };
+  const each = (to: number): Point[] => {
+    const h = (to - start.x) / Math.max(2, Math.round(steps / 2));
+    if (!Number.isFinite(h) || h === 0) return [];
+    const out: Point[] = [{ x: start.x, y: start.y }];
+    let x = start.x;
+    let y = start.y;
+    let v = start.v;
+    for (let i = 0; i < Math.max(2, Math.round(steps / 2)); i += 1) {
+      /*
+       * The pair written out rather than handed to `stepPair`.
+       *
+       * The first half of a second-order equation is always `y' = v` — a
+       * function that returns its own argument — and saying that in four
+       * lines of Runge–Kutta is clearer than passing an identity in.
+       */
+      const k1y = v;
+      const k1v = rate(x, y, v);
+      const k2y = v + (h * k1v) / 2;
+      const k2v = rate(x + h / 2, y + (h * k1y) / 2, v + (h * k1v) / 2);
+      const k3y = v + (h * k2v) / 2;
+      const k3v = rate(x + h / 2, y + (h * k2y) / 2, v + (h * k2v) / 2);
+      const k4y = v + h * k3v;
+      const k4v = rate(x + h, y + h * k3y, v + h * k3v);
+      const nextY = y + (h / 6) * (k1y + 2 * k2y + 2 * k3y + k4y);
+      const nextV = v + (h / 6) * (k1v + 2 * k2v + 2 * k3v + k4v);
+      if (!Number.isFinite(nextY) || !Number.isFinite(nextV)) break;
+      x += h;
+      y = nextY;
+      v = nextV;
+      out.push({ x, y });
+      if (y < band.low || y > band.high) break;
+    }
+    return out;
+  };
+  const back = each(frame.x0);
+  const on = each(frame.x1);
+  return [...back.slice(1).reverse(), ...on];
+}
+
+/**
+ * A system's trajectory in the plane the two quantities live in.
+ *
+ * `x' = x - xy`, `y' = xy - y` is predator and prey, and the picture of it is
+ * not either quantity against time — it is the loop they make against each
+ * other. Time runs along the curve without appearing on either axis, which is
+ * exactly what a phase plane is.
+ *
+ * ## Why the step is chosen by distance rather than by time
+ *
+ * A fixed step in t crawls where the system is slow and jumps where it is
+ * fast, so the same curve is over-sampled at one end and ragged at the other —
+ * and a system that is slow somewhere and fast elsewhere is the ordinary case
+ * rather than the awkward one. Stepping by roughly a constant distance on the
+ * page instead gives an even curve wherever it goes, and it is what makes one
+ * setting work for a slow loop and a fast spiral alike.
+ */
+export function trajectory(
+  dx: (x: number, y: number) => number,
+  dy: (x: number, y: number) => number,
+  start: Point,
+  frame: Frame,
+  steps = 1400,
+): Point[] {
+  const width = frame.x1 - frame.x0;
+  const height = frame.y1 - frame.y0;
+  const band = {
+    x0: frame.x0 - width * 2,
+    x1: frame.x1 + width * 2,
+    y0: frame.y0 - height * 2,
+    y1: frame.y1 + height * 2,
+  };
+  /** A step that moves about this much of the window, whatever the speed is. */
+  const share = 1 / 400;
+  const each = (way: 1 | -1): Point[] => {
+    const out: Point[] = [start];
+    let { x, y } = start;
+    for (let i = 0; i < steps; i += 1) {
+      // The pace in windows per unit of time, which is what makes one setting
+      // work for a slow loop and a fast spiral alike.
+      const pace = Math.hypot(dx(x, y) / width, dy(x, y) / height);
+      // Standing still is an equilibrium, and a trajectory that starts on one
+      // stays there: a point rather than a curve, and drawn as nothing.
+      if (!Number.isFinite(pace) || pace < 1e-12) break;
+      const h = way * Math.min(share / pace, 1e3);
+      const next = stepPair((_, a, b) => dx(a, b), (_, a, b) => dy(a, b), 0, x, y, h);
+      if (!Number.isFinite(next.a) || !Number.isFinite(next.b)) break;
+      x = next.a;
+      y = next.b;
+      out.push({ x, y });
+      if (x < band.x0 || x > band.x1 || y < band.y0 || y > band.y1) break;
+      /*
+       * A closed loop is drawn once.
+       *
+       * Without this a predator–prey cycle is drawn over itself for as many
+       * steps as it is given: the same picture, at a hundred times the cost,
+       * and the walk never reaching anywhere new.
+       */
+      if (i > 30 && Math.hypot((x - start.x) / width, (y - start.y) / height) < share) break;
+    }
+    return out;
+  };
+  return [...each(-1).slice(1).reverse(), ...each(1)];
+}
+
 /** The equation as a function of the point it is at. */
 export function rateOf(body: Node, scope: Scope): (x: number, y: number) => number {
   return (x: number, y: number) => {
     const got = value(body, { ...scope, vars: { ...scope.vars, x, y } });
     return Array.isArray(got) ? (got[0] ?? NaN) : got;
   };
+}
+
+/**
+ * A second-order equation as a function of where it is and how fast it is going.
+ *
+ * `y'` is bound as an ordinary variable, which is why `lib/calc.ts` reads a
+ * prime as part of a name: `y'' = -y - 0.2y'` is then just an expression in
+ * three letters, and the walk supplies all three.
+ */
+export function rateOfSecond(body: Node, scope: Scope): (x: number, y: number, v: number) => number {
+  return (x: number, y: number, v: number) => {
+    const got = value(body, { ...scope, vars: { ...scope.vars, x, y, "y'": v } });
+    return Array.isArray(got) ? (got[0] ?? NaN) : got;
+  };
+}
+
+/**
+ * A `y'' = …` line as what the plot draws: the curve, or the family of them.
+ *
+ * No slope field underneath, unlike the first-order picture — and that is not
+ * an omission. A second-order equation does not give a slope at a point: it
+ * gives one at a point *and a speed*, so there is nothing to draw on the plane
+ * that would be true. Drawing one anyway is the kind of picture that teaches
+ * something false.
+ */
+export function asSecond(
+  body: Node,
+  starts: { x: number; y: number; v: number }[],
+  scope: Scope,
+  frame: Frame,
+  steps = STEPS,
+): Drawn {
+  const rate = rateOfSecond(body, scope);
+  const from =
+    starts.length > 0
+      ? starts
+      : spread(frame, 7).map((p) => ({ x: p.x, y: p.y, v: 0 }));
+  const curves = from.map((start) => second(rate, start, frame, steps)).filter((c) => c.length > 1);
+  return {
+    paths: curves,
+    points: from.map((s) => ({ x: s.x, y: s.y })),
+    shades: curves.map(() => 1),
+  };
+}
+
+/**
+ * A system as its phase plane: the field it describes, and the paths through it.
+ *
+ * The arrows are the same ones a `(f, g)` line draws — one implementation, in
+ * `lib/fields.ts` — because a system and a field are the same object seen two
+ * ways, and a phase plane with the trajectories drawn over the arrows is the
+ * picture a dynamics course is about.
+ */
+export function asSystem(
+  dxBody: Node,
+  dyBody: Node,
+  starts: Point[],
+  scope: Scope,
+  frame: Frame,
+): Drawn {
+  const dx = rateOf(dxBody, scope);
+  const dy = rateOf(dyBody, scope);
+  const field = asArrows(dxBody, dyBody, scope, frame);
+  const from = starts.length > 0 ? starts : corners(frame);
+  const paths = from
+    .map((start) => trajectory(dx, dy, start, frame))
+    .filter((path) => path.length > 1);
+  return {
+    paths,
+    points: starts,
+    arrows: field.arrows,
+    shades: paths.map(() => 1),
+  };
+}
+
+/**
+ * Where to start a system's trajectories when nobody said.
+ *
+ * Along the diagonal rather than on a grid: a grid of starts on a system with
+ * one loop draws the same loop a dozen times, while a diagonal crosses the
+ * families instead of following one.
+ */
+function corners(frame: Frame, count = 5): Point[] {
+  return Array.from({ length: count }, (_, i) => {
+    const part = (i + 1) / (count + 1);
+    return {
+      x: frame.x0 + (frame.x1 - frame.x0) * part,
+      y: frame.y0 + (frame.y1 - frame.y0) * part,
+    };
+  });
 }
 
 /**

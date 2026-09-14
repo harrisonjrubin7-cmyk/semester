@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { fileURLToPath } from 'node:url'
+import { publicCalendarUrl } from './src/lib/publichost.ts'
 
 /**
  * The dev server doubles as the OAuth token proxy.
@@ -25,13 +26,76 @@ const forward = (target: string, path: string) => ({
   rewrite: () => path,
 })
 
+/** One megabyte. A term's calendar is a few hundred kilobytes at the outside. */
+const FEED_MAX_BYTES = 1_000_000
+
+/** Long enough for a slow campus server, short enough not to hold the dev server. */
+const FEED_TIMEOUT_MS = 15_000
+
+/**
+ * The body, up to the cap, and nothing past it.
+ *
+ * Read through the stream rather than with `.text()`: a cap checked after the
+ * whole body is in memory is not a cap, it is a way to spend the memory it was
+ * meant to protect. Cancelling the stream is what stops the transfer.
+ */
+async function readCapped(response: Response): Promise<string | null> {
+  const declared = Number(response.headers.get('content-length') ?? '')
+  if (Number.isFinite(declared) && declared > FEED_MAX_BYTES) {
+    await response.body?.cancel()
+    return null
+  }
+  if (!response.body) return ''
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let bytes = 0
+  let out = ''
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      bytes += value.byteLength
+      if (bytes > FEED_MAX_BYTES) {
+        await reader.cancel()
+        return null
+      }
+      out += decoder.decode(value, { stream: true })
+    }
+  } finally {
+    reader.releaseLock()
+  }
+  return out + decoder.decode()
+}
+
 /**
  * `/feed?url=…` fetches a calendar the page cannot fetch itself.
  *
  * A calendar server sends no CORS headers, so a subscribed Brightspace or
  * Outlook link is unreachable from the browser. This forwards the one request
- * and returns the text — it reads nothing, keeps nothing, and only ever speaks
- * https, so it cannot be pointed at the machine it runs on.
+ * and returns the text — it reads nothing and keeps nothing.
+ *
+ * It is a calendar reader, not a proxy, and the difference is three refusals.
+ * It used to be one: https, on the grounds that https "cannot be pointed at
+ * the machine it runs on", which is not true of `https://127.0.0.1:8443/` and
+ * not true of any private name with a certificate on it. Everything this
+ * process can reach and a browser cannot — a database on the LAN, the router,
+ * the metadata service at `169.254.169.254` on a cloud box — was one query
+ * string away. `vite --host` is how this app is opened on a phone, and at that
+ * point the forwarder belongs to everyone on the wifi rather than to the
+ * developer.
+ *
+ *   1. **https, to a public host.** `publicCalendarUrl` refuses loopback,
+ *      link-local, the private ranges and the local-network names, by literal
+ *      and by name — and again on wherever a redirect landed, because a
+ *      redirect into `169.254.169.254` is the whole trick.
+ *   2. **A calendar, or nothing.** The body has to begin a `VCALENDAR`, so
+ *      this cannot fetch a page, a JSON API or an image even once.
+ *   3. **A bounded read.** One megabyte and fifteen seconds, whichever comes
+ *      first, so a slow or endless address cannot hold the dev server open.
+ *
+ * The same three, in the same order, as the deployed route in
+ * `supabase/functions/fetchcal/index.ts`. See `src/lib/publichost.ts` for why
+ * the host rule is written twice rather than imported once.
  */
 const icsProxy = () => ({
   name: 'ics-proxy',
@@ -53,20 +117,45 @@ const icsProxy = () => ({
     server.middlewares.use('/feed', (req, res) => {
       const target = new URL(req.url ?? '', 'http://local').searchParams.get('url')
       void (async () => {
-        if (!target || !/^https:\/\//i.test(target)) {
+        const asked = publicCalendarUrl(target ?? '')
+        if (!asked.ok) {
           res.statusCode = 400
-          res.end('Pass ?url= an https calendar address.')
+          res.end(asked.why)
           return
         }
         try {
-          const upstream = await fetch(target, { redirect: 'follow' })
-          const body = await upstream.text()
+          const upstream = await fetch(asked.url, {
+            redirect: 'follow',
+            signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+            headers: { Accept: 'text/calendar, text/plain;q=0.8, */*;q=0.1' },
+          })
+          // Where the redirects actually landed, held to the same rule as the
+          // address that was asked for.
+          if (!publicCalendarUrl(upstream.url || asked.url.toString()).ok) {
+            res.statusCode = 400
+            res.end('That link redirects somewhere this will not follow.')
+            return
+          }
+          const body = await readCapped(upstream)
+          if (body === null) {
+            res.statusCode = 413
+            res.end('That calendar is larger than this will fetch.')
+            return
+          }
+          if (upstream.ok && !/BEGIN:VCALENDAR/i.test(body.slice(0, 4096))) {
+            res.statusCode = 422
+            res.end('That address answered with something that is not a calendar.')
+            return
+          }
           res.statusCode = upstream.status
           res.setHeader('Content-Type', 'text/calendar; charset=utf-8')
           res.end(body)
         } catch (e) {
           res.statusCode = 502
-          res.end(e instanceof Error ? e.message : 'The calendar could not be reached.')
+          // Deliberately not the thrown message: it can carry the URL, and a
+          // feed URL is a password.
+          void e
+          res.end('The calendar could not be reached.')
         }
       })()
     })

@@ -44,7 +44,7 @@ import { currentLook } from '../state/shape';
 import { directoryOf } from '../lib/look';
 import { allApps, categories, isFavourite, narrowApps, readFavourites, toggleFavourite } from '../lib/desk';
 import type { Destination } from '../lib/nav';
-import { lately, saysFor } from '../lib/nav';
+import { ALWAYS_TO_HAND, lately, saysFor } from '../lib/nav';
 import { secondLine } from '../lib/dim';
 import { glyphFor } from '../components/icons.pick';
 import { AppsIcon, NotesIcon, Search as SearchIcon, StarIcon } from '../components/Icons';
@@ -60,7 +60,6 @@ import type { Screen } from '../lib/types';
  * a screen visited before somebody changed university or switched to teaching
  * cannot come back here after this list has stopped offering it.
  */
-const HIDE_IN_LATELY: Screen[] = ['home', 'me', 'notifs'];
 
 export function Directory() {
   const { state, dispatch, school } = useStore();
@@ -94,7 +93,7 @@ export function Directory() {
   const apps = allApps(caps, state.role);
   const shown = narrowApps(apps, category, query, caps);
   const favourites = readFavourites(look.favourites, caps, state.role);
-  const recent = lately(state.recent, state.tabs, caps, HIDE_IN_LATELY, 4, state.role);
+  const recent = lately(state.recent, state.tabs, caps, ALWAYS_TO_HAND, 4, state.role);
   const chips = categories(caps, state.role);
 
   const star = (screen: Screen) =>

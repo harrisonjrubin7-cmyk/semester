@@ -102,48 +102,57 @@ describe('the workspace overlays', () => {
 });
 
 /**
- * The browser shell's home, and the sheet of glass that lay over it.
+ * The skip link has to win against the chrome it is drawn over.
  *
- * That shell draws the app's own screen behind its home — `.g-home-legacy`,
- * fixed over the window — so that what the app mounts over a screen (the
- * undo toast, a dialog, the capture box) still reaches the student. The
- * mount is `pointer-events: none` and hands them back with
- * `.g-home-legacy .device > *`.
+ * `.skip-link` declares `z-index: 100`, and `.device > *` — the blanket that
+ * gives every direct child `position: relative` and `z-index: 1` — comes
+ * later in `app.css` and weighs the same, so it takes both. The `position`
+ * half of that was found and fixed once already; the note above
+ * `.device > .skip-link` tells the story of the 42px band of empty black it
+ * left above the header.
  *
- * Between `.device` and the screen sit two wrappers that are the size of the
- * window, and that rule handed *them* the pointer too. Nothing on the home
- * could be clicked: not the tab strip, not the search field, not the
- * shortcuts, not Customize — measured with `elementFromPoint`, which
- * returned `.device-pane` at the centre of all twenty of them.
+ * The `z-index` half outlived it, because it has no wrong pixel to notice.
+ * Unfocused the link is translated off the top of the window and paints
+ * nothing, so the only state that shows the fault is the focused one — and
+ * there it showed plainly: pressing Tab on the workspace put the focus ring
+ * around a rectangle with the header and the tab strip painted over it, so
+ * the words "Skip to content" were behind them. `document.elementFromPoint`
+ * over the focused link returned `SPAN` and `BUTTON.btn` in five of the six
+ * layout-and-width combinations measured at the time — one of those layouts
+ * was the browser shell, which `SIMPLIFY-AUDIT.md` E4 has since removed. The
+ * rule below is unchanged by that: it is held on `app.css`, which every
+ * surviving layout wears.
  *
- * jsdom has no layout, so the hit test cannot live in a test. The rule that
- * decides it can: the wrappers give the pointer up, and the pane's own
- * children — the only overlays inside it, the body being `display: none`
- * here — take it back.
+ * That is exactly the failure the comment over `.skip-link` names: a link a
+ * sighted keyboard user cannot see is worse than no link, because they cannot
+ * tell where their focus went. jsdom computes no stacking, so the rule is
+ * held on the stylesheet.
  */
-describe('the browser shell over the legacy mount', () => {
-  const css = readFileSync('src/components/google-shell.css', 'utf8');
-  const at = (rule: string) => {
-    const i = css.indexOf(rule);
-    expect(i, `${rule} is still in google-shell.css`).toBeGreaterThan(-1);
-    return i;
+describe('the skip link', () => {
+  const css = readFileSync('src/styles/app.css', 'utf8');
+
+  /*
+   * Comments stripped first. The explanation inside `.device > .skip-link`
+   * quotes the `z-index: 1` it exists to beat, and a rule that reads its own
+   * documentation as a declaration would have passed while the bug was live.
+   */
+  const rule = (selector: string) => {
+    const at = css.indexOf(`${selector} {`);
+    expect(at, `\`${selector}\` is still in the sheet`).toBeGreaterThan(-1);
+    return css.slice(at, css.indexOf('}', at)).replace(/\/\*[\s\S]*?\*\//g, '');
   };
 
-  it('does not let the window-sized wrappers take the pointer', () => {
-    const hands = at('.g-home-legacy .device>*{pointer-events:auto}');
-    const gives = at('.g-home-legacy .deskwork-body,.g-home-legacy .deskwork-pane{pointer-events:none}');
-    // Same specificity, so the later one wins and the order is the rule.
-    expect(gives, 'the wrappers give the pointer up after the mount hands it out').toBeGreaterThan(
-      hands,
+  it('is lifted above the siblings that draw the chrome', () => {
+    const blanket = /z-index:\s*(\d+)/.exec(rule('.device > *'));
+    const link = /z-index:\s*(\d+)/.exec(rule('.device > .skip-link'));
+    expect(blanket, 'the blanket still sets a z-index to beat').not.toBeNull();
+    expect(link, 'the skip link sets its own, rather than trusting .skip-link').not.toBeNull();
+    expect(Number(link?.[1]), 'the focused link draws over the chrome').toBeGreaterThan(
+      Number(blanket?.[1]),
     );
   });
 
-  it('keeps the overlays inside the pane live', () => {
-    expect(at('.g-home-legacy .deskwork-pane>*{pointer-events:auto}')).toBeGreaterThan(
-      at('.g-home-legacy .deskwork-body,.g-home-legacy .deskwork-pane{pointer-events:none}'),
-    );
-    expect(at('.g-home-legacy [role=dialog]{pointer-events:auto}')).toBeGreaterThan(
-      at('.g-home-legacy .deskwork-body,.g-home-legacy .deskwork-pane{pointer-events:none}'),
-    );
+  it('keeps the position the same rule took from it', () => {
+    expect(rule('.device > .skip-link'), 'absolute, not in the flow').toMatch(/position:\s*absolute/);
   });
 });

@@ -215,7 +215,18 @@ function lex(source: string): Tok[] | string {
 
     // Letters run together are one name; Greek letters are letters. A space is
     // what separates two of them, which is the whole rule for `a sin(x)`.
-    const word = /^[A-Za-zα-ωΑ-Ωθφ°]+/.exec(source.slice(i));
+    /*
+     * A prime belongs to the name in front of it.
+     *
+     * `y''` is a variable here — the rate, and the rate of the rate — because
+     * that is how a second-order equation is written: `y'' = -y - 0.2y'` has
+     * `y'` in it as an ordinary quantity. `lib/ode.ts` binds both while it
+     * walks the equation, so nothing else in this file needs to know what they
+     * mean. Two at most: `y'''` is a third-order equation and this app does
+     * not solve one, so it reads as a name nothing has set rather than as
+     * something that half works.
+     */
+    const word = /^[A-Za-zα-ωΑ-Ωθφ°]+'{0,2}/.exec(source.slice(i));
     if (word) {
       const prior = out[out.length - 1];
       if (prior && prior.kind === 'name' && GLUED.has(prior.value)) prior.value += word[0];
