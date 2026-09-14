@@ -37,6 +37,7 @@ import { useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { outstanding } from '../lib/select';
 import { TabGlyph } from '../components/TabIcon';
+import { TabList } from '../components/ui';
 import {
   DOCK_KEY,
   afterMove,
@@ -406,31 +407,26 @@ export function Springboard() {
           </div>
 
           {pages.length > 1 && (
-            <div
-              role="tablist"
-              aria-label="Pages"
+            <TabList
+              label="Pages"
               style={{ display: 'flex', gap: 'var(--sp-4)', justifyContent: 'center', padding: '20px 0 8px' }}
-            >
-              {pages.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === page}
-                  aria-label={`Page ${i + 1}`}
-                  onClick={() => setPage(i)}
-                  className="bare"
-                  style={{
-                    width: 7,
-                    height: 7,
-                    flex: 'none',
-                    padding: 0,
-                    borderRadius: '50%',
-                    background: i === page ? 'var(--app-accent)' : 'var(--app-line)',
-                  }}
-                />
-              ))}
-            </div>
+              tabs={pages.map((_, i) => ({
+                id: String(i),
+                label: null,
+                ariaLabel: `Page ${i + 1}`,
+              }))}
+              value={String(page)}
+              onChange={(id) => setPage(Number(id))}
+              tabClassName="bare"
+              tabStyle={(on) => ({
+                width: 7,
+                height: 7,
+                flex: 'none',
+                padding: 0,
+                borderRadius: '50%',
+                background: on ? 'var(--app-accent)' : 'var(--app-line)',
+              })}
+            />
           )}
         </>
       )}
