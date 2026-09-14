@@ -49,6 +49,20 @@
           }
         ]
       }
+    ],
+    "mealPlanTiers": [
+      {
+        "name": "First-Year Plan",
+        "swipes": 335,
+        "dollars": 0,
+        "period": "term"
+      },
+      {
+        "name": "Upper-Division Plan",
+        "swipes": 305,
+        "dollars": 0,
+        "period": "term"
+      }
     ]
   }
 }
