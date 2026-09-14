@@ -1493,13 +1493,6 @@ a:hover {
   }
 }
 
-/* A hairline that catches light in the middle — the engraved rule. */
-.chrome-rule {
-  height: 1px;
-  border: 0;
-  margin: 0;
-  background: var(--chrome-edge);
-}
 
 /* The kicker above every screen title. */
 .kicker {
@@ -1929,31 +1922,7 @@ a:hover {
   text-wrap: balance;
 }
 
-/*
- * The same display figure, in the one colour, for the one thing it is for.
- *
- * Progress draws four numbers in a row — Ahead, Late, Done, Courses — and
- * drew them identically, so "6 late" and "42 ahead" arrived at the same
- * weight and the one you needed to see was the one you had to read to find.
- * The screen's own comment already assumed otherwise: "a permanent zero in
- * that column is a red number you learn to stop seeing" is why Late is
- * omitted at nothing rather than shown as 0, and the number it describes was
- * never coloured.
- *
- * It is not a new use of the colour. `--app-warn` is a passed deadline
- * everywhere else in the app — Today's banner, a late date in a deadline row,
- * a unit nothing has touched on the runway — and this cell is the count of
- * exactly that fact. It was the one place the app said it in silver.
- *
- * The gradient has to go for the colour to arrive at all: `.chrome-text`
- * paints the brushed metal through the glyphs and fills them with
- * transparent, so a `color` alone would be invisible under it.
- */
-.chrome-text.is-late {
-  background: none;
-  color: var(--app-warn);
-  -webkit-text-fill-color: var(--app-warn);
-}
+
 .device h1,
 .device h2,
 .device h3 {
@@ -2791,11 +2760,6 @@ input[type='search'].input {
   gap: var(--sp-5);
 }
 
-.soft-folder-tile {
-  text-align: left;
-  touch-action: none;
-}
-
 /*
  * Anything that can be dragged into a different place in its list.
  *
@@ -3564,19 +3528,6 @@ input[type='search'].input {
   border-radius: var(--r-sm);
 }
 
-/* The name box. Fixed width so the formula starts in the same place whether
-   the selection is A1 or AA100 — a field that slides sideways as you move
-   about the grid is a field you have to find again every time. */
-.fx-where {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 72px;
-  font-size: var(--type-sm);
-  font-variant-numeric: tabular-nums;
-  color: var(--app-dim);
-  border-right: 1px solid var(--app-line);
-}
 
 .fx-mark {
   flex: none;
@@ -3590,64 +3541,11 @@ input[type='search'].input {
   border-right: 1px solid var(--app-line);
 }
 
-.fx-field {
-  flex: 1;
-  min-width: 0;
-  height: 34px;
-  padding: 0 var(--sp-4);
-  font-size: var(--type-sm);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  color: var(--app-fg);
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-}
-
 /* The cell the formula bar is about, marked in the grid so the two are
    obviously one thing. */
 .cell-on {
   outline: 2px solid var(--app-accent);
   outline-offset: -2px;
-}
-
-.tabstrip {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin-top: var(--sp-6);
-  padding-top: var(--sp-4);
-  border-top: 1px solid var(--app-line);
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.tabstrip::-webkit-scrollbar {
-  display: none;
-}
-
-.tabstrip-tab {
-  flex: none;
-  max-width: 180px;
-  padding: var(--sp-3) var(--sp-5);
-  font-size: var(--type-sm);
-  color: var(--app-dim);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--r-sm);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tabstrip-tab:hover {
-  color: var(--app-fg);
-  background: var(--app-panel);
-}
-
-.tabstrip-tab[aria-current='true'] {
-  color: var(--app-accent-bright);
-  background: var(--app-hero);
-  border-color: var(--app-line);
 }
 
 /* ── The spreadsheet ──────────────────────────────────────────────────────
@@ -5717,13 +5615,6 @@ input[type='search'].input {
   margin: 0;
   font-size: var(--type-sm);
   line-height: var(--leading-normal);
-}
-
-.desk-sheet-label {
-  font-size: var(--type-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--app-dim);
 }
 
 /* The Dark/Light pair that `.desk-sheet-pair` and the `.desk-swatch` rules
