@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import {
   forget,
-  keep,
   read,
   rename,
   savedAt,
@@ -66,11 +65,6 @@ export function star(place: { screen: Screen; title: string; place: Action[] }):
   const was = savedAt(marks(), place.screen, place.place) !== null;
   put(toggle(marks(), place));
   return !was;
-}
-
-/** Save this place. Already saved is left exactly as it is. */
-export function keepPlace(place: { screen: Screen; title: string; place: Action[] }): void {
-  put(keep(marks(), place));
 }
 
 /** Whether this place is saved — what the star is drawn from. */
