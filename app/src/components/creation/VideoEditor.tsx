@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActionButton, FilePick, SectionLabel } from '../ui';
+import { ActionButton, FilePick, Notice, SectionLabel } from '../ui';
 import { secondLine } from '../../lib/dim';
 import { addFile, getFile } from '../../lib/files';
 import { download } from '../../lib/deliver';
@@ -453,20 +453,9 @@ export function VideoEditor({
       </p>
 
       {notice && (
-        <p
-          role="status"
-          style={{
-            fontSize: 'var(--type-base)',
-            lineHeight: 'var(--leading-normal)',
-            border: '1px solid var(--app-line)',
-            borderRadius: 'var(--r-md)',
-            padding: 'var(--sp-5)',
-            marginBlock: 'var(--sp-4)',
-            textWrap: 'pretty',
-          }}
-        >
+        <Notice>
           {notice}
-        </p>
+        </Notice>
       )}
 
       {url && clip ? (

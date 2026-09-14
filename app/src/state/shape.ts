@@ -792,7 +792,7 @@ export interface Ephemeral {
    */
   mathTab: 'write' | 'calculate' | 'graph' | 'library' | 'kept';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
-  meTab: 'you' | 'all' | 'task';
+  meTab: 'you' | 'task';
   /** Which shelf of the directory is showing under Everything. */
   meGroup: string;
   /**
@@ -1831,7 +1831,7 @@ export type Action =
   | { type: 'setCostsTab'; tab: CostsTab }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: CoursesTab }
-  | { type: 'setMeTab'; tab: 'you' | 'all' | 'task' }
+  | { type: 'setMeTab'; tab: 'you' | 'task' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
   /**

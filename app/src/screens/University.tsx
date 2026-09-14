@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { ActionButton, FilePick, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
@@ -361,18 +361,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       />
 
       {(notice || saveError) && (
-        <p
-          role="status"
-          style={{
-            fontSize: 'var(--type-sm)',
-            lineHeight: 'var(--leading-normal)',
-            border: '1px solid var(--app-line)',
-            borderRadius: 'var(--r-md)',
-            padding: 'var(--sp-5)',
-            marginBlock: 'var(--sp-4)',
-            textWrap: 'pretty',
-          }}
-        >
+        <Notice>
           {saveError || notice}
           {library.error && (
             <ActionButton
@@ -401,7 +390,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               Undo removal
             </ActionButton>
           )}
-        </p>
+        </Notice>
       )}
 
       {tab === 'overview' && (

@@ -32,7 +32,6 @@
  */
 
 import type { ChangeSource, CoursesTab, ReportGrain, Screen, StudyMode } from './types';
-import type { State } from '../state/shape';
 
 /** What a screen is currently about, if anything. */
 export interface Route {
@@ -49,7 +48,7 @@ export interface Route {
    * are there, not part of the address, and putting them in the hash would
    * mean every flip pushed a history entry.
    */
-  opens?: { report?: ReportGrain; changes?: ChangeSource; courses?: CoursesTab; meTab?: MeTab };
+  opens?: { report?: ReportGrain; changes?: ChangeSource; courses?: CoursesTab };
 }
 
 /**
@@ -123,7 +122,6 @@ export const LIBRARIES: Screen[] = ['write', 'sheet', 'deck'];
  * rather than merged does not belong here: sending somebody somewhere
  * unrelated is worse than telling them the link is dead.
  */
-type MeTab = State['meTab'];
 
 const RETIRED: Record<string, { screen: Screen; opens?: Route['opens'] }> = {
   // Three grains of one report — see `screens/Reports.tsx`. Each link says
@@ -143,9 +141,17 @@ const RETIRED: Record<string, { screen: Screen; opens?: Route['opens'] }> = {
   // measurements are there now; the copies and the restore are on Export,
   // which had them already.
   setStorage: { screen: 'data' as Screen },
-  // Three of the Everything screen's four views were the Progress tab beside
-  // it. The link opens the tab that held them.
-  everything: { screen: 'me' as Screen, opens: { meTab: 'all' } },
+  /*
+   * Twice retired, and the second time is why this no longer carries a tab.
+   *
+   * Three of the Everything *screen's* four views were the Progress tab
+   * beside it, so the screen went and this opened that tab. Then the
+   * workspace shell arrived with `screens/Directory.tsx` and the tab was a
+   * second directory again — so the tab went too, and the survivor is the
+   * screen. A link written when Everything was a screen now lands on the
+   * screen that is Everything.
+   */
+  everything: { screen: 'directory' as Screen },
 };
 
 /** A screen id is already url-safe; an account's own ids may not be. */

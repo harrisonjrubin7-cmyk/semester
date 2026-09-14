@@ -1,4 +1,441 @@
-# One app — the audit, second pass
+# One app — the audit, sixth pass
+
+Step 1 of `/simplify`, run again against the app as it is now. No code in this
+commit.
+
+Counted against `app/src` at `8e5774d`: **60 destinations** in `lib/nav.ts`, 82
+members of the `Screen` union, 100 screen files, 136 components, 8 shelves
+holding between five and eight each. Baseline before any change: `npm run lint`
+exit 0, `npm test` 311 files / 6673 tests passing.
+
+**The app grew by eleven destinations since the last audit was written**, and
+that is the whole reason for this pass. The fifth pass ran at `3a12e03` against
+50; since then `university`, `create`, `call`, `meet`, `draw`, `equations`,
+`write`, `sheet`, `groupwork` and the four Beyond workspaces — `athletics`,
+`career`, `family`, `pathway` — arrived across five ports. **None of them had
+been through this command.** The previous audits' clusters were re-checked and
+still hold; everything new below is new ground.
+
+**The headline is that the ported screens brought exactly one duplicate home
+with them, and it is also a layout bug.** The rest of what they brought is one
+UI block written six times and a short tail of dead exports. The screen count
+does not need to come down; one tab does.
+
+---
+
+## 0. What the previous five passes left, re-checked
+
+Two of the last audit's open items are now closed, and the check is worth
+recording because both were things it said it was *not* going to fix:
+
+| Left open at `3a12e03` | State now |
+| --- | --- |
+| **"Erase from this device" does not exist** — the app promised it in `lib/privacy.ts` and `lib/cloud.ts`, and no screen offered it | **Closed.** `lib/erase.ts` exists and `screens/Privacy.tsx:30` calls `eraseDevice`. The machinery the last pass kept rather than cut (`wipe`, `clearSnapshots`, `clearFiles`, `clearVersions`, `clearShared`) is the thing it now calls. |
+| **The `set*` census is the wrong net** — the Claude key bypassed the reducer, so no `set*` scan could see it | **Closed, and re-run on the wider net.** See §3: the null result is now real. |
+
+---
+
+## 1. Screen overlap
+
+### D1 — the application tracker, given two homes · **MERGE — cut the tab**
+
+`screens/Career.tsx` has six tabs. The second is not Career's:
+
+```
+$ grep -n "Applying" app/src/screens/Career.tsx
+28:import { Applying } from './Applying';
+195:      {tab === 'tracker' && <Applying />}
+```
+
+`applying` is a destination in its own right — Beyond shelf, its own `blurb`,
+`keywords` and `taskTags`, and a card on Today (`components/Applying.tsx`)
+putting recruiting deadlines beside the coursework they collide with. So
+pressing Career → Applications and opening Applications land on the identical
+body. One job, two homes — the shape §5 cut for Today's Report tab (T1) and
+#34 cut for Settings.
+
+Three things separate this from the four-times-reversed grade table (T2), and
+all three point the same way:
+
+- **The data was never duplicated, only the home.** Career's "Track it"
+  (`Career.tsx:435`) dispatches `addApplication` into `state.applications`,
+  which is exactly what `Applying` reads. `Career.tsx:47` says so out loud:
+  "embedded rather than reimplemented… Two trackers, one of which is nearly
+  the other, is how a student ends up with half their deadlines in each."
+  That reasoning is right and this merge keeps it — there is still one
+  tracker. It just stops having two front doors.
+- **It is a layout defect the codebase already warns about.** `Applying`
+  opens `<Page>` (`Applying.tsx:68`) and Career renders it inside its own
+  `<Page>`. That trips the `Inside` guard in `components/Page.tsx` — *"`<Page>`
+  inside `<Page>`. A screen has one frame; its sub-views are parts of it, not
+  screens of their own"* — which is doubled side padding and doubled trailing
+  space above the tab bar. T1 and T2 both needed a `bare` prop to embed a
+  screen; this embed has none, so it is not a considered embed.
+- **T2's deciding argument does not apply.** The grade table stayed a tab
+  because `Courses.tsx` had called it one of three views of the same four
+  courses since it was written, and because Courses is in `DEFAULT_TABS`.
+  Neither is true here: Career's own comment calls the tracker *another
+  screen*, and neither `career` nor `applying` is a default tab.
+
+**Verdict: the tab goes, the destination stays.** The destination is what the
+directory, the search box and the tab bar point at, and a tab cannot be any of
+those. Career keeps the hand-off it already has — "Track it" still writes to
+the tracker — and gains a row that opens it, which is what Settings does for
+eight other things.
+
+−1 tab, 0 destinations.
+
+### D2 — two screens called People · **KEEP both, rename the tab**
+
+`Career.tsx:66` labels a tab **People**. `people` is a destination labelled
+**People and letters**. Same word, two places, and this time the two are
+genuinely two questions:
+
+| | Store | Shape | Question |
+| --- | --- | --- | --- |
+| `career` → People | device library, `lib/career.ts:85` | `CareerContact`: name, organization, interests, **permission**, next, nextDate | who have I met in this industry, did they agree to be on a list, what is my next move |
+| `people` | `state/shape.ts`, `lib/letters.ts:35` | `Person` + `Visit` + `Ask`: role, courseId, email, every conversation logged, every letter asked for | which professor will write about me in two years, and have I given them anything to write |
+
+Merging them would move a device library into `state/shape.ts`, and the brief
+is explicit: *do not touch data shape to make a merge easier*. They are also
+the case the brief names — two things that look alike and are asked by a
+different person in a different mood.
+
+So the cost is the shared **name**, and that is the half that can be fixed for
+nothing. This is T3's precedent exactly, where Study's "Tonight" tab became
+"Revise" so it stopped colliding with the `tonight` screen. The tab becomes
+**Contacts**. Two jobs, two names, both still there.
+
+### D3 — the device-library notice, drawn six times · **SHARED COMPONENT**
+
+The six workspaces that keep their data in a device library each hand-draw the
+same status block, with byte-identical inline styles:
+
+```
+$ grep -rln "lib.error || notice\|notice || lib.error" app/src/screens
+Create.tsx  Career.tsx  Athletics.tsx  Family.tsx  Pathway.tsx  University.tsx
+```
+
+`role="status"`, a 1px `--app-line` border at `--r-md`, `--sp-5` padding,
+`--sp-4` block margin, `textWrap: 'pretty'` — and in four of the six, a
+`lib.blocked` branch rendering a "Download recovery copy" button where the
+only thing that differs is the filename string. Thirty-three files in the app
+render some `role="status"` block; these six render *the same one*.
+
+→ one `LibraryNotice` in `components/`, taking the library handle and the
+recovery filename. This is the pattern `EmptyState` and `PickChips` already
+set: one component, several hosts.
+
+### D4 — exports with no caller, recounted · **CUT the dead, keep the contracts**
+
+One scan of every `export function`/`const`/`class` under `app/src`, counting a
+name as unread when no *production* file but its own mentions it:
+
+- **7 with no reader at all** — not the app, not a test, not their own file:
+  `components/mail/List.tsx: Face`, `components/CourseTag.tsx: CourseDot`,
+  `lib/intake.ts: intakeUrl`, `lib/runway.ts: courseOf`,
+  `lib/select.ts: SEMESTER`, `lib/docversions.ts: allVersions`,
+  `lib/browser.hook.ts: forgetStrip`.
+- **31 whose only reader is their own test.**
+
+Down from 26 and 50 at the last pass, which is the evidence that the cut held
+and that eleven new screens brought very little dead weight with them.
+
+Five of the 7 go — `CourseDot`, `courseOf`, `SEMESTER`, `forgetStrip` and
+`intakeUrl`, and with the last of them `isUrl`, whose only job was routing to
+it. Two turn out to be unfinished wiring rather than dead code and are
+finished instead; see §5. The 31 do **not** all go, and the last pass's rule — "a test is not a
+reader" — needs one qualification it did not have: some of these are *contracts
+a test asserts*, where the export exists so the test can state a rule about the
+app rather than to be called. `lib/contrast.ts: AA_TEXT, AA_LARGE` (the WCAG
+thresholds every colour in the app is checked against), `lib/privacy.ts:
+SYNCED_FIELDS, NEVER_SYNCED` (what may and may not leave the device — and
+`lib/context.ts` is out of scope by the brief's own guardrail) and
+`lib/erase.ts: DATABASES` (which `erase.test.ts` uses to fail the build when a
+database is opened that erase does not clear) are all of that kind. Deleting
+them deletes the rule, not the dead code. They stay, and this paragraph is why.
+
+### D7 — the directory, drawn twice again · **MERGED — `directory` survives**
+
+The fifth pass's S1 merged the `everything` screen into Progress, on the
+grounds that two screens must not both draw the registry. Then the workspace
+shell arrived with `screens/Directory.tsx`, and they now both do.
+
+| | Reads | Draws | Reached from |
+| --- | --- | --- | --- |
+| `directory` | `allApps(caps, role)`, `saysFor`, `readFavourites` — all of `lib/desk.ts` over `lib/nav.ts` | Every app, list or grid, category rail down the side, a star per row | The workspace sidebar, the launcher's "All apps", the search home |
+| `me` → **Everything** | `offered(caps)`, `lately`, `untried` | Every app, as headed shelves, with Lately and Not tried above | The Progress destination, in every navigation |
+
+Both gate on the same capabilities through the same registry, and both print
+every destination with its blurb. `Directory.tsx` claimed in its own comment to
+be "the only surface in the workspace that shows the whole registry" — written
+before the two met, and corrected in this pass.
+
+**Nothing hides either from the other.** The three-navigations defence that
+clears `import` and `edit` in §2 does not apply: `me` is a destination, so it
+is reachable in the workspace navigation too, and a student there can open two
+full directories without leaving it.
+
+**Recorded first and merged second**, and the reason for the gap is §6 of this
+file rather than any doubt about the finding. The survivor question here is
+which of two things a person *navigates by* should survive, and that depends
+on which navigation they actually use — `directory` is the better screen and
+is unreachable outside the workspace; `me` is a destination in `DEFAULT_TABS`'
+world and works in all five. §6 is a record of exactly this question being
+answered four times from the code and reversed four times by the person whose
+app it is, at the cost of a migration each way.
+
+It was taken to them, and the answer is **`directory` survives**. So Me's
+Everything tab becomes a row that opens it — precisely the rule `Me.tsx`
+already states for itself about the Settings tab it dropped: *"pressing the tab
+and pressing the Settings button landed on the same list, so the app had two
+homes for one thing. The screen kept its own — this keeps the row that opens
+it."*
+
+### What the merge carried
+
+**Two lists, which were the only things the tab had that the screen did not.**
+**Lately** (the four places you were) and **Not opened yet** (three you have
+never been, from `lib/unseen.ts`) are on `directory` now. Nothing else in the
+app drew either, so losing them was the whole risk in this merge, and
+`screens/directory.test.tsx` mounts the screen and reads them off it rather
+than grepping for the import — a static check passes on a screen that imports
+a list and never renders it, which is exactly the failure a merge introduces.
+Both stand aside the moment a filter or category is on: they answer "where was
+that", and a list ignoring the filter above one obeying it reads as a bug.
+
+**One card, not two.** Favourites drew its own; Lately would have been a second
+copy of it in the same file, which is the thing this pass exists to remove.
+
+**`directory` did not become a destination**, and that is deliberate rather
+than an omission. Every shelf but two is already at `MOST_ON_A_SHELF`, and the
+`Screen` union's own note is right that this is the shell looking at itself,
+the way a browser's new-tab page is not a bookmark. So `me` keeps the
+Everything keywords — "sitemap", "what can this app do", "never opened" — and
+search still lands there, one tap from the row. Reachable from the Progress
+row in every navigation, and from the sidebar, the launcher and the search
+home in the workspace.
+
+**`#/everything` is retired a second time**, now onto `directory`. It first
+went to the Progress tab that had duplicated the Everything *screen*; a link
+written when Everything was a screen is on a screen again. `opens.meTab` went
+with it — it had exactly one setter — and `meTab` narrows to `'you' | 'task'`.
+No state migration: `meTab` is `Ephemeral` (`state/shape.ts`), never read back
+out of a save.
+
+### Two things the merge found that the audit had not
+
+**`Launcher` and `nav/Folder` were the tab's other half.** The tab drew shelves
+at `directory: 'list'` and eight shelf tiles at `'tiles'`; the screen draws
+rows and cards for the same two. Both launcher files had exactly one caller —
+the tab — so they go with it. `lib/launcher.ts` stays: `groupOrder` still
+orders the apps sheet and the workspace apps panel through `lib/apps.ts`, which
+is why the ordering board in Settings → Navigation still has something to
+order. Its copy said "the tiles inside a folder, and the directory rows on Me",
+which was true of neither afterwards, and now names the two surfaces that read
+it.
+
+**One setting was being read two ways — a §3 finding the §3 method could not
+see.** `directoryOf` resolves the unchosen state at the point of use (soft
+draws tiles); Progress' tab resolved it and `Directory.tsx` compared the raw
+key to `'tiles'`. So an unchosen soft-layout account got the list on the
+directory while **Layout and navigation** showed Tiles selected. It could
+disagree only because there were two renderers; there is one now, and it
+resolves. The `DIRECTORIES` blurbs described the launcher's nine shelf tiles
+and now describe what the setting actually draws.
+
+### D5 — three springboards over existing screens · **KEEP, recorded**
+
+Three of the new screens carry their own list of links to other destinations:
+
+| Screen | Links out to | What it is |
+| --- | --- | --- |
+| `create` | 6 of 9 tiles → `write`, `deck`, `sheet`, `draw`, `study`, `mine` | "you know what you want to make, not which screen makes it" |
+| `university` | 11 destinations | which of 37 service areas this app can honestly touch |
+| `pathway` | 7, in `CONNECTED` (`Pathway.tsx:71`) | what a multi-term project touches |
+
+This is the `everything`-versus-`me` shape at smaller scale, and the temptation
+is to call all three a second directory. **They are not, and the distinction is
+the one the brief itself draws**: the directory and search are indexes and do
+not count as pathways. Each of these is an index too — task-scoped rather than
+whole-app — and none of them reimplements the screen it points at. `Create`
+says so in its own comment: *"A second document editor here would be a second
+place documents could live"*, and it does not build one; the three makers it
+does own (a form, a design, a video) have no other home in the app.
+
+Cutting them removes an affordance and no duplication. Kept, recorded, so the
+seventh pass does not have to work it out again. The line worth holding is the
+one Create already states: a hub may *point*, and the moment one of these grows
+an editor of its own it becomes a D1.
+
+### D6 — the previous clusters, re-checked
+
+| Cluster | State |
+| --- | --- |
+| `ahead` · `tonight` · `behind` · `runway` | **Keep**, unchanged. Four questions, each file still arguing its own case. |
+| `brief` grains vs `calendar` grains | **Keep.** Grains of one report and grains of one grid. |
+| `ask` vs the assistant sheet | **Keep**, owned by `/ask-tab`. Shared `Composer`/`Turns`, two shapes. |
+| `applying` vs `career` vs `pathway` | **Three questions, one merge.** A recruiting deadline (`applying`), an industry and its evidence (`career`), a project spanning terms (`pathway`). Only the *tracker's second home* is duplication — D1. |
+| `people` vs `career`→People | **Keep**, rename — D2. |
+| `grades` | **Closed. Do not reopen.** Reversed four times; §6 records why it takes an instruction from the app's owner, not a fresh reading of `Courses.tsx`. |
+
+---
+
+## 2. Routes per destination
+
+Re-run, excluding tests and the nine navigation-infrastructure files
+(`nav.ts`, `App.tsx`, `shape.ts`, `land.ts`, `route.ts`, `navigate.ts`,
+`desk.ts`, `tabbar.ts`, `settings.ts`):
+
+```
+# screen -> distinct production files dispatching to it
+$ for s in $(grep -oP "^    screen: '\\K[a-zA-Z]+" app/src/lib/nav.ts); do
+    grep -rlP "screen: '$s'(?![a-zA-Z])" --include=*.ts --include=*.tsx app/src \
+      | grep -vE '\.test\.|nav\.ts|App\.tsx|shape\.ts|land\.ts|route\.ts|navigate\.ts|desk\.ts|tabbar\.ts|settings\.ts' \
+      | sort -u | wc -l | xargs echo "$s"
+  done | sort -k2 -rn
+courses 8 · import 7 · mine 6 · edit 6 · calendar 6 · study 5 · ahead 5 · exam 4
+… 16 destinations have two · 15 have one · 12 have none
+```
+
+**The brief's "no destination reachable more than one way" is not a claim this
+app can honestly make, and should not.** Three passes have now examined the top
+of this table and reached the same answer, so it is stated once here as
+settled: the counts are three things, none of which is a duplicate home.
+
+- **Three navigations, one drawn at a time.** `App`, `lib/softtop.ts` and the
+  springboard each offer `import` and `edit`; `NAVS` in `lib/look.ts` means a
+  student sees exactly one of the three. Cutting any removes the affordance for
+  whoever chose that navigation.
+- **Contextual actions.** `insights/`, `lib/toolnow.ts`, `components/Clashes.tsx`
+  — a card answering a question you are already holding, which is the shape the
+  brief asks for rather than one it forbids.
+- **Keyboard shortcuts.** `lib/keys.ts` is an accelerator over the tab bar, not
+  a second door.
+
+What *is* checkable, and is the real form of the rule, is that **no destination
+has a second home** — no screen's body is rendered in two places. After D1 that
+is true, and `lib/onehome.test.ts` is what holds it.
+
+One hole in the grep, kept from the last audit because it is still true:
+`screen: '…'` misses routes passed positionally through the reducers
+(`push({ … }, 'quiz')`), which is how twelve sub-screens are reached. Second
+grep: `grep -rhno "}, '[a-z][a-zA-Z]*'" app/src/state/slices/`.
+
+---
+
+## 3. Duplicated controls — a real null result this time
+
+The last pass said its census used the wrong net, because the Claude key was
+written by `saveSettings()` rather than by a reducer action and no `set*` scan
+could see it. Re-run on the wider net — *which files write this setting, by any
+route*:
+
+- **Reducer actions.** Every `set*` in `state/slices/settings.ts` against every
+  non-`state/` file that dispatches it: **no action is dispatched from more
+  than one file.** The census returns empty.
+- **Module helpers that bypass the reducer.** `saveSettings` has exactly one
+  caller outside its own module: `screens/settings/Assistant.tsx`.
+  `screens/Connect.tsx:487` keeps only a comment and a row saying where the key
+  went — the #46 merge held.
+- **Direct `localStorage.setItem` in screens or components.** Two files,
+  `components/Watching.tsx` and `components/Boundary.tsx`, both writing the
+  error log. Neither is a setting.
+
+**No control has a second copy**, and unlike the last three times this was
+claimed, the scan that says so is the one that would have caught the exception.
+
+---
+
+## 4. Findability — already satisfied, checked not assumed
+
+- **Every one of the 60 destinations has a `blurb`.** Script-checked, zero
+  missing.
+- **Every one has at least one `taskTags` entry**, so nothing is invisible to
+  the directory's intention view. Zero missing.
+- **All 8 shelves hold between five and eight.** `Beyond` 5, `Life` 7, the
+  other six at 8. The brief's "reduce a shelf under three" does not fire, and
+  `nav.test.ts` already holds the ceiling.
+
+D1 and D2 remove no destination, so no `keywords` need moving and no
+`state/shape.ts` migration is required — a point checked rather than assumed,
+because every previous pass in this file needed one.
+
+---
+
+## 5. What to do, in order
+
+| # | Change | Destinations | Tabs | Kind | Done |
+| --- | --- | --- | --- | --- | --- |
+| D1 | Career's Applications tab → the `applying` screen | 0 | −1 | Merge | ✅ `d14912d` |
+| D2 | Career's People tab → "Contacts" | 0 | 0 | Rename | ✅ `d14912d` |
+| D3 | `Notice` — one component, **eight** hosts | 0 | 0 | Shared component | ✅ `fd57928` |
+| D4 | 7 dead exports — **5 cut, 2 wired**, plus the `isUrl` that only routed to one of them | 0 | 0 | Cut | ✅ `41c1607` |
+| D5 | Three springboards | 0 | 0 | Keep, recorded | ✅ recorded |
+| D6 | Previous clusters | 0 | 0 | Keep, re-checked | ✅ recorded |
+| D7 | The directory drawn twice — `directory` against Progress → Everything | 0 | −1 | Merge | ✅ survivor `directory`, on the app owner's instruction |
+
+### What each turned out to be, once done
+
+**D1 carried a guard with it.** `lib/onehome.test.ts` existed precisely to stop
+a screen becoming a tab of another screen, and this got past it: it looks for
+a `bare` prop, on the reasoning that embedding a screen needs a frameless
+render path in order to compile. Career simply wore the doubled `<Page>`
+frame instead. The test now asks the question directly — which components are
+a destination's whole body, per `App.tsx` and `lib/nav.ts`, and does any
+screen render one it did not define — and is checked against the embed Career
+actually had. Its first version mistook `Array<Application>` for a render;
+that is recorded in the test.
+
+**D3 was eight, not six.** The two the exact-match scan missed were found by
+the guard written for it: `creation/VideoEditor.tsx`, the same box drifted one
+type step larger, and a false positive in `components/Replaced.tsx` — an undo
+toast that shares a border with the notice and nothing else. The rule matches
+the box's three measurements now rather than its decoration, because a rule
+that catches the wrong file teaches people to add exceptions to it.
+
+**D4 found two things that were not dead code but unfinished wiring**, and
+both are now finished rather than cut:
+
+- `Face` draws a sender's monogram; `mail/Reader.tsx` hand-wrote its exact one
+  line instead of calling it.
+- `allVersions` was written, tested, and commented *"for the storage figures
+  on the Data screen"* — and never called. So the Data screen's answer to
+  "what is this app taking up" omitted the document history entirely: its own
+  database, holding up to twenty full copies of every document, invisible to
+  all three figures beside it. `lib/erase.ts` found the same database missing
+  from the other end. Data counts it now, as a fourth row outside the store.
+
+That is the second time in two passes that the honest reading of a test-only
+export was *"a promise the app has not finished keeping"* rather than *"dead
+code"*. The last pass found it for Erase from this device. **The rule to carry
+forward is not "a test is not a reader" on its own** — it is that an unread
+export is one of three things, and they are told apart by reading its comment:
+dead (cut it), a contract a test asserts (keep it), or wiring somebody stopped
+halfway through (finish it).
+
+### Nothing needed a migration, and that is checked rather than assumed
+
+No destination was removed, so no `keywords` moved and no saved `screen` can
+now name something that is gone. The three nets that would have caught it are
+in place either way:
+
+- the current screen is `Ephemeral` (`state/shape.ts:727`), defaulted to
+  `home` in `blank()` — it is never read back out of a save;
+- a saved tab bar goes through `readTabs` (`lib/tabbar.ts:86`), which drops
+  screens not in `DESTINATIONS`;
+- a deep link goes through the `opens` table in `lib/route.ts`, which is what
+  still lands `#/grades` and `#/weekly` on their survivors.
+
+**60 destinations, and they stay 60.** That is the finding, not a failure to
+find one: five passes have already taken this app from 59 to 49 and the eleven
+that arrived since are eleven things it does, not eleven ways of saying one
+thing. What the ports did bring was one screen given a second home, one tab
+named after another screen, and one block of markup written six times.
+
+---
+
+# Appendix — the audit, passes two to five
 
 Step 1 of `/simplify`, run again. No code in this commit.
 
