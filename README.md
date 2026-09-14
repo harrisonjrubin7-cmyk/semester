@@ -304,6 +304,14 @@ colour is one of twelve, and they are the same twelve a course can be pinned
 to: your accent, turned round the wheel, at a lightness measured against the
 ground you are actually reading on.
 
+The strip holds a hundred, which makes it somewhere to *keep* tabs rather than
+a row anybody reads end to end — so the caret at the end of it opens **the open
+tabs as a list**: every one of them in the strip's own order, with the group
+each belongs to beside it, filtered as you type and forgiving of a typo the
+same way the rest of the app's search is. Enter opens the one under the
+cursor. It appears once there are four tabs; below that the strip is the
+search.
+
 **Pinning** is the other half of a strip that has got long. The four or five
 places you are in every day — Today, the calendar, the guide you are working
 through — are never finished with, and everything else is opened beside them.
