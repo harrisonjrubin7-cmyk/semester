@@ -318,13 +318,16 @@ export default defineConfig(({ command, mode }) => {
 
   return {
     /*
-     * The shared data contract. See tsconfig.app.json for why it is aliased
-     * rather than copied into each client.
+     * The two shared contracts. See tsconfig.app.json for why each is aliased
+     * rather than copied into the clients that read it.
      */
     resolve: {
       alias: {
         '@semester/contract': fileURLToPath(
           new URL('../packages/contract/src/index.ts', import.meta.url),
+        ),
+        '@semester/institution': fileURLToPath(
+          new URL('../packages/institution/src/index.ts', import.meta.url),
         ),
       },
     },

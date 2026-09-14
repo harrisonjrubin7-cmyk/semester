@@ -3,6 +3,8 @@ import { forTerm as costsFor, money, total } from '../../lib/cost';
 import { aidKindOf, billFor, chargeKindOf, forTerm as billRowsFor } from '../../lib/bill';
 import { codeOf } from '../../lib/call';
 import { dateToIso } from '../../lib/date';
+import { UNIVERSITY_AREAS } from '@semester/institution';
+import { gatewayConfigured } from '../../lib/university';
 import type { Provide } from '../shape';
 
 /**
@@ -328,3 +330,40 @@ export const links: Provide = (look) => ({
   actions: ['open_screen'],
   suggestions: ['Where do I go for this?'],
 });
+
+/**
+ * The university — and, above all, what it cannot do.
+ *
+ * The most important field this provider hands over is the one saying nothing
+ * is connected. Without it the assistant, asked "register me for ECON 2100"
+ * on a screen headed *Course registration*, has every reason to believe that
+ * is a thing this app does. It is not, and a confident yes there costs
+ * somebody a class.
+ *
+ * So the summary leads with the limit, `focus` states it as data rather than
+ * prose, and no draft text is handed over at all: drafts live in
+ * `localStorage` under `screens/University.tsx`, they are appeals and advising
+ * notes, and they are none of the assistant's business unless somebody pastes
+ * one in.
+ */
+export const university: Provide = () => {
+  const areas = UNIVERSITY_AREAS.length;
+  const connected = gatewayConfigured
+    ? 'A gateway address is configured, but no service has been verified for this account yet.'
+    : 'No university gateway is configured, so no official service is reachable.';
+  return {
+    summary: `University — ${areas} service areas. ${connected} This app can prepare drafts and plans for them; it cannot submit, enrol, pay or fetch official records.`,
+    focus: {
+      service_areas: areas,
+      gateway_configured: gatewayConfigured,
+      official_actions_available: false,
+      can_do_here: 'preparation drafts, checklists, and opening the local screens that already exist',
+    },
+    visible: [],
+    actions: ['open_screen'],
+    suggestions: [
+      'What should I ask my advisor before registration opens?',
+      'Help me prepare a draft for a grade appeal.',
+    ],
+  };
+};

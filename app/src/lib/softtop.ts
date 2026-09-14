@@ -48,6 +48,8 @@
  */
 
 import type { Catalog } from '../data/catalog';
+import { UNIVERSITY_AREAS } from '@semester/institution';
+import { gatewayConfigured } from './university';
 import type { State } from '../state/shape';
 import type { Screen } from './types';
 import type { Capabilities } from './school';
@@ -590,6 +592,29 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     }
 
     // ── Campus ────────────────────────────────────────────────────────────
+    /*
+     * The university's figure is what it can reach, not what exists.
+     *
+     * Thirty-seven areas is the impressive number and the wrong one to lead
+     * with: it says the app does thirty-seven things, and it does not do any
+     * of them officially yet. So the hero counts *connected* services, which
+     * is nought until a school deploys a gateway, and the foot says what the
+     * thirty-seven actually are. A screen whose whole argument is "be honest
+     * about what is not connected" cannot open with a number that implies the
+     * opposite. See `screens/University.tsx`.
+     */
+    case 'university':
+      return {
+        hero: {
+          label: 'Connected services',
+          figure: num(0),
+          foot: gatewayConfigured
+            ? `No service verified yet, of ${UNIVERSITY_AREAS.length}`
+            : `Preparation only, across ${UNIVERSITY_AREAS.length} areas`,
+        },
+        stats: term,
+      };
+
     case 'meals':
       // The noun is the school's, not ours: "swipes" at one, "board meals" at
       // another, and "meals" where nothing has been declared.

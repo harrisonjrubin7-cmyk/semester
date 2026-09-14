@@ -561,7 +561,18 @@ export const DESTINATIONS: Destination[] = [
     short: 'Register',
     blurb: 'Registration and class search — and paste your schedule straight back in.',
     keywords: 'yes enrollment enrolment registration register student landing search classes schedule timetable transcript holds advisor commodore vanderbilt add drop credit hours section',
-    group: 'Campus',
+    /*
+     * Courses, not Campus, and the move came with University arriving.
+     *
+     * Campus was at eight, which is the most a row of pills can draw, and
+     * University needed the place. Of the nine this was the one filed by
+     * where it used to live rather than by what somebody is doing: choosing
+     * next term's classes is course work, and it belongs beside The degree it
+     * has to satisfy and the Term deadlines that bound it — not beside the
+     * meal plan. That is this file's own rule, applied to the screen it was
+     * least true of.
+     */
+    group: 'Courses',
     taskTags: ['ahead', 'campus'],
     root: 'courses',
   },
@@ -713,6 +724,27 @@ export const DESTINATIONS: Destination[] = [
       'school university role student teaching what am i here to do',
     group: 'Life',
     taskTags: ['data', 'app'],
+    root: 'me',
+  },
+  {
+    screen: 'university',
+    label: 'University',
+    short: 'Uni',
+    blurb: 'Every university service in one place, and what this app can honestly do for each.',
+    /*
+     * Deliberately *not* the thirty-seven area names.
+     *
+     * Listing them made this screen match "housing", "dining", "aid" and the
+     * rest — so it shadowed the campus screens that actually do those things,
+     * and surfaced for a faculty member searching a word whose own screen the
+     * directory hides from them. A hub that outranks the thing it links to is
+     * worse than a hub nobody finds. These are the words that describe *this*
+     * screen: the institution, and the connection it does not yet have.
+     */
+    keywords:
+      'university institution school gateway adapter connection connected official records submission registrar bursar preparation draft service areas verified role permission',
+    group: 'Campus',
+    taskTags: ['campus', 'ahead'],
     root: 'me',
   },
   {

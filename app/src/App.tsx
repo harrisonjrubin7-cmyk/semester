@@ -114,6 +114,7 @@ const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work 
 const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
 const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
 const Guides = lazy(() => import('./screens/Guides').then((m) => ({ default: m.Guides })));
+const University = lazy(() => import('./screens/University').then((m) => ({ default: m.University })));
 /* The workspace's own two screens — the search home a new tab opens on, and
    the directory of everything behind it. See `lib/desk.ts`. */
 const SearchHome = lazy(() => import('./screens/Search').then((m) => ({ default: m.SearchHome })));
@@ -438,6 +439,13 @@ function useHeader(): { kicker: string; title: string } {
       return { kicker: 'Counted backwards from the exam', title: 'Exam runway' };
     case 'registrar':
       return { kicker: 'The dates the university sets', title: 'Term deadlines' };
+    /*
+     * Its own case rather than the registry fallback, which would print the
+     * tab bar's nine-character `short` — "Uni" — as the page's heading. The
+     * kicker is the screen's whole argument in six words.
+     */
+    case 'university':
+      return { kicker: 'What it does, and what it cannot', title: 'University' };
     case 'sources':
       return { kicker: 'Yours, never invented', title: 'Sources' };
     case 'account':
@@ -942,6 +950,8 @@ function CurrentScreen() {
       return <SearchHome />;
     case 'directory':
       return <Directory />;
+    case 'university':
+      return <University />;
     case 'privacy':
       return <Privacy />;
     case 'data':

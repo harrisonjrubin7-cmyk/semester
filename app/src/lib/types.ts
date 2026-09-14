@@ -555,6 +555,12 @@ export type Screen =
   | 'people'
   | 'meet'
   | 'call'
+  /*
+   * The university itself: thirty-seven service areas, and an honest account
+   * of which this app can reach. Nearly none, today — see
+   * `screens/University.tsx` and `docs/UNIVERSITY_CONNECTIONS.md`.
+   */
+  | 'university'
   // The settings pages. Real screens rather than a sub-mode of one, so Back,
   // the recent list and a deep link all work the way they do everywhere else.
   | 'setLook'
