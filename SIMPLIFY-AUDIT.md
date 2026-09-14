@@ -1142,6 +1142,66 @@ than quietly widened: a class-based copy of a component is still a copy, and
 the next pass should decide whether the rule can see one without failing every
 `role="alert"` in the app.
 
+### E3, done — and four of its five rows were wrong
+
+Read one file at a time rather than by class name, the table above does not
+survive. Only the `portal-empty` row was the merge it claimed. The other four
+named a survivor that cannot take the job, and saying so is the point of
+writing the census down rather than acting on it directly.
+
+**`portal-empty` → `EmptyState`. Real, and done** for the three sites that
+fit: the cart, the saved schedules, and the directory's "no entries match".
+
+**`portal-warning` → `Notice`. Half real, and the half that was real needed a
+change to `Notice` first.** The two recovery notices — the ones with a
+"Download recovery copy" button inside the box — are exactly this component
+and are now drawing it. But they said `role="alert"` and `Notice` said
+`role="status"`, and those are not the same promise: status is polite and
+waits its turn, alert interrupts. Swapping them silently would have demoted
+"your saved copy could not be read" to something a reader hears after it
+finishes the sentence the student is typing. So `Notice` took an `alert` prop,
+defaulting to the polite role, and the box is shared rather than forked.
+
+The other five `portal-warning` uses are *not* notices. They are inline
+validation under the cart — "ECON 1020 and PSCI 1100 overlap on Mon, Wed" —
+which belongs beside the thing it is about and is not a live region at all.
+Rehoming those into a notice box would be the E2 mistake in miniature:
+a duplicate rehomed is not a duplicate removed.
+
+**`portal-tabs` → `Segmented`. Wrong survivor.** `Segmented` is a row of
+`aria-pressed` buttons; `portal-tabs` is `role="tablist"` with `role="tab"`
+and `aria-selected`. Those are different contracts and the substitution would
+lose the weaker-sighted half of it.
+
+The real finding on that row is bigger than the port: **`role="tablist"` is in
+ten files and wears four different stylings** — `rib-tabs`, `shelf-nav-row`,
+`mb-tabs` and the port's `portal-tabs`. Three of those four are the app's own.
+So this is not a port duplicate to delete, it is a shared tab-strip component
+the app never had; and `Segmented` cannot be it without growing the tablist
+contract, which would change every one of its 36 existing uses. Recorded for a
+later pass rather than half-done here.
+
+**`portal-filter-row` → `ChipRow` · `PickChips` · `Segmented`. Wrong
+survivor.** It is an `<input type="search">` beside a `<select>`. The three
+named components are chip and segment controls; none of them is a search
+field, and none takes a select. There is a real question underneath — whether
+that category `<select>` should be `PickChips` — but it is a design question
+about four screens, not a duplicate to fold away.
+
+**`directory-star` → the star in `screens/Directory.tsx`. Not a duplicate at
+all.** They share a glyph and nothing else. Directory's star pins a
+*destination* into `look.favourites`, which syncs with the account and is read
+by the launcher, the sidebar and the search home. `directory-star` saves an
+imported *listing* — a dorm, a dining hall, a club — into a device library
+under `semester.directory.<kind>.saved`. Different data, different store,
+different meaning. The census matched on the word "star".
+
+**What this row is really about**, then: one genuine shared-component merge,
+one that needed the component widened before it was safe, and three entries
+that a name-based census produced and a file-based one dissolves. The lesson
+is the same shape as E5's — *the tempting next step after finding a duplicate
+is to follow the name rather than the behaviour.*
+
 ### E4 — a second workspace shell · **MERGED — `workspace` survives**
 
 `browser` is the seventh navigation, and the sixth is `workspace`. Both are

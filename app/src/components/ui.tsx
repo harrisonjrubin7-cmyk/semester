@@ -508,11 +508,34 @@ export function Meter({
  * button inside the box — the recovery download, and University's undo for a
  * removed draft — and a component that takes a string would have sent those
  * back to drawing their own.
+ *
+ * ## `alert`, and why it is a prop rather than a second component
+ *
+ * `role="status"` is polite: a screen reader finishes its sentence and then
+ * reads it. That is right for "Added to your tracker" and wrong for "your
+ * saved copy could not be read — here is a recovery download", which is the
+ * one thing on the screen the reader needs to hear before they carry on
+ * typing into it. The ported campus screens knew this and said
+ * `role="alert"`, which is assertive; they just said it on a hand-rolled box
+ * (`SIMPLIFY-AUDIT.md` E3).
+ *
+ * So the politeness is the prop and the box is shared, rather than a second
+ * component that would drift from this one in every other respect. The
+ * default stays `status`: assertive interrupts, so it has to be asked for.
  */
-export function Notice({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+export function Notice({
+  children,
+  style,
+  alert = false,
+}: {
+  children: ReactNode;
+  style?: CSSProperties;
+  /** Interrupt the reader. For a failure the student has to know about now. */
+  alert?: boolean;
+}) {
   return (
     <p
-      role="status"
+      role={alert ? 'alert' : 'status'}
       style={{
         fontSize: 'var(--type-sm)',
         lineHeight: 'var(--leading-normal)',

@@ -33,8 +33,28 @@ import { sources, withoutComments } from '../styles/rules';
  * it matches the measurements rather than the decoration.
  */
 
+/*
+ * The role half matches either politeness, and either spelling of it.
+ *
+ * `Notice` took an `alert` prop in `SIMPLIFY-AUDIT.md` E3 — the ported campus
+ * screens' recovery notices are assertive, and rightly — so the component now
+ * reads `role={alert ? 'alert' : 'status'}` and a rule keyed to the literal
+ * `role="status"` stopped matching the very component it exists to protect.
+ * That is the guard working: it failed the moment the box changed shape.
+ *
+ * Widened rather than pinned to the new spelling, because for the first rule
+ * below it is strictly more coverage: a hand-rolled box with these three
+ * measurements is a copy of this component whichever politeness it asks for,
+ * and before this an assertive one would have walked straight past.
+ *
+ * What this still cannot see is unchanged and is the limit written in the
+ * audit: a copy that puts the measurements in a CSS class rather than inline
+ * — which is exactly what the port's `portal-warning` did — matches nothing
+ * here. The role was never the reason for that blind spot and widening it is
+ * not a fix for it.
+ */
 const NOTICE_BOX =
-  /role="status"[\s\S]{0,400}?padding: 'var\(--sp-5\)'[\s\S]{0,200}?marginBlock: 'var\(--sp-4\)'[\s\S]{0,200}?textWrap: 'pretty'/;
+  /role=(?:"(?:status|alert)"|\{[^}]*'(?:status|alert)'[^}]*\})[\s\S]{0,400}?padding: 'var\(--sp-5\)'[\s\S]{0,200}?marginBlock: 'var\(--sp-4\)'[\s\S]{0,200}?textWrap: 'pretty'/;
 
 describe('the notice box', () => {
   it('is drawn by the component and nowhere else', () => {
