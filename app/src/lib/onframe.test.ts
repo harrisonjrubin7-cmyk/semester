@@ -166,6 +166,66 @@ describe('two controls in one frame never share a name', () => {
   });
 });
 /**
+ * One search field in the workspace, reachable from two places.
+ *
+ * The front door drew two: the bar's, a real input answering with apps as you
+ * type, and the search home's centre, a button opening the palette — which
+ * answers with records. Two vocabularies, two result sets, one above the
+ * other, and a `⌘ K` chip on each.
+ *
+ * Both chips were false. `lib/keys.ts` ignores anything carrying a modifier on
+ * principle — the rule that keeps this app out of the browser's shortcuts — so
+ * no binding there can be ⌘-anything, and the app's only ⌘K listener is
+ * `ai/Assistant.tsx`'s, which opens the assistant. A chip inside a search
+ * field advertising a key that opens a chat, drawn twice.
+ *
+ * The centre box focuses the bar now, the way a new-tab page's box focuses the
+ * omnibox, and the chips are gone rather than corrected: nothing focuses that
+ * field from the keyboard today, and adding a binding would be a feature
+ * rather than the removal of a false claim.
+ */
+describe('the workspace has one search field', () => {
+  const HOME = () => read('src/screens/Search.tsx');
+
+  it('leaves the search home’s centre no search of its own', () => {
+    expect(withoutComments(HOME()), 'the centre box must not open the palette').not.toContain(
+      "type: 'finder'",
+    );
+    expect(HOME(), 'it focuses the bar instead').toContain('onClick={focusBar}');
+    expect(HOME()).toContain('useFocusBar()');
+  });
+
+  it('gives the bar the only text input in the front door', () => {
+    const inputs = (src: string) => [...withoutComments(src).matchAll(/<input\b/g)].length;
+    expect(inputs(BAR()), 'the bar owns the field').toBe(1);
+    expect(inputs(HOME()), 'the search home types into nothing').toBe(0);
+  });
+
+  /*
+   * The chips, held as an absence — which needs the reason with it, or a
+   * future reader restores them as a helpful hint.
+   */
+  it('claims no ⌘K in either search field', () => {
+    for (const f of ['src/components/desk/TopBar.tsx', 'src/screens/Search.tsx']) {
+      expect(withoutComments(read(f)), `${f} still advertises ⌘K`).not.toContain('⌘');
+    }
+  });
+
+  it('keeps ⌘K where it actually goes, and out of lib/keys.ts', () => {
+    const panel = read('src/ai/Assistant.tsx');
+    expect(panel, 'the one ⌘K listener opens the assistant').toMatch(
+      /metaKey \|\| e\.ctrlKey\) && e\.key\.toLowerCase\(\) === 'k'/,
+    );
+    // And the rule that made the chips wrong in the first place, so a binding
+    // cannot quietly appear beside the single-letter ones and make ⌘K mean two
+    // things at once.
+    expect(read('src/lib/keys.ts')).toContain(
+      'if (e.metaKey || e.ctrlKey || e.altKey) return null;',
+    );
+  });
+});
+
+/**
  * And the same fault outside the workspace: one glyph, two meanings.
  *
  * The feed's floating button drew a `Plus` that opened the syllabus importer

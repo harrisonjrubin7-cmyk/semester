@@ -4802,19 +4802,9 @@ input[type='search'].input {
 }
 
 .desktop-clear,
-.desktop-keys,
 .desktop-ai {
   flex: none;
   width: auto;
-}
-
-.desktop-keys {
-  padding: var(--sp-1) var(--sp-4);
-  border: 1px solid var(--app-line);
-  border-radius: var(--r-md);
-  font-size: var(--type-xs);
-  color: var(--app-faint);
-  white-space: nowrap;
 }
 
 .desktop-ai {
@@ -4834,7 +4824,6 @@ input[type='search'].input {
 }
 
 @media (max-width: 759px) {
-  .desktop-keys,
   .desktop-ai span {
     display: none;
   }
@@ -5317,8 +5306,7 @@ input[type='search'].input {
 }
 
 .deskhome-plus,
-.deskhome-box,
-.deskhome-keys {
+.deskhome-box {
   color: inherit;
 }
 
@@ -5345,14 +5333,9 @@ input[type='search'].input {
   opacity: 0.55;
 }
 
-.deskhome-keys {
-  flex: none;
-  padding: var(--sp-1) var(--sp-4);
-  border: 1px solid rgba(0, 0, 0, 0.18);
-  border-radius: var(--r-md);
-  font-size: var(--type-xs);
-  opacity: 0.6;
-}
+/* `.deskhome-keys` and `.desktop-keys` drew a `⌘ K` chip in each of the two
+   search fields. Both were false — ⌘K opens the assistant, not a search — and
+   the second field is gone; see `components/desk/barfocus.ts`. */
 
 /* `.deskhome-ai` drew an AI Tutor button in this field. The bar above the
    screen draws the same control with the same words, so the search home had

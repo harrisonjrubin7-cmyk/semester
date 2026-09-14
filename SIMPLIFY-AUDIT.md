@@ -173,7 +173,7 @@ The bar's survives, by the rule every survivor in this pass has used: it is
 drawn on every screen in this navigation and the search home is drawn on
 exactly one. **Cut.**
 
-### W7 — the search home's centre repeats the bar · **OPEN — recorded, not changed**
+### W7 — the search home's centre repeats the bar · **FIX — the centre box focuses the bar**
 
 Found while cutting W5's button, and it is the same fault one size larger. On
 the `search` screen the bar's row and the screen's centre are drawn one above
@@ -204,10 +204,54 @@ than open a second search.
 
 Three ways out, and they are genuinely different products: focus the bar from
 the centre box, drop the centre and let the wordmark and the shortcuts be the
-screen, or keep both and make the ⌘K hint honest. Redesigning the screen the
-app opens on is past "remove the redundancy", and two searches that genuinely
-answer different questions are exactly the case §2's rules say to stop and say
-so rather than merge.
+screen, or keep both and make the ⌘K hint honest. Recorded rather than picked,
+because redesigning the screen the app opens on is past "remove the
+redundancy". **The first was chosen.**
+
+#### The ⌘K hints were both false, which settles the third option
+
+Checked before touching either, and it is worse than "one of the two is
+honest", which is what the row above assumed:
+
+```
+$ grep -rn "metaKey" app/src/lib/keys.ts app/src/ai/Assistant.tsx
+lib/keys.ts:131      if (e.metaKey || e.ctrlKey || e.altKey) return null;
+ai/Assistant.tsx:326 if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { … ai.show() }
+```
+
+`lib/keys.ts` ignores anything carrying a modifier **on principle** — the rule
+that keeps this app out of the browser's shortcuts, argued at the top of that
+file — so no binding in the app's shortcut table can be ⌘-anything. The only
+⌘K listener in the codebase is the assistant's, and it opens the assistant.
+
+So both chips sat inside a *search field* advertising a key that opens a chat,
+and two file headers asserted the same thing in prose: `TopBar.tsx`'s "every
+route into it still works: ⌘K, `/`…" and `Search.tsx`'s "⌘K still opens the
+palette". Four wrong statements about one key.
+
+Both chips are **removed rather than corrected**, because there is no key to
+correct them to: nothing focuses the bar's field from the keyboard today, and
+adding a binding is a feature rather than the removal of a false claim. Both
+prose notes are fixed where they stand. Giving the bar a real focus shortcut is
+a reasonable follow-up and is deliberately not done here.
+
+#### How the centre box focuses the bar
+
+The gap is the one `components/desk/suggesting.ts` already names: the shell
+renders the bar, the router renders the screen, and siblings have no prop
+between them. That file carries a fact *down* ("my list is over your centre");
+the new `components/desk/barfocus.ts` carries a request *up* ("take the
+cursor"), as the same shape of context and for the same stated reasons.
+
+It stays a `<button>`, not an input. A second text box that forwarded its
+keystrokes would be the duplicate again wearing a disguise — and there is
+nothing to type into a control whose whole job is to hand the cursor
+somewhere else.
+
+The two rules also turn out to agree rather than fight: click the box, the
+cursor lands in the bar, and the moment you type, the bar drops its list and
+`centreHidden` takes the centre row away. That is one motion, and it is the
+browser's.
 
 ---
 
@@ -379,10 +423,11 @@ doing the second's job, and having both named makes that hard to repeat.
 | F1 | Cut `chrome.fab` and the button | the header's `+` for adding, seven routes for importing | one shortcut on one screen; the glyph stops meaning two things |
 | W6 | `Sidebar`'s directory row is renamed, not cut | both — they are different places | the shared name, which was the fault |
 | W5 | The search home drops its AI Tutor button | `TopBar`'s, drawn on every screen | nothing — the bar's is inches above it |
-| W7 | — | — | recorded only; a design question, not a duplicate |
+| W7 | The centre box focuses the bar instead of opening a second search; both `⌘ K` chips go | `TopBar`'s field — the only one now | nothing; the front door has one search field, reachable from two places |
 
-**Six controls go, one is renamed. No destination goes**, which is why the
-screen count stays at 60 and why nothing in this pass needs a state migration —
+**Eight controls go, one is renamed, one stops being a search and becomes a way
+into the one that is. No destination goes**, which is why the screen count
+stays at 60 and why nothing in this pass needs a state migration —
 no saved `screen` can become invalid when no screen is removed.
 
 ### W6 — one name, two places · **RENAME**
@@ -418,14 +463,14 @@ Every row above is closed. Three commits, each green.
 | W3, W4, W6 | `0cb57a6` | `Sidebar` loses Search home and Settings; its directory row is renamed. `lib/onframe.test.ts` holds the invariant. |
 | F1 | `79b9681` | The FAB and `chrome.fab` go; `chromeFor` answers one question again. |
 | W5 | *"The assistant is offered once"* | The search home's duplicate AI Tutor button goes. The panel and the tab stay: one conversation, two doors, named apart and sharing every component — `/ask-tab` still owns any rebuild. |
-| W7 | — | **Open.** The search home's centre still repeats the bar's field and its ⌘K. Two searches with two vocabularies, so merging them is a design decision rather than a deletion. |
+| W7 | *"One search field in the workspace"* | Fixed, by the first of the three routes the audit set out. The centre box focuses the bar through a new `components/desk/barfocus.ts`; both `⌘ K` chips go, along with the four statements in prose and markup that said ⌘K opens a search when it opens the assistant. |
 | §3.1 `feedOrder`, `boardOrder` | — | Kept. The object and the index of the object, through one resolver. |
 | §3.1 `ground` | *"The ground has one home"* | Fixed. The Dark/Light pair goes; the row below reports the ground through `groundName` and opens the page that owns it. `lib/onframe.test.ts` gains a one-writer-per-preference census, with `Customize`'s one-way exit to the tab bar stated as the exemption it is. |
 
 ### The claim, checked rather than asserted
 
-`npm run lint` exit 0. `npm test` **315 files / 6727 tests**, all passing —
-twenty-six more than the baseline, all of them new checks on this pass's
+`npm run lint` exit 0. `npm test` **315 files / 6731 tests**, all passing —
+thirty more than the baseline, all of them new checks on this pass's
 invariants. `npm run build` clean.
 
 And driven in a browser, because an absent control is easy to claim and hard to
@@ -452,6 +497,18 @@ And the search home, which had two of the assistant's button:
 | Workspace, search home, 1280px | **1** (was 2) | the bar's; W7's two search fields remain, open |
 | Workspace, any other screen | 1 | unchanged |
 | Rail, 1280px | 1 — the rail's "Ask Claude" row | the floating button is named apart |
+
+And the front door's search, at both widths — the centre box clicked, the
+cursor followed, and nothing opened over the page:
+
+| Frame | Search inputs | `⌘` on the page | Centre box focuses the bar |
+| --- | --- | --- | --- |
+| Workspace, search home, 1280px | **1** (was 2 fields) | **0** (was 2) | yes |
+| Workspace, search home, 420px | **1** | **0** | yes |
+
+Then typing into it: the bar's value became what was typed, its suggestions
+opened, and `centreHidden` took the centre row away — one motion, the
+browser's. The palette did not open, which is the whole of the change.
 
 The first row is the screenshot this pass opened with, and it is the one that
 matters: on Alerts in the workspace, the header is now the way back and the

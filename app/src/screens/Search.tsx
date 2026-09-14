@@ -22,9 +22,17 @@
  * screen cannot come to different conclusions about whether something is up.
  *
  * Nothing is lost while it is away: the bar above this screen carries the same
- * search on every screen in this navigation, ⌘K still opens the palette, and
- * whatever is covering the centre is itself a way of finding something. That
- * is what makes hiding it outright the right answer rather than dimming it.
+ * search on every screen in this navigation — it *is* the search this centre
+ * box reaches — `/` still opens the palette, and whatever is covering the
+ * centre is itself a way of finding something. That is what makes hiding it
+ * outright the right answer rather than dimming it.
+ *
+ * This paragraph used to say "⌘K still opens the palette". It does not, and
+ * never did in this build: `lib/keys.ts` ignores anything carrying a modifier
+ * on principle, and the one ⌘K listener in the app is `ai/Assistant.tsx`'s,
+ * which opens the assistant. There was a `⌘ K` chip in the row below saying
+ * otherwise, and an identical one in the bar; both are gone with the second
+ * search they were labelling.
  *
  * ## Where the shortcuts come from
  *
@@ -42,6 +50,7 @@ import { AppsIcon, EditIcon, Plus } from '../components/Icons';
 import { glyphFor } from '../components/icons.pick';
 import { createElement } from 'react';
 import { useSuggesting } from '../components/desk/suggesting';
+import { useFocusBar } from '../components/desk/barfocus';
 import { longLabel } from '../lib/date';
 
 export function SearchHome() {
@@ -58,6 +67,11 @@ export function SearchHome() {
    * thing that would be stale exactly when it mattered.
    */
   const suggesting = useSuggesting();
+  /*
+   * The other direction through the same gap. `suggesting` comes down from
+   * the bar; this goes back up to it. See `components/desk/barfocus.ts`.
+   */
+  const focusBar = useFocusBar();
   const covered = centreHidden({
     suggesting,
     apps: state.apps,
@@ -87,16 +101,33 @@ export function SearchHome() {
           >
             <Plus size={20} />
           </button>
+          {/*
+            The centre box puts the cursor in the bar. It does not search.
+
+            It used to open the command palette, which made the workspace's
+            front door two search fields one above the other: the bar's,
+            answering with apps as you type, and this one, opening a palette
+            that answers with records. Two vocabularies, two result sets,
+            stacked — and nothing on either saying which was which.
+
+            The browser idiom this screen is borrowed from is also the answer
+            to it. A new-tab page's big centre box does not run a second
+            search; it focuses the omnibox. So does this. One field, two
+            places to reach it, and as soon as you type, the bar drops its
+            list and `centreHidden` takes this row away — which is the same
+            motion, and why the two rules do not fight.
+
+            A button rather than an input for that reason: there is nothing to
+            type into here, and a second text box that forwarded its keystrokes
+            would be the duplicate again wearing a disguise.
+          */}
           <button
             type="button"
             className="bare deskhome-box"
-            onClick={() => dispatch({ type: 'finder', open: true })}
+            onClick={focusBar}
           >
             <span className="deskhome-box-say">Search your semester</span>
           </button>
-          <span className="deskhome-keys" aria-hidden="true">
-            ⌘ K
-          </span>
           {/*
             There was an AI Tutor button here.
 

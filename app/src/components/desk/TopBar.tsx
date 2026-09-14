@@ -17,10 +17,16 @@
  * mixed into one undifferentiated list.
  *
  * The palette is still the record search, and every route into it still
- * works: ⌘K, `/`, the row at the bottom of these suggestions, and the field
- * on the search home. What is new is that the first thing you type in now
- * answers the question people actually have most often, which is "where is
- * the thing that does X".
+ * works: `/`, the row at the bottom of these suggestions, and the header's
+ * magnifier where that is still drawn. What is new is that the first thing
+ * you type in now answers the question people actually have most often, which
+ * is "where is the thing that does X".
+ *
+ * This list used to begin "⌘K" and end "and the field on the search home".
+ * Neither was true. ⌘K opens the assistant — `lib/keys.ts` ignores modifiers
+ * on principle, so the app's only ⌘K listener is `ai/Assistant.tsx`'s — and
+ * the search home's field is no longer a search at all: it focuses this one.
+ * See `components/desk/barfocus.ts`.
  *
  * ## Keyboard
  *
@@ -32,7 +38,7 @@
  * is what makes typing and arrowing in the same breath possible.
  */
 
-import { createElement, useEffect, useId, useRef, useState } from 'react';
+import { createElement, useEffect, useId, useState } from 'react';
 import { useStore } from '../../state/store';
 import { findApps } from '../../lib/desk';
 import { saysFor } from '../../lib/nav';
@@ -54,14 +60,25 @@ const SHOWN = 6;
 export function TopBar({
   /** Told when the list opens or closes, so the shell can hide the centre. */
   onSuggesting,
+  /**
+   * The shell's handle on this field, so the search home's centre box can put
+   * the cursor here rather than opening a second search.
+   *
+   * Passed in rather than kept here and published upwards: the shell has to
+   * hand the same handle to `FocusBarProvider`, and a ref this component
+   * created and then registered would be two objects to keep in step for no
+   * gain. See `components/desk/barfocus.ts`.
+   */
+  boxRef,
 }: {
   onSuggesting: (open: boolean) => void;
+  boxRef: React.RefObject<HTMLInputElement | null>;
 }) {
   const { state, dispatch, school } = useStore();
   const caps = school.capabilities;
   const [text, setText] = useState('');
   const [at, setAt] = useState(0);
-  const box = useRef<HTMLInputElement>(null);
+  const box = boxRef;
   const listId = useId();
 
   const apps = text.trim() ? findApps(text, caps, state.role, SHOWN) : [];
@@ -177,9 +194,22 @@ export function TopBar({
               ✕
             </button>
           )}
-          <span className="desktop-keys" aria-hidden="true">
-            ⌘ K
-          </span>
+          {/*
+            There was a `⌘ K` chip here, and it was not true.
+
+            `lib/keys.ts` ignores anything carrying a modifier on principle —
+            the rule that keeps this app out of the browser's shortcuts — so
+            no single-letter binding can be ⌘-anything. The one ⌘K listener in
+            the app is `ai/Assistant.tsx`'s, and it opens the assistant. So
+            this chip sat inside a *search field* advertising a key that opens
+            a chat, and the search home drew an identical one a row below it.
+
+            Removed rather than corrected, because there is no key to correct
+            it to: nothing focuses this field from the keyboard today, and
+            adding a binding is a feature rather than the removal of a false
+            one. `/` opens the palette and is written where that is true — in
+            the header's magnifier, on the screens that still draw it.
+          */}
           <button
             type="button"
             className="bare desktop-ai"

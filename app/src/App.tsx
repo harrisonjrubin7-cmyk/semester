@@ -155,6 +155,7 @@ import { Sidebar } from './components/desk/Sidebar';
 import { AppsPanel } from './components/desk/AppsPanel';
 import { Customize } from './components/desk/Customize';
 import { SuggestingProvider } from './components/desk/suggesting';
+import { FocusBarProvider } from './components/desk/barfocus';
 import { Undone } from './components/Undone';
 import { ScrollArea } from './components/ScrollArea';
 import { Tapped } from './components/Tapped';
@@ -1218,11 +1219,23 @@ function Workspace({
   // Stable, or the effect in `TopBar` that reports the state would re-run on
   // every render of this component and report it again.
   const onSuggesting = useCallback((open: boolean) => setSuggesting(open), []);
+  /*
+   * The bar's search field, held here so the search home's centre box can put
+   * the cursor in it.
+   *
+   * The same shape as `suggesting` above and for the same reason: the bar and
+   * the screen are siblings, so anything that passes between them passes
+   * through here. See `components/desk/barfocus.ts` for why the centre box
+   * focuses this field rather than opening a search of its own.
+   */
+  const barBox = useRef<HTMLInputElement>(null);
+  const focusBar = useCallback(() => barBox.current?.focus(), []);
   /** The shell's own two screens, which are their own titles. See above. */
   const ownTitle = state.screen === 'search' || state.screen === 'directory';
 
   return (
     <SuggestingProvider value={suggesting}>
+      <FocusBarProvider value={focusBar}>
       {/*
         `.device` as well as `.deskwork`, and it is load-bearing rather than
         tidy. Every control primitive in `app.css` is scoped `.device .btn`,
@@ -1252,7 +1265,7 @@ function Workspace({
             navigation's top edge: a bar that appeared on the second tab would
             push the whole app down a row the first time you opened one. */}
         <TabStrip alwaysOn onBlank={() => dispatch({ type: 'go', screen: 'search' })} />
-        <TopBar onSuggesting={onSuggesting} />
+        <TopBar onSuggesting={onSuggesting} boxRef={barBox} />
 
         <div className={chrome.sidebar ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
           {chrome.sidebar && <Sidebar />}
@@ -1331,6 +1344,7 @@ function Workspace({
           <Customize onClose={() => dispatch({ type: 'customize', open: false })} />
         )}
       </div>
+      </FocusBarProvider>
     </SuggestingProvider>
   );
 }
