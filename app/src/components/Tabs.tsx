@@ -390,10 +390,27 @@ export function TabStrip({
           type="button"
           className="bare"
           onClick={onDismiss}
+          /*
+           * A gutter, and a rule, because the row beside this one scrolls.
+           *
+           * The tabs sit in a `overflow-x: auto` box whose right edge was two
+           * pixels from this word. A row that has overflowed is cut wherever
+           * it is cut — mid-name, mid-letter — so on a phone with four tabs
+           * open the strip read "…Practice pap CLOSE", one string, and the
+           * cut looked like the app had broken rather than like a row that
+           * scrolls. The gutter separates them and the hairline says which
+           * side of it a thing belongs to: everything left of the line is a
+           * place you can go, and this is not.
+           */
           style={{
             width: 'auto',
             flex: 'none',
-            padding: 'var(--sp-4) var(--sp-2)',
+            marginLeft: 'var(--sp-4)',
+            paddingLeft: 'var(--sp-5)',
+            paddingRight: 'var(--sp-2)',
+            paddingTop: 'var(--sp-4)',
+            paddingBottom: 'var(--sp-4)',
+            borderLeft: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',
             letterSpacing: '0.12em',
             ...secondLine(),
