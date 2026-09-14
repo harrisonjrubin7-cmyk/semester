@@ -85,15 +85,36 @@ export interface Chrome {
    * below fail on every laptop.
    */
   sidebar: boolean;
-  /**
-   * The floating "import a syllabus" button.
-   *
-   * Not a navigation — one action, on one screen — but it is drawn by the
-   * same decision and belongs beside it rather than in a fourth condition
-   * somewhere else.
-   */
-  fab: boolean;
 }
+
+/*
+ * There was a `fab` here.
+ *
+ * A floating "import a syllabus" button, drawn on the feed's home screen on a
+ * phone, and the one member of `Chrome` that was not a navigation — the
+ * comment on it said as much and justified itself on being decided by the
+ * same rule rather than by a fourth condition somewhere else.
+ *
+ * It went because of what it drew, not where it was decided. The button was a
+ * `Plus`, and the header above it draws a `Plus` too, so on that one screen
+ * there were two of the same mark on screen at once doing different things:
+ * one opened the capture box, one opened the importer. The header's own note
+ * had already made this argument, about an earlier version of exactly this —
+ * the `+` briefly opened the importer on the courses list, "and that made the
+ * one control whose meaning you can rely on into one you have to check".
+ *
+ * Nothing became harder to reach. `import` keeps seven routes — the `n`
+ * shortcut, its own registry row so search finds it by "syllabus", the
+ * directory, the launcher, and the offers Courses, Runway, Gap and the
+ * first-run screen make when they notice there is no course yet. Those offers
+ * are the honest version of this button: they appear on the screen that
+ * noticed the gap, saying what they are, rather than hovering over every
+ * screen in one navigation wearing a glyph that means something else.
+ *
+ * And `chromeFor` goes back to answering one question. A rule about
+ * navigation that also answered a question about a button is the shape this
+ * file was written to stop.
+ */
 
 /**
  * The one decision. Everything that draws chrome reads its answer from here.
@@ -111,7 +132,7 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
   // one screen that never got the display it asked for.
   const full = FULLSCREEN.includes(screen);
   if (full)
-    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false, fab: false };
+    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false };
 
   /*
    * The workspace answers first, and answers for every width.
@@ -132,7 +153,7 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
    * false here, at both widths, and the header's Back button is the way out.
    */
   if (nav === 'guides') {
-    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false, fab: false };
+    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false };
   }
 
   return {
@@ -147,7 +168,6 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
     shelves: nav === 'shelves',
     desk,
     sidebar: desk && wide,
-    fab: nav === 'feed' && screen === 'home' && !wide,
   };
 }
 
@@ -189,8 +209,8 @@ export function firstScreen(nav: NavMode): Screen {
  * How many navigations are on screen. One, or none — never two.
  *
  * The number this returns is the whole invariant, which is why it is a
- * function rather than a comment. `fab` is not counted: it opens the importer
- * and goes nowhere else.
+ * function rather than a comment. Every member of `Chrome` is now in it —
+ * `fab` was the one that was not, and it is gone; see the note where it was.
  */
 export function navigationsDrawn(c: Chrome): number {
   return [c.tabs, c.rail, c.shelves, c.desk].filter(Boolean).length;
