@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { sources, withoutComments } from '../styles/rules';
 
@@ -95,5 +96,106 @@ describe('what it catches', () => {
     // `FirstRun` is an empty state, not a destination with a second door.
     expect(PASSES.test('if (catalog.empty) return <FirstRun where="in your courses" />;')).toBe(false);
     expect(PASSES.test('<DayReport onGrain={(next) => setGrain(next)} />')).toBe(false);
+  });
+});
+
+
+/**
+ * The same rule, without relying on the escape hatch being used.
+ *
+ * Everything above catches `bare`, on the reasoning that embedding a screen
+ * inside a screen needs a frameless second render path in order to compile.
+ * That reasoning was wrong in one direction, and `screens/Career.tsx` is how
+ * it was found: it rendered `<Applying />` — the whole `applying` destination,
+ * frame and all — as its Applications tab, and simply wore the doubled
+ * padding. No `bare` anywhere, so every check above passed while the app had
+ * two doors onto one room for five ports.
+ *
+ * `<Page>` already warns about this at runtime ("A screen has one frame"), but
+ * only in DEV and only if somebody opens that tab with a console visible.
+ *
+ * So this asks the question directly rather than by proxy: **which components
+ * are a destination's whole body, and does any screen render one it did not
+ * define?** `App.tsx` is the authority on the first half — it is the file that
+ * turns a `Screen` into a component — and `lib/nav.ts` on which of those
+ * screens is a destination somebody can be sent to.
+ *
+ * Sub-screens are deliberately not included. `course`, `item`, `quiz` and the
+ * other nested ones are reached *from* something and have no directory row, so
+ * a screen rendering one is a flow rather than a second front door.
+ */
+
+/** `case 'x': … return <Component` — App.tsx's own screen-to-body mapping. */
+function destinationBodies(): Map<string, string> {
+  const app = readFileSync(join(process.cwd(), 'src', 'App.tsx'), 'utf8');
+  const nav = readFileSync(join(process.cwd(), 'src', 'lib', 'nav.ts'), 'utf8');
+  const listed = new Set([...nav.matchAll(/^ {4}screen: '([a-zA-Z]+)'/gm)].map((m) => m[1]));
+
+  const bodies = new Map<string, string>();
+  for (const chunk of withoutComments(app).split(/\n {4}case '/).slice(1)) {
+    const screen = chunk.slice(0, chunk.indexOf("'"));
+    const body = chunk.match(/return <([A-Z]\w*)/);
+    if (body && listed.has(screen)) bodies.set(body[1], screen);
+  }
+  return bodies;
+}
+
+/**
+ * A JSX element, not a type argument.
+ *
+ * `useState<Profile | null>` is not a render of the Profile screen, and the
+ * first version of this rule said it was. So the match is the two shapes a
+ * rendered *screen* actually takes — `<X />` and `<X prop…` — and not the bare
+ * `<X>`, which `Array<Application>` is indistinguishable from.
+ *
+ * Dropping `<X>` costs nothing real: it is the with-children form, and a
+ * destination takes no children. Every screen in `App.tsx` is rendered either
+ * self-closing or with props.
+ */
+const renders = (component: string) => new RegExp(`<${component}(\\s*/>|\\s+[a-zA-Z-]+[=\\s])`);
+
+describe('no destination is rendered inside another screen', () => {
+  it('finds every destination body in App.tsx', () => {
+    // A guard on the guard: if App.tsx is restructured so this parse returns
+    // nothing, the rule below passes vacuously and nobody notices.
+    expect(destinationBodies().size).toBeGreaterThan(50);
+  });
+
+  it('renders no destination it did not define', () => {
+    const bodies = destinationBodies();
+    const offenders: string[] = [];
+    for (const file of sources(join(process.cwd(), 'src', 'screens'))) {
+      if (file.path.includes('.test.')) continue;
+      const text = withoutComments(file.text);
+      for (const [component, screen] of bodies) {
+        if (new RegExp(`export function ${component}\\b`).test(text)) continue;
+        if (renders(component).test(text)) {
+          offenders.push(`${file.path.slice(file.path.indexOf('/screens/') + 1)} renders <${component}/>, the '${screen}' screen`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
+describe('what the second rule catches', () => {
+  it('catches the embed Career had, which declared no bare prop', () => {
+    expect(renders('Applying').test("{tab === 'tracker' && <Applying />}")).toBe(true);
+    expect(renders('Applying').test('<Applying/>')).toBe(true);
+    expect(renders('Reports').test('<Reports grain={grain}>')).toBe(true);
+  });
+
+  it('leaves a type argument alone', () => {
+    expect(renders('Profile').test('const [profile, setProfile] = useState<Profile | null>(null);')).toBe(false);
+    expect(renders('Application').test('const rows: Array<Application> = [];')).toBe(false);
+    expect(renders('Career').test('const shown: Record<Career, string> = {};')).toBe(false);
+  });
+
+  it('leaves a screen that is not a destination alone', () => {
+    // `FirstRun` is an empty state and `Grades` is a view of Courses — neither
+    // has a directory row, so neither can be a second front door. They are
+    // absent from the map rather than excused by the regex.
+    expect([...destinationBodies().keys()]).not.toContain('FirstRun');
+    expect([...destinationBodies().keys()]).not.toContain('Grades');
   });
 });
