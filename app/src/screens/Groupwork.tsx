@@ -52,7 +52,7 @@ const asPart = (p: PartRow): Part => ({
  * without pretending to score anybody.
  *
  * Everything on screen is counted in `lib/groupwork.ts`. The policies that
- * make it safe are in `supabase/groups.sql`, and they follow the room's: you
+ * make it safe are in `supabase/migrations/20260901000500_groups.sql`, and they follow the room's: you
  * are verified, you are in that class, and nobody can remove you from a group
  * but you.
  */

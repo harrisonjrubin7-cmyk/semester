@@ -115,9 +115,16 @@ three layouts, and no layout draws navigation of its own.
 Anything the app draws as an ordered list can be dragged into a different
 order: the icons, folders and dock on the home screen, the tiles inside a
 shelf, the rows of the directory in Me and in Everything, the tabs in the
-bottom bar, your courses, the sections of Today — on Today itself, by the
-grip beside each heading — and everything on the calendar. Hold it, move it,
-let go.
+bottom bar, the tabs in the workspace's strip, your courses, the sections of
+Today — on Today itself, by the grip beside each heading — and everything on
+the calendar. Hold it, move it, let go.
+
+The strip is the one list where a drop says something as well as ordering: a
+tab let go among a group's tabs joins that group, and one dragged clear of
+every tab in it leaves. That is `rearrange` in
+[`lib/browser.ts`](src/lib/browser.ts) rather than in the hook, because it is
+a fact about tab groups and not about dragging — the hook's job is to say
+which row moved and where, which is why `onMove` carries both.
 
 One gesture and one arithmetic, in [`lib/arrange.ts`](src/lib/arrange.ts) over
 the pointer handling in [`lib/drag.ts`](src/lib/drag.ts) — a press is a drag
@@ -476,7 +483,13 @@ calendars. Files you attach are larger, so they live in IndexedDB
 (`semester-files`) instead. Tokens and any Claude key are under their own keys
 and are never bundled with the rest.
 
-Navigation state is deliberately not persisted — the app opens on Today.
+Navigation state is deliberately not persisted — the app opens on Today. The
+two things that look like exceptions are not: the workspace's open tabs
+(`semester.tabs.v1`, with their groups) and the bookmarks bar
+(`semester.bookmarks.v1`) are kept on the device under their own keys and are
+never synced, for the reason written at the top of `src/lib/bookmarks.ts` —
+a strip of tabs restored onto a phone from a laptop's backup is a row of tabs
+nobody opened.
 
 Clear it from the console with `localStorage.removeItem('semester.v1')`.
 

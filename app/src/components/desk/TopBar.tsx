@@ -40,6 +40,7 @@ import { secondLine } from '../../lib/dim';
 import { glyphFor } from '../icons.pick';
 import { recordSearch } from '../../lib/browser.hook';
 import { Avatar } from '../Avatar';
+import { BookmarkStar } from '../Bookmarks';
 import {
   AppsIcon,
   AskIcon,
@@ -177,6 +178,9 @@ export function TopBar({
               ✕
             </button>
           )}
+          {/* The star, where a browser puts it: in the field, about the page
+              the tab you are on is showing. See `components/Bookmarks.tsx`. */}
+          <BookmarkStar />
           <span className="desktop-keys" aria-hidden="true">
             ⌘ K
           </span>

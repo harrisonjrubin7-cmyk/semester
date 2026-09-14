@@ -21,9 +21,12 @@ import { useAI } from '../ai/store';
 import { WIDE, useMedia } from '../lib/media';
 import { useSitting } from '../lib/sitting.hook';
 import { hold, running } from '../lib/session';
+import { here } from '../lib/browser.hook';
+import { savable } from '../lib/bookmarks';
+import { star } from '../lib/bookmarks.hook';
 
 export function Keys() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, say } = useStore();
   const ai = useAI();
   const wide = useMedia(WIDE);
   const [open, setOpen] = useState(false);
@@ -72,6 +75,20 @@ export function Keys() {
         case 'capture':
           dispatch({ type: 'quickAdd', open: true });
           break;
+        case 'bookmark': {
+          // The tab rather than the screen, because the strip is what knows
+          // the difference between "Course" and "ECON 1020". A new tab has no
+          // page in it and nothing to keep, and says so rather than doing
+          // nothing — a key that is silent is a key people press twice.
+          const tab = here();
+          if (!savable(tab) || !tab.screen) {
+            say('There is nothing to bookmark on a new tab.');
+            break;
+          }
+          const kept = star({ screen: tab.screen, title: tab.title, place: tab.place });
+          say(kept ? `${tab.title} is bookmarked.` : `${tab.title} is no longer bookmarked.`);
+          break;
+        }
         case 'back':
           dispatch({ type: 'back' });
           break;
@@ -88,7 +105,7 @@ export function Keys() {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [wide, open, dispatch, sitting, setSitting, ai]);
+  }, [wide, open, dispatch, sitting, setSitting, ai, say]);
 
   // No effect to close it when the window narrows: the guard below already
   // hides it, and resetting the state in an effect would be a second render

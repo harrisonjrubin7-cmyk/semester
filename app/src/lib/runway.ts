@@ -29,7 +29,7 @@
  * a person draw their own conclusion.
  */
 
-import type { CourseId, DatedItem } from './types';
+import type { DatedItem } from './types';
 import type { Sitting } from './sitting';
 
 /** How far out you are, in the only bands where the answer differs. */
@@ -240,10 +240,6 @@ export function examsAhead(items: DatedItem[], done: Record<string, boolean>): D
     .sort((a, b) => a.daysAway - b.daysAway);
 }
 
-/** Which course an exam belongs to, for the caller to fetch the right guide. */
-export function courseOf(exam: DatedItem): CourseId {
-  return exam.c;
-}
 
 /**
  * N business days before a date.

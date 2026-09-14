@@ -7,7 +7,7 @@
  * two strings. See `app/src/lib/push.ts` for why it is arranged that way.
  *
  * Deploy:
- *     psql "$DATABASE_URL" -f supabase/push.sql
+ *     psql "$DATABASE_URL" -f supabase/migrations/20260901000600_push.sql
  *     npx web-push generate-vapid-keys          # once, keep both halves
  *     supabase secrets set VAPID_PUBLIC_KEY=…
  *     supabase secrets set VAPID_PRIVATE_KEY=…

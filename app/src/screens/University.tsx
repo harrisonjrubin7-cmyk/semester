@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { useDeviceLibrary } from '../lib/device-library';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { ActionButton, FilePick, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
@@ -323,6 +323,26 @@ function Workspace({ storageKey }: { storageKey: string }) {
     }
   };
 
+  /*
+   * Ask the gateway what became of a receipt that is still pending.
+   *
+   * The school completes an action on its own clock, so a receipt can sit at
+   * "pending" long after this screen is done with it. This asks about that
+   * same review rather than sending the action again — reconciling is a read.
+   */
+  const recheck = async () => {
+    if (!review) return;
+    setBusy(true);
+    setNotice('');
+    try {
+      setReceipt(await reconcileInstitutionAction(review.id));
+    } catch (e) {
+      setNotice((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const exportDrafts = () =>
     download({
       name: 'Semester university preparation drafts.json',
@@ -361,18 +381,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       />
 
       {(notice || saveError) && (
-        <p
-          role="status"
-          style={{
-            fontSize: 'var(--type-sm)',
-            lineHeight: 'var(--leading-normal)',
-            border: '1px solid var(--app-line)',
-            borderRadius: 'var(--r-md)',
-            padding: 'var(--sp-5)',
-            marginBlock: 'var(--sp-4)',
-            textWrap: 'pretty',
-          }}
-        >
+        <Notice>
           {saveError || notice}
           {library.error && (
             <ActionButton
@@ -401,7 +410,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               Undo removal
             </ActionButton>
           )}
-        </p>
+        </Notice>
       )}
 
       {tab === 'overview' && (
@@ -892,6 +901,14 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   {receipt.message} ·{' '}
                   {receipt.status === 'pending' ? 'Awaiting official completion' : 'Completed'} · Receipt{' '}
                   {receipt.id}
+                  {receipt.status === 'pending' && (
+                    <>
+                      {' '}
+                      <ActionButton disabled={busy} onClick={() => void recheck()}>
+                        Recheck this action
+                      </ActionButton>
+                    </>
+                  )}
                 </p>
               ) : review ? (
                 <>

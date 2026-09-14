@@ -213,16 +213,22 @@ export function SettingsNav() {
           {/*
             And the shelves, for the same reason.
 
-            `groupOrder` is dragged in two places — the tiles inside a folder
-            on the shelves navigation, and the directory rows on Me — and
-            neither offered any way to move a row without dragging it. Drawn
-            here beside the board rather than on either of them: a directory
-            row is a single `<button>`, and a pair of arrows inside a button is
-            a button inside a button.
+            `groupOrder` is dragged on the apps sheet and the workspace's
+            apps panel — see `lib/apps.ts`, which both read — and neither
+            offers any way to move a row without dragging it. Drawn here
+            beside the board rather than on either of them: an app row is a
+            single `<button>`, and a pair of arrows inside a button is a
+            button inside a button.
+
+            It used to say "the tiles inside a folder, and the directory rows
+            on Me". Both of those were the launcher and the shelves that
+            Progress → Everything drew, and they went when that tab merged
+            into the directory. The key did not go with them: it still orders
+            every shelf on the two surfaces named above.
           */}
           <Group
             header="The shelves"
-            footer="Where each screen sits on its shelf — the same order the tiles and the directory rows are dragged into."
+            footer="Where each screen sits on its shelf — the same order the apps sheet and the workspace apps panel are dragged into."
             lit={lights('shelves shelf order rearrange move up down directory tiles arrange', lit)}
           >
             {shelfLists(school.capabilities, currentLook(state).groupOrder).map((list) => (

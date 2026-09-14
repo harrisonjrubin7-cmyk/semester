@@ -45,36 +45,3 @@ export function CourseTag({
   );
 }
 
-/**
- * The same fact as a mark rather than a word.
- *
- * For the places a chip does not fit — a rail of five classes, a row already
- * carrying four labels — where the question is only "same course as that
- * one?". Hidden from screen readers on purpose: every one of these sits beside
- * the course's name or code, and a reader announcing "orange square" before it
- * is noise rather than information.
- */
-export function CourseDot({
-  id,
-  size = 8,
-  style,
-}: {
-  id: string | null | undefined;
-  size?: number;
-  style?: CSSProperties;
-}) {
-  const { tint } = useStore();
-  return (
-    <span
-      aria-hidden
-      style={{
-        flex: 'none',
-        width: size,
-        height: size,
-        borderRadius: '50%',
-        background: tint(id).fill,
-        ...style,
-      }}
-    />
-  );
-}

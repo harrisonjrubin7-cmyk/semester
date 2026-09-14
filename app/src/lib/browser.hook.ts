@@ -1,13 +1,24 @@
 import { useSyncExternalStore } from 'react';
 import {
+  MAX_TABS,
   add,
   asked,
   blank,
   close,
+  closeGroup,
+  collapse,
   current,
+  dissolve,
+  joinGroup,
+  leaveGroup,
+  makeGroup,
   openBeside,
+  pin,
   read,
+  rearrange,
+  renameGroup,
   select,
+  toneGroup,
   visit,
   write,
   type AppTab,
@@ -33,6 +44,14 @@ import type { Screen } from './types';
  */
 
 let held: Strip | null = null;
+/*
+ * The tabs closed this visit, most recent last.
+ *
+ * Bounded on its own rather than by `MAX_TABS`: this is a short undo for a
+ * mis-click, not a second strip, and it was ten when the cap was ten.
+ */
+const REOPENABLE = 10;
+const closed: {tab: AppTab; at: number}[]=[];
 const listeners = new Set<() => void>();
 
 /**
@@ -92,8 +111,10 @@ export function recordSearch(query: string): void {
 }
 
 /** A new tab, beside the one you are on, and you are now on it. */
-export function openTab(): void {
+export function openTab(): boolean {
+  if(strip().tabs.length>=MAX_TABS)return false;
   put(add(strip()));
+  return true;
 }
 
 /**
@@ -104,9 +125,11 @@ export function openTab(): void {
  * thing anybody does with a page of results, and the tab you landed in is
  * where you are when you want it.
  */
-export function openInNew(screen: Screen, title: string, place: Action[], query = ''): void {
+export function openInNew(screen: Screen, title: string, place: Action[], query = ''): boolean {
+  if(strip().tabs.length>=MAX_TABS)return false;
   put(openBeside(strip(), screen, title, place));
   if (query) put(asked(strip(), query));
+  return true;
 }
 
 /** Go to a tab. Returns the tab you are now on, for the caller to open. */
@@ -117,11 +140,125 @@ export function pickTab(which: number): AppTab {
 
 /** Close one. Returns the tab that is now on — its neighbour, or a new tab. */
 export function closeTab(which: number): AppTab {
-  put(close(strip(), which));
+  const before=strip();
+  if(before.tabs[which]){closed.push({tab:before.tabs[which],at:which});if(closed.length>REOPENABLE)closed.shift();}
+  put(close(before, which));
   return here();
 }
 
-/** For tests: forget everything read from the device. */
+/*
+ * The groups.
+ *
+ * One line each, for the same reason the tab operations above are one line
+ * each: the rules are in `lib/browser.ts` where they can be tested without a
+ * DOM, and this is the wire between them and a menu. The four that can change
+ * which tab is on — collapsing the group you are working in, closing a group
+ * whole — hand back the tab the app should now be showing, because a tab's
+ * page *is* the app and revealing one is going to it.
+ */
+
+/** Put a tab in a group of its own. */
+export function groupTab(which: number, name = ''): void {
+  put(makeGroup(strip(), which, name));
+}
+
+/** Move a tab into a group that already exists. */
+export function joinTabGroup(which: number, id: string): void {
+  put(joinGroup(strip(), which, id));
+}
+
+/** Take a tab out of whatever group it is in. */
+export function leaveTabGroup(which: number): void {
+  put(leaveGroup(strip(), which));
+}
+
+/** Name a group, or clear its name. */
+export function nameGroup(id: string, name: string): void {
+  put(renameGroup(strip(), id, name));
+}
+
+/** Recolour a group. */
+export function colourGroup(id: string, tone: number): void {
+  put(toneGroup(strip(), id, tone));
+}
+
+/**
+ * Fold a group down to its name, or open it.
+ *
+ * Answers with the tab the app should now be showing, or `null` when that did
+ * not change — folding the group you are working in moves you out of it, and
+ * folding one you are not in moves nothing. The caller opens what it is
+ * handed, so `null` has to mean "nothing to open" rather than "here, again":
+ * re-dispatching the place you are already in is a navigation, and in the
+ * search overlay a navigation closes the overlay you were folding from.
+ */
+export function foldGroup(id: string, shut: boolean): AppTab | null {
+  const was = here().id;
+  put(collapse(strip(), id, shut));
+  return here().id === was ? null : here();
+}
+
+/** Undo the grouping, keeping every tab open. */
+export function dissolveGroup(id: string): void {
+  put(dissolve(strip(), id));
+}
+
+/** Keep a tab at the front of the strip, as its glyph. Or let it go. */
+export function pinTab(which: number, pinned: boolean): void {
+  put(pin(strip(), which, pinned));
+}
+
+/**
+ * The strip, as a drag left it.
+ *
+ * `order` is the ids as drawn and `moved` is the tab the finger had; what the
+ * new position means for its group is `rearrange` in `lib/browser.ts`.
+ */
+export function moveTab(order: string[], moved: string): void {
+  put(rearrange(strip(), order, moved));
+}
+
+/**
+ * A new tab, in a group that already exists.
+ *
+ * Two steps rather than one: `add` puts it beside the tab you are on, which
+ * may be anywhere, and `joinGroup` moves it to the end of the group's run. The
+ * strip holds its own invariants through both, so there is no moment where a
+ * group is two runs with something else between them.
+ */
+export function openTabIn(id: string): void {
+  put(add(strip()));
+  put(joinGroup(strip(), strip().at, id));
+}
+
+/** Close every tab in a group. Returns the tab now on, or null — as above. */
+export function shutGroup(id: string): AppTab | null {
+  const was = here().id;
+  put(closeGroup(strip(), id));
+  return here().id === was ? null : here();
+}
+
+/** Last closed tab from this visit, including its original per-tab workspace identity. */
+export function lastClosed(): AppTab | undefined { return closed.at(-1)?.tab; }
+export function reopenClosed(): AppTab | null {
+  const current=strip();
+  if(!closed.length || current.tabs.length>=MAX_TABS)return null;
+  const entry=closed.pop()!;
+  const at=Math.min(entry.at,current.tabs.length);
+  /* Spread the strip rather than rebuilding it: it carries the groups too,
+     and a reopened tab must not take them down with it. */
+  put({...current,tabs:[...current.tabs.slice(0,at),entry.tab,...current.tabs.slice(at)],at});
+  return here();
+}
+
+/**
+ * For tests: forget everything read from the device.
+ *
+ * Cut on main as an export nothing read; `browser-recovery.test.ts` reads it
+ * again, and it now clears the closed-tab history too — that history is
+ * module state, so without this one test's closes are visible to the next.
+ */
 export function forgetStrip(): void {
   held = null;
+  closed.length = 0;
 }

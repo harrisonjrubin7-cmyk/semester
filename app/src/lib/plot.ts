@@ -71,7 +71,50 @@ export type Line =
   | { kind: 'curve'; of: 'y' | 'x'; body: Node }
   /** `x^2 + y^2 = 25`, held as `left − right` and drawn where it is zero. */
   | { kind: 'relation'; body: Node }
+  /**
+   * `r = 2 + 2\cos(\theta)` — a distance from the origin at each angle.
+   *
+   * Only where the right-hand side actually mentions θ. `r = 5` stays what it
+   * has always been here, a parameter with a slider, because that is what the
+   * circle example uses it for and silently turning somebody's slider into a
+   * curve would be the worse surprise of the two.
+   */
+  | { kind: 'polar'; body: Node }
+  /** `(\cos(t), \sin(t))` — a point that moves, drawn as the path it takes. */
+  | { kind: 'parametric'; x: Node; y: Node }
+  /**
+   * `z = x^2 - y^2` — a height over every point of the floor.
+   *
+   * Not a curve and not drawn as one: the picture of it has a camera in it,
+   * and the whole of that lives in `lib/surface.ts`. It is read here because
+   * one list takes every kind of thing somebody writes, whatever draws it.
+   */
+  | { kind: 'surface'; body: Node }
+  /**
+   * `(y, -x)` — a vector at every point of the window.
+   *
+   * The same brackets as a point and as a parametric curve, told apart by the
+   * same rule: the letters in it. `t` makes it a path, `x` or `y` makes it a
+   * field — which is the picture a phase diagram and a flow are — and neither
+   * makes it the fixed point it looks like.
+   */
+  | { kind: 'field'; x: Node; y: Node }
   | { kind: 'point'; x: Node; y: Node };
+
+/** The letter a polar curve turns through, and the one a parametric curve runs on. */
+export const ANGLE = 'θ';
+export const TIME = 't';
+
+/**
+ * How far round θ and t go, in half-turns.
+ *
+ * A circle closes in one turn and a five-petalled rose needs one; a spiral and
+ * a Lissajous figure need several, and sampling further than the curve goes
+ * costs detail everywhere else. Two turns is the default because it draws both
+ * `\sin(\theta)`'s two-lobed rose and `\sin(2\theta)`'s four-petalled one
+ * completely, and the screen offers the rest.
+ */
+export const TURNS: readonly number[] = [1, 2, 4, 6, 12];
 
 // ── Reading a line of the list ───────────────────────────────────────────
 
@@ -163,6 +206,19 @@ export function readLine(source: string): Line {
     const y = node(point[1]);
     if ('says' in x) return { kind: 'fault', says: x.says };
     if ('says' in y) return { kind: 'fault', says: y.says };
+    /*
+     * Three things wear these brackets, and the letters inside decide which.
+     *
+     * `t` is a path — a point that moves. `x` or `y` is a field — a vector at
+     * every point of the window, which is the picture a phase diagram and a
+     * flow are. Neither is a fixed point, which is what is left.
+     *
+     * `t` wins where both appear: a path drawn at each point of a field is not
+     * a picture of anything, and the moving point is what was written.
+     */
+    const letters = [...free(x.node), ...free(y.node)];
+    if (letters.includes(TIME)) return { kind: 'parametric', x: x.node, y: y.node };
+    if (letters.includes('x') || letters.includes('y')) return { kind: 'field', x: x.node, y: y.node };
     return { kind: 'point', x: x.node, y: y.node };
   }
 
@@ -198,6 +254,8 @@ export function readLine(source: string): Line {
   if (lhs.node.kind === 'name') {
     const name = lhs.node.name;
     if (name === 'y' || name === 'x') return { kind: 'curve', of: name, body: rhs.node };
+    if (name === 'z') return { kind: 'surface', body: rhs.node };
+    if (name === 'r' && free(rhs.node).includes(ANGLE)) return { kind: 'polar', body: rhs.node };
     return { kind: 'value', name, body: rhs.node };
   }
 
@@ -229,12 +287,20 @@ export function scopeOf(lines: Line[], degrees = false): Scope {
 
 /** What a line still needs before it can be drawn — what the list says in red. */
 export function missing(line: Line, scope: Scope): string[] {
-  const has = (name: string) => name === 'x' || name === 'y';
+  // The letters the drawing itself supplies: x and y across the window, θ round
+  // the turn, t along the run. Reporting those as unset would ask somebody to
+  // give a value to the very thing being varied.
+  const has = (name: string) => name === 'x' || name === 'y' || name === ANGLE || name === TIME;
   switch (line.kind) {
     case 'curve':
       return free(line.body, scope).filter((n) => !has(n));
     case 'relation':
       return free(line.body, scope).filter((n) => !has(n));
+    case 'polar':
+    case 'surface':
+      return free(line.body, scope).filter((n) => !has(n));
+    case 'parametric':
+    case 'field':
     case 'point':
       return [...free(line.x, scope), ...free(line.y, scope)].filter((n) => !has(n));
     case 'value':
@@ -254,6 +320,26 @@ const flat = (v: Val): number[] => (Array.isArray(v) ? v : [v]);
 export interface Drawn {
   paths: Point[][];
   points: Point[];
+  /** A field's arrows, where the line is one. See `lib/fields.ts`. */
+  arrows?: Arrow[];
+  /**
+   * How strongly to draw each path, where they are not all equal.
+   *
+   * Contour lines want this and nothing else does: twelve levels of one
+   * function in one colour are unreadable unless the line says which level it
+   * is. Absent means every path is drawn at full strength.
+   */
+  shades?: number[];
+}
+
+/** One arrow of a field: where it starts, where it points, and the two barbs. */
+export interface Arrow {
+  from: Point;
+  to: Point;
+  /** The two barb ends; the head is drawn as barb → tip → barb. */
+  head: [Point, Point];
+  /** How long this one is against the longest, 0 to 1 — what the ink says. */
+  strength: number;
 }
 
 const EMPTY: Drawn = { paths: [], points: [] };
@@ -371,11 +457,78 @@ export function contour(at: (x: number, y: number) => number, frame: Frame, cell
   return out;
 }
 
-/** How many points across the window a curve is sampled at, and a relation's grid. */
-export const DETAIL = { columns: 480, cells: 90 } as const;
+/**
+ * A curve walked along its own parameter rather than across the window.
+ *
+ * What polar and parametric have in common, and what makes them different from
+ * everything else here: nothing about the window decides where the pen goes.
+ * A cardioid comes back to where it started and a Lissajous figure crosses
+ * itself, so there is no "for each x" to sample over — there is a run of the
+ * parameter, and the curve is wherever that run puts it.
+ *
+ * Two consequences worth stating. The whole run is drawn whether or not it is
+ * on screen, so zooming out finds the rest of a spiral rather than redrawing
+ * it. And the line breaks only where a value is not a number — an asymptote in
+ * `r = 1/\theta` — because a big step between two samples is how a fast curve
+ * looks, not how a discontinuity looks.
+ *
+ * Lists pair up, so `(\cos(t), a\sin(t))` with `a = [1, 2, 3]` is three
+ * ellipses, the same way a list draws a family anywhere else.
+ */
+export function along(
+  at: (t: number) => { xs: number[]; ys: number[] },
+  from: number,
+  to: number,
+  steps: number,
+): Point[][] {
+  const rows: { xs: number[]; ys: number[] }[] = [];
+  let widest = 0;
+  for (let i = 0; i <= steps; i += 1) {
+    const got = at(from + ((to - from) * i) / steps);
+    widest = Math.max(widest, got.xs.length, got.ys.length);
+    rows.push(got);
+  }
+  const out: Point[][] = [];
+  for (let b = 0; b < widest; b += 1) {
+    let run: Point[] = [];
+    for (const { xs, ys } of rows) {
+      const x = xs[b] ?? xs[0];
+      const y = ys[b] ?? ys[0];
+      if (!Number.isFinite(x) || !Number.isFinite(y)) {
+        if (run.length > 1) out.push(run);
+        run = [];
+        continue;
+      }
+      run.push({ x, y });
+    }
+    if (run.length > 1) out.push(run);
+  }
+  return out;
+}
+
+/**
+ * How many points across the window a curve is sampled at, a relation's grid,
+ * and the steps along a turn.
+ *
+ * `turns` is in half-turns of π, and `steps` is per turn: a cardioid at 360
+ * points a turn has a point every degree, which is smooth at any zoom the
+ * window is likely to be at and cheap enough to redraw while a finger moves.
+ */
+export interface Detail {
+  /** Points across the window, for a function of x. */
+  columns: number;
+  /** The grid a relation's boundary is found on. */
+  cells: number;
+  /** Points per turn, for a polar or parametric curve. */
+  steps: number;
+  /** How far θ and t run, in half-turns of π. */
+  turns: number;
+}
+
+export const DETAIL: Detail = { columns: 480, cells: 90, steps: 360, turns: 2 };
 
 /** One line of the list, as what a plot draws for it. */
-export function draw(line: Line, scope: Scope, frame: Frame, detail = DETAIL): Drawn {
+export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DETAIL): Drawn {
   switch (line.kind) {
     case 'curve': {
       const over = line.of === 'y' ? 'x' : 'y';
@@ -395,6 +548,28 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail = DETAIL): D
         return Array.isArray(got) ? (got[0] ?? NaN) : got;
       };
       return { paths: contour(at, frame, detail.cells), points: [] };
+    }
+    case 'polar': {
+      const turns = detail.turns * Math.PI;
+      const at = (angle: number) => {
+        const rs = flat(value(line.body, { ...scope, vars: { ...scope.vars, [ANGLE]: angle } }));
+        // A negative r is not a mistake and not an absence: it is the point on
+        // the opposite ray, which is what makes `r = \cos(2\theta)`'s missing
+        // petals appear rather than the curve simply stopping.
+        return {
+          xs: rs.map((r) => r * Math.cos(angle)),
+          ys: rs.map((r) => r * Math.sin(angle)),
+        };
+      };
+      return { paths: along(at, 0, turns, Math.round(detail.steps * detail.turns)), points: [] };
+    }
+    case 'parametric': {
+      const turns = detail.turns * Math.PI;
+      const at = (t: number) => {
+        const vars = { ...scope.vars, [TIME]: t };
+        return { xs: flat(value(line.x, { ...scope, vars })), ys: flat(value(line.y, { ...scope, vars })) };
+      };
+      return { paths: along(at, 0, turns, Math.round(detail.steps * detail.turns)), points: [] };
     }
     case 'point': {
       const xs = flat(value(line.x, scope));
@@ -743,6 +918,31 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'A family of curves',
     says: 'One line, drawn once for every value in a list.',
     lines: ['a = [1, 1.5, ..., 4]', 'y = a \\sin(x)'],
+  },
+  {
+    name: 'A rose',
+    says: 'A polar curve: how far from the origin, at each angle.',
+    lines: ['r = 4\\sin(2\\theta)'],
+  },
+  {
+    name: 'A Lissajous figure',
+    says: 'A point that moves — x and y each written in t.',
+    lines: ['a = 3', '(5\\sin(a t), 5\\sin(2t))'],
+  },
+  {
+    name: 'A saddle',
+    says: 'A surface: a height over every point of the floor, turned with a finger.',
+    lines: ['z = x^2 - y^2'],
+  },
+  {
+    name: 'A flow',
+    says: 'A field: which way it pushes at every point, and how hard.',
+    lines: ['(-y, x)'],
+  },
+  {
+    name: 'Supply, demand and where they move',
+    says: 'A phase diagram: prices rise where demand beats supply.',
+    lines: ['(20 - 2x - y, x - 2)'],
   },
   {
     name: 'Discounting',

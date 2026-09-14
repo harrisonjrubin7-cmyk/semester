@@ -149,7 +149,9 @@ import { QuickAdd } from './components/QuickAdd';
 import { Assistant } from './ai/Assistant';
 import { Command } from './components/Command';
 import { TabStrip, TabsFollow } from './components/Tabs';
+import { BookmarksBar } from './components/Bookmarks';
 import { AllApps } from './components/nav/AllApps';
+import { GoogleShell } from './components/GoogleShell';
 import { TopBar } from './components/desk/TopBar';
 import { Sidebar } from './components/desk/Sidebar';
 import { AppsPanel } from './components/desk/AppsPanel';
@@ -1148,8 +1150,10 @@ function CurrentScreen() {
  * shell body and the screen itself are the same elements in the same order —
  * so a screen is one screen, drawn in a different frame, rather than a second
  * implementation that will drift. The overlays are the same objects too: the
- * command palette, the capture box, the undo toast and the assistant are
- * mounted here exactly as they are there.
+ * command palette, the capture box, the undo toast and the assistant are the
+ * ones the other layouts open. The three that cover the window hang off this
+ * layout's root rather than off its pane, which is a place and not a
+ * difference in what they are — see the note over them below.
  *
  * Two things are this layout's own: the launcher is a panel hanging off the
  * nine dots rather than a sheet over the window (`AppsPanel`), and Customize
@@ -1215,6 +1219,10 @@ function Workspace({
             push the whole app down a row the first time you opened one. */}
         <TabStrip alwaysOn onBlank={() => dispatch({ type: 'go', screen: 'search' })} />
         <TopBar onSuggesting={onSuggesting} />
+        {/* And the bookmarks under the field, which is where the browser this
+            layout is shaped like keeps them. It draws nothing at all until
+            something has been starred. */}
+        <BookmarksBar />
 
         <div className={chrome.sidebar ? 'deskwork-body' : 'deskwork-body deskwork-one'}>
           {chrome.sidebar && <Sidebar />}
@@ -1225,11 +1233,6 @@ function Workspace({
                 : 'device-pane deskwork-pane'
             }
           >
-            <Assistant />
-            {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
-            {state.quickAdd && (
-              <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />
-            )}
             {!ownTitle && <Header slim />}
             <Said />
             {/* The sample banner belongs over records, which is what it is
@@ -1257,6 +1260,40 @@ function Workspace({
           </div>
         </div>
 
+        {/*
+          The three that cover the window: beside the body, not inside the pane.
+
+          They are mounted in the pane on both other layouts, for the reason
+          written over them there — `.device .input`, `.device .btn` and
+          `.device .bare` are where this app's controls are drawn, and an
+          overlay outside `.device` is the one part of the app not drawn in
+          the app's own materials. That reason is satisfied here by the root
+          itself: the workspace's outer box *is* `.device`, so a child of it
+          is inside that scope wherever it sits in this subtree.
+
+          What is not satisfied inside the pane is the stacking. This layout
+          is the only one with chrome painted over the body — `.deskwork >
+          .deskstrip` at 21 and `.desktop-bar` at 20, so the bar's
+          suggestions are not covered by the pane the moment they open — and
+          `.device > *` puts every direct child, the body included, at 1. An
+          overlay in the pane is inside that 1: its own `z-index: 80` is
+          spent against its siblings and cannot lift its parent, so the tab
+          strip and the search bar painted straight over the top of it. The
+          capture box lost its field and its Close button to them — you
+          pressed +, saw the explanation with nothing to type into, and a
+          click where the field should be landed in the bar's search box
+          instead — and the palette opened under the bar with two search
+          fields on screen at once.
+
+          Out here each one is a sibling of those strips rather than a
+          grandchild of the body, so the number it already carries is
+          compared with theirs and wins. Nothing else changes: all three are
+          `position: fixed` above 1180px and laid out against the window
+          wherever they are mounted.
+        */}
+        <Assistant />
+        {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
+        {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
         {/* The launcher and Customize, last so they stack over the body
             without a z-index of their own to keep in step with anything. */}
         {state.apps && <AppsPanel onClose={() => dispatch({ type: 'apps', open: false })} />}
@@ -1265,6 +1302,99 @@ function Workspace({
         )}
       </div>
     </SuggestingProvider>
+  );
+}
+
+/**
+ * The workspace with a browser's habits.
+ *
+ * The same job as `Workspace` above — one navigation, chrome at the top, at
+ * every width — drawn the way a browser draws it: tabs you can name,
+ * bookmark, collect into a coloured group and reopen after closing, with a
+ * top search field that owns the window. It came from the audited source,
+ * where it was the whole app's frame; here it is one of the navigations in
+ * `lib/chrome.ts`, so choosing it is a setting rather than a rewrite and the
+ * workspace it sits beside is still there.
+ *
+ * `GoogleShell` draws all of that and mounts what it is given inside itself,
+ * so this function's job is only the screen: no `TabStrip`, no `TopBar`, no
+ * `Sidebar`. The pieces that must exist on every layout — the shortcut sheet,
+ * the timers, the title — are mounted here exactly as they are there.
+ *
+ * The shell also puts `ModernShellContext` over the whole subtree, which is
+ * how the app's own search and tab chrome knows to stand down rather than
+ * draw a second copy of itself inside it. See `components/shell-context.ts`.
+ */
+function BrowserShell({ trouble }: { trouble: React.ReactNode }) {
+  const { state, dispatch, asking, settle } = useStore();
+  const header = useHeader();
+
+  return (
+    <GoogleShell title={header.title}>
+      {/*
+        `.device` for the reason the workspace gives for its own root: every
+        control primitive in `app.css` is scoped `.device .btn`, `.device
+        .input`, `.device .bare`, so a screen mounted outside it is the one
+        part of the app not drawn in the app's own materials. `.deskwork`
+        undoes the two things `.device` says about being a phone — the 402px
+        cap and the column — because the shell has already given this the
+        whole window.
+      */}
+      <div className="device deskwork browsershell">
+        <SkipLink />
+        <Titled />
+        <Fresh />
+        <Keys />
+        <Ringing />
+        <PushTop />
+        <Tapped />
+        <Watching />
+        {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
+        {/* Follows the address into the strip, as on every other layout. The
+            strip itself is the shell's, not ours. */}
+        <TabsFollow />
+
+        <div className="deskwork-body deskwork-one">
+          <div
+            className={
+              isCanvas(state.screen)
+                ? 'device-pane deskwork-pane has-canvas'
+                : 'device-pane deskwork-pane'
+            }
+          >
+            <Said />
+            <Replaced />
+            <Undone />
+            {trouble}
+            <ScrollArea screen={state.screen} key={state.screen}>
+              <SoftTop />
+              <Suspense fallback={<Loading />}>
+                <ScreenTrouble
+                  key={state.screen}
+                  onLeave={() => dispatch({ type: 'go', screen: 'search' })}
+                >
+                  <ShellBody screen={state.screen}>
+                    <CurrentScreen />
+                  </ShellBody>
+                </ScreenTrouble>
+              </Suspense>
+            </ScrollArea>
+          </div>
+        </div>
+
+        {/*
+          A sibling of the body rather than a child of the pane, for the
+          stacking reason written over the same three in `Workspace`.
+
+          The assistant's own floating dock is deliberately not mounted here.
+          This shell already offers the tutor twice — in the top bar and
+          inside the search field — and a third route to it lands in the
+          bottom-right corner the shell keeps its Customize button in, so the
+          two covered each other.
+        */}
+        {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
+      </div>
+    </GoogleShell>
   );
 }
 
@@ -1541,6 +1671,16 @@ export default function App() {
    * already decided which. See `Workspace` above.
    */
   if (chrome.desk) return <Workspace chrome={chrome} trouble={trouble} />;
+
+  /*
+   * The browser shell, on the same terms and for the same reason.
+   *
+   * Its chrome is at the top of the window too, so it is its own frame rather
+   * than the desktop one with a different bar on it, and `chromeFor` has
+   * already decided that it and the workspace are never both on. See
+   * `BrowserShell` above.
+   */
+  if (chrome.browser) return <BrowserShell trouble={trouble} />;
 
   if (wide) {
     return (

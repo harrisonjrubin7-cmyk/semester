@@ -28,20 +28,52 @@
  * actions that opened it — see `place` in `lib/browser.ts` — so ECON 1020
  * comes back as ECON 1020, and the guide unit comes back in the mode it was
  * being read in.
+ *
+ * ## Groups are drawn as runs, not as a second row
+ *
+ * A group is its tabs with a coloured head in front of them and a wash behind
+ * them — one object on the strip rather than a folder somewhere else. That is
+ * the whole reason the model keeps a group's tabs next to each other
+ * (`tidy` in `lib/browser.ts`): the drawing is the grouping, and a run split
+ * in two by somebody else's tab would be a colour repeated rather than a
+ * group. Folded, the run is its head alone with a count on it, which is what
+ * buys back the room on a strip that has reached ten.
  */
 
-import { useEffect, useMemo, useRef } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+} from 'react';
 import { useStore } from '../state/store';
 import { strip as stripNow } from '../lib/browser.hook';
-import { closeTab, here, openTab, pickTab, record, useStrip } from '../lib/browser.hook';
-import { NEW_TAB, placeFor, sameplace } from '../lib/browser';
+import {
+  closeTab,
+  foldGroup,
+  here,
+  moveTab,
+  openTab,
+  pickTab,
+  record,
+  useStrip,
+} from '../lib/browser.hook';
+import { NEW_TAB, lanes, pinnedCount, placeFor, sameplace } from '../lib/browser';
+import { useMovable, type Movable } from '../lib/arrange';
 import { screenName } from '../lib/nav';
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
 import { secondLine } from '../lib/dim';
-import { Plus, Search as SearchIcon } from './Icons';
+import { ChevronDown, Plus, Search as SearchIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
-import type { AppTab } from '../lib/browser';
+import { StripMenu, type MenuOn } from './TabMenu';
+import type { Corner } from './Popover';
+import { toneAt, useTones } from './tones';
+import type { CourseTint } from '../lib/tint';
+import type { AppTab, Seat, TabGroup } from '../lib/browser';
+import { useModernShell } from './shell-context';
 
 /**
  * The strip follows the app, wherever the app is driven from.
@@ -135,6 +167,8 @@ export function TabsFollow() {
     sheetId,
     deckId,
     mode,
+    openUnit,
+    callCode,
   } = state;
   const at = useMemo(
     () =>
@@ -148,8 +182,25 @@ export function TabsFollow() {
         sheetId,
         deckId,
         mode,
+        /* A study tab remembers the unit it is open on and a call tab its
+           room, so two study tabs come back to their own. See `placeFor`. */
+        openUnit,
+        callCode,
       }),
-    [screen, courseId, itemId, eventId, guideId, noteId, documentId, sheetId, deckId, mode],
+    [
+      screen,
+      courseId,
+      itemId,
+      eventId,
+      guideId,
+      noteId,
+      documentId,
+      sheetId,
+      deckId,
+      mode,
+      openUnit,
+      callCode,
+    ],
   );
   const seen = useRef<string | null>(null);
 
@@ -211,6 +262,42 @@ export function TabStrip({
 }) {
   const { dispatch } = useStore();
   const strip = useStrip();
+  const tones = useTones();
+  /*
+   * Dragging a tab along the strip.
+   *
+   * The same hook every ordered list in this app is arranged with, so the
+   * gesture is the one that already moves a course, a shelf tile and the
+   * bottom bar — hold, drag, let go — and Alt with the arrow keys is the
+   * keyboard's version of it, which is the half a strip of small targets on a
+   * phone most needs. `lib/arrange.ts` is the whole of it.
+   *
+   * The ids are every tab, including the ones folded inside a collapsed
+   * group: they are not drawn, so nothing can be dropped on them, but they
+   * still hold their places in the order — dragging a tab past a folded group
+   * lands it past all of it rather than in the middle of it.
+   */
+  const rows = useMemo(() => strip.tabs.map((t) => t.id), [strip.tabs]);
+  const movable = useMovable<string>({
+    items: rows,
+    onMove: (order, moved) => moveTab(order, moved),
+  });
+  /** The tab or group menu, and where it was summoned from. See `TabMenu`. */
+  const [menu, setMenu] = useState<{ on: MenuOn; corner: Corner } | null>(null);
+  const modern = useModernShell();
+
+  /**
+   * Picking a tab, unless the click is the tail of a drag.
+   *
+   * A pointer sequence that moved a tab still ends in a click on the tab it
+   * was dropped on, and without this every rearrangement would also navigate
+   * — usually to the tab that was in the way. `tookDrop` is `arrange.ts`'s
+   * answer to exactly that, and reading it clears it.
+   */
+  const pick = (at: number) => {
+    if (movable.tookDrop()) return;
+    land(pickTab(at));
+  };
 
   /** Put the app where a tab says, or hand a new tab to the search page. */
   const land = (tab: AppTab) => {
@@ -222,7 +309,33 @@ export function TabStrip({
     onBlank?.();
   };
 
+  /** Close a tab, and go wherever closing it revealed. */
+  const shut = (which: number) => {
+    const landed = closeTab(which);
+    // Closing the tab you are on reveals its neighbour, and a tab's page is
+    // the app — so revealing one is going to it.
+    if (which === strip.at) land(landed);
+  };
+
+  /*
+   * The menu opens under the control that asked for it, or at the pointer
+   * when it was a right-click. Both are read here rather than in the menu: by
+   * the time it renders, the strip may have scrolled the control away.
+   */
+  const summon = (on: MenuOn, e: ReactMouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const box = e.currentTarget.getBoundingClientRect();
+    const pointer = e.detail > 0 && e.clientY > 0;
+    setMenu({ on, corner: { x: pointer ? e.clientX : box.left, y: pointer ? e.clientY : box.bottom + 2 } });
+  };
+  /* Inside the browser shell the strip is the shell's, not ours — drawing
+     this one too is the doubling `lib/chrome.ts` exists to stop. */
+  if (modern) return null;
   if (!inOverlay && !alwaysOn && strip.tabs.length < 2) return null;
+
+  const runs = lanes(strip);
+  const pins = pinnedCount(strip);
 
   return (
     <div
@@ -244,79 +357,91 @@ export function TabStrip({
       }}
     >
       <div style={{ display: 'flex', gap: 'var(--sp-1)', overflowX: 'auto', flex: 1, minWidth: 0 }}>
-        {strip.tabs.map((tab, i) => {
-          const on = i === strip.at;
-          /*
-           * A tab in the middle of a search is named after the search, which
-           * is what the tab in a browser does and is the only thing that
-           * tells two new tabs apart. Not written into the strip: the query
-           * is this session's, and a tab reopened tomorrow is a new tab
-           * again rather than one carrying a question nobody asked twice.
-           */
-          const title = (on && searching.trim() ? searching : tab.title) || NEW_TAB;
+        {runs.map((lane) => {
+          const group = lane.group;
+          if (!group) {
+            const seat = lane.seats[0];
+            /*
+             * The line where the pinned run ends.
+             *
+             * Without it the strip reads as one row whose first few tabs have
+             * lost their names. With it there are two things: the places you
+             * keep, and what you happen to have open — which is what pinning
+             * is *for*, and it costs one pixel to say.
+             */
+            const edge = pins > 0 && seat.at === pins;
+            return (
+              <Fragment key={seat.tab.id}>
+                {edge && <PinEdge />}
+                <Tab
+                  seat={seat}
+                  on={seat.at === strip.at}
+                  searching={searching}
+                  hold={movable.props(seat.tab.id)}
+                  onPick={() => pick(seat.at)}
+                  onShut={() => shut(seat.at)}
+                  onMenu={(e) => summon({ kind: 'tab', at: seat.at }, e)}
+                />
+              </Fragment>
+            );
+          }
+          const tint = toneAt(tones, group.tone);
           return (
+            <Fragment key={group.id}>
+            {pins > 0 && lane.seats[0].at === pins && <PinEdge />}
             <div
-              key={tab.id}
+              /*
+               * The run, drawn as one object.
+               *
+               * The wash and the rule under it are what make four tabs read as
+               * four tabs *of something* rather than four that happen to be
+               * next to each other — and they are the group's own colour, so
+               * two groups on one strip are told apart before anything is
+               * read. Both come from `lib/tint.ts` at a lightness measured
+               * against the ground, which is why a group is legible on
+               * Parchment and on Ink without being chosen twice.
+               */
               style={{
                 display: 'flex',
                 alignItems: 'center',
+                gap: 'var(--sp-1)',
                 flex: 'none',
-                maxWidth: 190,
+                maxWidth: '100%',
+                padding: '0 var(--sp-1)',
                 borderRadius: 'var(--r-lg) var(--r-lg) 0 0',
-                background: on ? 'var(--app-panel)' : 'transparent',
-                border: `1px solid ${on ? 'var(--app-line)' : 'transparent'}`,
-                borderBottom: 'none',
+                background: tint.wash,
+                borderBottom: `2px solid ${tint.fill}`,
               }}
             >
-              <button
-                type="button"
-                className="bare tappable"
-                onClick={() => land(pickTab(i))}
-                aria-current={on ? 'page' : undefined}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 'var(--sp-3)',
-                  minWidth: 0,
-                  width: 'auto',
-                  textAlign: 'left',
-                  padding: 'var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-4)',
-                  fontSize: 'var(--type-sm)',
-                  ...(on ? {} : secondLine()),
+              <GroupHead
+                group={group}
+                held={lane.seats.length}
+                tint={tint}
+                onToggle={() => {
+                  const landed = foldGroup(group.id, !group.collapsed);
+                  // Only when it moved you: see `foldGroup`. Opening a group
+                  // you were never inside leaves you exactly where you were.
+                  if (landed) land(landed);
                 }}
-              >
-                {tab.screen ? <TabGlyph screen={tab.screen} size={15} /> : <SearchIcon size={15} />}
-                <span
-                  style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {title}
-                </span>
-              </button>
-              <button
-                type="button"
-                className="bare tappable"
-                onClick={() => {
-                  const landed = closeTab(i);
-                  // Closing the tab you are on reveals its neighbour, and a
-                  // tab's page is the app — so revealing one is going to it.
-                  if (i === strip.at) land(landed);
-                }}
-                aria-label={`Close ${title}`}
-                style={{
-                  width: 'auto',
-                  flex: 'none',
-                  padding: 'var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-1)',
-                  fontSize: 'var(--type-sm)',
-                  ...secondLine(),
-                }}
-              >
-                ✕
-              </button>
+                onMenu={(e) => summon({ kind: 'group', id: group.id }, e)}
+              />
+              {/* Folded, the run is its head and nothing else — which is the
+                  room a strip at ten tabs gets back for it. */}
+              {!group.collapsed &&
+                lane.seats.map((seat) => (
+                  <Tab
+                    key={seat.tab.id}
+                    seat={seat}
+                    on={seat.at === strip.at}
+                    searching={searching}
+                    hold={movable.props(seat.tab.id)}
+                    onPick={() => pick(seat.at)}
+                    onShut={() => shut(seat.at)}
+                    onMenu={(e) => summon({ kind: 'tab', at: seat.at }, e)}
+                  />
+                ))}
             </div>
+            </Fragment>
           );
         })}
         <button
@@ -345,10 +470,27 @@ export function TabStrip({
           type="button"
           className="bare"
           onClick={onDismiss}
+          /*
+           * A gutter, and a rule, because the row beside this one scrolls.
+           *
+           * The tabs sit in a `overflow-x: auto` box whose right edge was two
+           * pixels from this word. A row that has overflowed is cut wherever
+           * it is cut — mid-name, mid-letter — so on a phone with four tabs
+           * open the strip read "…Practice pap CLOSE", one string, and the
+           * cut looked like the app had broken rather than like a row that
+           * scrolls. The gutter separates them and the hairline says which
+           * side of it a thing belongs to: everything left of the line is a
+           * place you can go, and this is not.
+           */
           style={{
             width: 'auto',
             flex: 'none',
-            padding: 'var(--sp-4) var(--sp-2)',
+            marginLeft: 'var(--sp-4)',
+            paddingLeft: 'var(--sp-5)',
+            paddingRight: 'var(--sp-2)',
+            paddingTop: 'var(--sp-4)',
+            paddingBottom: 'var(--sp-4)',
+            borderLeft: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',
             letterSpacing: '0.12em',
             ...secondLine(),
@@ -357,6 +499,255 @@ export function TabStrip({
           CLOSE
         </button>
       )}
+      {menu && (
+        <StripMenu
+          on={menu.on}
+          corner={menu.corner}
+          onClose={() => setMenu(null)}
+          onLand={land}
+          onCloseTab={shut}
+          onNewTab={() => onBlank?.()}
+        />
+      )}
     </div>
+  );
+}
+
+/** The hairline between the tabs you keep and the ones you happen to have. */
+function PinEdge() {
+  return (
+    <div
+      aria-hidden="true"
+      style={{
+        flex: 'none',
+        alignSelf: 'stretch',
+        width: 1,
+        margin: 'var(--sp-2) var(--sp-3)',
+        background: 'var(--app-line)',
+      }}
+    />
+  );
+}
+
+/**
+ * One tab: its glyph, its name, its cross, and the ⌄ when it is the one on.
+ *
+ * The chevron is drawn on the current tab only. It is the touchable way into
+ * the menu that right-click is for everybody else, and a chevron on every tab
+ * would cost the strip exactly the room the names need — nine of them is an
+ * inch of chrome to save one click on a tab you are not looking at.
+ */
+function Tab({
+  seat,
+  on,
+  searching,
+  hold,
+  onPick,
+  onShut,
+  onMenu,
+}: {
+  seat: Seat;
+  on: boolean;
+  searching: string;
+  /**
+   * What makes this tab draggable: `props` from `useMovable`.
+   *
+   * The whole tab is the handle and the whole tab is what a drop lands on,
+   * which is right here for the reason `arrange.ts` gives — a row that is a
+   * row. The close cross inside it is not: a pointer that went down on ✕ is
+   * closing a tab, not picking one up, and `stopPropagation` there is what
+   * keeps those two gestures apart.
+   */
+  hold: ReturnType<Movable<string>['props']>;
+  onPick: () => void;
+  onShut: () => void;
+  onMenu: (e: ReactMouseEvent) => void;
+}) {
+  const { tab } = seat;
+  /*
+   * A tab in the middle of a search is named after the search, which is what
+   * the tab in a browser does and is the only thing that tells two new tabs
+   * apart. Not written into the strip: the query is this session's, and a tab
+   * reopened tomorrow is a new tab again rather than one carrying a question
+   * nobody asked twice.
+   */
+  const title = (on && searching.trim() ? searching : tab.title) || NEW_TAB;
+  /*
+   * A pinned tab is its glyph, and it has no cross.
+   *
+   * Both halves matter. The width is the point of pinning — five places kept
+   * to hand cost five glyphs rather than half the strip — and the missing
+   * cross is what makes that safe: a target this small with a close on it is
+   * a tab you lose to a thumb landing an inch from where it meant to. Closing
+   * one is in the menu, where it takes a deliberate press.
+   */
+  const pinned = Boolean(tab.pinned);
+
+  return (
+    <div
+      {...hold}
+      onContextMenu={onMenu}
+      title={pinned ? title : undefined}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        flex: 'none',
+        maxWidth: pinned ? undefined : 190,
+        borderRadius: 'var(--r-lg) var(--r-lg) 0 0',
+        background: on ? 'var(--app-panel)' : 'transparent',
+        border: `1px solid ${on ? 'var(--app-line)' : 'transparent'}`,
+        borderBottom: 'none',
+        ...hold.style,
+      }}
+    >
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={onPick}
+        aria-current={on ? 'page' : undefined}
+        // The name is the button's text on an ordinary tab and has to be said
+        // out loud on a pinned one, where the glyph is all there is to see.
+        aria-label={pinned ? title : undefined}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--sp-3)',
+          minWidth: 0,
+          width: 'auto',
+          textAlign: 'left',
+          padding: pinned
+            ? 'var(--sp-3) var(--sp-4)'
+            : 'var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-4)',
+          fontSize: 'var(--type-sm)',
+          ...(on ? {} : secondLine()),
+        }}
+      >
+        {tab.screen ? <TabGlyph screen={tab.screen} size={15} /> : <SearchIcon size={15} />}
+        {!pinned && (
+          <span
+            style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {title}
+          </span>
+        )}
+      </button>
+      {on && (
+        <button
+          type="button"
+          className="bare tappable"
+          onClick={onMenu}
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label={`What this tab can do — ${title}`}
+          aria-haspopup="dialog"
+          style={{
+            width: 'auto',
+            flex: 'none',
+            padding: 'var(--sp-3) var(--sp-1)',
+            fontSize: 'var(--type-sm)',
+          }}
+        >
+          <ChevronDown size={13} />
+        </button>
+      )}
+      {!pinned && (
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={onShut}
+        // A press on the cross is a close, not the start of a drag — see the
+        // note on `hold` above.
+        onPointerDown={(e) => e.stopPropagation()}
+        aria-label={`Close ${title}`}
+        style={{
+          width: 'auto',
+          flex: 'none',
+          padding: 'var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-1)',
+          fontSize: 'var(--type-sm)',
+          ...secondLine(),
+        }}
+      >
+        ✕
+      </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The head of a group: a dot, its name, and how many are folded behind it.
+ *
+ * Clicking it folds and unfolds, which is the gesture every browser uses and
+ * the only one worth a whole click on a strip this size. Everything else the
+ * group can do — its name, its colour, ungrouping, closing the lot — is one
+ * right-click away, and the head carries `aria-haspopup` so the keyboard has
+ * the same route in.
+ *
+ * An unnamed group is its dot and its count. That is a real state rather than
+ * a missing one: three tabs grouped in one gesture and named never is how most
+ * groups start, and the colour alone reads a strip.
+ */
+function GroupHead({
+  group,
+  held,
+  tint,
+  onToggle,
+  onMenu,
+}: {
+  group: TabGroup;
+  held: number;
+  tint: CourseTint;
+  onToggle: () => void;
+  onMenu: (e: ReactMouseEvent) => void;
+}) {
+  const says = group.name || 'Unnamed group';
+  const count = held === 1 ? '1 tab' : `${held} tabs`;
+  return (
+    <button
+      type="button"
+      className="bare tappable"
+      onClick={onToggle}
+      onContextMenu={onMenu}
+      // Not `aria-expanded` alone: what folds is the run of tabs beside this,
+      // which is not a region this button owns. The label says the state in
+      // words, which is the honest version of the same information.
+      aria-label={`${says} — ${count}, ${group.collapsed ? 'open' : 'fold away'}`}
+      aria-haspopup="dialog"
+      title={`${says} — ${count}`}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--sp-3)',
+        width: 'auto',
+        flex: 'none',
+        maxWidth: 160,
+        padding: 'var(--sp-3) var(--sp-4)',
+        borderRadius: 'var(--r-sm)',
+        fontSize: 'var(--type-sm)',
+        color: tint.ink,
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          flex: 'none',
+          width: 'var(--sp-4)',
+          height: 'var(--sp-4)',
+          borderRadius: '50%',
+          background: tint.fill,
+        }}
+      />
+      {group.name && (
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {group.name}
+        </span>
+      )}
+      {/* The count only while it is folded: open, the tabs are right there
+          and a number beside them is one more thing to read past. */}
+      {group.collapsed && <span aria-hidden="true">{held}</span>}
+    </button>
   );
 }

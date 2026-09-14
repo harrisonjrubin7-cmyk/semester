@@ -120,8 +120,16 @@ describe('links to screens that have since merged', () => {
     // A settings page rather than a destination, and the same rule: it counted
     // the same bytes the Data screen counts.
     expect(fromHash('#/setStorage')?.screen).toBe('data');
-    // The directory that was a screen is the tab it duplicated.
-    expect(fromHash('#/everything')?.screen).toBe('me');
+    /*
+     * Retired twice, which is why this moved.
+     *
+     * `#/everything` first went to the Progress tab that had duplicated the
+     * Everything screen. Then the workspace shell's `directory` turned that
+     * tab into a second directory again, the tab went, and the link now lands
+     * on the screen that draws the registry. A link written when Everything
+     * was a screen is on a screen again.
+     */
+    expect(fromHash('#/everything')?.screen).toBe('directory');
   });
 
   it('says which part of the survivor the link meant', () => {
@@ -136,8 +144,9 @@ describe('links to screens that have since merged', () => {
     // The id a link used to carry went with the screen: the table lists every
     // course and never read it.
     expect(fromHash('#/grades/econ')?.screen).toBe('courses');
-    // `#/everything` says which tab of Progress it meant.
-    expect(fromHash('#/everything')?.opens).toEqual({ meTab: 'all' });
+    // Nothing to disambiguate any more: `directory` is the whole of what
+    // Everything was, so the link names no part of it.
+    expect(fromHash('#/everything')?.opens).toBeUndefined();
     // Nothing to disambiguate: the chat was the whole of what Ask now is, and
     // the Data screen has no sections to open.
     expect(fromHash('#/chat')?.opens).toBeUndefined();

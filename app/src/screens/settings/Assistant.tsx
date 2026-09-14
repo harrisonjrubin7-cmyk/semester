@@ -9,6 +9,7 @@ import {
   configured,
   envProxy,
   modelLabel,
+  proxyProblem,
   route,
   routeLabel,
   saveSettings,
@@ -95,7 +96,7 @@ export function SettingsAssistant() {
                 ? 'Two providers, so a lapsed account or an outage the night before a midterm does not stop the app working. Nothing above this setting knows which one answered.'
                 : route() === 'shared'
                   ? 'Signed in, so this is already working — the shared key lives in a server function, metered per account, and never reaches this browser. Add your own key below only if you want past the monthly limit.'
-                  : 'There is no “sign in with Claude”: Anthropic publishes no consumer login for other apps, so a claude.ai Pro or Max subscription cannot be linked here by any app. What works is a key from console.anthropic.com → API keys, billed separately per use. A key typed here is stored on this device and sent only to Anthropic. Be clear-eyed about it: anything running in this browser can read a key in this browser. Signing in uses the shared key instead, and a proxy you run is better still — the proxy field wins when both are filled in.'
+                  : 'There is no “sign in with Claude”: Anthropic publishes no consumer login for other apps, so a claude.ai Pro or Max subscription cannot be linked here by any app. What works is a key from console.anthropic.com → API keys, billed separately per use. A key typed here is stored on this device and sent only to Anthropic. Be clear-eyed about it: anything running in this browser can read a key in this browser. Signing in uses the shared key instead, and a proxy you run is better still — an address in the proxy box wins over a key when both are filled in, and anything in it that is not an address is ignored.'
             }
             lit={lights('provider claude openai chatgpt anthropic key api model', lit)}
           >
@@ -199,7 +200,32 @@ export function SettingsAssistant() {
                   onChange={(e) => setConfig({ ...config, proxy: e.target.value })}
                   style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-4)' }}
                   aria-label="Proxy URL"
+                  aria-invalid={proxyProblem(config.proxy) ? true : undefined}
                 />
+                {/*
+                  * Said here, where it was typed, rather than as a number in
+                  * the middle of a question.
+                  *
+                  * Two boxes of long identifiers one above the other: a key in
+                  * the second one, or a workspace id, used to take the route
+                  * and send every question to whatever serves this page —
+                  * which answers a POST with 405 and nothing else. It is
+                  * ignored now, so the key above answers; this is the line
+                  * that says so before somebody spends an evening on it.
+                  */}
+                {proxyProblem(config.proxy) && (
+                  <div
+                    style={{
+                      fontSize: 'var(--type-sm)',
+                      color: 'var(--app-accent)',
+                      marginTop: 'var(--sp-3)',
+                      lineHeight: 'var(--leading-normal)',
+                      textWrap: 'pretty',
+                    }}
+                  >
+                    {proxyProblem(config.proxy)}
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
                   {MODELS.map((m) => (
                     <button

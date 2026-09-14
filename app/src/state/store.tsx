@@ -266,7 +266,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...(landed.opens?.report ? { report: landed.opens.report } : {}),
         ...(landed.opens?.changes ? { changes: landed.opens.changes } : {}),
         ...(landed.opens?.courses ? { coursesTab: landed.opens.courses } : {}),
-        ...(landed.opens?.meTab ? { meTab: landed.opens.meTab } : {}),
       };
     }
     /*

@@ -736,6 +736,19 @@ export const NAVS = [
     home: 'Today',
   },
   {
+    id: 'browser',
+    label: 'Browser',
+    blurb:
+      'The workspace with a browser’s habits: name a tab, bookmark it, keep a coloured group of them, and reopen the one you just closed.',
+    /*
+     * Today, for the same reason the workspace's is: what this navigation
+     * changes is the chrome and where you land, not what home means. See
+     * `firstScreen` in `lib/chrome.ts` — this one opens on the search home
+     * too, the way a browser opens on a new tab.
+     */
+    home: 'Today',
+  },
+  {
     id: 'guides',
     label: 'Study guides',
     blurb:
@@ -851,12 +864,12 @@ export const DIRECTORIES = [
   {
     id: 'list',
     label: 'A list',
-    blurb: 'Every screen with the sentence saying what it is for, by shelf. Reads.',
+    blurb: 'Every screen in a row, with the sentence saying what it is for. Reads.',
   },
   {
     id: 'tiles',
     label: 'Tiles',
-    blurb: 'Nine tiles, one per shelf, each in the same place every time. Found by position.',
+    blurb: 'Every screen as a card, in the same place every time. Found by position.',
   },
 ];
 

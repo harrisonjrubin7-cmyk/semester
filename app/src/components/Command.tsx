@@ -67,10 +67,12 @@ import { secondLine } from '../lib/dim';
 import { AskIcon, ClocksIcon, Search as SearchIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import { TabStrip } from './Tabs';
+import { BookmarkChips } from './Bookmarks';
 import { here, openInNew, record, recordSearch, useStrip } from '../lib/browser.hook';
 import { justGo } from '../lib/browser';
 import { readSearches, remember, forget, suggestions, writeSearches } from '../lib/typeahead';
 import type { Screen } from '../lib/types';
+import { useModernShell } from './shell-context';
 
 /**
  * Every size on this page, at the two scales it is drawn at.
@@ -90,6 +92,9 @@ const SHORTCUTS = 7;
 export function Command({ onClose }: { onClose: () => void }) {
   const { state, dispatch, now, catalog, school } = useStore();
   const ai = useAI();
+  /* The shell owns search when it is the navigation: two search fields on
+     screen at once was the audit's fix #10. */
+  const modern = useModernShell();
   const wide = useMedia(DESKTOP);
   const size = wide ? SIZES.desk : SIZES.phone;
   // Empty every time. It used to open seeded from a screen's own filter box,
@@ -342,6 +347,10 @@ export function Command({ onClose }: { onClose: () => void }) {
   /** The tab the strip is on, which is what the app behind this is showing. */
   const tab = here();
 
+  /* After every hook, so the palette keeps its place in the hook order on the
+     render where the shell takes search off it. */
+  if (modern) return null;
+
   return (
     <div
       role="dialog"
@@ -455,6 +464,14 @@ export function Command({ onClose }: { onClose: () => void }) {
       }}
     >
       <TabStrip inOverlay searching={sent} onOpened={onClose} onBlank={blank} onDismiss={onClose} />
+
+      {/* The bookmarks, under the strip, because this overlay is how every
+          layout but the workspace reaches its tabs — and a phone that could
+          save a place but never open one would be half a feature. Nothing is
+          drawn until something has been starred. */}
+      <div style={{ padding: 'var(--sp-2) var(--sp-7) 0' }}>
+        <BookmarkChips onOpened={onClose} />
+      </div>
 
       {/* The box. On the search page it is drawn again, in the middle — this
           one is the results page's, the way a search engine keeps the query

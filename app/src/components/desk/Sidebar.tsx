@@ -1,16 +1,18 @@
 /**
  * The workspace's left column, where there is room for one.
  *
- * Six rows and a button, and every one of them is somewhere the app already
- * goes. That is the whole design: a sidebar earns its width by holding the
- * handful of places somebody returns to between everything else, not by being
- * a second copy of the directory — which is what the rail beside it is, and
- * why the two are never drawn together (see `lib/chrome.ts`).
+ * Six rows, and every one of them is somewhere the app already goes. That is
+ * the whole design: a sidebar earns its width by holding the handful of
+ * places somebody returns to between everything else, not by being a second
+ * copy of the directory — which is what the rail beside it is, and why the
+ * two are never drawn together (see `lib/chrome.ts`).
  *
- * **New** is the capture box, not a menu. One line, from anywhere, is the
- * fastest thing in this app and the thing people forget exists; at the top of
- * the column in the position every workspace puts its primary action, it is
- * the first thing the eye lands on.
+ * It is navigation and nothing else. A **New** button sat at the top of this
+ * column and opened the capture box, which the search home already opens from
+ * the + beside its field — one action, two places, and in a column of rows
+ * that all go somewhere it read as a seventh destination rather than as the
+ * one thing here that writes. The capture box is where it was: the + on the
+ * search home, and `q` from anywhere.
  *
  * The favourites in the middle are the same five as the search home's
  * shortcuts, read through the same function, so moving one moves it in both
@@ -25,7 +27,7 @@ import { rootOf, saysFor, screenName } from '../../lib/nav';
 import type { Screen } from '../../lib/types';
 import { secondLine } from '../../lib/dim';
 import { glyphFor } from '../icons.pick';
-import { AppsIcon, ConnectIcon, Plus, Search as SearchIcon, SettingsIcon } from '../Icons';
+import { AppsIcon, ConnectIcon, Search as SearchIcon, SettingsIcon } from '../Icons';
 
 export function Sidebar() {
   const { state, dispatch, school, catalog } = useStore();
@@ -72,15 +74,6 @@ export function Sidebar() {
 
   return (
     <nav className="desk-side" aria-label="Semester">
-      <button
-        type="button"
-        className="bare desk-new"
-        onClick={() => dispatch({ type: 'quickAdd', open: true })}
-      >
-        <Plus size={22} />
-        <span>New</span>
-      </button>
-
       {row('directory', 'All apps', AppsIcon)}
       {row('search', 'Search home', SearchIcon)}
 

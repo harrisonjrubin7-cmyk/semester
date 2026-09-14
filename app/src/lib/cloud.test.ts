@@ -248,7 +248,7 @@ describe('explainSyncError', () => {
   it('turns a missing table into the setup step that was missed', async () => {
     const { explainSyncError } = await load();
     const out = explainSyncError("Could not find the table 'public.state' in the schema cache");
-    expect(out).toContain('supabase/schema.sql');
+    expect(out).toContain('supabase/migrations/');
     expect(out).toContain('NOTIFY pgrst');
     // The original wording is kept: it is accurate, and somebody searching for
     // it should still find their own error in the message.

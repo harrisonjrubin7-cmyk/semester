@@ -126,6 +126,40 @@ function type(label: string, text: string) {
   });
 }
 
+/**
+ * A key pressed in a cell, as that cell's own handler sees it.
+ *
+ * Returned so a test can ask whether the grid took the key or left it to the
+ * browser, which is the whole question over ⌘C in a text box.
+ */
+function key(
+  address: string,
+  named: string,
+  held: { meta?: boolean; shift?: boolean } = {},
+): KeyboardEvent {
+  const el = field(`Cell ${address}`);
+  const event = new KeyboardEvent('keydown', {
+    key: named,
+    metaKey: held.meta ?? false,
+    shiftKey: held.shift ?? false,
+    bubbles: true,
+    cancelable: true,
+  });
+  act(() => {
+    el.dispatchEvent(event);
+  });
+  return event;
+}
+
+/** Select part of what is typed in a cell, the way a caret dragged over it does. */
+function within(address: string, from: number, to: number) {
+  const el = field(`Cell ${address}`);
+  act(() => {
+    el.focus();
+    el.setSelectionRange(from, to);
+  });
+}
+
 /** What a cell is showing right now: its answer, or its formula while focused. */
 function cell(address: string): string {
   return field(`Cell ${address}`).value;
@@ -511,5 +545,94 @@ describe('the View tab', () => {
     expect(shown()).toBe('125%');
     pressNamed('Zoom out');
     expect(shown()).toBe('100%');
+  });
+});
+
+/**
+ * The clipboard, which is the app's before it is the system's.
+ *
+ * `cutOrCopy` fills `clip`, and `pasteIn` prefers `clip` over the system
+ * clipboard so a copied `=SUM(B2:B9)` keeps its formula. That preference is
+ * what makes a ⌘C the grid does not hear into something worse than nothing:
+ * `clip` goes on holding the last block, and the next paste puts that down
+ * with no sign on screen that anything was missed. So every route to ⌘C has
+ * to leave `clip` holding what was last copied.
+ */
+describe('copy, cut and paste from the keyboard', () => {
+  it('copies the one cell the cursor is in', () => {
+    type('Cell A1', '7');
+    at('A1');
+    key('A1', 'c', { meta: true });
+    at('C1');
+    pressNamed('Paste');
+    away();
+    expect(cell('C1')).toBe('7');
+  });
+
+  it('replaces what a block left on the clipboard, rather than pasting it again', () => {
+    // The silent one: copy a block, copy a single cell, paste — and before
+    // this the block came back, two steps late and looking deliberate.
+    type('Cell A1', '10');
+    type('Cell A2', '20');
+    type('Cell B1', '99');
+    at('A1');
+    key('A1', 'ArrowDown', { shift: true });
+    key('A1', 'c', { meta: true });
+    at('B1');
+    key('B1', 'c', { meta: true });
+    at('D1');
+    pressNamed('Paste');
+    away();
+    expect(cell('D1')).toBe('99');
+    expect(cell('D2')).toBe('');
+  });
+
+  it('leaves a part-selected cell to the browser, clipboard and all', () => {
+    type('Cell A1', '10');
+    type('Cell A2', '20');
+    at('A1');
+    key('A1', 'ArrowDown', { shift: true });
+    key('A1', 'c', { meta: true });
+    type('Cell B1', 'Midterm');
+    within('B1', 0, 3);
+    const event = key('B1', 'c', { meta: true });
+    // Not taken, so `Mid` is copied by the text box the way it always was.
+    expect(event.defaultPrevented).toBe(false);
+    at('D1');
+    pressNamed('Paste');
+    away();
+    expect(cell('D1')).toBe('10');
+    expect(cell('D2')).toBe('20');
+  });
+
+  it('copies a cell whose whole value is selected, which is what tabbing in leaves', () => {
+    // Sequential focus navigation selects a text input's contents, so a cell
+    // reached with Tab from the ribbon arrives fully selected. Measured in
+    // Chromium: (0, length). Left to the browser it would copy the same
+    // characters and leave `clip` holding the block below.
+    type('Cell A1', '10');
+    type('Cell A2', '20');
+    at('A1');
+    key('A1', 'ArrowDown', { shift: true });
+    key('A1', 'c', { meta: true });
+    type('Cell B1', '99');
+    within('B1', 0, 2);
+    key('B1', 'c', { meta: true });
+    at('D1');
+    pressNamed('Paste');
+    away();
+    expect(cell('D1')).toBe('99');
+    expect(cell('D2')).toBe('');
+  });
+
+  it('cuts the one cell the cursor is in, and pastes it back elsewhere', () => {
+    type('Cell A1', '5');
+    at('A1');
+    key('A1', 'x', { meta: true });
+    at('C1');
+    pressNamed('Paste');
+    away();
+    expect(cell('A1')).toBe('');
+    expect(cell('C1')).toBe('5');
   });
 });

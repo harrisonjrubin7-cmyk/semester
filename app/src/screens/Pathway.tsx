@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
+import { useWorkspaceSelection, useWorkspaceTabId } from '../lib/workspace-view';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { ActionButton, FilePick, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
 import { useDeviceLibrary } from '../lib/device-library';
@@ -80,20 +81,41 @@ const CONNECTED: [Screen, string][] = [
 ];
 
 export function Pathway() {
+  const tabId = useWorkspaceTabId();
   const { account } = useStore();
-  // Not keyed by term: applying to graduate school spans several of them.
-  return <Workspace key={account?.id || 'device'} storageKey={`semester.pathway.v1:${account?.id || 'device'}`} />;
+  /*
+    Not keyed by term: applying to graduate school spans several of them. It
+    *is* keyed by app tab, so two tabs open on two applications each get their
+    own editor rather than sharing one — the saved records stay shared.
+  */
+  return (
+    <Workspace
+      key={`${account?.id || 'device'}:${tabId}`}
+      storageKey={`semester.pathway.v1:${account?.id || 'device'}`}
+    />
+  );
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
   const { dispatch } = useStore();
   const lib = useDeviceLibrary(storageKey, readPathway, EMPTY_PATHWAY);
 
-  const [tab, setTab] = useState<Tab>('home');
+  /*
+    Which section is open, and which application is being edited, belong to
+    the app tab you are in rather than to the workspace — two tabs on two
+    applications each come back to their own. The applications themselves
+    stay in the one shared library below.
+  */
+  const [tab, setTab] = useWorkspaceSelection(storageKey, 'tab', 'home') as [
+    Tab,
+    Dispatch<SetStateAction<Tab>>,
+  ];
   const [query, setQuery] = useState('');
-  const [programId, setProgramId] = useState('');
-  const [program, setProgram] = useState<Program>(() => newProgram());
-  const [projectId, setProjectId] = useState('');
+  const [programId, setProgramId] = useWorkspaceSelection(storageKey, 'programId', '');
+  const [program, setProgram] = useState<Program>(() =>
+    structuredClone(lib.value.programs.find((p) => p.id === programId) ?? newProgram()),
+  );
+  const [projectId, setProjectId] = useWorkspaceSelection(storageKey, 'projectId', '');
   const [template, setTemplate] = useState('College application');
   const [material, setMaterial] = useState('');
   const [stepTitle, setStepTitle] = useState('');
@@ -154,20 +176,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
       />
 
       {(lib.error || notice) && (
-        <p
-          role="status"
-          style={{
-            fontSize: 'var(--type-sm)',
-            lineHeight: 'var(--leading-normal)',
-            border: '1px solid var(--app-line)',
-            borderRadius: 'var(--r-md)',
-            padding: 'var(--sp-5)',
-            marginBlock: 'var(--sp-4)',
-            textWrap: 'pretty',
-          }}
-        >
+        <Notice>
           {lib.error || notice}
-        </p>
+        </Notice>
       )}
 
       {tab === 'home' && (

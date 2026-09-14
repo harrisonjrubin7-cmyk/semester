@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { ActionButton, FilePick, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
+import { Group, NavRow } from '../components/shell/Rows';
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
 import { useDeviceLibrary } from '../lib/device-library';
@@ -24,8 +25,7 @@ import {
 } from '../lib/career';
 import { fromMarkdown } from '../lib/document';
 import { download } from '../lib/deliver';
-import { safeUrl, type ApplyKind } from '../lib/apply';
-import { Applying } from './Applying';
+import { LIVE, safeUrl, type ApplyKind } from '../lib/apply';
 
 /**
  * What is open, what you have done, and who you have spoken to.
@@ -46,11 +46,31 @@ import { Applying } from './Applying';
  *
  * ## Applications live in the tracker that already exists
  *
- * The Applications tab is `screens/Applying.tsx` — the app's own tracker,
- * embedded rather than reimplemented. "Track application" hands an
- * opportunity to it and says plainly that nothing was submitted. Two
- * trackers, one of which is nearly the other, is how a student ends up with
- * half their deadlines in each.
+ * "Track it" hands an opportunity to `screens/Applying.tsx` — the app's own
+ * tracker — and says plainly that nothing was submitted. Two trackers, one of
+ * which is nearly the other, is how a student ends up with half their
+ * deadlines in each, and that reasoning is why there has only ever been one.
+ *
+ * ## …and they live there only
+ *
+ * This screen used to render that tracker inline, as an Applications tab. The
+ * data was never duplicated — the tab and the screen both read
+ * `state.applications` — but the *home* was: pressing Career → Applications
+ * and opening Applications landed on the identical body, so a student had to
+ * know which one you meant. That is the shape `lib/onehome.test.ts` was
+ * written for after Today's Report tab and Courses' Grades tab, and the rule
+ * it states applies here unchanged: a destination is what the directory, the
+ * search box and the tab bar point at, and a tab cannot be any of those.
+ *
+ * It also nested two `<Page>` frames, since `Applying` opens one and this
+ * screen wraps it in another — doubled padding and doubled trailing space,
+ * which is exactly what the warning in `components/Page.tsx` describes. The
+ * embed had no `bare` prop, which is why the guard did not catch it; the test
+ * now checks for the destination itself rather than for the escape hatch.
+ *
+ * What is left is the hand-off, which is the part that was always worth
+ * having: the row below opens the tracker, with the number of live
+ * applications on it so the answer is there without opening anything.
  *
  * ## Contacts record permission
  *
@@ -61,9 +81,8 @@ import { Applying } from './Applying';
 
 const TABS = [
   { id: 'discover' as const, label: 'Discover' },
-  { id: 'tracker' as const, label: 'Applications' },
   { id: 'resume' as const, label: 'Résumé' },
-  { id: 'network' as const, label: 'People' },
+  { id: 'network' as const, label: 'Contacts' },
   { id: 'abroad' as const, label: 'Abroad' },
   { id: 'library' as const, label: 'Library' },
 ];
@@ -164,19 +183,22 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       <Segmented options={TABS} value={tab} onChange={setTab} style={{ marginBlock: 'var(--sp-5)' }} />
 
+      {/*
+       * Where the Applications tab used to be, as a row rather than a second
+       * copy of the tracker. Above the tab bodies because it is not one of
+       * them: it belongs to the whole screen, the way "Track it" does.
+       */}
+      <Group>
+        <NavRow
+          label="Applications"
+          sub="Every one you are tracking, beside the coursework it lands on"
+          value={String(state.applications.filter((a) => LIVE.includes(a.stage)).length)}
+          onClick={() => dispatch({ type: 'go', screen: 'applying' })}
+        />
+      </Group>
+
       {(notice || lib.error) && (
-        <p
-          role="status"
-          style={{
-            fontSize: 'var(--type-sm)',
-            lineHeight: 'var(--leading-normal)',
-            border: '1px solid var(--app-line)',
-            borderRadius: 'var(--r-md)',
-            padding: 'var(--sp-5)',
-            marginBlock: 'var(--sp-4)',
-            textWrap: 'pretty',
-          }}
-        >
+        <Notice>
           {lib.error || notice}
           {lib.blocked && (
             <ActionButton
@@ -188,11 +210,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
               Download recovery copy
             </ActionButton>
           )}
-        </p>
+        </Notice>
       )}
-
-      {/* The app's own tracker, embedded rather than rebuilt. See above. */}
-      {tab === 'tracker' && <Applying />}
 
       {tab === 'discover' && (
         <>

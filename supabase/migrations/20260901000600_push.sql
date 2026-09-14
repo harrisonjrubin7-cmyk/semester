@@ -11,7 +11,7 @@
 -- people to ignore them.
 --
 -- Apply with:
---     psql "$DATABASE_URL" -f supabase/push.sql
+--     psql "$DATABASE_URL" -f supabase/migrations/20260901000600_push.sql
 
 -- Where to send. One row per device, not per account: a phone and a laptop are
 -- two subscriptions, and a student who signs out on one should not lose the

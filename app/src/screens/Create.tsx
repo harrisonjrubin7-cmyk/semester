@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { ActionButton, FilePick, SectionLabel } from '../components/ui';
+import { ActionButton, FilePick, Notice, SectionLabel } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
 import { FormBuilder } from '../components/creation/FormBuilder';
@@ -98,18 +98,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
   return (
     <Page>
       {(lib.error || notice) && (
-        <p
-          role="status"
-          style={{
-            fontSize: 'var(--type-sm)',
-            lineHeight: 'var(--leading-normal)',
-            border: '1px solid var(--app-line)',
-            borderRadius: 'var(--r-md)',
-            padding: 'var(--sp-5)',
-            marginBlock: 'var(--sp-4)',
-            textWrap: 'pretty',
-          }}
-        >
+        <Notice>
           {lib.error || notice}
           {lib.blocked && (
             <ActionButton
@@ -121,7 +110,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               Download recovery copy
             </ActionButton>
           )}
-        </p>
+        </Notice>
       )}
 
       {project ? (

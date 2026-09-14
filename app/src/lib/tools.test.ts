@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Proposal } from './tools';
+import { strictly } from './claude';
+import { LOOKUPS } from './lookup';
 import type { ToolCall } from './claude';
 import type { Attended } from './attend';
 import type { CourseId } from './types';
@@ -97,6 +99,32 @@ describe('what it is allowed to offer', () => {
 
   it('asks the API to guarantee the arguments validate', () => {
     expect(TOOLS.every((t) => t.strict === true)).toBe(true);
+  });
+
+  it('stays inside the number of strict tools the API will take', () => {
+    // Twenty-two tools go out on a question and the API takes the strict
+    // promise for twenty, refusing the whole request at twenty-one — so what
+    // ships has to be under the cap before `strictly` has to enforce it.
+    const wire = strictly([...TOOLS, ...LOOKUPS]);
+    expect(wire.length).toBe(TOOLS.length + LOOKUPS.length);
+    expect(wire.filter((t) => t.strict).length).toBeLessThanOrEqual(20);
+    // And the promise is on the writes, which are the calls that change
+    // something.
+    expect(wire.filter((t) => t.strict).map((t) => t.name).sort()).toEqual(
+      TOOLS.map((t) => t.name).sort(),
+    );
+  });
+
+  it('ships every tool in a shape a strict API will take', () => {
+    // The guarantee above is one the API only makes if it can check it: every
+    // object closed, every property it names required. A tool that misses
+    // either takes the whole request down with a 400, so this is checked for
+    // the tools the app actually ships, not only for the closing itself.
+    for (const t of strictly([...TOOLS, ...LOOKUPS]).filter((t) => t.strict)) {
+      const schema = t.input_schema;
+      expect(schema.additionalProperties).toBe(false);
+      expect(schema.required).toEqual(Object.keys(schema.properties));
+    }
   });
 
   it('gives every write an undo and every view none', () => {

@@ -283,6 +283,63 @@ where the directory on **Progress** is furthest away. The order inside a shelf
 is whatever you dragged your tiles into on **Progress → Everything**, so the
 two cannot disagree about where you put something.
 
+## Tabs, groups and bookmarks
+
+The workspace is a browser-shaped shell, and the strip across the top is what
+makes it one: a tab holds a place in the app, so "I was reading the guide, let
+me check when that is due, now where was I" costs a click rather than four
+navigations and a hunt for your place. A tab with nothing in it yet is a new
+tab, and a new tab is the search page — opening one and typing is a single
+gesture for *somewhere else, without losing this*. Ten is the ceiling; past
+that, the oldest tab you are not using gives way.
+
+**Groups** are for the Wednesday when there are nine of them. Right-click a tab
+(or press the ⌄ on the one you are on) and **New group**: it and everything you
+open out of it become one run on the strip, behind a coloured head you can
+name. **Midterm** and **Essay** are then two objects rather than seven tabs,
+and clicking the head folds the run away to its name and a count — which is
+how a strip that has reached ten gets its room back. Folding the group you are
+working in moves you out of it first, because its page is the window. The
+colour is one of twelve, and they are the same twelve a course can be pinned
+to: your accent, turned round the wheel, at a lightness measured against the
+ground you are actually reading on.
+
+**Pinning** is the other half of a strip that has got long. The four or five
+places you are in every day — Today, the calendar, the guide you are working
+through — are never finished with, and everything else is opened beside them.
+Pin one from its menu and it keeps its place at the front of the strip as its
+glyph alone: five of them cost the width of a name rather than half the row,
+a line separates them from what you merely have open, and they carry no cross,
+because a target that small with a close on it is a tab you lose to a thumb
+landing an inch out. Closing one is in the same menu, where it takes saying so.
+
+Tabs are dragged into the order you want them in, the same hold-move-let-go
+the rest of the app uses for anything with an order — and on the strip the
+drop means something as well: let a tab go among a group's tabs and it joins
+the group, drag it clear of them and it leaves. Alt with the left and right
+arrows does the same without a pointer.
+
+**Bookmarks** are the other half. A tab is where you are; a bookmark is where
+you keep going back to — the ECON study guide, the essay brief, the deadline
+you are counting down to — and before this the only way to keep one to hand
+was to leave a tab open for a fortnight. The star in the search field saves the
+page the tab you are on is showing, `b` does the same from the keyboard, and
+what is saved is the *place*: ECON 1020 rather than "Course", the guide unit in
+the mode you were reading it in. They appear as a row under the search field,
+one click from every screen; on the other navigations they are on the new tab
+page and in the search overlay instead, because that is where those layouts
+keep their tabs. Clicking one goes there in the tab you are on, middle-clicking
+opens it beside, and the ⌄ on a chip renames it, moves it along the row or
+removes it.
+
+Neither the strip nor the bookmarks are account data. The store syncs to the
+cloud and is what a backup contains; which places you happen to have open on
+this laptop is neither, and a row of tabs restored onto a phone from a
+desktop's backup is a row nobody opened. Both live on the device, under their
+own keys, and **Erase from this device** takes them with everything else. See
+[`app/src/lib/browser.ts`](app/src/lib/browser.ts) and
+[`app/src/lib/bookmarks.ts`](app/src/lib/bookmarks.ts).
+
 ## Folding a screen down to what you came for
 
 Every section heading in the app, on every tab, is a control: tap it and that
@@ -653,6 +710,44 @@ model in it or needs a key:
   a point, and a list — `a = [1, 1.5, …, 4]` — drawn as a family of curves.
   Drag to move, pinch to zoom, press to read a point off it, and one button to
   fit the window to what is actually on it.
+
+  **A `z =` line is a surface**, in three dimensions: `z = x^2 - y^2` is the
+  saddle, drawn over whatever window the axes are set to and turned with a
+  finger. No WebGL and no 3D library — a surface plot of a formula is a few
+  hundred quadrilaterals sorted back to front, which is the painter's
+  algorithm, and it draws in the same SVG as everything else, prints, and
+  costs nothing to ship. The camera is orthographic on purpose: a perspective
+  one makes the far side of a symmetric bowl smaller than the near side, which
+  reads as asymmetry in the function. Everything is worked in a unit cube, so
+  a function reaching 10,000 and one reaching 0.001 are both a shape rather
+  than a spike or a sheet; a piece with a corner that has no height is left
+  out rather than drawn across, which is the hole in a dome; and the height,
+  the depth and where each of them is are written out under the picture. See
+  `app/src/lib/surface.ts`.
+
+  The same `z =` line draws **as contours** as well: the level curves, one per
+  round number, with zero heaviest and the spacing said in a sentence under the
+  picture — because the whole reason to draw contours rather than the solid
+  shape is to read values off, and a map whose spacing is not stated is a
+  picture rather than a reading. It is a control on the screen rather than new
+  notation, since which picture to draw is a choice about the drawing.
+
+  **A pair with `x` or `y` in it is a field of arrows** — `(y, -x)` is a
+  rotation, `(20 - 2x - y, x - 2)` is a phase diagram — drawn at every point of
+  the window: which way it pushes, and how hard. The lengths are the honest
+  difficulty and the choice is stated rather than hidden: drawn true, one fast
+  corner turns every other arrow into a dot, so length is the magnitude against
+  the largest under a square root, and the ink carries the rest.
+
+  **Polar and parametric** are the same box and the same notation, told apart
+  by the letter in them: an `r =` line with the angle in it is polar —
+  `r = 2 + 2\cos(\theta)`, a cardioid — and a pair with `t` in it is the path
+  a moving point takes — `(5\sin(3t), 5\sin(2t))`, a Lissajous figure. Both
+  are walked along their own parameter rather than across the window, so a
+  curve that comes back on itself or crosses itself is drawn whole, on screen
+  or off, and how far round θ and t go is a control rather than more notation.
+  A negative radius is drawn on the opposite ray, which is what puts the other
+  four petals on a rose.
 
   Then the part a calculator leaves you to hunt with a cursor, written out
   instead: **where it crosses zero, where it turns, where two curves meet, the

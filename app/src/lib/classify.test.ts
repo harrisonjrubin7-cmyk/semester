@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { KIND_LABEL, SURE, guess, type Kind } from './classify';
-import { hashOf, intakeText, isUrl } from './intake';
+import { hashOf, intakeText } from './intake';
 import type { Intake } from './intake';
 
 /**
@@ -220,24 +220,5 @@ describe('pasted text', () => {
 
   it('is nothing at all when nothing was pasted', () => {
     expect(intakeText('   \n\n ')).toBeNull();
-  });
-});
-
-describe('telling an address from a paste', () => {
-  it('knows one when it sees one', () => {
-    for (const u of [
-      'https://brightspace.vanderbilt.edu/d2l/le/12345',
-      'http://example.edu/syllabus.pdf',
-      'www.vanderbilt.edu/econ',
-      'webcal://example.edu/feed.ics',
-    ]) {
-      expect(isUrl(u), u).toBe(true);
-    }
-  });
-
-  it('does not mistake prose that mentions one', () => {
-    expect(isUrl('See https://example.edu for the readings')).toBe(false);
-    expect(isUrl('Problem Set 3 is due Friday')).toBe(false);
-    expect(isUrl('')).toBe(false);
   });
 });

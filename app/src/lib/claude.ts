@@ -97,6 +97,13 @@ export function settings(): ClaudeSettings {
 }
 
 export function saveSettings(next: ClaudeSettings): void {
+  // A setting changed here is a fresh start: whatever a proxy did to the last
+  // question, the person has just been to the screen about it and may well
+  // have fixed it. See `proxyDown`. The same for the model's grammar budget,
+  // in memory only — what this device learned stays learned in `STRICT_KEY`,
+  // so nothing is re-spent finding it out again.
+  proxyDown = false;
+  strictRefusedNow = '';
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
   } catch {
@@ -137,6 +144,60 @@ export function envProxy(): string {
 }
 
 /**
+ * Why what is in the proxy box cannot be a proxy — empty when it can.
+ *
+ * The box takes an address, and the box above it takes a key, and they sit
+ * one above the other on a screen full of long identifiers. Anything else
+ * that lands in here — a key, a workspace or organisation id, an account
+ * number copied off the console — used to be treated as an address and win
+ * the route, because winning the route was decided by the box being filled
+ * in rather than by what was in it. A relative address is what a browser
+ * makes of `wrkspc_01GN…`, so every question went to the page's own host,
+ * which answers a POST with 405 and no idea what was being asked. A key
+ * sitting right above it worked perfectly and was never reached.
+ *
+ * So: an address is `https://…`, `http://…` for something on this machine,
+ * or a path beginning `/` for something served alongside the page — the shape
+ * `VITE_CLAUDE_PROXY` takes in development. Anything else is a mistake, and
+ * the sentence returned here says which mistake it is.
+ */
+export function proxyProblem(value: string): string {
+  const address = value.trim();
+  if (!address) return '';
+  if (/^\//.test(address)) return '';
+  if (/^https?:\/\/[^\s/]+/i.test(address)) return '';
+  if (/^sk-ant-/i.test(address)) {
+    return 'That is a key, not a proxy. Put it in the box above and leave this one empty.';
+  }
+  if (/^(wrkspc|org|user|acct|apikey)[-_]/i.test(address)) {
+    return (
+      'That is an id from the console, not an address. Nothing here needs one: leave this ' +
+      'box empty and the key above is used.'
+    );
+  }
+  return (
+    'A proxy is a server you point the app at, so this has to be an address — https://… , or ' +
+    '/something served alongside this page. Leave it empty to use the key above.'
+  );
+}
+
+/**
+ * Set for the session when the proxy answers as something that does not
+ * forward to the API at all — a 404, a 405, a 501.
+ *
+ * The point is the afternoon it saves: a proxy that is wrong is wrong on
+ * every question, and the key typed on the same screen answers all of them.
+ * Same shape as `structuredRefused` below, and cleared by `saveSettings`,
+ * because somebody who has just been to that screen may have fixed it.
+ */
+let proxyDown = false;
+
+/** The address typed on this device, if it is one. */
+function deviceProxy(s: ClaudeSettings): string {
+  return proxyProblem(s.proxy) ? '' : s.proxy.trim();
+}
+
+/**
  * The proxy in force: this device's if one was typed, otherwise this build's.
  *
  * Device before build is the same rule as everywhere else here — something a
@@ -145,7 +206,17 @@ export function envProxy(): string {
  * once in a file should not quietly take over from a key set on purpose.
  */
 export function proxyUrl(s = settings()): string {
-  return s.proxy.trim() || envProxy();
+  return deviceProxy(s) || envProxy();
+}
+
+/** Whether the proxy is the one a question would actually take. */
+function proxyAnswers(s: ClaudeSettings): boolean {
+  if (!proxyUrl(s)) return false;
+  // Only stood down where there is something else to stand down to. A proxy
+  // that failed and no key to fall back on still gets the question, so the
+  // failure it reports is the proxy's own rather than "no key yet".
+  if (proxyDown && (s.apiKey.trim() || (sessionToken && sharedEndpoint()))) return false;
+  return true;
 }
 
 export function configured(s = settings()): boolean {
@@ -159,9 +230,9 @@ export function route(s = settings()): 'proxy' | 'shared' | 'own' | 'openai' | '
   // is no proxy and no shared key behind it, because the Edge Function holds
   // an Anthropic key and nothing else.
   if (s.provider === 'openai') return s.openaiKey.trim() ? 'openai' : 'none';
-  if (s.proxy.trim()) return 'proxy';
+  if (deviceProxy(s) && proxyAnswers(s)) return 'proxy';
   if (s.apiKey.trim()) return 'own';
-  if (envProxy()) return 'proxy';
+  if (proxyAnswers(s)) return 'proxy';
   if (sessionToken && sharedEndpoint()) return 'shared';
   return 'none';
 }
@@ -179,7 +250,7 @@ export function routeLabel(s = settings()): string {
     case 'shared':
       return 'the shared key';
     case 'proxy':
-      return s.proxy.trim() ? 'your proxy' : 'the proxy this build points at';
+      return deviceProxy(s) ? 'your proxy' : 'the proxy this build points at';
     case 'openai':
       return 'your OpenAI key';
     case 'own':
@@ -286,7 +357,12 @@ type Route = 'proxy' | 'shared' | 'own' | 'openai' | 'none';
 // model, once there is half an answer to describe.
 export { NOTHING_ARRIVED };
 
-export function explainAskError(taking: Route, status: number, detail: string): string {
+export function explainAskError(
+  taking: Route,
+  status: number,
+  detail: string,
+  addressUsed = '',
+): string {
   if (taking === 'shared') {
     if (status === 404 || /function was not found|not_found/i.test(detail)) {
       return (
@@ -308,8 +384,39 @@ export function explainAskError(taking: Route, status: number, detail: string): 
   if (taking === 'own' && status === 401) {
     return `${detail}\n\nThat key was refused. Check it under Settings — a key is not the same as a project id.`;
   }
-  if (taking === 'proxy' && (status === 404 || status === 502)) {
+  if (taking === 'proxy' && (status === 404 || status === 405 || status === 501)) {
+    /*
+     * The host answered, and it is not a proxy.
+     *
+     * 405 is what a static host — GitHub Pages, a preview server — says to a
+     * POST, and it is exactly what a proxy box holding something that is not
+     * an address produces: the browser reads it as a path on this site, so
+     * the question goes to whatever is serving the page. Naming the address
+     * is the whole fix, because seeing it written out is usually the moment
+     * it becomes obvious.
+     */
+    return (
+      `${leading(detail, status)}Nothing at ${addressUsed || 'that address'} forwards to the API — it ` +
+      `answered ${status} rather than Claude. Clear the proxy box under Settings → The assistant to ` +
+      'use your key instead, or correct the address.'
+    );
+  }
+  if (taking === 'proxy' && status === 502) {
     return `${detail}\n\nThe proxy did not answer at /v1/messages. Check the address under Settings.`;
+  }
+  /*
+   * Something answered, and it was not an API — on a route with no box to fix.
+   *
+   * The branch above is the common way this happens and names the proxy box.
+   * The same fact reaches the other routes too: a function that has moved, a
+   * network that intercepts a request and answers it itself, an address that
+   * was right when the build was made. There the app printed the number on
+   * its own, which is the one thing a student cannot act on — so this says
+   * what was posted to and what came back, which is the whole of what is
+   * known.
+   */
+  if (status === 404 || status === 405 || status === 501) {
+    return `${leading(detail, status)}${whatAnswered(taking, addressUsed, status)} ${insteadTry(taking)}`;
   }
   if (status === 529 || status === 429) {
     return `${detail}\n\nThat is rate limiting rather than a mistake — wait a moment and ask again.`;
@@ -327,7 +434,66 @@ export function explainAskError(taking: Route, status: number, detail: string): 
       ? `${detail}\n\nThe shared key has run out for this month. Add your own under Settings to carry on now.`
       : `${detail}\n\nThe key works — the account behind it has no credit left. Top it up at console.anthropic.com under Billing; nothing needs replacing.`;
   }
+  /*
+   * A number with no words in it.
+   *
+   * `detail` starts as the status and is replaced by whatever the body said,
+   * so it is still the status exactly when nothing readable came back: an
+   * HTML error page from a static host, an empty body, anything in the way
+   * that is not an API. A bare "405" in a red box is a failure this app has
+   * already had once, and naming the address is what made it solvable — so no
+   * status reaches a student on its own, whatever the number turns out to be.
+   */
+  if (detail === String(status)) {
+    return `The question never reached Claude: ${named(addressUsed)} answered ${status} and sent nothing an API would send. ${insteadTry(taking)}`;
+  }
   return detail;
+}
+
+/** The body's own sentence first, when it had one, and nothing when it did not. */
+function leading(detail: string, status: number): string {
+  return detail === String(status) ? '' : `${detail}\n\n`;
+}
+
+/** What was posted to, for a sentence — never an empty space where it should be. */
+function named(addressUsed: string): string {
+  return addressUsed || 'the address this build uses';
+}
+
+/**
+ * What answered, in one clause.
+ *
+ * Two different facts wear the same status. On a route with an address in it,
+ * a 404 or a 405 means the address is not a thing that forwards to the API —
+ * the address is the mistake. On your own key the address is Claude's own and
+ * cannot be wrong, so the same number means something else answered in its
+ * place, and saying "nothing there forwards to the API" about Anthropic's own
+ * endpoint would send somebody looking in the one place that is correct.
+ */
+function whatAnswered(taking: Route, addressUsed: string, status: number): string {
+  return taking === 'own'
+    ? `${named(addressUsed)} answered ${status}, which Claude’s API does not do.`
+    : `Nothing at ${named(addressUsed)} forwards to the API — it answered ${status}.`;
+}
+
+/** Where to go next, which is a different place on each route. */
+function insteadTry(taking: Route): string {
+  switch (taking) {
+    case 'shared':
+      return (
+        'That is the shared key’s function rather than Claude itself. Add your own key under ' +
+        'Settings → The assistant to carry on now; whoever runs this deployment can look at ' +
+        'the function (SETUP.md).'
+      );
+    case 'own':
+      return (
+        'Nothing in the app is pointing at the wrong place — that is Claude’s own address — so it ' +
+        'is either something between this browser and Claude, a network that intercepts requests ' +
+        'or an extension, or Claude itself having a moment. Asking again says which.'
+      );
+    default:
+      return 'Check the address under Settings → The assistant, or clear it to use the key above.';
+  }
 }
 
 /** What a browser reports when the request never reached anything. */
@@ -504,13 +670,186 @@ type Block =
  */
 let structuredRefused = false;
 
+/**
+ * The models that have told us they will not compile the promise.
+ *
+ * `strict: true` is checked by the API building one grammar out of every
+ * strict schema in the request, and that grammar has a size the request is
+ * refused for exceeding — "Schema is too complex", or "The compiled grammar
+ * is too large … Simplify your tool schemas or reduce the number of strict
+ * tools". It is the same shape of failure as the count limit `MOST_STRICT`
+ * guards, one step along: no tool definition can see it, because it is not
+ * about any one of them. Sixteen small, flat, fully-required schemas were
+ * enough, and while they were sent every question failed — including the
+ * ones with no tool anywhere near them.
+ *
+ * The size that is too large is not published and is not the same on every
+ * model, so there is no number to write here that stays true. What is true is
+ * that the promise is worth less to this app than an answer is: `readProposal`
+ * re-reads every proposal against what the app actually holds and `runLookups`
+ * reads each argument with a fallback, so nothing downstream has ever trusted
+ * a tool argument. So the promise is dropped, the question is asked again, and
+ * every tool is still offered.
+ *
+ * Remembered against the model rather than for the session, and on this device
+ * rather than in memory, because the model is what the budget belongs to and
+ * because that retry is not free: on the shared key it is a metered call out of
+ * sixty a month, and a session-long memory spends one on every page load for a
+ * fact already known. Picking a different model starts clean, which is also how
+ * a raised limit is picked up.
+ */
+const STRICT_KEY = 'semester.claude.strict.v1';
+
+/**
+ * The same fact held in memory, because storage may be off.
+ *
+ * Not an optimisation: `ask` retries by calling itself, and it stops because
+ * the second call can see that the promise has already been refused. With
+ * storage unavailable that is the only place it can see it, and without this
+ * the retry would ask the same refused question forever.
+ */
+let strictRefusedNow = '';
+
+function strictRefused(model: string): boolean {
+  if (strictRefusedNow === model) return true;
+  try {
+    const kept: unknown = JSON.parse(localStorage.getItem(STRICT_KEY) ?? '[]');
+    return Array.isArray(kept) && kept.includes(model);
+  } catch {
+    return false;
+  }
+}
+
+function rememberStrictRefused(model: string): void {
+  strictRefusedNow = model;
+  try {
+    const kept: unknown = JSON.parse(localStorage.getItem(STRICT_KEY) ?? '[]');
+    const models = Array.isArray(kept) ? kept.filter((m) => typeof m === 'string') : [];
+    if (!models.includes(model)) {
+      localStorage.setItem(STRICT_KEY, JSON.stringify([...models, model]));
+    }
+  } catch {
+    // Storage off. It holds for this session and is re-learned after.
+  }
+}
+
+/**
+ * Whether a 400 is the API refusing to compile the strict promise.
+ *
+ * Matched on the wording rather than the status because a 400 is also how a
+ * genuinely wrong request comes back, and those must still reach the student.
+ * Three sentences have been seen for the one fact — the complexity of the
+ * compiled grammar, its size, and the count of strict tools — and all three
+ * are fixed by the same thing.
+ */
+function aboutStrictTools(detail: string): boolean {
+  return /schema is too complex|compiled grammar|grammar is too large|strict tool/i.test(detail);
+}
+
 /** A tool as the API is told about it. */
 export interface ToolSpec {
   name: string;
   description: string;
-  input_schema: { type: 'object'; properties: Record<string, unknown>; required?: string[] };
+  input_schema: {
+    type: 'object';
+    properties: Record<string, unknown>;
+    required?: string[];
+    /** Filled in by `strictly` on the way out; no schema need write it. */
+    additionalProperties?: false;
+  };
   /** Guarantees the arguments validate against the schema. */
   strict?: boolean;
+}
+
+/**
+ * A strict tool's schema, closed the way a strict API insists on.
+ *
+ * `strict: true` is a promise the API will only make if it can check it, and
+ * the check has two conditions: every object in the schema must close itself
+ * with `additionalProperties: false`, and every property it names must be
+ * required. Miss either and nothing degrades gracefully — the whole request
+ * comes back 400 ("For 'object' type, 'additionalProperties' must be
+ * explicitly set to false"), so the student sees an error where an answer
+ * should be, on every question, however unrelated to tools.
+ *
+ * Done here rather than in each of the twenty schemas in `lib/tools.ts` and
+ * `lib/lookup.ts`, because a rule spread across twenty literals is a rule the
+ * twenty-first forgets — and it is not a thing the schemas are *about*.
+ */
+function closed(node: unknown): unknown {
+  if (!node || typeof node !== 'object' || Array.isArray(node)) return node;
+  const schema: Record<string, unknown> = { ...(node as Record<string, unknown>) };
+  const props = schema.properties;
+
+  if (schema.type === 'object' || (props && typeof props === 'object')) {
+    const properties = (props ?? {}) as Record<string, unknown>;
+    const names = Object.keys(properties);
+    // Nested objects are held to the same rule: the API walks the whole tree.
+    schema.properties = Object.fromEntries(names.map((n) => [n, closed(properties[n])]));
+    schema.additionalProperties = false;
+    // Declared order first, so a schema that already said what it wants reads
+    // on the wire the way it was written.
+    const declared = Array.isArray(schema.required) ? (schema.required as string[]) : [];
+    schema.required = [
+      ...declared.filter((n) => names.includes(n)),
+      ...names.filter((n) => !declared.includes(n)),
+    ];
+  }
+
+  if (schema.items) schema.items = closed(schema.items);
+  return schema;
+}
+
+/**
+ * How many tools the API will make that promise for at once.
+ *
+ * Twenty. The twenty-first is not a warning: the whole request is refused —
+ * "Too many strict tools (22). The maximum number of strict tools supported
+ * is 20" — which is the same afternoon as the schemas that did not close
+ * themselves. Every question in the app failing, on a limit that none of the
+ * twenty-two tool definitions can see from where it is written.
+ */
+const MOST_STRICT = 20;
+
+/**
+ * Every strict tool, ready for the wire. Anything else is passed through.
+ *
+ * Past the cap the *guarantee* is dropped and the tool is still offered,
+ * which is the right way round: a tool the model cannot see is a thing the
+ * app can no longer do, while a tool whose arguments were not checked by the
+ * API is one whose arguments are checked here — `readProposal` re-reads every
+ * proposal against what the app actually holds, and `runLookups` reads each
+ * argument with a fallback. Nothing downstream ever trusted a tool argument
+ * anyway, which is what makes this safe to spend.
+ *
+ * Which twenty keep it is the caller's order, and `ai/converse.ts` sends the
+ * writes first on purpose: a write changes the student's semester, so it is
+ * the one worth the promise, and a lookup that comes back malformed costs a
+ * re-read.
+ *
+ * None keep it on a model that has already refused to compile the promise at
+ * all — see `STRICT_KEY`, which is the same trade made for the whole set.
+ */
+export function strictly(tools: ToolSpec[], model = ''): ToolSpec[] {
+  if (model && strictRefused(model)) {
+    return tools.map((t) => {
+      if (!t.strict) return t;
+      const loosened = { ...t };
+      delete loosened.strict;
+      return loosened;
+    });
+  }
+  let promised = 0;
+  return tools.map((t) => {
+    if (!t.strict) return t;
+    if (promised >= MOST_STRICT) {
+      const loosened = { ...t };
+      delete loosened.strict;
+      return loosened;
+    }
+    promised += 1;
+    return { ...t, input_schema: closed(t.input_schema) as ToolSpec['input_schema'] };
+  });
 }
 
 /** A tool the model wants to use, with the arguments it chose. */
@@ -755,7 +1094,7 @@ export async function ask(options: AskOptions): Promise<string> {
           : options.system,
         stream: true,
         ...(options.think ? { thinking: { type: 'adaptive' } } : {}),
-        ...(options.tools?.length ? { tools: options.tools } : {}),
+        ...(options.tools?.length ? { tools: strictly(options.tools, s.model) } : {}),
         // Never both: the API refuses a request that asks for citations and a
         // constrained shape at once, and the citations are worth more.
         ...(options.format && !options.cite && !structuredRefused
@@ -791,7 +1130,41 @@ export async function ask(options: AskOptions): Promise<string> {
       return ask(options);
     }
 
-    throw new Error(explainAskError(taking, res.status, detail));
+    /*
+     * The same move for the other promise, and for the same reason.
+     *
+     * A grammar the API will not compile refuses the whole request, so every
+     * question fails — including the ones that were never going to call a
+     * tool. Dropping `strict` costs a guarantee the app was already making
+     * for itself; not dropping it costs the assistant. See `strictRefused`.
+     */
+    if (
+      res.status === 400 &&
+      options.tools?.length &&
+      !strictRefused(s.model) &&
+      aboutStrictTools(detail)
+    ) {
+      rememberStrictRefused(s.model);
+      return ask(options);
+    }
+
+    /*
+     * A proxy that is not one, with a key sitting right there.
+     *
+     * 404, 405 and 501 all mean the same thing here: something answered and
+     * it does not forward to the API. That is a permanent fact about the
+     * address, not a bad moment, so every question after this one would fail
+     * the same way — while a key typed on the same screen answers all of
+     * them. Remembered for the session and the question asked again, so the
+     * student gets an answer rather than a number. `saveSettings` clears it,
+     * because going back to that screen is how a proxy gets fixed.
+     */
+    if (taking === 'proxy' && !proxyDown && [404, 405, 501].includes(res.status)) {
+      proxyDown = true;
+      if (route(s) !== 'proxy') return ask(options);
+    }
+
+    throw new Error(explainAskError(taking, res.status, detail, url));
   }
 
   const reader = res.body.getReader();

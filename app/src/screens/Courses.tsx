@@ -1,3 +1,4 @@
+import { CourseHub } from '../components/CourseHub';
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import type { CoursesTab } from '../lib/types';
@@ -66,6 +67,8 @@ function CoursesTabs({
 export function Courses() {
   const { state, dispatch, now, catalog, tint } = useStore();
   const soft = useSoft();
+  const [query,setQuery] = useState('');
+  const shownCourses=catalog.courses.filter(c=>`${c.code} ${c.name} ${c.prof}`.toLowerCase().includes(query.trim().toLowerCase()));
   const ahead = upcomingItems(catalog, now);
   if (catalog.empty) return <FirstRun where="in your courses" />;
   const tab = state.coursesTab;
@@ -99,11 +102,30 @@ export function Courses() {
       courses, so the destination went and this branch is where it lives.
     */
     <Page
+      className="portal-workspace course-list-workspace" folds={false}
       style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-6)' }}
     >
         <>
           <CoursesTabs value={tab} onChange={(t) => dispatch({ type: 'setCoursesTab', tab: t })} />
           {/* Absent until there is more than one term. See `components/TermSwitch`. */}
+          <div className="portal-intro"><h2>Your courses, together</h2><p>Assignments, readings and every way to study, organized by class.</p></div>
+          {/*
+            Search the list, and add to it. One way to add, not two.
+
+            There was a second until the seventh simplify pass: a quiet link
+            after the last card, whose own comment argued against a prominent
+            button — "that read as the screen's main action when it is the
+            rarest thing you do here". That argument was about the full-width
+            uppercase button it replaced, and this is not one: it is a pill in
+            the row where this screen keeps the things you do *to the list*,
+            beside the search that is the other one. What the comment was
+            protecting still holds — the + in the header captures a deadline,
+            so a courses screen with no way to add a course would leave `n`
+            and search as the only routes on a phone. This is that way, and
+            it is the one you reach without scrolling past four cards.
+          */}
+          <div className="portal-filter-row"><label className="portal-search"><input type="search" aria-label="Search your courses" placeholder="Search by course, code or instructor" value={query} onChange={e=>setQuery(e.target.value)}/></label><button className="portal-primary" onClick={()=>dispatch({type:'go',screen:'import'})}>+ Add a course</button></div>
+          {!shownCourses.length&&<p role="status">No courses match that search.</p>}
           <TermSwitch />
           {/*
             The soft layout shows the same courses as a grid of tiles.
@@ -121,7 +143,7 @@ export function Courses() {
           */}
           {soft ? (
             <div className="soft-tiles">
-              {catalog.courses.map((c) => {
+              {shownCourses.map((c) => {
                 const next = ahead.find((i) => i.c === c.id);
                 const mark = standing(c, state.grades, {
                   pieces: state.pieces,
@@ -156,7 +178,7 @@ export function Courses() {
             at once, and on a phone the class does nothing at all.
           */
           <div className="cards">
-          {catalog.courses.map((c) => {
+          {shownCourses.map((c) => {
             const next = ahead.find((i) => i.c === c.id);
             return (
               <Blueprint
@@ -233,45 +255,6 @@ export function Courses() {
           </div>
           )}
 
-          {/*
-            One quiet way to add a course, at the end of the courses.
-
-            Not the full-width uppercase button this used to be: that read as
-            the screen's main action when it is the rarest thing you do here —
-            four times a semester against a list you open weekly. And not
-            nothing either, which is what it was briefly: the + in the header
-            captures a deadline, so with no link here the courses screen was
-            the one place that talked about courses and could not add one,
-            leaving `n` and search as the only routes on a phone.
-
-            `tap-x`: it is the last item in a vertical list, so the room is
-            beside it — reaching up would claim the last card's own tap area.
-          */}
-          <button
-            type="button"
-            className="bare tap-x"
-            onClick={() => dispatch({ type: 'go', screen: 'import' })}
-            style={{
-              width: 'auto',
-              // Longhand and on the scale: `padding` as a shorthand puts two
-              // raw pixel values past the style budget. 16 + 16 either side of
-              // a --type-sm line is already a fingertip tall, so the tap
-              // overlay adds nothing vertically and cannot reach the card.
-              paddingTop: 'var(--sp-7)',
-              paddingBottom: 'var(--sp-7)',
-              paddingLeft: 'var(--sp-1)',
-              paddingRight: 'var(--sp-1)',
-              marginTop: 'var(--sp-1)',
-              textAlign: 'left',
-              fontSize: 'var(--type-sm)',
-              opacity: 0.6,
-              textDecoration: 'underline dotted',
-              textUnderlineOffset: 3,
-              textDecorationColor: 'currentColor',
-            }}
-          >
-            Add a course from a syllabus
-          </button>
           <div style={{ height: 12 }} />
         </>
     </Page>
@@ -451,6 +434,10 @@ function LmsLink({ course }: { course: Course }) {
 }
 
 export function CourseDetail() {
+ const {state,catalog}=useStore();const course=catalog.byId[state.courseId];
+ return course ? <CourseHub key={course.id} course={course} information={<CourseInformation/>}/> : null;
+}
+function CourseInformation() {
   const { state, dispatch, now, catalog } = useStore();
   const course = catalog.byId[state.courseId];
   // The store settles this pointer after a term switch, but there is one

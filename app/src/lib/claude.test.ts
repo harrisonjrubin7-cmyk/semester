@@ -3,12 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ask,
   configured,
+  explainAskError,
   readCitation,
   readMaterial,
+  proxyProblem,
   route,
   routeLabel,
+  saveSettings,
+  settings,
   withAttachments,
   asSent,
+  strictly,
   wire,
   CUT_OFF,
 } from './claude';
@@ -301,6 +306,222 @@ describe('a tool the model wants to use', () => {
     catchRequest([said('ok')]);
     await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
     expect(sent!.body).not.toHaveProperty('tools');
+  });
+
+  it('closes a strict tool before it goes out', async () => {
+    // A strict tool whose schema does not close itself is a 400 on the whole
+    // request — not on that tool, on the question — so the closing happens on
+    // the way to the wire rather than in twenty schema literals.
+    catchRequest([said('ok')]);
+    await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      tools: [
+        {
+          name: 'tick_deadline',
+          description: 'x',
+          strict: true,
+          input_schema: {
+            type: 'object',
+            properties: { id: { type: 'string' }, title: { type: 'string' } },
+            required: ['id'],
+          },
+        },
+      ],
+    });
+
+    expect((sent!.body.tools as { input_schema: unknown }[])[0].input_schema).toEqual({
+      type: 'object',
+      properties: { id: { type: 'string' }, title: { type: 'string' } },
+      required: ['id', 'title'],
+      additionalProperties: false,
+    });
+  });
+});
+
+describe('a strict tool, as a strict API insists on it', () => {
+  const tool = (input_schema: Record<string, unknown>, strict = true) => ({
+    name: 't',
+    description: 'x',
+    ...(strict ? { strict: true as const } : {}),
+    input_schema: input_schema as never,
+  });
+
+  it('closes the object and requires everything it names', () => {
+    const [out] = strictly([
+      tool({ type: 'object', properties: { a: { type: 'string' }, b: { type: 'number' } } }),
+    ]);
+    expect(out.input_schema.additionalProperties).toBe(false);
+    expect(out.input_schema.required).toEqual(['a', 'b']);
+  });
+
+  it('closes nested objects and the objects inside a list', () => {
+    // The API walks the whole tree, so one unclosed object three levels down
+    // fails the request exactly as loudly as the top one.
+    const [out] = strictly([
+      tool({
+        type: 'object',
+        properties: {
+          who: { type: 'object', properties: { name: { type: 'string' } } },
+          rows: { type: 'array', items: { type: 'object', properties: { cell: { type: 'string' } } } },
+        },
+      }),
+    ]);
+    const props = out.input_schema.properties as Record<string, Record<string, unknown>>;
+    expect(props.who.additionalProperties).toBe(false);
+    expect(props.who.required).toEqual(['name']);
+    const items = props.rows.items as Record<string, unknown>;
+    expect(items.additionalProperties).toBe(false);
+    expect(items.required).toEqual(['cell']);
+  });
+
+  it('keeps the declared order and adds nothing twice', () => {
+    const [out] = strictly([
+      tool({
+        type: 'object',
+        properties: { a: { type: 'string' }, b: { type: 'string' }, c: { type: 'string' } },
+        required: ['c', 'a'],
+      }),
+    ]);
+    expect(out.input_schema.required).toEqual(['c', 'a', 'b']);
+  });
+
+  it('stops promising at twenty, and still offers the rest', () => {
+    // Twenty-one strict tools is not a warning: the request is refused whole.
+    // So the twenty-first goes out as an ordinary tool — the model can still
+    // call it, and every argument is re-read here anyway — rather than not
+    // going out at all, which would quietly take something the app can do.
+    const many = Array.from({ length: 24 }, (_, i) => ({
+      name: `t${i}`,
+      description: 'x',
+      strict: true as const,
+      input_schema: { type: 'object' as const, properties: { a: { type: 'string' } } },
+    }));
+
+    const wire = strictly(many);
+    expect(wire.length).toBe(24);
+    expect(wire.filter((t) => t.strict).length).toBe(20);
+    // In order, so a caller can decide which twenty are worth the promise.
+    expect(wire.map((t) => Boolean(t.strict)).lastIndexOf(true)).toBe(19);
+    // And the ones past the cap are whole tools, not stubs.
+    expect(wire[23].name).toBe('t23');
+    expect(wire[23].input_schema.properties).toEqual({ a: { type: 'string' } });
+  });
+
+  it('leaves a tool that is not strict exactly as it was', () => {
+    // Nothing here is a promise the API checks, so nothing needs closing —
+    // and a schema changed on its way out is a schema nobody can read back.
+    const loose = tool({ type: 'object', properties: { a: { type: 'string' } } }, false);
+    expect(strictly([loose])[0]).toBe(loose);
+  });
+
+  it('does not touch the schema it was handed', () => {
+    const schema = { type: 'object', properties: { a: { type: 'string' } } };
+    strictly([tool(schema)]);
+    expect(schema).toEqual({ type: 'object', properties: { a: { type: 'string' } } });
+  });
+});
+
+/**
+ * A grammar the API will not compile.
+ *
+ * The count limit above is one way the promise is refused; this is the other,
+ * and it is refused for the *set* rather than for any tool in it. Both take
+ * the whole request down, so a student asking "what is due this week?" — a
+ * question with no tool in it — gets an error where the answer should be.
+ */
+describe('when the API will not compile the promise', () => {
+  /** What the app was left showing: a sentence, in a red box, on every ask. */
+  const refusing = (message: string) => {
+    let attempt = 0;
+    const calls = { get n() { return attempt; } };
+    vi.stubGlobal('fetch', (url: string, init: RequestInit) => {
+      attempt += 1;
+      sent = { url: String(url), body: JSON.parse(String(init.body)) };
+      if (attempt === 1) {
+        return Promise.resolve(new Response(JSON.stringify({ error: { message } }), { status: 400 }));
+      }
+      return Promise.resolve(stream([said('Two things are due.')]));
+    });
+    return calls;
+  };
+
+  const tools = [
+    {
+      name: 'tick_deadline',
+      description: 'x',
+      strict: true as const,
+      input_schema: { type: 'object' as const, properties: { id: { type: 'string' } } },
+    },
+  ];
+
+  const asking = () =>
+    ask({ system: 's', messages: [{ role: 'user', content: 'what is due this week?' }], tools });
+
+  beforeEach(() => {
+    // `afterEach` clears the device's memory of it; this clears the copy the
+    // module is holding, which is the same thing a reload does.
+    saveSettings(JSON.parse(localStorage.getItem('semester.claude.v1')!));
+  });
+
+  it('drops the promise and answers the question', async () => {
+    const calls = refusing('Schema is too complex.');
+    expect(await asking()).toBe('Two things are due.');
+    expect(calls.n).toBe(2);
+    // Still offered — a tool the model cannot see is a thing the app can no
+    // longer do, and every argument is re-read by `readProposal` anyway.
+    const wire = sent!.body.tools as { name: string; strict?: boolean }[];
+    expect(wire.map((t) => t.name)).toEqual(['tick_deadline']);
+    expect(wire.every((t) => t.strict === undefined)).toBe(true);
+  });
+
+  it('costs one round trip, not one per question', async () => {
+    refusing('Schema is too complex.');
+    await asking();
+    catchRequest([said('Two things are due.')]);
+    await asking();
+    expect((sent!.body.tools as { strict?: boolean }[])[0].strict).toBeUndefined();
+  });
+
+  it('is remembered on the device, so a reload does not re-spend the call', async () => {
+    // On the shared key that retry is one of sixty metered calls a month, and
+    // a memory that only lasts a session spends one on every page load.
+    refusing('Schema is too complex.');
+    await asking();
+    saveSettings(JSON.parse(localStorage.getItem('semester.claude.v1')!)); // as a reload
+    catchRequest([said('Two things are due.')]);
+    await asking();
+    expect((sent!.body.tools as { strict?: boolean }[])[0].strict).toBeUndefined();
+  });
+
+  it('is the model’s budget, not the device’s', async () => {
+    // Which schemas compile differs between models, so a refusal from one is
+    // not a reason to stop promising on another — and picking a different
+    // model is how a raised limit gets picked up.
+    refusing('Schema is too complex.');
+    await asking();
+    saveSettings({ ...settings(), model: 'claude-sonnet-5' });
+    catchRequest([said('Two things are due.')]);
+    await asking();
+    expect((sent!.body.tools as { strict?: boolean }[])[0].strict).toBe(true);
+  });
+
+  it.each([
+    'Schema is too complex.',
+    'The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.',
+    'Too many strict tools (22). The maximum number of strict tools supported is 20.',
+  ])('recognises it however the API words it: %s', async (message) => {
+    const calls = refusing(message);
+    expect(await asking()).toBe('Two things are due.');
+    expect(calls.n).toBe(2);
+  });
+
+  it('leaves an unrelated 400 alone', async () => {
+    // A genuinely wrong request must still reach the student: retrying it
+    // without the promise would spend a second call and fail the same way.
+    const calls = refusing('messages: at least one message is required');
+    await expect(asking()).rejects.toThrow(/at least one message/);
+    expect(calls.n).toBe(1);
   });
 });
 
@@ -850,6 +1071,103 @@ describe('which route a question takes', () => {
     expect(routeLabel()).toBe('your proxy');
   });
 
+  /**
+   * The box under the key takes an address, and only an address.
+   *
+   * What actually happened: a workspace id from the console went into it, the
+   * route was decided by the box being filled in rather than by what was in
+   * it, and every question in the app went to whatever serves the page —
+   * which answers a POST with 405. The key in the box above worked and was
+   * never reached. Both halves are tested here: the mistake is ignored, and
+   * a proxy that turns out not to be one hands the question on.
+   */
+  describe('when what is in the proxy box is not an address', () => {
+    it('says which mistake it is, and nothing for a real address', () => {
+      expect(proxyProblem('wrkspc_01GNUgn2xy8esod3kYbXdD3t')).toMatch(/id from the console/);
+      expect(proxyProblem('sk-ant-api03-abc')).toMatch(/a key, not a proxy/);
+      expect(proxyProblem('my proxy')).toMatch(/has to be an address/);
+
+      expect(proxyProblem('')).toBe('');
+      expect(proxyProblem('  ')).toBe('');
+      expect(proxyProblem('/anthropic')).toBe('');
+      expect(proxyProblem('https://mine.example.com')).toBe('');
+      expect(proxyProblem('http://localhost:8787')).toBe('');
+    });
+
+    it('leaves it out of the route, so the key answers', async () => {
+      on({ proxy: 'wrkspc_01GNUgn2xy8esod3kYbXdD3t', apiKey: 'sk-ant-mine' });
+      vi.stubEnv('VITE_CLAUDE_PROXY', '');
+
+      expect(route()).toBe('own');
+      expect(routeLabel()).toBe('your key');
+      catchHeaders();
+      await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+      expect(call!.url).toBe('https://api.anthropic.com/v1/messages');
+      expect(call!.headers['x-api-key']).toBe('sk-ant-mine');
+    });
+
+    it('falls back to the build\'s proxy rather than to nothing', async () => {
+      on({ proxy: 'wrkspc_01GNUgn2xy8esod3kYbXdD3t' });
+      vi.stubEnv('VITE_CLAUDE_PROXY', '/anthropic');
+
+      expect(route()).toBe('proxy');
+      expect(routeLabel()).toBe('the proxy this build points at');
+      catchHeaders();
+      await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+      expect(call!.url).toBe('/anthropic/v1/messages');
+    });
+  });
+
+  it('asks again on the key when the proxy turns out not to forward', async () => {
+    // 405 is what a static host answers a POST with. It is a permanent fact
+    // about the address, so the question goes to the key and every question
+    // after it does too — rather than the student seeing a number.
+    on({ proxy: 'https://not-a-proxy.example.com', apiKey: 'sk-ant-mine' });
+    vi.stubEnv('VITE_CLAUDE_PROXY', '');
+    expect(route()).toBe('proxy');
+
+    const urls: string[] = [];
+    vi.stubGlobal('fetch', (url: string) => {
+      urls.push(String(url));
+      if (urls.length === 1) {
+        return Promise.resolve(
+          new Response(JSON.stringify({ error: { message: 'Method Not Allowed' } }), {
+            status: 405,
+          }),
+        );
+      }
+      return Promise.resolve(stream([said('answered anyway')]));
+    });
+
+    const text = await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+    expect(text).toBe('answered anyway');
+    expect(urls).toEqual([
+      'https://not-a-proxy.example.com/v1/messages',
+      'https://api.anthropic.com/v1/messages',
+    ]);
+    // And stays stood down, so the next question does not spend a round trip
+    // rediscovering it.
+    expect(route()).toBe('own');
+  });
+
+  it('says what answered and how, when there is no key to fall back to', async () => {
+    on({ proxy: 'https://not-a-proxy.example.com' });
+    vi.stubEnv('VITE_CLAUDE_PROXY', '');
+    // Cleared by a trip to the settings screen, which is where a proxy is
+    // fixed — otherwise the test above would have stood this route down.
+    saveSettings({ ...JSON.parse(localStorage.getItem('semester.claude.v1')!) });
+
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(
+        new Response(JSON.stringify({ error: { message: 'Method Not Allowed' } }), { status: 405 }),
+      ),
+    );
+
+    await expect(ask({ system: 's', messages: [{ role: 'user', content: 'q' }] })).rejects.toThrow(
+      /https:\/\/not-a-proxy\.example\.com\/v1\/messages forwards to the API — it answered 405/,
+    );
+  });
+
   it('is still nothing when the build was given nothing', async () => {
     on({});
     vi.stubEnv('VITE_CLAUDE_PROXY', '');
@@ -859,5 +1177,68 @@ describe('which route a question takes', () => {
     await expect(ask({ system: 's', messages: [{ role: 'user', content: 'q' }] })).rejects.toThrow(
       /No key yet/,
     );
+  });
+
+  /**
+   * A host that answers a POST with a web page, not an API.
+   *
+   * The proxy route above already says what happened; what these are about is
+   * the same thing arriving anywhere else. A static host answers `405 Not
+   * Allowed` as HTML, so the body carries no message to show and the app was
+   * left printing the number on its own — which is what a student saw, in a
+   * red box, with nothing in it to act on.
+   */
+  describe('when the answer is a page rather than an API', () => {
+    /** What GitHub Pages actually sends: a status, and HTML nobody can parse. */
+    const notAllowed = () =>
+      vi.stubGlobal('fetch', () =>
+        Promise.resolve(
+          new Response('<html><head><title>405 Not Allowed</title></head></html>', {
+            status: 405,
+            headers: { 'Content-Type': 'text/html' },
+          }),
+        ),
+      );
+
+    it('names the address on the route with no box to fix', async () => {
+      on({ apiKey: 'sk-ant-mine' });
+      vi.stubEnv('VITE_CLAUDE_PROXY', '');
+      expect(route()).toBe('own');
+      notAllowed();
+
+      const said = await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] }).catch(
+        (e: Error) => e.message,
+      );
+      expect(said).toMatch(/https:\/\/api\.anthropic\.com\/v1\/messages/);
+      expect(said).toMatch(/answered 405/);
+      // The number on its own is the thing being fixed here.
+      expect(said).not.toBe('405');
+    });
+
+    it('never hands back a bare status, whatever the number', () => {
+      // 418 stands in for anything unrecognised: the rule is that a status
+      // with no sentence from the body never reaches a student alone.
+      const bare = explainAskError('shared', 418, '418', 'https://p.supabase.co/functions/v1/claude');
+      expect(bare).toMatch(/https:\/\/p\.supabase\.co\/functions\/v1\/claude/);
+      expect(bare).toMatch(/418/);
+      expect(bare).toMatch(/your own key/i);
+      expect(bare).not.toBe('418');
+    });
+
+    it('keeps the body’s own sentence when there was one', () => {
+      // The API's wording beats anything written here, so it stays at the top
+      // and the explanation follows it.
+      const said = explainAskError('shared', 405, 'POST only.', 'https://p.supabase.co/functions/v1/claude');
+      expect(said.startsWith('POST only.')).toBe(true);
+      expect(said).toMatch(/answered 405/);
+    });
+
+    it('still says the deployed function is the thing to look at', () => {
+      // The 404 case is more specific and was already worded for it; the new
+      // branch must not swallow it.
+      expect(explainAskError('shared', 404, '404', 'https://p.supabase.co/functions/v1/claude')).toMatch(
+        /has not been deployed/,
+      );
+    });
   });
 });

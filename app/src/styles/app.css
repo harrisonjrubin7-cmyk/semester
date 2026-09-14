@@ -4613,7 +4613,24 @@ input[type='search'].input {
  * 320px window inside a 390px one is nobody's idea of writing.
  */
 .mb-compose {
-  position: fixed;
+  /*
+   * Absolute inside the screen's own box, not fixed to the window.
+   *
+   * Fixed was right when the app was a phone in a frame and wrong the moment
+   * the workspace shell arrived: its tab strip and search bar are children of
+   * `.deskwork` at z-index 20 and 21, the pane beside them is at 1, and a
+   * fixed sheet inside that pane is inside the pane's stacking context — so
+   * no z-index of its own can lift it over them. On the deployed build at
+   * phone width that ate the top of the compose sheet: its title bar, its
+   * close button and the To field were all behind the chrome, with Subject
+   * the first thing you could see.
+   *
+   * Absolute puts it in the mail screen's box instead, which is the surface
+   * the app actually owns — docked to the bottom right of the pane on a wide
+   * window, filling the pane below the chrome on a narrow one. The folder
+   * drawer and its shade were already absolute for the same reason.
+   */
+  position: absolute;
   overflow: hidden;
   inset: auto var(--sp-6) 0 auto;
   z-index: 40;
@@ -4802,6 +4819,20 @@ input[type='search'].input {
   flex: none;
 }
 
+/* ── The bookmarks bar ──
+ *
+ * Under the search field, drawn only when there is something in it — a row of
+ * chrome that is always empty is a row people learn to look past, and the
+ * workspace has three bars above the page already. Opaque, because it is over
+ * the pane rather than beside it; see the z-index note at the foot of this
+ * sheet. */
+
+.deskwork .deskmarks {
+  background: var(--app-bg);
+  border-bottom: 0;
+  padding: 0 var(--sp-7) var(--sp-3);
+}
+
 /* ── The bar ── */
 
 .desktop-bar {
@@ -4909,10 +4940,26 @@ input[type='search'].input {
 }
 
 .desktop-clear,
+.desktop-star,
 .desktop-keys,
 .desktop-ai {
   flex: none;
   width: auto;
+}
+
+/* The star sits in the field, where every browser window has it. It never
+   dims below the field's own secondary colour, and it takes the accent when
+   the page in front of you is saved — a filled star that is still grey is a
+   state nobody reads as "kept". */
+.desktop-star[aria-pressed='true'] {
+  color: var(--app-accent);
+}
+
+.desktop-star:disabled {
+  /* `--app-faint` is held to 3:1, which is the bar for a disabled control and
+     is what makes it read as unavailable. Same as `.bench-item:disabled`. */
+  color: var(--app-faint);
+  cursor: default;
 }
 
 .desktop-keys {
@@ -5081,28 +5128,10 @@ input[type='search'].input {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 0 var(--sp-6) var(--sp-7);
+  /* The top pad is what the New button's own margin used to hold open; with
+     it gone the first row would start against the chrome above. */
+  padding: var(--sp-3) var(--sp-6) var(--sp-7);
   overflow-y: auto;
-}
-
-.desk-new {
-  width: auto;
-  align-self: flex-start;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-6);
-  margin: var(--sp-3) 0 var(--sp-7);
-  padding: var(--sp-7) var(--sp-7) var(--sp-7) var(--sp-6);
-  border-radius: var(--r-lg);
-  border: 1px solid var(--app-line);
-  background: var(--app-panel);
-  box-shadow: var(--lift-2);
-  color: var(--app-fg);
-  font-size: var(--type-md);
-}
-
-.desk-new:hover {
-  background: var(--app-hero);
 }
 
 .desk-row {
@@ -5529,6 +5558,16 @@ input[type='search'].input {
   white-space: nowrap;
 }
 
+/* The saved places, under the shortcuts and above "Explore all apps". A
+   narrower column than the app row above it: these are named by hand and run
+   longer than "Calendar", and a row of them at full width reads as a second
+   navigation rather than as a shelf of what somebody kept. */
+.deskhome-marks {
+  width: 100%;
+  max-width: 560px;
+  margin-top: var(--sp-7);
+}
+
 .deskhome-explore {
   width: auto;
   display: flex;
@@ -5928,6 +5967,14 @@ input[type='search'].input {
 
 .deskwork > .desktop-bar {
   z-index: 20;
+}
+
+/* And the bookmarks bar under it, for the same reason one step down: its
+   chips open a menu, and a menu at 1 is a menu the pane paints over. Below
+   the two above it, which sit over it on the screen and must stay over it
+   when one of their own panels is open. */
+.deskwork > .deskmarks {
+  z-index: 19;
 }
 
 /*

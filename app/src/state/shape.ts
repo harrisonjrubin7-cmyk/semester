@@ -792,7 +792,7 @@ export interface Ephemeral {
    */
   mathTab: 'write' | 'calculate' | 'graph' | 'library' | 'kept';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
-  meTab: 'you' | 'all' | 'task';
+  meTab: 'you' | 'task';
   /** Which shelf of the directory is showing under Everything. */
   meGroup: string;
   /**
@@ -1831,7 +1831,7 @@ export type Action =
   | { type: 'setCostsTab'; tab: CostsTab }
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: CoursesTab }
-  | { type: 'setMeTab'; tab: 'you' | 'all' | 'task' }
+  | { type: 'setMeTab'; tab: 'you' | 'task' }
   | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
   /**
@@ -1949,7 +1949,21 @@ export type Action =
   | { type: 'toggleTask'; id: string }
   | { type: 'deleteTask'; id: string }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
-  | { type: 'setAppointmentKind'; id: string; kind: string }
+  /*
+   * The same shape as `editTask`, and here for the same reason it is.
+   *
+   * `moveAppointment` changed when it is and `deleteAppointment` took it
+   * away, and between them was the whole of what you could do to one you had
+   * already written: a typo in the title, the wrong room or the wrong kind
+   * meant deleting it and adding it again. The calendar has said for longer
+   * than that has been true that tapping your own appointment "opens the list
+   * it lives in, which is where it can be edited" — this is the action that
+   * makes the sentence true.
+   *
+   * Not in `lib/undo.ts`, by the rule written there: an edit leaves the thing
+   * on screen to edit back, and only a drag and a delete take that away.
+   */
+  | { type: 'editAppointment'; id: string; patch: Partial<Omit<Appointment, 'id' | 'created'>> }
   | { type: 'deleteAppointment'; id: string }
   | { type: 'setMathTab'; tab: State['mathTab'] }
   | { type: 'newNote'; courseId: CourseId | null; itemId?: string | null }
