@@ -263,12 +263,24 @@ the minute has not moved, and `state/clock.test.ts` asserts identity rather than
 equality — the same minute must come back as the *same object*, or React cannot
 tell that nothing happened.
 
-**The real fix** is to take `now` out of the omnibus context — its own provider,
-read through a `useNow()` hook by the handful of components that show a relative
-time. Then the minute boundary re-renders a countdown and a class rail rather
-than sixty screens' worth of tree. That is a larger change and wants its own
-pass; the bail-out above is worth taking today regardless, because it is correct
-on its own terms even if the context is never split.
+**Done.** `NowContext`, nested inside `StoreContext` so a tick makes a new
+value for the inner provider only — 117 of the 195 files that read the store no
+longer re-render on the minute, and `state/clocksplit.test.ts` pins both the
+absence of `now` from the store type and the nesting, because putting either
+back is silent.
+
+The sweep is worth one line of warning for whoever does the next one: of 78 call
+sites, 75 rewrote mechanically and three did not, and one of those had a
+`useNow` of its own — a per-second clock in `screens/Clocks.tsx` — so importing
+the store's under the same name shadowed it and an alarm countdown started
+being handed a number where it wanted a `Date`. Nothing about that reads wrong.
+`tsc` caught it and nothing else would have.
+
+It corrected one guess of its own on the way: this section expected the clock
+to matter to "the handful of components that show a relative time". It is 78 of
+195 — closer to half than to a handful, because a great many screens compute
+what is due from `now` rather than merely printing it. The saving is real and it
+is 117 files, not 190.
 
 ---
 
@@ -408,25 +420,49 @@ This is not duplication in the sense the simplify passes were hunting; every one
 of those lists is about a genuinely different thing. It is *co-location*: eight
 lists keyed by the same value, kept in step by hand.
 
-**The symptom is already visible in the numbers.** The `Screen` union has 82
-members and the registry has 60. Twenty-two screens exist, render, and are
-navigable, but carry no `blurb`, no `keywords` and no `taskTags` — so the
-directory does not list them and search cannot find them. Some of that is
-correct by design (`search` and `directory` are the shell looking at itself, and
-`lib/types.ts:481` says so). Some of it is a screen that quietly fell out of the
-index.
+### The symptom this section claimed does not exist · **CORRECTED**
+
+This said: *"The `Screen` union has 82 members and the registry has 60. Twenty-
+two screens exist, render, and are navigable, but the directory does not list
+them and search cannot find them… some of it is a screen that quietly fell out
+of the index."*
+
+That was wrong, and it was wrong in the direction that makes a maintenance
+refactor look like a bug fix. The twenty-two are, in full: `search`,
+`directory`, `onboarding`; the seven detail screens that need an id (`course`,
+`item`, `event`, `note`, `guide`, `lesson`, `slides`); the four study modes
+reached from a guide (`drill`, `quiz`, `guess`, `gap`); and the eight `set*`
+pages. **Every one is deliberately not a destination** — putting `item` in the
+launcher would mean "a deadline", unanswerably, and putting `setLook` there
+would be a second door into a page Settings already lists.
+
+Nor were they unnamed. `screenName` has always read three registries —
+`DESTINATIONS`, `settingsTitle`, and a `NESTED_NAMES` table — and
+`lib/nav.test.ts` already walked the union out of the source to prove no screen
+falls through to its own id. The "cheap first step" proposed below was, in the
+part that mattered, already there.
+
+**And the rest of it now is too.** `lib/nav.registry.test.ts` lands the
+allowlist: every union member is either registered or named with the reason it
+is not. It was written on `main` rather than here, and it cites this section
+while correcting it.
+
+So what is left of P4 is **only** the maintenance cost — eight lists keyed by
+the same value, kept in step by hand — with no user-facing symptom behind it.
 
 **The shape of the fix**, if it is worth doing: one module per screen exporting
 everything that screen needs registered — the lazy component, the header, its
 soft-top facts, its registry row — and `nav.ts` built by collecting them. The
-registry stays the one list it already is; the three switches in `App.tsx` and
-`softtop.ts` become lookups; adding a screen becomes adding a file.
+three switches in `App.tsx` and `softtop.ts` become lookups; adding a screen
+becomes adding a file.
 
-That is a large refactor of a working app, so it belongs on a branch of its own
-and probably behind a cheaper first step: **a test that asserts every `Screen`
-union member either appears in `DESTINATIONS` or is on an explicit
-shell-screens allowlist.** That closes the findability hole this week, and turns
-the eight-place registration from an invisible cost into a named one.
+**Recommended against, for now, and the reason is not the size.** It touches
+`App.tsx` (1,868 lines, 82 `lazy()` consts, 159 case labels) and `lib/softtop.ts`
+(933 lines, 60 cases) — the two files `main` merges into most often; this branch
+took in 39 commits across three merges in a single evening. A restructure of the
+router that cannot be reviewed in one sitting and conflicts with every PR
+touching a screen is a poor trade for a convenience with no symptom. It wants a
+quiet week and a decision, not a slot at the end of an audit.
 
 ---
 
@@ -617,9 +653,9 @@ Ordered by measured value per unit of risk, not by size.
 | 6 | ✅ **P1a** — split the panel out behind its button | medium | −6,608 lines measured, and the panel opens no slower |
 | 7 | ✅ **P3** — two projects: 354 shared, 9 isolated | an afternoon | −51s per CI run (135s → 84s, −37%) |
 | 8 | ✅ **P1d** — gate the hero at its mount, not inside it | small | −3,919 lines, −4.7% of the gzipped critical path, and a spec no longer built and thrown away on every render |
-| 9 | **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | closes the 82-vs-60 findability hole |
-| 10 | **P4 proper** — one module per screen | large, own branch | adding a screen becomes adding a file |
-| 11 | **P2 proper** — split `now` out of the store context | large | the minute boundary stops being an app-wide event |
+| 9 | ✅ **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | done on `main` as `nav.registry.test.ts`; the hole it was meant to close turned out not to exist |
+| 10 | ⏸ **P4 proper** — one module per screen | large, own branch | adding a screen becomes adding a file — recommended against for now, see §4 |
+| 11 | ✅ **P2 proper** — split `now` out of the store context | large | 117 of 195 store consumers no longer re-render on a tick |
 | 12 | **P7** — keep paying the style ledger down | ongoing | the memoisation in 11 becomes worth having |
 | 14 | ✅ **§7a** — give focus back when the assistant closes | small | a dialog that takes focus returns it, both ways in |
 | 15 | ✅ **§3's aside** — read the timezone at the call site, not at module load | tiny | calendar events written in the zone you are in |
