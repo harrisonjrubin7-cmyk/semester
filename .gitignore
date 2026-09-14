@@ -23,3 +23,5 @@ venv/
 
 # Scratch the Supabase CLI writes when it runs.
 supabase/.temp/
+
+# (probe: confirming the Supabase working directory — not for merge)
