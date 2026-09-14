@@ -380,6 +380,28 @@ a:hover {
  */
 .device > .skip-link {
   position: absolute;
+  /*
+   * And the z-index, which is the same rule's second victim.
+   *
+   * The blanket above sets `z-index: 1` as well as `position: relative`, and
+   * it beats the 100 declared on `.skip-link` for the same reason it beat the
+   * `position`: it is later in this sheet and weighs the same. So the link
+   * came down in front of nothing — it is a child of `.device`, and every
+   * sibling that draws the chrome sits at that same 1 and wins on order.
+   *
+   * Only the focused state shows it, which is why this outlived the fix
+   * above: unfocused the link is translated off the top of the window and
+   * paints nothing at all, so there is no wrong pixel to notice. Press Tab on
+   * the workspace or the browser shell and the focus ring appeared around a
+   * rectangle with the header and the tab strip drawn over it — the words
+   * "Skip to content" were behind them.
+   *
+   * That is the failure the note over `.skip-link` above names exactly: a
+   * sighted keyboard user cannot see where their focus went. It is not safe
+   * to leave to the declaration, because this rule is what the declaration
+   * loses to.
+   */
+  z-index: 100;
 }
 
 /* ── The three layouts ────────────────────────────────────────────────────
