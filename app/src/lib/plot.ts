@@ -44,6 +44,17 @@
 
 import { free, read, value, type Node, type Scope, type Val } from './calc';
 import {
+  at as beatAt,
+  atZ,
+  inverse as unZed,
+  latexSeq,
+  latexZed,
+  poleText as zPoleText,
+  poles as zPoles,
+  readZed,
+  transform as zTransform,
+} from './discrete';
+import {
   HARMONICS,
   harmonicsOf,
   latexSeries,
@@ -175,6 +186,21 @@ export type Line =
    * series forming is the reason to draw it at all.
    */
   | { kind: 'harmonics'; body: Node; period: Node; count: Node | null }
+  /**
+   * `Z{0.5^n}` — the z-transform, read and drawn against z.
+   *
+   * Laplace for a thing that happens on the beat rather than continuously: a
+   * balance each month, a reading each second. See `lib/discrete.ts`.
+   */
+  | { kind: 'ztransform'; body: Node }
+  /**
+   * `Z^{-1}{z/(z - 0.5)}` — the sequence behind a transform.
+   *
+   * Drawn as points on the integers with a stem to each, because that is what
+   * a sequence is: joining them with a line would draw a value at n = 1.5,
+   * which is not a thing that exists.
+   */
+  | { kind: 'sequence'; body: Node }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -184,6 +210,9 @@ export const TIME = 't';
 export const FREQUENCY = 's';
 /** What a Fourier transform is a function of — the other frequency, and a different axis. */
 export const OMEGA = 'ω';
+/** What a z-transform is a function of, and the letter its sequences are counted in. */
+export const ZED = 'z';
+export const BEAT = 'n';
 
 /**
  * How far round θ and t go, in half-turns.
@@ -228,6 +257,10 @@ const LAPLACE =
 
 /** `F{f(t)}` — the Fourier transform, in the ways somebody writes it. */
 const FOURIER = /^\s*(?:\\mathcal\s*\{\s*F\s*\}|F)\s*\\?\{([\s\S]*?)\\?\}\s*$/;
+
+/** `Z{x[n]}` and `Z^{-1}{X(z)}` — the z-transform, the same shape as the Laplace pair. */
+const ZEDDED =
+  /^\s*(?:\\mathcal\s*\{\s*Z\s*\}|Z|ztransform)\s*(\^\s*\{?\s*-\s*1\s*\}?)?\s*\\?\{([\s\S]*?)\\?\}\s*$/;
 
 /** `fourier(f, T)` and `fourier(f, T, n)`: a Fourier series, told by its name and its arguments. */
 const HARMONIC = new Set(['fourier', 'harmonics']);
@@ -323,6 +356,13 @@ export function readLine(source: string): Line {
     const inner = node(laplace[2]);
     if ('says' in inner) return { kind: 'fault', says: inner.says };
     return laplace[1] ? { kind: 'inverse', body: inner.node } : { kind: 'transform', body: inner.node };
+  }
+
+  const zedded = ZEDDED.exec(text);
+  if (zedded) {
+    const inner = node(zedded[2]);
+    if ('says' in inner) return { kind: 'fault', says: inner.says };
+    return zedded[1] ? { kind: 'sequence', body: inner.node } : { kind: 'ztransform', body: inner.node };
   }
 
   const fourier = FOURIER.exec(text);
@@ -477,6 +517,10 @@ export function missing(line: Line, scope: Scope): string[] {
     case 'convolution':
     case 'spectrum':
       return free(line.body, scope).filter((n) => n !== TIME && !table(n));
+    case 'ztransform':
+      return free(line.body, scope).filter((n) => n !== BEAT && !table(n));
+    case 'sequence':
+      return free(line.body, scope).filter((n) => n !== ZED && !table(n));
     case 'harmonics':
       return [
         ...free(line.body, scope).filter((n) => n !== TIME),
@@ -594,6 +638,31 @@ export function answered(
        * out which of the two lines is the answer.
        */
       note: 'The function is faint under it. Outside that interval a series repeats, which is what makes it a series.',
+    };
+  }
+  if (line.kind === 'ztransform') {
+    const got = zTransform(line.body, BEAT, scope);
+    if (!got.ok) return { says: got.fault };
+    return {
+      lead: 'It comes to',
+      latex: latexZed(got.it, ZED),
+      over: ZED,
+      at: (z: number) => atZ(got.it, z),
+      note: zPoleText(zPoles(got.it)),
+    };
+  }
+  if (line.kind === 'sequence') {
+    const zed = readZed(line.body, ZED, scope);
+    if (!zed.ok) return { says: zed.fault };
+    const got = unZed(zed.it);
+    if (!got.ok) return { says: got.fault };
+    const seq = got.it;
+    return {
+      lead: 'The sequence behind it is',
+      latex: latexSeq(seq, BEAT),
+      over: BEAT,
+      at: (n: number) => beatAt(seq, n),
+      note: 'Drawn as the beats it is, rather than joined into a curve it is not.',
     };
   }
   if (line.kind === 'transfer') {
@@ -886,10 +955,35 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
         shades: [...under.map(() => 0.5), ...over.map(() => 1)],
       };
     }
+    case 'sequence': {
+      const got = answered(line, scope);
+      if (!got || 'says' in got) return EMPTY;
+      /*
+       * A sequence is points, and a stem to each of them.
+       *
+       * The stems are what make a row of dots readable as values rather than
+       * as a scatter, and they are the picture every signals textbook draws.
+       * They are paths because a path is what the plot knows how to draw; each
+       * is two points and no more.
+       */
+      const points: Point[] = [];
+      const paths: Point[][] = [];
+      for (let n = Math.max(0, Math.ceil(frame.x0)); n <= Math.floor(frame.x1) && points.length < 400; n += 1) {
+        const y = got.at(n);
+        if (!Number.isFinite(y)) continue;
+        points.push({ x: n, y });
+        paths.push([
+          { x: n, y: 0 },
+          { x: n, y },
+        ]);
+      }
+      return { paths, points };
+    }
     case 'transform':
     case 'inverse':
     case 'convolution':
     case 'spectrum':
+    case 'ztransform':
     case 'transfer': {
       const got = answered(line, scope);
       if (!got || 'says' in got) return EMPTY;
@@ -1308,6 +1402,16 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'A spectrum',
     says: 'A Fourier transform: where a dying wobble keeps its energy.',
     lines: ['F{e^{-0.4t}\\sin(6t)}'],
+  },
+  {
+    name: 'Money each month',
+    says: 'A z-transform: Laplace for a thing that happens on the beat.',
+    lines: ['Z{0.5^n}'],
+  },
+  {
+    name: 'The sequence behind it',
+    says: 'Back from z, drawn as the beats it is rather than a curve it is not.',
+    lines: ['Z^{-1}{z/((z - 1)(z - 2))}'],
   },
   {
     name: 'A flow',
