@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { useDeviceLibrary } from '../lib/device-library';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { ActionButton, FilePick, SectionLabel, Segmented } from '../components/ui';
@@ -116,6 +117,16 @@ const LOCAL: Partial<Record<UniversityArea, { screen: Screen; label: string }>> 
   clubs: { screen: 'activities', label: 'Open clubs' },
 };
 
+/*
+ * Module-level, so `useDeviceLibrary`'s memo of the read is stable.
+ *
+ * Passed inline these would be new values every render, and the hook's `load`
+ * — and the effect subscribing to storage events with it — would rebuild on
+ * each one.
+ */
+const EMPTY_DRAFTS: UniversityDraft[] = [];
+const readDrafts = (value: unknown) => readUniversityDrafts(JSON.stringify(value));
+
 export function University() {
   const { state, account } = useStore();
   /*
@@ -136,30 +147,27 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const [area, setArea] = useState<UniversityArea>('courses');
 
   /*
-   * Read once, and keep the failure if there was one.
+   * The same store the other five device workspaces use.
    *
-   * A draft file that cannot be parsed is not cleared and not overwritten —
-   * it is somebody's appeal, and the recovery download below is the only way
-   * back to it. Every write is disabled while `error` is set, so a bad read
-   * cannot be followed by a good write that destroys the evidence.
+   * This screen used to read and write `localStorage` itself, and carried the
+   * two faults that cost `device-library.ts` its rewrite: a save built on the
+   * value this component last read, so another tab's draft was overwritten
+   * rather than added to; and a refusal latched at mount, so a file corrupted
+   * *after* the screen opened was flattened by the next keystroke rather than
+   * kept. A draft here is somebody's appeal or their withdrawal letter, which
+   * is the worst thing in the app to overwrite.
+   *
+   * `update` also reports whether the write landed. Every caller below checks
+   * it before telling anybody the draft was created.
    */
-  const [initial] = useState(() => {
-    try {
-      return { drafts: readUniversityDrafts(localStorage.getItem(storageKey) || '[]'), error: '' };
-    } catch {
-      return {
-        drafts: [] as UniversityDraft[],
-        error:
-          'An older draft file could not be read. It has been kept — download it for recovery before creating drafts.',
-      };
-    }
-  });
+  const library = useDeviceLibrary(storageKey, readDrafts, EMPTY_DRAFTS);
+  const drafts = library.value;
+  const setDrafts = library.update;
+  const saveError = library.error;
 
-  const [drafts, setDrafts] = useState<UniversityDraft[]>(initial.drafts);
   const [selected, setSelected] = useState('');
   const [step, setStep] = useState('');
   const [notice, setNotice] = useState('');
-  const [saveError, setSaveError] = useState(initial.error);
   const [removed, setRemoved] = useState<UniversityDraft | null>(null);
 
   const [status, setStatus] = useState<InstitutionStatus | null>(null);
@@ -188,35 +196,21 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const draft = drafts.find((d) => d.id === selected);
   const connection = status?.connections.find((c) => c.area === area);
 
-  useEffect(() => {
-    if (initial.error) return;
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(drafts));
-      /*
-       * Functional, and returning the same string when there is nothing to
-       * clear. React bails out of a set that produces the identical value, so
-       * the ordinary path — a save that worked, which is every keystroke in
-       * the editor — schedules no second render at all.
-       */
-      setSaveError((was) => (was ? '' : was));
-    } catch {
-      setSaveError('Drafts could not be saved on this device. Export a backup before leaving this screen.');
-    }
-  }, [drafts, storageKey, initial.error]);
-
   const patch = (fields: Partial<UniversityDraft>) =>
     setDrafts((ds) =>
       ds.map((d) => (d.id === selected ? { ...d, ...fields, updatedAt: new Date().toISOString() } : d)),
     );
 
   const create = (kind: UniversityArea) => {
-    if (initial.error) return setNotice(initial.error);
+    if (library.error) return setNotice(library.error);
     if (drafts.length >= DRAFT_LIMITS.drafts) {
       return setNotice(`Export and remove older drafts before adding more than ${DRAFT_LIMITS.drafts}.`);
     }
     const template = DRAFT_TEMPLATES[kind];
     const id = crypto.randomUUID();
-    setDrafts((ds) => [
+    // Nothing below this line runs on a refused write: selecting a draft that
+    // was never stored would open an editor bound to a draft that is not there.
+    const saved = setDrafts((ds) => [
       {
         id,
         role: intent,
@@ -230,6 +224,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       },
       ...ds,
     ]);
+    if (!saved) return;
     setSelected(id);
     setArea(kind);
     setTab('drafts');
@@ -379,7 +374,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           }}
         >
           {saveError || notice}
-          {initial.error && (
+          {library.error && (
             <ActionButton
               onClick={() =>
                 download({
@@ -521,7 +516,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             multiple={false}
             onPick={async (files) => {
               try {
-                if (initial.error) throw new Error(initial.error);
+                if (library.error) throw new Error(library.error);
                 const file = files[0];
                 if (!file) return;
                 if (file.size > 1_600_000) throw new Error('Choose a draft export smaller than 1.6 MB.');
