@@ -402,6 +402,30 @@ export function resolveGround(id: string | undefined, prefersDark: boolean): str
   return prefersDark ? DEVICE_DARK : DEVICE_LIGHT;
 }
 
+/** What "Match my device" is called, wherever the setting is named. */
+export const MATCH_DEVICE_LABEL = 'Match my device';
+
+/**
+ * What the ground somebody has chosen is called.
+ *
+ * The distinction `resolveGround` deliberately erases, put back — and that is
+ * the point of having both. `resolveGround` answers "which palette do I
+ * paint", so it turns `device` into a real ground; this answers "what has this
+ * person chosen", so it does not. Anything that *reports* the setting must use
+ * this one, or it tells somebody on Match my device that they picked Ink.
+ *
+ * That was not hypothetical. The workspace's Customize panel offered a
+ * Dark/Light pair built on `resolveGround`, so it lit Dark for somebody
+ * following their device, and pressing Light wrote a fixed ground over the
+ * instruction — one way, with nothing said, and no route back to Match my
+ * device from that panel. The pair is gone (the panel links to the setting
+ * instead) and this exists so that the panel, and anything else that names a
+ * ground, cannot make the same mistake by construction.
+ */
+export function groundName(id: string | undefined): string {
+  return id === MATCH_DEVICE ? MATCH_DEVICE_LABEL : ground(id).label;
+}
+
 // ── Spacing, corners, type ───────────────────────────────────────────────
 
 export const DENSITIES = [

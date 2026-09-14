@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { headerRow } from './header';
 import { chromeFor } from './chrome';
+import { withoutComments } from '../styles/rules';
+import { MATCH_DEVICE, MATCH_DEVICE_LABEL, ground, groundName, resolveGround } from './look';
 
 /**
  * No two controls in one frame do the same job.
@@ -135,5 +137,117 @@ describe('the + means one thing', () => {
     const at = app.indexOf('<Plus size=');
     const opening = app.slice(0, at).split('<button').pop() ?? '';
     expect(opening, 'and it opens the capture box').toContain("type: 'quickAdd'");
+  });
+});
+
+/**
+ * One place each preference is written — and the reason it is in this file.
+ *
+ * The census above is about two controls in one frame. This is the same fault
+ * one layer down: two controls over one *key*, which do not have to share a
+ * frame to disagree, because the disagreement is stored.
+ *
+ * The sixth pass reported a null result on this axis and it was not null.
+ * Three settings had two writers. Two are keeps — `feedOrder` and `boardOrder`
+ * are written by dragging the thing itself and by an arrowed list in Settings,
+ * which is the object and the index of the object, through one resolver, and
+ * cannot disagree. The third was real.
+ *
+ * ## What `ground`'s second writer actually did
+ *
+ * The workspace's Customize panel drew a Dark/Light pair. It read the current
+ * ground through `resolveGround`, which exists to turn the `device`
+ * instruction into a palette — so somebody whose setting was **Match my
+ * device** was shown Dark, lit, as a choice they had made. Pressing Light
+ * counted as a move and wrote a fixed `paper` over the instruction: silently,
+ * one way, and not even the ground Match my device resolves light to.
+ *
+ * A second control that could not express the key it wrote. The pair is gone;
+ * the row below it opens the page where all eleven states live, and reports
+ * which one you are on through `groundName`, the function that does not erase
+ * `device`. These hold both halves.
+ */
+describe('one writer per preference', () => {
+  /*
+   * The surfaces that are not Settings, and could grow a copy of one of its
+   * controls. `components/Appearance.tsx` is deliberately absent: it holds the
+   * layout and navigation pickers *for* `screens/settings/Nav.tsx`, which is
+   * its only caller, so it is that page rather than a second surface — the
+   * check below holds it to that.
+   */
+  const FILES = [
+    'src/components/desk/Customize.tsx',
+    'src/components/desk/AppsPanel.tsx',
+    'src/components/desk/Sidebar.tsx',
+    'src/components/desk/TopBar.tsx',
+    'src/screens/Directory.tsx',
+    'src/screens/Springboard.tsx',
+  ];
+
+  it('keeps the pickers in components/Appearance.tsx a settings page’s own', () => {
+    const callers = [
+      'src/screens/settings/Nav.tsx',
+      ...FILES,
+      'src/App.tsx',
+      'src/screens/Search.tsx',
+    ].filter((f) => /from '.*components\/Appearance'/.test(read(f)));
+    expect(callers, 'Appearance is Settings’ picker, not a shared control').toEqual([
+      'src/screens/settings/Nav.tsx',
+    ]);
+  });
+
+  /*
+   * The look fields that are appearance preferences, as against the ones that
+   * are the arrangement of a thing you can drag — `favourites`, `boardOrder`,
+   * `groupOrder` and `directory` are written where the thing is, on purpose.
+   */
+  const OWNED = ['ground', 'accent', 'hue', 'courseColours', 'shell', 'labels', 'badges'];
+
+  for (const field of OWNED) {
+    it(`writes ${field} only under screens/settings/`, () => {
+      const wrote = FILES.filter((f) => new RegExp(`\\b${field}:`).test(read(f)));
+      expect(wrote, `${field} is written outside Settings`).toEqual([]);
+    });
+  }
+
+  /*
+   * And the one exemption, stated rather than left as a gap in the list above.
+   *
+   * `Customize`'s "Open the original layout" writes `nav`, which
+   * `screens/settings/Nav.tsx` also writes. It is not a second picker: it can
+   * only ever write one value, it never reads the current one, and it says
+   * where it goes. That is an exit, not a control over the setting — and a
+   * design that can only be entered is one people refuse to try. A *picker*
+   * appearing here, which would have to read `state.nav` to draw itself, is
+   * what this catches.
+   */
+  it('leaves the panel an exit out of the workspace, not a navigation picker', () => {
+    const src = read('src/components/desk/Customize.tsx');
+    expect(src, 'the one-way exit stays').toContain("type: 'setNav', nav: 'tabs'");
+    expect([...src.matchAll(/type: 'setNav'/g)].length, 'and it is the only one').toBe(1);
+    expect(src, 'an exit does not read the setting it writes').not.toContain('state.nav');
+  });
+
+  it('names a ground without erasing Match my device', () => {
+    // `resolveGround` answers "which palette do I paint" and must resolve it;
+    // `groundName` answers "what did this person choose" and must not. The
+    // pair was built on the first while doing the second's job.
+    expect(resolveGround(MATCH_DEVICE, true)).toBe('ink');
+    expect(groundName(MATCH_DEVICE)).toBe(MATCH_DEVICE_LABEL);
+    expect(groundName('ink')).toBe('Ink');
+    expect(groundName(undefined)).toBe(ground(undefined).label);
+  });
+
+  it('reports the ground in the panel rather than offering to set it', () => {
+    const src = read('src/components/desk/Customize.tsx');
+    expect(src, 'the panel names the setting').toContain('groundName(look.ground)');
+    expect(src, 'and opens the page that owns it').toContain("screen: 'setLook'");
+    // Comments blanked: this file's own note *names* `resolveGround`, because
+    // explaining what the pair got wrong requires naming what it read. The
+    // code must not call it.
+    expect(
+      withoutComments(src),
+      'a reporter must not resolve the instruction away',
+    ).not.toContain('resolveGround');
   });
 });

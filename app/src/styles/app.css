@@ -5207,44 +5207,11 @@ input[type='search'].input {
   color: var(--app-dim);
 }
 
-.desk-sheet-pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--sp-6);
-}
+/* The Dark/Light pair that `.desk-sheet-pair` and the `.desk-swatch` rules
+   drew is gone from `components/desk/Customize.tsx`, and so are they. It was
+   a second writer of `ground` that could not express the setting it was
+   showing — the note at the top of that file has the whole of it. */
 
-.desk-swatch {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-  padding: var(--sp-4);
-  border-radius: var(--r-lg);
-  border: 2px solid transparent;
-  color: var(--app-dim);
-  font-size: var(--type-sm);
-}
-
-.desk-swatch.is-on {
-  border-color: var(--app-accent);
-  color: var(--app-fg);
-}
-
-.desk-swatch-chip {
-  display: grid;
-  place-items: center;
-  height: 74px;
-  border-radius: var(--r-md);
-  border: 1px solid var(--app-line);
-  background: var(--app-bright, #f0f2f6);
-  color: #1a1c22;
-  font-size: calc(20px * var(--text-scale, 1));
-}
-
-.desk-swatch-chip.is-dark {
-  background: #2b2c31;
-  color: #f0f2f6;
-}
 
 .desk-sheet-toggle {
   display: flex;
@@ -5284,6 +5251,25 @@ input[type='search'].input {
 
 .desk-sheet-row:hover {
   background: var(--app-accent-wash);
+}
+
+/* A row that also reports what it opens onto. The name on the left, the
+   value on the right, the way a settings row reads — so the panel can say
+   which ground you are on without offering a second way to change it. */
+.desk-sheet-said {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  text-align: left;
+}
+
+.desk-sheet-value {
+  flex: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .desk-sheet-plain {

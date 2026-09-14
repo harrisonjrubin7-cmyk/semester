@@ -255,7 +255,7 @@ one:
 | --- | --- | --- |
 | `feedOrder` | `screens/Today.tsx:1327` (drag the section itself) and `screens/settings/Nav.tsx:71,319` (a list with arrows) | **KEEP** |
 | `boardOrder` | `screens/Springboard.tsx` (drag the tile itself) and `screens/settings/Nav.tsx:95` (the same list with arrows) | **KEEP** |
-| `ground` | `screens/settings/Look.tsx:298,331` (ten grounds) and `components/desk/Customize.tsx:47` (dark / light) | **KEEP — and this is the one I am least sure of** |
+| `ground` | `screens/settings/Look.tsx:298,331` (ten grounds) and `components/desk/Customize.tsx:47` (dark / light) | **FIX — and it turned out to be a defect, not only a duplicate** |
 
 The first two are kept because they are not two copies of a control, they are
 **the object and the index of the object**. Dragging the checklist above the
@@ -267,23 +267,45 @@ already says why there are two: *"Two places, one order — this is the one you
 are looking at when you decide."* `/simplify`'s own rule about direct
 manipulation is the argument for keeping them, not against.
 
-`ground` is different and is the one thing this pass leaves alone knowingly.
-`Customize` writes it too, and its own file opens by defending that:
+`ground` is different, and looking at it properly turned a judgement call into
+a bug report. `Customize` writes it too, and its own file opens by defending
+that:
 
 > It is a shortcut to settings, not a second settings. […] The temptation with a
 > panel like this is to grow it until it is the settings screen in a drawer, at
 > which point there are two settings screens that disagree.
 > — `components/desk/Customize.tsx:4-13`
 
-The defence is honest as far as it goes — the panel offers two grounds where
-Settings offers ten, and switching only ever moves you to the other side's
-default — but it is still a second place a preference is changed, which is the
-thing step 3 of `/simplify` says not to have. Resolving it means either turning
-the pair of buttons into a row that opens Colour and type, or accepting the
-shortcut. That is a judgement about the workspace's front door rather than a
-duplicate to delete, it is not what this pass was opened to fix, and a control
-somebody uses at the front door is a bad place to be wrong. **Recorded, not
-changed.**
+The defence sounds right and is false, because of the one option it does not
+mention. `screens/settings/Look.tsx` puts **Match my device** *above* the ten
+grounds, for the reason written beside it — it is the answer for most people,
+and a device on a light-and-dark schedule otherwise means coming back twice a
+day. The pair could not express it.
+
+It read the ground through `resolveGround`, whose whole job is to turn the
+`device` instruction into a palette. So:
+
+| Saved `ground` | What the pair showed | What pressing the other side wrote |
+| --- | --- | --- |
+| `device`, device dark | **Dark**, lit — a choice never made | `paper`, destroying the instruction |
+| `device`, device light | **Light**, lit | `ink` |
+| `oxide` | **Dark**, lit | `paper`, over a chosen ground |
+
+Three faults in one control, all verified against the real functions before
+anything was changed: it **misreported** the setting, it **overwrote** it
+silently and one way — pressing the lit side is a no-op, so there is no route
+back to Match my device from that panel — and the ground it wrote for "light"
+(`paper`) is not even the one Match my device resolves light to (`parchment`,
+`DEVICE_LIGHT` in `lib/look.ts`).
+
+So not a judgement about the front door after all. **The pair is gone.** A
+faithful three-state version would still be a second writer of one key, and the
+row beneath it already opens the page where all eleven states are one tap each
+— so that row does the reporting instead: it names the ground you are on,
+through a new `groundName`, which is the function that does *not* erase
+`device`. `resolveGround` answers "which palette do I paint"; `groundName`
+answers "what did this person choose"; the pair was built on the first while
+doing the second's job, and having both named makes that hard to repeat.
 
 ---
 
@@ -337,13 +359,13 @@ Every row above is closed. Three commits, each green.
 | F1 | `79b9681` | The FAB and `chrome.fab` go; `chromeFor` answers one question again. |
 | W5 | — | Recorded, untouched. `/ask-tab` owns it. |
 | §3.1 `feedOrder`, `boardOrder` | — | Kept. The object and the index of the object, through one resolver. |
-| §3.1 `ground` | — | Kept, knowingly. `Customize` is a second place a preference is changed; resolving it is a judgement about the workspace's front door, not a duplicate to delete. |
+| §3.1 `ground` | *"The ground has one home"* | Fixed. The Dark/Light pair goes; the row below reports the ground through `groundName` and opens the page that owns it. `lib/onframe.test.ts` gains a one-writer-per-preference census, with `Customize`'s one-way exit to the tab bar stated as the exemption it is. |
 
 ### The claim, checked rather than asserted
 
-`npm run lint` exit 0. `npm test` **315 files / 6713 tests**, all passing —
-twelve more than the baseline, all of them new checks on this pass's invariant.
-`npm run build` clean.
+`npm run lint` exit 0. `npm test` **315 files / 6724 tests**, all passing —
+twenty-three more than the baseline, all of them new checks on this pass's
+invariants. `npm run build` clean.
 
 And driven in a browser, because an absent control is easy to claim and hard to
 see. Chromium at two widths, four navigations, `pageerror` empty throughout:
@@ -354,6 +376,13 @@ see. Chromium at two widths, four navigations, `pageerror` empty throughout:
 | Workspace, Alerts, 420px | **Add something in one line**, alone | bar's field + tools; no sidebar |
 | Feed, home, 420px | add · search · All apps · Alerts · Profile | no floating import button; **one `+` on the screen** |
 | Tab bar, Alerts, 420px | add · search · All apps | the tab bar, unchanged |
+
+And the panel, on the two saved grounds the pair got wrong:
+
+| Saved `ground` | Customize now reads | Swatches on screen |
+| --- | --- | --- |
+| `device` | Colour and type · **Match my device** | 0 |
+| `oxide` | Colour and type · **Oxide** | 0 |
 
 The first row is the screenshot this pass opened with, and it is the one that
 matters: on Alerts in the workspace, the header is now the way back and the

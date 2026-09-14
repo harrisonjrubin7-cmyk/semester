@@ -1,50 +1,54 @@
 /**
- * Customize Semester: the four things somebody changes about the front door.
+ * Customize Semester: the few things somebody changes about the front door.
  *
- * It is a shortcut to settings, not a second settings. Every control here
- * writes the same look key the full page writes, through the same `setLook`
- * action, and the two rows at the bottom go to the pages that hold the rest —
- * so there is exactly one place each preference actually lives, and this is a
- * faster door into four of them rather than a copy of them.
+ * It is a shortcut to settings, not a second settings. The one preference it
+ * *writes* is its own — whether the search home draws its shortcuts, which
+ * exists nowhere else — and everything else here is a door: the launcher, the
+ * page that holds the rest of the look, and the way back to the tab bar. So
+ * there is exactly one place each preference lives, and this is a faster route
+ * to some of them rather than a copy of them.
  *
  * That distinction is the whole reason it is short. The temptation with a
  * panel like this is to grow it until it is the settings screen in a drawer,
  * at which point there are two settings screens that disagree.
  *
- * ## Light and dark
+ * ## There was a Dark/Light pair here, and it was the disagreement
  *
- * The two buttons pick a ground, and the grounds are the app's own — Indigo
- * and Paper, the default dark and the default light — rather than a `theme`
- * of this panel's invention. Somebody who has chosen Oxide or Fog keeps it:
- * the panel shows which side of the line their ground is on and switching
- * only ever moves them to the other side's default. Everything else about the
- * look is Colour and type, one row down.
+ * It claimed to be safe: two buttons picking between the app's own default
+ * dark and default light, showing which side of the line you were on, moving
+ * you only when you pressed the other one. What it could not express is the
+ * option `screens/settings/Look.tsx` puts *above* the ten grounds, because it
+ * is the answer for most people — **Match my device**.
+ *
+ * The pair read the ground through `resolveGround`, which turns `device` into
+ * whichever ground the device currently resolves to. So somebody following
+ * their device was shown Dark, lit, as though they had chosen it. Pressing
+ * Light then counted as a move and wrote a fixed `paper` over the
+ * instruction — silently, one way, with no route back to Match my device from
+ * this panel, and `paper` is not even the ground Match my device resolves
+ * light to (`parchment`).
+ *
+ * A second control over one key, and the second one could not say what the
+ * key held. That is the whole of why it is gone rather than corrected: a
+ * faithful three-state version would still be a second writer, and the row
+ * below already opens the page where all eleven states are one tap each.
+ * What the row does now is *report* — it names the ground you are on, through
+ * `groundName`, which is the function that does not erase `device`.
  */
 
 import { useRef } from 'react';
 import { useStore } from '../../state/store';
 import { currentLook } from '../../state/shape';
 import { useModal } from '../../a11y/modal';
-import { ground, resolveGround } from '../../lib/look';
-import { usePrefersDark } from '../../lib/prefers';
+import { groundName } from '../../lib/look';
 import { secondLine } from '../../lib/dim';
 import { Check } from '../Icons';
-
-/** The ground each side of the switch lands on, when a move is needed. */
-const DARK = 'ink';
-const LIGHT = 'paper';
 
 export function Customize({ onClose }: { onClose: () => void }) {
   const { state, dispatch } = useStore();
   const look = currentLook(state);
-  const prefersDark = usePrefersDark();
-  // Resolved, because "Match my device" is an instruction rather than a
-  // palette and this panel has to show which one it currently resolves to.
-  const light = ground(resolveGround(look.ground, prefersDark)).light;
   const shut = useRef<HTMLButtonElement>(null);
   const modal = useModal<HTMLDivElement>({ onClose, initial: shut });
-
-  const setGround = (id: string) => dispatch({ type: 'setLook', look: { ground: id } });
 
   return (
     <div
@@ -72,31 +76,6 @@ export function Customize({ onClose }: { onClose: () => void }) {
       <p className="desk-sheet-note" style={secondLine()}>
         Make a little room for your semester.
       </p>
-
-      <div className="desk-sheet-label">Appearance</div>
-      <div className="desk-sheet-pair">
-        {[
-          { id: DARK, label: 'Dark', on: !light },
-          { id: LIGHT, label: 'Light', on: light },
-        ].map((side) => (
-          <button
-            key={side.id}
-            type="button"
-            className={side.on ? 'bare desk-swatch is-on' : 'bare desk-swatch'}
-            aria-pressed={side.on}
-            // Only when it is a move. Pressing the side you are already on
-            // must not overwrite somebody's Oxide with plain Indigo.
-            onClick={() => {
-              if (!side.on) setGround(side.id);
-            }}
-          >
-            <span className={side.id === DARK ? 'desk-swatch-chip is-dark' : 'desk-swatch-chip'}>
-              Aa
-            </span>
-            <span className="desk-swatch-name">{side.label}</span>
-          </button>
-        ))}
-      </div>
 
       <button
         type="button"
@@ -126,15 +105,27 @@ export function Customize({ onClose }: { onClose: () => void }) {
       >
         Choose favourite apps
       </button>
+      {/*
+        The row that replaced the pair, and it says what it is showing.
+
+        `groundName` rather than `ground().label`: the second erases Match my
+        device into whichever palette it happens to resolve to, which is the
+        exact misreport the pair was built on. Reporting the setting and
+        offering to change it are different jobs, and this row only does the
+        first — the page it opens does the second, for all eleven.
+      */}
       <button
         type="button"
-        className="bare desk-sheet-row"
+        className="bare desk-sheet-row desk-sheet-said"
         onClick={() => {
           dispatch({ type: 'go', screen: 'setLook' });
           onClose();
         }}
       >
-        Colour and type
+        <span>Colour and type</span>
+        <span className="desk-sheet-value" style={secondLine()}>
+          {groundName(look.ground)}
+        </span>
       </button>
 
       {/*
