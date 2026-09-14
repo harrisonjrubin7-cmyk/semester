@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { read } from './calc';
 import { readLine, type Frame } from './plot';
-import { asOde, rateOf, slopes, spread, through, walk } from './ode';
+import { asOde, rateOf, second, slopes, spread, through, trajectory, walk } from './ode';
 
 /**
  * A numerical solver is checked against answers that are known, because a
@@ -126,5 +126,97 @@ describe('the family, and the field under it', () => {
     const solutions = (d: typeof one) => (d.shades ?? []).filter((v) => v === 1).length;
     expect(solutions(one)).toBe(1);
     expect(solutions(many)).toBeGreaterThan(4);
+  });
+});
+
+/**
+ * The two harder kinds, against answers that are known.
+ *
+ * A spring and a predator–prey cycle both have shapes anybody can check: one
+ * is a cosine, the other closes on itself. A solver that drifts draws
+ * something that still looks like a spring and still looks like a loop, which
+ * is why neither is checked by eye.
+ */
+describe('second-order equations', () => {
+  it('draws a spring as the cosine it is', () => {
+    // y'' = -y from y(0) = 1, y'(0) = 0 is cos x, exactly.
+    const curve = second(() => 0, { x: 0, y: 1, v: 0 }, frame, 10);
+    expect(curve.length).toBeGreaterThan(2);
+    const cos = second((_x, y) => -y, { x: 0, y: 1, v: 0 }, frame, 2000);
+    for (const p of cos) expect(p.y).toBeCloseTo(Math.cos(p.x), 5);
+  });
+
+  it('lets the rate be in the equation, which is what damping is', () => {
+    // y'' = -y - 0.4y' loses height every swing rather than keeping it.
+    const damped = second((_x, y, v) => -y - 0.4 * v, { x: 0, y: 1, v: 0 }, { ...frame, x0: 0, x1: 20 }, 3000);
+    const peak = (from: number, to: number) =>
+      Math.max(...damped.filter((p) => p.x >= from && p.x <= to).map((p) => Math.abs(p.y)));
+    expect(peak(0, 7)).toBeGreaterThan(peak(13, 20));
+  });
+
+  it('starts where it was told, going as fast as it was told', () => {
+    const curve = second((_x, y) => -y, { x: 0, y: 2, v: 0 }, { ...frame, x0: 0, x1: 1 }, 400);
+    expect(curve[0].y).toBeCloseTo(2, 9);
+    // v = 0 at the start means the curve is flat there: the first step barely moves.
+    expect(Math.abs(curve[1].y - 2)).toBeLessThan(0.01);
+  });
+});
+
+describe('systems', () => {
+  it('walks a rotation round a circle and closes it', () => {
+    // x' = -y, y' = x is a circle through whatever point it starts at.
+    const loop = trajectory((_x, y) => -y, (x) => x, { x: 3, y: 0 }, frame);
+    expect(loop.length).toBeGreaterThan(50);
+    for (const p of loop) expect(Math.hypot(p.x, p.y)).toBeCloseTo(3, 4);
+  });
+
+  it('draws a closed loop once rather than a hundred times', () => {
+    const loop = trajectory((_x, y) => -y, (x) => x, { x: 3, y: 0 }, frame, 5000);
+    // Once round a circle at a step of a four-hundredth of the window is on
+    // the order of a thousand points, not five thousand.
+    expect(loop.length).toBeLessThan(3000);
+  });
+
+  it('stands still at an equilibrium rather than wandering off it', () => {
+    const still = trajectory((_x, y) => -y, (x) => x, { x: 0, y: 0 }, frame);
+    expect(still).toHaveLength(1);
+  });
+
+  it('draws the predator–prey cycle as a loop that comes back', () => {
+    const loop = trajectory(
+      (x, y) => x - x * y,
+      (x, y) => x * y - y,
+      { x: 1, y: 0.5 },
+      { x0: 0, x1: 4, y0: 0, y1: 4 },
+      4000,
+    );
+    const first = loop[0];
+    const last = loop[loop.length - 1];
+    expect(Math.hypot(first.x - last.x, first.y - last.y)).toBeLessThan(0.2);
+  });
+
+  it('leaves rather than grinding on when the trajectory runs away', () => {
+    const away = trajectory((x) => x, (_x, y) => y, { x: 1, y: 1 }, frame, 4000);
+    const last = away[away.length - 1];
+    expect(Math.max(Math.abs(last.x), Math.abs(last.y))).toBeGreaterThan(5);
+    expect(away.every((p) => Number.isFinite(p.x) && Number.isFinite(p.y))).toBe(true);
+  });
+});
+
+describe('reading the harder kinds off the list', () => {
+  it('takes a second-order equation, and says which order it is', () => {
+    expect(readLine("y'' = -y")).toMatchObject({ kind: 'ode', of: 'y', order: 2 });
+    expect(readLine("y' = -y")).toMatchObject({ kind: 'ode', of: 'y', order: 1 });
+  });
+
+  it('takes both halves of a system', () => {
+    expect(readLine("x' = x - x y")).toMatchObject({ kind: 'ode', of: 'x', order: 1 });
+    expect(readLine("y' = x y - y")).toMatchObject({ kind: 'ode', of: 'y', order: 1 });
+  });
+
+  it('takes a condition on the value and one on the rate', () => {
+    expect(readLine('y(0) = 1')).toMatchObject({ kind: 'start', of: 'y', rate: false });
+    expect(readLine("y'(0) = 0")).toMatchObject({ kind: 'start', of: 'y', rate: true });
+    expect(readLine('x(0) = 2')).toMatchObject({ kind: 'start', of: 'x', rate: false });
   });
 });
