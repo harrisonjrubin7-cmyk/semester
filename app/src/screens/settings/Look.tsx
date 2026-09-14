@@ -16,6 +16,7 @@ import {
   ICON_SHAPES,
   LINE_HEIGHTS,
   MATCH_DEVICE,
+  MATCH_DEVICE_LABEL,
   MATCH_GROUND,
   READING_WIDTHS,
   accentFromHue,
@@ -310,7 +311,11 @@ export function SettingsLook() {
               >
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
-                    Match my device
+                    {/* The one copy of this name. The workspace's Customize
+                        panel reports it too, through `groundName`, and a
+                        second literal here is how the two would come to
+                        call one setting different things. */}
+                    {MATCH_DEVICE_LABEL}
                   </span>
                   <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
                     {`Ink after dark, Parchment in daylight. Following your device now: ${

@@ -24,6 +24,7 @@ import { hold, running } from '../lib/session';
 import { here } from '../lib/browser.hook';
 import { savable } from '../lib/bookmarks';
 import { star } from '../lib/bookmarks.hook';
+import { useFocusBar } from './desk/barfocus';
 
 export function Keys() {
   const { state, dispatch, say } = useStore();
@@ -31,6 +32,13 @@ export function Keys() {
   const wide = useMedia(WIDE);
   const [open, setOpen] = useState(false);
   const [sitting, setSitting] = useSitting();
+  /*
+   * The workspace's search field, or `null` where none is drawn. Read here
+   * rather than worked out from `state.nav`, because the provider is mounted
+   * by the same branch that draws the bar — so this cannot say "focus it" on a
+   * screen that has none. See `components/desk/barfocus.ts`.
+   */
+  const focusBar = useFocusBar();
 
   useEffect(() => {
     if (!wide) return;
@@ -56,15 +64,37 @@ export function Keys() {
       switch (hit.action) {
         case 'search':
           /*
-           * One key, one answer.
+           * One key, one answer — and the answer is "the search this
+           * navigation has".
            *
-           * It used to ask the screen in front of you first, and open its own
-           * filter where it had one — which meant `/` did different things on
+           * It used to ask the *screen* in front of you and open its own
+           * filter where it had one, which meant `/` did different things on
            * Grades and on Today, and the app had two searches to explain.
-           * There is one now, and this opens it: an overlay rather than a
-           * screen, because looking something up should not cost you the page
-           * you were reading. See `components/Command.tsx`.
+           * That is still the rule this is written against: what the key does
+           * must not change as you move between screens.
+           *
+           * Asking the navigation does not break it. The workspace draws a
+           * search field across the top of every one of its screens; the other
+           * five draw none on any. So `/` puts the cursor where the search
+           * already is, and opens the palette where there is nothing to put it
+           * in — one meaning, expressed by whatever is actually on screen,
+           * which is how `lib/chrome.ts` treats the navigation itself.
+           *
+           * And it is the same answer the pointer gives: the search home's
+           * centre box focuses this field rather than opening a second search
+           * (see `components/desk/barfocus.ts`), so a keyboard that opened the
+           * palette instead would be the two-searches problem again, reachable
+           * one way and not the other.
+           *
+           * Nothing is lost in the workspace. The bar answers with apps as you
+           * type and its last row — "Browse all results" — opens the palette on
+           * what you have typed, so the records are one key further on rather
+           * than gone.
            */
+          if (focusBar) {
+            focusBar();
+            break;
+          }
           dispatch({ type: 'finder', open: true });
           break;
         case 'assistant':
@@ -105,7 +135,7 @@ export function Keys() {
 
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [wide, open, dispatch, sitting, setSitting, ai, say]);
+  }, [wide, open, dispatch, sitting, setSitting, ai, say, focusBar]);
 
   // No effect to close it when the window narrows: the guard below already
   // hides it, and resetting the state in an effect would be a second render

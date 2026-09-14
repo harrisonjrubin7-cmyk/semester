@@ -237,7 +237,7 @@ export function roomsFor(codes: string[], joined: string[], schoolId: string): R
 
 // ── The network ───────────────────────────────────────────────────────────
 // Everything below needs Supabase. The tables and their policies are in
-// supabase/classmates.sql; the policies are the security, not these calls.
+// supabase/migrations/20260901000200_classmates.sql; the policies are the security, not these calls.
 
 export async function myProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await (await cloud())
@@ -423,7 +423,7 @@ export async function across(term: string, codes: string[], limit = 200): Promis
   return (data ?? []) as Message[];
 }
 
-/** One person's one tap on one message. `supabase/rooms.sql` holds the policies. */
+/** One person's one tap on one message. `supabase/migrations/20260901000400_rooms.sql` holds the policies. */
 export interface Reaction {
   message_id: string;
   user_id: string;
@@ -437,7 +437,7 @@ export interface Reaction {
  *
  * Answers with nothing rather than throwing when the table is not there. A
  * reaction is an ornament on a conversation that works without it, and an
- * instance whose owner has not run `supabase/rooms.sql` should show the
+ * instance whose owner has not run `supabase/migrations/20260901000400_rooms.sql` should show the
  * conversation rather than an error where the messages go. Leaving one says so
  * properly — `react` below throws, and `explain` turns the refusal into the
  * sentence naming the file to run.
@@ -538,7 +538,7 @@ export function listenReactions(
  * Presence rather than a table: being in a room is true for as long as a tab is
  * open, and a row saying so is wrong the moment a phone goes in a pocket. The
  * channel is private, so Realtime puts the same question to the same policies
- * as everything else here — see the presence section of `supabase/rooms.sql`.
+ * as everything else here — see the presence section of `supabase/migrations/20260901000400_rooms.sql`.
  *
  * It fails to nothing on purpose. Without those policies the join is refused
  * and the room shows no dots, which costs an ornament rather than the
@@ -648,17 +648,19 @@ export function explain(message: string): string {
    * that a setup file has not been run.
    *
    * Which file depends on the table, so the table is named back. `groups`,
-   * `group_members` and `group_tasks` come from groups.sql; everything else
-   * this module touches comes from classmates.sql.
+   * `group_members` and `group_tasks` come from the groups migration; everything
+   * else this module touches comes from the classmates one.
    */
   if (
     text.includes('schema cache') ||
     (text.includes('relation') && text.includes('does not exist'))
   ) {
-    const file = /group/.test(text) ? 'groups.sql' : 'classmates.sql';
+    const file = /group/.test(text)
+      ? '20260901000500_groups.sql'
+      : '20260901000200_classmates.sql';
     return (
       `This part of the app is not set up on this project yet — whoever runs this ` +
-      `deployment needs to run supabase/${file} once in the SQL Editor. If the tables ` +
+      `deployment needs to apply supabase/migrations/${file}. If the tables ` +
       `are already there, the API's schema cache is stale: run ` +
       `NOTIFY pgrst, 'reload schema';`
     );
@@ -671,7 +673,7 @@ export function explain(message: string): string {
 // A group is smaller than a room and outlives a conversation: members who are
 // a subset of the class, a deliverable with a date, and a list of parts with
 // owners. None of that fits in a message stream, and a message stream cannot
-// answer "what is unclaimed". `supabase/groups.sql` holds the policies; the
+// answer "what is unclaimed". `supabase/migrations/20260901000500_groups.sql` holds the policies; the
 // arithmetic is in `lib/groupwork.ts`.
 
 export interface GroupRow {

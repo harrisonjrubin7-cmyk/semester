@@ -304,6 +304,21 @@ colour is one of twelve, and they are the same twelve a course can be pinned
 to: your accent, turned round the wheel, at a lightness measured against the
 ground you are actually reading on.
 
+**Pinning** is the other half of a strip that has got long. The four or five
+places you are in every day — Today, the calendar, the guide you are working
+through — are never finished with, and everything else is opened beside them.
+Pin one from its menu and it keeps its place at the front of the strip as its
+glyph alone: five of them cost the width of a name rather than half the row,
+a line separates them from what you merely have open, and they carry no cross,
+because a target that small with a close on it is a tab you lose to a thumb
+landing an inch out. Closing one is in the same menu, where it takes saying so.
+
+Tabs are dragged into the order you want them in, the same hold-move-let-go
+the rest of the app uses for anything with an order — and on the strip the
+drop means something as well: let a tab go among a group's tabs and it joins
+the group, drag it clear of them and it leaves. Alt with the left and right
+arrows does the same without a pointer.
+
 **Bookmarks** are the other half. A tab is where you are; a bookmark is where
 you keep going back to — the ECON study guide, the essay brief, the deadline
 you are counting down to — and before this the only way to keep one to hand
@@ -552,6 +567,34 @@ model in it or needs a key:
   a point, and a list — `a = [1, 1.5, …, 4]` — drawn as a family of curves.
   Drag to move, pinch to zoom, press to read a point off it, and one button to
   fit the window to what is actually on it.
+
+  **A `z =` line is a surface**, in three dimensions: `z = x^2 - y^2` is the
+  saddle, drawn over whatever window the axes are set to and turned with a
+  finger. No WebGL and no 3D library — a surface plot of a formula is a few
+  hundred quadrilaterals sorted back to front, which is the painter's
+  algorithm, and it draws in the same SVG as everything else, prints, and
+  costs nothing to ship. The camera is orthographic on purpose: a perspective
+  one makes the far side of a symmetric bowl smaller than the near side, which
+  reads as asymmetry in the function. Everything is worked in a unit cube, so
+  a function reaching 10,000 and one reaching 0.001 are both a shape rather
+  than a spike or a sheet; a piece with a corner that has no height is left
+  out rather than drawn across, which is the hole in a dome; and the height,
+  the depth and where each of them is are written out under the picture. See
+  `app/src/lib/surface.ts`.
+
+  The same `z =` line draws **as contours** as well: the level curves, one per
+  round number, with zero heaviest and the spacing said in a sentence under the
+  picture — because the whole reason to draw contours rather than the solid
+  shape is to read values off, and a map whose spacing is not stated is a
+  picture rather than a reading. It is a control on the screen rather than new
+  notation, since which picture to draw is a choice about the drawing.
+
+  **A pair with `x` or `y` in it is a field of arrows** — `(y, -x)` is a
+  rotation, `(20 - 2x - y, x - 2)` is a phase diagram — drawn at every point of
+  the window: which way it pushes, and how hard. The lengths are the honest
+  difficulty and the choice is stated rather than hidden: drawn true, one fast
+  corner turns every other arrow into a dot, so length is the magnitude against
+  the largest under a square root, and the ink carries the rest.
 
   **Polar and parametric** are the same box and the same notation, told apart
   by the letter in them: an `r =` line with the angle in it is polar —

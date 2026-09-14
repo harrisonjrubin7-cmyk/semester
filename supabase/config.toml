@@ -1,0 +1,22 @@
+# Supabase project configuration.
+#
+# Deliberately small. This file exists so that Supabase Branching can find the
+# project at all — the GitHub integration reads it, and without one the
+# `migrations/` directory beside it is never looked at. Everything it does not
+# say is left at the platform's own default on purpose: a setting written here
+# is a setting that silently overrides whatever is in the dashboard the next
+# time a deploy runs, and a dashboard that lies to the person reading it is
+# worse than a config file that is short.
+#
+# In particular there is no [functions] block. Edge Functions are deployed by
+# `.github/workflows/functions.yml`, which deploys only the directories a push
+# actually changed — see DEPLOY.md. Declaring them here as well would give one
+# function two deploy paths that can disagree about which version is live.
+
+project_id = "lzrqvlugnawcgywkhqlz"
+
+[db]
+# Matches the live project. A mismatch here is not cosmetic: a preview branch
+# would be built on a different major than production, and the first thing you
+# would learn from it is something untrue about production.
+major_version = 17

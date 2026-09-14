@@ -84,7 +84,11 @@ it('lets Enter search all results until a suggestion is explicitly selected',()=
   expect(host.querySelector('.g-global-results')).not.toBeNull();expect(here().screen).toBe('home');
   click('Close search results');act(()=>input.blur());type('calendar');
   act(()=>input.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true})));
-  expect(input.getAttribute('aria-activedescendant')).toBe('g-option-top-0');
+  // `g-option-0`, not `g-option-top-0`: the id used to carry which of two
+  // search fields owned the list. There is one field now — the home page's
+  // centre is a button that focuses this one rather than a second input — so
+  // there is nothing left for the id to disambiguate.
+  expect(input.getAttribute('aria-activedescendant')).toBe('g-option-0');
   act(()=>input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})));
   expect(here().screen).toBe('calendar');
 });
@@ -121,11 +125,27 @@ it('pins and switches ground into the app\u2019s own settings, not a copy of its
   expect(main().getAttribute('data-fav')!.split(',')).toContain('ask');
   expect(localStorage.getItem('semester.google.favorites')).toBeNull();
   click('Done');click('Semester home');
+  /*
+   * And light and dark, which this panel no longer sets at all.
+   *
+   * It had a Dark/Light pair here, writing `ground` directly — the shape the
+   * workspace's own panel used to have, and the reason that one lost it: the
+   * pair reads through `resolveGround`, so somebody on **Match my device** was
+   * shown Dark, lit, as a choice they had made, and pressing Light wrote a
+   * fixed `paper` over the instruction, one way, with nothing said. `paper` is
+   * not even what Match my device resolves light to.
+   *
+   * So the preference is still the app's — which is what this test was written
+   * to hold, and it still holds — but the panel reports it and links to the
+   * page that owns it rather than offering a second way to set it.
+   */
   act(()=>host.querySelector<HTMLButtonElement>('.g-customize')!.click());
-  const [dark,light]=[...host.querySelectorAll<HTMLButtonElement>('.g-theme-options button')];
-  act(()=>light.click());expect(main().getAttribute('data-ground')).toBe('paper');
-  act(()=>host.querySelector<HTMLButtonElement>('.g-customize')!.click());
-  act(()=>dark.click());expect(main().getAttribute('data-ground')).toBe('ink');
+  expect(host.querySelectorAll('.g-theme-options button'),
+    'no second way to set the ground').toHaveLength(0);
+  const says=host.querySelector<HTMLButtonElement>('.g-says')!;
+  expect(says.textContent, 'it reports the ground it is on').toContain('Ink');
+  act(()=>says.click());
+  expect(here().screen, 'and opens the page that sets it').toBe('setLook');
   expect(localStorage.getItem('semester.google.lightHome')).toBeNull();
 });
 it('clears remembered search text along with the visible search',()=>{

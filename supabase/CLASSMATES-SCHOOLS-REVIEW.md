@@ -33,7 +33,7 @@ stands.
 
 ## The thing being fixed
 
-`supabase/classmates.sql` has this, inside a row-level-security policy:
+`supabase/migrations/20260901000200_classmates.sql` has this, inside a row-level-security policy:
 
 ```sql
 and lower(u.email) like '%@vanderbilt.edu'

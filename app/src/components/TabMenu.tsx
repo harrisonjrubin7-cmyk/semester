@@ -34,6 +34,7 @@ import {
   nameGroup,
   openTab,
   openTabIn,
+  pinTab,
   shutGroup,
   useStrip,
 } from '../lib/browser.hook';
@@ -131,6 +132,17 @@ function TabRows({
         <MenuSaid>Nothing to bookmark yet</MenuSaid>
       )}
 
+      <MenuRow
+        onPress={() => {
+          pinTab(at, !tab.pinned);
+          onClose();
+        }}
+      >
+        {tab.pinned ? 'Unpin this tab' : 'Pin this tab'}
+      </MenuRow>
+
+      {!tab.pinned && (
+        <>
       <MenuRule />
       <MenuLabel>Group</MenuLabel>
       <MenuRow
@@ -162,6 +174,8 @@ function TabRows({
         >
           Remove from {mine.name || 'the group'}
         </MenuRow>
+      )}
+        </>
       )}
 
       <MenuRule />

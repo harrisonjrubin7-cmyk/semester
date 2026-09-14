@@ -1,6 +1,5 @@
 import { Suspense, lazy, useRef, useState } from 'react';
 import { useStore } from '../state/store';
-import { GraphCalculator } from '../components/GraphCalculator';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { ActionButton, SectionLabel } from '../components/ui';
@@ -31,12 +30,43 @@ const Drawing = lazy(() =>
  * matters more here than anywhere else in the app, because a number inside a
  * neat little chart is believed and repeated far more readily than the same
  * number in a sentence.
+ *
+ * ## There was a graphing calculator in here, and it was the second one
+ *
+ * A port added a tab bar over this screen — "Graphing calculator · Diagrams &
+ * illustrations" — where the first tab was `components/GraphCalculator.tsx`
+ * over `lib/graphing.ts`: a second expression parser and a second plotter, in
+ * an app whose `lib/calc.ts` and `lib/plot.ts` already did both and are what
+ * the grades are computed with.
+ *
+ * It went to `equations`, which is where the registry always said it was.
+ * That screen's blurb is "Write a formula properly, work it out at your own
+ * numbers, and draw its curve" and its keywords already carried `graphing
+ * calculator`, `desmos` and `geogebra`. This screen is the one that draws a
+ * *diagram* — a curve shifting, a causal chain, a payoff matrix — from a
+ * sentence and a course guide. Somebody typing `y = sin(x)` was never looking
+ * for it.
+ *
+ * The survivor is the better instrument, which is the part worth knowing
+ * rather than assuming: `lib/plot.ts` does implicit curves, zeros, turning
+ * points, intersections, the area under a curve and the slope at a point, and
+ * `components/Grapher.tsx` gives every free number its own slider and colours
+ * each curve off the reader's own accent. The copy that went had none of that
+ * and hardcoded twelve colours, `fill="white"` among them — a white square in
+ * the dark themes.
+ *
+ * Two things the copy did have and the survivor does not, left out
+ * deliberately rather than overlooked. A **table of values** is the opposite
+ * of what `lib/plot.ts` is for, and says so at the top of that file: "the
+ * handful of facts somebody actually wants off a graph — where it crosses
+ * zero, where it turns, where two curves meet". Twenty-one rows of y is
+ * figures instead of facts. An **SVG export** is a fair thing to want, and is
+ * real work rather than a carry-over: this app's plot is drawn in
+ * `var(--app-*)` tokens, so a file saved straight out of it has unresolved
+ * variables in it. The copy exported cleanly only because its colours were
+ * hardcoded, which is the same defect from the other end.
  */
 export function Draw() {
- const [mode,setMode] = useState('graph');
- return <div className="drawing-workspace portal-workspace"><div className="portal-tabs" role="tablist" aria-label="Drawing tools"><button role="tab" aria-selected={mode==='graph'} onClick={()=>setMode('graph')}>Graphing calculator</button><button role="tab" aria-selected={mode==='diagrams'} onClick={()=>setMode('diagrams')}>Diagrams & illustrations</button></div>{mode==='graph'?<GraphCalculator/>:<DiagramBuilder/>}</div>;
-}
-function DiagramBuilder() {
   const { state, catalog } = useStore();
   const { guide } = useLive(state.guideId);
 

@@ -81,11 +81,20 @@ export function mine(state: State, action: Action): State | null {
         ],
       };
 
-    case 'setAppointmentKind':
+    /*
+     * One appointment, changed — title, kind, place, date or time.
+     *
+     * It replaces `setAppointmentKind`, which did a sixth of this and which
+     * nothing in the app ever dispatched: the kind was choosable while you
+     * typed the appointment and unreachable a second later. Written as a
+     * patch, like `editTask`, so the caller sends the fields it changed and
+     * an appointment written before a field existed keeps its own.
+     */
+    case 'editAppointment':
       return {
         ...state,
         appointments: state.appointments.map((a) =>
-          a.id === action.id ? { ...a, kind: action.kind } : a,
+          a.id === action.id ? { ...a, ...action.patch } : a,
         ),
       };
 
