@@ -198,9 +198,44 @@ fixed until the person whose app it is asked for it.
   surfaces, the four gradebooks: re-checked against passes four to six, all
   still resolved there. Nothing in this pass reopens them.
 
+## 4b. S4 — the appointment the calendar promised you could edit · **FIXED**
+
+Found by opening every id-addressed screen in `lib/route.ts` on a real
+object. Thirteen of the fourteen opened from something a student can press.
+`event` was the exception: it resolves `state.eventId` against
+`datedEvents` → `campusCalendar`, so it is a *campus* event's page, and no
+appointment of your own can ever land there.
+
+That much is deliberate and `screens/Calendar.tsx` says so where it draws
+your own appointments: *"Tapping one opens the list it lives in, which is
+where it can be edited."* A campus event is a poster you can Save; yours is
+yours, so it goes home to Mine. Right answer, and the one-home rule the rest
+of this file argues for.
+
+**What was not true was the second half of that sentence.** A census of every
+appointment mutation in the app:
+
+| Action | Dispatched from |
+| --- | --- |
+| `addAppointment` | Mine, Athletics, Schedule a call, the calendar's add-here |
+| `deleteAppointment` | Mine — one Del button |
+| `moveAppointment` | the calendar drag, date and time only |
+| `setAppointmentKind` | **nothing at all** |
+
+No edit. The row in Mine was read-only text plus Join and Del, so a typo in
+the title, a wrong room or the wrong kind meant deleting the appointment and
+writing it out again — and `setAppointmentKind` had sat in the reducer
+unreachable, a sixth of the answer with no caller.
+
+`editAppointment` replaces it: a patch, like `editTask`, dispatched by the
+form Mine already had. One form, two jobs — writing one and fixing one are
+the same five fields — with Save where Add was and an Edit beside Del on the
+row. Not in `lib/undo.ts`, by the rule written there: an edit leaves the
+thing on screen to edit back.
+
 ## 5. What this pass changed
 
-S1, S2 and S3, one commit each. No destination was added or removed: the
+S1, S2, S3 and S4, one commit each. No destination was added or removed: the
 count stands at 60, because every duplicate this pass found was a *control*
 rather than a *screen*. −4 duplicated settings, −1 duplicated control, and
 one shell's home given back its pointer.

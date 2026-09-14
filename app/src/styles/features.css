@@ -1,9 +1,11 @@
 /* Styles for the feature modules ported from the audited source.
-   Taken from that tree's components/workspace.css — the shell's own
-   sheet stays beside it in components/google-shell.css. Limited to the
-   rules the ported components and screens actually use.
+   Taken from that tree's components/workspace.css, limited to the rules
+   the ported components and screens actually use.
    Its shell stylesheet is deliberately not carried over: this app's
-   workspace lives in components/desk/ and owns that surface. */
+   workspace lives in components/desk/ and owns that surface. The port's
+   own shell sheet did arrive for a while, as components/google-shell.css
+   beside this one, and drew a second browser-shaped navigation from it —
+   which is the duplication SIMPLIFY-AUDIT.md E4 removed. Both are gone. */
 
 /* --- from workspace.css --- */
 .workspace-text-button:hover{background:var(--app-accent-wash)!important}
@@ -31,7 +33,7 @@
 .portal-workspace button, .portal-button{min-height:40px;border-radius:8px;padding:9px 15px;background:var(--app-accent-wash);border:1px solid transparent;font-size:14px!important;color:var(--app-accent-deep);font-family:Arial,sans-serif;letter-spacing:normal!important;text-transform:none!important;line-height:1.4}
 .portal-workspace button:hover, .portal-button:hover{background:var(--app-accent-wash)}
 .portal-workspace button:disabled{opacity:.5;cursor:default}
-.portal-workspace button.portal-primary, .portal-workspace .portal-primary{background:var(--app-accent)!important;color:var(--app-panel)!important;padding:11px 20px;border-radius:24px}
+.portal-workspace button.portal-primary, .portal-workspace .portal-primary{background:var(--app-fg)!important;color:var(--app-bg)!important;padding:11px 20px;border-radius:24px}
 .portal-primary:hover{filter:brightness(.96)}
 .portal-button{display:inline-flex;align-items:center;text-decoration:none}
 .portal-workspace input:not([type=checkbox]), .portal-workspace select, .portal-workspace textarea{min-height:42px;color:var(--app-fg);background:var(--app-panel);border:1px solid var(--app-accent-wash);border-radius:8px;font-family:Arial,sans-serif;font-size:14px;padding:10px 12px;max-width:100%}
@@ -175,7 +177,6 @@
 .semester-primary-nav button{padding:8px 12px}
 .semester-primary-nav .semester-search-records{display:none}
 .assignment-next{align-items:stretch;flex-direction:column;padding:18px}
-.assignment-plan .portal-filter-row>*{max-width:100%}
 }
 .study-studio{background:var(--app-accent-wash);color:var(--app-fg);border-radius:20px;font-family:Arial,sans-serif}
 .study-studio-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}
@@ -218,14 +219,14 @@
 .study-source-list>label{flex-wrap:wrap}
 }
 .study-source-list>label, .study-format-list>label{flex-shrink:0}
-.studio-entry>.portal-primary{background:var(--app-accent);color:white;border:0;border-radius:24px;padding:12px 20px;min-height:44px;font-size:14px}
+.studio-entry>.portal-primary{background:var(--app-fg);color:var(--app-bg);border:0;border-radius:24px;padding:12px 20px;min-height:44px;font-size:14px}
 .university-workspace .portal-notice{line-height:1.6}
 .university-workspace .portal-panel{min-width:0}
 .university-workspace .portal-tabs{overflow:auto}
 .university-workspace .portal-tabs button{white-space:nowrap}
 .university-service-grid article>.portal-actions{margin-top:auto;padding-top:18px}
 .university-workspace .portal-filter-row>label{min-width:210px}
-.university-workspace .portal-primary{background:var(--app-accent);color:white}
+.university-workspace .portal-primary{background:var(--app-fg);color:var(--app-bg)}
 .university-workspace .portal-filter-row p{flex:1;min-width:220px}
 .university-workspace .portal-filter-row .btn{flex:none}
 @media(max-width:700px){
@@ -244,3 +245,20 @@
 .study-journal-entry{padding:16px 0;border-top:1px solid var(--app-accent-wash);}
 .study-journal textarea{width:100%;min-height:120px;}
 
+
+/* The ported screens never named a placeholder colour, so the browser's
+   own #757575 was drawn — fine on the white these came from, 2.7:1 on
+   this app's ground. */
+.portal-workspace input::placeholder,.portal-workspace textarea::placeholder,
+.study-studio input::placeholder,.study-studio textarea::placeholder{color:var(--app-dim)}
+
+/* `.portal-primary` is used outside `.portal-workspace` too — the study
+   studio's entry card, the journal. Unscoped, so a filled button is
+   filled wherever it is written, on the app's own inverse pair. */
+.portal-primary{background:var(--app-fg);color:var(--app-bg)}
+
+/* The study screen's next-action row was a flex container with unstyled
+   buttons in it, so they inherited the page's light ink and sat on a
+   light surface — 1.01:1. They get the app's own raised-surface pair. */
+.study-next-actions button{background:var(--app-panel);color:var(--app-fg);
+  border:1px solid var(--app-line);border-radius:8px;min-height:40px;padding:9px 15px}
