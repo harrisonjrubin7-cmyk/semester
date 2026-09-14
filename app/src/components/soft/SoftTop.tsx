@@ -1,105 +1,73 @@
-/**
- * The hero and the stat row, for whichever screen is open.
- *
- * One component in `App.tsx` rather than a block inside sixty screen
- * files. Which facts to show is `lib/softtop.ts`; this is only the wiring —
- * it reads the store, hands the registry the state, and renders what comes
- * back.
- *
- * ## There was a `SoftBar` here
- *
- * It drew the registry's bar as a sticky pill at the foot of the scroller,
- * and it is gone with the bar itself — the reasoning is in `lib/softtop.ts`,
- * where the facts live. What it leaves behind is worth stating: this file no
- * longer touches `dispatch`, because the registry describes what a screen is
- * about and never anywhere to go. Navigation is the navigation's job.
- */
-
-import { useMemo } from 'react';
-import { useStore } from '../../state/store';
-import { softTop, type TopStat } from '../../lib/softtop';
+import { useEffect, useState } from 'react';
 import { useSoft } from '../shell/useShell';
-import { fills } from '../shell/exempt';
-import { Hero, Stat, StatRow } from './Soft';
-
-/*
- * What each sync state is called on a stat card.
- *
- * One word each, because the slot is a stat's value and set at the size of
- * one: "Signed out" wrapped to two lines and made the card taller than the
- * two beside it. "None" for a signed-out account says the same thing in the
- * space there is — there is no account — and the card's label already
- * supplies the noun.
- */
-const SYNC_SAID: Record<string, string> = {
-  synced: 'Synced',
-  syncing: 'Syncing',
-  'signed-out': 'None',
-  error: 'Trouble',
-};
 
 /**
- * This screen's spec.
+ * The hero, on the one shell that has one.
  *
- * Memoised because the hero and the bar are two elements in two places in the
- * tree, so the hook runs twice per render — and the spec walks the term's
- * deadlines to build it. Keyed on the store's own identities, so it is
- * recomputed when something changes and not when something re-renders.
+ * `App.tsx` renders this in all three shells and always has — the component
+ * asked which shell was on and drew nothing when the answer was not Soft.
+ * That is the right shape for the call site and was the wrong shape for the
+ * cost: the guard was inside the module, so `components/soft/SoftTopBody.tsx`,
+ * `lib/softtop.ts` and the ten modules behind it were fetched and parsed
+ * before the first render on every shell. 3,887 lines, measured on the eager
+ * import graph, to decide not to draw anything.
+ *
+ * And it was not only bytes. The body's `useTop()` is a hook, so it ran
+ * *above* the early return: every render on every shell built a spec — which
+ * walks the term's deadlines — and then discarded it. Gating at the mount
+ * rather than inside it is what stops that, and this file is that gate.
+ *
+ * ## Fetched when the answer is Soft, not before and not on idle
+ *
+ * The other splits in this app prefetch when the browser goes quiet, because
+ * what is behind them is opened later by a tap. This is not: a Soft-shell
+ * reader needs the hero in the first paint, and everybody else never needs it
+ * at all. So the fetch is the answer to the question rather than a guess ahead
+ * of it — `soft` is known on the first render, because the shell comes out of
+ * the state that was primed before anything mounted.
+ *
+ * What it costs is one round trip on a Soft reader's first load, during which
+ * the hero is absent and the screen below it is drawn where it will stay. The
+ * hero occupies its own block at the top of the scroller, so what happens is
+ * that it appears — not that the page moves under a thumb.
+ *
+ * A fetch that fails leaves no hero and nothing else: the shell, the
+ * navigation and the screen are all somewhere else. There is nothing here
+ * worth an error card, and `components/Boundary.tsx` still catches a throw
+ * from inside the body once it is mounted. See `ENGINEERING-AUDIT.md` §1, P1d.
  */
-function useTop() {
-  const { state, catalog, now, school, sync } = useStore();
-  const caps = school.capabilities;
-  // The word Settings shows, not the whole status object: the spec holds
-  // strings, and a shape with a timestamp in it would recompute every tick.
-  const said = SYNC_SAID[sync.status] ?? 'Local';
-  return useMemo(
-    () => softTop(state.screen, { state, catalog, now, caps, sync: said }),
-    [state, catalog, now, caps, said],
-  );
-}
+
+type Body = (typeof import('./SoftTopBody'))['SoftTopBody'];
+
+/** Module-level, so three call sites and two shells share one request. */
+let loading: Promise<Body> | null = null;
+const loadBody = (): Promise<Body> =>
+  (loading ??= import('./SoftTopBody').then((m) => m.SoftTopBody));
 
 export function SoftTop() {
-  const { state } = useStore();
   const soft = useSoft();
-  const top = useTop();
-  if (!soft) return null;
-  /*
-   * Not above a screen that is already the full height of the window.
-   *
-   * A hero is the top of a column you scroll: it introduces the screen and
-   * then goes away as you read past it. The chat has no such column — it is a
-   * log that scrolls inside itself and a composer on the bottom edge, sized to
-   * the box it is given. So 200px of hero above it is not an introduction, it
-   * is 200px taken off the conversation, and because the chat cannot scroll
-   * out of the way of it the composer was pushed clean off the bottom of the
-   * phone and clipped. The one place the hero and the screen disagreed about
-   * who owns the height.
-   *
-   * The registry keeps its entry for `ask` — it is data, and the same facts
-   * would be right if this screen ever became a column. This is the wiring
-   * declining to draw them here.
-   */
-  if (fills(state.screen)) return null;
-  if (!top.hero && top.stats.length === 0) return null;
+  const [Body, setBody] = useState<Body | null>(null);
 
-  return (
-    <div className="soft-top">
-      {top.hero ? (
-        <Hero
-          label={top.hero.label}
-          meta={top.hero.meta}
-          figure={top.hero.figure}
-          said={top.hero.said}
-          foot={top.hero.foot ? <div className="soft-tile-sub">{top.hero.foot}</div> : undefined}
-        />
-      ) : null}
-      {top.stats.length > 0 ? (
-        <StatRow cols={top.stats.length === 2 ? 2 : 3}>
-          {top.stats.slice(0, 3).map((s: TopStat) => (
-            <Stat key={s.label} label={s.label} value={s.value} fraction={s.fraction} />
-          ))}
-        </StatRow>
-      ) : null}
-    </div>
-  );
+  useEffect(() => {
+    if (!soft) return;
+    let alive = true;
+    loadBody().then(
+      // The updater form: `setBody(fn)` would call a component instead of
+      // storing it.
+      (body) => {
+        if (alive) setBody(() => body);
+      },
+      () => {
+        // Cleared, so switching shells and back is a real second attempt
+        // rather than the same rejection returned instantly.
+        loading = null;
+      },
+    );
+    return () => {
+      alive = false;
+    };
+  }, [soft]);
+
+  if (!soft || !Body) return null;
+  return <Body />;
 }
