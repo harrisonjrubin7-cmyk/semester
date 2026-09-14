@@ -10,10 +10,20 @@ import { extractText } from './extract';
  * attached and never read, a slide deck was refused outright, and which door
  * you happened to use decided how much of your material the app understood.
  *
- * This is the single door. It takes files, a zip of files, pasted text, and a
- * pasted address, reads whatever it can, and hands back the same shape for all
- * of them. Nothing here decides what the material *is* — that is `classify.ts`
- * — and nothing here writes anything.
+ * This is the single door. It takes files, a zip of files and pasted text,
+ * reads whatever it can, and hands back the same shape for all of them.
+ * Nothing here decides what the material *is* — that is `classify.ts` — and
+ * nothing here writes anything.
+ *
+ * ## There was a fourth, and it could not work
+ *
+ * `intakeUrl` fetched a pasted address through the `/feed` route and was never
+ * called by any screen. It could not usefully be: `/feed` is the dev server's
+ * proxy, so outside `npm run dev` the function's only possible outcome was the
+ * error it raises explaining that a browser may not read another site. A door
+ * that is shut everywhere the app actually runs is not a door. `Connect.tsx`
+ * is the honest precedent for anything that wants one — it uses `/feed` for
+ * calendar subscriptions and says plainly where the limit is.
  *
  * ## What it will not do
  *
@@ -163,50 +173,6 @@ export function intakeText(text: string, door: Door = 'paste'): Intake | null {
   };
 }
 
-/** Anything that is only an address, so the paste box can tell them apart. */
-export function isUrl(text: string): boolean {
-  const one = text.trim();
-  if (/\s/.test(one)) return false;
-  return /^(https?:\/\/|webcal:\/\/|www\.)\S+$/i.test(one);
-}
-
-/**
- * An address somebody pasted.
- *
- * A browser cannot fetch an arbitrary page: the site has to send CORS headers
- * and a course site does not. The app already has one way round this — the
- * `/feed` route the dev server provides, which `Connect.tsx` uses for calendar
- * subscriptions — and it is honest there about the limit. This is honest about
- * the same one rather than failing with a network error that reads like a bug.
- */
-export async function intakeUrl(url: string, signal?: AbortSignal): Promise<Intake> {
-  const target = url.trim().replace(/^webcal:\/\//i, 'https://').replace(/^www\./i, 'https://www.');
-  let text: string;
-  try {
-    const res = await fetch(`/feed?url=${encodeURIComponent(target)}`, { signal });
-    if (!res.ok) throw new Error(`That address answered ${res.status}.`);
-    text = await res.text();
-  } catch (e) {
-    if (e instanceof Error && e.name === 'AbortError') throw e;
-    throw new Error(
-      'A pasted address can only be fetched with the dev proxy running — a browser is not allowed to read another site directly. Download the file and add it, or paste the text itself.',
-    );
-  }
-  // A page comes back as HTML. Reuse the reader rather than a second stripper.
-  const looksHtml = /^\s*<(!doctype|html|head|body)/i.test(text);
-  const file = new File([text], looksHtml ? 'page.html' : 'page.txt', {
-    type: looksHtml ? 'text/html' : 'text/plain',
-  });
-  const out = await extractText(file);
-  return {
-    name: target.replace(/^https?:\/\//, '').slice(0, 60),
-    text: out.text,
-    words: out.words,
-    door: 'url',
-    hash: hashOf(out.text),
-    size: text.length,
-  };
-}
 
 /**
  * One hash for everything a hand-added piece of material is made of.

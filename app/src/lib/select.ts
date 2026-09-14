@@ -7,7 +7,6 @@ import {
   decorateItem,
   minutesNow,
   sameDay,
-  SEMESTER_YEAR,
   untilLabel,
 } from './date';
 import { blocksOn, type Commitment } from './activities';
@@ -677,4 +676,3 @@ export function spanOf(meets: string): number | null {
   return span > 0 && span <= 5 * 60 ? span : null;
 }
 
-export const SEMESTER = { year: SEMESTER_YEAR };

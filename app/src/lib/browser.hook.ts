@@ -121,7 +121,3 @@ export function closeTab(which: number): AppTab {
   return here();
 }
 
-/** For tests: forget everything read from the device. */
-export function forgetStrip(): void {
-  held = null;
-}
