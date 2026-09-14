@@ -68,15 +68,21 @@ duplicate that five passes removed.
 - Static build. `base` comes from `VITE_BASE` (GitHub Pages serves from
   `/semester/`), otherwise `/`.
 - Deployed by `.github/workflows` to GitHub Pages, hash-routed SPA.
-- Workspace: `app/` (the client) and `packages/contract/` (shared data contract,
-  aliased as `@semester/contract`).
+- Workspace: `app/` (the client), `packages/contract/` (shared data contract,
+  aliased as `@semester/contract`), `packages/institution/` (the university
+  gateway contract, aliased as `@semester/institution`) and
+  `app/server/institution/` (the gateway itself — a Node service, not part of
+  the built page and not touched by `npm run build`).
 - Dev-server-only middleware in `vite.config.ts`: ICS calendar proxy (`/feed`),
   Apple token signing, OAuth token forwarding (Microsoft/Google/Zoom), and a
   Claude proxy (`/anthropic/v1/messages`). **None of these exist in a built
   page**; production uses `supabase/functions/claude`.
 - Scripts: `dev`, `build`, `lint` (oxlint + `scripts/styles.mjs` +
   `scripts/labels.mjs`), `test`, `test:zones` (runs the suite under
-  `America/Chicago` and `Pacific/Kiritimati`), `counts`, `mirror`, `transcripts`.
+  `America/Chicago` and `Pacific/Kiritimati`), `counts`, `mirror`,
+  `transcripts`, `check:university` (typechecks the gateway under NodeNext —
+  separate from `build`, which never sees `server/`) and `dev:university`
+  (runs it, reading `server/institution/.env`).
 
 ### Dependencies actually installed
 
