@@ -36,11 +36,13 @@ leaves the rest of the file running unprotected.
 
 ## `*.check.sql` — the tests
 
-`classmates.check.sql`, `groups.check.sql`, `records.check.sql`,
-`calendar.check.sql`, `sync.check.sql`.
+`classmates.check.sql`, `groups.check.sql`, `rooms.check.sql`,
+`records.check.sql`, `calendar.check.sql`, `sync.check.sql`.
 
 Each one invents two to five users, proves the row-level policies refuse what
-they should refuse, and ends in `rollback;`. They answer the questions a policy
+they should refuse, and ends in `rollback;`. `rooms.check.sql` covers the
+reactions half of `…0400_rooms.sql`; the presence half is policies on
+`realtime.messages`, which no bare Postgres has, and its header says so. They answer the questions a policy
 can only be wrong about when a second person is involved — can a stranger read
 your room, can one member throw another out — without needing a second person.
 
@@ -98,7 +100,7 @@ when only one suite matters:
     SQL
     psql -v ON_ERROR_STOP=1 -d semester_check -f supabase/classmates.check.sql
 
-All five suites pass this way, and each rolls itself back. The grants come
+All six suites pass this way, and each rolls itself back. The grants come
 last because they are `on all tables` and there are no tables until the
 migrations have run; Supabase applies the equivalent as default privileges,
 which is why nothing in `migrations/` grants them itself.

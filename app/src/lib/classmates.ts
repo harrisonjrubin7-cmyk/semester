@@ -358,6 +358,17 @@ export async function unsay(id: string): Promise<void> {
  * Realtime honours row-level security, so a subscriber receives only what the
  * select policy would have handed them anyway — including the blocking rule.
  * Returns the unsubscribe.
+ *
+ * `code` goes into the filter string unescaped, and since `…0300` a room key
+ * is `vanderbilt/BUS 1600` — a slash and a space in a value that is parsed out
+ * of a string by the Realtime server. It survives, and the reason is worth
+ * writing down because the failure would be silent: the server splits a
+ * condition on the *first* `=` and then the operator on the *first* `.`, and
+ * the value is whatever is left, verbatim. Only three characters mean anything
+ * inside one — a comma separates conditions, parentheses group an `in` list,
+ * and a leading double quote starts a quoted value — and `enrollments_code_check`
+ * admits none of them. Add an operator whose value is a list, or a school slug
+ * with a comma in it, and this stops being true.
  */
 export function listen(
   term: string,
@@ -490,7 +501,18 @@ export async function unreact(userId: string, messageId: string, emoji: string):
  * Both events, because a reaction that disappears from one screen and stays on
  * another is worse than one that never arrived. A delete payload carries only
  * the primary key — message, person, emoji — which is exactly what the screen
- * needs to take it off.
+ * needs to take it off. `rooms.check.sql` asserts that key, because widening it
+ * would take reactions off nobody's screen but the tapper's.
+ *
+ * The delete is deliberately unfiltered, and that is load-bearing rather than
+ * an oversight. Realtime matches a delete against the *identity* columns — the
+ * primary key, all a deleted row leaves behind — and `is_visible_through_filters`
+ * refuses a filter naming a column that is not among them. `code` is not in
+ * this key, so `code=eq.…` on this binding would drop every delete silently and
+ * reactions would stop disappearing for everybody but the person who took one
+ * back. The key already narrows it: a delete for a room this screen does not
+ * have simply removes nothing. On the insert, see `listen` above on what a room
+ * key may contain.
  */
 export function listenReactions(
   term: string,
