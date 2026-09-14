@@ -685,7 +685,6 @@ export type NavMode =
   | 'springboard'
   | 'shelves'
   | 'workspace'
-  | 'browser'
   | 'guides';
 
 /** A class that repeats every week, from the syllabus meeting pattern. */
