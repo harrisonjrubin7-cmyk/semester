@@ -225,6 +225,34 @@ function currentMinute(): Date {
   return d;
 }
 
+/**
+ * The same minute is the same value, and React needs to be told so.
+ *
+ * The clock below fires twice a minute, and `currentMinute()` hands back a
+ * fresh `Date` every time it is called. `useReducer` bails out of a re-render
+ * only when the reducer returns something `Object.is`-equal to what it already
+ * held, and two `Date` objects never are — so half of these ticks published a
+ * minute that had not changed, and every one of them was a full re-render.
+ *
+ * Not a small one, either: `now` is a member of the single context value built
+ * at the foot of this file, `useStore()` is read at 298 call sites, and there
+ * is no `React.memo` anywhere in the app to stop the cascade. So the whole
+ * mounted tree re-rendered twice a minute, on a phone, on battery, while
+ * somebody read a field guide.
+ *
+ * Returning the previous `Date` when the minute has not moved is the whole
+ * fix, and it is correct on its own terms whatever else happens to the
+ * context: the value is the minute, and the minute has not changed.
+ *
+ * It halves the cost rather than removing it. The other half is that a minute
+ * boundary is still an app-wide event, and that wants `now` in a provider of
+ * its own — a larger change, argued in `ENGINEERING-AUDIT.md` §2.
+ */
+export function nextMinute(was: Date): Date {
+  const d = currentMinute();
+  return d.getTime() === was.getTime() ? was : d;
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const startedAt = useRef(currentMinute());
 
@@ -236,7 +264,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * while you read it would make the answer disappear as you looked at it.
    */
   const lastSeen = useRef(readSeen());
-  const [now, tick] = useReducer(currentMinute, startedAt.current);
+  const [now, tick] = useReducer(nextMinute, startedAt.current);
 
   const [state, dispatch] = useReducer(reducer, undefined, () => {
     const persisted = loadPersisted();
@@ -281,6 +309,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // Re-render on the minute so "in 1 hr 19 min" and "Today" stay correct
   // without a timer per component.
+  //
+  // Still every 30 seconds rather than every 60, and deliberately: a timer
+  // that fires exactly on the period drifts, so a minute boundary could be
+  // missed for a whole minute. Checking twice as often as the thing being
+  // watched is what keeps the label at most 30 seconds stale — and now that
+  // `nextMinute` returns the same value when the minute has not moved, the
+  // extra check costs one comparison rather than a re-render of the app.
   useEffect(() => {
     const id = setInterval(() => tick(), 30_000);
     return () => clearInterval(id);
