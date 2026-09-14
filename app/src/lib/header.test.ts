@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { DESTINATIONS } from './nav';
 import { SETTINGS, pageTitle, settingsTitle } from './settings';
-import { showsAvatar } from './header';
+import { headerRow, showsAvatar } from './header';
 import { withoutComments } from '../styles/rules';
 
 /**
@@ -133,36 +133,58 @@ describe('the header buttons a thumb has to hit', () => {
   });
 
   /*
-   * The avatar, which is the one header control that is a *place* rather than
-   * an action — and the one most easily broken by a well-meant tidy.
+   * Every control in the row, gated by `lib/header.ts` and by nothing else.
    *
-   * The markup must ask `lib/header.ts` rather than testing anything itself.
-   * Three conditions written inline is the shape that produced the bug: the
-   * first version of this was `state.nav === 'feed' && atRoot`, which hid the
-   * app's own profile from three of its four navigations *and* left the row
-   * overflowing at 320px in the fourth. The rule, its measurement and its
-   * argument are in that file; this holds that the markup defers to it.
+   * This used to check the avatar alone, because the avatar was the one whose
+   * rule had already been got wrong once — three conditions written inline,
+   * `state.nav === 'feed' && atRoot`, which hid the app's own profile from
+   * three of the four navigations *and* left the row overflowing in the
+   * fourth. The other four kept their own inline conditions, and two of them
+   * were wrong in the same way for the same reason: `!slim` was a list of
+   * three controls the workspace's top bar carries, written without checking
+   * the rest of that layout, so the header went on drawing a magnifier under
+   * the workspace's search field and a `+` beside its New button.
+   *
+   * So the check is now the whole row. A control here asks `row`, or this
+   * fails — which is the only way a sixth control, or a second opinion in
+   * front of an existing one, gets noticed.
    */
-  it('asks lib/header.ts whether to draw the avatar', () => {
-    const at = src().indexOf('<Avatar name={state.myName}');
-    expect(at, 'the header avatar has moved; point this test at it').toBeGreaterThan(-1);
-    // The condition its own element opens under: the text from the `{` that
-    // starts the block to the `<button` that starts the element.
-    const block = src().slice(0, at).split('<button').pop() ?? '';
-    const opened = (src().slice(0, at - block.length - '<button'.length).match(/\{[^\n]*&& \(\s*$/) ?? [''])[0];
-    /*
-     * `showsAvatar` decides whether the row has space for it, and that answer
-     * is still the whole of the measurement. The one thing allowed in front
-     * of it is the workspace's `slim`, which is not a second opinion about
-     * the width: that layout draws the avatar in its own top bar, so the
-     * header's would be the same control twice on one screen. Written into
-     * the expected string rather than stripped out, so a *third* condition
-     * appearing here still fails this.
-     */
-    expect(opened.trim(), 'the avatar is drawn by showsAvatar, not by a condition here').toBe(
-      '{!slim && showsAvatar({ atRoot, phone, counting }) && (',
+  const CONTROLS = {
+    add: "type: 'quickAdd', open: true",
+    search: "type: 'finder', open: true",
+    apps: "type: 'apps', open: true",
+    alerts: "screen: 'notifs'",
+    avatar: '<Avatar name={state.myName}',
+  };
+
+  it('decides the whole row in one place', () => {
+    expect(src(), 'the row is one call, not five conditions').toContain(
+      'const row = headerRow({ atRoot, phone, counting, desk });',
+    );
+    // The measurement itself stays in lib/header.ts. A second caller here is
+    // a second opinion about the width, which is the shape that shipped the
+    // bug the file exists to hold.
+    expect(src(), 'showsAvatar is headerRow’s business, not the markup’s').not.toContain(
+      'showsAvatar(',
     );
   });
+
+  for (const [key, marks] of Object.entries(CONTROLS)) {
+    it(`draws the ${key} control only when lib/header.ts says so`, () => {
+      const gate = `{row.${key} && (`;
+      const at = src().indexOf(gate);
+      expect(at, `${key} should be gated by ${gate}`).toBeGreaterThan(-1);
+      expect(
+        src().split(gate).length - 1,
+        `${gate} should appear exactly once`,
+      ).toBe(1);
+      // And the gate opens the control it claims to: the element that follows
+      // it, up to the next gate or the end of the row, carries that control's
+      // own mark.
+      const after = src().slice(at, at + 700);
+      expect(after, `${gate} should open the ${key} control`).toContain(marks);
+    });
+  }
 
   it('sends the avatar to the profile, not to the progress report', () => {
     // It went to `me` for as long as there was no screen about the person.
@@ -227,6 +249,71 @@ describe('what the header can carry', () => {
    * hid the profile from three navigations, and the fourth — feed — is where
    * the overflow was already happening before the avatar existed.
    */
+  /*
+   * The workspace, which is what `headerRow` was extracted to get right.
+   *
+   * Its bar draws a search field at every width and a cluster of four — the
+   * bell, settings, the launcher and the avatar — beside it. Four of this
+   * row's controls are therefore already on screen; the `+` is not, and the
+   * timer pill is nobody else's.
+   */
+  const AT_ROOT = { atRoot: true, phone: false, counting: false };
+
+  it('draws all five outside the workspace, exactly as before', () => {
+    expect(headerRow({ ...AT_ROOT, desk: false })).toEqual({
+      add: true,
+      search: true,
+      apps: true,
+      alerts: true,
+      avatar: true,
+    });
+  });
+
+  it('draws only the + in the workspace, whose bar has the other four', () => {
+    const row = headerRow({ ...AT_ROOT, desk: true });
+    expect(row, 'the bar carries four of the five').toEqual({
+      add: true,
+      search: false,
+      apps: false,
+      alerts: false,
+      avatar: false,
+    });
+  });
+
+  /*
+   * The `+` used to ask about the sidebar, which drew a New button this one
+   * would have sat beside. That column no longer draws one — New opened the
+   * capture box, which the search home already opens from the + beside its
+   * field — so the premise went and the question with it.
+   *
+   * Asserted at every width and in both navigations rather than as a constant,
+   * because the failure it guards is two correct removals landing together:
+   * the sidebar dropping New, and this deferring to a New that is no longer
+   * there, leaving a wide workspace with no pointing route to the capture box.
+   */
+  it('draws the + everywhere, because nothing else carries the capture box', () => {
+    for (const desk of [true, false]) {
+      for (const phone of [true, false]) {
+        for (const atRoot of [true, false]) {
+          expect(headerRow({ atRoot, phone, counting: false, desk }).add, `${desk} ${phone}`).toBe(
+            true,
+          );
+        }
+      }
+    }
+  });
+
+  it('never draws the magnifier over the workspace’s own search field', () => {
+    for (const atRoot of [true, false]) {
+      expect(headerRow({ atRoot, phone: true, counting: false, desk: true }).search).toBe(false);
+    }
+  });
+
+  it('keeps the width rule in front of the avatar, on top of the workspace one', () => {
+    // A phone with a timer counting: no room, workspace or not.
+    expect(headerRow({ atRoot: true, phone: true, counting: true, desk: false }).avatar).toBe(false);
+  });
+
   it('does not depend on which navigation is on', () => {
     // Comments blanked: the file's own note names the feed layout, because
     // that is where the overflow was first drawn. The rule must not.

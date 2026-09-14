@@ -13,6 +13,7 @@ import {
   leaveGroup,
   makeGroup,
   openBeside,
+  pin,
   read,
   rearrange,
   renameGroup,
@@ -55,18 +56,20 @@ const listeners = new Set<() => void>();
 /*
  * The place the strip was last followed to.
  *
- * Here rather than in the component that does the following, because that
- * component does not outlive a navigation. The browser shell draws the app
- * inside `.g-home-legacy` while its home screen is up and inside
- * `.g-legacy-mount` once it is not, and those are different parents — so
- * going anywhere from the home unmounts the app's whole subtree and mounts it
- * again, `TabsFollow` with it. Held in a ref, this came back null every time,
- * and the navigation that caused the remount then looked like the session's
- * first look, which is the one moment `TabsFollow` is allowed to ignore a
- * navigation. Two tabs open and nothing you did from the home was recorded.
+ * Here rather than in the component that does the following, because it is a
+ * fact about this visit — like the strip itself and the closed-tab list above
+ * — rather than about whatever happens to be rendering. `forgetStrip` clears
+ * it with them.
  *
- * It is a fact about this visit, like the strip itself and the closed-tab
- * list above, so it lives with them and `forgetStrip` clears it.
+ * It was a ref in `TabsFollow`, and the shell used to draw the app in one
+ * parent while its home screen was up and another once it was not, so going
+ * anywhere from the home remounted that component and the ref came back null.
+ * The navigation that caused the remount then looked like the session's first
+ * look, which is the one moment `TabsFollow` is allowed to ignore a
+ * navigation: two tabs open and nothing you did from the home was recorded.
+ * The shell mounts the app once now (`shell-remount.test.tsx`), so that
+ * particular remount is gone — but a session's fact still does not belong to
+ * a component, and the next remount will not cost a tab its place.
  */
 let followed: string | null = null;
 
@@ -233,6 +236,11 @@ export function foldGroup(id: string, shut: boolean): AppTab | null {
 /** Undo the grouping, keeping every tab open. */
 export function dissolveGroup(id: string): void {
   put(dissolve(strip(), id));
+}
+
+/** Keep a tab at the front of the strip, as its glyph. Or let it go. */
+export function pinTab(which: number, pinned: boolean): void {
+  put(pin(strip(), which, pinned));
 }
 
 /**

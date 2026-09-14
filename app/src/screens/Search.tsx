@@ -10,9 +10,9 @@
  *
  * ## The centre goes away when anything is over it
  *
- * The field, its + and its AI Tutor control are all hidden the moment the top
- * bar is suggesting, the launcher is open, Customize is open, the command
- * palette is open or the capture box is. Not dimmed and not lowered: hidden,
+ * The field and its + are hidden the moment the top bar is suggesting, the
+ * launcher is open, Customize is open, the command palette is open or the
+ * capture box is. Not dimmed and not lowered: hidden,
  * so they leave the tab order and the accessibility tree along with the
  * screen. A control you cannot see but can still tab into and still click
  * through is the fault this rule exists to prevent — it would sit under the
@@ -22,9 +22,18 @@
  * screen cannot come to different conclusions about whether something is up.
  *
  * Nothing is lost while it is away: the bar above this screen carries the same
- * search on every screen in this navigation, ⌘K still opens the palette, and
- * whatever is covering the centre is itself a way of finding something. That
- * is what makes hiding it outright the right answer rather than dimming it.
+ * search on every screen in this navigation — it *is* the search this centre
+ * box reaches, and `/` puts the cursor in it from anywhere in the workspace —
+ * and whatever is covering the centre is itself a way of finding something.
+ * That is what makes hiding it outright the right answer rather than dimming
+ * it.
+ *
+ * This paragraph used to say "⌘K still opens the palette". It does not, and
+ * never did in this build: `lib/keys.ts` ignores anything carrying a modifier
+ * on principle, and the one ⌘K listener in the app is `ai/Assistant.tsx`'s,
+ * which opens the assistant. There was a `⌘ K` chip in the row below saying
+ * otherwise, and an identical one in the bar; both are gone with the second
+ * search they were labelling.
  *
  * ## Where the shortcuts come from
  *
@@ -38,10 +47,11 @@ import { useStore } from '../state/store';
 import { currentLook } from '../state/shape';
 import { centreHidden, readFavourites } from '../lib/desk';
 import { saysFor, shortFor } from '../lib/nav';
-import { AppsIcon, AskIcon, EditIcon, Plus } from '../components/Icons';
+import { AppsIcon, EditIcon, Plus } from '../components/Icons';
 import { glyphFor } from '../components/icons.pick';
 import { createElement } from 'react';
 import { useSuggesting } from '../components/desk/suggesting';
+import { useFocusBar } from '../components/desk/barfocus';
 import { longLabel } from '../lib/date';
 import { BookmarkChips } from '../components/Bookmarks';
 
@@ -59,6 +69,11 @@ export function SearchHome() {
    * thing that would be stale exactly when it mattered.
    */
   const suggesting = useSuggesting();
+  /*
+   * The other direction through the same gap. `suggesting` comes down from
+   * the bar; this goes back up to it. See `components/desk/barfocus.ts`.
+   */
+  const focusBar = useFocusBar();
   const covered = centreHidden({
     suggesting,
     apps: state.apps,
@@ -88,24 +103,64 @@ export function SearchHome() {
           >
             <Plus size={20} />
           </button>
+          {/*
+            The centre box puts the cursor in the bar. It does not search.
+
+            It used to open the command palette, which made the workspace's
+            front door two search fields one above the other: the bar's,
+            answering with apps as you type, and this one, opening a palette
+            that answers with records. Two vocabularies, two result sets,
+            stacked — and nothing on either saying which was which.
+
+            The browser idiom this screen is borrowed from is also the answer
+            to it. A new-tab page's big centre box does not run a second
+            search; it focuses the omnibox. So does this. One field, two
+            places to reach it, and as soon as you type, the bar drops its
+            list and `centreHidden` takes this row away — which is the same
+            motion, and why the two rules do not fight.
+
+            A button rather than an input for that reason: there is nothing to
+            type into here, and a second text box that forwarded its keystrokes
+            would be the duplicate again wearing a disguise.
+          */}
           <button
             type="button"
             className="bare deskhome-box"
-            onClick={() => dispatch({ type: 'finder', open: true })}
+            /*
+              The palette is the fallback, and it is reachable — not defensive
+              padding.
+
+              This screen is the workspace's own: it is not in the registry and
+              no chrome outside that navigation points at it. But `fromHash`
+              accepts any screen name in the address, so `#/search` bookmarked
+              from the workspace still opens this screen after somebody
+              switches to the tab bar — and there is no bar there to focus. The
+              box falls back to the search it used to open rather than doing
+              nothing, which is the one behaviour worse than either.
+            */
+            onClick={() => (focusBar ? focusBar() : dispatch({ type: 'finder', open: true }))}
           >
             <span className="deskhome-box-say">Search your semester</span>
           </button>
-          <span className="deskhome-keys" aria-hidden="true">
-            ⌘ K
-          </span>
-          <button
-            type="button"
-            className="bare deskhome-ai"
-            onClick={() => dispatch({ type: 'go', screen: 'ask' })}
-          >
-            <AskIcon size={15} />
-            <span>AI Tutor</span>
-          </button>
+          {/*
+            There was an AI Tutor button here.
+
+            The bar directly above this screen draws one — same words, same
+            glyph, same `go ask` — so on the one screen this component renders,
+            the workspace put two identical controls one row apart. The bar's
+            survives for the reason every survivor in this pass survives: it is
+            drawn on every screen in this navigation and this one is drawn on
+            exactly one, so keeping the narrower of the two would have been
+            keeping the one that is usually not there.
+
+            The assistant is not harder to reach for it. The bar's button is
+            inches away, `ask` is in the launcher, the directory and search,
+            and the floating button — "Ask about Alerts", named for wherever
+            you are standing — opens the panel over this screen like any other.
+            See `ai/Assistant.tsx` on why those two are not themselves a
+            duplicate: one is a conversation carrying the screen you are on,
+            the other is the room where every thread lives.
+          */}
         </div>
       </div>
 

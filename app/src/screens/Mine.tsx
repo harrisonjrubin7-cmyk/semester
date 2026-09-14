@@ -15,6 +15,7 @@ import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import { codeOf } from '../lib/call';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
+import type { Appointment } from '../lib/types';
 import { CheckIt } from '../components/CheckIt';
 import { Dictate } from '../components/Dictate';
 import { RecordButton } from '../components/RecordButton';
@@ -363,6 +364,12 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
   );
 }
 
+/** Back the other way: "18:30" for the field, from the minutes we store. */
+function inputFromClock(at: number): string {
+  const h = Math.floor(at / 60);
+  return `${String(h).padStart(2, '0')}:${String(at % 60).padStart(2, '0')}`;
+}
+
 /** "6:30p" from a 24h "18:30" — the format the rail uses. */
 function clockFromInput(value: string): { at: number; time: string } {
   const [h, m] = value.split(':').map(Number);
@@ -375,22 +382,46 @@ function clockFromInput(value: string): { at: number; time: string } {
 function Appointments() {
   const { state, dispatch, now } = useStore();
   const [open, setOpen] = useState(false);
+  /**
+   * Which appointment the form is holding, or null for a new one.
+   *
+   * One form, two jobs, on purpose: the fields of an appointment are the same
+   * five whether you are writing it or fixing it, and a second form beside
+   * this one would be the duplicate control the seventh simplify pass spent
+   * its day removing. What changes is where Save sends them.
+   */
+  const [editing, setEditing] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dateToIso(now));
   const [when, setWhen] = useState('09:00');
   const [where, setWhere] = useState('');
   const [kind, setKind] = useState<EventKindId>('social');
 
-  const add = () => {
-    if (!title.trim()) return;
-    const { at, time } = clockFromInput(when);
-    dispatch({
-      type: 'addAppointment',
-      appointment: { title: title.trim(), date, at, time, where: where.trim(), note: '', kind },
-    });
+  const shut = () => {
+    setOpen(false);
+    setEditing(null);
     setTitle('');
     setWhere('');
-    setOpen(false);
+  };
+
+  /** The form, filled in from an appointment that already exists. */
+  const edit = (a: Appointment) => {
+    setEditing(a.id);
+    setTitle(a.title);
+    setDate(a.date);
+    setWhen(inputFromClock(a.at));
+    setWhere(a.where);
+    setKind((a.kind as EventKindId) ?? 'other');
+    setOpen(true);
+  };
+
+  const save = () => {
+    if (!title.trim()) return;
+    const { at, time } = clockFromInput(when);
+    const written = { title: title.trim(), date, at, time, where: where.trim(), kind };
+    if (editing) dispatch({ type: 'editAppointment', id: editing, patch: written });
+    else dispatch({ type: 'addAppointment', appointment: { ...written, note: '' } });
+    shut();
   };
 
   const upcoming = [...state.appointments].sort((a, b) =>
@@ -405,7 +436,7 @@ function Appointments() {
             className="input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={submitOnEnter(add, () => setOpen(false))}
+            onKeyDown={submitOnEnter(save, shut)}
             placeholder="Dentist, advisor meeting, shift…"
             style={{ height: 42, fontSize: 'var(--type-lg)' }}
             aria-label="Appointment"
@@ -434,7 +465,7 @@ function Appointments() {
             className="input"
             value={where}
             onChange={(e) => setWhere(e.target.value)}
-            onKeyDown={submitOnEnter(add, () => setOpen(false))}
+            onKeyDown={submitOnEnter(save, shut)}
             placeholder="Where?"
             style={inputStyle}
             aria-label="Place"
@@ -480,7 +511,7 @@ function Appointments() {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => setOpen(false)}
+              onClick={shut}
               style={{ flex: 1, height: 42, textTransform: 'uppercase', letterSpacing: '0.1em' }}
             >
               Cancel
@@ -488,16 +519,21 @@ function Appointments() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={add}
+              onClick={save}
               style={{ flex: 1, height: 42, textTransform: 'uppercase', letterSpacing: '0.1em' }}
             >
-              Add
+              {editing ? 'Save' : 'Add'}
             </button>
           </div>
         </Blueprint>
       ) : (
         <ActionButton
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setEditing(null);
+            setTitle('');
+            setWhere('');
+            setOpen(true);
+          }}
           tone="primary"
         >
           + New appointment
@@ -563,6 +599,18 @@ function Appointments() {
                 Join
               </button>
             ) : null}
+            {/* The way into the form above, filled in. Ghost and the same size
+                as Del, because fixing a room is not a bigger act than
+                deleting one and a primary button here would say it was. */}
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => edit(a)}
+              aria-label={`Edit ${a.title}`}
+              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
+            >
+              Edit
+            </button>
             <button
               type="button"
               className="btn btn-ghost"
