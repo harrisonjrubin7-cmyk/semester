@@ -1,3 +1,114 @@
+# One app — the eighth pass: state written and never read
+
+Against `main` at `0aa769c`. No code in this commit.
+
+**60 destinations**, unchanged. Routes per destination re-checked and
+unchanged. The previous seven passes have taken the axes this command names —
+screen overlap, route count, duplicated controls, duplicated implementations,
+shared components — and this one deliberately does not re-walk them. It asks a
+question none of them could answer, because each of them reads what the code
+*does* and this one asks what the code's results are *for*:
+
+> Which pieces of state are written and never read?
+
+## Why no earlier census could see this
+
+A control census reads `set*` and finds the screens that dispatch it — and
+finds these, because they *are* dispatched. An implementation census reads what
+a new file does against what an old one already did — and finds nothing,
+because there is only one implementation. A route census counts arrivals, and
+these all arrive.
+
+Every one of those asks about the write. A field's deadness lives at the other
+end: the reducer case is correct, the action is typed, the value is stored, and
+**nothing ever asks for it back**. Nothing throws, nothing fails a type check,
+no pixel moves. It is the same shape as the dead CSS in E3b one layer up, and
+it has the same symptom, which is none.
+
+## The census
+
+Every field of `Persisted` and `Ephemeral` in `state/shape.ts` — 189 — against
+every reference outside `state/` itself.
+
+One false positive, worth recording because it is the shape of the mistake:
+`removedCourses` came back with no reference, and it is thoroughly alive — a
+tombstone list that `state/slices/library.ts` reads on every import so a course
+you deleted does not walk back in. Its readers are *in* `state/`, which the
+filter excluded. A census that excludes a directory has to be asked whether
+that directory is where the readers live.
+
+## The four
+
+| Field | Action | Dispatched? | Read? |
+| --- | --- | --- | --- |
+| `calTab` | `setCalTab` | no | no |
+| `meGroup` | `setMeGroup` | no | no |
+| `loadStep` | `setLoadStep` | no | no |
+| `mailSeed` | `writeMail` | **yes — three places** | **no** |
+
+The first three are closed loops with nothing attached at either end: a field,
+a default, a reducer case and a member of the action union, all four of them
+maintained, none of them reachable. **Cut.**
+
+### `mailSeed` is not dead state. It is three buttons that do not work.
+
+`writeMail` is dispatched from three live controls:
+
+- `components/AskForTime.tsx` — asking for more time on a deadline
+- `components/DropBy.tsx` — office hours
+- `screens/Courses.tsx:571` — asking a question about a course
+
+Each one navigates to `mail` and stores a seed: the purpose, the course, the
+recipient, the incoming message, and the deadline the mail is about.
+`screens/Mail.tsx` never reads it. Mail opens its composer from a *different*
+action, `composeMail`, which carries a `draft` — and `writeMail` does not set
+one, so pressing any of those three buttons lands you on the mailbox with **no
+composer open at all**, let alone a filled one.
+
+The comment on the field says exactly what was intended, and is the reason this
+row matters more than its line count:
+
+> *Carried so an email opened from a deadline arrives with that deadline
+> already named. Naming the assignment and its date is most of what turns a
+> vague email into an answerable one, and re-picking it from a list of
+> thirty-eight is the step at which people gave up.*
+
+The feature was designed against a known failure, and the failure is what
+ships. This is the same class as #252's "five controls that did nothing" and
+#233's two `+` glyphs — a control whose meaning you cannot rely on — arrived at
+from the opposite direction.
+
+**Merge**, not cut: `writeMail` should build a `composeMail` draft from the
+seed and open the composer, and `mailSeed` should stop existing as a separate
+fact. Two actions that both mean "start writing an email" is the duplication
+this command exists to remove; that they disagree about whether the composer
+opens is the bug it caused.
+
+## What this pass deliberately leaves
+
+**Shared components, recounted.** `EmptyState` 23 files, `Segmented` 35,
+`TabList` 11, `Notice` 9 — all up, none complete. Fourteen files still write
+their own "nothing here yet" line. **Not a row**, and the reason is E3's
+lesson: most of those fourteen are one-line inline statuses inside a populated
+screen, not empty screens, and `EmptyState`'s own note says the `action` is its
+point. Converting a status line into a component with an action would be
+following the name again.
+
+**`industry.css`'s seventeen unused classes**, for the reason in E3b: a design
+system's vocabulary is meant to be wider than today's usage.
+
+## To do, in order
+
+| # | Row | Verdict |
+| --- | --- | --- |
+| F1 | `mailSeed` / `writeMail` — three controls that open nothing | **Merge into `composeMail`** |
+| F2 | `calTab`, `meGroup`, `loadStep` — closed loops | **Cut** |
+| F3 | a guard so write-only state cannot come back | **Add** |
+
+F1 first: it is a bug, and the other two are tidying.
+
+---
+
 # One app — the seventh pass, run three times over
 
 Three audits of this name were written at the same time, on three branches, by
