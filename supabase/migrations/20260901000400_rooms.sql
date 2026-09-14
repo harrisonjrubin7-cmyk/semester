@@ -148,10 +148,27 @@ $$;
 -- one: a term is "2026FA" and a room key is a school id and a course code
 -- joined with a slash.
 
+-- `realtime.messages` is owned by `supabase_realtime_admin`, not by `postgres`,
+-- and ALTER TABLE wants ownership even when it would change nothing. So the
+-- enable is asked for only when it is actually off. Supabase ships every
+-- project with it already on, which is why the guard makes this a no-op rather
+-- than a skipped step — and why, without the guard, this file could not be
+-- applied by `postgres` at all: not from the SQL Editor, not by `db push`, not
+-- by a deploy. Found by applying it to the live project, which is the only
+-- place it shows: `check.sh` builds a bare Postgres with no `realtime` schema,
+-- so the whole block below is skipped there and the fault is invisible.
+--
+-- CREATE POLICY on that table is permitted; only the ALTER is not.
 do $$
 begin
   if exists (select 1 from pg_tables where schemaname = 'realtime' and tablename = 'messages') then
-    execute 'alter table realtime.messages enable row level security';
+    if not (
+      select c.relrowsecurity from pg_class c
+        join pg_namespace n on n.oid = c.relnamespace
+       where n.nspname = 'realtime' and c.relname = 'messages'
+    ) then
+      execute 'alter table realtime.messages enable row level security';
+    end if;
 
     execute 'drop policy if exists "read your class rooms live" on realtime.messages';
     execute $p$
