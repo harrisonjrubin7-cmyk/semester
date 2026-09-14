@@ -57,8 +57,9 @@ const holdOne = () => {
 
 vi.mock('../lib/claude', () => ({
   ask: (opts: unknown) => (asked as unknown as (o: unknown) => Promise<string>)(opts),
-  configured: () => true,
 }));
+
+vi.mock('../lib/assistant', () => ({ configured: () => true }));
 
 const dispatched: { type: string }[] = [];
 

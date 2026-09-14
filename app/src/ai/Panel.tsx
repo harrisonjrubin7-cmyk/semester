@@ -9,7 +9,7 @@ import { Composer, sendHint } from './Composer';
 import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
 import { Opening } from './Opening';
 import { money } from '../lib/spend';
-import { configured, modelLabel } from '../lib/claude';
+import { configured, modelLabel } from '../lib/assistant';
 import { nameOf } from '../lib/threads';
 import { Trouble } from '../components/Trouble';
 import { Applied, Locally, Proposals } from './Actions';

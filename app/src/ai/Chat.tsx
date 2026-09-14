@@ -4,7 +4,7 @@ import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { chromeFor } from '../lib/chrome';
 import { useKeyboardInset } from '../lib/keyboard';
 import { useConversation, provider } from './converse';
-import { configured, modelLabel } from '../lib/claude';
+import { configured, modelLabel } from '../lib/assistant';
 import { Composer, sendHint } from './Composer';
 import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
 import { Threads, ThreadsOver } from './Threads';

@@ -22,7 +22,7 @@ import type { CourseModule, Screen } from '../lib/types';
 import { buildCatalog, type Catalog } from '../data/catalog';
 import type { Named } from '../lib/forwork';
 import { arrange } from '../lib/yours';
-import { setSessionToken } from '../lib/claude';
+import { setSessionToken } from '../lib/token';
 import {
   accountOf,
   cloudConfigured,
