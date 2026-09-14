@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources } from '../styles/rules';
 import { boardLists } from '../lib/springboard';
 import { shelfLists } from '../lib/launcher';
 import type { Capabilities } from '../lib/school';
@@ -20,14 +20,8 @@ import type { Capabilities } from '../lib/school';
  * on the settings page rather than on Today, which is the shape the other two
  * now follow.
  */
-function tsx(dir: string, out: string[] = []): string[] {
-  for (const e of readdirSync(dir)) {
-    const p = join(dir, e);
-    if (statSync(p).isDirectory()) tsx(p, out);
-    else if (/\.tsx?$/.test(e) && !/\.test\./.test(e)) out.push(p);
-  }
-  return out;
-}
+/** The files this rule reads. `styles/rules.ts` walks; this names. */
+const tsx = (dir: string): string[] => sources(dir, { ext: ['.ts', '.tsx'], tests: false }).map((s) => s.path);
 
 const FILES = tsx('src').map((f) => ({ file: f, src: readFileSync(f, 'utf8') }));
 

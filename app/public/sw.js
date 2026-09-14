@@ -367,7 +367,21 @@ async function stashShared(request) {
         SHARE_KEY,
         new Response(file, {
           headers: {
-            'x-shared-name': file.name || 'shared',
+            /*
+             * The name is percent-encoded, because a header cannot hold it raw.
+             *
+             * A header value is a byte string, and `new Response` throws
+             * outright on a code point above U+00FF — "String contains non
+             * ISO-8859-1 code point". A filename routinely has one: `Econ
+             * 1010 – Syllabus.pdf` with the en dash Word inserts for you, a
+             * curly apostrophe, or any name not written in a Latin script.
+             *
+             * The throw landed in the catch below, which was written for a
+             * share with nothing usable in it — so a perfectly good syllabus
+             * was dropped for the shape of its name, and the importer opened
+             * empty with nothing said. `takeShared` decodes this back.
+             */
+            'x-shared-name': encodeURIComponent(file.name || 'shared'),
             'x-shared-type': file.type || 'application/octet-stream',
           },
         }),

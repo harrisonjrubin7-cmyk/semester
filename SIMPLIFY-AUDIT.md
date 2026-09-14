@@ -1,3 +1,128 @@
+# One app — the tenth pass: read but never written, and the rest of the walkers
+
+Against `main` at `f0a2368`. No code in this commit.
+
+**60 destinations**, unchanged. 79 screen files, 132 components. Fifty-two
+commits since the ninth pass and none of the growth is duplication.
+
+## Null result: nothing is read but never written
+
+The mirror of the eighth pass. That one asked which state is **written and
+never read** and found four, one of which was three broken buttons. This asks
+the other side: **which state is read but never written** — a field pinned at
+its default for the life of the app, a feature that cannot turn on.
+
+**None.** All 184 fields of `Persisted` and `Ephemeral` are written somewhere.
+
+### The census was wrong three ways first, and this time that was caught
+
+The first cut returned **nineteen**. Every one was a false positive, for three
+distinct reasons, and finding them before reporting them is the ninth pass's
+lesson working rather than being re-learned:
+
+1. **Eighteen are written by a spread.** `setLook` does
+   `{ ...state, ...readLook({ ...currentLook(state), ...action.look }) }`, so
+   `ground`, `textSize`, `density` and the rest of the `Look` are assigned
+   wholesale and never named in a reducer. A rule looking for `field:` sees
+   nothing.
+2. **One is written by assignment, not a key.** `lib/migrate.ts` ends with
+   `out.schemaVersion = SCHEMA`. A rule that only knows object literals cannot
+   see a statement.
+3. **And it was looking in the wrong place anyway** — the census scanned
+   `state/` for writers, and `migrate.ts` is in `lib/`.
+
+Three shapes of write, one of which the eighth pass's own guard also assumes:
+`state/readstate.test.ts` calls a write "a key in an object literal". That is
+safe there, because it only ever asks about *reads* — but it is worth knowing
+that the sentence is not the whole truth about this codebase.
+
+## H1 — the fourteen walkers, and the three that are not the same job
+
+The ninth pass's G2 merged six directory walks into `sources()` and recorded
+that counting by *name* had missed the rest. Counted by shape — a `readdirSync`
+loop that recurses — fourteen private walkers remain beside the shared one.
+
+**Twelve are the same job** and differ only in what `sources()` already takes
+as arguments:
+
+| File | Wants |
+| --- | --- |
+| `a11y/dragging.test.ts` | `.ts` + `.tsx`, no tests |
+| `a11y/landmarks.test.ts` | `.tsx`, no tests |
+| `a11y/modal.test.ts` | `.tsx`, no tests |
+| `a11y/tellings.test.ts` | `.tsx` |
+| `components/marks.test.ts` | `.tsx` |
+| `isolation.test.ts` | `.ts` + `.tsx` |
+| `lib/credits.test.ts` | `.ts` + `.tsx` |
+| `state/readstate.test.ts` | `.ts` + `.tsx` |
+| `styles/fields.test.ts` | `.tsx`, no tests |
+| `styles/gutter.test.ts` | `.tsx`, no tests |
+| `styles/inset.test.ts` | `.tsx` |
+| `styles/taps.test.ts` | `.tsx` |
+
+**Two are not**, and this is the half the ninth pass guessed at rather than
+read:
+
+- `lib/counts.ts` walks `public/` for **`.mp3`**. It is app code counting
+  lesson audio, not a census reading source. Nothing about it belongs in a
+  walker built for rules.
+- `styles/deadcss.test.ts` keeps **every file, whatever its extension** — its
+  haystack has to include `.css` and `.html`, because a class can be written
+  anywhere. `sources()` filters by extension by definition, so serving this
+  would mean an "everything" mode that makes the extension argument a lie.
+
+### Why this is worth doing at all
+
+Not "fewer copies of twenty lines". Every one of the twelve is a census that
+asserts an empty offender list, which is exactly the shape G1 found passing
+vacuously when its walk returns nothing — and none of the twelve has the throw,
+because none of them uses the walker that has it. Converting them is how G1's
+protection reaches the other twelve rules rather than just the ten it started
+with.
+
+## To do
+
+| # | Row | Verdict |
+| --- | --- | --- |
+| H1 | eleven private walkers, eleven censuses without the throw | **Merge into `sources()`** |
+| — | `lib/counts.ts`, `styles/deadcss.test.ts`, `isolation.test.ts` | **Keep, with the reason written down** |
+
+### H1, done — eleven, and the table above said twelve
+
+Retired: `a11y/dragging`, `landmarks`, `modal`, `tellings`,
+`components/marks`, `lib/credits`, `state/readstate`, `styles/fields`,
+`gutter`, `inset`, `taps`. Each is now one line naming what it reads —
+`sources(dir, { ext: ['.ts', '.tsx'], tests: false })` and the like — over the
+one walker.
+
+**`isolation.test.ts` is the third exception, not the twelfth conversion.** It
+keeps *only* `.test.` files and returns paths relative to the repo root, both
+of which `sources()` would have to grow a mode for. A `tests: 'only'` and a
+`relative:` option would make the API about its callers rather than about
+walking, which is the shape `lib/counts.ts` and `styles/deadcss.test.ts` were
+already excluded for.
+
+**And `tellings` was in the table on the wrong row.** It was listed as keeping
+tests; it excludes them, like the other three a11y rules. The characterisation
+grepped for markers rather than reading the bodies, and printing all fourteen
+bodies before touching any of them is what caught both this and `isolation`.
+
+That is the fourth near-miss in two passes, and the first two that cost
+nothing: they were found *before* the conversion rather than by the
+typechecker afterwards. **The ninth pass's lesson is cheap to apply and
+expensive to skip** — read the thing, do not grep for a marker that stands in
+for it.
+
+### What this was for
+
+Not fewer copies. The walk was emptied again, and **all eleven files now
+fail**, where every one of them would have passed before: `sources()` throws
+on a walk that finds nothing, and these eleven censuses now inherit that
+instead of quietly reporting no offenders. G1 protected ten rules; it protects
+twenty-one.
+
+---
+
 # One app — the ninth pass: the guards that cannot fail
 
 Against `main` at `7cddea8`. No code in this commit.

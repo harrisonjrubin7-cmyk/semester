@@ -85,8 +85,14 @@ begin
 
   insert into public.notes (user_id, id, data) values
     (you, 'n1', '{"title":"Kept"}'),
-    (you, 'n2', '{"title":"Also kept"}'),
     (you, 'n3', '{"title":"Deleted on the phone"}');
+
+  -- n2 arrives from a device whose clock is a year fast, and says so. The
+  -- trigger is `before insert *or update*`, and nothing here ever reached the
+  -- insert half — see the note beside its assertion below for why the column
+  -- default does not stand in for it.
+  insert into public.notes (user_id, id, data, updated_at)
+  values (you, 'n2', '{"title":"Also kept"}', now() + interval '365 days');
 
   -- The deletion, as the app will do it: a mark, not a removal.
   update public.notes set deleted_at = now() where user_id = you and id = 'n3';
@@ -113,10 +119,33 @@ begin
   perform pg_temp.check('a device cannot set updated_at into the future',
                         live_updated > now() + interval '1 day', false);
 
-  -- And it moves on a real write.
+  -- Not merely "not next year": the contract is that the stamp is the
+  -- server's own clock, and `now()` is the instant this transaction began, so
+  -- the value the trigger wrote can be named rather than bounded. A trigger
+  -- that stamped 1970 would satisfy the line above and fail this one.
+  perform pg_temp.check('the stamp it wrote instead is the server''s own',
+                        live_updated = now(), true);
+
+  -- And the same on the way in, which is the half nothing here reached.
+  --
+  -- `default now()` does not stand in for the insert side of the trigger: a
+  -- default applies when a client *omits* the column, and a phone set a year
+  -- fast does not omit it — n2 above supplies the value outright. Narrow the
+  -- trigger to `before update` and both lines above still report ok; this is
+  -- the only one that catches it.
+  --
+  -- This assertion used to read `after_touch <= live_updated`, under the
+  -- label "an untouched row keeps its timestamp", and it could not fail.
+  -- Inside one transaction `now()` does not move, so two server stamps are
+  -- the same instant and the comparison is `t <= t`; with the trigger removed
+  -- altogether it is still true, because n1's stamp becomes the future one
+  -- and n2's is merely earlier than it. It passed in exactly the world it was
+  -- there to rule out — the one where the clock belongs to the device.
+  -- Measured, not argued: with `touch_notes` dropped the line above fails and
+  -- this one, in its old form, still reported ok.
   select updated_at into after_touch from public.notes where user_id = you and id = 'n2';
-  perform pg_temp.check('an untouched row keeps its timestamp',
-                        after_touch <= live_updated, true);
+  perform pg_temp.check('nor set updated_at on the way in',
+                        after_touch = now(), true);
 end $$;
 
 
