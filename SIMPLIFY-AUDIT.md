@@ -2940,10 +2940,19 @@ modes above are guarded in it rather than remembered, and it exits non-zero on
 anything half covered or with its centre blocked, so the next person to ask
 this question runs
 
-    npm run build && npm run check:dock
+    npm run build && node scripts/dock.mjs
 
 rather than spending an afternoon re-discovering that a closed `<details>`
 has a rect.
+
+It is run by hand rather than by CI, and deliberately has no `check:` entry in
+the scripts block — `lib/ci.test.ts` holds the rule that a script named that
+way must have a workflow step, and it failed this one for exactly the right
+reason. A browser download and a sixty-screen walk on every pull request is
+`scripts/baseline.mjs`'s trade, already made once in this repo and made the
+same way: a script that needs a real browser is a before-a-release job, and a
+scripts-block entry that promises otherwise is the promise `ci.test.ts` exists
+to stop.
 
 ---
 

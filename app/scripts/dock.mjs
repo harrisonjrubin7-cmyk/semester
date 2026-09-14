@@ -28,6 +28,21 @@
  * gives: one browser and a large download for a script most contributors never
  * run. `npx playwright install chromium` fetches it on demand.
  *
+ * ## Why there is no `npm run check:dock`
+ *
+ * There was, and `lib/ci.test.ts` was right to fail it. Its rule is that a
+ * script *named* `check:` is one somebody wrote to verify something, so the
+ * workflow has to run it — a check nothing runs is not a check. Satisfying
+ * that here would mean a browser download and a sixty-screen walk on every
+ * pull request, plus the timing waits below turning red on a slow runner for
+ * reasons that are not this app's.
+ *
+ * `baseline.mjs` already settled this, and is the shape to follow: a script
+ * that needs a real browser and takes minutes is a before-a-release job, run
+ * by hand, with no entry in the scripts block to promise otherwise. If the
+ * four minutes are ever judged worth paying, the honest way in is a CI step
+ * that runs it *and* a `check:` name, not one without the other.
+ *
  * ## Three ways this measured the wrong thing
  *
  * Each of them produced a confident wrong answer before it was caught, and
