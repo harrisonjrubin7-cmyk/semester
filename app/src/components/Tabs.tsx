@@ -40,13 +40,15 @@
  * buys back the room on a strip that has reached ten.
  */
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent as ReactMouseEvent } from 'react';
 import { useStore } from '../state/store';
 import { strip as stripNow } from '../lib/browser.hook';
 import {
   closeTab,
   foldGroup,
+  follow,
   here,
+  lastFollowed,
   moveTab,
   openTab,
   pickTab,
@@ -195,13 +197,17 @@ export function TabsFollow() {
       callCode,
     ],
   );
-  const seen = useRef<string | null>(null);
-
   useEffect(() => {
     const key = JSON.stringify(at);
-    const firstLook = seen.current === null;
-    if (seen.current === key) return;
-    seen.current = key;
+    /*
+     * Both of these are the session's, not this component's. This subtree is
+     * remounted every time the browser shell leaves its home screen — see
+     * `followed` in `lib/browser.hook.ts` — so a ref here would call every
+     * such navigation a first look and the rule below would then discard it.
+     */
+    const firstLook = lastFollowed() === null;
+    if (lastFollowed() === key) return;
+    follow(key);
     const tab = here();
     /*
      * On the first look the strip adopts the app only if the tab it is on is

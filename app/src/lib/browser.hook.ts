@@ -52,6 +52,23 @@ let held: Strip | null = null;
 const REOPENABLE = 10;
 const closed: {tab: AppTab; at: number}[]=[];
 const listeners = new Set<() => void>();
+/*
+ * The place the strip was last followed to.
+ *
+ * Here rather than in the component that does the following, because that
+ * component does not outlive a navigation. The browser shell draws the app
+ * inside `.g-home-legacy` while its home screen is up and inside
+ * `.g-legacy-mount` once it is not, and those are different parents — so
+ * going anywhere from the home unmounts the app's whole subtree and mounts it
+ * again, `TabsFollow` with it. Held in a ref, this came back null every time,
+ * and the navigation that caused the remount then looked like the session's
+ * first look, which is the one moment `TabsFollow` is allowed to ignore a
+ * navigation. Two tabs open and nothing you did from the home was recorded.
+ *
+ * It is a fact about this visit, like the strip itself and the closed-tab
+ * list above, so it lives with them and `forgetStrip` clears it.
+ */
+let followed: string | null = null;
 
 /**
  * A screen this build still has.
@@ -102,6 +119,22 @@ export function here(): AppTab {
 /** The tab you are on is now showing this place. */
 export function record(screen: Screen, title: string, place: Action[]): void {
   put(visit(strip(), screen, title, place));
+}
+
+/**
+ * The place the app was last followed to, or null before anything has been.
+ *
+ * Null means "the strip has not looked yet this visit", which is the state
+ * the adoption rule in `TabsFollow` turns on — not "the component mounted",
+ * which is a different and much commoner event. See `followed` above.
+ */
+export function lastFollowed(): string | null {
+  return followed;
+}
+
+/** Remember that the strip has now been followed to this place. */
+export function follow(key: string): void {
+  followed = key;
 }
 
 /** Remember what this tab searched for, so it can be come back to. */
@@ -255,4 +288,5 @@ export function reopenClosed(): AppTab | null {
 export function forgetStrip(): void {
   held = null;
   closed.length = 0;
+  followed = null;
 }
