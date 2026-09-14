@@ -47,12 +47,14 @@ import {
   closeTab,
   foldGroup,
   here,
+  moveTab,
   openTab,
   pickTab,
   record,
   useStrip,
 } from '../lib/browser.hook';
 import { NEW_TAB, lanes, placeFor, sameplace } from '../lib/browser';
+import { useMovable, type Movable } from '../lib/arrange';
 import { screenName } from '../lib/nav';
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
@@ -254,9 +256,41 @@ export function TabStrip({
   const { dispatch } = useStore();
   const strip = useStrip();
   const tones = useTones();
+  /*
+   * Dragging a tab along the strip.
+   *
+   * The same hook every ordered list in this app is arranged with, so the
+   * gesture is the one that already moves a course, a shelf tile and the
+   * bottom bar — hold, drag, let go — and Alt with the arrow keys is the
+   * keyboard's version of it, which is the half a strip of small targets on a
+   * phone most needs. `lib/arrange.ts` is the whole of it.
+   *
+   * The ids are every tab, including the ones folded inside a collapsed
+   * group: they are not drawn, so nothing can be dropped on them, but they
+   * still hold their places in the order — dragging a tab past a folded group
+   * lands it past all of it rather than in the middle of it.
+   */
+  const rows = useMemo(() => strip.tabs.map((t) => t.id), [strip.tabs]);
+  const movable = useMovable<string>({
+    items: rows,
+    onMove: (order, moved) => moveTab(order, moved),
+  });
   /** The tab or group menu, and where it was summoned from. See `TabMenu`. */
   const [menu, setMenu] = useState<{ on: MenuOn; corner: Corner } | null>(null);
   const modern = useModernShell();
+
+  /**
+   * Picking a tab, unless the click is the tail of a drag.
+   *
+   * A pointer sequence that moved a tab still ends in a click on the tab it
+   * was dropped on, and without this every rearrangement would also navigate
+   * — usually to the tab that was in the way. `tookDrop` is `arrange.ts`'s
+   * answer to exactly that, and reading it clears it.
+   */
+  const pick = (at: number) => {
+    if (movable.tookDrop()) return;
+    land(pickTab(at));
+  };
 
   /** Put the app where a tab says, or hand a new tab to the search page. */
   const land = (tab: AppTab) => {
@@ -293,7 +327,7 @@ export function TabStrip({
   if (modern) return null;
   if (!inOverlay && !alwaysOn && strip.tabs.length < 2) return null;
 
-  const rows = lanes(strip);
+  const runs = lanes(strip);
 
   return (
     <div
@@ -315,7 +349,7 @@ export function TabStrip({
       }}
     >
       <div style={{ display: 'flex', gap: 'var(--sp-1)', overflowX: 'auto', flex: 1, minWidth: 0 }}>
-        {rows.map((lane) => {
+        {runs.map((lane) => {
           const group = lane.group;
           if (!group) {
             const seat = lane.seats[0];
@@ -325,7 +359,8 @@ export function TabStrip({
                 seat={seat}
                 on={seat.at === strip.at}
                 searching={searching}
-                onPick={() => land(pickTab(seat.at))}
+                hold={movable.props(seat.tab.id)}
+                onPick={() => pick(seat.at)}
                 onShut={() => shut(seat.at)}
                 onMenu={(e) => summon({ kind: 'tab', at: seat.at }, e)}
               />
@@ -379,7 +414,8 @@ export function TabStrip({
                     seat={seat}
                     on={seat.at === strip.at}
                     searching={searching}
-                    onPick={() => land(pickTab(seat.at))}
+                    hold={movable.props(seat.tab.id)}
+                    onPick={() => pick(seat.at)}
                     onShut={() => shut(seat.at)}
                     onMenu={(e) => summon({ kind: 'tab', at: seat.at }, e)}
                   />
@@ -468,6 +504,7 @@ function Tab({
   seat,
   on,
   searching,
+  hold,
   onPick,
   onShut,
   onMenu,
@@ -475,6 +512,16 @@ function Tab({
   seat: Seat;
   on: boolean;
   searching: string;
+  /**
+   * What makes this tab draggable: `props` from `useMovable`.
+   *
+   * The whole tab is the handle and the whole tab is what a drop lands on,
+   * which is right here for the reason `arrange.ts` gives — a row that is a
+   * row. The close cross inside it is not: a pointer that went down on ✕ is
+   * closing a tab, not picking one up, and `stopPropagation` there is what
+   * keeps those two gestures apart.
+   */
+  hold: ReturnType<Movable<string>['props']>;
   onPick: () => void;
   onShut: () => void;
   onMenu: (e: ReactMouseEvent) => void;
@@ -491,6 +538,7 @@ function Tab({
 
   return (
     <div
+      {...hold}
       onContextMenu={onMenu}
       style={{
         display: 'flex',
@@ -501,6 +549,7 @@ function Tab({
         background: on ? 'var(--app-panel)' : 'transparent',
         border: `1px solid ${on ? 'var(--app-line)' : 'transparent'}`,
         borderBottom: 'none',
+        ...hold.style,
       }}
     >
       <button
@@ -536,6 +585,7 @@ function Tab({
           type="button"
           className="bare tappable"
           onClick={onMenu}
+          onPointerDown={(e) => e.stopPropagation()}
           aria-label={`What this tab can do — ${title}`}
           aria-haspopup="dialog"
           style={{
@@ -552,6 +602,9 @@ function Tab({
         type="button"
         className="bare tappable"
         onClick={onShut}
+        // A press on the cross is a close, not the start of a drag — see the
+        // note on `hold` above.
+        onPointerDown={(e) => e.stopPropagation()}
         aria-label={`Close ${title}`}
         style={{
           width: 'auto',

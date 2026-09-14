@@ -90,20 +90,40 @@ async function readEverything(): Promise<Partial<Persisted>> {
 }
 
 /**
+ * What the first run found, told apart rather than collapsed into null.
+ *
+ * Three different things used to come back as `null` here, and `load` could
+ * only treat them alike: an account moved, nothing to move, and a move that
+ * was tried and did not land. The last two need opposite handling — one is a
+ * new account to stamp, the other is a move to try again next time — so they
+ * are named.
+ */
+type FirstRun =
+  /** An account was read out of `semester.v1` and written to the database. */
+  | { kind: 'moved'; state: Persisted }
+  /** There was nothing to move: this device is starting from scratch. */
+  | { kind: 'fresh' }
+  /** There was something to move and the write did not land. Try again. */
+  | { kind: 'incomplete' };
+
+/**
  * The one-time move.
  *
  * Runs only when the database is empty and the old key exists. Reads it
  * through the app's own loader, so the same migrations and the same defaults
  * apply, and writes the result out record by record.
  */
-async function migrateFromLocalStorage(): Promise<Persisted | null> {
+async function migrateFromLocalStorage(): Promise<FirstRun> {
   let raw: string | null = null;
   try {
     raw = localStorage.getItem(STORAGE_KEY);
   } catch {
-    return null;
+    // Storage off, in a private window or behind a setting. There is nothing
+    // to move and there never will be, so this is a fresh account rather
+    // than a move to retry.
+    return { kind: 'fresh' };
   }
-  if (!raw) return null;
+  if (!raw) return { kind: 'fresh' };
 
   // Through the app's own reader, not through `JSON.parse` here: that is what
   // applies `lib/migrate.ts`, the per-field validators and the defaults, and
@@ -137,7 +157,7 @@ async function migrateFromLocalStorage(): Promise<Persisted | null> {
     { store: SETTINGS_STORE, key: 'schemaVersion', value: state.schemaVersion },
   ]);
   // The old copy stays. It is the way back for one release.
-  return ok ? state : null;
+  return ok ? { kind: 'moved', state } : { kind: 'incomplete' };
 }
 
 /**
@@ -152,9 +172,43 @@ export async function load(): Promise<Persisted | null> {
   ready = true;
 
   if (await isEmpty()) {
-    const migrated = await migrateFromLocalStorage();
-    // A genuinely new account has nothing to migrate and nothing to read.
-    return migrated ?? { ...DEFAULT_PERSISTED };
+    const first = await migrateFromLocalStorage();
+    if (first.kind === 'moved') return first.state;
+    /*
+     * A genuinely new account has nothing to migrate and nothing to read —
+     * but it does have a version, and it has to say so.
+     *
+     * `writesFor` stores only a setting that differs from the default, and a
+     * new account's version *is* the default, so the marker was never
+     * written. Nothing here says that: the account went to disk with no
+     * `schemaVersion` row, and on the next open `forwardFrom` read that
+     * silence as `FIRST_DB_SCHEMA` and ran every step above it — on an
+     * account created by this build, which had never needed any of them.
+     *
+     * Steps 4, 5 and 6 each rewrite `nav` unconditionally, so the cost was
+     * exact and silent: choose a navigation on the day you install the app,
+     * reopen it, and you are back on the default with nothing said. Step 3
+     * takes `directory` the same way. From the second open it stuck, because
+     * by then the steps had written the marker themselves — which is what
+     * made it look like a fluke rather than a rule.
+     *
+     * `migrateFromLocalStorage` already writes this marker on its own path,
+     * for the reason its comment gives: closing the window by construction
+     * rather than by a fact about history. This is the same door, and it was
+     * the one left open.
+     *
+     * Only for `fresh`. An `incomplete` move must not be stamped: the stamp
+     * fills the settings store, `isEmpty` is false next time, and the
+     * `semester.v1` account it failed to move would never be looked at again.
+     * A write that does not land leaves the marker off and the steps run
+     * once, which is exactly where this started — no worse than today.
+     */
+    if (first.kind === 'fresh') {
+      await write([
+        { store: SETTINGS_STORE, key: 'schemaVersion', value: DEFAULT_PERSISTED.schemaVersion },
+      ]);
+    }
+    return { ...DEFAULT_PERSISTED };
   }
 
   const found = await readEverything();

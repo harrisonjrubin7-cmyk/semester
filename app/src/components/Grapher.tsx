@@ -1,15 +1,19 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Plot, type Drawing } from './Plot';
-import { ActionButton, SectionLabel, Toggle } from './ui';
+import { Surface } from './Surface';
+import { heightOf, heights, range } from '../lib/surface';
+import { ActionButton, PickChips, SectionLabel, Toggle } from './ui';
 import { secondLine } from '../lib/dim';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
 import { anchorHue, tintAt } from '../lib/tint';
 import { text as showValue, type Val } from '../lib/calc';
 import {
+  DETAIL,
   EXAMPLES,
   HOME,
+  TURNS,
   area,
   asFunction,
   draw,
@@ -62,6 +66,16 @@ export function Grapher() {
   const [square, setSquare] = useState(true);
   const [trace, setTrace] = useState<Point | null>(null);
   const [degrees, setDegrees] = useState(false);
+  /**
+   * How far round θ and t are drawn, in half-turns.
+   *
+   * On screen rather than in the notation, because it is a property of the
+   * *drawing* rather than of the curve: a spiral is the same spiral whether
+   * two turns of it or twelve are on the page. It appears only when there is a
+   * curve it could apply to — a control for a thing nobody has written yet is
+   * a control in the way.
+   */
+  const [turns, setTurns] = useState<number>(DETAIL.turns);
   const [from, setFrom] = useState('0');
   const [to, setTo] = useState('1');
 
@@ -82,14 +96,51 @@ export function Grapher() {
       lines
         .map((line, i) => ({ line, at: i }))
         .filter(({ line, at }) => line.on && read[at].kind !== 'blank')
-        .map(({ line, at }) => ({ id: line.id, colour: colours[at], drawn: draw(read[at], scope, frame) })),
-    [lines, read, scope, frame, colours],
+        .map(({ line, at }) => ({
+          id: line.id,
+          colour: colours[at],
+          drawn: draw(read[at], scope, frame, { ...DETAIL, turns }),
+        })),
+    [lines, read, scope, frame, colours, turns],
+  );
+
+  /** Whether anything on the list is drawn by turning or running, rather than across x. */
+  const winding = read.some((line) => line.kind === 'polar' || line.kind === 'parametric');
+
+  /*
+   * The first surface on the list, and the picture it takes over.
+   *
+   * A height over the floor and a curve across the page are two different
+   * drawings with two different cameras, and putting them in one box would
+   * make both unreadable. So a `z =` line shows the surface instead, and the
+   * list says as much rather than leaving somebody to wonder where their
+   * parabola went. The first, because two surfaces at once is a picture nobody
+   * can read either — the second is drawn by turning its own line on.
+   */
+  const solid = lines
+    .map((line, at) => ({ line, at }))
+    .find(({ line, at }) => line.on && read[at].kind === 'surface');
+  const solidLine = solid ? read[solid.at] : null;
+  // Held still across renders that are not about the surface — every new
+  // identity here re-samples the whole mesh, and a trace on the flat picture
+  // is not a reason to do that.
+  const solidAt = useMemo(
+    () => (solidLine && solidLine.kind === 'surface' ? heightOf(solidLine.body, scope) : null),
+    [solidLine, scope],
   );
 
   const add = (text = '') => dispatch({ type: 'addPlot', text });
 
   return (
     <>
+      {solidLine && solidLine.kind === 'surface' && solidAt ? (
+        <Surface
+          at={solidAt}
+          frame={frame}
+          colour={colours[solid?.at ?? 0]}
+          says={`A surface of ${lines[solid?.at ?? 0]?.text}, seen from above and to one side. Drag to turn it.`}
+        />
+      ) : (
       <Plot
         drawings={drawings}
         frame={frame}
@@ -108,6 +159,14 @@ export function Grapher() {
         onTrace={setTrace}
         says={saying(lines.filter((l) => l.on).map((l) => l.text))}
       />
+      )}
+
+      {solidLine ? (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+          A <code>z =</code> line is a surface, so it is drawn on its own. Turn it off to get the flat
+          picture and the curves back.
+        </div>
+      ) : null}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: 'var(--sp-6)' }}>
         {lines.map((line, i) => (
@@ -174,7 +233,27 @@ export function Grapher() {
         </>
       ) : null}
 
+      {winding ? (
+        <>
+          <SectionLabel>How far round</SectionLabel>
+          <PickChips
+            options={TURNS}
+            value={turns}
+            onChange={setTurns}
+            labels={(n) => (n === 1 ? 'Half a turn' : `${n / 2} turn${n > 2 ? 's' : ''}`)}
+          />
+          <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}>
+            θ and t run from 0 to {turns === 1 ? 'π' : `${turns}π`}. A circle closes in one turn; a
+            spiral and a Lissajous figure want more.
+          </div>
+        </>
+      ) : null}
+
       <Sliders lines={lines} read={read} scope={scope} />
+
+      {solidLine && solidLine.kind === 'surface' ? (
+        <Heights body={solidLine.body} scope={scope} frame={frame} />
+      ) : null}
 
       <Readings
         lines={lines}
@@ -194,8 +273,11 @@ export function Grapher() {
         A bare expression is a <code>y =</code>. <code>x = 4</code> is a vertical line, and an
         equation with both letters in it — <code>x^2 + y^2 = 25</code> — is drawn wherever it holds.{' '}
         <code>f(x) = …</code> defines something every line below can use, <code>a = 2</code> gets a
-        slider, and <code>(2, 3)</code> is a point. It takes the same notation the Write tab draws,
-        so a formula you kept can be pasted in as it is.
+        slider, and <code>(2, 3)</code> is a point. An <code>r =</code> line with the angle in it is a polar
+        curve — <code>{'r = 2 + 2\\cos(\\theta)'}</code> — and a pair with <code>t</code> in it is the
+        path a moving point takes — <code>{'(\\cos(t), \\sin(t))'}</code>. A <code>z =</code> line is a
+        surface — <code>z = x^2 - y^2</code> — drawn over the window the axes are set to. It takes the
+        same notation the Write tab draws, so a formula you kept can be pasted in as it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
         <Toggle on={degrees} label="Work in degrees rather than radians" onChange={() => setDegrees(!degrees)} />
@@ -234,7 +316,19 @@ function Row({
   onDrop: () => void;
 }) {
   const unset = missing(reading, scope);
-  const drawn = reading.kind === 'curve' || reading.kind === 'relation' || reading.kind === 'point';
+  /*
+   * Whether this line puts anything on the picture — which decides whether its
+   * dot is a switch or an empty ring. A surface belongs on the list: the note
+   * beside it says to turn it off to get the curves back, and a disabled
+   * switch would make that sentence a lie.
+   */
+  const drawn =
+    reading.kind === 'curve' ||
+    reading.kind === 'relation' ||
+    reading.kind === 'point' ||
+    reading.kind === 'polar' ||
+    reading.kind === 'parametric' ||
+    reading.kind === 'surface';
 
   return (
     <div
@@ -568,5 +662,48 @@ function Fact({ says, value, note }: { says: string; value: string; note?: strin
         <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-1)' }}>{note}</div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * What a surface says, which is not what a curve says.
+ *
+ * Zeros and turning points are questions about a line. A height field is
+ * asked three things instead — how high, how low, and where — and those are
+ * the three worth writing out, because finding them by turning the picture is
+ * exactly the hunting this screen exists to save.
+ */
+function Heights({
+  body,
+  scope,
+  frame,
+}: {
+  body: Parameters<typeof heightOf>[0];
+  scope: Parameters<typeof heightOf>[1];
+  frame: Frame;
+}) {
+  const found = useMemo(() => range(heights(heightOf(body, scope), frame, 48), frame), [body, scope, frame]);
+  if (!found.highest || !found.lowest) {
+    return (
+      <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-5)' }}>
+        This has no height anywhere on the window you are looking at.
+      </div>
+    );
+  }
+  const place = (spot: { x: number; y: number; z: number }) =>
+    `${showValue(neat(spot.z, found.high - found.low || 1))} at x = ${showValue(neat(spot.x, frame.x1 - frame.x0))}, y = ${showValue(neat(spot.y, frame.y1 - frame.y0))}`;
+
+  return (
+    <>
+      <SectionLabel>What it says</SectionLabel>
+      <Fact says="Highest" value={place(found.highest)} />
+      <div style={{ marginTop: 'var(--sp-5)' }}>
+        <Fact
+          says="Lowest"
+          value={place(found.lowest)}
+          note="Over the window the axes are set to — drag or zoom the flat view to change it."
+        />
+      </div>
+    </>
   );
 }

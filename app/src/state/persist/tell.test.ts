@@ -52,6 +52,15 @@ beforeEach(async () => {
   // `persist` is inert until the database has opened. `load` is what sets
   // that, and the mocked `open` makes it succeed without a real IndexedDB.
   await load().catch(() => {});
+  /*
+   * And cleared again afterwards, because opening a database with nothing in
+   * it now writes one row: the schema marker, stamped at the moment the
+   * account is created so the steps cannot re-run on it. See `load`. That
+   * write belongs to the account coming into existence, not to any change a
+   * test below makes, and counting it here would make every assertion about
+   * how many writes a dispatch causes off by one.
+   */
+  write.mockClear();
 });
 
 afterEach(() => {

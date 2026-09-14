@@ -74,7 +74,7 @@ describe('a reminder keeps its destination all the way to the phone', () => {
   });
 
   it('3. has somewhere to be stored', () => {
-    const sql = read('supabase/push.sql');
+    const sql = read('supabase/migrations/20260901000600_push.sql');
     expect(sql).toMatch(/screen\s+text/);
     expect(sql).toMatch(/item\s+text/);
     // An existing project must be able to gain the column without a rebuild.
