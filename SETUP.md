@@ -67,7 +67,19 @@ Leave the second box empty unless you are running a proxy.
 1. **Create a project** at [supabase.com](https://supabase.com). Any region;
    the free tier is enough.
 2. **Create the tables.** SQL Editor → New query → paste
-   [`supabase/schema.sql`](supabase/schema.sql) → Run. It is safe to run twice.
+   [`supabase/migrations/20260901000100_schema.sql`](supabase/migrations/20260901000100_schema.sql) → Run. It is safe to run twice.
+
+   That is the first of the files in
+   [`supabase/migrations/`](supabase/migrations), which are the whole schema in
+   the order it has to be applied. The sections below add the rest as each
+   feature comes up, and you can equally paste all eight now, in filename
+   order, and have everything at once — each is guarded, so running one twice
+   changes nothing.
+
+   Pasting is the manual route, and it is the one this guide describes because
+   it needs nothing installed. A project with the GitHub integration connected
+   (Project Settings → Integrations, **Working directory** `.`) can apply them
+   on merge instead — see [`supabase/README.md`](supabase/README.md).
 3. **Copy two values** from Project Settings → API into `app/.env.local`:
 
    ```
@@ -114,7 +126,7 @@ things beyond the tables above.
    in the repo.
 
 Then the table and the sender: SQL Editor → paste
-[`supabase/push.sql`](supabase/push.sql) → Run, then `supabase functions deploy
+[`supabase/migrations/20260901000600_push.sql`](supabase/migrations/20260901000600_push.sql) → Run, then `supabase functions deploy
 push --no-verify-jwt` and the `cron.schedule` call in the header of
 [`supabase/functions/push/index.ts`](supabase/functions/push/index.ts).
 `--no-verify-jwt` is right for this one and wrong for the Claude function: the
@@ -133,7 +145,7 @@ that it emptied after seven days while the switch still said "on".
 ### Optional · Classmates
 
 Rooms per class, for people with a confirmed university address. SQL Editor →
-New query → paste [`supabase/classmates.sql`](supabase/classmates.sql) → Run,
+New query → paste [`supabase/migrations/20260901000200_classmates.sql`](supabase/migrations/20260901000200_classmates.sql) → Run,
 after `schema.sql`. Safe to run twice. Skip it and the Classmates screen says
 the tables are not set up; nothing else is affected.
 
@@ -159,7 +171,7 @@ all three on screen:
 
 The class chat works on `classmates.sql` alone. Two things in it need one more
 file: the faces under a message, and the dot beside somebody who has the room
-open. SQL Editor → New query → paste [`supabase/rooms.sql`](supabase/rooms.sql)
+open. SQL Editor → New query → paste [`supabase/migrations/20260901000400_rooms.sql`](supabase/migrations/20260901000400_rooms.sql)
 → Run, after `classmates.sql`. Safe to run twice.
 
 Both fail to nothing rather than to an error. Without the table the room draws
@@ -177,7 +189,7 @@ verified, and are you in this class.
 ### Optional · Group work
 
 A shared checklist for a group project, inside a class room. SQL Editor → New
-query → paste [`supabase/groups.sql`](supabase/groups.sql) → Run, after
+query → paste [`supabase/migrations/20260901000500_groups.sql`](supabase/migrations/20260901000500_groups.sql) → Run, after
 `classmates.sql`. Safe to run twice.
 
 A group is visible to its whole class so somebody can find theirs and join it;
