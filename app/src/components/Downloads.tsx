@@ -5,11 +5,15 @@ import { ActionButton, SectionLabel } from './ui';
 import { Folding } from './Fold';
 import { size } from '../lib/device';
 import {
+  MEDIA_CAP,
   clearCourse,
   clearDownloads,
   readDownloads,
+  readShed,
+  shedLine,
   shelves,
   totalBytes,
+  type Shed,
   type Shelf,
 } from '../lib/downloads';
 
@@ -53,21 +57,24 @@ export function Downloads() {
    * the moment the screen drew. Found by opening the screen rather than by any
    * test — the row only appears when something uncoursed is cached.
    */
+  const [shed, setShed] = useState<Shed | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
 
   const read = useCallback(async () => {
-    const items = await readDownloads();
+    const [items, lastShed] = await Promise.all([readDownloads(), readShed()]);
     setShelf(shelves(items));
     setBytes(totalBytes(items));
+    setShed(lastShed);
   }, []);
 
   useEffect(() => {
     let alive = true;
-    void readDownloads().then((items) => {
+    void Promise.all([readDownloads(), readShed()]).then(([items, lastShed]) => {
       if (!alive) return;
       setShelf(shelves(items));
       setBytes(totalBytes(items));
+      setShed(lastShed);
     });
     return () => {
       alive = false;
@@ -109,8 +116,35 @@ export function Downloads() {
         }}
       >
         {size(bytes)} of lessons, podcast editions, decks and handouts are kept on this device so
-        they play with no signal. They are part of the room used above.
+        they play with no signal. They are part of the room used above, and are held under{' '}
+        {size(MEDIA_CAP)} — past that, whatever you have played least recently makes way.
       </div>
+
+      {/*
+        What the cap took, said rather than left to be discovered.
+
+        `lib/keep.ts` makes this argument about shedding a full store and it is
+        the same one here: a cache that quietly threw away last month's lessons
+        is the same betrayal in a smaller coat. One event, the most recent —
+        a student does not need the history of their cache, they need to know
+        that the thing they are about to look for is not there.
+      */}
+      {shed ? (
+        <div
+          role="status"
+          style={{
+            fontSize: 'var(--type-sm)',
+            marginTop: 'var(--sp-5)',
+            lineHeight: 'var(--leading-normal)',
+            color: 'var(--app-warn)',
+            textWrap: 'pretty',
+          }}
+        >
+          Room was made on {new Date(shed.at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' })}:{' '}
+          {shedLine(shed)} went, {size(shed.bytes)} in all. Playing any of them again downloads it
+          again.
+        </div>
+      ) : null}
 
       <ul style={{ listStyle: 'none', margin: 'var(--sp-5) 0 0', padding: 0 }}>
         {shelf.map((s, i) => (

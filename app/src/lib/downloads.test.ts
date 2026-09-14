@@ -1,9 +1,15 @@
+/// <reference types="node" />
+import { readFileSync } from 'node:fs';
 import { describe as group, expect, it } from 'vitest';
 import {
+  LEDGER_NAME,
+  MEDIA_CAP,
   clearCourse,
   clearDownloads,
   describe,
   readDownloads,
+  readShed,
+  shedLine,
   shelfLine,
   shelves,
   totalBytes,
@@ -17,7 +23,7 @@ import {
  * shell cache sitting next to the media one waiting to be deleted by mistake.
  */
 function fakeCaches(
-  contents: Record<string, { url: string; bytes?: number; blob?: number }[]>,
+  contents: Record<string, { url: string; bytes?: number; blob?: number; body?: unknown }[]>,
   opts: { refuse?: string } = {},
 ): CacheStorage {
   const stores = new Map(Object.entries(contents).map(([k, v]) => [k, [...v]]));
@@ -33,6 +39,10 @@ function fakeCaches(
             get: () => (hit.bytes === undefined ? null : String(hit.bytes)),
           },
           blob: () => Promise.resolve({ size: hit.blob ?? 0 }),
+          json: () =>
+            hit.body === undefined
+              ? Promise.reject(new Error('not json'))
+              : Promise.resolve(hit.body),
         } as unknown as Response);
       },
       delete: (req: Request) => {
@@ -242,5 +252,96 @@ group('clearing', () => {
 
     const refusing = fakeCaches({ 'semester-v1-media': [] }, { refuse: 'semester-v1-media' });
     expect(await clearCourse('psci', refusing)).toBe(false);
+  });
+});
+
+group('the cap, and what it took', () => {
+  it('agrees with the worker about the number and the ledger', () => {
+    /*
+     * Both are written in `public/sw.js` and read here, because a service
+     * worker is not a module this app can import from. Duplicated on purpose
+     * and pinned here, so the copy cannot drift into a screen that reports a
+     * ceiling the worker is not holding — which would be worse than no
+     * ceiling, because it would be believed.
+     */
+    const worker = readFileSync(new URL('../../public/sw.js', import.meta.url), 'utf8');
+    const cap = /const MEDIA_CAP = (\d+) \* 1024 \* 1024;/.exec(worker);
+    expect(cap, 'public/sw.js no longer declares MEDIA_CAP in megabytes').not.toBeNull();
+    expect(Number(cap![1]) * 1024 * 1024).toBe(MEDIA_CAP);
+    const ledger = /const LEDGER = `\$\{BASE\}(__[a-z-]+)`;/.exec(worker);
+    expect(ledger, 'public/sw.js no longer declares LEDGER off BASE').not.toBeNull();
+    expect(ledger![1]).toBe(LEDGER_NAME);
+  });
+
+  it('reads back what the worker threw out', async () => {
+    const shed = { at: 1_764_600_000_000, bytes: 3_000_000, paths: ['/semester/audio/lessons/psci/unit-0.mp3'] };
+    const store = fakeCaches({
+      'semester-v1-media': [
+        { url: at(`/semester/${LEDGER_NAME}`), bytes: 200, body: { played: {}, shed } },
+        { url: at('/semester/audio/lessons/econ/unit-0.mp3'), bytes: 1_000 },
+      ],
+    });
+
+    expect(await readShed(store)).toEqual(shed);
+  });
+
+  it('leaves the ledger out of the list and out of the total', async () => {
+    // It is the worker's bookkeeping, not something anybody chose to keep.
+    const store = fakeCaches({
+      'semester-v1-media': [
+        { url: at(`/semester/${LEDGER_NAME}`), bytes: 200, body: { played: {}, shed: null } },
+        { url: at('/semester/audio/lessons/econ/unit-0.mp3'), bytes: 1_000 },
+      ],
+    });
+
+    const got = await readDownloads(store);
+    expect(got.map((d) => d.path)).toEqual(['/semester/audio/lessons/econ/unit-0.mp3']);
+    expect(totalBytes(got)).toBe(1_000);
+  });
+
+  it('answers null where nothing has ever been over the cap', async () => {
+    const store = fakeCaches({
+      'semester-v1-media': [{ url: at('/semester/decks/psci.pptx'), bytes: 1_000 }],
+    });
+    expect(await readShed(store)).toBeNull();
+    expect(await readShed(undefined as unknown as CacheStorage)).toBeNull();
+  });
+
+  it('ignores a ledger it cannot read rather than failing the screen', async () => {
+    const store = fakeCaches({
+      'semester-v1-media': [{ url: at(`/semester/${LEDGER_NAME}`), bytes: 9 }],
+    });
+    expect(await readShed(store)).toBeNull();
+  });
+
+  it('says what went as a sentence, not as a row', () => {
+    expect(
+      shedLine({
+        at: 0,
+        bytes: 0,
+        paths: [
+          '/semester/audio/lessons/psci/unit-0.mp3',
+          '/semester/audio/lessons/psci/unit-1.mp3',
+          '/semester/audio/psci-podcast.mp3',
+        ],
+      }),
+    ).toBe('2 lessons and a podcast edition from PSCI');
+  });
+
+  it('names both courses when it took from both', () => {
+    expect(
+      shedLine({
+        at: 0,
+        bytes: 0,
+        paths: ['/semester/audio/lessons/psci/unit-0.mp3', '/semester/decks/econ.pptx'],
+      }),
+    ).toBe('a lesson and a deck from PSCI and ECON');
+  });
+
+  it('falls back to a count for files it cannot place', () => {
+    expect(shedLine({ at: 0, bytes: 0, paths: ['/semester/handouts/notes.txt'] })).toBe('a file');
+    expect(
+      shedLine({ at: 0, bytes: 0, paths: ['/semester/handouts/a.txt', '/semester/handouts/b.txt'] }),
+    ).toBe('2 files');
   });
 });

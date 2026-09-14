@@ -328,7 +328,7 @@ on its own branch.
 
 ---
 
-## 5. The offline media cache had no size, no list and no way out · **fixed; the ceiling is not**
+## 5. The offline media cache had no size, no list, no ceiling and no way out · **fixed**
 
 `ENGINEERING-AUDIT.md` §5 fixed the *shell* cache growing without bound. The
 media cache was never in scope and has the same shape and a larger number.
@@ -356,7 +356,7 @@ nowhere to act on it. On iOS that matters more than the number suggests: Safari
 evicts by origin under pressure, so the media nobody chose to keep can take the
 shell and the offline promise with it.
 
-**Three of the four are now built.** `lib/downloads.ts` reads the media caches
+**All four are now built.** `lib/downloads.ts` reads the media caches
 — found by the `-media` suffix, so a `VERSION` bump cannot strand a screenful
 of files this is the only way to delete, and so the shell and the share
 handover are never in reach — measures each entry from its `content-length`,
@@ -374,9 +374,35 @@ sentence beside the button has to be honest about is the one case where that
 is not free, which is the case the whole cache exists for, so it says it:
 *they download again the next time you play one, which needs a connection*.
 
-**The cap is not built**, and is the remaining half of §5. A ceiling past which
-the oldest goes is the same argument `lib/keep.ts` makes about shedding, and
-would have to hold to the same rule: shedding is reported, never silent.
+**The cap is built too.** `public/sw.js` holds the media cache under
+`MEDIA_CAP`, 150 MB — enough for every lesson of every course with room for the
+four or five podcast editions somebody actually listens to, against the 212 MB
+the site ships. A judgement rather than a measurement, and one line to change.
+
+What goes is the **least recently played**, which is the reason the worker now
+keeps a ledger at all. `cache.keys()` is insertion order — *first download*
+order — so evicting by it drops the lessons somebody is working through this
+week and keeps the edition they played once in the first week of term. That is
+the wrong answer and it is the one you get for free. The ledger holds only a
+time per file; sizes are read from each cached response's `content-length` when
+they are needed, so there is no second number to go stale. A file the ledger
+has never heard of sorts as the oldest thing there is, which is the right guess
+and the only one that leaves no entry beyond eviction's reach.
+
+And it is **reported, never silent** — `lib/keep.ts`'s rule, and the same
+argument: a cache that quietly threw away last month's lessons is the same
+betrayal in a smaller coat. The worker writes down what went, the screen says
+it: *Room was made on 3 December: 2 lessons and a podcast edition from BUS
+went, 41.0 MB in all.*
+
+Two things the tests are worth naming for. `lib/swmedia.test.ts` drives the
+real `public/sw.js` through its fetch handler and pins that a file downloaded
+first and replayed in December outlives one downloaded second and never touched
+— the whole reason the ledger exists, and invisible in the source. And
+`downloads.test.ts` reads `public/sw.js` for the cap and the ledger's name: a
+service worker is not a module this app can import from, so both are written
+twice, and a screen reporting a ceiling the worker is not holding would be
+worse than no ceiling, because it would be believed.
 
 **Opening it found the bug the tests could not.** Which clear was running was
 held as a string with `''` for none — and `''` is a real shelf, the one
@@ -476,7 +502,7 @@ something once went wrong.
 | 5 | **§3's last row** — run `splash.test.tsx` to ground, then put `--sequence.shuffle` in CI | half a day | the guard that would have caught all six, on every push |
 | 6 | ✅ **§2** — `isolate: false`, with the mocking files as exceptions and a test that keeps the list honest | done, by another session | 42 s → 29.5 s a run, three runs deep |
 | 7 | ✅ **§5** — a size, a list and a clear button for downloaded media | done | an installed app that does not quietly take 200 MB of a phone with no way to see or stop it |
-| 7a | **§5, the rest** — a cap past which the oldest goes | medium | the same, without anybody having to go and look |
+| 7a | ✅ **§5, the rest** — a cap, least recently played first, and what it took said out loud | done | the same, without anybody having to go and look |
 | 8 | **§6 follow-on** — reshape `useModal`'s return | small | 20 of 45 warnings, in one change |
 | 9 | **§7** — direct tests for `rtc.ts`, `mic.ts` | medium | the part of the app that is hardest to check by hand |
 

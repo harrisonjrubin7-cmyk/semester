@@ -24,7 +24,10 @@ import { createRoot, type Root } from 'react-dom/client';
 const at = (path: string) => `https://example.test${path}`;
 
 /** The cache storage a browser would have, with whatever the test put in it. */
-function give(contents: Record<string, { url: string; bytes: number }[]>, refuse = false) {
+function give(
+  contents: Record<string, { url: string; bytes: number; body?: unknown }[]>,
+  refuse = false,
+) {
   const stores = new Map(Object.entries(contents).map(([k, v]) => [k, [...v]]));
   vi.stubGlobal('caches', {
     keys: () => Promise.resolve([...stores.keys()]),
@@ -35,7 +38,16 @@ function give(contents: Record<string, { url: string; bytes: number }[]>, refuse
         match: (req: { url: string }) => {
           const hit = held.find((e) => e.url === req.url);
           return Promise.resolve(
-            hit ? { headers: { get: () => String(hit.bytes) }, blob: () => Promise.resolve({ size: 0 }) } : undefined,
+            hit
+              ? {
+                  headers: { get: () => String(hit.bytes) },
+                  blob: () => Promise.resolve({ size: 0 }),
+                  json: () =>
+                    hit.body === undefined
+                      ? Promise.reject(new Error('not json'))
+                      : Promise.resolve(hit.body),
+                }
+              : undefined,
           );
         },
         delete: (req: { url: string }) => {
@@ -139,6 +151,70 @@ describe('what has been downloaded', () => {
     });
     await mount();
     expect(host.textContent).toContain('BUS');
+  });
+
+  it('names the ceiling it is held under', async () => {
+    give({ 'semester-v1-media': [{ url: at('/semester/decks/psci.pptx'), bytes: 1_000 }] });
+    await mount();
+    expect(host.textContent).toContain('150 MB');
+    expect(host.textContent).toContain('played least recently makes way');
+  });
+
+  it('says what the cap took, rather than leaving it to be discovered', async () => {
+    const shedAt = new Date('2026-12-03T10:00:00Z').getTime();
+    /*
+     * `lib/keep.ts` makes this argument about shedding a full store and it is
+     * the same here: a cache that quietly threw away last month's lessons is
+     * the same betrayal in a smaller coat.
+     */
+    give({
+      'semester-v1-media': [
+        { url: at('/semester/decks/psci.pptx'), bytes: 1_000 },
+        {
+          url: at('/semester/__media-ledger'),
+          bytes: 200,
+          body: {
+            played: {},
+            shed: {
+              at: shedAt,
+              bytes: 40 * 1024 * 1024,
+              paths: [
+                '/semester/audio/lessons/econ/unit-0.mp3',
+                '/semester/audio/lessons/econ/unit-1.mp3',
+              ],
+            },
+          },
+        },
+      ],
+    });
+    await mount();
+
+    expect(host.textContent).toContain('2 lessons from ECON');
+    expect(host.textContent).toContain('40.0 MB');
+    expect(host.textContent).toContain('downloads it again');
+    /*
+     * Dated, because "room was made" with no when is a fact nobody can place —
+     * and dated in the reader's own zone, which is what the assertion has to
+     * allow for. Written as `/3 December/` first, which passes here and fails
+     * under `npm run test:zones`: 10:00 UTC on the 3rd is the 4th in
+     * Pacific/Kiritimati, and the component is right to say so.
+     */
+    const shown = new Date(shedAt).toLocaleDateString(undefined, {
+      day: 'numeric',
+      month: 'long',
+    });
+    expect(host.textContent).toContain(`Room was made on ${shown}`);
+  });
+
+  it('says nothing about shedding when nothing has been shed', async () => {
+    give({
+      'semester-v1-media': [
+        { url: at('/semester/decks/psci.pptx'), bytes: 1_000 },
+        { url: at('/semester/__media-ledger'), bytes: 200, body: { played: {}, shed: null } },
+      ],
+    });
+    await mount();
+    expect(host.textContent).not.toContain('Room was made');
   });
 
   it('says what is not in here, which is everything of yours', async () => {

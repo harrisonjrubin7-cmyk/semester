@@ -41,6 +41,28 @@
 /** What `sw.js` calls the cache it puts played media in. */
 export const MEDIA_SUFFIX = '-media';
 
+/**
+ * The ceiling the worker holds the cache under, and the ledger it keeps.
+ *
+ * Both are `sw.js`'s, written there and read here. They are duplicated rather
+ * than imported for the reason `lib/publichost.ts` gives about the calendar
+ * host rule: a service worker is not a module this app can import from, and
+ * the alternative — a build step that writes one file from the other — is more
+ * machinery than one number and one string are worth. `downloads.test.ts`
+ * reads `public/sw.js` and fails if either drifts.
+ */
+export const MEDIA_CAP = 150 * 1024 * 1024;
+
+/** The ledger's key, minus the base the worker prefixes it with. */
+export const LEDGER_NAME = '__media-ledger';
+
+/** What the worker threw out to stay under the cap, and when. */
+export interface Shed {
+  at: number;
+  bytes: number;
+  paths: string[];
+}
+
 export type Kind = 'lesson' | 'edition' | 'deck' | 'handout' | 'other';
 
 export interface Download {
@@ -195,9 +217,12 @@ export async function readDownloads(store = globalThis.caches): Promise<Download
     for (const name of await mediaCaches(store)) {
       const cache = await store.open(name);
       for (const request of await cache.keys()) {
+        const path = pathOf(request.url);
+        // The worker's own bookkeeping, not a download. It is a few hundred
+        // bytes and it is not something anybody chose to keep.
+        if (path.endsWith(LEDGER_NAME)) continue;
         const res = await cache.match(request);
         if (!res) continue;
-        const path = pathOf(request.url);
         out.push({ url: request.url, path, bytes: await bytesOf(res), ...describe(path) });
       }
     }
@@ -240,4 +265,70 @@ export async function clearCourse(course: string, store = globalThis.caches): Pr
   } catch {
     return false;
   }
+}
+
+/**
+ * What the worker last threw out to stay under the cap, or null.
+ *
+ * `lib/keep.ts` argues this about shedding a full store and the argument is
+ * the same here: a cache that quietly threw away last month's lessons is the
+ * same betrayal in a smaller coat. The worker writes what went; this is how
+ * the screen gets to say so.
+ *
+ * One event, the most recent, replaced by the next and gone when downloads are
+ * cleared. Not a log: a student does not need the history of their cache, they
+ * need to know that the thing they are about to look for is not there.
+ */
+export async function readShed(store = globalThis.caches): Promise<Shed | null> {
+  if (!store) return null;
+  try {
+    for (const name of await mediaCaches(store)) {
+      const cache = await store.open(name);
+      for (const request of await cache.keys()) {
+        if (!pathOf(request.url).endsWith(LEDGER_NAME)) continue;
+        const res = await cache.match(request);
+        if (!res) continue;
+        const held: unknown = await res.json();
+        const shed = (held as { shed?: unknown } | null)?.shed;
+        if (!shed || typeof shed !== 'object') continue;
+        const { at, bytes, paths } = shed as Partial<Shed>;
+        if (typeof at !== 'number' || typeof bytes !== 'number' || !Array.isArray(paths)) continue;
+        return { at, bytes, paths: paths.filter((x): x is string => typeof x === 'string') };
+      }
+    }
+  } catch {
+    // No ledger, or one that will not parse. There is nothing to report, which
+    // is also what a cache that has never been over the cap looks like.
+  }
+  return null;
+}
+
+/** "a, b and c" — a list inside a sentence rather than a list in a row. */
+function prose(parts: string[]): string {
+  if (parts.length <= 1) return parts[0] ?? '';
+  return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`;
+}
+
+/**
+ * "2 lessons and a podcast edition from PSCI", or what there is of it.
+ *
+ * The same counts a shelf line gives, joined as prose rather than with the
+ * shelf's middle dots. A shelf line sits in a row and reads as a list; this
+ * sits inside a sentence, and `2 lessons · a podcast edition from BUS went`
+ * is not a sentence. Written the other way first and changed on reading it in
+ * the app.
+ */
+export function shedLine(shed: Shed): string {
+  const items: Download[] = shed.paths.map((path) => ({
+    url: path,
+    path,
+    bytes: 0,
+    ...describe(path),
+  }));
+  const kinds = prose(shelfLine(items).split(' · ').filter(Boolean));
+  const courses = [...new Set(items.map((i) => i.course).filter(Boolean))].map((c) =>
+    c.toUpperCase(),
+  );
+  const from = courses.length ? ` from ${prose(courses)}` : '';
+  return kinds ? `${kinds}${from}` : counted(shed.paths.length, 'file', 'files');
 }
