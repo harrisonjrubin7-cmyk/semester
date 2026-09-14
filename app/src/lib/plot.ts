@@ -56,8 +56,13 @@ import {
 } from './discrete';
 import {
   HARMONICS,
+  dft,
+  latexSeries as latexHarmonics,
+  loudest,
+  samplesOf,
+  seriesOf,
+  sizeOf,
   harmonicsOf,
-  latexSeries,
   latexSpectrum,
   partial,
   sampler,
@@ -201,6 +206,15 @@ export type Line =
    * which is not a thing that exists.
    */
   | { kind: 'sequence'; body: Node }
+  /**
+   * `dft([1, 0, -1, 0])` — the frequencies a run of numbers is made of.
+   *
+   * The one transform on this list that runs on data rather than on a formula,
+   * which is what somebody actually has. Drawn as the size of each bin against
+   * its number, in stems, because a spectrum of data is a set of readings and
+   * not a curve.
+   */
+  | { kind: 'bins'; body: Node; count: Node | null }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -264,6 +278,9 @@ const ZEDDED =
 
 /** `fourier(f, T)` and `fourier(f, T, n)`: a Fourier series, told by its name and its arguments. */
 const HARMONIC = new Set(['fourier', 'harmonics']);
+
+/** `dft([…])` and `fft(x[n], N)`: the transform of a run of numbers. */
+const BINNED = new Set(['dft', 'fft']);
 
 /** `conv(f, g)` at the start of a line: a convolution, which is a function of t. */
 const CONVOLVE = /^\s*(?:conv|convolve|convolution)\s*\(/;
@@ -402,6 +419,12 @@ export function readLine(source: string): Line {
     if ('says' in got) return { kind: 'fault', says: got.says };
     if (CONVOLVE.test(text)) return { kind: 'convolution', body: got.node };
     const call = got.node;
+    if ((call.kind === 'apply' || call.kind === 'call') && BINNED.has(call.name)) {
+      if (call.args.length < 1 || call.args.length > 2) {
+        return { kind: 'fault', says: 'A discrete transform wants the data: dft([1, 0, -1, 0]), or a formula and how many samples.' };
+      }
+      return { kind: 'bins', body: call.args[0], count: call.args[1] ?? null };
+    }
     if ((call.kind === 'apply' || call.kind === 'call') && HARMONIC.has(call.name)) {
       if (call.args.length < 2 || call.args.length > 3) {
         return { kind: 'fault', says: 'A Fourier series wants the function and its period: fourier(f(t), 2\\pi).' };
@@ -521,6 +544,10 @@ export function missing(line: Line, scope: Scope): string[] {
       return free(line.body, scope).filter((n) => n !== BEAT && !table(n));
     case 'sequence':
       return free(line.body, scope).filter((n) => n !== ZED && !table(n));
+    case 'bins':
+      return [...free(line.body, scope), ...(line.count ? free(line.count, scope) : [])].filter(
+        (n) => n !== BEAT && !table(n),
+      );
     case 'harmonics':
       return [
         ...free(line.body, scope).filter((n) => n !== TIME),
@@ -570,7 +597,10 @@ export function missing(line: Line, scope: Scope): string[] {
 export function answered(
   line: Line,
   scope: Scope,
-): { lead: string; latex: string; over: string; at: (v: number) => number; note?: string } | { says: string } | null {
+):
+  | { lead: string; latex: string; over: string; at: (v: number) => number; note?: string; upto?: number }
+  | { says: string }
+  | null {
   const shown = (fn: Parameters<typeof timeAt>[0], lead: string, note?: string) => ({
     lead,
     latex: latexFn(fn, TIME),
@@ -625,7 +655,7 @@ export function answered(
     const made = harmonicsOf(sampler(line.body, TIME, scope), period, count);
     return {
       lead: `${count} harmonics of it, over ${neat(-period / 2, period)} to ${neat(period / 2, period)}:`,
-      latex: latexSeries(made, TIME),
+      latex: latexHarmonics(made, TIME),
       over: TIME,
       at: (t: number) => partial(made, t),
       /*
@@ -638,6 +668,25 @@ export function answered(
        * out which of the two lines is the answer.
        */
       note: 'The function is faint under it. Outside that interval a series repeats, which is what makes it a series.',
+    };
+  }
+  if (line.kind === 'bins') {
+    const xs = samplesOf(line.body, line.count, scope);
+    if (!xs.ok) return { says: xs.fault };
+    const bins = dft(xs.it);
+    const top = loudest(xs.it);
+    const many = xs.it.length;
+    return {
+      lead: `${many} samples, as the waves in them:`,
+      // A transform of N samples has N bins and no more. It repeats after
+      // that, and drawing the repeat would offer a reading of data nobody gave.
+      upto: many - 1,
+      latex: latexHarmonics(seriesOf(xs.it), BEAT),
+      over: 'k',
+      at: (k: number) => sizeOf(bins[((Math.round(k) % many) + many) % many]),
+      note: top
+        ? `Biggest at k = ${top.k}, which is ${top.k} ${top.k === 1 ? 'cycle' : 'cycles'} across the ${many}. Drawn as the size of each bin, which is the same either side of ${many / 2} because the data is real.`
+        : 'Every bin but the average is empty: this run does not go up and down at all.',
     };
   }
   if (line.kind === 'ztransform') {
@@ -955,6 +1004,7 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
         shades: [...under.map(() => 0.5), ...over.map(() => 1)],
       };
     }
+    case 'bins':
     case 'sequence': {
       const got = answered(line, scope);
       if (!got || 'says' in got) return EMPTY;
@@ -968,7 +1018,8 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
        */
       const points: Point[] = [];
       const paths: Point[][] = [];
-      for (let n = Math.max(0, Math.ceil(frame.x0)); n <= Math.floor(frame.x1) && points.length < 400; n += 1) {
+      const last = Math.min(Math.floor(frame.x1), got.upto ?? Infinity);
+      for (let n = Math.max(0, Math.ceil(frame.x0)); n <= last && points.length < 400; n += 1) {
         const y = got.at(n);
         if (!Number.isFinite(y)) continue;
         points.push({ x: n, y });
@@ -1412,6 +1463,11 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'The sequence behind it',
     says: 'Back from z, drawn as the beats it is rather than a curve it is not.',
     lines: ['Z^{-1}{z/((z - 1)(z - 2))}'],
+  },
+  {
+    name: 'The frequencies in some numbers',
+    says: 'A discrete transform: the one that runs on data rather than on a formula.',
+    lines: ['dft([1, 0, -1, 0, 1, 0, -1, 0])'],
   },
   {
     name: 'A flow',

@@ -627,3 +627,67 @@ describe('a z-transform on the list', () => {
     expect(got.says).toMatch(/ln/);
   });
 });
+
+/**
+ * The discrete transform on the list.
+ *
+ * `lib/fourier.test.ts` checks the arithmetic. This checks the joint, and the
+ * one thing only true here: it reads a *list* off the line, which no other
+ * kind on this list does.
+ */
+describe('a discrete transform on the list', () => {
+  it('is its own kind, told by its name', () => {
+    expect(of('dft([1, 0, -1, 0])').kind).toBe('bins');
+    expect(of('fft(\\cos(n), 16)').kind).toBe('bins');
+    expect(of('fourier(t, 2\\pi)').kind).toBe('harmonics');
+  });
+
+  it('reads the data off the line, and says what is in it', () => {
+    const line = of('dft([1, 0, -1, 0, 1, 0, -1, 0])');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toBe('8 samples, as the waves in them:');
+    expect(got.over).toBe('k');
+    expect(got.note).toMatch(/Biggest at k = 2, which is 2 cycles across the 8/);
+    // Two cycles across eight samples: bins 2 and 6, at four each.
+    expect(got.at(2)).toBeCloseTo(4, 9);
+    expect(got.at(6)).toBeCloseTo(4, 9);
+    expect(got.at(1)).toBeCloseTo(0, 9);
+  });
+
+  it('takes a formula and a count as well as a list', () => {
+    const got = answered(of('dft(\\cos(2\\pi n/8), 8)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.at(1)).toBeCloseTo(4, 9);
+  });
+
+  it('takes its data from a line above it', () => {
+    const lines = [of('a = [3, -1, 4, 1]'), of('dft(a)')];
+    const scope = scopeOf(lines);
+    const got = answered(lines[1], scope);
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toBe('4 samples, as the waves in them:');
+    expect(got.at(0)).toBeCloseTo(7, 9);
+  });
+
+  it('draws a bin per sample, as stems from the axis', () => {
+    // Four samples is four bins, and the window asking for more gets no more:
+    // the transform repeats after N, and drawing the repeat would offer a
+    // reading of data nobody gave.
+    const drawn = draw(of('dft([1, 0, -1, 0])'), {}, { x0: -1, x1: 6, y0: -1, y1: 4 });
+    expect(drawn.points.map((p) => p.x)).toEqual([0, 1, 2, 3]);
+    // [1, 0, -1, 0] is one cycle across four samples: bins 1 and 3.
+    expect(drawn.points.map((p) => Number(p.y.toFixed(9)))).toEqual([0, 2, 0, 2]);
+    for (const path of drawn.paths) {
+      expect(path).toHaveLength(2);
+      expect(path[0].y).toBe(0);
+    }
+  });
+
+  it('says what it wants rather than transforming a formula it cannot count', () => {
+    const got = answered(of('dft(\\cos(n))'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/wants the data/);
+    expect(of('dft()')).toMatchObject({ kind: 'fault' });
+  });
+});
