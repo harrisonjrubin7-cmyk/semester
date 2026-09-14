@@ -7,6 +7,8 @@ import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
 import { ActionButton, ChipRow, EmptyState, FilePick, SectionLabel, Segmented, Toggle } from '../components/ui';
 import { Bench, Tool, ToolRule } from '../components/Bench';
+import { Library } from './sheet/Library';
+import { FUNCTIONS, fnDoc } from '../lib/functions';
 import { ChevronRight, Plus, SheetIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
@@ -942,6 +944,15 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   /** What the View tab is showing, and what it is hiding. */
   const [view, setView] = useState({ lines: true, heads: true, formulas: false, freeze: true });
   const [seeking, setSeeking] = useState(false);
+  /*
+   * Whether the function list is open.
+   *
+   * Beside `seeking` rather than inside the ribbon, for the same reason find
+   * and replace is: both are panels that stay open while somebody works in
+   * the grid underneath, and a control that closes the moment the cursor
+   * leaves it is a control nobody can use to type a formula.
+   */
+  const [browsing, setBrowsing] = useState(false);
   /** Which panel is open under the ribbon, or none. */
   const [panel, setPanel] = useState<'filter' | 'rules' | 'names' | 'checks' | null>(null);
   /** Which column the filter strip is setting a rule on. */
@@ -2113,6 +2124,15 @@ function Grid({ sheet }: { sheet: SheetModel }) {
       groups: [
         [
           {
+            id: 'insert.function',
+            label: 'Function…',
+            hint: 'Every function the sheet knows, searchable.',
+            on: browsing,
+            run: () => setBrowsing((was) => !was),
+          },
+        ],
+        [
+          {
             id: 'insert.rowabove',
             label: `Row above ${rangeLabel(sel)}`,
             hint: 'The formulas below it move with it.',
@@ -2341,7 +2361,7 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             label: 'What the formulas can do',
             run: () =>
               say(
-                'A cell starting with = is a formula. SUM, AVERAGE, MEDIAN, STDEV, MIN, MAX, COUNT, IF, ROUND, SQRT, VLOOKUP and SUMPRODUCT are all here, and so are the scientific ones — SIN, COS, TAN, LOG to any base, FACT, COMBIN — and the fitted line: SLOPE, INTERCEPT, RSQ and FORECAST over two columns. A formula can also read another sheet: =Marks!B2. All computed on this device.',
+                `A cell starting with = is a formula, and there are ${FUNCTIONS.length} of them — totals and averages, lookups, dates and working days, text, and the money ones a finance course runs on. A formula can also read another sheet: =Marks!B2. Formulas · All functions searches them by name or by what you want worked out. All computed on this device.`,
               ),
           },
           {
@@ -2831,6 +2851,22 @@ function Grid({ sheet }: { sheet: SheetModel }) {
       label: 'Formulas',
       groups: [
         {
+          id: 'g.all',
+          label: 'Find one',
+          controls: [
+            {
+              kind: 'button',
+              id: 'fn.all',
+              label: 'All functions',
+              glyph: 'ƒx',
+              hint: 'Search all 159 by name, or by what you want worked out',
+              wide: true,
+              on: browsing,
+              run: () => setBrowsing((was) => !was),
+            },
+          ],
+        },
+        {
           id: 'g.lib',
           label: 'Function library',
           controls: (['SUM', 'AVERAGE', 'MEDIAN', 'STDEV', 'MIN', 'MAX', 'COUNT'] as const).map((fn) => ({
@@ -2850,8 +2886,8 @@ function Grid({ sheet }: { sheet: SheetModel }) {
           // quarter. The spelling is what this list is for.
           controls: (
             [
-              'IF', 'ROUND', 'VLOOKUP', 'SUMPRODUCT', 'SUMIF',
-              'QUARTILE', 'PERCENTILE', 'SLOPE', 'INTERCEPT', 'RSQ', 'FORECAST', 'LOG',
+              'IF', 'IFS', 'XLOOKUP', 'SUMPRODUCT', 'SUMIFS',
+              'PERCENTILE', 'SLOPE', 'FORECAST', 'NETWORKDAYS', 'PMT',
             ] as const
           ).map((fn) => ({
             kind: 'button' as const,
@@ -2865,7 +2901,12 @@ function Grid({ sheet }: { sheet: SheetModel }) {
              * needs from a function list is the spelling, because a misspelt
              * name is `#NAME?` and a wrong range is a number that looks right.
              */
-            run: () => write(focus, `=${fn}()`),
+            hint: fnDoc(fn)?.says,
+            run: () => {
+              write(focus, `=${fn}()`);
+              const doc = fnDoc(fn);
+              if (doc) say(`${doc.name}(${doc.args}) — ${doc.says}`);
+            },
           })),
         },
         {
@@ -3175,6 +3216,23 @@ function Grid({ sheet }: { sheet: SheetModel }) {
             say(`${done.changed} ${done.changed === 1 ? 'cell' : 'cells'} changed.`);
           }}
           onClose={() => setSeeking(false)}
+        />
+      )}
+
+      {browsing && (
+        <Library
+          onPick={(formula, fn) => {
+            write(focus, formula);
+            setBrowsing(false);
+            /*
+             * Said out loud, because the cell now holds `=XLOOKUP()` and the
+             * next thing to happen is somebody typing inside the brackets.
+             * The arguments are the part a function list exists to tell you
+             * and the part that has just scrolled away with the panel.
+             */
+            say(`${fn.name}(${fn.args}) — ${fn.says}`);
+          }}
+          onClose={() => setBrowsing(false)}
         />
       )}
 

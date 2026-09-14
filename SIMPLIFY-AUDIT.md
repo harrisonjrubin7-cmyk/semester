@@ -1004,10 +1004,57 @@ exactly: the row is the way in, the fields open in place, and Delete moves
 inside the editor rather than sitting as a two-letter button next to Join.
 The form above writes new ones and nothing else.
 
+## 4d. S5 — Mine's four tabs, and the third pattern that is not one · **KEEP**
+
+Asked after S4, because a screen with two editing patterns had just been
+given one and the other two tabs had not been looked at. Notes' **+ New note**
+leaves Mine for `#/note/<id>` where Tasks and Events open their form in
+place, which reads at a glance like a third answer to the same question. It
+is not. Measured:
+
+| | Fields | Long text | Attachments | Own address |
+| --- | --- | --- | --- | --- |
+| Task | 6 scalars | no | no | none |
+| Appointment | 7 scalars | no | no | none |
+| **Note** | 4 + `body` + `fileIds[]` | **yes** | **yes**, in IndexedDB | `#/note/<id>` |
+
+Four things separate a note from a row, and each of them is the reason on its
+own:
+
+- **What the screen draws.** `NoteEditor` is a title, a `CoursePicker`, a
+  `DeadlinePicker`, a textarea for the body, and an Attachments section that
+  adds, opens and removes files. Five controls and a file list against a
+  task's three fields.
+- **Who else opens it.** `newNote` is dispatched from three places — a
+  deadline's own panel (`components/ForThis.tsx`), Study, and Mine — and
+  `openNote` from three: `ForThis`, **search** (`lib/openhit.ts`), and Mine's
+  list. The screen exists whatever the tab does, so an editor in the tab
+  would be a *second* editor for one object, which is the fault this half of
+  the file is about rather than a fix for it.
+- **How it saves.** The note editor dispatches `updateNote` on every
+  keystroke; a row commits on Save. An autosaving textarea inside a list is
+  exactly what `TaskRow`'s own note warns against — "a list that is also a
+  page of live inputs is a page where a stray tap lands in a field".
+- **The address outlives the object.** `NoteEditor` carries a "that note is
+  gone" state because `#/note/<id>` is real: bookmarked, reopened from
+  history, restored from a backup written before the note was. A row has no
+  address to outlive anything.
+
+So the rule across the four tabs is **two patterns, applied consistently** —
+rows edit in place, documents open their own screen — and Notes is a
+document. Both of Mine's routes to a note leave the tab, which is the same
+rule twice rather than a drift. Files is not a third pattern either: it is a
+small file manager (Home, My drive, Recent, Starred, Bin, a search over names
+and contents, Add files, and a line of device storage), and a file is not
+edited here at all — it is added and opened.
+
+Recorded rather than changed, and recorded because the next pass will see the
+same shape from the outside and ask the same question.
+
 ## 5. What this pass changed
 
-S1, S2, S3 and S4, one commit each. No destination was added or removed: the
-count stands at 60, because every duplicate this pass found was a *control*
+S1, S2, S3 and S4, one commit each; S5 is a keep. No destination was added or
+removed: the count stands at 60, because every duplicate this pass found was a *control*
 rather than a *screen*. −4 duplicated settings, −1 duplicated control, and
 one shell's home given back its pointer.
 
@@ -1272,6 +1319,61 @@ which is the attribute a tab actually has.
 Incidental: `.tabstrip`, `.tabstrip-tab` and `.tabstrip-tab[aria-current]` in
 `app.css` have no `.tsx` user at all. Left alone here rather than swept into a
 pass about something else, and recorded so the next dead-CSS sweep has it.
+**Done in E3b below.**
+
+### E3b — the rules that style nothing · **CUT**
+
+**131 lines** of `app.css` and `features.css`, 25 classes, styling markup that
+does not exist.
+
+| Sheet | What it was |
+| --- | --- |
+| `app.css` | the spreadsheet formula bar's name box (`.fx-where`, `.fx-field`), `.tabstrip*` superseded by `components/Tabs.tsx`, `.chrome-rule`, `.soft-folder-tile`, `.desk-sheet-label`, and `.chrome-text.is-late` |
+| `features.css` | seventeen selectors left by the ported campus screens — `.university-workspace`, `.semester-primary-nav`, `.maps-sidebar`, `.write-paper`, `.mail-compose` and the rest — including four whole `@media` blocks |
+
+Dead CSS is the quietest thing in a codebase. It does not throw, it does not
+fail a type check, it does not move a pixel, and it costs a reader the
+assumption that a rule they are looking at is reached.
+
+**The census was wrong the first time, in the direction that hides things.**
+Version one called a class used if any dash-prefix of its name appeared
+anywhere in the source — meant to catch `` className={`directory-${kind}`} ``,
+which no literal search finds. It also meant `.semester-primary-nav` counted
+as live because the string "semester" is everywhere in an app called Semester.
+That heuristic rescued **seventeen genuinely dead rules**, and it would have
+gone on rescuing them silently, which is the worst property a census can have.
+
+So the rule is exact-match, and the two things exact matching cannot see are
+written out by name instead of guessed at: `is-bottom` and `is-right`, built
+by `` `mb-main is-${pane}` `` in `screens/Mail.tsx`, and `leaflet-*`, which is
+Leaflet's own DOM that the app restyles. Both lists live in the guard, so
+adding to either is a deliberate edit.
+
+**`industry.css` is deliberately not audited.** Its first line calls it "the
+source of truth for the system's look" — a design system, whose component
+classes are a published vocabulary. A vocabulary is *meant* to be wider than
+today's usage, so its seventeen unused classes are a design decision to make,
+not a cleanup to do. Auditing it would be one sheet's test overruling another
+sheet's purpose.
+
+**Two things the sweep itself got wrong**, both caught before pushing and both
+now held by the guard's second test:
+
+- Stripping rules out of four `@media` wrappers left the **wrappers**. They
+  minify away to nothing, so no check would have complained, and a reader
+  finds a breakpoint that appears to do something.
+- Three rules had explanatory comments above them, which the stripper left
+  behind attached to whatever came next. The twenty-line note about drawing
+  the late count in `--app-warn` rather than silver ended up sitting above
+  `.device h1`, describing a rule that no longer existed. **A comment orphaned
+  onto an unrelated rule is worse than the dead rule was** — the dead rule
+  merely did nothing, where the comment now says something false. Removed by
+  hand, and the reasoning kept here: the late count was the one place the app
+  said a passed deadline in silver instead of `--app-warn`, and if that cell
+  is ever coloured again this is why.
+
+`styles/deadcss.test.ts` holds both. Verified by planting a dead class and an
+empty `@media` block and watching each be named.
 
 **Two guards, both run against the fault before being believed.**
 `onetablist.test.ts` fails if any file spells the role by hand again *or* if

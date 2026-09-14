@@ -173,7 +173,7 @@ export function Group({
        * pushed outwards would either double the gutter or need a negative
        * margin tuned to whichever padding that screen happened to choose.
        * Insetting within the page's own gutter is one pixel different from
-       * the phone's settings app and survives all fifty screens.
+       * the phone's settings app and survives all sixty screens.
        */
       style={{ margin: `0 0 calc(16px * var(--density, 1))`, ...style }}
     >

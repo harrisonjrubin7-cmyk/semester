@@ -10,7 +10,7 @@ import { probes } from './Assistant';
  *
  * Every file was right on its own. `.scrollarea` reserves 76px under every
  * screen so nothing sits behind the assistant's floating button, which is
- * correct for the forty-nine screens that have one. `ai/Assistant.tsx` does
+ * correct for every screen that has one. `ai/Assistant.tsx` does
  * not draw that button on the chat tab, because the tab you are on *is* the
  * assistant — also correct. Neither knew about the other, so the chat got a
  * reservation for a button that was never drawn: the composer stopped 76px

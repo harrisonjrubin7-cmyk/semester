@@ -15,7 +15,7 @@ import { forgetFolds } from '../lib/folds.hook';
  * `components/Fold.tsx` reads a screen's own markup looking for headings, and
  * the thing it must never do is change what a screen renders when it is not
  * folding anything. That is not a claim a reader can check by eye across
- * fifty-seven screens, so it is checked here on the four shapes those screens
+ * sixty screens, so it is checked here on the four shapes those screens
  * use: headings at the top level, headings nested in a wrapper, a heading
  * inside a list that decides its own children, and a screen with none.
  *

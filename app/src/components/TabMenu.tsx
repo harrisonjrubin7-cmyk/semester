@@ -31,6 +31,7 @@ import {
   groupTab,
   joinTabGroup,
   leaveTabGroup,
+  muteTab,
   nameGroup,
   openTab,
   openTabIn,
@@ -139,6 +140,25 @@ function TabRows({
         }}
       >
         {tab.pinned ? 'Unpin this tab' : 'Pin this tab'}
+      </MenuRow>
+
+      {/*
+        * Muting, for the tab you are on.
+        *
+        * The speaker on the strip is the quick way and only appears on a tab
+        * that is actually playing something. This row is here for the other
+        * case, which is the one a menu is for: deciding *in advance* that
+        * this tab is not to make a noise. A tab muted before it plays
+        * anything starts quiet, which is what somebody in a library wants and
+        * is not a thing a speaker that is not drawn yet can offer.
+        */}
+      <MenuRow
+        onPress={() => {
+          muteTab(tab.id, !tab.muted);
+          onClose();
+        }}
+      >
+        {tab.muted ? 'Unmute this tab' : 'Mute this tab'}
       </MenuRow>
 
       {!tab.pinned && (

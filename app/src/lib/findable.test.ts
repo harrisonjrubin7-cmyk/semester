@@ -7,7 +7,7 @@ import type { Screen } from './types';
 /**
  * Every screen is findable, or is named here with the reason it is not.
  *
- * The app has seventy-six screens. Thirty-one of them were, at one point,
+ * The app has eighty-two screens. Thirty-one of them were, at one point,
  * reachable only by knowing the tap that opened them — a screen could exist,
  * work, and be invisible to the directory, to search and to the shelves all
  * at once, and nothing would say so. `lib/nav.ts` fixed that by being one
