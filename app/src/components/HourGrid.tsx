@@ -1,10 +1,11 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import { blockLabel, kindTint } from '../lib/kinds';
 import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
+import { hourWindow } from '../lib/hourwindow';
 import { placeBlock } from '../lib/hourplace';
 import { useStore } from '../state/store';
 import { ground as groundOf, resolveGround } from '../lib/look';
-import { usePrefersDark } from '../lib/prefers';
+import { revealKindly, usePrefersDark } from '../lib/prefers';
 
 /**
  * A day, by the hour.
@@ -77,6 +78,7 @@ export function HourGrid({
   onMove,
   onAddAt,
   canMove,
+  findNow,
 }: {
   blocks: HourBlock[];
   /** Minutes past midnight, or null when this is not today. */
@@ -96,16 +98,42 @@ export function HourGrid({
   onAddAt?: (minutes: number) => void;
   /** Whether a given block may be dragged at all. Classes may not. */
   canMove?: (block: HourBlock) => boolean;
+  /**
+   * Open the day scrolled to the hour it is now.
+   *
+   * Off by default, and on only where the grid is the screen. Today's feed has
+   * one of these part way down a page of other things, and a grid that dragged
+   * the page to itself on load would be taking the screen from whatever
+   * somebody had come to read.
+   */
+  findNow?: boolean;
 }) {
   // The window is the day's own, not a fixed 7-to-11: a day with an 8am lab and
-  // nothing after four should not draw seven empty evening rows. An hour of
-  // padding either side keeps the first and last block off the edge.
-  const starts = blocks.map((b) => b.at);
-  const ends = blocks.map((b) => b.at + b.minutes);
-  const lo = Math.max(0, Math.floor(Math.min(8 * 60, ...starts) / 60) - 1);
-  const hi = Math.min(24, Math.ceil(Math.max(18 * 60, ...ends) / 60) + 1);
+  // nothing after four should not draw seven empty evening rows. The sum is in
+  // `lib/hourwindow.ts` because the week grid needs the same answer and had
+  // been keeping a second copy of it with a different floor.
+  const { lo, hi } = hourWindow(blocks, now);
   const hours = Array.from({ length: hi - lo }, (_, i) => lo + i);
   const top = (minutes: number) => ((minutes - lo * 60) / 60) * ROW;
+
+  /*
+   * A day opens where you are in it, the way every calendar does.
+   *
+   * It used to open at the top of the window and stay there, so on a phone —
+   * where the grid starts about four hundred pixels down and half of it is
+   * below the fold — the current hour was never one of the hours on screen.
+   *
+   * Keyed on `findNow` alone rather than on `now`: the clock ticks every
+   * minute and a grid that re-centred itself each time would pull the page out
+   * from under anybody reading their evening. Stepping to another day turns
+   * this off and stepping back turns it on, which is exactly when the day
+   * should find its hour again.
+   */
+  const marker = useRef<HTMLDivElement | null>(null);
+  const opening = Boolean(findNow);
+  useEffect(() => {
+    if (opening) revealKindly(marker.current, { block: 'center' });
+  }, [opening]);
 
   // Anything sharing time with an earlier block is narrowed and pushed right,
   // so an overlap looks like an overlap instead of one thing hiding another.
@@ -197,8 +225,15 @@ export function HourGrid({
         </div>
       ))}
 
-      {now !== null && now >= lo * 60 && now <= hi * 60 && (
+      {/*
+        No bounds test on the hour: `hourWindow` was given `now` and drew the
+        window around it, so on today the marker is always inside the grid. The
+        test that used to stand here is what silently removed the marker every
+        evening once the day's last block had gone by.
+      */}
+      {now !== null && (
         <div
+          ref={marker}
           aria-hidden
           style={{
             position: 'absolute',

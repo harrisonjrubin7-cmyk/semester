@@ -313,6 +313,9 @@ function DayView() {
           <HourGrid
             blocks={gridBlocks}
             now={isToday ? minutesNow(now) : null}
+            // Here the grid is what the screen is for, so it opens on the hour
+            // it is. Today's feed passes no such thing; see the prop.
+            findNow={isToday}
             style={{ margin: '14px 0 26px' }}
             /*
              * What a block is drawn from decides whether it moves. A class is

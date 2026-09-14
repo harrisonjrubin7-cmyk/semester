@@ -7,6 +7,7 @@ import { DOW_INITIALS, clock } from '../lib/date';
 import type { HourBlock } from './HourGrid';
 import { lanesOf } from '../lib/weekpage';
 import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
+import { hourWindow } from '../lib/hourwindow';
 import { placeBlock } from '../lib/hourplace';
 
 /**
@@ -63,10 +64,17 @@ export function WeekGrid({
   canMove?: (block: HourBlock) => boolean;
 }) {
   const all = days.flatMap((d) => d.blocks);
-  const starts = all.map((b) => b.at);
-  const ends = all.map((b) => b.at + b.minutes);
-  const lo = Math.max(0, Math.floor(Math.min(8 * 60, ...starts) / 60) - 1);
-  const hi = Math.min(24, Math.ceil(Math.max(17 * 60, ...ends) / 60) + 1);
+  /*
+   * The same window the day grid draws, from the same file.
+   *
+   * This used to be its own copy of that sum with its own floor — five in the
+   * evening here against six there — so the two grids disagreed about how far
+   * down a week ran, and the hour line vanished from the week on exactly the
+   * evenings it vanished from the day. The hour is only part of the window
+   * when today is one of the days shown; a week in October has no now in it.
+   */
+  const here = days.some((d) => d.isToday) ? now : null;
+  const { lo, hi } = hourWindow(all, here);
   const hours = Array.from({ length: hi - lo }, (_, i) => lo + i);
   const top = (m: number) => ((m - lo * 60) / 60) * ROW;
   const col = `calc((100% - ${GUTTER}px) / ${days.length})`;
@@ -254,23 +262,21 @@ export function WeekGrid({
           });
         })}
 
-        {now !== null &&
-          days.some((d) => d.isToday) &&
-          now >= lo * 60 &&
-          now <= hi * 60 && (
-            <div
-              aria-hidden
-              className="wg-now"
-              style={{
-                position: 'absolute',
-                top: top(now),
-                left: `calc(${GUTTER}px + ${days.findIndex((d) => d.isToday)} * ${col})`,
-                width: col,
-                height: 1,
-                background: 'var(--app-accent)',
-              }}
-            />
-          )}
+        {/* No bounds test: `hourWindow` drew the window around this hour. */}
+        {here !== null && (
+          <div
+            aria-hidden
+            className="wg-now"
+            style={{
+              position: 'absolute',
+              top: top(here),
+              left: `calc(${GUTTER}px + ${days.findIndex((d) => d.isToday)} * ${col})`,
+              width: col,
+              height: 1,
+              background: 'var(--app-accent)',
+            }}
+          />
+        )}
       </div>
     </div>
   );
