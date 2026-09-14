@@ -48,6 +48,107 @@ export function region(supabaseUrl: string): string {
   }
 }
 
+/**
+ * What the account copy actually carries, grouped by the name a person would
+ * give it.
+ *
+ * The page used to name ten things and end "that is your academic record".
+ * That sentence was written when the app was a syllabus reader with a study
+ * guide attached, and it stayed on the page through everything that has been
+ * added since: the documents, spreadsheets, decks and graphs somebody makes,
+ * the drafts they write to a professor, what they have recorded a term
+ * costing, the degree they are tracking, the people they have logged. All of
+ * it goes up — the sync sends what `pickPersisted` returns, whole — so a list
+ * of ten was not a summary, it was an understatement of what signing in does.
+ *
+ * Written as data for the same reason the claims are: `privacy.test.ts` holds
+ * every field the store persists against these groups and fails on one that
+ * is in none, so the next collection added to the app cannot be sent to the
+ * account without appearing on this page. The sentence is built from the
+ * `says` phrases below rather than typed a second time.
+ */
+export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
+  {
+    says: 'your courses, their deadlines and everything you have added to them',
+    keys: [
+      'courses', 'updates', 'sources', 'linkUrls', 'extraLinks', 'term',
+      'archivedTerms', 'sample', 'registrar', 'courseOrder', 'mySchools',
+      'schoolId', 'examCovers', 'drops', 'gradeSystems', 'scale',
+    ],
+  },
+  {
+    says: 'what you have ticked off, started and attended, and when',
+    keys: [
+      'done', 'tickedAt', 'started', 'saved', 'pieces', 'progress',
+      'attendance', 'attendPolicy',
+    ],
+  },
+  {
+    says: 'your notes, tasks, appointments, activities and the calendars you subscribe to',
+    keys: [
+      'notes', 'tasks', 'appointments', 'commitments', 'timers', 'alarms',
+      'feeds', 'feedEvents', 'feedHidden', 'feedOrder',
+    ],
+  },
+  {
+    says: 'the hours you plan to work and the rules that decide your reminders',
+    keys: [
+      'windows', 'spent', 'contract', 'floor', 'rest', 'dayBudget', 'myRules',
+      'quiet', 'notifs', 'accessLeadDays',
+    ],
+  },
+  {
+    says: 'everything you have made — documents, spreadsheets, decks, equations, graphs and the folders they sit in',
+    keys: [
+      'documents', 'sheets', 'decks', 'equations', 'plots', 'folders',
+      'mathWorking', 'mathGiven',
+    ],
+  },
+  {
+    says: 'the email you have drafted, how you have marked messages, and the mail rules you have written',
+    keys: ['mailDrafts', 'mailMarks', 'mailRules', 'mailPane'],
+  },
+  {
+    says: 'your study history — cards drilled, practice papers sat and the answers you gave',
+    keys: ['reviews', 'sittings', 'answers', 'pretested'],
+  },
+  {
+    says: 'your grades, the work that came back, your degree plan and the applications you are tracking',
+    keys: [
+      'grades', 'returned', 'regradeWindows', 'requirements', 'taken',
+      'applications', 'wanted',
+    ],
+  },
+  {
+    says: 'the people you have logged, the letters you have asked for and your advising visits',
+    keys: ['people', 'visits', 'letters', 'myName'],
+  },
+  {
+    says: 'what you have recorded a term costing, and your housing, meal and map records',
+    keys: [
+      'costs', 'charges', 'aid', 'payments', 'plans', 'balances', 'residences',
+      'places', 'geocode',
+    ],
+  },
+  {
+    says: 'and how the app is set up — your navigation, layout, colours, text size and which screens you have opened',
+    keys: [
+      'nav', 'tone', 'seenOnboarding', 'registered', 'cleared',
+      'waysOpen', 'keyOpen', 'countScreens', 'lastSync', 'recent', 'visited',
+      'lastOpened', 'tabs', 'yours', 'controls', 'role', 'showAll',
+      'schemaVersion', 'accent', 'textSize', 'ground', 'density', 'corners',
+      'typeface', 'bodyface', 'lineHeight', 'readingWidth', 'iconShape',
+      'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites',
+      'shortcuts', 'directory', 'groupOrder', 'boardOrder', 'hue',
+    ],
+  },
+];
+
+/** The groups as one sentence, so the prose cannot say less than the list. */
+export function whatSyncs(): string {
+  return SYNC_GROUPS.map((g) => g.says).join('; ');
+}
+
 export const CLAIMS: Claim[] = [
   {
     heading: 'It works without an account',
@@ -57,7 +158,12 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'What syncs when you are signed in',
     body:
-      'Your courses and their deadlines, what you have ticked off and when, your own tasks, appointments and notes, your grades and practice paper results, your study card history, and your settings. That is your academic record, and it is the reason the sign-in is optional.',
+      `All of it, and it is worth reading the list rather than the word: ${whatSyncs()}. ` +
+      'If you have typed it into this app, signing in copies it to the account so the other ' +
+      'device has it too. Nothing is left behind as a summary and nothing is sent that is not ' +
+      'on that list — the two exceptions are named below, and they are exceptions in your ' +
+      'favour: your API key and your attached files stay on this device. This is the whole ' +
+      'reason the sign-in is optional.',
   },
   {
     heading: 'What never leaves the device',
@@ -97,7 +203,7 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'Which screens you open',
     body:
-      'The app keeps a count of how many times each of its screens has been opened, in this device’s own storage, under the key “semester.usage”. It is a number per screen — not when, not in what order, not how long. It is not uploaded, it is not in the sync payload, and nobody but you can read it; what it is for is the count on this page of how many screens you never open, so you can decide whether to hide the rest. Switch it off on this page and nothing is counted.',
+      'The app keeps a count of how many times each of its screens has been opened, in this device’s own storage, under the key “semester.usage”. It is a number per screen — not when, not in what order, not how long. That count is not uploaded and is not in the sync payload; what it is for is the figure on this page of how many screens you never open, so you can decide whether to hide the rest. Switch it off on this page and nothing is counted. Two smaller facts about the same thing do go to the account when you are signed in, because the app uses them on every device you read on: which screens you have ever opened, and the day each was last opened. Both are in the list above, neither is timed to anything finer than the day, and signed out neither leaves the device at all.',
   },
   {
     heading: 'Who can see your rows',
@@ -109,22 +215,14 @@ export const CLAIMS: Claim[] = [
 /**
  * The fields that go up, named exactly as the sync sends them.
  *
- * Kept here so the page can be checked against the code rather than trusted.
- * The test asserts these are a subset of what `pickPersisted` returns, so a
- * page that claims less than the app sends fails the build.
+ * Every one of them, read off the groups above rather than kept as a second
+ * list. This was ten hand-written names and the test checked only that each
+ * was really sent — which a list of ten passes just as easily as a list of
+ * all hundred and nineteen, and so said nothing about the hundred and nine
+ * it was silent on. `privacy.test.ts` now checks both directions against
+ * `pickPersisted`, which is what makes this a claim rather than a sample.
  */
-export const SYNCED_FIELDS = [
-  'courses',
-  'notes',
-  'tasks',
-  'appointments',
-  'done',
-  'tickedAt',
-  'started',
-  'grades',
-  'sittings',
-  'reviews',
-];
+export const SYNCED_FIELDS = SYNC_GROUPS.flatMap((g) => g.keys);
 
 /** Fields that must never appear in what is uploaded. */
 export const NEVER_SYNCED = ['apiKey', 'anthropicKey', 'sessionToken', 'password'];

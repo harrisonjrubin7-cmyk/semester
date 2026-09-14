@@ -3,7 +3,7 @@
  *
  * An alternate way in, chosen in Settings, not a replacement for the tab bar.
  * The bar is right for somebody who lives in four screens; this is right for
- * somebody who has forty-six and would rather see them than remember which
+ * somebody who has sixty and would rather see them than remember which
  * shelf they are on. Which is better genuinely depends on the person.
  *
  * The arrangement, the folders and the gating are in `lib/springboard.ts` and
@@ -33,7 +33,7 @@
  * than not offering it.
  */
 
-import { useState, type HTMLAttributes } from 'react';
+import { useRef, useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { outstanding } from '../lib/select';
 import { TabGlyph } from '../components/TabIcon';
@@ -54,6 +54,7 @@ import {
 import { MOVE_HINT, useMovable } from '../lib/arrange';
 import { currentLook } from '../state/shape';
 import { lately } from '../lib/nav';
+import { useBottomChrome } from '../lib/bottomchrome.hook';
 import type { Screen } from '../lib/types';
 
 const ICON = 58;
@@ -242,6 +243,9 @@ export function Springboard() {
   const look = currentLook(state);
   const pages = arrangedPages(school.capabilities, look.boardOrder, state.role);
   const dock = arrangedDock(school.capabilities, look.boardOrder, state.role);
+  // What the assistant's floating button has to clear. See the dock below.
+  const dockBox = useRef<HTMLDivElement>(null);
+  useBottomChrome(dockBox);
   const open = (screen: string) => dispatch({ type: 'go', screen: screen as Screen });
 
   /** One list of the arrangement, written back whole. See `afterMove`. */
@@ -361,7 +365,7 @@ export function Springboard() {
           {/*
             The four you keep coming back to, on the first page only.
 
-            A launcher is a grid of forty-six things arranged by category, and
+            A launcher is a grid of sixty things arranged by category, and
             a category is the thing nobody remembers. Repeating this on every
             page would be four icons of chrome on each; the first page is where
             somebody lands.
@@ -410,21 +414,44 @@ export function Springboard() {
             <TabList
               label="Pages"
               style={{ display: 'flex', gap: 'var(--sp-4)', justifyContent: 'center', padding: '20px 0 8px' }}
+              /*
+                A 7px dot is what a page indicator looks like everywhere, and
+                a 7px dot is not something a thumb can hit. So the dot is
+                drawn at 7 and the button around it is 24 — the floor — with
+                nothing but space between the drawing and the edge of the
+                target. `tap` is no use here: the dots sit 8px apart, and a
+                44px overlay on each would have every one of them reaching
+                across its neighbours, which is the failure that class's own
+                note warns about.
+              */
               tabs={pages.map((_, i) => ({
                 id: String(i),
-                label: null,
+                label: (
+                  <span
+                    aria-hidden
+                    style={{
+                      display: 'block',
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      background: i === page ? 'var(--app-accent)' : 'var(--app-line)',
+                    }}
+                  />
+                ),
                 ariaLabel: `Page ${i + 1}`,
               }))}
               value={String(page)}
               onChange={(id) => setPage(Number(id))}
               tabClassName="bare"
-              tabStyle={(on) => ({
-                width: 7,
-                height: 7,
+              tabStyle={() => ({
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 24,
+                height: 24,
                 flex: 'none',
                 padding: 0,
-                borderRadius: '50%',
-                background: on ? 'var(--app-accent)' : 'var(--app-line)',
+                background: 'transparent',
               })}
             />
           )}
@@ -433,10 +460,21 @@ export function Springboard() {
 
       <div style={{ flex: 1, minHeight: 12 }} />
 
-      {/* The dock does not move between pages, which is the whole point of
-          it. What is in it does: four icons, and which four in what order is
-          the only thing the dock is for. */}
+      {/*
+        The dock does not move between pages, which is the whole point of it.
+        What is in it does: four icons, and which four in what order is the
+        only thing the dock is for.
+
+        It reports itself as the bottom chrome. It is not a bar — it is drawn
+        in the page's own flow, with the spacer above pushing it down — but it
+        is what is along the bottom of this navigation, and the assistant's
+        floating button is fixed to the viewport and has to clear it. It did
+        not: with nothing reported the button fell back to the height of a tab
+        bar this navigation does not have, and landed across the fourth
+        label.
+      */}
       <div
+        ref={dockBox}
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${Math.max(1, dock.length)}, 1fr)`,

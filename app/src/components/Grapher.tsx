@@ -12,7 +12,7 @@ import { usePrefersDark } from '../lib/prefers';
 import { anchorHue, tintAt } from '../lib/tint';
 import { text as showValue, value, type Val } from '../lib/calc';
 import { Equation } from './Equation';
-import { exactly, latexFn } from '../lib/laplace';
+import { exactly, latexFn, latexTransform, poleText, poles, transferOf } from '../lib/laplace';
 import {
   DETAIL,
   EXAMPLES,
@@ -185,10 +185,22 @@ export function Grapher() {
    * an answer to a question nobody asked.
    */
   const closed = useMemo(() => {
-    const out: Record<number, string> = {};
+    const out: Record<number, { exact?: string; transfer?: string; poles?: string }> = {};
     if (pair) return out;
     read.forEach((line, index) => {
       if (line.kind !== 'ode' || line.of !== 'y' || !lines[index].on) return;
+      /*
+       * The transfer function first, because it needs less.
+       *
+       * It is the equation written as what it does to an input and has
+       * nothing to do with where the solution starts — so it is there for an
+       * equation with no conditions under it at all, which is the state the
+       * list is in for most of the time somebody is typing.
+       */
+      const system = transferOf({ body: line.body, of: 'x', order: line.order, scope });
+      if (system.ok) {
+        out[index] = { transfer: latexTransform(system.it, 's'), poles: poleText(poles(system.it)) };
+      }
       const start = said.find((c) => c.of === 'y' && !c.rate);
       const speed = said.find((c) => c.of === 'y' && c.rate);
       if (!start || Math.abs(start.at) > 1e-9) return;
@@ -201,7 +213,7 @@ export function Grapher() {
         v0: speed?.to ?? 0,
         scope,
       });
-      if (got.ok && got.it.terms.length) out[index] = latexFn(got.it, 'x');
+      if (got.ok && got.it.terms.length) out[index] = { ...out[index], exact: latexFn(got.it, 'x') };
     });
     return out;
   }, [read, lines, said, scope, pair]);
@@ -358,7 +370,7 @@ export function Grapher() {
             on={line.on}
             reading={read[i]}
             scope={scope}
-            exact={closed[i]}
+            solved={closed[i]}
             onText={(text) => dispatch({ type: 'writePlot', id: line.id, patch: { text } })}
             onShow={() => dispatch({ type: 'writePlot', id: line.id, patch: { on: !line.on } })}
             onDrop={() => dispatch({ type: 'dropPlot', id: line.id })}
@@ -490,8 +502,17 @@ export function Grapher() {
         two make in the plane they share — and where an equation is linear with
         constant coefficients, the exact solution is printed under it as well.{' '}
         <code>{'L{t^2 e^{-t}}'}</code> is a Laplace transform, read and drawn against{' '}
-        <code>s</code>, and <code>{'L^{-1}{1/(s^2 + 4)}'}</code> is the way back. It takes the
-        same notation the Write tab draws, so a formula you kept can be pasted in as it is.
+        <code>s</code>, and <code>{'L^{-1}{1/(s^2 + 4)}'}</code> is the way back.{' '}
+        <code>{'conv(t, e^{-t})'}</code> convolves two functions — the awkward integral, done as
+        the product it is in <code>s</code> — and an <code>H =</code> line with an <code>s</code>{' '}
+        in it is a transfer function, which says where its poles are and whether it settles.{' '}
+        <code>{'fourier(sign(\\sin(t)), 2\\pi)'}</code> is a Fourier series — the harmonics a
+        repeating thing is made of, drawn over the thing itself — and <code>{'F{e^{-2t}}'}</code>{' '}
+        is a Fourier transform, drawn as its size against <code>ω</code>. <code>{'Z{0.5^n}'}</code>{' '}
+        is a z-transform — Laplace for a thing that happens on the beat — and{' '}
+        <code>{'Z^{-1}{z/(z - 0.5)}'}</code> is the sequence behind one, drawn as the beats it is.
+        It takes the same notation the Write tab draws, so a formula you kept can be pasted in as
+        it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
         <Toggle on={degrees} label="Work in degrees rather than radians" onChange={() => setDegrees(!degrees)} />
@@ -515,7 +536,7 @@ function Row({
   on,
   reading,
   scope,
-  exact,
+  solved,
   onText,
   onShow,
   onDrop,
@@ -526,8 +547,8 @@ function Row({
   on: boolean;
   reading: Line;
   scope: ReturnType<typeof scopeOf>;
-  /** The closed form, where the equation on this line has one. */
-  exact?: string;
+  /** What Laplace makes of the equation on this line, where it can make anything of it. */
+  solved?: { exact?: string; transfer?: string; poles?: string };
   onText: (text: string) => void;
   onShow: () => void;
   onDrop: () => void;
@@ -553,6 +574,12 @@ function Row({
     reading.kind === 'start' ||
     reading.kind === 'transform' ||
     reading.kind === 'inverse' ||
+    reading.kind === 'convolution' ||
+    reading.kind === 'transfer' ||
+    reading.kind === 'spectrum' ||
+    reading.kind === 'harmonics' ||
+    reading.kind === 'ztransform' ||
+    reading.kind === 'sequence' ||
     reading.kind === 'surface';
   /** Whether it puts ink of its own on the picture — see the swatch below. */
   const inked = drawn && reading.kind !== 'start';
@@ -627,7 +654,7 @@ function Row({
           <code>{unset[0]} = 1</code>.
         </div>
       ) : (
-        <Answer reading={reading} scope={scope} exact={exact} />
+        <Answer reading={reading} scope={scope} solved={solved} />
       )}
     </div>
   );
@@ -645,11 +672,11 @@ function Row({
 function Answer({
   reading,
   scope,
-  exact,
+  solved,
 }: {
   reading: Line;
   scope: ReturnType<typeof scopeOf>;
-  exact?: string;
+  solved?: { exact?: string; transfer?: string; poles?: string };
 }) {
   const got = answered(reading, scope);
   if (got && 'says' in got) {
@@ -659,24 +686,47 @@ function Answer({
       </div>
     );
   }
-  if (!got && !exact) return null;
-  const latex = got ? got.latex : `y = ${exact}`;
+  if (!got && !solved) return null;
   return (
     <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-2)' }}>
-      <div>{got ? 'It comes to' : 'Exactly, by Laplace:'}</div>
-      {/*
-        An answer is as long as it is.
-        
-        A forced spring's solution is four terms and runs past the width of a
-        phone twice over, and there is no shortening it that is still the
-        answer. So the equation scrolls sideways inside its own box — the one
-        place in this app that is allowed to — rather than pushing the page out
-        from under everything else on it.
-      */}
-      <div style={{ overflowX: 'auto', maxWidth: '100%', paddingBottom: 'var(--sp-1)' }}>
-        <Equation latex={latex} inline />
-      </div>
-      {got ? <div>Drawn against {got.over}.{got.note ? ` ${got.note}` : ''}</div> : null}
+      {got ? (
+        <>
+          <div>{got.lead}</div>
+          <Wide latex={got.latex} />
+          <div>
+            Drawn against {got.over}.{got.note ? ` ${got.note}` : ''}
+          </div>
+        </>
+      ) : null}
+      {solved?.exact ? (
+        <>
+          <div>Exactly, by Laplace:</div>
+          <Wide latex={`y = ${solved.exact}`} />
+        </>
+      ) : null}
+      {solved?.transfer ? (
+        <>
+          <div>As a system, it is</div>
+          <Wide latex={`H(s) = ${solved.transfer}`} />
+          <div>{solved.poles}</div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * An equation as long as it is.
+ *
+ * A forced spring's solution is four terms and runs past the width of a phone
+ * twice over, and there is no shortening it that is still the answer. So it
+ * scrolls sideways inside its own box — the one place in this app that is
+ * allowed to — rather than pushing the page out from under everything else.
+ */
+function Wide({ latex }: { latex: string }) {
+  return (
+    <div style={{ overflowX: 'auto', maxWidth: '100%', paddingBottom: 'var(--sp-1)' }}>
+      <Equation latex={latex} inline />
     </div>
   );
 }

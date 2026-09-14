@@ -6,26 +6,31 @@ import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
 import { Equation } from '../components/Equation';
-import { ActionButton, SectionLabel, Toggle } from '../components/ui';
+import { ActionButton, FilePick, SectionLabel, Toggle } from '../components/ui';
 import { Bench, Tool, ToolPick, ToolRule } from '../components/Bench';
 import { Gallery, type Starter } from '../components/Gallery';
 import { WriteIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
-import { docx } from '../lib/docx';
+import { docx, type Picture } from '../lib/docx';
+import { addFile, getFile, listFiles, settled, type Settled } from '../lib/files';
+import { pictureLike, sizeOf } from '../lib/imagesize';
 import {
   BLOCK_LABEL,
+  DEEPEST,
   blankBlock,
   docFileName,
   fromMarkdown,
   hasContent,
+  listed,
   summary,
   toMarkdown,
   words,
   type Block,
   type BlockKind,
   type Doc,
+  type Line,
 } from '../lib/document';
 import { filled } from '../lib/sheet';
 import { TEMPLATES, fromTemplate } from '../lib/doctemplates';
@@ -187,7 +192,7 @@ function Paper({ doc }: { doc: Pick<Doc, 'blocks'> }) {
  */
 const INSERT_GROUPS: BlockKind[][] = [
   ['heading', 'text', 'bullets', 'checks'],
-  ['quote', 'table', 'equation', 'code', 'toc', 'break'],
+  ['quote', 'table', 'image', 'equation', 'code', 'toc', 'rule', 'break'],
 ];
 
 /** Every kind the screen can insert, flattened out of the groups above. */
@@ -207,9 +212,11 @@ const INSERT_LABEL: Record<BlockKind, string> = {
   checks: 'Insert a checklist',
   quote: 'Insert a quotation',
   table: 'Insert a table',
+  image: 'Insert a picture',
   equation: 'Insert an equation',
   code: 'Insert a code block',
   toc: 'Insert a contents page',
+  rule: 'Insert a divider',
   break: 'Insert a page break',
 };
 
@@ -445,7 +452,7 @@ function Editor({ doc }: { doc: Doc }) {
   const saveWord = async () => {
     setBusy(true);
     try {
-      const blob = await docx(doc);
+      const blob = await docx(doc, await pictureOf(doc));
       download({
         name: docFileName(doc.title),
         body: blob,
@@ -1587,172 +1594,7 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
       );
 
     case 'bullets':
-      return (
-        <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-            {block.items.map((line, i) => (
-              <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
-                <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', width: 18 }}>
-                  {block.numbered ? `${i + 1}.` : '•'}
-                </div>
-                <input
-                  className="input"
-                  data-item={i}
-                  value={line}
-                  onChange={(e) =>
-                    onChange({
-                      ...block,
-                      items: block.items.map((x, j) => (j === i ? e.target.value : x)),
-                    })
-                  }
-                  aria-label={`Item ${i + 1}`}
-                  style={{ flex: 1, height: 38 }}
-                />
-                <SmallButton
-                  label={`Remove item ${i + 1}`}
-                  onClick={() =>
-                    onChange({
-                      ...block,
-                      items: block.items.length > 1 ? block.items.filter((_, j) => j !== i) : [''],
-                    })
-                  }
-                >
-                  ×
-                </SmallButton>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
-            <ActionButton onClick={() => onChange({ ...block, items: [...block.items, ''] })}>
-              Add item
-            </ActionButton>
-            <ActionButton onClick={() => onChange({ ...block, numbered: !block.numbered })}>
-              {block.numbered ? 'Make it bulleted' : 'Make it numbered'}
-            </ActionButton>
-          </div>
-        </>
-      );
-
-    /*
-     * A snippet, in a box that does not help.
-     *
-     * `spellCheck` off and the autocorrect attributes with it: a phone that
-     * capitalises the first letter of every line turns `def` into `Def`, and
-     * the smart-quote substitution turns `"x"` into something no parser
-     * accepts. On the one block where the characters are the content, every
-     * convenience the platform offers is damage.
-     */
-    case 'code':
-      return (
-        <>
-          <input
-            className="input"
-            value={block.language}
-            onChange={(e) => onChange({ ...block, language: e.target.value })}
-            placeholder="Language — python, sql, r. Optional."
-            aria-label="What language the code is in"
-            spellCheck={false}
-            style={{ width: '100%', height: 34, marginBottom: 'var(--sp-4)' }}
-          />
-          <textarea
-            className="input"
-            value={block.text}
-            onChange={(e) => onChange({ ...block, text: e.target.value })}
-            placeholder="Paste or type it. Nothing in here is read as markdown."
-            aria-label="Code"
-            rows={6}
-            spellCheck={false}
-            autoCapitalize="off"
-            autoCorrect="off"
-            autoComplete="off"
-            style={{
-              width: '100%',
-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-              fontSize: 'var(--type-sm)',
-              lineHeight: 'var(--leading-snug)',
-              whiteSpace: 'pre',
-              overflowX: 'auto',
-            }}
-          />
-        </>
-      );
-
-    case 'checks':
-      return (
-        <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-            {block.items.map((line, i) => (
-              <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
-                <input
-                  type="checkbox"
-                  checked={line.done}
-                  onChange={(e) =>
-                    onChange({
-                      ...block,
-                      items: block.items.map((x, j) =>
-                        j === i ? { ...x, done: e.target.checked } : x,
-                      ),
-                    })
-                  }
-                  aria-label={`${line.text.trim() || `Item ${i + 1}`} — done`}
-                />
-                <input
-                  className="input"
-                  value={line.text}
-                  onChange={(e) =>
-                    onChange({
-                      ...block,
-                      items: block.items.map((x, j) =>
-                        j === i ? { ...x, text: e.target.value } : x,
-                      ),
-                    })
-                  }
-                  aria-label={`Item ${i + 1}`}
-                  style={{
-                    flex: 1,
-                    height: 38,
-                    // Struck through when it is done, which is the whole
-                    // reason somebody ticks one rather than deleting it.
-                    textDecoration: line.done ? 'line-through' : undefined,
-                  }}
-                />
-                <SmallButton
-                  label={`Remove item ${i + 1}`}
-                  onClick={() =>
-                    onChange({
-                      ...block,
-                      items:
-                        block.items.length > 1
-                          ? block.items.filter((_, j) => j !== i)
-                          : [{ text: '', done: false }],
-                    })
-                  }
-                >
-                  ×
-                </SmallButton>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
-            <ActionButton
-              onClick={() =>
-                onChange({ ...block, items: [...block.items, { text: '', done: false }] })
-              }
-            >
-              Add item
-            </ActionButton>
-            {block.items.some((i) => i.done) && (
-              <ActionButton
-                onClick={() =>
-                  onChange({ ...block, items: block.items.map((i) => ({ ...i, done: false })) })
-                }
-              >
-                Untick everything
-              </ActionButton>
-            )}
-          </div>
-        </>
-      );
+      return <ListEditor block={block} onChange={onChange} />;
 
     case 'quote':
       return (
@@ -1780,6 +1622,14 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
     case 'checks':
       return <ChecklistEditor block={block} onChange={onChange} />;
 
+    /*
+     * `spellCheck` off, and the three autocorrect attributes with it.
+     *
+     * A phone that capitalises the first letter of every line turns `def`
+     * into `Def`, and the smart-quote substitution turns `"x"` into something
+     * no parser accepts. On the one block where the characters *are* the
+     * content, every convenience the platform offers is damage.
+     */
     case 'code':
       return (
         <>
@@ -1790,6 +1640,9 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
             placeholder={'lm(mark ~ hours, data = class)'}
             aria-label="Code"
             spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            autoComplete="off"
             rows={6}
             style={{
               width: '100%',
@@ -1797,6 +1650,9 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
               fontSize: 'var(--type-sm)',
               lineHeight: 'var(--leading-normal)',
               whiteSpace: 'pre',
+              // A long line scrolls rather than wrapping, because a wrapped
+              // line of code reads as two statements.
+              overflowX: 'auto',
             }}
           />
           <input
@@ -1835,8 +1691,26 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
     case 'table':
       return <TableEditor block={block} onChange={onChange} />;
 
+    case 'image':
+      return <PictureEditor block={block} onChange={onChange} />;
+
     case 'equation':
       return <EquationEditor block={block} onChange={onChange} />;
+
+    /*
+     * Both of these are marks rather than content, so the card holds a
+     * sentence saying what the mark does instead of a field. The two
+     * sentences are written to be told apart at a glance, because the two
+     * blocks are one line apart in the insert toolbar and used to be the
+     * same block.
+     */
+    case 'rule':
+      return (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>
+          A line across the page, between one section and the next. It does not start a new
+          page — that is the page break, below it on the Insert bar.
+        </div>
+      );
 
     case 'break':
       return (
@@ -1845,6 +1719,187 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
         </div>
       );
   }
+}
+
+/**
+/**
+ * The bytes for every picture the document points at, read before the export.
+ *
+ * `docx` takes a plain synchronous lookup rather than doing the reads itself,
+ * which is what keeps it a pure function its tests can call without a
+ * browser. So the reads happen here, all of them, before a byte of the
+ * package is written.
+ *
+ * A file that is gone, or whose header `sizeOf` cannot read, is left out
+ * rather than throwing: one binned screenshot is not a reason a twelve-page
+ * paper fails to save. The block writes its caption and no picture; see the
+ * `image` case in `lib/docx.ts`.
+ */
+async function pictureOf(doc: Doc): Promise<(fileId: string) => Picture | undefined> {
+  const ids = [...new Set(doc.blocks.flatMap((b) => (b.kind === 'image' && b.fileId ? [b.fileId] : [])))];
+  const found = new Map<string, Picture>();
+  for (const id of ids) {
+    const file = await getFile(id);
+    if (!file) continue;
+    const bytes = new Uint8Array(await file.blob.arrayBuffer());
+    const size = sizeOf(bytes);
+    if (size) found.set(id, { bytes, size });
+  }
+  return (id: string) => found.get(id);
+}
+
+/**
+ * Choosing a picture, describing it, and captioning it.
+ *
+ * The picture itself is not held in the block — the block holds the id of a
+ * file in the drive, and the bytes stay in IndexedDB where the rest of the
+ * drive is. A document is saved in localStorage with everything else, and a
+ * single phone screenshot base64'd into it would spend the whole 5MB budget
+ * on one figure.
+ *
+ * Which means a picture can go missing: the file it points at can be binned
+ * from the Files screen without the document knowing. That is said here
+ * plainly rather than papered over, because the fix — put it back, or pick
+ * another — is one the person has to make. See the `image` case in
+ * `lib/docx.ts` for what the export does with a block whose file is gone.
+ */
+function PictureEditor({
+  block,
+  onChange,
+}: {
+  block: Extract<Block, { kind: 'image' }>;
+  onChange: (next: Block) => void;
+}) {
+  const [pictures, setPictures] = useState<Settled[] | null>(null);
+  const [preview, setPreview] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  const load = () => {
+    void listFiles().then((all) => setPictures(all.filter(pictureLike)));
+  };
+  useEffect(load, []);
+
+  /*
+   * The preview is an object URL over the stored blob, and it is revoked when
+   * the block changes or the editor closes. Left unrevoked, every picture
+   * opened in a writing session stays in memory until the tab is closed.
+   */
+  useEffect(() => {
+    let url = '';
+    let dropped = false;
+    // One path whether or not there is a file to read, so clearing the
+    // preview happens after the render rather than during the effect.
+    const reading = block.fileId ? getFile(block.fileId) : Promise.resolve(undefined);
+    void reading.then((file) => {
+      if (dropped) return;
+      if (!file) {
+        setPreview('');
+        return;
+      }
+      url = URL.createObjectURL(file.blob);
+      setPreview(url);
+    });
+    return () => {
+      dropped = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [block.fileId]);
+
+  const pick = (id: string) => {
+    const chosen = pictures?.find((f) => f.id === id);
+    onChange({ ...block, fileId: id, name: chosen?.name ?? '' });
+  };
+
+  const addFromDevice = async (file: File) => {
+    setAdding(true);
+    try {
+      const saved = await addFile(file, null);
+      setPictures((was) => [settled(saved), ...(was ?? [])]);
+      onChange({ ...block, fileId: saved.id, name: saved.name });
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  // Chosen, but the drive has no such file: binned, or on another device.
+  const missing = block.fileId !== '' && pictures !== null && !pictures.some((f) => f.id === block.fileId);
+
+  return (
+    <>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', alignItems: 'center' }}>
+        <select
+          className="input"
+          value={block.fileId}
+          onChange={(e) => pick(e.target.value)}
+          aria-label="Which picture"
+          style={{ flex: 1, minWidth: 180, height: 38 }}
+        >
+          <option value="">Choose a picture…</option>
+          {(pictures ?? []).map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.name}
+            </option>
+          ))}
+          {missing && <option value={block.fileId}>{block.name || 'The file this used'}</option>}
+        </select>
+        <FilePick
+          accept="image/png,image/jpeg,image/gif"
+          multiple={false}
+          block={false}
+          disabled={adding}
+          onPick={(picked) => {
+            if (picked[0]) void addFromDevice(picked[0]);
+          }}
+          style={{ width: 'auto' }}
+        >
+          {adding ? 'Adding…' : 'Add from this device'}
+        </FilePick>
+      </div>
+
+      {missing && (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
+          That file is not in your drive any more. The caption still exports; the picture will
+          not. Choose another, or put the file back from the bin.
+        </div>
+      )}
+
+      {preview !== '' && (
+        <img
+          src={preview}
+          alt={block.alt || 'The picture this block holds'}
+          style={{
+            display: 'block',
+            maxWidth: '100%',
+            maxHeight: 260,
+            marginTop: 'var(--sp-5)',
+            borderRadius: 'var(--r-sm)',
+            border: '1px solid var(--app-line)',
+          }}
+        />
+      )}
+
+      <input
+        className="input"
+        value={block.alt}
+        onChange={(e) => onChange({ ...block, alt: e.target.value })}
+        placeholder="What it shows, for somebody who cannot see it"
+        aria-label="Alt text"
+        style={{ width: '100%', height: 38, marginTop: 'var(--sp-5)' }}
+      />
+      <input
+        className="input"
+        value={block.caption}
+        onChange={(e) => onChange({ ...block, caption: e.target.value })}
+        placeholder="Caption — printed under it. Optional."
+        aria-label="Caption"
+        style={{ width: '100%', height: 38, marginTop: 'var(--sp-4)' }}
+      />
+      <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
+        The alt text is what a screen reader reads out in Word, and it is not the caption — a
+        caption says what to make of the picture, alt text says what is in it.
+      </div>
+    </>
+  );
 }
 
 /**
@@ -1924,6 +1979,159 @@ function ChecklistEditor({
         <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>
           {all === 0 ? 'Nothing on it yet' : `${done} of ${all} done`}
         </div>
+      </div>
+    </>
+  );
+}
+
+/**
+ * What each line of a list is marked with, at its own level.
+ *
+ * The same cycle the `.docx` writes — • ○ ▪ and 1. a. i. — so the card and
+ * the Word file agree about what a sub-item looks like. The numbers restart
+ * inside each sub-list and carry on when it ends, which is what the counters
+ * mean; taking the array index instead is how a nested numbered list comes
+ * out as 1, 2, 3, 4 down one column regardless of depth.
+ */
+const LIST_GLYPHS = ['\u2022', '\u25CB', '\u25AA', '\u2022', '\u25CB'];
+
+function markers(items: Line[], numbered: boolean): string[] {
+  const at: number[] = [];
+  return items.map((line) => {
+    at.length = line.level + 1;
+    at[line.level] = (at[line.level] ?? 0) + 1;
+    if (!numbered) return LIST_GLYPHS[line.level] ?? '\u2022';
+    const n = at[line.level];
+    if (line.level % 3 === 1) return `${String.fromCharCode(96 + ((n - 1) % 26) + 1)}.`;
+    if (line.level % 3 === 2) return `${roman(n)}.`;
+    return `${n}.`;
+  });
+}
+
+/** Lower-case roman, for the third level of a numbered list. */
+function roman(n: number): string {
+  const parts: [number, string][] = [
+    [1000, 'm'], [900, 'cm'], [500, 'd'], [400, 'cd'], [100, 'c'], [90, 'xc'],
+    [50, 'l'], [40, 'xl'], [10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i'],
+  ];
+  let left = n;
+  let out = '';
+  for (const [value, numeral] of parts) {
+    while (left >= value) {
+      out += numeral;
+      left -= value;
+    }
+  }
+  return out;
+}
+
+/**
+ * A list, with each line's depth under its own control.
+ *
+ * ## Why buttons rather than Tab
+ *
+ * Word, Docs and Notion all indent on Tab, and all three are one big editing
+ * surface with a focus model of their own. This is not: a list here is a
+ * column of ordinary `<input>`s on a card, and Tab is how a keyboard gets out
+ * of one and on to the next control. Taking Tab would make the list a trap
+ * for exactly the people who cannot reach for the mouse instead — so the
+ * indent is a button, which is also the version somebody can *see*.
+ *
+ * ## Why a line cannot jump two levels
+ *
+ * `listed` clamps a level to one deeper than the line above, because deeper
+ * than that is not a tree and markdown, Word and the page all draw trees. The
+ * button is disabled where the clamp would bite rather than letting somebody
+ * press it and watch nothing happen.
+ */
+function ListEditor({
+  block,
+  onChange,
+}: {
+  block: Extract<Block, { kind: 'bullets' }>;
+  onChange: (next: Block) => void;
+}) {
+  const items = listed(block.items);
+  const marks = markers(items, block.numbered);
+
+  const set = (next: Line[]) => onChange({ ...block, items: listed(next) });
+
+  const move = (at: number, by: 1 | -1) =>
+    set(items.map((l, j) => (j === at ? { ...l, level: l.level + by } : l)));
+
+  /* How deep this line is allowed to be: one past the line above it, and
+     never past the last level the exporters define. */
+  const deepest = (at: number) => Math.min(DEEPEST, at === 0 ? 0 : items[at - 1].level + 1);
+
+  return (
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        {items.map((line, i) => (
+          <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
+            {/* The indent itself, drawn rather than described. */}
+            <div
+              aria-hidden="true"
+              style={{ width: line.level * 20, flexShrink: 0 }}
+            />
+            <div
+              style={{ ...secondLine(), fontSize: 'var(--type-sm)', minWidth: 20, flexShrink: 0 }}
+            >
+              {marks[i]}
+            </div>
+            <input
+              className="input"
+              data-item={i}
+              value={line.text}
+              onChange={(e) =>
+                set(items.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))
+              }
+              /* The level is in the name because the marker beside it is not
+                 read out — a screen reader gets "Item 3" and no idea it is a
+                 sub-item of item 2 otherwise. */
+              aria-label={
+                line.level === 0 ? `Item ${i + 1}` : `Item ${i + 1}, indented ${line.level}`
+              }
+              style={{ flex: 1, minWidth: 80, height: 38 }}
+            />
+            <SmallButton
+              label={`Outdent item ${i + 1}`}
+              disabled={line.level === 0}
+              onClick={() => move(i, -1)}
+            >
+              ←
+            </SmallButton>
+            <SmallButton
+              label={`Indent item ${i + 1}`}
+              disabled={line.level >= deepest(i)}
+              onClick={() => move(i, 1)}
+            >
+              →
+            </SmallButton>
+            <SmallButton
+              label={`Remove item ${i + 1}`}
+              onClick={() =>
+                set(items.length > 1 ? items.filter((_, j) => j !== i) : [{ text: '', level: 0 }])
+              }
+            >
+              ×
+            </SmallButton>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+        <ActionButton
+          onClick={() =>
+            /* At the depth of the line above it. Adding a sub-item and being
+               dropped back to the margin every time is the thing that makes a
+               nested list tedious to type. */
+            set([...items, { text: '', level: items[items.length - 1]?.level ?? 0 }])
+          }
+        >
+          Add item
+        </ActionButton>
+        <ActionButton onClick={() => onChange({ ...block, numbered: !block.numbered })}>
+          {block.numbered ? 'Make it bulleted' : 'Make it numbered'}
+        </ActionButton>
       </div>
     </>
   );

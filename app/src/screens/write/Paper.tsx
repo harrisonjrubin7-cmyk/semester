@@ -1,5 +1,5 @@
 import { Equation } from '../../components/Equation';
-import { runs, type Block, type Doc, type Run } from '../../lib/document';
+import { nested, runs, type Block, type Branch, type Doc, type Run } from '../../lib/document';
 import { fontStack, layoutOf, lineHeight, pageSize } from '../../lib/doclayout';
 import { outline } from '../../lib/doctools';
 
@@ -105,23 +105,7 @@ function Drawn({ block, headings }: { block: Block; headings: ReturnType<typeof 
         </p>
       );
     case 'bullets':
-      return block.numbered ? (
-        <ol className="docpaper-list">
-          {block.items.map((item, i) => (
-            <li key={i}>
-              <Marked text={item} />
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <ul className="docpaper-list">
-          {block.items.map((item, i) => (
-            <li key={i}>
-              <Marked text={item} />
-            </li>
-          ))}
-        </ul>
-      );
+      return <Nest branches={nested(block.items)} numbered={block.numbered} />;
     case 'checks':
       return (
         <ul className="docpaper-list docpaper-ticks">
@@ -196,9 +180,40 @@ function Drawn({ block, headings }: { block: Block; headings: ReturnType<typeof 
           ))}
         </nav>
       );
+    /*
+     * A real `<hr>`, not a bordered div: it is what the element is for, and a
+     * screen reader announces it as a separator, which is the whole of what
+     * the line is saying.
+     */
+    case 'rule':
+      return <hr className="docpaper-rule" />;
     case 'break':
       return <div className="docpaper-break" aria-hidden="true" />;
   }
+}
+
+/**
+ * A list, drawn as the tree it is.
+ *
+ * A sub-list is a `<ul>` inside its parent's `<li>`, which is what HTML means
+ * by a nested list and what a screen reader reads as one — six flat rows with
+ * padding on three of them announce six items, not three and three. The
+ * browser's own indentation and marker cycling then do the drawing, so there
+ * is no per-level styling here to keep in step with the Word file.
+ */
+function Nest({ branches, numbered }: { branches: Branch[]; numbered: boolean }) {
+  if (branches.length === 0) return null;
+  const List = numbered ? 'ol' : 'ul';
+  return (
+    <List className="docpaper-list">
+      {branches.map((branch, i) => (
+        <li key={i}>
+          <Marked text={branch.line.text} />
+          <Nest branches={branch.under} numbered={numbered} />
+        </li>
+      ))}
+    </List>
+  );
 }
 
 /** A line of text with its marks drawn — the on-screen half of `runs`. */

@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
+import { configDefaults } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
 import { publicCalendarUrl } from './src/lib/publichost.ts'
 
@@ -376,6 +377,35 @@ const claudeProxy = (key: string) => ({
   },
 })
 
+/**
+ * The test files that must keep a module registry of their own.
+ *
+ * Every one of these calls `vi.mock`, and a mock can only rebind a module the
+ * worker has not already evaluated. Under `isolate: false` that depends on
+ * which file ran first in that worker, which is how a suite passes twice and
+ * fails the third time.
+ *
+ * Nine files, and each is here for the same reason rather than nine reasons:
+ * it replaces something the real version of would reach the network, a
+ * database, a PDF worker or the store. Kept as a list rather than inferred at
+ * startup because a config that greps the tree to configure itself is a config
+ * nobody can read — and `src/isolation.test.ts` does the grep instead, and
+ * fails if this list and the tree disagree.
+ */
+const MOCKS_MODULES = [
+  'src/components/credentials.test.tsx',
+  'src/data/seed.test.ts',
+  'src/components/rework.test.tsx',
+  'src/components/StudyStudio.test.tsx',
+  'src/lib/extract.test.ts',
+  'src/lib/generate.test.ts',
+  'src/lib/presence.test.ts',
+  'src/screens/pathway.test.tsx',
+  'src/screens/university.test.tsx',
+  'src/state/persist/firstrun.test.ts',
+  'src/state/persist/tell.test.ts',
+]
+
 export default defineConfig(({ command, mode }) => {
   /*
    * The key, read here and never handed to the page.
@@ -449,6 +479,51 @@ export default defineConfig(({ command, mode }) => {
     // development changes.
     base: process.env.VITE_BASE ?? '/',
     plugins: [react(), icsProxy(), appleToken(), claudeProxy(anthropicKey)],
+    /*
+     * The test suite, which had no configuration at all and was paying for it.
+     *
+     * 363 files, and vitest was spawning one worker per file: 363 spawns at
+     * ~224ms each, which is 27 of the suite's 47 seconds spent starting
+     * processes rather than running tests. Vitest says so itself at the foot
+     * of every run, and has done for as long as there have been this many
+     * files. CI pays it three times — `npm test`, then `test:zones` runs the
+     * whole suite again in Chicago and again in Kiritimati.
+     *
+     * `isolate: false` reuses a worker across files instead of starting one
+     * per file. What it gives up is the guarantee that each file gets a fresh
+     * module registry, and nine files here need exactly that: they call
+     * `vi.mock`, which can only rebind a module that has not already been
+     * evaluated in that worker. Whether it has depends on which file ran
+     * first, so the failure is real but intermittent — `components/rework`
+     * got the real `state/store` and threw "useStore must be used inside
+     * StoreProvider" on one run in three, and passed on the others.
+     *
+     * So: two projects. Everything runs in shared workers, and the nine that
+     * mock run isolated, which is 2.5% of the suite paying for what it needs.
+     * `src/isolation.test.ts` keeps the list honest — it reads this file and
+     * the tree, and fails if a new `vi.mock` appears in a file that is not
+     * listed.
+     */
+    test: {
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: 'shared',
+            isolate: false,
+            exclude: [...configDefaults.exclude, ...MOCKS_MODULES],
+          },
+        },
+        {
+          extends: true,
+          test: {
+            name: 'mocked',
+            isolate: true,
+            include: MOCKS_MODULES,
+          },
+        },
+      ],
+    },
     server: {
       proxy: {
         '/oauth/microsoft/token': forward(

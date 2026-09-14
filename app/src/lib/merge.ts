@@ -118,7 +118,6 @@ export const STRATEGY: Record<string, Strategy> = {
   // other wholesale.
   started: 'ticks',
   saved: 'ticks',
-  picked: 'ticks',
   grades: 'ticks',
   // Cutoffs per course. Keyed the same way and merged the same way: typing
   // this course's scale off its syllabus on the laptop must not wipe the one

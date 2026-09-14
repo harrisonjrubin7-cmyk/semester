@@ -1,10 +1,10 @@
 /**
  * Three things in the app you have not opened.
  *
- * Forty-two places, and a student uses six. The other thirty-six are not
- * hidden — they are in the directory, in search, each with a sentence saying
- * what it is for — and they are still invisible, because nobody reads a
- * directory of forty-two things looking for one they do not know exists.
+ * Sixty places, and a student uses six. The other fifty-four are not hidden —
+ * they are in the directory, in search, each with a sentence saying what it is
+ * for — and they are still invisible, because nobody reads a directory of
+ * sixty things looking for one they do not know exists.
  *
  * So: an honest count, and three of them, rotating by the day. Not a
  * marketing panel — the count is theirs, the three are ones they genuinely

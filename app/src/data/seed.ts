@@ -37,7 +37,27 @@ export function loadSeed(): Promise<CourseModule[]> {
     import('./courses/psci'),
     import('./courses/core'),
     import('./courses/bus'),
-  ]).then((mods) => mods.map((m) => m.default));
+  ])
+    .then((mods) => mods.map((m) => m.default))
+    /*
+     * A failure is not cached, which is the difference between "not yet" and
+     * "never".
+     *
+     * These are four dynamic imports, so they fail in exactly the two ways
+     * `components/Boundary.tsx` is written about: there is no connection and
+     * these chunks were never fetched, or the app was updated underneath an
+     * installed copy and the files it is asking for are no longer served.
+     * Both are temporary. Holding the rejected promise made them permanent —
+     * the toggle would go on, nothing would appear, and flicking it off and
+     * on again returned the same rejection for the rest of the session,
+     * because `??=` is satisfied by a promise whatever it settled to.
+     *
+     * Clearing it means the next attempt is a real one.
+     */
+    .catch((e: unknown) => {
+      pending = null;
+      throw e;
+    });
   return pending;
 }
 
@@ -48,5 +68,22 @@ export function loadSeed(): Promise<CourseModule[]> {
  * exists to avoid — the numbers are on a screen that offers the sample, so
  * computing them would download the sample to describe it. `pipeline/validate.mjs`
  * checks these against the real modules on every build, so they cannot drift.
+ *
+ * `items` and `episodes` are here for a second reason, and it is the stronger
+ * one. The validator finds them by matching the shape of the source, and a
+ * pattern that stops matching finds nothing rather than finding a fault — so
+ * the item checks could switch themselves off and the run would still say
+ * "all checks passed". Measured: putting `c:` on the same line as `id:` in one
+ * course dropped four items out of every item check, a planted duplicate id
+ * went unreported, and the exit code stayed 0. The only trace was a count in
+ * a success line nobody diffs. A declared number turns that silence into a
+ * failure, which is what it already did for the four above.
  */
-export const SEED_SUMMARY = { courses: 4, units: 44, cards: 278, lessons: 44 };
+export const SEED_SUMMARY = {
+  courses: 4,
+  units: 44,
+  cards: 278,
+  lessons: 44,
+  items: 48,
+  episodes: 8,
+};

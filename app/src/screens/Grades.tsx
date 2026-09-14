@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
@@ -5,7 +6,7 @@ import { Meter, SectionLabel } from '../components/ui';
 import { key, needCaveat, needFor, reaches, standing } from '../lib/grades';
 import { NO_POLICY, pointsOff, rate, tally } from '../lib/attend';
 import { PiecesRow } from '../components/PiecesRow';
-import { against, forCourse, trend, trendLine } from '../lib/sitting';
+import { against, forCourse, trend, trendLine, type Sitting } from '../lib/sitting';
 import { projectGrade, projectionLine } from '../lib/worth';
 import { NO_CUTOFFS, letterFor, systemFor, targetsOf } from '../lib/cutoffs';
 import { Cutoffs } from '../components/Cutoffs';
@@ -282,20 +283,7 @@ export function Grades() {
                   ) : null}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 9 }}>
                     {sat.slice(0, 6).map((paper) => (
-                      <span
-                        key={paper.id}
-                        className="tag tag-outline"
-                        style={{ fontVariantNumeric: 'tabular-nums' }}
-                      >
-                        {paper.pct}%
-                        <span style={{ opacity: 0.5 }}>
-                          {' '}
-                          · {new Date(paper.at).toLocaleDateString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </span>
-                      </span>
+                      <PaperTag key={paper.id} paper={paper} />
                     ))}
                   </div>
                   {t.missed > 0 && (
@@ -349,5 +337,68 @@ export function Grades() {
       {body(catalog.courses)}
       <div style={{ height: 22 }} />
     </div>
+  );
+}
+
+/**
+ * One practice paper's score, and the way to take it back.
+ *
+ * `keepSitting` shipped and `dropSitting` sat in the reducer with nothing
+ * dispatching it, so a sitting could be recorded and never removed. That is
+ * worse here than a stray row usually is, because of what a sitting feeds:
+ * `trend` averages them into the line above ("you are averaging 74% across
+ * four papers"), `against` compares that to the mark the rest of the term
+ * needs, and the drill deck is built from the questions they say you missed.
+ * A paper abandoned after two questions, or sat twice by a double tap, or sat
+ * on a phone on a bus, drags all three — and `lib/sitting.ts` opens by saying
+ * the trend is the useful part.
+ *
+ * ## Two presses, in place
+ *
+ * A single tap on a small tag is the accident `Mine.tsx` keeps destructive
+ * controls inside an opened editor to avoid, and a full editor for a number
+ * you cannot edit would be a drawer with one button in it. So the tag arms
+ * first and removes second, and says which it is doing. Arming is per tag and
+ * exclusive by construction — each tag holds its own flag, and a tag that is
+ * armed and then not pressed stays armed only until the next render that
+ * replaces it.
+ */
+function PaperTag({ paper }: { paper: Sitting }) {
+  const { dispatch } = useStore();
+  const [armed, setArmed] = useState(false);
+  const when = new Date(paper.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
+  return (
+    <button
+      type="button"
+      className="tag tag-outline"
+      onClick={() => {
+        if (!armed) {
+          setArmed(true);
+          return;
+        }
+        dispatch({ type: 'dropSitting', id: paper.id });
+      }}
+      onBlur={() => setArmed(false)}
+      aria-label={
+        armed
+          ? `Remove the ${paper.pct}% paper from ${when}. Press again to confirm.`
+          : `${paper.pct}% on ${when}. Press to remove it.`
+      }
+      style={{
+        fontVariantNumeric: 'tabular-nums',
+        cursor: 'pointer',
+        borderColor: armed ? 'var(--app-warn-line)' : undefined,
+        background: armed ? 'var(--app-warn-wash)' : undefined,
+      }}
+    >
+      {armed ? (
+        'Remove?'
+      ) : (
+        <>
+          {paper.pct}%<span style={{ opacity: 0.5 }}> · {when}</span>
+        </>
+      )}
+    </button>
   );
 }

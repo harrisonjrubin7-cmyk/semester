@@ -2,7 +2,7 @@
  * The app as a home screen: pages of icons, folders, and a dock.
  *
  * An alternate way in, not a replacement. The tab bar is right for somebody who
- * lives in four screens; a springboard is right for somebody who has forty-six
+ * lives in four screens; a springboard is right for somebody who has sixty
  * and wants to see them. Both stay, and the choice is in Settings, because
  * which one is better genuinely depends on the person rather than on us.
  *
@@ -313,7 +313,7 @@ export function labelFor(screen: string): string {
  * What a search across the springboard matches.
  *
  * The same ranked scoring `lib/find.ts` uses would be better, but this runs on
- * every keystroke over forty-six items, and an icon you can already see needs
+ * every keystroke over sixty items, and an icon you can already see needs
  * finding rather than ordering. So it is the plain substring test every
  * in-screen filter in the app uses — `has`, from `lib/search.ts` — over the
  * words the directory already holds.

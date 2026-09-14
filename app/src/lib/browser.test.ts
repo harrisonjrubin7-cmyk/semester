@@ -25,6 +25,8 @@ import {
   leaveGroup,
   load,
   makeGroup,
+  mute,
+  mutedTab,
   openBeside,
   pin,
   pinnedCount,
@@ -34,6 +36,7 @@ import {
   reopen,
   renameGroup,
   select,
+  tabAt,
   tidy,
   visit,
   whatClosed,
@@ -975,5 +978,140 @@ describe('the one closed-tab list', () => {
     // entry and one only.
     const back = reopen(s, s.closed[0].tab.id);
     expect(back.closed.map((c) => c.tab.screen)).toEqual(['calendar']);
+  });
+});
+
+describe('muting a tab', () => {
+  it('silences it and lets it speak again', () => {
+    const one = mute(strip(['home', 'study'], 0), 1);
+    expect(one.tabs[1].muted).toBe(true);
+    expect(mute(one, 1, false).tabs[1].muted).toBeUndefined();
+  });
+
+  it('removes the key rather than setting it false, like pinned', () => {
+    // `dump` writes whole tabs, so `muted: false` would be a field written to
+    // every device for a setting nobody chose.
+    const back = mute(mute(strip(['home'], 0), 0), 0, false);
+    expect('muted' in back.tabs[0]).toBe(false);
+  });
+
+  it('is the same strip back when it would change nothing', () => {
+    const s = strip(['home', 'study'], 0);
+    expect(mute(s, 1, false)).toBe(s);
+    expect(mute(mute(s, 1), 1)).toEqual(mute(s, 1));
+    expect(mute(s, 99)).toBe(s);
+  });
+
+  it('moves nothing — not the order, not the tab you are on', () => {
+    const s = strip(['home', 'study', 'calendar'], 2);
+    const m = mute(s, 0);
+    expect(names(m)).toEqual(names(s));
+    expect(m.at).toBe(2);
+  });
+
+  it('is orthogonal to pinning and grouping — a tab may be any of them', () => {
+    // By id, because pinning reorders: `tidy` moves the pinned tab to the
+    // front, so the index that named it a moment ago names its neighbour.
+    const pinned = pin(strip(['home', 'study'], 0), 1);
+    const both = mute(pinned, pinned.tabs.findIndex((t) => t.id === 't1'));
+    const kept = both.tabs.find((t) => t.id === 't1');
+    expect(kept?.pinned).toBe(true);
+    expect(kept?.muted).toBe(true);
+
+    const grouped = makeGroup(strip(['home', 'study'], 1), 1, 'Midterm');
+    const g = mute(grouped, grouped.tabs.findIndex((t) => t.group));
+    expect(g.tabs.find((t) => t.muted)?.group).toBeTruthy();
+  });
+
+  it('answers by id, for a player that knows one', () => {
+    const s = mute(strip(['home', 'study'], 0), 1);
+    expect(mutedTab(s, 't1')).toBe(true);
+    expect(mutedTab(s, 't0')).toBe(false);
+    expect(mutedTab(s, 'gone')).toBe(false);
+  });
+
+  it('survives a reload, because a mute is a setting rather than a session', () => {
+    write(mute(strip(['home', 'study'], 0), 1));
+    expect(read(known).tabs[1].muted).toBe(true);
+  });
+
+  it('is only ever exactly true off the device', () => {
+    // The stored reader builds each tab field by field so that a hand-edited
+    // store cannot smuggle anything in. A truthy test would give that up.
+    localStorage.setItem(
+      TABS_KEY,
+      JSON.stringify({
+        tabs: [{ id: 'a', screen: 'home', title: 'Home', place: justGo('home'), muted: 'yes' }],
+        at: 0,
+        groups: [],
+        closed: [],
+      }),
+    );
+    expect(read(known).tabs[0].muted).toBeUndefined();
+  });
+});
+
+describe('the tab already at a place', () => {
+  it('finds it, so a result can offer to switch rather than open a second one', () => {
+    const s = strip(['home', 'study', 'calendar'], 0);
+    expect(tabAt(s, justGo('calendar'))?.id).toBe('t2');
+  });
+
+  it('is nobody when nothing is open there', () => {
+    expect(tabAt(strip(['home', 'study'], 0), justGo('calendar'))).toBeUndefined();
+  });
+
+  it('never answers with a blank tab, whatever it is asked', () => {
+    // A new tab has no screen and an empty place. An empty place matching
+    // would send somebody to a blank page instead of what they searched for.
+    const s = strip([null, 'home'], 0);
+    expect(tabAt(s, [])).toBeUndefined();
+    expect(tabAt(s, justGo('home'))?.id).toBe('t1');
+  });
+
+  it('tells two places on the same screen apart', () => {
+    // The whole point of matching the place rather than the screen: two
+    // courses are both `course`, and switching to the wrong one is worse
+    // than opening a new tab.
+    const econ: Strip = {
+      ...strip(['home'], 0),
+      tabs: [
+        { id: 'a', screen: 'home', title: 'Today', place: justGo('home') },
+        { id: 'b', screen: 'courses', title: 'ECON 1020', place: [{ type: 'openCourse', id: 'econ' } as never] },
+      ],
+    };
+    expect(tabAt(econ, [{ type: 'openCourse', id: 'econ' } as never])?.id).toBe('b');
+    expect(tabAt(econ, [{ type: 'openCourse', id: 'psci' } as never])).toBeUndefined();
+  });
+
+  it('will not match a guide in one mode against the same guide in another', () => {
+    // The reason a search result carries no speaker: a unit result always
+    // opens the guide in `cards` (`find.ts`), and the mode that plays is
+    // `listen`. Two modes of one guide are two places, and this is what says
+    // so — if it ever stops being true, the mark on the row becomes buildable.
+    const listening: Strip = {
+      ...strip(['home'], 0),
+      tabs: [
+        {
+          id: 'g',
+          screen: 'study',
+          title: 'ECON 1020 · Study guide',
+          place: [{ type: 'openGuide', id: 'econ', mode: 'listen', unit: 0 } as never],
+        },
+      ],
+    };
+    expect(tabAt(listening, [{ type: 'openGuide', id: 'econ', mode: 'cards', unit: 0 } as never])).toBeUndefined();
+    expect(tabAt(listening, [{ type: 'openGuide', id: 'econ', mode: 'listen', unit: 0 } as never])?.id).toBe('g');
+  });
+
+  it('answers with the one nearest the front when a place is open twice', () => {
+    const twice: Strip = {
+      ...strip(['home'], 0),
+      tabs: [
+        { id: 'a', screen: 'calendar', title: 'Calendar', place: justGo('calendar') },
+        { id: 'b', screen: 'calendar', title: 'Calendar', place: justGo('calendar') },
+      ],
+    };
+    expect(tabAt(twice, justGo('calendar'))?.id).toBe('a');
   });
 });

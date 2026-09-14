@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { sources as walk } from '../styles/rules';
 import { DATABASES, PREFIX, keysIn } from './erase';
 
 /**
@@ -15,15 +16,9 @@ import { DATABASES, PREFIX, keysIn } from './erase';
 
 const SRC = join(process.cwd(), 'src');
 
-function sources(dir: string): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir)) {
-    const path = join(dir, entry);
-    if (statSync(path).isDirectory()) out.push(...sources(path));
-    else if (/\.tsx?$/.test(entry) && !/\.test\.tsx?$/.test(entry)) out.push(path);
-  }
-  return out;
-}
+/** Every module, tests aside — `sources` in `styles/rules` walks, this names. */
+const sources = (dir: string): string[] =>
+  walk(dir, { ext: ['.ts', '.tsx'], tests: false }).map((f) => f.path);
 
 describe('every key the app writes is under the prefix', () => {
   /*

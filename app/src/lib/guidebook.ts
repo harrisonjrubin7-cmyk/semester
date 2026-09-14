@@ -52,9 +52,6 @@ export interface Guidebook {
   claims: { screens: Screen[]; shortcuts: string[]; settings: string[] };
 }
 
-/** The six areas, in the order somebody meets them. */
-
-
 /** What each area is for. The one piece of prose per group. */
 const AREA: Record<Group, string> = {
   Semester:
@@ -118,6 +115,35 @@ export const TASKS: { task: string; why: string; steps: Screen[] }[] = [
     task: 'I want to fix bad import data',
     why: 'Every screen here shows the old and the new side by side before anything changes.',
     steps: ['edit', 'announce', 'import'],
+  },
+  /*
+   * The four below are the ones this table did not have.
+   *
+   * It was written when the app was the term and the studying, and it stayed
+   * at five routes while Make, Campus, Beyond and the export grew into four
+   * shelves of their own. A person arriving with "I have to write something"
+   * or "I am applying to things" found the screens in the directory, which is
+   * the search this section exists to save them.
+   */
+  {
+    task: 'I want to write or make something',
+    why: 'Create is the one way in — documents, spreadsheets, decks, diagrams and graphs are the same set of tools whichever screen you started from. Everything made is saved on the device and exports as a file anything else can open.',
+    steps: ['create', 'write', 'proof'],
+  },
+  {
+    task: 'I have to deal with the university itself',
+    why: 'University lists every service and says plainly what this app can do for each: prepare the draft, the checklist and the questions. Filing, paying and registering happen on the school\u2019s own systems, and the app says so rather than pretending.',
+    steps: ['university', 'yes', 'costs'],
+  },
+  {
+    task: 'I am thinking past this term',
+    why: 'These keep their own work, separate from the term, so none of it disappears when the term ends.',
+    steps: ['pathway', 'career', 'applying'],
+  },
+  {
+    task: 'I want my work somewhere else, or out of here',
+    why: 'Nothing is locked in: what you have is a list you can read, a file you can take, and a page saying what leaves the device and what does not.',
+    steps: ['export', 'data', 'privacy'],
   },
 ];
 
@@ -183,9 +209,11 @@ export function build(): Guidebook {
     body: [
       'Semester takes the PDFs your professors posted and turns them into a term you can see: every deadline, every weight, and a study guide per course that every way of studying reads from. It is built around one idea — that the syllabus already contains the answer, and the work is getting it out of the PDF and into a place you will look.',
       '',
-      'It does not do several things on purpose. It does not fetch your grades from the university; there is no student API a student can use alone, so what it knows about your marks is what you have typed. It does not write your coursework. It does not invent a citation, a date or a fact: where it quotes your syllabus it shows the sentence, and anything it could not find in the file is dropped rather than guessed. It has no account requirement and no analytics, and signed out nothing leaves this device.',
+      'It has grown out from there, and in one direction: the rest of the term the syllabus does not cover. There are tools that make something — a document, a spreadsheet, a deck, a diagram, a graph, a draft of an email to a professor. There is the money, the housing, the meal plan and the map. There is the part of a university that is not coursework at all — the services you have to prepare something for, the season you are training for, the job you are applying to, the people at home, the degree after this one. All of it is on this device and none of it is a second app: a deadline in your term and a practice you are travelling for are on the same calendar.',
       '',
-      'What it needs from you is the syllabus, once per course, and your own marks as you get them. Everything else it can work out. The import is the only part that takes real effort, and it takes about five minutes a course.',
+      'It does not do several things on purpose. It does not fetch your grades from the university; there is no student API a student can use alone, so what it knows about your marks is what you have typed. It is not your university\u2019s systems and does not stand in for them: it can hold the questions for an advising appointment, the checklist before a form is filed and the draft of an appeal, and it cannot file, register, pay or submit anything on your behalf. A status you record here is what you believe is happening, not what a registrar has recorded. It does not write your coursework. It does not invent a citation, a date or a fact: where it quotes your syllabus it shows the sentence, and anything it could not find in the file is dropped rather than guessed. It has no account requirement and no analytics, and signed out nothing leaves this device.',
+      '',
+      'What it needs from you is the syllabus, once per course, and your own marks as you get them. Everything else it can work out. The import is the only part that takes real effort, and it takes about five minutes a course — and nothing past that first import is required: every screen added since works, or sits quietly, whether or not you ever open it.',
     ].join('\n'),
   });
 
@@ -208,7 +236,7 @@ export function build(): Guidebook {
     ].join('\n'),
   });
 
-  // 3 — The six areas.
+  // 3 — The shelves, however many there are. `GROUPS` is the order.
   for (const group of GROUPS) {
     const inGroup = DESTINATIONS.filter((d) => d.group === group);
     screens.push(...inGroup.map((d) => d.screen));

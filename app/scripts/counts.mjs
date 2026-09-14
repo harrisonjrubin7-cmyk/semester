@@ -43,10 +43,27 @@ const vite = await createServer({
   configFile: false,
   appType: 'custom',
   server: { middlewareMode: true },
+  /*
+   * Both shared contracts, and both for the same reason `vite.config.ts`
+   * aliases them: they are source, not a built package, and nothing resolves
+   * them without being told where they are.
+   *
+   * `@semester/institution` was missing here while the app config had it,
+   * which is the drift the note at the top of this file says this mechanism
+   * exists to prevent — a second, shorter copy of a list that has to match.
+   * Nothing failed, because `counts.ts` does not reach `lib/softtop.ts` and
+   * so never asked for it; the resolver still walked the tree, still failed
+   * to find it, and printed "The following dependencies are imported but
+   * could not be resolved" on every run. An error on a passing check is
+   * worse than an error on a failing one — it teaches the reader to skip it.
+   */
   resolve: {
     alias: {
       '@semester/contract': fileURLToPath(
         new URL('../../packages/contract/src/index.ts', import.meta.url),
+      ),
+      '@semester/institution': fileURLToPath(
+        new URL('../../packages/institution/src/index.ts', import.meta.url),
       ),
     },
   },

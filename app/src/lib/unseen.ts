@@ -1,11 +1,12 @@
 /**
  * The screens you have never opened.
  *
- * The app has forty-two places in it. A student uses six. The other
- * thirty-six are not hidden — they are in the directory, they are in search,
- * they each have a sentence saying what they are for — and they are still
- * invisible, because nobody reads a directory of forty-two things looking for
- * one they do not know exists.
+ * The app has sixty places in it. A student uses six. The other fifty-four
+ * are not hidden — they are in the directory, they are in search, they each
+ * have a sentence saying what they are for — and they are still invisible,
+ * because nobody reads a directory of sixty things looking for one they do
+ * not know exists. The gap has widened with every screen added since this was
+ * written, which is the argument for this panel rather than against it.
  *
  * The fix is not another list. It is a short, honest count and three
  * suggestions: *you have opened nine of these; here are three you have not.*

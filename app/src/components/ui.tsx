@@ -289,7 +289,16 @@ export function PickChips<T extends string | number>({
   );
 }
 
-/** An equal-width segmented control — Deadlines / Campus, Tabs / Feed. */
+/**
+ * An equal-width segmented control — Deadlines / Campus, Tabs / Feed.
+ *
+ * The row wraps. `flex: 1` cannot shrink a button past the width of its own
+ * label, so on a narrow phone a five-way control (Career, Family) laid its
+ * last segment off the side of the screen, where the app frame clipped it
+ * mid-word. Wrapping costs nothing when the row fits — which is every two-
+ * and three-way control here — and puts the overflowing segment on a second
+ * line, whole and legible, when it does not.
+ */
 export function Segmented<T extends string>({
   options,
   value,
@@ -302,7 +311,7 @@ export function Segmented<T extends string>({
   style?: CSSProperties;
 }) {
   return (
-    <div style={{ display: 'flex', gap: 'var(--sp-3)', ...style }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', ...style }}>
       {options.map((o) => {
         const on = o.id === value;
         return (

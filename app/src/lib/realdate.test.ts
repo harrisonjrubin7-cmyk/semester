@@ -92,8 +92,26 @@ describe('realDate', () => {
     beforeAll(() => {
       process.env.TZ = 'America/Havana';
     });
+    /*
+     * Deleted rather than assigned back, when there was nothing to assign.
+     *
+     * `process.env.TZ = undefined` does not unset it — it sets the *string*
+     * "undefined", which is not a zone, and Node then answers
+     * `Intl.DateTimeFormat().resolvedOptions().timeZone` with `undefined` for
+     * the rest of the process. A plain `npm test` has no TZ in the
+     * environment, so `held` is undefined and that is the path taken every
+     * time; `npm run test:zones` sets one, and takes the other.
+     *
+     * It did no harm while every file had a worker to itself. With workers
+     * shared across files it is process-wide, and the next module in that
+     * worker to read the zone *at import time* captures the broken value for
+     * good — which is how `lib/connect.ts` came to write a calendar event
+     * with no timeZone on it, on about one run in six, in a file that has
+     * nothing to do with this one.
+     */
     afterAll(() => {
-      process.env.TZ = held;
+      if (held === undefined) delete process.env.TZ;
+      else process.env.TZ = held;
     });
 
     it('is the timezone this test needs, or the test is not testing anything', () => {

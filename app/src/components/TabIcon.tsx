@@ -2,10 +2,12 @@
  * A glyph for any screen that can go in the bar.
  *
  * The bar used to hold seven screens fixed in a source file, and seven icons
- * drawn for them. Once a student can put any of forty-two screens in it, the
- * other thirty-five need something to show — and drawing thirty-five icons
- * would mostly produce thirty-five squares with faint differences, which is
- * worse than not trying.
+ * drawn for them. Once a student can put any of the app's screens in it — all
+ * sixty — the rest needed something to show, and drawing an icon each would
+ * mostly have produced squares with faint differences, which is worse than
+ * not trying. Most of them have a drawing of their own now, one at a time and
+ * where the drawing says something; the fallback is what made that optional
+ * rather than a batch of fifty icons owed on the day the bar opened up.
  *
  * So: the drawn icon where one exists, and otherwise the icon of the shelf
  * the screen sits on in `lib/nav.ts`. One fallback per shelf. A student

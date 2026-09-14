@@ -56,6 +56,7 @@ import {
   here,
   lastFollowed,
   moveTab,
+  muteTab,
   openTab,
   pickTab,
   record,
@@ -67,7 +68,9 @@ import { screenName } from '../lib/nav';
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
 import { secondLine } from '../lib/dim';
-import { ChevronDown, Plus, Search as SearchIcon } from './Icons';
+import { ChevronDown, Plus, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
+import { sounding } from '../lib/sound';
+import { useSound } from '../lib/sound.hook';
 import { TabGlyph } from './TabIcon';
 import { StripMenu, type MenuOn } from './TabMenu';
 import { TabFind } from './TabFind';
@@ -268,6 +271,17 @@ export function TabStrip({
 }) {
   const { dispatch } = useStore();
   const strip = useStrip();
+  /*
+   * What is playing, so a tab can say it is the one playing it.
+   *
+   * Watched here rather than inside each tab: this changes when somebody
+   * presses Play and at no other time, and a subscription per tab would be a
+   * hundred of them on a full strip. The clock inside the sound ticks several
+   * times a second and is deliberately a different subscription
+   * (`usePlayback`), which the strip never takes — a tab bar that re-rendered
+   * four times a second could not be dragged.
+   */
+  const noise = useSound();
   const tones = useTones();
   /*
    * Dragging a tab along the strip.
@@ -400,6 +414,7 @@ export function TabStrip({
                   seat={seat}
                   on={seat.at === strip.at}
                   searching={searching}
+                  talking={sounding(noise, seat.tab.id)}
                   hold={movable.props(seat.tab.id)}
                   onPick={() => pick(seat.at)}
                   onShut={() => shut(seat.at)}
@@ -457,6 +472,7 @@ export function TabStrip({
                     seat={seat}
                     on={seat.at === strip.at}
                     searching={searching}
+                    talking={sounding(noise, seat.tab.id)}
                     hold={movable.props(seat.tab.id)}
                     onPick={() => pick(seat.at)}
                     onShut={() => shut(seat.at)}
@@ -559,7 +575,15 @@ function PinEdge() {
 }
 
 /**
- * One tab: its glyph, its name, its cross, and the ⌄ when it is the one on.
+ * One tab: its glyph, its name, its cross, the ⌄ when it is the one on, and a
+ * speaker when it is the one talking.
+ *
+ * The speaker is the exception to everything below about what a tab may
+ * spend room on. It is drawn on whichever tab owns the player — usually *not*
+ * the one you are looking at, which is the entire point of it — because a
+ * sound with no visible source is the thing every browser added this control
+ * to answer. It is a button, and pressing it mutes that tab without going to
+ * it, which is the other half of the same answer.
  *
  * The chevron is drawn on the current tab only. It is the touchable way into
  * the menu that right-click is for everybody else, and a chevron on every tab
@@ -570,6 +594,7 @@ function Tab({
   seat,
   on,
   searching,
+  talking,
   hold,
   onPick,
   onShut,
@@ -578,6 +603,8 @@ function Tab({
   seat: Seat;
   on: boolean;
   searching: string;
+  /** This tab owns the player: it is the one making the noise. */
+  talking: boolean;
   /**
    * What makes this tab draggable: `props` from `useMovable`.
    *
@@ -664,6 +691,34 @@ function Tab({
           </span>
         )}
       </button>
+      {talking && (
+        <button
+          type="button"
+          className="bare tappable"
+          onClick={(e) => {
+            e.stopPropagation();
+            muteTab(tab.id, !tab.muted);
+          }}
+          // A press on the speaker is a mute, not the start of a drag — the
+          // same reason the cross below stops its pointer event.
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label={`${tab.muted ? 'Unmute' : 'Mute'} ${title}`}
+          aria-pressed={Boolean(tab.muted)}
+          title={tab.muted ? `${title} — muted` : `${title} — playing`}
+          style={{
+            width: 'auto',
+            flex: 'none',
+            padding: 'var(--sp-3) var(--sp-1)',
+            fontSize: 'var(--type-sm)',
+            // Muted is the quiet state in every sense: the glyph stands down
+            // to the strip's second line rather than staying at full strength
+            // and claiming something is happening.
+            ...(tab.muted ? secondLine() : {}),
+          }}
+        >
+          {tab.muted ? <SpeakerOffIcon size={13} /> : <SpeakerIcon size={13} />}
+        </button>
+      )}
       {on && (
         <button
           type="button"
@@ -675,7 +730,9 @@ function Tab({
           style={{
             width: 'auto',
             flex: 'none',
-            padding: 'var(--sp-3) var(--sp-1)',
+            // A 13px chevron with `--sp-1` beside it is a 17px-wide target.
+            // Even padding takes it to 25, over the floor on both axes.
+            padding: 'var(--sp-3)',
             fontSize: 'var(--type-sm)',
           }}
         >
@@ -694,7 +751,11 @@ function Tab({
         style={{
           width: 'auto',
           flex: 'none',
-          padding: 'var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-1)',
+          // Still wider on the outside than the inside — the cross sits at
+          // the end of the tab, not in the middle of it — but the tight side
+          // goes from `--sp-1` to `--sp-3`, which is what takes the target
+          // from 20px wide to 24.
+          padding: 'var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3)',
           fontSize: 'var(--type-sm)',
           ...secondLine(),
         }}

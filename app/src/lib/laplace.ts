@@ -53,105 +53,34 @@
  */
 
 import { value, type Node, type Scope } from './calc';
+import {
+  cx,
+  factorial,
+  gathered,
+  pAdd,
+  pDivide,
+  pMul,
+  pPow,
+  pScale,
+  pTrim,
+  partialFractions,
+  qPow,
+  roots,
+  type Complex,
+  type Poly,
+} from './poly';
 
-/** Below this, a number is zero: a coefficient that survived rounding, not a quantity. */
-const TINY = 1e-9;
+export type { Poly } from './poly';
 
-// ── Numbers with two parts ───────────────────────────────────────────────
-
-interface Cx {
-  re: number;
-  im: number;
-}
-
-const cx = (re: number, im = 0): Cx => ({ re, im });
-const cadd = (a: Cx, b: Cx): Cx => ({ re: a.re + b.re, im: a.im + b.im });
-const csub = (a: Cx, b: Cx): Cx => ({ re: a.re - b.re, im: a.im - b.im });
-const cmul = (a: Cx, b: Cx): Cx => ({ re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re });
-const cabs = (a: Cx): number => Math.hypot(a.re, a.im);
-
-function cdiv(a: Cx, b: Cx): Cx {
-  const d = b.re * b.re + b.im * b.im;
-  if (d === 0) return cx(NaN, NaN);
-  return { re: (a.re * b.re + a.im * b.im) / d, im: (a.im * b.re - a.re * b.im) / d };
-}
-
-// ── Polynomials, lowest power first ──────────────────────────────────────
-
-/** `[1, 0, 2]` is `1 + 2s²`. Ascending because that is the order the algebra wants. */
-export type Poly = number[];
-type CPoly = Cx[];
-
-const pTrim = (a: Poly): Poly => {
-  const out = [...a];
-  while (out.length > 1 && Math.abs(out[out.length - 1]) < TINY) out.pop();
-  return out;
-};
-
-function pAdd(a: Poly, b: Poly): Poly {
-  const out: Poly = [];
-  for (let i = 0; i < Math.max(a.length, b.length); i += 1) out.push((a[i] ?? 0) + (b[i] ?? 0));
-  return out;
-}
-
-function pMul(a: Poly, b: Poly): Poly {
-  const out = new Array<number>(a.length + b.length - 1).fill(0);
-  for (let i = 0; i < a.length; i += 1) for (let j = 0; j < b.length; j += 1) out[i + j] += a[i] * b[j];
-  return out;
-}
-
-const pScale = (a: Poly, k: number): Poly => a.map((v) => v * k);
-
-function pPow(a: Poly, n: number): Poly {
-  let out: Poly = [1];
-  for (let i = 0; i < n; i += 1) out = pMul(out, a);
-  return out;
-}
-
-/** Horner, from the top down. */
+/** Horner, from the top down. Kept here because `lib/plot.ts` draws a transform with it. */
 export function pAt(a: Poly, x: number): number {
   let out = 0;
   for (let i = a.length - 1; i >= 0; i -= 1) out = out * x + a[i];
   return out;
 }
 
-/** Long division, for a numerator that is not smaller than its denominator. */
-function pDivide(num: Poly, den: Poly): { quotient: Poly; remainder: Poly } {
-  const d = pTrim(den);
-  const r = [...pTrim(num)];
-  const quotient = new Array<number>(Math.max(1, r.length - d.length + 1)).fill(0);
-  const lead = d[d.length - 1];
-  for (let i = r.length - d.length; i >= 0; i -= 1) {
-    const k = r[i + d.length - 1] / lead;
-    quotient[i] = k;
-    for (let j = 0; j < d.length; j += 1) r[i + j] -= k * d[j];
-  }
-  return { quotient: pTrim(quotient), remainder: pTrim(r.slice(0, Math.max(1, d.length - 1))) };
-}
-
-function qMul(a: CPoly, b: CPoly): CPoly {
-  const out: CPoly = new Array(a.length + b.length - 1).fill(0).map(() => cx(0));
-  for (let i = 0; i < a.length; i += 1) for (let j = 0; j < b.length; j += 1) out[i + j] = cadd(out[i + j], cmul(a[i], b[j]));
-  return out;
-}
-
-function qPow(a: CPoly, n: number): CPoly {
-  let out: CPoly = [cx(1)];
-  for (let i = 0; i < n; i += 1) out = qMul(out, a);
-  return out;
-}
-
-function qAt(a: CPoly, z: Cx): Cx {
-  let out = cx(0);
-  for (let i = a.length - 1; i >= 0; i -= 1) out = cadd(cmul(out, z), a[i]);
-  return out;
-}
-
-function factorial(n: number): number {
-  let out = 1;
-  for (let i = 2; i <= n; i += 1) out *= i;
-  return out;
-}
+/** Below this, a number is zero: a coefficient that survived rounding, not a quantity. */
+const TINY = 1e-9;
 
 // ── What a time function is ──────────────────────────────────────────────
 
@@ -240,10 +169,17 @@ export function tidy(fn: Fn): Fn {
     else seen.set(key, { ...p });
   }
   const terms = [...seen.values()].filter((p) => Math.abs(p.c) >= 1e-7);
-  // Slowest decay first, which is how an answer is written: the term that is
-  // still there at the end of the page leads, and `e^{-t} - e^{-2t}` reads the
-  // way it is spoken rather than starting with a minus sign.
-  terms.sort((p, q) => p.delay - q.delay || q.a - p.a || p.n - q.n || (p.wave === q.wave ? 0 : p.wave === 'cos' ? -1 : 1));
+  /*
+   * Slowest decay first, and within that the highest power of t first.
+   *
+   * Both halves are how an answer is written rather than how it was found: the
+   * term still there at the end of the page leads, so `e^{-t} - e^{-2t}` reads
+   * the way it is spoken, and the powers run down as they do in every
+   * polynomial, so a convolution comes out `t - 1 + e^{-t}` rather than
+   * `-1 + t + e^{-t}`. A sum that opens with a minus sign is one somebody has
+   * to read twice.
+   */
+  terms.sort((p, q) => p.delay - q.delay || q.a - p.a || q.n - p.n || (p.wave === q.wave ? 0 : p.wave === 'cos' ? -1 : 1));
   return { terms, impulses: fn.impulses.filter((i) => Math.abs(i.c) >= 1e-7) };
 }
 
@@ -321,7 +257,46 @@ function names(node: Node, into: Set<string> = new Set()): Set<string> {
 }
 
 /** The names this transforms by rule rather than by arithmetic. */
-const FAMILY = new Set(['u', 'step', 'heaviside', 'δ', 'delta', 'dirac', 'impulse', 'exp', 'sin', 'cos', 'sinh', 'cosh']);
+const FAMILY = new Set([
+  'u', 'step', 'heaviside', 'δ', 'delta', 'dirac', 'impulse',
+  'exp', 'sin', 'cos', 'sinh', 'cosh', 'conv', 'convolve', 'convolution',
+]);
+
+/** `f * g`, in the three spellings — the one thing in the family that is not a shape. */
+const CONV = new Set(['conv', 'convolve', 'convolution']);
+
+/** Whether any part of the tree is a convolution, wherever it is buried. */
+function convolving(node: Node): boolean {
+  switch (node.kind) {
+    case 'call':
+    case 'apply':
+      return CONV.has(node.name) || node.args.some(convolving) || (node.kind === 'apply' && node.power ? convolving(node.power) : false);
+    case 'neg':
+    case 'fact':
+    case 'percent':
+    case 'abs':
+      return convolving(node.body);
+    case 'op':
+      return convolving(node.left) || convolving(node.right);
+    case 'list':
+      return node.items.some(convolving);
+    case 'range':
+      return convolving(node.from) || (node.second ? convolving(node.second) : false) || convolving(node.to);
+    case 'big':
+      return convolving(node.from) || convolving(node.to) || convolving(node.body);
+    default:
+      return false;
+  }
+}
+
+/**
+ * Whether this depends on t, which is not the same as having a t written in it.
+ *
+ * `conv(1, 1)` has no t in it and is t: the convolution of two constants is a
+ * ramp. Folding it to a number because the letter is absent would be the one
+ * silently wrong answer in this file.
+ */
+const varying = (node: Node, of: string): boolean => mentions(node, of) || convolving(node);
 
 /**
  * `a(x + 1)`, `f(t)` and `u(t - 2)` all arrive wearing the same brackets.
@@ -489,7 +464,7 @@ const plus = (a: Fn, b: Fn): Fn => ({ terms: [...a.terms, ...b.terms], impulses:
  * anything outside it comes back as a sentence naming the piece.
  */
 export function readFn(node: Node, of: string, scope: Scope = {}): Got<Fn> {
-  if (!mentions(node, of)) {
+  if (!varying(node, of)) {
     const got = fixed(node, scope);
     return got.ok ? good(constant(got.it)) : got;
   }
@@ -531,7 +506,7 @@ function readOp(node: Node & { kind: 'op' }, of: string, scope: Scope): Got<Fn> 
     return timesFn(left.it, right.it);
   }
   if (node.op === '/') {
-    if (mentions(node.right, of)) return bad(`Dividing by something with ${of} in it is not in this family.`);
+    if (varying(node.right, of)) return bad(`Dividing by something with ${of} in it is not in this family.`);
     const by = fixed(node.right, scope);
     if (!by.ok) return by;
     if (Math.abs(by.it) < TINY) return bad('That divides by zero.');
@@ -543,7 +518,7 @@ function readOp(node: Node & { kind: 'op' }, of: string, scope: Scope): Got<Fn> 
 }
 
 function readPower(base: Node, power: Node, of: string, scope: Scope): Got<Fn> {
-  if (!mentions(power, of)) {
+  if (!varying(power, of)) {
     const n = fixed(power, scope);
     if (!n.ok) return n;
     if (!Number.isInteger(n.it) || n.it < 0 || n.it > 12) {
@@ -560,7 +535,7 @@ function readPower(base: Node, power: Node, of: string, scope: Scope): Got<Fn> {
     return good(out);
   }
   // `2^t` and `e^{-3t}` are the same rule: a constant raised to a straight line.
-  if (mentions(base, of)) return bad(`Something with ${of} in it raised to a power of ${of} has no transform here.`);
+  if (varying(base, of)) return bad(`Something with ${of} in it raised to a power of ${of} has no transform here.`);
   const k = fixed(base, scope);
   if (!k.ok) return k;
   if (k.it <= 0) return bad('Only a positive number can be raised to a power of t here.');
@@ -590,6 +565,14 @@ function readCall(name: string, args: Node[], of: string, scope: Scope): Got<Fn>
   if (KICK.has(name)) {
     const at = shiftPoint(args, of, scope, 'An impulse');
     return at.ok ? good({ terms: [], impulses: [{ c: 1, at: at.it }] }) : at;
+  }
+  if (CONV.has(name)) {
+    if (args.length !== 2) return bad('A convolution takes two functions: conv(t, e^{-t}).');
+    const f = readFn(args[0], of, scope);
+    if (!f.ok) return f;
+    const g = readFn(args[1], of, scope);
+    if (!g.ok) return g;
+    return convolved(f.it, g.it);
   }
   if (args.length !== 1) return bad(`${name} takes one thing in its brackets here.`);
   const line = straight(args[0], of, scope);
@@ -820,155 +803,12 @@ function delayOf(power: Node, of: string, scope: Scope): Got<Transform> {
 // ── Backwards: a function of s, as a function of t ───────────────────────
 
 /**
- * The roots of a polynomial, all at once.
- *
- * Durand–Kerner: start the roots spread round a circle and push each one by
- * the polynomial's value there divided by its distance from the others, which
- * converges on all of them together. There is no formula past the quartic, so
- * a numerical method is not a shortcut here — it is the only way.
- */
-function roots(den: Poly): Cx[] {
-  const a = pTrim(den);
-  const degree = a.length - 1;
-  if (degree < 1) return [];
-  const monic = a.map((v) => v / a[degree]);
-  let guess: Cx[] = [];
-  for (let i = 0; i < degree; i += 1) {
-    const angle = (2 * Math.PI * i) / degree + 0.4;
-    guess.push(cx(0.9 * Math.cos(angle), 0.9 * Math.sin(angle)));
-  }
-  const poly: CPoly = monic.map((v) => cx(v));
-  for (let pass = 0; pass < 500; pass += 1) {
-    let moved = 0;
-    const next: Cx[] = [];
-    for (let i = 0; i < degree; i += 1) {
-      let below = cx(1);
-      for (let j = 0; j < degree; j += 1) if (j !== i) below = cmul(below, csub(guess[i], guess[j]));
-      const step = cdiv(qAt(poly, guess[i]), below);
-      if (!Number.isFinite(step.re) || !Number.isFinite(step.im)) return guess;
-      next.push(csub(guess[i], step));
-      moved = Math.max(moved, cabs(step));
-    }
-    guess = next;
-    if (moved < 1e-15) break;
-  }
-  return guess.map(flattened);
-}
-
-/** A root whose imaginary part is rounding rather than a frequency. */
-const flattened = (z: Cx): Cx => (Math.abs(z.im) < 1e-7 * Math.max(1, cabs(z)) ? cx(z.re, 0) : z);
-
-/**
- * A root that is known to be repeated, sharpened.
- *
- * Durand–Kerner slows to a crawl at a repeated root — `(s+1)^3` comes back as
- * three roots in a ring of about a ten-thousandth about −1, which is nowhere
- * near enough to put back into a partial fraction. Newton's step multiplied by
- * the multiplicity fixes that: it is quadratic again once the count is known,
- * and four or five passes take the ring down to the last bit of the float.
- */
-function polished(den: Poly, root: Cx, times: number): Cx {
-  const poly: CPoly = den.map((v) => cx(v));
-  const slope: CPoly = den.slice(1).map((v, i) => cx(v * (i + 1)));
-  let z = root;
-  for (let pass = 0; pass < 60; pass += 1) {
-    const below = qAt(slope, z);
-    if (cabs(below) < 1e-300) break;
-    const step = cmul(cx(times), cdiv(qAt(poly, z), below));
-    if (!Number.isFinite(step.re) || !Number.isFinite(step.im)) break;
-    z = csub(z, step);
-    if (cabs(step) < 1e-16 * Math.max(1, cabs(z))) break;
-  }
-  return flattened(z);
-}
-
-/** Roots within a radius of each other, taken as one root occurring that many times. */
-function clustered(found: Cx[], near: number): { root: Cx; times: number }[] {
-  const out: { root: Cx; times: number }[] = [];
-  for (const z of found) {
-    const had = near > 0 ? out.find((g) => cabs(csub(g.root, z)) < near * Math.max(1, cabs(z))) : undefined;
-    if (had) {
-      had.root = {
-        re: (had.root.re * had.times + z.re) / (had.times + 1),
-        im: (had.root.im * had.times + z.im) / (had.times + 1),
-      };
-      had.times += 1;
-    } else out.push({ root: { ...z }, times: 1 });
-  }
-  return out;
-}
-
-/** Whether multiplying the factors back out gives the polynomial they came from. */
-function reproduces(groups: { root: Cx; times: number }[], den: Poly): boolean {
-  const top = pTrim(den);
-  const lead = top[top.length - 1];
-  const size = top.reduce((m, v) => Math.max(m, Math.abs(v)), 1);
-  let made: CPoly = [cx(lead)];
-  for (const g of groups) made = qMul(made, qPow([cx(-g.root.re, -g.root.im), cx(1)], g.times));
-  if (made.length !== top.length) return false;
-  for (let i = 0; i < top.length; i += 1) {
-    if (Math.abs(made[i].re - top[i]) > 1e-8 * size) return false;
-    if (Math.abs(made[i].im) > 1e-8 * size) return false;
-  }
-  return true;
-}
-
-/**
- * The roots gathered into the distinct ones and how many times each occurs.
- *
- * A repeated root is never found exactly, so nearby roots are gathered,
- * sharpened, and then *checked* — the factors are multiplied back out and
- * compared with the polynomial they came from. A radius that gathered too much
- * fails that check and the next one down is tried, ending at a radius of
- * nothing, which is every root on its own. A wrong multiplicity is a wrong
- * answer, and guessing one is worse than a clumsier partial fraction that is
- * right.
- */
-function gathered(found: Cx[], den: Poly): { root: Cx; times: number }[] {
-  for (const near of [1e-2, 1e-3, 1e-4, 0]) {
-    const groups = clustered(found, near).map((g) => ({ ...g, root: polished(den, g.root, g.times) }));
-    if (reproduces(groups, den)) return groups;
-  }
-  return found.map((z) => ({ root: z, times: 1 }));
-}
-
-/** `den(s)` with one root taken out, once — synthetic division, exactly. */
-function without(poly: CPoly, root: Cx): CPoly {
-  const out: CPoly = new Array(Math.max(1, poly.length - 1)).fill(0).map(() => cx(0));
-  let carry = cx(0);
-  for (let i = poly.length - 1; i >= 1; i -= 1) {
-    carry = cadd(poly[i], cmul(carry, root));
-    out[i - 1] = carry;
-  }
-  return out;
-}
-
-/** A square complex system, by elimination with the biggest pivot available. */
-function solved(matrix: Cx[][], rhs: Cx[]): Cx[] | null {
-  const n = rhs.length;
-  const m = matrix.map((row, i) => [...row, rhs[i]]);
-  for (let col = 0; col < n; col += 1) {
-    let best = col;
-    for (let row = col + 1; row < n; row += 1) if (cabs(m[row][col]) > cabs(m[best][col])) best = row;
-    if (cabs(m[best][col]) < 1e-12) return null;
-    [m[col], m[best]] = [m[best], m[col]];
-    for (let row = 0; row < n; row += 1) {
-      if (row === col) continue;
-      const k = cdiv(m[row][col], m[col][col]);
-      for (let j = col; j <= n; j += 1) m[row][j] = csub(m[row][j], cmul(k, m[col][j]));
-    }
-  }
-  return m.map((row, i) => cdiv(row[n], m[i][i]));
-}
-
-/**
  * One fraction, split and turned back into terms.
  *
- * The split is a linear system rather than the residue formula: with the basis
- * `den(s)/(s − r)^i` written out as polynomials, the coefficients are whatever
- * combination of them reproduces the numerator, which is one solve. The
- * residue formula needs derivatives at repeated roots and loses accuracy at
- * every one of them.
+ * The splitting is `partialFractions` in `lib/poly.ts`, which the z-transform
+ * uses too; what is here is the only part that is about time — that
+ * `A/(s − r)^i` is `A t^{i-1}e^{rt}/(i-1)!`, and that a conjugate pair is one
+ * oscillation counted once rather than two terms with imaginary parts in them.
  */
 function back(num: Poly, den: Poly): Got<Fn> {
   const top = pTrim(num);
@@ -989,39 +829,21 @@ function back(num: Poly, den: Poly): Got<Fn> {
     rest = split.remainder;
   }
   if (pTrim(rest).length === 1 && Math.abs(pTrim(rest)[0]) < TINY) return good({ terms: [], impulses });
-  const groups = gathered(roots(bottom), bottom);
-  const degree = bottom.length - 1;
-  const poly: CPoly = bottom.map((v) => cx(v));
-  const columns: { root: Cx; power: number; coefficients: CPoly }[] = [];
-  for (const g of groups) {
-    let left = poly;
-    for (let i = 1; i <= g.times; i += 1) {
-      left = without(left, g.root);
-      columns.push({ root: g.root, power: i, coefficients: left });
-    }
-  }
-  if (columns.length !== degree) return bad('The bottom of this fraction did not come apart.');
-  const matrix: Cx[][] = [];
-  for (let row = 0; row < degree; row += 1) matrix.push(columns.map((c) => c.coefficients[row] ?? cx(0)));
-  const want: Cx[] = [];
-  for (let row = 0; row < degree; row += 1) want.push(cx(rest[row] ?? 0));
-  const answer = solved(matrix, want);
-  if (!answer) return bad('The bottom of this fraction did not come apart.');
+  const parts = partialFractions(rest, bottom);
+  if (!parts) return bad('The bottom of this fraction did not come apart.');
 
   const terms: Term[] = [];
-  for (let i = 0; i < columns.length; i += 1) {
-    const { root, power } = columns[i];
-    const A = answer[i];
+  for (const { root, power, coef } of parts) {
     const over = factorial(power - 1);
     if (Math.abs(root.im) < TINY) {
-      terms.push(term(A.re / over, power - 1, root.re));
+      terms.push(term(coef.re / over, power - 1, root.re));
       continue;
     }
     // A conjugate pair is one oscillation, counted once: the two halves add to
     // twice the real part, which is a cosine and a sine of the same frequency.
     if (root.im < 0) continue;
-    terms.push(term((2 * A.re) / over, power - 1, root.re, root.im, 'cos'));
-    terms.push(term((-2 * A.im) / over, power - 1, root.re, root.im, 'sin'));
+    terms.push(term((2 * coef.re) / over, power - 1, root.re, root.im, 'cos'));
+    terms.push(term((-2 * coef.im) / over, power - 1, root.re, root.im, 'sin'));
   }
   return good(tidy({ terms, impulses }));
 }
@@ -1038,6 +860,88 @@ export function inverse(rat: Transform): Got<Fn> {
     });
   }
   return good(tidy(out));
+}
+
+// ── Convolution, which is a multiplication once you are in s ─────────────
+
+/**
+ * `f * g` — the integral of `f(τ)g(t − τ)` from 0 to t, without the integral.
+ *
+ * This is the convolution theorem and it is the whole reason the theorem is
+ * worth knowing: the integral is awkward, the product of the transforms is
+ * not, and the family here is closed under both directions. So the work is
+ * three steps that already exist — transform each side, multiply, come back —
+ * and the answer is exact rather than a quadrature over a grid.
+ *
+ * Delays add, which is right: a thing switched on at two convolved with a
+ * thing switched on at three is switched on at five, and `timesPiece` gets
+ * that for free from the `e^{-as}e^{-bs}` the two carry.
+ */
+export function convolved(f: Fn, g: Fn): Got<Fn> {
+  const product: Transform = [];
+  for (const p of forward(f)) for (const q of forward(g)) product.push(timesPiece(p, q));
+  return inverse(product);
+}
+
+// ── Where a transform blows up, and what that says about the thing ───────
+
+/** A root of the denominator: where the transform is infinite. */
+export type Pole = Complex;
+
+/**
+ * The poles of a transform.
+ *
+ * Every term of the answer is `e^{(pole)t}` times something slower, so the
+ * poles are the whole of how a system behaves without solving it: left of the
+ * axis it dies away, right of it it grows, on it it rings forever. That is why
+ * an engineer looks at these before looking at the curve.
+ */
+export function poles(rat: Transform): Pole[] {
+  const out: Pole[] = [];
+  for (const p of rat) {
+    const den = pTrim(p.den);
+    if (den.length < 2) continue;
+    for (const g of gathered(roots(den), den)) {
+      for (let i = 0; i < g.times; i += 1) out.push({ re: round(g.root.re), im: round(g.root.im) });
+    }
+  }
+  return out.sort((a, b) => b.re - a.re || Math.abs(a.im) - Math.abs(b.im));
+}
+
+/** A pole, or a conjugate pair written once with a ±. */
+function poleName(p: Pole): string {
+  if (Math.abs(p.im) < 1e-7) return numberText(p.re);
+  const real = Math.abs(p.re) < 1e-7 ? '' : `${numberText(p.re)} ± `;
+  return `${real}${Math.abs(p.im) === 1 ? '' : numberText(Math.abs(p.im))}i`;
+}
+
+/**
+ * What the poles say, in a sentence.
+ *
+ * The sentence rather than the numbers alone, because the numbers are only
+ * worth having for what they mean: a pole at `-0.15 ± 0.98861i` is a thing
+ * that wobbles and settles, and reading that off two coordinates is a skill
+ * somebody is still learning on the week they need this screen.
+ */
+export function poleText(list: Pole[]): string {
+  if (!list.length) return 'No poles: this is a polynomial in s, which is an impulse and its slopes.';
+  const seen: Pole[] = [];
+  for (const p of list) {
+    if (p.im < 0 && seen.some((q) => Math.abs(q.re - p.re) < 1e-7 && Math.abs(q.im + p.im) < 1e-7)) continue;
+    if (seen.some((q) => q.re === p.re && q.im === p.im)) continue;
+    seen.push(p);
+  }
+  const where = seen.map(poleName).join(', ');
+  const worst = Math.max(...list.map((p) => p.re));
+  const says =
+    worst < -1e-7
+      ? 'all left of the axis, so it settles'
+      : worst > 1e-7
+        ? 'one of them right of the axis, so it runs away'
+        : 'one of them on the axis, so it neither settles nor runs away';
+  // Counted before the pair is collapsed: `-1 ± 2i` is two poles written once,
+  // and "Pole at -1 ± 2i" is a sentence about a thing that does not exist.
+  return `${list.length === 1 ? 'Pole' : 'Poles'} at ${where} — ${says}.`;
 }
 
 // ── The reason for the other two: solving an equation exactly ────────────
@@ -1183,6 +1087,24 @@ export function exactly(opts: {
     y0: opts.y0,
     v0: opts.v0,
   });
+}
+
+/**
+ * The transfer function of `y'' = a y + b y' + f(t)`, which is `1/(s² − bs − a)`.
+ *
+ * The same `Q(s)` the solution above divides by, read on its own. That is not
+ * a coincidence and it is the point: dividing by `Q` is what solving the
+ * equation *is* once it is transformed, so `1/Q` is the equation itself,
+ * written as the thing it does to whatever is put into it. The initial
+ * conditions are nowhere in it, which is also right — a transfer function is
+ * the system and not the run.
+ */
+export function transferOf(opts: { body: Node; of: string; order: 1 | 2; scope: Scope }): Got<Transform> {
+  const read = linearOde(opts.body, opts.of, opts.scope);
+  if (!read.ok) return read;
+  const { a, b } = read.it;
+  const q: Poly = opts.order === 1 ? [-a, 1] : [-a, -b, 1];
+  return good([{ delay: 0, num: [1], den: q }]);
 }
 
 // ── Writing it down ──────────────────────────────────────────────────────

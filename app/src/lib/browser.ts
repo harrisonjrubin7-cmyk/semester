@@ -83,6 +83,21 @@ export interface AppTab {
    */
   pinned?: boolean;
   /**
+   * Silenced, whatever it plays.
+   *
+   * On the tab rather than on the player, because that is what makes it a
+   * *tab* setting: a lesson tab you muted on the bus is still muted when you
+   * come back to it an hour later and start a different unit in it. The
+   * player is one element shared by everything (`lib/sound.ts`); a mute kept
+   * there would be a mute on the app, and would be forgotten the moment
+   * anything else claimed it.
+   *
+   * Present-or-absent like `pinned`, so a strip written by this build and
+   * read by an older one loses a mute rather than gaining a field it cannot
+   * read.
+   */
+  muted?: boolean;
+  /**
    * The group this tab belongs to, if it is in one.
    *
    * The id of a `TabGroup` in the same strip, never the group itself: a tab
@@ -531,6 +546,46 @@ export function sameplace(a: Action[], b: Action[]): boolean {
   return a.length === b.length && a.every((x, i) => JSON.stringify(x) === JSON.stringify(b[i]));
 }
 
+/**
+ * The tab already sitting at this place, if one is.
+ *
+ * What a search result carries is the actions that would open it — the same
+ * actions a tab keeps — so "is this already open?" is `sameplace` against
+ * every tab, and nothing cleverer. That question has an answer worth acting
+ * on: picking a result whose place is already open should go to the tab that
+ * has it rather than making a second tab onto the same page, which is what
+ * a browser's address bar does and the reason it says "Switch to tab".
+ *
+ * A blank tab is never the answer. It has no screen and no place, and an
+ * empty place would otherwise match a result whose actions had all been
+ * filtered out on the way off the device — sending you to a new tab page
+ * instead of the thing you searched for.
+ *
+ * The first match rather than all of them: two tabs on one place is allowed
+ * (nothing stops you opening the same course twice) and the one nearest the
+ * front of the strip is the one a person means.
+ *
+ * ## Why the row this feeds carries no speaker
+ *
+ * It was going to. A result already open in the tab that is playing would
+ * have said so, the way the strip and the tab list do — and it cannot
+ * happen. Two places in this app play audio: the lesson screen, and a guide
+ * in listen mode. No result lands on `lesson` at all (`landingOf` in
+ * `lib/openhit.ts` has no case for it, and a `screen` hit's place is a bare
+ * `justGo`, which is "the lesson screen" rather than *this* lesson), and
+ * every unit hit is built with `mode: 'cards'` (`lib/find.ts`), so a unit
+ * result opens the guide in a different place from the one that is playing —
+ * which `sameplace` correctly refuses to match.
+ *
+ * Written down here rather than discovered twice. If lessons ever become
+ * searchable, the mark is three lines and this paragraph is the reason it was
+ * not three lines sooner.
+ */
+export function tabAt(strip: Strip, place: Action[]): AppTab | undefined {
+  if (place.length === 0) return undefined;
+  return strip.tabs.find((t) => t.screen && t.place.length > 0 && sameplace(t.place, place));
+}
+
 /** Open a screen in a tab of its own — the middle-click, as a button. */
 export function openBeside(
   strip: Strip,
@@ -645,6 +700,36 @@ export function pin(strip: Strip, which: number, pinned = true): Strip {
 function unpinned(tab: AppTab): AppTab {
   const { pinned: _out, ...rest } = tab;
   return rest;
+}
+
+/**
+ * Silence this tab, or let it speak again.
+ *
+ * Nothing else moves: not the order, not the tab you are on, not what is
+ * playing. Muting is not stopping — the lesson goes on running and keeps its
+ * place, which is the difference between turning a tab down and closing it,
+ * and the reason a browser offers both.
+ *
+ * No `tidy`, because no invariant of the strip mentions this: a muted tab may
+ * be pinned, grouped, first, last or the one you are on.
+ */
+export function mute(strip: Strip, which: number, muted = true): Strip {
+  const tab = strip.tabs[which];
+  if (!tab || Boolean(tab.muted) === muted) return strip;
+  const tabs = [...strip.tabs];
+  tabs[which] = muted ? { ...tab, muted: true } : unmuted(tab);
+  return { ...strip, tabs };
+}
+
+/** The same tab, no longer muted — the key removed rather than set false. */
+function unmuted(tab: AppTab): AppTab {
+  const { muted: _out, ...rest } = tab;
+  return rest;
+}
+
+/** Is the tab with this id muted? For the player, which knows an id. */
+export function mutedTab(strip: Strip, id: string): boolean {
+  return Boolean(strip.tabs.find((t) => t.id === id)?.muted);
 }
 
 /** How many tabs are pinned, which is where the working strip begins. */
@@ -1108,6 +1193,10 @@ function storedTabs(raw: unknown, known: (screen: string) => boolean, blanks: bo
       ...(typeof tab.query === 'string' && tab.query ? { query: tab.query } : {}),
       ...(typeof tab.group === 'string' && tab.group ? { group: tab.group } : {}),
       ...(tab.pinned === true ? { pinned: true } : {}),
+      // Strictly `true`, like `pinned`: this object is built field by field
+      // precisely so that a stored tab can carry nothing the app did not ask
+      // for, and "truthy" is how that guarantee gets lost.
+      ...(tab.muted === true ? { muted: true } : {}),
       // A tab whose place did not survive the check still knows its screen,
       // so it lands you there rather than nowhere. Losing the deadline you
       // had open is a smaller failure than a tab that does nothing.

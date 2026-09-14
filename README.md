@@ -8,6 +8,13 @@ Built first for one Vanderbilt semester (Fall 2026, four courses, by hand), then
 generalised: anyone can sign in, upload their own syllabus and readings, and get
 the same thing for their own courses.
 
+It has since grown past the term it started as. Alongside the coursework there
+is a place to make things that are not documents, the university's own services
+with an honest account of which parts this app can do anything about, and four
+workspaces for the parts of a degree that outlast a semester — the season you
+train for, the job you are applying to, the people at home, and the degree after
+this one. Those are the three sections near the end of this file.
+
 **Live: https://harrisonjrubin7-cmyk.github.io/semester/** · running your own
 copy: [SETUP.md](SETUP.md)
 
@@ -290,8 +297,7 @@ makes it one: a tab holds a place in the app, so "I was reading the guide, let
 me check when that is due, now where was I" costs a click rather than four
 navigations and a hunt for your place. A tab with nothing in it yet is a new
 tab, and a new tab is the search page — opening one and typing is a single
-gesture for *somewhere else, without losing this*. Ten is the ceiling; past
-that, the oldest tab you are not using gives way.
+gesture for *somewhere else, without losing this*.
 
 **Groups** are for the Wednesday when there are nine of them. Right-click a tab
 (or press the ⌄ on the one you are on) and **New group**: it and everything you
@@ -310,13 +316,19 @@ tabs as a list**: every one of them in the strip's own order, with the group
 each belongs to beside it, filtered as you type and forgiving of a typo the
 same way the rest of the app's search is. Enter opens the one under the
 cursor. It appears once there are four tabs; below that the strip is the
-search.
+search. Each row also says whether its tab has a voice: a speaker on the one
+that is playing, and a crossed one on a tab that is **muted and silent** —
+which the strip never shows, because the strip is short of room and that state
+has nothing happening to point at. It is the setting **Mute this tab** leaves
+behind, and this is the only place you can see it or undo it. Pressing either
+does what the strip's speaker does.
 
 Under them is **Recently closed**, because the cross is eight pixels from the
 name and on a phone that is inside a thumb: the last ten tabs you shut are
 there to be put back, with what they were — the screen, the name, the group —
-into the seat they were closed from, and one press does it. It is the same
-list the Browser navigation's own reopen reads, and it survives a reload. Ten, and no more: a list of everything closed this term
+into the seat they were closed from, and one press does it. It survives a reload, which is
+what a list kept on the strip can do and a list kept in a variable cannot.
+Ten, and no more: a list of everything closed this term
 is a history of your term, which is a different thing to keep and not one this
 app decided to. **Clear** is beside the list, where somebody is when they want
 it gone.
@@ -335,6 +347,28 @@ the rest of the app uses for anything with an order — and on the strip the
 drop means something as well: let a tab go among a group's tabs and it joins
 the group, drag it clear of them and it leaves. Alt with the left and right
 arrows does the same without a pointer.
+
+**Muting** is for the tab that is talking. A lesson is forty minutes of
+narration and the thing you put on walking across campus, so it keeps playing
+when you go and look at something else — the player is one element that lives
+above every screen, and the *tab* owns it rather than the page. Whichever tab
+is playing grows a speaker, and it is a button: press it and that tab goes
+quiet without you having to go to it, which is the question every browser
+added this control to answer. Muting is not stopping. The lesson runs on and
+keeps its place, the way turning a tab down differs from closing it, and the
+mute is remembered — a tab you silenced on the bus is still silent when you
+come back to it, and **Mute this tab** in the menu silences one before it has
+played anything at all, which is what you want in a library.
+
+A sound ends the way it would in a browser: close the tab that owns it, or
+navigate that tab somewhere else, and it stops. Only one thing plays at a
+time — this is a place to study, and two narrations over each other is not a
+feature anybody asked for.
+
+A result you already have open says **Switch to tab**, and pressing it goes to
+that tab instead of making a second one onto the same page — which is what an
+address bar does, and what stops the strip filling with duplicates of the
+things you look at most. The ⧉ beside it still opens another on purpose.
 
 **Bookmarks** are the other half. A tab is where you are; a bookmark is where
 you keep going back to — the ECON study guide, the essay brief, the deadline
@@ -516,8 +550,8 @@ stayed behind. Three screens now, on the **Make** shelf, and none of them has a
 model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
-  checklists, quotations, tables, equations, code blocks, page breaks — out as
-  a real `.docx`, as
+  checklists, quotations, tables, pictures, equations, code blocks, a contents
+  page, dividers, page breaks — out as a real `.docx`, as
   Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
   `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
   link becomes a real hyperlink in the Word file rather than an address typed
@@ -537,6 +571,45 @@ model in it or needs a key:
   survives into the Word file. Its Markdown fence grows longer than any run of
   backticks inside it, so a snippet *about* Markdown does not quietly end its
   own block halfway down.
+
+  A **picture** is one of your own files — a PNG, a JPEG or a GIF, chosen from
+  the drive or added from the device on the spot — with alt text and a caption
+  beside it. The block holds the file's id and not its bytes: a document is
+  saved in the browser's local storage with everything else, and a single
+  phone screenshot written into it would spend the whole budget on one figure,
+  so the picture stays in the drive and the export goes and fetches it. Two
+  consequences worth knowing. A screenshot 1200 pixels wide is twelve and a
+  half inches at the size Word reads pixels, so it is brought down to the
+  6.5-inch text column — Word draws exactly the size it is told, and a picture
+  written out at its natural size runs off the paper. And a file you later bin
+  is not a broken document: the caption still exports, the picture does not,
+  and the editor says so and offers to find another. The alt text is separate
+  from the caption on purpose — it is what a screen reader in Word reads out,
+  so it says what is *in* the picture, where a caption says what to make of
+  it.
+
+  A **list can nest.** Each item has ← and → beside it, five levels deep, and
+  a sub-item exports as a sub-item: indented under its parent in Markdown, at
+  its own `ilvl` in Word with the marker cycling • ○ ▪ and 1. a. i. the way
+  Word's own lists do. Not Tab — a list here is a column of ordinary text
+  fields on a card, and Tab is how a keyboard gets out of one, so taking it
+  would trap exactly the people who cannot reach for the mouse instead. Lists
+  written before this still work: an item that is a bare string is read as a
+  line at the left margin, which is what it always was.
+
+  A **divider** is a line between one section and the next, and a **page
+  break** starts a new page. Two blocks, one line apart on the Insert bar,
+  because they are two different things — which they had not been. The page
+  break used to write `---` to Markdown, and `---` is Markdown's *thematic
+  break*: a divider. So a document exported from here said divider and meant
+  page break, and re-importing it only worked because both ends were wrong in
+  the same direction. The divider has `---` now, which was always its
+  spelling, and the page break is written as an HTML comment — invisible in
+  GitHub, Obsidian, Pandoc and anything else that reads Markdown, so there is
+  no noise where the page breaks were. One thing this costs, worth knowing
+  rather than finding out: a Markdown file exported from this app *before*
+  now will re-import its page breaks as dividers. That is the right reading
+  of `---` and the wrong answer for that file, and it is visible on the page.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
   `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It
@@ -844,6 +917,116 @@ model in it or needs a key:
   against the Runge–Kutta walk, which shares no code with any of this and
   agrees to six places. See `app/src/lib/laplace.ts`.
 
+  **`conv(t, e^{-t})` is a convolution** — the integral of `f(τ)g(t - τ)` from
+  0 to t — done as the product it is in `s`. That is the whole reason the
+  convolution theorem is worth knowing, and it is what makes it cheap here: the
+  family is closed in both directions, so the work is three steps that already
+  exist, and the answer is exact rather than a quadrature over a grid. It comes
+  out `t - 1 + e^{-t}`, which is what the integral comes to. Delays add, as
+  they should: a thing switched on at two convolved with a thing switched on at
+  three is switched on at five. Checked against the integral itself, worked by
+  Simpson's rule inside the test rather than in the app, so the two methods
+  share nothing.
+
+  **An `H =` line with an `s` in it is a transfer function** —
+  `H = \frac{1}{s^2 + 0.3s + 1}` — told apart from the letter H with a value by
+  the same rule that tells `r = 5` from a polar curve: what is written in it.
+  It is drawn as its impulse response, which is `H` itself read the other way,
+  and the sentence under it is the part worth having: *poles at
+  -0.15 ± 0.988686i — all left of the axis, so it settles*. Every term of the
+  answer is `e^{(pole)t}` times something slower, so the poles are the whole of
+  how a thing behaves without solving anything, which is why an engineer reads
+  them before reading the curve.
+
+  And an equation on the list gets the same treatment: under `y'' = -y - 0.3y'`
+  the app prints `H(s) = \frac{1}{s^2 + 0.3s + 1}` and where its poles are,
+  beside the exact solution. The transfer function is the same `Q(s)` the
+  solution divides by, read on its own — which is not a coincidence: dividing
+  by `Q` is what solving the equation *is*, once it is transformed. It carries
+  no initial conditions, which is also right. A transfer function is the system
+  and not the run, so it is there before anybody has written a `y(0) =`.
+
+  **`fourier(sign(\sin(t)), 2\pi)` is a Fourier series** — the harmonics a
+  repeating thing is made of — drawn over the thing itself, faint, which is the
+  whole picture: the partial sum climbing towards the square wave, ringing
+  where the jumps are. It prints what it found,
+  `1.27324\sin(t) + 0.424413\sin(3t) + \cdots`, which is `4/n\pi` to six
+  figures.
+
+  This one is not in the family above and does not need to be. A series is an
+  integral per coefficient, and the functions people take the series *of* are
+  the ones with corners and jumps in them — a square wave, a sawtooth, a
+  rectified sine — none of which is a shape any table has. So the coefficients
+  are integrated rather than looked up, which makes this work on anything the
+  calculator can evaluate: `|t|`, `\text{sign}`, `\text{floor}`, a formula
+  somebody wrote this morning.
+
+  The honest difficulty is that Simpson's rule across a jump is bad arithmetic
+  — the error is first order in the step, so a square wave's `b_1` would come
+  out to four figures rather than twelve. So the jumps are found first, sampled
+  and then bisected to the last bit of the float, and each smooth piece is
+  integrated on its own with its ends read from inside. That last part was
+  worth three ten-thousandths on its own: `\text{sign}(\sin(t))` is zero at
+  `t = 0`, which is neither of its two values, and Simpson's rule gives that
+  one sample a third of a panel's weight.
+
+  The overshoot at each jump is Gibbs and is not a mistake: the first peak
+  settles on `1.178980`, however many harmonics are taken, and a series that
+  did not overshoot would be the wrong series. Checked at thirty, sixty and a
+  hundred and twenty terms.
+
+  **`F{e^{-2t}}` is a Fourier transform**, drawn against `ω`. For a signal that
+  starts at zero and settles, this is the Laplace transform read up the
+  imaginary axis — `F(\omega) = F_L(i\omega)` — which is not a shortcut but
+  the definition, the two integrals being the same integral once `s = i\omega`.
+  So the whole of the Laplace engine is the engine here and there is no second
+  table. `F{e^{-0.4t}\sin(6t)}` draws the twin peaks at `\pm 6` that say where
+  a dying wobble keeps its energy.
+
+  What comes back is complex, so what is drawn is its size, and the line says
+  so rather than leaving somebody to assume the picture is the transform. And
+  it follows from the definition that the transform exists only where the
+  signal settles: `F{1}` and `F{\sin(t)}` have poles on the axis and their
+  transforms are impulses in frequency rather than functions, so they are
+  refused with the sentence that says exactly that — which is a better lesson
+  than an answer made of the part that happens to be a function. `F{e^{-|t|}}`
+  is the one two-sided shape taken, because an even function is its own right
+  half read twice.
+
+  **`Z{0.5^n}` is a z-transform**, which is Laplace for a thing that happens on
+  the beat rather than continuously — a balance after each month, a reading
+  each second, a series each quarter. `Z^{-1}{z/((z-1)(z-2))}` is the sequence
+  behind one, and it reads `2^n - 1`.
+
+  The family is the discrete twin of the Laplace one: `c\,n^k r^n` times a
+  cosine or a sine of `\omega n`, starting at `n = d`. Same closure, same
+  reason there is no half-solved case to fall into. The arithmetic is shared
+  outright — `app/src/lib/poly.ts` now holds the roots and the partial
+  fraction, because taking `\frac{z}{(z-2)(z-3)}` apart is the same problem as
+  taking `\frac{1}{(s+1)(s+2)}` apart, and two copies of a root finder are two
+  root finders that drift.
+
+  What differs is worth saying. The work is done in `w = z^{-1}`, where the
+  sums are geometric and a delay is a multiplication, and turned back into `z`
+  only to be written down, which is why the denominators come out as tables
+  print them. Where a Laplace pole left of the axis means a thing settles, a
+  z-transform pole *inside the unit circle* means it dies away, and the line
+  under it says which — `|p| < 1` is the whole of discrete stability.
+
+  And the answer is drawn as the beats it is: points on the integers with a
+  stem to each, nothing before `n = 0`, and no line joining them. A curve
+  through those points would claim a value at `n = 1.5`, which is not a thing
+  that exists. For the same reason a step at `u(n - 1.5)` is refused rather
+  than rounded.
+
+  Building it found a bug in the adding-up. Three terms over a denominator
+  built by multiplying — `(1-w)^3(1-0.5w)` — has a pole at 1 three times where
+  the sequence has it twice; the spare one cancels against a zero on top, and a
+  partial fraction asked to split at a pole that is not there answered with a
+  five-hundred-thousand. Caught by transforming a sequence and transforming it
+  back, which is the test worth having for a pair of functions that are meant
+  to undo each other.
+
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms
   without complaint. A bracket after a letter is a multiplication or a function
@@ -1031,6 +1214,76 @@ course brings the filing back. `app/src/lib/forwork.ts` is the only module that
 reads it; `app/src/lib/clips.ts` is what makes asking "how much is filed against
 this" affordable on forty rows at once.
 
+## One door to making things
+
+The app could already write a document, build a deck and fill a spreadsheet, on
+three screens you had to know the names of. **Create** is the screen you open
+when you know what you want to make and not which screen makes it: nine tiles,
+six of which hand straight over to the editor that already exists — documents,
+decks, spreadsheets, maths activities, study guides, notes — and three that are
+its own. Forms, designs and videos share one project shape and one device
+library (`app/src/lib/creations.ts`).
+
+The asymmetry is deliberate. A second document editor behind a tile would be a
+second place documents could live, which is the thing the rest of this app
+spends its effort not doing. A project is told which course and which deadline
+it belongs to before it is created, so its export lands in Files against the
+right one without anybody filing it afterwards.
+
+The three it owns are basic editors and say so: a form with nine question
+types, response windows and CSV out; a design surface with text, shapes,
+images, layers and SVG, PNG or JPG export; a video editor that trims, splits,
+orders, re-times and renders 720p WebM in the browser. No transcription, no
+multi-track mixing, no MP4, no real-time collaboration.
+
+## The university itself
+
+**University** is thirty-seven service areas — registration, the bursar,
+dining, advising, accessibility, the library, health, transport, the ID card —
+each saying plainly what this app can do for it. For nearly all of them the
+answer is the same: it can help you *prepare*. It holds the questions for an
+advising appointment, the checklist before a form is filed, the draft of an
+appeal, and it reuses the course, study, registration, degree, billing, meal,
+housing and map tools that are already here rather than growing copies of them.
+
+It cannot file, register, pay or submit anything. Behind the screen there is a
+real gateway — verified identity, per-school and per-record permission
+boundaries, per-service capabilities, preview-then-confirm, an encrypted action
+journal, receipts and reconciliation (`packages/institution/`, `app/server/`) —
+and the production adapter registry is deliberately empty until a school
+approves one. The hero on that screen counts *connected* services rather than
+the thirty-seven, because thirty-seven is the impressive number and the wrong
+one: it is nought until a school deploys something.
+
+## Beyond the term
+
+Four workspaces for the parts of a degree a semester does not contain. Each
+keeps its work on the device, apart from the term, so none of it disappears when
+the term is archived — and none of it reaches an institution.
+
+- **Athletics** — the practices, the training and the travel, against the
+  classes and deadlines they collide with. The conflict list is the screen; the
+  absence request, the travel study pack and the calendar entries are all built
+  from it. A roster, eligibility, medical clearance and an authorised absence
+  belong to an athletics office, and the screen says so.
+- **Career** — what is open, what you have done and who you have spoken to, in
+  one place because for a student they are one job. There is no job board
+  behind it: every opportunity was typed in or imported from a file, and the
+  link goes to the official source. "Track it" hands the opportunity to the
+  app's one applications tracker rather than starting a second.
+- **Family** — deciding what a parent sees, item by item, with nothing shared
+  by default. The version everybody builds is a parent login, which hands over
+  the grades, the health administration and where somebody is at nine on a
+  Tuesday. This is the opposite shape: a person, a category, the individual
+  things chosen for them, an expiry, and a preview that shows exactly that and
+  nothing else. No invitation is sent and no account is created.
+- **Pathway** — applying somewhere, arriving, transferring, a thesis,
+  graduating, leaving: eleven milestone templates that are the order the
+  deadlines actually fall in, for somebody meeting each exactly once. Every
+  status on it is what you typed, and every place one is drawn says whose claim
+  it is. The cost table refuses to rank, convert currencies or subtract loans
+  as aid.
+
 ## Phone, iPad, laptop, or its own window
 
 One build, three layouts and a way of installing it. The two boundaries are
@@ -1044,9 +1297,17 @@ written once, in `app/src/lib/media.ts`, and repeated in the media queries of
   so every iPad in portrait (768–834pt) gets it, and landscape and Split View
   follow the window live. An iPad mini upright, and any half-width split, stay
   on the phone layout at full height. The touch sizes do not change: the finger
-  holding an iPad is the finger that held the phone. The content column fills
-  whatever the rail leaves, up to a 760px cap so a list row on a landscape iPad
-  is not a metre of hairline with its value stranded at the far end.
+  holding an iPad is the finger that held the phone — the rail's own rows
+  included, which they were not. Unrolled, the five destinations that are 51px
+  tall each in the tab bar came out at 41 in the rail, and the five under them
+  — Ask Claude, Account, Settings — at 35, so the one piece of chrome on screen
+  the whole time was the one part of a tablet build nobody had sized for a
+  tablet. They have a 44px floor now, on `pointer: coarse` rather than on a
+  width: an iPad at 1194 is in the desktop layout and still has a finger on it,
+  and a browser window dragged to 820 is in the tablet layout and does not.
+  The content column fills whatever the rail leaves, up to a 760px cap so a
+  list row on a landscape iPad is not a metre of hairline with its value
+  stranded at the far end.
 - **Desktop** (1180px and up) — a window rather than a phone propped up. A
   wider sidebar with room for its labels; the app filling the window instead of
   a 560px column with black either side; a measured reading column with the
@@ -1058,6 +1319,28 @@ written once, in `app/src/lib/media.ts`, and repeated in the media queries of
   the last week of the month falling off the bottom of a laptop screen. A
   fourth step at 1600px widens the measure again rather than stranding the
   layout in the middle of a large monitor.
+- **Held, rather than opened in a window** — which is the thing width alone
+  cannot tell you, and the three boundaries above are widths. An iPhone 15 Pro
+  Max on its side is 932pt across, wider than an iPad mini is upright, so it
+  was getting the tablet layout: a rail of ten rows down the side of 430px of
+  height, taking 220px of the width for a navigation whose last items ran off
+  the bottom. And the standalone column's 402px cap — the artboard the app was
+  drawn on, which never comes into play on a phone held upright because the
+  phone is narrower than it is — did come into play the moment the phone was
+  turned, and again on an iPad mini upright at 744 and on any iPad in Split
+  View: the app drawn as a column down the middle of the device with black
+  either side of it and a tab bar reaching neither edge.
+  Both are the same sentence — on a device the app fills the device, and a cap
+  written for a window belongs to a window. `pointer: coarse` is what tells
+  the two apart, paired with a short viewport (under 600px, which no tablet is
+  at any rotation and every phone is on its side) or a narrow one. A desktop
+  window dragged short or narrow has a mouse in it and keeps the desktop.
+  `HANDHELD` in `app/src/lib/media.ts` is the query, the last block of the
+  layout section in `app.css` is its copy, and `lib/tiers.test.ts` holds the
+  two together the way it holds the widths. The side safe-area insets are read
+  here too — a notch goes to whichever side is the top when a phone is turned,
+  and `viewport-fit=cover` means the header and the tab bar sit under it
+  unless something asks.
 - **Installed** — a manifest, PNG icons (iOS ignores an SVG tile) and a service
   worker make it a real window on macOS or Windows and an icon on a home screen,
   with the app shell and anything you have played working offline. Audio is

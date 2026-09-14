@@ -1867,6 +1867,41 @@ function MonthView() {
 const WEEK_LIST: CSSProperties = { fontSize: 'var(--type-sm)', opacity: 0.72, lineHeight: 1.35 };
 
 /**
+ * One nameable thing in a week, as something a finger can hit.
+ *
+ * These rows are the view's whole interaction — fifty-three of the sixty-one
+ * controls on a phone are one of these — and they were sixteen pixels tall,
+ * stacked with nothing between them. Sixteen is below WCAG's twenty-four and
+ * a long way below the forty-four every touch guideline asks for; on a phone
+ * it is about a fifth of a fingertip, and the thing above it is the thing you
+ * hit instead.
+ *
+ * Thirty-two rather than forty-four, and the number was arrived at by
+ * measuring both. At forty-four the term ran to five and a half screens
+ * against the three it was, and a view whose whole question is "how bad does
+ * October get" answers it worse the more scrolling stands between the weeks.
+ * Thirty-two clears WCAG's floor with a third to spare, is twice the target
+ * it was, and brings the term back to four and a half. That is the trade this
+ * view wants: the rows are comfortably hittable and the term is still
+ * something you take in rather than travel through.
+ *
+ * Forty-four is what a row somewhere less dense should be. Nothing here is
+ * standing in its way should this view ever stop being a summary.
+ *
+ * None of the rows lost a word either way: what grows is the space around the
+ * line rather than the line. The text sits in one child so the row can centre
+ * it without the course code and the title becoming two flex items that will
+ * not wrap together.
+ */
+const WEEK_ROW: CSSProperties = {
+  width: 'auto',
+  display: 'flex',
+  alignItems: 'center',
+  minHeight: 32,
+  textAlign: 'left',
+};
+
+/**
  * The whole term on one screen, week by week.
  *
  * A month grid answers "what is this week"; this answers "how bad does October
@@ -1878,6 +1913,42 @@ function SemesterView() {
   const { state, dispatch, now, catalog, tint } = useStore();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<string | null>(null);
+  /*
+   * Which "+n more" have been opened.
+   *
+   * It was a `<div>`: a count of the things a heavy week holds, rendered as
+   * plain text with nothing to press. So the week this view exists to warn you
+   * about was the one week whose contents it would not show — "+3 more" on the
+   * fortnight before finals, and the only way to read those three was to leave
+   * for the month or the day. A count you cannot open is worse than no count,
+   * because it tells you something is there and then declines to say what.
+   *
+   * Keyed by week and list rather than one flag per week, so the label stays
+   * true to the button under it: opening the deadlines does not silently
+   * unfold the campus events beside them.
+   */
+  const [opened, setOpened] = useState<Record<string, boolean>>({});
+  const showsAll = (key: string) => opened[key] === true;
+  /**
+   * The control that count became.
+   *
+   * `aria-expanded` rather than a bare label, because the thing it opens is
+   * the list directly above it and a screen reader should be told that this
+   * closes again rather than loading more. The label says how many and of
+   * what, so three buttons stacked under one week are told apart by their
+   * words rather than by which list they happen to sit under.
+   */
+  const moreButton = (key: string, n: number, whose: string) => (
+    <button
+      type="button"
+      className="bare"
+      aria-expanded={showsAll(key)}
+      onClick={() => setOpened((was) => ({ ...was, [key]: !was[key] }))}
+      style={{ ...WEEK_ROW, opacity: 0.5 }}
+    >
+      <span>{showsAll(key) ? `Fewer${whose}` : `+${n} more${whose}`}</span>
+    </button>
+  );
   const source = state.calSource;
 
   /*
@@ -2271,7 +2342,7 @@ function SemesterView() {
 
                 {w.items.length > 0 && (
                   <div style={WEEK_LIST}>
-                    {w.items.slice(0, 3).map((it) => (
+                    {(showsAll(`d:${i}`) ? w.items : w.items.slice(0, 3)).map((it) => (
                       <button
                         key={it.id}
                         type="button"
@@ -2288,20 +2359,15 @@ function SemesterView() {
                           if (drag.tookDrop()) return;
                           dispatch({ type: 'openItem', id: it.id });
                         }}
-                        style={{
-                          width: 'auto',
-                          display: 'block',
-                          textAlign: 'left',
-                          opacity: drag.held?.id === it.id ? 0.4 : 1,
-                        }}
+                        style={{ ...WEEK_ROW, opacity: drag.held?.id === it.id ? 0.4 : 1 }}
                       >
-                        <span style={{ opacity: 0.55 }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
-                        {it.title.length > 42 ? `${it.title.slice(0, 40)}…` : it.title}
+                        <span>
+                          <span style={{ opacity: 0.55 }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
+                          {it.title.length > 42 ? `${it.title.slice(0, 40)}…` : it.title}
+                        </span>
                       </button>
                     ))}
-                    {w.items.length > 3 && (
-                      <div style={{ opacity: 0.5 }}>+{w.items.length - 3} more</div>
-                    )}
+                    {w.items.length > 3 && moreButton(`d:${i}`, w.items.length - 3, '')}
                   </div>
                 )}
 
@@ -2317,36 +2383,44 @@ function SemesterView() {
                   */}
                 {w.events.length + w.feed.length > 0 && (
                   <div style={WEEK_LIST}>
-                    {w.events.slice(0, 3).map((e) => (
+                    {(showsAll(`e:${i}`) ? w.events : w.events.slice(0, 3)).map((e) => (
                       <button
                         key={e.id}
                         type="button"
                         className="bare"
                         onClick={() => dispatch({ type: 'openEvent', id: e.id })}
-                        style={{ width: 'auto', display: 'block', textAlign: 'left' }}
+                        style={WEEK_ROW}
                       >
-                        <span style={{ opacity: 0.55 }}>{e.dow}</span>{' '}
-                        {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
+                        <span>
+                          <span style={{ opacity: 0.55 }}>{e.dow}</span>{' '}
+                          {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
+                        </span>
                       </button>
                     ))}
-                    {w.events.length < 3 &&
-                      w.feed.slice(0, 3 - w.events.length).map((e) => (
-                        <div key={e.id}>
+                    {/* The feed fills whatever the listings left of the three,
+                        and all of it once the week is open. A feed entry is
+                        not a button: there is no listing behind it to show. */}
+                    {(showsAll(`e:${i}`)
+                      ? w.feed
+                      : w.events.length < 3
+                        ? w.feed.slice(0, 3 - w.events.length)
+                        : []
+                    ).map((e) => (
+                      <div key={e.id} style={{ ...WEEK_ROW, display: 'flex' }}>
+                        <span>
                           <span style={{ opacity: 0.55 }}>{DOW[isoToDate(e.date).getDay()]}</span>{' '}
                           {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
-                        </div>
-                      ))}
-                    {w.events.length + w.feed.length > 3 && (
-                      <div style={{ opacity: 0.5 }}>
-                        +{w.events.length + w.feed.length - 3} more
+                        </span>
                       </div>
-                    )}
+                    ))}
+                    {w.events.length + w.feed.length > 3 &&
+                      moreButton(`e:${i}`, w.events.length + w.feed.length - 3, '')}
                   </div>
                 )}
 
                 {w.tasks.length > 0 && (
                   <div style={WEEK_LIST}>
-                    {w.tasks.slice(0, 3).map((t) => (
+                    {(showsAll(`t:${i}`) ? w.tasks : w.tasks.slice(0, 3)).map((t) => (
                       <button
                         key={t.id}
                         type="button"
@@ -2366,20 +2440,19 @@ function SemesterView() {
                           dispatch({ type: 'go', screen: 'mine' });
                         }}
                         style={{
-                          width: 'auto',
-                          display: 'block',
-                          textAlign: 'left',
+                          ...WEEK_ROW,
                           opacity: drag.held?.id === t.id ? 0.4 : 1,
                           textDecoration: t.done ? 'line-through' : 'none',
                         }}
                       >
-                        <span style={{ opacity: 0.55 }}>Yours</span>{' '}
-                        {t.title.length > 42 ? `${t.title.slice(0, 40)}…` : t.title}
+                        <span>
+                          <span style={{ opacity: 0.55 }}>Yours</span>{' '}
+                          {t.title.length > 42 ? `${t.title.slice(0, 40)}…` : t.title}
+                        </span>
                       </button>
                     ))}
-                    {w.tasks.length > 3 && (
-                      <div style={{ opacity: 0.5 }}>+{w.tasks.length - 3} more of your own</div>
-                    )}
+                    {w.tasks.length > 3 &&
+                      moreButton(`t:${i}`, w.tasks.length - 3, ' of your own')}
                   </div>
                 )}
 
@@ -2388,7 +2461,7 @@ function SemesterView() {
                     choice and an appointment's is somebody else's. */}
                 {w.appts.length > 0 && (
                   <div style={WEEK_LIST}>
-                    {w.appts.slice(0, 3).map((a) => (
+                    {(showsAll(`a:${i}`) ? w.appts : w.appts.slice(0, 3)).map((a) => (
                       <button
                         key={a.id}
                         type="button"
@@ -2397,20 +2470,21 @@ function SemesterView() {
                           dispatch({ type: 'setMineTab', tab: 'appointments' });
                           dispatch({ type: 'go', screen: 'mine' });
                         }}
-                        style={{ width: 'auto', display: 'block', textAlign: 'left' }}
+                        style={WEEK_ROW}
                       >
                         {/* `secondLine` rather than an opacity — main's
                             contrast pass landed while this was open, and new
                             dimmed text answers to the audit now. The task rows
                             above keep the old shape; converting those is that
                             pass's to finish. */}
-                        <span style={secondLine()}>Yours</span>{' '}
-                        {a.title.length > 42 ? `${a.title.slice(0, 40)}…` : a.title}
+                        <span>
+                          <span style={secondLine()}>Yours</span>{' '}
+                          {a.title.length > 42 ? `${a.title.slice(0, 40)}…` : a.title}
+                        </span>
                       </button>
                     ))}
-                    {w.appts.length > 3 && (
-                      <div style={secondLine()}>+{w.appts.length - 3} more of your own</div>
-                    )}
+                    {w.appts.length > 3 &&
+                      moreButton(`a:${i}`, w.appts.length - 3, ' of your own')}
                   </div>
                 )}
 

@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  MAX_WINDOW_DAYS,
   NO_WINDOW,
   closesOn,
   closing,
   daysLeft,
   newReturned,
   readReturned,
+  readWindowDays,
   readWindows,
   stillOpen,
   windowLine,
@@ -38,6 +40,47 @@ describe('when the window shuts', () => {
   it('has nothing to say without a recorded window', () => {
     expect(closesOn(back(), NO_WINDOW)).toBeNull();
     expect(daysLeft(back(), NO_WINDOW, FRIDAY)).toBeNull();
+  });
+
+  it.each([1e9, Number.MAX_SAFE_INTEGER])(
+    'returns rather than counting to %p a day at a time',
+    (days) => {
+      /*
+       * The business-days branch counts down one iteration per day, so what
+       * it is handed decides whether it ever comes back. `readWindows`
+       * clamped on the way out of storage; `setRegradeWindow` did not clamp
+       * on the way in, and the field behind it is a text input — so a figure
+       * typed or pasted there reached this loop unbounded and locked the tab
+       * on the keystroke, long before any reload could save it.
+       *
+       * Asserted as a value rather than by timing: the clamp is what makes
+       * this return at all, so a regression hangs the suite here instead of
+       * the student's browser, and the date proves the ceiling is
+       * `MAX_WINDOW_DAYS` and not merely some smaller number.
+       */
+      const huge: RegradeWindow = { days, business: true, note: '' };
+      const capped: RegradeWindow = { days: MAX_WINDOW_DAYS, business: true, note: '' };
+      expect(closesOn(back(), huge)).toEqual(closesOn(back(), capped));
+    },
+  );
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY])(
+    'reads %p as no window rather than as one',
+    (days) => {
+      // NaN failed `days > 0` on the first test and fell out of the loop
+      // holding the day the work came back, so a window that had not survived
+      // storage read as "it shut the day you got this".
+      expect(closesOn(back(), { days, business: true, note: '' })).toBeNull();
+    },
+  );
+
+  it('clamps a window typed in the same way one read back is clamped', () => {
+    expect(readWindowDays(7)).toBe(7);
+    expect(readWindowDays(1e9)).toBe(MAX_WINDOW_DAYS);
+    expect(readWindowDays(-3)).toBe(0);
+    for (const bad of [Number.NaN, Number.POSITIVE_INFINITY, '7', null, undefined, {}]) {
+      expect(readWindowDays(bad)).toBe(0);
+    }
   });
 });
 

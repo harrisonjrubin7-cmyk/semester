@@ -1,10 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   ALARMS,
   appointmentEvents,
   backupOf,
   classEvents,
   BACKUP_SECTIONS,
+  NOT_IN_BACKUP,
   readBackup,
   cell,
   deadlineCsv,
@@ -325,6 +328,40 @@ describe('appointmentEvents', () => {
     expect(ics).not.toContain('VALUE=DATE');
   });
 
+  it.each([
+    ['2026-09-15T02:30:00Z', 'the evening, west of Greenwich'],
+    ['2026-09-14T11:30:00Z', 'the next morning, east of it'],
+  ])('stamps the file in one clock and not half of each — %s', (instant) => {
+    /*
+     * DTSTAMP promises UTC — that is what the `Z` means — and it was built
+     * from the local year, month and day glued to the UTC hour, minute and
+     * second. Those two agree only while the local date and the UTC date are
+     * the same day, which for anyone west of Greenwich stops being true every
+     * evening, and for anyone far enough east every morning. The stamp then
+     * named the wrong day while still claiming to be UTC, and a calendar
+     * comparing DTSTAMPs to decide which copy of an event is newer would read
+     * a fresh export as older than the one it already had, and keep the old.
+     *
+     * Two instants, pinned, because one of them only lands on the wrong side
+     * of midnight in half the world: whichever zone the suite runs in, one of
+     * these has the local day and the UTC day disagreeing. Left to the real
+     * clock this caught the bug or not depending on the hour it ran at.
+     */
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(instant));
+    try {
+      const ics = toIcs(deadlineEvents([item()], code));
+      const utc = new Date(instant);
+      const two = (n: number) => String(n).padStart(2, '0');
+      const want =
+        `${utc.getUTCFullYear()}${two(utc.getUTCMonth() + 1)}${two(utc.getUTCDate())}` +
+        `T${two(utc.getUTCHours())}${two(utc.getUTCMinutes())}${two(utc.getUTCSeconds())}Z`;
+      expect(ics).toContain(`DTSTAMP:${want}`);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('writes an appointment with no recorded hour as all-day, not as hour -1', () => {
     // -1 is what a stored appointment holds when neither the number nor the
     // words could be read. It used to reach the formatter and write `T-1-100`.
@@ -339,8 +376,8 @@ describe('notesMarkdown', () => {
     id: 'n1',
     title: 'Lecture 4',
     body: 'Inflation expectations.',
-    created: Date.UTC(2026, 8, 3),
-    updated: Date.UTC(2026, 8, 4),
+    created: new Date(2026, 8, 3, 9, 0).getTime(),
+    updated: new Date(2026, 8, 4, 9, 0).getTime(),
     courseId: 'econ',
     fileIds: [],
   } as Note;
@@ -359,6 +396,62 @@ describe('notesMarkdown', () => {
 
   it('does not leave an untitled note headingless', () => {
     expect(notesMarkdown([{ ...note, title: '', body: '' }], code)).toContain('## Untitled');
+  });
+
+  it('dates a note by the day it was written on, not the day it was in Greenwich', () => {
+    /*
+     * Half past nine on a Thursday evening in Nashville is already Friday in
+     * UTC, and `toISOString().slice(0, 10)` — which is what this wrote — says
+     * so. The student sees an export of tonight's note dated tomorrow.
+     *
+     * Built from local fields and asserted against local fields, so this
+     * holds in every zone `npm run test:zones` runs in rather than only in
+     * the one the export happened to be written in.
+     */
+    const evening = new Date(2026, 8, 3, 21, 30);
+    const md = notesMarkdown([{ ...note, updated: evening.getTime() }], code);
+    expect(md).toContain('2026-09-03');
+  });
+
+  /*
+   * The Export screen says this file is "everything you wrote, including
+   * transcripts and email drafts". Transcripts were true — a kept transcript
+   * is a note — and drafts were not: they are their own collection, and the
+   * sentence had been wrong for as long as the composer has existed.
+   */
+  const draft = {
+    id: 'd1',
+    to: 'prof@example.edu',
+    cc: '',
+    bcc: '',
+    subject: 'Extension on the essay',
+    body: 'I am writing to ask…',
+    courseId: 'econ' as const,
+    purposeId: 'extension',
+    updated: Date.UTC(2026, 8, 5),
+    handed: null,
+  };
+
+  it('carries the email drafts the screen says it carries', () => {
+    const md = notesMarkdown([note], code, [draft]);
+    expect(md).toContain('# Email drafts');
+    expect(md).toContain('## Extension on the essay');
+    expect(md).toContain('To: prof@example.edu');
+    expect(md).toContain('I am writing to ask…');
+  });
+
+  it('says whether a draft ever left the app, without claiming it was sent', () => {
+    expect(notesMarkdown([], code, [draft])).toContain('not sent');
+    expect(notesMarkdown([], code, [{ ...draft, handed: 1 }])).toContain('opened in your mail app');
+  });
+
+  it('writes a file for drafts alone rather than saying nothing was written', () => {
+    const md = notesMarkdown([], code, [draft]);
+    expect(md).toContain('## Extension on the essay');
+  });
+
+  it('is unchanged for a caller that has no drafts', () => {
+    expect(notesMarkdown([note], code, [])).toBe(notesMarkdown([note], code));
   });
 });
 
@@ -535,6 +628,118 @@ describe('a backup that can be restored from', () => {
     expect(back.synced).toBe(0);
     expect(back.status).toBe('');
     expect(back.count).toBe(0);
+  });
+});
+
+describe('every field the store holds is a decision about the backup', () => {
+  /**
+   * The field names, read out of the store itself.
+   *
+   * The same reading `merge.test.ts` does, and for the same reason:
+   * `pickPersisted` is the one place that says what a persisted field is, and
+   * a guard written against a copy of that list is a guard that drifts with
+   * the copy.
+   */
+  const persistedFields = (): string[] => {
+    const source = readFileSync(join(process.cwd(), 'src/state/shape.ts'), 'utf8');
+    const body = source.split('export function pickPersisted')[1]?.split('\n}')[0] ?? '';
+    return [...body.matchAll(/^\s{4}(\w+):/gm)].map((m) => m[1]);
+  };
+
+  /**
+   * Carried, but not through a section.
+   *
+   * `sample` is a flag rather than a collection — whether the term on screen
+   * is the demonstration one — and `readBackup` reads it by hand, because a
+   * section would report it to the person restoring as "1 sample courses".
+   */
+  const BY_HAND = ['sample'];
+
+  const named = new Set([
+    ...BACKUP_SECTIONS.map((s) => s.key),
+    ...Object.keys(NOT_IN_BACKUP),
+    ...BY_HAND,
+  ]);
+
+  it('found the store, so the rest of this means something', () => {
+    expect(persistedFields().length).toBeGreaterThan(20);
+  });
+
+  it('leaves no field unaccounted for', () => {
+    /*
+     * The failure this exists for.
+     *
+     * `plots` and `mailDrafts` — a graph built line by line, a message to a
+     * professor half written — were persisted, synced and shown on the Data
+     * screen while being in neither half of the backup. Nothing failed: the
+     * file restored cleanly and the work was not in it, which is the worst
+     * shape a data-loss bug can take.
+     *
+     * So a field in neither list fails here, and the fix is to decide which
+     * list it is in rather than to remember.
+     */
+    const undecided = persistedFields().filter((f) => !named.has(f));
+    expect(undecided).toEqual([]);
+  });
+
+  it('holds nothing the store no longer persists', () => {
+    const fields = new Set(persistedFields());
+    const stale = [...named].filter((f) => !fields.has(f));
+    expect(stale).toEqual([]);
+  });
+
+  it('says why for everything it leaves out', () => {
+    // A key with an empty reason is a key somebody added to silence the test
+    // above, which is the one way this guard could be worse than nothing.
+    const blank = Object.entries(NOT_IN_BACKUP).filter(([, why]) => why.trim().length < 10);
+    expect(blank).toEqual([]);
+  });
+
+  it('cannot both carry and omit the same field', () => {
+    const both = BACKUP_SECTIONS.map((s) => s.key).filter((k) => k in NOT_IN_BACKUP);
+    expect(both).toEqual([]);
+  });
+});
+
+describe('the work the app grew after the backup was written', () => {
+  const state = (over: Partial<State> = {}): State =>
+    ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date()), ...over }) as State;
+
+  const draft = {
+    id: 'd1',
+    to: 'prof@example.edu',
+    cc: '',
+    bcc: '',
+    subject: 'Extension on the essay',
+    body: 'I am writing to ask…',
+    courseId: 'econ' as const,
+    purposeId: 'extension',
+    updated: 222,
+    handed: null,
+  };
+
+  it('carries a graph somebody built', () => {
+    const plots = [{ id: 'p1', text: 'y = x^2 - 3', on: true }];
+    const { data } = readBackup(JSON.stringify(backupOf(state({ plots }))));
+    expect(data.plots).toEqual(plots);
+  });
+
+  it('carries an unsent draft, which is the one nobody can retype', () => {
+    const { data } = readBackup(JSON.stringify(backupOf(state({ mailDrafts: [draft] }))));
+    expect((data.mailDrafts as typeof draft[])[0].body).toBe('I am writing to ask…');
+  });
+
+  it('says what it found, so the restore names them', () => {
+    const { parts } = readBackup(
+      JSON.stringify(backupOf(state({ mailDrafts: [draft], plots: [{ id: 'p1', text: 'y = x', on: true }] }))),
+    );
+    expect(parts).toContain('1 graphs');
+    expect(parts).toContain('1 email drafts');
+  });
+
+  it('carries the name letters are signed with', () => {
+    const { data } = readBackup(JSON.stringify(backupOf(state({ myName: 'Harrison Rubin' }))));
+    expect(data.myName).toBe('Harrison Rubin');
   });
 });
 

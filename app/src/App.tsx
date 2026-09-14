@@ -1,5 +1,6 @@
-import { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useStore } from './state/store';
+import { useBottomChrome } from './lib/bottomchrome.hook';
 import { currentLook } from './state/shape';
 import {
   AppsIcon,
@@ -25,9 +26,9 @@ import { DRAWN_AT, ground, homeTitle, resolveGround, scaleFrom, scaleOf, tokensF
 /**
  * Every screen but the first, fetched when it is opened.
  *
- * All forty-six used to be imported statically, which put every one of them
+ * All sixty used to be imported statically, which put every one of them
  * — and everything they pull in — into one 1,047 kB chunk that had to arrive
- * before anything painted. Nobody opens forty-six screens. They open Today.
+ * before anything painted. Nobody opens sixty screens. They open Today.
  *
  * The heavy leaves are the ones nobody loads on a normal day: Draw brings
  * cytoscape at 435 kB, the guide brings KaTeX at 259 kB, the importer brings
@@ -143,6 +144,7 @@ import { barFor, litRailTab, litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
+import { Sound } from './components/Sound';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
@@ -167,7 +169,7 @@ import { Fresh } from './components/Fresh';
 import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
-import { provider } from './lib/claude';
+import { provider } from './lib/assistant';
 import type { Screen } from './lib/types';
 
 /**
@@ -869,38 +871,10 @@ function Header({
   );
 }
 
-/**
- * The tab bar's real height, written to the root as `--tabbar-h`.
- *
- * Nothing else in the app needed to know it — the bar is a flex child and
- * everything above it just takes the remaining space. The assistant's button
- * is fixed to the viewport, so it does need to know, and the height is not a
- * constant: the bar grows with the text-size and density settings, and a
- * hard-coded number sits on top of it at the largest one.
- */
-function useTabBarHeight(ref: React.RefObject<HTMLElement | null>) {
-  useLayoutEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const write = () => {
-      document.documentElement.style.setProperty('--tabbar-h', `${Math.round(node.getBoundingClientRect().height)}px`);
-    };
-    write();
-    const watch = new ResizeObserver(write);
-    watch.observe(node);
-    return () => {
-      watch.disconnect();
-      // Left set would strand the button above a bar that is no longer there
-      // — the fullscreen screens hide it entirely.
-      document.documentElement.style.removeProperty('--tabbar-h');
-    };
-  }, [ref]);
-}
-
 function TabBar() {
   const { state, dispatch, school } = useStore();
   const bar = useRef<HTMLElement>(null);
-  useTabBarHeight(bar);
+  useBottomChrome(bar);
   // The seven that shipped are still the default; this is whichever seven the
   // student arranged, minus anything the school or the role has since taken
   // off the table — see `barFor`. `litTab` rather than `rootOf` because a
@@ -1641,9 +1615,34 @@ export default function App() {
    * chrome at the top, the sidebar where there is room — and `chromeFor` has
    * already decided which. See `Workspace` above.
    */
-  if (chrome.desk) return <Workspace chrome={chrome} trouble={trouble} />;
+  /*
+   * The layouts, and the one thing that must not be inside any of them.
+   *
+   * `Sound` holds the app's only `<audio>` element and is mounted here,
+   * outside the three frames below, because *which* frame renders is not
+   * fixed for a session: `chromeFor` reads the screen, so opening a new tab
+   * can move the app from the workspace frame to the wide one. A component
+   * mounted in each of them is unmounted and remounted by that move — which
+   * is exactly what an element holding forty minutes of narration must never
+   * do, and what it was mounted high up to avoid in the first place.
+   *
+   * Measured before it was moved: pressing Play and then opening a tab
+   * replaced the element and the lesson started again from zero, paused. The
+   * element survived the tab *switch* it was written for and died on the
+   * frame change nobody had thought about. Here it survives both.
+   */
+  const frame = () => {
+    if (chrome.desk) return <Workspace chrome={chrome} trouble={trouble} />;
+    return wide ? wideFrame() : phoneFrame();
+  };
+  return (
+    <>
+      <Sound />
+      {frame()}
+    </>
+  );
 
-  if (wide) {
+  function wideFrame() {
     return (
       /*
        * One column when the shelves are the navigation, two when the rail is.
@@ -1796,11 +1795,12 @@ export default function App() {
     );
   }
 
+  function phoneFrame() {
   return (
     <div className="device" data-tier={tier}>
       {/*
         The first focusable thing on the page, and invisible until it has
-        focus. With fifty screens behind a header and a tab bar, a keyboard
+        focus. With sixty screens behind a header and a tab bar, a keyboard
         user's only route into the content was to tab through the whole of
         both, on every screen, every time.
 
@@ -1861,6 +1861,7 @@ export default function App() {
       {chrome.tabs && <TabBar />}
     </div>
   );
+  }
 }
 
 /** Re-exported so screens can render a tick without importing the icon set. */

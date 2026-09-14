@@ -42,7 +42,20 @@ vi.mock('./db', async () => {
   return { ...real, open: vi.fn(async () => ({}) as unknown), write: (w: unknown[]) => write(w) };
 });
 
-// Imported after the mock is registered, so the module binds the fake `write`.
+/*
+ * Imported after the mock is registered, so the module binds the fake `write`
+ * — and after the registry is cleared, so it is *this* file's instance that
+ * binds it.
+ *
+ * `vi.resetModules()` is what makes that true when test files share a worker.
+ * Without it, a file that had already imported `./index` against the real
+ * `./db` left that instance in the registry, and this dynamic import handed it
+ * back: `open` unmocked, `load()` failing, `persist` inert, and every
+ * assertion below about what was written failing on a module that was never
+ * given the double. It passed alone and failed in the suite, which is the
+ * worst shape a test failure can have.
+ */
+vi.resetModules();
 const { persist, prime, flushNow, stopWriting, whileWriting } = await import('./index');
 const { load } = await import('./index');
 

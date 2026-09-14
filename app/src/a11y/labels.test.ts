@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { says, unnamed } from './labels';
+import { hiddenNames, says, saysHidden, unnamed } from './labels';
 
 /**
  * The label rule, from the test suite's side.
@@ -157,5 +157,71 @@ export const toField = (m: number) => m;`,
 );`,
     );
     expect(unnamed(dir)).toEqual([]);
+  });
+});
+
+/**
+ * The other way a control loses its name: the stylesheet takes it.
+ *
+ * `.desktop-ai span { display: none }` in a media query left the AI Tutor
+ * button in the workspace top bar with no accessible name at all below 760px
+ * — which is every viewport this app is designed for. The markup was fine;
+ * the button really did contain the words. Nothing in the suite saw it,
+ * because jsdom parses the stylesheet and applies no media query, so the span
+ * was present in every test that asked for it.
+ *
+ * So this rule reads the CSS rather than the render, and these are the two
+ * cases it has to get right: the class that hides its text and is named
+ * anyway, and the one that is not.
+ */
+describe('the label CSS takes away', () => {
+  const HIDES = '@media (max-width: 759px) { .desktop-ai span { display: none } }';
+
+  it('reports a control whose only text the stylesheet hides', () => {
+    const dir = withFile(
+      'Bar.tsx',
+      `export const A = () => (
+  <button type="button" className="bare desktop-ai" onClick={go}>
+    <AskIcon size={15} />
+    <span>AI Tutor</span>
+  </button>
+);`,
+    );
+    const found = hiddenNames(dir, HIDES);
+    expect(found).toHaveLength(1);
+    expect(found[0].cls).toBe('desktop-ai');
+    expect(found[0].selector).toBe('.desktop-ai span');
+    expect(saysHidden(found[0])).toContain('no accessible name');
+  });
+
+  it('leaves it alone once aria-label carries the name', () => {
+    const dir = withFile(
+      'Bar.tsx',
+      `export const A = () => (
+  <button type="button" className="bare desktop-ai" aria-label="AI Tutor" onClick={go}>
+    <AskIcon size={15} />
+    <span>AI Tutor</span>
+  </button>
+);`,
+    );
+    expect(hiddenNames(dir, HIDES)).toEqual([]);
+  });
+
+  it('says nothing when no rule hides a label', () => {
+    const dir = withFile(
+      'Bar.tsx',
+      `export const A = () => <button className="bare desktop-ai"><span>AI Tutor</span></button>;`,
+    );
+    expect(hiddenNames(dir, '.desktop-ai { display: flex }')).toEqual([]);
+  });
+
+  /*
+   * The rule against the app, which is the assertion that matters: this is the
+   * same call `scripts/labels.mjs` makes, so the suite and the linter cannot
+   * disagree about whether the app is clean.
+   */
+  it('finds nothing in the app as it stands', () => {
+    const css = readFileSync(join(src, 'styles', 'app.css'), 'utf8');
+    expect(hiddenNames(src, css)).toEqual([]);
   });
 });

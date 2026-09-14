@@ -42,6 +42,23 @@ function applied(was: Marks, ids: string[], patch: Mark | null): Marks {
   return marks;
 }
 
+/**
+ * A new draft, at the front, open.
+ *
+ * Shared by `composeMail` and `writeMail` so that "start an email" means one
+ * thing however you got here. They differ only in whether the app moves to
+ * the mailbox first.
+ */
+function started(state: State, partial: Partial<MailDraft>): State {
+  const draft: MailDraft = {
+    ...emptyDraft(),
+    ...partial,
+    id: newId(),
+    updated: Date.now(),
+  };
+  return { ...state, mailDrafts: [draft, ...state.mailDrafts], mailDraftId: draft.id };
+}
+
 export function mailbox(state: State, action: Action): State | null {
   switch (action.type) {
     /**
@@ -134,14 +151,26 @@ export function mailbox(state: State, action: Action): State | null {
 
     case 'composeMail': {
       if (action.draft === null) return { ...state, mailDraftId: null };
-      const draft: MailDraft = {
-        ...emptyDraft(),
-        ...action.draft,
-        id: newId(),
-        updated: Date.now(),
-      };
-      return { ...state, mailDrafts: [draft, ...state.mailDrafts], mailDraftId: draft.id };
+      return started(state, action.draft);
     }
+
+    /*
+     * The same thing, from somewhere else in the app.
+     *
+     * The *ask for more time* line under a deadline, office hours' *write to
+     * them first*, and *ask a question* on a course all start an email from a
+     * screen that is not the mailbox, so this navigates as well as composing.
+     * That is the only difference, and `started` below is why it is not a
+     * second copy of the case above.
+     *
+     * It used to write a `mailSeed` object instead, which nothing read, so all
+     * three buttons arrived at the mailbox with no composer open at all —
+     * `SIMPLIFY-AUDIT.md` F1. The callers build the draft with `draftFor` in
+     * `lib/mail.ts`, because they are the ones holding the catalogue this
+     * reducer cannot see.
+     */
+    case 'writeMail':
+      return started(push(state, 'mail'), action.draft);
 
     case 'openMailDraft':
       return { ...state, mailDraftId: action.id, mailOpen: null };

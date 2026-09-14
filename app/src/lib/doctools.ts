@@ -7,7 +7,7 @@
  * at.
  */
 
-import { runs, unmarked, words, type Block, type Doc } from './document';
+import { listed, runs, unmarked, words, type Block, type Doc } from './document';
 
 // ── The outline ──────────────────────────────────────────────────────────
 
@@ -43,7 +43,8 @@ export function characters(doc: Doc): number {
   let n = 0;
   for (const block of doc.blocks) {
     if (block.kind === 'heading' || block.kind === 'text') n += unmarked(block.text).length;
-    else if (block.kind === 'bullets') for (const item of block.items) n += unmarked(item).length;
+    else if (block.kind === 'bullets')
+      for (const line of listed(block.items)) n += unmarked(line.text).length;
     else if (block.kind === 'quote') n += unmarked(block.text).length;
   }
   return n;
@@ -97,7 +98,7 @@ function strings(block: Block): string[] {
   if (block.kind === 'heading' || block.kind === 'text' || block.kind === 'quote') {
     return [block.text];
   }
-  if (block.kind === 'bullets') return block.items;
+  if (block.kind === 'bullets') return listed(block.items).map((l) => l.text);
   if (block.kind === 'checks') return block.items.map((i) => i.text);
   /*
    * A code block is skipped, for the reason a table and an equation are:
@@ -188,7 +189,11 @@ export function replaceAll(
       return { ...block, text: swap(block.text) };
     }
     if (block.kind === 'quote') return { ...block, text: swap(block.text) };
-    if (block.kind === 'bullets') return { ...block, items: block.items.map(swap) };
+    // Rebuilt through `listed` so the levels survive a replace-all, and so a
+    // list still stored as plain strings comes back in the shape it is read in.
+    if (block.kind === 'bullets') {
+      return { ...block, items: listed(block.items).map((l) => ({ ...l, text: swap(l.text) })) };
+    }
     if (block.kind === 'checks') {
       return { ...block, items: block.items.map((i) => ({ ...i, text: swap(i.text) })) };
     }
@@ -347,9 +352,11 @@ export function glance(doc: Pick<Doc, 'blocks'>, lines = 6): string[] {
         if (block.text.trim()) out.push(block.text.trim());
         break;
       case 'bullets':
-        for (const item of block.items) {
+        for (const line of listed(block.items)) {
           if (out.length >= lines) break;
-          if (item.trim()) out.push(`• ${item.trim()}`);
+          // Indented in the thumbnail too, at one space a level: a nested list
+          // drawn flat is a different list.
+          if (line.text.trim()) out.push(`${' '.repeat(line.level)}• ${line.text.trim()}`);
         }
         break;
       case 'quote':
@@ -373,6 +380,20 @@ export function glance(doc: Pick<Doc, 'blocks'>, lines = 6): string[] {
       case 'toc':
         out.push(block.title.trim() || 'Contents');
         break;
+      /*
+       * What it is captioned, or what it is of. A thumbnail cannot draw the
+       * picture — the bytes are in IndexedDB behind an async read and this is
+       * a pure function — so it says there is one, which is the thing a blank
+       * line fails to say.
+       */
+      case 'image': {
+        const said = block.caption.trim() || block.alt.trim() || block.name.trim();
+        out.push(said ? `Picture — ${said}` : 'Picture');
+        break;
+      }
+      // Neither has anything to show at thumbnail size, and a line drawn
+      // across a four-line preview would read as the end of it.
+      case 'rule':
       case 'break':
         break;
     }

@@ -73,6 +73,40 @@ $$ select auth.jwt() ->> 'email' $$;
 create or replace function auth.role() returns text language sql stable as
 $$ select auth.jwt() ->> 'role' $$;
 
+-- The Realtime server's own table, and the function a policy on it reads.
+--
+-- `…0400_rooms.sql` guards its whole presence block on `realtime.messages`
+-- existing, because a bare Postgres has no `realtime` schema — which meant the
+-- two policies the green dots depend on were created nowhere a suite could
+-- reach and asserted by nothing. This is the smallest thing that makes them
+-- reachable: `topic()` is copied from the definition a real project carries,
+-- and `messages` has only the columns the policies and the suite touch.
+--
+-- On a real project Realtime sets `realtime.topic` per connection from the
+-- channel name the client joined, with its `realtime:` prefix already off;
+-- `rooms.check.sql` sets it with `set_config` the same way `become` sets the
+-- JWT claims. Nothing here is a migration, and on a real project every object
+-- below already exists — including the grants, which mirror what a project
+-- gives `authenticated` on this table.
+create schema if not exists realtime;
+
+create or replace function realtime.topic() returns text language sql stable as
+$$ select nullif(current_setting('realtime.topic', true), '')::text $$;
+
+create table if not exists realtime.messages (
+  id          uuid        not null default gen_random_uuid(),
+  topic       text        not null,
+  extension   text        not null,
+  payload     jsonb,
+  event       text,
+  private     boolean     default false,
+  inserted_at timestamp   not null default now(),
+  updated_at  timestamp   not null default now()
+);
+
+grant usage on schema realtime to anon, authenticated;
+grant select, insert, update on realtime.messages to anon, authenticated;
+
 -- `…0200_classmates.sql` adds `public.messages` to this publication and fails
 -- outright without it. Supabase ships it on every project, branches included.
 do $$ begin

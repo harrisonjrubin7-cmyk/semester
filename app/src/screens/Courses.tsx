@@ -1,6 +1,7 @@
 import { CourseHub } from '../components/CourseHub';
 import { useState } from 'react';
 import { useStore } from '../state/store';
+import { draftFor } from '../lib/mail';
 import type { CourseId, CoursesTab } from '../lib/types';
 import { nameFor, renamed } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
@@ -568,7 +569,7 @@ function CourseInformation() {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() =>
-            dispatch({ type: 'writeMail', purposeId: 'question', courseId: course.id })
+            dispatch({ type: 'writeMail', draft: draftFor('question', { course }) })
           }
           style={{ height: 44, marginTop: 'var(--sp-4)' }}
         >
