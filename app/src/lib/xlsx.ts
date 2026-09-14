@@ -51,6 +51,16 @@ import {
   washPaper,
   type Sheet,
 } from './sheet';
+import {
+  CHART_TYPE,
+  DRAWING_TYPE,
+  chartXml,
+  drawingRels,
+  drawingXml,
+  readable,
+  sheetRels,
+} from './xlsxchart';
+import { chartsOf, type ChartRead, type SheetChart } from './chart';
 
 /**
  * A look with nothing on it is no look at all.
@@ -140,6 +150,14 @@ export interface Tab {
   header: boolean;
   /** Column widths in characters, where the caller has an opinion. */
   widths?: number[];
+  /**
+   * Charts over this tab's own cells, already read.
+   *
+   * Read rather than raw so the addresses behind a series are worked out once,
+   * by the file that owns the rule about which row is a heading — see
+   * `ChartRead.at` in `lib/chart.ts`.
+   */
+  charts?: { chart: SheetChart; read: ChartRead }[];
 }
 
 export interface Book {
@@ -199,7 +217,7 @@ function cellXml(address: string, cell: Formatted, style: number, styles: Styles
   );
 }
 
-function sheetXml(tab: Tab, styles: Styles): string {
+function sheetXml(tab: Tab, styles: Styles, drawing = false): string {
   const cols = tab.widths?.length
     ? `<cols>${tab.widths
         .map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`)
@@ -223,7 +241,11 @@ function sheetXml(tab: Tab, styles: Styles): string {
 
   return (
     `${HEAD}<worksheet xmlns="${MAIN}" xmlns:r="${REL}">` +
-    `${view}${cols}<sheetData>${rows}</sheetData></worksheet>`
+    `${view}${cols}<sheetData>${rows}</sheetData>` +
+    // `CT_Worksheet` is a sequence and `drawing` is near the end of it: put it
+    // before `sheetData` and the file opens as a repair notice.
+    (drawing ? '<drawing r:id="rId1"/>' : '') +
+    '</worksheet>'
   );
 }
 
@@ -464,6 +486,25 @@ export function parts(book: Book): Record<string, string> {
   const tabs = book.tabs.length ? book.tabs : [{ name: 'Sheet1', rows: [], header: false }];
   const out: Record<string, string> = {};
 
+  /*
+   * Which tabs have charts, and which chart part each one's charts are.
+   *
+   * Worked out before anything is written because four parts have to agree
+   * about it — the content types, the worksheet's own relationships, the
+   * drawing and the chart itself — and each of them numbers from a different
+   * base. `chartAt` is the number of the first chart part belonging to a tab,
+   * counted across the whole book, because the chart parts are one flat series
+   * (`chart1.xml`, `chart2.xml`) however many tabs they are spread over.
+   */
+  let sofar = 1;
+  const drawn = tabs.map((tab, i) => {
+    const charts = tab.charts ?? [];
+    const from = sofar;
+    sofar += charts.length;
+    return { tab, index: i, charts, chartAt: from, drawing: i + 1 };
+  });
+  const withCharts = drawn.filter((d) => d.charts.length > 0);
+
   out['[Content_Types].xml'] =
     `${HEAD}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
     '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
@@ -475,6 +516,18 @@ export function parts(book: Book): Record<string, string> {
         (_, i) =>
           `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ` +
           'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>',
+      )
+      .join('') +
+    withCharts
+      .map(
+        (d) =>
+          `<Override PartName="/xl/drawings/drawing${d.drawing}.xml" ContentType="${DRAWING_TYPE}"/>` +
+          d.charts
+            .map(
+              (_, n) =>
+                `<Override PartName="/xl/charts/chart${d.chartAt + n}.xml" ContentType="${CHART_TYPE}"/>`,
+            )
+            .join(''),
       )
       .join('') +
     '</Types>';
@@ -518,8 +571,15 @@ export function parts(book: Book): Record<string, string> {
   // part, and two tabs asking for `$#,##0.00` must land on the same index.
   const styles = styleTable(tabs);
   out['xl/styles.xml'] = styles.xml;
-  tabs.forEach((tab, i) => {
-    out[`xl/worksheets/sheet${i + 1}.xml`] = sheetXml(tab, styles);
+  drawn.forEach((d) => {
+    out[`xl/worksheets/sheet${d.index + 1}.xml`] = sheetXml(d.tab, styles, d.charts.length > 0);
+    if (!d.charts.length) return;
+    out[`xl/worksheets/_rels/sheet${d.index + 1}.xml.rels`] = sheetRels(d.drawing);
+    out[`xl/drawings/drawing${d.drawing}.xml`] = drawingXml(d.charts.length, d.tab.rows.length);
+    out[`xl/drawings/_rels/drawing${d.drawing}.xml.rels`] = drawingRels(d.charts.length, d.chartAt);
+    d.charts.forEach(({ chart, read }, n) => {
+      out[`xl/charts/chart${d.chartAt + n}.xml`] = chartXml(names[d.index], chart, read);
+    });
   });
 
   return out;
@@ -602,7 +662,17 @@ export function fromSheet(sheet: Sheet, header = true): Tab {
       return n === null ? worn({ kind: 'text', value }) : worn({ kind: 'number', value: n });
     }),
   );
-  return { name: tabName(sheet.title), rows, header: header && rows.length > 1 };
+  return {
+    name: tabName(sheet.title),
+    rows,
+    header: header && rows.length > 1,
+    /*
+     * The charts come out with the numbers, or the export is half the thing
+     * the student made. One that cannot be read is left out rather than
+     * written as an empty frame — see `readable`.
+     */
+    charts: readable(sheet.cells, chartsOf(sheet)),
+  };
 }
 
 /**

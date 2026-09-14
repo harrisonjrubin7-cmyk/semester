@@ -38,6 +38,9 @@
  */
 
 import type { CourseId } from './types';
+// Type only, so the cycle with `chart.ts` — which reads this file's cells —
+// never exists at runtime.
+import type { SheetChart } from './chart';
 
 /** One sheet, as the store holds it. */
 export interface Sheet {
@@ -61,6 +64,17 @@ export interface Sheet {
   /** How far the grid has been dragged out. Never smaller than what is in it. */
   rows: number;
   cols: number;
+  /**
+   * Pictures of parts of this grid — see `lib/chart.ts`.
+   *
+   * Each holds a *range* and never a copy of the numbers, so a chart is
+   * redrawn from the cells on every render and cannot go stale. Absent on
+   * every sheet nobody has charted, which is most of them.
+   *
+   * The type is imported rather than declared here because the reading, the
+   * drawing and the `.xlsx` all need it and none of them is this file.
+   */
+  charts?: SheetChart[];
   created: number;
   updated: number;
   /**

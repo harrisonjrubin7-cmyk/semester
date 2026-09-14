@@ -5,7 +5,7 @@ import { Blueprint } from '../components/Blueprint';
 import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
-import { ActionButton, ChipRow, EmptyState, FilePick, SectionLabel } from '../components/ui';
+import { ActionButton, ChipRow, EmptyState, FilePick, SectionLabel, Segmented, Toggle } from '../components/ui';
 import { Bench, Tool, ToolRule } from '../components/Bench';
 import { ChevronRight, Plus, SheetIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
@@ -96,6 +96,16 @@ import { fromSheet, sheetFileName, widthsFor, xlsx } from '../lib/xlsx';
 import { canBuild, gradeSheet } from '../lib/gradesheet';
 import { fromDelimited, fromXlsx, readerFor } from '../lib/xlsxin';
 import { LIMIT } from '../state/slices/made';
+import {
+  CHART_KINDS,
+  CHART_LABELS,
+  CHART_SAYS,
+  chartsOf,
+  suggest as suggestChart,
+  type SheetChart as ChartSpec,
+} from '../lib/chart';
+import { SheetChart as ChartPicture } from '../components/SheetChart';
+import { pictureFileName, standalone } from '../lib/svgout';
 import type { Menu } from '../lib/menus';
 
 /**
@@ -812,6 +822,27 @@ function Grid({ sheet }: { sheet: SheetModel }) {
   const totals = useMemo(() => summarise(sheet.cells, selected), [sheet.cells, selected]);
   const spot = box(sel);
 
+  /*
+   * The charts on this sheet.
+   *
+   * Read through `chartsOf` rather than off `sheet.charts` directly — a
+   * stored copy is restored with `list()`, which takes the holes out of an
+   * array and trusts what is left. See `lib/chart.ts`.
+   *
+   * They are patched rather than put through `change()`: undo in this editor
+   * is the grid's, and a drawing is not one of the four fields it records.
+   * Adding a chart and then pressing undo should take back the last thing
+   * typed, not silently remove the picture.
+   */
+  const charts = useMemo(() => chartsOf(sheet), [sheet]);
+  const setCharts = (next: ChartSpec[]) => patch({ charts: next });
+
+  const addChart = () => {
+    const where = rangeLabel(sel);
+    setCharts([...charts, suggestChart(sheet.cells, where)]);
+    say(`Chart of ${where} added under the grid.`);
+  };
+
   /** Move the cursor, and take the browser's focus with it. */
   const go = (address: string, extend = false) => {
     setSel((was) => (extend ? { ...was, focus: address } : oneCell(address)));
@@ -1200,6 +1231,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
               : `In ${focus}, over the run of cells above it.`,
             run: () => sum(fn),
           })),
+          {
+            id: 'insert.chart',
+            label: `Chart ${rangeLabel(sel)}`,
+            hint: many(sel)
+              ? 'Columns, bars, a line or a pie, under the grid.'
+              : 'Select the block first — a chart of one cell is a dot.',
+            run: many(sel) ? addChart : undefined,
+          },
           {
             id: 'insert.weighted',
             label: 'Weighted mark',
@@ -2081,6 +2120,14 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         </table>
       </div>
 
+      <Charts
+        sheet={sheet}
+        charts={charts}
+        selection={rangeLabel(sel)}
+        onChange={setCharts}
+        onAdd={many(sel) ? addChart : undefined}
+      />
+
       <SheetTabs
         sheets={state.sheets}
         on={sheet.id}
@@ -2118,6 +2165,200 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         onZoom={(by) => setZoom(stepZoom(zoom, by > 0 ? 1 : -1))}
       />
     </Page>
+  );
+}
+
+/**
+ * The pictures, under the grid that makes them.
+ *
+ * Under rather than beside, and in the page's own scroll rather than in a
+ * panel: a chart is read *after* the numbers, by somebody who has just
+ * finished typing them, and a floating window over a spreadsheet is the thing
+ * every spreadsheet gets wrong. Nothing is drawn at all until somebody asks
+ * for the first one, so a sheet of eight cells is still a sheet of eight
+ * cells.
+ *
+ * Each chart's controls sit with it and edit it in place. There is no dialogue
+ * in front of a new chart asking which four things it should be, because the
+ * guess is right most of the time and wrong visibly — you can see it is wrong,
+ * which is the fastest correction there is.
+ */
+function Charts({
+  sheet,
+  charts,
+  selection,
+  onChange,
+  onAdd,
+}: {
+  sheet: SheetModel;
+  charts: ChartSpec[];
+  /** What is selected in the grid now, for the "read this instead" button. */
+  selection: string;
+  onChange: (next: ChartSpec[]) => void;
+  /** Absent when the selection is one cell, which is not a chart. */
+  onAdd?: () => void;
+}) {
+  if (!charts.length) {
+    return onAdd ? (
+      <div style={{ marginTop: 'var(--sp-6)' }}>
+        <ActionButton onClick={onAdd}>Chart {selection}</ActionButton>
+      </div>
+    ) : null;
+  }
+
+  const edit = (id: string, over: Partial<ChartSpec>) =>
+    onChange(charts.map((c) => (c.id === id ? { ...c, ...over } : c)));
+
+  return (
+    <div style={{ marginTop: 'var(--sp-7)' }}>
+      <SectionLabel>Charts</SectionLabel>
+      {charts.map((chart) => (
+        <ChartCard
+          key={chart.id}
+          sheet={sheet}
+          chart={chart}
+          selection={selection}
+          onEdit={(over) => edit(chart.id, over)}
+          onRemove={() => onChange(charts.filter((c) => c.id !== chart.id))}
+        />
+      ))}
+      {onAdd ? (
+        <div style={{ marginTop: 'var(--sp-5)' }}>
+          {/*
+            "Another way" rather than "too" when a chart of exactly these
+            cells is already on the page — which is a real thing to want, a
+            pie beside the columns, and not a mistake to be talked out of.
+          */}
+          <ActionButton onClick={onAdd}>
+            {charts.some((c) => c.range === selection)
+              ? `Chart ${selection} another way`
+              : `Chart ${selection} too`}
+          </ActionButton>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ChartCard({
+  sheet,
+  chart,
+  selection,
+  onEdit,
+  onRemove,
+}: {
+  sheet: SheetModel;
+  chart: ChartSpec;
+  selection: string;
+  onEdit: (over: Partial<ChartSpec>) => void;
+  onRemove: () => void;
+}) {
+  const { say } = useStore();
+  const hold = useRef<HTMLDivElement | null>(null);
+
+  const savePicture = () => {
+    const svg = hold.current?.querySelector('svg');
+    if (!svg) return;
+    download({
+      name: pictureFileName(chart.title || `${sheet.title} ${chart.range}`),
+      // The panel goes under it, or a chart saved on a dark ground opens as
+      // light text on nothing.
+      body: standalone(svg as SVGSVGElement, 'var(--app-panel)'),
+      mime: 'image/svg+xml',
+    });
+    say('Picture saved.');
+  };
+
+  return (
+    <Blueprint style={{ padding: 'var(--sp-6)', marginTop: 'var(--sp-5)' }}>
+      <input
+        className="bare"
+        value={chart.title}
+        onChange={(e) => onEdit({ title: e.target.value })}
+        aria-label={`Title of the chart of ${chart.range}`}
+        placeholder={`${CHART_LABELS[chart.kind]} of ${chart.range}`}
+        style={{
+          width: '100%',
+          fontSize: 'var(--type-md)',
+          background: 'transparent',
+          border: 0,
+          marginBottom: 'var(--sp-5)',
+        }}
+      />
+
+      <div ref={hold}>
+        <ChartPicture cells={sheet.cells} chart={chart} />
+      </div>
+
+      <Segmented
+        options={CHART_KINDS.map((id) => ({ id, label: CHART_LABELS[id] }))}
+        // The union rather than `string`, so a kind that is not one of the four
+        // cannot reach the store through this picker.
+        value={chart.kind}
+        onChange={(kind) => onEdit({ kind })}
+        style={{ marginTop: 'var(--sp-5)' }}
+      />
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-3)' }}>
+        {CHART_SAYS[chart.kind]}
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 'var(--sp-4)',
+          alignItems: 'center',
+          marginTop: 'var(--sp-5)',
+        }}
+      >
+        <label style={{ fontSize: 'var(--type-xs)', ...secondLine() }}>
+          Reads{' '}
+          <input
+            className="bare"
+            value={chart.range}
+            onChange={(e) => onEdit({ range: e.target.value.toUpperCase() })}
+            aria-label={`Which cells the chart of ${chart.range} reads`}
+            size={9}
+            style={{
+              fontSize: 'var(--type-xs)',
+              background: 'transparent',
+              border: '1px solid var(--app-line)',
+              borderRadius: 'var(--r-sm)',
+              paddingBlock: 'var(--sp-2)',
+              paddingInline: 'var(--sp-3)',
+            }}
+          />
+        </label>
+        {selection !== chart.range ? (
+          <button type="button" className="btn" onClick={() => onEdit({ range: selection })}>
+            Read {selection}
+          </button>
+        ) : null}
+      </div>
+
+      <div style={{ marginTop: 'var(--sp-4)' }}>
+        <Toggle
+          on={chart.headers}
+          label="The top row names the series"
+          onChange={() => onEdit({ headers: !chart.headers })}
+        />
+        <Toggle
+          on={chart.labels}
+          label="The left column names the categories"
+          onChange={() => onEdit({ labels: !chart.labels })}
+        />
+      </div>
+
+      <ToolRule />
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
+        <button type="button" className="btn" onClick={savePicture}>
+          Save the picture
+        </button>
+        <button type="button" className="btn" onClick={onRemove}>
+          Remove this chart
+        </button>
+      </div>
+    </Blueprint>
   );
 }
 
