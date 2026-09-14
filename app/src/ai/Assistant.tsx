@@ -1,61 +1,77 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { focusablesIn, nextInRing } from '../a11y/modal';
+import { Component, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useStore } from '../state/store';
-import { useAI, useSeed } from './store';
-import { TOUCH, WIDE, useMedia } from '../lib/media';
+import { useAI } from './store';
+import { WIDE, useMedia } from '../lib/media';
 import { screenName } from '../lib/nav';
-import { useConversation, provider } from './converse';
 import { AskSelection } from './AskAbout';
-import { Composer, sendHint } from './Composer';
-import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
-import { Opening } from './Opening';
-import { money } from '../lib/spend';
-import { configured, modelLabel } from '../lib/claude';
-import { nameOf } from '../lib/threads';
-import { Trouble } from '../components/Trouble';
-import { Applied, Locally, Proposals } from './Actions';
 import { fills } from '../components/shell/exempt';
+import { faultOf } from '../lib/fault';
+import { offline } from '../lib/offline';
+import { secondLine } from '../lib/dim';
+
+type PanelComponent = (typeof import('./Panel'))['Panel'];
 
 /**
- * The assistant, everywhere.
+ * The panel, which is the rest of the assistant and most of its weight.
  *
- * A button in the corner and a chat panel that comes up over whatever you
- * were looking at — mounted once in the shell rather than rendered by a
- * screen, so there is exactly one of it and it can never disagree with itself
- * about where you are.
+ * Twenty modules and 7,287 lines behind this one import, measured on the eager
+ * import graph: the conversation, the turns, the composer, the proposals,
+ * `lib/claude.ts` and `lib/tools.ts`. None of it is needed to draw a button,
+ * and until this split all of it was parsed before the app's first render.
+ * See `ai/Panel.tsx`.
  *
- * ## It is the chat, not a preview of it
+ * ## Why this is not `lazy()` and a `Suspense`
  *
- * There is one destination for the assistant — the Ask tab — and one
- * conversation behind both of them, held in `ai/live.ts` and read through
- * `useConversation`. This panel is the way *in* to that conversation from
- * wherever you happen to be standing, carrying that screen's context with it.
+ * Because `lazy()` made opening the panel **twenty times slower**, and the
+ * measurement is worth keeping: tap to panel-in-the-DOM went from 14–28ms to
+ * a flat 314ms, on the production build, with the chunk already fetched and
+ * sitting in memory.
  *
- * So it is shaped like the thing it is: a titled header, a transcript at a
- * reading measure that follows the stream and lets you scroll back out of it,
- * the answer's own offers in the flow of the answer, and a composer pinned to
- * the bottom. Every one of those pieces is the *same component* the tab
- * draws — `Turns.tsx`, `Opening.tsx`, `Composer.tsx`, `Actions.tsx` — because
- * a panel that rendered its own smaller version of a message is how one
- * conversation starts reading as two products.
+ * The flatness is the clue — that is not work, it is a deliberate delay.
+ * `lazy` only calls its factory at the first render that needs it, so even an
+ * already-resolved module suspends for a tick; the `Suspense` fallback is
+ * committed; and React then throttles *un*-showing a fallback it has just
+ * shown, so that a flash of spinner cannot be briefer than the eye can follow.
+ * That rule is right, and the way to not pay it is to never suspend.
  *
- * What it does not have is the history list. Twelve rows inside a panel sized
- * to leave the screen behind it visible would be the panel; `ALL CHATS` opens
- * the tab, which is a navigation and not a handoff, since there was only ever
- * one log.
+ * So the module is held in state instead. The effect below fetches it when the
+ * browser is idle, long before anybody taps, and the panel then renders in the
+ * same commit as any other conditional child — no fallback, no throttle,
+ * nothing to reveal. A tap that somehow beats the prefetch waits for the
+ * fetch and no longer, rather than for the fetch plus a third of a second.
  *
- * ## Partial on purpose, and a card on a laptop
+ * The promise is module-level so the prefetch and the open share one request.
+ * It is cleared on failure, which `lazy` will not do: a rejected `lazy` is
+ * rejected for the life of the page, and this way walking back into signal and
+ * tapping again tries again.
+ */
+let loading: Promise<PanelComponent> | null = null;
+const loadPanel = (): Promise<PanelComponent> =>
+  (loading ??= import('./Panel').then((m) => m.Panel));
+
+/**
+ * The assistant's button, everywhere — and the door to the rest of it.
  *
- * On a phone it comes up to about three-fifths and the screen behind stays
- * visible and usable. That is the whole difference between an assistant that
- * is part of the app and a chat window that happens to float: you can read
- * your grades while you ask about them, and tap a row behind it without
- * dismissing anything. Full height is a swipe, a drag or a tap away.
+ * One button in the corner, mounted once in the shell rather than rendered by
+ * a screen, so there is exactly one of it and it can never disagree with
+ * itself about where you are. Tapping it opens `ai/Panel.tsx`, which is the
+ * conversation and is fetched separately; the reasoning about what the panel
+ * is and how it behaves lives over there, beside the code that does it.
  *
- * On a wide window a strip across the bottom of a laptop would be neither —
- * the measure is wrong and the composer ends up a long way from the answer —
- * so it docks as a card in the corner it was opened from. Opened out, both
- * become a modal over a wash, and only then is the app behind it inert.
+ * ## Why the two are separate files
+ *
+ * They were one component, and `App.tsx` mounts it in all three shells — so
+ * the whole conversation stack was parsed before the app's first render:
+ * `converse.ts`, `Turns`, `Composer`, `Actions`, `lib/claude.ts`,
+ * `lib/tools.ts` and the rest. Twenty modules and 7,287 lines, measured on
+ * the eager import graph, to draw a button with a glyph in it.
+ *
+ * What stays here is everything that has to be true *before* the panel is
+ * open: the button and where it rests, Cmd+K, Escape, the selection
+ * affordance, and the lift that keeps the button off a primary action. All of
+ * it is cheap, and all of it would be wrong to load late — a shortcut that
+ * arrives two seconds after the page is a shortcut that does nothing when it
+ * is first pressed. See `ENGINEERING-AUDIT.md` §1.
  *
  * ## Where the button sits
  *
@@ -65,20 +81,10 @@ import { fills } from '../components/shell/exempt';
  * sheet — so this steps aside for both rather than stacking on them.
  */
 
-/** How tall the sheet is when it first comes up, as a share of the window. */
-const PART = 0.6;
 
 /** How far the button lifts when something it would cover is underneath. */
 const LIFT = 58;
 
-/**
- * How far the handle has to travel before a tap becomes a drag.
- *
- * Forty pixels rather than five: a tap on a phone moves the finger a little,
- * and a sheet that treated four pixels of that as "drag down" would close
- * itself on every attempt to expand it.
- */
-const DRAG = 40;
 
 /**
  * Whether an element is something a person would tap.
@@ -174,39 +180,115 @@ function savedCorner(): Corner {
   }
 }
 
+
+/**
+ * The panel could not be fetched, and the app must survive it.
+ *
+ * `<Assistant />` is mounted in the shell, *outside* the boundary that wraps
+ * the screen — so a `lazy()` that rejects here has nothing between it and the
+ * root, and React unmounts the whole tree. That is the white page
+ * `components/Boundary.tsx` was written about, and code-splitting this panel
+ * is exactly what would have reintroduced it: an installed app open across a
+ * deploy asks for a file GitHub Pages has stopped serving, and an app with no
+ * signal asks for one it never fetched.
+ *
+ * Small and in place, rather than the full-page apology `ScreenTrouble`
+ * draws. Nothing is lost when this fails — the conversation is in
+ * `ai/live.ts` and on the device — so the honest thing is a card where the
+ * panel would have been, saying which of the two happened, and a way out.
+ * `lib/fault.ts` tells them apart; the wording is `Boundary.tsx`'s, shortened.
+ */
+class PanelTrouble extends Component<{ children: ReactNode; onClose: () => void }, { error: Error | null }> {
+  state: { error: Error | null } = { error: null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  render() {
+    const { error } = this.state;
+    if (!error) return this.props.children;
+    return <PanelGone error={error} onClose={this.props.onClose} />;
+  }
+}
+
+/**
+ * The card that stands in for the panel, when there is no panel.
+ *
+ * Two ways to get here and one thing to say. The chunk would not fetch, or it
+ * fetched and threw while rendering; `lib/fault.ts` sorts the first into the
+ * two cases a student can act on, and the second reads as the second of them.
+ *
+ * Small and in place, rather than the full-page apology `ScreenTrouble`
+ * draws — nothing is lost when this fails, because the conversation lives in
+ * `ai/live.ts` and on the device. The wording is `components/Boundary.tsx`'s,
+ * shortened to a card.
+ */
+function PanelGone({ error, onClose }: { error: Error; onClose: () => void }) {
+  // Read at render, not when it was caught: somebody who has walked back into
+  // signal should not still be told they are offline.
+  const absent = faultOf(error, !offline()) === 'absent';
+  return (
+    <div
+      role="alert"
+      style={{
+        position: 'fixed',
+        left: 16,
+        right: 16,
+        bottom: 16,
+        zIndex: 60,
+        maxWidth: 420,
+        marginInline: 'auto',
+        padding: 'var(--sp-6)',
+        background: 'var(--card)',
+        border: '1px solid var(--line)',
+        borderRadius: 'var(--r-lg)',
+        boxShadow: 'var(--glow)',
+      }}
+    >
+      <div
+        style={{
+          fontFamily: 'var(--font-heading)',
+          fontSize: 'var(--type-xs)',
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          // `secondLine()`, not `opacity: 0.5`. The audited rung against
+          // whichever ground is on — see `lib/dim.ts`, and the `dim` axis in
+          // `styles/rules.ts` that counts the hand-written kind.
+          ...secondLine(),
+        }}
+      >
+        {absent ? 'No connection' : 'This app was updated'}
+      </div>
+      <p style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)' }}>
+        {absent
+          ? 'The assistant has not been downloaded to this device yet. It will open as soon as there is a connection — everything you have asked it is saved here.'
+          : 'A new version was published while this was open, so the assistant could not be fetched. A reload is the whole fix, and nothing is lost.'}
+      </p>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
+        {!absent && (
+          <button type="button" className="btn btn-primary" onClick={() => window.location.reload()} style={{ minHeight: 44 }}>
+            Reload
+          </button>
+        )}
+        <button type="button" className="btn btn-secondary" onClick={onClose} style={{ minHeight: 44 }}>
+          Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function Assistant() {
-  const { state, dispatch } = useStore();
+  const { state } = useStore();
   const ai = useAI();
-  const seed = useSeed();
   const wide = useMedia(WIDE);
-  const touch = useMedia(TOUCH);
   const [corner, setCorner] = useState<Corner>(savedCorner);
-  const [full, setFull] = useState(false);
-  const [draft, setDraft] = useState('');
+  /** The panel's component, once it has been fetched. See `loadPanel`. */
+  const [Panel, setPanel] = useState<PanelComponent | null>(null);
+  /** Or why it could not be. */
+  const [panelTrouble, setPanelTrouble] = useState<Error | null>(null);
 
-  // One place that empties the box and sends, because the send button and the
-  // Enter key must not drift into doing slightly different things.
-  const ask = () => {
-    const q = draft;
-    setDraft('');
-    void talk.send(q);
-  };
-  /**
-   * The conversation, from the one place it lives.
-   *
-   * Not built here: `ai/converse.ts` holds the turns, the request, the
-   * proposals and the undo, so the sheet and the older Ask screen are two
-   * views of one assistant rather than two assistants. See its header.
-   */
-  const talk = useConversation();
-  /** Whether the "what's included" panel is open. Nothing hidden, on request. */
-  const [showing, setShowing] = useState(false);
-
-  const sheet = useRef<HTMLDivElement | null>(null);
-  /** What had focus before the sheet opened, to give it back on close. */
-  const cameFrom = useRef<HTMLElement | null>(null);
-
-  const assembled = useMemo(() => (ai.open ? ai.look() : null), [ai]);
   /*
    * `screenName`, not the registry directly. Twenty screens are not
    * destinations — the eight settings pages and the twelve you reach from
@@ -216,38 +298,6 @@ export function Assistant() {
    * of the three registries a given screen's name is kept in.
    */
   const here = useMemo(() => screenName(ai.screen), [ai.screen]);
-
-  /** Nothing asked in this thread yet, so the opening stands in for it. */
-  const empty = talk.turns.length === 0 && !talk.busy;
-
-  /**
-   * What the panel is called: the conversation you are in.
-   *
-   * The thread's own name if it has been renamed, otherwise its first
-   * question — the same string the history list shows, so opening the tab
-   * finds the row you were just reading under the name you were just reading.
-   * A new thread has no question yet and says who is answering instead.
-   */
-  const open = talk.threads.find((t) => t.id === talk.openId);
-  const title = open && open.turns.length > 0 ? nameOf(open) : `Ask ${provider()}`;
-
-  /**
-   * Follows the stream, and stops the moment you scroll up.
-   *
-   * The sheet had neither. It was a plain overflow box, so a streaming answer
-   * wrote itself past the bottom edge while the reader sat looking at their
-   * own question — the one bug in this panel that made it read as not being a
-   * chat at all. `useFollowing` is the tab's rule and this is the same one.
-   */
-  const { box, following, toEnd } = useFollowing([
-    talk.turns.length,
-    talk.streaming,
-    talk.busy,
-    ai.open,
-  ]);
-
-  /** Where a drag on the handle started, or null when it is a tap. */
-  const grab = useRef<number | null>(null);
 
   /*
    * The one corner it must not take.
@@ -259,54 +309,6 @@ export function Assistant() {
    */
   const taken = state.nav === 'feed' && state.screen === 'home' && !wide;
   const side: Corner = taken && corner === 'right' ? 'left' : corner;
-
-  /**
-   * The panel's geometry, which is three shapes and not one.
-   *
-   * On a phone it is a bottom sheet: full-bleed, three-fifths of the height,
-   * rounded at the top, and the screen behind it still visible. That is the
-   * embedded assistant, and it is what the corner button is for.
-   *
-   * On a wide window a full-bleed strip across the bottom of a laptop is
-   * neither: the measure is wrong, the composer is a metre from the answer,
-   * and it covers a screen that had the room to keep showing. So there it
-   * docks as a card in the corner it was opened from — the shape every
-   * embedded assistant on the web has settled on, for the reason they all
-   * settled on it.
-   *
-   * Opened out, both become the same thing: a modal over a wash, capped at a
-   * reading width on a wide window rather than stretched across it.
-   */
-  const shape = useMemo((): React.CSSProperties => {
-    if (!wide) {
-      return {
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: full ? '100%' : `${Math.round(PART * 100)}%`,
-        borderRadius: full ? 0 : 'var(--r-lg) var(--r-lg) 0 0',
-        borderInline: full ? 0 : undefined,
-        borderBottom: full ? 0 : undefined,
-      };
-    }
-    if (full) {
-      return {
-        top: 24,
-        bottom: 24,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: 'min(980px, calc(100vw - 48px))',
-        borderRadius: 'var(--r-lg)',
-      };
-    }
-    return {
-      [side]: 20,
-      bottom: 20,
-      width: 'min(440px, calc(100vw - 40px))',
-      height: 'min(700px, calc(100vh - 96px))',
-      borderRadius: 'var(--r-lg)',
-    };
-  }, [wide, full, side]);
 
   /*
    * Cmd/Ctrl+K, and Escape while the sheet is up.
@@ -338,60 +340,6 @@ export function Assistant() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [ai]);
-
-  /*
-   * Remember what had focus, and give it back on close.
-   *
-   * Focusing *into* the box is the composer's own job now — it mounts with
-   * the sheet and focuses itself, which is one fewer thing that can race. The
-   * timeout that used to be here was working around the box not existing yet.
-   */
-  useEffect(() => {
-    if (ai.open) {
-      cameFrom.current = document.activeElement as HTMLElement | null;
-      return;
-    }
-    cameFrom.current?.focus?.();
-    setFull(false);
-    setShowing(false);
-  }, [ai.open]);
-
-  useEffect(() => {
-    if (seed.seeded) {
-      setDraft(seed.seeded);
-      seed.clear();
-    }
-  }, [seed]);
-
-  /*
-   * Focus is trapped only at full height.
-   *
-   * At the partial height the screen behind is meant to stay usable — that is
-   * what makes this feel embedded — and trapping focus would make the tab key
-   * disagree with the pointer about whether the app behind is live. Full
-   * height covers everything, so there it is a real modal and traps.
-   */
-  const onTab = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (!full || e.key !== 'Tab' || !sheet.current) return;
-      /*
-       * The ring is `a11y/modal.ts`'s rather than this file's.
-       *
-       * Only the ring: this sheet is open and shut by `ai.open` rather than
-       * by mounting, and it is a modal only at full height, so `useModal`'s
-       * other half — take focus on open, give it back on close — would be
-       * fighting the effect above that already does exactly that on the
-       * right signal. What was here was a second copy of the arithmetic, and
-       * it had the bug a second copy gets: no `[disabled]`, so a Send button
-       * greyed out until you type was a dead stop at the end of the ring.
-       */
-      const to = nextInRing(focusablesIn(sheet.current), document.activeElement, e.shiftKey);
-      if (!to) return;
-      e.preventDefault();
-      to.focus();
-    },
-    [full],
-  );
 
   const moveCorner = (to: Corner) => {
     setCorner(to);
@@ -466,6 +414,59 @@ export function Assistant() {
       window.removeEventListener('resize', soon);
     };
   }, [ai.open, state.screen, state.mode, wide, lift]);
+
+  /*
+   * Fetch the panel when the browser has nothing better to do — and at once
+   * if somebody has already asked for it.
+   *
+   * Splitting the panel off keeps it out of the first render; it does not have
+   * to keep it out of the first tap. Idle time after paint is neither: the
+   * page is drawn, the student is reading, and the panel arrives quietly in
+   * the background so that opening it is as immediate as it was before the
+   * split.
+   *
+   * `requestIdleCallback` where there is one, a timer where there is not —
+   * Safari only gained it recently, and a fixed two seconds is the same idea
+   * with worse timing rather than a different one. Either way `loadPanel`
+   * hands back the same promise, so a tap during the fetch joins it rather
+   * than starting a second one.
+   */
+  useEffect(() => {
+    let alive = true;
+    const get = () => {
+      loadPanel().then(
+        (loaded) => {
+          // The updater form: `setPanel(fn)` would call a component instead of
+          // storing it.
+          if (alive) setPanel(() => loaded);
+        },
+        (e: unknown) => {
+          // Cleared, so the next attempt is a real one. See `loadPanel`.
+          loading = null;
+          if (alive) setPanelTrouble(e instanceof Error ? e : new Error(String(e)));
+        },
+      );
+    };
+
+    if (ai.open) {
+      get();
+      return () => {
+        alive = false;
+      };
+    }
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(get, { timeout: 4000 });
+      return () => {
+        alive = false;
+        window.cancelIdleCallback?.(id);
+      };
+    }
+    const t = window.setTimeout(get, 2000);
+    return () => {
+      alive = false;
+      window.clearTimeout(t);
+    };
+  }, [ai.open]);
 
   return (
     <>
@@ -544,546 +545,37 @@ export function Assistant() {
         </button>
       )}
 
-      {ai.open && assembled && (
-        <>
-          {/*
-            The wash, at full height only.
+      {/*
+        The panel, on a chunk of its own.
 
-            At the partial height the screen behind is meant to stay readable
-            and tappable — that is the whole difference between an assistant
-            embedded in the app and a chat window that floats over it, and a
-            scrim would take it away. At full height the panel is a real modal
-            and the wash is what says so; tapping it closes, which is what
-            everybody tries first.
-          */}
-          {full && (
-            <button
-              type="button"
-              className="bare"
-              aria-label="Close the assistant"
-              onClick={() => ai.hide()}
-              style={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: 69,
-                width: '100%',
-                background: 'var(--scrim)',
-                border: 0,
-                cursor: 'default',
-              }}
-            />
-          )}
-          <div
-            ref={sheet}
-            role="dialog"
-            aria-label={`Ask about ${assembled.label}`}
-            aria-modal={full}
-            onKeyDown={onTab}
-            style={{
-              position: 'fixed',
-              zIndex: 70,
-              display: 'flex',
-              flexDirection: 'column',
-              minHeight: 0,
-              background: 'var(--app-panel)',
-              border: '1px solid var(--app-line)',
-              boxShadow: 'var(--lift-2), 0 -18px 40px rgba(0,0,0,0.45)',
-              ...shape,
-            }}
-          >
-            {/*
-              The grab handle, on the surface that has a grab.
+        `fallback={null}` rather than a spinner, because by the time anybody
+        taps, the effect above has usually already fetched it and there is
+        nothing to wait for. A skeleton that flashes for one frame on every
+        open would be worse than the two frames it covers on the first.
 
-              A phone sheet is dragged; a panel docked in the corner of a
-              laptop is not, and a handle there is a decoration pretending to
-              be a control. It doubles as the full-height toggle, which is
-              what a swipe would do and what a keyboard cannot swipe for.
-            */}
-            {!wide && (
-              <button
-                type="button"
-                className="bare"
-                onClick={() => setFull((was) => !was)}
-                onPointerDown={(e) => {
-                  grab.current = e.clientY;
-                }}
-                onPointerUp={(e) => {
-                  const from = grab.current;
-                  grab.current = null;
-                  if (from === null) return;
-                  const moved = e.clientY - from;
-                  // A drag, not a tap. Up opens it out, down puts it back and
-                  // then closes it — the two gestures every sheet on a phone
-                  // already answers to.
-                  if (moved < -DRAG) setFull(true);
-                  else if (moved > DRAG) {
-                    if (full) setFull(false);
-                    else ai.hide();
-                  }
-                }}
-                aria-label={full ? 'Shrink the assistant' : 'Expand the assistant'}
-                aria-expanded={full}
-                style={{
-                  width: '100%',
-                  padding: '9px 0 5px',
-                  display: 'grid',
-                  placeItems: 'center',
-                  touchAction: 'none',
-                }}
-              >
-                <span
-                  aria-hidden
-                  style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--app-line-top)' }}
-                />
-              </button>
-            )}
+        `key` on the boundary is the open itself, so closing and reopening
+        gets a fresh attempt rather than the message the last failure left up.
+      */}
+      {/*
+        The panel, on a chunk of its own, and drawn the moment it is here.
 
-            {/*
-              The header a chat has: who is answering, and what to do with the
-              conversation. Two rows rather than one, because the two things
-              it has to say are of different ranks — the title is the thread
-              you are in, and "looking at" is the context that thread carries.
-              Folding them into one line made the second read as a subtitle of
-              the app rather than as a statement about this question.
-            */}
-            <div
-              style={{
-                flex: 'none',
-                padding: wide ? 'var(--sp-6) var(--sp-6) var(--sp-4)' : 'var(--sp-3) var(--sp-6) var(--sp-4)',
-                borderBottom: '1px solid var(--app-line-soft)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
-                <span
-                  aria-hidden
-                  style={{
-                    flex: 'none',
-                    width: 24,
-                    height: 24,
-                    borderRadius: '50%',
-                    display: 'grid',
-                    placeItems: 'center',
-                    background: 'var(--app-accent-wash)',
-                    border: '1px solid var(--app-line)',
-                    fontFamily: 'var(--font-heading)',
-                    fontSize: 'var(--type-xs)',
-                  }}
-                >
-                  ✦
-                </span>
-                <div
-                  style={{
-                    flex: 1,
-                    minWidth: 0,
-                    fontFamily: 'var(--font-heading)',
-                    fontSize: 'var(--type-md)',
-                    lineHeight: 'var(--leading-tight)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {title}
-                </div>
-                {/* New, expand, close — in that order, because that is the
-                    order of how often they are wanted and the close button
-                    belongs at the edge where a thumb reaches for it. */}
-                {talk.turns.length > 0 && !talk.busy && (
-                  <button
-                    type="button"
-                    className="bare tap"
-                    onClick={talk.clear}
-                    aria-label="New conversation"
-                    style={ICON}
-                  >
-                    <span aria-hidden>＋</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="bare tap"
-                  onClick={() => setFull((was) => !was)}
-                  aria-label={full ? 'Shrink the assistant' : 'Expand the assistant'}
-                  aria-expanded={full}
-                  style={ICON}
-                >
-                  <span aria-hidden>{full ? '⤡' : '⤢'}</span>
-                </button>
-                <button
-                  type="button"
-                  className="bare tap"
-                  onClick={() => ai.hide()}
-                  aria-label="Close the assistant"
-                  style={{ ...ICON, fontSize: 'var(--type-lg)' }}
-                >
-                  <span aria-hidden>×</span>
-                </button>
-              </div>
+        Nothing is shown while it is still being fetched. By the time anybody
+        taps, the effect above has almost always finished, and a skeleton that
+        flashed for a frame on every open would cost more than the rare wait
+        it covers.
 
-              {/* What it can see, tappable to see exactly what. Nothing
-                  hidden — an answer whose basis you cannot check is one you
-                  either swallow or ignore.
-
-                  The chevron leads the line rather than following it: the
-                  summary is one line and is often longer than the panel, so a
-                  trailing marker was the first thing the ellipsis ate, and the
-                  only sign that this was a control at all disappeared exactly
-                  when there was most to disclose. */}
-              <button
-                type="button"
-                className="bare"
-                onClick={() => setShowing((was) => !was)}
-                aria-expanded={showing}
-                style={{
-                  width: '100%',
-                  textAlign: 'left',
-                  marginTop: 'var(--sp-2)',
-                  paddingLeft: 'calc(24px + var(--sp-4))',
-                  fontSize: 'var(--type-xs)',
-                  lineHeight: 'var(--leading-normal)',
-                  opacity: 0.55,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {/*
-                  What it is actually about, which is not always the screen.
-                  A long press on a deadline says "Looking at: that deadline";
-                  saying "Looking at: Courses" while the question is scoped to
-                  one row is the header telling the student something untrue
-                  about their own question.
-                */}
-                <span aria-hidden>{showing ? '▾' : '▸'}</span> Looking at:{' '}
-                {assembled.extra.length > 0
-                  ? assembled.extra[0].summary.replace(/\.$/, '')
-                  : `${assembled.label}${
-                      assembled.own
-                        ? ` — ${assembled.own.summary.replace(/\.$/, '')}`
-                        : ' — nothing of its own'
-                    }`}
-              </button>
-            </div>
-
-            <div
-              ref={box}
-              /*
-               * `log`, not `feed`, and the same region the full chat uses.
-               *
-               * A log is a live region whose new entries are announced in
-               * order, which is what a transcript is. `polite` so a completed
-               * answer waits for the reader to pause rather than cutting
-               * across them — and the streaming text below is deliberately
-               * marked hidden, so tokens do not announce one at a time.
-               */
-              role="log"
-              aria-live="polite"
-              aria-label="Conversation"
-              style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 'var(--sp-7) 0' }}
-            >
-              <div style={COLUMN}>
-                {showing && (
-                  <div style={{ marginBottom: 'var(--sp-7)' }}>
-                    <div className="kicker">Exactly what goes with your question</div>
-                    <pre
-                      style={{
-                        marginTop: 'var(--sp-3)',
-                        padding: 'var(--sp-5)',
-                        borderRadius: 'var(--r-sm)',
-                        border: '1px solid var(--app-line)',
-                        background: 'var(--app-hero)',
-                        fontSize: 'var(--type-xs)',
-                        lineHeight: 'var(--leading-normal)',
-                        whiteSpace: 'pre-wrap',
-                        overflowX: 'auto',
-                      }}
-                    >
-                      {assembled.text || 'This screen tells the assistant nothing of its own.'}
-                    </pre>
-                    {assembled.dropped > 0 && (
-                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.6, marginTop: 5 }}>
-                        {assembled.dropped} more rows did not fit and were left out. The assistant
-                        is told that too, so it will not count from a partial list.
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Nothing asked yet. The same opening the tab draws, from
-                    `Opening.tsx` — a sentence about what it can see and four
-                    things worth asking here, rather than four naked buttons. */}
-                {empty && <Opening onPick={(q) => void talk.send(q)} tight />}
-
-                {/*
-                  The same two components the full chat draws, from
-                  `Turns.tsx`, laid out the same way: the question in a tinted
-                  block, the answer as prose at the reading measure, and the
-                  turns a clear distance apart. Not a second implementation of
-                  them — the sheet and the tab are two views of one
-                  conversation, and a turn that looked like one thing here and
-                  another there would make opening the tab read as having gone
-                  somewhere else. The shapes and the reasons are in that file.
-                */}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 'calc(var(--sp-7) * 1.6)',
-                  }}
-                >
-                  <Dropped n={talk.dropped} />
-                  {talk.turns.map((t, i) =>
-                    t.role === 'user' ? (
-                      <Question
-                        key={i}
-                        text={t.content}
-                        onEdit={
-                          i === talk.turns.length - 2 && !talk.busy
-                            ? (next) => void talk.send(next, talk.turns.slice(0, i))
-                            : undefined
-                        }
-                      />
-                    ) : (
-                      <Reply
-                        key={i}
-                        text={t.content}
-                        incomplete={t.incomplete}
-                        onRetry={i === talk.turns.length - 1 ? (talk.redo ?? undefined) : undefined}
-                        /*
-                         * The offers belong to the answer that made them.
-                         *
-                         * They used to sit in a tray under the whole
-                         * transcript here, which put a live "add a reminder"
-                         * button several screens below the sentence that
-                         * offered it. The tab has had them in the flow since
-                         * it was written; this is the same arrangement.
-                         */
-                        extra={
-                          i === talk.turns.length - 1 && !talk.busy ? (
-                            <>
-                              {talk.used.length > 0 && (
-                                <Looked
-                                  said={`Read ${talk.used.length} ${
-                                    talk.used.length === 1 ? 'part' : 'parts'
-                                  } of your records`}
-                                  detail={talk.used.join('\n')}
-                                />
-                              )}
-                              <Locally
-                                locally={talk.locally}
-                                onGo={(screen) => {
-                                  dispatch({ type: 'go', screen });
-                                  ai.hide();
-                                }}
-                              />
-                              <Proposals
-                                proposals={talk.proposals}
-                                line={talk.proposalsLine}
-                                onRun={talk.run}
-                                onDismiss={talk.dismiss}
-                              />
-                              <Applied applied={talk.applied} onTakeBack={talk.takeBack} />
-                            </>
-                          ) : undefined
-                        }
-                      />
-                    ),
-                  )}
-
-                  {/*
-                    Hidden from the reader, on purpose.
-
-                    A live region containing the streaming text would announce
-                    every token — a paragraph read one word at a time as it
-                    arrives, which is unusable. The completed turn is announced
-                    by the log when it lands; this is the sighted view of it
-                    arriving.
-                  */}
-                  {talk.busy && (
-                    <div aria-hidden style={{ fontSize: 'var(--type-sm)' }}>
-                      {talk.streaming && <Reply text={talk.streaming} />}
-                      {(!talk.streaming || talk.looking.length > 0) && (
-                        <Waiting who={provider()} doing={talk.looking} />
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Never yanks anybody back down: it appears, and it waits. The
-                sheet had no such rule at all — it did not follow the stream
-                either, so a long answer wrote itself off the bottom edge
-                while you sat looking at the question. */}
-            {!following && (
-              <div style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={toEnd}
-                  style={{
-                    position: 'absolute',
-                    bottom: 'var(--sp-4)',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    height: 32,
-                    padding: '0 var(--sp-6)',
-                    fontSize: 'var(--type-xs)',
-                    letterSpacing: '0.08em',
-                    borderRadius: 'var(--r-lg)',
-                    boxShadow: 'var(--lift-2)',
-                    background: 'var(--app-panel)',
-                    zIndex: 2,
-                  }}
-                >
-                  ↓ Latest
-                </button>
-              </div>
-            )}
-
-            <div
-              style={{
-                flex: 'none',
-                borderTop: '1px solid var(--app-line)',
-                padding: 'var(--sp-5) 0',
-                paddingBottom: wide
-                  ? 'var(--sp-5)'
-                  : 'max(var(--sp-5), env(safe-area-inset-bottom))',
-              }}
-            >
-              <div style={COLUMN}>
-                {/*
-                  The same box the full chat uses, from `Composer.tsx`, so
-                  Enter means the same thing on both — including on a touch
-                  keyboard, where it makes a new line and the arrow sends.
-                */}
-                <Composer
-                  value={draft}
-                  onChange={setDraft}
-                  onSend={ask}
-                  onStop={talk.stop}
-                  onRecall={() => {
-                    // The last thing *you* asked, not the last thing said.
-                    for (let i = talk.turns.length - 1; i >= 0; i -= 1) {
-                      if (talk.turns[i].role === 'user') return talk.turns[i].content;
-                    }
-                    return null;
-                  }}
-                  busy={talk.busy}
-                  placeholder={`Ask about ${assembled.label} — ${sendHint(touch)}`}
-                  autoFocus
-                />
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: 'var(--sp-6)',
-                    marginTop: 'var(--sp-4)',
-                  }}
-                >
-                  {/*
-                    Where the key, the model and the cost live. One tap from
-                    the conversation they change, because somebody who wants a
-                    different model should not have to guess it is in Settings.
-                  */}
-                  <button
-                    type="button"
-                    className="bare"
-                    onClick={() => {
-                      ai.hide();
-                      dispatch({ type: 'go', screen: 'setAssistant' });
-                    }}
-                    style={QUIET}
-                  >
-                    {configured() ? modelLabel().toUpperCase() : 'SET A KEY'}
-                  </button>
-                  <span style={{ flex: 1 }} />
-                  {/* The same conversation, with the page to itself. Not a
-                      handoff and nothing is copied — both surfaces read the
-                      one conversation in `ai/live.ts`, so this is a
-                      navigation.
-
-                      This is what the sheet is *for*, now that there is one
-                      destination: it is the way in from wherever you were
-                      standing, holding that screen's context, and the tab is
-                      where the history of every conversation lives. The list
-                      is there rather than here because twelve rows inside a
-                      panel sized to leave the screen behind it visible would
-                      fill the panel. */}
-                  <button
-                    type="button"
-                    className="bare"
-                    onClick={() => {
-                      ai.hide();
-                      dispatch({ type: 'go', screen: 'ask' });
-                    }}
-                    style={QUIET}
-                  >
-                    ALL CHATS ↗
-                  </button>
-                </div>
-                {/* A failed request, and the retry for it. */}
-                <Trouble said={talk.said} onRetry={talk.again} busy={talk.busy} />
-                {/* The running cost, in small print. Silent when nothing was
-                    measured — a zero would read as "this was free". See
-                    `lib/spend.ts`. */}
-                {talk.cost.asks > 0 && (
-                  <div
-                    style={{
-                      fontSize: 'var(--type-xs)',
-                      opacity: 0.45,
-                      marginTop: 'var(--sp-3)',
-                      lineHeight: 'var(--leading-normal)',
-                    }}
-                  >
-                    About {money(talk.cost.dollars)} this month, over {talk.cost.asks}{' '}
-                    {talk.cost.asks === 1 ? 'answer' : 'answers'}
-                    {talk.cost.unpriced > 0 ? ` (${talk.cost.unpriced} unpriced)` : ''}. Estimated.
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </>
+        The boundary is for a panel that throws while rendering; the failure
+        to *fetch* it is `panelTrouble`, which the same card reports. Both
+        matter here and nowhere else in the app: this is mounted in the shell,
+        outside the boundary that wraps the screen, so an uncaught throw takes
+        the whole tree with it.
+      */}
+      {ai.open && panelTrouble && <PanelGone error={panelTrouble} onClose={() => ai.hide()} />}
+      {ai.open && !panelTrouble && Panel && (
+        <PanelTrouble key="panel" onClose={() => ai.hide()}>
+          <Panel side={side} />
+        </PanelTrouble>
       )}
     </>
   );
 }
-
-/** A header control: square, named, and quiet until you reach for it. */
-const ICON = {
-  flex: 'none',
-  width: 28,
-  height: 28,
-  display: 'grid',
-  placeItems: 'center',
-  borderRadius: 'var(--r-sm)',
-  fontSize: 'var(--type-md)',
-  opacity: 0.6,
-} as const;
-
-const QUIET = {
-  width: 'auto',
-  flex: 'none',
-  fontSize: 'var(--type-xs)',
-  letterSpacing: '0.1em',
-  opacity: 0.55,
-} as const;
-
-/**
- * The reading measure, the same one the tab uses.
- *
- * Around sixty-eight characters — the width a paragraph is comfortable at,
- * which is the whole point of not putting answers in a bubble. The panel is
- * narrower than that on a phone and at the docked width, so this only bites
- * when the sheet is opened out on a wide window, which is exactly where an
- * answer would otherwise run the full width of a laptop.
- *
- * `--reading-width` is the reader's own setting, so somebody who set the guide
- * wider gets this wider too rather than two different measures in one app.
- */
-const COLUMN = {
-  maxWidth: 'min(100%, var(--reading-width, 68ch))',
-  margin: '0 auto',
-  padding: '0 var(--sp-7)',
-} as const;
