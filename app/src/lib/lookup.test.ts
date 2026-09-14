@@ -418,8 +418,15 @@ describe('the tool definitions themselves', () => {
     for (const t of LOOKUPS) {
       const props = Object.keys(t.input_schema.properties);
       expect(t.input_schema.required, t.name).toEqual(props);
-      expect(t.strict, t.name).toBe(true);
     }
+  });
+
+  it('does not spend the strict promise on a read', () => {
+    // The API takes that promise for twenty tools and refuses the request at
+    // twenty-one; the app offers twenty-two. So it goes to the writes, which
+    // change a semester, and not to these, whose arguments are read through
+    // `str` and `num` and whose worst case is a re-read.
+    for (const t of LOOKUPS) expect(t.strict, t.name).toBeUndefined();
   });
 });
 
