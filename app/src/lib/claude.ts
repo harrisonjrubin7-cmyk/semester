@@ -393,13 +393,27 @@ export function explainAskError(
      * it becomes obvious.
      */
     return (
-      `${detail}\n\nNothing at ${addressUsed || 'that address'} forwards to the API — it answered ` +
-      `${status} rather than Claude. Clear the proxy box under Settings → The assistant to use your ` +
-      'key instead, or correct the address.'
+      `${leading(detail, status)}Nothing at ${addressUsed || 'that address'} forwards to the API — it ` +
+      `answered ${status} rather than Claude. Clear the proxy box under Settings → The assistant to ` +
+      'use your key instead, or correct the address.'
     );
   }
   if (taking === 'proxy' && status === 502) {
     return `${detail}\n\nThe proxy did not answer at /v1/messages. Check the address under Settings.`;
+  }
+  /*
+   * Something answered, and it was not an API — on a route with no box to fix.
+   *
+   * The branch above is the common way this happens and names the proxy box.
+   * The same fact reaches the other routes too: a function that has moved, a
+   * network that intercepts a request and answers it itself, an address that
+   * was right when the build was made. There the app printed the number on
+   * its own, which is the one thing a student cannot act on — so this says
+   * what was posted to and what came back, which is the whole of what is
+   * known.
+   */
+  if (status === 404 || status === 405 || status === 501) {
+    return `${leading(detail, status)}${whatAnswered(taking, addressUsed, status)} ${insteadTry(taking)}`;
   }
   if (status === 529 || status === 429) {
     return `${detail}\n\nThat is rate limiting rather than a mistake — wait a moment and ask again.`;
@@ -417,7 +431,66 @@ export function explainAskError(
       ? `${detail}\n\nThe shared key has run out for this month. Add your own under Settings to carry on now.`
       : `${detail}\n\nThe key works — the account behind it has no credit left. Top it up at console.anthropic.com under Billing; nothing needs replacing.`;
   }
+  /*
+   * A number with no words in it.
+   *
+   * `detail` starts as the status and is replaced by whatever the body said,
+   * so it is still the status exactly when nothing readable came back: an
+   * HTML error page from a static host, an empty body, anything in the way
+   * that is not an API. A bare "405" in a red box is a failure this app has
+   * already had once, and naming the address is what made it solvable — so no
+   * status reaches a student on its own, whatever the number turns out to be.
+   */
+  if (detail === String(status)) {
+    return `The question never reached Claude: ${named(addressUsed)} answered ${status} and sent nothing an API would send. ${insteadTry(taking)}`;
+  }
   return detail;
+}
+
+/** The body's own sentence first, when it had one, and nothing when it did not. */
+function leading(detail: string, status: number): string {
+  return detail === String(status) ? '' : `${detail}\n\n`;
+}
+
+/** What was posted to, for a sentence — never an empty space where it should be. */
+function named(addressUsed: string): string {
+  return addressUsed || 'the address this build uses';
+}
+
+/**
+ * What answered, in one clause.
+ *
+ * Two different facts wear the same status. On a route with an address in it,
+ * a 404 or a 405 means the address is not a thing that forwards to the API —
+ * the address is the mistake. On your own key the address is Claude's own and
+ * cannot be wrong, so the same number means something else answered in its
+ * place, and saying "nothing there forwards to the API" about Anthropic's own
+ * endpoint would send somebody looking in the one place that is correct.
+ */
+function whatAnswered(taking: Route, addressUsed: string, status: number): string {
+  return taking === 'own'
+    ? `${named(addressUsed)} answered ${status}, which Claude’s API does not do.`
+    : `Nothing at ${named(addressUsed)} forwards to the API — it answered ${status}.`;
+}
+
+/** Where to go next, which is a different place on each route. */
+function insteadTry(taking: Route): string {
+  switch (taking) {
+    case 'shared':
+      return (
+        'That is the shared key’s function rather than Claude itself. Add your own key under ' +
+        'Settings → The assistant to carry on now; whoever runs this deployment can look at ' +
+        'the function (SETUP.md).'
+      );
+    case 'own':
+      return (
+        'Nothing in the app is pointing at the wrong place — that is Claude’s own address — so it ' +
+        'is either something between this browser and Claude, a network that intercepts requests ' +
+        'or an extension, or Claude itself having a moment. Asking again says which.'
+      );
+    default:
+      return 'Check the address under Settings → The assistant, or clear it to use the key above.';
+  }
 }
 
 /** What a browser reports when the request never reached anything. */

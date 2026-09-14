@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   ask,
   configured,
+  explainAskError,
   readCitation,
   readMaterial,
   proxyProblem,
@@ -1050,5 +1051,68 @@ describe('which route a question takes', () => {
     await expect(ask({ system: 's', messages: [{ role: 'user', content: 'q' }] })).rejects.toThrow(
       /No key yet/,
     );
+  });
+
+  /**
+   * A host that answers a POST with a web page, not an API.
+   *
+   * The proxy route above already says what happened; what these are about is
+   * the same thing arriving anywhere else. A static host answers `405 Not
+   * Allowed` as HTML, so the body carries no message to show and the app was
+   * left printing the number on its own — which is what a student saw, in a
+   * red box, with nothing in it to act on.
+   */
+  describe('when the answer is a page rather than an API', () => {
+    /** What GitHub Pages actually sends: a status, and HTML nobody can parse. */
+    const notAllowed = () =>
+      vi.stubGlobal('fetch', () =>
+        Promise.resolve(
+          new Response('<html><head><title>405 Not Allowed</title></head></html>', {
+            status: 405,
+            headers: { 'Content-Type': 'text/html' },
+          }),
+        ),
+      );
+
+    it('names the address on the route with no box to fix', async () => {
+      on({ apiKey: 'sk-ant-mine' });
+      vi.stubEnv('VITE_CLAUDE_PROXY', '');
+      expect(route()).toBe('own');
+      notAllowed();
+
+      const said = await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] }).catch(
+        (e: Error) => e.message,
+      );
+      expect(said).toMatch(/https:\/\/api\.anthropic\.com\/v1\/messages/);
+      expect(said).toMatch(/answered 405/);
+      // The number on its own is the thing being fixed here.
+      expect(said).not.toBe('405');
+    });
+
+    it('never hands back a bare status, whatever the number', () => {
+      // 418 stands in for anything unrecognised: the rule is that a status
+      // with no sentence from the body never reaches a student alone.
+      const bare = explainAskError('shared', 418, '418', 'https://p.supabase.co/functions/v1/claude');
+      expect(bare).toMatch(/https:\/\/p\.supabase\.co\/functions\/v1\/claude/);
+      expect(bare).toMatch(/418/);
+      expect(bare).toMatch(/your own key/i);
+      expect(bare).not.toBe('418');
+    });
+
+    it('keeps the body’s own sentence when there was one', () => {
+      // The API's wording beats anything written here, so it stays at the top
+      // and the explanation follows it.
+      const said = explainAskError('shared', 405, 'POST only.', 'https://p.supabase.co/functions/v1/claude');
+      expect(said.startsWith('POST only.')).toBe(true);
+      expect(said).toMatch(/answered 405/);
+    });
+
+    it('still says the deployed function is the thing to look at', () => {
+      // The 404 case is more specific and was already worded for it; the new
+      // branch must not swallow it.
+      expect(explainAskError('shared', 404, '404', 'https://p.supabase.co/functions/v1/claude')).toMatch(
+        /has not been deployed/,
+      );
+    });
   });
 });
