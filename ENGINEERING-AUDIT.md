@@ -115,6 +115,21 @@ other eager paths already reach them — `App.tsx:170` imports `provider` from
 `App.tsx:170` plus the `lib/sheet.ts` importers, and those need their own
 measurement, not a guess.
 
+### What landed
+
+P1b and P1c are done. Measured after, the same way:
+
+```
+287 modules, 86,319 lines  →  285 modules, 83,903 lines
+initial gzipped JS: 346,504 bytes  →  335,358 bytes
+```
+
+`lib/connect.ts`, `lib/decks.ts` and `lib/pptx.ts` are off the critical path
+entirely. `lib/sheet.ts` is still on it, and the trace says why: after the
+reducer stopped importing it, `ai/providers/make.ts` is the remaining eager
+path — so it leaves with P1a, not before. That is the shape of this work, and
+the reason each edge is measured rather than argued.
+
 > **How to reproduce.** Walk the graph from `src/main.tsx`, following every
 > non-`type` `import … from` / `export … from` and bare `import '…'`, and
 > ignoring `import()`. Count modules and lines with an edge present, then with
@@ -154,6 +169,11 @@ const [now, tick] = useReducer(
   startedAt.current,
 );
 ```
+
+**Done.** `nextMinute` in `state/store.tsx` returns the previous `Date` when
+the minute has not moved, and `state/clock.test.ts` asserts identity rather than
+equality — the same minute must come back as the *same object*, or React cannot
+tell that nothing happened.
 
 **The real fix** is to take `now` out of the omnibus context — its own provider,
 read through a `useNow()` hook by the handful of components that show a relative
@@ -257,10 +277,22 @@ it) and needs a worker to activate inside it, which `skipWaiting()` on install
 makes possible right after a deploy. Low severity, one-character class of fix:
 name it `${VERSION}-shared`, or exempt it explicitly.
 
-**The fix for both** is to make the cache name carry the build — Vite can hand
-the worker a build id — or to prune, on each `warm`, any entry in the shell
-cache that is not in the list the page just sent. The second is nicer: it needs
-no build plumbing, and the page's list is by definition the current one.
+**The fix for both.** This audit first proposed pruning, on each `warm`, any
+entry not in the list the page just sent — "nicer, because it needs no build
+plumbing". That is wrong, and writing the fix is what showed it: the warm list
+is what the *first* load fetched, and a screen opened later is cached by the
+fetch handler and is not in it. Pruning on every load would evict precisely the
+screens the offline promise is about.
+
+A build change is the one moment the old entries are certainly dead — they are
+named after files the server has stopped serving. So the page is stamped with a
+build id and passes it on with the list, and the worker prunes only when that id
+changes. The share cache is kept by naming the three caches the worker owns
+rather than testing a prefix.
+
+**Done** — `vite.config.ts` stamps `VITE_BUILD_ID`, `lib/warm.ts` sends it,
+`public/sw.js` prunes on it, and `lib/swcache.test.ts` drives the worker through
+eight builds to prove the cache stops growing.
 
 ---
 
@@ -292,9 +324,20 @@ are worth naming here because they are the kind that bite quietly:
   `Groupwork.tsx`, `Classmates.tsx` and `ai/Assistant.tsx` — each one is a render
   pass that exists only to correct the one before it.
 
-**Turn the two noisy rules off** (or scope `only-export-components` to files
-that are genuinely component-only) so the remaining 19 are visible, then work
-them down. A linter nobody reads is a linter that is not running.
+**One of the two rules went off, not both** — and the reason is the second half
+of the `refs` count. Nineteen of those 22 are the `modal.ref` false positive.
+The other three are real writes and reads of a ref during render:
+`components/room/Talk.tsx:227`, `screens/call/Green.tsx:140` and
+`screens/Calendar.tsx:1948`. Turning a correctness rule off to quieten a
+heuristic would have hidden them, which is a worse trade than the noise.
+
+So `react/only-export-components` is `off` and `react/refs` stays on.
+
+**Done: 155 warnings → 41**, of which 22 are real and 19 are the `modal.ref`
+pattern. The three ref-during-render sites are left for a pass that can think
+about each one; they are behaviour, not configuration. Renaming `Modal.ref` in
+`a11y/modal.ts` would silence the remaining 19, and was rejected: renaming an
+a11y interface to suit a linter's heuristic makes the code worse to read.
 
 ---
 
@@ -347,11 +390,11 @@ Ordered by measured value per unit of risk, not by size.
 
 | | Work | Cost | What it buys |
 | --- | --- | --- | --- |
-| 1 | **P2 bail-out** — three lines in `store.tsx` | minutes | half of every full-tree re-render, for ever |
-| 2 | **P1b** — guard the OAuth import in `main.tsx` | ~20 lines | −1,616 lines off first paint |
-| 3 | **P1c** — move `blankSheet`/`blankDeck`/`DEFAULT_PALETTE` to leaf modules | ~30 lines | −1,001 lines, and a reducer that no longer imports a `.pptx` writer |
-| 4 | **P5** — prune the shell cache against the warm list; version the share cache | small | an installed app that does not grow without bound |
-| 5 | **P6** — silence the two noisy lint rules | one config edit | 19 real warnings become visible |
+| 1 | ✅ **P2 bail-out** — three lines in `store.tsx` | minutes | half of every full-tree re-render, for ever |
+| 2 | ✅ **P1b** — guard the OAuth import in `main.tsx` | ~20 lines | −1,616 lines off first paint |
+| 3 | ✅ **P1c** — move `blankSheet`/`blankDeck` to `lib/blank.ts` | ~30 lines | −1,001 lines, and a reducer that no longer imports a `.pptx` writer |
+| 4 | ✅ **P5** — prune the shell cache on a build change; keep the share cache | small | an installed app that does not grow without bound |
+| 5 | ✅ **P6** — silence the one noisy lint rule | one config edit | 155 warnings → 41 |
 | 6 | **P1a** — lazy the assistant panel behind its button | medium | −7,287 lines, the single largest cut |
 | 7 | **P3** — `isolate: false`, then fix what breaks | an afternoon | ~80s per CI run, three runs deep |
 | 8 | **P1d** — lazy `softtop.ts` behind the soft shell | small | −1,518 lines |
@@ -360,8 +403,16 @@ Ordered by measured value per unit of risk, not by size.
 | 11 | **P2 proper** — split `now` out of the store context | large | the minute boundary stops being an app-wide event |
 | 12 | **P7** — keep paying the style ledger down | ongoing | the memoisation in 11 becomes worth having |
 
-Items 1–5 are a single afternoon and touch nothing a student can see. Items
-10–11 are architecture and should be argued before they are written.
+Items 1–5 are done, in that order, one commit each, with `lint`, `test`,
+`test:zones` and `build` green after every one. They touch nothing a student
+can see. Items 10–11 are architecture and should be argued before they are
+written.
+
+Two of the five changed shape once they were written rather than described, and
+both corrections are in the sections above rather than quietly applied: the
+service-worker prune had to key on the build rather than on the warm list, and
+only one of the two lint rules could be turned off without hiding real
+findings.
 
 ## 10. What this audit deliberately did not do
 
