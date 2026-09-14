@@ -317,6 +317,80 @@ describe('the + means one thing', () => {
 });
 
 /**
+ * The browser shell, held to the same census as the workspace.
+ *
+ * It arrived as a seventh navigation while this pass was open, ported whole,
+ * and inside its own frame it repeated most of what the pass had just removed:
+ * one `searchBox` rendered twice, so two inputs, two `⌘ K` hints and two AI
+ * Tutor buttons on the screen it opens on; a sidebar whose Search home and
+ * Settings rows went where the wordmark and the gear already go; an "All apps"
+ * row sharing its name with the launcher; and a Dark/Light pair writing a
+ * preference of its own.
+ *
+ * Checked on the source rather than through `chromeFor`, because this shell
+ * draws its chrome itself rather than reading the rule — that is what makes it
+ * able to drift, and what makes these worth holding.
+ */
+describe('the browser shell draws each job once', () => {
+  const SHELL = () => withoutComments(read('src/components/GoogleShell.tsx'));
+
+  it('has one search field, not one per placement', () => {
+    // Counted by `role="combobox"`, not by `<input>`: the Customize panel has
+    // a checkbox, and a test that cannot tell a search field from a tickbox
+    // is one that fails for the wrong reason later.
+    expect(
+      [...SHELL().matchAll(/role="combobox"/g)].length,
+      'the omnibox is the only search field',
+    ).toBe(1);
+    // `placement` is gone with the second copy, and so is the state that
+    // tracked which of the two was being typed in.
+    expect(SHELL(), 'no second field to disambiguate').not.toContain('activeSearch');
+    expect(SHELL()).not.toContain('homeSearchRef');
+  });
+
+  it('puts the ⌘K hint and the tutor in the bar, once each', () => {
+    expect([...SHELL().matchAll(/g-key-hint/g)].length, 'one hint').toBe(1);
+    expect([...SHELL().matchAll(/AI Tutor<\/button>/g)].length, 'one tutor button').toBe(1);
+  });
+
+  /*
+   * Unlike the two chips this pass removed from the other shell, this hint is
+   * true: this shell's own listener binds ⌘K to focus the field. Held so a
+   * later tidy cannot leave the words without the binding.
+   */
+  it('means the ⌘K it advertises', () => {
+    expect(SHELL()).toMatch(/metaKey \|\| e\.ctrlKey\) && e\.key\.toLowerCase\(\) === 'k'/);
+    expect(SHELL(), 'and it focuses the field').toContain('searchRef.current?.focus()');
+  });
+
+  it('gives `/` the same field, through the same channel as the workspace', () => {
+    expect(SHELL(), 'the shell publishes its field').toContain('FocusBarProvider');
+    expect(SHELL()).toContain('const focusBar = useCallback(() => searchRef.current?.focus(), [])');
+  });
+
+  it('leaves the sidebar nothing the bar above already carries', () => {
+    expect(SHELL(), 'the wordmark goes to the search home').not.toContain('Search home');
+    // `go('settings')` survives once — the gear in the top actions. Two of it
+    // in one frame was the fault.
+    expect([...SHELL().matchAll(/go\('settings'\)/g)].length, 'one route to Settings').toBe(1);
+  });
+
+  it('keeps the launcher and the directory separately named', () => {
+    expect(SHELL(), 'the nine dots are the launcher').toContain('Open all apps');
+    expect(SHELL(), 'so the row opening the directory must not be').not.toContain('> All apps<');
+    expect(SHELL()).toContain('App directory');
+  });
+
+  it('takes light and dark from the app’s ground rather than a key of its own', () => {
+    expect(SHELL(), 'no preference of its own').not.toContain("usePreference('lightHome'");
+    expect(SHELL(), 'it resolves the ground the app is on').toContain('resolveGround(state.ground');
+    // And it reports that ground rather than offering a second way to set it.
+    expect(SHELL()).toContain('groundName(state.ground)');
+    expect(SHELL(), 'the panel opens the page that owns it').toContain("go('setLook')");
+  });
+});
+
+/**
  * One place each preference is written — and the reason it is in this file.
  *
  * The census above is about two controls in one frame. This is the same fault

@@ -463,7 +463,7 @@ doing the second's job, and having both named makes that hard to repeat.
 | W5 | The search home drops its AI Tutor button | `TopBar`'s, drawn on every screen | nothing — the bar's is inches above it |
 | W7 | The centre box focuses the bar instead of opening a second search; both `⌘ K` chips go | `TopBar`'s field — the only one now | nothing; the front door has one search field, reachable from two places |
 | W8 | `/` focuses that field where one is drawn, and opens the palette where none is | one search key, as before | nothing; the keyboard now gives the same answer as the pointer |
-| W9 | — | — | recorded only; a seventh navigation landed on `main` mid-branch and repeats four of these rows. See §4b. |
+| W9 | The browser shell stops repeating itself — and the app | its bar, in every row | nothing; and its centre box can be clicked at last |
 
 **Eight controls go, one is renamed, one stops being a search and becomes a way
 into the one that is. No destination goes**, which is why the screen count
@@ -493,42 +493,62 @@ to the one piece of chrome `lib/chrome.ts` deliberately does not cover.
 
 ---
 
-## 4b. W9 — a seventh navigation arrived after this census, and repeats it · **OPEN**
+## 4b. W9 — a seventh navigation arrived after this census, and repeated it · **FIXED**
 
-Not a finding about this branch's work. It is what the census says about code
-that landed on `main` while the branch was open, and it is recorded here
-because the next pass should not have to rediscover it.
+`#232` ported a **browser shell** — `chrome.browser`, drawn by
+`components/GoogleShell.tsx` — while this branch was open. It is one
+navigation by `navigationsDrawn`'s reckoning and the invariant at the top of
+`lib/chrome.ts` held. What it repeated is everything below that line.
 
-`#232` ported a **browser shell** — a seventh navigation, `chrome.browser`,
-drawn by `components/GoogleShell.tsx`. It is one navigation by
-`navigationsDrawn`'s reckoning and the invariant at the top of `lib/chrome.ts`
-still holds. What it repeats is everything below that line:
+Measured on `main` before anything changed, on the screen the shell opens on:
 
-| This pass removed | The browser shell has |
-| --- | --- |
-| **W7** — two search fields in one frame | two `<input>`s from one component, `placement` `top` and `home`, both drawn on its home |
-| **W5** — the assistant offered twice | an `AI Tutor` button in the bar, and `ask` again in the launcher as "AI Tutor" (`GoogleShell.tsx:35,137`) — its own note says so: *"This shell already offers the tutor twice"* |
-| **§3.1 `ground`** — one writer per preference | its own Dark/Light pair, writing `usePreference('lightHome')` — a third place light and dark are chosen, and a key that can disagree with `ground` |
-| **W8** — `/` lands in the search on screen | `/` opens the palette over its search field, because `barfocus` is not wired here |
+```
+searchInputs: 2      cmdKHints: 2      aiTutor: 2
+centreClickable: false   ← covered by `.device-pane`
+```
 
-Two things keep this off this branch's plate rather than on it.
+One `searchBox(placement)` rendered twice — omnibox and centre — each copy
+carrying an input, a `⌘ K` chip and an AI Tutor button. Both share `query`, so
+it was one search behind two comboboxes.
 
-It is **not a regression**. `/` opened the palette everywhere before W8; the
-browser shell simply does not benefit yet. And the tutor pair and the theme
-pair arrived with the port, not from anything here.
+| This pass had removed | The shell had | Now |
+| --- | --- | --- |
+| **W7** two search fields in one frame | `searchBox('top')` and `searchBox('home')` | one field; the centre is a button that focuses it, as in the workspace |
+| **W5** the assistant offered twice | an AI Tutor in each copy | one, in the bar |
+| **W3** the search home twice | the wordmark, and a sidebar **Search home** row | the wordmark |
+| **W4** Settings twice | the gear in `g-top-actions`, and a sidebar **Settings** row | the gear |
+| **W6** one name, two places | sidebar **All apps** beside a launcher labelled *Open all apps* | **App directory** |
+| **§3.1** one writer per preference | its own Dark/Light pair on `usePreference('lightHome')` | derives from the app's `ground`; the panel links to Colour and type and reports it |
+| **W8** `/` lands in the on-screen search | `/` opened the palette over the field | `FocusBarProvider` here too, so `Keys` keeps asking one question |
 
-And it is **not a merge**. `GoogleShell.tsx` is 179 lines in the style of the
-source it came from, with its own preference keys (`lightHome`, `classic`) and
-its own overlays. Reaching into a navigation that landed hours ago to apply
-four of this pass's conclusions is a pass of its own, with its own audit — and
-this one is already eight rows long and open on a branch. The honest thing is
-to say so.
+Two of those are worth a sentence of their own.
 
-What would make it a merge rather than a rewrite, when somebody does it:
-`ModernShellContext` already exists so the app's own chrome stands down inside
-this shell, and `components/desk/barfocus.ts` is the shape the `/` half wants —
-a provider mounted by whichever shell draws a field, so `Keys` keeps asking one
-question and gets the right answer in both.
+**The `⌘ K` chip stays here, because here it is true.** The two this pass
+removed sat in fields where ⌘K opened the assistant. This shell binds ⌘K
+itself, in the capture phase, to focus its own field — so the words match the
+key. It is written once now rather than twice, and `onframe.test.ts` holds both
+halves: one chip, and a listener that does what it says.
+
+**And a bug the census turned up rather than caused.** The shell's central
+search box could not be clicked *at all*: `.g-home-legacy .device>*` re-enabled
+pointer events on every direct child of `.device`, the pane is one, it is the
+full height of the window at z-index 50, and the home page's own controls are
+at 35. `elementFromPoint` over the middle of that box returned `.device-pane`.
+Measured on `main`, so it predates this branch — but a centre box that focuses
+the omnibox is no use if nothing can press it, so the rule is narrowed: the
+pane is transparent to the pointer and the things it actually draws — the
+change strip, the sync banner, the undo toast — keep their clicks.
+
+**Verified in a browser**, `pageerror` empty:
+
+| Frame | search fields | `⌘ K` | AI Tutor | outcome |
+| --- | --- | --- | --- | --- |
+| Browser shell, home | **1** (was 2) | **1** (was 2) | **1** (was 2) | the centre box focuses the omnibox — with a real click, which was impossible before |
+| Browser shell, inner | 1 | 1 | 1 | sidebar reads New · App directory · favourites · Connections; `/` focuses the omnibox |
+
+and the ground, which the shell now follows rather than keeping its own copy
+of: `ground: ink` draws dark, `ground: paper` draws light, with nothing to set
+separately.
 
 ---
 
@@ -548,8 +568,8 @@ Every row above is closed. Three commits, each green.
 
 ### The claim, checked rather than asserted
 
-`npm run lint` exit 0. `npm test` **334 files / 6888 tests**, all passing, on a
-head merged with `main` at `9512384` — so the count carries two other branches'
+`npm run lint` exit 0. `npm test` **334 files / 6902 tests**, all passing, on a
+head merged with `main` at `ea287a3` — so the count carries two other branches'
 new tests as well as this pass's. `npm run build` clean, `test:zones` green in
 two other timezones, and `pipeline/validate.mjs` clean.
 

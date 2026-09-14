@@ -1,5 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useStore } from '../state/store';
+import { ground, groundName, resolveGround } from '../lib/look';
+import { usePrefersDark } from '../lib/prefers';
 import { appShelves } from '../lib/apps';
 import { destination, GROUPS, type Destination } from '../lib/nav';
 import type { Screen } from '../lib/types';
@@ -16,6 +18,7 @@ import { actionsFor, hitKey, landingOf } from '../lib/openhit';
 import { recordSearch, here, openInNew, useStrip } from '../lib/browser.hook';
 import {MAX_TABS} from '../lib/browser';
 import {ModernShellContext} from './shell-context';
+import {FocusBarProvider} from './desk/barfocus';
 import {GlobalSearchResults} from './GlobalSearchResults';
 
 const DEFAULT_FAVORITES: Screen[] = ['home', 'courses', 'study', 'calendar', 'import'];
@@ -43,11 +46,25 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   const apps = useMemo(() => appShelves(school.capabilities, undefined).flatMap(s => s.apps), [school.capabilities]);
   const [favorites, setFavorites] = usePreference<Screen[]>('favorites', DEFAULT_FAVORITES);
   const [recent, setRecent] = usePreference<Screen[]>('recent', []);
-  const [lightHome, setLightHome] = usePreference('lightHome', false);
+  /*
+   * Light or dark here is the app's ground, not a preference of this shell's.
+   *
+   * It was `usePreference('lightHome')` — a key of this shell's own, written
+   * by a Dark/Light pair in its Customize panel. That made three places light
+   * and dark were chosen (Settings → Colour and type, the workspace's own
+   * panel, and this) and two of them could disagree: pick Paper in Settings
+   * and this shell stayed dark until you told it separately.
+   *
+   * `resolveGround` rather than `state.ground`, because "Match my device" is
+   * an instruction rather than a palette and this has to paint one. The pair
+   * that used to write the key is a row into Colour and type now — see the
+   * panel below — so the setting has one home and this follows it.
+   */
+  const prefersDark = usePrefersDark();
+  const lightHome = ground(resolveGround(state.ground, prefersDark)).light;
   const [showFavorites, setShowFavorites] = usePreference('showFavorites', true);
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
-  const [activeSearch, setActiveSearch] = useState<'top'|'home'>('top');
   const [selected, setSelected] = useState(-1);
   const tabs=useStrip();
   const canOpenTab=tabs.tabs.length<MAX_TABS;
@@ -60,7 +77,9 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   const [grid, setGrid] = useState(false);
   const [classic, setClassic] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
-  const homeSearchRef = useRef<HTMLInputElement>(null);
+  /* What `/` reaches, through `components/desk/barfocus.ts`. Stable, so a
+     keystroke does not re-subscribe the listener that reads it. */
+  const focusBar = useCallback(() => searchRef.current?.focus(), []);
   useEffect(() => {
     setLauncher(false); setFocused(false); setCustomize(false); setOrganizerOpen(false); setQuery('');
   }, [state.screen]);
@@ -68,7 +87,7 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   const launcherRef = useRef<HTMLDivElement>(null);
   const home = state.screen === 'search';
   const homePage = home && !directory && !state.finder;
-  useEffect(()=>{if(!classic && state.finder){setOrganizerOpen(false);setQuery(here().query??'');setDirectory(false);setFocused(false);setLauncher(false);setCustomize(false);setActiveSearch('top');searchRef.current?.focus();}},[state.finder,classic]);
+  useEffect(()=>{if(!classic && state.finder){setOrganizerOpen(false);setQuery(here().query??'');setDirectory(false);setFocused(false);setLauncher(false);setCustomize(false);searchRef.current?.focus();}},[state.finder,classic]);
   useEffect(()=>{if(!classic && state.apps){dispatch({type:'apps',open:false});setLauncher(true);setOrganizerOpen(false);setFocused(false);setCustomize(false);}},[state.apps,classic,dispatch]);
   useEffect(()=>{if(state.quickAdd){setFocused(false);setLauncher(false);setOrganizerOpen(false);setCustomize(false);}},[state.quickAdd]);
   const productivity = ['write','sheet','deck','mine','mail','classmates','call','draw','courses','course','study','degree','yes','housing','meals','maps','activities','work','university','create','athletics','career','family','pathway'].includes(state.screen);
@@ -92,7 +111,7 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if(classic || hasOpenModal())return;
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); e.stopImmediatePropagation(); dispatch({type:'finder',open:false}); setLauncher(false);setOrganizerOpen(false);setActiveSearch('top'); searchRef.current?.focus(); setFocused(true); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); e.stopImmediatePropagation(); dispatch({type:'finder',open:false}); setLauncher(false);setOrganizerOpen(false); searchRef.current?.focus(); setFocused(true); }
       if (e.key === 'Escape' && (focused || launcher || customize || state.finder)) { e.preventDefault(); e.stopImmediatePropagation(); dispatch({type:'finder',open:false}); setFocused(false); setLauncher(false); setCustomize(false); }
     };
     document.addEventListener('keydown',key,true);
@@ -124,36 +143,86 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   // eslint-disable-next-line react-hooks/exhaustive-deps
   },[apps,dispatch]);
   const showDirectory = () => { dispatch({type:'finder',open:false}); dispatch({type:'go',screen:'search'}); setDirectory(true); setFocused(false); setLauncher(false); setGroup('All apps'); };
-  const searchBox = (placement: 'top'|'home') => <div className={`g-search-wrap ${placement==='top'?'g-omnibox':'g-central-search'} ${placement==='home' && (launcher || customize || state.finder || state.quickAdd || (focused && activeSearch==='top'))?'is-suppressed':''} ${focused && activeSearch===placement ? 'is-open' : ''}`}>
+  /*
+   * One field, in the bar, on every screen.
+   *
+   * This took a `placement` of 'top' or 'home' and was rendered twice — the
+   * omnibox in the header and a second copy in the middle of the home page.
+   * They shared `query`, so it was one search with two inputs: two comboboxes
+   * for a screen reader, two `⌘ K` hints and two AI Tutor buttons on the one
+   * screen this shell opens on.
+   *
+   * The centre is `homeBox` below now, and it is a button that focuses this
+   * field rather than a second one — the idiom this whole shell is borrowed
+   * from, where a new tab page's box focuses the omnibox. With the second
+   * field went `activeSearch`, which existed only to remember which of the
+   * two was being typed in.
+   */
+  const searchBox = () => <div className={`g-search-wrap g-omnibox ${focused ? 'is-open' : ''}`}>
     <form className="g-search" onSubmit={e => {e.preventDefault(); query.trim()?searchAll():showDirectory();}} role="search">
-      {placement==='home' ? <button type="button" className="g-icon g-plus" aria-label="Add a task or appointment" onClick={() => {dispatch({type:'finder',open:false});dispatch({type:'quickAdd',open:true});}}><Plus size={24}/></button> : <Search size={23}/>}
-      <input ref={placement==='top'?searchRef:homeSearchRef} aria-label={placement==='top'?'Search Semester':'Search your semester'} aria-expanded={focused && activeSearch===placement} aria-controls={`semester-search-results-${placement}`} aria-activedescendant={focused && activeSearch===placement && selected>=0 && selected<optionCount ? `g-option-${placement}-${selected}` : undefined} role="combobox" autoComplete="off" placeholder={placement==='home' ? 'Search your semester' : 'Search apps, courses, assignments and files'} value={query} onFocus={() => {setLauncher(false);setOrganizerOpen(false);setActiveSearch(placement);setSelected(-1);setFocused(!state.finder);}} onChange={e=>{setQuery(e.target.value);if(state.finder)recordSearch(e.target.value);setSelected(-1);setFocused(!state.finder);}} onKeyDown={e=>{
+      <Search size={23}/>
+      <input ref={searchRef} aria-label="Search Semester" aria-expanded={focused} aria-controls="semester-search-results" aria-activedescendant={focused && selected>=0 && selected<optionCount ? `g-option-${selected}` : undefined} role="combobox" autoComplete="off" placeholder="Search apps, courses, assignments and files" value={query} onFocus={() => {setLauncher(false);setOrganizerOpen(false);setSelected(-1);setFocused(!state.finder);}} onChange={e=>{setQuery(e.target.value);if(state.finder)recordSearch(e.target.value);setSelected(-1);setFocused(!state.finder);}} onKeyDown={e=>{
         if(e.key==='ArrowDown'){e.preventDefault();setSelected(n=>optionCount?Math.min(n+1,optionCount-1):-1);}
         if(e.key==='ArrowUp'){e.preventDefault();setSelected(n=>optionCount?(n<=0?optionCount-1:n-1):-1);}
         if(e.key==='Enter' && focused && selected>=0 && selected<optionCount){e.preventDefault();if(options[selected])go(options[selected].screen);else openRecord(records[selected-options.length]);}
       }}/>
-      {query && <button type="button" className="g-icon" aria-label="Clear search" onClick={()=>{setQuery('');setSelected(-1);recordSearch('');(placement==='top'?searchRef:homeSearchRef).current?.focus();}}>×</button>}
+      {query && <button type="button" className="g-icon" aria-label="Clear search" onClick={()=>{setQuery('');setSelected(-1);recordSearch('');searchRef.current?.focus();}}>×</button>}
+      {/* True here, unlike the two chips this pass removed from the other
+          shell: `GoogleShell`'s own listener binds ⌘K, in the capture phase,
+          to focus this field. It is written once because there is one field. */}
       <span className="g-key-hint">⌘ K</span>
       <button type="button" className="g-ask" onClick={()=>go('ask')}><span className="g-spark">✦</span> AI Tutor</button>
     </form>
-    {focused && activeSearch===placement && <div className="g-suggestions" id={`semester-search-results-${placement}`} role="listbox" aria-label="Search suggestions">
+    {focused && <div className="g-suggestions" id="semester-search-results" role="listbox" aria-label="Search suggestions">
       <div className="g-suggest-title">{query.trim() ? `${matches.length} matching ${matches.length===1?'app':'apps'}` : recent.length ? 'Recently opened' : 'Suggested apps'}</div>
-      {options.map((app,i)=><button id={`g-option-${placement}-${i}`} type="button" role="option" aria-selected={i===selected} className={`g-suggestion ${i===selected?'selected':''}`} key={app.screen} onMouseDown={e=>e.preventDefault()} onClick={()=>go(app.screen)}><AppBadge app={app} small/><span><strong>{label(app)}</strong><small>{app.blurb}</small></span><span className="g-result-group">{app.group}</span></button>)}
+      {options.map((app,i)=><button id={`g-option-${i}`} type="button" role="option" aria-selected={i===selected} className={`g-suggestion ${i===selected?'selected':''}`} key={app.screen} onMouseDown={e=>e.preventDefault()} onClick={()=>go(app.screen)}><AppBadge app={app} small/><span><strong>{label(app)}</strong><small>{app.blurb}</small></span><span className="g-result-group">{app.group}</span></button>)}
       {!!records.length&&<div className="g-suggest-title">Your semester</div>}
-      {records.map((hit,i)=><button id={`g-option-${placement}-${options.length+i}`} type="button" role="option" aria-selected={selected===options.length+i} className={`g-suggestion ${selected===options.length+i?'selected':''}`} key={hitKey(hit)} onMouseDown={e=>e.preventDefault()} onClick={()=>openRecord(hit)}><Search size={22}/><span><strong>{hit.title}</strong><small>{hit.sub}</small></span><span className="g-result-group">{hit.tag}</span></button>)}
+      {records.map((hit,i)=><button id={`g-option-${options.length+i}`} type="button" role="option" aria-selected={selected===options.length+i} className={`g-suggestion ${selected===options.length+i?'selected':''}`} key={hitKey(hit)} onMouseDown={e=>e.preventDefault()} onClick={()=>openRecord(hit)}><Search size={22}/><span><strong>{hit.title}</strong><small>{hit.sub}</small></span><span className="g-result-group">{hit.tag}</span></button>)}
       {!optionCount && <div className="g-no-results">No matching apps or saved records. Try a course, document title, or “deadlines”.</div>}
       {query.trim()&&<button className="g-search-all" type="button" onClick={searchAll}>Search all my information <span>→</span></button>}
       <button className="g-search-all" type="button" onClick={showDirectory}>Browse {query.trim() ? 'all results' : `all ${apps.length} apps`} <span>→</span></button>
     </div>}
   </div>;
 
+  /*
+   * The home page's centre: a way into the field above, not a second one.
+   *
+   * A button rather than an input, for the reason the workspace's own centre
+   * box gives — a second text box forwarding its keystrokes is the duplicate
+   * wearing a disguise. Pressing it puts the cursor in the omnibox, which
+   * then drops its suggestions over this row.
+   *
+   * The `+` stays because it is the only one here: the sidebar's New button
+   * is not drawn on the home page, and the bar above has no `+` of its own.
+   * The `⌘ K` hint and the AI Tutor button do not stay — both are in the bar,
+   * inches above, and this row had the only other copy of each.
+   */
+  const homeBox = () => <div className={`g-search-wrap g-central-search ${launcher || customize || state.finder || state.quickAdd || focused ? 'is-suppressed' : ''}`}>
+    <div className="g-search">
+      <button type="button" className="g-icon g-plus" aria-label="Add a task or appointment" onClick={() => {dispatch({type:'finder',open:false});dispatch({type:'quickAdd',open:true});}}><Plus size={24}/></button>
+      <button type="button" className="g-central-box" onClick={focusBar}>Search your semester</button>
+    </div>
+  </div>;
+
   if(classic) return <><button className="g-classic-back" onClick={()=>setClassic(false)}>← Return to search layout</button>{children}</>;
-  return <ModernShellContext.Provider value={true}><div className={`semester-google ${homePage?'g-home':'g-workspace'} ${lightHome?'g-home-light':''} ${productivity && !directory ? 'g-productivity' : ''}`} data-workspace-screen={state.screen}>
+  /*
+   * `/` lands in this shell's field, the way it lands in the workspace's.
+   *
+   * `components/desk/barfocus.ts` is the channel and `components/Keys.tsx`
+   * the one caller: it focuses the bar where a provider says there is one and
+   * opens the palette where there is none. Mounting it here is the whole of
+   * what this navigation needed — the key was already right, it just had no
+   * way to know this shell draws a search field.
+   *
+   * Inside the provider rather than outside: `Keys` is one of the children
+   * `BrowserShell` mounts, so the value has to be above it in the tree.
+   */
+  return <ModernShellContext.Provider value={true}><FocusBarProvider value={focusBar}><div className={`semester-google ${homePage?'g-home':'g-workspace'} ${lightHome?'g-home-light':''} ${productivity && !directory ? 'g-productivity' : ''}`} data-workspace-screen={state.screen}>
     <GoogleTabs menuOpen={organizerOpen} onMenuChange={open=>{setOrganizerOpen(open);if(open){setFocused(false);setLauncher(false);setCustomize(false);}}} onNavigate={()=>{dispatch({type:'finder',open:false});setDirectory(false);setQuery('');setFocused(false);setLauncher(false);setCustomize(false);}}/>
     {focused && <div className="g-dismiss-search" onClick={()=>setFocused(false)} />}
     <header className="g-topbar">
       {<button className={`g-brand ${home&&!directory?'g-home-brand':''}`} onClick={()=>go('search')} aria-label="Semester home"><span className="g-brand-mark">S</span><span>Semester</span></button>}
-      {searchBox('top')}
+      {searchBox()}
       <nav className="g-top-actions" aria-label="Quick navigation">
         
         {(!home || directory) && <><button className="g-icon" aria-label="Alerts" onClick={()=>go('notifs')}><Bell size={21}/></button><button className="g-icon g-settings-icon" aria-label="Settings" onClick={()=>go('settings')}>⚙</button></>}
@@ -165,15 +234,29 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
     </header>
     {!home && <nav className="semester-primary-nav" aria-label="Main navigation">{([['home','Home'],['courses','Courses'],['study','Study'],['calendar','Calendar'],['work','Assignments'],['classmates','Messages'],['university','Campus'],['career','Career'],['create','Create']] as [Screen,string][]).map(([screen,name])=><button key={screen} aria-current={state.screen===screen?'page':undefined} onClick={()=>go(screen)}>{name}</button>)}<button onClick={showDirectory}>More</button><button className="semester-search-records" onClick={()=>dispatch({type:'finder',open:true})}>Search my information</button></nav>}
     {homePage ? <section className="g-search-home" id="search-home" aria-label="Semester home">
-      <div className="g-home-center"><h1 className="g-wordmark">Semester</h1>{searchBox('home')}
+      <div className="g-home-center"><h1 className="g-wordmark">Semester</h1>{homeBox()}
       {showFavorites && <div className="g-shortcuts">{favoriteApps.slice(0,9).map(a=><button className="g-shortcut" onClick={()=>go(a.screen)} key={a.screen}><span className="g-shortcut-circle"><AppBadge app={a}/></span><span>{label(a)}</span></button>)}<button className="g-shortcut" onClick={()=>{setLauncher(true);setEditing(true);}}><span className="g-shortcut-circle"><Plus size={27}/></span><span>Add shortcut</span></button></div>}
       <button className="g-browse-home" onClick={showDirectory}><AppsIcon size={17}/> Explore all {apps.length} apps <span>→</span></button>
       </div>
       <footer className="g-home-footer"><div className="g-footer-info"><span>{now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</span><span>{state.sample ? 'Sample semester · ' : ''}{catalog.courses.length} courses this semester</span></div><button className="g-customize" onClick={()=>setCustomize(true)}><span>✎</span> Customize Semester</button></footer>
-    </section> : <div className="g-workspace-body"><aside className="g-sidebar"><button className="g-new" onClick={()=>{dispatch({type:'finder',open:false});dispatch({type:'quickAdd',open:true});}}><Plus size={26}/> New</button><button className={home?'selected':''} onClick={()=>{setQuery('');showDirectory();}}><AppsIcon size={21}/> All apps</button><button onClick={()=>go('search')}><Search size={21}/> Search home</button><div className="g-nav-caption">Your favorites</div>{favoriteApps.map(a=><button className={state.screen===a.screen?'selected':''} key={a.screen} onClick={()=>go(a.screen)}><TabGlyph screen={a.screen} size={21}/>{label(a)}</button>)}<div className="g-sidebar-bottom"><button onClick={()=>go('connect')}><TabGlyph screen="connect" size={21}/> Connections</button><button onClick={()=>go('settings')}><TabGlyph screen="settings" size={21}/> Settings</button><p>{school.name || 'Your semester'}<span>{catalog.courses.length} courses · {apps.length} apps</span></p></div></aside>
+    </section> : <div className="g-workspace-body"><aside className="g-sidebar"><button className="g-new" onClick={()=>{dispatch({type:'finder',open:false});dispatch({type:'quickAdd',open:true});}}><Plus size={26}/> New</button>
+      {/* "App directory", not "All apps". The nine dots in the bar above are
+          already labelled Open all apps and they open the launcher — a panel
+          over the page — rather than this screen. Two controls in one frame
+          answering to one name is worse than either being redundant: a screen
+          reader read both out identically and pressing one was the only way to
+          tell which you had. */}
+      <button className={home?'selected':''} onClick={()=>{setQuery('');showDirectory();}}><AppsIcon size={21}/> App directory</button>
+      {/* There were two more rows here, and the bar above has both.
+          **Search home** went where the wordmark goes, and **Settings** where
+          the gear in `g-top-actions` goes — each a few inches from the row
+          that repeated it, in the same frame. The bar's two survive because
+          they are drawn on every screen of this navigation and this column is
+          drawn on none of the home page; nothing is lost at either. */}
+      <div className="g-nav-caption">Your favorites</div>{favoriteApps.map(a=><button className={state.screen===a.screen?'selected':''} key={a.screen} onClick={()=>go(a.screen)}><TabGlyph screen={a.screen} size={21}/>{label(a)}</button>)}<div className="g-sidebar-bottom"><button onClick={()=>go('connect')}><TabGlyph screen="connect" size={21}/> Connections</button><p>{school.name || 'Your semester'}<span>{catalog.courses.length} courses · {apps.length} apps</span></p></div></aside>
     {directory && !state.finder ? <section className="g-directory" aria-label="All applications"><div className="g-directory-title"><h1>{query.trim()?`Results for “${query}”`:'Welcome to Semester'}</h1><span>{apps.length} apps, one semester</span></div><h2 className="g-section-title">Your favorites</h2><div className="g-favorite-cards">{favoriteApps.slice(0,4).map(a=><button key={a.screen} onClick={()=>go(a.screen)}><AppBadge app={a} small/><span><strong>{label(a)}</strong><small>{a.group}</small></span><span>↗</span></button>)}</div><div className="g-directory-toolbar"><h2>All applications</h2><div className="g-view-toggle"><button aria-label="List view" aria-pressed={!grid} onClick={()=>setGrid(false)}>☰</button><button aria-label="Grid view" aria-pressed={grid} onClick={()=>setGrid(true)}><AppsIcon size={20}/></button></div></div><div className="g-filters">{['All apps',...GROUPS].map(g=><button key={g} className={group===g?'selected':''} onClick={()=>setGroup(g)}>{g}</button>)}</div><div className={grid?'g-directory-grid':'g-app-table'}>{!grid&&<div className="g-table-head"><span>Name</span><span>What you can do</span><span>Category</span><span>Favorite</span></div>}{matches.filter(a=>group==='All apps'||a.group===group).map(a=><div className="g-directory-app" key={a.screen}><button onClick={()=>go(a.screen)}><AppBadge app={a} small/><strong>{label(a)}</strong><p>{a.blurb}</p><span className="g-table-category">{a.group}</span></button><button className="g-star" aria-label={`${favorites.includes(a.screen)?'Unpin':'Pin'} ${label(a)}`} aria-pressed={favorites.includes(a.screen)} onClick={()=>toggleFavorite(a.screen)}>{favorites.includes(a.screen)?'★':'☆'}</button></div>)}{!matches.filter(a=>group==='All apps'||a.group===group).length&&<p className="g-no-results">No apps match this search and category. Choose another category or clear the search.</p>}</div></section> : <section className="g-app-content" aria-label={current?.label ?? 'Semester workspace'}><div className="g-workspace-heading"><button className="g-icon" onClick={()=>{if(state.finder)dispatch({type:'finder',open:false});else if(state.history.length)window.history.back();else go('search');}} aria-label="Go back"><ChevronLeft size={23}/></button><h1>{state.finder?'Search results':title}</h1>{state.finder?<button className="g-icon" aria-label="Close search results" onClick={()=>dispatch({type:'finder',open:false})}>×</button>:<button className="g-icon" aria-label="Search everything in your semester" onClick={()=>dispatch({type:'finder',open:true})}><Search size={21}/></button>}</div>{state.finder&&<section className="g-global-results" aria-label="Semester search results"><GlobalSearchResults query={query} groups={found} canOpenTab={canOpenTab} onOpen={openRecord} onNewTab={openRecordInNew}/></section>}<div className="g-legacy-mount" hidden={state.finder}>{children}</div></section>}
     </div>}
     {home && !state.finder && <div className="g-home-legacy">{children}</div>}
-    {customize&&<><div className="g-drawer-wash" onClick={()=>setCustomize(false)}/><aside className="g-customize-panel" aria-label="Customize Semester" role="dialog" aria-modal="true" ref={customizeModal.ref} onKeyDown={customizeModal.onKeyDown} tabIndex={-1}><div className="g-panel-heading"><h2>Customize Semester</h2><button className="g-icon" aria-label="Close customization" onClick={()=>setCustomize(false)}>×</button></div><p>Make a little room for your semester.</p><h3>Appearance</h3><div className="g-theme-options"><button className={!lightHome?'selected':''} onClick={()=>setLightHome(false)}><span className="g-theme-dark">Aa</span>Dark</button><button className={lightHome?'selected':''} onClick={()=>setLightHome(true)}><span className="g-theme-light">Aa</span>Light</button></div><label className="g-toggle-label">Show shortcuts<input type="checkbox" checked={showFavorites} onChange={e=>setShowFavorites(e.target.checked)}/></label><button className="g-outline-button" onClick={()=>{setCustomize(false);setLauncher(true);setEditing(true);}}>Choose favorite apps</button><button className="g-outline-button" onClick={()=>go('onboarding')}>Set up your semester</button><button className="g-text-button" onClick={()=>{setCustomize(false);setClassic(true);go('home');}}>Open original layout</button></aside></>}
-  </div></ModernShellContext.Provider>;
+    {customize&&<><div className="g-drawer-wash" onClick={()=>setCustomize(false)}/><aside className="g-customize-panel" aria-label="Customize Semester" role="dialog" aria-modal="true" ref={customizeModal.ref} onKeyDown={customizeModal.onKeyDown} tabIndex={-1}><div className="g-panel-heading"><h2>Customize Semester</h2><button className="g-icon" aria-label="Close customization" onClick={()=>setCustomize(false)}>×</button></div><p>Make a little room for your semester.</p><h3>Appearance</h3><button className="g-outline-button g-says" onClick={()=>go('setLook')}>Colour and type<span>{groundName(state.ground)}</span></button><label className="g-toggle-label">Show shortcuts<input type="checkbox" checked={showFavorites} onChange={e=>setShowFavorites(e.target.checked)}/></label><button className="g-outline-button" onClick={()=>{setCustomize(false);setLauncher(true);setEditing(true);}}>Choose favorite apps</button><button className="g-outline-button" onClick={()=>go('onboarding')}>Set up your semester</button><button className="g-text-button" onClick={()=>{setCustomize(false);setClassic(true);go('home');}}>Open original layout</button></aside></>}
+  </div></FocusBarProvider></ModernShellContext.Provider>;
 }

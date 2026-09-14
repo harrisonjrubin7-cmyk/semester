@@ -80,7 +80,11 @@ it('lets Enter search all results until a suggestion is explicitly selected',()=
   expect(host.querySelector('.g-global-results')).not.toBeNull();expect(here().screen).toBe('home');
   click('Close search results');act(()=>input.blur());type('calendar');
   act(()=>input.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true})));
-  expect(input.getAttribute('aria-activedescendant')).toBe('g-option-top-0');
+  // `g-option-0`, not `g-option-top-0`: the id used to carry which of two
+  // search fields owned the list. There is one field now — the home page's
+  // centre is a button that focuses this one rather than a second input — so
+  // there is nothing left for the id to disambiguate.
+  expect(input.getAttribute('aria-activedescendant')).toBe('g-option-0');
   act(()=>input.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})));
   expect(here().screen).toBe('calendar');
 });
