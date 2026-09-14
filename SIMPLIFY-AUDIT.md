@@ -141,6 +141,43 @@ Checked by restoring the old reducer and watching five of its six cases fail;
 the one that still passed is "goes to the mailbox", which is the only thing
 the old code did right.
 
+### F2 and F3, done — and F3 could not land without F2
+
+`calTab`, `meGroup` and `loadStep` are gone: the field, the default, the
+reducer case and the member of the action union, four places each. Nothing
+dispatched them and nothing read them, so nothing else changes.
+
+They had to go as part of F3 rather than after it, because the guard is a rule
+about the whole state and three known offenders would have failed it on the
+first run. A guard that lands with an allowlist of its own findings is a guard
+nobody trusts.
+
+**`state/readstate.test.ts` asks the question no other check asks.** The
+reducer was correct, the action was typed, the value was stored — and `tsc` is
+satisfied by a field that is *assigned*, because being read is not part of what
+a type says. Nothing threw and the suite passed on the broken version. So the
+rule is: **is there a reader at the other end?**
+
+Reads and writes are told apart exactly rather than by heuristic. A write is a
+key in an object literal — the declaration, the default, or
+`{ ...state, calTab: action.tab }` — and a read is a member access,
+`state.calTab`, or a name pulled out of `= state`. The colon is what makes a
+key a key, and that is the whole distinction.
+
+185 fields, none of them write-only. Verified the way this file now insists
+on: a field was planted with a declaration and a default and no reader, and
+the rule named it.
+
+**One claim in that test was wrong when written, and is corrected in it.** The
+note said both halves of the read rule were needed, citing the calendar's
+`calYear`, `calMonth` and `calSource` as destructured-and-nothing-else.
+Deleting the destructure half left the test green — all three are
+member-accessed elsewhere too. The half is kept, because the field that is
+destructured and nothing else is the false positive this rule cannot afford,
+but the note now says it catches nothing today and that this was measured
+rather than assumed. *Writing a justification for a rule is not the same as
+checking it, and this file is four rows deep in that lesson.*
+
 ---
 
 # One app — the seventh pass, run three times over

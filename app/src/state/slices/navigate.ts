@@ -196,9 +196,6 @@ export function navigate(state: State, action: Action): State | null {
     case 'setQuery':
       return { ...state, query: action.query };
 
-    case 'setCalTab':
-      return { ...state, calTab: action.tab };
-
     case 'setHomeTab':
       return { ...state, homeTab: action.tab };
 
@@ -210,9 +207,6 @@ export function navigate(state: State, action: Action): State | null {
 
     case 'setMeTab':
       return { ...state, meTab: action.tab };
-
-    case 'setMeGroup':
-      return { ...state, meGroup: action.group };
 
     case 'setTone':
       return { ...state, tone: action.tone };
@@ -248,9 +242,6 @@ export function navigate(state: State, action: Action): State | null {
 
     case 'finishOnboarding':
       return { ...state, screen: firstScreen(state.nav), history: [], seenOnboarding: true, onb: 0 };
-
-    case 'setLoadStep':
-      return { ...state, loadStep: action.step };
 
     case 'openLesson':
       return push({ ...state, lessonUnit: action.unit }, 'lesson');

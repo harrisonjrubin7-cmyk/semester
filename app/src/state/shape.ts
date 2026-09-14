@@ -744,7 +744,6 @@ export interface Ephemeral {
   episodeId: string | null;
   filter: string;
   evFilter: string;
-  calTab: 'deadlines' | 'campus';
   /**
    * Which grain the report screen is showing — the day, the week, the term.
    *
@@ -793,8 +792,6 @@ export interface Ephemeral {
   mathTab: 'write' | 'calculate' | 'graph' | 'library' | 'kept';
   /** Me follows the same shape as every other tab: a switcher, then one view. */
   meTab: 'you' | 'task';
-  /** Which shelf of the directory is showing under Everything. */
-  meGroup: string;
   /**
    * A paper the guide's Quiz mode asked for, read once by the Exam screen.
    *
@@ -875,7 +872,6 @@ export interface Ephemeral {
   updateUnit: number | null;
   query: string;
   onb: number;
-  loadStep: number;
   selDate: string | null;
   calMonth: number;
   calYear: number;
@@ -1336,7 +1332,6 @@ export function initialEphemeral(now: Date): Ephemeral {
     episodeId: null,
     filter: 'All',
     evFilter: 'All',
-    calTab: 'deadlines',
     report: 'day',
     changes: 'told',
     calView: 'month',
@@ -1348,7 +1343,6 @@ export function initialEphemeral(now: Date): Ephemeral {
     coursesTab: 'courses',
     costsTab: 'bill',
     meTab: 'you',
-    meGroup: 'Study',
     examPreset: null,
     roomDraft: '',
     dueTab: 'ahead',
@@ -1369,7 +1363,6 @@ export function initialEphemeral(now: Date): Ephemeral {
     updateUnit: null,
     query: '',
     onb: 0,
-    loadStep: 0,
     selDate: null,
     calMonth: now.getMonth(),
     calYear: now.getFullYear(),
@@ -1905,7 +1898,6 @@ export type Action =
   | { type: 'setLook'; look: Partial<Look> }
   | { type: 'setFilter'; filter: string }
   | { type: 'setEvFilter'; filter: string }
-  | { type: 'setCalTab'; tab: 'deadlines' | 'campus' }
   | { type: 'setQuery'; query: string }
   | { type: 'selectDate'; date: string | null }
   | { type: 'stepMonth'; delta: number }
@@ -1937,7 +1929,6 @@ export type Action =
   | { type: 'onbNext' }
   | { type: 'restartOnboarding' }
   | { type: 'finishOnboarding' }
-  | { type: 'setLoadStep'; step: number }
   /**
    * Start a run of cards.
    *
@@ -1978,7 +1969,6 @@ export type Action =
   | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
   | { type: 'setCoursesTab'; tab: CoursesTab }
   | { type: 'setMeTab'; tab: 'you' | 'task' }
-  | { type: 'setMeGroup'; group: string }
   | { type: 'setTone'; tone: Tone }
   /**
    * Take the shipped semester on as your own courses.
