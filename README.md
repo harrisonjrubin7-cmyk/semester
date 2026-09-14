@@ -533,8 +533,8 @@ stayed behind. Three screens now, on the **Make** shelf, and none of them has a
 model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
-  checklists, quotations, tables, equations, code blocks, page breaks — out as
-  a real `.docx`, as
+  checklists, quotations, tables, pictures, equations, code blocks, page
+  breaks — out as a real `.docx`, as
   Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
   `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
   link becomes a real hyperlink in the Word file rather than an address typed
@@ -554,6 +554,22 @@ model in it or needs a key:
   survives into the Word file. Its Markdown fence grows longer than any run of
   backticks inside it, so a snippet *about* Markdown does not quietly end its
   own block halfway down.
+
+  A **picture** is one of your own files — a PNG, a JPEG or a GIF, chosen from
+  the drive or added from the device on the spot — with alt text and a caption
+  beside it. The block holds the file's id and not its bytes: a document is
+  saved in the browser's local storage with everything else, and a single
+  phone screenshot written into it would spend the whole budget on one figure,
+  so the picture stays in the drive and the export goes and fetches it. Two
+  consequences worth knowing. A screenshot 1200 pixels wide is twelve and a
+  half inches at the size Word reads pixels, so it is brought down to the
+  6.5-inch text column — Word draws exactly the size it is told, and a picture
+  written out at its natural size runs off the paper. And a file you later bin
+  is not a broken document: the caption still exports, the picture does not,
+  and the editor says so and offers to find another. The alt text is separate
+  from the caption on purpose — it is what a screen reader in Word reads out,
+  so it says what is *in* the picture, where a caption says what to make of
+  it.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
   `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It

@@ -20,7 +20,7 @@ const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships
  */
 const doc = (blocks: Block[], title = 'Memo'): Doc => ({ ...blankDoc(title), id: 'd1', blocks });
 
-const documentXml = (d: Doc) => parts(d)['word/document.xml'];
+const documentXml = (d: Doc) => parts(d).text['word/document.xml'];
 
 /**
  * Every part, through a real XML parser.
@@ -53,7 +53,7 @@ describe('well-formedness', () => {
         ],
         'R&D <notes>',
       ),
-    );
+    ).text;
     for (const [path, body] of Object.entries(made)) {
       expect(() => parse(body), path).not.toThrow();
     }
@@ -62,7 +62,7 @@ describe('well-formedness', () => {
 
 describe('the package', () => {
   it('carries every part a reader looks for', () => {
-    const made = parts(doc([]));
+    const made = parts(doc([])).text;
     for (const path of [
       '[Content_Types].xml',
       '_rels/.rels',
@@ -78,7 +78,7 @@ describe('the package', () => {
   });
 
   it('declares a content type for every part that needs one', () => {
-    const made = parts(doc([]));
+    const made = parts(doc([])).text;
     const types = made['[Content_Types].xml'];
     for (const path of Object.keys(made)) {
       if (path.endsWith('.rels') || path === '[Content_Types].xml') continue;
@@ -87,7 +87,7 @@ describe('the package', () => {
   });
 
   it('points every relationship at a part that is in the package', () => {
-    const made = parts(doc([]));
+    const made = parts(doc([])).text;
     const targets = [
       ...made['_rels/.rels'].matchAll(/Target="([^"]+)"/g),
     ].map((m) => m[1]);
@@ -113,7 +113,7 @@ describe('the package', () => {
         { kind: 'quote', text: 'q', source: 's' },
         { kind: 'table', rows: [['a']], header: true, caption: 'c' },
       ]),
-    );
+    ).text;
     const used = [...made['word/document.xml'].matchAll(/<w:pStyle w:val="([^"]+)"\/>/g)].map(
       (m) => m[1],
     );
@@ -124,7 +124,7 @@ describe('the package', () => {
   });
 
   it('points a list at a numbering definition that exists', () => {
-    const made = parts(doc([{ kind: 'bullets', items: ['a'], numbered: true }]));
+    const made = parts(doc([{ kind: 'bullets', items: ['a'], numbered: true }])).text;
     const ids = [...made['word/document.xml'].matchAll(/<w:numId w:val="(\d+)"\/>/g)].map((m) => m[1]);
     expect(ids).toContain('2');
     for (const id of ids) expect(made['word/numbering.xml']).toContain(`<w:num w:numId="${id}">`);
@@ -140,7 +140,7 @@ describe('escaping', () => {
   });
 
   it('escapes the title too, which is the one nobody remembers', () => {
-    const made = parts(doc([], 'R&D <notes>'));
+    const made = parts(doc([], 'R&D <notes>')).text;
     expect(made['word/document.xml']).toContain('R&amp;D &lt;notes&gt;');
     expect(made['docProps/core.xml']).toContain('R&amp;D &lt;notes&gt;');
   });
@@ -226,13 +226,13 @@ describe('the marks that are not just a run property', () => {
    * exactly the case neither of them tests on its own.
    */
   it('numbers a link above the header, when there is one', () => {
-    const plain = parts(doc([{ kind: 'text', text: '[x](https://e.edu/a)' }]));
+    const plain = parts(doc([{ kind: 'text', text: '[x](https://e.edu/a)' }])).text;
     expect(plain['word/document.xml']).toContain('<w:hyperlink r:id="rId3">');
 
     const headed = parts({
       ...doc([{ kind: 'text', text: '[x](https://e.edu/a)' }]),
       layout: fromStyle('apa'),
-    });
+    }).text;
     expect(headed['word/document.xml']).toContain('<w:hyperlink r:id="rId4">');
     const rels = headed['word/_rels/document.xml.rels'];
     expect(rels).toContain('<Relationship Id="rId3" Type="' + REL + '/header"');
@@ -241,7 +241,7 @@ describe('the marks that are not just a run property', () => {
   });
 
   it('writes strike-through and monospace as run properties', () => {
-    const made = parts(doc([{ kind: 'text', text: 'keep ~~cut~~ and `code`' }]))[
+    const made = parts(doc([{ kind: 'text', text: 'keep ~~cut~~ and `code`' }])).text[
       'word/document.xml'
     ];
     expect(made).toContain('<w:strike/>');
@@ -259,13 +259,13 @@ describe('the marks that are not just a run property', () => {
           ],
         },
       ]),
-    )['word/document.xml'];
+    ).text['word/document.xml'];
     expect(made).toContain('☒ Read the chapter');
     expect(made).toContain('☐ Write the memo');
   });
 
   it('leaves a code block exactly as typed, marks and all', () => {
-    const made = parts(doc([{ kind: 'code', text: 'a <- b * c * d', language: 'R' }]))[
+    const made = parts(doc([{ kind: 'code', text: 'a <- b * c * d', language: 'R' }])).text[
       'word/document.xml'
     ];
     expect(made).toContain('a &lt;- b * c * d');
@@ -284,7 +284,7 @@ describe('the marks that are not just a run property', () => {
         { kind: 'heading', level: 1, text: 'The tariff' },
         { kind: 'heading', level: 2, text: 'The vote' },
       ]),
-    )['word/document.xml'];
+    ).text['word/document.xml'];
     expect(made).toContain('w:val="TOC1"');
     expect(made).toContain('The tariff');
     expect(made).not.toContain('instrText xml:space="preserve"> TOC');

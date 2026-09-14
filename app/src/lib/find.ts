@@ -237,6 +237,10 @@ function textOfBlock(b: Block): string {
       return `${b.language} ${b.text}`;
     case 'checks':
       return b.items.map((i) => i.text).join(' ');
+    // The name too: a picture is often remembered by its file name and by
+    // nothing else somebody wrote.
+    case 'image':
+      return `${b.alt} ${b.caption} ${b.name}`;
     case 'toc':
       return b.title;
     case 'break':

@@ -69,6 +69,26 @@ export type Block =
    */
   | { kind: 'checks'; items: { text: string; done: boolean }[] }
   /**
+   * A picture, held in IndexedDB and pointed at from here.
+   *
+   * The bytes are not in the block, and could not be: a document lives in
+   * localStorage with the rest of the app's state, and one screenshot would
+   * spend the whole budget. `fileId` is a key into `lib/files.ts`, the same
+   * store the drive uses.
+   *
+   * `name` is what the file was called when it was put in, kept beside the id
+   * rather than looked up. It is what markdown has to write — `![alt](id)` is
+   * a reference to nothing outside this app — and keeping it means the export
+   * still says something useful about a picture whose file has since been
+   * renamed or deleted. It is a label, never the way the picture is found.
+   *
+   * `alt` is separate from `caption` because they are different sentences: a
+   * caption is read by everybody and says what the picture is *for*; alt text
+   * is read instead of the picture and says what is *in* it. A document that
+   * uses one for both leaves somebody with neither.
+   */
+  | { kind: 'image'; fileId: string; name: string; alt: string; caption: string }
+  /**
    * The table of contents, built from the headings rather than typed.
    *
    * Word's is a field that has to be updated and Docs' is a live block; both
@@ -143,6 +163,7 @@ export const BLOCK_LABEL: Record<BlockKind, string> = {
   table: 'Table',
   equation: 'Equation',
   code: 'Code',
+  image: 'Picture',
   toc: 'Contents',
   break: 'Page break',
 };
@@ -172,6 +193,8 @@ export function blankBlock(kind: BlockKind): Block {
       return { kind: 'code', text: '', language: '' };
     case 'checks':
       return { kind: 'checks', items: [{ text: '', done: false }] };
+    case 'image':
+      return { kind: 'image', fileId: '', name: '', alt: '', caption: '' };
     case 'toc':
       return { kind: 'toc', title: 'Contents' };
     case 'break':
@@ -407,6 +430,7 @@ export function summary(blocks: Block[]): string {
     'checks',
     'quote',
     'table',
+    'image',
     'equation',
     'code',
     'toc',
@@ -433,6 +457,8 @@ export function hasContent(doc: Partial<Doc> & Pick<Doc, 'blocks'>): boolean {
     // something.
     if (b.kind === 'checks') return b.items.some((i) => i.text.trim() !== '');
     if (b.kind === 'equation') return b.latex.trim() !== '';
+    // A picture is content once it points at one, whatever it is captioned.
+    if (b.kind === 'image') return b.fileId.trim() !== '';
     if (b.kind === 'code') return b.text.trim() !== '';
     /*
      * A contents block is not content.
@@ -498,6 +524,23 @@ export function toMarkdown(doc: Doc): string {
             .join('\n'),
         );
         break;
+      /*
+       * `![alt](name)`, with the caption as its own line under it.
+       *
+       * Markdown has nowhere to put a caption — `![alt](src "title")` is a
+       * tooltip, which is not what a caption is — so it goes underneath in
+       * italics, which is what it looks like on the page anyway and what every
+       * markdown-to-anything converter does with it.
+       */
+      case 'image': {
+        if (!block.fileId.trim()) break;
+        const alt = block.alt.trim() || block.name.trim() || 'Picture';
+        parts.push(
+          `![${alt.replace(/[[\]]/g, '')}](${block.name.trim() || block.fileId})` +
+            (block.caption.trim() ? `\n\n*${block.caption.trim()}*` : ''),
+        );
+        break;
+      }
       case 'quote': {
         const body = block.text
           .split('\n')
@@ -519,20 +562,6 @@ export function toMarkdown(doc: Doc): string {
         parts.push(block.caption.trim() ? `${lines.join('\n')}\n\n*${block.caption}*` : lines.join('\n'));
         break;
       }
-      case 'checks':
-        parts.push(
-          block.items
-            .filter((i) => i.text.trim())
-            .map((item) => `- [${item.done ? 'x' : ' '}] ${item.text}`)
-            .join('\n'),
-        );
-        break;
-      case 'code':
-        // Fenced with the language after the ticks, which is what every
-        // renderer from GitHub down reads and what makes a paste into one
-        // come out as code rather than as a paragraph of monospace.
-        if (block.text.trim()) parts.push(`\`\`\`${block.language.trim()}\n${block.text}\n\`\`\``);
-        break;
       /*
        * The contents, written out as the list it is rather than as a marker.
        *
@@ -739,6 +768,28 @@ export function fromMarkdown(text: string): Block[] {
         body.pop();
       }
       blocks.push({ kind: 'quote', text: body.join('\n').trim(), source });
+      continue;
+    }
+
+    /*
+     * A picture, where the whole line is one.
+     *
+     * The file is not here — a markdown document brings a *reference*, and the
+     * bytes it points at are wherever the person kept them. So this comes in
+     * with no `fileId`: the alt text and the name survive, the block says it
+     * has no picture, and the screen offers to attach one. Inventing an id
+     * would be a block pointing confidently at nothing.
+     */
+    const picture = /^\s*!\[([^\]]*)\]\(([^)]*)\)\s*$/.exec(line);
+    if (picture) {
+      flush();
+      blocks.push({
+        kind: 'image',
+        fileId: '',
+        name: picture[2].trim(),
+        alt: picture[1].trim(),
+        caption: '',
+      });
       continue;
     }
 

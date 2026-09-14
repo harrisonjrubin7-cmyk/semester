@@ -6,14 +6,16 @@ import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
 import { Equation } from '../components/Equation';
-import { ActionButton, SectionLabel, Toggle } from '../components/ui';
+import { ActionButton, FilePick, SectionLabel, Toggle } from '../components/ui';
 import { Bench, Tool, ToolPick, ToolRule } from '../components/Bench';
 import { Gallery, type Starter } from '../components/Gallery';
 import { WriteIcon } from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
-import { docx } from '../lib/docx';
+import { docx, type Picture } from '../lib/docx';
+import { addFile, getFile, listFiles, settled, type Settled } from '../lib/files';
+import { pictureLike, sizeOf } from '../lib/imagesize';
 import {
   BLOCK_LABEL,
   blankBlock,
@@ -187,7 +189,7 @@ function Paper({ doc }: { doc: Pick<Doc, 'blocks'> }) {
  */
 const INSERT_GROUPS: BlockKind[][] = [
   ['heading', 'text', 'bullets', 'checks'],
-  ['quote', 'table', 'equation', 'code', 'toc', 'break'],
+  ['quote', 'table', 'image', 'equation', 'code', 'toc', 'break'],
 ];
 
 /** Every kind the screen can insert, flattened out of the groups above. */
@@ -207,6 +209,7 @@ const INSERT_LABEL: Record<BlockKind, string> = {
   checks: 'Insert a checklist',
   quote: 'Insert a quotation',
   table: 'Insert a table',
+  image: 'Insert a picture',
   equation: 'Insert an equation',
   code: 'Insert a code block',
   toc: 'Insert a contents page',
@@ -445,7 +448,7 @@ function Editor({ doc }: { doc: Doc }) {
   const saveWord = async () => {
     setBusy(true);
     try {
-      const blob = await docx(doc);
+      const blob = await docx(doc, await pictureOf(doc));
       download({
         name: docFileName(doc.title),
         body: blob,
@@ -1633,127 +1636,6 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
         </>
       );
 
-    /*
-     * A snippet, in a box that does not help.
-     *
-     * `spellCheck` off and the autocorrect attributes with it: a phone that
-     * capitalises the first letter of every line turns `def` into `Def`, and
-     * the smart-quote substitution turns `"x"` into something no parser
-     * accepts. On the one block where the characters are the content, every
-     * convenience the platform offers is damage.
-     */
-    case 'code':
-      return (
-        <>
-          <input
-            className="input"
-            value={block.language}
-            onChange={(e) => onChange({ ...block, language: e.target.value })}
-            placeholder="Language — python, sql, r. Optional."
-            aria-label="What language the code is in"
-            spellCheck={false}
-            style={{ width: '100%', height: 34, marginBottom: 'var(--sp-4)' }}
-          />
-          <textarea
-            className="input"
-            value={block.text}
-            onChange={(e) => onChange({ ...block, text: e.target.value })}
-            placeholder="Paste or type it. Nothing in here is read as markdown."
-            aria-label="Code"
-            rows={6}
-            spellCheck={false}
-            autoCapitalize="off"
-            autoCorrect="off"
-            autoComplete="off"
-            style={{
-              width: '100%',
-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-              fontSize: 'var(--type-sm)',
-              lineHeight: 'var(--leading-snug)',
-              whiteSpace: 'pre',
-              overflowX: 'auto',
-            }}
-          />
-        </>
-      );
-
-    case 'checks':
-      return (
-        <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-            {block.items.map((line, i) => (
-              <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
-                <input
-                  type="checkbox"
-                  checked={line.done}
-                  onChange={(e) =>
-                    onChange({
-                      ...block,
-                      items: block.items.map((x, j) =>
-                        j === i ? { ...x, done: e.target.checked } : x,
-                      ),
-                    })
-                  }
-                  aria-label={`${line.text.trim() || `Item ${i + 1}`} — done`}
-                />
-                <input
-                  className="input"
-                  value={line.text}
-                  onChange={(e) =>
-                    onChange({
-                      ...block,
-                      items: block.items.map((x, j) =>
-                        j === i ? { ...x, text: e.target.value } : x,
-                      ),
-                    })
-                  }
-                  aria-label={`Item ${i + 1}`}
-                  style={{
-                    flex: 1,
-                    height: 38,
-                    // Struck through when it is done, which is the whole
-                    // reason somebody ticks one rather than deleting it.
-                    textDecoration: line.done ? 'line-through' : undefined,
-                  }}
-                />
-                <SmallButton
-                  label={`Remove item ${i + 1}`}
-                  onClick={() =>
-                    onChange({
-                      ...block,
-                      items:
-                        block.items.length > 1
-                          ? block.items.filter((_, j) => j !== i)
-                          : [{ text: '', done: false }],
-                    })
-                  }
-                >
-                  ×
-                </SmallButton>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
-            <ActionButton
-              onClick={() =>
-                onChange({ ...block, items: [...block.items, { text: '', done: false }] })
-              }
-            >
-              Add item
-            </ActionButton>
-            {block.items.some((i) => i.done) && (
-              <ActionButton
-                onClick={() =>
-                  onChange({ ...block, items: block.items.map((i) => ({ ...i, done: false })) })
-                }
-              >
-                Untick everything
-              </ActionButton>
-            )}
-          </div>
-        </>
-      );
-
     case 'quote':
       return (
         <>
@@ -1780,6 +1662,14 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
     case 'checks':
       return <ChecklistEditor block={block} onChange={onChange} />;
 
+    /*
+     * `spellCheck` off, and the three autocorrect attributes with it.
+     *
+     * A phone that capitalises the first letter of every line turns `def`
+     * into `Def`, and the smart-quote substitution turns `"x"` into something
+     * no parser accepts. On the one block where the characters *are* the
+     * content, every convenience the platform offers is damage.
+     */
     case 'code':
       return (
         <>
@@ -1790,6 +1680,9 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
             placeholder={'lm(mark ~ hours, data = class)'}
             aria-label="Code"
             spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            autoComplete="off"
             rows={6}
             style={{
               width: '100%',
@@ -1797,6 +1690,9 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
               fontSize: 'var(--type-sm)',
               lineHeight: 'var(--leading-normal)',
               whiteSpace: 'pre',
+              // A long line scrolls rather than wrapping, because a wrapped
+              // line of code reads as two statements.
+              overflowX: 'auto',
             }}
           />
           <input
@@ -1835,6 +1731,9 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
     case 'table':
       return <TableEditor block={block} onChange={onChange} />;
 
+    case 'image':
+      return <PictureEditor block={block} onChange={onChange} />;
+
     case 'equation':
       return <EquationEditor block={block} onChange={onChange} />;
 
@@ -1845,6 +1744,187 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
         </div>
       );
   }
+}
+
+/**
+/**
+ * The bytes for every picture the document points at, read before the export.
+ *
+ * `docx` takes a plain synchronous lookup rather than doing the reads itself,
+ * which is what keeps it a pure function its tests can call without a
+ * browser. So the reads happen here, all of them, before a byte of the
+ * package is written.
+ *
+ * A file that is gone, or whose header `sizeOf` cannot read, is left out
+ * rather than throwing: one binned screenshot is not a reason a twelve-page
+ * paper fails to save. The block writes its caption and no picture; see the
+ * `image` case in `lib/docx.ts`.
+ */
+async function pictureOf(doc: Doc): Promise<(fileId: string) => Picture | undefined> {
+  const ids = [...new Set(doc.blocks.flatMap((b) => (b.kind === 'image' && b.fileId ? [b.fileId] : [])))];
+  const found = new Map<string, Picture>();
+  for (const id of ids) {
+    const file = await getFile(id);
+    if (!file) continue;
+    const bytes = new Uint8Array(await file.blob.arrayBuffer());
+    const size = sizeOf(bytes);
+    if (size) found.set(id, { bytes, size });
+  }
+  return (id: string) => found.get(id);
+}
+
+/**
+ * Choosing a picture, describing it, and captioning it.
+ *
+ * The picture itself is not held in the block — the block holds the id of a
+ * file in the drive, and the bytes stay in IndexedDB where the rest of the
+ * drive is. A document is saved in localStorage with everything else, and a
+ * single phone screenshot base64'd into it would spend the whole 5MB budget
+ * on one figure.
+ *
+ * Which means a picture can go missing: the file it points at can be binned
+ * from the Files screen without the document knowing. That is said here
+ * plainly rather than papered over, because the fix — put it back, or pick
+ * another — is one the person has to make. See the `image` case in
+ * `lib/docx.ts` for what the export does with a block whose file is gone.
+ */
+function PictureEditor({
+  block,
+  onChange,
+}: {
+  block: Extract<Block, { kind: 'image' }>;
+  onChange: (next: Block) => void;
+}) {
+  const [pictures, setPictures] = useState<Settled[] | null>(null);
+  const [preview, setPreview] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  const load = () => {
+    void listFiles().then((all) => setPictures(all.filter(pictureLike)));
+  };
+  useEffect(load, []);
+
+  /*
+   * The preview is an object URL over the stored blob, and it is revoked when
+   * the block changes or the editor closes. Left unrevoked, every picture
+   * opened in a writing session stays in memory until the tab is closed.
+   */
+  useEffect(() => {
+    let url = '';
+    let dropped = false;
+    // One path whether or not there is a file to read, so clearing the
+    // preview happens after the render rather than during the effect.
+    const reading = block.fileId ? getFile(block.fileId) : Promise.resolve(undefined);
+    void reading.then((file) => {
+      if (dropped) return;
+      if (!file) {
+        setPreview('');
+        return;
+      }
+      url = URL.createObjectURL(file.blob);
+      setPreview(url);
+    });
+    return () => {
+      dropped = true;
+      if (url) URL.revokeObjectURL(url);
+    };
+  }, [block.fileId]);
+
+  const pick = (id: string) => {
+    const chosen = pictures?.find((f) => f.id === id);
+    onChange({ ...block, fileId: id, name: chosen?.name ?? '' });
+  };
+
+  const addFromDevice = async (file: File) => {
+    setAdding(true);
+    try {
+      const saved = await addFile(file, null);
+      setPictures((was) => [settled(saved), ...(was ?? [])]);
+      onChange({ ...block, fileId: saved.id, name: saved.name });
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  // Chosen, but the drive has no such file: binned, or on another device.
+  const missing = block.fileId !== '' && pictures !== null && !pictures.some((f) => f.id === block.fileId);
+
+  return (
+    <>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap', alignItems: 'center' }}>
+        <select
+          className="input"
+          value={block.fileId}
+          onChange={(e) => pick(e.target.value)}
+          aria-label="Which picture"
+          style={{ flex: 1, minWidth: 180, height: 38 }}
+        >
+          <option value="">Choose a picture…</option>
+          {(pictures ?? []).map((f) => (
+            <option key={f.id} value={f.id}>
+              {f.name}
+            </option>
+          ))}
+          {missing && <option value={block.fileId}>{block.name || 'The file this used'}</option>}
+        </select>
+        <FilePick
+          accept="image/png,image/jpeg,image/gif"
+          multiple={false}
+          block={false}
+          disabled={adding}
+          onPick={(picked) => {
+            if (picked[0]) void addFromDevice(picked[0]);
+          }}
+          style={{ width: 'auto' }}
+        >
+          {adding ? 'Adding…' : 'Add from this device'}
+        </FilePick>
+      </div>
+
+      {missing && (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
+          That file is not in your drive any more. The caption still exports; the picture will
+          not. Choose another, or put the file back from the bin.
+        </div>
+      )}
+
+      {preview !== '' && (
+        <img
+          src={preview}
+          alt={block.alt || 'The picture this block holds'}
+          style={{
+            display: 'block',
+            maxWidth: '100%',
+            maxHeight: 260,
+            marginTop: 'var(--sp-5)',
+            borderRadius: 'var(--r-sm)',
+            border: '1px solid var(--app-line)',
+          }}
+        />
+      )}
+
+      <input
+        className="input"
+        value={block.alt}
+        onChange={(e) => onChange({ ...block, alt: e.target.value })}
+        placeholder="What it shows, for somebody who cannot see it"
+        aria-label="Alt text"
+        style={{ width: '100%', height: 38, marginTop: 'var(--sp-5)' }}
+      />
+      <input
+        className="input"
+        value={block.caption}
+        onChange={(e) => onChange({ ...block, caption: e.target.value })}
+        placeholder="Caption — printed under it. Optional."
+        aria-label="Caption"
+        style={{ width: '100%', height: 38, marginTop: 'var(--sp-4)' }}
+      />
+      <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
+        The alt text is what a screen reader reads out in Word, and it is not the caption — a
+        caption says what to make of the picture, alt text says what is in it.
+      </div>
+    </>
+  );
 }
 
 /**
