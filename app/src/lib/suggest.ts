@@ -23,6 +23,8 @@
 
 import { FIELDS, PROGRAMMES, YEARS, type Programme, type Year } from '../data/fellowships';
 import { newApplication, type Application } from './apply';
+// The months, said in full, from the one list that holds them.
+import { MONTH_NAMES as MONTHS } from './date';
 
 /** How far ahead a programme's window counts as "about now". */
 export const SOON_MONTHS = 3;
@@ -68,20 +70,6 @@ export function suggest(
     .sort((a, b) => nearness(a, now) - nearness(b, now) || a.role.localeCompare(b.role));
 }
 
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
 
 /**
  * When it is usually open, said as the guess it is.

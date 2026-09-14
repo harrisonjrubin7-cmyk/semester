@@ -30,6 +30,10 @@
  * 16:9 at the size PowerPoint itself defaults to.
  */
 
+// The XML declaration and the relationships namespace all three writers share.
+import { HEAD, REL } from './ooxml';
+
+
 const EMU = 914_400;
 // PowerPoint's own widescreen page, to the EMU. 13.333 inches rounds to 305
 // EMU short of it, which is invisible on screen and wrong in the file.
@@ -129,11 +133,10 @@ export function xml(s: string): string {
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
 }
 
-const HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 
 const NS =
   'xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" ' +
-  'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ' +
+  `xmlns:r="${REL}" ` +
   'xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"';
 
 /** One text box. Positions and sizes are in inches, converted here. */
@@ -409,7 +412,6 @@ function themeXml(look: Palette): string {
   );
 }
 
-const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 const OFFICE = 'http://schemas.openxmlformats.org/package/2006/relationships';
 
 function rels(entries: { id: string; type: string; target: string }[]): string {

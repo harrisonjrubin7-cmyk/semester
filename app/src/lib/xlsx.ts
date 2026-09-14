@@ -51,6 +51,7 @@ import {
   washPaper,
   type Sheet,
 } from './sheet';
+import { HEAD, REL } from './ooxml';
 
 /**
  * A look with nothing on it is no look at all.
@@ -75,10 +76,8 @@ export function xml(s: string): string {
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
 }
 
-const HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 
 const MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
-const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 /** One cell. What it is, rather than what it looks like. */
 export type Cell =
