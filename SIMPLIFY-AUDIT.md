@@ -107,6 +107,40 @@ system's vocabulary is meant to be wider than today's usage.
 
 F1 first: it is a bug, and the other two are tidying.
 
+### F1, done — and the census undercounted it
+
+`writeMail` carries a `Partial<MailDraft>` now and the mailbox slice opens a
+composer on it. `mailSeed` is gone: the field, its default, and the four loose
+payload members of the action. `draftFor` in `lib/mail.ts` is the one place
+that turns a purpose, a course and a deadline into a draft, so the callers do
+not each grow their own copy — they are the ones holding the catalogue the
+reducer cannot see, which is why the conversion happens at the call and not in
+the reducer.
+
+The case moved from `slices/navigate.ts` to `slices/mailbox.ts`, beside the
+`composeMail` it is now a variant of, and both go through one `started()`
+helper. Two actions that both mean "start an email" differ in exactly one
+thing — whether the app moves to the mailbox first — and that is now the only
+difference in the code.
+
+**There were four dispatchers, not three.** `components/CourseHub.tsx` has a
+fourth, and the census missed it because it is written `type:'writeMail'`
+without the space, in the dense style the ported files use, while the grep
+asked for `type: 'writeMail'`. The typechecker found it the moment the action
+changed shape — which is the useful part: **a census over source text is only
+as good as its spelling, and this repo has two spellings.** Earlier rows in
+this file searched both forms; this one did not, and the count in the table
+above is wrong by one.
+
+**The suite passed on the broken version**, which is why this shipped at all.
+Nothing asserted what happened *after* the action, so the reducer was correct
+in the sense that it did what it said — and what it said had no reader.
+`slices/writemail.test.ts` asserts the end state a person would see: a
+composer open, on a draft, with "ECON 1020 — Problem Set 4" in the subject.
+Checked by restoring the old reducer and watching five of its six cases fail;
+the one that still passed is "goes to the mailbox", which is the only thing
+the old code did right.
+
 ---
 
 # One app — the seventh pass, run three times over

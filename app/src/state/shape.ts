@@ -818,20 +818,6 @@ export interface Ephemeral {
   /** `working` is a filter over the other three, not a fourth bucket. */
   dueTab: 'ahead' | 'working' | 'overdue' | 'done';
   /**
-   * What the Email screen should open already filled in.
-   *
-   * Set by whoever sent you there — a course page knows the professor, a
-   * message in the Mail tab knows what you are replying to — and read once.
-   */
-  mailSeed: {
-    purposeId: string;
-    courseId: CourseId | '';
-    to: string;
-    incoming: string;
-    /** The deadline the email is about, when it was opened from one. */
-    itemId: string;
-  } | null;
-  /**
    * An announcement handed to the Changes screen, read once.
    *
    * Set from the mailbox: the message that moved a deadline is already in the
@@ -1366,7 +1352,6 @@ export function initialEphemeral(now: Date): Ephemeral {
     examPreset: null,
     roomDraft: '',
     dueTab: 'ahead',
-    mailSeed: null,
     changeText: '',
     mailFolder: 'inbox',
     mailOpen: null,
@@ -2086,14 +2071,20 @@ export type Action =
   | { type: 'writeRoomDraft'; text: string }
   | { type: 'clearRoomDraft' }
   | { type: 'setDueTab'; tab: 'ahead' | 'working' | 'overdue' | 'done' }
-  | {
-      type: 'writeMail';
-      purposeId: string;
-      courseId?: CourseId | '';
-      itemId?: string;
-      to?: string;
-      incoming?: string;
-    }
+  /**
+   * Go to the mailbox and open a composer on this draft.
+   *
+   * `composeMail` opens a composer without moving, for the buttons already on
+   * the mail screen. This is the same thing from somewhere else in the app,
+   * and the navigation is the only difference.
+   *
+   * It used to carry four loose facts — purpose, course, recipient, deadline
+   * — into a `mailSeed` field that nothing read, so the three buttons that
+   * dispatch it arrived at the mailbox with no composer open. It carries a
+   * draft now, built by `draftFor` in `lib/mail.ts`, because a draft is what
+   * the mailbox opens. See `SIMPLIFY-AUDIT.md` F1.
+   */
+  | { type: 'writeMail'; draft: Partial<MailDraft> }
   | { type: 'setStudyTab'; tab: 'guides' | 'revise' | 'ask' }
   | { type: 'addTask'; task: Omit<PersonalTask, 'id' | 'created' | 'done'> }
   /**
