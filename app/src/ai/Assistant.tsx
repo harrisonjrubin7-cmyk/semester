@@ -456,6 +456,23 @@ export function Assistant() {
    * a scroll turns into a stutter.
    */
   const [lift, setLift] = useState(0);
+  /**
+   * Whether the screen has a row open as its own editor.
+   *
+   * The button stands down for it, the way it stands down on a screen whose
+   * composer is on the bottom edge. Same argument, one scale smaller: while a
+   * row is a form, the controls that matter are its Save, its Cancel and its
+   * Delete, they are the densest thing on the screen, and at phone width the
+   * button cannot get clear of all three — two lifts is the cap and the cap
+   * has its reasons. Offering to talk about the page is not worth sitting on
+   * the page's only way to finish.
+   *
+   * Read from the document rather than passed down. A provider threaded from
+   * `App` through four components to a row would be the plumbing this file
+   * already avoids for the same question — what is under me — and this effect
+   * is where that reading already happens.
+   */
+  const [editing, setEditing] = useState(false);
   const fab = useRef<HTMLButtonElement | null>(null);
   /*
    * Lifted when the screen puts something tappable under it.
@@ -473,6 +490,11 @@ export function Assistant() {
     if (ai.open) return;
     let waiting = 0;
     const check = () => {
+      // Before the button is asked about: when a row is a form, there is no
+      // button to measure and the answer is to stay away.
+      const open = !!document.querySelector('[data-editing]');
+      setEditing(open);
+      if (open) return;
       const node = fab.current;
       if (!node) return;
       const box = node.getBoundingClientRect();
@@ -528,7 +550,7 @@ export function Assistant() {
       window.removeEventListener('resize', soon);
       watch.disconnect();
     };
-  }, [ai.open, state.screen, state.mode, wide, lift]);
+  }, [ai.open, state.screen, state.mode, wide, lift, editing]);
 
   return (
     <>
@@ -550,7 +572,7 @@ export function Assistant() {
         conversation does too — so the floating button lands on the send
         control of whatever chat is open. See `shell/exempt.ts`.
       */}
-      {!ai.open && !fills(state.screen) && (
+      {!ai.open && !fills(state.screen) && !editing && (
         <button
           type="button"
           ref={fab}
