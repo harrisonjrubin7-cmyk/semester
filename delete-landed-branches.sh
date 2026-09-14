@@ -2,9 +2,9 @@
 #
 # Delete the claude/* branches whose work has landed in main.
 #
-# 149 claude/* branches: 140 here, 5 excluded for having an open pull request,
-# and 4 excluded because nobody can currently say whether their work landed.
-# Those 4 are listed at the bottom of this file and are a decision, not a task.
+# 149 claude/* branches: 144 here, 5 excluded for having an open pull request.
+# 140 were cleared by a merged pull request; the last 4 are an orphaned
+# lineage and carry their own note below.
 #
 # ── Why the list is pinned to SHAs ────────────────────────────────────────
 #
@@ -191,11 +191,32 @@ claude/which-synonym-actually-matched	ad73643c22c83753bb8a0039a578ea7093848b11
 claude/you-screen-progress-improvements-myb3v7	5dcd1f9b7a34727bf2b65b8b8eff897e5a073379
 "
 
-FOUR_TO_DECIDE="
-claude/app-review-improvements-7i2aaq
-claude/calendar-subscribe-message
-claude/readme-screen-count-fifty
-claude/remove-duplicate-tabs-k3m9
+# The four that had no pull request at all, merged or open, and so could not be
+# cleared the way the 140 above were. Decided by looking at them rather than by
+# deferring: they share NO COMMON ANCESTOR with main. Different root commit,
+# a separate lineage that was never connected to the history this repo has now
+# — which is why they read as hundreds of commits "ahead" and why no merge
+# check could ever clear them.
+#
+# They are older and smaller than main: 808-907 files against main's 1305,
+# last touched 2026-09-09. Each holds 9-18 paths main does not have, and the
+# ones checked are pre-refactor names whose concepts survived the move —
+# `components/nav/Launcher.tsx` and `Folder.tsx` are `lib/launcher.ts` and
+# `lib/apps.ts` in main now. `appointment.ts`, `everything.ts` and `adding.ts`
+# have no file of that name in main, though main plainly still does
+# appointments.
+#
+# So: superseded remnants, not lost work — but that is a judgement from
+# reading, not a proof, and it is the reason the SHAs below matter more than
+# the ones above. Restoring one is the same command:
+#
+#     git push origin <sha>:refs/heads/<branch>
+#
+ORPHANED="
+claude/app-review-improvements-7i2aaq	6d606e8d7b5f1c3b80af9dc69bfafce439fc0873
+claude/calendar-subscribe-message	21c99fe8af1b6c1353855199f80cb71466036343
+claude/readme-screen-count-fifty	9fcbade527a3d03f737b5cdaa7622bf0290de0a2
+claude/remove-duplicate-tabs-k3m9	6006767d0cefcfa5530555332a228132c4c1d13a
 "
 
 git fetch origin
@@ -220,7 +241,7 @@ while read -r br want; do
   else
     failed+=("$br")
   fi
-done <<< "$BRANCHES"
+done <<< "$BRANCHES$ORPHANED"
 
 echo
 echo "deleted $deleted, already gone $skipped, moved since listing $moved, failed ${#failed[@]}"
@@ -228,7 +249,4 @@ if [ ${#failed[@]} -gt 0 ]; then
   printf 'failed to delete: %s\n' "${failed[@]}" >&2
 fi
 echo
-echo "Not touched — no pull request, merged or open, so whether this work landed"
-echo "is a question for a person and not for this script:"
-echo "$FOUR_TO_DECIDE"
 [ ${#failed[@]} -eq 0 ] || exit 1
