@@ -38,7 +38,7 @@ export function AppsPanel({ onClose }: { onClose: () => void }) {
   const { state, dispatch, school } = useStore();
   const caps = school.capabilities;
   const look = currentLook(state);
-  const shelves = appShelves(caps, look.groupOrder);
+  const shelves = appShelves(caps, look.groupOrder, state.role);
   const favourites = readFavourites(look.favourites, caps, state.role);
   /** Whether the panel is in the state where tapping an icon pins it. */
   const [editing, setEditing] = useState(false);
