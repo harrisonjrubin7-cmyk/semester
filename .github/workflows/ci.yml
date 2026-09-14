@@ -70,6 +70,33 @@ jobs:
         working-directory: app
         run: npm run lint
 
+      # The half of the typecheck the build graph does not reach.
+      #
+      # `tsc -b` builds what `tsconfig.json` references, which is the app and
+      # the Vite config. `server/institution/` is in neither, and
+      # `tsconfig.university.json` — which exists to cover it, along with
+      # `packages/institution/` — is referenced by nothing, so nothing ran it.
+      #
+      # Four of its seven files were typechecked anyway, and that is the part
+      # worth stating: `src` imports `gateway.ts`, `adapter.ts` and `auth.ts`,
+      # so they get pulled into the app's program and an error in them fails
+      # the step above. `start.ts`, `adapters.ts` and `gateway.test.ts` are
+      # imported by nothing in `src` and were checked by nothing at all —
+      # measured by planting a type error in each and watching `tsc -b` stay
+      # green. `start.ts` is the server's entry point.
+      #
+      # So the coverage that did exist was an accident of the import graph
+      # rather than a decision, and a refactor that stopped `src` importing
+      # the gateway would have quietly dropped three more files without
+      # anything going red.
+      #
+      # A separate step rather than a project reference: making it one would
+      # mean `composite: true` and an emit target on a config whose whole
+      # point is `noEmit`, and the script it runs already exists.
+      - name: Typecheck the university server
+        working-directory: app
+        run: npm run check:university
+
       - name: Test
         working-directory: app
         run: npm test
