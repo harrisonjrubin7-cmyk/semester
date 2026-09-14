@@ -123,21 +123,26 @@ it then names — and the name it prints is the configured working directory, so
 that comment is the setting read back to you. A path that is not a path means
 the field holds something that is not one.
 
-**If the field will not hold the value, reconnect the repository rather than
-editing it again.** This is written down because it cost an afternoon. The
-setting had somehow been given this app's own GitHub Pages address, so the
-integration went looking for `https:/harrisonjrubin7-cmyk.github.io/semester/supabase`
-and of course never found a change in it — every pull request for the life of
-the project was answered "ignored", no preview branch was ever built, and no
-migration in this directory had been applied anywhere before production. Typing
-`.` into the field and saving appeared to work and changed nothing: three
-separate attempts were each followed by a fresh pull request drawing the same
-comment, naming the same URL, character for character. Disconnecting the
-repository under Project Settings → Integrations and connecting it again,
-setting **Working directory** during the connect flow rather than afterwards,
-is the path that takes.
+**Known broken on this project, and not from want of trying.** The setting has
+somehow been given this app's own GitHub Pages address, so the integration goes
+looking for `https:/harrisonjrubin7-cmyk.github.io/semester/supabase` and of
+course never finds a change in it. Every pull request for the life of the
+project has been answered "ignored", no preview branch has ever been built, and
+**no migration in `migrations/` has been applied anywhere before production** —
+which is the part that matters, because the one check that would catch a
+migration that does not apply cleanly has never run. `check.sh` covers some of
+that locally; it is not the same as a real branch.
 
-Whichever route you use, the confirmation is the same and it is worth insisting
+Four attempts to correct it have failed identically — three by typing `.` into
+the field and saving, one by disconnecting the repository and reconnecting it
+with the directory set during the connect flow. Each was followed by a fresh
+pull request drawing the same comment, naming the same URL, character for
+character. Whatever is holding that value is not being reset by either route,
+so if you are reading this because you hit it too: the field is not the whole
+story, and it is worth raising with Supabase with one of those pull requests as
+the reproduction rather than trying a fifth time.
+
+Whatever eventually fixes it, the confirmation is the same and it is worth insisting
 on: a pull request touching `supabase/` that draws a preview branch. The
 project's own branch row flickering between `FUNCTIONS_DEPLOYED` and
 `CREATING_PROJECT` is **not** confirmation — main takes merges all day and that
