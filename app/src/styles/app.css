@@ -1621,7 +1621,9 @@ a:hover {
   transition: border-color var(--fast), box-shadow var(--fast);
 }
 .device .input::placeholder {
-  color: var(--app-faint);
+  /* A placeholder is read, so it is text: `--app-faint` put it at 3.03:1 on
+     Parchment. Held to the same strength as any other small text. */
+  color: var(--app-dim);
 }
 
 /*
@@ -4971,7 +4973,8 @@ input[type='search'].input {
 }
 
 .desktop-input::placeholder {
-  color: var(--app-faint);
+  /* As `.device .input::placeholder` above, and for the same reason. */
+  color: var(--app-dim);
 }
 
 /* The browser's own clear button, on top of the one this draws. */
@@ -5599,7 +5602,11 @@ input[type='search'].input {
   justify-content: space-between;
   gap: var(--sp-6);
   padding-top: var(--sp-7);
-  color: var(--app-faint);
+  /* Small text, so `--app-dim` and not `--app-faint` — the same call
+     `.soft-caps-quiet` already makes. At faint this line read 3.59:1 on Ink
+     and 2.90:1 on Parchment, and it is the line naming which semester you
+     are looking at. */
+  color: var(--app-dim);
   font-size: var(--type-sm);
   text-align: left;
 }
