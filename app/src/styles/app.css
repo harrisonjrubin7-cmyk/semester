@@ -4452,11 +4452,29 @@ input[type='search'].input {
   overflow-y: auto;
 }
 
+/*
+ * Pinned to the top of the message, not to the top of the conversation.
+ *
+ * The reader is its own scroller, so a thread six messages long put this row
+ * — Back, Archive, Delete, Snooze, Star — two and a half screens above the
+ * foot of it. Measured on a phone: scrolled to the end, the toolbar sat at
+ * -1648, and the only control in the app labelled "Back to the list" went
+ * with it. The way out of a message was to scroll all the way up first.
+ *
+ * Sticky is what the date headings in the list already do, and for the same
+ * reason: the thing that tells you where you are, and how to leave, should
+ * not be a thing you have to scroll back for. Opaque rather than translucent
+ * so the message does not read through it.
+ */
 .mb-read-top {
+  position: sticky;
+  top: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: var(--sp-2);
   padding: var(--sp-3) var(--sp-4);
+  background: var(--app-bg);
   border-bottom: 1px solid var(--app-line);
 }
 
