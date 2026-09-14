@@ -58,3 +58,25 @@
 @media(max-width:760px){.g-global-results{padding:14px 16px 28px}.g-full-result{gap:4px}}
 
 .g-result-new:disabled{opacity:.4;cursor:not-allowed}
+
+/* The home's legacy mount must not take the clicks meant for the home.
+
+   `.g-home-legacy` is a fixed, full-window, `pointer-events:none` overlay:
+   on the search home the shell draws its own wordmark, search field and
+   shortcuts, and the screen behind it is mounted only so its ambient
+   pieces keep running and its toasts and dialogs can still be reached.
+   `.g-home-legacy .device>*{pointer-events:auto}` is what reaches them —
+   the toasts are direct children of `.device`.
+
+   Under `BrowserShell` one of those direct children is `.deskwork-body`,
+   the screen's own scaffolding, and it is the size of the window. The
+   scroller inside it is `display:none` on this overlay, so it draws
+   nothing at all — but it was handed `pointer-events:auto` along with the
+   toasts, and at `z-index:50` it sat over the whole home. Every click
+   landed in an empty transparent box: the wordmark, the search field,
+   the shortcuts, the launcher, the tab strip and the top bar were all
+   dead, which reads as the app having stopped rather than as a stacking
+   bug. So the scaffolding passes the pointer through, and the things
+   inside it that do paint pick it up again. */
+.g-home-legacy .deskwork-body,.g-home-legacy .device-pane{pointer-events:none}
+.g-home-legacy .device-pane>*{pointer-events:auto}
