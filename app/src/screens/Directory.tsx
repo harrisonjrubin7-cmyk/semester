@@ -3,9 +3,25 @@
  *
  * The launcher answers "where is the thing that looks like this"; the top bar
  * answers "where is the thing called this". This answers the third question,
- * which neither of those can: *what is there*. It is the only surface in the
- * workspace that shows the whole registry with its sentences intact, which is
- * what somebody reads once, in their first week, and then never needs again.
+ * which neither of those can: *what is there*. It shows the whole registry
+ * with its sentences intact, which is what somebody reads once, in their first
+ * week, and then never needs again.
+ *
+ * ## It is not the only surface that does, and that is unresolved
+ *
+ * `screens/Me.tsx`'s "Everything" tab draws the same registry through the same
+ * `offered` gate, and nothing hides it in this navigation — so a student in
+ * the workspace can reach two full directories, one from the sidebar and one
+ * from Progress. This file used to claim to be the only one, which was written
+ * before the two met.
+ *
+ * Neither is a copy of the other's *markup* — this one has the category rail,
+ * the two views and the stars; Me's has the shelves, Lately and Not tried —
+ * but they answer one question, which is the thing `SIMPLIFY-AUDIT.md` exists
+ * to remove. It is recorded there as the pass's one open row rather than
+ * merged, because which of the two survives depends on which navigation the
+ * person is actually using, and §6 of that file is four reversals of exactly
+ * this kind of question being answered from the code instead of by them.
  *
  * ## What is this screen's, and what is not
  *
