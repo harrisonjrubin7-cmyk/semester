@@ -377,6 +377,16 @@ what the narration actually says, since the cues are its transcript, so
 after it. They are their own group because they are their own place: the unit
 and its lesson are two results, one opening the cards and one the audio.
 
+**Resting on a tab** says what it is: the full name — which the strip cuts at
+190 pixels, and which a pinned tab does not show at all — what kind of place
+it is, the work it belongs to, whether it is the one playing, and what it last
+searched for. No thumbnail, and that is the architecture rather than a
+shortcut: a tab here is a saved place rather than a running page, so there is
+no rendered screen anywhere to take a picture of, and rendering one to
+photograph would mean going there. The keyboard gets the same card on focus,
+as one sentence; a thumb gets none, because a card under a finger covers the
+tab it describes, and the tab's own menu is the touch route to the same facts.
+
 **Bookmarks** are the other half. A tab is where you are; a bookmark is where
 you keep going back to — the ECON study guide, the essay brief, the deadline
 you are counting down to — and before this the only way to keep one to hand
