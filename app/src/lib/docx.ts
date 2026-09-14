@@ -528,6 +528,23 @@ function blockXml(
           : '';
       return block.caption.trim() ? `${body}${para(block.caption, 'Caption', '', links)}` : body;
     }
+    /*
+     * A divider, as an empty paragraph with a line under it.
+     *
+     * Word has no horizontal-rule element — what the Borders button draws is
+     * exactly this, a paragraph whose bottom border is on — so this is not a
+     * workaround but the format's own answer. `w:sz` is in eighths of a
+     * point, so 6 is the three-quarter-point hairline Word itself uses.
+     *
+     * The empty run is there on purpose: a `w:p` with no run at all is legal
+     * and some readers collapse it away, taking the border with it.
+     */
+    case 'rule':
+      return (
+        '<w:p><w:pPr><w:pBdr>' +
+        '<w:bottom w:val="single" w:sz="6" w:space="1" w:color="auto"/>' +
+        '</w:pBdr></w:pPr><w:r><w:t xml:space="preserve"></w:t></w:r></w:p>'
+      );
     case 'break':
       return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
   }

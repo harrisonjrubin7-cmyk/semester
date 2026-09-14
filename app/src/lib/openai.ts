@@ -51,14 +51,19 @@ import type { Shot, Turn } from './claude';
 export const NOTHING_ARRIVED =
   'The connection closed before any of the answer arrived. Nothing was lost — ask again.';
 
-export const OPENAI_MODELS = [
-  { id: 'gpt-5', label: 'GPT-5', note: 'The strongest of these at a hard explanation.' },
-  { id: 'gpt-5-mini', label: 'GPT-5 mini', note: 'Faster and cheaper. Fine for most asking.' },
-  { id: 'gpt-4.1', label: 'GPT-4.1', note: 'The previous generation, still capable.' },
-  { id: 'gpt-4o', label: 'GPT-4o', note: 'Older, widely available, reads images well.' },
-];
-
-export const DEFAULT_MODEL = 'gpt-5';
+/*
+ * The list and the default live in `lib/assistant.ts`, beside the Claude one.
+ *
+ * They were here, and that put this file — the OpenAI transport, and the
+ * endpoint it posts to — on the critical path: `assistant.ts` is read by
+ * `App.tsx` on every first load and needed exactly these two values, so the
+ * request builder came with them. Measured in the built bundle,
+ * `api.openai.com` was in the eager chunk. A name and four labels are a
+ * setting; this file is what happens once one is chosen.
+ *
+ * Imported here rather than re-exported, so there stays one route to each.
+ */
+import { DEFAULT_MODEL } from './assistant';
 
 const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 

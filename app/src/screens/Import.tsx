@@ -13,7 +13,7 @@ import { troubleOf, useTrouble } from '../lib/trouble';
 import { intakeFiles, intakeText, type Intake } from '../lib/intake';
 import { generateCourse, type GenerationResult } from '../lib/generate';
 import { packSummary, provenance, readPack } from '../lib/handoff';
-import { configured } from '../lib/claude';
+import { configured } from '../lib/assistant';
 import { readTerm } from '../lib/term';
 import {
   diff,

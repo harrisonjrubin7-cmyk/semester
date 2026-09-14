@@ -133,7 +133,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
   {
     says: 'and how the app is set up — your navigation, layout, colours, text size and which screens you have opened',
     keys: [
-      'nav', 'tone', 'picked', 'seenOnboarding', 'registered', 'cleared',
+      'nav', 'tone', 'seenOnboarding', 'registered', 'cleared',
       'waysOpen', 'keyOpen', 'countScreens', 'lastSync', 'recent', 'visited',
       'lastOpened', 'tabs', 'yours', 'controls', 'role', 'showAll',
       'schemaVersion', 'accent', 'textSize', 'ground', 'density', 'corners',

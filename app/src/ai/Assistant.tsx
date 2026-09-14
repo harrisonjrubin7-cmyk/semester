@@ -594,20 +594,26 @@ export function Assistant() {
             position: 'fixed',
             [side]: 18,
             /*
-             * Above the tab bar, measured rather than guessed.
+             * Above whatever is along the bottom, measured rather than
+             * guessed.
              *
-             * The bar has no fixed height — it is a flex child sized by its
-             * own content, and it grows with the text-size setting. A
-             * hard-coded 64 left a two-pixel gap at the default size and would
-             * have sat on top of the bar at the largest one, so the shell
-             * measures it and writes `--tabbar-h`.
+             * Nothing down there has a fixed height — a bottom bar is a flex
+             * child sized by its own content, and it grows with the text-size
+             * setting. A hard-coded 64 left a two-pixel gap at the default
+             * size and would have sat on top of the bar at the largest one,
+             * so whatever is drawn along the bottom reports itself and the
+             * shell writes `--bottom-chrome`. See `lib/bottomchrome.hook.ts`
+             * for why that is an inset up from the edge rather than a height:
+             * the springboard's dock is drawn in the page's own flow and
+             * stops short of the edge, and reading its height put this button
+             * across the word "Progress".
              */
             /*
-             * A wide window has no tab bar — the rail replaces it and the
-             * shell removes `--tabbar-h` — so the fallback would strand the
-             * button 76px above nothing.
+             * A wide window has no bar along the bottom — the rail replaces
+             * it and the shell removes `--bottom-chrome` — so the fallback
+             * would strand the button 76px above nothing.
              */
-            bottom: wide ? 20 + lift : `calc(var(--tabbar-h, 76px) + ${12 + lift}px)`,
+            bottom: wide ? 20 + lift : `calc(var(--bottom-chrome, 76px) + ${12 + lift}px)`,
             width: 52,
             height: 52,
             borderRadius: '50%',

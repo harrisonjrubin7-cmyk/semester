@@ -19,7 +19,8 @@ import { useMemo, useRef, useState } from 'react';
 import { Panel } from './Produced';
 import { Trouble } from './Trouble';
 import { useTrouble } from '../lib/trouble';
-import { ask, configured } from '../lib/claude';
+import { ask } from '../lib/claude';
+import { configured } from '../lib/assistant';
 import {
   AI_SYSTEM,
   KIND_LABEL,

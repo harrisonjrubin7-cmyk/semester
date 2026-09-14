@@ -44,6 +44,16 @@
 
 import { free, read, value, type Node, type Scope, type Val } from './calc';
 import {
+  HARMONICS,
+  harmonicsOf,
+  latexSeries,
+  latexSpectrum,
+  partial,
+  sampler,
+  sizeAt,
+  spectrumOf,
+} from './fourier';
+import {
   at as timeAt,
   atS,
   inverse,
@@ -150,6 +160,21 @@ export type Line =
    * function; without one it is the letter H with a value, and a slider.
    */
   | { kind: 'transfer'; body: Node }
+  /**
+   * `F{e^{-2t}}` — the Fourier transform, read and drawn against ω.
+   *
+   * Drawn as its size, because the transform is complex and a complex function
+   * is two curves or a lie. The reading says which. See `lib/fourier.ts`.
+   */
+  | { kind: 'spectrum'; body: Node }
+  /**
+   * `fourier(f(t), 2\pi)` — a repeating thing as the waves it is made of.
+   *
+   * The period is the second argument because a series has no meaning without
+   * one, and the count of harmonics is the third because the picture of a
+   * series forming is the reason to draw it at all.
+   */
+  | { kind: 'harmonics'; body: Node; period: Node; count: Node | null }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -157,6 +182,8 @@ export const ANGLE = 'θ';
 export const TIME = 't';
 /** What a transform is a function of — the other axis `L{}` and `L^{-1}{}` share. */
 export const FREQUENCY = 's';
+/** What a Fourier transform is a function of — the other frequency, and a different axis. */
+export const OMEGA = 'ω';
 
 /**
  * How far round θ and t go, in half-turns.
@@ -198,6 +225,12 @@ const START = /^\s*([xy])\s*('?)\s*\(([^()]*)\)\s*$/;
  */
 const LAPLACE =
   /^\s*(?:\\mathcal\s*\{\s*L\s*\}|L|laplace)\s*(\^\s*\{?\s*-\s*1\s*\}?)?\s*\\?\{([\s\S]*?)\\?\}\s*$/;
+
+/** `F{f(t)}` — the Fourier transform, in the ways somebody writes it. */
+const FOURIER = /^\s*(?:\\mathcal\s*\{\s*F\s*\}|F)\s*\\?\{([\s\S]*?)\\?\}\s*$/;
+
+/** `fourier(f, T)` and `fourier(f, T, n)`: a Fourier series, told by its name and its arguments. */
+const HARMONIC = new Set(['fourier', 'harmonics']);
 
 /** `conv(f, g)` at the start of a line: a convolution, which is a function of t. */
 const CONVOLVE = /^\s*(?:conv|convolve|convolution)\s*\(/;
@@ -292,6 +325,13 @@ export function readLine(source: string): Line {
     return laplace[1] ? { kind: 'inverse', body: inner.node } : { kind: 'transform', body: inner.node };
   }
 
+  const fourier = FOURIER.exec(text);
+  if (fourier) {
+    const inner = node(fourier[1]);
+    if ('says' in inner) return { kind: 'fault', says: inner.says };
+    return { kind: 'spectrum', body: inner.node };
+  }
+
   const point = pointParts(text);
   if (point) {
     const x = node(point[0]);
@@ -321,6 +361,13 @@ export function readLine(source: string): Line {
     const got = node(text);
     if ('says' in got) return { kind: 'fault', says: got.says };
     if (CONVOLVE.test(text)) return { kind: 'convolution', body: got.node };
+    const call = got.node;
+    if ((call.kind === 'apply' || call.kind === 'call') && HARMONIC.has(call.name)) {
+      if (call.args.length < 2 || call.args.length > 3) {
+        return { kind: 'fault', says: 'A Fourier series wants the function and its period: fourier(f(t), 2\\pi).' };
+      }
+      return { kind: 'harmonics', body: call.args[0], period: call.args[1], count: call.args[2] ?? null };
+    }
     return { kind: 'curve', of: 'y', body: got.node };
   }
 
@@ -428,7 +475,14 @@ export function missing(line: Line, scope: Scope): string[] {
     case 'transfer':
       return free(line.body, scope).filter((n) => n !== FREQUENCY && !table(n));
     case 'convolution':
+    case 'spectrum':
       return free(line.body, scope).filter((n) => n !== TIME && !table(n));
+    case 'harmonics':
+      return [
+        ...free(line.body, scope).filter((n) => n !== TIME),
+        ...free(line.period, scope),
+        ...(line.count ? free(line.count, scope) : []),
+      ].filter((n) => !table(n));
     case 'curve':
       return free(line.body, scope).filter((n) => !has(n));
     case 'relation':
@@ -502,6 +556,45 @@ export function answered(
     const got = readFn(line.body, TIME, scope);
     if (!got.ok) return { says: got.fault };
     return shown(got.it, 'It comes to');
+  }
+  if (line.kind === 'spectrum') {
+    const got = spectrumOf(line.body, TIME, scope);
+    if (!got.ok) return { says: got.fault };
+    const { rat, even } = got.it;
+    return {
+      lead: 'Its spectrum is',
+      latex: latexSpectrum(rat, even),
+      over: OMEGA,
+      at: (w: number) => sizeAt(rat, w, even),
+      note: 'A transform is complex, so what is drawn is its size.',
+    };
+  }
+  if (line.kind === 'harmonics') {
+    const number = (node: Node) => {
+      const got = value(node, scope);
+      return Array.isArray(got) ? (got[0] ?? NaN) : got;
+    };
+    const period = number(line.period);
+    if (!Number.isFinite(period) || period <= 0) return { says: 'A Fourier series wants a period bigger than nothing.' };
+    const asked = line.count ? number(line.count) : HARMONICS;
+    const count = Math.max(1, Math.min(200, Math.round(Number.isFinite(asked) ? asked : HARMONICS)));
+    const made = harmonicsOf(sampler(line.body, TIME, scope), period, count);
+    return {
+      lead: `${count} harmonics of it, over ${neat(-period / 2, period)} to ${neat(period / 2, period)}:`,
+      latex: latexSeries(made, TIME),
+      over: TIME,
+      at: (t: number) => partial(made, t),
+      /*
+       * The one thing about a series that catches everybody.
+       *
+       * `fourier(t, 2\pi)` draws a sawtooth, and the function under it is a
+       * straight line: a series represents the *repeat* of what is on the
+       * interval, not the formula beyond it. The picture shows that plainly
+       * once both are on it, and the sentence says it so nobody has to work
+       * out which of the two lines is the answer.
+       */
+      note: 'The function is faint under it. Outside that interval a series repeats, which is what makes it a series.',
+    };
   }
   if (line.kind === 'transfer') {
     const rat = readRat(line.body, FREQUENCY, scope);
@@ -775,9 +868,28 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
       };
       return { paths: along(at, 0, turns, Math.round(detail.steps * detail.turns)), points: [] };
     }
+    case 'harmonics': {
+      const got = answered(line, scope);
+      if (!got || 'says' in got) return EMPTY;
+      const window = frame.y1 - frame.y0;
+      // The function faint and the sum full, in one drawing: a series is only
+      // interesting beside the thing it is approximating, and two lines in two
+      // colours would say they were two unrelated curves.
+      const under = series(sampler(line.body, TIME, scope), frame.x0, frame.x1, detail.columns, window);
+      const over = series(got.at, frame.x0, frame.x1, detail.columns, window);
+      return {
+        paths: [...under, ...over],
+        points: [],
+        // Half strength rather than the contour map's third: this one is a
+        // reference to read the sum against, not a level competing with eleven
+        // others, and at a third it disappeared into the grid on a phone.
+        shades: [...under.map(() => 0.5), ...over.map(() => 1)],
+      };
+    }
     case 'transform':
     case 'inverse':
     case 'convolution':
+    case 'spectrum':
     case 'transfer': {
       const got = answered(line, scope);
       if (!got || 'says' in got) return EMPTY;
@@ -1186,6 +1298,16 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'A system, as what it does',
     says: 'A transfer function: its poles say whether it settles before you look.',
     lines: ['H = \\frac{1}{s^2 + 0.3s + 1}'],
+  },
+  {
+    name: 'A square wave, out of sines',
+    says: 'A Fourier series: the harmonics it is made of, drawn over the wave itself.',
+    lines: ['fourier(sign(\\sin(t)), 2\\pi)'],
+  },
+  {
+    name: 'A spectrum',
+    says: 'A Fourier transform: where a dying wobble keeps its energy.',
+    lines: ['F{e^{-0.4t}\\sin(6t)}'],
   },
   {
     name: 'A flow',
