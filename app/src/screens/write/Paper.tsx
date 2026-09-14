@@ -196,6 +196,13 @@ function Drawn({ block, headings }: { block: Block; headings: ReturnType<typeof 
           ))}
         </nav>
       );
+    /*
+     * A real `<hr>`, not a bordered div: it is what the element is for, and a
+     * screen reader announces it as a separator, which is the whole of what
+     * the line is saying.
+     */
+    case 'rule':
+      return <hr className="docpaper-rule" />;
     case 'break':
       return <div className="docpaper-break" aria-hidden="true" />;
   }

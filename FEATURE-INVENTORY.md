@@ -331,7 +331,9 @@ merge as unions and are never shed by `lib/keep.ts`.
   app never quotes blind**), `table` (rows, header flag, caption), `image`
   (a drive file id + name, alt text and caption), `equation` (LaTeX +
   caption), `code` (text + language, and the one kind whose text is not marked
-  up), `break`.
+  up), `toc`, `rule` (a divider) and `break` (a page break) — the last two
+  distinct kinds, one line apart on the Insert bar and no longer sharing a
+  markdown spelling.
 - Inline runs (`runs()`, `unmarked()`), word count (`words()`), summary line,
   `hasContent()`.
 - Markdown out (`toMarkdown`) **and in** (`fromMarkdown`).
@@ -589,14 +591,22 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
 - No rich-text editing surface. The editor is block-structured, not WYSIWYG: no
   bold/italic toolbar, font family/size, text or highlight colour. (`**bold**`
   and `*italic*` are typed as marks and do reach the `.docx`.)
-- ~~No checkbox lists,~~ no indent/outdent, no horizontal rules, ~~no code
-  blocks.~~ — **checklists and code blocks closed.** Horizontal rules are still
-  absent, and worth one sentence because it looks as though they are not: the
-  `break` kind writes `---` to markdown, which is markdown's *thematic break*,
-  but it emits `<w:br w:type="page"/>` to the `.docx` and is called Page break
-  on screen. It is a page break that borrows a horizontal rule's spelling, so a
-  document round-trips through markdown while meaning something different in
-  each. A checklist is its
+- ~~No checkbox lists,~~ no indent/outdent, ~~no horizontal rules,~~ ~~no code
+  blocks.~~ — **all three closed.** The horizontal rule is a `rule` block, and
+  closing it meant taking `---` off the page break: `break` wrote markdown's
+  *thematic break* and emitted `<w:br w:type="page"/>`, so the export said
+  divider and meant page break, and the import agreed with it because both
+  ends were wrong the same way. `rule` now writes `---` and `break` writes
+  `<!-- pagebreak -->`, which renders as nothing anywhere and comes home
+  intact; `\pagebreak` and `\newpage` are read as well, so a document from
+  Pandoc keeps its breaks. In the `.docx` a rule is a paragraph with its
+  bottom border on, which is what Word's own Borders button draws — the format
+  has no horizontal-rule element. **One consequence, stated rather than
+  hidden:** a markdown file this app exported *before* this re-imports its
+  page breaks as dividers. That is the correct reading of `---` and the wrong
+  answer for that file, and it is visible on the page rather than silent.
+  There was no test of a page break's markdown round trip at all, which is how
+  the conflation survived; `docrules.test.ts` is that test. A checklist is its
   own block rather than a flag on `bullets`, because the ticked state belongs
   to each *item* and a parallel array of booleans is two lists that have to
   stay the same length — the first reorder would tick the wrong line. A code
@@ -793,12 +803,12 @@ Everything above that is not struck through, collected — so the next person
 reading this has one short list rather than a long one to re-check. Verified
 by grepping for each, not by re-reading the sentence.
 
-**Documents** — horizontal rules (distinct from the page break, which exists
-and borrows their markdown spelling) · indent and outdent ·
+**Documents** — indent and outdent ·
 alignment, line spacing and margins · comments and margin notes · a generated
 PDF, as against the browser's print-to-PDF, which is there · `.docx` *import* ·
 "Open in Docs" from a study guide · a WYSIWYG surface (the marks are typed).
-(Code blocks, checkbox lists and images were on this list and are done.)
+(Code blocks, checkbox lists, images and horizontal rules were on this list
+and are done.)
 
 **Sheets** — nothing. Every entry this section listed is either built or was
 already built when it was listed.

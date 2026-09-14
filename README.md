@@ -540,8 +540,8 @@ stayed behind. Three screens now, on the **Make** shelf, and none of them has a
 model in it or needs a key:
 
 - **Write a document.** A block editor — headings, paragraphs, lists,
-  checklists, quotations, tables, pictures, equations, code blocks, page
-  breaks — out as a real `.docx`, as
+  checklists, quotations, tables, pictures, equations, code blocks, a contents
+  page, dividers, page breaks — out as a real `.docx`, as
   Markdown, or printed to PDF from the browser. `**Bold**`, `*italic*` and
   `[a link](vanderbilt.edu)` are written the way Markdown writes them, and a
   link becomes a real hyperlink in the Word file rather than an address typed
@@ -577,6 +577,20 @@ model in it or needs a key:
   from the caption on purpose — it is what a screen reader in Word reads out,
   so it says what is *in* the picture, where a caption says what to make of
   it.
+
+  A **divider** is a line between one section and the next, and a **page
+  break** starts a new page. Two blocks, one line apart on the Insert bar,
+  because they are two different things — which they had not been. The page
+  break used to write `---` to Markdown, and `---` is Markdown's *thematic
+  break*: a divider. So a document exported from here said divider and meant
+  page break, and re-importing it only worked because both ends were wrong in
+  the same direction. The divider has `---` now, which was always its
+  spelling, and the page break is written as an HTML comment — invisible in
+  GitHub, Obsidian, Pandoc and anything else that reads Markdown, so there is
+  no noise where the page breaks were. One thing this costs, worth knowing
+  rather than finding out: a Markdown file exported from this app *before*
+  now will re-import its page breaks as dividers. That is the right reading
+  of `---` and the wrong answer for that file, and it is visible on the page.
 - **Sheet or table.** A grid you type into, with formulas computed on the
   device: `SUM`, `AVERAGE`, `MEDIAN`, `STDEV`, `MIN`, `MAX`, `COUNT`, `IF`,
   `ROUND`, `SQRT`, `VLOOKUP`, `SUMPRODUCT` and the arithmetic around them. It
