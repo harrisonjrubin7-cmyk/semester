@@ -5,7 +5,11 @@ break — what was checked, what was found, and what was checked and found
 clean, so the next pass does not spend its time here again.
 
 Baseline and result are both green: `npm run lint`, `npm test`, `npm run build`.
-Tests went from 6854 to 6863; the nine added are the guards below.
+
+**Two of the five below were found independently on `main` while this pass ran**
+and are marked as such. Their entries are kept because the reasoning is still
+the record of what was wrong, not because this branch fixed them — after the
+merge, main's version of each is what ships.
 
 ## What was wrong
 
@@ -29,7 +33,7 @@ stopped offering them.
 The existing test compared the grid against `offered` at the default role on
 **both sides**, which is why it stayed green throughout.
 
-### 2. The browser shell kept four settings of its own
+### 2. The browser shell kept four settings of its own — *also fixed on `main`*
 
 `components/GoogleShell.tsx` held the shortcut row's contents, whether that row
 is drawn, light versus dark, and a recents list in `localStorage` under
@@ -60,7 +64,7 @@ larger was unreachable; and the grid took neither the saved `groupOrder` nor
 the role, so it could hold a different set of apps in a different order from
 the launcher.
 
-### 3. Customize Semester could be seen, hovered, and never clicked
+### 3. Customize Semester could be seen, hovered, and never clicked — *also fixed on `main`*
 
 Found by driving the app, not by reading it.
 
@@ -92,14 +96,18 @@ Focused is the state that matters, and there it showed plainly.
 content" were behind the header and the tab strip. The first line of this app's
 accessibility is the first thing Tab reaches.
 
-### 5. The Appearance swatches previewed the opposite of what they did
+### 5. The Appearance swatches previewed the opposite of what they did — *moot on `main`*
 
 In the browser shell's Customize panel the two chips were painted with
 `--app-fg` and `--app-accent-wash`, which invert with the ground. In the dark,
 the button labelled Dark drew a white chip and the one labelled Light drew a
 dark one. `.desk-swatch-chip` in `styles/app.css` had already solved this with
-fixed colours, and those are the values now used, so the app's two Customize
-panels preview the same two grounds.
+fixed colours.
+
+Moot after the merge: `main` took the better route on the same control, and
+the panel now reports which ground you are on and links to the page that owns
+it rather than carrying a second pair of buttons at all. A swatch that is not
+drawn cannot be drawn upside down.
 
 ## The duplicates
 
@@ -170,7 +178,12 @@ Each was verified to fail against the code as it was.
   component's own storage; and not under a key a component computes for itself,
   which is the shape that actually got in, since the hook wrote a template and
   no literal key name ever appeared in the source.
-- `styles/stacking.test.ts` — the home overlay's full-window containers stay
-  transparent to presses while what they contain does not; and the skip link is
-  lifted above the blanket's own z-index rather than a literal, so the two
-  cannot drift.
+- `styles/stacking.test.ts` — the skip link is lifted above the blanket's own
+  z-index rather than above a literal, so the two cannot drift. The home
+  overlay is held by `main`'s `home-reachable.test.tsx`, which walks the real
+  tree from the hidden scroller up and is the better test of the two.
+
+`lib/onelook.test.ts` guards *storage* — that no component keeps a rival copy
+of a look preference — where `main`'s `onframe.test.ts` "one writer per
+preference" guards *authorship*, which file may write a look field. They sit
+beside each other rather than repeating each other.
