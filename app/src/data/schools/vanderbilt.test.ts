@@ -30,6 +30,20 @@ describe('Vanderbilt, Fall 2026', () => {
     expect(term?.finalsFrom).toBeUndefined();
   });
 
+  it('ships the two undergraduate plans, in meals a term', () => {
+    const tiers = BUNDLED.vanderbilt.data.mealPlanTiers;
+    expect(tiers?.map((t) => [t.name, t.swipes, t.period])).toEqual([
+      ['First-Year Plan', 335, 'term'],
+      ['Upper-Division Plan', 305, 'term'],
+    ]);
+  });
+
+  it('carries no Meal Money figure, because none was ever found', () => {
+    // Every plan has Meal Money; no source gave an amount. Zero is how the
+    // Meals screen is told to draw the swipe count alone rather than "$0.00".
+    expect(BUNDLED.vanderbilt.data.mealPlanTiers?.every((t) => t.dollars === 0)).toBe(true);
+  });
+
   it('proposes the term start and both breaks, and nothing else', () => {
     const rows = fromCalendar(term!);
     expect(rows.map((r) => [r.id, r.iso, r.until])).toEqual([

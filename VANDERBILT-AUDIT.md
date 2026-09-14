@@ -217,13 +217,35 @@ The earlier fragment quoted below — exams and reading days 5–13 December,
 from a graduate calendar — is now positively **contradicted** by PSCI 1104's
 final on 17 December. Good evidence that leaving it out was right.
 
-### Meal plan tiers: still empty
+### Meal plan tiers: the swipe counts, at the owner's direction
 
-`data.mealPlanTiers` wants a name, a swipe count, a dollar figure and a
-period per plan. No syllabus carries any of that, and search returned only a
-third-party blog and an unattributed "335 meals ≈ 20 a week" with no year and
-no plan names attached. Nothing was written. The screen for it is built and
-shows nothing, which is the correct behaviour for a field nobody has filled.
+`data.mealPlanTiers` is filled with two plans — First-Year 335 and
+Upper-Division 305, both per semester. Where they came from matters, because
+it is a weaker source than the syllabi that produced the calendar above:
+
+- Not the dining page. `vanderbilt.edu/dining` is blocked here like the rest.
+- Not the repository. No syllabus or study guide mentions dining at all.
+- A **search index**, in two separate rounds: one returned "First-Year Plan:
+  With 335 meals", the other "Sophomores receive the Upper-Division Plan, with
+  305 meals per semester". Neither is attributed to a page or to an academic
+  year, and the two are one backend agreeing with itself rather than two
+  sources agreeing with each other.
+
+That was put to the repository's owner with the reasoning above, and the
+decision to ship the two numbers is theirs. It is recorded here rather than
+left implicit, because the same source produced calendar dates this audit
+declined to write, one of which the syllabi later contradicted outright.
+
+**Meal Money is deliberately absent.** Every Vanderbilt plan carries it and no
+search result gave an amount for any plan, so `dollars` is `0` on both tiers —
+which the Meals screen draws as the swipe count alone rather than as "$0.00".
+A fabricated dollar figure would be the one number on that screen capable of
+producing a wrong answer about money, since the screen's whole job is the
+arithmetic on what a balance is worth.
+
+The screen also now says, in one clause, that the balance page is the thing to
+check these counts against. That is the same rule `data/campus.ts` keeps for
+every address it ships: a starting point somebody can correct, not a fact.
 
 ### A bug the real data found
 
