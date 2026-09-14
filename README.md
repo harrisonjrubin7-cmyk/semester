@@ -304,6 +304,12 @@ colour is one of twelve, and they are the same twelve a course can be pinned
 to: your accent, turned round the wheel, at a lightness measured against the
 ground you are actually reading on.
 
+Tabs are dragged into the order you want them in, the same hold-move-let-go
+the rest of the app uses for anything with an order — and on the strip the
+drop means something as well: let a tab go among a group's tabs and it joins
+the group, drag it clear of them and it leaves. Alt with the left and right
+arrows does the same without a pointer.
+
 **Bookmarks** are the other half. A tab is where you are; a bookmark is where
 you keep going back to — the ECON study guide, the essay brief, the deadline
 you are counting down to — and before this the only way to keep one to hand
