@@ -78,17 +78,6 @@ export interface Chrome {
    */
   desk: boolean;
   /**
-   * The browser shell: a tab strip with bookmarks and groups, and a top
-   * search field that owns the whole window.
-   *
-   * The same job as `desk` — chrome at the top, one navigation, every width —
-   * done the way a web browser does it: tabs you can name, bookmark, group
-   * and reopen after closing. It is a separate navigation rather than a
-   * setting on the workspace because the two draw different chrome and only
-   * one of them may be on screen, which is the rule this file keeps.
-   */
-  browser: boolean;
-  /**
    * The workspace's column of shortcuts, where there is room for it.
    *
    * Not counted as a navigation of its own for exactly that reason: it is the
@@ -143,7 +132,7 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
   // one screen that never got the display it asked for.
   const full = FULLSCREEN.includes(screen);
   if (full)
-    return { tabs: false, rail: false, shelves: false, desk: false, browser: false, sidebar: false };
+    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false };
 
   /*
    * The workspace answers first, and answers for every width.
@@ -155,15 +144,6 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
    */
   const desk = nav === 'workspace';
   /*
-   * And the browser shell answers with it, for the same reason.
-   *
-   * Its chrome is at the top of the window too, so like the workspace it has
-   * nothing to trade against the tab bar or the rail — it simply takes them
-   * both off, at every width.
-   */
-  const browser = nav === 'browser';
-
-  /*
    * The guides answer next, and answer with nothing.
    *
    * Every other navigation is chrome plus a screen. This one is the screen:
@@ -173,7 +153,7 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
    * false here, at both widths, and the header's Back button is the way out.
    */
   if (nav === 'guides') {
-    return { tabs: false, rail: false, shelves: false, desk: false, browser: false, sidebar: false };
+    return { tabs: false, rail: false, shelves: false, desk: false, sidebar: false };
   }
 
   return {
@@ -184,10 +164,9 @@ export function chromeFor(nav: NavMode, screen: Screen, wide: boolean): Chrome {
     // layout worse than the narrow one. The shelves are excluded because they
     // are already a navigation that shows both the shelf and its screens —
     // drawing the rail beside them is the doubling this file exists to stop.
-    rail: wide && nav !== 'shelves' && !desk && !browser,
+    rail: wide && nav !== 'shelves' && !desk,
     shelves: nav === 'shelves',
     desk,
-    browser,
     sidebar: desk && wide,
   };
 }
@@ -223,7 +202,7 @@ export function homeShape(nav: NavMode): 'springboard' | 'feed' | 'today' | 'gui
  * the reason the file is about: a navigation's shape decided in one place.
  */
 export function firstScreen(nav: NavMode): Screen {
-  return nav === 'workspace' || nav === 'browser' ? 'search' : 'home';
+  return nav === 'workspace' ? 'search' : 'home';
 }
 
 /**
@@ -234,5 +213,5 @@ export function firstScreen(nav: NavMode): Screen {
  * `fab` was the one that was not, and it is gone; see the note where it was.
  */
 export function navigationsDrawn(c: Chrome): number {
-  return [c.tabs, c.rail, c.shelves, c.desk, c.browser].filter(Boolean).length;
+  return [c.tabs, c.rail, c.shelves, c.desk].filter(Boolean).length;
 }

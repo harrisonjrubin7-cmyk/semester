@@ -760,6 +760,24 @@ model in it or needs a key:
   stops where it stops, and the reading says so rather than letting a steep
   line stand in for a thing that has no value. See `app/src/lib/ode.ts`.
 
+  **`y'' = -y - 0.15y'` is second order** — a spring in treacle — and wants two
+  conditions, the value and the rate: `y(0) = 4` and `y'(0) = 0`. The prime is
+  part of the name in `app/src/lib/calc.ts`, so the rate is an ordinary
+  quantity in the equation and the walk binds it at every step. No slope field
+  under this one, and that is not an omission: a second-order equation gives a
+  slope at a point *and a speed*, so there is nothing true to draw on the
+  plane.
+
+  **An `x' = …` beside a `y' = …` is a system**, drawn where a dynamics course
+  draws it — the plane the two quantities share, with time running along the
+  curve and appearing on neither axis. `x' = x - xy`, `y' = xy - y` is predator
+  and prey, and it closes into the loop it should. Over its own field of
+  arrows, since a system and a field are the same object seen two ways. The
+  step is paced by distance on the page rather than by time, so a system that
+  is slow in one place and fast in another comes out evenly drawn; a closed
+  loop is drawn once rather than a hundred times; and a trajectory that starts
+  at an equilibrium stays there, as a point.
+
   **Polar and parametric** are the same box and the same notation, told apart
   by the letter in them: an `r =` line with the angle in it is polar —
   `r = 2 + 2\cos(\theta)`, a cardioid — and a pair with `t` in it is the path

@@ -46,10 +46,23 @@ export interface DayDue {
   tasks: PersonalTask[];
 }
 
-/** The seven dates of a week, from whatever the view is showing as its first. */
-export function weekDates(start: Date): Date[] {
+/**
+ * How many days the week view is showing.
+ *
+ * Seven everywhere there is room for seven, and three on a phone. Not a
+ * setting and not a preference: at 390px a seven-column grid gives each day
+ * about fifty pixels, and the block titles wrapped to one character a line —
+ * "CO RE 25 00" — with fourteen pixels left where two things share an hour.
+ * Three columns is what the phone calendars settled on, and for the same
+ * reason. The number lives here because the grid, the heading, the campus
+ * list and the deadlines under it all have to agree about it.
+ */
+export type Span = 3 | 7;
+
+/** The dates a span covers, from whatever the view is showing as its first. */
+export function weekDates(start: Date, span: Span = 7): Date[] {
   return Array.from(
-    { length: 7 },
+    { length: span },
     (_, i) => new Date(start.getFullYear(), start.getMonth(), start.getDate() + i),
   );
 }
@@ -64,8 +77,13 @@ export function weekDates(start: Date): Date[] {
  * hour, and most do not — "before work" is a real answer to when. Without
  * this, a week of things you had written down printed as a blank sheet.
  */
-export function dueByDay(items: DatedItem[], start: Date, tasks: PersonalTask[] = []): DayDue[] {
-  return weekDates(start).map((date) => {
+export function dueByDay(
+  items: DatedItem[],
+  start: Date,
+  tasks: PersonalTask[] = [],
+  span: Span = 7,
+): DayDue[] {
+  return weekDates(start, span).map((date) => {
     const iso = dateToIso(date);
     return {
       date,
@@ -76,9 +94,10 @@ export function dueByDay(items: DatedItem[], start: Date, tasks: PersonalTask[] 
   });
 }
 
-/** "Sep 7 – 13" — or "Sep 28 – Oct 4" where the week crosses a month. */
-export function weekLabel(start: Date): string {
-  const end = weekDates(start)[6];
+/** "Sep 7 – 13" — or "Sep 28 – Oct 4" where the span crosses a month. */
+export function weekLabel(start: Date, span: Span = 7): string {
+  const dates = weekDates(start, span);
+  const end = dates[dates.length - 1];
   const tail =
     start.getMonth() === end.getMonth()
       ? `${end.getDate()}`
@@ -93,10 +112,10 @@ export function weekLabel(start: Date): string {
  * in a position to make about somebody whose other four commitments it has
  * never been told about.
  */
-export function weekLine(days: DayDue[], classes: number): string {
+export function weekLine(days: DayDue[], classes: number, when = 'this week'): string {
   const due = days.reduce((n, d) => n + d.items.length, 0);
   const mine = days.reduce((n, d) => n + d.tasks.length, 0);
-  if (due === 0 && classes === 0 && mine === 0) return 'Nothing on this week.';
+  if (due === 0 && classes === 0 && mine === 0) return `Nothing on ${when}.`;
   const parts: string[] = [];
   if (classes > 0) parts.push(`${classes} ${classes === 1 ? 'class' : 'classes'}`);
   if (due > 0) parts.push(`${due} ${due === 1 ? 'deadline' : 'deadlines'}`);
@@ -104,7 +123,7 @@ export function weekLine(days: DayDue[], classes: number): string {
   // in their own field above: three deadlines and two things you wrote down
   // is not five deadlines.
   if (mine > 0) parts.push(`${mine} of your own`);
-  return `${parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0]} this week.`;
+  return `${parts.length > 1 ? `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}` : parts[0]} ${when}.`;
 }
 
 export interface Lane {

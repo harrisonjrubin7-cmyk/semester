@@ -4,7 +4,7 @@ import { useRowStyle } from './shell/useShell';
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
-import { dueByDay, weekLabel, weekLine } from '../lib/weekpage';
+import { dueByDay, weekLabel, weekLine, type Span } from '../lib/weekpage';
 import { clock } from '../lib/date';
 import { hasTime } from '../lib/duetime';
 import { Folding } from './Fold';
@@ -23,7 +23,16 @@ import { Folding } from './Fold';
  * on paper is the space next to Thursday as much as the four things already
  * on Tuesday.
  */
-export function WeekDue({ start, classes }: { start: Date; classes: number }) {
+export function WeekDue({
+  start,
+  classes,
+  span = 7,
+}: {
+  start: Date;
+  classes: number;
+  /** Three days on a phone, seven where there is room. See `lib/weekpage.ts`. */
+  span?: Span;
+}) {
   const { state, now, catalog, courseCode } = useStore();
   const row = useRowStyle(8);
 
@@ -38,15 +47,18 @@ export function WeekDue({ start, classes }: { start: Date; classes: number }) {
    * there.
    */
   const days = useMemo(
-    () => dueByDay(datedItems(catalog, now), start, state.tasks),
-    [catalog, now, start, state.tasks],
+    () => dueByDay(datedItems(catalog, now), start, state.tasks, span),
+    [catalog, now, start, state.tasks, span],
   );
+
+  /* What to call the days below, in the heading and at the end of the line. */
+  const when = span === 7 ? 'this week' : 'these three days';
 
   return (
     <Folding name="WeekDue">
-      <SectionLabel>Due this week</SectionLabel>
+      <SectionLabel>Due {when}</SectionLabel>
       <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
-        {weekLabel(start)} · {weekLine(days, classes)}
+        {weekLabel(start, span)} · {weekLine(days, classes, when)}
       </div>
 
       {days.map((d) => (
