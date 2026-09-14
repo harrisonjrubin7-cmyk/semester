@@ -67,15 +67,41 @@ BRANCHES=(
 git fetch origin --prune
 main=$(git rev-parse "origin/main^{tree}")
 
+deleted=0
+skipped=0
+failed=()
+
 for br in "${BRANCHES[@]}"; do
   if ! git rev-parse --verify --quiet "origin/$br" >/dev/null; then
-    echo "gone already:  $br"
+    echo "gone already:                  $br"
     continue
   fi
   t=$(git merge-tree --write-tree origin/main "origin/$br" 2>/dev/null || true)
-  if [ -n "$t" ] && [ "$t" = "$main" ]; then
-    git push origin --delete "$br"
-  else
+  if [ -z "$t" ] || [ "$t" != "$main" ]; then
     echo "SKIP, no longer fully merged:  $br" >&2
+    skipped=$((skipped + 1))
+    continue
+  fi
+  # `|| failed+=(...)` rather than a bare call: `set -e` would end the whole
+  # run on the first branch that would not delete, leaving the other
+  # thirty-three in place and the exit status blaming only the one. That is
+  # what happened on the first real attempt — every push was refused 403 and
+  # the script stopped at branch one, which reads like one bad branch rather
+  # than no permission at all. A refusal is per-branch information; the run
+  # collects it and carries on, and the summary below is what says whether
+  # this was one branch or all of them.
+  if git push origin --delete "$br"; then
+    deleted=$((deleted + 1))
+  else
+    failed+=("$br")
   fi
 done
+
+echo
+echo "deleted $deleted, skipped $skipped, failed ${#failed[@]}"
+if [ ${#failed[@]} -gt 0 ]; then
+  printf 'failed to delete: %s\n' "${failed[@]}" >&2
+  # Non-zero, so this still fails a pipeline — but only after trying every
+  # branch rather than instead of trying them.
+  exit 1
+fi
