@@ -2853,6 +2853,12 @@ Chromium at 402×874, all 60 destinations in `lib/nav.ts`, 2.6s per screen so
 the lift's own timers settle. For each visible control in `main`, its overlap
 with the button's resting rect as a fraction of the control's own area.
 
+The table below is one run, on the production build at `b5000de`. The count of
+screens *touching* moves with the content — three screens left it and one
+gained a second hit between that commit and the one before it, on changes that
+had nothing to do with the assistant — so it is the last two rows that are the
+claim, and they are what the script exits non-zero on.
+
 Three corrections to the instrument are worth more than the numbers, because
 each produced a confident wrong answer first. Two are below; the third is the
 padded tap target, which needs the census's own result to explain and is at
@@ -2876,7 +2882,7 @@ the end of this section.
 | --- | --- |
 | Destinations swept | 60 |
 | Button drawn | 57 — the other three are `FILLS` in `components/shell/exempt.ts` |
-| Touching any visible control | 30 |
+| Touching any visible control | 27 |
 | Covered ≥50% (the rule's own threshold) | **0** |
 | Centre of a control unreachable | **0** |
 | Closest to the threshold | `links` EDIT at 48%, and see below |
