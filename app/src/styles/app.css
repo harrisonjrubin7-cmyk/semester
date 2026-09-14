@@ -4963,6 +4963,11 @@ input[type='search'].input {
   flex: 1;
   min-width: 0;
   width: auto;
+  /* The pill around it is 38px tall, but the pill is a div: only the input
+     itself takes a tap, and a line of `--type-md` text is 22. The floor is
+     24, and two more pixels is the whole difference between a target that
+     qualifies and one that does not. */
+  min-height: 24px;
   padding: 0;
   border: 0;
   background: transparent;

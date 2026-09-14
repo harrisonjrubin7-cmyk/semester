@@ -675,7 +675,9 @@ function Tab({
           style={{
             width: 'auto',
             flex: 'none',
-            padding: 'var(--sp-3) var(--sp-1)',
+            // A 13px chevron with `--sp-1` beside it is a 17px-wide target.
+            // Even padding takes it to 25, over the floor on both axes.
+            padding: 'var(--sp-3)',
             fontSize: 'var(--type-sm)',
           }}
         >
@@ -694,7 +696,11 @@ function Tab({
         style={{
           width: 'auto',
           flex: 'none',
-          padding: 'var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-1)',
+          // Still wider on the outside than the inside — the cross sits at
+          // the end of the tab, not in the middle of it — but the tight side
+          // goes from `--sp-1` to `--sp-3`, which is what takes the target
+          // from 20px wide to 24.
+          padding: 'var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-3)',
           fontSize: 'var(--type-sm)',
           ...secondLine(),
         }}
