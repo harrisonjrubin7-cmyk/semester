@@ -505,3 +505,69 @@ describe('a transfer function on the list', () => {
     expect(away.note).toMatch(/runs away/);
   });
 });
+
+/**
+ * The two Fourier lines, off the same list.
+ *
+ * `lib/fourier.test.ts` checks the arithmetic against coefficients a textbook
+ * prints. This checks the joint: that the two are told apart from each other
+ * and from everything else by what is written, that the picture is drawn from
+ * the same numbers the sentence reports, and that a signal with no transform
+ * is refused rather than half-answered.
+ */
+describe('Fourier on the list', () => {
+  it('tells a transform from a series from a letter called F', () => {
+    expect(of('F{e^{-2t}}').kind).toBe('spectrum');
+    expect(of('\\mathcal{F}\\{e^{-2t}\\}').kind).toBe('spectrum');
+    expect(of('fourier(sign(\\sin(t)), 2\\pi)').kind).toBe('harmonics');
+    expect(of('F = 4')).toMatchObject({ kind: 'value', name: 'F' });
+  });
+
+  it('takes the period, and the count of harmonics where one is given', () => {
+    const line = of('fourier(t, 2\\pi, 20)');
+    if (line.kind !== 'harmonics') throw new Error('not harmonics');
+    expect(line.count).not.toBeNull();
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toMatch(/^20 harmonics/);
+    expect(got.over).toBe('t');
+  });
+
+  it('says what the series comes to, and draws that same sum', () => {
+    const line = of('fourier(sign(\\sin(t)), 2\\pi)');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toMatch(/^1\.27324\\sin\(t\)/);
+    const drawn = draw(line, {}, { x0: -6, x1: 6, y0: -2, y1: 2 });
+    // Two drawings in one: the wave faint underneath, the sum full over it.
+    expect(new Set(drawn.shades)).toEqual(new Set([0.5, 1]));
+    const full = drawn.paths.filter((_, i) => drawn.shades?.[i] === 1).flat();
+    for (const p of full) expect(p.y).toBeCloseTo(got.at(p.x), 10);
+  });
+
+  it('draws a spectrum from the size the sentence is about', () => {
+    const line = of('F{e^{-2t}}');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.over).toBe('ω');
+    expect(got.latex).toBe('\\frac{1}{i\\omega + 2}');
+    const drawn = draw(line, {}, { x0: -8, x1: 8, y0: -1, y1: 1 });
+    for (const p of drawn.paths.flat()) expect(p.y).toBeCloseTo(got.at(p.x), 10);
+  });
+
+  it('refuses a signal with no transform, on the line rather than silently', () => {
+    const got = answered(of('F{\\sin(t)}'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/impulse in frequency/);
+  });
+
+  it('asks for the letters it needs and no others', () => {
+    expect(missing(of('F{e^{-2t}}'), {})).toEqual([]);
+    expect(missing(of('fourier(sign(\\sin(t)), T)'), {})).toEqual(['T']);
+    expect(missing(of('fourier(k \\sin(t), 2\\pi)'), {})).toEqual(['k']);
+  });
+
+  it('says so rather than guessing at one argument', () => {
+    expect(of('fourier(t)')).toMatchObject({ kind: 'fault' });
+  });
+});
