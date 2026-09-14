@@ -1,5 +1,5 @@
 import { ArchiveIcon, ClockIcon, OpenedIcon, Paperclip, StarIcon, TrashIcon } from '../Icons';
-import { TickBox } from '../ui';
+import { TabList, TickBox } from '../ui';
 import { CourseTag } from '../CourseTag';
 import {
   CATEGORIES,
@@ -71,21 +71,14 @@ export function List({
   return (
     <div className="mb-list">
       {category !== null && folder === 'inbox' && (
-        <div className="mb-tabs" role="tablist" aria-label="Inbox categories">
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              role="tab"
-              className="mb-tab"
-              aria-current={category === c.id}
-              aria-selected={category === c.id}
-              onClick={() => onCategory(c.id)}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
+        <TabList
+          label="Inbox categories"
+          className="mb-tabs"
+          tabClassName="mb-tab"
+          tabs={CATEGORIES}
+          value={category}
+          onChange={onCategory}
+        />
       )}
 
       {threads.length === 0 && empty}
@@ -213,7 +206,16 @@ function Row({
         <button type="button" className="mb-ico" aria-label={`Delete ${last.subject}`} onClick={onTrash}>
           <TrashIcon size={17} />
         </button>
-        <button type="button" className="mb-ico" aria-label={`Snooze ${last.subject}`} onClick={onSnooze}>
+        {/* The row's own snooze is the one-press one — tomorrow morning, which
+            is the answer four times out of five. The toolbar's opens the four
+            `snoozeOptions` offers, and the row has no width for a menu. */}
+        <button
+          type="button"
+          className="mb-ico"
+          aria-label={`Snooze ${last.subject} until tomorrow morning`}
+          title="Snooze until tomorrow morning"
+          onClick={onSnooze}
+        >
           <ClockIcon size={17} />
         </button>
         <button

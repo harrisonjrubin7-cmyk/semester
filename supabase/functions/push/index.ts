@@ -87,10 +87,30 @@ Deno.serve(async (req) => {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
   const db = createClient(SUPABASE_URL, SERVICE_KEY);
 
+  /*
+   * Oldest first, and the `order` is the whole of the change.
+   *
+   * `limit` without `order` takes an arbitrary five hundred: SQL guarantees no
+   * order without `ORDER BY`, so which of them a run picks up is whatever the
+   * planner found convenient that time. That is invisible until there is a
+   * backlog — and `PER_RUN` exists because the author expected one ("a cap, so
+   * a bad week cannot run away") — at which point the queue drains in no
+   * particular order and a reminder due three hours ago goes out after one due
+   * five minutes ago, for no reason anybody can see.
+   *
+   * Ascending rather than descending, because the alternative stalls: newest
+   * first means a backlog that keeps growing never reaches its own tail, and
+   * the oldest reminders are the ones that never send at all. Oldest first
+   * drains in the order things actually came due, which is also the order
+   * somebody would guess.
+   *
+   * Free, as it happens: `push_queue_due` is already an index on `send_at`.
+   */
   const { data: due, error } = await db
     .from('push_queue')
     .select('user_id, id, title, body, screen, item')
     .lte('send_at', new Date().toISOString())
+    .order('send_at', { ascending: true })
     .limit(PER_RUN);
 
   if (error) return new Response(error.message, { status: 500 });

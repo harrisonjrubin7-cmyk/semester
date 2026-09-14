@@ -349,3 +349,85 @@ describe('the app’s own drafts', () => {
     expect(draftAsMail({ ...draft, subject: '' }, me).subject).toBe('(no subject)');
   });
 });
+
+/**
+ * The operators a search box grows once it is used.
+ *
+ * Every one of these is a question a student has about a term's mail and
+ * could not ask: which ECON mail, what arrived since the midterm, everything
+ * except the automated ones. The negation is the interesting one to get right
+ * — written as a second rule beside the positive form it drifts from it the
+ * first time either changes, so it is the same function run again.
+ */
+describe('searching by course, by date and by what it is not', () => {
+  it('reads the course off the message, which no mail client can', () => {
+    expect(matches(mail({ courseId: 'econ' }), parseQuery('course:econ'))).toBe(true);
+    expect(matches(mail({ courseId: 'psci' }), parseQuery('course:econ'))).toBe(false);
+    expect(matches(mail({ courseId: null }), parseQuery('course:econ'))).toBe(false);
+  });
+
+  it('cuts the list at a date, from either end', () => {
+    const old = mail({ at: new Date(2026, 8, 1, 12, 0).getTime() });
+    const recent = mail({ at: new Date(2026, 8, 20, 12, 0).getTime() });
+    expect(matches(recent, parseQuery('after:2026-09-15'))).toBe(true);
+    expect(matches(old, parseQuery('after:2026-09-15'))).toBe(false);
+    expect(matches(old, parseQuery('before:2026-09-15'))).toBe(true);
+    expect(matches(recent, parseQuery('before:2026-09-15'))).toBe(false);
+  });
+
+  it('reads the slashed form Gmail writes as well as the dashed one', () => {
+    const recent = mail({ at: new Date(2026, 8, 20, 12, 0).getTime() });
+    expect(matches(recent, parseQuery('after:2026/09/15'))).toBe(true);
+  });
+
+  /*
+   * A typo in one operator emptying the whole search is how somebody
+   * concludes the mailbox has lost their mail.
+   */
+  it('ignores a date it cannot read rather than matching nothing', () => {
+    expect(matches(mail(), parseQuery('after:soon'))).toBe(true);
+    expect(matches(mail(), parseQuery('after:2026-13-45'))).toBe(true);
+  });
+
+  it('takes a minus as "not this"', () => {
+    expect(matches(mail({ courseId: 'econ' }), parseQuery('-course:econ'))).toBe(false);
+    expect(matches(mail({ courseId: 'psci' }), parseQuery('-course:econ'))).toBe(true);
+    expect(matches(mail({ unread: true }), parseQuery('-is:unread'))).toBe(false);
+    expect(matches(mail({ unread: false }), parseQuery('-is:unread'))).toBe(true);
+  });
+
+  it('negates a plain word as well as an operator', () => {
+    expect(matches(mail({ subject: 'Problem set 2' }), parseQuery('-problem'))).toBe(false);
+    expect(matches(mail({ subject: 'Reading week' }), parseQuery('-problem'))).toBe(true);
+  });
+
+  it('takes a bare dash as a word rather than as a negation of nothing', () => {
+    expect(parseQuery('-').text).toEqual(['-']);
+    expect(parseQuery('-').not).toEqual([]);
+  });
+
+  it('holds a quoted phrase together after a minus', () => {
+    expect(parseQuery('-subject:"problem set"').not).toEqual(['subject:"problem set"']);
+    expect(matches(mail({ subject: 'Problem set 2' }), parseQuery('-subject:"problem set"'))).toBe(
+      false,
+    );
+  });
+
+  it('runs several of them together, all of which must hold', () => {
+    const q = parseQuery('course:econ after:2026-09-01 -is:read');
+    expect(matches(mail({ at: new Date(2026, 8, 20).getTime(), unread: true }), q)).toBe(true);
+    expect(matches(mail({ at: new Date(2026, 8, 20).getTime(), unread: false }), q)).toBe(false);
+  });
+
+  /*
+   * `parseQuery` builds twelve arrays. Spreading a shared empty object would
+   * copy the *references*, so every search would push into the same lists and
+   * the second query would carry the first one's terms — a bug that looks
+   * like the mailbox remembering a search nobody typed.
+   */
+  it('gives each search its own lists', () => {
+    const one = parseQuery('from:a');
+    parseQuery('from:b');
+    expect(one.from).toEqual(['a']);
+  });
+});

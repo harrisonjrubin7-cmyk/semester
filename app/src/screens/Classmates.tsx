@@ -467,6 +467,17 @@ function Waiting({ term, school }: { term: string; school: string }) {
 
 function Blocked({ me }: { me: string }) {
   const [ids, setIds] = useState<string[]>([]);
+  /*
+   * Unblocking is a safety control, and the list is the only thing that says
+   * whether it worked.
+   *
+   * `unblock` throws `explain(error.message)` — a sentence written to be read
+   * — and this component dropped it: the `.then` never ran, so the row stayed
+   * exactly where it was with nothing said, which reads as a dead button
+   * rather than as a change that did not reach the account. The effect above
+   * was already catch-aware; the button was the one call that was not.
+   */
+  const [trouble, setTrouble] = useState('');
   useEffect(() => {
     void listBlocked(me)
       .then(setIds)
@@ -504,13 +515,31 @@ function Blocked({ me }: { me: string }) {
           <button
             type="button"
             className="bare tap-y"
-            onClick={() => void unblock(me, id).then(() => setIds((x) => x.filter((y) => y !== id)))}
+            onClick={() => {
+              setTrouble('');
+              void unblock(me, id)
+                .then(() => setIds((x) => x.filter((y) => y !== id)))
+                .catch((e: unknown) => setTrouble(e instanceof Error ? e.message : String(e)));
+            }}
             style={{ width: 'auto', fontSize: 'var(--type-xs)', ...secondLine() }}
           >
             UNBLOCK
           </button>
         </div>
       ))}
+      {trouble && (
+        <div
+          role="status"
+          style={{
+            fontSize: 'var(--type-sm)',
+            lineHeight: 'var(--leading-normal)',
+            paddingTop: 'var(--sp-4)',
+            ...secondLine(),
+          }}
+        >
+          {trouble} They are still blocked.
+        </div>
+      )}
     </Folding>
   );
 }

@@ -75,5 +75,6 @@ export function blankDeck(
     updated: now,
     hidden: [],
     theme: 'ink',
+    numbers: false,
   };
 }
