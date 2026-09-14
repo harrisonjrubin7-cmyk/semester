@@ -328,12 +328,28 @@ export function Mail() {
           </button>
         )}
 
+        {/*
+          Off when there is no mailbox to check.
+
+          `pull` opens with `if (accounts.length === 0) return`, which is right
+          — there is nothing to ask — and left this button enabled, pressable,
+          and completely silent. The folder underneath already says "No account
+          connected" and offers Connect; the one control up here that looks
+          like it would go and get something did nothing and said nothing about
+          why. The same `disabled` the four actions beside it already use, and
+          the title carries the reason so the answer is on the control rather
+          than only in the empty state below it.
+        */}
         <button
           type="button"
           className="mb-ico"
           aria-label="Check for new mail"
-          title="Check for new mail"
-          disabled={busy}
+          title={
+            accounts.length === 0
+              ? 'Connect an account before checking for new mail'
+              : 'Check for new mail'
+          }
+          disabled={busy || accounts.length === 0}
           onClick={() => void pull(folder, query)}
         >
           <RefreshIcon size={18} />

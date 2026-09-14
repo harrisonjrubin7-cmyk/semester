@@ -145,7 +145,54 @@ export interface Run {
   text: string;
   bold: boolean;
   italic: boolean;
+  /**
+   * Where this run points, or empty when it points nowhere.
+   *
+   * Already checked by {@link safeUrl} — nothing downstream re-checks it, so
+   * nothing downstream may set it from raw text either.
+   */
+  link: string;
 }
+
+/**
+ * A URL this app is willing to put behind words, or nothing.
+ *
+ * A document is text somebody else wrote as often as not — pasted from a
+ * reading, imported from Markdown, handed over by a model — and a link is the
+ * one piece of a document that *does* something when it is clicked. So the
+ * scheme is checked against a list of three rather than against a list of the
+ * bad ones: `javascript:` is the one everybody remembers, and `data:` will
+ * serve a whole page, and neither is the interesting part. The interesting
+ * part is that the next scheme somebody thinks of is allowed by any rule
+ * written as a denial and refused by this one.
+ *
+ * A bare domain is what people actually type, so `vanderbilt.edu` becomes
+ * `https://vanderbilt.edu` — but only when it *looks* like a domain. `#notes`
+ * and `../thing` are not links out of this document and must not be turned
+ * into one by having a scheme stapled to the front.
+ */
+export function safeUrl(raw: string): string {
+  const text = raw.trim();
+  if (!text) return '';
+  const looksLikeDomain = /^[\w-]+(\.[\w-]+)+([/?#]|$)/.test(text);
+  const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(text);
+  if (!hasScheme && !looksLikeDomain) return '';
+  try {
+    const url = new URL(hasScheme ? text : `https://${text}`);
+    return ['http:', 'https:', 'mailto:'].includes(url.protocol) ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * `[words](where)`, in the form people already type.
+ *
+ * The space between `]` and `(` is what keeps a numbered citation out of
+ * this: "see [3] (above)" is not a link and never becomes one. The target may
+ * not contain whitespace for the same reason.
+ */
+const LINK = /\[([^\]\n]+)\]\((\S+?)\)/;
 
 /**
  * A paragraph split into its emphasised pieces.
@@ -164,25 +211,48 @@ export interface Run {
  */
 export function runs(text: string): Run[] {
   const out: Run[] = [];
-  const walk = (part: string, bold: boolean, italic: boolean) => {
+  const walk = (part: string, bold: boolean, italic: boolean, link: string) => {
+    /*
+     * Links first, and only outside a link.
+     *
+     * First because the marks inside one belong to it — `[**Title**](url)` is
+     * a bold link and not a link beside a bold word. Only outside one because
+     * a link inside a link has no meaning and the recursion has to end.
+     *
+     * A target this app will not follow keeps its brackets and is pushed as
+     * it was typed. Visible and fixable, which is the same choice this file
+     * makes about `***three stars***`; silently dropping the words, or
+     * silently keeping the link, are both worse.
+     */
+    if (!link) {
+      const found = LINK.exec(part);
+      if (found) {
+        if (found.index > 0) walk(part.slice(0, found.index), bold, italic, link);
+        const url = safeUrl(found[2]);
+        if (url) walk(found[1], bold, italic, url);
+        else out.push({ text: found[0], bold, italic, link: '' });
+        walk(part.slice(found.index + found[0].length), bold, italic, link);
+        return;
+      }
+    }
     const strong = /\*\*(\S(?:(?!\*\*)[\s\S])*?\S|\S)\*\*/.exec(part);
     if (strong) {
-      if (strong.index > 0) walk(part.slice(0, strong.index), bold, italic);
-      walk(strong[1], true, italic);
-      walk(part.slice(strong.index + strong[0].length), bold, italic);
+      if (strong.index > 0) walk(part.slice(0, strong.index), bold, italic, link);
+      walk(strong[1], true, italic, link);
+      walk(part.slice(strong.index + strong[0].length), bold, italic, link);
       return;
     }
     const em = /\*(\S(?:[^*]*\S)?)\*/.exec(part);
     if (em) {
-      if (em.index > 0) walk(part.slice(0, em.index), bold, italic);
-      walk(em[1], bold, true);
-      walk(part.slice(em.index + em[0].length), bold, italic);
+      if (em.index > 0) walk(part.slice(0, em.index), bold, italic, link);
+      walk(em[1], bold, true, link);
+      walk(part.slice(em.index + em[0].length), bold, italic, link);
       return;
     }
-    if (part) out.push({ text: part, bold, italic });
+    if (part) out.push({ text: part, bold, italic, link });
   };
-  walk(text, false, false);
-  return out.length ? out : [{ text: '', bold: false, italic: false }];
+  walk(text, false, false, '');
+  return out.length ? out : [{ text: '', bold: false, italic: false, link: '' }];
 }
 
 /** The same text with the marks taken off — for a word count or a plain export. */

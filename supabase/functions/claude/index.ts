@@ -12,11 +12,14 @@
  *  2. **A monthly cap.** Metered per account in the `usage` table, so one
  *     person cannot spend the whole budget. Generating a course costs a few
  *     cents; the default cap is generous for a student and cheap for the owner.
+ *     The counting is one atomic statement in the database, because the cap is
+ *     worth exactly as much as the arithmetic behind it is — see below.
  *  3. **Streaming passes through.** The app renders Claude's answers as they
  *     arrive, and that should not stop being true because the call went through
  *     a function.
  *
  * Deploy:
+ *     psql "$DATABASE_URL" -f supabase/migrations/20260901000900_usage_atomic.sql
  *     supabase secrets set ANTHROPIC_API_KEY=sk-ant-…
  *     supabase functions deploy claude
  *
@@ -76,16 +79,37 @@ Deno.serve(async (req) => {
   const userId = user.user.id;
 
   // ── how much they have used ─────────────────────────────────────────────
+  //
+  // Counted before the call is forwarded rather than after, and counted by the
+  // database rather than here. Both halves of that matter.
+  //
+  // *By the database*, because `select calls` … `upsert(used + 1)` is a lost
+  // update: two requests that read the same 59 both write 60, and the app
+  // fires several generations at once when a syllabus is imported, so the
+  // ordinary path through the app was the one that dropped counts. The cap was
+  // therefore not a cap. `count_call` does the arithmetic inside one statement
+  // that holds the row lock — see
+  // `supabase/migrations/20260901000900_usage_atomic.sql`.
+  //
+  // *Before*, because the alternative is that the count lands after a network
+  // call that can be abandoned. A client that disconnects mid-stream would be
+  // a generation nobody paid for, repeatable as fast as connections can be
+  // opened. Counting first means a call reserves its place and then happens;
+  // the cost of that is a refused upstream still costing a call, which the
+  // previous arrangement deliberately chose as well.
   const month = new Date().toISOString().slice(0, 7);
-  const { data: row } = await admin
-    .from('usage')
-    .select('calls')
-    .eq('user_id', userId)
-    .eq('month', month)
-    .maybeSingle();
+  const { data: used, error: meterError } = await admin.rpc('count_call', {
+    p_user: userId,
+    p_month: month,
+  });
 
-  const used = row?.calls ?? 0;
-  if (used >= MONTHLY_CALLS) {
+  if (meterError || typeof used !== 'number') {
+    // Refusing rather than forwarding. A meter that cannot count is a key with
+    // no cap on it, and that is the one failure not to be generous about.
+    return json({ error: { message: 'Usage could not be checked just now. Try again in a moment.' } }, 503);
+  }
+
+  if (used > MONTHLY_CALLS) {
     return json(
       {
         error: {
@@ -110,19 +134,12 @@ Deno.serve(async (req) => {
     body,
   });
 
-  // Count the call whether or not the model liked the request: a failed call
-  // still costs, and an uncounted failure is a free retry loop.
-  await admin.from('usage').upsert(
-    { user_id: userId, month, calls: used + 1, updated_at: new Date().toISOString() },
-    { onConflict: 'user_id,month' },
-  );
-
   return new Response(upstream.body, {
     status: upstream.status,
     headers: {
       ...cors,
       'Content-Type': upstream.headers.get('Content-Type') ?? 'application/json',
-      'X-Calls-Remaining': String(Math.max(0, MONTHLY_CALLS - used - 1)),
+      'X-Calls-Remaining': String(Math.max(0, MONTHLY_CALLS - used)),
     },
   });
 });

@@ -418,6 +418,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           <label style={{ display: 'block', marginBlock: 'var(--sp-5) var(--sp-3)' }}>
             <SectionLabel style={{ marginBlock: 0 }}>Prepare drafts as</SectionLabel>
             <select
+              className="input"
               value={intent}
               onChange={(e) => setIntent(e.target.value as UniversityRole)}
               style={{ marginTop: 'var(--sp-3)', width: '100%' }}
@@ -591,6 +592,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Title</span>
                 <input
+                  className="input"
                   value={draft.title}
                   maxLength={DRAFT_LIMITS.title}
                   onChange={(e) => patch({ title: e.target.value })}
@@ -600,6 +602,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Course (optional)</span>
                 <select
+                  className="input"
                   value={draft.courseId}
                   onChange={(e) => patch({ courseId: e.target.value })}
                   style={{ width: '100%', marginTop: 'var(--sp-2)' }}
@@ -615,6 +618,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Target date</span>
                 <input
+                  className="input"
                   type="date"
                   value={draft.due}
                   onChange={(e) => patch({ due: e.target.value })}
@@ -624,6 +628,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Preparation notes</span>
                 <textarea
+                  className="input"
                   rows={12}
                   maxLength={DRAFT_LIMITS.body}
                   value={draft.body}
@@ -680,6 +685,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}
               >
                 <input
+                  className="input"
                   aria-label="New readiness step"
                   value={step}
                   maxLength={DRAFT_LIMITS.stepText}
@@ -748,6 +754,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           <label style={{ display: 'block', marginBlock: 'var(--sp-5) var(--sp-4)' }}>
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Service</span>
             <select
+              className="input"
               disabled={busy}
               value={area}
               onChange={(e) => changeArea(e.target.value as UniversityArea)}
@@ -802,6 +809,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 style={{ display: 'flex', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}
               >
                 <input
+                  className="input"
                   aria-label="Search connected university records"
                   placeholder="Search school records"
                   value={query}
@@ -973,6 +981,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                         <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>{f.label}</span>
                         {f.kind === 'textarea' ? (
                           <textarea
+                            className="input"
                             required={f.required}
                             maxLength={20_000}
                             value={values[f.id] || ''}
@@ -981,6 +990,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                           />
                         ) : f.kind === 'select' ? (
                           <select
+                            className="input"
                             required={f.required}
                             value={values[f.id] || ''}
                             onChange={(e) => setValues((v) => ({ ...v, [f.id]: e.target.value }))}
@@ -993,6 +1003,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                           </select>
                         ) : (
                           <input
+                            className="input"
                             type={f.kind}
                             required={f.required}
                             maxLength={20_000}

@@ -32,13 +32,16 @@ describe('the screen boundary', () => {
   });
 
   it('wraps the screen in every layout, not just one', () => {
-    // The phone, the wide layout, the workspace and the browser shell are
-    // four separate return statements in `App.tsx`. Wrapping one and not
-    // another would leave a phone — where this app is mostly used — taking the
-    // whole app down on a bad screen. Four, because there are four layouts;
-    // a fifth has to bring its own boundary rather than raise this.
+    // The phone, the wide layout and the workspace are three separate return
+    // statements in `App.tsx`. Wrapping one and not another would leave a
+    // phone — where this app is mostly used — taking the whole app down on a
+    // bad screen. Three, because there are three layouts; a fourth has to
+    // bring its own boundary rather than raise this.
+    //
+    // It was four while the browser shell existed; that shell was a second
+    // copy of the workspace's and went in the seventh pass (E4).
     const wraps = app.match(/<ScreenTrouble\b/g) ?? [];
-    expect(wraps.length, 'every layout needs one').toBe(4);
+    expect(wraps.length, 'every layout needs one').toBe(3);
   });
 
   it('resets when you move on, so one failure does not follow you', () => {

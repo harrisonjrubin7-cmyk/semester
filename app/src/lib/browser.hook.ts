@@ -18,6 +18,7 @@ import {
   rearrange,
   renameGroup,
   select,
+  tidy,
   toneGroup,
   visit,
   write,
@@ -53,6 +54,30 @@ let held: Strip | null = null;
 const REOPENABLE = 10;
 const closed: {tab: AppTab; at: number}[]=[];
 const listeners = new Set<() => void>();
+/*
+ * The place the strip was last followed to.
+ *
+ * Here rather than in the component that does the following, because it is a
+ * fact about this visit — like the strip itself and the closed-tab list above
+ * — rather than about whatever happens to be rendering. `forgetStrip` clears
+ * it with them.
+ *
+ * It was a ref in `TabsFollow`, and the browser shell used to draw the app in
+ * one parent while its home screen was up and another once it was not, so
+ * going anywhere from the home remounted that component and the ref came back
+ * null. The navigation that caused the remount then looked like the session's
+ * first look, which is the one moment `TabsFollow` is allowed to ignore a
+ * navigation: two tabs open and nothing you did from the home was recorded.
+ *
+ * That shell is gone (`SIMPLIFY-AUDIT.md` E4, `workspace` survives) and with
+ * it the remount that exposed this, so the bug is no longer reachable. The
+ * state stays here anyway, and the distinction is the reason why: where a
+ * session was last followed to is a fact about the visit, like the strip and
+ * the closed-tab list above it, and it was only ever in a component by
+ * accident. A ref would work today and cost a tab its place the next time
+ * anything remounts the strip's subtree.
+ */
+let followed: string | null = null;
 
 /**
  * A screen this build still has.
@@ -103,6 +128,22 @@ export function here(): AppTab {
 /** The tab you are on is now showing this place. */
 export function record(screen: Screen, title: string, place: Action[]): void {
   put(visit(strip(), screen, title, place));
+}
+
+/**
+ * The place the app was last followed to, or null before anything has been.
+ *
+ * Null means "the strip has not looked yet this visit", which is the state
+ * the adoption rule in `TabsFollow` turns on — not "the component mounted",
+ * which is a different and much commoner event. See `followed` above.
+ */
+export function lastFollowed(): string | null {
+  return followed;
+}
+
+/** Remember that the strip has now been followed to this place. */
+export function follow(key: string): void {
+  followed = key;
 }
 
 /** Remember what this tab searched for, so it can be come back to. */
@@ -219,16 +260,24 @@ export function moveTab(order: string[], moved: string): void {
 }
 
 /**
- * A new tab, in a group that already exists.
+ * A new tab, in a group that already exists. False when there was no room.
  *
  * Two steps rather than one: `add` puts it beside the tab you are on, which
  * may be anywhere, and `joinGroup` moves it to the end of the group's run. The
  * strip holds its own invariants through both, so there is no moment where a
  * group is two runs with something else between them.
+ *
+ * The cap is checked here rather than left to `add`, which answers a full
+ * strip by handing back the strip it was given. That is the right answer for
+ * `add` and the wrong one for these two steps together: the second would then
+ * move the tab *you are on* into the group, so asking for a new tab at the cap
+ * would have swallowed the page in front of you into somebody else's run.
  */
-export function openTabIn(id: string): void {
+export function openTabIn(id: string): boolean {
+  if (strip().tabs.length >= MAX_TABS) return false;
   put(add(strip()));
   put(joinGroup(strip(), strip().at, id));
+  return true;
 }
 
 /** Close every tab in a group. Returns the tab now on, or null — as above. */
@@ -246,8 +295,15 @@ export function reopenClosed(): AppTab | null {
   const entry=closed.pop()!;
   const at=Math.min(entry.at,current.tabs.length);
   /* Spread the strip rather than rebuilding it: it carries the groups too,
-     and a reopened tab must not take them down with it. */
-  put({...current,tabs:[...current.tabs.slice(0,at),entry.tab,...current.tabs.slice(at)],at});
+     and a reopened tab must not take them down with it.
+
+     Through `tidy`, because putting a tab back at the index it left from is
+     the one insertion that can land in the middle of somebody else's run —
+     the strip has moved on since. And because the group it remembers being in
+     may have gone with the last of its other tabs, which makes it a tab
+     pointing at a name no group answers to. `tidy` is where both of those are
+     already answered, and it keeps you on the tab you were on. */
+  put(tidy({...current,tabs:[...current.tabs.slice(0,at),entry.tab,...current.tabs.slice(at)],at}));
   return here();
 }
 
@@ -261,4 +317,5 @@ export function reopenClosed(): AppTab | null {
 export function forgetStrip(): void {
   held = null;
   closed.length = 0;
+  followed = null;
 }

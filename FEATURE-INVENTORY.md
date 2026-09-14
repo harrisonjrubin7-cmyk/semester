@@ -535,15 +535,48 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
 
 ## 9. What the prompt asks for that genuinely does **not** exist
 
-This is the real gap list — the honest version of §2 of the build prompt.
+> ### Re-checked against the code on 2026-09-14, and most of it was wrong
+>
+> This section was written on 2026-09-10 and read as the repository's own map
+> of itself for four days, during which a great deal of it was built. Every
+> claim below was put back against `app/src` one at a time — by grepping for
+> the thing rather than by reading the sentence — and **most of the Drive,
+> Docs and Sheets entries were already closed**.
+>
+> They are struck through rather than deleted, in the style this section
+> already used for the two entries that were wrong when it was written,
+> because the pattern is the finding: *a hand-written gap list is a snapshot,
+> and a snapshot of a repository this active is stale in days.* Anybody using
+> this to decide what to build next should check the claim before acting on
+> it; three of these sent work at things that already existed.
+>
+> What is genuinely absent today is collected at the end of the section.
+>
+> Closed since it was written, and verified: folders, star, trash and restore,
+> recents, search inside file contents, a grid/list toggle, document templates,
+> find and replace, an outline, version history, plain-text export, every
+> named spreadsheet function (`VLOOKUP` … `RATE`), fill, sort, frozen panes,
+> `.xlsx` import, charts on the screen and in the file, a slide canvas and a
+> presenter view.
+>
+> Images on a slide are *not* among them, and the way that nearly got written
+> here is worth the line: `lib/pptx.ts` matches "image" twice, and both are
+> the notes slide's own placeholder. Grepping for a word is not checking for a
+> feature, which is the same mistake at one remove as reading the sentence.
 
 **Drive**
-- No folders or nested subfolders. Files are a flat list tagged by `courseId`.
-- No drag-and-drop to move, no grid/list toggle, no sort by type or course.
+- ~~No folders or nested subfolders. Files are a flat list tagged by `courseId`.~~
+  — **closed.** `folderId` on `StoredFile`, `moveFile`, and `readFolder` in
+  `lib/stored.ts`.
+- ~~No drag-and-drop to move, no grid/list toggle, no sort by type or course.~~
+  — **half closed.** The grid/list toggle and the sorts are in
+  `screens/mine/Drive.tsx`; drag-and-drop is not.
 - No auto-created folder per course.
-- No search across file *contents*.
-- No star/favourite, no recents view, **no trash and no restore** (delete is
-  immediate and final).
+- ~~No search across file *contents*.~~ — **closed.** `search()` in
+  `lib/files.ts` reads the text inside and says which matched on it.
+- ~~No star/favourite, no recents view, **no trash and no restore** (delete is
+  immediate and final).~~ — **closed.** `starFile`, `touchFile`, `trashFile`,
+  `restoreFile`, `emptyTrash` and a thirty-day `sweepTrash`.
 - ~~No link between a file and an *assignment* — only to a course and to notes.~~
   — **closed.** `StoredFile.itemId`, set from the drive's own **For** button or
   from the deadline's *Work for this* panel, and shown on the file's row.
@@ -551,25 +584,39 @@ This is the real gap list — the honest version of §2 of the build prompt.
 
 **Docs**
 - No rich-text editing surface. The editor is block-structured, not WYSIWYG: no
-  bold/italic toolbar, font family/size, text or highlight colour.
+  bold/italic toolbar, font family/size, text or highlight colour. (`**bold**`
+  and `*italic*` are typed as marks and do reach the `.docx`.)
 - No checkbox lists, no indent/outdent, no horizontal rules, no code blocks.
 - No images in documents at all.
-- No links, alignment, line spacing or margin controls.
-- No find-and-replace, no outline sidebar, no comments/margin notes.
-- **No version history and no restore.** No autosave indicator.
-- No PDF export, no DOCX *import* (Markdown import exists), no plain-text export.
-- No templates (essay/MLA/APA, lab report, reading response, etc.).
+- ~~No links,~~ alignment, line spacing or margin controls. — links **closed**:
+  `[words](where)` in `lib/document.ts`, checked by `safeUrl` against http,
+  https and mailto, and written into the `.docx` as a real hyperlink
+  relationship. A refused target keeps its brackets and stays on the page.
+- ~~No find-and-replace, no outline sidebar,~~ no comments/margin notes. —
+  both **closed** in `lib/doctools.ts` (`findAll`, `replaceAll`, `outline`).
+- ~~**No version history and no restore.** No autosave indicator.~~ —
+  **closed.** `lib/docversions.ts`, and the History panel in `screens/Write.tsx`.
+- No *generated* PDF — though File → "Print, or save as PDF" is there and is
+  how a browser makes one. No DOCX *import* (Markdown import exists).
+  ~~No plain-text export.~~ — Markdown out is `toMarkdown`.
+- ~~No templates (essay/MLA/APA, lab report, reading response, etc.).~~ —
+  **closed.** Seven, in `lib/doctemplates.ts`.
 - No "Open in Docs" from a study guide.
 
 **Sheets**
-- **Single grid per file — no cross-sheet `Sheet2!A1` references.** There is a
-  tab strip along the bottom of the editor now, but it switches between the
-  account's sheets rather than between tabs inside one workbook: an imported
-  workbook's worksheets each arrive as a sheet of their own, so a formula can
-  never reach across one.
-- Missing functions the prompt names: `IFS IFERROR VLOOKUP HLOOKUP XLOOKUP INDEX
+- ~~**Single grid per file — no cross-sheet `Sheet2!A1` references.**~~ —
+  **closed.** `Marks!B2` and `'Q1 marks'!B2:B9` resolve through `Ctx.book` in
+  `lib/sheet.ts`, with the cycle check qualified by sheet so `A1` on two
+  sheets is two cells. A rename follows (`renameIn`), a row inserted on one
+  sheet moves every reference into it from every other (`shiftIn`, undo
+  included), and an export brings the sheets a formula reads with it under the
+  names the tabs will carry. A name no sheet has, or one two sheets share,
+  reads `#REF!`.
+- ~~Missing functions the prompt names: `IFS IFERROR VLOOKUP HLOOKUP XLOOKUP INDEX
   MATCH LEFT RIGHT MID TEXT SPLIT TODAY NOW DATE DATEDIF WEEKDAY EOMONTH MODE
-  CORREL COUNTIF SUMIF COUNTIFS SUMIFS AVERAGEIF NPV IRR PMT FV PV RATE`.
+  CORREL COUNTIF SUMIF COUNTIFS SUMIFS AVERAGEIF NPV IRR PMT FV PV RATE`.~~ —
+  **closed.** Every one of the thirty is in `lib/sheet.ts`, alongside the
+  fitted line (`SLOPE`, `INTERCEPT`, `RSQ`, `FORECAST`).
 - ~~No absolute references (`$A$1`)~~ — **wrong as written, and correcting it
   found a bug.** `parseRef` has always accepted `$A$1`, `$A1` and `A$1`, and a
   range end was rebuilt through `ref()` so `SUM($A$1:$B$2)` was right. But a
@@ -578,29 +625,100 @@ This is the real gap list — the honest version of §2 of the build prompt.
   rather than a `#REF!`. Fixed on this branch; addresses are normalised before
   lookup. What is still genuinely absent is any *effect* of pinning: there is
   no fill handle, so nothing moves a reference and nothing needs holding still.
-- No named ranges.
+- ~~No named ranges.~~ — **closed.** `lib/names.ts` holds a name as a pointer
+  at a sheet and two corners, not as a string, so `=AVERAGE(Marks)` goes on
+  meaning the marks when rows are inserted inside the block or the sheet under
+  it is renamed — `moveRef`/`renameRef` in `lib/sheetedit.ts` move it the same
+  way a formula moves. A one-cell name reads as that cell and a block used
+  where one value is wanted says `#VALUE!` rather than picking a corner.
+  `lib/xlsx.ts` writes them as real `<definedNames>`, re-pointed at the tab
+  names the file will carry — without that last step the name named a tab the
+  file did not have, and openpyxl is what said so.
 - No fill handle — so a formula filled down in Excel arrives as the values it
   last had, not as a live formula. The import says so rather than leaving it to
   be found in a total that stopped moving.
 - ~~No fill handle, no paste-special, no undo/redo inside the grid.~~ — undo
   and redo are in the grid now (`lib/history.ts`), coalesced by cell so a run
-  of typing is one step rather than one per keystroke. No fill handle and no
-  paste-special still.
+  of typing is one step rather than one per keystroke. **Fill down and fill
+  right** are on the Data tab and on ⌘D/⌘R (`fill` in `lib/sheetedit.ts`),
+  with `$` honoured. ~~No fill *handle* — the corner you drag~~ — **closed**:
+  the corner of the selection drags to fill and presses to fill as far as the
+  column beside it goes, and it is a real button with a name so it works from
+  the keyboard. ~~No paste-special.~~ — **closed.** Five ways in
+  `PASTE_WAYS` (`lib/sheetedit.ts`): everything, values, formulas, formats,
+  transposed. `values` is the one that could not be had another way — it needs
+  the *answers*, which are taken at copy time and carried on the clip, because
+  a clip can be put down on another sheet where its `=SUM(B2:B9)` would
+  evaluate against nine cells that have nothing to do with it. A transposed
+  paste leaves its formulas as written: there is no single translation that is
+  right for the block, since the offset for the cell at (1, 4) is not the one
+  for (4, 1).
 - ~~No cell formatting at all: number/currency/percent/date formats, bold,
-  fill, borders, alignment, wrap, merge.~~ — number, currency, percent, date
-  and decimal places, bold, italic, strikethrough and alignment are on the
-  toolbar and go into the `.xlsx`. Still no fill, borders, wrap or merge.
-- No sort, no filter, no freeze panes. (A `.xlsx` export freezes the header
-  row; nothing on the screen does.)
-- No conditional formatting, no data validation or dropdowns.
-- **No charts and no pivot tables.**
+  fill, borders, alignment, wrap, merge.~~ — **closed, and the correction that
+  closed it was itself out of date twice.** Number, currency, percent, date and
+  decimal places, bold, italic, strikethrough and alignment went in first. The
+  sentence then said *still no fill, borders, wrap or merge* — and **fill and
+  borders were already there** when it was written: `CellStyle.wash` and
+  `CellStyle.edge`, a swatch and a pick on the Format tab, written out as real
+  `<fill>` and `<border>` elements. Only wrap and merge were genuinely absent.
+  Both are in now: `CellStyle.wrap` (a wrapped cell is drawn as a `<textarea>`,
+  because no CSS makes an `<input>` fold, and only a wrapped one, so every
+  other cell keeps the element it had) and `lib/joined.ts` for blocks drawn as
+  one cell — named `joined` and not `merge` because `lib/merge.ts` is this
+  app's *sync*. Joining clears the cells it covers and says how many it
+  cleared: `=SUM(A1:C1)` must not add up values nobody can see, which is the
+  hidden-row trap with no filter visible to explain it. Undo takes back the
+  block and the values together — it did not at first, and put them back
+  underneath a block still covering them.
+- ~~No sort, no filter, no freeze panes.~~ — **closed.** Sort is `sortRange`,
+  the View tab freezes the top row, and `lib/filter.ts` hides rows on a rule
+  per column — with the status bar counting only what is visible, because a
+  `SUM` still adds up the hidden rows and that is the trap.
+- ~~No conditional formatting, no data validation or dropdowns.~~ —
+  **both closed.** `lib/condfmt.ts` holds rules rather than
+  painted cells, so a colour follows the number; `lib/xlsxcond.ts` writes them
+  into the file as real `cfRule`s against a book-wide `dxfs` table.
+  `lib/validate.ts` says what a block may hold — one of a list, a whole
+  number, a number, a band, a text length — and **marks rather than refuses**,
+  because the grid writes a cell on every keystroke and a rule that could
+  refuse would refuse the `8` on the way to `85`. That is also why the marking
+  earns its keep: Excel validates only what is typed and lets paste, fill and
+  import past, which is how a validated column fills with values breaking its
+  own rule. A list rule offers its values as a `datalist` — it offers, it does
+  not confine. `lib/xlsxvalid.ts` writes them as real `dataValidation`
+  elements, native types where they map and a spelled-out `custom` formula
+  where they do not, rather than inventing a floor of minus a trillion and
+  calling it unbounded.
+- ~~**No charts and no pivot tables.**~~ — **charts closed.** `lib/chart.ts`
+  reads a range into series, `components/SheetChart.tsx` draws columns, bars,
+  a line or a pie, and `lib/xlsxchart.ts` writes a *live* chart into the
+  workbook — a reference, not a copy, so editing the cell in Excel moves the
+  bar. **Pivot tables closed** too: `lib/pivot.ts` groups a block by one field
+  and optionally a second, and counts, sums, averages or takes the extremes of
+  a third. A row or column total re-gathers the values rather than averaging
+  the averages — the arithmetic mistake a hand-built summary makes — and
+  `asCells` writes the table into the grid as live `SUMIFS`/`AVERAGEIFS`, so it
+  is still right after a mark changes, in the app and in Excel alike. Data →
+  Analyse still hands the same numbers to `screens/Analyse.tsx` for the
+  statistics a pivot does not do.
 - ~~**No XLSX or CSV import** (export only)~~ — **wrong as written.** CSV and
   TSV could always be *pasted* in: "Paste a table in" runs `readTable()` and
   dispatches `makeSheet`. What was missing was importing a **file** — and
   `.xlsx` in any form. Both are on this branch now (`lib/xlsxin.ts`): a picked
   `.xlsx` or `.csv` comes in with its formulas live, its dates read as dates,
   and every worksheet as its own sheet.
-- No auto-generated grade calculator per course, no GPA planner template.
+- ~~No auto-generated grade calculator per course, no GPA planner template.~~
+  — **half of this was already wrong, and the rest is closed.** The per-course
+  calculator has existed as `lib/gradesheet.ts` the whole time: built from
+  `Course.grading`, offered on the shelf under *What do I need?*, with every
+  score blank and the syllabus's own wording beside each weight. What was
+  genuinely absent was the GPA planner, now `lib/gpasheet.ts` — this term's
+  courses and credits, what is already on the transcript, and what the rest of
+  the term would have to average to reach a target, with the sentence that says
+  when that is above what the scale can give. The grade-point table is a
+  visible block in the sheet that every lookup reads, so a school counting A+
+  as 4.3 is one cell. Both also ship as blank templates, for a syllabus written
+  in prose or a term the app does not hold.
 
 **Slides**
 - ~~No canvas editor.~~ — the slide is drawn at 16:9 and typed into in place
@@ -640,6 +758,48 @@ This is the real gap list — the honest version of §2 of the build prompt.
   something, a paperclip and a count on every deadline row, and a *for Quiz #1*
   line on a file in the drive. A link whose deadline has been edited away reads
   as no link rather than as a broken one.
+
+### Genuinely absent, 2026-09-14
+
+Everything above that is not struck through, collected — so the next person
+reading this has one short list rather than a long one to re-check. Verified
+by grepping for each, not by re-reading the sentence.
+
+**Documents** — code blocks · checkbox lists · horizontal rules · indent and
+outdent · images · alignment, line spacing and margins · comments and margin
+notes · a generated PDF, as against the browser's print-to-PDF, which is
+there · `.docx` *import* · "Open in Docs" from a study guide · a WYSIWYG
+surface (the marks are typed).
+
+**Sheets** — nothing. Every entry this section listed is either built or was
+already built when it was listed.
+(Cross-sheet references, the fill handle, filtering, conditional formatting,
+named ranges, pivot tables, paste-special, data validation, wrap, merge and the
+GPA planner were all on this list and are done. Fill, borders and the
+per-course grade calculator were on it and had already been built when it was
+written — which is three of fourteen, and the reason this file says to grep for
+the thing rather than read the sentence.)
+
+**Slides** — free layout (a text box you can move) · images and charts placed
+on a slide · transitions, which are deliberate: `lib/pptx.ts` would have to
+write them into the file for the promise to be real · PDF and PNG export ·
+`.pptx` import · whole-deck templates.
+
+**Drive** — drag-and-drop to move · an auto-created folder per course · the
+quota shown over the files rather than on the Data screen.
+
+**Cross-app** — a ＋ New row on a *folder* · paste-a-range-into-Docs-as-a-table.
+
+Both of the entries this list once flagged as the dangerous ones have since
+been built, and the warnings turned out to be the right ones. Widening
+`evaluate` to several grids did land in the code where a wrong answer is
+silent — the first version used one function as both the cell-lookup key and
+the cycle-path key, and every formula in the app read as an empty cell until a
+test said so — and the half nobody thinks of is not the reading but the
+*editing*: a row inserted on one sheet has to move the references into it from
+every other sheet, and undo has to put those back. The fill handle was the
+small one, and the two faults in it were both about telling a press from a
+drag.
 
 > **Two entries above were wrong when this was written**, and are struck
 > through rather than deleted so the correction is visible. Both were found by

@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from 'react';
-import { AssignmentCenter } from '../components/AssignmentCenter';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
@@ -45,13 +44,24 @@ const TABS: { id: Tab; label: string }[] = [
  * was never broken into steps small enough to start. All three are fixed by
  * reading carefully, which is a thing a model is good at and a tired student
  * at 1am is not.
+ *
+ * ## It opened on somebody else's list for a while
+ *
+ * A port put an "assignment center" in front of all this — eight filtered
+ * views of every deadline in the term — and left the breaking-down behind an
+ * "Assignment tools" button. So the screen the registry describes as "Paste
+ * an assignment and get it broken down — rubric, plan, dates, what to ask"
+ * opened on a list, and the thing it is named for was two taps in.
+ *
+ * Six of those eight views already existed: Today is `home`, Next 7 days is
+ * `ahead`, Past due is `behind`, and Upcoming, Recorded grades and All work
+ * are the three tabs of `courses`. E2 in `SIMPLIFY-AUDIT.md` has the table.
+ * The two filters that were genuinely new — a search, and one course at a
+ * time — went to Courses' Coming up, which is the list the registry already
+ * says holds "everything they are asking of you as one list". This screen
+ * went back to being the one that reads an assignment.
  */
 export function Work() {
-  const [tools, setTools] = useState(false);
-  return tools ? <><button className="assignment-back" onClick={()=>setTools(false)}>← All assignments</button><AssignmentTools/></> : <AssignmentCenter onTools={()=>setTools(true)}/>;
-}
-
-function AssignmentTools() {
   const { state, dispatch, now, catalog } = useStore();
   const courseId: CourseId = state.guideId;
   const { guide } = useLive(courseId);

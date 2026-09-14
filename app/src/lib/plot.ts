@@ -105,9 +105,13 @@ export type Line =
    * Drawn as the slope field and the solutions through it. Solved by walking,
    * never symbolically: see `lib/ode.ts`.
    */
-  | { kind: 'ode'; body: Node }
-  /** `y(0) = 1` — where a solution is known to pass, which picks one out of the family. */
-  | { kind: 'start'; at: Node; value: Node }
+  | { kind: 'ode'; body: Node; of: 'x' | 'y'; order: 1 | 2 }
+  /**
+   * `y(0) = 1` — where a solution is known to pass, which picks one out of the
+   * family. `y'(0) = 0` is the same thing for the rate, which is the second
+   * condition a second-order equation needs.
+   */
+  | { kind: 'start'; of: 'x' | 'y'; rate: boolean; at: Node; value: Node }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -137,10 +141,11 @@ const INEQUALITY = /(<=|>=|≤|≥|≠|<|>|\\le\b|\\ge\b|\\neq?\b|\\lt\b|\\gt\b)
  * through the parser is d times y over d times x, which is 1 and is not what
  * anybody wrote.
  */
-const RATE = /^\s*(?:y\s*'|dy\s*\/\s*dx|\\frac\s*\{\s*dy\s*\}\s*\{\s*dx\s*\})\s*$/;
+const RATE =
+  /^\s*(?:([xy])\s*('{1,2})|d(\^?2\s*)?([xy])\s*\/\s*d\s*[xt](\^?2)?|\\frac\s*\{\s*d(?:\^?2)?\s*([xy])\s*\}\s*\{\s*d\s*[xt](?:\^?2)?\s*\})\s*$/;
 
-/** `y(0)` on the left of an `=`: where a solution is known to pass. */
-const START = /^\s*y\s*\(([^()]*)\)\s*$/;
+/** `y(0)`, and `y'(0)` for the rate: where a solution is known to pass. */
+const START = /^\s*([xy])\s*('?)\s*\(([^()]*)\)\s*$/;
 
 /** `f(x)` and `g(x, y)` on the left of an `=`: a definition, not a product. */
 const DEFINES = /^\s*([A-Za-z][A-Za-z0-9]*)\s*\(\s*([A-Za-z][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z][A-Za-z0-9_]*)*)\s*\)\s*$/;
@@ -261,13 +266,25 @@ export function readLine(source: string): Line {
   const rhs = node(right);
   if ('says' in rhs) return { kind: 'fault', says: rhs.says };
 
-  if (RATE.test(left)) return { kind: 'ode', body: rhs.node };
+  const rate = RATE.exec(left);
+  if (rate) {
+    const of = (rate[1] ?? rate[4] ?? rate[6] ?? 'y') as 'x' | 'y';
+    // `y''` and `d^2y/dx^2` are second order; everything else here is first.
+    const order = rate[2] === "''" || rate[3] !== undefined || rate[5] !== undefined || /\^?2/.test(left) ? 2 : 1;
+    return { kind: 'ode', body: rhs.node, of, order: order === 2 ? 2 : 1 };
+  }
 
   const start = START.exec(left);
   if (start) {
-    const at = node(start[1]);
+    const at = node(start[3]);
     if ('says' in at) return { kind: 'fault', says: at.says };
-    return { kind: 'start', at: at.node, value: rhs.node };
+    return {
+      kind: 'start',
+      of: start[1] as 'x' | 'y',
+      rate: start[2] === "'",
+      at: at.node,
+      value: rhs.node,
+    };
   }
 
   if (defines) {
@@ -329,8 +346,18 @@ export function missing(line: Line, scope: Scope): string[] {
       return free(line.body, scope).filter((n) => !has(n));
     case 'polar':
     case 'surface':
-    case 'ode':
       return free(line.body, scope).filter((n) => !has(n));
+    case 'ode':
+      /*
+       * A second-order equation supplies its own rate.
+       *
+       * `y'' = -y - 0.15y'` has `y'` in it as an ordinary quantity and the
+       * walk binds it at every step — so asking somebody to give it a value
+       * would be asking them to fill in the thing being solved for. A
+       * first-order equation supplies no such thing, and a `y'` on its
+       * right-hand side there is a genuine mistake worth reporting.
+       */
+      return free(line.body, scope).filter((n) => !has(n) && !(line.order === 2 && n === "y'"));
     case 'start':
       return [...free(line.at, scope), ...free(line.value, scope)].filter((n) => !has(n));
     case 'parametric':
@@ -977,6 +1004,16 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'Growth that levels off',
     says: 'The logistic curve: fast while there is room, then flat.',
     lines: ["y' = 0.6 y (1 - y/40)", 'y(0) = 2'],
+  },
+  {
+    name: 'A spring',
+    says: 'Second order: a value and a speed, and the swing they make.',
+    lines: ["y'' = -y - 0.15 y'", 'y(0) = 4', "y'(0) = 0"],
+  },
+  {
+    name: 'Predator and prey',
+    says: 'A system: two quantities driving each other round a loop.',
+    lines: ["x' = x - x y", "y' = x y - y", 'x(0) = 1', 'y(0) = 0.5'],
   },
   {
     name: 'A flow',

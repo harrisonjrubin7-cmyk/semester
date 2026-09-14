@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { COALESCE, DEEPEST, canRedo, canUndo, now, push, redo, start, undo } from './history';
+import { COALESCE, DEEPEST, amend, canRedo, canUndo, now, push, redo, start, undo } from './history';
 
 /**
  * The editor's undo.
@@ -94,5 +94,41 @@ describe('an editing history', () => {
     const h = start('a');
     expect(undo(h)).toBe(h);
     expect(redo(h)).toBe(h);
+  });
+});
+
+describe('amending the entry showing', () => {
+  it('replaces it without moving the finger or dropping anything', () => {
+    let h = start({ n: 1, extra: '' });
+    h = push(h, { n: 2, extra: '' }, 'a', 1000);
+    h = push(h, { n: 3, extra: '' }, 'b', 5000);
+    h = undo(h);
+    const at = h.at;
+    h = amend(h, (state) => ({ ...state, extra: 'put back' }));
+    expect(h.at).toBe(at);
+    expect(now(h)).toEqual({ n: 2, extra: 'put back' });
+    expect(h.past.length).toBe(3);
+    expect(canRedo(h)).toBe(true);
+    expect(now(redo(h))).toEqual({ n: 3, extra: '' });
+  });
+
+  /*
+   * The case it exists for: undo has to put back state the earlier entry
+   * never recorded, so it is written onto that entry first.
+   */
+  it('lets undo restore what the step before it never knew about', () => {
+    let h = start({ n: 1, others: undefined as string | undefined });
+    h = amend(h, (state) => ({ ...state, others: 'before' }));
+    h = push(h, { n: 2, others: 'after' }, 'edit', 1000);
+    expect(now(h).others).toBe('after');
+    expect(now(undo(h)).others).toBe('before');
+  });
+
+  it('does not coalesce with what comes next', () => {
+    let h = start({ n: 1 });
+    h = amend(h, (state) => ({ ...state, n: 9 }));
+    h = push(h, { n: 2 }, 'typing', 100);
+    expect(h.past.length).toBe(2);
+    expect(h.past[0]).toEqual({ n: 9 });
   });
 });

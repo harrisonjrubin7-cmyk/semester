@@ -1,7 +1,7 @@
 import { CourseHub } from '../components/CourseHub';
 import { useState } from 'react';
 import { useStore } from '../state/store';
-import type { CoursesTab } from '../lib/types';
+import type { CourseId, CoursesTab } from '../lib/types';
 import { nameFor, renamed } from '../lib/yours';
 import { HowLong } from '../components/HowLong';
 import { Timer } from '../components/Timer';
@@ -27,6 +27,7 @@ import { longLabel } from '../lib/date';
 import { appleMapsUrl, directionsUrl, fromRoom, prefersApple, type Destination } from '../lib/maps';
 import { upcomingItems, datedItems } from '../lib/select';
 import { DeadlineRow } from '../components/DeadlineRow';
+import { CoursePicker } from '../components/CoursePicker';
 import { badge, overdueLine, split, standingOf } from '../lib/standing';
 import { isUnderway, openLine, underway, underwayLine } from '../lib/underway';
 import type { Course } from '../lib/types';
@@ -272,7 +273,37 @@ export function Courses() {
  */
 function ComingUp() {
   const { state, dispatch, now, catalog } = useStore();
-  const all = datedItems(catalog, now);
+  const [query, setQuery] = useState('');
+  const [course, setCourse] = useState<CourseId | null>(null);
+  /*
+   * Two filters over the same four tabs, and they arrived from a screen that
+   * was rebuilding all four.
+   *
+   * The port at #232 put an "assignment center" on `work` — eight views of
+   * every deadline, six of which are this list, `home`, `ahead` or `behind`
+   * under another name. E2 in `SIMPLIFY-AUDIT.md` has the table. What it had
+   * that nothing here did was these two: a search across titles and
+   * instructions, and a filter down to one course. Those came here rather
+   * than dying with it, because they are the two questions this list could
+   * not answer — "where is the one about the referendum" and "just PSCI".
+   *
+   * Its other four — a workload chart, a priority sort, a stat row and a
+   * "what next" card — did not, and that is not an oversight: they are
+   * `ahead`, `tonight`, `home` and `tonight` again. Rehoming a duplicate is
+   * not the same as keeping it.
+   *
+   * Filtered before `split`, so the counts on the tabs are the counts of what
+   * you are looking at. A tab reading "Overdue 8" over a filtered list of one
+   * would be the arithmetic disagreeing with the page.
+   */
+  const everything = datedItems(catalog, now);
+  const words = query.trim().toLowerCase();
+  const all = everything.filter(
+    (i) =>
+      (!course || i.c === course) &&
+      (!words ||
+        `${i.title} ${i.detail ?? ''} ${catalog.byId[i.c]?.code ?? ''}`.toLowerCase().includes(words)),
+  );
   const { ahead, overdue, done } = split(all, state.done);
   const tab = state.dueTab;
   /*
@@ -298,6 +329,17 @@ function ComingUp() {
 
   return (
     <>
+      <input
+        className="input"
+        type="search"
+        value={query}
+        placeholder="Search deadlines and instructions"
+        aria-label="Search your deadlines"
+        onChange={(e) => setQuery(e.target.value)}
+        style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
+      />
+      {/* The app's own course row, not a fifth copy of one. See `CoursePicker`. */}
+      <CoursePicker value={course} onChange={setCourse} none="All courses" style={{ marginBottom: 'var(--sp-5)' }} />
       <Segmented
         options={[
           { id: 'ahead', label: `Ahead${badge(ahead.length)}` },
@@ -318,7 +360,9 @@ function ComingUp() {
               ? 'Nothing ticked off yet. The box on any row does it.'
               : tab === 'working'
                 ? 'Nothing marked as started yet. Open a deadline and mark it, and it stays here until you tick it off.'
-                : 'Nothing left this semester.'}
+                : words || course
+                  ? 'Nothing matches that. Try another course, or clear the search.'
+                  : 'Nothing left this semester.'}
         </div>
       )}
       {list.map((i) => (

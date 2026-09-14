@@ -44,7 +44,6 @@ import {
   Fragment,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
@@ -53,14 +52,16 @@ import { strip as stripNow } from '../lib/browser.hook';
 import {
   closeTab,
   foldGroup,
+  follow,
   here,
+  lastFollowed,
   moveTab,
   openTab,
   pickTab,
   record,
   useStrip,
 } from '../lib/browser.hook';
-import { NEW_TAB, lanes, pinnedCount, placeFor, sameplace } from '../lib/browser';
+import { MAX_TABS, NEW_TAB, lanes, pinnedCount, placeFor, sameplace } from '../lib/browser';
 import { useMovable, type Movable } from '../lib/arrange';
 import { screenName } from '../lib/nav';
 import type { Catalog } from '../data/catalog';
@@ -84,7 +85,7 @@ import { useModernShell } from './shell-context';
  * an answer or the browser's own Back button. Without it the strip would only
  * be right about the places search sent you to, which is the minority of them.
  *
- * Nothing is recorded on the first render. A tab opened and left empty is a
+ * Nothing is recorded on the app's first look. A tab opened and left empty is a
  * new tab, and a new tab that adopted whatever was already on screen the
  * moment the app reloaded would be a tab nobody opened.
  */
@@ -203,13 +204,17 @@ export function TabsFollow() {
       callCode,
     ],
   );
-  const seen = useRef<string | null>(null);
-
   useEffect(() => {
     const key = JSON.stringify(at);
-    const firstLook = seen.current === null;
-    if (seen.current === key) return;
-    seen.current = key;
+    /*
+     * Both of these are the session's, not this component's — see `followed`
+     * in `lib/browser.hook.ts`. A ref here would answer "first look" again
+     * every time this component was remounted, and the rule below would then
+     * discard the navigation that remounted it.
+     */
+    const firstLook = lastFollowed() === null;
+    if (lastFollowed() === key) return;
+    follow(key);
     const tab = here();
     /*
      * On the first look the strip adopts the app only if the tab it is on is
@@ -286,6 +291,23 @@ export function TabStrip({
   /** The tab or group menu, and where it was summoned from. See `TabMenu`. */
   const [menu, setMenu] = useState<{ on: MenuOn; corner: Corner } | null>(null);
   const modern = useModernShell();
+  const full = strip.tabs.length >= MAX_TABS;
+
+  /*
+   * A new tab's page is the search page, and going to one is a navigation.
+   *
+   * The overlay hands in its own `onBlank` because it has to close itself on
+   * the way. Every other mount is a bare `<TabStrip />` on the window, and
+   * those had no handler at all — so picking a new tab, or pressing the +,
+   * marked it as the tab you were on and left the previous screen in front of
+   * you. The strip then said you were somewhere you were not, which is the one
+   * thing it cannot get wrong. `search` is `SearchHome` in every navigation,
+   * so this is the same landing the overlay makes.
+   */
+  const blank = () => {
+    if (onBlank) onBlank();
+    else dispatch({ type: 'go', screen: 'search' });
+  };
 
   /**
    * Picking a tab, unless the click is the tail of a drag.
@@ -307,7 +329,7 @@ export function TabStrip({
       onOpened?.();
       return;
     }
-    onBlank?.();
+    blank();
   };
 
   /** Close a tab, and go wherever closing it revealed. */
@@ -449,12 +471,14 @@ export function TabStrip({
           type="button"
           className="bare tappable"
           onClick={() => {
-            openTab();
-            // A new tab's page is the search page, so opening one opens it.
-            onBlank?.();
+            // Only when one was actually opened. At the cap `openTab` refuses,
+            // and going to the search page anyway would answer "no room for
+            // another tab" by throwing away the page in the tab you are on.
+            if (openTab()) blank();
           }}
+          disabled={full}
           aria-label="New tab"
-          title="New tab"
+          title={full ? `Close a tab before opening another (${MAX_TABS} open)` : 'New tab'}
           style={{
             width: 'auto',
             flex: 'none',
@@ -511,7 +535,7 @@ export function TabStrip({
           onClose={() => setMenu(null)}
           onLand={land}
           onCloseTab={shut}
-          onNewTab={() => onBlank?.()}
+          onNewTab={blank}
         />
       )}
     </div>
