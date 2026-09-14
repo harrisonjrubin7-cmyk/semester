@@ -605,11 +605,19 @@ export function Mail() {
             position: 'absolute',
             right: 'var(--sp-6)',
             /*
-             * Above the assistant's button rather than under it. That one is
-             * fixed over the bottom right of every screen in the app, and two
-             * round buttons in the same corner is one of them unreachable.
+             * On the bottom edge, because the corner is empty here.
+             *
+             * This used to lift by `--assistant-strip` to clear the
+             * assistant's own round button, which is fixed over the bottom
+             * right of nearly every screen — two round buttons in one corner
+             * is one of them unreachable. It is not drawn on this one:
+             * `ai/Assistant.tsx` skips the button on every screen `fills()`
+             * names, because those end at the bottom edge with a control you
+             * use there, and the mailbox joined that list when it was built.
+             * So the lift was reserving a corner for something that never
+             * arrives, and left the button floating 82px up a blank screen.
              */
-            bottom: 'calc(var(--assistant-strip) + var(--sp-3))',
+            bottom: 'var(--sp-6)',
             zIndex: 10,
             display: 'flex',
             alignItems: 'center',
