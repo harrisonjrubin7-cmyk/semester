@@ -966,6 +966,46 @@ export const STORAGE_KEY = 'semester.v1';
 /** When this device last agreed with the account copy, as epoch ms. */
 export const SYNCED_KEY = 'semester.synced';
 
+/**
+ * The sync watermark, read and written through a browser that may refuse both.
+ *
+ * Every other reader of storage in this app is wrapped — `loadPersisted` below,
+ * `lib/keep.ts`, `lib/notify.ts`, `lib/claude.ts` — and the four writes of this
+ * one key in `state/store.tsx` were the exception. `localStorage.setItem`
+ * throws in a browser that has site data blocked and in Safari's private
+ * windows, and each of those four sat somewhere a throw did real damage:
+ *
+ *   * inside `refresh`'s `try`, where a pull that had already succeeded was
+ *     reported on screen as a sync error;
+ *   * inside the push effect's `.then`, where the same thing happened to a
+ *     push that had already landed;
+ *   * and twice inside `settle`, the first-sign-in "this device or the
+ *     account?" dialogue — which is a React event handler with no `try` around
+ *     it, so the throw skipped `setAsking(null)` and left the dialogue on
+ *     screen with both buttons dead. In a private window the app could not be
+ *     signed into at all, and nothing said why.
+ *
+ * Storage that will not hold this number is not an error worth reporting. It
+ * means the device cannot remember having synced, so the next sign-in treats
+ * itself as a first one — which is the conservative answer, and the one the
+ * adoption dialogue exists to handle.
+ */
+export function syncedAt(): number {
+  try {
+    return Number(localStorage.getItem(SYNCED_KEY) ?? 0) || 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function markSynced(at: number): void {
+  try {
+    localStorage.setItem(SYNCED_KEY, String(at));
+  } catch {
+    // See above: nothing to say and nothing to undo.
+  }
+}
+
 export const DEFAULT_PERSISTED: Persisted = {
   /*
    * The workspace is what the app opens as: a tab strip, one search field
