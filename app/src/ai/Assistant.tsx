@@ -122,6 +122,25 @@ function tappable(el: Element | null, self: Element | null, at: DOMRect | null):
   const tag = node.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
 
+  /*
+   * And a destructive control, at any overlap at all.
+   *
+   * The proportional rule below is right for the case it was written for — a
+   * full-width row with a clipped corner is still a row you can tap, and
+   * treating every overlap as a collision made six screens run out of lifts.
+   * It reasons about how much of the control you can still *see*, which is
+   * the right question when the cost of a mis-tap is another tap.
+   *
+   * Delete is the control where it is not. A quarter-covered Delete passes
+   * the rule at 26% and puts the assistant on top of the corner somebody aims
+   * at — the button that wins the overlap is this one, so the mis-tap opens a
+   * chat rather than deleting, which is the safe direction and still a
+   * control the student cannot finish reaching. Marked in the markup rather
+   * than matched on the label, for the reason `lib/onframe.test.ts` gives
+   * about labels: they drift, and a rule that reads them drifts with them.
+   */
+  if (node.hasAttribute('data-danger')) return true;
+
   if (!at) return true;
   const r = node.getBoundingClientRect();
   const area = r.width * r.height;
@@ -147,16 +166,43 @@ function tappable(el: Element | null, self: Element | null, at: DOMRect | null):
  * that anywhere is a compromise, and a button wandering up the page is worse
  * than one that overlaps.
  */
+/**
+ * The points a resting place is asked about: its centre and its four corners.
+ *
+ * The centre alone was the whole question for a long time, and it answers a
+ * different one than it looks like it does. `elementsFromPoint` reports what
+ * is under *a point*, so a control that sits entirely inside one corner of
+ * the button — a 24px icon, a short Delete — is invisible to it however
+ * completely the button covers it. The corners are inset by a pixel so they
+ * land inside the button's own box rather than on whatever owns the boundary.
+ *
+ * Exported for `ai/dock.test.ts`, which is where the shape of this is held:
+ * jsdom has no layout and cannot run `elementsFromPoint` at all, so the part
+ * a test can check is which points get asked.
+ */
+export function probes(rest: DOMRect, lifted = 0): [number, number][] {
+  const top = rest.top - lifted;
+  const bottom = rest.bottom - lifted;
+  const inset = 1;
+  return [
+    [rest.left + rest.width / 2, top + rest.height / 2],
+    [rest.left + inset, top + inset],
+    [rest.right - inset, top + inset],
+    [rest.left + inset, bottom - inset],
+    [rest.right - inset, bottom - inset],
+  ];
+}
+
 function clearOf(rest: DOMRect, self: Element | null, tries = 3): number {
-  const x = rest.left + rest.width / 2;
-  const y = rest.top + rest.height / 2;
   let lifted = 0;
   for (let i = 0; i < tries; i += 1) {
     // Where the button would actually be, so the overlap below is the real
     // overlap rather than one measured against where it is now.
     const would = new DOMRect(rest.left, rest.top - lifted, rest.width, rest.height);
-    const under = document.elementsFromPoint(x, y - lifted);
-    if (!under.some((el) => tappable(el, self, would))) return lifted;
+    const covered = probes(rest, lifted).some(([x, y]) =>
+      document.elementsFromPoint(x, y).some((el) => tappable(el, self, would)),
+    );
+    if (!covered) return lifted;
     lifted += LIFT;
   }
   return lifted;
@@ -459,11 +505,28 @@ export function Assistant() {
     const area = document.querySelector('.scrollarea');
     area?.addEventListener('scroll', soon, { passive: true });
     window.addEventListener('resize', soon);
+    /*
+     * And when the screen changes shape under it without anybody scrolling.
+     *
+     * The two triggers above are "you moved" and "the window did". A third
+     * way to end up with something under the button is for the page to grow a
+     * control where it is standing: a row in Mine that becomes its own editor
+     * on a press, a section that unfolds, a form that adds a field. None of
+     * those scroll, none resize the window, and the timers ran on the way
+     * into the screen — so the button kept a measurement of a layout that no
+     * longer existed.
+     *
+     * `soon` is already rAF-debounced, so a burst of mutations costs one
+     * measurement, and a measurement is five `elementsFromPoint` calls.
+     */
+    const watch = new MutationObserver(soon);
+    if (area) watch.observe(area, { childList: true, subtree: true });
     return () => {
       for (const t of timers) window.clearTimeout(t);
       if (waiting) window.cancelAnimationFrame(waiting);
       area?.removeEventListener('scroll', soon);
       window.removeEventListener('resize', soon);
+      watch.disconnect();
     };
   }, [ai.open, state.screen, state.mode, wide, lift]);
 

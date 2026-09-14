@@ -159,6 +159,10 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             className="bare"
             onClick={() => dispatch({ type: 'deleteTask', id: t.id })}
             aria-label={`Delete ${t.title}`}
+            /* Marked so the assistant's floating button lifts clear of it at
+               any overlap rather than at half of it — see `tappable` in
+               `ai/Assistant.tsx`. */
+            data-danger=""
             style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.5 }}
           >
             Delete
@@ -515,6 +519,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             className="bare"
             onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
             aria-label={`Delete ${a.title}`}
+            data-danger=""
             style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.5 }}
           >
             Delete
