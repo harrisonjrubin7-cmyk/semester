@@ -5318,8 +5318,7 @@ input[type='search'].input {
 
 .deskhome-plus,
 .deskhome-box,
-.deskhome-keys,
-.deskhome-ai {
+.deskhome-keys {
   color: inherit;
 }
 
@@ -5355,17 +5354,10 @@ input[type='search'].input {
   opacity: 0.6;
 }
 
-.deskhome-ai {
-  width: auto;
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-4) var(--sp-6);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.07);
-  font-size: var(--type-sm);
-}
+/* `.deskhome-ai` drew an AI Tutor button in this field. The bar above the
+   screen draws the same control with the same words, so the search home had
+   two of it one row apart — see the note where it was removed in
+   `screens/Search.tsx`. */
 
 .deskhome-shortcuts {
   display: flex;

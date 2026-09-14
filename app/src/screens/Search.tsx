@@ -10,9 +10,9 @@
  *
  * ## The centre goes away when anything is over it
  *
- * The field, its + and its AI Tutor control are all hidden the moment the top
- * bar is suggesting, the launcher is open, Customize is open, the command
- * palette is open or the capture box is. Not dimmed and not lowered: hidden,
+ * The field and its + are hidden the moment the top bar is suggesting, the
+ * launcher is open, Customize is open, the command palette is open or the
+ * capture box is. Not dimmed and not lowered: hidden,
  * so they leave the tab order and the accessibility tree along with the
  * screen. A control you cannot see but can still tab into and still click
  * through is the fault this rule exists to prevent — it would sit under the
@@ -38,7 +38,7 @@ import { useStore } from '../state/store';
 import { currentLook } from '../state/shape';
 import { centreHidden, readFavourites } from '../lib/desk';
 import { saysFor, shortFor } from '../lib/nav';
-import { AppsIcon, AskIcon, EditIcon, Plus } from '../components/Icons';
+import { AppsIcon, EditIcon, Plus } from '../components/Icons';
 import { glyphFor } from '../components/icons.pick';
 import { createElement } from 'react';
 import { useSuggesting } from '../components/desk/suggesting';
@@ -97,14 +97,25 @@ export function SearchHome() {
           <span className="deskhome-keys" aria-hidden="true">
             ⌘ K
           </span>
-          <button
-            type="button"
-            className="bare deskhome-ai"
-            onClick={() => dispatch({ type: 'go', screen: 'ask' })}
-          >
-            <AskIcon size={15} />
-            <span>AI Tutor</span>
-          </button>
+          {/*
+            There was an AI Tutor button here.
+
+            The bar directly above this screen draws one — same words, same
+            glyph, same `go ask` — so on the one screen this component renders,
+            the workspace put two identical controls one row apart. The bar's
+            survives for the reason every survivor in this pass survives: it is
+            drawn on every screen in this navigation and this one is drawn on
+            exactly one, so keeping the narrower of the two would have been
+            keeping the one that is usually not there.
+
+            The assistant is not harder to reach for it. The bar's button is
+            inches away, `ask` is in the launcher, the directory and search,
+            and the floating button — "Ask about Alerts", named for wherever
+            you are standing — opens the panel over this screen like any other.
+            See `ai/Assistant.tsx` on why those two are not themselves a
+            duplicate: one is a conversation carrying the screen you are on,
+            the other is the room where every thread lives.
+          */}
         </div>
       </div>
 

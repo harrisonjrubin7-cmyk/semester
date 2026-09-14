@@ -103,6 +103,52 @@ describe('the workspace draws each job once', () => {
 });
 
 /**
+ * The assistant, whose two surfaces are not the duplicate — its buttons were.
+ *
+ * `ai/Assistant.tsx` and the Ask tab are one conversation behind two doors,
+ * and that is deliberate and argued at length in that file: the panel carries
+ * the screen you are standing on, the tab is the room where every thread
+ * lives, and both draw the *same* components so one conversation cannot start
+ * reading as two products. They are also named apart — the floating button
+ * says "Ask about <screen>", the tab's controls say "AI Tutor" — so they are
+ * not the fault the census above is about. Left alone on purpose.
+ *
+ * What was the fault: the workspace's bar draws an AI Tutor button on every
+ * screen, and the search home drew a second one, same words and same glyph,
+ * one row below the first. Two identical controls in one frame, on the screen
+ * the workspace opens on.
+ */
+describe('the assistant is offered once per frame', () => {
+  const HOME = () => read('src/screens/Search.tsx');
+
+  it('leaves the AI Tutor button to the bar that draws it on every screen', () => {
+    expect(BAR(), 'the bar is the survivor').toContain("screen: 'ask'");
+    expect(withoutComments(HOME()), 'the search home must not draw a second').not.toContain(
+      "screen: 'ask'",
+    );
+  });
+
+  it('keeps the panel and the tab named apart', () => {
+    const panel = read('src/ai/Assistant.tsx');
+    // The floating button says where it will ask about; the bar says what it
+    // opens. Two doors to one conversation is fine — two doors wearing one
+    // name is the fault, and `App.tsx`'s launcher/directory pair was it.
+    expect(panel).toContain('aria-label={`Ask about ${here}`}');
+    expect(BAR()).toContain('AI Tutor');
+    expect(panel, 'the panel does not call itself the tab').not.toContain('AI Tutor');
+  });
+
+  /*
+   * And the handoff stays, because it is a handoff and not a second door: the
+   * panel's ALL CHATS is reached only from inside the open panel, which is the
+   * one place the tab's history is missing and wanted.
+   */
+  it('keeps the panel’s way through to the tab', () => {
+    expect(read('src/ai/Assistant.tsx')).toContain("screen: 'ask'");
+  });
+});
+
+/**
  * One name, one place.
  *
  * Distinct from the census above, and the reason it is separate: these two

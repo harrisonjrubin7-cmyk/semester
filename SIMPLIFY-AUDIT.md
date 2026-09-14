@@ -142,13 +142,72 @@ at either width: the gear is drawn wide, and narrow — where the sidebar does n
 exist at all — settings is in the launcher and in the bar's own app search,
 which is what `styles/app.css:4859` already says out loud.
 
-### W5 — `ask`, twice · **RECORD, do not fix here**
+### W5 — the assistant · **CUT one button; the two surfaces are a KEEP**
 
-`TopBar`'s AI Tutor button and `ai/Assistant.tsx`'s corner button are two
-surfaces over one conversation, and `SearchHome` adds a third AI Tutor control
-on the `search` screen. This is the `ask`/`chat`/assistant cluster the fifth
-pass logged, and `/simplify` is explicit that `/ask-tab` owns it. Counted here so
-the census is complete; untouched.
+Recorded as "do not fix here" on the first writing, because `/simplify` says
+`/ask-tab` owns the assistant. Re-opened on request, and it splits cleanly in
+two — which is why the deferral was half right.
+
+**The two surfaces are not the duplicate.** `ai/Assistant.tsx`'s panel and the
+Ask tab are one conversation behind two doors, deliberately: the panel carries
+the screen you are standing on, the tab is the room where every thread lives,
+and both draw the *same* components — `Turns.tsx`, `Opening.tsx`,
+`Composer.tsx`, `Actions.tsx` — precisely so one conversation cannot start
+reading as two products. They are named apart too: the floating button says
+"Ask about <screen>", the tab's controls say "AI Tutor", so the W6 fault is not
+present either. The screen-level duplicate this cluster used to have is already
+gone — `chat` was merged into `ask` in an earlier pass, and `lib/route.ts:135`
+keeps the old address pointing at the survivor. **Keep,** and `/ask-tab` still
+owns any rebuild.
+
+**One button was a plain duplicate.** `TopBar` draws an AI Tutor button on
+every screen in the workspace; `screens/Search.tsx` drew a second one, same
+words and same glyph and the same `go ask`, one row below the first — on the
+screen the workspace opens on. Measured in a browser at 1280px, before:
+
+```
+aiTutor: ["AI Tutor", "AI Tutor"]      # two, one frame
+```
+
+The bar's survives, by the rule every survivor in this pass has used: it is
+drawn on every screen in this navigation and the search home is drawn on
+exactly one. **Cut.**
+
+### W7 — the search home's centre repeats the bar · **OPEN — recorded, not changed**
+
+Found while cutting W5's button, and it is the same fault one size larger. On
+the `search` screen the bar's row and the screen's centre are drawn one above
+the other, and at rest both are visible:
+
+```
+searchFields: ["topbar", "searchhome"]   # two
+cmdK: 2                                  # two ⌘K hints
+```
+
+The AI Tutor pair was one of four things duplicated between them, and it is the
+only one this pass removed. What is left is two search boxes and two ⌘K hints —
+and they are *not* simply copies, which is what makes this a design question
+rather than a deletion:
+
+| | The bar's | The centre's |
+| --- | --- | --- |
+| Says | "Search apps and features" | "Search your semester" |
+| Is | a real input, answering with screens inline | a button that opens the palette |
+| Answers with | apps | records — courses, deadlines, readings, notes |
+| ⌘K | opens the palette, *not* this field | opens the palette, which is what it is |
+
+Two fields, two vocabularies, two result sets, one above the other — and only
+one of the two ⌘K hints is telling the truth about the field it sits in. The
+browser idiom this is borrowed from, a new-tab page with a big centre box under
+the omnibox, resolves it by making the centre box *focus the omnibox* rather
+than open a second search.
+
+Three ways out, and they are genuinely different products: focus the bar from
+the centre box, drop the centre and let the wordmark and the shortcuts be the
+screen, or keep both and make the ⌘K hint honest. Redesigning the screen the
+app opens on is past "remove the redundancy", and two searches that genuinely
+answer different questions are exactly the case §2's rules say to stop and say
+so rather than merge.
 
 ---
 
@@ -319,9 +378,10 @@ doing the second's job, and having both named makes that hard to repeat.
 | W4 | `Sidebar` drops the Settings row | `TopBar`'s gear | nothing — gear wide, launcher narrow |
 | F1 | Cut `chrome.fab` and the button | the header's `+` for adding, seven routes for importing | one shortcut on one screen; the glyph stops meaning two things |
 | W6 | `Sidebar`'s directory row is renamed, not cut | both — they are different places | the shared name, which was the fault |
-| W5 | — | — | recorded only; `/ask-tab` owns it |
+| W5 | The search home drops its AI Tutor button | `TopBar`'s, drawn on every screen | nothing — the bar's is inches above it |
+| W7 | — | — | recorded only; a design question, not a duplicate |
 
-**Five controls go, one is renamed. No destination goes**, which is why the
+**Six controls go, one is renamed. No destination goes**, which is why the
 screen count stays at 60 and why nothing in this pass needs a state migration —
 no saved `screen` can become invalid when no screen is removed.
 
@@ -357,14 +417,15 @@ Every row above is closed. Three commits, each green.
 | W1, W2 | `80061c0` | `headerRow` in `lib/header.ts` decides all five; the markup asks. `slim` is gone, replaced by the two facts it was standing in for. |
 | W3, W4, W6 | `0cb57a6` | `Sidebar` loses Search home and Settings; its directory row is renamed. `lib/onframe.test.ts` holds the invariant. |
 | F1 | `79b9681` | The FAB and `chrome.fab` go; `chromeFor` answers one question again. |
-| W5 | — | Recorded, untouched. `/ask-tab` owns it. |
+| W5 | *"The assistant is offered once"* | The search home's duplicate AI Tutor button goes. The panel and the tab stay: one conversation, two doors, named apart and sharing every component — `/ask-tab` still owns any rebuild. |
+| W7 | — | **Open.** The search home's centre still repeats the bar's field and its ⌘K. Two searches with two vocabularies, so merging them is a design decision rather than a deletion. |
 | §3.1 `feedOrder`, `boardOrder` | — | Kept. The object and the index of the object, through one resolver. |
 | §3.1 `ground` | *"The ground has one home"* | Fixed. The Dark/Light pair goes; the row below reports the ground through `groundName` and opens the page that owns it. `lib/onframe.test.ts` gains a one-writer-per-preference census, with `Customize`'s one-way exit to the tab bar stated as the exemption it is. |
 
 ### The claim, checked rather than asserted
 
-`npm run lint` exit 0. `npm test` **315 files / 6724 tests**, all passing —
-twenty-three more than the baseline, all of them new checks on this pass's
+`npm run lint` exit 0. `npm test` **315 files / 6727 tests**, all passing —
+twenty-six more than the baseline, all of them new checks on this pass's
 invariants. `npm run build` clean.
 
 And driven in a browser, because an absent control is easy to claim and hard to
@@ -383,6 +444,14 @@ And the panel, on the two saved grounds the pair got wrong:
 | --- | --- | --- |
 | `device` | Colour and type · **Match my device** | 0 |
 | `oxide` | Colour and type · **Oxide** | 0 |
+
+And the search home, which had two of the assistant's button:
+
+| Frame | AI Tutor controls | Note |
+| --- | --- | --- |
+| Workspace, search home, 1280px | **1** (was 2) | the bar's; W7's two search fields remain, open |
+| Workspace, any other screen | 1 | unchanged |
+| Rail, 1280px | 1 — the rail's "Ask Claude" row | the floating button is named apart |
 
 The first row is the screenshot this pass opened with, and it is the one that
 matters: on Alerts in the workspace, the header is now the way back and the
