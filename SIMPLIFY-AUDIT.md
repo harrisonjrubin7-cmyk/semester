@@ -578,30 +578,51 @@ after the merge:
 | Workspace, wide, home | 1 |
 | Tab bar, wide, inner | 1 |
 
-### The one that is still a gap · **OPEN, and not this branch's**
+### The gap that left, and the rule that had swallowed it · **FIXED**
 
 The browser shell draws no header, so it had nothing to fall back on when its
-own sidebar lost New:
+own sidebar lost New. Measured before anything changed:
 
 ```
 browser wide   #/notifs   pointing routes: []   q opens capture: true
 browser narrow #/notifs   pointing routes: []   q opens capture: false
-browser wide   #/search   pointing routes: ["Add a task or appointment"]
 browser narrow #/search   pointing routes: ["Add a task or appointment"]
 ```
 
-On a **narrow browser shell, on any screen but its home, the capture box cannot
-be reached at all** — no control points at it, and `components/Keys.tsx`
-returns early below `WIDE`, so `q` does not fire either. Its home is fine; the
-inner screens are not.
+So on a **narrow browser shell, on any screen but its home, the capture box
+could not be reached at all** — nothing pointed at it, and `components/Keys.tsx`
+returns early below `WIDE`, so `q` did not fire either.
 
-Not a regression from this branch: nothing here draws that shell's chrome, and
-the button that went was removed on `main`. Left alone rather than patched
-because the repair is a judgement about where that shell puts a write action —
-its bar, drawn on every screen, is the obvious place and is the shape the
-workspace uses, but it is main's shell and its chrome changed twice in the hour
-this was written. Recorded so the next pass has the measurement rather than the
-suspicion.
+Wider than `#240` at that: the sidebar it took New from is `display:none`
+below 760px, so the narrow half of this was never `#240`'s doing. What `#240`
+changed was the wide half, from a pointing route to keyboard-only.
+
+The bar takes it, by the rule every survivor in this pass has used: it is the
+one piece of this navigation's chrome drawn on every screen at every width, and
+it is the same answer the workspace gives with the `+` in its header. Gated as
+the mirror of the home centre's own `+` — **one capture control per frame,
+never two, never none** — and named as the centre names it, so the shell calls
+one job one thing wherever you meet it.
+
+**The half that would have been missed.** Adding the button was not enough:
+`.g-workspace .g-top-actions>.g-icon{display:none}` clears that whole row on a
+narrow window, and the new button is a `.g-icon`. The two it drops go there
+safely — alerts and settings are one row down in the launcher — but the capture
+box is an **overlay, not a screen**, so the launcher cannot list it. Swept up
+with them, the fix would have worked at 1280 and left the gap exactly where it
+started. Hence `g-capture` and an exemption written beside the rule it answers;
+`onframe.test.ts` holds both the button and the exemption, because a fix that
+is right at one width only is the hardest kind to notice.
+
+Measured after, every frame of that navigation, `pageerror` empty:
+
+| Frame | pointing routes | opens the capture box |
+| --- | --- | --- |
+| Browser, wide, home / Alerts / Courses | 1 each | yes |
+| Browser, narrow, home / Alerts / Courses | 1 each | yes |
+
+and the other navigations unchanged: one route in the workspace at both widths
+and on its home, one under the tab bar.
 
 ---
 

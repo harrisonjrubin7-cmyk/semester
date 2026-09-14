@@ -388,6 +388,50 @@ describe('the browser shell draws each job once', () => {
     expect(SHELL()).toContain('App directory');
   });
 
+  /*
+   * One capture control per frame, and never none.
+   *
+   * The shell's home draws a `+` beside its centre box; every other screen had
+   * nothing. Its sidebar's New was the pointing route on a wide window until
+   * `#240` took it off both columns, and narrow never had one — `.g-sidebar`
+   * is `display:none` below 760px. `q` does not cover the difference, because
+   * `Keys` returns early below `WIDE`.
+   *
+   * So the bar draws it, gated as the mirror image of the centre's: exactly
+   * one on screen, never two. Asserted as the pair of gates rather than as a
+   * count, because a count cannot tell "both drawn" from "neither".
+   */
+  it('offers the capture box on every screen, and once', () => {
+    const src = SHELL();
+    const opens = [...src.matchAll(/type:'quickAdd',open:true/g)].length;
+    expect(opens, 'the centre box and the bar, and nothing else').toBe(2);
+    expect(src, 'the bar draws it everywhere the home centre does not').toContain(
+      '{!homePage && <button className="g-icon g-capture" aria-label="Add a task or appointment"',
+    );
+    /*
+     * `g-capture` is not decoration. A narrow window clears every `.g-icon`
+     * out of that row — alerts and settings go there safely, being one row
+     * down in the launcher — and the capture box is an overlay, not a screen,
+     * so the launcher cannot list it. Without the exemption it is swept up and
+     * the gap this test exists for comes back at one width only, which is the
+     * hardest kind to notice.
+     */
+    expect(
+      read('src/components/google-shell.css'),
+      'the narrow rule must exempt it',
+    ).toContain('.g-workspace .g-top-actions>.g-capture{display:inline-flex}');
+    // And the centre's own, which is the other half of that pair.
+    expect(src, 'the centre keeps its +').toMatch(
+      /g-plus" aria-label="Add a task or appointment"/,
+    );
+  });
+
+  it('calls the capture box one thing wherever you meet it', () => {
+    const names = [...SHELL().matchAll(/aria-label="([^"]*(?:task or appointment|one line)[^"]*)"/g)]
+      .map((m) => m[1]);
+    expect(new Set(names).size, `two names for one job: ${names.join(', ')}`).toBe(1);
+  });
+
   it('takes light and dark from the app’s ground rather than a key of its own', () => {
     expect(SHELL(), 'no preference of its own').not.toContain("usePreference('lightHome'");
     expect(SHELL(), 'it resolves the ground the app is on').toContain('resolveGround(state.ground');

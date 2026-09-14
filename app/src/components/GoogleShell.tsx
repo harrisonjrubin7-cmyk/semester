@@ -229,7 +229,35 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
       {<button className={`g-brand ${home&&!directory?'g-home-brand':''}`} onClick={()=>go('search')} aria-label="Semester home"><span className="g-brand-mark">S</span><span>Semester</span></button>}
       {searchBox()}
       <nav className="g-top-actions" aria-label="Quick navigation">
-        
+        {/*
+          The capture box, on every screen that is not this shell's home.
+
+          Its home draws a `+` beside the centre box and that is the only one
+          there; everywhere else there was none at all. The sidebar's New was
+          the pointing route on a wide window until `#240` took it off both
+          columns — rightly, for this pass's own reason — and narrow never had
+          one, because `.g-sidebar` is `display:none` below 760px. `q` does not
+          cover it either: `components/Keys.tsx` returns early below `WIDE`, so
+          on a narrow window, on any screen but the home, the capture box could
+          not be reached at all.
+
+          The bar is where it belongs for the reason every survivor in this
+          pass survives: it is the one piece of this navigation's chrome drawn
+          on every screen at every width. It is the same answer the workspace
+          gives with the `+` in its header, and it is gated the same way — one
+          capture control per frame, never two, so this is off exactly where
+          the centre box's own `+` is on.
+
+          Named as the centre box names it, so the shell calls one job one
+          thing wherever you meet it.
+
+          `g-capture` as well as `g-icon`, because a narrow window clears every
+          `.g-icon` out of this row — alerts and settings go there, and they go
+          safely, being one row down in the launcher. The capture box is not in
+          the launcher and cannot be: it is an overlay, not a screen. The
+          exemption is in `google-shell.css`, beside the rule it answers.
+        */}
+        {!homePage && <button className="g-icon g-capture" aria-label="Add a task or appointment" onClick={()=>{dispatch({type:'finder',open:false});dispatch({type:'quickAdd',open:true});}}><Plus size={21}/></button>}
         {(!home || directory) && <><button className="g-icon" aria-label="Alerts" onClick={()=>go('notifs')}><Bell size={21}/></button><button className="g-icon g-settings-icon" aria-label="Settings" onClick={()=>go('settings')}>⚙</button></>}
         <div ref={launcherRef} className="g-launcher-anchor"><button className={`g-icon ${launcher?'active':''}`} aria-label="Open all apps" aria-expanded={launcher} onClick={()=>{dispatch({type:'finder',open:false});setLauncher(!launcher);setOrganizerOpen(false);setCustomize(false);setFocused(false);}}><AppsIcon size={24}/></button>
         {launcher && <section className="g-launcher" aria-label="Semester app launcher"><div className="g-launcher-favorites"><div className="g-panel-heading"><h2>Your favorites</h2><button className="g-icon" aria-label="Edit favorites" onClick={()=>setEditing(!editing)}>{editing?<Check size={20}/>:'✎'}</button></div><div className="g-launcher-grid">{(editing?apps:favoriteApps).map(a=><button key={a.screen} aria-label={editing ? `${favorites.includes(a.screen)?'Unpin':'Pin'} ${label(a)}` : `Open ${label(a)}`} className="g-launcher-app" onClick={()=>editing?toggleFavorite(a.screen):go(a.screen)}><AppBadge app={a}/><span>{label(a)}</span>{editing&&favorites.includes(a.screen)&&<span className="g-pin-check">✓</span>}</button>)}</div>{editing&&<button className="g-blue-button" onClick={()=>setEditing(false)}>Done</button>}</div>{!editing&&<><div className="g-panel-heading"><h2>More from Semester</h2></div><div className="g-launcher-grid">{apps.filter(a=>!favorites.includes(a.screen)).map(a=><button key={a.screen} className="g-launcher-app" onClick={()=>go(a.screen)}><AppBadge app={a}/><span>{label(a)}</span></button>)}</div></>}</section>}
