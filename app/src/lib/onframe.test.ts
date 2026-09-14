@@ -434,9 +434,13 @@ describe('the browser shell draws each job once', () => {
 
   it('takes light and dark from the app’s ground rather than a key of its own', () => {
     expect(SHELL(), 'no preference of its own').not.toContain("usePreference('lightHome'");
-    expect(SHELL(), 'it resolves the ground the app is on').toContain('resolveGround(state.ground');
+    // `look.ground` rather than `state.ground`: the shell reads the whole look
+    // through `currentLook`, which is the plumbing `main` put in when it moved
+    // this shell's four private preferences onto the app's own.
+    expect(SHELL(), 'it resolves the ground the app is on').toContain('resolveGround(look.ground');
     // And it reports that ground rather than offering a second way to set it.
-    expect(SHELL()).toContain('groundName(state.ground)');
+    expect(SHELL()).toContain('groundName(look.ground)');
+    expect(SHELL(), 'no pair writing the ground from here').not.toContain('g-theme-options');
     expect(SHELL(), 'the panel opens the page that owns it').toContain("go('setLook')");
   });
 });

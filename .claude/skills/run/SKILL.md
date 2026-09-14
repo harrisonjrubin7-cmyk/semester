@@ -145,48 +145,83 @@ These are two independent axes (see `lib/types.ts` on `NavMode` and
 app. A change to one is not exercised by looking at the other.
 
 Seed them before the first load — much faster than clicking through
-Settings, and verified to apply:
+Settings. **`schemaVersion` is part of the seed, not decoration:**
 
 ```js
-// 6 is SCHEMA from app/src/lib/migrate.ts — read it there, do not guess.
-const seed = { schemaVersion: 6, shell: 'soft', nav: 'tabs' };
-await ctx.addInitScript(
-  `localStorage.setItem('semester.v1', ${JSON.stringify(JSON.stringify(seed))})`,
-);
+await ctx.addInitScript(() => {
+  localStorage.setItem('semester.v1', JSON.stringify({
+    schemaVersion: 6,          // must match SCHEMA in lib/migrate.ts
+    shell: 'soft',
+    nav: 'springboard',
+  }));
+});
 ```
-
-**`schemaVersion` is not optional, and leaving it out fails silently.**
-`loadPersisted` runs the seed through `lib/migrate.ts` before reading a field,
-and `versionOf` reads a stored copy with no `schemaVersion` as version 1 — so
-every migration step runs over it. Two of those steps set `nav` outright
-(`nav: 'workspace'` at step 6), so an unversioned seed is *overwritten*, not
-merged: `localStorage` still reads back `"nav":"tabs"` on the next line, the
-app draws the workspace, and nothing anywhere says why. Stamp the seed with
-`SCHEMA` from `lib/migrate.ts` and the steps are skipped.
-
-Confirm the seed took by asserting on the chrome rather than on the key —
-§6b's table says which class each navigation draws, and `.desktop-bar`
-present when you asked for `tabs` is this bug.
 
 | Setting | Values in code | Labels on screen |
 |---|---|---|
 | `shell` | `plain` · `grouped` · `soft` | Drawn · Grouped · Soft |
-| `nav` | `tabs` · `feed` · `springboard` · `shelves` · `workspace` · `guides` | Tab bar · One feed · Home screen · Shelves · Workspace · Guides |
+| `nav` | `tabs` · `feed` · `springboard` · `shelves` · `workspace` · `browser` · `guides` | Tab bar · One feed · Home screen · Shelves · Workspace · Browser · Study guides |
 
-**`workspace` is the default**, so a run that seeds nothing is a run of the
-workspace, not of the tab bar. It is also the one navigation that opens on a
-screen of its own — `firstScreen` in `lib/chrome.ts` sends it to `search`, the
-way a browser opens on a new tab — so `#/` is not home there.
+**The default is `workspace`,** not the tab bar (`state/shape.ts`). So a run
+that seeds nothing is a run in the workspace shell — a browser-shaped strip
+of app tabs over a search bar — and it is easy to screenshot that while
+believing you are looking at the tab bar.
+
+**Read `NAVS` rather than trusting the row above.** It has grown twice
+without this file noticing: it was four when this was written, six by the
+time the Workspace and Study-guides ports landed, and seven once Browser
+arrived. `NAVS` in `lib/look.ts` is the list; `SHELLS` beside it is the
+other axis.
 
 The names do not match: **`plain` is "Drawn"** (`SHELLS` in `lib/look.ts`).
 `drawn` is a real value in this app, but it belongs to `corners`, not
 `shell` — and `useShell` returns plain for anything it does not recognise,
 so `shell: 'drawn'` falls through silently and looks like it worked.
 
+### Without `schemaVersion` the migrations silently rewrite your seed
+
+`lib/migrate.ts` walks a stored copy forward from whatever version it
+declares to `SCHEMA`, and **a copy with no version marker is version 1**, so
+every step runs. Two of them set `nav` outright — one to `workspace`, a
+later one to `guides` — because each was a deliberate change of where the
+app opens, made once per stored copy rather than as a standing policy.
+
+A seed without `schemaVersion` is therefore a version-1 payload, and those
+steps overwrite the `nav` you just asked for. The failure is invisible: the
+app comes up working, in the wrong navigation, and nothing is logged. Worse,
+it is *partial* — `recent`, `visited` and `shell` come through untouched, so
+the seed looks like it took.
+
+Setting `schemaVersion` to the current `SCHEMA` says "this copy is already
+current", no step runs, and `nav` survives. Check the number in
+`lib/migrate.ts` rather than copying the 6 above; the whole point of the
+marker is that it moves.
+
+**Check it in the DOM, never by reading `semester.v1` back.** The obvious
+test — seed a nav, then read the key again — passes whether or not the seed
+took, because nothing has necessarily saved yet and you are reading your own
+write. Measured both ways on the same build: reading the key said all seven
+navigations applied; reading the chrome said none of them had, without the
+version. The navigation each one draws is in §6b, and a one-line probe
+settles it:
+
+```js
+await page.evaluate(() => ({
+  tabs: document.querySelectorAll('.app-tabs').length,      // tabs
+  shelf: document.querySelectorAll('.shelf-nav').length,    // shelves
+  icons: document.querySelectorAll('.iconshape').length,    // springboard
+  desk: document.querySelectorAll('.deskwork').length,      // workspace · browser
+  strip: document.querySelectorAll('.deskstrip').length,    // workspace only
+}));
+```
+
+That is the same rule as "look at the screenshot" and "assert on the DOM
+when the change is a removal", applied to the seed itself.
+
 Seeding the shell does **not** skip the adoption prompt — still click Skip.
 `semester.v1` is plain JSON (`state/shape.ts`, `STORAGE_KEY`) and is merged
-over the defaults, so a partial object is fine — as long as it is stamped with
-the schema version, per the warning above.
+over the defaults, so a partial object is fine — as long as the version is
+in it.
 
 The UI path, if you need to prove the picker itself works:
 Settings → *Layout and navigation* → the layout by name.
@@ -248,14 +283,13 @@ The class names do not follow the names on screen, and guessing costs a
 | `shelves` | `.shelf-nav`, `.shelf-nav-row`, `.shelf-nav-pill`, `.shelf-nav-said` | above the scroller |
 | `springboard` | `.iconshape` inside `.tappable`; pages are `role="tab"` | the home screen itself |
 | `feed` | no chrome of its own | — |
-| `workspace` | `.deskstrip` (tabs), `.desktop-bar` (search + tools), `.desk-side` (the column) | above and beside the pane |
-| `guides` | no chrome at any width | — |
+| `workspace` | `.deskstrip` (the app-tab strip) inside `.deskwork` | above the scroller |
+| `browser` | `.deskwork` and **no** `.deskstrip`; its `<h1>` is "Semester" | above the scroller |
+| `guides` | no chrome of its own; its `<h1>` is "Guides" | — |
 
-The workspace is three pieces at once, which is why it is the layout worth
-checking a chrome change against: the header inside its pane is drawn beside a
-bar above it and a column next to it, and `.desk-side` appears only where there
-is room for it (`sidebar: desk && wide` in `lib/chrome.ts`). A control that
-looks fine at 1280 can be the only one of its kind at 420.
+`workspace` and `browser` are not the same chrome and the obvious guess says
+they are: both are `.deskwork`, only the first has the strip of app tabs. A
+probe on `.deskstrip` alone reports `browser` as "no navigation at all".
 
 `.soft-grid` is the **folder** that opens on top of the springboard, not
 the launcher's own grid — the obvious guess, and it silently matches
@@ -305,13 +339,13 @@ const ctx = await browser.newContext({
   viewport: { width: 420, height: 900 },
   deviceScaleFactor: 2,
 });
-// SCHEMA is `lib/migrate.ts`'s export — 6 at the time of writing. Without it
-// the seed is read as version 1 and the migrations overwrite `nav`.
-await ctx.addInitScript(
-  `localStorage.setItem('semester.v1', ${JSON.stringify(
+await ctx.addInitScript(() => {
+  // `schemaVersion` or the migrations rewrite `nav`. See section 5.
+  localStorage.setItem(
+    'semester.v1',
     JSON.stringify({ schemaVersion: 6, shell: 'soft', nav: 'tabs' }),
-  )})`,
-);
+  );
+});
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));

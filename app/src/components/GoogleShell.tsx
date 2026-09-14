@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useStore } from '../state/store';
-import { ground, groundName, resolveGround } from '../lib/look';
-import { usePrefersDark } from '../lib/prefers';
 import { appShelves } from '../lib/apps';
 import { destination, GROUPS, type Destination } from '../lib/nav';
 import type { Screen } from '../lib/types';
@@ -12,6 +10,10 @@ import './google-shell.css';
    in `styles/features.css` in this app, loaded once from `main.tsx` — they
    are the ported screens' own styling and are not this shell's to carry. */
 import { hasOpenModal, useModal } from '../a11y/modal';
+import { currentLook } from '../state/shape';
+import { DEFAULT_FAVOURITES, readFavourites, toggleFavourite } from '../lib/desk';
+import { ground, groundName, resolveGround } from '../lib/look';
+import { usePrefersDark } from '../lib/prefers';
 import { WIDE, useMedia } from '../lib/media';
 import { GoogleTabs } from './GoogleTabs';
 import { findEverything, type Hit } from '../lib/find';
@@ -22,20 +24,27 @@ import {ModernShellContext} from './shell-context';
 import {FocusBarProvider} from './desk/barfocus';
 import {GlobalSearchResults} from './GlobalSearchResults';
 
-const DEFAULT_FAVORITES: Screen[] = ['home', 'courses', 'study', 'calendar', 'import'];
 const COLORS = ['#4285f4', '#34a853', '#ea4335', '#f9ab00', '#8e63ce', '#00a6a6', '#e871b3'];
-function readPreference<T,>(key: string, fallback: T): T {
-  try {
-    const value: unknown = JSON.parse(localStorage.getItem(`semester.google.${key}`) ?? 'null');
-    if (Array.isArray(fallback)) return (Array.isArray(value) ? value.filter(v => typeof v === 'string').slice(0,60) : fallback) as T;
-    return typeof value === typeof fallback ? value as T : fallback;
-  } catch { return fallback; }
-}
-function usePreference<T,>(key: string, initial: T) {
-  const [value, setValue] = useState<T>(() => readPreference(key, initial));
-  useEffect(() => { try { localStorage.setItem(`semester.google.${key}`, JSON.stringify(value)); } catch { /* Preferences remain usable during this session. */ } }, [key, value]);
-  return [value, setValue] as const;
-}
+/*
+ * There was a `DARK`/`LIGHT` pair here, and the Appearance switch that used it.
+ *
+ * It arrived citing `components/desk/Customize.tsx` as the precedent — and it
+ * was the right instinct, taken from a version of that file that had already
+ * been found wrong. That pair read the ground through `resolveGround`, whose
+ * job is to turn the `device` instruction into a palette, so somebody on
+ * **Match my device** was shown Dark, lit, as a choice they had made; pressing
+ * Light then wrote a fixed `paper` over the instruction, silently, one way,
+ * with no route back — and `paper` is not even the ground Match my device
+ * resolves light to (`parchment`, `DEVICE_LIGHT` in `lib/look.ts`). All three
+ * verified against the real functions.
+ *
+ * So the precedent is the other way now: that panel links to Colour and type
+ * and *reports* the ground through `groundName`, the function that does not
+ * erase `device`. This one does the same, a few lines down. `lightHome` below
+ * still resolves, because painting a page does need a palette — reporting a
+ * setting and painting from it are different jobs, which is why the two
+ * functions are named apart.
+ */
 function label(app: Destination) { return app.screen === 'ask' ? 'AI Tutor' : app.screen === 'import' ? 'Add a course' : app.short ?? app.label; }
 export function AppBadge({ app, small = false }: { app: Destination; small?: boolean }) {
   const color = COLORS[GROUPS.indexOf(app.group)] ?? COLORS[0];
@@ -45,25 +54,26 @@ export function AppBadge({ app, small = false }: { app: Destination; small?: boo
 export function GoogleShell({ children, title }: { children: ReactNode; title: string }) {
   const { state, dispatch, school, catalog, now } = useStore();
   const apps = useMemo(() => appShelves(school.capabilities, undefined).flatMap(s => s.apps), [school.capabilities]);
-  const [favorites, setFavorites] = usePreference<Screen[]>('favorites', DEFAULT_FAVORITES);
-  const [recent, setRecent] = usePreference<Screen[]>('recent', []);
   /*
-   * Light or dark here is the app's ground, not a preference of this shell's.
+   * Pinned apps, the shortcut row's switch, light and dark, and where you
+   * have been: four preferences this shell used to keep for itself under
+   * `semester.google.*`, and four the app already had.
    *
-   * It was `usePreference('lightHome')` — a key of this shell's own, written
-   * by a Dark/Light pair in its Customize panel. That made three places light
-   * and dark were chosen (Settings → Colour and type, the workspace's own
-   * panel, and this) and two of them could disagree: pick Paper in Settings
-   * and this shell stayed dark until you told it separately.
-   *
-   * `resolveGround` rather than `state.ground`, because "Match my device" is
-   * an instruction rather than a palette and this has to paint one. The pair
-   * that used to write the key is a row into Colour and type now — see the
-   * panel below — so the setting has one home and this follows it.
+   * They are the app's now. Two copies of one preference do not drift
+   * quietly — they disagree in front of the student: a star pressed here left
+   * the workspace sidebar, the search home and Settings on the old five, and
+   * a switch under the heading Appearance moved this shell's home and not the
+   * app's ground. They were also outside the store, so a backup carried
+   * neither and a restore brought neither back.
    */
+  const look = currentLook(state);
+  const caps = school.capabilities;
   const prefersDark = usePrefersDark();
-  const lightHome = ground(resolveGround(state.ground, prefersDark)).light;
-  const [showFavorites, setShowFavorites] = usePreference('showFavorites', true);
+  /* Resolved, because "Match my device" is an instruction rather than a
+     palette and the pair has to show which side it currently lands on. */
+  const lightHome = ground(resolveGround(look.ground, prefersDark)).light;
+  const showFavorites = look.shortcuts !== 'off';
+  const recent = state.recent;
   const [query, setQuery] = useState('');
   const [focused, setFocused] = useState(false);
   const [selected, setSelected] = useState(-1);
@@ -96,10 +106,11 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   useEffect(()=>{if(!classic && state.apps){dispatch({type:'apps',open:false});setLauncher(true);setOrganizerOpen(false);setFocused(false);setCustomize(false);}},[state.apps,classic,dispatch]);
   useEffect(()=>{if(state.quickAdd){setFocused(false);setLauncher(false);setOrganizerOpen(false);setCustomize(false);}},[state.quickAdd]);
   const productivity = ['write','sheet','deck','mine','mail','classmates','call','draw','courses','course','study','degree','yes','housing','meals','maps','activities','work','university','create','athletics','career','family','pathway'].includes(state.screen);
-  const favoriteApps = favorites.map(s => apps.find(a => a.screen === s)).filter((a): a is Destination => !!a);
+  const favourites = readFavourites(look.favourites, caps, state.role).map(d => d.screen);
+  const favoriteApps = favourites.map(s => apps.find(a => a.screen === s)).filter((a): a is Destination => !!a);
   const terms = query.toLowerCase().trim().split(/\s+/).filter(Boolean);
   const matches = apps.filter(a => terms.every(t => `${a.label} ${a.short ?? ''} ${a.blurb} ${a.keywords} ${a.group}`.toLowerCase().includes(t))).sort((a,b) => Number(b.label.toLowerCase().startsWith(query.toLowerCase())) - Number(a.label.toLowerCase().startsWith(query.toLowerCase())));
-  const suggested = (recent.length ? recent : DEFAULT_FAVORITES).map(s => apps.find(a => a.screen === s)).filter((a): a is Destination => !!a).slice(0,6);
+  const suggested = (recent.length ? recent : DEFAULT_FAVOURITES).map(s => apps.find(a => a.screen === s)).filter((a): a is Destination => !!a).slice(0,6);
   const found = useMemo(()=>query.trim()?findEverything(catalog,now,query,state.notes,state.tasks,school.capabilities,state.updates,state.reviews,state.appointments,{documents:state.documents,sheets:state.sheets,decks:state.decks},state.role):[],[catalog,now,query,state.notes,state.tasks,school.capabilities,state.updates,state.reviews,state.appointments,state.documents,state.sheets,state.decks,state.role]);
   const records = found.flatMap(g=>g.hits).filter(h=>h.kind!=='screen').sort((a,b)=>b.score-a.score).slice(0,5);
   const options = query.trim() ? matches.slice(0,records.length?3:6) : suggested;
@@ -107,12 +118,11 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   const current = destination(state.screen);
   const go = (screen: Screen) => {
     dispatch({type:'finder',open:false}); dispatch({ type: 'go', screen }); setDirectory(false); setQuery(''); setFocused(false); setLauncher(false); setCustomize(false); setSelected(-1);
-    if (screen !== 'search') setRecent(old => [screen,...old.filter(s => s !== screen)].slice(0,8));
   };
   const openRecord=(hit:Hit)=>{dispatch({type:'finder',open:false});setDirectory(false);setFocused(false);setLauncher(false);setQuery('');for(const action of actionsFor(hit))dispatch(action);};
   const openRecordInNew=(hit:Hit)=>{if(openInNew(landingOf(hit),hit.title,actionsFor(hit),query))openRecord(hit);};
   const searchAll=()=>{recordSearch(query);setFocused(false);setLauncher(false);dispatch({type:'finder',open:true});};
-  const toggleFavorite = (screen: Screen) => setFavorites(old => old.includes(screen) ? old.filter(s => s !== screen) : [...old,screen]);
+  const toggleFavorite = (screen: Screen) => dispatch({ type: 'setLook', look: { favourites: toggleFavourite(look.favourites, screen, caps, state.role) } });
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
       if(classic || hasOpenModal())return;
@@ -153,15 +163,15 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
    *
    * This took a `placement` of 'top' or 'home' and was rendered twice — the
    * omnibox in the header and a second copy in the middle of the home page.
-   * They shared `query`, so it was one search with two inputs: two comboboxes
-   * for a screen reader, two `⌘ K` hints and two AI Tutor buttons on the one
-   * screen this shell opens on.
+   * They shared `query`, so it was one search behind two comboboxes: two of
+   * them for a screen reader, two `⌘ K` hints and two AI Tutor buttons on the
+   * one screen this shell opens on.
    *
-   * The centre is `homeBox` below now, and it is a button that focuses this
-   * field rather than a second one — the idiom this whole shell is borrowed
-   * from, where a new tab page's box focuses the omnibox. With the second
-   * field went `activeSearch`, which existed only to remember which of the
-   * two was being typed in.
+   * The centre is `homeBox` below now, a button that focuses this field
+   * rather than a second one — the idiom this whole shell is borrowed from,
+   * where a new tab page's box focuses the omnibox. With the second field
+   * went `activeSearch`, which existed only to remember which of the two was
+   * being typed in.
    */
   const searchBox = () => <div className={`g-search-wrap g-omnibox ${focused ? 'is-open' : ''}`}>
     <form className="g-search" onSubmit={e => {e.preventDefault(); query.trim()?searchAll():showDirectory();}} role="search">
@@ -173,8 +183,8 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
       }}/>
       {query && <button type="button" className="g-icon" aria-label="Clear search" onClick={()=>{setQuery('');setSelected(-1);recordSearch('');searchRef.current?.focus();}}>×</button>}
       {/* True here, unlike the two chips this pass removed from the other
-          shell: `GoogleShell`'s own listener binds ⌘K, in the capture phase,
-          to focus this field. It is written once because there is one field. */}
+          shell: this shell's own listener binds ⌘K, in the capture phase, to
+          focus this field. Written once because there is one field. */}
       <span className="g-key-hint">⌘ K</span>
       <button type="button" className="g-ask" onClick={()=>go('ask')}><span className="g-spark">✦</span> AI Tutor</button>
     </form>
@@ -197,10 +207,9 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
    * wearing a disguise. Pressing it puts the cursor in the omnibox, which
    * then drops its suggestions over this row.
    *
-   * The `+` stays because it is the only one here: the sidebar's New button
-   * is not drawn on the home page, and the bar above has no `+` of its own.
-   * The `⌘ K` hint and the AI Tutor button do not stay — both are in the bar,
-   * inches above, and this row had the only other copy of each.
+   * The `+` stays because on this page it is the only one: the bar's own
+   * capture button is drawn everywhere *but* here, so that exactly one is on
+   * screen in either case.
    */
   const homeBox = () => <div className={`g-search-wrap g-central-search ${launcher || customize || state.finder || state.quickAdd || focused ? 'is-suppressed' : ''}`}>
     <div className="g-search">
@@ -213,14 +222,12 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
   /*
    * `/` lands in this shell's field, the way it lands in the workspace's.
    *
-   * `components/desk/barfocus.ts` is the channel and `components/Keys.tsx`
-   * the one caller: it focuses the bar where a provider says there is one and
-   * opens the palette where there is none. Mounting it here is the whole of
-   * what this navigation needed — the key was already right, it just had no
-   * way to know this shell draws a search field.
-   *
-   * Inside the provider rather than outside: `Keys` is one of the children
-   * `BrowserShell` mounts, so the value has to be above it in the tree.
+   * `components/desk/barfocus.ts` is the channel and `components/Keys.tsx` the
+   * one caller: it focuses the bar where a provider says there is one and
+   * opens the palette where there is none. Mounting it here is all this
+   * navigation needed — the key was already right, it had no way to know this
+   * shell draws a field. Inside the provider, because `Keys` is one of the
+   * children `BrowserShell` mounts.
    */
   return <ModernShellContext.Provider value={true}><FocusBarProvider value={focusBar}><div className={`semester-google ${homePage?'g-home':'g-workspace'} ${lightHome?'g-home-light':''} ${productivity && !directory ? 'g-productivity' : ''}`} data-workspace-screen={state.screen}>
     <GoogleTabs menuOpen={organizerOpen} onMenuChange={open=>{setOrganizerOpen(open);if(open){setFocused(false);setLauncher(false);setCustomize(false);}}} onNavigate={()=>{dispatch({type:'finder',open:false});setDirectory(false);setQuery('');setFocused(false);setLauncher(false);setCustomize(false);}}/>
@@ -233,34 +240,31 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
           The capture box, on every screen that is not this shell's home.
 
           Its home draws a `+` beside the centre box and that is the only one
-          there; everywhere else there was none at all. The sidebar's New was
-          the pointing route on a wide window until `#240` took it off both
-          columns — rightly, for this pass's own reason — and narrow never had
-          one, because `.g-sidebar` is `display:none` below 760px. `q` does not
-          cover it either: `components/Keys.tsx` returns early below `WIDE`, so
-          on a narrow window, on any screen but the home, the capture box could
-          not be reached at all.
+          there; everywhere else there was none. The sidebar's New was the
+          pointing route on a wide window until `#240` took it off both
+          columns, and narrow never had one — `.g-sidebar` is `display:none`
+          below 760px. `q` does not cover it: `components/Keys.tsx` returns
+          early below `WIDE`. So on a narrow window, on any screen but the
+          home, the capture box could not be reached at all.
 
-          The bar is where it belongs for the reason every survivor in this
-          pass survives: it is the one piece of this navigation's chrome drawn
-          on every screen at every width. It is the same answer the workspace
-          gives with the `+` in its header, and it is gated the same way — one
-          capture control per frame, never two, so this is off exactly where
-          the centre box's own `+` is on.
-
-          Named as the centre box names it, so the shell calls one job one
-          thing wherever you meet it.
+          The bar is where it belongs, by the rule every survivor in this pass
+          has used: it is the one piece of this navigation's chrome drawn on
+          every screen at every width, and it is the answer the workspace gives
+          with the `+` in its header. Gated as the mirror of the centre box's
+          own `+` — one capture control per frame, never two, never none — and
+          named as the centre names it.
 
           `g-capture` as well as `g-icon`, because a narrow window clears every
-          `.g-icon` out of this row — alerts and settings go there, and they go
-          safely, being one row down in the launcher. The capture box is not in
-          the launcher and cannot be: it is an overlay, not a screen. The
-          exemption is in `google-shell.css`, beside the rule it answers.
+          `.g-icon` out of this row. The two it drops go safely, being one row
+          down in the launcher; the capture box is an overlay, not a screen, so
+          the launcher cannot list it. The exemption is in `google-shell.css`,
+          beside the rule it answers.
         */}
         {!homePage && <button className="g-icon g-capture" aria-label="Add a task or appointment" onClick={()=>{dispatch({type:'finder',open:false});dispatch({type:'quickAdd',open:true});}}><Plus size={21}/></button>}
+        
         {(!home || directory) && <><button className="g-icon" aria-label="Alerts" onClick={()=>go('notifs')}><Bell size={21}/></button><button className="g-icon g-settings-icon" aria-label="Settings" onClick={()=>go('settings')}>⚙</button></>}
         <div ref={launcherRef} className="g-launcher-anchor"><button className={`g-icon ${launcher?'active':''}`} aria-label="Open all apps" aria-expanded={launcher} onClick={()=>{dispatch({type:'finder',open:false});setLauncher(!launcher);setOrganizerOpen(false);setCustomize(false);setFocused(false);}}><AppsIcon size={24}/></button>
-        {launcher && <section className="g-launcher" aria-label="Semester app launcher"><div className="g-launcher-favorites"><div className="g-panel-heading"><h2>Your favorites</h2><button className="g-icon" aria-label="Edit favorites" onClick={()=>setEditing(!editing)}>{editing?<Check size={20}/>:'✎'}</button></div><div className="g-launcher-grid">{(editing?apps:favoriteApps).map(a=><button key={a.screen} aria-label={editing ? `${favorites.includes(a.screen)?'Unpin':'Pin'} ${label(a)}` : `Open ${label(a)}`} className="g-launcher-app" onClick={()=>editing?toggleFavorite(a.screen):go(a.screen)}><AppBadge app={a}/><span>{label(a)}</span>{editing&&favorites.includes(a.screen)&&<span className="g-pin-check">✓</span>}</button>)}</div>{editing&&<button className="g-blue-button" onClick={()=>setEditing(false)}>Done</button>}</div>{!editing&&<><div className="g-panel-heading"><h2>More from Semester</h2></div><div className="g-launcher-grid">{apps.filter(a=>!favorites.includes(a.screen)).map(a=><button key={a.screen} className="g-launcher-app" onClick={()=>go(a.screen)}><AppBadge app={a}/><span>{label(a)}</span></button>)}</div></>}</section>}
+        {launcher && <section className="g-launcher" aria-label="Semester app launcher"><div className="g-launcher-favorites"><div className="g-panel-heading"><h2>Your favorites</h2><button className="g-icon" aria-label="Edit favorites" onClick={()=>setEditing(!editing)}>{editing?<Check size={20}/>:'✎'}</button></div><div className="g-launcher-grid">{(editing?apps:favoriteApps).map(a=><button key={a.screen} aria-label={editing ? `${favourites.includes(a.screen)?'Unpin':'Pin'} ${label(a)}` : `Open ${label(a)}`} className="g-launcher-app" onClick={()=>editing?toggleFavorite(a.screen):go(a.screen)}><AppBadge app={a}/><span>{label(a)}</span>{editing&&favourites.includes(a.screen)&&<span className="g-pin-check">✓</span>}</button>)}</div>{editing&&<button className="g-blue-button" onClick={()=>setEditing(false)}>Done</button>}</div>{!editing&&<><div className="g-panel-heading"><h2>More from Semester</h2></div><div className="g-launcher-grid">{apps.filter(a=>!favourites.includes(a.screen)).map(a=><button key={a.screen} className="g-launcher-app" onClick={()=>go(a.screen)}><AppBadge app={a}/><span>{label(a)}</span></button>)}</div></>}</section>}
         </div>
         <button className="g-avatar" aria-label="Your profile" onClick={()=>go('profile')}>{state.myName?.[0]?.toUpperCase() || 'H'}</button>
       </nav>
@@ -273,12 +277,6 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
       </div>
       <footer className="g-home-footer"><div className="g-footer-info"><span>{now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</span><span>{state.sample ? 'Sample semester · ' : ''}{catalog.courses.length} courses this semester</span></div><button className="g-customize" onClick={()=>setCustomize(true)}><span>✎</span> Customize Semester</button></footer>
     </section> : <div className="g-workspace-body"><aside className="g-sidebar">
-      {/* There was a **New** button at the top of this column, and it went the
-          way the workspace's did: it opened the capture box, which this
-          shell's own home already opens from the + beside its field — one
-          action, two places — and in a column of rows that all go somewhere it
-          read as another destination rather than as the one thing here that
-          writes. */}
       {/* "App directory", not "All apps". The nine dots in the bar above are
           already labelled Open all apps and they open the launcher — a panel
           over the page — rather than this screen. Two controls in one frame
@@ -286,16 +284,15 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
           reader read both out identically and pressing one was the only way to
           tell which you had. */}
       <button className={home?'selected':''} onClick={()=>{setQuery('');showDirectory();}}><AppsIcon size={21}/> App directory</button>
-      {/* There were two more rows here, and the bar above has both.
-          **Search home** went where the wordmark goes, and **Settings** where
-          the gear in `g-top-actions` goes — each a few inches from the row
-          that repeated it, in the same frame. The bar's two survive because
-          they are drawn on every screen of this navigation and this column is
-          drawn on none of the home page; nothing is lost at either. */}
-      <div className="g-nav-caption">Your favorites</div>{favoriteApps.map(a=><button className={state.screen===a.screen?'selected':''} key={a.screen} onClick={()=>go(a.screen)}><TabGlyph screen={a.screen} size={21}/>{label(a)}</button>)}<div className="g-sidebar-bottom"><button onClick={()=>go('connect')}><TabGlyph screen="connect" size={21}/> Connections</button><p>{school.name || 'Your semester'}<span>{catalog.courses.length} courses · {apps.length} apps</span></p></div></aside>
-    {directory && !state.finder ? <section className="g-directory" aria-label="All applications"><div className="g-directory-title"><h1>{query.trim()?`Results for “${query}”`:'Welcome to Semester'}</h1><span>{apps.length} apps, one semester</span></div><h2 className="g-section-title">Your favorites</h2><div className="g-favorite-cards">{favoriteApps.slice(0,4).map(a=><button key={a.screen} onClick={()=>go(a.screen)}><AppBadge app={a} small/><span><strong>{label(a)}</strong><small>{a.group}</small></span><span>↗</span></button>)}</div><div className="g-directory-toolbar"><h2>All applications</h2><div className="g-view-toggle"><button aria-label="List view" aria-pressed={!grid} onClick={()=>setGrid(false)}>☰</button><button aria-label="Grid view" aria-pressed={grid} onClick={()=>setGrid(true)}><AppsIcon size={20}/></button></div></div><div className="g-filters">{['All apps',...GROUPS].map(g=><button key={g} className={group===g?'selected':''} onClick={()=>setGroup(g)}>{g}</button>)}</div><div className={grid?'g-directory-grid':'g-app-table'}>{!grid&&<div className="g-table-head"><span>Name</span><span>What you can do</span><span>Category</span><span>Favorite</span></div>}{matches.filter(a=>group==='All apps'||a.group===group).map(a=><div className="g-directory-app" key={a.screen}><button onClick={()=>go(a.screen)}><AppBadge app={a} small/><strong>{label(a)}</strong><p>{a.blurb}</p><span className="g-table-category">{a.group}</span></button><button className="g-star" aria-label={`${favorites.includes(a.screen)?'Unpin':'Pin'} ${label(a)}`} aria-pressed={favorites.includes(a.screen)} onClick={()=>toggleFavorite(a.screen)}>{favorites.includes(a.screen)?'★':'☆'}</button></div>)}{!matches.filter(a=>group==='All apps'||a.group===group).length&&<p className="g-no-results">No apps match this search and category. Choose another category or clear the search.</p>}</div></section> : <section className="g-app-content" aria-label={current?.label ?? 'Semester workspace'}><div className="g-workspace-heading"><button className="g-icon" onClick={()=>{if(state.finder)dispatch({type:'finder',open:false});else if(state.history.length)window.history.back();else go('search');}} aria-label="Go back"><ChevronLeft size={23}/></button><h1>{state.finder?'Search results':title}</h1>{state.finder?<button className="g-icon" aria-label="Close search results" onClick={()=>dispatch({type:'finder',open:false})}>×</button>:<button className="g-icon" aria-label="Search everything in your semester" onClick={()=>dispatch({type:'finder',open:true})}><Search size={21}/></button>}</div>{state.finder&&<section className="g-global-results" aria-label="Semester search results"><GlobalSearchResults query={query} groups={found} canOpenTab={canOpenTab} onOpen={openRecord} onNewTab={openRecordInNew}/></section>}<div className="g-legacy-mount" hidden={state.finder}>{children}</div></section>}
+      {/* There were two more rows here, and the bar above has both. **Search
+          home** went where the wordmark goes and **Settings** where the gear in
+          `g-top-actions` goes — each a few inches from the row that repeated
+          it, in the same frame. The bar's two survive because they are drawn on
+          every screen of this navigation and this column is drawn on none of
+          the home page. */}<div className="g-nav-caption">Your favorites</div>{favoriteApps.map(a=><button className={state.screen===a.screen?'selected':''} key={a.screen} onClick={()=>go(a.screen)}><TabGlyph screen={a.screen} size={21}/>{label(a)}</button>)}<div className="g-sidebar-bottom"><button onClick={()=>go('connect')}><TabGlyph screen="connect" size={21}/> Connections</button><p>{school.name || 'Your semester'}<span>{catalog.courses.length} courses · {apps.length} apps</span></p></div></aside>
+    {directory && !state.finder ? <section className="g-directory" aria-label="All applications"><div className="g-directory-title"><h1>{query.trim()?`Results for “${query}”`:'Welcome to Semester'}</h1><span>{apps.length} apps, one semester</span></div><h2 className="g-section-title">Your favorites</h2><div className="g-favorite-cards">{favoriteApps.slice(0,4).map(a=><button key={a.screen} onClick={()=>go(a.screen)}><AppBadge app={a} small/><span><strong>{label(a)}</strong><small>{a.group}</small></span><span>↗</span></button>)}</div><div className="g-directory-toolbar"><h2>All applications</h2><div className="g-view-toggle"><button aria-label="List view" aria-pressed={!grid} onClick={()=>setGrid(false)}>☰</button><button aria-label="Grid view" aria-pressed={grid} onClick={()=>setGrid(true)}><AppsIcon size={20}/></button></div></div><div className="g-filters">{['All apps',...GROUPS].map(g=><button key={g} className={group===g?'selected':''} onClick={()=>setGroup(g)}>{g}</button>)}</div><div className={grid?'g-directory-grid':'g-app-table'}>{!grid&&<div className="g-table-head"><span>Name</span><span>What you can do</span><span>Category</span><span>Favorite</span></div>}{matches.filter(a=>group==='All apps'||a.group===group).map(a=><div className="g-directory-app" key={a.screen}><button onClick={()=>go(a.screen)}><AppBadge app={a} small/><strong>{label(a)}</strong><p>{a.blurb}</p><span className="g-table-category">{a.group}</span></button><button className="g-star" aria-label={`${favourites.includes(a.screen)?'Unpin':'Pin'} ${label(a)}`} aria-pressed={favourites.includes(a.screen)} onClick={()=>toggleFavorite(a.screen)}>{favourites.includes(a.screen)?'★':'☆'}</button></div>)}{!matches.filter(a=>group==='All apps'||a.group===group).length&&<p className="g-no-results">No apps match this search and category. Choose another category or clear the search.</p>}</div></section> : <section className="g-app-content" aria-label={current?.label ?? 'Semester workspace'}><div className="g-workspace-heading"><button className="g-icon" onClick={()=>{if(state.finder)dispatch({type:'finder',open:false});else if(state.history.length)window.history.back();else go('search');}} aria-label="Go back"><ChevronLeft size={23}/></button><h1>{state.finder?'Search results':title}</h1>{state.finder?<button className="g-icon" aria-label="Close search results" onClick={()=>dispatch({type:'finder',open:false})}>×</button>:<button className="g-icon" aria-label="Search everything in your semester" onClick={()=>dispatch({type:'finder',open:true})}><Search size={21}/></button>}</div>{state.finder&&<section className="g-global-results" aria-label="Semester search results"><GlobalSearchResults query={query} groups={found} canOpenTab={canOpenTab} onOpen={openRecord} onNewTab={openRecordInNew}/></section>}<div className="g-legacy-mount" hidden={state.finder}>{children}</div></section>}
     </div>}
     {home && !state.finder && <div className="g-home-legacy">{children}</div>}
-    {customize&&<><div className="g-drawer-wash" onClick={()=>setCustomize(false)}/><aside className="g-customize-panel" aria-label="Customize Semester" role="dialog" aria-modal="true" ref={customizeModal.ref} onKeyDown={customizeModal.onKeyDown} tabIndex={-1}><div className="g-panel-heading"><h2>Customize Semester</h2><button className="g-icon" aria-label="Close customization" onClick={()=>setCustomize(false)}>×</button></div><p>Make a little room for your semester.</p><h3>Appearance</h3><button className="g-outline-button g-says" onClick={()=>go('setLook')}>Colour and type<span>{groundName(state.ground)}</span></button><label className="g-toggle-label">Show shortcuts<input type="checkbox" checked={showFavorites} onChange={e=>setShowFavorites(e.target.checked)}/></label><button className="g-outline-button" onClick={()=>{setCustomize(false);setLauncher(true);setEditing(true);}}>Choose favorite apps</button><button className="g-outline-button" onClick={()=>go('onboarding')}>Set up your semester</button><button className="g-text-button" onClick={()=>{setCustomize(false);setClassic(true);go('home');}}>Open original layout</button></aside></>}
+    {customize&&<><div className="g-drawer-wash" onClick={()=>setCustomize(false)}/><aside className="g-customize-panel" aria-label="Customize Semester" role="dialog" aria-modal="true" ref={customizeModal.ref} onKeyDown={customizeModal.onKeyDown} tabIndex={-1}><div className="g-panel-heading"><h2>Customize Semester</h2><button className="g-icon" aria-label="Close customization" onClick={()=>setCustomize(false)}>×</button></div><p>Make a little room for your semester.</p><h3>Appearance</h3><button className="g-outline-button g-says" onClick={()=>go('setLook')}>Colour and type<span>{groundName(look.ground)}</span></button><label className="g-toggle-label">Show shortcuts<input type="checkbox" checked={showFavorites} onChange={e=>dispatch({type:'setLook',look:{shortcuts:e.target.checked?'on':'off'}})}/></label><button className="g-outline-button" onClick={()=>{setCustomize(false);setLauncher(true);setEditing(true);}}>Choose favorite apps</button><button className="g-outline-button" onClick={()=>go('onboarding')}>Set up your semester</button><button className="g-text-button" onClick={()=>{setCustomize(false);setClassic(true);go('home');}}>Open original layout</button></aside></>}
   </div></FocusBarProvider></ModernShellContext.Provider>;
 }

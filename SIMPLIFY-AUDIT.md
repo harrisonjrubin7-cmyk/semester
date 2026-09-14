@@ -1,4 +1,34 @@
-# One app — the audit, seventh pass
+# One app — the seventh pass, run twice over
+
+Two audits of this name were written at the same time, on two branches, by two
+people who could not see each other's work. They looked at different things and
+agree where they overlap, so both are kept whole rather than one being folded
+into the other — and where they met is the most useful part of either.
+
+**A** — *controls drawn twice in one frame*: the header repeating the
+workspace's bar, the sidebars repeating it again, two `+` glyphs meaning
+different things, and the same census applied to the browser shell.
+
+**B** — *one job, one control*: a census of the four panels every navigation
+can open, the four settings the browser shell kept for itself, Courses offering
+*Add a course* twice, and the shell's home page that could not be clicked.
+
+Where they met, twice, is recorded in A's §4c and in the note where the browser
+shell's `DARK`/`LIGHT` constants were:
+
+- B took **New** off both sidebars, correctly. A had made the header's `+`
+  stand down wherever a sidebar was drawn, *because* that sidebar had New. Two
+  correct removals would have cancelled into a workspace with no pointing route
+  to the capture box; the rule is unconditional now, and tested as such.
+- B moved the browser shell's light/dark onto the app's `ground` with a
+  Dark/Light pair, citing the workspace's panel as precedent — from a version
+  of that file A had already found wrong, because the pair cannot express
+  *Match my device* and silently overwrites it. Both panels report the ground
+  and link to the page that sets it.
+
+---
+
+# A — controls drawn twice in one frame
 
 Step 1 of `/simplify`, run again. No code in this commit.
 
@@ -695,6 +725,219 @@ The first row is the screenshot this pass opened with, and it is the one that
 matters: on Alerts in the workspace, the header is now the way back and the
 screen's name, which is all a header on that screen was ever for.
 
+
+---
+
+# B — one job, one control
+
+Step 1 of `/simplify`, run from the outside in: the pass that fixed the
+sidebar's New button (#240) removed one control that said again what another
+control already said, and this pass asks where else that is true.
+
+Counted against `app/src` at `fe1ea7e`: **60 destinations** in `lib/nav.ts`,
+72 screen files, 123 components. Baseline before any change: `npm run lint`
+exit 0, `npm test` **332 files / 6854 tests** passing.
+
+**The headline is that the browser shell keeps its own copy of four of the
+app's settings**, in its own corner of `localStorage`, where the app cannot
+see them and they cannot see the app. Everything else this pass found is
+smaller: one screen that offers the same action twice, one dead conditional,
+and a short list of duplicate-looking routes that are object affordances
+rather than doorways and are cleared below.
+
+---
+
+## 1. The census, and how it was taken
+
+**Overlay entry points per navigation.** Every site that opens one of the
+app's four shared panels, tests and the reducer excluded:
+
+```
+$ grep -rn "type: *'quickAdd'" app/src --include=*.tsx | grep "open: *true"
+```
+
+| Panel | Sites | Verdict |
+| --- | --- | --- |
+| `quickAdd` | 4 — `Keys` (`q`), the classic header's **+**, the workspace search home's **+**, the browser shell's home **+** | **Clear.** One per navigation plus the keyboard. This is what #240 left; before it, the workspace and the browser shell had two each. |
+| `finder` | 5 hosts — `Keys` (`/`), the classic header, `desk/TopBar`, the workspace search home, the browser shell (which re-enters it internally) | **Clear**, same rule. |
+| `apps` | 3 — the classic header, the workspace search home, `desk/Customize` | **Clear.** The third is a link out of a panel that says it is a shortcut into settings, not a second launcher. |
+| assistant | 2 — `Keys` (`a`), `ai/Assistant` re-showing itself | **Clear.** |
+
+**Routes that land on the same destination from one file.** Twelve pairs,
+found with a whitespace-insensitive scan of every `go`:
+
+```
+5 screens/Calendar.tsx → mine        2 screens/Profile.tsx → account
+4 screens/Today.tsx → mine           2 screens/Guide.tsx → deck
+3 screens/Drill.tsx → guide          2 screens/Courses.tsx → import
+3 App.tsx → search                   2 lib/openhit.ts → mine
+2 components/Applying.tsx → applying 2 components/GoogleTabs.tsx → search
+2 App.tsx → home                     2 screens/Profile.tsx → setCourses
+```
+
+Eleven of the twelve are **object affordances**, not second doorways: a row
+that opens the thing the row is about is not a route to a screen, it is how
+you open that object. `Today`'s four are a section's "see all", two task rows
+and an appointments button, each carrying its own `setMineTab`; `Applying`'s
+two are the card and the rows inside it. The twelfth is S2 below.
+
+**Settings written from more than one file.** Every `set*` action in
+`state/shape.ts`, mapped to the production files that dispatch it. Fourteen
+are dispatched from more than one place; twelve of those are `set*Tab`
+actions used to *deep-link* into a tab while navigating, which is not a
+second copy of a control. The two that are real are `setLook` (8 files) and
+`setNav` (2) — and both are cleared, because `components/desk/Customize.tsx`
+says at the top why it writes the same keys as the settings page rather than
+keeping its own, and it does exactly that. The browser shell is the one that
+does not, and that is S1.
+
+---
+
+## 2. S1 — the browser shell keeps four settings of its own · **MERGE**
+
+`components/GoogleShell.tsx:23-33` defines a private storage hook, and four
+preferences ride on it:
+
+```
+const [favorites, setFavorites]       = usePreference<Screen[]>('favorites', DEFAULT_FAVORITES);
+const [recent, setRecent]             = usePreference<Screen[]>('recent', []);
+const [lightHome, setLightHome]       = usePreference('lightHome', false);
+const [showFavorites, setShowFavorites] = usePreference('showFavorites', true);
+```
+
+Each writes `semester.google.<key>` in `localStorage`. Each already exists in
+the app, and the two copies cannot see each other:
+
+| The shell's copy | The app's | Who else reads the app's |
+| --- | --- | --- |
+| `favorites` | the `favourites` look key, `lib/desk.ts` — same five defaults, to the screen | the workspace sidebar, the search home's shortcut row, the directory's star, the launcher's pin |
+| `showFavorites` | the `shortcuts` look key (`'on'`/`'off'`), `lib/look.ts:1098` | the workspace search home, `desk/Customize` |
+| `lightHome` | `ground`, resolved through `lib/look.ts` | Settings → Colour and type, `desk/Customize`, and every colour in the app |
+| `recent` | `state.recent`, written by `remember()` in `state/slices/navigate.ts` on every `go` | the directory's *Lately*, `lib/unseen.ts` |
+
+Three consequences, each checkable:
+
+- **Pinning disagrees with pinning.** Star an app in the browser shell's
+  directory and the workspace sidebar, the search home and Settings do not
+  move. Pin one in Settings and the browser shell ignores it.
+- **The light switch does not switch the app.** The panel is titled
+  *Customize Semester* and its first heading is *Appearance*, but its Dark /
+  Light pair only sets a class on this shell's own root (`g-home-light`) and
+  leaves the app's ground where it was. It is the wider half of the app that
+  gives that away rather than the shell itself: press **Light** in the browser
+  navigation and then switch to the workspace, and the app is still on its
+  dark ground — measured, `rgb(4, 5, 7)` before this change and
+  `rgb(223, 226, 232)` after. Settings goes on saying dark, too.
+  `desk/Customize` has the considered answer to this exact control and wrote
+  it down: the two buttons move the ground, to Indigo or Paper, and somebody
+  who chose Oxide or Fog keeps it.
+- **None of it is in a backup.** `backupOf(state)` carries the look keys;
+  `semester.google.*` is outside the store, so it does not export, does not
+  restore and does not merge. (It *is* erased — `lib/erase.ts` clears
+  everything under `semester.`, and this is under it.)
+
+**Verdict: the shell reads and writes the app's keys**, the way every other
+surface does. The private hook goes with them. `readFavourites` caps the row
+at `MAX_FAVOURITES` (6) where the shell drew up to nine — the app's answer
+wins, because a shortcut row that is one length here and another there is the
+same disagreement one layer down. A curated `semester.google.favorites` is
+not migrated: it is dropped in favour of the app's list, whose defaults are
+the identical five screens.
+
+## 3. S2 — Courses offers *Add a course* twice · **MERGE — the top one stays**
+
+One screen, one tab, two controls, the same destination:
+
+```
+screens/Courses.tsx:112  <button className="portal-primary" …>+ Add a course</button>   (the filter row, beside the search field)
+screens/Courses.tsx:260  <button className="bare tap-x" …>Add a course from a syllabus</button>  (quiet, after the last card)
+```
+
+Both render inside the `tab === 'courses'` branch, so both are on screen
+together. They arrived from different ports: the filter row is the portal
+UI, the quiet link is this app's, and the quiet link's own comment argues
+against a prominent button as if the prominent one were not there —
+*"Not the full-width uppercase button this used to be: that read as the
+screen's main action when it is the rarest thing you do here."*
+
+That argument is about a full-width uppercase button and the survivor is not
+one: it is a small pill beside the search field, in the row where this screen
+keeps the things you do *to the list*. It is also the one a person sees
+without scrolling past four cards. **The filter-row button stays, the trailing
+link goes**, and the trailing link's reasoning moves into the survivor so the
+next pass does not re-add it.
+
+## 4. Cleared, with the reason
+
+- **`App.tsx:565` — `const showActions = true;`** A conditional that lost its
+  condition, and **left alone on a second look**: the six lines above it are
+  the record of *why* the row has no condition any more — search became an
+  overlay, so there is no longer a screen it must hide on. Cutting the
+  constant cuts the anchor for that paragraph, and the paragraph is worth more
+  than the line. It is not a duplicate control either way.
+- **The registry, drawn a fourth time.** `GoogleShell` renders its own full
+  directory (`.g-directory`, every app, list or grid, with a category filter)
+  where the app has `screens/Directory.tsx`, which pass six chose as the
+  survivor over Me's Everything tab. This is the same finding as D7 one shell
+  further out. It is **recorded, not fixed here**: the shell's directory is
+  the shell's own body rather than a destination, the fix is a port of
+  `Directory` into it rather than a deletion, and it is larger than the class
+  this pass is about. Next pass's first item.
+## 4a. S3 — nothing on the browser shell's home could be clicked · **FIXED**
+
+Found while photographing the panel S1 changes, **older than this pass** — it
+reproduced identically on `main` — and much larger than the button it was
+found on.
+
+`.g-home-legacy` lays the app's own screen over the browser shell's home, so
+that what the app mounts over a screen still reaches the student. The mount
+is `pointer-events: none` and hands them back with
+`.g-home-legacy .device > * { pointer-events: auto }`. Between `.device` and
+the screen sit `.deskwork-body` and `.device-pane`, both the size of the
+window, and that rule handed the pointer to them as well.
+
+So the home had a sheet of glass over it. Counted with `elementFromPoint` at
+the centre of every control on it, **twenty of twenty** returned
+`.device-pane.deskwork-pane`: the tab strip and its New tab, the omnibox, AI
+Tutor, the launcher, the profile, the capture +, the home search field, all
+six shortcuts, Explore all 60 apps, and Customize. A real pointer click on
+Customize timed out against the pane; the keyboard still reached everything,
+which is why the shell looked usable in a test.
+
+**Fixed with the pattern six rules further down the same file** —
+`.g-home-legacy .google-global` already gives the pointer up and hands it
+back on its children. The two wrappers do the same now, and the pane's own
+children (Said, Replaced, Undone) and the dialogs keep it; the screen body
+inside them is `display: none` in this mount already, so nothing that was
+reachable has become unreachable. After: **zero of twenty** blocked, and the
+real click that timed out lands.
+
+jsdom has no layout, so the hit test cannot be a test. The rule is held in
+`styles/stacking.test.ts` instead, next to the workspace's own
+overlay-stacking rules, by order and specificity.
+
+This is not the class this pass is about — it is the family of #238, one
+piece of shell chrome laid over another — and it was recorded rather than
+fixed until the person whose app it is asked for it.
+- **`Today.tsx:456` and `Today.tsx:1511`** render the same task row, styles
+  and `setMineTab` and all, in two branches. Duplicated UI, not a duplicated
+  pathway — it belongs with the 74 hand-rolled rows `GROUPED-AUDIT.md`
+  counted, and it is left for the shared-row work rather than fixed one
+  instance at a time.
+- **Six screens over "what is due and when"**, the assistant's three
+  surfaces, the four gradebooks: re-checked against passes four to six, all
+  still resolved there. Nothing in this pass reopens them.
+
+## 5. What this pass changed
+
+S1, S2 and S3, one commit each. No destination was added or removed: the
+count stands at 60, because every duplicate this pass found was a *control*
+rather than a *screen*. −4 duplicated settings, −1 duplicated control, and
+one shell's home given back its pointer.
+
+`src/styles/budget.ts` moves with S2 — `dim` 928 → 927, regenerated with
+`npm run lint:styles -- --fix`, which is the ledger recording that a screen
+got smaller.
 
 ---
 
