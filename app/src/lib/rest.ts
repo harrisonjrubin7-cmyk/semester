@@ -59,6 +59,27 @@ export interface Rest {
 }
 
 /**
+ * Three blocks to adjust rather than a blank form, for the reason
+ * `lib/windows.ts` gives about its own list: three plausible answers is a much
+ * easier question than an empty one, and the hardest part of writing down the
+ * hours you keep is admitting you keep any.
+ *
+ * These are the three the note at the top of this file names — meals, the gym,
+ * one genuinely free evening — because they are the ones people lose first and
+ * the ones nobody else will defend.
+ */
+export const SUGGESTED_REST: Omit<Rest, 'id'>[] = [
+  { label: 'Dinner', days: [0, 1, 2, 3, 4, 5, 6], from: 18 * 60, to: 19 * 60 },
+  { label: 'The gym', days: [1, 3, 5], from: 17 * 60, to: 18 * 60 + 30 },
+  { label: 'One free evening', days: [5], from: 18 * 60, to: 23 * 60 },
+];
+
+/** Whether a block is complete enough to take hours out of the week. */
+export function keeps(r: Rest): boolean {
+  return r.days.length > 0 && r.to > r.from;
+}
+
+/**
  * How many minutes of a span fall inside the floor.
  *
  * The floor wraps midnight, which is the whole reason this is a function

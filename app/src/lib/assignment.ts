@@ -28,7 +28,7 @@
  */
 
 import { ask } from './claude';
-import { realDate } from './date';
+import { dateToIso, realDate } from './date';
 
 export interface Deliverable {
   what: string;
@@ -176,7 +176,11 @@ export async function breakDown(
   unitNames: string[],
   signal?: AbortSignal,
 ): Promise<Breakdown> {
-  const today = new Date().toISOString().slice(0, 10);
+  // The student's day, not Greenwich's. Every step this returns is dated
+  // relative to "today", so a UTC date handed to the model after six in the
+  // evening in Nashville puts the whole plan a day early — and the one thing
+  // a breakdown of an assignment has to get right is when things are due.
+  const today = dateToIso(new Date());
   const reply = await ask({
     signal,
     maxTokens: 2600,

@@ -69,6 +69,27 @@ export interface RegradeWindow {
 
 export const NO_WINDOW: RegradeWindow = { days: 0, business: false, note: '' };
 
+/** The longest regrade window this app will hold, in days. */
+export const MAX_WINDOW_DAYS = 90;
+
+/**
+ * A stated window length, from wherever it arrived.
+ *
+ * `closesOn` counts this down one day at a time when the syllabus states
+ * business days, so its exit depends entirely on this number — and the number
+ * is typed into a text field. `readWindows` clamped it on the way *out* of
+ * storage and `setRegradeWindow` did not clamp it on the way in, so a figure
+ * pasted into that field reached the loop unbounded and locked the tab before
+ * there was ever a reload to be saved by. One definition now, used by the
+ * reader, by the reducer and by the loop itself — the same arrangement as
+ * `readLeadDays` in `lib/runway.ts`, which had the two doors the other way
+ * round.
+ */
+export function readWindowDays(raw: unknown): number {
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return 0;
+  return Math.max(0, Math.min(MAX_WINDOW_DAYS, Math.round(raw)));
+}
+
 export function newReturned(id: string, courseId: string, at: number): Returned {
   return { id, courseId, at, score: '', note: '', raised: false };
 }
@@ -88,13 +109,14 @@ function startOfDay(at: number): Date {
  * refusal `lib/runway.ts` makes about testing-centre lead times.
  */
 export function closesOn(r: Returned, w: RegradeWindow): Date | null {
-  if (w.days <= 0) return null;
+  const days = readWindowDays(w.days);
+  if (days <= 0) return null;
   const out = startOfDay(r.at);
   if (!w.business) {
-    out.setDate(out.getDate() + w.days);
+    out.setDate(out.getDate() + days);
     return out;
   }
-  let left = w.days;
+  let left = days;
   while (left > 0) {
     out.setDate(out.getDate() + 1);
     const dow = out.getDay();
@@ -195,7 +217,7 @@ export function readWindows(raw: unknown): Record<string, RegradeWindow> {
     const w = value as Partial<RegradeWindow>;
     if (!w || typeof w !== 'object') continue;
     out[id] = {
-      days: typeof w.days === 'number' && w.days > 0 ? Math.min(90, Math.round(w.days)) : 0,
+      days: readWindowDays(w.days),
       business: w.business === true,
       note: typeof w.note === 'string' ? w.note : '',
     };

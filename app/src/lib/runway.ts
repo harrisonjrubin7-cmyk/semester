@@ -241,6 +241,21 @@ export function examsAhead(items: DatedItem[], done: Record<string, boolean>): D
 }
 
 
+export const MAX_LEAD_DAYS = 30;
+
+/**
+ * A testing-centre lead time, from wherever it arrived.
+ *
+ * One definition, used by the reducer that accepts the setting and by the
+ * reader that restores it — those were two clamps, and only one of them
+ * existed. Anything that is not a real number is no lead time at all, which
+ * is what everybody who does not use a testing centre has.
+ */
+export function readLeadDays(raw: unknown): number {
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return 0;
+  return Math.max(0, Math.min(MAX_LEAD_DAYS, Math.round(raw)));
+}
+
 /**
  * N business days before a date.
  *
@@ -253,7 +268,23 @@ export function examsAhead(items: DatedItem[], done: Record<string, boolean>): D
  */
 export function businessDaysBefore(date: Date, days: number): Date {
   const out = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  let left = days;
+  /*
+   * Bounded, because this is a loop whose exit depends on a number that came
+   * from somewhere else. `setAccessLead` clamps on the way in, but the
+   * setting is also *restored* — out of storage, and out of an imported
+   * backup — and a number arriving that way has been through no reducer. A
+   * count of 1e9 does not throw and does not return; it walks the calendar a
+   * day at a time with the tab locked, and because the value is persisted it
+   * does it again on the next load.
+   *
+   * So the clamp is applied here as well as at the doors, in the function
+   * that would hang rather than only in the ones that can forget. It is the
+   * same `readLeadDays`, which also disposes of Infinity and of NaN — NaN
+   * failed `left > 0` on the first test and fell out with the exam's own
+   * date, so a lead time that had not survived storage read as "book this
+   * today" on an exam three weeks off.
+   */
+  let left = readLeadDays(days);
   while (left > 0) {
     out.setDate(out.getDate() - 1);
     const dow = out.getDay();
@@ -269,8 +300,9 @@ export function businessDaysBefore(date: Date, days: number): Date {
  * does not use one — this is not a thing to ask every student about.
  */
 export function bookBy(exam: DatedItem, leadDays: number): Date | null {
-  if (leadDays <= 0) return null;
-  return businessDaysBefore(exam.date, leadDays);
+  const lead = readLeadDays(leadDays);
+  if (lead <= 0) return null;
+  return businessDaysBefore(exam.date, lead);
 }
 
 /** Whether the booking window has already closed. */

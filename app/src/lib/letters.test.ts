@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { dateToIso } from './date';
 import {
   NOTICE,
+  askedToday,
   known,
   knownLine,
   needing,
@@ -47,6 +48,25 @@ describe('how much notice a request gives', () => {
     expect(short(letter({ due: day(40) }), NOW)).toBe(false);
     // Adjustable, because some want a month and some are happy with ten days.
     expect(short(letter({ due: day(10) }), NOW, 7)).toBe(false);
+  });
+
+  it('does not move the moment the letter is marked asked', () => {
+    /*
+     * The two halves of this number were computed in different clocks: the
+     * screen stamped `askedOn` from `toISOString`, which is the UTC day, and
+     * `notice` falls back to the local day for a letter with no stamp. West of
+     * Greenwich in the evening those differ, so pressing "Asked" — which
+     * records a fact and decides nothing — quietly took a day off the notice
+     * the student was told they had given.
+     *
+     * Pinned to an evening that is already tomorrow in UTC, so the assertion
+     * bites in the zone this app is written for rather than only in the one
+     * the suite happens to run in.
+     */
+    const evening = new Date(2026, 8, 18, 21, 30);
+    const before = notice(letter({ due: day(30) }), evening);
+    const after = notice(letter({ due: day(30), askedOn: askedToday(evening) }), evening);
+    expect(after).toBe(before);
   });
 
   it('says nothing about notice with no deadline recorded', () => {

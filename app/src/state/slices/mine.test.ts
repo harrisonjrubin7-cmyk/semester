@@ -92,3 +92,137 @@ describe('an appointment of your own', () => {
     expect(fixed.appointments).toEqual(after.appointments);
   });
 });
+
+/**
+ * The hours you keep for yourself, which for a long time you could not keep.
+ *
+ * `addRest` and `dropRest` were in the reducer and nothing dispatched either,
+ * so `state.rest` was empty on every device and the whole of `lib/rest.ts`'s
+ * protected-block arithmetic ran on an empty list. `components/Capacity.tsx`
+ * has the control now, and it edits in place the way `WorkWindows` does —
+ * which is why `patchRest` had to exist too. Without it, changing the hour of
+ * a standing dinner meant deleting the block and writing it out again.
+ */
+describe('a block of time you keep', () => {
+  const dinner = { label: 'Dinner', days: [1, 2, 3], from: 18 * 60, to: 19 * 60 };
+
+  it('can be added, edited and removed', () => {
+    const added = run(start(), { type: 'addRest', patch: dinner });
+    expect(added.rest).toHaveLength(1);
+    const id = added.rest[0].id;
+
+    const moved = run(added, { type: 'patchRest', id, patch: { from: 19 * 60, to: 20 * 60 } });
+    expect(moved.rest[0].from).toBe(19 * 60);
+    expect(moved.rest[0].to).toBe(20 * 60);
+    // The fields the patch did not name survive it.
+    expect(moved.rest[0].label).toBe('Dinner');
+    expect(moved.rest[0].days).toEqual([1, 2, 3]);
+    // And the block stays the same block, so the list does not jump.
+    expect(moved.rest[0].id).toBe(id);
+
+    expect(run(moved, { type: 'dropRest', id }).rest).toEqual([]);
+  });
+
+  it('cleans a patch on the way in, the way the floor does', () => {
+    const added = run(start(), { type: 'addRest', patch: dinner });
+    const id = added.rest[0].id;
+    // Out-of-range minutes and a duplicated, unsorted day list — the two
+    // things a time field and a row of day toggles can actually send.
+    const odd = run(added, { type: 'patchRest', id, patch: { days: [3, 1, 1], to: 99 * 60 } });
+    expect(odd.rest[0].days).toEqual([1, 3]);
+    expect(odd.rest[0].to).toBe(24 * 60);
+  });
+
+  it('leaves the other blocks alone', () => {
+    const two = run(
+      start(),
+      { type: 'addRest', patch: dinner },
+      { type: 'addRest', patch: { label: 'The gym', days: [5], from: 17 * 60, to: 18 * 60 } },
+    );
+    const gym = two.rest[1];
+    const after = run(two, { type: 'patchRest', id: two.rest[0].id, patch: { label: 'Supper' } });
+    expect(after.rest[1]).toEqual(gym);
+  });
+});
+
+/**
+ * The corrections a screen could not make.
+ *
+ * Six operations sat in the reducer with nothing dispatching them, found by
+ * tracing every `Action` variant to its sender. The screens have them now —
+ * `TakenRow` and `RequirementRow` in `screens/Degree.tsx`, `Correct` and the
+ * per-visit remove in `screens/People.tsx` — and these are the reducer halves
+ * they lean on. Written against the patch semantics a form actually has: it
+ * sends the fields it holds, so anything it does not name has to survive.
+ */
+describe('correcting what was recorded', () => {
+  const course = { code: 'ECON 1020', title: 'Principles', term: 'Fall 2026', hours: 3, grade: 'B+', current: false };
+
+  it('edits a course on the transcript and keeps what the patch leaves out', () => {
+    const added = run(start(), { type: 'addTaken', patch: course });
+    const c = added.taken[0];
+    const fixed = run(added, { type: 'patchTaken', id: c.id, patch: { grade: 'A-', hours: 4 } });
+
+    expect(fixed.taken).toHaveLength(1);
+    expect(fixed.taken[0].grade).toBe('A-');
+    expect(fixed.taken[0].hours).toBe(4);
+    expect({ ...fixed.taken[0], grade: c.grade, hours: c.hours }).toEqual(c);
+  });
+
+  it('edits a requirement without disturbing its neighbours', () => {
+    const two = run(
+      start(),
+      { type: 'addRequirement', patch: { programme: 'Econ major', name: 'Theory', need: 'courses', count: 2, accepts: ['ECON 3010'] } },
+      { type: 'addRequirement', patch: { programme: 'Econ major', name: 'Methods', need: 'hours', count: 6, accepts: [] } },
+    );
+    const methods = two.requirements[1];
+    const after = run(two, {
+      type: 'patchRequirement',
+      id: two.requirements[0].id,
+      patch: { accepts: ['ECON 3010', 'ECON 3012'], count: 3 },
+    });
+
+    expect(after.requirements[0].accepts).toEqual(['ECON 3010', 'ECON 3012']);
+    expect(after.requirements[0].count).toBe(3);
+    expect(after.requirements[0].name).toBe('Theory');
+    expect(after.requirements[1]).toEqual(methods);
+  });
+
+  it('corrects a person without losing what was recorded about them', () => {
+    // The whole reason delete-and-retype was the wrong repair: `dropPerson`
+    // takes the visits with it, deliberately.
+    const added = run(start(), { type: 'addPerson', patch: { name: 'Dr Stromme', role: 'Professor' } });
+    const p = added.people[0];
+    const withVisit = run(added, { type: 'addVisit', patch: { personId: p.id, what: 'Talked about the thesis' } });
+
+    const fixed = run(withVisit, {
+      type: 'patchPerson',
+      id: p.id,
+      patch: { name: 'Dr. Strømme', email: 'strom@vanderbilt.edu' },
+    });
+    expect(fixed.people[0].name).toBe('Dr. Strømme');
+    expect(fixed.people[0].email).toBe('strom@vanderbilt.edu');
+    expect(fixed.people[0].role).toBe('Professor');
+    expect(fixed.visits).toHaveLength(1);
+
+    // And the contrast that makes the point.
+    expect(run(withVisit, { type: 'dropPerson', id: p.id }).visits).toEqual([]);
+  });
+
+  it('removes one recorded conversation and leaves the others', () => {
+    const added = run(start(), { type: 'addPerson', patch: { name: 'Dr Stromme', role: '' } });
+    const p = added.people[0];
+    const two = run(
+      added,
+      { type: 'addVisit', patch: { personId: p.id, what: 'First' } },
+      { type: 'addVisit', patch: { personId: p.id, what: 'Typed twice by mistake' } },
+    );
+    expect(two.visits).toHaveLength(2);
+
+    const after = run(two, { type: 'dropVisit', id: two.visits[1].id });
+    expect(after.visits).toHaveLength(1);
+    expect(after.visits[0].what).toBe('First');
+    // The person stays; only the line goes.
+    expect(after.people).toHaveLength(1);
+  });
+});

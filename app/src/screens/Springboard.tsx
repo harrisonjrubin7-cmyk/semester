@@ -410,21 +410,44 @@ export function Springboard() {
             <TabList
               label="Pages"
               style={{ display: 'flex', gap: 'var(--sp-4)', justifyContent: 'center', padding: '20px 0 8px' }}
+              /*
+                A 7px dot is what a page indicator looks like everywhere, and
+                a 7px dot is not something a thumb can hit. So the dot is
+                drawn at 7 and the button around it is 24 — the floor — with
+                nothing but space between the drawing and the edge of the
+                target. `tap` is no use here: the dots sit 8px apart, and a
+                44px overlay on each would have every one of them reaching
+                across its neighbours, which is the failure that class's own
+                note warns about.
+              */
               tabs={pages.map((_, i) => ({
                 id: String(i),
-                label: null,
+                label: (
+                  <span
+                    aria-hidden
+                    style={{
+                      display: 'block',
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      background: i === page ? 'var(--app-accent)' : 'var(--app-line)',
+                    }}
+                  />
+                ),
                 ariaLabel: `Page ${i + 1}`,
               }))}
               value={String(page)}
               onChange={(id) => setPage(Number(id))}
               tabClassName="bare"
-              tabStyle={(on) => ({
-                width: 7,
-                height: 7,
+              tabStyle={() => ({
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 24,
+                height: 24,
                 flex: 'none',
                 padding: 0,
-                borderRadius: '50%',
-                background: on ? 'var(--app-accent)' : 'var(--app-line)',
+                background: 'transparent',
               })}
             />
           )}

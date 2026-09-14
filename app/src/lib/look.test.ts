@@ -117,8 +117,20 @@ describe('tokensFor', () => {
   });
 
   it('carries the accent through, and darkens it on a light ground', () => {
-    expect(tokensFor({ accent: 'brass' })['--app-accent']).toBe('#d8c79a');
-    expect(tokensFor({ accent: 'brass', ground: 'parchment' })['--app-accent']).toBe('#6b5c34');
+    /*
+     * Against the accent's own steps rather than two hexes.
+     *
+     * This held Brass's literals, and both went stale the moment the palette
+     * was retuned for contrast — which the note over `ACCENTS` says happens,
+     * and has now happened twice. A copied hex turns a retune into a failing
+     * test that says nothing about what broke: the claim here is that the
+     * accent resolves to `base` on a dark ground and to `shade` on a light
+     * one, and that the light one really is the darker of the two.
+     */
+    const brass = ACCENTS.find((a) => a.id === 'brass')!;
+    expect(tokensFor({ accent: 'brass' })['--app-accent']).toBe(brass.base);
+    expect(tokensFor({ accent: 'brass', ground: 'parchment' })['--app-accent']).toBe(brass.shade);
+    expect(contrast(brass.shade, '#ffffff')).toBeGreaterThan(contrast(brass.base, '#ffffff'));
   });
 
   it('darkens the fill on a light ground too, because a fill still has to be seen', () => {

@@ -40,9 +40,10 @@ leaves the rest of the file running unprotected.
 `records.check.sql`, `calendar.check.sql`, `sync.check.sql`.
 
 Each one invents two to five users, proves the row-level policies refuse what
-they should refuse, and ends in `rollback;`. `rooms.check.sql` covers the
-reactions half of `…0400_rooms.sql`; the presence half is policies on
-`realtime.messages`, which no bare Postgres has, and its header says so. They answer the questions a policy
+they should refuse, and ends in `rollback;`. `rooms.check.sql` covers both halves of
+`…0400_rooms.sql` — reactions, and the presence policies on
+`realtime.messages`, which `local.stub.sql` supplies so that the migration's
+guarded block runs here at all. They answer the questions a policy
 can only be wrong about when a second person is involved — can a stranger read
 your room, can one member throw another out — without needing a second person.
 
@@ -55,7 +56,9 @@ See **Running the checks, without a project** below.
 The furniture a real Supabase project already has and a bare Postgres does not,
 and the script that builds a database out of it. Neither is a migration and
 neither reaches a project; nothing should grow in the stub that the suites do
-not need. See **Running the checks, without a project** below.
+not need — `realtime.messages` and `realtime.topic()` are there because
+`…0400_rooms.sql` skips its presence policies without them, which left the
+green dots asserted by nothing. See **Running the checks, without a project** below.
 
 ## `scheduler.sql` — infrastructure, applied once by hand
 

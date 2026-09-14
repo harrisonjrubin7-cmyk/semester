@@ -12,14 +12,16 @@
 -- wrong without saying anything about the policies. `supabase/check.sh` builds
 -- that database; see supabase/README.md.
 --
--- Two things in that migration this cannot reach, and both want a second real
--- device rather than a second synthetic account:
+-- Presence is here too, which took a stub. Its policies live on
+-- `realtime.messages`, and the migration creates them only where that table
+-- exists — so on a bare Postgres the whole block was skipped and nothing
+-- asserted the two policies the green dots depend on. `local.stub.sql` now
+-- supplies that table and `realtime.topic()`, and the checks set the topic
+-- with `set_config` exactly as Realtime sets it per connection.
 --
---   * Presence. Its policies are on `realtime.messages`, which belongs to the
---     Realtime server and does not exist in a bare Postgres at all.
---   * Delivery. Realtime honours the select policy below, so what a subscriber
---     is *allowed* is settled here — but whether the websocket carries it is
---     not a question Postgres can answer.
+-- The one thing left that this cannot reach is delivery. Realtime honours the
+-- policies below, so what a subscriber is *allowed* is settled here — but
+-- whether the websocket carries it wants a second real device.
 
 begin;
 
@@ -259,6 +261,106 @@ begin
   reset role;
   select count(*) into n from public.message_reactions where message_id = m;
   perform pg_temp.counted('deleting the message takes its reactions with it', n, 0);
+end $$;
+
+-- ── The green dots ────────────────────────────────────────────────────────
+-- Presence is not a table: it lives in the Realtime server for as long as a
+-- tab is open. What Postgres decides is whether you may join the channel at
+-- all, and it decides it from the channel's name — `here:<term>:<room key>`,
+-- split on colons. Both policies ask the same question of that name, so both
+-- are wrong in the same way if the split is.
+
+create or replace function pg_temp.at_topic(t text)
+returns void language plpgsql as $$
+begin
+  perform set_config('realtime.topic', t, true);
+end $$;
+
+do $$
+declare n bigint;
+begin
+  -- The assumption the split rests on, pinned where somebody widening the key
+  -- will trip over it: a colon in a room key would silently move the course
+  -- code out of `split_part(…, 3)` and every dot would go out at once.
+  perform pg_temp.become('11111111-1111-1111-1111-111111111111');
+  begin
+    insert into public.enrollments (user_id, term, code)
+    values (auth.uid(), '2026FA', 'vanderbilt/BUS:1600');
+    raise exception 'FAILED: a room key with a colon in it was accepted';
+  exception
+    when insufficient_privilege or check_violation then
+      raise notice 'ok  a room key cannot contain a colon, which the topic is split on';
+  end;
+
+  -- Ana is in the room, so she may say she is here.
+  perform pg_temp.at_topic('here:2026FA:vanderbilt/BUS 1600');
+  insert into realtime.messages (topic, extension, event)
+  values (realtime.topic(), 'presence', 'track');
+
+  -- And a classmate in the same room reads it. This is the half that draws
+  -- somebody else's dot rather than your own.
+  perform pg_temp.become('22222222-2222-2222-2222-222222222222');
+  perform pg_temp.at_topic('here:2026FA:vanderbilt/BUS 1600');
+  select count(*) into n from realtime.messages;
+  perform pg_temp.counted('a classmate can watch who is in the room', n, 1);
+
+  -- Cara is not in it, and neither half is open to her.
+  perform pg_temp.become('33333333-3333-3333-3333-333333333333');
+  perform pg_temp.at_topic('here:2026FA:vanderbilt/BUS 1600');
+  select count(*) into n from realtime.messages;
+  perform pg_temp.counted('somebody outside the class cannot watch the room', n, 0);
+  begin
+    insert into realtime.messages (topic, extension, event)
+    values (realtime.topic(), 'presence', 'track');
+    raise exception 'FAILED: somebody appeared in a class they are not in';
+  exception
+    when insufficient_privilege or check_violation then
+      raise notice 'ok  you cannot appear in a class you are not in';
+  end;
+
+  -- Ben takes ECON 1020, so `in_class` passes for that room and the dot is
+  -- his to give — the topic, not the enrolment, is what picks the room.
+  perform pg_temp.become('22222222-2222-2222-2222-222222222222');
+  perform pg_temp.at_topic('here:2026FA:vanderbilt/ECON 1020');
+  insert into realtime.messages (topic, extension, event)
+  values (realtime.topic(), 'presence', 'track');
+  perform pg_temp.at_topic('here:2026FA:vanderbilt/PSCI 1104');
+  begin
+    insert into realtime.messages (topic, extension, event)
+    values (realtime.topic(), 'presence', 'track');
+    raise exception 'FAILED: a topic named a room its author is not in';
+  exception
+    when insufficient_privilege or check_violation then
+      raise notice 'ok  the room comes from the topic, and it is checked';
+  end;
+
+  -- Eve is in the room and still not a student.
+  perform pg_temp.become('55555555-5555-5555-5555-555555555555');
+  perform pg_temp.at_topic('here:2026FA:vanderbilt/BUS 1600');
+  begin
+    insert into realtime.messages (topic, extension, event)
+    values (realtime.topic(), 'presence', 'track');
+    raise exception 'FAILED: an unconfirmed address was allowed into a room';
+  exception
+    when insufficient_privilege or check_violation then
+      raise notice 'ok  an unconfirmed address cannot appear in a room';
+  end;
+
+  -- These policies open the presence topic and nothing else. Every other
+  -- channel this app opens — `room:…`, `reactions:…` — is `postgres_changes`
+  -- on an ordinary table and must not be reachable through this door.
+  perform pg_temp.become('11111111-1111-1111-1111-111111111111');
+  perform pg_temp.at_topic('room:2026FA:vanderbilt/BUS 1600');
+  select count(*) into n from realtime.messages;
+  perform pg_temp.counted('another topic in a room you are in reads nothing', n, 0);
+  begin
+    insert into realtime.messages (topic, extension, event)
+    values (realtime.topic(), 'presence', 'track');
+    raise exception 'FAILED: a topic that is not presence was opened';
+  exception
+    when insufficient_privilege or check_violation then
+      raise notice 'ok  only the presence topic is opened by these policies';
+  end;
 end $$;
 
 rollback;

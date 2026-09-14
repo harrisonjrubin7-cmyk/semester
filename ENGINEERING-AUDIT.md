@@ -246,28 +246,81 @@ on its own terms even if the context is never split.
 
 ---
 
-## 3. P3 — CI spends about two and a half minutes spawning test workers
+## 3. P3 — CI spent a third of its test time starting processes · **DONE**
 
-Vitest reports it itself, at the end of every run:
+Vitest reported it itself, at the end of every run:
 
 ```
-Isolate  336 workers spawned · ~244ms startup each (spawn + environment, per file)
-         at least ~27.09s faster with isolate: false
+Isolate  363 workers spawned · ~224ms startup each (spawn + environment, per file)
+         at least ~27.02s faster with isolate: false
 ```
 
-Of a 48-second suite, **27 seconds is process startup** — 56%. And CI runs the
-suite **three times**: `npm test`, then `npm run test:zones`, which is the same
-suite again under `TZ=America/Chicago` and `TZ=Pacific/Kiritimati`. That is
-roughly **80 seconds per CI run** spent on worker spawn.
+There was no test configuration at all — the suite ran on defaults, one worker
+per file. And CI pays it three times: `npm test`, then `test:zones` runs the
+whole suite again under `TZ=America/Chicago` and again under
+`TZ=Pacific/Kiritimati`.
 
-`poolOptions.threads.isolate: false` is the setting. It is not free: it reuses a
-worker across files, so any test leaning on a fresh module registry, a clean
-`localStorage`, or a global mutated at module scope can start failing. With 335
-files some will. The work is: turn it on, see which files break, and either fix
-their setup or list them under `poolOptions.threads.isolate` exceptions. A
-one-off afternoon against a saving taken on every push, three times.
+Measured from a cold transform cache, in CI's own order:
 
----
+```
+baseline   npm test 46s  +  test:zones 89s  =  135s
+after      npm test 29s  +  test:zones 55s  =   84s      −37%
+```
+
+### It is two projects, not one setting
+
+`isolate: false` gives up a fresh module registry per file, and this audit
+guessed that "with 335 files some will break". Nine do, and they are a
+principled nine rather than a scattering: every file that calls `vi.mock`.
+A mock can only rebind a module the worker has not already evaluated, so
+whether it takes depends on which file ran first — `components/rework` got
+the real `state/store` and threw *"useStore must be used inside
+StoreProvider"* on one run in three.
+
+So the nine run isolated and the other 354 share workers, and
+`src/isolation.test.ts` keeps the list true by grepping the tree against the
+list in the config. A file that starts mocking without being listed would
+otherwise not fail — it would fail *sometimes*, which is worse.
+
+### The bug it uncovered, which was nothing to do with workers
+
+`lib/realdate.test.ts` sets `process.env.TZ` to Havana for one test and puts
+it back afterwards. `process.env.TZ = undefined` does not unset a variable: it
+sets the **string** `"undefined"`, which is not a zone, and Node then answers
+`Intl.DateTimeFormat().resolvedOptions().timeZone` with `undefined` for the
+rest of the process. A plain `npm test` has no `TZ` in the environment, so
+that is the path taken every single run.
+
+Harmless while every file had a worker to itself. With workers shared it is
+process-wide, and the next module in that worker to read the zone *at import
+time* keeps the broken value — which is how `lib/connect.ts`, whose `TZ` is a
+module-level `const`, wrote a calendar event with no `timeZone` on it about one
+run in six, from a file that has nothing to do with timezones.
+
+### 7b — two more things the stress test found, left alone
+
+Running with `--sequence.shuffle.files` eight times found no failures. Running
+with plain `--sequence.shuffle`, which also shuffles tests *within* a file,
+found two things that are **not** this work's and are recorded rather than
+fixed:
+
+- **Four files depend on their own tests running in order** — `lib/claude`,
+  `lib/keys`, `lib/device` and `components/splash`. Checked against the
+  unchanged config: they fail there too, so it is within-file order dependence
+  and predates the projects split.
+- **`EnvironmentTeardownError` on `data/courses/econ/guide.ts`**, three at a
+  time, on roughly a third of shuffled runs — an async import that resolves
+  after its environment is gone. Also present at baseline. CI does not shuffle,
+  so neither reaches it today; both are real and both want their own pass.
+
+### The `lib/connect.ts` capture is worth a second look
+
+Not a test problem. `const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone`
+is read once when the module loads and never again, so a PWA left open across a
+timezone change — a flight, which is exactly when somebody adds calendar events
+— writes them with the zone it started in. An app whose CI runs in three
+timezones because of an off-by-one should probably read it at the call site.
+Out of scope here, and named so it is not lost.
 
 ## 4. P4 — a screen is registered in eight places
 
@@ -481,7 +534,7 @@ Ordered by measured value per unit of risk, not by size.
 | 4 | ✅ **P5** — prune the shell cache on a build change; keep the share cache | small | an installed app that does not grow without bound |
 | 5 | ✅ **P6** — silence the one noisy lint rule | one config edit | 155 warnings → 41 |
 | 6 | ✅ **P1a** — split the panel out behind its button | medium | −6,608 lines measured, and the panel opens no slower |
-| 7 | **P3** — `isolate: false`, then fix what breaks | an afternoon | ~80s per CI run, three runs deep |
+| 7 | ✅ **P3** — two projects: 354 shared, 9 isolated | an afternoon | −51s per CI run (135s → 84s, −37%) |
 | 8 | **P1d** — lazy `softtop.ts` behind the soft shell | small | −1,518 lines |
 | 9 | **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | closes the 82-vs-60 findability hole |
 | 10 | **P4 proper** — one module per screen | large, own branch | adding a screen becomes adding a file |

@@ -230,9 +230,25 @@ export function TopBar({
             that acts on what you are looking at rather than in a claim
             about a key.
           */}
+          {/*
+            Named here as well as in the span, because below 760px the span is
+            not drawn: `.desktop-ai span { display: none }` in app.css leaves
+            the glyph alone in the bar. The name then came only from text that
+            had been display-none'd, which is no name at all — a screen reader
+            on a phone announced "button" and stopped, on the one control in
+            this bar that opens the assistant.
+
+            The same answer the tab bar gives when its labels are off: the
+            glyph carries the picture and `aria-label` carries the name, so
+            the button reads identically at every width. The span stays for
+            the sighted reader where there is room for it, and being labelled
+            twice with the same words is not a conflict — `aria-label` wins,
+            and it wins with the text that was already there.
+          */}
           <button
             type="button"
             className="bare desktop-ai"
+            aria-label="AI Tutor"
             onClick={() => dispatch({ type: 'go', screen: 'ask' })}
           >
             <AskIcon size={15} />

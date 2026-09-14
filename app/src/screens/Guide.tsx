@@ -120,7 +120,10 @@ export function Guide() {
       ) : (
       <button
         type="button"
-        className="bare tappable"
+        // The row is a 16px line of text, so it needs `tap-y` to reach a
+        // finger-sized target. It is full width in a vertical stack, so the
+        // reach has to be up and down — the axis the class names.
+        className="bare tappable tap-y"
         onClick={() => dispatch({ type: 'toggleWays' })}
         aria-expanded={state.waysOpen}
         style={{
@@ -128,7 +131,7 @@ export function Guide() {
           alignItems: 'center',
           gap: 'var(--sp-4)',
           width: '100%',
-          margin: '20px 0 8px',
+          margin: '20px 0 14px',
           textAlign: 'left',
         }}
       >

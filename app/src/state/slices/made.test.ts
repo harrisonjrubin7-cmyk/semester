@@ -242,3 +242,48 @@ describe('moving work to another course', () => {
     expect(after.notes[0].courseId).toBeNull();
   });
 });
+
+/**
+ * Nesting a folder, which the drive could not do.
+ *
+ * `moveFolder` sat in the reducer with nothing dispatching it. The evidence
+ * that it was meant to be reachable is `canMove` in `lib/folders.ts`: it
+ * refuses a move into the thing's own subtree, and a file has no subtree, so
+ * that guard was written for folders and nothing could trip it. A folder could
+ * be made, renamed and deleted; putting one inside another meant making a new
+ * one in the right place and moving every file across by hand.
+ *
+ * `screens/mine/Drive.tsx` now opens the same picker files use, with `canMove`
+ * disabling the rows that would make a cycle. These are the reducer's half.
+ */
+describe('a folder moved into another', () => {
+  const tree = () =>
+    run(
+      start(),
+      { type: 'newFolder', id: 'a', name: 'Econ', parentId: null },
+      { type: 'newFolder', id: 'b', name: 'Problem sets', parentId: null },
+      { type: 'newFolder', id: 'c', name: 'Week 1', parentId: 'b' },
+    );
+
+  it('nests one under another and leaves the rest alone', () => {
+    const before = tree();
+    const after = run(before, { type: 'moveFolder', id: 'b', parentId: 'a' });
+
+    expect(after.folders.find((f) => f.id === 'b')?.parentId).toBe('a');
+    // Its own child follows it by staying pointed at it — nothing reparents.
+    expect(after.folders.find((f) => f.id === 'c')?.parentId).toBe('b');
+    expect(after.folders.find((f) => f.id === 'a')).toEqual(
+      before.folders.find((f) => f.id === 'a'),
+    );
+  });
+
+  it('moves one back out to the drive root', () => {
+    const after = run(tree(), { type: 'moveFolder', id: 'c', parentId: null });
+    expect(after.folders.find((f) => f.id === 'c')?.parentId).toBeNull();
+  });
+
+  it('keeps every folder — a move is not a delete', () => {
+    const after = run(tree(), { type: 'moveFolder', id: 'b', parentId: 'a' });
+    expect(after.folders.map((f) => f.id).sort()).toEqual(['a', 'b', 'c']);
+  });
+});

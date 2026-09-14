@@ -159,19 +159,32 @@ await ctx.addInitScript(() => {
 
 | Setting | Values in code | Labels on screen |
 |---|---|---|
-| `shell` | `plain` · `grouped` · `soft` | Drawn · Grouped · Soft |
-| `nav` | `tabs` · `feed` · `springboard` · `shelves` · `workspace` · `browser` · `guides` | Tab bar · One feed · Home screen · Shelves · Workspace · Browser · Study guides |
+| `shell` | `plain` · `grouped` · `soft` · `list` · `tiles` · `hue` | Drawn · Grouped · Soft · A list · Tiles · Hue |
+| `nav` | `tabs` · `feed` · `springboard` · `shelves` · `workspace` · `guides` | Tab bar · One feed · Home screen · Shelves · Workspace · Study guides |
+
+Six and six, so **thirty-six pairings**, and each is a working app. A change
+to one is not exercised by looking at another.
 
 **The default is `workspace`,** not the tab bar (`state/shape.ts`). So a run
 that seeds nothing is a run in the workspace shell — a browser-shaped strip
 of app tabs over a search bar — and it is easy to screenshot that while
 believing you are looking at the tab bar.
 
-**Read `NAVS` rather than trusting the row above.** It has grown twice
-without this file noticing: it was four when this was written, six by the
-time the Workspace and Study-guides ports landed, and seven once Browser
-arrived. `NAVS` in `lib/look.ts` is the list; `SHELLS` beside it is the
-other axis.
+**Read `NAVS` and `SHELLS` rather than trusting the rows above.** Both have
+moved without this file noticing, and in both directions. `NAVS` was four
+when this was written, six once the Workspace and Study-guides ports landed,
+then seven when a `browser` nav arrived — and six again when that nav merged
+back into the workspace and was deleted from the union. `SHELLS` was three
+here for far longer than it was three in the code. `NAVS` in `lib/look.ts` is
+the list; `SHELLS` beside it is the other axis.
+
+**A value that no longer exists fails silently, which is why this matters.**
+`useShell` returns plain for anything it does not recognise and the nav
+reader does the same, so seeding the retired `nav: 'browser'` today comes up
+in the *workspace* — working, wrong, and nothing logged. Measured: a sweep
+seeding all seven of the old navigations reported seven distinct runs and
+had really made six, because `browser` and `workspace` drew the same chrome.
+Check the seed in the DOM (§6b), never by assuming the value took.
 
 The names do not match: **`plain` is "Drawn"** (`SHELLS` in `lib/look.ts`).
 `drawn` is a real value in this app, but it belongs to `corners`, not
@@ -200,8 +213,8 @@ marker is that it moves.
 **Check it in the DOM, never by reading `semester.v1` back.** The obvious
 test — seed a nav, then read the key again — passes whether or not the seed
 took, because nothing has necessarily saved yet and you are reading your own
-write. Measured both ways on the same build: reading the key said all seven
-navigations applied; reading the chrome said none of them had, without the
+write. Measured both ways on the same build: reading the key said every
+navigation applied; reading the chrome said none of them had, without the
 version. The navigation each one draws is in §6b, and a one-line probe
 settles it:
 
@@ -210,8 +223,8 @@ await page.evaluate(() => ({
   tabs: document.querySelectorAll('.app-tabs').length,      // tabs
   shelf: document.querySelectorAll('.shelf-nav').length,    // shelves
   icons: document.querySelectorAll('.iconshape').length,    // springboard
-  desk: document.querySelectorAll('.deskwork').length,      // workspace · browser
-  strip: document.querySelectorAll('.deskstrip').length,    // workspace only
+  desk: document.querySelectorAll('.deskwork').length,      // workspace
+  strip: document.querySelectorAll('.deskstrip').length,    // workspace
 }));
 ```
 
@@ -284,12 +297,14 @@ The class names do not follow the names on screen, and guessing costs a
 | `springboard` | `.iconshape` inside `.tappable`; pages are `role="tab"` | the home screen itself |
 | `feed` | no chrome of its own | — |
 | `workspace` | `.deskstrip` (the app-tab strip) inside `.deskwork` | above the scroller |
-| `browser` | `.deskwork` and **no** `.deskstrip`; its `<h1>` is "Semester" | above the scroller |
 | `guides` | no chrome of its own; its `<h1>` is "Guides" | — |
 
-`workspace` and `browser` are not the same chrome and the obvious guess says
-they are: both are `.deskwork`, only the first has the strip of app tabs. A
-probe on `.deskstrip` alone reports `browser` as "no navigation at all".
+**There is no `browser` row any more.** It was the seventh navigation for one
+release — `.deskwork` with no `.deskstrip` — and the browser-shaped shell
+merged back into `workspace`, which now draws both. Seeding `nav: 'browser'`
+is seeding a value the union no longer has, so it lands in the workspace
+without a word. If you are reading an older script that expects the two to
+differ on `.deskstrip`, that difference is gone, not broken.
 
 `.soft-grid` is the **folder** that opens on top of the springboard, not
 the launcher's own grid — the obvious guess, and it silently matches

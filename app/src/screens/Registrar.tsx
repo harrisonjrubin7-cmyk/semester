@@ -193,6 +193,7 @@ export function Registrar() {
             Leave anything your university does not do. A blank row is a normal row.
           </div>
           {rows.map(row)}
+          <YourOwn />
         </>
       ) : (
         <>
@@ -301,5 +302,95 @@ export function Registrar() {
 
     </>
     </Page>
+  );
+}
+
+/**
+ * A date of your own, which the sheet had no way to add.
+ *
+ * `addTermDate` was in the reducer, unreachable. The evidence that it was
+ * meant to be reachable is one line down in the same file: `dropTermDate`
+ * says "a landmark is emptied rather than removed — it is part of the sheet
+ * and will be asked for again. **One of your own goes for good.**" There were
+ * none of your own, because nothing could make one.
+ *
+ * It matters more here than the sheet suggests. `LANDMARKS` is the list of
+ * dates most American registrars publish, and the note at the top of this
+ * screen already concedes that these "differ by university and by year" — a
+ * thesis filing deadline, a study-abroad application, a co-op registration
+ * window, a conservatory jury. The screen asked people to fill in a fixed
+ * list and then told them their own dates were not worth keeping.
+ *
+ * Two fields and a range that appears once a start is set, because that is
+ * how `addTermDate` reads it: a date with an `until` is stored as a break,
+ * without as a deadline, and the row above draws the second field for exactly
+ * those kinds.
+ */
+function YourOwn() {
+  const { dispatch } = useStore();
+  const row = useRowStyle(11);
+  const [label, setLabel] = useState('');
+  const [iso, setIso] = useState('');
+  const [until, setUntil] = useState('');
+
+  const add = () => {
+    if (!label.trim() || !iso) return;
+    dispatch({ type: 'addTermDate', label: label.trim(), iso, until: until || undefined });
+    setLabel('');
+    setIso('');
+    setUntil('');
+  };
+
+  return (
+    <div style={{ ...row }}>
+      <SectionLabel style={{ margin: '0 0 var(--sp-3)' }}>One of your own</SectionLabel>
+      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        Anything your registrar publishes that is not above — a filing deadline, an audition, a
+        window that opens and closes. It sits in the list with the rest and counts down the same.
+      </div>
+      <input
+        className="input"
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') add();
+        }}
+        placeholder="Thesis filing deadline"
+        aria-label="What the date is"
+        style={{ width: '100%', height: 36, fontSize: 'var(--type-base)' }}
+      />
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)', alignItems: 'center' }}>
+        <input
+          className="input"
+          type="date"
+          value={iso}
+          onChange={(e) => setIso(e.target.value)}
+          aria-label="The day it falls on"
+          style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
+        />
+        {iso ? (
+          <>
+            <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: 'none' }}>to</span>
+            <input
+              className="input"
+              type="date"
+              value={until}
+              onChange={(e) => setUntil(e.target.value)}
+              aria-label="Its last day, if it is a window"
+              style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
+            />
+          </>
+        ) : null}
+      </div>
+      <button
+        type="button"
+        className="btn btn-secondary"
+        onClick={add}
+        disabled={!label.trim() || !iso}
+        style={{ width: 'auto', height: 36, marginTop: 'var(--sp-3)', fontSize: 'var(--type-sm)', paddingInline: 'var(--sp-6)' }}
+      >
+        Add it
+      </button>
+    </div>
   );
 }

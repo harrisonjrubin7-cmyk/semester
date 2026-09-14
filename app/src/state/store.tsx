@@ -903,7 +903,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           done: state.done,
           classes: classesToNudge(railFor(catalog, at, state.appointments)),
           registrar: state.registrar,
-          bill: nextPayment(state, state.term, at),
+          /*
+           * The four lists `nextPayment` reads, named rather than passed as
+           * the whole store. `Held` in `lib/bill.ts` is structural, so this
+           * satisfies it — and it is the difference between a dependency
+           * array that can be checked and one that says `state` and so
+           * re-creates this interval on every keystroke anywhere in the app.
+           */
+          bill: nextPayment(
+            {
+              charges: state.charges,
+              aid: state.aid,
+              payments: state.payments,
+              plans: state.plans,
+            },
+            state.term,
+            at,
+          ),
           quiet: state.quiet,
           atRisk: atRiskToday(
             railFor(catalog, at, state.appointments),
@@ -933,7 +949,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // until something else in this list changed, and the reminders would keep
     // naming work already handed in. Re-creating the interval is free — the
     // list of what has already fired lives in storage, not in this closure.
-  }, [catalog, state.notifs, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, courseCode]);
+    //
+    // The same reasoning covers the six below, which were missing.
+    // `state.quiet` is the worst of them: quiet hours gate whether anything
+    // fires at all, so a student who set them at eleven at night went on
+    // being notified through the night — the interval was still holding the
+    // window as it stood when the effect last ran. `state.term` and the four
+    // it reads through `nextPayment` — charges, aid, payments and plans — are
+    // the same failure one screen over: a bill paid in full kept being
+    // nudged about until an unrelated part of this list happened to change.
+  }, [catalog, state.notifs, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, state.quiet, state.term, state.charges, state.aid, state.payments, state.plans, courseCode]);
 
   // The number on the installed icon: things due today and not ticked. In the
   // provider rather than on Today, because the count has to be right whatever

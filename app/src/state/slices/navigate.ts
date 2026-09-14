@@ -196,9 +196,6 @@ export function navigate(state: State, action: Action): State | null {
     case 'setQuery':
       return { ...state, query: action.query };
 
-    case 'setCalTab':
-      return { ...state, calTab: action.tab };
-
     case 'setHomeTab':
       return { ...state, homeTab: action.tab };
 
@@ -210,9 +207,6 @@ export function navigate(state: State, action: Action): State | null {
 
     case 'setMeTab':
       return { ...state, meTab: action.tab };
-
-    case 'setMeGroup':
-      return { ...state, meGroup: action.group };
 
     case 'setTone':
       return { ...state, tone: action.tone };
@@ -249,9 +243,6 @@ export function navigate(state: State, action: Action): State | null {
     case 'finishOnboarding':
       return { ...state, screen: firstScreen(state.nav), history: [], seenOnboarding: true, onb: 0 };
 
-    case 'setLoadStep':
-      return { ...state, loadStep: action.step };
-
     case 'openLesson':
       return push({ ...state, lessonUnit: action.unit }, 'lesson');
 
@@ -268,22 +259,16 @@ export function navigate(state: State, action: Action): State | null {
         'update',
       );
 
-    case 'writeMail':
-      return {
-        ...push(state, 'mail'),
-        mailSeed: {
-          purposeId: action.purposeId,
-          courseId: action.courseId ?? '',
-          to: action.to ?? '',
-          incoming: action.incoming ?? '',
-          // Carried so an email opened from a deadline arrives with that
-          // deadline already named. Naming the assignment and its date is
-          // most of what turns a vague email into an answerable one, and
-          // re-picking it from a list of thirty-eight is the step at which
-          // people gave up.
-          itemId: action.itemId ?? '',
-        },
-      };
+    /*
+     * `writeMail` was here, and is in `slices/mailbox.ts` now.
+     *
+     * It navigated to the mailbox and wrote a `mailSeed` that nothing read,
+     * so it opened no composer — `SIMPLIFY-AUDIT.md` F1. Making it open one
+     * means creating a `MailDraft`, which is what the mailbox slice already
+     * does for `composeMail`, so it belongs beside that rather than here with
+     * a second copy of it. It still navigates: `push` is exported from this
+     * file and that slice already imports it.
+     */
 
     default:
       return null;

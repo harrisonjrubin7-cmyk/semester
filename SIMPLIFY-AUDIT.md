@@ -1,3 +1,185 @@
+# One app — the eighth pass: state written and never read
+
+Against `main` at `0aa769c`. No code in this commit.
+
+**60 destinations**, unchanged. Routes per destination re-checked and
+unchanged. The previous seven passes have taken the axes this command names —
+screen overlap, route count, duplicated controls, duplicated implementations,
+shared components — and this one deliberately does not re-walk them. It asks a
+question none of them could answer, because each of them reads what the code
+*does* and this one asks what the code's results are *for*:
+
+> Which pieces of state are written and never read?
+
+## Why no earlier census could see this
+
+A control census reads `set*` and finds the screens that dispatch it — and
+finds these, because they *are* dispatched. An implementation census reads what
+a new file does against what an old one already did — and finds nothing,
+because there is only one implementation. A route census counts arrivals, and
+these all arrive.
+
+Every one of those asks about the write. A field's deadness lives at the other
+end: the reducer case is correct, the action is typed, the value is stored, and
+**nothing ever asks for it back**. Nothing throws, nothing fails a type check,
+no pixel moves. It is the same shape as the dead CSS in E3b one layer up, and
+it has the same symptom, which is none.
+
+## The census
+
+Every field of `Persisted` and `Ephemeral` in `state/shape.ts` — 189 — against
+every reference outside `state/` itself.
+
+One false positive, worth recording because it is the shape of the mistake:
+`removedCourses` came back with no reference, and it is thoroughly alive — a
+tombstone list that `state/slices/library.ts` reads on every import so a course
+you deleted does not walk back in. Its readers are *in* `state/`, which the
+filter excluded. A census that excludes a directory has to be asked whether
+that directory is where the readers live.
+
+## The four
+
+| Field | Action | Dispatched? | Read? |
+| --- | --- | --- | --- |
+| `calTab` | `setCalTab` | no | no |
+| `meGroup` | `setMeGroup` | no | no |
+| `loadStep` | `setLoadStep` | no | no |
+| `mailSeed` | `writeMail` | **yes — three places** | **no** |
+
+The first three are closed loops with nothing attached at either end: a field,
+a default, a reducer case and a member of the action union, all four of them
+maintained, none of them reachable. **Cut.**
+
+### `mailSeed` is not dead state. It is three buttons that do not work.
+
+`writeMail` is dispatched from three live controls:
+
+- `components/AskForTime.tsx` — asking for more time on a deadline
+- `components/DropBy.tsx` — office hours
+- `screens/Courses.tsx:571` — asking a question about a course
+
+Each one navigates to `mail` and stores a seed: the purpose, the course, the
+recipient, the incoming message, and the deadline the mail is about.
+`screens/Mail.tsx` never reads it. Mail opens its composer from a *different*
+action, `composeMail`, which carries a `draft` — and `writeMail` does not set
+one, so pressing any of those three buttons lands you on the mailbox with **no
+composer open at all**, let alone a filled one.
+
+The comment on the field says exactly what was intended, and is the reason this
+row matters more than its line count:
+
+> *Carried so an email opened from a deadline arrives with that deadline
+> already named. Naming the assignment and its date is most of what turns a
+> vague email into an answerable one, and re-picking it from a list of
+> thirty-eight is the step at which people gave up.*
+
+The feature was designed against a known failure, and the failure is what
+ships. This is the same class as #252's "five controls that did nothing" and
+#233's two `+` glyphs — a control whose meaning you cannot rely on — arrived at
+from the opposite direction.
+
+**Merge**, not cut: `writeMail` should build a `composeMail` draft from the
+seed and open the composer, and `mailSeed` should stop existing as a separate
+fact. Two actions that both mean "start writing an email" is the duplication
+this command exists to remove; that they disagree about whether the composer
+opens is the bug it caused.
+
+## What this pass deliberately leaves
+
+**Shared components, recounted.** `EmptyState` 23 files, `Segmented` 35,
+`TabList` 11, `Notice` 9 — all up, none complete. Fourteen files still write
+their own "nothing here yet" line. **Not a row**, and the reason is E3's
+lesson: most of those fourteen are one-line inline statuses inside a populated
+screen, not empty screens, and `EmptyState`'s own note says the `action` is its
+point. Converting a status line into a component with an action would be
+following the name again.
+
+**`industry.css`'s seventeen unused classes**, for the reason in E3b: a design
+system's vocabulary is meant to be wider than today's usage.
+
+## To do, in order
+
+| # | Row | Verdict |
+| --- | --- | --- |
+| F1 | `mailSeed` / `writeMail` — three controls that open nothing | **Merge into `composeMail`** |
+| F2 | `calTab`, `meGroup`, `loadStep` — closed loops | **Cut** |
+| F3 | a guard so write-only state cannot come back | **Add** |
+
+F1 first: it is a bug, and the other two are tidying.
+
+### F1, done — and the census undercounted it
+
+`writeMail` carries a `Partial<MailDraft>` now and the mailbox slice opens a
+composer on it. `mailSeed` is gone: the field, its default, and the four loose
+payload members of the action. `draftFor` in `lib/mail.ts` is the one place
+that turns a purpose, a course and a deadline into a draft, so the callers do
+not each grow their own copy — they are the ones holding the catalogue the
+reducer cannot see, which is why the conversion happens at the call and not in
+the reducer.
+
+The case moved from `slices/navigate.ts` to `slices/mailbox.ts`, beside the
+`composeMail` it is now a variant of, and both go through one `started()`
+helper. Two actions that both mean "start an email" differ in exactly one
+thing — whether the app moves to the mailbox first — and that is now the only
+difference in the code.
+
+**There were four dispatchers, not three.** `components/CourseHub.tsx` has a
+fourth, and the census missed it because it is written `type:'writeMail'`
+without the space, in the dense style the ported files use, while the grep
+asked for `type: 'writeMail'`. The typechecker found it the moment the action
+changed shape — which is the useful part: **a census over source text is only
+as good as its spelling, and this repo has two spellings.** Earlier rows in
+this file searched both forms; this one did not, and the count in the table
+above is wrong by one.
+
+**The suite passed on the broken version**, which is why this shipped at all.
+Nothing asserted what happened *after* the action, so the reducer was correct
+in the sense that it did what it said — and what it said had no reader.
+`slices/writemail.test.ts` asserts the end state a person would see: a
+composer open, on a draft, with "ECON 1020 — Problem Set 4" in the subject.
+Checked by restoring the old reducer and watching five of its six cases fail;
+the one that still passed is "goes to the mailbox", which is the only thing
+the old code did right.
+
+### F2 and F3, done — and F3 could not land without F2
+
+`calTab`, `meGroup` and `loadStep` are gone: the field, the default, the
+reducer case and the member of the action union, four places each. Nothing
+dispatched them and nothing read them, so nothing else changes.
+
+They had to go as part of F3 rather than after it, because the guard is a rule
+about the whole state and three known offenders would have failed it on the
+first run. A guard that lands with an allowlist of its own findings is a guard
+nobody trusts.
+
+**`state/readstate.test.ts` asks the question no other check asks.** The
+reducer was correct, the action was typed, the value was stored — and `tsc` is
+satisfied by a field that is *assigned*, because being read is not part of what
+a type says. Nothing threw and the suite passed on the broken version. So the
+rule is: **is there a reader at the other end?**
+
+Reads and writes are told apart exactly rather than by heuristic. A write is a
+key in an object literal — the declaration, the default, or
+`{ ...state, calTab: action.tab }` — and a read is a member access,
+`state.calTab`, or a name pulled out of `= state`. The colon is what makes a
+key a key, and that is the whole distinction.
+
+185 fields, none of them write-only. Verified the way this file now insists
+on: a field was planted with a declaration and a default and no reader, and
+the rule named it.
+
+**One claim in that test was wrong when written, and is corrected in it.** The
+note said both halves of the read rule were needed, citing the calendar's
+`calYear`, `calMonth` and `calSource` as destructured-and-nothing-else.
+Deleting the destructure half left the test green — all three are
+member-accessed elsewhere too. The half is kept, because the field that is
+destructured and nothing else is the false positive this rule cannot afford,
+but the note now says it catches nothing today and that this was measured
+rather than assumed. *Writing a justification for a rule is not the same as
+checking it, and this file is four rows deep in that lesson.*
+
+---
+
 # One app — the seventh pass, run three times over
 
 Three audits of this name were written at the same time, on three branches, by

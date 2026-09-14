@@ -112,6 +112,89 @@ export const CAMPUS_LINKS: CampusLink[] = [
     note: 'Organisations and campus events. Event pages usually offer an .ics you can add above.',
   },
 
+  // ── The university's own services ───────────────────────────────────────
+  //
+  // The dozen places the university sends a student to that were not here
+  // before: the calendar the term deadlines come out of, the office that
+  // holds the money, the number you call at two in the morning. Each was
+  // something you reached through a search engine, which is the argument for
+  // the screen.
+  //
+  // Same rule as everything above, and it matters more here rather than less:
+  // these are starting points, not facts. None was read by the build, a
+  // university moves a page whenever it likes, and the correction you make is
+  // what persists.
+  {
+    id: 'registrar',
+    name: 'Registrar · Academic calendar',
+    url: 'https://registrar.vanderbilt.edu/calendars/',
+    hint: '',
+    note: 'The published term calendar — first day of class, the drop and withdrawal deadlines, reading days, finals. The app cannot read it, so copy the dates that cost money or points into Term deadlines and it will count them down for you.',
+  },
+  {
+    id: 'registration-dates',
+    name: 'Registration dates',
+    url: 'https://www.vanderbilt.edu/enrollmentbulletin/registration-essentials/registration-dates/',
+    hint: '',
+    note: 'When your enrolment window opens, by school and by year. The window is the appointment; missing it is how you end up in the eight a.m. section.',
+  },
+  {
+    id: 'dining',
+    name: 'Campus Dining · Meal plans',
+    url: 'https://www.vanderbilt.edu/dining/meal-plans/undergraduate-plans/',
+    hint: '',
+    note: 'What each plan actually contains, which is the number Meal plan needs from you. The balance page is above under Meal plan & Commodore Cash — this is the one that says what a plan was meant to hold.',
+  },
+  {
+    id: 'ohare',
+    name: 'Housing and Residential Experience',
+    url: 'https://www.vanderbilt.edu/ohare/',
+    hint: '',
+    note: 'The office rather than the portal: selection timelines, what a room includes, who to ask. The portal itself is above under Housing portal.',
+  },
+  {
+    id: 'financialaid',
+    name: 'Financial Aid and Scholarships',
+    url: 'https://www.vanderbilt.edu/financialaid/',
+    hint: '',
+    note: 'Aid, scholarships and the deadlines that renew them. Aid deadlines are the other kind that costs money, so they belong under Term deadlines beside the registrar’s.',
+  },
+  {
+    id: 'career',
+    name: 'Career Center',
+    url: 'https://www.vanderbilt.edu/career/',
+    hint: '',
+    note: 'Advising, recruiting and the campus interview calendar. Deadlines from here go in the job workspace rather than beside your coursework.',
+  },
+  {
+    id: 'library',
+    name: 'Vanderbilt Libraries',
+    url: 'https://www.library.vanderbilt.edu',
+    hint: '',
+    note: 'Catalogue, databases, hours and study rooms. Worth pinning in a term with a research paper in it.',
+  },
+  {
+    id: 'student-care',
+    name: 'Student Care Network',
+    url: 'https://www.vanderbilt.edu/student-care-network/',
+    hint: '',
+    note: 'Health, counselling, care coordination and wellbeing, under one roof. Student Care Coordination answers on 615-343-WELL (9355).',
+  },
+  {
+    id: 'publicsafety',
+    name: 'Public Safety (VUPD)',
+    url: 'https://publicsafety.vanderbilt.edu/',
+    hint: '',
+    note: 'Emergencies are 911. VUPD non-emergency is 615-322-2745 — the number for an escort across campus at night, a lost card, or something that is wrong but not urgent.',
+  },
+  {
+    id: 'vuit',
+    name: 'Vanderbilt IT',
+    url: 'https://it.vanderbilt.edu/',
+    hint: '',
+    note: 'Accounts, wifi, software and the help desk on 615-343-9999. The office to call when the thing keeping you out of Brightspace is the login rather than the course.',
+  },
+
   // ── Tickets ─────────────────────────────────────────────────────────────
   {
     id: 'tix-students',
