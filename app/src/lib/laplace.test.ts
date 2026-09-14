@@ -10,8 +10,11 @@ import {
   latexFn,
   latexTransform,
   linearOde,
+  poleText,
+  poles,
   readFn,
   readRat,
+  transferOf,
   transform,
   type Transform,
 } from './laplace';
@@ -290,7 +293,7 @@ describe('writing it down', () => {
     expect(latexFn(got(inverse(L('t^2 e^{-t}'))))).toBe('t^{2}e^{-t}');
     expect(latexFn(back('1/(s^2 + 4)'))).toBe('0.5\\sin(2t)');
     expect(latexFn(back('1/((s + 1)(s + 2))'))).toBe('e^{-t} - e^{-2t}');
-    expect(latexFn(back('1/(s(s + 2)^2)'))).toBe('0.25 - 0.25e^{-2t} - 0.5te^{-2t}');
+    expect(latexFn(back('1/(s(s + 2)^2)'))).toBe('0.25 - 0.5te^{-2t} - 0.25e^{-2t}');
   });
 
   it('writes a delayed answer with the step that switches it on', () => {
@@ -316,5 +319,136 @@ describe('the denominator, as it was built rather than as it multiplies out', ()
   it('leaves a single plain factor without brackets round it', () => {
     expect(latexTransform(L('e^{-2t}'))).toBe('\\frac{1}{s + 2}');
     expect(latexTransform(L('\\sin(3t)'))).toBe('\\frac{3}{s^{2} + 9}');
+  });
+});
+
+/**
+ * Convolution, against integrals somebody can do by hand.
+ *
+ * The convolution theorem is worth having because the integral is awkward and
+ * the product is not — which is exactly why an answer got the easy way has to
+ * be checked against the hard one. Every case here has a closed form worked
+ * from `∫₀ᵗ f(τ)g(t − τ) dτ`, and the last one is checked against the integral
+ * itself, worked numerically by Simpson's rule in the test rather than in the
+ * app, so the two methods share nothing.
+ */
+describe('convolution', () => {
+  const same = (source: string, f: (t: number) => number, ts = [0.3, 1.2, 2.8]) => {
+    const fn = got(readFn(node(source), 't'));
+    for (const t of ts) expect(at(fn, t)).toBeCloseTo(f(t), 8);
+  };
+
+  it('convolves two constants into the ramp it is', () => {
+    // ∫₀ᵗ 1 dτ = t, and no t is written anywhere in it.
+    same('conv(1, 1)', (t) => t);
+    same('conv(2, 3)', (t) => 6 * t);
+  });
+
+  it('does the one every textbook sets, and writes it the way the textbook does', () => {
+    // ∫₀ᵗ τ e^{-(t-τ)} dτ = t - 1 + e^{-t}.
+    same('conv(t, e^{-t})', (t) => t - 1 + Math.exp(-t));
+    expect(latexFn(got(readFn(node('conv(t, e^{-t})'), 't')))).toBe('t - 1 + e^{-t}');
+  });
+
+  it('convolves two waves, where the answer is not a wave', () => {
+    // sin t * sin t = (sin t − t cos t)/2.
+    same('conv(\\sin(t), \\sin(t))', (t) => (Math.sin(t) - t * Math.cos(t)) / 2);
+  });
+
+  it('leaves a function alone when convolved with an impulse', () => {
+    same('conv(δ(t), e^{-2t})', (t) => Math.exp(-2 * t));
+    same('conv(δ(t - 1), 1)', (t) => (t >= 1 ? 1 : 0), [0.5, 1.5, 3]);
+  });
+
+  it('adds the delays, because a thing switched on later starts later', () => {
+    const fn = got(readFn(node('conv(u(t - 2), u(t - 3))'), 't'));
+    expect(at(fn, 4)).toBe(0);
+    expect(at(fn, 8)).toBeCloseTo(3, 8);
+  });
+
+  it('is a product once it is transformed, which is the theorem', () => {
+    agrees(L('conv(t, e^{-t})'), (s) => (1 / s ** 2) * (1 / (s + 1)));
+    agrees(L('conv(\\sin(2t), e^{-t})'), (s) => (2 / (s ** 2 + 4)) * (1 / (s + 1)));
+  });
+
+  it('agrees with the integral it is defined as', () => {
+    // Simpson's rule over ∫₀ᵗ f(τ)g(t − τ) dτ, worked here rather than in the
+    // app: if the two agree the app is not being checked against itself.
+    const f = (x: number) => x * Math.exp(-x);
+    const g = (x: number) => Math.cos(2 * x);
+    const integral = (t: number) => {
+      const n = 2000;
+      const h = t / n;
+      let out = f(0) * g(t) + f(t) * g(0);
+      for (let i = 1; i < n; i += 1) out += (i % 2 ? 4 : 2) * f(i * h) * g(t - i * h);
+      return (out * h) / 3;
+    };
+    const fn = got(readFn(node('conv(t e^{-t}, \\cos(2t))'), 't'));
+    for (const t of [0.7, 1.9, 3.4]) expect(at(fn, t)).toBeCloseTo(integral(t), 7);
+  });
+
+  it('says what it wants rather than guessing at one argument', () => {
+    expect(fault(readFn(node('conv(t)'), 't'))).toMatch(/two functions/);
+  });
+});
+
+describe('poles, and what they say', () => {
+  it('finds them where they are', () => {
+    expect(poles(L('e^{-2t}'))).toEqual([{ re: -2, im: 0 }]);
+    expect(poles(L('\\sin(3t)'))).toEqual([
+      { re: 0, im: 3 },
+      { re: 0, im: -3 },
+    ]);
+  });
+
+  it('counts a repeated pole as many times as it repeats', () => {
+    expect(poles(L('t^2 e^{-t}'))).toEqual([
+      { re: -1, im: 0 },
+      { re: -1, im: 0 },
+      { re: -1, im: 0 },
+    ]);
+  });
+
+  it('counts a conjugate pair as the two poles it is, not the one it is written as', () => {
+    expect(poleText(poles(L('\\sin(3t)')))).toMatch(/^Poles at 3i/);
+    expect(poleText(poles(L('e^{-2t}')))).toMatch(/^Pole at -2/);
+  });
+
+  it('says whether the thing settles, which is what they are read for', () => {
+    expect(poleText(poles(L('e^{-2t}')))).toBe('Pole at -2 — all left of the axis, so it settles.');
+    expect(poleText(poles(L('e^{2t}')))).toMatch(/runs away/);
+    expect(poleText(poles(L('\\sin(3t)')))).toMatch(/neither settles nor runs away/);
+    expect(poleText(poles(L('e^{-t}\\sin(2t)')))).toBe('Poles at -1 ± 2i — all left of the axis, so it settles.');
+  });
+});
+
+describe('the transfer function', () => {
+  const of = (body: string, order: 1 | 2) =>
+    got(transferOf({ body: node(body), of: 'x', order, scope: {} }));
+
+  it('is the equation written as what it does to an input', () => {
+    expect(latexTransform(of("-y - 0.3y'", 2))).toBe('\\frac{1}{s^{2} + 0.3s + 1}');
+    expect(latexTransform(of('-4y', 2))).toBe('\\frac{1}{s^{2} + 4}');
+    expect(latexTransform(of('-0.5y', 1))).toBe('\\frac{1}{s + 0.5}');
+  });
+
+  it('has nothing to do with the conditions, because a system is not a run', () => {
+    expect(latexTransform(of("-y - 0.3y' + \\sin(x)", 2))).toBe('\\frac{1}{s^{2} + 0.3s + 1}');
+  });
+
+  it('reads as stable exactly when the equation settles', () => {
+    expect(poleText(poles(of("-y - 0.3y'", 2)))).toMatch(/settles/);
+    expect(poleText(poles(of('-4y', 2)))).toMatch(/neither/);
+    expect(poleText(poles(of('y', 1)))).toMatch(/runs away/);
+  });
+
+  it('inverts to the impulse response', () => {
+    // 1/(s² + 4) back is sin(2t)/2, which is what the spring does when kicked.
+    const h = got(inverse(of('-4y', 2)));
+    for (const t of [0.4, 1.6]) expect(at(h, t)).toBeCloseTo(Math.sin(2 * t) / 2, 9);
+  });
+
+  it('refuses an equation that has none rather than inventing one', () => {
+    expect(fault(transferOf({ body: node('y^2'), of: 'x', order: 1, scope: {} }))).toMatch(/straight/);
   });
 });

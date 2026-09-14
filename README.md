@@ -884,6 +884,35 @@ model in it or needs a key:
   against the Runge–Kutta walk, which shares no code with any of this and
   agrees to six places. See `app/src/lib/laplace.ts`.
 
+  **`conv(t, e^{-t})` is a convolution** — the integral of `f(τ)g(t - τ)` from
+  0 to t — done as the product it is in `s`. That is the whole reason the
+  convolution theorem is worth knowing, and it is what makes it cheap here: the
+  family is closed in both directions, so the work is three steps that already
+  exist, and the answer is exact rather than a quadrature over a grid. It comes
+  out `t - 1 + e^{-t}`, which is what the integral comes to. Delays add, as
+  they should: a thing switched on at two convolved with a thing switched on at
+  three is switched on at five. Checked against the integral itself, worked by
+  Simpson's rule inside the test rather than in the app, so the two methods
+  share nothing.
+
+  **An `H =` line with an `s` in it is a transfer function** —
+  `H = \frac{1}{s^2 + 0.3s + 1}` — told apart from the letter H with a value by
+  the same rule that tells `r = 5` from a polar curve: what is written in it.
+  It is drawn as its impulse response, which is `H` itself read the other way,
+  and the sentence under it is the part worth having: *poles at
+  -0.15 ± 0.988686i — all left of the axis, so it settles*. Every term of the
+  answer is `e^{(pole)t}` times something slower, so the poles are the whole of
+  how a thing behaves without solving anything, which is why an engineer reads
+  them before reading the curve.
+
+  And an equation on the list gets the same treatment: under `y'' = -y - 0.3y'`
+  the app prints `H(s) = \frac{1}{s^2 + 0.3s + 1}` and where its poles are,
+  beside the exact solution. The transfer function is the same `Q(s)` the
+  solution divides by, read on its own — which is not a coincidence: dividing
+  by `Q` is what solving the equation *is*, once it is transformed. It carries
+  no initial conditions, which is also right. A transfer function is the system
+  and not the run, so it is there before anybody has written a `y(0) =`.
+
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms
   without complaint. A bracket after a letter is a multiplication or a function
