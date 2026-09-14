@@ -189,7 +189,7 @@ function Paper({ doc }: { doc: Pick<Doc, 'blocks'> }) {
  */
 const INSERT_GROUPS: BlockKind[][] = [
   ['heading', 'text', 'bullets', 'checks'],
-  ['quote', 'table', 'image', 'equation', 'code', 'toc', 'break'],
+  ['quote', 'table', 'image', 'equation', 'code', 'toc', 'rule', 'break'],
 ];
 
 /** Every kind the screen can insert, flattened out of the groups above. */
@@ -213,6 +213,7 @@ const INSERT_LABEL: Record<BlockKind, string> = {
   equation: 'Insert an equation',
   code: 'Insert a code block',
   toc: 'Insert a contents page',
+  rule: 'Insert a divider',
   break: 'Insert a page break',
 };
 
@@ -1736,6 +1737,21 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
 
     case 'equation':
       return <EquationEditor block={block} onChange={onChange} />;
+
+    /*
+     * Both of these are marks rather than content, so the card holds a
+     * sentence saying what the mark does instead of a field. The two
+     * sentences are written to be told apart at a glance, because the two
+     * blocks are one line apart in the insert toolbar and used to be the
+     * same block.
+     */
+    case 'rule':
+      return (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>
+          A line across the page, between one section and the next. It does not start a new
+          page — that is the page break, below it on the Insert bar.
+        </div>
+      );
 
     case 'break':
       return (

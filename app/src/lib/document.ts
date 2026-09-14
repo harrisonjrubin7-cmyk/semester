@@ -103,6 +103,23 @@ export type Block =
    * none.
    */
   | { kind: 'toc'; title: string }
+  /**
+   * A line across the page, and nothing else.
+   *
+   * Its own kind rather than a mode of `break`, because the two look alike in
+   * markdown and are not alike anywhere else. `---` is markdown's *thematic
+   * break* — a divider between sections, on the same page — and this app
+   * wrote it for a page break, which is a different thing that happens to be
+   * spelled the same way. A document exported and re-imported came back with
+   * its page breaks intact only because both ends made the same mistake.
+   *
+   * So `rule` takes the `---` that was never the page break's to use, and
+   * `break` writes what it actually is. One consequence worth knowing: a
+   * markdown file this app exported *before* this will re-import its page
+   * breaks as rules. That is the correct reading of `---` and the wrong
+   * answer for that file, and it is visible on the page rather than silent.
+   */
+  | { kind: 'rule' }
   | { kind: 'break' };
 
 export type BlockKind = Block['kind'];
@@ -165,6 +182,7 @@ export const BLOCK_LABEL: Record<BlockKind, string> = {
   code: 'Code',
   image: 'Picture',
   toc: 'Contents',
+  rule: 'Divider',
   break: 'Page break',
 };
 
@@ -197,6 +215,8 @@ export function blankBlock(kind: BlockKind): Block {
       return { kind: 'image', fileId: '', name: '', alt: '', caption: '' };
     case 'toc':
       return { kind: 'toc', title: 'Contents' };
+    case 'rule':
+      return { kind: 'rule' };
     case 'break':
       return { kind: 'break' };
     default:
@@ -448,7 +468,9 @@ export function summary(blocks: Block[]): string {
 /** Whether there is anything in it at all — an empty paragraph is not something. */
 export function hasContent(doc: Partial<Doc> & Pick<Doc, 'blocks'>): boolean {
   return doc.blocks.some((b) => {
-    if (b.kind === 'break') return false;
+    // Neither a divider nor a page break is something a document holds — both
+    // are marks about where other things go.
+    if (b.kind === 'break' || b.kind === 'rule') return false;
     if (b.kind === 'table') return b.rows.some((r) => r.some((c) => c.trim() !== ''));
     if (b.kind === 'bullets') return b.items.some((i) => i.trim() !== '');
     // Said out loud because the fall-through below reads `b.text`, and a
@@ -473,6 +495,14 @@ export function hasContent(doc: Partial<Doc> & Pick<Doc, 'blocks'>): boolean {
 }
 
 // ── Markdown, both directions ────────────────────────────────────────────
+
+/**
+ * What a page break is written as, since markdown has no way to say it.
+ *
+ * Exported so the round-trip test can name it rather than re-typing it, which
+ * is how the two halves of a convention drift apart.
+ */
+export const PAGE_BREAK_MARK = '<!-- pagebreak -->';
 
 /** One markdown table row, with pipes inside cells escaped. */
 function tableRow(row: string[], width: number): string {
@@ -596,8 +626,27 @@ export function toMarkdown(doc: Doc): string {
             : `$$\n${block.latex}\n$$`,
         );
         break;
-      case 'break':
+      // The thematic break, which is what `---` has always meant.
+      case 'rule':
         parts.push('---');
+        break;
+      /*
+       * A page break, as an HTML comment.
+       *
+       * Markdown has no page break — it describes a document, not a printed
+       * one — so whatever goes here is a convention, and the choice is
+       * between one that is invisible elsewhere and one that is wrong
+       * elsewhere. `---` was the second: it is the thematic break, it now
+       * belongs to `rule`, and writing it here made every exported page break
+       * read as a divider in every other tool.
+       *
+       * An HTML comment renders as nothing in GitHub, Obsidian, Pandoc and
+       * anything else that reads markdown, so a document exported from here
+       * and read elsewhere has no noise in it where the page breaks were —
+       * and comes home again with them intact.
+       */
+      case 'break':
+        parts.push(PAGE_BREAK_MARK);
         break;
     }
   }
@@ -637,9 +686,23 @@ export function fromMarkdown(text: string): Block[] {
       continue;
     }
 
-    if (/^\s*(?:---|\*\*\*|___)\s*$/.test(line)) {
+    /*
+     * A page break, in the spelling above and in the two a person is likely
+     * to have typed by hand. `\pagebreak` and `\newpage` are what Pandoc
+     * takes, so a document that came from there keeps its breaks; they are
+     * read and not written, because what this app writes is the comment.
+     */
+    if (/^\s*(?:<!--\s*page-?break\s*-->|\\pagebreak|\\newpage)\s*$/i.test(line)) {
       flush();
       blocks.push({ kind: 'break' });
+      continue;
+    }
+
+    // `---`, `***` and `___` are all the same thing in markdown: a thematic
+    // break. Which is a divider, and was read as a page break until now.
+    if (/^\s*(?:---|\*\*\*|___)\s*$/.test(line)) {
+      flush();
+      blocks.push({ kind: 'rule' });
       continue;
     }
 

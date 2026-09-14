@@ -4161,6 +4161,16 @@ input[type='search'].input {
   break-after: page;
 }
 
+/* A divider: solid where the page break is dashed, and it does not break the
+   page. The two are one line apart on screen and must not look alike, because
+   telling them apart is the whole reason they are separate blocks. */
+.docpaper-rule {
+  height: 0;
+  margin: 1.2em 0;
+  border: 0;
+  border-top: 1px solid #bfbfbf;
+}
+
 /* ── Page setup ───────────────────────────────────────────────────────── */
 
 .docsetup {

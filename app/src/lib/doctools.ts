@@ -384,6 +384,9 @@ export function glance(doc: Pick<Doc, 'blocks'>, lines = 6): string[] {
         out.push(said ? `Picture — ${said}` : 'Picture');
         break;
       }
+      // Neither has anything to show at thumbnail size, and a line drawn
+      // across a four-line preview would read as the end of it.
+      case 'rule':
       case 'break':
         break;
     }
