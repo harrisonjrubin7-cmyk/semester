@@ -3861,6 +3861,100 @@ input[type='search'].input {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* ── The function list ────────────────────────────────────────────────────
+   A searchable catalogue of everything the calculator can do, which is the
+   control Excel calls Insert Function and Sheets hides under the sigma. The
+   rows are three lines on a phone and one wide row on a laptop: the name and
+   its arguments, what it answers, and an example — in that order, because the
+   name is what is being looked for and the example is what gets copied. */
+
+.fnlib {
+  margin-top: var(--sp-4);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+  border-radius: var(--r-md);
+  background: var(--app-bg);
+}
+
+.fnlib .fx {
+  margin-top: 0;
+}
+
+.fnlib-shelves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.fnlib-count {
+  margin-top: var(--sp-3);
+  font-size: var(--type-xs);
+  color: var(--app-faint);
+}
+
+.fnlib-list {
+  max-height: 46vh;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.fnlib-row {
+  display: grid;
+  gap: var(--sp-1);
+  width: 100%;
+  padding: var(--sp-4);
+  text-align: left;
+  color: var(--app-fg);
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--app-line-soft);
+  border-radius: var(--r-sm);
+}
+
+.fnlib-list li:first-child .fnlib-row {
+  border-top: 0;
+}
+
+.fnlib-row:hover,
+.fnlib-row:focus-visible {
+  background: var(--app-hero);
+}
+
+.fnlib-name {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--type-sm);
+  color: var(--app-accent-bright);
+}
+
+.fnlib-args {
+  color: var(--app-faint);
+}
+
+.fnlib-says {
+  font-size: var(--type-sm);
+  line-height: var(--leading-normal);
+  color: var(--app-dim);
+}
+
+.fnlib-eg {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--type-xs);
+  color: var(--app-faint);
+}
+
+/* Three lines on a phone, one row on anything wider — the same information
+   either way, and a list that can be scanned rather than scrolled. */
+@media (min-width: 760px) {
+  .fnlib-row {
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) minmax(0, 13rem);
+    align-items: baseline;
+    gap: var(--sp-5);
+  }
+}
+
 /* ── The grid ─────────────────────────────────────────────────────────────
    Headers that stay put while the body scrolls under them, which is the one
    thing that makes a grid bigger than the screen usable: a column of numbers

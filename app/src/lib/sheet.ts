@@ -1381,14 +1381,22 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       }
       return out;
     }
+    /*
+     * The four plainest text functions, and the guard they all need.
+     *
+     * `#DIV/0!` through `LOWER` came out `#div/0!`, which is not an error any
+     * more — `isError` does not know it, `ISERROR` says false, and the cell
+     * shows a lower-case joke. An error goes in and the same error comes out,
+     * which is what every other function here already promises.
+     */
     case 'LEN':
-      return show(first ?? '').length;
+      return isError(first) ? first : show(first ?? '').length;
     case 'UPPER':
-      return show(first ?? '').toUpperCase();
+      return isError(first) ? first : show(first ?? '').toUpperCase();
     case 'LOWER':
-      return show(first ?? '').toLowerCase();
+      return isError(first) ? first : show(first ?? '').toLowerCase();
     case 'TRIM':
-      return show(first ?? '').trim();
+      return isError(first) ? first : show(first ?? '').trim();
     /**
      * The chain of tests, which is what a grade boundary actually is.
      *
@@ -1642,6 +1650,545 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       if (!totals || totals.values.length !== length) return '#VALUE!';
       const ns = numbers(rows.map((r) => totals.values[r]));
       return isError(ns) ? ns : sum(ns);
+    }
+    // ── What a cell holds ─────────────────────────────────────────────────
+    /*
+     * The IS family, and why it sits up here.
+     *
+     * Everything below the first switch runs its arguments through `numbers`,
+     * which stops at the first error and hands it back. That is right for a
+     * sum and exactly wrong for a question *about* an error: `ISERROR(1/0)`
+     * that came back `#DIV/0!` would be a joke rather than a function, and
+     * `IFNA` would be unable to catch the one thing it exists to catch. So
+     * these read the value as it arrived, errors and blanks included.
+     */
+    case 'ISBLANK':
+      return groups.length === 0 ? '#VALUE!' : first === '';
+    case 'ISNUMBER':
+      return typeof first === 'number';
+    case 'ISTEXT':
+      return typeof first === 'string' && !isError(first) && first !== '';
+    case 'ISLOGICAL':
+      return typeof first === 'boolean';
+    case 'ISERROR':
+      return isError(first);
+    /** Every error but `#N/A` — a missing lookup is a fact, not a fault. */
+    case 'ISERR':
+      return isError(first) && first !== '#N/A';
+    case 'ISNA':
+      return first === '#N/A';
+    case 'ISEVEN':
+    case 'ISODD': {
+      const n = number(first ?? '');
+      if (isError(n)) return n;
+      const even = Math.trunc(n) % 2 === 0;
+      return name === 'ISEVEN' ? even : !even;
+    }
+    /** "There is no answer here", written on purpose rather than left blank. */
+    case 'NA':
+      return '#N/A';
+    /**
+     * `IFERROR` narrowed to the one error a lookup produces.
+     *
+     * The difference matters: `IFERROR` round a `VLOOKUP` also swallows the
+     * `#REF!` that says the table moved and the `#VALUE!` that says the
+     * column index is text, and a gradebook full of blanks where the formula
+     * is broken is the failure this whole file is written against.
+     */
+    case 'IFNA': {
+      const value = groups[0]?.values[0];
+      if (value === undefined) return '#VALUE!';
+      return value === '#N/A' ? (groups[1]?.values[0] ?? '') : value;
+    }
+    /** The two coercions Excel names: a value as a number, and as text. */
+    case 'N': {
+      if (first === undefined) return 0;
+      if (isError(first)) return first;
+      if (typeof first === 'number') return first;
+      if (typeof first === 'boolean') return first ? 1 : 0;
+      return asNumber(first) ?? 0;
+    }
+    case 'T':
+      if (isError(first)) return first;
+      return typeof first === 'string' ? first : '';
+    /** True when an odd number of them are true — `OR` that stops at one. */
+    case 'XOR': {
+      let odd = false;
+      for (const a of args) {
+        if (isError(a)) return a;
+        if (truthy(a)) odd = !odd;
+      }
+      return odd;
+    }
+    /**
+     * `SWITCH(value, is-this, then-this, …, [otherwise])`.
+     *
+     * `IFS` the other way up, and the right shape whenever every test is "is
+     * it this one" — a room by day name, a weight by assessment type. The odd
+     * trailing argument is the fallback, as in Excel, and without one a miss
+     * is `#N/A` rather than a blank: the same choice `IFS` makes, and for the
+     * same reason. A blank is a cell somebody scrolls past.
+     */
+    case 'SWITCH': {
+      const subject = groups[0]?.values[0];
+      if (subject === undefined) return '#VALUE!';
+      if (isError(subject)) return subject;
+      let i = 1;
+      for (; i + 1 < groups.length; i += 2) {
+        const test = groups[i].values[0];
+        if (isError(test)) return test;
+        if (compare('=', subject, test ?? '') === true) return groups[i + 1].values[0] ?? '';
+      }
+      return i < groups.length ? (groups[i].values[0] ?? '') : '#N/A';
+    }
+    /** `CHOOSE(n, …)` — the nth of the rest, one-based. */
+    case 'CHOOSE': {
+      const n = number(groups[0]?.values[0] ?? '');
+      if (isError(n)) return n;
+      const picked = groups[Math.trunc(n)];
+      return n >= 1 && picked ? (picked.values[0] ?? '') : '#VALUE!';
+    }
+    /**
+     * How big a range is.
+     *
+     * The two questions a range can answer about itself without knowing where
+     * it sits — which is also why `ROW()` and `COLUMN()` are not here. Those
+     * need the address of the cell being evaluated, and `apply` is handed
+     * values rather than a position on purpose: it is what keeps the engine a
+     * function of the sheet and nothing else. See `Group`, which carries the
+     * shape these read.
+     */
+    case 'ROWS':
+      return groups[0] ? groups[0].rows : '#VALUE!';
+    case 'COLUMNS':
+      return groups[0] ? groups[0].cols : '#VALUE!';
+    // ── Text, beyond the four everybody knows ─────────────────────────────
+    /**
+     * `SUBSTITUTE(text, old, new, [which])` — by what the text says.
+     *
+     * The other half of a pair: this one finds, `REPLACE` counts. Which is
+     * which is the thing nobody remembers, so the rule is in the catalogue
+     * beside both — see `lib/functions.ts`.
+     */
+    case 'SUBSTITUTE': {
+      if (isError(first)) return first;
+      const body = text(0);
+      const old = text(1);
+      const put = text(2);
+      if (old === '') return body;
+      if (!groups[3]) return body.split(old).join(put);
+      const which = number(groups[3].values[0]);
+      if (isError(which)) return which;
+      if (which < 1) return '#VALUE!';
+      let at = -1;
+      for (let n = 0; n < which; n += 1) {
+        at = body.indexOf(old, at + 1);
+        if (at < 0) return body;
+      }
+      return body.slice(0, at) + put + body.slice(at + old.length);
+    }
+    /** `REPLACE(text, start, how-many, new)` — by position, one-based. */
+    case 'REPLACE': {
+      if (isError(first)) return first;
+      const body = text(0);
+      const start = number(groups[1]?.values[0] ?? '');
+      const count = number(groups[2]?.values[0] ?? '');
+      if (isError(start)) return start;
+      if (isError(count)) return count;
+      if (start < 1 || count < 0) return '#VALUE!';
+      return body.slice(0, start - 1) + text(3) + body.slice(start - 1 + count);
+    }
+    /**
+     * `FIND` and `SEARCH` — where one piece of text sits inside another.
+     *
+     * `FIND` matches exactly, `SEARCH` ignores case. Excel's `SEARCH` also
+     * reads `?` and `*` as wildcards and this one does not: a wildcard search
+     * that returns a *position* has to say which character it landed on, and
+     * the position of a pattern is a question with no honest answer. The
+     * wildcards live where they mean something — in the criterion of
+     * `COUNTIF` and the rest, through `matcher`.
+     *
+     * Not found is `#VALUE!` rather than 0, as in Excel, so
+     * `IFERROR(FIND(…),0)` is the idiom here that it is everywhere else.
+     */
+    case 'FIND':
+    case 'SEARCH': {
+      for (const a of args) if (isError(a)) return a;
+      const needle = text(0);
+      const hay = text(1);
+      const from = groups[2] ? number(groups[2].values[0]) : 1;
+      if (isError(from)) return from;
+      if (from < 1 || from > hay.length + 1) return '#VALUE!';
+      const at =
+        name === 'FIND'
+          ? hay.indexOf(needle, from - 1)
+          : hay.toLowerCase().indexOf(needle.toLowerCase(), from - 1);
+      return at < 0 ? '#VALUE!' : at + 1;
+    }
+    /**
+     * Title case, with one deliberate difference from Excel.
+     *
+     * Excel capitalises after any non-letter, so `don't` comes out `Don'T`.
+     * That is a bug everybody has agreed to live with in a program nobody can
+     * change; a name list run through it reads as broken. A letter after an
+     * apostrophe is left alone here, which keeps `o'brien` → `O'Brien` right
+     * and `don't` → `Don't` right too.
+     */
+    case 'PROPER': {
+      if (isError(first)) return first;
+      return text(0)
+        .toLowerCase()
+        .replace(/(^|[^\p{L}])(\p{L}+)/gu, (_, before: string, word: string) => {
+          // A single letter after an apostrophe is a contraction — `don't`,
+          // `it's` — and more than one is a name: `o'brien`, `d'angelo`.
+          // Excel makes no such distinction and writes `Don'T`, which is the
+          // sort of thing that reads as broken software in a name list.
+          const contraction = (before === "'" || before === '’') && word.length === 1;
+          return contraction ? before + word : before + word[0].toUpperCase() + word.slice(1);
+        });
+    }
+    case 'REPT': {
+      if (isError(first)) return first;
+      const n = number(groups[1]?.values[0] ?? '');
+      if (isError(n)) return n;
+      if (n < 0) return '#VALUE!';
+      const piece = text(0);
+      /*
+       * A cell is not a place to build a megabyte of text.
+       *
+       * `REPT("-", A1)` with a thousand in A1 is a bar chart in a column and
+       * is the whole reason this function is worth having; `REPT("-", A1)`
+       * with a million in A1 is a tab that stops responding. The cap is
+       * Excel's own cell limit, and going over it is an error somebody can
+       * see rather than a screen that hangs.
+       */
+      if (piece.length * Math.trunc(n) > 32_767) return '#VALUE!';
+      return piece.repeat(Math.trunc(n));
+    }
+    /** `TEXTJOIN(separator, skip-blanks, …)` — a column as a sentence. */
+    case 'TEXTJOIN': {
+      const sep = text(0);
+      const skip = truthy(groups[1]?.values[0]);
+      const pieces: string[] = [];
+      for (const g of groups.slice(2)) {
+        for (const v of g.values) {
+          if (isError(v)) return v;
+          const s = show(v);
+          if (skip && s === '') continue;
+          pieces.push(s);
+        }
+      }
+      return pieces.join(sep);
+    }
+    /** Text that looks like a number, as one — what an import leaves behind. */
+    case 'VALUE': {
+      if (isError(first)) return first;
+      if (typeof first === 'number') return first;
+      const n = asNumber(show(first ?? ''));
+      return n === null ? '#VALUE!' : n;
+    }
+    /** `=` compares case-blind; this does not, which is the only reason it exists. */
+    case 'EXACT':
+      for (const a of args) if (isError(a)) return a;
+      return text(0) === text(1);
+    case 'CHAR': {
+      const n = number(first ?? '');
+      if (isError(n)) return n;
+      if (n < 1 || n > 1_114_111) return '#VALUE!';
+      return String.fromCodePoint(Math.trunc(n));
+    }
+    case 'CODE': {
+      if (isError(first)) return first;
+      const s = text(0);
+      return s === '' ? '#VALUE!' : (s.codePointAt(0) ?? 0);
+    }
+    // ── Dates, pulled apart and put together ──────────────────────────────
+    case 'YEAR':
+    case 'MONTH':
+    case 'DAY': {
+      const serial = number(first ?? '');
+      if (isError(serial)) return serial;
+      const d = fromSerial(Math.floor(serial));
+      if (name === 'YEAR') return d.getUTCFullYear();
+      return name === 'MONTH' ? d.getUTCMonth() + 1 : d.getUTCDate();
+    }
+    /*
+     * The clock out of a serial's fraction.
+     *
+     * Rounded to the whole second before it is split up. A day is a float and
+     * half of one is not exactly 12:00:00 — without the rounding `HOUR(NOW())`
+     * reads an hour low about as often as it does not, which is the sort of
+     * thing nobody reports and everybody stops trusting.
+     */
+    case 'HOUR':
+    case 'MINUTE':
+    case 'SECOND': {
+      const serial = number(first ?? '');
+      if (isError(serial)) return serial;
+      const seconds = Math.round((serial - Math.floor(serial)) * 86_400);
+      if (name === 'HOUR') return Math.floor(seconds / 3600) % 24;
+      if (name === 'MINUTE') return Math.floor(seconds / 60) % 60;
+      return seconds % 60;
+    }
+    /** A time of day as the fraction of a day every sheet stores one as. */
+    case 'TIME': {
+      const h = number(groups[0]?.values[0] ?? '');
+      const m = number(groups[1]?.values[0] ?? 0);
+      const s = groups[2] ? number(groups[2].values[0]) : 0;
+      if (isError(h)) return h;
+      if (isError(m)) return m;
+      if (isError(s)) return s;
+      const total = h * 3600 + m * 60 + s;
+      if (total < 0) return '#VALUE!';
+      return (total % 86_400) / 86_400;
+    }
+    /** `DAYS(end, start)` — end first, which is the order Excel chose. */
+    case 'DAYS': {
+      const end = number(groups[0]?.values[0] ?? '');
+      const start = number(groups[1]?.values[0] ?? '');
+      if (isError(end)) return end;
+      if (isError(start)) return start;
+      return Math.floor(end) - Math.floor(start);
+    }
+    /**
+     * The same day of the month, `n` months along.
+     *
+     * The end of a short month rather than a spill into the next one: 31
+     * January plus a month is 28 February, not 3 March. `Date.UTC` would
+     * happily do the spill, and a rent schedule built on it drifts a day at
+     * a time until it is paying on the 3rd.
+     */
+    case 'EDATE': {
+      const serial = number(groups[0]?.values[0] ?? '');
+      const months = number(groups[1]?.values[0] ?? 0);
+      if (isError(serial)) return serial;
+      if (isError(months)) return months;
+      const d = fromSerial(serial);
+      const y = d.getUTCFullYear();
+      const m = d.getUTCMonth() + Math.trunc(months);
+      const last = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      return toSerial(Date.UTC(y, m, Math.min(d.getUTCDate(), last)));
+    }
+    /**
+     * The ISO week number — Monday-based, and week 1 is the one holding the
+     * first Thursday. Every university timetable that says "week 7" means
+     * this one, and the alternative definitions disagree with it every
+     * January.
+     */
+    case 'ISOWEEKNUM': {
+      const serial = number(first ?? '');
+      if (isError(serial)) return serial;
+      const d = fromSerial(Math.floor(serial));
+      const weekday = (d.getUTCDay() + 6) % 7;
+      const thursday = new Date(d.getTime() + (3 - weekday) * DAY_MS);
+      const january = Date.UTC(thursday.getUTCFullYear(), 0, 1);
+      return Math.floor((thursday.getTime() - january) / (7 * DAY_MS)) + 1;
+    }
+    /**
+     * `NETWORKDAYS(from, to, [days off])` and `WORKDAY(from, n, [days off])`.
+     *
+     * Saturday and Sunday off, and a range of dates as the optional last
+     * argument — which on a university calendar is reading week, the break
+     * and the public holidays, and is the whole reason a plain day count is
+     * not enough for "how long have I actually got".
+     *
+     * Both walk a day at a time, so both carry a limit: a hundred years is
+     * far past any answer a student wants and is the point at which a typo in
+     * a date — a serial where a year was meant — stops being a slow formula
+     * and becomes a frozen tab.
+     */
+    case 'NETWORKDAYS':
+    case 'WORKDAY': {
+      const from = number(groups[0]?.values[0] ?? '');
+      const second = number(groups[1]?.values[0] ?? '');
+      if (isError(from)) return from;
+      if (isError(second)) return second;
+      const off = new Set<number>();
+      for (const v of groups[2]?.values ?? []) {
+        if (isError(v)) return v;
+        if (show(v) === '') continue;
+        const n = number(v);
+        if (isError(n)) return n;
+        off.add(Math.floor(n));
+      }
+      const working = (serial: number) => {
+        const day = fromSerial(serial).getUTCDay();
+        return day !== 0 && day !== 6 && !off.has(serial);
+      };
+      const FAR = 40_000;
+      if (name === 'NETWORKDAYS') {
+        const a = Math.floor(Math.min(from, second));
+        const b = Math.floor(Math.max(from, second));
+        if (b - a > FAR) return '#VALUE!';
+        let n = 0;
+        for (let at = a; at <= b; at += 1) if (working(at)) n += 1;
+        return from <= second ? n : -n;
+      }
+      let left = Math.trunc(second);
+      if (Math.abs(left) > FAR) return '#VALUE!';
+      let at = Math.floor(from);
+      const step = left < 0 ? -1 : 1;
+      while (left !== 0) {
+        at += step;
+        if (working(at)) left -= step;
+      }
+      return at;
+    }
+    /**
+     * `YEARFRAC(from, to, [basis])` — the fraction of a year between two
+     * dates, on one of the day counts a finance course actually uses.
+     *
+     * 0 is 30/360 US, Excel's default and what a bond problem set means; 1 is
+     * actual over the average length of the years spanned, which is Excel's
+     * own definition of "actual/actual"; 2 is actual/360 and 3 actual/365,
+     * the money-market pair; 4 is 30E/360, the European one.
+     *
+     * Five conventions for one question looks absurd until the first time an
+     * answer is a hundredth out from the book's, which is exactly what
+     * choosing the wrong one costs.
+     */
+    case 'YEARFRAC': {
+      const one_ = number(groups[0]?.values[0] ?? '');
+      const two = number(groups[1]?.values[0] ?? '');
+      if (isError(one_)) return one_;
+      if (isError(two)) return two;
+      const basis = groups[2] ? number(groups[2].values[0]) : 0;
+      if (isError(basis)) return basis;
+      const a = Math.floor(Math.min(one_, two));
+      const b = Math.floor(Math.max(one_, two));
+      if (basis === 2) return (b - a) / 360;
+      if (basis === 3) return (b - a) / 365;
+      if (basis === 1) {
+        const ya = fromSerial(a).getUTCFullYear();
+        const yb = fromSerial(b).getUTCFullYear();
+        let days = 0;
+        for (let y = ya; y <= yb; y += 1) {
+          days += (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 366 : 365;
+        }
+        return (b - a) / (days / (yb - ya + 1));
+      }
+      if (basis !== 0 && basis !== 4) return '#VALUE!';
+      const start = fromSerial(a);
+      const end = fromSerial(b);
+      let d1 = start.getUTCDate();
+      let d2 = end.getUTCDate();
+      if (basis === 4) {
+        // 30E/360: both ends simply capped at 30, which is the whole of the
+        // European rule and the reason it is the one people can check by hand.
+        d1 = Math.min(d1, 30);
+        d2 = Math.min(d2, 30);
+      } else {
+        if (d1 === 31) d1 = 30;
+        if (d2 === 31 && d1 === 30) d2 = 30;
+      }
+      const months =
+        (end.getUTCFullYear() - start.getUTCFullYear()) * 12 +
+        (end.getUTCMonth() - start.getUTCMonth());
+      return (months * 30 + (d2 - d1)) / 360;
+    }
+    // ── Conditions over more than one column ──────────────────────────────
+    /**
+     * `AVERAGEIFS`, `MAXIFS`, `MINIFS` — the `SUMIFS` shape, with the other
+     * three answers.
+     *
+     * Range first, then the (range, criterion) pairs, exactly as `SUMIFS` has
+     * them, so the four read alike and a formula changes answer by changing
+     * one word. Nothing matching is 0 for the max and the min, as in Excel,
+     * and `#DIV/0!` for the average — a mean of no numbers is not a number,
+     * and a zero there is a mark somebody would believe.
+     */
+    case 'AVERAGEIFS':
+    case 'MAXIFS':
+    case 'MINIFS': {
+      const totals = groups[0];
+      const pairs = groups.slice(1);
+      if (!totals || pairs.length < 2) return '#VALUE!';
+      const rows = hits(pairs, totals.values.length);
+      if (isError(rows)) return rows;
+      const ns = numbers(rows.map((r) => totals.values[r]));
+      if (isError(ns)) return ns;
+      if (name === 'AVERAGEIFS') return ns.length ? mean(ns) : '#DIV/0!';
+      if (!ns.length) return 0;
+      return name === 'MAXIFS' ? Math.max(...ns) : Math.min(...ns);
+    }
+    /** How many cells in a range have nothing in them. */
+    case 'COUNTBLANK': {
+      const where = groups[0];
+      if (!where) return '#VALUE!';
+      return where.values.filter((v) => v === '').length;
+    }
+    /**
+     * How many *different* things are in a range — Sheets' own `COUNTUNIQUE`.
+     *
+     * Text is compared case-blind, which is how `=` compares it everywhere
+     * else in this engine; a list of names where two rows differ only in
+     * their capitals is one name, and that is nearly always what was meant.
+     */
+    case 'COUNTUNIQUE': {
+      const seen = new Set<string>();
+      for (const a of args) {
+        if (isError(a)) return a;
+        const s = show(a);
+        if (s !== '') seen.add(typeof a === 'string' ? s.toLowerCase() : s);
+      }
+      return seen.size;
+    }
+    /**
+     * `RANK(value, range, [ascending])` — where one mark sits in the class.
+     *
+     * Ties share the better rank and the ranks after them skip it: two firsts
+     * and then a third, which is what a rank means everywhere one is printed.
+     */
+    case 'RANK': {
+      const wanted = number(groups[0]?.values[0] ?? '');
+      if (isError(wanted)) return wanted;
+      const ns = numbers(groups[1]?.values ?? []);
+      if (isError(ns)) return ns;
+      if (!ns.includes(wanted)) return '#N/A';
+      const up = groups[2] ? truthy(groups[2].values[0]) : false;
+      return ns.filter((n) => (up ? n < wanted : n > wanted)).length + 1;
+    }
+    /**
+     * The same question as a share: `PERCENTRANK(range, value)`.
+     *
+     * Excel's inclusive definition — the count below, over one less than the
+     * count — and a value between two of the range is read between their two
+     * ranks. Outside the range is `#N/A` rather than 0 or 1: a percentile for
+     * a mark nobody in the class got is a number with nothing behind it.
+     */
+    case 'PERCENTRANK': {
+      const ns = numbers(groups[0]?.values ?? []);
+      if (isError(ns)) return ns;
+      const wanted = number(groups[1]?.values[0] ?? '');
+      if (isError(wanted)) return wanted;
+      if (ns.length < 2) return '#DIV/0!';
+      const s = [...ns].sort((a, b) => a - b);
+      if (wanted < s[0] || wanted > s[s.length - 1]) return '#N/A';
+      const exact = s.indexOf(wanted);
+      if (exact >= 0) return exact / (s.length - 1);
+      let below = 0;
+      while (s[below + 1] < wanted) below += 1;
+      const share = (wanted - s[below]) / (s[below + 1] - s[below]);
+      return (below + share) / (s.length - 1);
+    }
+    /**
+     * `TRIMMEAN(range, share)` — the mean with the extremes dropped.
+     *
+     * The same number comes off each end, which is why the count is rounded
+     * down to an even one: a trimmed mean that took three off the top and two
+     * off the bottom would not be a trimmed mean, it would be a thumb on the
+     * scale.
+     */
+    case 'TRIMMEAN': {
+      const ns = numbers(groups[0]?.values ?? []);
+      if (isError(ns)) return ns;
+      const share = number(groups[1]?.values[0] ?? '');
+      if (isError(share)) return share;
+      if (share < 0 || share >= 1) return '#VALUE!';
+      if (!ns.length) return '#DIV/0!';
+      const drop = Math.floor((ns.length * share) / 2);
+      const kept = [...ns].sort((a, b) => a - b).slice(drop, ns.length - drop);
+      return kept.length ? mean(kept) : '#DIV/0!';
     }
     default:
       break;
@@ -1929,6 +2476,143 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       const [nper, pay, pv, fv, type] = [xs[0] ?? 0, xs[1] ?? 0, xs[2] ?? 0, xs[3] ?? 0, xs[4] ?? 0];
       if (nper === 0) return '#DIV/0!';
       return solveRate((r) => fvOf(r, nper, pay, pv, type) - fv);
+    }
+    // ── More arithmetic ───────────────────────────────────────────────────
+    case 'SUMSQ':
+      return xs.reduce((t, x) => t + x * x, 0);
+    /**
+     * The two means that are not the arithmetic one.
+     *
+     * A growth rate compounds, so the average of three years of returns is
+     * the geometric mean and not the one everybody reaches for — and the
+     * difference is in the direction that flatters, which is why it turns up
+     * in every prospectus. A speed over a fixed distance averages
+     * harmonically. Both are in the first quantitative methods course and
+     * neither could be written here.
+     *
+     * Zero or a negative refuses rather than returning `NaN`: the geometric
+     * mean of a set containing a loss of 100% is genuinely undefined, and
+     * `#VALUE!` says so where a blank cell would not.
+     */
+    case 'GEOMEAN': {
+      if (!xs.length) return '#DIV/0!';
+      if (xs.some((x) => x <= 0)) return '#VALUE!';
+      return Math.exp(mean(xs.map(Math.log)));
+    }
+    case 'HARMEAN': {
+      if (!xs.length) return '#DIV/0!';
+      if (xs.some((x) => x <= 0)) return '#VALUE!';
+      return xs.length / xs.reduce((t, x) => t + 1 / x, 0);
+    }
+    /** The spread around the mean, before it is squared and after. */
+    case 'AVEDEV': {
+      if (!xs.length) return '#DIV/0!';
+      const m = mean(xs);
+      return mean(xs.map((x) => Math.abs(x - m)));
+    }
+    case 'DEVSQ':
+      return xs.length ? squares(xs) : '#DIV/0!';
+    /** Division with the remainder thrown away — `MOD`'s other half. */
+    case 'QUOTIENT': {
+      const bottom = xs[1] ?? 0;
+      return bottom === 0 ? '#DIV/0!' : Math.trunc((xs[0] ?? 0) / bottom);
+    }
+    /**
+     * `MROUND(n, step)` — to the nearest quarter hour, the nearest five marks.
+     *
+     * `ROUND` goes to a number of places, which is a power of ten and nothing
+     * else. A timetable rounds to 15 minutes and a mark scheme to 5, and
+     * neither is a power of ten.
+     */
+    case 'MROUND': {
+      const [n, step] = [xs[0] ?? 0, xs[1] ?? 0];
+      if (step === 0) return 0;
+      if (n !== 0 && Math.sign(n) !== Math.sign(step)) return '#VALUE!';
+      return Math.round(n / step) * step;
+    }
+    case 'GCD':
+    case 'LCM': {
+      if (!xs.length) return '#VALUE!';
+      const ns = xs.map((x) => Math.trunc(Math.abs(x)));
+      const both = (a: number, b: number): number => (b === 0 ? a : both(b, a % b));
+      if (name === 'GCD') return ns.reduce(both, 0);
+      // Anything times nothing is nothing, and dividing by the gcd first is
+      // what stops a list of four four-figure numbers overflowing on its way
+      // to an answer that fits comfortably in a double.
+      if (ns.some((n) => n === 0)) return 0;
+      return ns.reduce((a, b) => (a / both(a, b)) * b, 1);
+    }
+    // ── More money ────────────────────────────────────────────────────────
+    /**
+     * `NPER(rate, payment, pv, [fv], [type])` — how many payments it takes.
+     *
+     * The question a student actually has about a loan, which is not what the
+     * instalment is but how long it goes on for. Refuses rather than
+     * returning a complex number when the payment never clears the interest:
+     * the logarithm's argument goes negative exactly when the debt grows, and
+     * "this never pays off" is the answer, said as an error.
+     */
+    case 'NPER': {
+      const [rate, pay, pv, fv, type] = [xs[0] ?? 0, xs[1] ?? 0, xs[2] ?? 0, xs[3] ?? 0, xs[4] ?? 0];
+      if (rate === 0) return pay === 0 ? '#DIV/0!' : -(pv + fv) / pay;
+      const due = pay * (1 + rate * type);
+      const top = due - fv * rate;
+      const bottom = pv * rate + due;
+      if (bottom === 0 || top / bottom <= 0) return '#VALUE!';
+      return Math.log(top / bottom) / Math.log(1 + rate);
+    }
+    /**
+     * `IPMT` and `PPMT` — the interest and the principal inside one payment.
+     *
+     * The split an amortisation table is made of, and the thing a loan
+     * question asks: how much of March's instalment went on interest. Taken
+     * from the balance at the start of the period rather than from a second
+     * closed form, because the balance is what the table shows and the two
+     * would have to agree to the cent.
+     */
+    case 'IPMT':
+    case 'PPMT': {
+      const [rate, per, nper, pv, fv, type] = [
+        xs[0] ?? 0,
+        xs[1] ?? 0,
+        xs[2] ?? 0,
+        xs[3] ?? 0,
+        xs[4] ?? 0,
+        xs[5] ?? 0,
+      ];
+      if (per < 1 || per > nper) return '#VALUE!';
+      const pay = pmt(rate, nper, pv, fv, type);
+      if (isError(pay)) return pay;
+      const before = fvOf(rate, per - 1, pay, pv, type);
+      // Payments at the start of a period earn a period's discount, and the
+      // very first one is made before any interest has accrued at all.
+      let interest = before * rate;
+      if (type === 1) interest = per === 1 ? 0 : interest / (1 + rate);
+      return name === 'IPMT' ? interest : pay - interest;
+    }
+    /** Straight-line depreciation — the one a first accounting course uses. */
+    case 'SLN': {
+      const life = xs[2] ?? 0;
+      return life === 0 ? '#DIV/0!' : ((xs[0] ?? 0) - (xs[1] ?? 0)) / life;
+    }
+    /**
+     * `EFFECT` and `NOMINAL` — one rate quoted the two ways a credit card and
+     * a savings account quote it.
+     *
+     * The APR printed on the statement is the nominal one; what a year
+     * actually costs, compounding included, is the effective one. The gap
+     * between them is the whole of the lesson, and it is not small: 24%
+     * nominal compounded monthly is 26.8% effective.
+     */
+    case 'EFFECT': {
+      const periods = Math.trunc(xs[1] ?? 0);
+      if ((xs[0] ?? 0) <= 0 || periods < 1) return '#VALUE!';
+      return (1 + (xs[0] ?? 0) / periods) ** periods - 1;
+    }
+    case 'NOMINAL': {
+      const periods = Math.trunc(xs[1] ?? 0);
+      if ((xs[0] ?? 0) <= 0 || periods < 1) return '#VALUE!';
+      return ((1 + (xs[0] ?? 0)) ** (1 / periods) - 1) * periods;
     }
     default:
       return '#NAME?';

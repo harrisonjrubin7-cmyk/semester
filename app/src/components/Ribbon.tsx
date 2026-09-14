@@ -93,7 +93,7 @@ function Piece({ control }: { control: Control }) {
       <button
         type="button"
         className={control.wide ? 'rib-btn rib-btn-wide' : 'rib-btn'}
-        title={control.label}
+        title={control.hint ? `${control.label} — ${control.hint}` : control.label}
         aria-label={control.label}
         aria-pressed={control.on}
         disabled={dead}
