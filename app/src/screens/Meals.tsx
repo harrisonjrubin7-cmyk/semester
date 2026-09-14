@@ -151,7 +151,8 @@ function MealsDetails() {
           <SectionLabel>What {school.shortName || school.name} publishes</SectionLabel>
           <div style={{ fontSize: 'var(--type-sm)', ...secondLine(), marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             The plans as your school lists them, not your balance. Yours is whichever one you are
-            enrolled in — the balance page above is the only place that knows which.
+            enrolled in — the balance page above is the only place that knows which, and the one to
+            check these counts against.
           </div>
           <Group framed={false}>
             {(school.data.mealPlanTiers ?? []).map((tier) => (

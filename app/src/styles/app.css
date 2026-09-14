@@ -1594,13 +1594,35 @@ a:hover {
  *
  * The button is fixed above the tab bar on every screen, and a screen whose
  * last element is a primary action put that action underneath it — on Costs,
- * "Add it" sat directly behind it. Reserving the space here fixes it once for
- * every screen rather than sixty times: the padding makes even a
- * short screen scrollable by exactly the button's footprint, so anything at
- * the bottom can always be brought clear of it.
+ * "Add it" sat directly behind it. Reserving the space once here fixes it for
+ * every screen rather than sixty times: the reservation makes even a short
+ * screen scrollable by exactly the button's footprint, so anything at the
+ * bottom can always be brought clear of it.
+ *
+ * ## Why this is a box after the content and not padding on the scroller
+ *
+ * It was `padding-bottom` on `.scrollarea`, and it had stopped doing
+ * anything at all. `.pane-body` above takes `height: 100%` — deliberately,
+ * to keep the percentage-height chain intact — so every screen taller than
+ * the window overflows it rather than sitting in the scroller's own flow,
+ * and a scroll container's end padding is not applied below content that
+ * overflows a descendant. The scroll extent came from the overflowing box
+ * and stopped exactly where the text did.
+ *
+ * Nothing said so. The rule was still there, still computed 76px, and the
+ * space it claimed was simply absent: at the bottom of Study the last line
+ * ran under the button with no scroll left to bring it clear, and the same
+ * on a guide and on Me at the larger text sizes. Removing the padding
+ * changed no measurement on any screen, which is the proof it was dead.
+ *
+ * A block after the content is counted wherever the content ends, because it
+ * overflows alongside it. `::after` rather than a real element so no screen
+ * has to remember to render one.
  */
-.scrollarea {
-  padding-bottom: var(--assistant-strip);
+.scrollarea:not(.is-filled) .pane-body::after {
+  content: '';
+  display: block;
+  height: var(--assistant-strip);
 }
 
 /*
@@ -1625,7 +1647,6 @@ a:hover {
  * step with them.
  */
 .scrollarea.is-filled {
-  padding-bottom: 0;
   overflow: hidden;
 }
 

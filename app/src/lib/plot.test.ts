@@ -691,3 +691,82 @@ describe('a discrete transform on the list', () => {
     expect(of('dft()')).toMatchObject({ kind: 'fault' });
   });
 });
+
+/**
+ * A wavelet on the list.
+ *
+ * `lib/wavelet.test.ts` checks the arithmetic. This checks the joint, and the
+ * one thing peculiar to reading it off a line: the same second argument means
+ * a level after a list and a count after a formula, because a list needs no
+ * count. That is settled by looking at what is there, and getting it wrong
+ * would smooth the wrong amount without saying so.
+ */
+describe('a wavelet on the list', () => {
+  const run = '[1, 1, 2, 1, 1, 9, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2]';
+
+  it('is its own kind, with the filter named by the call', () => {
+    expect(of(`wavelet(${run})`).kind).toBe('wavelet');
+    expect(of(`haar(${run})`)).toMatchObject({ kind: 'wavelet', filter: { name: 'Haar' } });
+    expect(of(`db(${run})`)).toMatchObject({ kind: 'wavelet', filter: { name: 'Daubechies-4' } });
+    expect(of(`daubechies(${run})`)).toMatchObject({ kind: 'wavelet', filter: { name: 'Daubechies-4' } });
+    // A name in this notation is letters, so `d4` is `d` times `4` and always was.
+    expect(of(`d4(${run})`).kind).toBe('curve');
+    expect(of(`dft(${run})`).kind).toBe('bins');
+  });
+
+  it('reads the second argument as a level after a list', () => {
+    const one = answered(of(`wavelet(${run}, 1)`), {});
+    const two = answered(of(`wavelet(${run}, 2)`), {});
+    if (!one || 'says' in one || !two || 'says' in two) throw new Error('no answer');
+    expect(one.lead).toMatch(/smoothed to level 1:$/);
+    expect(two.lead).toMatch(/smoothed to level 2:$/);
+    // Level 1 is pairs averaged: samples 4 and 5 are 1 and 9, so both become 5.
+    expect(one.at(4)).toBeCloseTo(5, 9);
+    expect(one.at(5)).toBeCloseTo(5, 9);
+    // Level 2 averages fours: 1, 9, 2, 1 becomes 3.25 across all four.
+    expect(two.at(4)).toBeCloseTo(3.25, 9);
+    expect(two.at(7)).toBeCloseTo(3.25, 9);
+  });
+
+  it('reads it as a count after a formula, and the level third', () => {
+    const got = answered(of('wavelet(n, 16, 2)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toMatch(/^16 samples over 4 scales, Haar, smoothed to level 2:/);
+    // A ramp averaged in fours: 0..3 all become 1.5.
+    expect(got.at(0)).toBeCloseTo(1.5, 9);
+    expect(got.at(3)).toBeCloseTo(1.5, 9);
+  });
+
+  it('says where the wobble is, which is the whole point of it', () => {
+    const got = answered(of(`wavelet(${run}, 2)`), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.note).toMatch(/Of the wobble, level 1 holds \d+%/);
+    expect(got.note).toMatch(/biggest single one is at level \d+, near sample \d+/);
+    // The 9 is at sample 5, and nothing else in the run moves much.
+    expect(got.note).toMatch(/near sample [4-7]/);
+  });
+
+  it('draws the data as dots and the smoothing as a step through them', () => {
+    const drawn = draw(of(`wavelet(${run}, 1)`), {}, { x0: -2, x1: 20, y0: -2, y1: 12 });
+    // Sixteen samples and no more, however wide the window is.
+    expect(drawn.points).toHaveLength(16);
+    expect(drawn.points[5].y).toBe(9);
+    // One step path, two points per sample, flat across each.
+    expect(drawn.paths).toHaveLength(1);
+    expect(drawn.paths[0]).toHaveLength(32);
+    expect(drawn.paths[0][10].y).toBeCloseTo(5, 9);
+    expect(drawn.paths[0][11].y).toBeCloseTo(5, 9);
+  });
+
+  it('refuses a length it cannot halve, and says which lengths it can', () => {
+    const got = answered(of('wavelet([1, 2, 3, 4, 5])'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/wants a power of two — 4 or 8, not 5/);
+  });
+
+  it('asks for the letters it needs and no others', () => {
+    expect(missing(of(`wavelet(${run})`), {})).toEqual([]);
+    expect(missing(of('wavelet(k n, 16)'), {})).toEqual(['k']);
+    expect(of('wavelet()')).toMatchObject({ kind: 'fault' });
+  });
+});

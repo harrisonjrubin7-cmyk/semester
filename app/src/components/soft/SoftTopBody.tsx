@@ -34,6 +34,8 @@
 
 import { useMemo } from 'react';
 import { useNow, useStore } from '../../state/store';
+import { useDeviceLibrary } from '../../lib/device-library';
+import { EMPTY_FAMILY, readFamily } from '../../lib/family';
 import { softTop, type TopStat } from '../../lib/softtop';
 import { fills } from '../shell/exempt';
 import { Hero, Stat, StatRow } from './Soft';
@@ -63,15 +65,36 @@ const SYNC_SAID: Record<string, string> = {
  * recomputed when something changes and not when something re-renders.
  */
 function useTop() {
-  const { state, catalog, school, sync } = useStore();
+  const { state, catalog, school, sync, account } = useStore();
   const now = useNow();
   const caps = school.capabilities;
   // The word Settings shows, not the whole status object: the spec holds
   // strings, and a shape with a timestamp in it would recompute every tick.
   const said = SYNC_SAID[sync.status] ?? 'Local';
+  /*
+   * The one figure the spec cannot reach for itself.
+   *
+   * Family's plans are in a device library rather than in the store, and
+   * `lib/softtop.ts` is a pure function of the store — so the hero over that
+   * screen used to count `state.people`, which is the contacts list behind
+   * People and letters and has nothing to do with who a student has chosen to
+   * share a bill with. Read here through the library's own hook, so it stays
+   * in step with another tab and with the account the key carries, and passed
+   * in the way `sync` is.
+   *
+   * Always read rather than only on that screen: a hook cannot be called
+   * conditionally, and the cost is one `localStorage` entry and one listener
+   * for a component the soft shell mounts once.
+   */
+  const family = useDeviceLibrary(
+    `semester.family.v1:${account?.id || 'device'}`,
+    readFamily,
+    EMPTY_FAMILY,
+  );
+  const familyPlans = family.value.members.length;
   return useMemo(
-    () => softTop(state.screen, { state, catalog, now, caps, sync: said }),
-    [state, catalog, now, caps, said],
+    () => softTop(state.screen, { state, catalog, now, caps, sync: said, familyPlans }),
+    [state, catalog, now, caps, said, familyPlans],
   );
 }
 
