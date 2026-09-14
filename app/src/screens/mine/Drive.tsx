@@ -246,6 +246,14 @@ export function Drive() {
    * telling the panel a change had happened that had not. A caller doing one
    * write can ignore the answer; a caller doing two must not.
    */
+  /*
+   * Opening is a read, so `act` above is the wrong sentence for it — nothing
+   * was being saved — but the silence is the same fault. `openFile` reads the
+   * blob out of the database before it can hand it to the browser, and a read
+   * that rejects left `.then(refresh)` unrun: no tab, no change, nothing said.
+   */
+  const CANNOT_OPEN = 'That file could not be opened. It may no longer be on this device.';
+
   const act = async (run: Promise<unknown>, what = 'That change'): Promise<boolean> => {
     try {
       await run;
@@ -479,7 +487,7 @@ export function Drive() {
             setView('drive');
             setAt(id);
           }}
-          onOpen={(id) => void openFile(id).then(refresh)}
+          onOpen={(id) => void openFile(id).then(refresh).catch(() => setTrouble(CANNOT_OPEN))}
           onEverything={() => setView('drive')}
         />
       )}
@@ -578,7 +586,7 @@ export function Drive() {
                    link rather than as a broken one. See `lib/forwork.ts`. */
                 due={nameFor(allItems, file.itemId)}
                 notes={state.notes.filter((n) => n.fileIds.includes(file.id)).length}
-                onOpen={() => void openFile(file.id).then(refresh)}
+                onOpen={() => void openFile(file.id).then(refresh).catch(() => setTrouble(CANNOT_OPEN))}
                 onStar={() => void act(starFile(file.id, !file.starred))}
                 onMove={() => setMoving(file)}
                 onFile={() => setFiling(file)}

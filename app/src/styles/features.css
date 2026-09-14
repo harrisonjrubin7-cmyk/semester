@@ -9,22 +9,16 @@
 
 /* --- from workspace.css --- */
 .workspace-text-button:hover{background:var(--app-accent-wash)!important}
-.workspace-details .input{background:var(--app-panel)!important}
-.write-paper .write-block .input{border-color:transparent!important;background:transparent!important;border-radius:0;box-shadow:none!important;font-family:Arial,sans-serif;padding:4px!important;color:var(--app-fg)}
-.drive-main .section-label{font-size:17px!important;letter-spacing:0!important;text-transform:none!important}
-@media(max-width:800px){
-.workspace-editor .bench-top .btn{font-size:12px!important;min-width:85px!important}
-}
-@media(max-width:540px){
-.workspace-gallery .gal-template-head .workspace-text-button{font-size:12px;padding:8px}
-}
-@media print{
-.write-paper .input{border:0!important}
-}
-.mail-context .input{background:var(--app-panel)!important}
-.mail-compose .section-label{font-size:13px!important;text-transform:none!important;letter-spacing:0!important}
-.mail-compose .btn-block{width:auto!important;padding:0 24px;display:inline-flex!important;border-radius:24px!important;text-transform:none!important;letter-spacing:0!important}
-.portal-workspace{max-width:1500px;margin:0 auto;padding:20px 28px 40px;color:var(--app-fg);--app-panel:var(--app-panel);--app-line:var(--app-line)}
+/* Two tokens used to be re-declared here as themselves —
+   `--app-panel:var(--app-panel)` — which reads as "keep this one" and is
+   the opposite: a custom property whose value refers to itself is a cycle,
+   and a cycle computes to the guaranteed-invalid value. So both were
+   *deleted* for this element and everything under it, and every rule below
+   that asked for them silently lost its value: the primary action's ink
+   (`color:var(--app-panel)`, invalid, so it inherited the page's near-white
+   onto the light accent at 1.2:1) and every field's ground and border.
+   Keeping a token is what happens when nothing is said about it. */
+.portal-workspace{max-width:1500px;margin:0 auto;padding:20px 28px 40px;color:var(--app-fg)}
 .portal-workspace :is(h2,h3,h4){font-family:Arial,sans-serif;letter-spacing:normal;text-transform:none;font-weight:500;color:var(--app-fg)}
 .portal-workspace h2{font-size:30px;line-height:1.25;margin:8px 0 12px}
 .portal-workspace h3{font-size:20px;line-height:1.35;margin:10px 0 16px}
@@ -121,10 +115,6 @@
 .portal-material summary small{display:block;margin:7px 0 0;color:var(--app-dim);font-weight:400}
 .course-hub .portal-mode:hover{border-color:var(--app-accent-bright);background:var(--app-accent-wash)}
 .course-hub>.portal-panel{margin-top:20px}
-.maps-sidebar .btn{font-size:12px!important;letter-spacing:normal!important;text-transform:none!important}
-.maps-sidebar .kicker{font-size:12px!important;letter-spacing:.02em}
-.maps-sidebar .section-label{font-size:14px!important;letter-spacing:normal!important}
-.maps-sidebar>form .input{border-radius:24px!important;padding-left:16px;font-size:14px;background:var(--app-accent-wash)}
 @media(min-width:1300px){
 .portal-card-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
@@ -164,28 +154,23 @@
 @media(prefers-reduced-motion:reduce){
 .portal-workspace *{scroll-behavior:auto!important;transition:none!important}
 }
-.semester-primary-nav{display:flex;align-items:center;gap:4px;padding:4px 24px 8px;background:var(--app-accent-wash);overflow-x:auto;flex:none;border-bottom:1px solid var(--app-line-soft)}
-.semester-primary-nav button{color:var(--app-fg);white-space:nowrap;font-size:14px;border:0;background:transparent;border-radius:20px;min-height:40px;padding:8px 16px}
 /* The pill you are on: `--app-accent-deep` is a mid metal in this app and
    sat at 3.29:1 on the accent wash behind it, so the one pill naming
    where you are was the least readable in the row. */
-.semester-primary-nav button:hover, .semester-primary-nav button[aria-current=page]{background:var(--app-accent-wash);color:var(--app-fg)}
-.semester-primary-nav .semester-search-records{margin-left:auto}
 .assignment-next{display:flex;justify-content:space-between;align-items:center;gap:24px;border:1px solid var(--app-accent-wash);background:var(--app-accent-wash);border-radius:20px;padding:22px;margin:18px 0}
 .assignment-next strong{display:block;font-size:20px;margin-top:8px}
 .assignment-next p{margin:8px 0 0}
 .assignment-next button{flex:none}
 @media(max-width:640px){
-.semester-primary-nav{padding:4px 8px}
-.semester-primary-nav button{padding:8px 12px}
-.semester-primary-nav .semester-search-records{display:none}
 .assignment-next{align-items:stretch;flex-direction:column;padding:18px}
 }
 .study-studio{background:var(--app-accent-wash);color:var(--app-fg);border-radius:20px;font-family:Arial,sans-serif}
 .study-studio-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .study-studio fieldset{border:0;padding:0;margin:0;min-width:0}
 .study-studio label{font-size:14px}
-.study-studio input:not([type=checkbox]), .study-studio textarea, .study-studio select, .studio-course-picker select{color:var(--app-fg);background:white;border:1px solid var(--app-line);border-radius:8px;min-height:40px;padding:8px;max-width:100%;box-sizing:border-box}
+/* The ink follows the theme, so the paper has to as well: a literal white
+   here put light text on a white field on every dark theme. */
+.study-studio input:not([type=checkbox]), .study-studio textarea, .study-studio select, .studio-course-picker select{color:var(--app-fg);background:var(--app-panel);border:1px solid var(--app-line);border-radius:8px;min-height:40px;padding:8px;max-width:100%;box-sizing:border-box}
 .study-studio textarea{width:100%;line-height:1.6;resize:vertical}
 .study-studio input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:var(--app-accent)}
 .study-source-list, .study-format-list{display:flex;flex-direction:column;gap:8px;max-height:430px;overflow:auto}
@@ -223,26 +208,7 @@
 }
 .study-source-list>label, .study-format-list>label{flex-shrink:0}
 .studio-entry>.portal-primary{background:var(--app-fg);color:var(--app-bg);border:0;border-radius:24px;padding:12px 20px;min-height:44px;font-size:14px}
-.university-workspace .portal-notice{line-height:1.6}
-.university-workspace .portal-panel{min-width:0}
-.university-workspace .portal-tabs{overflow:auto}
-.university-workspace .portal-tabs button{white-space:nowrap}
-.university-service-grid article>.portal-actions{margin-top:auto;padding-top:18px}
-.university-workspace .portal-filter-row>label{min-width:210px}
-.university-workspace .portal-primary{background:var(--app-fg);color:var(--app-bg)}
-.university-workspace .portal-filter-row p{flex:1;min-width:220px}
-.university-workspace .portal-filter-row .btn{flex:none}
-@media(max-width:700px){
-.university-workspace .portal-filter-row{align-items:stretch}
-.university-workspace .portal-filter-row>label, .university-workspace .portal-filter-row>form{width:100%;min-width:0}
-.university-workspace .portal-filter-row p{min-width:0}
-.university-workspace .portal-heading{flex-wrap:wrap}
-}
 .preserve-lines{white-space:pre-wrap;}
-.career-workspace>.portal-panel, .athletics-workspace>.portal-panel{margin:20px 0;}
-.creation-workspace .portal-panel, .career-workspace .portal-panel, .athletics-workspace .portal-panel{min-width:0;overflow-wrap:anywhere;}
-.semester-primary-nav{overflow-x:auto;white-space:nowrap;}
-.semester-primary-nav>button{flex-shrink:0;}
 .study-next-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;}
 .study-journal{margin:24px 0;}
 .study-journal-entry{padding:16px 0;border-top:1px solid var(--app-accent-wash);}

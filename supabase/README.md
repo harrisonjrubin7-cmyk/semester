@@ -36,11 +36,13 @@ leaves the rest of the file running unprotected.
 
 ## `*.check.sql` — the tests
 
-`classmates.check.sql`, `groups.check.sql`, `records.check.sql`,
-`calendar.check.sql`, `sync.check.sql`.
+`classmates.check.sql`, `groups.check.sql`, `rooms.check.sql`,
+`records.check.sql`, `calendar.check.sql`, `sync.check.sql`.
 
 Each one invents two to five users, proves the row-level policies refuse what
-they should refuse, and ends in `rollback;`. They answer the questions a policy
+they should refuse, and ends in `rollback;`. `rooms.check.sql` covers the
+reactions half of `…0400_rooms.sql`; the presence half is policies on
+`realtime.messages`, which no bare Postgres has, and its header says so. They answer the questions a policy
 can only be wrong about when a second person is involved — can a stranger read
 your room, can one member throw another out — without needing a second person.
 
@@ -98,7 +100,7 @@ when only one suite matters:
     SQL
     psql -v ON_ERROR_STOP=1 -d semester_check -f supabase/classmates.check.sql
 
-All five suites pass this way, and each rolls itself back. The grants come
+All six suites pass this way, and each rolls itself back. The grants come
 last because they are `on all tables` and there are no tables until the
 migrations have run; Supabase applies the equivalent as default privileges,
 which is why nothing in `migrations/` grants them itself.
@@ -120,6 +122,32 @@ misconfigured one comments that there are *no changes detected* in a directory
 it then names — and the name it prints is the configured working directory, so
 that comment is the setting read back to you. A path that is not a path means
 the field holds something that is not one.
+
+**Known broken on this project, and not from want of trying.** The setting has
+somehow been given this app's own GitHub Pages address, so the integration goes
+looking for `https:/harrisonjrubin7-cmyk.github.io/semester/supabase` and of
+course never finds a change in it. Every pull request for the life of the
+project has been answered "ignored", no preview branch has ever been built, and
+**no migration in `migrations/` has been applied anywhere before production** —
+which is the part that matters, because the one check that would catch a
+migration that does not apply cleanly has never run. `check.sh` covers some of
+that locally; it is not the same as a real branch.
+
+Four attempts to correct it have failed identically — three by typing `.` into
+the field and saving, one by disconnecting the repository and reconnecting it
+with the directory set during the connect flow. Each was followed by a fresh
+pull request drawing the same comment, naming the same URL, character for
+character. Whatever is holding that value is not being reset by either route,
+so if you are reading this because you hit it too: the field is not the whole
+story, and it is worth raising with Supabase with one of those pull requests as
+the reproduction rather than trying a fifth time.
+
+Whatever eventually fixes it, the confirmation is the same and it is worth insisting
+on: a pull request touching `supabase/` that draws a preview branch. The
+project's own branch row flickering between `FUNCTIONS_DEPLOYED` and
+`CREATING_PROJECT` is **not** confirmation — main takes merges all day and that
+row moves for reasons that have nothing to do with the setting. Only the
+comment reads the field back.
 
 Until **Deploy to production** is switched on, migrations are still applied by
 hand: SQL Editor → New query → paste a file's contents → Run, in filename

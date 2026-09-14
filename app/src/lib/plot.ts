@@ -43,6 +43,16 @@
  */
 
 import { free, read, value, type Node, type Scope, type Val } from './calc';
+import {
+  at as timeAt,
+  atS,
+  inverse,
+  latexFn,
+  latexTransform,
+  readRat,
+  transform,
+  type Fn as TimeFn,
+} from './laplace';
 
 export interface Point {
   x: number;
@@ -105,14 +115,30 @@ export type Line =
    * Drawn as the slope field and the solutions through it. Solved by walking,
    * never symbolically: see `lib/ode.ts`.
    */
-  | { kind: 'ode'; body: Node }
-  /** `y(0) = 1` — where a solution is known to pass, which picks one out of the family. */
-  | { kind: 'start'; at: Node; value: Node }
+  | { kind: 'ode'; body: Node; of: 'x' | 'y'; order: 1 | 2 }
+  /**
+   * `y(0) = 1` — where a solution is known to pass, which picks one out of the
+   * family. `y'(0) = 0` is the same thing for the rate, which is the second
+   * condition a second-order equation needs.
+   */
+  | { kind: 'start'; of: 'x' | 'y'; rate: boolean; at: Node; value: Node }
+  /**
+   * `L{t^2}` — the Laplace transform of what is in the brackets.
+   *
+   * Read against s rather than x, and drawn there: the pole of `\frac{1}{s-2}`
+   * is a thing to see, and a transform nobody can look at is a table entry
+   * rather than a picture. See `lib/laplace.ts`.
+   */
+  | { kind: 'transform'; body: Node }
+  /** `L^{-1}{1/(s^2 + 4)}` — the way back, read and drawn against t. */
+  | { kind: 'inverse'; body: Node }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
 export const ANGLE = 'θ';
 export const TIME = 't';
+/** What a transform is a function of — the other axis `L{}` and `L^{-1}{}` share. */
+export const FREQUENCY = 's';
 
 /**
  * How far round θ and t go, in half-turns.
@@ -137,10 +163,23 @@ const INEQUALITY = /(<=|>=|≤|≥|≠|<|>|\\le\b|\\ge\b|\\neq?\b|\\lt\b|\\gt\b)
  * through the parser is d times y over d times x, which is 1 and is not what
  * anybody wrote.
  */
-const RATE = /^\s*(?:y\s*'|dy\s*\/\s*dx|\\frac\s*\{\s*dy\s*\}\s*\{\s*dx\s*\})\s*$/;
+const RATE =
+  /^\s*(?:([xy])\s*('{1,2})|d(\^?2\s*)?([xy])\s*\/\s*d\s*[xt](\^?2)?|\\frac\s*\{\s*d(?:\^?2)?\s*([xy])\s*\}\s*\{\s*d\s*[xt](?:\^?2)?\s*\})\s*$/;
 
-/** `y(0)` on the left of an `=`: where a solution is known to pass. */
-const START = /^\s*y\s*\(([^()]*)\)\s*$/;
+/** `y(0)`, and `y'(0)` for the rate: where a solution is known to pass. */
+const START = /^\s*([xy])\s*('?)\s*\(([^()]*)\)\s*$/;
+
+/**
+ * `L{f(t)}` and `L^{-1}{F(s)}`, in the four ways somebody writes them.
+ *
+ * Off the text, like `RATE` above and for the same reason: `L{t^2}` through
+ * the expression parser is a letter beside a group, which is a multiplication,
+ * and the braces of `\mathcal{L}\{…\}` are LaTeX's rather than the
+ * expression's. The `^{-1}` is the only thing separating the two directions,
+ * so it is what the first group catches.
+ */
+const LAPLACE =
+  /^\s*(?:\\mathcal\s*\{\s*L\s*\}|L|laplace)\s*(\^\s*\{?\s*-\s*1\s*\}?)?\s*\\?\{([\s\S]*?)\\?\}\s*$/;
 
 /** `f(x)` and `g(x, y)` on the left of an `=`: a definition, not a product. */
 const DEFINES = /^\s*([A-Za-z][A-Za-z0-9]*)\s*\(\s*([A-Za-z][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z][A-Za-z0-9_]*)*)\s*\)\s*$/;
@@ -222,6 +261,13 @@ export function readLine(source: string): Line {
     return { kind: 'fault', says: 'Inequalities are not drawn yet — write it with an = and read the line it gives.' };
   }
 
+  const laplace = LAPLACE.exec(text);
+  if (laplace) {
+    const inner = node(laplace[2]);
+    if ('says' in inner) return { kind: 'fault', says: inner.says };
+    return laplace[1] ? { kind: 'inverse', body: inner.node } : { kind: 'transform', body: inner.node };
+  }
+
   const point = pointParts(text);
   if (point) {
     const x = node(point[0]);
@@ -261,13 +307,25 @@ export function readLine(source: string): Line {
   const rhs = node(right);
   if ('says' in rhs) return { kind: 'fault', says: rhs.says };
 
-  if (RATE.test(left)) return { kind: 'ode', body: rhs.node };
+  const rate = RATE.exec(left);
+  if (rate) {
+    const of = (rate[1] ?? rate[4] ?? rate[6] ?? 'y') as 'x' | 'y';
+    // `y''` and `d^2y/dx^2` are second order; everything else here is first.
+    const order = rate[2] === "''" || rate[3] !== undefined || rate[5] !== undefined || /\^?2/.test(left) ? 2 : 1;
+    return { kind: 'ode', body: rhs.node, of, order: order === 2 ? 2 : 1 };
+  }
 
   const start = START.exec(left);
   if (start) {
-    const at = node(start[1]);
+    const at = node(start[3]);
     if ('says' in at) return { kind: 'fault', says: at.says };
-    return { kind: 'start', at: at.node, value: rhs.node };
+    return {
+      kind: 'start',
+      of: start[1] as 'x' | 'y',
+      rate: start[2] === "'",
+      at: at.node,
+      value: rhs.node,
+    };
   }
 
   if (defines) {
@@ -322,15 +380,38 @@ export function missing(line: Line, scope: Scope): string[] {
   // the turn, t along the run. Reporting those as unset would ask somebody to
   // give a value to the very thing being varied.
   const has = (name: string) => name === 'x' || name === 'y' || name === ANGLE || name === TIME;
+  /*
+   * A step and an impulse look like unset letters and are not.
+   *
+   * `u(t - 2)` is `u` beside a bracket to everything that reads the notation,
+   * which is the right reading everywhere else — `lib/laplace.ts` is the one
+   * place that knows better. Reporting `u` as a letter with no value would ask
+   * somebody to give the step function a number.
+   */
+  const table = (name: string) => ['u', 'step', 'heaviside', 'δ', 'delta', 'dirac', 'impulse'].includes(name);
   switch (line.kind) {
+    case 'transform':
+      return free(line.body, scope).filter((n) => n !== TIME && !table(n));
+    case 'inverse':
+      return free(line.body, scope).filter((n) => n !== FREQUENCY && !table(n));
     case 'curve':
       return free(line.body, scope).filter((n) => !has(n));
     case 'relation':
       return free(line.body, scope).filter((n) => !has(n));
     case 'polar':
     case 'surface':
-    case 'ode':
       return free(line.body, scope).filter((n) => !has(n));
+    case 'ode':
+      /*
+       * A second-order equation supplies its own rate.
+       *
+       * `y'' = -y - 0.15y'` has `y'` in it as an ordinary quantity and the
+       * walk binds it at every step — so asking somebody to give it a value
+       * would be asking them to fill in the thing being solved for. A
+       * first-order equation supplies no such thing, and a `y'` on its
+       * right-hand side there is a genuine mistake worth reporting.
+       */
+      return free(line.body, scope).filter((n) => !has(n) && !(line.order === 2 && n === "y'"));
     case 'start':
       return [...free(line.at, scope), ...free(line.value, scope)].filter((n) => !has(n));
     case 'parametric':
@@ -344,6 +425,38 @@ export function missing(line: Line, scope: Scope): string[] {
     default:
       return [];
   }
+}
+
+/**
+ * What a transform line comes to: the answer, and the function to draw it by.
+ *
+ * One place rather than two, because the sentence under the line and the curve
+ * beside it are the same piece of arithmetic and a picture that disagreed with
+ * the reading over it would be the worst of the three outcomes.
+ */
+export function answered(
+  line: Line,
+  scope: Scope,
+): { latex: string; over: string; at: (v: number) => number; note?: string } | { says: string } | null {
+  if (line.kind === 'transform') {
+    const got = transform(line.body, TIME, scope);
+    if (!got.ok) return { says: got.fault };
+    return { latex: latexTransform(got.it, FREQUENCY), over: FREQUENCY, at: (s: number) => atS(got.it, s) };
+  }
+  if (line.kind === 'inverse') {
+    const rat = readRat(line.body, FREQUENCY, scope);
+    if (!rat.ok) return { says: rat.fault };
+    const got = inverse(rat.it);
+    if (!got.ok) return { says: got.fault };
+    const fn: TimeFn = got.it;
+    return {
+      latex: latexFn(fn, TIME),
+      over: TIME,
+      at: (t: number) => timeAt(fn, t),
+      note: fn.impulses.length ? 'The impulse in it is not drawn — an impulse has no height to draw.' : undefined,
+    };
+  }
+  return null;
 }
 
 // ── Turning it into lines on a page ──────────────────────────────────────
@@ -604,6 +717,13 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
         return { xs: flat(value(line.x, { ...scope, vars })), ys: flat(value(line.y, { ...scope, vars })) };
       };
       return { paths: along(at, 0, turns, Math.round(detail.steps * detail.turns)), points: [] };
+    }
+    case 'transform':
+    case 'inverse': {
+      const got = answered(line, scope);
+      if (!got || 'says' in got) return EMPTY;
+      const window = frame.y1 - frame.y0;
+      return { paths: series(got.at, frame.x0, frame.x1, detail.columns, window), points: [] };
     }
     case 'point': {
       const xs = flat(value(line.x, scope));
@@ -977,6 +1097,26 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'Growth that levels off',
     says: 'The logistic curve: fast while there is room, then flat.',
     lines: ["y' = 0.6 y (1 - y/40)", 'y(0) = 2'],
+  },
+  {
+    name: 'A spring',
+    says: 'Second order: a value and a speed, and the swing they make.',
+    lines: ["y'' = -y - 0.15 y'", 'y(0) = 4', "y'(0) = 0"],
+  },
+  {
+    name: 'Predator and prey',
+    says: 'A system: two quantities driving each other round a loop.',
+    lines: ["x' = x - x y", "y' = x y - y", 'x(0) = 1', 'y(0) = 0.5'],
+  },
+  {
+    name: 'A transform',
+    says: 'Laplace: a function of t, read as a function of s.',
+    lines: ['L{t^2 e^{-t}}'],
+  },
+  {
+    name: 'The way back',
+    says: 'The same table read the other way — a fraction in s, as the wave it was.',
+    lines: ['L^{-1}{1/(s^2 + 2s + 5)}'],
   },
   {
     name: 'A flow',

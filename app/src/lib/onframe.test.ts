@@ -136,7 +136,9 @@ describe('the assistant is offered once per frame', () => {
   });
 
   it('keeps the panel and the tab named apart', () => {
-    const panel = read('src/ai/Assistant.tsx');
+    // The button's file: the `aria-label` below is the button's, and neither
+    // half of the assistant may call itself the tab.
+    const panel = read('src/ai/Assistant.tsx') + read('src/ai/Panel.tsx');
     // The floating button says where it will ask about; the bar says what it
     // opens. Two doors to one conversation is fine — two doors wearing one
     // name is the fault, and `App.tsx`'s launcher/directory pair was it.
@@ -151,7 +153,10 @@ describe('the assistant is offered once per frame', () => {
    * one place the tab's history is missing and wanted.
    */
   it('keeps the panel’s way through to the tab', () => {
-    expect(read('src/ai/Assistant.tsx')).toContain("screen: 'ask'");
+    // `Panel.tsx`, not `Assistant.tsx`: the assistant is two files now — the
+    // button that is always mounted, and the panel behind it on its own chunk.
+    // ALL CHATS is drawn by the panel, which is the half this is about.
+    expect(read('src/ai/Panel.tsx')).toContain("screen: 'ask'");
   });
 });
 

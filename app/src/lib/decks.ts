@@ -117,35 +117,57 @@ export function themeOf(deck: Pick<StoredDeck, 'theme'>): Theme {
   return THEMES.find((t) => t.id === deck.theme) ?? THEMES[0];
 }
 
-export function blankDeck(
-  title: string,
-  courseId: CourseId | null = null,
-  itemId: string | null = null,
-): Omit<StoredDeck, 'id'> {
-  const now = Date.now();
-  return {
-    title: title.trim() || 'Untitled deck',
-    subtitle: '',
-    slides: [{ title: title.trim() || 'Untitled deck', bullets: [], opening: true }],
-    courseId,
-    itemId,
-    created: now,
-    updated: now,
-    hidden: [],
-    theme: 'ink',
-  };
-}
+/*
+ * `blankDeck` lives in `lib/blank.ts` now, and is re-exported here so every
+ * caller is unchanged.
+ *
+ * It left for the same reason `blankSheet` did: the reducer creates decks and
+ * has no business loading this file, which imports the palette out of
+ * `lib/pptx.ts` — so a fourteen-line factory was putting a .pptx serialiser on
+ * the first render. See `lib/blank.ts`.
+ */
+export { blankDeck } from './blank';
 
 /** A blank slide of a given shape. The layouts a class presentation actually uses. */
-export type Layout = 'title' | 'bullets' | 'table' | 'equation' | 'section' | 'blank';
+export type Layout =
+  | 'title'
+  | 'bullets'
+  | 'two'
+  | 'table'
+  | 'equation'
+  | 'quote'
+  | 'big'
+  | 'section'
+  | 'blank';
 
-export const LAYOUTS: { id: Layout; label: string }[] = [
-  { id: 'title', label: 'Title' },
-  { id: 'section', label: 'Section' },
-  { id: 'bullets', label: 'Title and points' },
-  { id: 'table', label: 'Table' },
-  { id: 'equation', label: 'Equation' },
-  { id: 'blank', label: 'Blank' },
+/**
+ * The shapes a class presentation is actually given in.
+ *
+ * Six was the list and three of the commonest were missing. PowerPoint ships
+ * eleven layouts and most of them are a picture in a different corner, which
+ * this app has no images to put in — but the three added here are not
+ * decoration, they are things a deck could not say:
+ *
+ *   - **two columns**, which is the argument beside the objection, and whose
+ *     workaround was one list beginning "For:" and "Against:";
+ *   - **a quotation**, which set as a bullet is a quotation nobody reads as
+ *     one;
+ *   - **a figure**, which is the slide a findings deck is built round.
+ *
+ * `says` is the line under the name in the picker: what this shape is for,
+ * rather than what it looks like, because the picker is opened by somebody
+ * who knows what they want to say and not what it is called.
+ */
+export const LAYOUTS: { id: Layout; label: string; says: string }[] = [
+  { id: 'title', label: 'Title', says: 'The opening slide' },
+  { id: 'section', label: 'Section', says: 'A divider, with a line under it' },
+  { id: 'bullets', label: 'Title and points', says: 'The ordinary slide' },
+  { id: 'two', label: 'Two columns', says: 'A comparison — this against that' },
+  { id: 'table', label: 'Table', says: 'Figures in rows' },
+  { id: 'equation', label: 'Equation', says: 'One formula, set out' },
+  { id: 'quote', label: 'Quotation', says: 'A passage, with where it came from' },
+  { id: 'big', label: 'One figure', says: 'A number, and what it means' },
+  { id: 'blank', label: 'Blank', says: 'A title and nothing else' },
 ];
 
 export function blankSlide(layout: Layout): Slide {
@@ -162,6 +184,18 @@ export function blankSlide(layout: Layout): Slide {
     return { title: '', bullets: [], table: [['', ''], ['', '']] };
   }
   if (layout === 'equation') return { title: '', bullets: [], equation: '' };
+  if (layout === 'two') {
+    return {
+      title: '',
+      bullets: [],
+      columns: [
+        { heading: '', points: [''] },
+        { heading: '', points: [''] },
+      ],
+    };
+  }
+  if (layout === 'quote') return { title: '', bullets: [], quote: { text: '', source: '' } };
+  if (layout === 'big') return { title: '', bullets: [], big: { value: '', says: '' } };
   if (layout === 'blank') return { title: '', bullets: [] };
   return { title: '', bullets: [''] };
 }
@@ -203,9 +237,18 @@ export function forExport(deck: StoredDeck): Deck {
       subtitle: deck.subtitle,
       slides: [{ title: '', bullets: [] }],
       palette,
+      footer: deck.footer,
+      numbers: deck.numbers,
     };
   }
-  return { title: deck.title, subtitle: deck.subtitle, slides, palette };
+  return {
+    title: deck.title,
+    subtitle: deck.subtitle,
+    slides,
+    palette,
+    footer: deck.footer,
+    numbers: deck.numbers,
+  };
 }
 
 /**
@@ -219,6 +262,9 @@ export function forExport(deck: StoredDeck): Deck {
  */
 export function layoutOf(slide: Slide): Layout {
   if (slide.equation !== undefined) return 'equation';
+  if (slide.quote) return 'quote';
+  if (slide.big) return 'big';
+  if (slide.columns) return 'two';
   if (slide.table) return 'table';
   if (slide.opening) return slide.note !== undefined ? 'section' : 'title';
   return slide.bullets.length ? 'bullets' : 'blank';
@@ -251,7 +297,15 @@ export function relayout(slide: Slide, layout: Layout): Slide {
   };
 }
 
-/** The layouts with a body to put points in. */
+/**
+ * The layouts with a body to put points in.
+ *
+ * Not the three new ones. A quotation slide with bullets under the quotation
+ * is two slides in one, a figure slide with bullets is the thing a figure
+ * slide exists to replace, and a two-column slide's points are in its
+ * columns — carrying a stray list into any of them would put text on top of
+ * the layout rather than in it.
+ */
 const KEEPS_POINTS: Layout[] = ['bullets', 'table', 'equation'];
 
 /** Whether changing the layout would throw away something somebody typed. */
@@ -263,6 +317,16 @@ export function losesSomething(slide: Slide, layout: Layout): string[] {
   }
   if (slide.equation?.trim() && to.equation === undefined) gone.push('the equation');
   if (slide.note?.trim() && to.note === undefined) gone.push('the line under the title');
+  if (
+    slide.columns?.some((c) => c.heading.trim() || c.points.some((p) => p.trim())) &&
+    !to.columns
+  ) {
+    gone.push('the two columns');
+  }
+  if ((slide.quote?.text.trim() || slide.quote?.source.trim()) && !to.quote) {
+    gone.push('the quotation');
+  }
+  if ((slide.big?.value.trim() || slide.big?.says.trim()) && !to.big) gone.push('the figure');
   if (slide.bullets.some((b) => b.trim() !== '') && !KEEPS_POINTS.includes(layout)) {
     gone.push('the points');
   }

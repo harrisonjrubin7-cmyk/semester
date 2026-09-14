@@ -56,18 +56,21 @@ import {
   here,
   lastFollowed,
   moveTab,
+  muteTab,
   openTab,
   pickTab,
   record,
   useStrip,
 } from '../lib/browser.hook';
-import { NEW_TAB, lanes, pinnedCount, placeFor, sameplace } from '../lib/browser';
+import { MAX_TABS, NEW_TAB, lanes, pinnedCount, placeFor, sameplace } from '../lib/browser';
 import { useMovable, type Movable } from '../lib/arrange';
 import { screenName } from '../lib/nav';
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
 import { secondLine } from '../lib/dim';
-import { ChevronDown, Plus, Search as SearchIcon } from './Icons';
+import { ChevronDown, Plus, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
+import { sounding } from '../lib/sound';
+import { useSound } from '../lib/sound.hook';
 import { TabGlyph } from './TabIcon';
 import { StripMenu, type MenuOn } from './TabMenu';
 import { TabFind } from './TabFind';
@@ -85,7 +88,7 @@ import { useModernShell } from './shell-context';
  * an answer or the browser's own Back button. Without it the strip would only
  * be right about the places search sent you to, which is the minority of them.
  *
- * Nothing is recorded on the first render. A tab opened and left empty is a
+ * Nothing is recorded on the app's first look. A tab opened and left empty is a
  * new tab, and a new tab that adopted whatever was already on screen the
  * moment the app reloaded would be a tab nobody opened.
  */
@@ -268,6 +271,17 @@ export function TabStrip({
 }) {
   const { dispatch } = useStore();
   const strip = useStrip();
+  /*
+   * What is playing, so a tab can say it is the one playing it.
+   *
+   * Watched here rather than inside each tab: this changes when somebody
+   * presses Play and at no other time, and a subscription per tab would be a
+   * hundred of them on a full strip. The clock inside the sound ticks several
+   * times a second and is deliberately a different subscription
+   * (`usePlayback`), which the strip never takes — a tab bar that re-rendered
+   * four times a second could not be dragged.
+   */
+  const noise = useSound();
   const tones = useTones();
   /*
    * Dragging a tab along the strip.
@@ -291,6 +305,23 @@ export function TabStrip({
   /** The tab or group menu, and where it was summoned from. See `TabMenu`. */
   const [menu, setMenu] = useState<{ on: MenuOn; corner: Corner } | null>(null);
   const modern = useModernShell();
+  const full = strip.tabs.length >= MAX_TABS;
+
+  /*
+   * A new tab's page is the search page, and going to one is a navigation.
+   *
+   * The overlay hands in its own `onBlank` because it has to close itself on
+   * the way. Every other mount is a bare `<TabStrip />` on the window, and
+   * those had no handler at all — so picking a new tab, or pressing the +,
+   * marked it as the tab you were on and left the previous screen in front of
+   * you. The strip then said you were somewhere you were not, which is the one
+   * thing it cannot get wrong. `search` is `SearchHome` in every navigation,
+   * so this is the same landing the overlay makes.
+   */
+  const blank = () => {
+    if (onBlank) onBlank();
+    else dispatch({ type: 'go', screen: 'search' });
+  };
 
   /**
    * Picking a tab, unless the click is the tail of a drag.
@@ -312,7 +343,7 @@ export function TabStrip({
       onOpened?.();
       return;
     }
-    onBlank?.();
+    blank();
   };
 
   /** Close a tab, and go wherever closing it revealed. */
@@ -383,6 +414,7 @@ export function TabStrip({
                   seat={seat}
                   on={seat.at === strip.at}
                   searching={searching}
+                  talking={sounding(noise, seat.tab.id)}
                   hold={movable.props(seat.tab.id)}
                   onPick={() => pick(seat.at)}
                   onShut={() => shut(seat.at)}
@@ -440,6 +472,7 @@ export function TabStrip({
                     seat={seat}
                     on={seat.at === strip.at}
                     searching={searching}
+                    talking={sounding(noise, seat.tab.id)}
                     hold={movable.props(seat.tab.id)}
                     onPick={() => pick(seat.at)}
                     onShut={() => shut(seat.at)}
@@ -454,12 +487,14 @@ export function TabStrip({
           type="button"
           className="bare tappable"
           onClick={() => {
-            openTab();
-            // A new tab's page is the search page, so opening one opens it.
-            onBlank?.();
+            // Only when one was actually opened. At the cap `openTab` refuses,
+            // and going to the search page anyway would answer "no room for
+            // another tab" by throwing away the page in the tab you are on.
+            if (openTab()) blank();
           }}
+          disabled={full}
           aria-label="New tab"
-          title="New tab"
+          title={full ? `Close a tab before opening another (${MAX_TABS} open)` : 'New tab'}
           style={{
             width: 'auto',
             flex: 'none',
@@ -473,7 +508,7 @@ export function TabStrip({
         {/* And the way back to a tab when the strip has stopped being one
             glance. It draws nothing until there are enough tabs to look
             for — see `ENOUGH` in `components/TabFind.tsx`. */}
-        <TabFind onPick={pick} onClose={shut} />
+        <TabFind onPick={pick} onClose={shut} onBack={land} />
       </div>
       {onDismiss && (
         <button
@@ -516,7 +551,7 @@ export function TabStrip({
           onClose={() => setMenu(null)}
           onLand={land}
           onCloseTab={shut}
-          onNewTab={() => onBlank?.()}
+          onNewTab={blank}
         />
       )}
     </div>
@@ -540,7 +575,15 @@ function PinEdge() {
 }
 
 /**
- * One tab: its glyph, its name, its cross, and the ⌄ when it is the one on.
+ * One tab: its glyph, its name, its cross, the ⌄ when it is the one on, and a
+ * speaker when it is the one talking.
+ *
+ * The speaker is the exception to everything below about what a tab may
+ * spend room on. It is drawn on whichever tab owns the player — usually *not*
+ * the one you are looking at, which is the entire point of it — because a
+ * sound with no visible source is the thing every browser added this control
+ * to answer. It is a button, and pressing it mutes that tab without going to
+ * it, which is the other half of the same answer.
  *
  * The chevron is drawn on the current tab only. It is the touchable way into
  * the menu that right-click is for everybody else, and a chevron on every tab
@@ -551,6 +594,7 @@ function Tab({
   seat,
   on,
   searching,
+  talking,
   hold,
   onPick,
   onShut,
@@ -559,6 +603,8 @@ function Tab({
   seat: Seat;
   on: boolean;
   searching: string;
+  /** This tab owns the player: it is the one making the noise. */
+  talking: boolean;
   /**
    * What makes this tab draggable: `props` from `useMovable`.
    *
@@ -645,6 +691,34 @@ function Tab({
           </span>
         )}
       </button>
+      {talking && (
+        <button
+          type="button"
+          className="bare tappable"
+          onClick={(e) => {
+            e.stopPropagation();
+            muteTab(tab.id, !tab.muted);
+          }}
+          // A press on the speaker is a mute, not the start of a drag — the
+          // same reason the cross below stops its pointer event.
+          onPointerDown={(e) => e.stopPropagation()}
+          aria-label={`${tab.muted ? 'Unmute' : 'Mute'} ${title}`}
+          aria-pressed={Boolean(tab.muted)}
+          title={tab.muted ? `${title} — muted` : `${title} — playing`}
+          style={{
+            width: 'auto',
+            flex: 'none',
+            padding: 'var(--sp-3) var(--sp-1)',
+            fontSize: 'var(--type-sm)',
+            // Muted is the quiet state in every sense: the glyph stands down
+            // to the strip's second line rather than staying at full strength
+            // and claiming something is happening.
+            ...(tab.muted ? secondLine() : {}),
+          }}
+        >
+          {tab.muted ? <SpeakerOffIcon size={13} /> : <SpeakerIcon size={13} />}
+        </button>
+      )}
       {on && (
         <button
           type="button"

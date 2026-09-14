@@ -76,8 +76,15 @@ export type Node =
    * are ordinary: `f(x) = x^2` above makes the first, and `a(x + 1)` with a
    * slider called `a` makes the second. So the choice is left until there is a
    * scope to make it against — see `value`.
+   *
+   * A power after the bracket is held here rather than wrapped around the
+   * outside, because it belongs to whichever reading wins: `f(x)^2` is the
+   * square of what f gives, and `s(s + 2)^2` is s times the square of the
+   * bracket, which is what `1/(s(s+2)^2)` means to everybody who writes it.
+   * Wrapping it outside would make the second of those `(s(s+2))^2` — a
+   * different function, drawn and transformed without complaint.
    */
-  | { kind: 'apply'; name: string; args: Node[] }
+  | { kind: 'apply'; name: string; args: Node[]; power?: Node }
   | { kind: 'fact'; body: Node }
   | { kind: 'percent'; body: Node }
   | { kind: 'abs'; body: Node }
@@ -215,7 +222,18 @@ function lex(source: string): Tok[] | string {
 
     // Letters run together are one name; Greek letters are letters. A space is
     // what separates two of them, which is the whole rule for `a sin(x)`.
-    const word = /^[A-Za-zα-ωΑ-Ωθφ°]+/.exec(source.slice(i));
+    /*
+     * A prime belongs to the name in front of it.
+     *
+     * `y''` is a variable here — the rate, and the rate of the rate — because
+     * that is how a second-order equation is written: `y'' = -y - 0.2y'` has
+     * `y'` in it as an ordinary quantity. `lib/ode.ts` binds both while it
+     * walks the equation, so nothing else in this file needs to know what they
+     * mean. Two at most: `y'''` is a third-order equation and this app does
+     * not solve one, so it reads as a name nothing has set rather than as
+     * something that half works.
+     */
+    const word = /^[A-Za-zα-ωΑ-Ωθφ°]+'{0,2}/.exec(source.slice(i));
     if (word) {
       const prior = out[out.length - 1];
       if (prior && prior.kind === 'name' && GLUED.has(prior.value)) prior.value += word[0];
@@ -374,7 +392,12 @@ class Parser {
     if (this.isOp('^')) {
       this.at += 1;
       // The exponent may itself be signed — `10^-3` — and is read to the right.
-      return { kind: 'op', op: '^', left: base, right: this.unary() };
+      const power = this.unary();
+      // See the note on `apply`: a power after an undecided bracket goes
+      // inside it, because where the bracket turns out to be a multiplication
+      // the power belongs to the bracket and not to the product.
+      if (base.kind === 'apply' && base.power === undefined) return { ...base, power };
+      return { kind: 'op', op: '^', left: base, right: power };
     }
     return base;
   }
@@ -828,13 +851,16 @@ export function value(node: Node, scope: Scope = {}, depth = 0): Val {
     case 'call':
       return callValue(node, scope, depth);
     case 'apply': {
+      const lifted = (v: Val) =>
+        node.power === undefined ? v : map2(v, value(node.power, scope, depth + 1), raise);
       const own = scope.funs?.[node.name];
-      if (own) return callValue({ kind: 'call', name: node.name, args: node.args }, scope, depth);
+      if (own) return lifted(callValue({ kind: 'call', name: node.name, args: node.args }, scope, depth));
       // Nobody defined it, so it is the multiplication it looks like —
-      // `a(x + 1)`, which is what somebody with a slider called `a` meant.
+      // `a(x + 1)`, which is what somebody with a slider called `a` meant. The
+      // power, where there is one, is the bracket's and not the product's.
       if (node.args.length !== 1) return NaN;
       const left = value({ kind: 'name', name: node.name }, scope, depth + 1);
-      return map2(left, value(node.args[0], scope, depth + 1), (a, b) => a * b);
+      return map2(left, lifted(value(node.args[0], scope, depth + 1)), (a, b) => a * b);
     }
   }
 }
@@ -918,6 +944,7 @@ export function free(node: Node, scope: Scope = {}, bound: string[] = []): strin
         // the reading it would take, so it is the one reported as missing.
         if (!scope.funs?.[n.name]) walk({ kind: 'name', name: n.name }, inner);
         n.args.forEach((a) => walk(a, inner));
+        if (n.power) walk(n.power, inner);
         return;
       }
       case 'op':

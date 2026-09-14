@@ -69,7 +69,7 @@ export function Chat() {
    * for: a composer on the bottom edge is the one control an iOS keyboard
    * covers completely. Everywhere else a focused field is somewhere in a
    * scrolling column and the browser scrolls it into view by itself, which is
-   * the behaviour this deliberately does not touch on forty-nine screens.
+   * the behaviour this deliberately does not touch on any other screen.
    */
   useKeyboardInset();
   const [draft, setDraft] = useState('');

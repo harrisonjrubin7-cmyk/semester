@@ -123,16 +123,54 @@ Deno.serve(async (req) => {
   }
 
   // ── forward it ──────────────────────────────────────────────────────────
+  //
+  // Wrapped, because an unwrapped `fetch` here throws out of the handler and
+  // the student gets whichever opaque 500 the runtime decides to write. That
+  // was survivable when the call was counted afterwards. It is not now: the
+  // count moved in front of this fetch so that a disconnect could not buy a
+  // free generation, which means a DNS blip on the way to Anthropic already
+  // costs somebody one of their sixty, and the only thing on screen to explain
+  // it is a blank error.
+  //
+  // The count is not given back, and that is deliberate rather than mean. A
+  // `fetch` that throws does not say whether the request was sent: a reset
+  // mid-flight may well have reached Anthropic and been billed, and a refund
+  // on every throw is a free retry loop for anybody who can induce one. So the
+  // charge stands and the message says so, which is the honest half of the
+  // trade — a student who is told they were charged can decide what to do, and
+  // one who is not told simply loses a generation to a blank box.
+  // Read outside the `try`, so the catch below covers reaching Anthropic and
+  // only that. A body this function cannot read is the caller's own request
+  // falling over, and answering that with "Claude could not be reached" would
+  // be a lie in the one place somebody is looking for a reason.
   const body = await req.text();
-  const upstream = await fetch(ANTHROPIC, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
-    body,
-  });
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(ANTHROPIC, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+      },
+      body,
+    });
+  } catch {
+    // Deliberately not the thrown message: it carries the upstream host and,
+    // depending on the runtime, the request that was being sent.
+    return json(
+      {
+        error: {
+          message:
+            'Claude could not be reached just now, and this attempt still counted against ' +
+            'your monthly total — there is no way to tell from a dropped connection whether ' +
+            'the request arrived. Try again in a moment.',
+        },
+      },
+      502,
+    );
+  }
 
   return new Response(upstream.body, {
     status: upstream.status,

@@ -31,6 +31,7 @@ import {
   groupTab,
   joinTabGroup,
   leaveTabGroup,
+  muteTab,
   nameGroup,
   openTab,
   openTabIn,
@@ -141,6 +142,25 @@ function TabRows({
         {tab.pinned ? 'Unpin this tab' : 'Pin this tab'}
       </MenuRow>
 
+      {/*
+        * Muting, for the tab you are on.
+        *
+        * The speaker on the strip is the quick way and only appears on a tab
+        * that is actually playing something. This row is here for the other
+        * case, which is the one a menu is for: deciding *in advance* that
+        * this tab is not to make a noise. A tab muted before it plays
+        * anything starts quiet, which is what somebody in a library wants and
+        * is not a thing a speaker that is not drawn yet can offer.
+        */}
+      <MenuRow
+        onPress={() => {
+          muteTab(tab.id, !tab.muted);
+          onClose();
+        }}
+      >
+        {tab.muted ? 'Unmute this tab' : 'Mute this tab'}
+      </MenuRow>
+
       {!tab.pinned && (
         <>
       <MenuRule />
@@ -181,10 +201,13 @@ function TabRows({
       <MenuRule />
       <MenuRow
         onPress={() => {
-          if (mine) openTabIn(mine.id);
-          else openTab();
+          // Only go to the new tab's page when there is a new tab. Both of
+          // these refuse at the cap, and landing on the search page anyway
+          // would answer "no room for another" by discarding the page in the
+          // tab you are on.
+          const opened = mine ? openTabIn(mine.id) : openTab();
           onClose();
-          onNewTab();
+          if (opened) onNewTab();
         }}
       >
         New tab{mine ? ` in ${mine.name || 'this group'}` : ''}
@@ -307,9 +330,9 @@ function GroupRows({
       </MenuRow>
       <MenuRow
         onPress={() => {
-          openTabIn(id);
+          const opened = openTabIn(id);
           onClose();
-          onNewTab();
+          if (opened) onNewTab();
         }}
       >
         New tab in this group

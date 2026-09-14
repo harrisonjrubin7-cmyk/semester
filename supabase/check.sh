@@ -20,11 +20,37 @@
 # removes it on the way out; it never touches a configured PGHOST or a real
 # project.
 #
-#     supabase/check.sh
+#     supabase/check.sh                 # every suite
+#     supabase/check.sh groups records  # only these
+#
+# Naming suites is for iterating on one: the cluster and the migrations are the
+# slow part and happen either way, but a failing suite's output is far easier to
+# read without the other five around it.
 #
 set -euo pipefail
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+
+# Which suites, resolved here — before a cluster is built — so that a typo
+# costs nothing and is answered at once rather than after half a minute of
+# initdb. A name matching no file is an error, never a quiet no-op: asking for
+# a suite and being told everything passed, having run nothing, is the failure
+# this directory keeps turning out to have had.
+suites=()
+if [ "$#" -gt 0 ]; then
+  for name in "$@"; do
+    c="$here/${name%.check.sql}.check.sql"
+    if [ ! -f "$c" ]; then
+      echo "No such suite: $name" >&2
+      echo "Available: $(cd "$here" && ls *.check.sql | sed 's/\.check\.sql$//' | tr '\n' ' ')" >&2
+      exit 2
+    fi
+    suites+=("$c")
+  done
+else
+  for c in "$here"/*.check.sql; do suites+=("$c"); done
+fi
+
 work=$(mktemp -d)
 port=${SEMESTER_CHECK_PORT:-54399}
 
@@ -89,7 +115,7 @@ SQL
 
 echo "· checks"
 failed=0
-for c in "$here"/*.check.sql; do
+for c in "${suites[@]}"; do
   out=$(psql -f "$c" 2>&1 || true)
   if echo "$out" | grep -qE "FAILED|ERROR"; then
     echo "  ✗ $(basename "$c")"

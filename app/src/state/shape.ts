@@ -332,9 +332,13 @@ export interface Persisted {
    * To the day, and not to the second, deliberately. The finer number is a
    * record of somebody's evenings that no screen has a use for, and rounding
    * it is the difference between a directory that knows what you have tried
-   * and a log of when you were awake. It never leaves the device — the same
-   * as everything else here — but that is not a reason to keep more of it
-   * than the feature needs.
+   * and a log of when you were awake. It does go to the account when you are
+   * signed in, the same as everything else here — the sentence that used to
+   * stand in this paragraph said the opposite, and `merge.ts` has reasoned
+   * about which of two devices' answers wins for as long as it has existed.
+   * Signed out it leaves the device no more than the rest does, and the day
+   * is still all that is kept: what a feature does not need is not stored,
+   * whichever machines end up holding it.
    */
   lastOpened: Record<string, number>;
   /**
@@ -963,47 +967,168 @@ export interface QuizQuestion {
 export type State = Persisted & Ephemeral;
 
 export const STORAGE_KEY = 'semester.v1';
-/** When this device last agreed with the account copy, as epoch ms. */
+/**
+ * The old watermark: one number, "when this device last agreed with the
+ * account". Still read, never written — see `seenRows` below.
+ */
 export const SYNCED_KEY = 'semester.synced';
+/** What the account's rows looked like when this device last agreed with them. */
+export const SEEN_KEY = 'semester.seen';
 
 /**
- * The sync watermark, read and written through a browser that may refuse both.
+ * The stamps this device has already taken, row by row.
  *
- * Every other reader of storage in this app is wrapped — `loadPersisted` below,
- * `lib/keep.ts`, `lib/notify.ts`, `lib/claude.ts` — and the four writes of this
- * one key in `state/store.tsx` were the exception. `localStorage.setItem`
- * throws in a browser that has site data blocked and in Safari's private
- * windows, and each of those four sat somewhere a throw did real damage:
- *
- *   * inside `refresh`'s `try`, where a pull that had already succeeded was
- *     reported on screen as a sync error;
- *   * inside the push effect's `.then`, where the same thing happened to a
- *     push that had already landed;
- *   * and twice inside `settle`, the first-sign-in "this device or the
- *     account?" dialogue — which is a React event handler with no `try` around
- *     it, so the throw skipped `setAsking(null)` and left the dialogue on
- *     screen with both buttons dead. In a private window the app could not be
- *     signed into at all, and nothing said why.
- *
- * Storage that will not hold this number is not an error worth reporting. It
- * means the device cannot remember having synced, so the next sign-in treats
- * itself as a first one — which is the conservative answer, and the one the
- * adoption dialogue exists to handle.
+ * Keys are the row's identity — `state` is the one state row, `courses` is one
+ * entry per course id — and values are `updated_at` exactly as the database
+ * wrote it, kept as the string it arrived as so nothing parses or re-formats a
+ * value whose only job is to be compared with itself.
  */
-export function syncedAt(): number {
+export interface Seen {
+  /** The `state` row. Absent when the account has no state row. */
+  state?: string;
+  /** Each course row, by course id. */
+  courses: Record<string, string>;
+}
+
+/**
+ * Why this is a set of stamps and not a timestamp.
+ *
+ * The question every refresh asks is "is there anything in the account I have
+ * not taken?" That used to be `remote.updated > syncedAt()` — the newest
+ * `updated_at` in the account, against a number this device had written down.
+ * Two different things were wrong with it, and both lose somebody's work
+ * silently, which is the only kind of sync bug worth being afraid of.
+ *
+ * ## It compared the database's clock against the device's
+ *
+ * Two of the four writes of that number were `Date.now()`: after a push, and
+ * on choosing "keep this device" in the first-sign-in dialogue. The values it
+ * was compared against are `updated_at`, which the database sets and a client
+ * cannot. `20260901000700_records.sql` spends a paragraph on exactly this
+ * hazard — "device clocks drift, and a phone set five minutes fast would
+ * otherwise win every conflict forever, silently, until somebody noticed their
+ * laptop's edits never survived" — and stops a device writing the column. The
+ * client then reintroduced it on the other side of the comparison.
+ *
+ * A phone five minutes fast wrote a watermark five minutes ahead of the
+ * database, so every change made on the laptop in that window came back with
+ * an `updated_at` *below* the watermark and was never taken. Not delayed:
+ * ignored, because the watermark only moves forward. And because a push
+ * upserts the whole `state` row from this device's copy, the next push then
+ * overwrote the laptop's edits with a copy that had never merged them.
+ *
+ * ## It could not see a row that arrived late
+ *
+ * `updated_at` is stamped by a `before` trigger, so it is the moment the
+ * transaction *started*; the row becomes visible to anyone else when that
+ * transaction *commits*. Between the two, a pull can read the account, miss
+ * the row, and write down a watermark higher than the stamp the row is
+ * carrying — after which `> watermark` never matches it again. A slow write
+ * on one device and a quick one on another, a pull in between, and the slow
+ * one is invisible for good.
+ *
+ * Widening the trigger to `clock_timestamp()` narrows that window to the
+ * length of the commit and does not close it, which is why this is fixed here
+ * rather than in the schema.
+ *
+ * ## What a set of stamps does instead
+ *
+ * It never compares two clocks and it never compares two instants. It asks
+ * whether the account's rows are the ones this device has already taken, and
+ * a row is "already taken" only if its stamp is the exact string last seen for
+ * it. A row that arrives late is a row this device has no entry for, or has a
+ * different entry for, so it is taken whenever it turns up and however old its
+ * stamp is. There is no window to be inside and no clock to be wrong.
+ *
+ * The cost is a map instead of a number, which for one state row and a handful
+ * of courses is a few hundred bytes.
+ */
+export function seenRows(): Seen | null {
   try {
-    return Number(localStorage.getItem(SYNCED_KEY) ?? 0) || 0;
+    const raw = localStorage.getItem(SEEN_KEY);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        const bag = parsed as { state?: unknown; courses?: unknown };
+        return {
+          ...(typeof bag.state === 'string' ? { state: bag.state } : {}),
+          courses: stamps(bag.courses),
+        };
+      }
+    }
+    /*
+     * A device that synced under the old watermark has synced, and must not be
+     * asked "this device or the account?" all over again — that dialogue is for
+     * a first sign-in and `seenRows() === null` is how `refresh` knows one.
+     *
+     * Returning an empty set rather than a reconstructed one: the old number
+     * cannot say which rows it covered, and guessing would be the same mistake
+     * in a new spelling. Empty means "synced before, holding nothing", so the
+     * first refresh after this ships takes the account's copy once and records
+     * it properly. A union merge, so taking a copy of what is already here
+     * costs a re-render.
+     */
+    if (localStorage.getItem(SYNCED_KEY)) return { courses: {} };
+    return null;
   } catch {
-    return 0;
+    // Site data blocked, or a private window. The device cannot remember
+    // having synced, so the next sign-in treats itself as a first one — the
+    // conservative answer, and the one the adoption dialogue exists to handle.
+    return null;
   }
 }
 
-export function markSynced(at: number): void {
-  try {
-    localStorage.setItem(SYNCED_KEY, String(at));
-  } catch {
-    // See above: nothing to say and nothing to undo.
+/** Only string values survive, so a hand-edited or truncated store cannot reach the compare. */
+function stamps(value: unknown): Record<string, string> {
+  if (!value || typeof value !== 'object') return {};
+  const out: Record<string, string> = {};
+  for (const [id, at] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof at === 'string') out[id] = at;
   }
+  return out;
+}
+
+/**
+ * Write down what was just taken.
+ *
+ * Wrapped, like every other write of storage in this app: `setItem` throws in
+ * Safari's private windows and wherever site data is blocked, and two of the
+ * four call sites are inside a React event handler with no `try` around it —
+ * a throw there skipped `setAsking(null)` and left the first-sign-in dialogue
+ * on screen with both buttons dead.
+ *
+ * Failing to remember costs a redundant take on the next refresh, which a
+ * union merge makes harmless. It is not worth a word on screen.
+ */
+export function markSeen(seen: Seen): void {
+  try {
+    localStorage.setItem(SEEN_KEY, JSON.stringify(seen));
+    // The old number can go once its replacement is written. Leaving it would
+    // make "has this device ever synced?" answerable two ways.
+    localStorage.removeItem(SYNCED_KEY);
+  } catch {
+    // See above.
+  }
+}
+
+/**
+ * Is there anything in the account this device has not taken?
+ *
+ * True for a row added, a row whose stamp moved, and a row that went away —
+ * all three are the account saying something this device does not know. False
+ * only when every row matches exactly, which is the one case where hydrating
+ * would do nothing.
+ *
+ * `null` for somebody who has never synced: everything is new to them.
+ */
+export function unseen(remote: Seen, seen: Seen | null): boolean {
+  if (!seen) return true;
+  if (remote.state !== seen.state) return true;
+  const ids = new Set([...Object.keys(remote.courses), ...Object.keys(seen.courses)]);
+  for (const id of ids) {
+    if (remote.courses[id] !== seen.courses[id]) return true;
+  }
+  return false;
 }
 
 export const DEFAULT_PERSISTED: Persisted = {
@@ -1863,7 +1988,15 @@ export type Action =
    * own action, and its own action is what the undo table can name.
    */
   | { type: 'moveTask'; id: string; date: string; time?: string }
-  | { type: 'moveAppointment'; id: string; date: string; at: number; time: string }
+  /**
+   * `from` is the occurrence being dragged, for a repeating appointment.
+   *
+   * Absent is "the whole thing", which is what a one-off is and what every
+   * caller written before repeats existed sends. See the note on the case in
+   * `state/slices/mine.ts` for why one occurrence detaches rather than
+   * dragging fifteen weeks of shifts with it.
+   */
+  | { type: 'moveAppointment'; id: string; date: string; at: number; time: string; from?: string }
   | { type: 'moveItem'; courseId: CourseId; itemId: string; month: number; day: number; year: number }
   | { type: 'setCalSource'; source: 'all' | 'classes' | 'deadlines' | 'campus' }
   | { type: 'setCalDay'; date: string | null }
@@ -2005,7 +2138,8 @@ export type Action =
    * on screen to edit back, and only a drag and a delete take that away.
    */
   | { type: 'editAppointment'; id: string; patch: Partial<Omit<Appointment, 'id' | 'created'>> }
-  | { type: 'deleteAppointment'; id: string }
+  /** `date` deletes just that occurrence of a repeating one. */
+  | { type: 'deleteAppointment'; id: string; date?: string }
   | { type: 'setMathTab'; tab: State['mathTab'] }
   | { type: 'newNote'; courseId: CourseId | null; itemId?: string | null }
   /** Save a finished piece of text as a note without leaving the screen. */
@@ -2037,6 +2171,15 @@ export type Action =
    * the screen, and therefore the ones worth an undo.
    */
   | { type: 'moveMail'; ids: string[]; to?: FolderId; snooze?: number }
+  /**
+   * A label of your own, put on or taken off.
+   *
+   * `Mark.labels` has existed since the mailbox did and nothing ever wrote to
+   * it: the rail could filter by a course label the provider happened to send
+   * and there was no way to add one. Toggling, because a label button that
+   * only ever adds is a label you cannot take off.
+   */
+  | { type: 'labelMail'; ids: string[]; label: string }
   /** Open the composer on a new draft, or `null` to shut it. */
   | { type: 'composeMail'; draft: Partial<MailDraft> | null }
   | { type: 'openMailDraft'; id: string }

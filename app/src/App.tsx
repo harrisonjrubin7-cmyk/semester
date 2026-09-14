@@ -25,9 +25,9 @@ import { DRAWN_AT, ground, homeTitle, resolveGround, scaleFrom, scaleOf, tokensF
 /**
  * Every screen but the first, fetched when it is opened.
  *
- * All forty-six used to be imported statically, which put every one of them
+ * All sixty used to be imported statically, which put every one of them
  * — and everything they pull in — into one 1,047 kB chunk that had to arrive
- * before anything painted. Nobody opens forty-six screens. They open Today.
+ * before anything painted. Nobody opens sixty screens. They open Today.
  *
  * The heavy leaves are the ones nobody loads on a normal day: Draw brings
  * cytoscape at 435 kB, the guide brings KaTeX at 259 kB, the importer brings
@@ -143,6 +143,7 @@ import { barFor, litRailTab, litTab, tabLabel } from './lib/tabbar';
 import { TabGlyph } from './components/TabIcon';
 import { Running } from './components/Running';
 import { Keys } from './components/Keys';
+import { Sound } from './components/Sound';
 import { Ringing } from './components/Ringing';
 import { PushTop } from './components/PushTop';
 import { QuickAdd } from './components/QuickAdd';
@@ -943,7 +944,14 @@ function TabBar() {
               flexDirection: 'column',
               alignItems: 'center',
               gap: 3,
-              color: on ? 'var(--app-accent)' : 'var(--app-faint)',
+              /*
+               * The tab that is not current still names a destination, so it
+               * is text and takes `--app-dim`. At `--app-faint` — the
+               * hairline strength, held to 3:1 — "Courses" read 3.64:1 on Ink
+               * and 2.98:1 on Parchment, which made the six places you are
+               * not the hardest words on the screen to read.
+               */
+              color: on ? 'var(--app-accent)' : 'var(--app-dim)',
               fontFamily: 'var(--font-heading)',
             }}
           >
@@ -1413,7 +1421,11 @@ function Rail() {
             }}
             aria-current={on ? 'page' : undefined}
             style={{
-              color: on ? 'var(--app-accent-bright)' : 'var(--app-faint)',
+              // The rail is the tab bar's wide-screen counterpart and its
+              // labels are the same words, so they take the same strength —
+              // `--app-dim`, not the hairline one. Measured at `--app-faint`:
+              // 3.64:1 on Ink, 2.98:1 on Parchment.
+              color: on ? 'var(--app-accent-bright)' : 'var(--app-dim)',
               background: on ? 'var(--app-hero)' : 'transparent',
               boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
             }}
@@ -1438,7 +1450,11 @@ function Rail() {
             title={blurb}
             aria-current={on ? 'page' : undefined}
             style={{
-              color: on ? 'var(--app-accent-bright)' : 'var(--app-faint)',
+              // The rail is the tab bar's wide-screen counterpart and its
+              // labels are the same words, so they take the same strength —
+              // `--app-dim`, not the hairline one. Measured at `--app-faint`:
+              // 3.64:1 on Ink, 2.98:1 on Parchment.
+              color: on ? 'var(--app-accent-bright)' : 'var(--app-dim)',
               background: on ? 'var(--app-hero)' : 'transparent',
               boxShadow: on ? '0 1px 0 var(--app-line-top) inset' : 'none',
             }}
@@ -1626,9 +1642,34 @@ export default function App() {
    * chrome at the top, the sidebar where there is room — and `chromeFor` has
    * already decided which. See `Workspace` above.
    */
-  if (chrome.desk) return <Workspace chrome={chrome} trouble={trouble} />;
+  /*
+   * The layouts, and the one thing that must not be inside any of them.
+   *
+   * `Sound` holds the app's only `<audio>` element and is mounted here,
+   * outside the three frames below, because *which* frame renders is not
+   * fixed for a session: `chromeFor` reads the screen, so opening a new tab
+   * can move the app from the workspace frame to the wide one. A component
+   * mounted in each of them is unmounted and remounted by that move — which
+   * is exactly what an element holding forty minutes of narration must never
+   * do, and what it was mounted high up to avoid in the first place.
+   *
+   * Measured before it was moved: pressing Play and then opening a tab
+   * replaced the element and the lesson started again from zero, paused. The
+   * element survived the tab *switch* it was written for and died on the
+   * frame change nobody had thought about. Here it survives both.
+   */
+  const frame = () => {
+    if (chrome.desk) return <Workspace chrome={chrome} trouble={trouble} />;
+    return wide ? wideFrame() : phoneFrame();
+  };
+  return (
+    <>
+      <Sound />
+      {frame()}
+    </>
+  );
 
-  if (wide) {
+  function wideFrame() {
     return (
       /*
        * One column when the shelves are the navigation, two when the rail is.
@@ -1781,11 +1822,12 @@ export default function App() {
     );
   }
 
+  function phoneFrame() {
   return (
     <div className="device" data-tier={tier}>
       {/*
         The first focusable thing on the page, and invisible until it has
-        focus. With fifty screens behind a header and a tab bar, a keyboard
+        focus. With sixty screens behind a header and a tab bar, a keyboard
         user's only route into the content was to tab through the whole of
         both, on every screen, every time.
 
@@ -1846,6 +1888,7 @@ export default function App() {
       {chrome.tabs && <TabBar />}
     </div>
   );
+  }
 }
 
 /** Re-exported so screens can render a tick without importing the icon set. */

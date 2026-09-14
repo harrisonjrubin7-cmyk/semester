@@ -3,7 +3,7 @@
  *
  * An alternate way in, chosen in Settings, not a replacement for the tab bar.
  * The bar is right for somebody who lives in four screens; this is right for
- * somebody who has forty-six and would rather see them than remember which
+ * somebody who has sixty and would rather see them than remember which
  * shelf they are on. Which is better genuinely depends on the person.
  *
  * The arrangement, the folders and the gating are in `lib/springboard.ts` and
@@ -37,6 +37,7 @@ import { useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { outstanding } from '../lib/select';
 import { TabGlyph } from '../components/TabIcon';
+import { TabList } from '../components/ui';
 import {
   DOCK_KEY,
   afterMove,
@@ -360,7 +361,7 @@ export function Springboard() {
           {/*
             The four you keep coming back to, on the first page only.
 
-            A launcher is a grid of forty-six things arranged by category, and
+            A launcher is a grid of sixty things arranged by category, and
             a category is the thing nobody remembers. Repeating this on every
             page would be four icons of chrome on each; the first page is where
             somebody lands.
@@ -406,31 +407,26 @@ export function Springboard() {
           </div>
 
           {pages.length > 1 && (
-            <div
-              role="tablist"
-              aria-label="Pages"
+            <TabList
+              label="Pages"
               style={{ display: 'flex', gap: 'var(--sp-4)', justifyContent: 'center', padding: '20px 0 8px' }}
-            >
-              {pages.map((_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  role="tab"
-                  aria-selected={i === page}
-                  aria-label={`Page ${i + 1}`}
-                  onClick={() => setPage(i)}
-                  className="bare"
-                  style={{
-                    width: 7,
-                    height: 7,
-                    flex: 'none',
-                    padding: 0,
-                    borderRadius: '50%',
-                    background: i === page ? 'var(--app-accent)' : 'var(--app-line)',
-                  }}
-                />
-              ))}
-            </div>
+              tabs={pages.map((_, i) => ({
+                id: String(i),
+                label: null,
+                ariaLabel: `Page ${i + 1}`,
+              }))}
+              value={String(page)}
+              onChange={(id) => setPage(Number(id))}
+              tabClassName="bare"
+              tabStyle={(on) => ({
+                width: 7,
+                height: 7,
+                flex: 'none',
+                padding: 0,
+                borderRadius: '50%',
+                background: on ? 'var(--app-accent)' : 'var(--app-line)',
+              })}
+            />
           )}
         </>
       )}

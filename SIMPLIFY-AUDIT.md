@@ -794,6 +794,34 @@ says at the top why it writes the same keys as the settings page rather than
 keeping its own, and it does exactly that. The browser shell is the one that
 does not, and that is S1.
 
+**What none of the three scans above can see, and the test that can.** Every
+census in this half counts *pathways over time*: how many places dispatch one
+action, how many files route to one screen, how many write one setting. That
+is the right net for "one job, one home", and it is blind by construction to
+the fault A is about — two controls that are **on screen at the same time**.
+Reaching Settings from here and also from there costs nothing while you are
+using neither; two buttons in one frame cost a decision every time you look.
+The proof that the blindness is real rather than theoretical is that this
+half's own census ran clean over a workspace whose bar and header were each
+drawing a search, and whose header's `+` sat inches from the sidebar's New.
+
+`lib/onframe.test.ts` (from `0cb57a6`, recorded in A §5) is the census of what
+is co-present, and it is a test rather than a paragraph because the fault is
+invisible in a type check, in a screenshot at one width, and in every other
+test here. It matches on the **dispatch** rather than the label, which is the
+half a reading of the screenshots would miss: two rows can be called different
+things and still land you in the same place — and, as the *All apps* collision
+showed, two rows can carry one name and land you in different ones.
+
+It also holds a rule this half nearly broke. #240's removal of **New** from
+both sidebars was right on its own terms and is S-nothing here; it also
+removed the premise of a rule in the header, whose `+` stood down wherever a
+sidebar was drawn *because that column had New*. Two correct removals, landing
+in the same week from two different passes, would have cancelled into a wide
+workspace with no pointing route to the capture box. See A §4c: `add` is
+unconditional now, and the test holds both halves — neither sidebar draws the
+capture box, and the header draws it at every width.
+
 ---
 
 ## 2. S1 — the browser shell keeps four settings of its own · **MERGE**
@@ -976,10 +1004,57 @@ exactly: the row is the way in, the fields open in place, and Delete moves
 inside the editor rather than sitting as a two-letter button next to Join.
 The form above writes new ones and nothing else.
 
+## 4d. S5 — Mine's four tabs, and the third pattern that is not one · **KEEP**
+
+Asked after S4, because a screen with two editing patterns had just been
+given one and the other two tabs had not been looked at. Notes' **+ New note**
+leaves Mine for `#/note/<id>` where Tasks and Events open their form in
+place, which reads at a glance like a third answer to the same question. It
+is not. Measured:
+
+| | Fields | Long text | Attachments | Own address |
+| --- | --- | --- | --- | --- |
+| Task | 6 scalars | no | no | none |
+| Appointment | 7 scalars | no | no | none |
+| **Note** | 4 + `body` + `fileIds[]` | **yes** | **yes**, in IndexedDB | `#/note/<id>` |
+
+Four things separate a note from a row, and each of them is the reason on its
+own:
+
+- **What the screen draws.** `NoteEditor` is a title, a `CoursePicker`, a
+  `DeadlinePicker`, a textarea for the body, and an Attachments section that
+  adds, opens and removes files. Five controls and a file list against a
+  task's three fields.
+- **Who else opens it.** `newNote` is dispatched from three places — a
+  deadline's own panel (`components/ForThis.tsx`), Study, and Mine — and
+  `openNote` from three: `ForThis`, **search** (`lib/openhit.ts`), and Mine's
+  list. The screen exists whatever the tab does, so an editor in the tab
+  would be a *second* editor for one object, which is the fault this half of
+  the file is about rather than a fix for it.
+- **How it saves.** The note editor dispatches `updateNote` on every
+  keystroke; a row commits on Save. An autosaving textarea inside a list is
+  exactly what `TaskRow`'s own note warns against — "a list that is also a
+  page of live inputs is a page where a stray tap lands in a field".
+- **The address outlives the object.** `NoteEditor` carries a "that note is
+  gone" state because `#/note/<id>` is real: bookmarked, reopened from
+  history, restored from a backup written before the note was. A row has no
+  address to outlive anything.
+
+So the rule across the four tabs is **two patterns, applied consistently** —
+rows edit in place, documents open their own screen — and Notes is a
+document. Both of Mine's routes to a note leave the tab, which is the same
+rule twice rather than a drift. Files is not a third pattern either: it is a
+small file manager (Home, My drive, Recent, Starred, Bin, a search over names
+and contents, Add files, and a line of device storage), and a file is not
+edited here at all — it is added and opened.
+
+Recorded rather than changed, and recorded because the next pass will see the
+same shape from the outside and ask the same question.
+
 ## 5. What this pass changed
 
-S1, S2, S3 and S4, one commit each. No destination was added or removed: the
-count stands at 60, because every duplicate this pass found was a *control*
+S1, S2, S3 and S4, one commit each; S5 is a keep. No destination was added or
+removed: the count stands at 60, because every duplicate this pass found was a *control*
 rather than a *screen*. −4 duplicated settings, −1 duplicated control, and
 one shell's home given back its pointer.
 
@@ -1142,6 +1217,173 @@ than quietly widened: a class-based copy of a component is still a copy, and
 the next pass should decide whether the rule can see one without failing every
 `role="alert"` in the app.
 
+### E3, done — and four of its five rows were wrong
+
+Read one file at a time rather than by class name, the table above does not
+survive. Only the `portal-empty` row was the merge it claimed. The other four
+named a survivor that cannot take the job, and saying so is the point of
+writing the census down rather than acting on it directly.
+
+**`portal-empty` → `EmptyState`. Real, and done** for the three sites that
+fit: the cart, the saved schedules, and the directory's "no entries match".
+
+**`portal-warning` → `Notice`. Half real, and the half that was real needed a
+change to `Notice` first.** The two recovery notices — the ones with a
+"Download recovery copy" button inside the box — are exactly this component
+and are now drawing it. But they said `role="alert"` and `Notice` said
+`role="status"`, and those are not the same promise: status is polite and
+waits its turn, alert interrupts. Swapping them silently would have demoted
+"your saved copy could not be read" to something a reader hears after it
+finishes the sentence the student is typing. So `Notice` took an `alert` prop,
+defaulting to the polite role, and the box is shared rather than forked.
+
+The other five `portal-warning` uses are *not* notices. They are inline
+validation under the cart — "ECON 1020 and PSCI 1100 overlap on Mon, Wed" —
+which belongs beside the thing it is about and is not a live region at all.
+Rehoming those into a notice box would be the E2 mistake in miniature:
+a duplicate rehomed is not a duplicate removed.
+
+**`portal-tabs` → `Segmented`. Wrong survivor.** `Segmented` is a row of
+`aria-pressed` buttons; `portal-tabs` is `role="tablist"` with `role="tab"`
+and `aria-selected`. Those are different contracts and the substitution would
+lose the weaker-sighted half of it.
+
+The real finding on that row is bigger than the port: **`role="tablist"` is in
+ten files and wears four different stylings** — `rib-tabs`, `shelf-nav-row`,
+`mb-tabs` and the port's `portal-tabs`. Three of those four are the app's own.
+So this is not a port duplicate to delete, it is a shared tab-strip component
+the app never had; and `Segmented` cannot be it without growing the tablist
+contract, which would change every one of its 36 existing uses. Recorded for a
+later pass rather than half-done here.
+
+**`portal-filter-row` → `ChipRow` · `PickChips` · `Segmented`. Wrong
+survivor.** It is an `<input type="search">` beside a `<select>`. The three
+named components are chip and segment controls; none of them is a search
+field, and none takes a select. There is a real question underneath — whether
+that category `<select>` should be `PickChips` — but it is a design question
+about four screens, not a duplicate to fold away.
+
+**`directory-star` → the star in `screens/Directory.tsx`. Not a duplicate at
+all.** They share a glyph and nothing else. Directory's star pins a
+*destination* into `look.favourites`, which syncs with the account and is read
+by the launcher, the sidebar and the search home. `directory-star` saves an
+imported *listing* — a dorm, a dining hall, a club — into a device library
+under `semester.directory.<kind>.saved`. Different data, different store,
+different meaning. The census matched on the word "star".
+
+**What this row is really about**, then: one genuine shared-component merge,
+one that needed the component widened before it was safe, and three entries
+that a name-based census produced and a file-based one dissolves. The lesson
+is the same shape as E5's — *the tempting next step after finding a duplicate
+is to follow the name rather than the behaviour.*
+
+### E3a — the tab strip the app never had · **SHARED COMPONENT**
+
+The finding E3's `portal-tabs` row was standing on, done as its own pass.
+
+`role="tablist"` was written out in **ten files** — `Ribbon`, `mail/List`,
+`nav/ShelfNav`, `Springboard`'s page dots, `room/Talk`, and the five ported
+campus screens. Every one of them declared the role and its `role="tab"`
+children correctly. **Not one implemented the pattern**: no arrow keys, no
+roving tabindex, no Home or End. There was no shared helper to have used; the
+grep for one comes back empty.
+
+**Why that is a fault and not an omission.** A row of plain buttons promises
+nothing and is navigated with Tab, which works. A tablist *announces* "tab, 2
+of 4" and then ignores the arrow keys that announcement invites — so ten
+correct-looking declarations left every one of these strips worse for a
+screen-reader user than no role at all would have. This is the one row in the
+whole audit where the duplication was costing something a student could feel
+rather than costing a maintainer a second place to edit.
+
+**`TabList` in `components/ui.tsx`** owns the roles, the roving tabindex
+(`tabIndex={0}` on the chosen tab, `-1` on the rest) and the keys, including
+carrying focus itself — the browser will not, because the other tabs are no
+longer tab stops, and without that an arrow press leaves focus on a `-1`
+button with nothing to move from.
+
+**It deliberately owns no styling.** Four tab stylings were in use —
+`rib-tabs`, `shelf-nav-row`, `mb-tabs`, `portal-tabs` — and which should win
+is a design question, not this one. Each caller passes its own `className` and
+keeps the look it had, so nothing moved on screen. That is also what made a
+ten-file change safe to do in one pass: it is a semantics-and-keyboard merge,
+and the semantics have exactly one right answer where the styling does not.
+
+One thing the conversion turned up that a census could not: `.mb-tab` was
+styled off **`aria-current`**, not `aria-selected`. The mail tabs carried both
+attributes and the stylesheet had picked the wrong one to depend on, so
+dropping the redundant attribute would have taken the selected inbox
+category's highlight with it. The rule moved to `[aria-selected='true']`,
+which is the attribute a tab actually has.
+
+Incidental: `.tabstrip`, `.tabstrip-tab` and `.tabstrip-tab[aria-current]` in
+`app.css` have no `.tsx` user at all. Left alone here rather than swept into a
+pass about something else, and recorded so the next dead-CSS sweep has it.
+**Done in E3b below.**
+
+### E3b — the rules that style nothing · **CUT**
+
+**131 lines** of `app.css` and `features.css`, 25 classes, styling markup that
+does not exist.
+
+| Sheet | What it was |
+| --- | --- |
+| `app.css` | the spreadsheet formula bar's name box (`.fx-where`, `.fx-field`), `.tabstrip*` superseded by `components/Tabs.tsx`, `.chrome-rule`, `.soft-folder-tile`, `.desk-sheet-label`, and `.chrome-text.is-late` |
+| `features.css` | seventeen selectors left by the ported campus screens — `.university-workspace`, `.semester-primary-nav`, `.maps-sidebar`, `.write-paper`, `.mail-compose` and the rest — including four whole `@media` blocks |
+
+Dead CSS is the quietest thing in a codebase. It does not throw, it does not
+fail a type check, it does not move a pixel, and it costs a reader the
+assumption that a rule they are looking at is reached.
+
+**The census was wrong the first time, in the direction that hides things.**
+Version one called a class used if any dash-prefix of its name appeared
+anywhere in the source — meant to catch `` className={`directory-${kind}`} ``,
+which no literal search finds. It also meant `.semester-primary-nav` counted
+as live because the string "semester" is everywhere in an app called Semester.
+That heuristic rescued **seventeen genuinely dead rules**, and it would have
+gone on rescuing them silently, which is the worst property a census can have.
+
+So the rule is exact-match, and the two things exact matching cannot see are
+written out by name instead of guessed at: `is-bottom` and `is-right`, built
+by `` `mb-main is-${pane}` `` in `screens/Mail.tsx`, and `leaflet-*`, which is
+Leaflet's own DOM that the app restyles. Both lists live in the guard, so
+adding to either is a deliberate edit.
+
+**`industry.css` is deliberately not audited.** Its first line calls it "the
+source of truth for the system's look" — a design system, whose component
+classes are a published vocabulary. A vocabulary is *meant* to be wider than
+today's usage, so its seventeen unused classes are a design decision to make,
+not a cleanup to do. Auditing it would be one sheet's test overruling another
+sheet's purpose.
+
+**Two things the sweep itself got wrong**, both caught before pushing and both
+now held by the guard's second test:
+
+- Stripping rules out of four `@media` wrappers left the **wrappers**. They
+  minify away to nothing, so no check would have complained, and a reader
+  finds a breakpoint that appears to do something.
+- Three rules had explanatory comments above them, which the stripper left
+  behind attached to whatever came next. The twenty-line note about drawing
+  the late count in `--app-warn` rather than silver ended up sitting above
+  `.device h1`, describing a rule that no longer existed. **A comment orphaned
+  onto an unrelated rule is worse than the dead rule was** — the dead rule
+  merely did nothing, where the comment now says something false. Removed by
+  hand, and the reasoning kept here: the late count was the one place the app
+  said a passed deadline in silver instead of `--app-warn`, and if that cell
+  is ever coloured again this is why.
+
+`styles/deadcss.test.ts` holds both. Verified by planting a dead class and an
+empty `@media` block and watching each be named.
+
+**Two guards, both run against the fault before being believed.**
+`onetablist.test.ts` fails if any file spells the role by hand again *or* if
+`TabList`'s keyboard handler is gutted — the second half checked by deleting
+the `ArrowRight` branch and watching it fail. `tablist.test.tsx` presses the
+keys in jsdom: wrapping at both ends, Home and End, the one tab stop, and the
+focus move — that last one checked by removing the `.focus()` call and
+watching the test go red. A source rule alone would have passed a handler that
+read the keys and did the wrong thing with them.
+
 ### E4 — a second workspace shell · **MERGED — `workspace` survives**
 
 `browser` is the seventh navigation, and the sixth is `workspace`. Both are
@@ -1173,6 +1415,15 @@ keepPlace`. Thirty-one are read only by their own test, which is the same
 figure as last pass and the same three kinds as before — dead, a contract a
 test asserts, or wiring somebody stopped halfway. The port added almost no
 dead weight, and that is worth saying plainly alongside the rest.
+
+**Cut.** `keepPlace` had no caller anywhere, not even a test — it was the
+"save, and leave an existing one alone" half of a pair whose other half,
+`star`, is what the star in the search field actually calls. Nothing else is
+removed with it: the `keep` it wrapped lives in `lib/bookmarks.ts` and is
+still reached through `toggle`, which is how `star` saves. So this is the
+wrapper going, not the behaviour — which is the distinction worth checking
+before cutting a one-line export, because the tempting next step is to follow
+it down and take a function three other things depend on.
 
 ---
 

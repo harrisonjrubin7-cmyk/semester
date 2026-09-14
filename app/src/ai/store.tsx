@@ -9,9 +9,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useStore } from '../state/store';
-import { screenName } from '../lib/nav';
-import { providerFor } from './providers';
-import { render, type Look, type ScreenContext } from './shape';
+import type { Look, ScreenContext } from './shape';
 import type { Screen } from '../lib/types';
 
 /**
@@ -37,31 +35,26 @@ import type { Screen } from '../lib/types';
  * surface actually reflects.
  */
 
-export interface Assembled {
-  screen: Screen;
-  /** What the screen is called, for the sheet header and the button's name. */
-  label: string;
-  /** The screen's own account of itself, or null when it has no provider. */
-  own: ScreenContext | null;
-  /** Extra context registered by whatever is mounted — a modal, an open row. */
-  extra: ScreenContext[];
-  /** Exactly what would be sent about this screen. Shown on demand. */
-  text: string;
-  /** Rows that did not fit. Said out loud rather than silently cut. */
-  dropped: number;
-}
 
 interface AI {
   open: boolean;
   /** Open the sheet, optionally with a question already in the box. */
   show: (seed?: string) => void;
   hide: () => void;
-  /** What is on screen, assembled now. Never stale, never recomputed early. */
-  look: () => Assembled;
   /** The screen the assistant is currently on, for the button's own name. */
   screen: Screen;
-  /** What the sheet should offer to ask here. */
-  suggestions: () => string[];
+  /**
+   * The live store, or null before the bridge has handed one up.
+   *
+   * Raw, because assembling it reaches every screen's provider and that is
+   * 7,543 lines this file must not import — `AIProvider` is mounted above the
+   * router, so what it imports, every student parses before the first render.
+   * `ai/assemble.ts` turns these two into an `Assembled`, and everything that
+   * calls it is already behind the panel's chunk or the Ask tab's.
+   */
+  live: () => Look | null;
+  /** Context registered by whatever is mounted right now. */
+  registered: () => ScreenContext[];
   /**
    * Register context while a component is mounted.
    *
@@ -121,61 +114,8 @@ export function AIProvider({ children }: { children: ReactNode }) {
     live.current = l;
   }, []);
 
-  const look = useCallback((): Assembled => {
-    const now = live.current;
-    // `screenName` rather than the registry alone: it also knows the settings
-    // pages and the screens you reach from something else, which the registry
-    // deliberately does not list. Without it the sheet's header read "Looking
-    // at: setLook" and its placeholder "Ask about drill".
-    const label = screenName(screen);
-    const registered = [...extra.current.values()];
-    if (!now) {
-      return { screen, label, own: null, extra: registered, text: '', dropped: 0 };
-    }
-    const provide = providerFor(screen);
-    const own = provide ? provide(now) : null;
-    if (!own) {
-      /*
-       * A screen with nothing of its own to say.
-       *
-       * The sheet says so rather than hiding it. "This screen told me
-       * nothing" is a fact the student should have when they are weighing an
-       * answer — the alternative is an answer that seems to be about what
-       * they are looking at and is not.
-       */
-      const only = registered
-        .map((c) => render(screen, label, c))
-        .map((r) => r.text)
-        .join('\n\n');
-      return { screen, label, own: null, extra: registered, text: only, dropped: 0 };
-    }
-    /*
-     * What was asked about goes first, not last.
-     *
-     * A long press on a deadline registers that deadline. Appending it after
-     * the whole screen put the specific thing at the bottom of eight hundred
-     * characters of list, which is the wrong way round twice over: it is what
-     * the question is about, and a context that has to be cut is cut from the
-     * end.
-     */
-    const rendered = render(screen, label, own);
-    const text = [...registered.map((c) => render(screen, label, c).text), rendered.text]
-      .filter(Boolean)
-      .join('\n\n');
-    return { screen, label, own, extra: registered, text, dropped: rendered.dropped };
-  }, [screen]);
-
-  const suggestions = useCallback(() => {
-    const assembled = look();
-    const fromScreen = assembled.own?.suggestions ?? [];
-    const fromExtra = assembled.extra.flatMap((c) => c.suggestions);
-    const all = [...fromExtra, ...fromScreen];
-    // Everywhere works, so a screen with nothing to suggest still offers the
-    // two questions that are worth asking from anywhere.
-    return all.length > 0
-      ? all.slice(0, 3)
-      : ['What is due this week?', 'How am I doing?', 'How does this app work?'];
-  }, [look]);
+  const readLive = useCallback(() => live.current, []);
+  const readRegistered = useCallback(() => [...extra.current.values()], []);
 
   const register = useCallback((id: string, ctx: ScreenContext) => {
     extra.current.set(id, ctx);
@@ -215,12 +155,12 @@ export function AIProvider({ children }: { children: ReactNode }) {
         setOpen(false);
       },
       forgetAbout,
-      look,
       screen,
-      suggestions,
+      live: readLive,
+      registered: readRegistered,
       register,
     }),
-    [open, look, screen, suggestions, register, forgetAbout],
+    [open, screen, readLive, readRegistered, register, forgetAbout],
   );
 
   return (

@@ -75,9 +75,10 @@ import {
   STORAGE_KEY,
   initialEphemeral,
   loadPersisted,
-  markSynced,
+  markSeen,
   pickPersisted,
-  syncedAt,
+  seenRows,
+  unseen,
   type Action,
   type Persisted,
   type State,
@@ -226,6 +227,34 @@ function currentMinute(): Date {
   return d;
 }
 
+/**
+ * The same minute is the same value, and React needs to be told so.
+ *
+ * The clock below fires twice a minute, and `currentMinute()` hands back a
+ * fresh `Date` every time it is called. `useReducer` bails out of a re-render
+ * only when the reducer returns something `Object.is`-equal to what it already
+ * held, and two `Date` objects never are — so half of these ticks published a
+ * minute that had not changed, and every one of them was a full re-render.
+ *
+ * Not a small one, either: `now` is a member of the single context value built
+ * at the foot of this file, `useStore()` is read at 298 call sites, and there
+ * is no `React.memo` anywhere in the app to stop the cascade. So the whole
+ * mounted tree re-rendered twice a minute, on a phone, on battery, while
+ * somebody read a field guide.
+ *
+ * Returning the previous `Date` when the minute has not moved is the whole
+ * fix, and it is correct on its own terms whatever else happens to the
+ * context: the value is the minute, and the minute has not changed.
+ *
+ * It halves the cost rather than removing it. The other half is that a minute
+ * boundary is still an app-wide event, and that wants `now` in a provider of
+ * its own — a larger change, argued in `ENGINEERING-AUDIT.md` §2.
+ */
+export function nextMinute(was: Date): Date {
+  const d = currentMinute();
+  return d.getTime() === was.getTime() ? was : d;
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const startedAt = useRef(currentMinute());
 
@@ -237,7 +266,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * while you read it would make the answer disappear as you looked at it.
    */
   const lastSeen = useRef(readSeen());
-  const [now, tick] = useReducer(currentMinute, startedAt.current);
+  const [now, tick] = useReducer(nextMinute, startedAt.current);
 
   const [state, dispatch] = useReducer(reducer, undefined, () => {
     const persisted = loadPersisted();
@@ -282,6 +311,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // Re-render on the minute so "in 1 hr 19 min" and "Today" stay correct
   // without a timer per component.
+  //
+  // Still every 30 seconds rather than every 60, and deliberately: a timer
+  // that fires exactly on the period drifts, so a minute boundary could be
+  // missed for a whole minute. Checking twice as often as the thing being
+  // watched is what keeps the label at most 30 seconds stale — and now that
+  // `nextMinute` returns the same value when the minute has not moved, the
+  // extra check costs one comparison rather than a re-render of the app.
   useEffect(() => {
     const id = setInterval(() => tick(), 30_000);
     return () => clearInterval(id);
@@ -633,18 +669,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
     try {
       const remote = await pull(account.id);
-      const localStamp = syncedAt();
+      const seen = seenRows();
       const hasRemote = remote.state !== null || remote.courses.length > 0;
 
       /*
        * A first sign-in with a semester on both sides is the one moment this
        * feature can ruin a term, so it asks instead of deciding.
        *
-       * Only on a *first* one — `localStamp` is zero until this device has
-       * synced once, and after that the ordinary newest-wins path is right and
-       * a dialogue every time would be intolerable. See `lib/adopt.ts`.
+       * Only on a *first* one — `seenRows()` is null until this device has
+       * taken something, and after that the ordinary newest-wins path is right
+       * and a dialogue every time would be intolerable. See `lib/adopt.ts`.
        */
-      if (hasRemote && localStamp === 0) {
+      if (hasRemote && seen === null) {
         const here = countRows(pickPersisted(latest.current));
         const there = countRows({
           ...(remote.state as Record<string, unknown>),
@@ -663,7 +699,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const take = hasRemote && remote.updated > localStamp;
+      /*
+       * Rows this device has not taken, rather than a stamp beating a clock.
+       * `state/shape.ts` sets out the two ways the old comparison lost work:
+       * a device clock on one side of it, and a row that commits after the
+       * pull that should have seen it. Neither survives asking this instead.
+       */
+      const take = hasRemote && unseen(remote.seen, seen);
 
       if (take) {
         dispatch({
@@ -673,7 +715,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             courses: remote.courses.map((c) => c.data as CourseModule),
           },
         });
-        markSynced(remote.updated);
+        markSeen(remote.seen);
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
@@ -719,8 +761,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         courses.map((c) => ({ id: c.course.id, data: c })),
         removed,
       )
-        .then(() => {
-          markSynced(Date.now());
+        .then((seen) => {
+          // What the database stamped, not what this device's clock says.
+          markSeen(seen);
           setSync({ status: 'synced', at: Date.now(), error: '' });
           if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
         })
@@ -1067,9 +1110,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // this device's rows because `hydrate`'s merge is a union, while `cloud`
       // clears them first so the account's copy is what is left.
       if (choice === 'device') {
-        // Nothing to take. The push effect sends this device up on its next
-        // run, which is what makes it the account's copy too.
-        markSynced(Date.now());
+        // Nothing to take, so what is recorded is the account as it was just
+        // read — this device has seen it and chosen against it. The push effect
+        // sends this device up on its next run, which is what makes it the
+        // account's copy too, and records its own stamps when it does.
+        markSeen(remote.seen);
       } else {
         if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
         dispatch({
@@ -1079,7 +1124,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             courses: remote.courses.map((c) => c.data as CourseModule),
           },
         });
-        markSynced(remote.updated);
+        markSeen(remote.seen);
       }
       setAsking(null);
     },

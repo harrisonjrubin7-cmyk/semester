@@ -11,7 +11,7 @@
  * Row one is the shelves. Row two is the screens on the shelf you are
  * standing on. Under both, the current screen's own sentence from the
  * registry — which is the cheapest discoverability the app can buy, because
- * fifty-five screens already carry a blurb that until now only the directory
+ * sixty screens already carry a blurb that until now only the directory
  * and the search results ever showed.
  *
  * ## Everything the school has, not everything you have unlocked
@@ -21,7 +21,7 @@
  * and worth stating plainly, because `lib/reveal.ts` argues the opposite for
  * the directory.
  *
- * The argument there is that a directory of forty-six names is a wall to
+ * The argument there is that a directory of sixty names is a wall to
  * somebody who opened the app an hour ago. It is a good argument about a
  * directory. These rows are not a directory: they are the chrome you navigate
  * by, they show one shelf at a time rather than all of them, and a row that
@@ -40,6 +40,7 @@
 import { useEffect, useRef } from 'react';
 import { useStore } from '../../state/store';
 import { GROUPS, destination, destinationsFor, saysFor, shelfOf } from '../../lib/nav';
+import { TabList } from '../ui';
 
 export function ShelfNav() {
   const { state, dispatch, school } = useStore();
@@ -68,29 +69,20 @@ export function ShelfNav() {
 
   return (
     <nav className="shelf-nav pane-strip" aria-label="Screens" ref={rows}>
-      <div className="shelf-nav-row" role="tablist" aria-label="Areas">
-        {GROUPS.map((g) => {
-          const on = g === here;
-          return (
-            <button
-              key={g}
-              type="button"
-              role="tab"
-              aria-selected={on}
-              className={`bare pill-soft shelf-nav-pill${on ? ' is-on' : ''}`}
-              onClick={() => {
-                // A shelf is not a screen, so pressing one opens the first
-                // screen on it rather than doing nothing. Row two then shows
-                // where that landed, which is the whole point of the pair.
-                const first = destinationsFor(g, caps, state.role)[0];
-                if (first) dispatch({ type: 'go', screen: first.screen });
-              }}
-            >
-              {g}
-            </button>
-          );
-        })}
-      </div>
+      <TabList
+        label="Areas"
+        className="shelf-nav-row"
+        tabs={GROUPS.map((g) => ({ id: g, label: g }))}
+        value={here}
+        tabClassName={(on) => `bare pill-soft shelf-nav-pill${on ? ' is-on' : ''}`}
+        onChange={(g) => {
+          // A shelf is not a screen, so pressing one opens the first screen on
+          // it rather than doing nothing. Row two then shows where that
+          // landed, which is the whole point of the pair.
+          const first = destinationsFor(g, caps, state.role)[0];
+          if (first) dispatch({ type: 'go', screen: first.screen });
+        }}
+      />
 
       <div className="shelf-nav-row" aria-label={`Screens in ${here}`}>
         {onShelf.map((d) => {

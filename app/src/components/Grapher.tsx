@@ -4,18 +4,21 @@ import { Plot, type Drawing } from './Plot';
 import { Surface } from './Surface';
 import { heightOf, heights, range } from '../lib/surface';
 import { asArrows, asContours } from '../lib/fields';
-import { asOde, rateOf, through } from '../lib/ode';
+import { asOde, asSecond, asSystem, rateOf, through } from '../lib/ode';
 import { ActionButton, PickChips, SectionLabel, Toggle } from './ui';
 import { secondLine } from '../lib/dim';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
 import { anchorHue, tintAt } from '../lib/tint';
 import { text as showValue, value, type Val } from '../lib/calc';
+import { Equation } from './Equation';
+import { exactly, latexFn } from '../lib/laplace';
 import {
   DETAIL,
   EXAMPLES,
   HOME,
   TURNS,
+  answered,
   area,
   asFunction,
   draw,
@@ -110,21 +113,98 @@ export function Grapher() {
    * equation, which is the picture a textbook draws, and nothing about the
    * order they were typed in should change that.
    */
-  const starts = useMemo(
+  const said = useMemo(
     () =>
       read
         .filter((line, at) => line.kind === 'start' && lines[at].on)
         .map((line) => {
           if (line.kind !== 'start') return null;
-          const x = value(line.at, scope);
-          const y = value(line.value, scope);
-          const at = Array.isArray(x) ? (x[0] ?? NaN) : x;
-          const to = Array.isArray(y) ? (y[0] ?? NaN) : y;
-          return Number.isFinite(at) && Number.isFinite(to) ? { x: at, y: to } : null;
+          const one = (node: Parameters<typeof value>[0]) => {
+            const got = value(node, scope);
+            return Array.isArray(got) ? (got[0] ?? NaN) : got;
+          };
+          const at = one(line.at);
+          const to = one(line.value);
+          return Number.isFinite(at) && Number.isFinite(to)
+            ? { of: line.of, rate: line.rate, at, to }
+            : null;
         })
-        .filter((p): p is { x: number; y: number } => p !== null),
+        .filter((c): c is { of: 'x' | 'y'; rate: boolean; at: number; to: number } => c !== null),
     [read, lines, scope],
   );
+
+  /** `y(a) = b` — where a solution passes, which is a point on the picture. */
+  const starts = useMemo(
+    () => said.filter((c) => c.of === 'y' && !c.rate).map((c) => ({ x: c.at, y: c.to })),
+    [said],
+  );
+
+  /**
+   * The two halves of a system, where both are on the list.
+   *
+   * `x' = …` and `y' = …` together are one picture in the plane they share;
+   * either on its own is the ordinary first-order kind. Both have to be first
+   * order — a second-order equation paired with a first is not a system, it is
+   * two equations somebody is part-way through writing.
+   */
+  const pair = useMemo(() => {
+    const across = read.find((line, at) => line.kind === 'ode' && line.of === 'x' && line.order === 1 && lines[at].on);
+    const up = read.find((line, at) => line.kind === 'ode' && line.of === 'y' && line.order === 1 && lines[at].on);
+    return across && across.kind === 'ode' && up ? { dx: across.body } : null;
+  }, [read, lines]);
+
+  /** Where a system starts: `x(0) = a` and `y(0) = b`, or nothing and it fills the plane. */
+  const together = useMemo(() => {
+    const across = said.find((c) => c.of === 'x' && !c.rate);
+    const up = said.find((c) => c.of === 'y' && !c.rate);
+    return across && up ? [{ x: across.to, y: up.to }] : [];
+  }, [said]);
+
+  /** Where a second-order equation starts: the value and the rate, at the same x. */
+  const second = useMemo(() => {
+    const at = said.find((c) => c.of === 'y' && !c.rate);
+    const speed = said.find((c) => c.of === 'y' && c.rate);
+    if (!at) return [];
+    return [{ x: at.at, y: at.to, v: speed?.to ?? 0 }];
+  }, [said]);
+
+  /**
+   * The closed form, where the equation on the line has one.
+   *
+   * The curve beside it is walked and always has been — `lib/ode.ts` will
+   * solve anything that has a slope, which is most of what somebody types. The
+   * formula is what a methods course asks for on the page and a walk cannot
+   * produce, so where Laplace can get it, it goes under the line as well. It is
+   * an addition to the picture and never a replacement for it: an equation
+   * that is not linear with constant coefficients simply has no line of text
+   * under it, and draws exactly as it did before.
+   *
+   * Only a lone equation with its conditions at zero. A system is two lines
+   * making one picture, and Laplace starts at t = 0 by construction — a
+   * `y(3) = 1` is a different problem, and quietly sliding it to zero would be
+   * an answer to a question nobody asked.
+   */
+  const closed = useMemo(() => {
+    const out: Record<number, string> = {};
+    if (pair) return out;
+    read.forEach((line, index) => {
+      if (line.kind !== 'ode' || line.of !== 'y' || !lines[index].on) return;
+      const start = said.find((c) => c.of === 'y' && !c.rate);
+      const speed = said.find((c) => c.of === 'y' && c.rate);
+      if (!start || Math.abs(start.at) > 1e-9) return;
+      if (line.order === 2 && !speed) return;
+      const got = exactly({
+        body: line.body,
+        of: 'x',
+        order: line.order,
+        y0: start.to,
+        v0: speed?.to ?? 0,
+        scope,
+      });
+      if (got.ok && got.it.terms.length) out[index] = latexFn(got.it, 'x');
+    });
+    return out;
+  }, [read, lines, said, scope, pair]);
 
   /*
    * The contour map, and the levels it was cut at.
@@ -148,6 +228,31 @@ export function Grapher() {
         .map(({ line, at }) => {
           const reading = read[at];
           if (reading.kind === 'ode') {
+            /*
+             * Three pictures wear the same notation, and what else is on the
+             * list decides which: an `x' =` beside a `y' =` is a system, drawn
+             * in the plane the two quantities share; `y'' =` is a second-order
+             * equation; a lone `y' =` is the slope field it has always been.
+             *
+             * The system is drawn by the `y' =` line of the pair so that it is
+             * drawn once — the `x' =` line is half of one picture, not a
+             * picture of its own, and it says so in the list.
+             */
+            if (pair) {
+              if (reading.of === 'x') return { id: line.id, colour: colours[at], drawn: { paths: [], points: [] } };
+              return {
+                id: line.id,
+                colour: colours[at],
+                drawn: asSystem(pair.dx, reading.body, together, scope, frame),
+              };
+            }
+            if (reading.order === 2) {
+              return {
+                id: line.id,
+                colour: colours[at],
+                drawn: asSecond(reading.body, second, scope, frame),
+              };
+            }
             return { id: line.id, colour: colours[at], drawn: asOde(reading.body, starts, scope, frame) };
           }
           if (reading.kind === 'field') {
@@ -164,7 +269,7 @@ export function Grapher() {
           }
           return { id: line.id, colour: colours[at], drawn: draw(reading, scope, frame, { ...DETAIL, turns }) };
         }),
-    [lines, read, scope, frame, colours, turns, view, flat, starts],
+    [lines, read, scope, frame, colours, turns, view, flat, starts, pair, together, second],
   );
 
   /** Whether anything on the list is drawn by turning or running, rather than across x. */
@@ -253,6 +358,7 @@ export function Grapher() {
             on={line.on}
             reading={read[i]}
             scope={scope}
+            exact={closed[i]}
             onText={(text) => dispatch({ type: 'writePlot', id: line.id, patch: { text } })}
             onShow={() => dispatch({ type: 'writePlot', id: line.id, patch: { on: !line.on } })}
             onDrop={() => dispatch({ type: 'dropPlot', id: line.id })}
@@ -378,8 +484,14 @@ export function Grapher() {
         thing or as its contour lines. A pair with <code>x</code> or <code>y</code> in it is a field
         of arrows — <code>(y, -x)</code>, which is every phase diagram. And{' '}
         <code>{"y' = x + y"}</code> is a differential equation: the slope field, and the solution
-        through every <code>y(0) = 1</code> you write under it. It takes the same notation the Write
-        tab draws, so a formula you kept can be pasted in as it is.
+        through every <code>y(0) = 1</code> you write under it. <code>{"y'' = -y"}</code> is a
+        second-order one, which wants a <code>{"y'(0) = 0"}</code> as well; an{' '}
+        <code>{"x' = …"}</code> beside a <code>{"y' = …"}</code> is a system, drawn as the path the
+        two make in the plane they share — and where an equation is linear with
+        constant coefficients, the exact solution is printed under it as well.{' '}
+        <code>{'L{t^2 e^{-t}}'}</code> is a Laplace transform, read and drawn against{' '}
+        <code>s</code>, and <code>{'L^{-1}{1/(s^2 + 4)}'}</code> is the way back. It takes the
+        same notation the Write tab draws, so a formula you kept can be pasted in as it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
         <Toggle on={degrees} label="Work in degrees rather than radians" onChange={() => setDegrees(!degrees)} />
@@ -403,6 +515,7 @@ function Row({
   on,
   reading,
   scope,
+  exact,
   onText,
   onShow,
   onDrop,
@@ -413,6 +526,8 @@ function Row({
   on: boolean;
   reading: Line;
   scope: ReturnType<typeof scopeOf>;
+  /** The closed form, where the equation on this line has one. */
+  exact?: string;
   onText: (text: string) => void;
   onShow: () => void;
   onDrop: () => void;
@@ -436,7 +551,11 @@ function Row({
     // the equation above it draws — but its switch is live, because turning it
     // off is how you get the whole family back.
     reading.kind === 'start' ||
+    reading.kind === 'transform' ||
+    reading.kind === 'inverse' ||
     reading.kind === 'surface';
+  /** Whether it puts ink of its own on the picture — see the swatch below. */
+  const inked = drawn && reading.kind !== 'start';
 
   return (
     <div
@@ -459,8 +578,16 @@ function Row({
             height: 22,
             flex: '0 0 auto',
             borderRadius: '50%',
-            border: `2px solid ${drawn ? colour : 'var(--app-line)'}`,
-            background: on && drawn ? colour : 'transparent',
+            /*
+             * Filled where the line has ink of its own on the picture.
+             *
+             * An initial condition switches on and off like anything else —
+             * turning it off gets the family back — but it draws nothing in
+             * its own colour, and a filled swatch would promise a curve
+             * somewhere on the picture that nobody can find.
+             */
+            border: `2px solid ${inked ? colour : 'var(--app-line)'}`,
+            background: on && inked ? colour : 'transparent',
           }}
         />
         <input
@@ -499,7 +626,57 @@ function Row({
           {unset.join(', ')} {unset.length === 1 ? 'has' : 'have'} no value yet — add a line like{' '}
           <code>{unset[0]} = 1</code>.
         </div>
-      ) : null}
+      ) : (
+        <Answer reading={reading} scope={scope} exact={exact} />
+      )}
+    </div>
+  );
+}
+
+/**
+ * What a line comes to, under it.
+ *
+ * A transform has an answer rather than only a curve — the whole reason to
+ * write `L{t^2}` is to read `\frac{2}{s^3}` — and an equation that Laplace can
+ * solve has one too. Both are drawn as equations rather than printed as text,
+ * by the same component the Write tab uses, because `\frac{2}{s^{3}}` in a
+ * monospace line is the thing this screen exists to stop people writing.
+ */
+function Answer({
+  reading,
+  scope,
+  exact,
+}: {
+  reading: Line;
+  scope: ReturnType<typeof scopeOf>;
+  exact?: string;
+}) {
+  const got = answered(reading, scope);
+  if (got && 'says' in got) {
+    return (
+      <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-warn)', marginTop: 'var(--sp-2)' }}>
+        {got.says}
+      </div>
+    );
+  }
+  if (!got && !exact) return null;
+  const latex = got ? got.latex : `y = ${exact}`;
+  return (
+    <div style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-2)' }}>
+      <div>{got ? 'It comes to' : 'Exactly, by Laplace:'}</div>
+      {/*
+        An answer is as long as it is.
+        
+        A forced spring's solution is four terms and runs past the width of a
+        phone twice over, and there is no shortening it that is still the
+        answer. So the equation scrolls sideways inside its own box — the one
+        place in this app that is allowed to — rather than pushing the page out
+        from under everything else on it.
+      */}
+      <div style={{ overflowX: 'auto', maxWidth: '100%', paddingBottom: 'var(--sp-1)' }}>
+        <Equation latex={latex} inline />
+      </div>
+      {got ? <div>Drawn against {got.over}.{got.note ? ` ${got.note}` : ''}</div> : null}
     </div>
   );
 }

@@ -14,7 +14,9 @@ import { Splash } from './components/Splash';
 import { askToPersist } from './lib/device';
 import { StoreProvider } from './state/store';
 import { AIProvider } from './ai/store';
-import { completeAuth } from './lib/connect';
+import { redirected } from './lib/redirected';
+// Type-only, so it is erased at build and pulls nothing onto the critical path.
+import type { ProviderId } from './lib/connect';
 import { load as loadFromDb, prime as primeDb } from './state/persist';
 import { primePersisted } from './state/shape';
 import { warm } from './lib/warm';
@@ -23,8 +25,21 @@ import { warm } from './lib/warm';
  * A sign-in comes back as a redirect to this same page. Redeem the code before
  * anything renders, so the app never mounts with a spent code in the address
  * bar, and leave a line behind for the Connect screen to show.
+ *
+ * Fetched only on the load that is one. `completeAuth` has always answered
+ * `null` immediately when there is no code and no pending request — which is
+ * every start but the one straight after somebody signed in — but the module
+ * around it had to be downloaded and evaluated to say so, and that module is
+ * 1,616 lines of provider specs, PKCE and token exchange sitting in front of
+ * the first render for everybody. `lib/redirected.ts` asks the same question
+ * without any of it. See `ENGINEERING-AUDIT.md` §1.
  */
-completeAuth()
+function finishAnyRedirect(): Promise<{ id: ProviderId; error?: string } | null> {
+  if (!redirected(window.location.search)) return Promise.resolve(null);
+  return import('./lib/connect').then((m) => m.completeAuth());
+}
+
+finishAnyRedirect()
   .then((result) => {
     if (!result) return;
     sessionStorage.setItem(
@@ -106,7 +121,7 @@ completeAuth()
       <StrictMode>
         <StoreProvider>
           {/* The assistant's own state sits above the router, so it is one
-              thing across all fifty screens rather than a thing each screen
+              thing across all sixty screens rather than a thing each screen
               mounts. See `ai/store.tsx`. */}
           <AIProvider>
             {/* The curtain over the first half-second, mounted beside the app

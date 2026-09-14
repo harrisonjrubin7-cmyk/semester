@@ -16,6 +16,7 @@ import {
   backupOf,
   coursesMarkdown,
   deadlineCsv,
+  classEvents,
   deadlineEvents,
   notesMarkdown,
   readBackup,
@@ -44,7 +45,7 @@ const PARTS: { id: PartId; label: string; blurb: string; format: string }[] = [
     id: 'calendar',
     label: 'Calendar',
     blurb:
-      'Deadlines and appointments, with a reminder the evening before and an hour before each.',
+      'Your classes as repeating events, your deadlines with a reminder the evening before and an hour before each, and everything you added.',
     format: 'ICS',
   },
   { id: 'notes', label: 'Notes', blurb: 'Everything you wrote, including transcripts and email drafts.', format: 'Markdown' },
@@ -55,10 +56,21 @@ const PARTS: { id: PartId; label: string; blurb: string; format: string }[] = [
     blurb: 'The PDFs, photos and recordings themselves. Zip only.',
     format: 'Files',
   },
+  /*
+   * "The whole account" was the blurb, and it is the store rather than the
+   * app: Athletics, Career, Family and Pathway keep their work in device
+   * libraries of their own — deliberately, because none of it is academic
+   * record and none of it syncs (`lib/device-library.ts`) — and each exports
+   * from its own screen. A file described as everything, restored onto a new
+   * phone without them, is the kind of surprise this screen exists to stop.
+   */
   {
     id: 'backup',
     label: 'Everything, as data',
-    blurb: 'The whole account in one file — the one to keep if you keep one.',
+    blurb:
+      'Your whole term in one file — the one to keep if you keep one. Athletics, Career, ' +
+      'Family and Pathway keep their own libraries on this device and each exports from its ' +
+      'own screen.',
     format: 'JSON',
   },
 ];
@@ -101,6 +113,13 @@ export function Export() {
   const code = (id: string) => catalog.byId[id]?.code ?? id;
   const items = datedItems(catalog, now);
   const stem = stampedName('semester', now);
+  /* The term, as the dated obligations in it mark it out. */
+  const dates = items.map((i) => i.date.getTime());
+  const termFrom = dates.length ? new Date(Math.min(...dates)) : now;
+  const termTo = dates.length ? new Date(Math.max(...dates)) : now;
+  const classes = dates.length
+    ? catalog.modules.reduce((n, m) => n + m.schedule.filter((b) => !b.optional).length, 0)
+    : 0;
 
   const build = async (forZip: boolean): Promise<Piece[]> => {
     const out: Piece[] = [];
@@ -122,7 +141,23 @@ export function Export() {
       out.push({
         name: `${stem}.ics`,
         body: toIcs(
-          [...deadlineEvents(items, code, ALARMS), ...appointmentEvents(state.appointments)],
+          [
+            /*
+             * The classes first, and the span taken from the term's own dated
+             * obligations.
+             *
+             * A recurring schedule states no first or last day — it is a
+             * pattern, not a range — so the bounds have to come from
+             * somewhere, and the deadlines are the app's own answer to "when
+             * is this term": it is the same span the semester view draws.
+             * With no dated obligations at all there is nothing to bound it
+             * with and the classes stay out, rather than being written as a
+             * series running to an invented date.
+             */
+            ...classEvents(catalog, termFrom, termTo),
+            ...deadlineEvents(items, code, ALARMS),
+            ...appointmentEvents(state.appointments),
+          ],
           'Semester',
         ),
         mime: 'text/calendar',
@@ -131,7 +166,7 @@ export function Export() {
     if (picked.notes) {
       out.push({
         name: `${stem}-notes.md`,
-        body: notesMarkdown(state.notes, code),
+        body: notesMarkdown(state.notes, code, state.mailDrafts),
         mime: 'text/markdown',
       });
     }
@@ -206,7 +241,7 @@ export function Export() {
   const counts: Record<PartId, number> = {
     courses: catalog.courses.length,
     deadlines: items.length,
-    calendar: items.length + state.appointments.length,
+    calendar: classes + items.length + state.appointments.length,
     notes: state.notes.length,
     tasks: state.tasks.length,
     files: 0,
