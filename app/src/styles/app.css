@@ -5004,28 +5004,10 @@ input[type='search'].input {
   display: flex;
   flex-direction: column;
   gap: 1px;
-  padding: 0 var(--sp-6) var(--sp-7);
+  /* The top pad is what the New button's own margin used to hold open; with
+     it gone the first row would start against the chrome above. */
+  padding: var(--sp-3) var(--sp-6) var(--sp-7);
   overflow-y: auto;
-}
-
-.desk-new {
-  width: auto;
-  align-self: flex-start;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-6);
-  margin: var(--sp-3) 0 var(--sp-7);
-  padding: var(--sp-7) var(--sp-7) var(--sp-7) var(--sp-6);
-  border-radius: var(--r-lg);
-  border: 1px solid var(--app-line);
-  background: var(--app-panel);
-  box-shadow: var(--lift-2);
-  color: var(--app-fg);
-  font-size: var(--type-md);
-}
-
-.desk-new:hover {
-  background: var(--app-hero);
 }
 
 .desk-row {
