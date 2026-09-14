@@ -84,6 +84,28 @@ describe('every combination the app will wear', () => {
     expect(GROUNDS.length * ACCENTS.length).toBe(143);
   });
 
+/**
+ * The five stops of `--chrome`, as colours this file can measure.
+ *
+ * On a dark ground they are literal hex. On a light one they are black at
+ * five alphas, so each has to be composited over the panel the control sits
+ * on before it means anything — which is why they are built here rather than
+ * read off the token: `--chrome` is a gradient string, and `contrast` takes
+ * colours.
+ *
+ * Kept beside the checks that use them so the two cannot drift apart: if the
+ * gradient in `lib/look.ts` gains or moves a stop, this list is the thing to
+ * change, and the checks follow it.
+ */
+const CHROME_DARK = ['#f7f8fa', '#c9ced8', '#aeb4c0', '#dfe3ea', '#f4f6f9'];
+const CHROME_LIGHT_ALPHAS = [0.86, 0.62, 0.58, 0.78, 0.88];
+
+function chromeStops(g: (typeof GROUNDS)[number], panel: string): string[] {
+  return g.light
+    ? CHROME_LIGHT_ALPHAS.map((a) => over('#000000', panel, a) ?? '')
+    : CHROME_DARK;
+}
+
   /** The checks one pairing has to survive. */
   const checksFor = (accentId: string, groundId: string): Check[] => {
     const t = tokensFor({ accent: accentId, ground: groundId });
@@ -127,6 +149,31 @@ describe('every combination the app will wear', () => {
        * somebody thought it paired.
        */
 
+      /*
+       * `--chrome-ink` against the gradient it is named for, at every stop.
+       *
+       * This file already checks a gradient at both ends — the tile's value,
+       * two checks down — and `--chrome` was the one that never got it,
+       * although `lib/look.ts` says plainly what the token is for: "text
+       * sitting ON the brushed metal — the primary button, an active chip."
+       * The pairing below tests that ink against `--app-accent-fill`, which
+       * is the pill and the bar, not the button.
+       *
+       * The stop at 52% is the glint, the lightest band of the sweep, and on
+       * the five light grounds it met the label at 3.72 to 4.17. The primary
+       * button is 14px at weight 600 — not large text under any reading of
+       * the rule — so 4.5 is the bar and the band missed it. The
+       * `text-shadow` on `.btn-primary` was doing work the colours were not.
+       *
+       * Every stop rather than the ends, because on the light branch the
+       * lightest stop is in the middle: checking the ends would have passed
+       * at .86 and .88 and never looked at the .58 between them.
+       */
+      ...chromeStops(g, panel).map((stop, i) => ({
+        what: `${where} · chrome-ink on chrome stop ${i + 1}`,
+        ratio: contrast(t['--chrome-ink'], stop) ?? 0,
+        needs: AA_TEXT,
+      })),
       // The handoff calls this the likely failure, and it would be: white on
       // the accent's `deep` stop is about 2.4:1. It passes because step 1
       // resolved `--app-accent-fill` to `shade` on light grounds, and this is
