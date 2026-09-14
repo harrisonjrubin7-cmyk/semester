@@ -400,11 +400,20 @@ const UNDER = {
   whiteSpace: 'nowrap',
 } as const;
 
-/** The row of small controls under a conversation. */
+/**
+ * The row of small controls under a conversation.
+ *
+ * The top padding is new, and it is there because the controls below grew.
+ * Their row used to begin exactly where the conversation's own button ended —
+ * measured at 1280×900, nothing between them at all — so giving each control
+ * the height WCAG asks for would have grown it upwards into the row above,
+ * and an invisible three and a half pixels of PIN over the bottom of the
+ * conversation button is the fault this app has already fixed twice.
+ */
 const ACTIONS = {
   display: 'flex',
   gap: 'var(--sp-4)',
-  padding: '0 var(--sp-5) var(--sp-3)',
+  padding: 'var(--sp-4) var(--sp-5) var(--sp-3)',
 } as const;
 
 /*
@@ -432,6 +441,23 @@ const ACT = {
   letterSpacing: '0.08em',
   color: 'var(--app-dim)',
   width: 'auto',
+  /*
+   * Twenty-four pixels tall, because WCAG 2.2's 2.5.8 wants either that or
+   * 24px of clear space around a smaller one, and these three had neither
+   * axis free: the conversation's own button is flush above them and they sit
+   * eight pixels from each other. Measured at 1280×900 they were 19×17, 47×17
+   * and 45×17 — and only drawn at desktop widths, which is why the tap audit
+   * that took a hundred and four small targets down to none never saw them.
+   *
+   * A floor rather than a height, so the text-size setting still grows the
+   * row — the same shape as the rail's `min-height: 44px` under a coarse
+   * pointer. And `min-height` rather than vertical padding because padding
+   * here would be an `--sp-*`, and those scale with density: at Tight (0.74)
+   * the four pixels this needs are three, and a floor that moves is not one.
+   */
+  minHeight: 24,
+  display: 'inline-flex',
+  alignItems: 'center',
 } as const;
 
 const SIDE = {
