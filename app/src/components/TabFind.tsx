@@ -23,8 +23,8 @@
  */
 
 import { useRef, useState } from 'react';
-import { findTabs, type AppTab, type Found } from '../lib/browser';
-import { useStrip } from '../lib/browser.hook';
+import { findTabs, whatClosed, type AppTab, type Found } from '../lib/browser';
+import { forgetWhatClosed, reopenTab, useStrip } from '../lib/browser.hook';
 import { secondLine } from '../lib/dim';
 import { Popover, type Corner } from './Popover';
 import { ChevronDown, Search as SearchIcon } from './Icons';
@@ -48,9 +48,12 @@ export function TabFind({
   onPick,
   /** Close this tab, by its seat. */
   onClose,
+  /** Show a tab that has just been reopened — the strip's own `land`. */
+  onBack,
 }: {
   onPick: (at: number) => void;
   onClose: (at: number) => void;
+  onBack: (tab: AppTab) => void;
 }) {
   const strip = useStrip();
   const [corner, setCorner] = useState<Corner | null>(null);
@@ -97,6 +100,7 @@ export function TabFind({
           onClose={() => setCorner(null)}
           onPick={onPick}
           onShut={onClose}
+          onBack={onBack}
         />
       )}
     </>
@@ -111,11 +115,14 @@ function Finder({
   onClose,
   onPick,
   onShut,
+  onBack,
 }: {
   corner: Corner;
   onClose: () => void;
   onPick: (at: number) => void;
   onShut: (at: number) => void;
+  /** A closed tab is open again, and the app should be showing it. */
+  onBack: (tab: AppTab) => void;
 }) {
   const strip = useStrip();
   const tones = useTones();
@@ -123,6 +130,16 @@ function Finder({
   const [at, setAt] = useState(0);
   const field = useRef<HTMLInputElement>(null);
   const found = findTabs(strip, text);
+  /*
+   * What was closed lately, filtered by the same words.
+   *
+   * Under the open tabs rather than mixed in with them: they are a different
+   * kind of thing — one is where you are, the other is where you were — and a
+   * list that mixed them would make Enter mean two things depending on how
+   * far down the arrow keys had got. The arrow keys walk the open ones; a
+   * closed tab takes a press of its own.
+   */
+  const gone = whatClosed(strip, text);
   const cursor = Math.min(at, Math.max(0, found.length - 1));
 
   const go = (seat: number) => {
@@ -162,9 +179,9 @@ function Finder({
         />
       </div>
 
-      {found.length === 0 ? (
+      {found.length === 0 && gone.length === 0 ? (
         <div style={{ padding: 'var(--sp-4)', fontSize: 'var(--type-sm)', ...secondLine() }}>
-          No open tab matches that.
+          Nothing open or lately closed matches that.
         </div>
       ) : (
         <div
@@ -185,6 +202,67 @@ function Finder({
             />
           ))}
         </div>
+      )}
+
+      {gone.length > 0 && (
+        <>
+          <div
+            className="kicker"
+            style={{
+              display: 'flex',
+              alignItems: 'baseline',
+              justifyContent: 'space-between',
+              gap: 'var(--sp-4)',
+              padding: 'var(--sp-4) var(--sp-4) var(--sp-2)',
+              borderTop: '1px solid var(--app-line)',
+              marginTop: 'var(--sp-2)',
+              ...secondLine(),
+            }}
+          >
+            <span>Recently closed</span>
+            {/* The one control over a list the app is keeping about you. It
+                is next to the list rather than in a settings page, because
+                that is where somebody is when they want it gone. */}
+            <button
+              type="button"
+              className="bare tappable"
+              onClick={() => forgetWhatClosed()}
+              style={{ width: 'auto', padding: 0, fontSize: 'var(--type-xs)', ...secondLine() }}
+            >
+              Clear
+            </button>
+          </div>
+          {gone.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              className="bare tappable"
+              onClick={() => {
+                const back = reopenTab(tab.id);
+                onClose();
+                if (back) onBack(back);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--sp-3)',
+                width: '100%',
+                textAlign: 'left',
+                padding: 'var(--sp-3) var(--sp-4)',
+                borderRadius: 'var(--r-sm)',
+                fontSize: 'var(--type-md)',
+              }}
+            >
+              {tab.screen ? <TabGlyph screen={tab.screen} size={15} /> : <SearchIcon size={15} />}
+              <span
+                style={{ minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              >
+                {tab.title}
+              </span>
+              <span style={{ flex: 'none', fontSize: 'var(--type-xs)', ...secondLine() }}>Reopen</span>
+            </button>
+          ))}
+        </>
       )}
     </Popover>
   );

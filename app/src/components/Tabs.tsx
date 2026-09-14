@@ -468,7 +468,7 @@ export function TabStrip({
         {/* And the way back to a tab when the strip has stopped being one
             glance. It draws nothing until there are enough tabs to look
             for — see `ENOUGH` in `components/TabFind.tsx`. */}
-        <TabFind onPick={pick} onClose={shut} />
+        <TabFind onPick={pick} onClose={shut} onBack={land} />
       </div>
       {onDismiss && (
         <button

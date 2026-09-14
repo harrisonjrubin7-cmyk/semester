@@ -9,6 +9,7 @@ import {
   collapse,
   current,
   dissolve,
+  forgetClosed,
   joinGroup,
   leaveGroup,
   makeGroup,
@@ -17,6 +18,7 @@ import {
   read,
   rearrange,
   renameGroup,
+  reopen,
   select,
   toneGroup,
   visit,
@@ -201,6 +203,24 @@ export function foldGroup(id: string, shut: boolean): AppTab | null {
 /** Undo the grouping, keeping every tab open. */
 export function dissolveGroup(id: string): void {
   put(dissolve(strip(), id));
+}
+
+/**
+ * Open a closed tab again. Answers with it, for the caller to land on.
+ *
+ * Null when there was nothing to reopen — an id that has aged out of the
+ * list, or a strip already at the cap — so a key that does nothing says so
+ * rather than pretending.
+ */
+export function reopenTab(id: string): AppTab | null {
+  const was = strip();
+  put(reopen(was, id));
+  return strip() === was ? null : here();
+}
+
+/** Forget what was closed. */
+export function forgetWhatClosed(): void {
+  put(forgetClosed(strip()));
 }
 
 /** Keep a tab at the front of the strip, as its glyph. Or let it go. */

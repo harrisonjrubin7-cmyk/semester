@@ -227,6 +227,16 @@ export const GROUP_TONES = 12;
 /** How long a group's name may be. A strip is not a place for a sentence. */
 export const GROUP_NAME = 24;
 
+/**
+ * How many closed tabs are kept.
+ *
+ * Enough for the slip this is for — the cross hit instead of the tab, the
+ * group closed a second too early — and not a browsing history: a list of
+ * everything shut this term is a different feature, with a different set of
+ * questions about what the app remembers about somebody.
+ */
+export const MAX_CLOSED = 10;
+
 /** The strip: what is open, which one of them is on, and how they are grouped. */
 export interface Strip {
   tabs: AppTab[];
@@ -238,6 +248,20 @@ export interface Strip {
    * shape it was written in and so `load` can filter it with one pass.
    */
   groups: TabGroup[];
+  /**
+   * What was closed lately, newest first.
+   *
+   * Closing a tab is one press and is the easiest thing in the strip to do by
+   * accident — the cross is eight pixels from the name, and on a phone that
+   * is inside a thumb. Before this, the cost of that slip was finding your
+   * way back to a deadline three navigations deep, which is exactly the work
+   * tabs exist to save. So the strip keeps the last few, and the tab list has
+   * a **Recently closed** section under the open ones.
+   *
+   * It holds the *tab*, not a record of one: its screen, its name, the
+   * actions that open it, the group it was in. Reopening is putting it back.
+   */
+  closed: AppTab[];
 }
 
 /** What a tab with nothing in it is called, in the strip and in the title. */
@@ -281,7 +305,7 @@ export function fresh(id: string = tabId()): AppTab {
 
 /** The strip somebody who has never opened one gets. */
 export function blank(id: string = tabId()): Strip {
-  return { tabs: [fresh(id)], at: 0, groups: [] };
+  return { tabs: [fresh(id)], at: 0, groups: [], closed: [] };
 }
 
 /** The tab that is on, which is always one of them. */
@@ -340,13 +364,57 @@ export function add(strip: Strip, id: string = tabId()): Strip {
 export function close(strip: Strip, which: number): Strip {
   if (which < 0 || which >= strip.tabs.length) return strip;
   const tabs = strip.tabs.filter((_, i) => i !== which);
-  if (tabs.length === 0) return blank();
+  const closed = stash(strip, [strip.tabs[which]]);
+  if (tabs.length === 0) return { ...blank(), closed };
   const at = clamp(strip, strip.at);
   const next = which < at ? at - 1 : at;
   // `tidy` because the tab that just left may have been the last one in its
   // group, and a group with nothing in it is a name in the store nobody can
   // see or remove.
-  return tidy({ ...strip, tabs, at: Math.min(next, tabs.length - 1) });
+  return tidy({ ...strip, tabs, closed, at: Math.min(next, tabs.length - 1) });
+}
+
+/**
+ * The closed tabs, with these added at the front.
+ *
+ * A new tab is not kept: there is nothing to reopen about a page nobody has
+ * been to, and a list of blanks is a list nobody reads. Reopening something
+ * takes it out again (see `reopen`), so the same tab cannot sit there twice.
+ */
+function stash(strip: Strip, gone: (AppTab | undefined)[]): AppTab[] {
+  const worth = gone.filter((t): t is AppTab => Boolean(t?.screen && t.place.length > 0));
+  if (worth.length === 0) return strip.closed;
+  return [...worth.reverse(), ...strip.closed].slice(0, MAX_CLOSED);
+}
+
+/**
+ * Open a closed tab again, where it was.
+ *
+ * Its group comes back with it when that group is still on the strip, and is
+ * dropped when it is not — a tab rejoining a name nobody can see would be a
+ * tab in a group of one that is drawn as a colour with no head. Everything
+ * else about it is exactly as it was: the screen, the name, the place.
+ *
+ * It goes on the end rather than back where it was. The strip has moved on —
+ * the index it left is somebody else's now — and the end is where a tab
+ * opened a moment ago belongs.
+ */
+export function reopen(strip: Strip, id: string): Strip {
+  const tab = strip.closed.find((t) => t.id === id);
+  if (!tab || strip.tabs.length >= MAX_TABS) return strip;
+  const known = tab.group && strip.groups.some((g) => g.id === tab.group);
+  const back = known ? tab : loose(tab);
+  return tidy({
+    ...strip,
+    tabs: [...strip.tabs, back],
+    at: strip.tabs.length,
+    closed: strip.closed.filter((t) => t.id !== id),
+  });
+}
+
+/** Forget what was closed. The one control over a list the app is keeping. */
+export function forgetClosed(strip: Strip): Strip {
+  return strip.closed.length === 0 ? strip : { ...strip, closed: [] };
 }
 
 /**
@@ -487,7 +555,7 @@ export function tidy(strip: Strip): Strip {
     order.length === strip.tabs.length &&
     order.every((t, i) => t === strip.tabs[i]) &&
     at === strip.at;
-  return same ? strip : { tabs: order, at, groups };
+  return same ? strip : { ...strip, tabs: order, at, groups };
 }
 
 /** The same tab, out of whatever group it was in. */
@@ -696,7 +764,7 @@ export function collapse(strip: Strip, id: string, shut: boolean): Strip {
   const to = out(at + 1, 1) === -1 ? out(at - 1, -1) : out(at + 1, 1);
   if (to !== -1) return { ...strip, groups, at: to };
   const room = strip.tabs.length < MAX_TABS ? strip.tabs : strip.tabs.slice(1);
-  return { tabs: [...room, fresh()], at: room.length, groups };
+  return { ...strip, tabs: [...room, fresh()], at: room.length, groups };
 }
 
 /** Undo the grouping. The tabs stay open and stay where they are. */
@@ -712,7 +780,10 @@ export function dissolve(strip: Strip, id: string): Strip {
 /** Close every tab in a group, which is the point of having named them. */
 export function closeGroup(strip: Strip, id: string): Strip {
   const tabs = strip.tabs.filter((t) => t.group !== id);
-  if (tabs.length === 0) return blank();
+  // Every tab of it, newest last, so reopening them one at a time comes back
+  // in the order they were in rather than inside out.
+  const closed = stash(strip, strip.tabs.filter((t) => t.group === id));
+  if (tabs.length === 0) return { ...blank(), closed };
   const on = strip.tabs[clamp(strip, strip.at)];
   const kept = tabs.findIndex((t) => t.id === on?.id);
   /*
@@ -728,7 +799,7 @@ export function closeGroup(strip: Strip, id: string): Strip {
       : after === -1
         ? tabs.length - 1
         : Math.max(0, tabs.findIndex((t) => t.id === strip.tabs[after].id));
-  return tidy({ ...strip, tabs, at, groups: strip.groups.filter((g) => g.id !== id) });
+  return tidy({ ...strip, tabs, closed, at, groups: strip.groups.filter((g) => g.id !== id) });
 }
 
 /** One change to one group, or the strip back unchanged. */
@@ -794,6 +865,22 @@ export interface Found {
   seat: Seat;
   /** The group it is in, for the list to say which work it belongs to. */
   group: TabGroup | null;
+}
+
+/**
+ * The closed tabs, filtered by the same words as the open ones.
+ *
+ * The same reading of a query, so `calender` finds the calendar tab you shut
+ * as readily as the one you did not — and the same order it was stashed in,
+ * newest first, because "the one I just closed" is the question nearly every
+ * visit to this list is asking.
+ */
+export function whatClosed(strip: Strip, query: string): AppTab[] {
+  const typed = query.trim().toLowerCase();
+  if (!typed) return strip.closed;
+  const words = typed.split(/\s+/).filter(Boolean);
+  const said = (tab: AppTab) => tab.title.toLowerCase();
+  return strip.closed.filter((t) => words.every((w) => said(t).includes(w) || nearAny(w, said(t))));
 }
 
 export function findTabs(strip: Strip, query: string): Found[] {
@@ -880,37 +967,27 @@ export function placeAction(raw: unknown): Action | null {
 export function load(raw: string | null, known: (screen: string) => boolean): Strip {
   try {
     if (!raw) return blank();
-    const saved = JSON.parse(raw) as { tabs?: unknown; at?: unknown; groups?: unknown };
-    const list = Array.isArray(saved.tabs) ? saved.tabs : [];
-    const tabs: AppTab[] = [];
-    for (const entry of list) {
-      const tab = entry as Partial<AppTab>;
-      if (typeof tab?.id !== 'string' || tabs.some(t=>t.id===tab.id)) continue;
-      if (tab.screen === null || tab.screen === undefined) {
-        tabs.push(fresh(tab.id));
-        continue;
-      }
-      if (typeof tab.screen !== 'string' || !known(tab.screen)) continue;
-      const screen = tab.screen as Screen;
-      const place = Array.isArray(tab.place)
-        ? tab.place.map(placeAction).filter((a): a is Action => a !== null)
-        : [];
-      tabs.push({
-        id: tab.id,
-        screen,
-        title: typeof tab.title === 'string' && tab.title ? tab.title : screen,
-        ...(typeof tab.query === 'string' && tab.query ? { query: tab.query } : {}),
-        ...(typeof tab.group === 'string' && tab.group ? { group: tab.group } : {}),
-        ...(tab.pinned === true ? { pinned: true } : {}),
-        // A tab whose place did not survive the check still knows its screen,
-        // so it lands you there rather than nowhere. Losing the deadline you
-        // had open is a smaller failure than a tab that does nothing.
-        place: place.length > 0 ? place : justGo(screen),
-      });
-    }
+    const saved = JSON.parse(raw) as {
+      tabs?: unknown;
+      at?: unknown;
+      groups?: unknown;
+      closed?: unknown;
+    };
+    const tabs = storedTabs(saved.tabs, known, true);
     if (tabs.length === 0) return blank();
     const at = typeof saved.at === 'number' ? saved.at : 0;
-    const strip = { tabs: tabs.slice(0, MAX_TABS), at: 0, groups: storedGroups(saved.groups) };
+    const strip = {
+      tabs: tabs.slice(0, MAX_TABS),
+      at: 0,
+      groups: storedGroups(saved.groups),
+      /*
+       * The closed ones go through exactly the same reader, and must: they
+       * are dispatched when one is reopened, so a store edited by hand would
+       * otherwise be a way in through the back door while the front one is
+       * bolted. A blank is not kept — `fresh` is not what this list is for.
+       */
+      closed: storedTabs(saved.closed, known, false).slice(0, MAX_CLOSED),
+    };
     /*
      * `tidy` last, and it is doing real work rather than tidying.
      *
@@ -924,6 +1001,46 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
   } catch {
     return blank();
   }
+}
+
+/**
+ * Tabs off the device, keeping only the ones that are a tab.
+ *
+ * One reader for the strip and for what was closed, because they are the same
+ * shape and the same risk: a tab's place is *dispatched*, so everything here
+ * goes through `placeAction` and anything malformed is dropped rather than
+ * repaired. `blanks` is the one difference — the strip may hold a new tab,
+ * and a list of things to reopen may not.
+ */
+function storedTabs(raw: unknown, known: (screen: string) => boolean, blanks: boolean): AppTab[] {
+  if (!Array.isArray(raw)) return [];
+  const out: AppTab[] = [];
+  for (const entry of raw) {
+    const tab = entry as Partial<AppTab>;
+    if (typeof tab?.id !== 'string' || out.some((t) => t.id === tab.id)) continue;
+    if (tab.screen === null || tab.screen === undefined) {
+      if (blanks) out.push(fresh(tab.id));
+      continue;
+    }
+    if (typeof tab.screen !== 'string' || !known(tab.screen)) continue;
+    const screen = tab.screen as Screen;
+    const place = Array.isArray(tab.place)
+      ? tab.place.map(placeAction).filter((a): a is Action => a !== null)
+      : [];
+    out.push({
+      id: tab.id,
+      screen,
+      title: typeof tab.title === 'string' && tab.title ? tab.title : screen,
+      ...(typeof tab.query === 'string' && tab.query ? { query: tab.query } : {}),
+      ...(typeof tab.group === 'string' && tab.group ? { group: tab.group } : {}),
+      ...(tab.pinned === true ? { pinned: true } : {}),
+      // A tab whose place did not survive the check still knows its screen,
+      // so it lands you there rather than nowhere. Losing the deadline you
+      // had open is a smaller failure than a tab that does nothing.
+      place: place.length > 0 ? place : justGo(screen),
+    });
+  }
+  return out;
 }
 
 /** The groups off the device, keeping only the ones that are a group. */
@@ -951,7 +1068,12 @@ function storedGroups(raw: unknown): TabGroup[] {
 }
 
 export function dump(strip: Strip): string {
-  return JSON.stringify({ tabs: strip.tabs, at: clamp(strip, strip.at), groups: strip.groups });
+  return JSON.stringify({
+    tabs: strip.tabs,
+    at: clamp(strip, strip.at),
+    groups: strip.groups,
+    closed: strip.closed,
+  });
 }
 
 export function read(known: (screen: string) => boolean): Strip {
