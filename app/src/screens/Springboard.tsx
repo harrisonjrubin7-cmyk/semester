@@ -33,7 +33,7 @@
  * than not offering it.
  */
 
-import { useState, type HTMLAttributes } from 'react';
+import { useRef, useState, type HTMLAttributes } from 'react';
 import { useStore } from '../state/store';
 import { outstanding } from '../lib/select';
 import { TabGlyph } from '../components/TabIcon';
@@ -54,6 +54,7 @@ import {
 import { MOVE_HINT, useMovable } from '../lib/arrange';
 import { currentLook } from '../state/shape';
 import { lately } from '../lib/nav';
+import { useBottomChrome } from '../lib/bottomchrome.hook';
 import type { Screen } from '../lib/types';
 
 const ICON = 58;
@@ -242,6 +243,9 @@ export function Springboard() {
   const look = currentLook(state);
   const pages = arrangedPages(school.capabilities, look.boardOrder, state.role);
   const dock = arrangedDock(school.capabilities, look.boardOrder, state.role);
+  // What the assistant's floating button has to clear. See the dock below.
+  const dockBox = useRef<HTMLDivElement>(null);
+  useBottomChrome(dockBox);
   const open = (screen: string) => dispatch({ type: 'go', screen: screen as Screen });
 
   /** One list of the arrangement, written back whole. See `afterMove`. */
@@ -456,10 +460,21 @@ export function Springboard() {
 
       <div style={{ flex: 1, minHeight: 12 }} />
 
-      {/* The dock does not move between pages, which is the whole point of
-          it. What is in it does: four icons, and which four in what order is
-          the only thing the dock is for. */}
+      {/*
+        The dock does not move between pages, which is the whole point of it.
+        What is in it does: four icons, and which four in what order is the
+        only thing the dock is for.
+
+        It reports itself as the bottom chrome. It is not a bar — it is drawn
+        in the page's own flow, with the spacer above pushing it down — but it
+        is what is along the bottom of this navigation, and the assistant's
+        floating button is fixed to the viewport and has to clear it. It did
+        not: with nothing reported the button fell back to the height of a tab
+        bar this navigation does not have, and landed across the fourth
+        label.
+      */}
       <div
+        ref={dockBox}
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${Math.max(1, dock.length)}, 1fr)`,
