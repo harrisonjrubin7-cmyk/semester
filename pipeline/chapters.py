@@ -104,7 +104,7 @@ def main() -> int:
 
     names = []
     if args.names and args.names.exists():
-        names = [line.strip() for line in args.names.read_text().splitlines() if line.strip()]
+        names = [line.strip() for line in args.names.read_text(encoding="utf-8").splitlines() if line.strip()]
 
     chapters = [
         {

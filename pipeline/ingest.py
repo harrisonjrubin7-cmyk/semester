@@ -38,8 +38,9 @@ EXTRA_ENTITIES = {
 
 def from_pdf(path: Path) -> str:
     """Extract text from a PDF. Falls back through the libraries that might be present."""
-    data = path.read_bytes()
-
+    # No `read_bytes()` here: both branches below take the path, so reading the
+    # file up front only held a second copy of a syllabus in memory and threw
+    # it away.
     try:
         from pypdf import PdfReader  # type: ignore
 
@@ -124,6 +125,32 @@ def extract(path: Path) -> str:
 
 
 def main() -> int:
+    """
+    Every path out of here is UTF-8, said out loud rather than inherited.
+
+    `read_text` and `write_text` fall back to `locale.getpreferredencoding()`,
+    and so does stdout. On a machine whose locale is UTF-8 — or whose locale is
+    plain `C`, where Python turns UTF-8 mode on for you — that is the same
+    thing and none of this matters. On a Windows console it is cp1252, and on
+    a box set to a Latin-1 locale it is latin-1, and neither of those can hold
+    `σ`, `∑`, `√`, `≈` or `✓`.
+
+    Which is the whole difficulty, because those are exactly the characters
+    this file exists to preserve: there is a table of them thirty lines up,
+    kept by hand because `html.unescape` alone does not cover the prose in an
+    economics syllabus. Extracting them carefully and then writing them through
+    whatever codec the machine happened to boot with is how a course arrives
+    with `UnicodeEncodeError` instead of a reading list.
+
+    `extract` already said `encoding="utf-8"` on the way in. This says it on
+    every way out.
+    """
+    sys.stdout.reconfigure(encoding="utf-8")
+    # stderr too, because the progress line has an arrow in it. Python defaults
+    # stderr to `backslashreplace`, so this one degrades to `\u2192` rather than
+    # crashing — which is safe and unreadable.
+    sys.stderr.reconfigure(encoding="utf-8")
+
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("sources", nargs="+", type=Path)
     ap.add_argument("-o", "--out", type=Path, help="Write one source to this file.")
@@ -140,12 +167,12 @@ def main() -> int:
         text = extract(src)
         if args.out:
             args.out.parent.mkdir(parents=True, exist_ok=True)
-            args.out.write_text(text)
+            args.out.write_text(text, encoding="utf-8")
             print(f"{src.name} → {args.out} ({len(text):,} chars)", file=sys.stderr)
         elif args.dir:
             args.dir.mkdir(parents=True, exist_ok=True)
             dest = args.dir / f"{src.stem}.txt"
-            dest.write_text(text)
+            dest.write_text(text, encoding="utf-8")
             print(f"{src.name} → {dest} ({len(text):,} chars)", file=sys.stderr)
         else:
             sys.stdout.write(text)
