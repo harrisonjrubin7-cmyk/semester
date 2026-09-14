@@ -25,7 +25,7 @@
 #
 # Naming suites is for iterating on one: the cluster and the migrations are the
 # slow part and happen either way, but a failing suite's output is far easier to
-# read without the other four around it.
+# read without the other five around it.
 #
 set -euo pipefail
 
