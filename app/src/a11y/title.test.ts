@@ -67,15 +67,16 @@ describe('the window title', () => {
  * mounts against it and a fourth layout has to raise all three together or
  * the one that was missed silently asserts the wrong thing.
  */
-const LAYOUTS = 3;
+const LAYOUTS = 4;
 
 describe('the component that writes it', () => {
   const src = () => readFileSync('src/App.tsx', 'utf8');
 
   it('is mounted in every layout', () => {
-    // The phone's return, the desk's and the workspace's. One missing is the
-    // skip-link bug again — and the number here is the number of layouts, so
-    // adding a fourth means adding its mount rather than raising this.
+    // The phone's return, the desk's, the workspace's and the browser
+    // shell's. One missing is the skip-link bug again — and the number here is
+    // the number of layouts, so adding another means adding its mount rather
+    // than raising this. The browser shell brought its own; hence four.
     expect([...src().matchAll(/<Titled \/>/g)].length).toBe(LAYOUTS);
   });
 

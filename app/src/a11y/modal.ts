@@ -1,6 +1,18 @@
 import { useEffect, useRef, type KeyboardEvent, type RefObject } from 'react';
 
 /**
+ * Whether a modal dialog is open anywhere.
+ *
+ * The shell's shortcuts — a new tab, the bookmarks menu, reopening a closed
+ * tab — are global, so they would otherwise fire while somebody is inside a
+ * dialog that has taken the display. They defer to this rather than each
+ * keeping its own idea of what counts as busy.
+ */
+export function hasOpenModal(): boolean {
+  return document.querySelector('[aria-modal="true"]') !== null;
+}
+
+/**
  * `aria-modal="true"`, kept as a promise rather than said as one.
  *
  * Seven overlays in this app declare it. The attribute is not decoration: it

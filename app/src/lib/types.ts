@@ -679,7 +679,14 @@ export interface Lesson {
  * courses you have, and opening one hands the whole display to its guide,
  * whose eleven ways of studying are the navigation. See `lib/chrome.ts`.
  */
-export type NavMode = 'tabs' | 'feed' | 'springboard' | 'shelves' | 'workspace' | 'guides';
+export type NavMode =
+  | 'tabs'
+  | 'feed'
+  | 'springboard'
+  | 'shelves'
+  | 'workspace'
+  | 'browser'
+  | 'guides';
 
 /** A class that repeats every week, from the syllabus meeting pattern. */
 export interface RecurringBlock {

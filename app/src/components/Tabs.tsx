@@ -42,6 +42,7 @@ import { secondLine } from '../lib/dim';
 import { Plus, Search as SearchIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import type { AppTab } from '../lib/browser';
+import { useModernShell } from './shell-context';
 
 /**
  * The strip follows the app, wherever the app is driven from.
@@ -135,6 +136,8 @@ export function TabsFollow() {
     sheetId,
     deckId,
     mode,
+    openUnit,
+    callCode,
   } = state;
   const at = useMemo(
     () =>
@@ -148,8 +151,25 @@ export function TabsFollow() {
         sheetId,
         deckId,
         mode,
+        /* A study tab remembers the unit it is open on and a call tab its
+           room, so two study tabs come back to their own. See `placeFor`. */
+        openUnit,
+        callCode,
       }),
-    [screen, courseId, itemId, eventId, guideId, noteId, documentId, sheetId, deckId, mode],
+    [
+      screen,
+      courseId,
+      itemId,
+      eventId,
+      guideId,
+      noteId,
+      documentId,
+      sheetId,
+      deckId,
+      mode,
+      openUnit,
+      callCode,
+    ],
   );
   const seen = useRef<string | null>(null);
 
@@ -211,6 +231,7 @@ export function TabStrip({
 }) {
   const { dispatch } = useStore();
   const strip = useStrip();
+  const modern = useModernShell();
 
   /** Put the app where a tab says, or hand a new tab to the search page. */
   const land = (tab: AppTab) => {
@@ -222,6 +243,9 @@ export function TabStrip({
     onBlank?.();
   };
 
+  /* Inside the browser shell the strip is the shell's, not ours — drawing
+     this one too is the doubling `lib/chrome.ts` exists to stop. */
+  if (modern) return null;
   if (!inOverlay && !alwaysOn && strip.tabs.length < 2) return null;
 
   return (

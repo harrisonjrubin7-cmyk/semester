@@ -26,6 +26,7 @@
 
 import { useRef, useState } from 'react';
 import { useModal } from '../a11y/modal';
+import { useModernShell } from './shell-context';
 import { useStore } from '../state/store';
 import { capture, enough, readBack } from '../lib/capture';
 import { ActionButton } from './ui';
@@ -46,6 +47,11 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
   const [text, setText] = useState('');
   const [said, setSaid] = useState('');
   const wide = useMedia(DESKTOP);
+  /* In the browser shell this is mounted beside the shell's own chrome
+     rather than inside a pane, so it is laid out against the window at every
+     width — otherwise it covers the pane and the shell's strip paints over
+     its field and its Close button. */
+  const modern = useModernShell();
   const box = useRef<HTMLInputElement>(null);
   // The field, for the same reason the search palette opens on its own: a
   // capture box that opens on its Close button is one you have to tab into
@@ -111,7 +117,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
          * would become the containing block and this would go back to
          * covering the pane.
          */
-        position: wide ? 'fixed' : 'absolute',
+        position: wide || modern ? 'fixed' : 'absolute',
         inset: 0,
         zIndex: 80,
         background: 'var(--app-bg)',
