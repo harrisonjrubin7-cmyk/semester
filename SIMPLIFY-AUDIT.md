@@ -296,11 +296,26 @@ changed.**
 | W3 | `Sidebar` drops the Search home row | `TopBar`'s wordmark | nothing — the mark is drawn at every width |
 | W4 | `Sidebar` drops the Settings row | `TopBar`'s gear | nothing — gear wide, launcher narrow |
 | F1 | Cut `chrome.fab` and the button | the header's `+` for adding, seven routes for importing | one shortcut on one screen; the glyph stops meaning two things |
+| W6 | `Sidebar`'s directory row is renamed, not cut | both — they are different places | the shared name, which was the fault |
 | W5 | — | — | recorded only; `/ask-tab` owns it |
 
-**Five controls go. No destination goes**, which is why the screen count stays
-at 60 and why nothing in this pass needs a state migration — no saved `screen`
-can become invalid when no screen is removed.
+**Five controls go, one is renamed. No destination goes**, which is why the
+screen count stays at 60 and why nothing in this pass needs a state migration —
+no saved `screen` can become invalid when no screen is removed.
+
+### W6 — one name, two places · **RENAME**
+
+Found while cutting W3 and W4, and it is not the same fault as either. The
+bar's nine dots carry `aria-label="All apps"` and open the launcher; the
+sidebar's second row read "All apps" and went to `screens/Directory.tsx`. Not
+duplicates — a panel over the page you were reading is a different object from
+a screen — but one name, in one frame, for two destinations. A screen reader
+read them out identically, and pressing one was the only way to find out which
+you had, which is worse than a plain duplicate: a duplicate at least takes you
+somewhere you expected.
+
+Cutting either would have lost something real, so neither is cut. The row is
+**App directory** now, and the two are called what they are.
 
 The rule the five share gets written down rather than left as five edits:
 `lib/header.ts` already owns "how many things the action row can carry and which
@@ -308,6 +323,41 @@ one yields", and it gains the rest of the row's arithmetic so that the answer to
 "does the header draw this control" is one tested function instead of five
 conditions in the markup — the shape `lib/chrome.ts` exists to enforce, applied
 to the one piece of chrome `lib/chrome.ts` deliberately does not cover.
+
+---
+
+## 5. Resolved
+
+Every row above is closed. Three commits, each green.
+
+| Row | Commit | What landed |
+| --- | --- | --- |
+| W1, W2 | `80061c0` | `headerRow` in `lib/header.ts` decides all five; the markup asks. `slim` is gone, replaced by the two facts it was standing in for. |
+| W3, W4, W6 | `0cb57a6` | `Sidebar` loses Search home and Settings; its directory row is renamed. `lib/onframe.test.ts` holds the invariant. |
+| F1 | `79b9681` | The FAB and `chrome.fab` go; `chromeFor` answers one question again. |
+| W5 | — | Recorded, untouched. `/ask-tab` owns it. |
+| §3.1 `feedOrder`, `boardOrder` | — | Kept. The object and the index of the object, through one resolver. |
+| §3.1 `ground` | — | Kept, knowingly. `Customize` is a second place a preference is changed; resolving it is a judgement about the workspace's front door, not a duplicate to delete. |
+
+### The claim, checked rather than asserted
+
+`npm run lint` exit 0. `npm test` **315 files / 6713 tests**, all passing —
+twelve more than the baseline, all of them new checks on this pass's invariant.
+`npm run build` clean.
+
+And driven in a browser, because an absent control is easy to claim and hard to
+see. Chromium at two widths, four navigations, `pageerror` empty throughout:
+
+| Frame | Header's action row | Other chrome |
+| --- | --- | --- |
+| Workspace, Alerts, 1280px | **empty** | bar's field + tools; sidebar New, App directory, favourites, Connect |
+| Workspace, Alerts, 420px | **Add something in one line**, alone | bar's field + tools; no sidebar |
+| Feed, home, 420px | add · search · All apps · Alerts · Profile | no floating import button; **one `+` on the screen** |
+| Tab bar, Alerts, 420px | add · search · All apps | the tab bar, unchanged |
+
+The first row is the screenshot this pass opened with, and it is the one that
+matters: on Alerts in the workspace, the header is now the way back and the
+screen's name, which is all a header on that screen was ever for.
 
 
 ---

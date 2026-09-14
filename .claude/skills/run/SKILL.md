@@ -148,15 +148,35 @@ Seed them before the first load — much faster than clicking through
 Settings, and verified to apply:
 
 ```js
-await ctx.addInitScript(() => {
-  localStorage.setItem('semester.v1', JSON.stringify({ shell: 'soft', nav: 'tabs' }));
-});
+// 6 is SCHEMA from app/src/lib/migrate.ts — read it there, do not guess.
+const seed = { schemaVersion: 6, shell: 'soft', nav: 'tabs' };
+await ctx.addInitScript(
+  `localStorage.setItem('semester.v1', ${JSON.stringify(JSON.stringify(seed))})`,
+);
 ```
+
+**`schemaVersion` is not optional, and leaving it out fails silently.**
+`loadPersisted` runs the seed through `lib/migrate.ts` before reading a field,
+and `versionOf` reads a stored copy with no `schemaVersion` as version 1 — so
+every migration step runs over it. Two of those steps set `nav` outright
+(`nav: 'workspace'` at step 6), so an unversioned seed is *overwritten*, not
+merged: `localStorage` still reads back `"nav":"tabs"` on the next line, the
+app draws the workspace, and nothing anywhere says why. Stamp the seed with
+`SCHEMA` from `lib/migrate.ts` and the steps are skipped.
+
+Confirm the seed took by asserting on the chrome rather than on the key —
+§6b's table says which class each navigation draws, and `.desktop-bar`
+present when you asked for `tabs` is this bug.
 
 | Setting | Values in code | Labels on screen |
 |---|---|---|
 | `shell` | `plain` · `grouped` · `soft` | Drawn · Grouped · Soft |
-| `nav` | `tabs` · `feed` · `springboard` · `shelves` | Tab bar · One feed · Home screen · Shelves |
+| `nav` | `tabs` · `feed` · `springboard` · `shelves` · `workspace` · `guides` | Tab bar · One feed · Home screen · Shelves · Workspace · Guides |
+
+**`workspace` is the default**, so a run that seeds nothing is a run of the
+workspace, not of the tab bar. It is also the one navigation that opens on a
+screen of its own — `firstScreen` in `lib/chrome.ts` sends it to `search`, the
+way a browser opens on a new tab — so `#/` is not home there.
 
 The names do not match: **`plain` is "Drawn"** (`SHELLS` in `lib/look.ts`).
 `drawn` is a real value in this app, but it belongs to `corners`, not
@@ -165,7 +185,8 @@ so `shell: 'drawn'` falls through silently and looks like it worked.
 
 Seeding the shell does **not** skip the adoption prompt — still click Skip.
 `semester.v1` is plain JSON (`state/shape.ts`, `STORAGE_KEY`) and is merged
-over the defaults, so a partial object is fine.
+over the defaults, so a partial object is fine — as long as it is stamped with
+the schema version, per the warning above.
 
 The UI path, if you need to prove the picker itself works:
 Settings → *Layout and navigation* → the layout by name.
@@ -227,6 +248,14 @@ The class names do not follow the names on screen, and guessing costs a
 | `shelves` | `.shelf-nav`, `.shelf-nav-row`, `.shelf-nav-pill`, `.shelf-nav-said` | above the scroller |
 | `springboard` | `.iconshape` inside `.tappable`; pages are `role="tab"` | the home screen itself |
 | `feed` | no chrome of its own | — |
+| `workspace` | `.deskstrip` (tabs), `.desktop-bar` (search + tools), `.desk-side` (the column) | above and beside the pane |
+| `guides` | no chrome at any width | — |
+
+The workspace is three pieces at once, which is why it is the layout worth
+checking a chrome change against: the header inside its pane is drawn beside a
+bar above it and a column next to it, and `.desk-side` appears only where there
+is room for it (`sidebar: desk && wide` in `lib/chrome.ts`). A control that
+looks fine at 1280 can be the only one of its kind at 420.
 
 `.soft-grid` is the **folder** that opens on top of the springboard, not
 the launcher's own grid — the obvious guess, and it silently matches
@@ -276,9 +305,13 @@ const ctx = await browser.newContext({
   viewport: { width: 420, height: 900 },
   deviceScaleFactor: 2,
 });
-await ctx.addInitScript(() => {
-  localStorage.setItem('semester.v1', JSON.stringify({ shell: 'soft', nav: 'tabs' }));
-});
+// SCHEMA is `lib/migrate.ts`'s export — 6 at the time of writing. Without it
+// the seed is read as version 1 and the migrations overwrite `nav`.
+await ctx.addInitScript(
+  `localStorage.setItem('semester.v1', ${JSON.stringify(
+    JSON.stringify({ schemaVersion: 6, shell: 'soft', nav: 'tabs' }),
+  )})`,
+);
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
