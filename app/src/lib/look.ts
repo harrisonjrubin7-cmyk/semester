@@ -851,12 +851,12 @@ export const DIRECTORIES = [
   {
     id: 'list',
     label: 'A list',
-    blurb: 'Every screen with the sentence saying what it is for, by shelf. Reads.',
+    blurb: 'Every screen in a row, with the sentence saying what it is for. Reads.',
   },
   {
     id: 'tiles',
     label: 'Tiles',
-    blurb: 'Nine tiles, one per shelf, each in the same place every time. Found by position.',
+    blurb: 'Every screen as a card, in the same place every time. Found by position.',
   },
 ];
 

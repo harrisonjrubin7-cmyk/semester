@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
-import { ActionButton, FilePick, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, FilePick, Notice, SectionLabel, Segmented } from '../components/ui';
 import { CardGrid, GridCard } from '../components/GridCard';
 import { secondLine } from '../lib/dim';
 import { useDeviceLibrary } from '../lib/device-library';
@@ -198,20 +198,9 @@ function Workspace({ storageKey }: { storageKey: string }) {
       />
 
       {(notice || lib.error) && (
-        <p
-          role="status"
-          style={{
-            fontSize: 'var(--type-sm)',
-            lineHeight: 'var(--leading-normal)',
-            border: '1px solid var(--app-line)',
-            borderRadius: 'var(--r-md)',
-            padding: 'var(--sp-5)',
-            marginBlock: 'var(--sp-4)',
-            textWrap: 'pretty',
-          }}
-        >
+        <Notice>
           {lib.error || notice}
-        </p>
+        </Notice>
       )}
 
       {tab === 'schedule' && (

@@ -8,6 +8,7 @@ import { pickPersisted } from '../state/shape';
 import { bytesOf, inventory, space, type Row, type Space } from '../lib/inventory';
 import { formatBytes, totalSize } from '../lib/files';
 import { weigh } from '../lib/keep';
+import { allVersions } from '../lib/docversions';
 import { DRAFTS_KEY } from '../lib/draft';
 
 /**
@@ -54,6 +55,7 @@ export function DataScreen() {
     }
   });
   const [files, setFiles] = useState<number | null>(null);
+  const [history, setHistory] = useState<number | null>(null);
 
   const store = useMemo(() => inventory(pickPersisted(state)), [state]);
 
@@ -68,6 +70,23 @@ export function DataScreen() {
       })
       .catch(() => {
         if (alive) setFiles(null);
+      });
+    /*
+     * The document history, which this screen did not count.
+     *
+     * `semester-drafts` holds up to twenty full copies of every document, and
+     * it is its own database — so none of the three figures above could see
+     * it and the screen's answer to "what is this app taking up" was short by
+     * however much somebody had written. `lib/erase.ts` found the same gap
+     * from the other end: erase did not clear this database either, and its
+     * comment says a list of databases drifts exactly this way.
+     */
+    void allVersions()
+      .then((vs) => {
+        if (alive) setHistory(weigh(JSON.stringify(vs)));
+      })
+      .catch(() => {
+        if (alive) setHistory(null);
       });
     return () => {
       alive = false;
@@ -131,7 +150,9 @@ export function DataScreen() {
             These are not collections and must not be added into the total
             above, which is the size of one string this app writes. Kept
             beside it because the question people arrive with is "what is
-            this app taking up", and the answer is all three.
+            this app taking up", and the answer is all four. Document history
+            was the one missing: its own database, so none of the others could
+            see it, and up to twenty full copies of every document in it.
           */}
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
             <span>Drafts in progress</span>
@@ -143,6 +164,12 @@ export function DataScreen() {
             <span>Attachments</span>
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>
               {files === null ? 'Not available' : formatBytes(files)}
+            </span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-2)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+            <span>Document history</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+              {history === null ? 'Not available' : history ? formatBytes(history) : 'None'}
             </span>
           </div>
 

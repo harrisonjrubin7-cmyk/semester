@@ -12,11 +12,11 @@ import {
   StarIcon,
   TrashIcon,
 } from '../Icons';
+import { Face } from './List';
 import { CourseTag } from '../CourseTag';
 import { secondLine } from '../../lib/dim';
 import {
   fullStamp,
-  initials,
   shown,
   splitQuote,
   type Mail,
@@ -206,7 +206,7 @@ function Message({ mail }: { mail: Mail }) {
   return (
     <article style={{ marginTop: 'var(--sp-7)' }}>
       <div className="mb-from">
-        <span className="mb-face">{initials(mail.from)}</span>
+        <Face mail={mail} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 'var(--type-base)' }}>
             <strong>{shown(mail.from)}</strong>{' '}

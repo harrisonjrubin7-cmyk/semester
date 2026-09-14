@@ -480,6 +480,56 @@ export function Meter({
 }
 
 /**
+ * What just happened, or what went wrong, said in a box.
+ *
+ * Seven copies of this, byte-identical in six of them: the six workspaces
+ * that keep their data in a device library — Create, Career, Athletics,
+ * Family, Pathway and University — each opened with
+ * `{(lib.error || notice) && (<p role="status" style={{…eleven lines…}}>`,
+ * and `creation/VideoEditor` drew the same box one step larger.
+ *
+ * They are one thing because they answer one question. A device library can
+ * fail to read or fail to save — a full quota, a corrupt value, a browser
+ * that has evicted the origin — and when it does, the screen has to say so
+ * *and* offer the recovery download, because the alternative is somebody's
+ * application essay disappearing quietly. The notice and the transient "Added
+ * to your tracker" message share the box deliberately: both are the screen
+ * talking back, and `role="status"` is what gets either of them read out.
+ *
+ * ## The size is the majority's, not the mean
+ *
+ * Six said `--type-sm` and one said `--type-base`, which is drift rather than
+ * a decision — the same drift the chip idiom had between 7px and 9px of
+ * padding. The six win, so the video editor's notice is now one step smaller.
+ * That is the one visible change in sharing this, and it is written down
+ * rather than slipped in.
+ *
+ * Children rather than a `message` prop, because three of the seven put a
+ * button inside the box — the recovery download, and University's undo for a
+ * removed draft — and a component that takes a string would have sent those
+ * back to drawing their own.
+ */
+export function Notice({ children, style }: { children: ReactNode; style?: CSSProperties }) {
+  return (
+    <p
+      role="status"
+      style={{
+        fontSize: 'var(--type-sm)',
+        lineHeight: 'var(--leading-normal)',
+        border: '1px solid var(--app-line)',
+        borderRadius: 'var(--r-md)',
+        padding: 'var(--sp-5)',
+        marginBlock: 'var(--sp-4)',
+        textWrap: 'pretty',
+        ...style,
+      }}
+    >
+      {children}
+    </p>
+  );
+}
+
+/**
  * A screen, or a section of one, with nothing in it yet.
  *
  * The app was already good at the sentence — most empty screens explained

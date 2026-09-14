@@ -140,8 +140,14 @@ export function reopenClosed(): AppTab | null {
   return here();
 }
 
-/** For tests: forget everything read from the device. */
+/**
+ * For tests: forget everything read from the device.
+ *
+ * Cut on main as an export nothing read; `browser-recovery.test.ts` reads it
+ * again, and it now clears the closed-tab history too — that history is
+ * module state, so without this one test's closes are visible to the next.
+ */
 export function forgetStrip(): void {
   held = null;
-  closed.length=0;
+  closed.length = 0;
 }
