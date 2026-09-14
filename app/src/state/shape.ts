@@ -333,9 +333,13 @@ export interface Persisted {
    * To the day, and not to the second, deliberately. The finer number is a
    * record of somebody's evenings that no screen has a use for, and rounding
    * it is the difference between a directory that knows what you have tried
-   * and a log of when you were awake. It never leaves the device — the same
-   * as everything else here — but that is not a reason to keep more of it
-   * than the feature needs.
+   * and a log of when you were awake. It does go to the account when you are
+   * signed in, the same as everything else here — the sentence that used to
+   * stand in this paragraph said the opposite, and `merge.ts` has reasoned
+   * about which of two devices' answers wins for as long as it has existed.
+   * Signed out it leaves the device no more than the rest does, and the day
+   * is still all that is kept: what a feature does not need is not stored,
+   * whichever machines end up holding it.
    */
   lastOpened: Record<string, number>;
   /**

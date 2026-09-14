@@ -49,9 +49,11 @@ import {
   inverse,
   latexFn,
   latexTransform,
+  poleText,
+  poles,
+  readFn,
   readRat,
   transform,
-  type Fn as TimeFn,
 } from './laplace';
 
 export interface Point {
@@ -132,6 +134,22 @@ export type Line =
   | { kind: 'transform'; body: Node }
   /** `L^{-1}{1/(s^2 + 4)}` — the way back, read and drawn against t. */
   | { kind: 'inverse'; body: Node }
+  /**
+   * `conv(t, e^{-t})` — one function convolved with another.
+   *
+   * A function of t like any other and drawn like one; it is its own kind
+   * because `conv` is not arithmetic `lib/calc.ts` can do at a point, and a
+   * line that read as a curve would draw nothing and say nothing.
+   */
+  | { kind: 'convolution'; body: Node }
+  /**
+   * `H = \frac{1}{s^2 + 0.3s + 1}` — a system, written as what it does.
+   *
+   * Told from a parameter called H by the same rule that tells `r = 5` from a
+   * polar curve: what is in it. An `H =` with an s on the right is a transfer
+   * function; without one it is the letter H with a value, and a slider.
+   */
+  | { kind: 'transfer'; body: Node }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -180,6 +198,12 @@ const START = /^\s*([xy])\s*('?)\s*\(([^()]*)\)\s*$/;
  */
 const LAPLACE =
   /^\s*(?:\\mathcal\s*\{\s*L\s*\}|L|laplace)\s*(\^\s*\{?\s*-\s*1\s*\}?)?\s*\\?\{([\s\S]*?)\\?\}\s*$/;
+
+/** `conv(f, g)` at the start of a line: a convolution, which is a function of t. */
+const CONVOLVE = /^\s*(?:conv|convolve|convolution)\s*\(/;
+
+/** `H` and `H(s)` on the left of an `=`: a transfer function, where there is an s on the right. */
+const TRANSFER = /^\s*H\s*(?:\(\s*s\s*\))?\s*$/;
 
 /** `f(x)` and `g(x, y)` on the left of an `=`: a definition, not a product. */
 const DEFINES = /^\s*([A-Za-z][A-Za-z0-9]*)\s*\(\s*([A-Za-z][A-Za-z0-9_]*(?:\s*,\s*[A-Za-z][A-Za-z0-9_]*)*)\s*\)\s*$/;
@@ -296,6 +320,7 @@ export function readLine(source: string): Line {
   if (at < 0) {
     const got = node(text);
     if ('says' in got) return { kind: 'fault', says: got.says };
+    if (CONVOLVE.test(text)) return { kind: 'convolution', body: got.node };
     return { kind: 'curve', of: 'y', body: got.node };
   }
 
@@ -306,6 +331,12 @@ export function readLine(source: string): Line {
   const defines = DEFINES.exec(left);
   const rhs = node(right);
   if ('says' in rhs) return { kind: 'fault', says: rhs.says };
+
+  // Before `DEFINES`, which would otherwise read `H(s) = …` as a function
+  // called H of one parameter — true, and not the reading anybody wants.
+  if (TRANSFER.test(left) && free(rhs.node).includes(FREQUENCY)) {
+    return { kind: 'transfer', body: rhs.node };
+  }
 
   const rate = RATE.exec(left);
   if (rate) {
@@ -388,12 +419,16 @@ export function missing(line: Line, scope: Scope): string[] {
    * place that knows better. Reporting `u` as a letter with no value would ask
    * somebody to give the step function a number.
    */
-  const table = (name: string) => ['u', 'step', 'heaviside', 'δ', 'delta', 'dirac', 'impulse'].includes(name);
+  const table = (name: string) =>
+    ['u', 'step', 'heaviside', 'δ', 'delta', 'dirac', 'impulse', 'conv', 'convolve', 'convolution'].includes(name);
   switch (line.kind) {
     case 'transform':
       return free(line.body, scope).filter((n) => n !== TIME && !table(n));
     case 'inverse':
+    case 'transfer':
       return free(line.body, scope).filter((n) => n !== FREQUENCY && !table(n));
+    case 'convolution':
+      return free(line.body, scope).filter((n) => n !== TIME && !table(n));
     case 'curve':
       return free(line.body, scope).filter((n) => !has(n));
     case 'relation':
@@ -437,24 +472,46 @@ export function missing(line: Line, scope: Scope): string[] {
 export function answered(
   line: Line,
   scope: Scope,
-): { latex: string; over: string; at: (v: number) => number; note?: string } | { says: string } | null {
+): { lead: string; latex: string; over: string; at: (v: number) => number; note?: string } | { says: string } | null {
+  const shown = (fn: Parameters<typeof timeAt>[0], lead: string, note?: string) => ({
+    lead,
+    latex: latexFn(fn, TIME),
+    over: TIME,
+    at: (t: number) => timeAt(fn, t),
+    note: note ?? (fn.impulses.length ? 'The impulse in it is not drawn — an impulse has no height to draw.' : undefined),
+  });
   if (line.kind === 'transform') {
     const got = transform(line.body, TIME, scope);
     if (!got.ok) return { says: got.fault };
-    return { latex: latexTransform(got.it, FREQUENCY), over: FREQUENCY, at: (s: number) => atS(got.it, s) };
+    return {
+      lead: 'It comes to',
+      latex: latexTransform(got.it, FREQUENCY),
+      over: FREQUENCY,
+      at: (s: number) => atS(got.it, s),
+      note: poleText(poles(got.it)),
+    };
   }
   if (line.kind === 'inverse') {
     const rat = readRat(line.body, FREQUENCY, scope);
     if (!rat.ok) return { says: rat.fault };
     const got = inverse(rat.it);
     if (!got.ok) return { says: got.fault };
-    const fn: TimeFn = got.it;
-    return {
-      latex: latexFn(fn, TIME),
-      over: TIME,
-      at: (t: number) => timeAt(fn, t),
-      note: fn.impulses.length ? 'The impulse in it is not drawn — an impulse has no height to draw.' : undefined,
-    };
+    return shown(got.it, 'It comes to');
+  }
+  if (line.kind === 'convolution') {
+    const got = readFn(line.body, TIME, scope);
+    if (!got.ok) return { says: got.fault };
+    return shown(got.it, 'It comes to');
+  }
+  if (line.kind === 'transfer') {
+    const rat = readRat(line.body, FREQUENCY, scope);
+    if (!rat.ok) return { says: rat.fault };
+    const got = inverse(rat.it);
+    if (!got.ok) return { says: got.fault };
+    // The impulse response, because it is `H` itself read the other way. The
+    // poles are what the sentence is for: they say how the thing behaves
+    // without anybody having to read the curve.
+    return shown(got.it, 'Kicked once, it does', poleText(poles(rat.it)));
   }
   return null;
 }
@@ -719,7 +776,9 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
       return { paths: along(at, 0, turns, Math.round(detail.steps * detail.turns)), points: [] };
     }
     case 'transform':
-    case 'inverse': {
+    case 'inverse':
+    case 'convolution':
+    case 'transfer': {
       const got = answered(line, scope);
       if (!got || 'says' in got) return EMPTY;
       const window = frame.y1 - frame.y0;
@@ -1117,6 +1176,16 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'The way back',
     says: 'The same table read the other way — a fraction in s, as the wave it was.',
     lines: ['L^{-1}{1/(s^2 + 2s + 5)}'],
+  },
+  {
+    name: 'A convolution',
+    says: 'Two functions folded together — an awkward integral, done as a product.',
+    lines: ['conv(t, e^{-t})'],
+  },
+  {
+    name: 'A system, as what it does',
+    says: 'A transfer function: its poles say whether it settles before you look.',
+    lines: ['H = \\frac{1}{s^2 + 0.3s + 1}'],
   },
   {
     name: 'A flow',

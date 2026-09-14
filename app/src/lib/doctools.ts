@@ -373,6 +373,17 @@ export function glance(doc: Pick<Doc, 'blocks'>, lines = 6): string[] {
       case 'toc':
         out.push(block.title.trim() || 'Contents');
         break;
+      /*
+       * What it is captioned, or what it is of. A thumbnail cannot draw the
+       * picture — the bytes are in IndexedDB behind an async read and this is
+       * a pure function — so it says there is one, which is the thing a blank
+       * line fails to say.
+       */
+      case 'image': {
+        const said = block.caption.trim() || block.alt.trim() || block.name.trim();
+        out.push(said ? `Picture — ${said}` : 'Picture');
+        break;
+      }
       case 'break':
         break;
     }

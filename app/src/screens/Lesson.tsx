@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { nowPlaying, playbackIs } from '../lib/device';
-import { useKeepAwake } from '../lib/awake';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
@@ -9,15 +7,11 @@ import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
-import { asset } from '../lib/asset';
+import { ask, mine, playHere, seekTo, setRate, usePlayback } from '../lib/sound.hook';
+import { clock } from '../lib/sound';
 import type { Figure, LessonCue, StudyCard } from '../lib/types';
 
 const SPEEDS = [1, 1.25, 1.5];
-
-function mmss(seconds: number): string {
-  const t = Math.max(0, Math.round(seconds));
-  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
-}
 
 /**
  * The lesson player.
@@ -81,15 +75,22 @@ export function LessonPlayer() {
   const unit = state.lessonUnit;
   const lesson = lessons[unit];
 
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [time, setTime] = useState(0);
-  const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
+  /*
+   * The element is not here. It is `components/Sound.tsx`, mounted above every
+   * screen, because a screen is unmounted the moment you look at another tab
+   * and a lesson is forty minutes long. This screen is a view on it and a set
+   * of controls for it: the clock below is the player's, not its own.
+   */
+  const { time: at, going, rate: speed } = usePlayback();
   const [extra, setExtra] = useState(0);
-
-  // A lesson is minutes of audio with slides that change under it. The screen
-  // locking halfway through is the whole reason people give up on it.
-  useKeepAwake(playing);
+  /*
+   * Whether the sound running is this lesson, in this tab. Another tab may
+   * own the player — that is the whole point of moving it — and its clock is
+   * not the one to draw under these slides.
+   */
+  const ours = lesson ? mine(lesson.file) : false;
+  const time = ours ? at : 0;
+  const playing = ours && going;
 
   const cues: LessonCue[] = useMemo(() => lesson?.cues ?? [], [lesson]);
   const index = useMemo(() => {
@@ -131,48 +132,29 @@ export function LessonPlayer() {
   }, [unit, onUnit, spare.length]);
 
   const seek = useCallback((seconds: number) => {
-    const el = audioRef.current;
-    if (!el) return;
-    el.currentTime = Math.max(0, seconds);
-    setTime(el.currentTime);
-    void el.play();
+    seekTo(Math.max(0, seconds));
   }, []);
 
-  // The lock screen, the headphone button and the car stereo. A lesson is
-  // exactly the thing you listen to walking across campus with the phone in a
-  // pocket, and pausing one used to mean taking it out. See `lib/device.ts`.
+  /*
+   * The lock screen, the speed and the wake lock all moved up to
+   * `components/Sound.tsx` with the element. They have to outlive this
+   * screen: pausing a lesson from a pocket has to work while you are looking
+   * at the calendar, which is precisely when it is in a pocket.
+   *
+   * What stays here is the tail. A lesson that has played out and has beats
+   * added since steps into the first of them, and this is the only place that
+   * knows there are any.
+   */
+  const ending = lesson ? time >= lesson.seconds - 0.5 : false;
   useEffect(() => {
-    if (!lesson) return;
-    nowPlaying(
-      { title: lesson.title || `Unit ${unit + 1}`, course: guide.code, album: guide.name },
-      {
-        play: () => void audioRef.current?.play(),
-        pause: () => audioRef.current?.pause(),
-        seekbackward: () => seek((audioRef.current?.currentTime ?? 0) - 15),
-        seekforward: () => seek((audioRef.current?.currentTime ?? 0) + 15),
-      },
-    );
-    // Cleared on the way out, so a lesson you have left is not still sitting
-    // on the lock screen.
-    return () => nowPlaying(null);
-  }, [lesson, unit, guide.code, guide.name, seek]);
-
-  useEffect(() => {
-    playbackIs(playing ? 'playing' : 'paused');
-  }, [playing]);
-
-  // Speed is a player setting, not a per-file one, so it has to be re-applied
-  // whenever the element is swapped for another unit's audio.
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.playbackRate = speed;
-  }, [speed, unit]);
+    if (ending && added.length > 0) setExtra((was) => (was === 0 ? 1 : was));
+  }, [ending, added.length]);
 
   // A different unit is a different lesson: back to the start, and out of the
   // added-slides tail. Done during render, so there is no second pass.
   const [playingUnit, setPlayingUnit] = useState(unit);
   if (playingUnit !== unit) {
     setPlayingUnit(unit);
-    setTime(0);
     setExtra(0);
   }
 
@@ -200,7 +182,7 @@ export function LessonPlayer() {
 
   const cue = cues[index];
   const pct = lesson.seconds ? Math.min(100, (time / lesson.seconds) * 100) : 0;
-  const finished = time >= lesson.seconds - 0.5;
+  const finished = ending;
   const showingExtra = finished && added.length > 0 && extra > 0;
   const beat = showingExtra ? added[Math.min(extra - 1, added.length - 1)] : null;
 
@@ -309,7 +291,7 @@ export function LessonPlayer() {
           marginTop: 5,
         }}
       >
-        <span>{mmss(time)}</span>
+        <span>{clock(time)}</span>
         <span>{lesson.len}</span>
       </div>
 
@@ -326,10 +308,20 @@ export function LessonPlayer() {
           type="button"
           className="btn btn-primary"
           onClick={() => {
-            const el = audioRef.current;
-            if (!el) return;
-            if (el.paused) void el.play();
-            else el.pause();
+            // Pressing Play is what takes the player — not arriving on the
+            // screen. Opening a lesson to see what is in it should not start
+            // talking, and claiming on mount would also stop whatever another
+            // tab was already playing.
+            if (!ours) {
+              playHere({
+                src: lesson.file,
+                title: lesson.title || `Unit ${unit + 1}`,
+                course: guide.code,
+                album: guide.name,
+              });
+              ask('play');
+            } else if (playing) ask('pause');
+            else ask('play');
           }}
           style={{
             flex: 1,
@@ -355,28 +347,13 @@ export function LessonPlayer() {
         <button
           type="button"
           className="btn btn-secondary"
-          onClick={() => setSpeed(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length])}
+          onClick={() => setRate(SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length])}
           style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-sm)', width: 54, flex: 'none' }}
         >
           {speed}×
         </button>
       </div>
 
-      <audio
-        ref={audioRef}
-        preload="metadata"
-        src={asset(lesson.file)}
-        onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => {
-          setPlaying(false);
-          if (added.length > 0 && extra === 0) setExtra(1);
-        }}
-        style={{ display: 'none' }}
-      >
-        <track kind="captions" />
-      </audio>
 
       {added.length > 0 && (
         <div
@@ -426,7 +403,7 @@ export function LessonPlayer() {
               color: i === index ? 'var(--app-accent)' : 'inherit',
             }}
           >
-            {mmss(c.at)}
+            {clock(c.at)}
           </span>
           <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>{c.text}</span>
         </button>

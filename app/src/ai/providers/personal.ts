@@ -104,7 +104,7 @@ export const me: Provide = (look) => {
    * What the directory knew, now that the directory is a tab of this screen.
    *
    * The registry itself is already in the system prompt — see `PICK.always` in
-   * `lib/context.ts` — so naming fifty screens here would spend two thousand
+   * `lib/context.ts` — so naming sixty screens here would spend two thousand
    * tokens on what the model has been told twice. What it does not have is
    * which of them this student has opened, which is the one thing the
    * Everything screen's own provider sent and the one thing worth keeping.

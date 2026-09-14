@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CLAIMS, NEVER_SYNCED, SUPPORT, SYNCED_FIELDS, region } from './privacy';
+import { CLAIMS, NEVER_SYNCED, SUPPORT, SYNCED_FIELDS, SYNC_GROUPS, whatSyncs, region } from './privacy';
 import { USAGE_KEY } from './usage';
 import { DEFAULT_PERSISTED, initialEphemeral, pickPersisted, type State } from '../state/shape';
 
@@ -150,6 +150,50 @@ describe('"delete my account" really means every row', () => {
     const { OWNED_TABLES } = await import('./cloud');
     for (const t of ['notes', 'tasks', 'appointments', 'sittings', 'calendar_feeds']) {
       expect(OWNED_TABLES, t).toContain(t);
+    }
+  });
+});
+
+describe('the page cannot say less than the sync sends', () => {
+  /**
+   * The failure this exists for.
+   *
+   * "Your courses and their deadlines… your study card history, and your
+   * settings. That is your academic record" was true of the app that wrote
+   * it. Since then the sync has carried everything somebody writes in Write,
+   * Sheets, Decks and the graphing workspace, their drafted email, what they
+   * have recorded a term costing, their degree plan and the people they have
+   * logged — all of it, because the payload is `pickPersisted` whole. A
+   * privacy page that understates what leaves the device is the one kind of
+   * inaccuracy nobody can catch by using the app.
+   */
+  const sent = () => Object.keys(pickPersisted(state()));
+
+  it('names every field the sync carries', () => {
+    const named = new Set(SYNC_GROUPS.flatMap((g) => g.keys));
+    const unnamed = sent().filter((f) => !named.has(f));
+    expect(unnamed).toEqual([]);
+  });
+
+  it('names nothing the sync does not carry', () => {
+    const fields = new Set(sent());
+    const stale = SYNC_GROUPS.flatMap((g) => g.keys).filter((f) => !fields.has(f));
+    expect(stale).toEqual([]);
+  });
+
+  it('puts each field in one group, so the sentence does not say it twice', () => {
+    const all = SYNC_GROUPS.flatMap((g) => g.keys);
+    expect(all.length).toBe(new Set(all).size);
+  });
+
+  it('is the sentence the page prints, rather than a second copy of it', () => {
+    const page = CLAIMS.find((c) => c.heading === 'What syncs when you are signed in');
+    expect(page?.body).toContain(whatSyncs());
+    // The specific words somebody would be surprised by, rather than a
+    // spot-check of the mechanism: these are the ones the old sentence left
+    // out, and a rewrite that drops them is a rewrite that understates again.
+    for (const word of ['spreadsheets', 'graphs', 'email', 'costing', 'degree']) {
+      expect(page?.body, word).toContain(word);
     }
   });
 });

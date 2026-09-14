@@ -105,7 +105,7 @@ describe('measuring the page', () => {
 
 describe('what reaches the Word file', () => {
   it('writes the font, the size and the spacing the layout asked for', () => {
-    const styles = parts(doc({ layout: fromStyle('mla') }))['word/styles.xml'];
+    const styles = parts(doc({ layout: fromStyle('mla') })).text['word/styles.xml'];
     expect(styles).toContain('w:ascii="Times New Roman"');
     // 12 point is 24 half-points, and double spacing is 12 × 20 × 2.
     expect(styles).toContain('<w:sz w:val="24"/>');
@@ -113,12 +113,12 @@ describe('what reaches the Word file', () => {
   });
 
   it('drops the gap between paragraphs when the spacing is not single', () => {
-    expect(parts(doc({ layout: fromStyle('mla') }))['word/styles.xml']).toContain('w:after="0"');
-    expect(parts(doc({ layout: fromStyle('own') }))['word/styles.xml']).toContain('w:after="160"');
+    expect(parts(doc({ layout: fromStyle('mla') })).text['word/styles.xml']).toContain('w:after="0"');
+    expect(parts(doc({ layout: fromStyle('own') })).text['word/styles.xml']).toContain('w:after="160"');
   });
 
   it('sets the page to the paper and the margins chosen', () => {
-    const a4 = parts(doc({ layout: adjusted(fromStyle('own'), { paper: 'a4', margin: 1.5 }) }));
+    const a4 = parts(doc({ layout: adjusted(fromStyle('own'), { paper: 'a4', margin: 1.5 }) })).text;
     expect(a4['word/document.xml']).toContain('w:w="11909"');
     expect(a4['word/document.xml']).toContain('w:top="2160"');
   });
@@ -129,28 +129,28 @@ describe('what reaches the Word file', () => {
    * header. Word reports the whole document as unreadable.
    */
   it('writes a header part, its type and its relationship together, or none of them', () => {
-    const numbered = parts(doc({ layout: fromStyle('apa') }));
+    const numbered = parts(doc({ layout: fromStyle('apa') })).text;
     expect(numbered['word/header1.xml']).toContain('PAGE');
     expect(numbered['[Content_Types].xml']).toContain('/word/header1.xml');
     expect(numbered['word/_rels/document.xml.rels']).toContain('Target="header1.xml"');
     expect(numbered['word/document.xml']).toContain('<w:headerReference');
 
-    const plain = parts(doc({ layout: fromStyle('own') }));
+    const plain = parts(doc({ layout: fromStyle('own') })).text;
     expect(plain['word/header1.xml']).toBeUndefined();
     expect(plain['[Content_Types].xml']).not.toContain('header1.xml');
     expect(plain['word/document.xml']).not.toContain('<w:headerReference');
   });
 
   it('puts the surname in front of the number when one is asked for', () => {
-    const head = parts(doc({ layout: adjusted(fromStyle('mla'), { runningHead: 'Rubin' }) }));
+    const head = parts(doc({ layout: adjusted(fromStyle('mla'), { runningHead: 'Rubin' }) })).text;
     expect(head['word/header1.xml']).toContain('Rubin');
   });
 
   it('breaks the page after the title when the title has a page of its own', () => {
-    expect(parts(doc({ layout: fromStyle('apa') }))['word/document.xml']).toContain(
+    expect(parts(doc({ layout: fromStyle('apa') })).text['word/document.xml']).toContain(
       'w:type="page"',
     );
-    expect(parts(doc({ layout: fromStyle('mla') }))['word/document.xml']).not.toContain(
+    expect(parts(doc({ layout: fromStyle('mla') })).text['word/document.xml']).not.toContain(
       'w:type="page"',
     );
   });

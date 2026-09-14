@@ -13,7 +13,7 @@
  * ## Built on Blueprint, not on `.card`
  *
  * The handoff says to build on `Blueprint` and `.card`, describing both as in
- * real use. `Blueprint` is — sixty-nine files — and the frame, the marks and
+ * real use. `Blueprint` is — eighty-three files — and the frame, the marks and
  * the `plain` escape are all reused below.
  *
  * `.card` is not, and could not be. It paints `--color-surface`, which is a

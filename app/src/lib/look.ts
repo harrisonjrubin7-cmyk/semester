@@ -716,7 +716,7 @@ export function feedStyleOf(id: string | undefined): string {
  *
  * Genuinely different habits rather than four skins: the bar suits somebody
  * who lives in four screens, the feed somebody who wants the day in one
- * scroll, the springboard somebody who has forty-six screens and would rather
+ * scroll, the springboard somebody who has sixty screens and would rather
  * see them than remember which shelf they are on, the shelves somebody who
  * wants the shelf and its screens visible at once.
  */

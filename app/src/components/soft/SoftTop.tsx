@@ -1,7 +1,7 @@
 /**
  * The hero and the stat row, for whichever screen is open.
  *
- * One component in `App.tsx` rather than a block inside fifty-five screen
+ * One component in `App.tsx` rather than a block inside sixty screen
  * files. Which facts to show is `lib/softtop.ts`; this is only the wiring —
  * it reads the store, hands the registry the state, and renders what comes
  * back.

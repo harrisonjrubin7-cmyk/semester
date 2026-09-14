@@ -82,7 +82,7 @@ export function tierFor(width: number): Tier {
  *
  * Two queries rather than a resize listener: `matchMedia` fires only when a
  * boundary is crossed, so dragging a window edge across 900px does not
- * re-render fifty screens on every frame.
+ * re-render sixty screens on every frame.
  */
 export function useTier(): Tier {
   const desktop = useMedia(DESKTOP);

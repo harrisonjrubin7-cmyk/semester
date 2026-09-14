@@ -19,6 +19,7 @@
 import type { Catalog } from '../data/catalog';
 import { dateToIso, isoToDate, realDate } from './date';
 import type { Appointment, DatedItem, Note, PersonalTask } from './types';
+import type { MailDraft } from './mailbox';
 import { standingOf, type DoneMap } from './standing';
 import { NO_TIME } from './duetime';
 import type { State } from '../state/shape';
@@ -77,8 +78,26 @@ export function taskCsv(tasks: PersonalTask[], code: (id: string) => string) {
 
 // ── Markdown ─────────────────────────────────────────────────────────────
 
-export function notesMarkdown(notes: Note[], code: (id: string) => string): string {
-  if (notes.length === 0) return '# Notes\n\nNothing written yet.\n';
+/**
+ * Everything you wrote, which now includes what you wrote to a professor.
+ *
+ * `drafts` is a parameter rather than a second file because the Export screen
+ * has promised for as long as the mail composer has existed that Notes is
+ * "everything you wrote, including transcripts and email drafts" — and the
+ * transcripts were true, because a kept transcript is a note, while the
+ * drafts were not: they are their own collection and nothing exported them.
+ * A half-written message asking for an extension is exactly the text somebody
+ * would look for in that file.
+ *
+ * Optional, so the two callers that have only notes — and the tests about
+ * notes — read the way they did.
+ */
+export function notesMarkdown(
+  notes: Note[],
+  code: (id: string) => string,
+  drafts: MailDraft[] = [],
+): string {
+  if (notes.length === 0 && drafts.length === 0) return '# Notes\n\nNothing written yet.\n';
   const parts = notes.map((n) => {
     // The day the student wrote it, on their clock. `toISOString` would give
     // the UTC day, which is tomorrow's date for anything written in the
@@ -87,7 +106,19 @@ export function notesMarkdown(notes: Note[], code: (id: string) => string): stri
     const tag = n.courseId ? ` · ${code(n.courseId)}` : '';
     return `## ${n.title || 'Untitled'}\n\n_${when}${tag}_\n\n${n.body.trim() || '(empty)'}\n`;
   });
-  return `# Notes\n\n${parts.join('\n---\n\n')}`;
+  const written = parts.length > 0 ? `# Notes\n\n${parts.join('\n---\n\n')}` : '# Notes\n\nNothing written yet.\n';
+  if (drafts.length === 0) return written;
+
+  const composed = drafts.map((d) => {
+    const when = new Date(d.updated).toISOString().slice(0, 10);
+    const tag = d.courseId ? ` · ${code(d.courseId)}` : '';
+    // Said plainly, because a draft that was handed to a mail app may or may
+    // not have been sent from it — the app saw it leave and nothing after.
+    const stage = d.handed ? 'opened in your mail app' : 'not sent';
+    const to = d.to.trim() ? `To: ${d.to.trim()}` : 'No recipient yet';
+    return `## ${d.subject.trim() || 'No subject'}\n\n_${when}${tag} · ${stage}_\n\n${to}\n\n${d.body.trim() || '(empty)'}\n`;
+  });
+  return `${written}\n\n# Email drafts\n\n${composed.join('\n---\n\n')}`;
 }
 
 export function coursesMarkdown(cat: Catalog, items: DatedItem[]): string {
@@ -654,6 +685,24 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valu
   { key: 'sheets', label: 'spreadsheets', array: true },
   { key: 'decks', label: 'presentations', array: true },
   { key: 'equations', label: 'equations', array: true },
+  /*
+   * The graphing workspace and the mail composer, which arrived after this
+   * list did.
+   *
+   * Both store work a person typed — a curve they built up line by line, a
+   * message to a professor they are part way through — and both were in the
+   * store, in the sync and on the Data screen while being in neither half of
+   * the backup. "The whole account in one file", on the Export screen, was
+   * short by two features, and the failure was silent in the direction that
+   * matters: the file restored cleanly and the graphs were not in it.
+   *
+   * This is the `feeds` gap above happening again for the same reason — a
+   * feature added, the two lists not — which is why `export.test.ts` now
+   * holds every persisted field against these lists rather than trusting
+   * that whoever adds the next one remembers.
+   */
+  { key: 'plots', label: 'graphs', array: true },
+  { key: 'mailDrafts', label: 'email drafts', array: true },
   { key: 'folders', label: 'folders', array: true },
   { key: 'sources', label: 'sources', array: true },
   { key: 'sittings', label: 'practice papers', array: true },
@@ -700,9 +749,94 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valu
   { key: 'started', label: 'work start history', array: false },
   { key: 'term', label: 'current term', array: false, valueType: 'string' },
   { key: 'schoolId', label: 'school selection', array: false, valueType: 'string' },
+  { key: 'myName', label: 'your name', array: false, valueType: 'string' },
   { key: 'accessLeadDays', label: 'testing lead time', array: false, valueType: 'number' },
 
 ];
+
+/**
+ * What a backup deliberately leaves behind, and why each one.
+ *
+ * The list above says what a person's work is. This says what the rest of the
+ * store is, so that "not in the backup" is a decision somebody wrote down
+ * rather than a field nobody thought about — which is what `plots` and
+ * `mailDrafts` were for as long as those two features have existed.
+ *
+ * `export.test.ts` holds every field `pickPersisted` returns against these two
+ * lists and fails on a field in neither. A collection added next term cannot
+ * quietly miss the backup again: it fails the suite until somebody says which
+ * of the two it is.
+ */
+export const NOT_IN_BACKUP: Record<string, string> = {
+  // How the app looks and is arranged. A backup carries the semester, not the
+  // phone it was taken on — and restoring somebody's type size onto a laptop
+  // is the one thing that makes a restore feel like it went wrong.
+  accent: 'the accent colour, chosen per device',
+  badges: 'whether counts appear on the tabs',
+  bodyface: 'the face everything is read in',
+  corners: 'how square the edges are',
+  courseColours: 'the colour each course is drawn in',
+  density: 'how much space sits between rows',
+  feed: 'the shape of Today',
+  ground: 'the background the app is drawn on',
+  hue: 'the tint behind the ground',
+  iconShape: 'how the icons are drawn',
+  labels: 'whether the tab bar names its tabs',
+  lineHeight: 'how far apart the lines sit',
+  readingWidth: 'how wide a paragraph gets',
+  shell: 'how a screen is arranged once you are on it',
+  textSize: 'the size text is set at here',
+  tone: 'how much the app explains itself',
+  typeface: 'the heading face',
+
+  // Where things sit. Each is a choice about this device's navigation, and
+  // every one of them is remade in a few seconds on a new one.
+  boardOrder: 'the order of the springboard pages',
+  courseOrder: 'the order the courses are listed in',
+  directory: 'how the directory is drawn',
+  favourites: 'the screens pinned to hand',
+  feedHidden: 'which calendars are hidden from view',
+  feedOrder: 'the order the calendars are listed in',
+  groupOrder: 'the order of the shelves',
+  keyOpen: 'whether a disclosure was left open',
+  mailPane: 'which mail pane was last open',
+  nav: 'which navigation the app draws',
+  shortcuts: 'the shortcuts put on Today',
+  tabs: 'which tabs are in the bar',
+  waysOpen: 'whether a disclosure was left open',
+  yours: 'how your own lists are grouped',
+
+  // Settings that are about this device or this browser rather than about the
+  // semester. Reminders are the clearest: the permission belongs to the
+  // browser, and a restored switch claiming reminders are on would be a lie
+  // on a device that has never been asked.
+  controls: 'which controls the editors show',
+  geocode: 'whether place lookup is switched on, which is off until you say so',
+  notifs: 'which reminders are on, which the browser grants per device',
+  picked: 'which parts of a syllabus the import reads',
+  quiet: 'the hours reminders are held back',
+  role: 'which role the app is being used as',
+  showAll: 'whether the screens held back on a first morning are shown',
+
+  // Facts about this install, true of the device and not of the person. A
+  // restore that carried these would describe the machine the backup came
+  // from.
+  cleared: 'whether the sample term has been cleared',
+  countScreens: 'whether screen opens are counted at all',
+  lastOpened: 'when each screen was last opened',
+  lastSync: 'when this device last reached the account',
+  recent: 'the screens opened lately',
+  registered: 'whether this device registered for reminders',
+  schemaVersion: 'the shape the file is in, written by the backup itself',
+  seenOnboarding: 'whether onboarding has run here',
+  visited: 'which screens have been opened here',
+
+  // Held back for a reason of its own, one each.
+  feedEvents: 'the events pulled from your calendars, fetched again from the subscriptions the file does carry',
+  mailMarks: 'read and flagged marks on messages the file does not carry',
+  mathGiven: 'the values the calculator is currently holding, not a saved thing',
+  mathWorking: 'what is currently typed into the calculator, not a saved thing',
+};
 
 export function readBackup(text: string): Restore {
   let parsed: unknown;
@@ -805,6 +939,8 @@ export function backupOf(state: State) {
     sheets: state.sheets,
     decks: state.decks,
     equations: state.equations,
+    plots: state.plots,
+    mailDrafts: state.mailDrafts,
     folders: state.folders,
     sources: state.sources,
     sittings: state.sittings,
@@ -851,6 +987,7 @@ export function backupOf(state: State) {
     started: state.started,
     term: state.term,
     schoolId: state.schoolId,
+    myName: state.myName,
     accessLeadDays: state.accessLeadDays,
     sample: state.sample,
   };

@@ -451,3 +451,57 @@ describe('a Laplace transform on the list', () => {
     expect(answered(of("y' = y"), {})).toBeNull();
   });
 });
+
+/**
+ * A convolution and a transfer function, off the same list.
+ *
+ * Both are told from ordinary lines by what is written in them rather than by
+ * a kind somebody picks first, which is the rule the whole list runs on — and
+ * both of those tellings can go wrong quietly, so they are what this pins.
+ */
+describe('a convolution on the list', () => {
+  it('is its own kind rather than a curve that draws nothing', () => {
+    expect(of('conv(t, e^{-t})').kind).toBe('convolution');
+    expect(of('convolve(1, 1)').kind).toBe('convolution');
+  });
+
+  it('says what it comes to, and draws it against t', () => {
+    const line = of('conv(t, e^{-t})');
+    const got = answered(line, {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.over).toBe('t');
+    expect(got.at(2)).toBeCloseTo(2 - 1 + Math.exp(-2), 9);
+    const drawn = draw(line, {}, { x0: 0, x1: 6, y0: -1, y1: 6 });
+    for (const p of drawn.paths.flat()) expect(p.y).toBeCloseTo(got.at(p.x), 10);
+  });
+
+  it('asks for nothing it supplies itself', () => {
+    expect(missing(of('conv(t, e^{-t})'), {})).toEqual([]);
+    expect(missing(of('conv(t, k e^{-t})'), {})).toEqual(['k']);
+  });
+});
+
+describe('a transfer function on the list', () => {
+  it('is told from a letter with a value by what is on the right of the =', () => {
+    expect(of('H = 1/(s^2 + 0.3s + 1)').kind).toBe('transfer');
+    expect(of('H(s) = 1/(s + 1)').kind).toBe('transfer');
+    // No s in it, so it is the letter H with a value — and a slider.
+    expect(of('H = 4')).toMatchObject({ kind: 'value', name: 'H' });
+  });
+
+  it('is read as the impulse response, with what its poles say', () => {
+    const got = answered(of('H = 1/(s^2 + 4)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.latex).toBe('0.5\\sin(2t)');
+    expect(got.over).toBe('t');
+    expect(got.note).toMatch(/neither settles nor runs away/);
+  });
+
+  it('says it settles when it settles, and runs away when it does', () => {
+    const steady = answered(of('H = 1/(s^2 + 0.3s + 1)'), {});
+    const away = answered(of('H = 1/(s - 2)'), {});
+    if (!steady || 'says' in steady || !away || 'says' in away) throw new Error('no answer');
+    expect(steady.note).toMatch(/so it settles/);
+    expect(away.note).toMatch(/runs away/);
+  });
+});
