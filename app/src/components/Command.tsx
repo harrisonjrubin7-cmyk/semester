@@ -67,6 +67,7 @@ import { secondLine } from '../lib/dim';
 import { AskIcon, ClocksIcon, Search as SearchIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import { TabStrip } from './Tabs';
+import { BookmarkChips } from './Bookmarks';
 import { here, openInNew, record, recordSearch, useStrip } from '../lib/browser.hook';
 import { justGo } from '../lib/browser';
 import { readSearches, remember, forget, suggestions, writeSearches } from '../lib/typeahead';
@@ -463,6 +464,14 @@ export function Command({ onClose }: { onClose: () => void }) {
       }}
     >
       <TabStrip inOverlay searching={sent} onOpened={onClose} onBlank={blank} onDismiss={onClose} />
+
+      {/* The bookmarks, under the strip, because this overlay is how every
+          layout but the workspace reaches its tabs — and a phone that could
+          save a place but never open one would be half a feature. Nothing is
+          drawn until something has been starred. */}
+      <div style={{ padding: 'var(--sp-2) var(--sp-7) 0' }}>
+        <BookmarkChips onOpened={onClose} />
+      </div>
 
       {/* The box. On the search page it is drawn again, in the middle — this
           one is the results page's, the way a search engine keeps the query

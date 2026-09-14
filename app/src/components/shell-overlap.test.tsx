@@ -11,6 +11,7 @@ import {Command} from './Command';
 import {AllApps} from './nav/AllApps';
 import {QuickAdd} from './QuickAdd';
 import {forgetStrip,here,strip} from '../lib/browser.hook';
+import {MAX_TABS} from '../lib/browser';
 import {type State,DEFAULT_PERSISTED,initialEphemeral} from '../state/shape';
 import {reducer} from '../state/reducer';
 
@@ -90,7 +91,9 @@ it('offers recovery of the closed tab in the organizer',()=>{
   expect(host.querySelector('[data-work="profile"]')).not.toBeNull();
 });
 it('disables new-result tabs at capacity while keeping normal search usable',()=>{
-  for(let i=1;i<10;i++)click('Add new tab');
+  // To the cap, whatever it is — this used to say 10 and stopped reaching
+  // capacity the day the cap moved.
+  for(let i=1;i<MAX_TABS;i++)click('Add new tab');
   click('Your profile');click('Legacy search entry');type('calendar');const before=strip();
   const newButtons=[...host.querySelectorAll<HTMLButtonElement>('.g-result-new')];
   expect(newButtons.length).toBeGreaterThan(0);expect(newButtons.every(b=>b.disabled)).toBe(true);

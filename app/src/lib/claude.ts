@@ -97,6 +97,10 @@ export function settings(): ClaudeSettings {
 }
 
 export function saveSettings(next: ClaudeSettings): void {
+  // A setting changed here is a fresh start: whatever a proxy did to the last
+  // question, the person has just been to the screen about it and may well
+  // have fixed it. See `proxyDown`.
+  proxyDown = false;
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
   } catch {
@@ -137,6 +141,60 @@ export function envProxy(): string {
 }
 
 /**
+ * Why what is in the proxy box cannot be a proxy — empty when it can.
+ *
+ * The box takes an address, and the box above it takes a key, and they sit
+ * one above the other on a screen full of long identifiers. Anything else
+ * that lands in here — a key, a workspace or organisation id, an account
+ * number copied off the console — used to be treated as an address and win
+ * the route, because winning the route was decided by the box being filled
+ * in rather than by what was in it. A relative address is what a browser
+ * makes of `wrkspc_01GN…`, so every question went to the page's own host,
+ * which answers a POST with 405 and no idea what was being asked. A key
+ * sitting right above it worked perfectly and was never reached.
+ *
+ * So: an address is `https://…`, `http://…` for something on this machine,
+ * or a path beginning `/` for something served alongside the page — the shape
+ * `VITE_CLAUDE_PROXY` takes in development. Anything else is a mistake, and
+ * the sentence returned here says which mistake it is.
+ */
+export function proxyProblem(value: string): string {
+  const address = value.trim();
+  if (!address) return '';
+  if (/^\//.test(address)) return '';
+  if (/^https?:\/\/[^\s/]+/i.test(address)) return '';
+  if (/^sk-ant-/i.test(address)) {
+    return 'That is a key, not a proxy. Put it in the box above and leave this one empty.';
+  }
+  if (/^(wrkspc|org|user|acct|apikey)[-_]/i.test(address)) {
+    return (
+      'That is an id from the console, not an address. Nothing here needs one: leave this ' +
+      'box empty and the key above is used.'
+    );
+  }
+  return (
+    'A proxy is a server you point the app at, so this has to be an address — https://… , or ' +
+    '/something served alongside this page. Leave it empty to use the key above.'
+  );
+}
+
+/**
+ * Set for the session when the proxy answers as something that does not
+ * forward to the API at all — a 404, a 405, a 501.
+ *
+ * The point is the afternoon it saves: a proxy that is wrong is wrong on
+ * every question, and the key typed on the same screen answers all of them.
+ * Same shape as `structuredRefused` below, and cleared by `saveSettings`,
+ * because somebody who has just been to that screen may have fixed it.
+ */
+let proxyDown = false;
+
+/** The address typed on this device, if it is one. */
+function deviceProxy(s: ClaudeSettings): string {
+  return proxyProblem(s.proxy) ? '' : s.proxy.trim();
+}
+
+/**
  * The proxy in force: this device's if one was typed, otherwise this build's.
  *
  * Device before build is the same rule as everywhere else here — something a
@@ -145,7 +203,17 @@ export function envProxy(): string {
  * once in a file should not quietly take over from a key set on purpose.
  */
 export function proxyUrl(s = settings()): string {
-  return s.proxy.trim() || envProxy();
+  return deviceProxy(s) || envProxy();
+}
+
+/** Whether the proxy is the one a question would actually take. */
+function proxyAnswers(s: ClaudeSettings): boolean {
+  if (!proxyUrl(s)) return false;
+  // Only stood down where there is something else to stand down to. A proxy
+  // that failed and no key to fall back on still gets the question, so the
+  // failure it reports is the proxy's own rather than "no key yet".
+  if (proxyDown && (s.apiKey.trim() || (sessionToken && sharedEndpoint()))) return false;
+  return true;
 }
 
 export function configured(s = settings()): boolean {
@@ -159,9 +227,9 @@ export function route(s = settings()): 'proxy' | 'shared' | 'own' | 'openai' | '
   // is no proxy and no shared key behind it, because the Edge Function holds
   // an Anthropic key and nothing else.
   if (s.provider === 'openai') return s.openaiKey.trim() ? 'openai' : 'none';
-  if (s.proxy.trim()) return 'proxy';
+  if (deviceProxy(s) && proxyAnswers(s)) return 'proxy';
   if (s.apiKey.trim()) return 'own';
-  if (envProxy()) return 'proxy';
+  if (proxyAnswers(s)) return 'proxy';
   if (sessionToken && sharedEndpoint()) return 'shared';
   return 'none';
 }
@@ -179,7 +247,7 @@ export function routeLabel(s = settings()): string {
     case 'shared':
       return 'the shared key';
     case 'proxy':
-      return s.proxy.trim() ? 'your proxy' : 'the proxy this build points at';
+      return deviceProxy(s) ? 'your proxy' : 'the proxy this build points at';
     case 'openai':
       return 'your OpenAI key';
     case 'own':
@@ -286,7 +354,12 @@ type Route = 'proxy' | 'shared' | 'own' | 'openai' | 'none';
 // model, once there is half an answer to describe.
 export { NOTHING_ARRIVED };
 
-export function explainAskError(taking: Route, status: number, detail: string): string {
+export function explainAskError(
+  taking: Route,
+  status: number,
+  detail: string,
+  addressUsed = '',
+): string {
   if (taking === 'shared') {
     if (status === 404 || /function was not found|not_found/i.test(detail)) {
       return (
@@ -308,7 +381,24 @@ export function explainAskError(taking: Route, status: number, detail: string): 
   if (taking === 'own' && status === 401) {
     return `${detail}\n\nThat key was refused. Check it under Settings — a key is not the same as a project id.`;
   }
-  if (taking === 'proxy' && (status === 404 || status === 502)) {
+  if (taking === 'proxy' && (status === 404 || status === 405 || status === 501)) {
+    /*
+     * The host answered, and it is not a proxy.
+     *
+     * 405 is what a static host — GitHub Pages, a preview server — says to a
+     * POST, and it is exactly what a proxy box holding something that is not
+     * an address produces: the browser reads it as a path on this site, so
+     * the question goes to whatever is serving the page. Naming the address
+     * is the whole fix, because seeing it written out is usually the moment
+     * it becomes obvious.
+     */
+    return (
+      `${detail}\n\nNothing at ${addressUsed || 'that address'} forwards to the API — it answered ` +
+      `${status} rather than Claude. Clear the proxy box under Settings → The assistant to use your ` +
+      'key instead, or correct the address.'
+    );
+  }
+  if (taking === 'proxy' && status === 502) {
     return `${detail}\n\nThe proxy did not answer at /v1/messages. Check the address under Settings.`;
   }
   if (status === 529 || status === 429) {
@@ -791,7 +881,23 @@ export async function ask(options: AskOptions): Promise<string> {
       return ask(options);
     }
 
-    throw new Error(explainAskError(taking, res.status, detail));
+    /*
+     * A proxy that is not one, with a key sitting right there.
+     *
+     * 404, 405 and 501 all mean the same thing here: something answered and
+     * it does not forward to the API. That is a permanent fact about the
+     * address, not a bad moment, so every question after this one would fail
+     * the same way — while a key typed on the same screen answers all of
+     * them. Remembered for the session and the question asked again, so the
+     * student gets an answer rather than a number. `saveSettings` clears it,
+     * because going back to that screen is how a proxy gets fixed.
+     */
+    if (taking === 'proxy' && !proxyDown && [404, 405, 501].includes(res.status)) {
+      proxyDown = true;
+      if (route(s) !== 'proxy') return ask(options);
+    }
+
+    throw new Error(explainAskError(taking, res.status, detail, url));
   }
 
   const reader = res.body.getReader();

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  GROUP_TONES,
   MAX_TABS,
   NEW_TAB,
   PLACE_ACTIONS,
@@ -8,18 +9,29 @@ import {
   add,
   blank,
   close,
+  closeGroup,
+  collapse,
   current,
+  dissolve,
   dump,
   fresh,
+  freeTone,
+  joinGroup,
   justGo,
+  lanes,
+  leaveGroup,
   load,
+  makeGroup,
   openBeside,
   placeFor,
   read,
+  renameGroup,
   select,
+  tidy,
   visit,
   write,
   type Strip,
+  type TabGroup,
   type Where,
 } from './browser';
 import { actionsFor } from './openhit';
@@ -40,7 +52,7 @@ import type { Screen } from './types';
 const known = (screen: string) =>
   ['home', 'calendar', 'courses', 'study', 'mine', 'me'].includes(screen);
 
-const strip = (screens: (Screen | null)[], at = 0): Strip => ({
+const strip = (screens: (Screen | null)[], at = 0, groups: TabGroup[] = []): Strip => ({
   tabs: screens.map((screen, i) => ({
     id: `t${i}`,
     screen,
@@ -48,6 +60,7 @@ const strip = (screens: (Screen | null)[], at = 0): Strip => ({
     place: screen ? justGo(screen) : [],
   })),
   at,
+  groups,
 });
 
 const names = (s: Strip) => s.tabs.map((t) => t.screen ?? NEW_TAB);
@@ -157,7 +170,7 @@ describe('what survives being put away', () => {
   });
 
   it('keeps a new tab, which has no screen to check', () => {
-    const s = load(dump({ tabs: [fresh('a')], at: 0 }), known);
+    const s = load(dump({ tabs: [fresh('a')], at: 0, groups: [] }), known);
     expect(current(s).screen).toBeNull();
     expect(current(s).title).toBe(NEW_TAB);
   });
@@ -277,5 +290,213 @@ describe('the place a tab carries', () => {
     for (const action of [...fromHits, ...fromScreens]) {
       expect(PLACE_ACTIONS as readonly string[], action.type).toContain(action.type);
     }
+  });
+});
+
+/*
+ * Groups, which are the strip's second rule rather than a decoration on it.
+ *
+ * Two things must hold however they are reached, and neither is visible until
+ * it is broken: a group is *one run* of tabs, and a group *has members*. Every
+ * change below is checked against both, because the ways of breaking them are
+ * ordinary — adding the seventh tab to a group whose others are at the front,
+ * closing the last tab of one, reading back a strip the tab cap cut in half.
+ */
+
+/** A strip with a named group holding the tabs at the given seats. */
+const grouped = (screens: (Screen | null)[], seats: number[], at = 0): Strip => {
+  const s = strip(screens, at, [{ id: 'g', name: 'Essay', tone: 0, collapsed: false }]);
+  return { ...s, tabs: s.tabs.map((t, i) => (seats.includes(i) ? { ...t, group: 'g' } : t)) };
+};
+
+const held = (s: Strip) => s.tabs.map((t) => t.group ?? '—');
+
+describe('a group', () => {
+  it('is made from one tab and keeps every other tab where it was', () => {
+    const s = makeGroup(strip(['home', 'calendar', 'study'], 1), 1, 'Essay', 3, 'g');
+    expect(names(s)).toEqual(['home', 'calendar', 'study']);
+    expect(held(s)).toEqual(['—', 'g', '—']);
+    expect(s.groups).toEqual([{ id: 'g', name: 'Essay', tone: 3, collapsed: false }]);
+    // The tab you were on is still the tab you are on.
+    expect(current(s).screen).toBe('calendar');
+  });
+
+  it('closes up when a tab joins it from further along the strip', () => {
+    // The one rule a group cannot bend: its tabs sit together, or the colour
+    // is drawn twice with somebody else's tab in the middle of it.
+    const s = joinGroup(grouped(['home', 'calendar', 'study', 'mine'], [0, 1], 3), 3, 'g');
+    expect(names(s)).toEqual(['home', 'calendar', 'mine', 'study']);
+    expect(held(s)).toEqual(['g', 'g', 'g', '—']);
+    // And it joins the end of the run rather than the front, so the order
+    // people put things in is the order they stay in.
+    expect(current(s).screen).toBe('mine');
+  });
+
+  it('goes when its last tab leaves, so no name is kept for an empty row', () => {
+    const s = leaveGroup(grouped(['home', 'calendar'], [0]), 0);
+    expect(s.groups).toEqual([]);
+    expect(held(s)).toEqual(['—', '—']);
+  });
+
+  it('goes when its last tab is closed', () => {
+    expect(close(grouped(['home', 'calendar'], [1]), 1).groups).toEqual([]);
+  });
+
+  it('survives a tab leaving while another stays in it', () => {
+    const s = leaveGroup(grouped(['home', 'calendar', 'study'], [0, 1]), 0);
+    expect(s.groups).toHaveLength(1);
+    expect(held(s)).toEqual(['—', 'g', '—']);
+  });
+
+  it('takes the tabs opened out of it, which is where the strip has room', () => {
+    // Beside a grouped tab is inside that group: an ungrouped tab inserted
+    // there would split the run in two, and there is nowhere else "beside"
+    // can mean.
+    const s = add(grouped(['home', 'calendar'], [0, 1], 0), 'new');
+    expect(held(s)).toEqual(['g', 'g', 'g']);
+    expect(current(s).id).toBe('new');
+  });
+
+  it('does not take a tab opened out of one that is not in it', () => {
+    expect(held(add(grouped(['home', 'calendar'], [1], 0), 'new'))).toEqual(['—', '—', 'g']);
+  });
+
+  it('is dissolved without closing anything', () => {
+    const s = dissolve(grouped(['home', 'calendar', 'study'], [0, 1]), 'g');
+    expect(names(s)).toEqual(['home', 'calendar', 'study']);
+    expect(s.groups).toEqual([]);
+  });
+
+  it('closes all of its tabs at once, landing after the run', () => {
+    const s = closeGroup(grouped(['home', 'calendar', 'study'], [0, 1], 1), 'g');
+    expect(names(s)).toEqual(['study']);
+    expect(current(s).screen).toBe('study');
+    expect(s.groups).toEqual([]);
+  });
+
+  it('leaves a new tab rather than an empty strip when it was the whole strip', () => {
+    const s = closeGroup(grouped(['home', 'calendar'], [0, 1], 0), 'g');
+    expect(s.tabs).toHaveLength(1);
+    expect(current(s).screen).toBeNull();
+  });
+
+  it('leaves the tab you were on alone when you were not in it', () => {
+    const s = closeGroup(grouped(['home', 'calendar', 'study'], [0], 2), 'g');
+    expect(current(s).screen).toBe('study');
+  });
+
+  it('keeps its name to something a strip can draw', () => {
+    const long = 'Everything I have to do before the exam on the fourteenth';
+    expect(renameGroup(grouped(['home'], [0]), 'g', long).groups[0].name.length).toBeLessThan(
+      long.length,
+    );
+  });
+
+  it('is a colour nothing else is wearing, until the twelve run out', () => {
+    let s = strip(['home', 'calendar', 'study'], 0);
+    s = makeGroup(s, 0, '', freeTone(s), 'a');
+    s = makeGroup(s, 1, '', freeTone(s), 'b');
+    expect(s.groups[0].tone).not.toBe(s.groups[1].tone);
+    expect(freeTone(s)).toBeLessThan(GROUP_TONES);
+  });
+});
+
+describe('collapsing a group', () => {
+  it('moves you out of it first, because its page is the window', () => {
+    const s = collapse(grouped(['home', 'calendar', 'study'], [0, 1], 1), 'g', true);
+    expect(current(s).screen).toBe('study');
+    expect(s.groups[0].collapsed).toBe(true);
+  });
+
+  it('moves you left when there is nothing to its right', () => {
+    const s = collapse(grouped(['home', 'calendar', 'study'], [1, 2], 2), 'g', true);
+    expect(current(s).screen).toBe('home');
+  });
+
+  it('opens a new tab when the group is the whole strip', () => {
+    // The same answer `close` gives to the same question: the app always has a
+    // page, and the page it invents is the search page.
+    const s = collapse(grouped(['home', 'calendar'], [0, 1], 0), 'g', true);
+    expect(s.tabs).toHaveLength(3);
+    expect(current(s).screen).toBeNull();
+  });
+
+  it('leaves you where you are when you were not inside it', () => {
+    const s = collapse(grouped(['home', 'calendar', 'study'], [0, 1], 2), 'g', true);
+    expect(current(s).screen).toBe('study');
+    expect(s.tabs).toHaveLength(3);
+  });
+
+  it('opens again when a tab inside it is picked', () => {
+    const shut = collapse(grouped(['home', 'calendar', 'study'], [0, 1], 2), 'g', true);
+    expect(select(shut, 0).groups[0].collapsed).toBe(false);
+  });
+});
+
+describe('the strip as it is drawn', () => {
+  it('is a run per group and a run per loose tab', () => {
+    const rows = lanes(grouped(['home', 'calendar', 'study'], [0, 1]));
+    expect(rows).toHaveLength(2);
+    expect(rows[0].group?.name).toBe('Essay');
+    expect(rows[0].seats.map((x) => x.at)).toEqual([0, 1]);
+    expect(rows[1].group).toBeNull();
+    expect(rows[1].seats.map((x) => x.tab.screen)).toEqual(['study']);
+  });
+
+  it('keeps the tabs of a collapsed group in its run, so it can say how many', () => {
+    const shut = collapse(grouped(['home', 'calendar'], [0, 1], 0), 'g', true);
+    expect(lanes(shut)[0].seats).toHaveLength(2);
+  });
+});
+
+describe('putting a strip back in order', () => {
+  it('drops a group id no group answers to', () => {
+    const s = tidy({ ...grouped(['home', 'calendar'], [0]), groups: [] });
+    expect(held(s)).toEqual(['—', '—']);
+  });
+
+  it('returns the strip untouched when nothing was wrong', () => {
+    const was = grouped(['home', 'calendar', 'study'], [0, 1]);
+    expect(tidy(was)).toBe(was);
+  });
+
+  it('keeps you on the tab you were on after a run has moved', () => {
+    const was = grouped(['home', 'calendar', 'study', 'mine'], [0, 3], 2);
+    const s = tidy(was);
+    expect(names(s)).toEqual(['home', 'mine', 'calendar', 'study']);
+    expect(current(s).screen).toBe('study');
+  });
+});
+
+describe('a strip with groups, through the store and back', () => {
+  it('comes back with its groups and its memberships', () => {
+    const was = grouped(['home', 'calendar', 'study'], [0, 1], 1);
+    write(was);
+    expect(read(known)).toEqual(was);
+  });
+
+  it('drops a group whose tabs did not survive the screen check', () => {
+    const saved = JSON.stringify({
+      tabs: [{ id: 'a', screen: 'gone', title: 'Gone', place: [], group: 'g' }],
+      at: 0,
+      groups: [{ id: 'g', name: 'Essay', tone: 0, collapsed: false }],
+    });
+    expect(load(saved, known).groups).toEqual([]);
+  });
+
+  it('reads a strip written before groups existed', () => {
+    const saved = JSON.stringify({ tabs: [{ id: 'a', screen: 'home', title: 'Today' }], at: 0 });
+    expect(load(saved, known).groups).toEqual([]);
+  });
+
+  it('refuses a group that is not one', () => {
+    const saved = JSON.stringify({
+      tabs: [{ id: 'a', screen: 'home', title: 'Today', group: 'g' }],
+      at: 0,
+      groups: ['nope', { name: 'no id' }, { id: 'g', tone: 99.5, collapsed: 'yes' }],
+    });
+    const s = load(saved, known);
+    expect(s.groups).toHaveLength(1);
+    expect(s.groups[0]).toEqual({ id: 'g', name: '', tone: 99 % GROUP_TONES, collapsed: false });
   });
 });
