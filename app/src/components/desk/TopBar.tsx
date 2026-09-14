@@ -233,6 +233,20 @@ export function TopBar({
           <button
             type="button"
             className="bare desktop-ai"
+            /*
+             * Named here as well as written inside, because under 760px the
+             * writing is not there: `.desktop-ai span` is `display: none` in
+             * `app.css`, which takes the words out of the accessibility tree
+             * along with the pixels. The icon beside them is `aria-hidden`,
+             * like every icon in `Icons.tsx` — so on a phone, in the two
+             * navigations that draw this bar, the control that opens the
+             * assistant announced itself as "button".
+             *
+             * The same words as the label, so the two cannot disagree — which
+             * is what WCAG 2.5.3 is about, and what lets somebody say "AI
+             * Tutor" to a voice control and have it press this.
+             */
+            aria-label="AI Tutor"
             onClick={() => dispatch({ type: 'go', screen: 'ask' })}
           >
             <AskIcon size={15} />

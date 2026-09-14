@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { says, unnamed } from './labels';
+import { readFileSync } from 'node:fs';
+import { hushed, says, silenced, unnamed } from './labels';
 
 /**
  * The label rule, from the test suite's side.
@@ -157,5 +158,94 @@ export const toField = (m: number) => m;`,
 );`,
     );
     expect(unnamed(dir)).toEqual([]);
+  });
+});
+
+/**
+ * The second rule: a name a stylesheet takes away.
+ *
+ * Found by running axe over the app in a browser rather than by reading it.
+ * `.desktop-ai span { display: none }` under 760px left the AI Tutor button —
+ * the way into the assistant in the workspace and browser navigations — with
+ * no accessible name on a phone, on every screen those navigations draw. The
+ * markup had the words; the stylesheet had no idea they were the only name
+ * the control had. Neither file is wrong on its own, which is why the check
+ * has to read both.
+ */
+describe('a name a stylesheet hides', () => {
+  const css = readFileSync(join(src, 'styles', 'app.css'), 'utf8');
+
+  it('passes on the app as it stands', () => {
+    expect(silenced(src, css).map((p) => `${p.file}:${p.line} .${p.className}`)).toEqual([]);
+  });
+
+  it('still finds the rule it was written for', () => {
+    // If this stops matching, the check above is passing on nothing — the
+    // failure mode the tap test next door calls "a test that cannot fail".
+    expect(hushed(css).map((r) => r.rule)).toContain('.desktop-ai span');
+  });
+
+  it('reads the rule out of the stylesheet rather than knowing it', () => {
+    expect(hushed('.thing b { display: none; }')).toEqual([
+      { className: 'thing', rule: '.thing b' },
+    ]);
+    // A media query around it changes the width, not the answer.
+    expect(hushed('@media (max-width: 500px) { .thing em { display: none } }')).toEqual([
+      { className: 'thing', rule: '.thing em' },
+    ]);
+    // Hiding the control itself is not hiding its name.
+    expect(hushed('.thing { display: none }')).toEqual([]);
+    expect(hushed('.thing span { opacity: 0 }')).toEqual([]);
+  });
+
+  it('catches a control whose only words the stylesheet hides', () => {
+    const dir = withFile(
+      'Eight.tsx',
+      `export const A = () => (
+  <button type="button" className="bare quiet-one" onClick={go}>
+    <Icon size={15} />
+    <span>Ask</span>
+  </button>
+);`,
+    );
+    const found = silenced(dir, '.quiet-one span { display: none }');
+    expect(found).toHaveLength(1);
+    expect(found[0].className).toBe('quiet-one');
+    expect(found[0].line).toBe(2);
+  });
+
+  it('is satisfied by a name of the control’s own', () => {
+    const dir = withFile(
+      'Nine.tsx',
+      `export const A = () => (
+  <button type="button" className="bare quiet-one" aria-label="Ask" onClick={go}>
+    <span>Ask</span>
+  </button>
+);`,
+    );
+    expect(silenced(dir, '.quiet-one span { display: none }')).toEqual([]);
+  });
+
+  it('is not fooled by a > inside an attribute before the label', () => {
+    // The same trap the rule above fell into once: a scan that stops at the
+    // first `>` never reaches the aria-label after it.
+    const dir = withFile(
+      'Ten.tsx',
+      `export const A = () => (
+  <button className="quiet-one" onClick={(e) => go(e)} aria-label="Ask">
+    <span>Ask</span>
+  </button>
+);`,
+    );
+    expect(silenced(dir, '.quiet-one span { display: none }')).toEqual([]);
+  });
+
+  it('does not read a control out of a comment', () => {
+    const dir = withFile(
+      'Eleven.tsx',
+      `/* <button className="quiet-one"><span>Ask</span></button> */
+export const A = () => null;`,
+    );
+    expect(silenced(dir, '.quiet-one span { display: none }')).toEqual([]);
   });
 });

@@ -1223,16 +1223,35 @@ function FeedPart({
           type="button"
           {...feed.grip(id, {
             /*
-             * `tap`, both ways, because this one really does stand alone.
+             * `tap-x` — sideways only. It was `tap`, both ways, on the
+             * reasoning that "the nearest other target is the next section's
+             * grip, a whole section away: there is room in every direction".
              *
-             * The drawn grip is 17×16 on a phone, which is the size the tap
-             * audit was about — a fingertip is 44px and does not shrink to
-             * meet a braille glyph. `tap` rather than `tap-x` or `tap-y`
-             * because the nearest other target is the next section's grip, a
-             * whole section away: there is room in every direction, which is
-             * the condition `app.css` names for using it.
+             * That is not true, and what is directly below is the heading
+             * itself. Half the sections here fold, and a folding section's
+             * heading *is* a button — 296×25, the full width of the column,
+             * starting five pixels under the grip or touching it. A 44×44
+             * box centred on a 17×16 glyph reaches 22px down from its middle,
+             * which is most of that heading.
+             *
+             * Measured with `document.elementFromPoint`, the way the
+             * Customize Semester fault in APP-AUDIT.md §3 was found: in the
+             * grip's own column, a press on the top **14 pixels** of "Due
+             * today" and the top **8** of "Office hours worth going to" was
+             * landing on the grip. Tapping a heading to fold its section
+             * started a drag hold instead, and the control that looked like
+             * it was not responding was the one being pressed.
+             *
+             * There is no room below, so the reach comes out of the vertical:
+             * 44px wide, its own height. Sideways is genuinely empty — the
+             * grip sits at the column's left edge with the page margin beside
+             * it. The glyph stays 17×16 and under WCAG 2.2's 24px minimum,
+             * which the twenty pixels of gap this lives in cannot fix; that
+             * is a question about the rhythm of Today's sections rather than
+             * about this handle, and it is not made better by a target that
+             * answers for a different control.
              */
-            className: 'tap',
+            className: 'tap-x',
             style: {
               position: 'absolute',
               /*

@@ -81,13 +81,32 @@ describe('tap targets', () => {
       // the form both it and the first run now render.
       'src/components/Credentials.tsx',
       'src/App.tsx',                     // 115×23, the way up to a course
-      // 17×16, one per section of Today, and the reason the measuring is
-      // written down twice: the first version of this grip was the size of
-      // the glyph, and on the first section its widened target came back
-      // clipped to 18×45 by the card frame painted over it. Re-measured at
-      // 390×844 against the running app: 32×45 for all five, stealing no
-      // other control's taps. Half the target is off the left edge of the
-      // screen, which is what the page's own margin leaves room for.
+      /*
+       * 17×16, one per section of Today, and the reason the measuring is
+       * written down three times.
+       *
+       * The first version of this grip was the size of the glyph, and on the
+       * first section its widened target came back clipped to 18×45 by the
+       * card frame painted over it. Re-measured at 390×844: 32×45 for all
+       * five, and recorded here as "stealing no other control's taps".
+       *
+       * That last part was wrong, and it was wrong because of what was
+       * measured. The check was whether anything clipped the *grip*; the
+       * question that mattered is what the grip clips. `tap` centres 44×44 on
+       * a 17×16 glyph, so it reaches 22px below the middle — and half of
+       * Today's sections fold, which makes their heading a button 296×25
+       * across the whole column, five pixels under the grip or touching it.
+       * Probed with `document.elementFromPoint` at 420×900: the top 14px of
+       * "Due today" and the top 8px of "Office hours worth going to" were
+       * answering as the grip. Tapping a heading to fold its section started
+       * a drag hold instead.
+       *
+       * So it is `tap-x` now — the axis this file's own opening paragraph
+       * says to name rather than assume. Sideways is the empty direction:
+       * the grip sits at the column's left edge with the page's margin beside
+       * it, which is what the earlier note meant about half the target being
+       * off the screen.
+       */
       'src/screens/Today.tsx',
       // 38×17, and it survived the audit that took 104 targets under 30px
       // down to none — because a walk of the screens never sees it. It is
@@ -116,6 +135,24 @@ describe('tap targets', () => {
     ]) {
       expect(used, `${must} lost its tap class`).toContain(must);
     }
+  });
+
+  /*
+   * The one site where the axis was assumed rather than named, and what it
+   * cost. See the note beside `src/screens/Today.tsx` above.
+   *
+   * This cannot measure the overlap — that needs a browser — but it can hold
+   * the conclusion: the grip grows on one axis, and that axis is not the one
+   * the heading is on.
+   */
+  it('does not let Today’s grip reach down into the heading below it', () => {
+    const today = readFileSync('src/screens/Today.tsx', 'utf8');
+    const grip = today.slice(today.indexOf('feed.grip('), today.indexOf('aria-label={`Move '));
+    expect(grip, 'the grip should still declare a tap class').toMatch(/className: '(tap|tap-x|tap-y)'/);
+    expect(grip, 'a folding section’s heading is directly below the grip').not.toMatch(
+      /className: 'tap'/,
+    );
+    expect(grip).toMatch(/className: 'tap-x'/);
   });
 
   /*

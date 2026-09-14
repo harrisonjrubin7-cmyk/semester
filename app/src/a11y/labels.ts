@@ -177,3 +177,107 @@ export function says(p: Unnamed): string {
     `<SectionLabel> above it, or wrap it in a <label>.`
   );
 }
+
+/*
+ * ── The second rule: a name that a stylesheet takes away ───────────────────
+ *
+ * The rule above asks whether a control was given a name. This one asks
+ * whether it still has the one it was written with at every width.
+ *
+ * The case it was written for: the AI Tutor button in the workspace and
+ * browser shells is an icon and the words "AI Tutor". Under 760px `app.css`
+ * has `.desktop-ai span { display: none }`, and `display: none` does not just
+ * hide pixels — it takes the element out of the accessibility tree. The icon
+ * beside it is `aria-hidden`, like every icon in `Icons.tsx`. So on a phone,
+ * on every screen of the two navigations that draw that bar, the control that
+ * opens the assistant announced itself as "button".
+ *
+ * Nothing could have caught that from one side. The markup has the words in
+ * it; the stylesheet has no idea it is looking at the only name a control
+ * has. It takes both files at once, which is what this does.
+ */
+
+/** Inline elements that are usually a control's visible name. */
+const NAMING = ['span', 'b', 'i', 'em', 'strong', 'small'];
+
+export interface Silenced {
+  file: string;
+  line: number;
+  /** The class whose text the stylesheet hides. */
+  className: string;
+  /** The rule that hides it, for the message. */
+  rule: string;
+  found: string;
+}
+
+/**
+ * Every class whose inline text a stylesheet sets to `display: none`.
+ *
+ * Deliberately blunt about which selectors it reads: the last class in the
+ * selector before the inline tag, which is the element the rule is about.
+ * `@media` wrappers are not parsed, because the width a rule applies at does
+ * not change the answer — a name that is gone at any width is gone.
+ */
+export function hushed(css: string): { className: string; rule: string }[] {
+  const out: { className: string; rule: string }[] = [];
+  for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const selector = m[1].replace(/\s+/g, ' ').trim();
+    if (!/display\s*:\s*none/.test(m[2])) continue;
+    const said = new RegExp(`\\.([A-Za-z0-9_-]+)\\s+(?:${NAMING.join('|')})$`).exec(selector);
+    if (said) out.push({ className: said[1], rule: selector });
+  }
+  return out;
+}
+
+/**
+ * Controls whose only visible name a stylesheet hides, with nothing else to
+ * fall back on.
+ *
+ * A control wearing one of those classes needs a name of its own — an
+ * `aria-label`, or an `aria-labelledby` — because at the width the rule
+ * applies it has nothing else.
+ */
+export function silenced(dir: string, css: string): Silenced[] {
+  const rules = hushed(css);
+  if (rules.length === 0) return [];
+  const out: Silenced[] = [];
+
+  for (const f of sources(dir)) {
+    if (f.path.includes('.test.')) continue;
+    const rel = f.path.slice(f.path.indexOf('/src/') + 5);
+    const code = withoutComments(f.text);
+
+    for (const { className, rule } of rules) {
+      // `className="bare desktop-ai"` and `className={\`… desktop-ai\`}` alike:
+      // the class as a whole word anywhere in a className value.
+      const worn = new RegExp(`className[=:]\\s*[{]?["'\`][^"'\`]*\\b${className}\\b`, 'g');
+      for (let m = worn.exec(code); m; m = worn.exec(code)) {
+        const open = code.lastIndexOf('<', m.index);
+        if (open === -1) continue;
+        const end = endOfTag(code, open);
+        if (end === -1) continue;
+        const written = code.slice(open, end + 1);
+        if (/aria-label(ledby)?[=:]/.test(written)) continue;
+        out.push({
+          file: rel,
+          line: code.slice(0, open).split('\n').length,
+          className,
+          rule,
+          found: written.split(/\s+/).join(' ').slice(0, 90),
+        });
+      }
+    }
+  }
+
+  return out.sort((a, b) => a.file.localeCompare(b.file) || a.line - b.line);
+}
+
+/** What to do about one. */
+export function saysSilenced(p: Silenced): string {
+  return (
+    `\`${p.rule}\` hides this control's own words, and \`display: none\` takes ` +
+    `them out of the accessibility tree as well as off the screen — so at that ` +
+    `width it has no name at all.\n    Add aria-label with the same words as ` +
+    `the text inside it.`
+  );
+}
