@@ -33,7 +33,7 @@ export function AllApps({ onClose }: { onClose: () => void }) {
   /* The shell draws its own launcher. One open menu at a time — fix #11. */
   const modern = useModernShell();
   const caps = school.capabilities;
-  const shelves = appShelves(caps, currentLook(state).groupOrder);
+  const shelves = appShelves(caps, currentLook(state).groupOrder, state.role);
   const count = appCount(shelves);
 
   if (modern) return null;

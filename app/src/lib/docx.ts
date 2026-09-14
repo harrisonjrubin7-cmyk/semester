@@ -44,24 +44,12 @@ import { outline } from './doctools';
 import { runs, type Block, type Doc } from './document';
 import { layoutOf, lineHeight, pageSize, type Layout } from './doclayout';
 import { omml, parse } from './maths';
+import { HEAD, REL, xml } from './ooxml';
 
-/** XML text escaping. Every string that reaches the file goes through here. */
-export function xml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
-}
 
-const HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 const M = 'http://schemas.openxmlformats.org/officeDocument/2006/math';
-const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 /**
  * The page, in twentieths of a point — Word's own unit, 1440 to the inch.
@@ -120,13 +108,82 @@ function headerXml(layout: Layout): string {
  * Five marks now rather than two. Strike-through and monospace are one
  * property each; a hyperlink is not a property at all — see `hyperlink`.
  */
-function run(piece: { text: string; bold: boolean; italic: boolean; strike: boolean; code: boolean }): string {
+/**
+ * The external links one document points at, in the order they were met.
+ *
+ * A hyperlink in this format is not a URL in the paragraph — it is a
+ * *relationship id*, and the URL lives in `document.xml.rels`. So writing the
+ * body and writing the relationships are the same pass, and this is what
+ * carries one to the other.
+ *
+ * Kept by target rather than per occurrence: a document citing the same page
+ * four times is one relationship, not four, which is what Word itself writes.
+ */
+class Links {
+  private readonly at = new Map<string, string>();
+
+  /**
+   * How many relationships this part already has before any link.
+   *
+   * Was a constant, and stopped being one when a page header arrived: styles
+   * and numbering are always there, and `header1.xml` is a third when the
+   * layout asks for page numbers. Passed in rather than counted here because
+   * only `parts` knows, and getting it wrong hands a link the header's own
+   * id — which Word opens as an unreadable document rather than as a broken
+   * link.
+   */
+  private readonly fixed: number;
+
+  constructor(fixed = FIXED_RELS) {
+    this.fixed = fixed;
+  }
+
+  /** The relationship id for a target, making one if this is the first time. */
+  id(target: string): string {
+    const had = this.at.get(target);
+    if (had) return had;
+    const made = `rId${this.at.size + this.fixed + 1}`;
+    this.at.set(target, made);
+    return made;
+  }
+
+  /** Every one, as the relationship elements that go beside the fixed ones. */
+  relationships(): string {
+    return [...this.at].
+      map(
+        ([target, id]) =>
+          `<Relationship Id="${id}" Type="${REL}/hyperlink" ` +
+          `Target="${xml(target)}" TargetMode="External"/>`,
+      )
+      .join('');
+  }
+}
+
+/** How many relationships `word/document.xml.rels` has before any link, at least. */
+const FIXED_RELS = 2;
+
+/**
+ * The blue underline a reader expects on a link.
+ *
+ * Written into the run rather than added as a `Hyperlink` character style,
+ * because a style is a second part to keep in step for one colour and one
+ * underline — and a document whose links are styled by a style that a later
+ * edit removes is a document whose links stop looking like links.
+ */
+const LINK_LOOK = '<w:color w:val="0563C1"/><w:u w:val="single"/>';
+
+function run(
+  piece: { text: string; bold: boolean; italic: boolean; strike: boolean; code: boolean },
+  link = '',
+): string {
   const props =
     `${piece.bold ? '<w:b/>' : ''}${piece.italic ? '<w:i/>' : ''}` +
     `${piece.strike ? '<w:strike/>' : ''}` +
     // A named character style rather than a font on the run, so somebody who
-    // has to hand in Courier can restyle every piece of code at once.
-    `${piece.code ? '<w:rStyle w:val="CodeChar"/>' : ''}`;
+    // has to hand in Courier can restyle every piece of code at once. The
+    // link's blue is direct formatting for the opposite reason — see
+    // `LINK_LOOK`, which explains why one is a style and one is not.
+    `${piece.code ? '<w:rStyle w:val="CodeChar"/>' : ''}${link ? LINK_LOOK : ''}`;
   return piece.text
     .split('\n')
     .map((line, i) => {
@@ -140,52 +197,28 @@ function run(piece: { text: string; bold: boolean; italic: boolean; strike: bool
 }
 
 /**
- * A run inside a hyperlink.
- *
- * The one mark that is not a run property: Word holds a link as a `w:hyperlink`
- * element pointing at a relationship id, and the target lives in a second file.
- * Which is why the ids are handed down from `parts` rather than made here —
- * a document with two links needs two relationships, and a counter local to
- * this function would give both of them rId3.
- *
- * `w:history="1"` is what makes Word draw it as followed-link blue after a
- * click, and its absence is the tell of a link written by a program.
- */
-function hyperlink(id: string, body: string): string {
-  return `<w:hyperlink r:id="${id}" w:history="1">${body}</w:hyperlink>`;
-}
-
-/**
  * A paragraph of marked-up text in a named style.
  *
- * `links` collects every target it meets, in the order it meets them, so that
- * `parts` can write the relationship file. Passing it in rather than returning
- * it keeps every caller — and there are nine — from having to thread a pair.
+ * `links` is optional so the two callers that cannot contain one — a table
+ * cell measured before the collector exists, a caption built in a test —
+ * still read as they did. Where it is absent a link is written as its words
+ * in the link's colour, with nothing behind them: visibly a link that goes
+ * nowhere rather than an invalid relationship, which Word refuses to open.
  */
-function para(text: string, style?: string, extra = '', links?: string[]): string {
+function para(text: string, style?: string, extra = '', links?: Links): string {
   const props = style || extra ? `<w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ''}${extra}</w:pPr>` : '';
   const body = runs(text)
     .map((r) => {
-      // No collector means nowhere to write the relationship — the header and
-      // the footer are their own parts with their own rels — so the words go
-      // in as words. A link that half-exists is a corrupt file.
-      if (!r.href || !links) return run(r);
-      links.push(r.href);
-      // Blue and underlined, as a link is everywhere: the style is what a
-      // reader recognises, and an unmarked link in a printed bibliography is
-      // a URL nobody can see.
-      const marked =
-        `<w:r><w:rPr><w:rStyle w:val="Hyperlink"/>${r.bold ? '<w:b/>' : ''}` +
-        `${r.italic ? '<w:i/>' : ''}${r.strike ? '<w:strike/>' : ''}</w:rPr>` +
-        `<w:t xml:space="preserve">${xml(r.text)}</w:t></w:r>`;
-      return hyperlink(`rIdLink${links.length}`, marked);
+      const piece = run(r, r.link);
+      if (!r.link || !links) return piece;
+      return `<w:hyperlink r:id="${links.id(r.link)}">${piece}</w:hyperlink>`;
     })
     .join('');
   return `<w:p>${props}${body}</w:p>`;
 }
 
 /** A list item, at the numbering definition the list's kind points at. */
-function item(text: string, numbered: boolean, links?: string[]): string {
+function item(text: string, numbered: boolean, links?: Links): string {
   const numbering = `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="${numbered ? 2 : 1}"/></w:numPr>`;
   return para(text, 'ListParagraph', numbering, links);
 }
@@ -199,7 +232,7 @@ function item(text: string, numbered: boolean, links?: string[]): string {
  * machines a group project is read on. A character everybody can render, in
  * a document everybody can open, beats a live checkbox in one program.
  */
-function ticked(line: { text: string; done: boolean }, links?: string[]): string {
+function ticked(line: { text: string; done: boolean }, links?: Links): string {
   return para(`${line.done ? '☒' : '☐'} ${line.text}`, 'ListParagraph', '<w:ind w:left="360"/>', links);
 }
 
@@ -211,7 +244,7 @@ function ticked(line: { text: string; done: boolean }, links?: string[]): string
  * and a document written on Letter and printed on A4 is the common case here
  * rather than the exotic one.
  */
-function table(block: Extract<Block, { kind: 'table' }>, links?: string[]): string {
+function table(block: Extract<Block, { kind: 'table' }>, links?: Links): string {
   const width = block.rows.reduce((n, r) => Math.max(n, r.length), 0);
   if (width === 0) return '';
   const each = Math.floor(5000 / width);
@@ -254,7 +287,7 @@ function table(block: Extract<Block, { kind: 'table' }>, links?: string[]): stri
   return block.caption.trim() ? `${tbl}${para(block.caption, 'Caption', '', links)}` : `${tbl}<w:p/>`;
 }
 
-function blockXml(block: Block, doc: Doc, links: string[]): string {
+function blockXml(block: Block, doc: Doc, links?: Links): string {
   switch (block.kind) {
     case 'heading':
       return block.text.trim() ? para(block.text, `Heading${block.level}`, '', links) : '';
@@ -272,7 +305,9 @@ function blockXml(block: Block, doc: Doc, links: string[]): string {
         .join('');
     case 'quote': {
       const body = block.text.trim() ? para(block.text, 'Quote', '', links) : '';
-      return block.source.trim() ? `${body}${para(`— ${block.source}`, 'Caption', '', links)}` : body;
+      return block.source.trim()
+        ? `${body}${para(`— ${block.source}`, 'Caption', '', links)}`
+        : body;
     }
     case 'table':
       return table(block, links);
@@ -426,10 +461,6 @@ function stylesXml(layout: Layout): string {
     `<w:rPr><w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/><w:sz w:val="${step(0.82)}"/></w:rPr></w:style>` +
     '<w:style w:type="character" w:styleId="CodeChar"><w:name w:val="Code Char"/>' +
     `<w:rPr><w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:cs="Consolas"/><w:sz w:val="${step(0.91)}"/></w:rPr></w:style>` +
-    // Word's own name for it, so a link looks like every other link in the
-    // reader's copy of Word rather than like blue text this app invented.
-    '<w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/>' +
-    '<w:rPr><w:color w:val="0563C1"/><w:u w:val="single"/></w:rPr></w:style>' +
     // A table cell is single-spaced: the document's own line spacing makes
     // every row taller than it needs to be, which is what turns a fifteen-row
     // table into two pages — and at double spacing, into four.
@@ -462,26 +493,7 @@ const NUMBERING =
 export function parts(doc: Doc): Record<string, string> {
   const out: Record<string, string> = {};
   const layout = layoutOf(doc);
-  /*
-   * Every link the body turned out to have, in the order it met them.
-   *
-   * Collected while the paragraphs are built rather than scanned for first,
-   * because the two passes would have to agree about which text is a link —
-   * and the moment they disagree the file has a `r:id` pointing at nothing,
-   * which Word opens as a document with no styles rather than as an error.
-   */
-  const links: string[] = [];
-
   const header = layout.numbers || layout.runningHead.trim() !== '';
-
-  const heading =
-    (doc.title.trim() ? para(doc.title, 'Title') : '') +
-    (doc.subtitle.trim() ? para(doc.subtitle, 'Subtitle') : '') +
-    // A title page is the title, the subtitle and then the break. Written
-    // here rather than as a block so that turning it off cannot leave a
-    // stray page break behind in the document itself.
-    (layout.titlePage && doc.title.trim() ? '<w:p><w:r><w:br w:type="page"/></w:r></w:p>' : '');
-  const body = doc.blocks.map((block) => blockXml(block, doc, links)).join('');
 
   out['[Content_Types].xml'] =
     `${HEAD}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">` +
@@ -505,23 +517,33 @@ export function parts(doc: Doc): Record<string, string> {
     '</Relationships>';
 
   /*
-   * A link's target is `TargetMode="External"`, and leaving that off is the
-   * fault worth naming: Word reads the URL as a path inside the package,
-   * finds nothing, and reports the file as corrupt rather than as a broken
-   * link.
+   * The body is written before the relationships, because writing it is what
+   * discovers them. A link is a relationship id in the paragraph and a URL in
+   * the rels part, so the two cannot be built in the order they are read.
+   *
+   * `Links` is told how many relationships this part already has, because
+   * that number is not a constant any more: a document with a header has
+   * three fixed ones and a document without has two. Handing it the wrong
+   * number gives a link the header's own id, and Word opens a document whose
+   * relationship points at the wrong part as unreadable rather than as a
+   * broken link.
    */
+  const links = new Links(header ? 3 : 2);
+  const heading =
+    (doc.title.trim() ? para(doc.title, 'Title', '', links) : '') +
+    (doc.subtitle.trim() ? para(doc.subtitle, 'Subtitle', '', links) : '') +
+    // A title page is the title, the subtitle and then the break. Written
+    // here rather than as a block so that turning it off cannot leave a
+    // stray page break behind in the document itself.
+    (layout.titlePage && doc.title.trim() ? '<w:p><w:r><w:br w:type="page"/></w:r></w:p>' : '');
+  const body = doc.blocks.map((block) => blockXml(block, doc, links)).join('');
+
   out['word/_rels/document.xml.rels'] =
     `${HEAD}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` +
     `<Relationship Id="rId1" Type="${REL}/styles" Target="styles.xml"/>` +
     `<Relationship Id="rId2" Type="${REL}/numbering" Target="numbering.xml"/>` +
     (header ? `<Relationship Id="rId3" Type="${REL}/header" Target="header1.xml"/>` : '') +
-    links
-      .map(
-        (href, i) =>
-          `<Relationship Id="rIdLink${i + 1}" Type="${REL}/hyperlink" ` +
-          `Target="${xml(href)}" TargetMode="External"/>`,
-      )
-      .join('') +
+    links.relationships() +
     '</Relationships>';
 
   out['word/document.xml'] =

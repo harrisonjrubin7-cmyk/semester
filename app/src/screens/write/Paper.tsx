@@ -218,7 +218,7 @@ function Piece({ run }: { run: Run }) {
   if (run.bold) body = <strong>{body}</strong>;
   if (run.italic) body = <em>{body}</em>;
   if (run.strike) body = <s>{body}</s>;
-  if (run.href) {
+  if (run.link) {
     /*
      * `rel="noreferrer"` and a new tab, because a link inside somebody's own
      * coursework is the one place a page should not be replaced under them —
@@ -226,7 +226,7 @@ function Piece({ run }: { run: Run }) {
      * thing that stops people trusting an editor.
      */
     body = (
-      <a href={run.href} target="_blank" rel="noreferrer noopener">
+      <a href={run.link} target="_blank" rel="noreferrer noopener">
         {body}
       </a>
     );

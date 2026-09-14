@@ -13,7 +13,6 @@ import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib
 import { Drive } from './mine/Drive';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import { codeOf } from '../lib/call';
-import { termEnds } from '../lib/registrar';
 import { secondLine } from '../lib/dim';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
@@ -24,6 +23,8 @@ import {
   howMany,
   type Every,
 } from '../lib/repeat';
+import { termEnds } from '../lib/registrar';
+import type { Appointment } from '../lib/types';
 import { CheckIt } from '../components/CheckIt';
 import { Dictate } from '../components/Dictate';
 import { RecordButton } from '../components/RecordButton';
@@ -111,7 +112,9 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
 
   if (editing) {
     return (
-      <Blueprint style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
+      /* `data-editing`: the assistant's floating button stands down while a
+         row is a form. See the note on `editing` in `ai/Assistant.tsx`. */
+      <Blueprint data-editing="" style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
         <input
           className="input"
           value={title}
@@ -167,6 +170,10 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             className="bare"
             onClick={() => dispatch({ type: 'deleteTask', id: t.id })}
             aria-label={`Delete ${t.title}`}
+            /* Marked so the assistant's floating button lifts clear of it at
+               any overlap rather than at half of it — see `tappable` in
+               `ai/Assistant.tsx`. */
+            data-danger=""
             style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.5 }}
           >
             Delete
@@ -372,6 +379,12 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
   );
 }
 
+/** Back the other way: "18:30" for the field, from the minutes we store. */
+function inputFromClock(at: number): string {
+  const h = Math.floor(at / 60);
+  return `${String(h).padStart(2, '0')}:${String(at % 60).padStart(2, '0')}`;
+}
+
 /** "6:30p" from a 24h "18:30" — the format the rail uses. */
 function clockFromInput(value: string): { at: number; time: string } {
   const [h, m] = value.split(':').map(Number);
@@ -379,6 +392,372 @@ function clockFromInput(value: string): { at: number; time: string } {
   const at = h * 60 + (m || 0);
   const hour = h % 12 === 0 ? 12 : h % 12;
   return { at, time: `${hour}:${String(m || 0).padStart(2, '0')}${h < 12 ? 'a' : 'p'}` };
+}
+
+/**
+ * One appointment, and the way to change it — the same way a task changes.
+ *
+ * The tab next door has done this since `TaskRow` was written: the row is the
+ * thing, pressing it turns that row into its fields, and Save puts it back.
+ * Appointments got their editing later and got it in the form at the top of
+ * the list instead, which worked and which meant Mine answered "how do I fix
+ * this?" two different ways on two adjacent tabs. One screen, one answer; the
+ * form above writes new ones and nothing else.
+ *
+ * Editing behind a press rather than always on, and saved explicitly, for the
+ * reason `TaskRow` gives: a list that is also a page of live inputs is a page
+ * where a stray tap lands in a field.
+ *
+ * Delete moves in here with it. On the row it was a two-letter button beside
+ * Join, which is the accident `TaskRow` avoids by keeping the destructive act
+ * inside the editor you had to open on purpose.
+ */
+/**
+ * The lengths offered for something you add.
+ *
+ * Not a free field. A minute count typed by hand is a field that accepts 4321
+ * and a form that has to say why it will not; these are the lengths somebody
+ * would have typed anyway, and the list is short enough to read at a glance.
+ * Four hours is the top of it because that is a shift, and anything longer is
+ * a day rather than an appointment.
+ */
+const LENGTHS = [15, 30, 45, 60, 90, 120, 180, 240];
+
+function lengthLabel(minutes: number): string {
+  if (minutes < 60) return `${minutes} min`;
+  const hours = minutes / 60;
+  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} ${hours === 1 ? 'hour' : 'hours'}`;
+}
+
+/**
+ * How long and how often, as two controls.
+ *
+ * Drawn by both the form that writes an appointment and the row that edits
+ * one, which is the whole reason it is a component: main made the row
+ * editable and this branch gave an appointment a length and a rule, and two
+ * copies of these five fields is how one of them ends up knowing about a
+ * third.
+ */
+function HowLongAndOften({
+  from,
+  minutes,
+  every,
+  until,
+  lastDay,
+  onMinutes,
+  onEvery,
+  onUntil,
+}: {
+  /** The day it starts, which bounds the repeat and dates its default end. */
+  from: string;
+  minutes: number;
+  every: Every | '';
+  until: string;
+  lastDay: string;
+  onMinutes: (next: number) => void;
+  onEvery: (next: Every | '') => void;
+  onUntil: (next: string) => void;
+}) {
+  const ends = until || defaultUntil(from, lastDay);
+  const times = every ? howMany(from, { every, until: ends }, ends) : 1;
+  return (
+    <>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
+        {/* How long, as a picker rather than an end time: an end time is two
+            fields that can disagree with each other, and every one of these
+            is a length somebody would have typed anyway. */}
+        <label style={{ flex: 1, minWidth: 0 }}>
+          <span className="sr-only">How long</span>
+          <select
+            className="input"
+            value={String(minutes)}
+            onChange={(e) => onMinutes(Number(e.target.value))}
+            style={{ ...inputStyle, width: '100%' }}
+            aria-label="How long"
+          >
+            {LENGTHS.map((m) => (
+              <option key={m} value={String(m)}>
+                {lengthLabel(m)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label style={{ flex: 1, minWidth: 0 }}>
+          <span className="sr-only">How often</span>
+          <select
+            className="input"
+            value={every}
+            onChange={(e) => {
+              const next = e.target.value as Every | '';
+              onEvery(next);
+              // The end filled in the moment a rule is chosen, rather than
+              // left empty for somebody to discover is required.
+              if (next && !until) onUntil(defaultUntil(from, lastDay));
+            }}
+            style={{ ...inputStyle, width: '100%' }}
+            aria-label="How often"
+          >
+            <option value="">Once</option>
+            {EVERY.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {every && (
+        <>
+          <input
+            className="input"
+            type="date"
+            value={until || ends}
+            min={from}
+            onChange={(e) => onUntil(e.target.value)}
+            style={{ ...inputStyle, width: '100%' }}
+            aria-label="Repeat until"
+          />
+          <div
+            role="status"
+            style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}
+          >
+            {`${describeRepeat({ every, until: ends })} — ${times} ${times === 1 ? 'time' : 'times'}. Every repeat names its last day; this one runs to the end of term unless you change it.`}
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
+  const { state, dispatch } = useStore();
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(a.title);
+  const [date, setDate] = useState(a.date);
+  const [when, setWhen] = useState(inputFromClock(a.at));
+  const [where, setWhere] = useState(a.where);
+  const [kind, setKind] = useState<EventKindId>((a.kind as EventKindId) ?? 'other');
+  const [minutes, setMinutes] = useState(a.minutes ?? 60);
+  const [every, setEvery] = useState<Every | ''>(a.repeat?.every ?? '');
+  const [until, setUntil] = useState(a.repeat?.until ?? '');
+  const lastDay = termEnds(state.registrar);
+
+  const save = () => {
+    if (!title.trim()) return;
+    const { at, time } = clockFromInput(when);
+    dispatch({
+      type: 'editAppointment',
+      id: a.id,
+      patch: {
+        title: title.trim(),
+        date,
+        at,
+        time,
+        where: where.trim(),
+        kind,
+        minutes,
+        /*
+         * `undefined` rather than a left-behind rule when the picker says
+         * Once: `editAppointment` is a patch, so writing nothing would leave
+         * the old repeat in place and the row would keep repeating while the
+         * form it was edited in said it did not.
+         */
+        repeat: every ? { every, until: until || defaultUntil(date, lastDay), ...(a.repeat?.except ? { except: a.repeat.except } : {}) } : undefined,
+      },
+    });
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <Blueprint data-editing="" style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
+        <input
+          className="input"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') save();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          aria-label="What the appointment is"
+          // eslint-disable-next-line jsx-a11y/no-autofocus
+          autoFocus
+          style={{ height: 40, fontSize: 'var(--type-md)', width: '100%' }}
+        />
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
+          <input
+            className="input"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            aria-label="The day it is on"
+            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
+          />
+          <input
+            className="input"
+            type="time"
+            value={when}
+            onChange={(e) => setWhen(e.target.value)}
+            aria-label="The time it starts"
+            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
+          />
+        </div>
+        <input
+          className="input"
+          value={where}
+          onChange={(e) => setWhere(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') save();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          placeholder="Where?"
+          aria-label="Where it is"
+          style={{ height: 40, fontSize: 'var(--type-base)', width: '100%', marginTop: 'var(--sp-4)' }}
+        />
+        <HowLongAndOften
+          from={date}
+          minutes={minutes}
+          every={every}
+          until={until}
+          lastDay={lastDay}
+          onMinutes={setMinutes}
+          onEvery={setEvery}
+          onUntil={setUntil}
+        />
+        {/* The same chips the form above draws, and the only place the kind of
+            an appointment could be changed at all before this. */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)' }}>
+          {EVENT_KINDS.map((k) => (
+            <button
+              key={k.id}
+              type="button"
+              className="btn"
+              onClick={() => setKind(k.id)}
+              aria-pressed={kind === k.id}
+              style={{
+                flex: 'none',
+                padding: '5px 10px',
+                fontSize: 'var(--type-xs)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                background: kind === k.id ? 'var(--app-hero)' : 'transparent',
+                borderColor: kind === k.id ? k.tint : 'var(--app-line)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--sp-3)',
+              }}
+            >
+              <span style={{ width: 3, height: 10, background: k.tint, flex: 'none' }} />
+              {k.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={save}
+            disabled={!title.trim()}
+            style={{ width: 'auto', padding: '0 16px', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            className="bare"
+            onClick={() => setEditing(false)}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.6 }}
+          >
+            Cancel
+          </button>
+          <div style={{ flex: 1 }} />
+          <button
+            type="button"
+            className="bare"
+            onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
+            aria-label={`Delete ${a.title}`}
+            data-danger=""
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.5 }}
+          >
+            Delete
+          </button>
+        </div>
+      </Blueprint>
+    );
+  }
+
+  return (
+    <Blueprint
+      plain
+      style={{
+        display: 'flex',
+        gap: 13,
+        padding: '12px 14px',
+        // The same tint the hour grid uses, so a row and its block on the
+        // day are recognisably the same thing.
+        borderLeft: `2px solid ${kindOf(a.kind).tint}`,
+      }}
+    >
+      <div style={{ width: 52, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1.1 }}>
+        <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}>{a.time}</div>
+        <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em' }}>
+          {longLabel(isoToDate(a.date)).replace(/^\w+ /, '')}
+        </div>
+      </div>
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={() => {
+          // Re-seeded on open rather than kept in sync, for the reason
+          // `TaskRow` gives: a draft that follows the thing while you are
+          // typing in it is a draft that fights you.
+          setTitle(a.title);
+          setDate(a.date);
+          setWhen(inputFromClock(a.at));
+          setWhere(a.where);
+          setKind((a.kind as EventKindId) ?? 'other');
+          setEditing(true);
+        }}
+        aria-label={`Edit ${a.title}`}
+        style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}
+      >
+        <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</span>
+        <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+          {/* How long and how often, on the row: a shelf of appointments that
+              all read alike is a shelf where the four-hour shift and the
+              coffee are indistinguishable. The repeat is not lower-cased —
+              "until 5 january" reads as a typo. */}
+          {[
+            kindOf(a.kind).label,
+            a.where,
+            lengthLabel(a.minutes ?? 60),
+            a.repeat ? describeRepeat(a.repeat) : '',
+          ]
+            .filter(Boolean)
+            .join(' \u00b7 ')}
+        </span>
+      </button>
+      {/*
+        A call in the diary opens into the call.
+
+        This is the whole reason a scheduled call is an appointment rather
+        than a fifth kind of dated thing — see `whereFor` in `lib/call.ts`.
+        The code is on the row already, because `where` is where it was
+        written; this turns it into the way in.
+      */}
+      {codeOf(a) ? (
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => dispatch({ type: 'openCall', code: codeOf(a) })}
+          aria-label={`Join ${a.title}`}
+          style={{ flex: 'none', height: 32, paddingInline: 'var(--sp-6)', fontSize: 'var(--type-xs)', width: 'auto' }}
+        >
+          Join
+        </button>
+      ) : null}
+    </Blueprint>
+  );
 }
 
 function Appointments() {
@@ -389,15 +768,9 @@ function Appointments() {
   const [when, setWhen] = useState('09:00');
   const [where, setWhere] = useState('');
   const [kind, setKind] = useState<EventKindId>('social');
-  /*
-   * How long, and how often.
-   *
-   * The two fields every calendar has had for thirty years and this form did
-   * not: every appointment was an hour-shaped point in time, so a four-hour
-   * shift was drawn the same as a coffee, and a standing Tuesday shift was
-   * fifteen rows typed one at a time.
-   */
   const [minutes, setMinutes] = useState(60);
+  const [every, setEvery] = useState<Every | ''>('');
+  const [until, setUntil] = useState('');
   /*
    * When the term ends, so a repeat's last day defaults to it.
    *
@@ -406,9 +779,20 @@ function Appointments() {
    * `defaultUntil` falls back to a term's length from the day it starts.
    */
   const lastDay = termEnds(state.registrar);
-  const [every, setEvery] = useState<Every | ''>('');
-  const [until, setUntil] = useState('');
 
+  const shut = () => {
+    setOpen(false);
+    setTitle('');
+    setWhere('');
+    setEvery('');
+    setUntil('');
+  };
+
+  /*
+   * Writing one only. Fixing one happens in its own row, a few lines down —
+   * the pattern `TaskRow` set in the tab next door, and the note over
+   * `AppointmentRow` says why it is worth having one of rather than two.
+   */
   const add = () => {
     if (!title.trim()) return;
     const { at, time } = clockFromInput(when);
@@ -426,11 +810,7 @@ function Appointments() {
         ...(every ? { repeat: { every, until: until || defaultUntil(date, lastDay) } } : {}),
       },
     });
-    setTitle('');
-    setWhere('');
-    setEvery('');
-    setUntil('');
-    setOpen(false);
+    shut();
   };
 
   const upcoming = [...state.appointments].sort((a, b) =>
@@ -445,7 +825,7 @@ function Appointments() {
             className="input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={submitOnEnter(add, () => setOpen(false))}
+            onKeyDown={submitOnEnter(add, shut)}
             placeholder="Dentist, advisor meeting, shift…"
             style={{ height: 42, fontSize: 'var(--type-lg)' }}
             aria-label="Appointment"
@@ -470,79 +850,25 @@ function Appointments() {
               aria-label="Time"
             />
           </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
-            <input
-              className="input"
-              value={where}
-              onChange={(e) => setWhere(e.target.value)}
-              onKeyDown={submitOnEnter(add, () => setOpen(false))}
-              placeholder="Where?"
-              style={{ ...inputStyle, flex: 2 }}
-              aria-label="Place"
-            />
-            {/* How long, as a picker rather than an end time: an end time is
-                two fields that can disagree with each other, and every one of
-                these is a length somebody would have typed anyway. */}
-            <select
-              className="input"
-              value={String(minutes)}
-              onChange={(e) => setMinutes(Number(e.target.value))}
-              style={{ ...inputStyle, flex: 1 }}
-              aria-label="How long"
-            >
-              {LENGTHS.map((m) => (
-                <option key={m} value={String(m)}>
-                  {lengthLabel(m)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
-            <select
-              className="input"
-              value={every}
-              onChange={(e) => {
-                const next = e.target.value as Every | '';
-                setEvery(next);
-                // The end filled in the moment a rule is chosen, rather than
-                // left empty for somebody to discover is required.
-                if (next && !until) setUntil(defaultUntil(date, lastDay));
-              }}
-              style={{ ...inputStyle, flex: 1 }}
-              aria-label="How often"
-            >
-              <option value="">Once</option>
-              {EVERY.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.label}
-                </option>
-              ))}
-            </select>
-            {every && (
-              <input
-                className="input"
-                type="date"
-                value={until}
-                min={date}
-                onChange={(e) => setUntil(e.target.value)}
-                style={{ ...inputStyle, flex: 1 }}
-                aria-label="Repeat until"
-              />
-            )}
-          </div>
-          {every && (
-            <div
-              role="status"
-              style={{ ...secondLine(), fontSize: 'var(--type-xs)', marginTop: 'var(--sp-3)' }}
-            >
-              {(() => {
-                const ends = until || defaultUntil(date, lastDay);
-                const n = howMany(date, { every, until: ends }, ends);
-                return `${describeRepeat({ every, until: ends })} — ${n} ${n === 1 ? 'time' : 'times'}. Every repeat names its last day; this one runs to the end of term unless you change it.`;
-              })()}
-            </div>
-          )}
+          <input
+            className="input"
+            value={where}
+            onChange={(e) => setWhere(e.target.value)}
+            onKeyDown={submitOnEnter(add, shut)}
+            placeholder="Where?"
+            style={inputStyle}
+            aria-label="Place"
+          />
+          <HowLongAndOften
+            from={date}
+            minutes={minutes}
+            every={every}
+            until={until}
+            lastDay={lastDay}
+            onMinutes={setMinutes}
+            onEvery={setEvery}
+            onUntil={setUntil}
+          />
 
           {/* What it is for, so the hour grid can colour it and a glance at the
               day tells you what kind of day it is. */}
@@ -584,7 +910,7 @@ function Appointments() {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => setOpen(false)}
+              onClick={shut}
               style={{ flex: 1, height: 42, textTransform: 'uppercase', letterSpacing: '0.1em' }}
             >
               Cancel
@@ -600,10 +926,7 @@ function Appointments() {
           </div>
         </Blueprint>
       ) : (
-        <ActionButton
-          onClick={() => setOpen(true)}
-          tone="primary"
-        >
+        <ActionButton onClick={() => setOpen(true)} tone="primary">
           + New appointment
         </ActionButton>
       )}
@@ -617,88 +940,7 @@ function Appointments() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 14 }}>
         {upcoming.map((a) => (
-          <Blueprint
-            key={a.id}
-            plain
-            style={{
-              display: 'flex',
-              gap: 13,
-              padding: '12px 14px',
-              // The same tint the hour grid uses, so a row and its block on the
-              // day are recognisably the same thing.
-              borderLeft: `2px solid ${kindOf(a.kind).tint}`,
-            }}
-          >
-            <div
-              style={{
-                width: 52,
-                flex: 'none',
-                fontFamily: 'var(--font-heading)',
-                lineHeight: 1.1,
-              }}
-            >
-              <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}>{a.time}</div>
-              <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em' }}>
-                {longLabel(isoToDate(a.date)).replace(/^\w+ /, '')}
-              </div>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</div>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
-                {/* How long and how often, on the row: a shelf of appointments
-                    that all read alike is a shelf where the four-hour shift
-                    and the coffee are indistinguishable. */}
-                {[
-                  kindOf(a.kind).label,
-                  a.where,
-                  lengthLabel(a.minutes ?? 60),
-                  // Not lower-cased: "until 5 january" reads as a typo, and
-                  // a capital in the middle of a dotted line does not.
-                  a.repeat ? describeRepeat(a.repeat) : '',
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </div>
-            </div>
-            {/*
-              A call in the diary opens into the call.
-
-              This is the whole reason a scheduled call is an appointment
-              rather than a fifth kind of dated thing — see `whereFor` in
-              `lib/call.ts`. The code is on the row already, because `where`
-              is where it was written; this turns it into the way in.
-            */}
-            {codeOf(a) ? (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => dispatch({ type: 'openCall', code: codeOf(a) })}
-                aria-label={`Join ${a.title}`}
-                style={{ flex: 'none', height: 32, paddingInline: 'var(--sp-6)', fontSize: 'var(--type-xs)', width: 'auto' }}
-              >
-                Join
-              </button>
-            ) : null}
-            {/*
-              Deleting a series here deletes the series.
-
-              This shelf lists the stored appointment — one row for the rule,
-              on the day it starts — rather than its occurrences, so "Del" on
-              it can only mean all of them, and the label says so. Taking one
-              Tuesday out is done where that Tuesday is: on the calendar,
-              where the block you mean is the one under your finger.
-            */}
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
-              aria-label={a.repeat ? `Delete every ${a.title}` : `Delete ${a.title}`}
-              title={a.repeat ? 'Deletes the whole series' : undefined}
-              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
-            >
-              Del
-            </button>
-          </Blueprint>
+          <AppointmentRow key={a.id} appointment={a} />
         ))}
       </div>
       <div style={{ height: 22 }} />
@@ -795,23 +1037,6 @@ function Files() {
       </Folding>
     </div>
   );
-}
-
-/**
- * The lengths offered for something you add.
- *
- * Not a free field. A minute count typed by hand is a field that accepts 4321
- * and a form that has to say why it will not; these are the lengths somebody
- * would have typed anyway, and the list is short enough to read at a glance.
- * Four hours is the top of it because that is a shift, and anything longer is
- * a day rather than an appointment.
- */
-const LENGTHS = [15, 30, 45, 60, 90, 120, 180, 240];
-
-function lengthLabel(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
-  const hours = minutes / 60;
-  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)} ${hours === 1 ? 'hour' : 'hours'}`;
 }
 
 export function Mine() {

@@ -845,3 +845,50 @@ describe('the scientific functions', () => {
     expect(at('=LARGE(A1:A4,9)', data)).toBe('#VALUE!');
   });
 });
+
+describe('measuring one column against conditions on others', () => {
+  /*
+   * `SUMIFS` and `COUNTIFS` were here; the other three are their siblings and
+   * exist because a pivot table writes itself out as formulas, and a pivot of
+   * averages or of the best mark in each course has to say so in a way that
+   * keeps working after it is exported. See `lib/pivot.ts`.
+   */
+  const cells = {
+    A1: 'Course', B1: 'Term', C1: 'Mark',
+    A2: 'ECON', B2: 'Fall', C2: '88',
+    A3: 'PSCI', B3: 'Fall', C3: '74',
+    A4: 'ECON', B4: 'Fall', C4: '95',
+    A5: 'ECON', B5: 'Spring', C5: '61',
+  };
+  const at = (formula: string) => evaluate({ ...cells, Z1: formula }, 'Z1');
+
+  it('averages only the rows that match', () => {
+    expect(at('=AVERAGEIFS(C2:C5,A2:A5,"ECON")')).toBeCloseTo(81.333, 2);
+    expect(at('=AVERAGEIFS(C2:C5,A2:A5,"ECON",B2:B5,"Fall")')).toBe(91.5);
+  });
+
+  it('takes the smallest and the largest of them', () => {
+    expect(at('=MINIFS(C2:C5,A2:A5,"ECON")')).toBe(61);
+    expect(at('=MAXIFS(C2:C5,A2:A5,"ECON")')).toBe(95);
+    expect(at('=MINIFS(C2:C5,A2:A5,"ECON",B2:B5,"Fall")')).toBe(88);
+  });
+
+  /* Excel's answers, and the honest pair: an average of no numbers is a
+     division by none; a smallest of none is zero, which is what sheets are
+     built around even though it is not a measurement. */
+  it('answers #DIV/0! for an average of nothing and 0 for a min of nothing', () => {
+    expect(at('=AVERAGEIFS(C2:C5,A2:A5,"NONE")')).toBe('#DIV/0!');
+    expect(at('=MINIFS(C2:C5,A2:A5,"NONE")')).toBe(0);
+    expect(at('=MAXIFS(C2:C5,A2:A5,"NONE")')).toBe(0);
+  });
+
+  it('refuses a range that is not the same length as the conditions', () => {
+    expect(at('=AVERAGEIFS(C2:C4,A2:A5,"ECON")')).toBe('#VALUE!');
+    expect(at('=MINIFS(C2:C5,A2:A5)')).toBe('#VALUE!');
+  });
+
+  it('takes the comparisons the other IFS functions take', () => {
+    expect(at('=MAXIFS(C2:C5,C2:C5,"<90")')).toBe(88);
+    expect(at('=AVERAGEIFS(C2:C5,C2:C5,">=88")')).toBe(91.5);
+  });
+});

@@ -206,6 +206,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
       {tab === 'schedule' && (
         <>
           <input
+            className="input"
             aria-label="Search athletics events"
             placeholder="Search team, event or type"
             value={query}
@@ -406,6 +407,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               <label key={field} style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
                 <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>{label}</span>
                 <input
+                  className="input"
                   type={kind}
                   required={required}
                   maxLength={ATHLETICS_LIMITS.where}
@@ -418,6 +420,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Type</span>
               <select
+                className="input"
                 value={draft.kind}
                 onChange={(e) => setDraft((v) => ({ ...v, kind: e.target.value as AthleticEvent['kind'] }))}
                 style={{ width: '100%', marginTop: 'var(--sp-2)' }}
@@ -430,6 +433,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Plan and travel notes</span>
               <textarea
+                className="input"
                 rows={5}
                 maxLength={ATHLETICS_LIMITS.notes}
                 value={draft.notes}
@@ -440,6 +444,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
             <label style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Checklist, one step per line</span>
               <textarea
+                className="input"
                 rows={5}
                 value={draft.steps.map((s) => s.text).join('\n')}
                 onChange={(e) =>

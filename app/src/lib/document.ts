@@ -206,8 +206,13 @@ export interface Run {
   strike: boolean;
   /** Monospaced and literal — nothing inside it is a mark. */
   code: boolean;
-  /** Where it points. Empty on everything that is not a link. */
-  href: string;
+  /**
+   * Where this run points, or empty when it points nowhere.
+   *
+   * Already checked by {@link safeUrl} — nothing downstream re-checks it, so
+   * nothing downstream may set it from raw text either.
+   */
+  link: string;
 }
 
 /** A run with nothing on it, which is what every walk starts from. */
@@ -216,8 +221,48 @@ const PLAIN: Omit<Run, 'text'> = {
   italic: false,
   strike: false,
   code: false,
-  href: '',
+  link: '',
 };
+
+/**
+ * A URL this app is willing to put behind words, or nothing.
+ *
+ * A document is text somebody else wrote as often as not — pasted from a
+ * reading, imported from Markdown, handed over by a model — and a link is the
+ * one piece of a document that *does* something when it is clicked. So the
+ * scheme is checked against a list of three rather than against a list of the
+ * bad ones: `javascript:` is the one everybody remembers, and `data:` will
+ * serve a whole page, and neither is the interesting part. The interesting
+ * part is that the next scheme somebody thinks of is allowed by any rule
+ * written as a denial and refused by this one.
+ *
+ * A bare domain is what people actually type, so `vanderbilt.edu` becomes
+ * `https://vanderbilt.edu` — but only when it *looks* like a domain. `#notes`
+ * and `../thing` are not links out of this document and must not be turned
+ * into one by having a scheme stapled to the front.
+ */
+export function safeUrl(raw: string): string {
+  const text = raw.trim();
+  if (!text) return '';
+  const looksLikeDomain = /^[\w-]+(\.[\w-]+)+([/?#]|$)/.test(text);
+  const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(text);
+  if (!hasScheme && !looksLikeDomain) return '';
+  try {
+    const url = new URL(hasScheme ? text : `https://${text}`);
+    return ['http:', 'https:', 'mailto:'].includes(url.protocol) ? url.href : '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * `[words](where)`, in the form people already type.
+ *
+ * The space between `]` and `(` is what keeps a numbered citation out of
+ * this: "see [3] (above)" is not a link and never becomes one. The target may
+ * not contain whitespace for the same reason.
+ */
+const LINK = /\[([^\]\n]+)\]\((\S+?)\)/;
 
 /**
  * A paragraph split into its marked pieces.
@@ -262,25 +307,37 @@ export function runs(text: string): Run[] {
     if (!part) return;
 
     /*
-     * A link's target is not text and never was.
+     * Five marks, earliest one first, and the two rules that decide nesting.
      *
-     * `[Smith 2019](https://…)` is one run whose words are the label and
-     * whose `href` is the rest, so a word count counts two words and the
-     * .docx carries a real hyperlink. Spaces are refused inside the brackets
-     * on purpose: `(see below)` after a `[bracketed]` aside is ordinary
-     * prose, and reading it as a link would make a document unwritable.
+     * **A link is only read outside a link**, because a link inside a link
+     * has no meaning and the recursion has to end. A target this app will not
+     * follow keeps its brackets and is pushed as it was typed — visible and
+     * fixable, which is the same choice this file makes about
+     * `***three stars***`; silently dropping the words, or silently keeping
+     * the link, are both worse.
+     *
+     * **Backticks are literal**, so what is between them is pushed rather
+     * than walked: otherwise `` `**p**` `` is a bold p in a sentence about
+     * markdown. Earliest-first is what keeps that from fighting the link
+     * rule — `[`x`](url)` starts with the bracket, so it is a link whose
+     * words happen to be code, which is what it looks like.
      */
+    const link = on.link ? null : LINK.exec(part);
     const code = on.code ? null : /`([^`\n]+)`/.exec(part);
-    const link = on.href ? null : /\[([^\]\n]+)\]\(([^)\s]+)\)/.exec(part);
     const strong = /\*\*(\S(?:(?!\*\*)[\s\S])*?\S|\S)\*\*/.exec(part);
     const struck = /~~(\S(?:(?!~~)[\s\S])*?\S|\S)~~/.exec(part);
     const em = /\*(\S(?:[^*]*\S)?)\*/.exec(part);
 
     const found = [
-      // Pushed rather than walked: what is between backticks is literal, and
-      // walking it would make `**p**` a bold p in a sentence about markdown.
+      {
+        at: link,
+        take: () => {
+          const url = safeUrl(link![2]);
+          if (url) walk(link![1], { ...on, link: url });
+          else out.push({ text: link![0], ...on });
+        },
+      },
       { at: code, take: () => out.push({ text: code![1], ...on, code: true }) },
-      { at: link, take: () => walk(link![1], { ...on, href: link![2] }) },
       { at: strong, take: () => walk(strong![1], { ...on, bold: true }) },
       { at: struck, take: () => walk(struck![1], { ...on, strike: true }) },
       { at: em, take: () => walk(em![1], { ...on, italic: true }) },

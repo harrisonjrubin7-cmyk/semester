@@ -28,6 +28,8 @@
  */
 
 import { dateToIso, daysBetween, isoToDate, realDate, startOfDay } from './date';
+// Lowercased for matching, derived from the one list. See `lib/date.ts`.
+import { MONTH_WORDS } from './date';
 
 export type RegistrarKind = 'deadline' | 'window' | 'break' | 'exams';
 
@@ -284,20 +286,6 @@ export function ahead(dates: TermDate[], now: Date): TermDate[] {
 
 // ── Reading a registrar's page ────────────────────────────────────────────
 
-const MONTH_WORDS = [
-  'january',
-  'february',
-  'march',
-  'april',
-  'may',
-  'june',
-  'july',
-  'august',
-  'september',
-  'october',
-  'november',
-  'december',
-];
 
 /** "Sept" and "Sept." as well as "September". Ordinals on the day. */
 const DATE_RE = new RegExp(

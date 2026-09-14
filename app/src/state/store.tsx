@@ -73,10 +73,12 @@ import type { School } from '../lib/school';
 import { said as refreshSaid } from '../lib/refresh';
 import {
   STORAGE_KEY,
-  SYNCED_KEY,
   initialEphemeral,
   loadPersisted,
+  markSeen,
   pickPersisted,
+  seenRows,
+  unseen,
   type Action,
   type Persisted,
   type State,
@@ -632,18 +634,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setSync((s) => ({ ...s, status: 'syncing', error: '' }));
     try {
       const remote = await pull(account.id);
-      const localStamp = Number(localStorage.getItem(SYNCED_KEY) ?? 0);
+      const seen = seenRows();
       const hasRemote = remote.state !== null || remote.courses.length > 0;
 
       /*
        * A first sign-in with a semester on both sides is the one moment this
        * feature can ruin a term, so it asks instead of deciding.
        *
-       * Only on a *first* one — `localStamp` is zero until this device has
-       * synced once, and after that the ordinary newest-wins path is right and
-       * a dialogue every time would be intolerable. See `lib/adopt.ts`.
+       * Only on a *first* one — `seenRows()` is null until this device has
+       * taken something, and after that the ordinary newest-wins path is right
+       * and a dialogue every time would be intolerable. See `lib/adopt.ts`.
        */
-      if (hasRemote && localStamp === 0) {
+      if (hasRemote && seen === null) {
         const here = countRows(pickPersisted(latest.current));
         const there = countRows({
           ...(remote.state as Record<string, unknown>),
@@ -662,7 +664,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const take = hasRemote && remote.updated > localStamp;
+      /*
+       * Rows this device has not taken, rather than a stamp beating a clock.
+       * `state/shape.ts` sets out the two ways the old comparison lost work:
+       * a device clock on one side of it, and a row that commits after the
+       * pull that should have seen it. Neither survives asking this instead.
+       */
+      const take = hasRemote && unseen(remote.seen, seen);
 
       if (take) {
         dispatch({
@@ -672,7 +680,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             courses: remote.courses.map((c) => c.data as CourseModule),
           },
         });
-        localStorage.setItem(SYNCED_KEY, String(remote.updated));
+        markSeen(remote.seen);
       }
       setSync({ status: 'synced', at: Date.now(), error: '' });
       return refreshSaid(
@@ -718,8 +726,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         courses.map((c) => ({ id: c.course.id, data: c })),
         removed,
       )
-        .then(() => {
-          localStorage.setItem(SYNCED_KEY, String(Date.now()));
+        .then((seen) => {
+          // What the database stamped, not what this device's clock says.
+          markSeen(seen);
           setSync({ status: 'synced', at: Date.now(), error: '' });
           if (removed.length > 0) dispatch({ type: 'removalsPushed', ids: removed });
         })
@@ -1066,9 +1075,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // this device's rows because `hydrate`'s merge is a union, while `cloud`
       // clears them first so the account's copy is what is left.
       if (choice === 'device') {
-        // Nothing to take. The push effect sends this device up on its next
-        // run, which is what makes it the account's copy too.
-        localStorage.setItem(SYNCED_KEY, String(Date.now()));
+        // Nothing to take, so what is recorded is the account as it was just
+        // read — this device has seen it and chosen against it. The push effect
+        // sends this device up on its next run, which is what makes it the
+        // account's copy too, and records its own stamps when it does.
+        markSeen(remote.seen);
       } else {
         if (choice === 'cloud') dispatch({ type: 'wipeLocalForAdopt' });
         dispatch({
@@ -1078,7 +1089,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             courses: remote.courses.map((c) => c.data as CourseModule),
           },
         });
-        localStorage.setItem(SYNCED_KEY, String(remote.updated));
+        markSeen(remote.seen);
       }
       setAsking(null);
     },

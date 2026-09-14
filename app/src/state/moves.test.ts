@@ -310,7 +310,7 @@ describe('one occurrence of a repeating appointment', () => {
   it('edits one in place without disturbing the rule', () => {
     const before = withSeries();
     const after = act(before, {
-      type: 'patchAppointment',
+      type: 'editAppointment',
       id: before.appointments[0].id,
       patch: { minutes: 180, where: 'Commons' },
     });

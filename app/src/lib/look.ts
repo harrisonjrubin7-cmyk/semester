@@ -402,6 +402,30 @@ export function resolveGround(id: string | undefined, prefersDark: boolean): str
   return prefersDark ? DEVICE_DARK : DEVICE_LIGHT;
 }
 
+/** What "Match my device" is called, wherever the setting is named. */
+export const MATCH_DEVICE_LABEL = 'Match my device';
+
+/**
+ * What the ground somebody has chosen is called.
+ *
+ * The distinction `resolveGround` deliberately erases, put back — and that is
+ * the point of having both. `resolveGround` answers "which palette do I
+ * paint", so it turns `device` into a real ground; this answers "what has this
+ * person chosen", so it does not. Anything that *reports* the setting must use
+ * this one, or it tells somebody on Match my device that they picked Ink.
+ *
+ * That was not hypothetical. The workspace's Customize panel offered a
+ * Dark/Light pair built on `resolveGround`, so it lit Dark for somebody
+ * following their device, and pressing Light wrote a fixed ground over the
+ * instruction — one way, with nothing said, and no route back to Match my
+ * device from that panel. The pair is gone (the panel links to the setting
+ * instead) and this exists so that the panel, and anything else that names a
+ * ground, cannot make the same mistake by construction.
+ */
+export function groundName(id: string | undefined): string {
+  return id === MATCH_DEVICE ? MATCH_DEVICE_LABEL : ground(id).label;
+}
+
 // ── Spacing, corners, type ───────────────────────────────────────────────
 
 export const DENSITIES = [
@@ -732,19 +756,6 @@ export const NAVS = [
      * other, and the sidebar's Today row goes to it. What the workspace does
      * differently is where the app *lands*, which is `firstScreen` in
      * `lib/chrome.ts` rather than anything about what home is called.
-     */
-    home: 'Today',
-  },
-  {
-    id: 'browser',
-    label: 'Browser',
-    blurb:
-      'The workspace with a browser’s habits: name a tab, bookmark it, keep a coloured group of them, and reopen the one you just closed.',
-    /*
-     * Today, for the same reason the workspace's is: what this navigation
-     * changes is the chrome and where you land, not what home means. See
-     * `firstScreen` in `lib/chrome.ts` — this one opens on the search home
-     * too, the way a browser opens on a new tab.
      */
     home: 'Today',
   },

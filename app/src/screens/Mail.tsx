@@ -24,7 +24,7 @@ import { Rail } from '../components/mail/Rail';
 import { List } from '../components/mail/List';
 import { Reader } from '../components/mail/Reader';
 import { Compose } from '../components/mail/Compose';
-import { readMail, tokens, describe as explain, type ProviderId } from '../lib/connect';
+import { readMail, readableMail, tokens, describe as explain, type ProviderId } from '../lib/connect';
 import {
   conversations,
   draftAsMail,
@@ -45,8 +45,6 @@ import {
 /** How many conversations a page holds. Gmail's number, and it is a good one. */
 const PER_PAGE = 50;
 
-/** The accounts that have a mailbox this app can read. */
-const MAIL_PROVIDERS: ProviderId[] = ['google', 'microsoft'];
 
 /**
  * Email.
@@ -114,7 +112,7 @@ export function Mail() {
   const search = useRef<HTMLInputElement>(null);
 
   const held = tokens();
-  const accounts = MAIL_PROVIDERS.filter((id) => held[id]);
+  const accounts = readableMail(held);
   const me = useMemo(
     () => ({ name: state.myName || 'You', address: account?.email ?? '' }),
     [state.myName, account?.email],
@@ -377,12 +375,28 @@ export function Mail() {
           </button>
         )}
 
+        {/*
+          Off when there is no mailbox to check.
+
+          `pull` opens with `if (accounts.length === 0) return`, which is right
+          — there is nothing to ask — and left this button enabled, pressable,
+          and completely silent. The folder underneath already says "No account
+          connected" and offers Connect; the one control up here that looks
+          like it would go and get something did nothing and said nothing about
+          why. The same `disabled` the four actions beside it already use, and
+          the title carries the reason so the answer is on the control rather
+          than only in the empty state below it.
+        */}
         <button
           type="button"
           className="mb-ico"
           aria-label="Check for new mail"
-          title="Check for new mail"
-          disabled={busy}
+          title={
+            accounts.length === 0
+              ? 'Connect an account before checking for new mail'
+              : 'Check for new mail'
+          }
+          disabled={busy || accounts.length === 0}
           onClick={() => void pull(folder, query)}
         >
           <RefreshIcon size={18} />

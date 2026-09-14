@@ -1,4 +1,4 @@
-import { realMonthDay } from './date';
+import { MONTHS, realMonthDay } from './date';
 /**
  * The email that changes a date.
  *
@@ -203,7 +203,6 @@ export function describe(change: Change, module: CourseModule): string {
   }
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /**
  * The course, with the accepted changes folded in.

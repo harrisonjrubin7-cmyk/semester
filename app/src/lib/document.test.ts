@@ -34,7 +34,7 @@ const piece = (text: string, on: Partial<Omit<ReturnType<typeof runs>[number], '
   italic: false,
   strike: false,
   code: false,
-  href: '',
+  link: '',
   ...on,
 });
 
@@ -87,14 +87,17 @@ describe('emphasis', () => {
   it('reads a link as its words and where it points', () => {
     expect(runs('see [the paper](https://example.edu/x.pdf) for it')).toEqual([
       piece('see '),
-      piece('the paper', { href: 'https://example.edu/x.pdf' }),
+      piece('the paper', { link: 'https://example.edu/x.pdf' }),
       piece(' for it'),
     ]);
   });
 
   it('marks the words inside a link without losing where it points', () => {
     expect(runs('[**Smith**](https://example.edu)')).toEqual([
-      piece('Smith', { bold: true, href: 'https://example.edu' }),
+      // The trailing slash is `safeUrl` normalising through `new URL`, which
+      // is what stops two spellings of one address becoming two relationships
+      // in the Word file.
+      piece('Smith', { bold: true, link: 'https://example.edu/' }),
     ]);
   });
 
@@ -104,7 +107,7 @@ describe('emphasis', () => {
    * a link would make an ordinary sentence unwritable.
    */
   it('leaves a bracketed aside beside a parenthesis alone', () => {
-    expect(runs('[sic] (see below)').map((r) => r.href)).toEqual(['']);
+    expect(runs('[sic] (see below)').map((r) => r.link)).toEqual(['']);
   });
 
   it('counts a link by its words rather than by its address', () => {
