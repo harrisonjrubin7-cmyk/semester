@@ -9,13 +9,14 @@ product vision. `ENGINEERING-AUDIT.md` asked what the code costs to open,
 render, test and extend, and closed six of its thirteen items. `APP-AUDIT.md`
 and `docs/APPLICATION_AUDIT.md` swept the screens for things that break.
 
-So this one re-measures, closes four of the things left open, finds three that
-were not on anyone's list, and — the part that matters most — reports one
-change that looked like the largest remaining win and **should not be made
-yet**, with the evidence for why.
+So this one re-measures, closes five of the things left open, finds four that
+were not on anyone's list — including a live bug that makes `npm test` red on
+`main` while reporting that everything passed — and reports one change that
+looked like the largest remaining win and **should not be made yet**, with the
+evidence for why.
 
 Everything below is measured, with the command that measured it. Measured at
-`253d34f` (the baseline) and re-measured at `d63507b` (this branch), on Node
+`253d34f` (the baseline) and re-measured at `5f3406f` (this branch), on Node
 22.22.2.
 
 ---
@@ -24,11 +25,11 @@ Everything below is measured, with the command that measured it. Measured at
 
 Run from `app/`, on a clean `npm install`:
 
-| | Baseline `253d34f` | This branch `d63507b` |
+| | Baseline `253d34f` | This branch `5f3406f` |
 | --- | --- | --- |
 | `npx tsc -b` | exit 0 | exit 0 |
 | `npm run lint` | exit 0, 45 warnings | exit 0, 45 warnings, **now capped at 45** |
-| `npm test` | 372 files, 7,678 passed, 10 skipped | 374 files, 7,685 passed, 10 skipped |
+| `npm test` | 372 files, 7,678 passed, 10 skipped — **exit 1 on some runs**, see §2a | 376 files, 7,687 passed, 10 skipped, exit 0 |
 | `npm run test:zones` | exit 0, twice | exit 0, twice |
 | `npm run build` | exit 0 | exit 0 |
 | `npm run check:university` | exit 0 | exit 0 |
@@ -167,9 +168,45 @@ the §3 estimate assumed:
    run ends in `EnvironmentTeardownError: Cannot load
    '/src/data/courses/econ/guide.ts' … after the environment was torn down`,
    and 29 tests in `screens/files.test.tsx` are reported *skipped* rather than
-   failed. Something triggers `loadSeed()` and nobody awaits it. Under
-   isolation the process dies before the import resolves and nobody ever finds
-   out; this is the shared worker telling the truth about it.
+   failed. **Fixed, and it was never only a test problem** — see §2a. Shared
+   workers made it fail every run rather than some runs, which is the only
+   reason it was found here.
+
+### 2a. The third class was a live bug, and `npm test` is red on main because of it · **fixed**
+
+Chasing where the floating import came from produced the one finding in this
+audit that a student would notice.
+
+`state/store.tsx` fetches the sample semester when `state.sample` is on, which
+is the default, so any test that mounts a provider starts four dynamic imports
+— started with `void loadSeed().then(…)` and no `catch`. A test that finishes
+first leaves them rejecting into nobody's hands, and an unhandled rejection
+fails the run *after* the summary has already said everything passed. Measured
+on the baseline, six runs of one file: three errors, three, one, three, three,
+none.
+
+```bash
+git stash && for i in 1 2 3 4 5 6; do \
+  npx vitest run src/components/splash.test.tsx 2>&1 | grep -c EnvironmentTeardownError; done
+```
+
+So **`npm test` exits 1 on `main`, intermittently, while reporting that all
+372 files passed.** That is the worst shape a red build can have: nothing to
+reproduce, nothing named, and a green summary above the failure.
+
+The production half is the part worth fixing and has nothing to do with tests.
+`loadSeed` caches its promise so that flicking the toggle does not refetch
+330 kB — but `??=` is satisfied by a promise whatever it settled to, so it
+cached failures as readily as successes. These are dynamic imports: they fail
+in exactly the two ways `components/Boundary.tsx` is written about, and both
+are over by the next attempt. There was no next attempt. The toggle went on,
+nothing appeared, off and on again returned the same rejection, and the sample
+stayed unavailable for the rest of the session on a device that was by then
+perfectly able to fetch it.
+
+A failure is no longer kept, the store catches what it starts, and
+`data/seed.test.ts` holds both halves. Three consecutive `npm test` runs now
+exit 0.
 
 **Why that adds up to "not yet" rather than "nearly".** Which worker a file
 lands in depends on how many files are packed into how many workers, and that
@@ -193,11 +230,12 @@ Vitest project with `isolate: true` was tried and is not enough on its own —
 class 2 and class 3 are not mocking files. Do these first, each on its own and
 provable by `--sequence.shuffle` and by the `--maxWorkers` sweep above:
 
-1. Run `splash.test.tsx` to ground (class 2).
-2. Find and await the floating `loadSeed()` (class 3) — this is a real finding
-   about the test, not only about the runner.
+1. ✅ The floating `loadSeed()` (class 3) — done, and see §2a.
+2. Run `splash.test.tsx` to ground (class 2).
 3. Then turn `isolate: false` on, with the nine mocking files listed as
-   exceptions, and re-run the whole sweep before merging.
+   exceptions, and re-run the whole `--maxWorkers` sweep before merging. Two of
+   the four sweep points were failing on classes 1 and 3; re-run it before
+   assuming 2 is all that is left.
 
 The saving does not go anywhere while that happens.
 
@@ -364,14 +402,15 @@ something once went wrong.
 | 1 | ✅ **§1** — split reading from asking in the assistant | done | −6.6 kB gzipped off every first load, and one real bug |
 | 2 | ✅ **§3** — four order-dependent test files | done | a suite that can be shuffled, which is the precondition for 4 |
 | 3 | ✅ **§4**, **§6** — the registry guard and the lint ceiling | done | two things that cannot quietly get worse |
-| 4 | **§2 steps 1–2** — `splash.test.tsx`, and the floating `loadSeed()` | a day | the last two blockers, and one is a genuine test bug |
-| 5 | **§2 step 3** — `isolate: false` with the nine exceptions | small, after 4 | ~45 s off every CI run, three runs deep |
-| 6 | **§5** — a size, a list and a clear button for downloaded media | medium | an installed app that does not quietly take 200 MB of a phone |
-| 7 | **§6 follow-on** — reshape `useModal`'s return | small | 20 of 45 warnings, in one change |
-| 8 | **§7** — direct tests for `rtc.ts`, `mic.ts` | medium | the part of the app that is hardest to check by hand |
+| 4 | ✅ **§2a** — the unawaited, failure-cached `loadSeed()` | done | `npm test` stops being intermittently red on main, and a sample that failed once can load again |
+| 5 | **§2 step 2** — run `splash.test.tsx` to ground | half a day | the last known blocker, and §3's last open row |
+| 6 | **§2 step 3** — `isolate: false` with the nine exceptions | small, after 5 | ~45 s off every CI run, three runs deep |
+| 7 | **§5** — a size, a list and a clear button for downloaded media | medium | an installed app that does not quietly take 200 MB of a phone |
+| 8 | **§6 follow-on** — reshape `useModal`'s return | small | 20 of 45 warnings, in one change |
+| 9 | **§7** — direct tests for `rtc.ts`, `mic.ts` | medium | the part of the app that is hardest to check by hand |
 
-Items 1–3 are on this branch, one commit each, with `lint`, `tsc`, `test`,
-`test:zones` and `build` green after every one.
+Items 1–4 are on this branch, one commit each, with `lint`, `tsc`, `test`,
+`test:zones`, `build` and `check:university` green after every one.
 
 ## 9. What this audit deliberately did not do
 
