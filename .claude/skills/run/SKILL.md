@@ -145,23 +145,49 @@ These are two independent axes (see `lib/types.ts` on `NavMode` and
 app. A change to one is not exercised by looking at the other.
 
 Seed them before the first load — much faster than clicking through
-Settings, and verified to apply:
+Settings. **The `schemaVersion` is not optional**, and leaving it out is the
+trap this section exists for:
 
 ```js
 await ctx.addInitScript(() => {
-  localStorage.setItem('semester.v1', JSON.stringify({ shell: 'soft', nav: 'tabs' }));
+  localStorage.setItem(
+    'semester.v1',
+    // SCHEMA in lib/migrate.ts. Without it the seed is a legacy copy.
+    JSON.stringify({ schemaVersion: 6, shell: 'soft', nav: 'tabs' }),
+  );
 });
 ```
+
+A stored object with no `schemaVersion` is *version 1* — see `versionOf` in
+`lib/migrate.ts` — so it is walked through every migration step on the way in.
+Three of those steps rewrite `nav` outright (4 → `workspace`, 5 → `guides`,
+6 → `workspace`), for the reasons written beside them. So a seed of
+`{ nav: 'tabs' }` is read, migrated to `workspace`, and the app opens on the
+search field with no tab bar anywhere — with no error, which reads as "the tab
+bar is broken" rather than as "the seed was overwritten". Measured: across
+forty-five shell × navigation × viewport combinations, seeding without the
+version produced the identical workspace screen every time; adding it drew all
+five navigations correctly.
+
+`shell` is not rewritten by any step, which is why this only ever bites the
+navigation — and why it is easy to conclude the seeding works when half of it
+did.
 
 | Setting | Values in code | Labels on screen |
 |---|---|---|
 | `shell` | `plain` · `grouped` · `soft` | Drawn · Grouped · Soft |
-| `nav` | `tabs` · `feed` · `springboard` · `shelves` | Tab bar · One feed · Home screen · Shelves |
+| `nav` | `tabs` · `feed` · `springboard` · `shelves` · `workspace` · `guides` | Tab bar · One feed · Home screen · Shelves · Workspace · Guides |
 
 The names do not match: **`plain` is "Drawn"** (`SHELLS` in `lib/look.ts`).
 `drawn` is a real value in this app, but it belongs to `corners`, not
 `shell` — and `useShell` returns plain for anything it does not recognise,
 so `shell: 'drawn'` falls through silently and looks like it worked.
+
+`workspace` is the default the app ships opening on, and it is the one
+navigation whose chrome is on *top*: a tab strip and a search field, with the
+sidebar as well on a laptop. `#/search` is its home. So a run that seeds
+nothing at all is a run looking at the workspace, which is correct and is not
+the tab bar.
 
 Seeding the shell does **not** skip the adoption prompt — still click Skip.
 `semester.v1` is plain JSON (`state/shape.ts`, `STORAGE_KEY`) and is merged
@@ -277,7 +303,10 @@ const ctx = await browser.newContext({
   deviceScaleFactor: 2,
 });
 await ctx.addInitScript(() => {
-  localStorage.setItem('semester.v1', JSON.stringify({ shell: 'soft', nav: 'tabs' }));
+  localStorage.setItem(
+    'semester.v1',
+    JSON.stringify({ schemaVersion: 6, shell: 'soft', nav: 'tabs' }),
+  );
 });
 const page = await ctx.newPage();
 const errors = [];
