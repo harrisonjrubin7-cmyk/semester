@@ -10,6 +10,7 @@ import {
   route,
   routeLabel,
   saveSettings,
+  settings,
   withAttachments,
   asSent,
   strictly,
@@ -418,6 +419,109 @@ describe('a strict tool, as a strict API insists on it', () => {
     const schema = { type: 'object', properties: { a: { type: 'string' } } };
     strictly([tool(schema)]);
     expect(schema).toEqual({ type: 'object', properties: { a: { type: 'string' } } });
+  });
+});
+
+/**
+ * A grammar the API will not compile.
+ *
+ * The count limit above is one way the promise is refused; this is the other,
+ * and it is refused for the *set* rather than for any tool in it. Both take
+ * the whole request down, so a student asking "what is due this week?" — a
+ * question with no tool in it — gets an error where the answer should be.
+ */
+describe('when the API will not compile the promise', () => {
+  /** What the app was left showing: a sentence, in a red box, on every ask. */
+  const refusing = (message: string) => {
+    let attempt = 0;
+    const calls = { get n() { return attempt; } };
+    vi.stubGlobal('fetch', (url: string, init: RequestInit) => {
+      attempt += 1;
+      sent = { url: String(url), body: JSON.parse(String(init.body)) };
+      if (attempt === 1) {
+        return Promise.resolve(new Response(JSON.stringify({ error: { message } }), { status: 400 }));
+      }
+      return Promise.resolve(stream([said('Two things are due.')]));
+    });
+    return calls;
+  };
+
+  const tools = [
+    {
+      name: 'tick_deadline',
+      description: 'x',
+      strict: true as const,
+      input_schema: { type: 'object' as const, properties: { id: { type: 'string' } } },
+    },
+  ];
+
+  const asking = () =>
+    ask({ system: 's', messages: [{ role: 'user', content: 'what is due this week?' }], tools });
+
+  beforeEach(() => {
+    // `afterEach` clears the device's memory of it; this clears the copy the
+    // module is holding, which is the same thing a reload does.
+    saveSettings(JSON.parse(localStorage.getItem('semester.claude.v1')!));
+  });
+
+  it('drops the promise and answers the question', async () => {
+    const calls = refusing('Schema is too complex.');
+    expect(await asking()).toBe('Two things are due.');
+    expect(calls.n).toBe(2);
+    // Still offered — a tool the model cannot see is a thing the app can no
+    // longer do, and every argument is re-read by `readProposal` anyway.
+    const wire = sent!.body.tools as { name: string; strict?: boolean }[];
+    expect(wire.map((t) => t.name)).toEqual(['tick_deadline']);
+    expect(wire.every((t) => t.strict === undefined)).toBe(true);
+  });
+
+  it('costs one round trip, not one per question', async () => {
+    refusing('Schema is too complex.');
+    await asking();
+    catchRequest([said('Two things are due.')]);
+    await asking();
+    expect((sent!.body.tools as { strict?: boolean }[])[0].strict).toBeUndefined();
+  });
+
+  it('is remembered on the device, so a reload does not re-spend the call', async () => {
+    // On the shared key that retry is one of sixty metered calls a month, and
+    // a memory that only lasts a session spends one on every page load.
+    refusing('Schema is too complex.');
+    await asking();
+    saveSettings(JSON.parse(localStorage.getItem('semester.claude.v1')!)); // as a reload
+    catchRequest([said('Two things are due.')]);
+    await asking();
+    expect((sent!.body.tools as { strict?: boolean }[])[0].strict).toBeUndefined();
+  });
+
+  it('is the model’s budget, not the device’s', async () => {
+    // Which schemas compile differs between models, so a refusal from one is
+    // not a reason to stop promising on another — and picking a different
+    // model is how a raised limit gets picked up.
+    refusing('Schema is too complex.');
+    await asking();
+    saveSettings({ ...settings(), model: 'claude-sonnet-5' });
+    catchRequest([said('Two things are due.')]);
+    await asking();
+    expect((sent!.body.tools as { strict?: boolean }[])[0].strict).toBe(true);
+  });
+
+  it.each([
+    'Schema is too complex.',
+    'The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.',
+    'Too many strict tools (22). The maximum number of strict tools supported is 20.',
+  ])('recognises it however the API words it: %s', async (message) => {
+    const calls = refusing(message);
+    expect(await asking()).toBe('Two things are due.');
+    expect(calls.n).toBe(2);
+  });
+
+  it('leaves an unrelated 400 alone', async () => {
+    // A genuinely wrong request must still reach the student: retrying it
+    // without the promise would spend a second call and fail the same way.
+    const calls = refusing('messages: at least one message is required');
+    await expect(asking()).rejects.toThrow(/at least one message/);
+    expect(calls.n).toBe(1);
   });
 });
 

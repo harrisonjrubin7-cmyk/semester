@@ -99,8 +99,11 @@ export function settings(): ClaudeSettings {
 export function saveSettings(next: ClaudeSettings): void {
   // A setting changed here is a fresh start: whatever a proxy did to the last
   // question, the person has just been to the screen about it and may well
-  // have fixed it. See `proxyDown`.
+  // have fixed it. See `proxyDown`. The same for the model's grammar budget,
+  // in memory only — what this device learned stays learned in `STRICT_KEY`,
+  // so nothing is re-spent finding it out again.
   proxyDown = false;
+  strictRefusedNow = '';
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
   } catch {
@@ -667,6 +670,82 @@ type Block =
  */
 let structuredRefused = false;
 
+/**
+ * The models that have told us they will not compile the promise.
+ *
+ * `strict: true` is checked by the API building one grammar out of every
+ * strict schema in the request, and that grammar has a size the request is
+ * refused for exceeding — "Schema is too complex", or "The compiled grammar
+ * is too large … Simplify your tool schemas or reduce the number of strict
+ * tools". It is the same shape of failure as the count limit `MOST_STRICT`
+ * guards, one step along: no tool definition can see it, because it is not
+ * about any one of them. Sixteen small, flat, fully-required schemas were
+ * enough, and while they were sent every question failed — including the
+ * ones with no tool anywhere near them.
+ *
+ * The size that is too large is not published and is not the same on every
+ * model, so there is no number to write here that stays true. What is true is
+ * that the promise is worth less to this app than an answer is: `readProposal`
+ * re-reads every proposal against what the app actually holds and `runLookups`
+ * reads each argument with a fallback, so nothing downstream has ever trusted
+ * a tool argument. So the promise is dropped, the question is asked again, and
+ * every tool is still offered.
+ *
+ * Remembered against the model rather than for the session, and on this device
+ * rather than in memory, because the model is what the budget belongs to and
+ * because that retry is not free: on the shared key it is a metered call out of
+ * sixty a month, and a session-long memory spends one on every page load for a
+ * fact already known. Picking a different model starts clean, which is also how
+ * a raised limit is picked up.
+ */
+const STRICT_KEY = 'semester.claude.strict.v1';
+
+/**
+ * The same fact held in memory, because storage may be off.
+ *
+ * Not an optimisation: `ask` retries by calling itself, and it stops because
+ * the second call can see that the promise has already been refused. With
+ * storage unavailable that is the only place it can see it, and without this
+ * the retry would ask the same refused question forever.
+ */
+let strictRefusedNow = '';
+
+function strictRefused(model: string): boolean {
+  if (strictRefusedNow === model) return true;
+  try {
+    const kept: unknown = JSON.parse(localStorage.getItem(STRICT_KEY) ?? '[]');
+    return Array.isArray(kept) && kept.includes(model);
+  } catch {
+    return false;
+  }
+}
+
+function rememberStrictRefused(model: string): void {
+  strictRefusedNow = model;
+  try {
+    const kept: unknown = JSON.parse(localStorage.getItem(STRICT_KEY) ?? '[]');
+    const models = Array.isArray(kept) ? kept.filter((m) => typeof m === 'string') : [];
+    if (!models.includes(model)) {
+      localStorage.setItem(STRICT_KEY, JSON.stringify([...models, model]));
+    }
+  } catch {
+    // Storage off. It holds for this session and is re-learned after.
+  }
+}
+
+/**
+ * Whether a 400 is the API refusing to compile the strict promise.
+ *
+ * Matched on the wording rather than the status because a 400 is also how a
+ * genuinely wrong request comes back, and those must still reach the student.
+ * Three sentences have been seen for the one fact — the complexity of the
+ * compiled grammar, its size, and the count of strict tools — and all three
+ * are fixed by the same thing.
+ */
+function aboutStrictTools(detail: string): boolean {
+  return /schema is too complex|compiled grammar|grammar is too large|strict tool/i.test(detail);
+}
+
 /** A tool as the API is told about it. */
 export interface ToolSpec {
   name: string;
@@ -747,8 +826,19 @@ const MOST_STRICT = 20;
  * writes first on purpose: a write changes the student's semester, so it is
  * the one worth the promise, and a lookup that comes back malformed costs a
  * re-read.
+ *
+ * None keep it on a model that has already refused to compile the promise at
+ * all — see `STRICT_KEY`, which is the same trade made for the whole set.
  */
-export function strictly(tools: ToolSpec[]): ToolSpec[] {
+export function strictly(tools: ToolSpec[], model = ''): ToolSpec[] {
+  if (model && strictRefused(model)) {
+    return tools.map((t) => {
+      if (!t.strict) return t;
+      const loosened = { ...t };
+      delete loosened.strict;
+      return loosened;
+    });
+  }
   let promised = 0;
   return tools.map((t) => {
     if (!t.strict) return t;
@@ -1004,7 +1094,7 @@ export async function ask(options: AskOptions): Promise<string> {
           : options.system,
         stream: true,
         ...(options.think ? { thinking: { type: 'adaptive' } } : {}),
-        ...(options.tools?.length ? { tools: strictly(options.tools) } : {}),
+        ...(options.tools?.length ? { tools: strictly(options.tools, s.model) } : {}),
         // Never both: the API refuses a request that asks for citations and a
         // constrained shape at once, and the citations are worth more.
         ...(options.format && !options.cite && !structuredRefused
@@ -1037,6 +1127,24 @@ export async function ask(options: AskOptions): Promise<string> {
     // trip, and the alternative is a feature that fails on every call.
     if (res.status === 400 && options.format && !structuredRefused && /output_config|format/i.test(detail)) {
       structuredRefused = true;
+      return ask(options);
+    }
+
+    /*
+     * The same move for the other promise, and for the same reason.
+     *
+     * A grammar the API will not compile refuses the whole request, so every
+     * question fails — including the ones that were never going to call a
+     * tool. Dropping `strict` costs a guarantee the app was already making
+     * for itself; not dropping it costs the assistant. See `strictRefused`.
+     */
+    if (
+      res.status === 400 &&
+      options.tools?.length &&
+      !strictRefused(s.model) &&
+      aboutStrictTools(detail)
+    ) {
+      rememberStrictRefused(s.model);
       return ask(options);
     }
 
