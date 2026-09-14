@@ -794,6 +794,34 @@ says at the top why it writes the same keys as the settings page rather than
 keeping its own, and it does exactly that. The browser shell is the one that
 does not, and that is S1.
 
+**What none of the three scans above can see, and the test that can.** Every
+census in this half counts *pathways over time*: how many places dispatch one
+action, how many files route to one screen, how many write one setting. That
+is the right net for "one job, one home", and it is blind by construction to
+the fault A is about — two controls that are **on screen at the same time**.
+Reaching Settings from here and also from there costs nothing while you are
+using neither; two buttons in one frame cost a decision every time you look.
+The proof that the blindness is real rather than theoretical is that this
+half's own census ran clean over a workspace whose bar and header were each
+drawing a search, and whose header's `+` sat inches from the sidebar's New.
+
+`lib/onframe.test.ts` (from `0cb57a6`, recorded in A §5) is the census of what
+is co-present, and it is a test rather than a paragraph because the fault is
+invisible in a type check, in a screenshot at one width, and in every other
+test here. It matches on the **dispatch** rather than the label, which is the
+half a reading of the screenshots would miss: two rows can be called different
+things and still land you in the same place — and, as the *All apps* collision
+showed, two rows can carry one name and land you in different ones.
+
+It also holds a rule this half nearly broke. #240's removal of **New** from
+both sidebars was right on its own terms and is S-nothing here; it also
+removed the premise of a rule in the header, whose `+` stood down wherever a
+sidebar was drawn *because that column had New*. Two correct removals, landing
+in the same week from two different passes, would have cancelled into a wide
+workspace with no pointing route to the capture box. See A §4c: `add` is
+unconditional now, and the test holds both halves — neither sidebar draws the
+capture box, and the header draws it at every width.
+
 ---
 
 ## 2. S1 — the browser shell keeps four settings of its own · **MERGE**
