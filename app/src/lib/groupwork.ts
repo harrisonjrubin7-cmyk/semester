@@ -8,7 +8,7 @@
  *
  * The rooms and the row-level policies that make them safe already existed;
  * this is a shared checklist inside one, plus the counting that turns it into
- * something worth opening. `supabase/groups.sql` holds the storage half.
+ * something worth opening. `supabase/migrations/20260901000500_groups.sql` holds the storage half.
  *
  * ## The pace line, which is the point
  *
