@@ -14,6 +14,23 @@
 
 import { tooPacked, tooPackedSaid } from './zips';
 
+/**
+ * What a file picker should offer, for the formats this file can read.
+ *
+ * Here rather than on a screen because it is a fact about the parser, not
+ * about either screen that uses it: the day `extract` learns a format, one
+ * list changes and both pickers follow. Import and Update each wrote the
+ * whole string out, identical up to the point where they differ, so adding a
+ * format meant remembering the second place — and the two had already drifted
+ * to the point where only one of them said so.
+ *
+ * They still differ, deliberately. Update takes a photo of a whiteboard or a
+ * posted notice and Import does not, so `DOCUMENTS` is the shared half and
+ * each screen adds what only it accepts. See `ACCEPT` in both.
+ */
+export const DOCUMENTS =
+  '.pdf,.docx,.pptx,.txt,.md,.markdown,.csv,.tsv,.rtf,.html,.htm,.zip,';
+
 /** What the parser needs from pdf.js, without pulling its types in. */
 interface PdfLib {
   GlobalWorkerOptions: { workerSrc: string };

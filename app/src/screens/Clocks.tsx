@@ -43,6 +43,8 @@ import {
   type Timer,
 } from '../lib/clocks';
 import { Folding } from '../components/Fold';
+// Day and month names come from `lib/date.ts`; see the note there.
+import { DAY_NAMES, DOW_INITIALS } from '../lib/date';
 
 /**
  * The time, once a second, for as long as this screen is open.
@@ -312,8 +314,6 @@ function Small({ children, onClick }: { children: React.ReactNode; onClick: () =
   );
 }
 
-const DAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function Alarms() {
   const { state, dispatch, now } = useStore();
@@ -360,7 +360,7 @@ function Alarms() {
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--sp-3)', margin: '10px 0 0' }}>
-        {DAY_LETTERS.map((letter, d) => {
+        {DOW_INITIALS.map((letter, d) => {
           const on = days.includes(d);
           return (
             <button

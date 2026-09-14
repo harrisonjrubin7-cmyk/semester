@@ -51,6 +51,7 @@ import {
   washPaper,
   type Sheet,
 } from './sheet';
+import { HEAD, REL, xml } from './ooxml';
 
 /**
  * A look with nothing on it is no look at all.
@@ -63,22 +64,9 @@ function dropEmpty(look: Look): Look | undefined {
   return Object.keys(look).length ? look : undefined;
 }
 
-/** XML text escaping. Every string that reaches the file goes through here. */
-export function xml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
-}
 
-const HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 
 const MAIN = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
-const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 /** One cell. What it is, rather than what it looks like. */
 export type Cell =
