@@ -167,10 +167,13 @@ function TabRows({
       <MenuRule />
       <MenuRow
         onPress={() => {
-          if (mine) openTabIn(mine.id);
-          else openTab();
+          // Only go to the new tab's page when there is a new tab. Both of
+          // these refuse at the cap, and landing on the search page anyway
+          // would answer "no room for another" by discarding the page in the
+          // tab you are on.
+          const opened = mine ? openTabIn(mine.id) : openTab();
           onClose();
-          onNewTab();
+          if (opened) onNewTab();
         }}
       >
         New tab{mine ? ` in ${mine.name || 'this group'}` : ''}
@@ -293,9 +296,9 @@ function GroupRows({
       </MenuRow>
       <MenuRow
         onPress={() => {
-          openTabIn(id);
+          const opened = openTabIn(id);
           onClose();
-          onNewTab();
+          if (opened) onNewTab();
         }}
       >
         New tab in this group

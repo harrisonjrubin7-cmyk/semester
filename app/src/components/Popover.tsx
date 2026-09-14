@@ -17,6 +17,17 @@
  * window and clamps to it. A context menu that opens half off the edge of the
  * screen is the one failure everybody notices.
  *
+ * ## Both edges, not just the left one
+ *
+ * That clamp was horizontal only, and the panel that most needs the other one
+ * is the group menu: a name field, twelve swatches and four rows, opened from
+ * a strip that on a phone sits at the bottom of the search overlay. Below
+ * about two thirds down the window it ran off the end — and `position: fixed`
+ * means off the end is gone, not scrolled to. So the height is measured before
+ * the browser paints and the panel opens *above* the corner when there is not
+ * room under it, which is what a context menu does everywhere else. A panel
+ * taller than the whole window scrolls inside itself rather than being cut.
+ *
  * ## `role="dialog"`, and not `menu`
  *
  * The app says elsewhere what it means by an ARIA role and does not claim
@@ -27,9 +38,14 @@
  * is, and the label says which one.
  */
 
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
 import { useModal } from '../a11y/modal';
 import { secondLine } from '../lib/dim';
+
+/** How close to the window's edge a panel is allowed to sit. */
+const EDGE = 8;
+/** And how far it keeps off the control it flipped above. */
+const GAP = 4;
 
 /** Where it opens: a point in the window, from a click or a control's corner. */
 export interface Corner {
@@ -54,6 +70,32 @@ export function Popover({
 }) {
   const modal = useModal<HTMLDivElement>({ onClose });
   const box = modal.ref;
+  /*
+   * Where it actually opens, once its height is known.
+   *
+   * Starts at the corner, which is right for the great majority of openings
+   * and is what is drawn if the measurement cannot happen at all. `useLayout
+   * Effect` rather than `useEffect` so the correction lands before the paint
+   * and the panel does not visibly jump up the screen.
+   */
+  const [top, setTop] = useState(corner.y);
+  useLayoutEffect(() => {
+    const panel = box.current;
+    if (!panel) return;
+    const place = () => {
+      const tall = panel.offsetHeight;
+      const room = window.innerHeight - EDGE;
+      if (corner.y + tall <= room) return setTop(corner.y);
+      // Above the corner, the way every context menu flips. `corner.y` is the
+      // bottom of the control that summoned it, so `GAP` keeps the panel off
+      // the control rather than under it.
+      const above = corner.y - tall - GAP;
+      setTop(above >= EDGE ? above : Math.max(EDGE, room - tall));
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [box, corner.x, corner.y, children]);
 
   /*
    * A click anywhere else closes it, and it is `pointerdown` rather than
@@ -79,11 +121,16 @@ export function Popover({
       onKeyDown={modal.onKeyDown}
       style={{
         position: 'fixed',
-        left: Math.max(8, Math.min(corner.x, window.innerWidth - width - 8)),
-        top: corner.y,
+        left: Math.max(EDGE, Math.min(corner.x, window.innerWidth - width - EDGE)),
+        top,
         zIndex: 90,
         width,
         maxWidth: 'calc(100vw - 16px)',
+        // The last resort, for a panel taller than the window itself: it
+        // scrolls rather than losing its bottom rows to the edge.
+        maxHeight: 'calc(100dvh - 16px)',
+        overflowY: 'auto',
+        overscrollBehavior: 'contain',
         padding: 'var(--sp-2)',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line-top)',

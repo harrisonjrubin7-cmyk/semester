@@ -207,6 +207,26 @@ export function firstScreen(nav: NavMode): Screen {
 }
 
 /**
+ * Whether this navigation is drawn from the arranged bar.
+ *
+ * The bar and the rail are the same list — `barFor(state.tabs, …)` — and
+ * three navigations draw one of them: the tab bar at every width, the feed
+ * and the springboard on a window wide enough for the rail. Settings offered
+ * the chooser to the first of those only, so somebody on the feed or the
+ * springboard with a laptop had a rail built out of a list they were given no
+ * way to arrange, and a control that would plainly have worked was missing
+ * with nothing said about why.
+ *
+ * Asked of `chromeFor` rather than written out as a list of three, so it
+ * cannot drift the day a navigation changes its mind about the rail. `home`
+ * because the question is about the navigation, and the screens that keep the
+ * whole display are about a screen.
+ */
+export function usesBar(nav: NavMode): boolean {
+  return chromeFor(nav, 'home', false).tabs || chromeFor(nav, 'home', true).rail;
+}
+
+/**
  * How many navigations are on screen. One, or none — never two.
  *
  * The number this returns is the whole invariant, which is why it is a

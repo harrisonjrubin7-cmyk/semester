@@ -16,6 +16,7 @@ import {
   read,
   renameGroup,
   select,
+  tidy,
   toneGroup,
   visit,
   write,
@@ -202,16 +203,24 @@ export function dissolveGroup(id: string): void {
 }
 
 /**
- * A new tab, in a group that already exists.
+ * A new tab, in a group that already exists. False when there was no room.
  *
  * Two steps rather than one: `add` puts it beside the tab you are on, which
  * may be anywhere, and `joinGroup` moves it to the end of the group's run. The
  * strip holds its own invariants through both, so there is no moment where a
  * group is two runs with something else between them.
+ *
+ * The cap is checked here rather than left to `add`, which answers a full
+ * strip by handing back the strip it was given. That is the right answer for
+ * `add` and the wrong one for these two steps together: the second would then
+ * move the tab *you are on* into the group, so asking for a new tab at the cap
+ * would have swallowed the page in front of you into somebody else's run.
  */
-export function openTabIn(id: string): void {
+export function openTabIn(id: string): boolean {
+  if (strip().tabs.length >= MAX_TABS) return false;
   put(add(strip()));
   put(joinGroup(strip(), strip().at, id));
+  return true;
 }
 
 /** Close every tab in a group. Returns the tab now on, or null — as above. */
@@ -229,8 +238,15 @@ export function reopenClosed(): AppTab | null {
   const entry=closed.pop()!;
   const at=Math.min(entry.at,current.tabs.length);
   /* Spread the strip rather than rebuilding it: it carries the groups too,
-     and a reopened tab must not take them down with it. */
-  put({...current,tabs:[...current.tabs.slice(0,at),entry.tab,...current.tabs.slice(at)],at});
+     and a reopened tab must not take them down with it.
+
+     Through `tidy`, because putting a tab back at the index it left from is
+     the one insertion that can land in the middle of somebody else's run —
+     the strip has moved on since. And because the group it remembers being in
+     may have gone with the last of its other tabs, which makes it a tab
+     pointing at a name no group answers to. `tidy` is where both of those are
+     already answered, and it keeps you on the tab you were on. */
+  put(tidy({...current,tabs:[...current.tabs.slice(0,at),entry.tab,...current.tabs.slice(at)],at}));
   return here();
 }
 

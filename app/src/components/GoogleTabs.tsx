@@ -194,9 +194,17 @@ export function GoogleTabs({
         <div className="g-tab-scroll" ref={tabRow}>
           {/*
             One run at a time, from `lanes` — the same shape the workspace's
-            strip draws from, so a group is one object on the row in both.
-            A folded run keeps the tab you are on visible: losing the page you
-            are reading because its group was folded is not a fold.
+            strip draws from, so a group is one object on the row in both, and
+            a folded run is its head alone in both.
+
+            It used to keep the current tab drawn inside a folded run, because
+            losing the page you are reading because its group was folded is not
+            a fold. That was the right worry patched at the wrong level: the
+            workspace's strip had no such patch and did lose it, and a rule two
+            components have to remember separately is a rule one of them will
+            forget. It is the strip's own now — see `reveal` in
+            `lib/browser.ts` — so the tab you are on is never in a folded run
+            to begin with, and both strips can simply draw what `lanes` says.
           */}
           {runs.map((lane) =>
             lane.group ? (
@@ -213,9 +221,10 @@ export function GoogleTabs({
                 >
                   {lane.group.name || 'Untitled group'} <small>{lane.seats.length}</small>
                 </button>
-                {lane.seats
-                  .filter(({ at }) => !lane.group!.collapsed || at === strip.at)
-                  .map(({ tab, at }) => tabNode(tab, at, toneAt(tones, lane.group!.tone).ink))}
+                {!lane.group.collapsed &&
+                  lane.seats.map(({ tab, at }) =>
+                    tabNode(tab, at, toneAt(tones, lane.group!.tone).ink),
+                  )}
               </div>
             ) : (
               lane.seats.map(({ tab, at }) => tabNode(tab, at))

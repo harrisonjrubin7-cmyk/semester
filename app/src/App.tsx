@@ -1330,7 +1330,25 @@ function BrowserShell({ trouble }: { trouble: React.ReactNode }) {
   const header = useHeader();
 
   return (
-    <GoogleShell title={header.title}>
+    /*
+     * The follower is a sibling of the shell rather than one of its children.
+     *
+     * `GoogleShell` mounts what it is given in two different places — inside
+     * the workspace body on a screen, and in `.g-home-legacy` on the search
+     * home — so anything handed to it as a child is unmounted and remounted on
+     * every navigation into or out of that home. `TabsFollow` keeps a ref for
+     * what it has already recorded and a guard against adopting the screen the
+     * app happened to reload on; remounted, both reset, and the guard then
+     * matched on every navigation once a second tab existed. The strip stopped
+     * following the app: tabs stayed "New tab" whatever you opened in them, and
+     * a reload put you back on the search page rather than where you were.
+     *
+     * Out here it is mounted once for the life of the navigation, which is what
+     * it is for and how every other layout mounts it.
+     */
+    <>
+      <TabsFollow />
+      <GoogleShell title={header.title}>
       {/*
         `.device` for the reason the workspace gives for its own root: every
         control primitive in `app.css` is scoped `.device .btn`, `.device
@@ -1350,9 +1368,6 @@ function BrowserShell({ trouble }: { trouble: React.ReactNode }) {
         <Tapped />
         <Watching />
         {asking && <Adopting sides={asking.sides} say={asking.say} onChoose={settle} />}
-        {/* Follows the address into the strip, as on every other layout. The
-            strip itself is the shell's, not ours. */}
-        <TabsFollow />
 
         <div className="deskwork-body deskwork-one">
           <div
@@ -1394,7 +1409,8 @@ function BrowserShell({ trouble }: { trouble: React.ReactNode }) {
         */}
         {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
       </div>
-    </GoogleShell>
+      </GoogleShell>
+    </>
   );
 }
 

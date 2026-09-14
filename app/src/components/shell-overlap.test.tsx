@@ -19,6 +19,10 @@ import {reducer} from '../state/reducer';
 let host:HTMLDivElement;let root:Root;
 function Screen(){const {state,dispatch}=useStore();return <div className="device"><TabStrip/><main data-work={state.screen} data-unit={state.openUnit} data-room={state.callCode}><button onClick={()=>dispatch({type:"openGuide",id:"econ",mode:"cards",unit:3})}>Study unit three</button><button onClick={()=>dispatch({type:"openGuide",id:"econ",mode:"cards",unit:1})}>Study unit one</button><input aria-label="Keep my draft" defaultValue="Keep this work"/><button onClick={()=>dispatch({type:'finder',open:true})}>Legacy search entry</button><button onClick={()=>dispatch({type:'apps',open:true})}>Legacy apps entry</button><button onClick={()=>dispatch({type:'quickAdd',open:true})}>Open the capture box</button></main>{state.finder&&<Command onClose={()=>dispatch({type:'finder',open:false})}/>} {state.apps&&<AllApps onClose={()=>dispatch({type:'apps',open:false})}/>} {state.quickAdd&&<QuickAdd onClose={()=>dispatch({type:'quickAdd',open:false})}/>}</div>;}
 function App(){const {state}=useStore();return <><TabsFollow/><GoogleShell title={state.screen}><Screen/></GoogleShell></>;}
+/* The arrangement `BrowserShell` used to have: the follower handed to the
+   shell as a child, where the shell's two mount points remount it on every
+   navigation into and out of the search home. See the test that uses it. */
+function Remounting(){const {state}=useStore();return <GoogleShell title={state.screen}><TabsFollow/><Screen/></GoogleShell>;}
 function button(name:string){const el=[...host.querySelectorAll('button')].find(b=>(b.getAttribute('aria-label')??b.textContent?.trim())===name);if(!el)throw new Error('Missing button '+name);return el;}
 function click(name:string){act(()=>button(name).click());}
 function type(text:string){const el=host.querySelector<HTMLInputElement>('[aria-label="Search Semester"]')!;act(()=>{el.focus();Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value')!.set!.call(el,text);el.dispatchEvent(new Event('input',{bubbles:true}));});}
@@ -111,6 +115,43 @@ it('does not use tab shortcuts inside a draft field or modal',()=>{
 it('clears remembered search text along with the visible search',()=>{
   click('Legacy search entry');type('calendar');expect(here().query).toBe('calendar');
   click('Clear search');expect(here().query).toBeUndefined();
+});
+
+/*
+ * The strip follows the app after a second tab exists.
+ *
+ * `GoogleShell` mounts its children in two places — the workspace body on a
+ * screen, `.g-home-legacy` on the search home — so anything given to it as a
+ * child was remounted on every navigation between the two. `TabsFollow` read
+ * "first render" as "the app has just reloaded", so every remount looked like
+ * a reload and its guard against adopting a screen into a blank tab fired on
+ * every navigation instead of once. Tabs stayed New tab whatever you opened,
+ * and a reload put you on the search page rather than where you were.
+ */
+it('follows the app even where a shell remounts the follower on every navigation',async()=>{
+  // The fault was not the mounting but the guard: "nothing is recorded on the
+  // first render" was read off a ref, so a remount looked like a page load and
+  // the guard against adopting a screen into a deliberately blank tab fired
+  // every time instead of once. Held against the arrangement that exposed it,
+  // so the guard stays a fact about the page rather than about a component.
+  act(()=>root.unmount());host.remove();forgetStrip();
+  host=document.createElement('div');document.body.append(host);root=createRoot(host);
+  await act(async()=>root.render(<StoreProvider><AIProvider><Remounting/></AIProvider></StoreProvider>));
+  click('Add new tab');click('Semester home');click('Add new tab');click('Your profile');
+  expect(here().screen).toBe('profile');
+});
+
+it('records where a newly opened tab was taken, not only where the first one was',()=>{
+  click('Add new tab');click('Your profile');
+  expect(here().screen).toBe('profile');
+  // And again after a trip through the search home, which is the navigation
+  // that used to remount the follower and silence it for the rest of the
+  // session: the second tab would have stayed on the search page for good.
+  click('Semester home');
+  expect(here().screen).toBe('search');
+  click('Add new tab');click('Your profile');
+  expect(here().screen).toBe('profile');
+  expect(strip().tabs.map(t=>t.screen)).toEqual(['home','search','profile']);
 });
 
 it('keeps each study tab on its own unit when switching and reopening',()=>{

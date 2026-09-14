@@ -455,8 +455,8 @@ export function NavPicker() {
     <Folding name="Appearance">
       <SectionLabel style={LABEL_STYLE}>Navigation</SectionLabel>
       <div style={BLURB_STYLE}>
-        Five ways of moving through the same screens. Only one is ever on screen at a time, and
-        none of them hides anything — every screen is reachable in all five, and search finds
+        Seven ways of moving through the same screens. Only one is ever on screen at a time, and
+        none of them hides anything — every screen is reachable in all seven, and search finds
         everything whichever you pick.
       </div>
       <Row>

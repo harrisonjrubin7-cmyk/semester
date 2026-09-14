@@ -296,7 +296,9 @@
 .study-studio-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .study-studio fieldset{border:0;padding:0;margin:0;min-width:0}
 .study-studio label{font-size:14px}
-.study-studio input:not([type=checkbox]), .study-studio textarea, .study-studio select, .studio-course-picker select{color:var(--app-fg);background:white;border:1px solid var(--app-line);border-radius:8px;min-height:40px;padding:8px;max-width:100%;box-sizing:border-box}
+/* The ink follows the theme, so the paper has to as well: a literal white
+   here put light text on a white field on every dark theme. */
+.study-studio input:not([type=checkbox]), .study-studio textarea, .study-studio select, .studio-course-picker select{color:var(--app-fg);background:var(--app-panel);border:1px solid var(--app-line);border-radius:8px;min-height:40px;padding:8px;max-width:100%;box-sizing:border-box}
 .study-studio textarea{width:100%;line-height:1.6;resize:vertical}
 .study-studio input[type=checkbox]{width:18px;height:18px;flex:none;accent-color:var(--app-accent)}
 .study-source-list, .study-format-list{display:flex;flex-direction:column;gap:8px;max-height:430px;overflow:auto}
@@ -333,14 +335,14 @@
 .study-source-list>label{flex-wrap:wrap}
 }
 .study-source-list>label, .study-format-list>label{flex-shrink:0}
-.studio-entry>.portal-primary{background:var(--app-accent);color:white;border:0;border-radius:24px;padding:12px 20px;min-height:44px;font-size:14px}
+.studio-entry>.portal-primary{background:var(--app-accent);color:var(--chrome-ink);border:0;border-radius:24px;padding:12px 20px;min-height:44px;font-size:14px}
 .university-workspace .portal-notice{line-height:1.6}
 .university-workspace .portal-panel{min-width:0}
 .university-workspace .portal-tabs{overflow:auto}
 .university-workspace .portal-tabs button{white-space:nowrap}
 .university-service-grid article>.portal-actions{margin-top:auto;padding-top:18px}
 .university-workspace .portal-filter-row>label{min-width:210px}
-.university-workspace .portal-primary{background:var(--app-accent);color:white}
+.university-workspace .portal-primary{background:var(--app-accent);color:var(--chrome-ink)}
 .university-workspace .portal-filter-row p{flex:1;min-width:220px}
 .university-workspace .portal-filter-row .btn{flex:none}
 @media(max-width:700px){

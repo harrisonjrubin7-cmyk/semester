@@ -52,7 +52,7 @@ import {
   record,
   useStrip,
 } from '../lib/browser.hook';
-import { NEW_TAB, lanes, placeFor, sameplace } from '../lib/browser';
+import { MAX_TABS, NEW_TAB, lanes, placeFor, sameplace } from '../lib/browser';
 import { screenName } from '../lib/nav';
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
@@ -74,7 +74,7 @@ import { useModernShell } from './shell-context';
  * an answer or the browser's own Back button. Without it the strip would only
  * be right about the places search sent you to, which is the minority of them.
  *
- * Nothing is recorded on the first render. A tab opened and left empty is a
+ * Nothing is recorded on the app's first look. A tab opened and left empty is a
  * new tab, and a new tab that adopted whatever was already on screen the
  * moment the app reloaded would be a tab nobody opened.
  */
@@ -142,6 +142,26 @@ function nameFor(state: State, catalog: Catalog): string {
   }
 }
 
+/**
+ * Whether the app has looked at where it is yet, since the page loaded.
+ *
+ * The guard below is about the *reload* — a strip coming back off the device
+ * must not have its blank tab silently filled in with whatever screen the
+ * address happened to name. That is a fact about the page, and it was kept as
+ * a ref, which made it a fact about this component's mounting instead.
+ *
+ * The two came apart the moment a shell moved this between two positions in
+ * its tree: every navigation remounted it, every remount looked like a reload,
+ * and the guard then fired on every navigation rather than once. The strip
+ * stopped recording anything at all — see `BrowserShell` in `App.tsx`, which
+ * is where that happened and is now also mounted so it cannot.
+ *
+ * Module state, because that is what "since the page loaded" means. It is only
+ * ever set, so there is nothing to reset between tests: a second mount in one
+ * page is not a reload and should not behave like one.
+ */
+let looked = false;
+
 export function TabsFollow() {
   const { state, catalog } = useStore();
   // Destructured, so the memo below depends on the ten ids that make a place
@@ -197,7 +217,8 @@ export function TabsFollow() {
 
   useEffect(() => {
     const key = JSON.stringify(at);
-    const firstLook = seen.current === null;
+    const firstLook = !looked;
+    looked = true;
     if (seen.current === key) return;
     seen.current = key;
     const tab = here();
@@ -257,6 +278,23 @@ export function TabStrip({
   /** The tab or group menu, and where it was summoned from. See `TabMenu`. */
   const [menu, setMenu] = useState<{ on: MenuOn; corner: Corner } | null>(null);
   const modern = useModernShell();
+  const full = strip.tabs.length >= MAX_TABS;
+
+  /*
+   * A new tab's page is the search page, and going to one is a navigation.
+   *
+   * The overlay hands in its own `onBlank` because it has to close itself on
+   * the way. Every other mount is a bare `<TabStrip />` on the window, and
+   * those had no handler at all — so picking a new tab, or pressing the +,
+   * marked it as the tab you were on and left the previous screen in front of
+   * you. The strip then said you were somewhere you were not, which is the one
+   * thing it cannot get wrong. `search` is `SearchHome` in every navigation,
+   * so this is the same landing the overlay makes.
+   */
+  const blank = () => {
+    if (onBlank) onBlank();
+    else dispatch({ type: 'go', screen: 'search' });
+  };
 
   /** Put the app where a tab says, or hand a new tab to the search page. */
   const land = (tab: AppTab) => {
@@ -265,7 +303,7 @@ export function TabStrip({
       onOpened?.();
       return;
     }
-    onBlank?.();
+    blank();
   };
 
   /** Close a tab, and go wherever closing it revealed. */
@@ -391,12 +429,14 @@ export function TabStrip({
           type="button"
           className="bare tappable"
           onClick={() => {
-            openTab();
-            // A new tab's page is the search page, so opening one opens it.
-            onBlank?.();
+            // Only when one was actually opened. At the cap `openTab` refuses,
+            // and going to the search page anyway would answer "no room for
+            // another tab" by throwing away the page in the tab you are on.
+            if (openTab()) blank();
           }}
+          disabled={full}
           aria-label="New tab"
-          title="New tab"
+          title={full ? `Close a tab before opening another (${MAX_TABS} open)` : 'New tab'}
           style={{
             width: 'auto',
             flex: 'none',
@@ -449,7 +489,7 @@ export function TabStrip({
           onClose={() => setMenu(null)}
           onLand={land}
           onCloseTab={shut}
-          onNewTab={() => onBlank?.()}
+          onNewTab={blank}
         />
       )}
     </div>

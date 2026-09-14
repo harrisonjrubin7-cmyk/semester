@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FULLSCREEN, chromeFor, firstScreen, homeShape, navigationsDrawn } from './chrome';
+import { FULLSCREEN, chromeFor, firstScreen, homeShape, navigationsDrawn, usesBar } from './chrome';
 import { NAVS, SHELLS, navOf } from './look';
 import { DESTINATIONS } from './nav';
 import { DEFAULT_PERSISTED } from '../state/shape';
@@ -244,5 +244,23 @@ describe('reading a navigation back', () => {
    */
   it('falls back to whatever the app actually defaults to', () => {
     expect(navOf('nonsense')).toBe(DEFAULT_PERSISTED.nav);
+  });
+
+  /*
+   * And whoever offers to arrange the bar offers it wherever there is one.
+   *
+   * Settings asked `nav === 'tabs'`, which is the navigation named after the
+   * bar rather than the set of navigations that draw one. The feed and the
+   * springboard draw the same list as the rail on a wide window, so those two
+   * had a rail built out of a list they were given no way to arrange — and a
+   * control that would plainly have worked was simply missing. Asked of
+   * `chromeFor` here, so it cannot drift from the rule again.
+   */
+  it('offers the bar\u2019s own list to every navigation that draws one', () => {
+    for (const nav of MODES) {
+      const draws = chromeFor(nav, 'home', false).tabs || chromeFor(nav, 'home', true).rail;
+      expect(usesBar(nav), `${nav} disagrees about whether it has a bar`).toBe(draws);
+    }
+    expect(MODES.filter(usesBar)).toEqual(['tabs', 'feed', 'springboard']);
   });
 });
