@@ -146,7 +146,7 @@ describe('escaping', () => {
   });
 
   it('drops control characters, which are legal in a string and not in XML', () => {
-    expect(xml('ab')).toBe('ab');
+    expect(xml('a\x07b')).toBe('ab');
   });
 });
 
