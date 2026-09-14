@@ -15,6 +15,8 @@
  * Audio is never pre-cached. Sixty megabytes of lessons downloaded on first
  * open would be a hostile thing to do to a phone plan; what you actually
  * listened to is kept, and that is enough.
+ *
+ * Kept, but not for ever and not without limit — see `MEDIA_CAP`.
  */
 
 const VERSION = 'semester-v1';
@@ -32,11 +34,52 @@ const MEDIA = `${VERSION}-media`;
 const SHARE_CACHE = 'semester-shared';
 const SHARE_KEY = './__shared';
 
+/**
+ * How much played media this worker will hold.
+ *
+ * "Keep what has been played" had no ceiling, and the site ships 212 MB of
+ * audio: 46 MB of lessons across the four courses and 167 MB of podcast
+ * editions. A student who works through a term plays their way to most of it,
+ * and every byte counts against `navigator.storage.estimate()` — which on iOS
+ * is the number Safari evicts an origin by when the device runs low. The
+ * lessons are the least valuable thing in the cache and the largest, and
+ * without a cap they could take the shell and the whole offline promise with
+ * them.
+ *
+ * 150 MB is a judgement rather than a measurement, and it is one line to
+ * change. What it is meant to hold: every lesson of every course, with room
+ * for the four or five podcast editions somebody actually listens to. What it
+ * is meant to stop: the long tail of everything played once in September and
+ * never again.
+ */
+const MEDIA_CAP = 150 * 1024 * 1024;
+
+
 // The worker is served from wherever the app is — '/' locally, '/semester/' on
 // GitHub Pages — so every path it holds is derived from its own location. A
 // hard-coded '/index.html' would cache the wrong page, or none.
 const BASE = new URL('./', self.location).pathname;
 const SHELL_FILES = [BASE, `${BASE}index.html`, `${BASE}manifest.webmanifest`, `${BASE}icon.svg`];
+
+/**
+ * When each cached file was last played, and what was thrown out to make room.
+ *
+ * A ledger is needed because the cache cannot answer either question.
+ * `cache.keys()` is insertion order, which is *first download* order — so
+ * evicting by it would drop the lessons somebody is still working through and
+ * keep the edition they played once in the first week. Least recently played
+ * is the order that matches how the cache is used.
+ *
+ * It holds only the time. Sizes are read from each cached response's
+ * `content-length` at the moment they are needed, so there is no second
+ * number to go stale, and reading a header off a cached response costs
+ * nothing like reading its body.
+ *
+ * It lives in the media cache so that clearing downloads clears it too, and
+ * its key is not one `isMedia` matches, so the fetch handler will never serve
+ * it or count it as a download.
+ */
+const LEDGER = `${BASE}__media-ledger`;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -182,6 +225,127 @@ const isMedia = (url) =>
   /\/(audio|decks|handouts)\//.test(url.pathname) ||
   /\.(mp3|mp4|pptx|docx|pdf)$/i.test(url.pathname);
 
+/** The ledger as it stands, or an empty one. Never throws; this is bookkeeping. */
+async function readLedger(cache) {
+  try {
+    const held = await cache.match(LEDGER);
+    if (!held) return { played: {}, shed: null };
+    const parsed = await held.json();
+    return {
+      played: parsed && typeof parsed.played === 'object' && parsed.played ? parsed.played : {},
+      shed: parsed && typeof parsed.shed === 'object' ? parsed.shed : null,
+    };
+  } catch {
+    return { played: {}, shed: null };
+  }
+}
+
+async function writeLedger(cache, ledger) {
+  try {
+    await cache.put(
+      LEDGER,
+      new Response(JSON.stringify(ledger), { headers: { 'Content-Type': 'application/json' } }),
+    );
+  } catch {
+    // A ledger that cannot be written costs the eviction order, not the app.
+    // `sweep` falls back to what the cache itself can tell it.
+  }
+}
+
+/** A path, however the key naming it was spelt. */
+function pathOf(url) {
+  try {
+    return new URL(url, self.location.origin).pathname;
+  } catch {
+    return String(url);
+  }
+}
+
+/** What a cached response weighs, from its header rather than its body. */
+async function weigh(cache, request) {
+  try {
+    const held = await cache.match(request);
+    const said = Number(held && held.headers.get('content-length'));
+    return Number.isFinite(said) && said > 0 ? said : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/**
+ * How close together two plays of one file count as the same play.
+ *
+ * An `<audio>` element does not make one request per track. It makes several —
+ * a ranged probe, the body, another range on every scrub — and each one
+ * reaches the handler below. Writing the ledger on all of them would be a
+ * cache write per seek to record a fact that has not changed. A minute is far
+ * below any interval at which the eviction order could differ.
+ */
+const PLAY_AGAIN_MS = 60 * 1000;
+
+/**
+ * Note that something was played, so the cap knows what to keep.
+ *
+ * Called on a cache hit as well as on a first download, which is the whole
+ * point: a lesson replayed in December must not be evicted as though it had
+ * last been touched in September.
+ */
+async function played(path) {
+  const cache = await caches.open(MEDIA);
+  const ledger = await readLedger(cache);
+  const now = Date.now();
+  if (now - (ledger.played[path] ?? 0) < PLAY_AGAIN_MS) return;
+  ledger.played[path] = now;
+  await writeLedger(cache, ledger);
+}
+
+/**
+ * Bring the media cache back under the cap, least recently played first.
+ *
+ * Runs after a download rather than on a schedule, because a download is the
+ * only thing that makes the cache bigger.
+ *
+ * An entry the ledger has never heard of — cached by a build before this
+ * existed, or after a ledger that would not write — sorts as the oldest thing
+ * there is. That is the right guess: it has not been played since the ledger
+ * started, and the alternative is an entry no eviction can ever reach.
+ *
+ * What went is written down. `lib/keep.ts` argues this about shedding a full
+ * store and the argument is the same here: a cache that quietly threw away
+ * last month's lessons is the same betrayal in a smaller coat. The page reads
+ * this and says so — see `lib/downloads.ts`.
+ */
+async function sweep() {
+  const cache = await caches.open(MEDIA);
+  const ledger = await readLedger(cache);
+
+  const entries = [];
+  let total = 0;
+  for (const request of await cache.keys()) {
+    const path = pathOf(request.url);
+    if (path === LEDGER) continue;
+    const bytes = await weigh(cache, request);
+    total += bytes;
+    entries.push({ request, path, bytes, at: ledger.played[path] ?? 0 });
+  }
+  if (total <= MEDIA_CAP) return;
+
+  entries.sort((a, b) => a.at - b.at);
+  const gone = [];
+  let freed = 0;
+  for (const entry of entries) {
+    if (total - freed <= MEDIA_CAP) break;
+    if (!(await cache.delete(entry.request))) continue;
+    delete ledger.played[entry.path];
+    freed += entry.bytes;
+    gone.push(entry.path);
+  }
+  if (!gone.length) return;
+
+  ledger.shed = { at: Date.now(), bytes: freed, paths: gone };
+  await writeLedger(cache, ledger);
+}
+
 /*
  * A syllabus shared into the app.
  *
@@ -244,19 +408,33 @@ self.addEventListener('fetch', (event) => {
 
   if (isMedia(url)) {
     event.respondWith(
-      caches.match(request).then(
-        (hit) =>
-          hit ||
-          fetch(request).then((res) => {
-            // Range requests come back as 206 and cannot be cached whole; the
-            // full response arrives on a later play and is kept then.
-            if (res.ok && res.status === 200) {
-              const copy = res.clone();
-              caches.open(MEDIA).then((cache) => cache.put(request, copy));
-            }
-            return res;
-          }),
-      ),
+      caches.match(request).then((hit) => {
+        if (hit) {
+          // Played again. Noted off the critical path — the response is
+          // already on its way back — but inside `waitUntil`, so the worker is
+          // not stopped halfway through writing the ledger.
+          event.waitUntil(played(url.pathname));
+          return hit;
+        }
+        return fetch(request).then((res) => {
+          // Range requests come back as 206 and cannot be cached whole; the
+          // full response arrives on a later play and is kept then.
+          if (res.ok && res.status === 200) {
+            const copy = res.clone();
+            event.waitUntil(
+              caches
+                .open(MEDIA)
+                .then((cache) => cache.put(request, copy))
+                .then(() => played(url.pathname))
+                // A download is the only thing that makes this cache bigger,
+                // so it is the only moment the cap has to be checked.
+                .then(sweep)
+                .catch(() => {}),
+            );
+          }
+          return res;
+        });
+      }),
     );
     return;
   }

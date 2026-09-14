@@ -23,10 +23,22 @@ const course = (id: string) => ({
   default: { course: { id, code: id.toUpperCase(), title: id, term: '2026FA' }, items: [] },
 });
 
-vi.mock('./courses/econ', () => {
-  if (failing) throw new Error('Failed to fetch dynamically imported module');
-  return course('econ');
-});
+/*
+ * The failure is thrown when the module is *read*, not when it is registered.
+ *
+ * A factory that threw outright read `failing` whenever Vitest chose to
+ * evaluate it, which is once per registry and not once per test — so the test
+ * that sets `failing = false` could evaluate it for the test that needs it
+ * true, and this file passed or failed on the order its two tests ran in.
+ * A getter is read on every `m.default`, which is where `loadSeed` reads it,
+ * so the flag is consulted at the moment the test means it to be.
+ */
+vi.mock('./courses/econ', () => ({
+  get default(): unknown {
+    if (failing) throw new Error('Failed to fetch dynamically imported module');
+    return course('econ').default;
+  },
+}));
 vi.mock('./courses/psci', () => course('psci'));
 vi.mock('./courses/core', () => course('core'));
 vi.mock('./courses/bus', () => course('bus'));

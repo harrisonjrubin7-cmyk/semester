@@ -9,7 +9,7 @@ product vision. `ENGINEERING-AUDIT.md` asked what the code costs to open,
 render, test and extend, and closed six of its thirteen items. `APP-AUDIT.md`
 and `docs/APPLICATION_AUDIT.md` swept the screens for things that break.
 
-So this one re-measures, closes five of the things left open, finds four that
+So this one re-measures, closes six of the things left open, finds four that
 were not on anyone's list — including a live bug that makes `npm test` red on
 `main` while reporting that everything passed — and reports one change that
 looked like the largest remaining win and **should not be made yet**, with the
@@ -124,11 +124,35 @@ happens to live next door — silently puts it all back.
 
 ---
 
-## 2. `isolate: false` is worth 45 seconds a CI run, and this suite is not ready for it · **do not ship yet**
+## 2. `isolate: false` is worth 45 seconds a CI run · **shipped, by somebody else, and the objection below is answered**
 
 This is `ENGINEERING-AUDIT.md` §3, item 7 on its list, estimated there at "an
-afternoon". It is the largest remaining win by wall clock and it is the one
-finding in this document that ends in *don't*.
+afternoon". It is the largest remaining win by wall clock, and this section was
+written as the one finding in this document that ended in *don't*.
+
+**It was then shipped while this was being written, by another session** —
+#311, "Half the test suite's time was spent starting processes", with a
+`vite.config.ts` that splits the run into two Vitest projects and a
+`src/isolation.test.ts` that reads the config and the tree and fails when a new
+`vi.mock` appears in a file the config has not listed. It is on `main` now.
+
+**The section is kept as written, and the objection re-tested rather than
+withdrawn on sight.** What it said was not "this is wrong" but "the same commit
+passes at three, four, six and eight workers and fails at one and two, and a
+runner with a different core count is a different packing". That is a
+falsifiable claim and it is now false. Re-run on the merged head:
+
+```
+npx vitest run --maxWorkers=1 → 8,081 passed    --maxWorkers=4 → 8,081 passed
+              --maxWorkers=2 → 8,081 passed                  8 → 8,081 passed
+              --maxWorkers=3 → 8,081 passed
+```
+
+The suite runs in 29.5 s where it took 42, at every packing this objected to.
+The guard test is what makes it stay true, and it earned its place immediately:
+the component test added in §5 mocks the store, and the guard failed until it
+was listed. What follows is what the objection was, and it is worth reading as
+the shape of the problem rather than as a verdict that still stands.
 
 **The prize is real and bigger than recorded.** Vitest spawns one worker per
 test file. It reports the cost itself at the end of every run:
@@ -158,8 +182,8 @@ the §3 estimate assumed:
    handed back the instance that file had already built against the real
    `./db`: `open` unmocked, `load()` failing, `persist` inert, four assertions
    failing on a module that was never given the double. **Fixed** —
-   `vi.resetModules()` before the import. Nine files in the suite use
-   `vi.mock` on a local module and are all exposed to this.
+   `vi.resetModules()` before the import. Every file that uses `vi.mock` on a
+   local module is exposed to this.
 
 2. **Module state that outlives a test.** `components/splash.test.tsx` renders
    an empty tree — the curtain never drawn — depending on what ran before it.
@@ -234,23 +258,23 @@ A GitHub runner with a different core count is a different packing. Shipping a
 green-on-my-laptop config would buy 45 seconds at the price of a red suite
 nobody can reproduce, which is a bad trade at any price.
 
-**The route through, in order.** Carving the nine mocking files into their own
-Vitest project with `isolate: true` was tried and is not enough on its own —
-class 2 and class 3 are not mocking files. Do these first, each on its own and
-provable by `--sequence.shuffle` and by the `--maxWorkers` sweep above:
+**The route through, as it was written here and as it actually went.** This
+section proposed: fix the floating `loadSeed()`, run `splash.test.tsx` to
+ground, then turn the setting on with the mocking files as exceptions and
+re-run the sweep. One and three happened — the first in §2a on this branch, the
+third in `990fe41`. The second did not, and `splash.test.tsx` is still the one
+file that fails under `--sequence.shuffle`; it passes under the isolation split
+because the split gives it back a fresh registry, which is a fix for the
+symptom this section found and not for the thing wrong in the file.
 
-1. ✅ The floating `loadSeed()` (class 3) — done, and see §2a.
-2. Run `splash.test.tsx` to ground (class 2).
-3. Then turn `isolate: false` on, with the nine mocking files listed as
-   exceptions, and re-run the whole `--maxWorkers` sweep before merging. Two of
-   the four sweep points were failing on classes 1 and 3; re-run it before
-   assuming 2 is all that is left.
-
-The saving does not go anywhere while that happens.
+So the remaining work is smaller than this section claimed and has not gone
+away: `--sequence.shuffle` is the guard that would have caught every one of
+these, it is one line in CI, and one file stands between here and turning it
+on.
 
 ---
 
-## 3. Five test files were passing on the order they ran in · **four fixed**
+## 3. Six test files were passing on the order they ran in · **five fixed**
 
 Nobody had run the suite shuffled. It has never needed to be — one worker per
 file hides most of this — which is exactly why it is worth doing before §2 is
@@ -266,6 +290,7 @@ npx vitest run --sequence.shuffle
 | `lib/claude.test.ts` | `structuredRefused`, the same shape, one assertion | fixed |
 | `lib/device.test.ts` | `badge()` remembers the number it last showed, so clearing is a transition; the test asked for it from a module that believed nothing was shown | fixed |
 | `lib/keys.test.ts` | a `role="dialog"` left in `document.body`; every shortcut is correctly stood down under a modal, so the tests after it were told *nothing* and failed | fixed |
+| `data/seed.test.ts` | the file added in §2a, caught by its own medicine: `vi.mock`'s factory reads a flag when Vitest chooses to evaluate it, which is once per registry rather than once per test, so the test that set the flag false could evaluate the module for the test that needed it true. A getter, read at every access, is consulted when the test means it to be | fixed |
 | `components/splash.test.tsx` | not yet found — the first render lands on `onboarding` and the splash correctly declines to cover it. Reproduces on the file alone, so it is inside the file rather than across the suite | **open** |
 
 The `claude.test.ts` fix is the one to copy: its setup now goes through
@@ -274,7 +299,8 @@ three session flags. Writing the key straight into storage behind the module's
 back was what made the tests depend on each other.
 
 Three shuffled runs of the full suite, at `d63507b`: 7,684 passed, one failed,
-and it is `splash.test.tsx` all three times. Adding `--sequence.shuffle` to CI
+and it is `splash.test.tsx` all three times. Three more on the merged head:
+8,080 passed, one failed, `splash.test.tsx` all three times again. Adding `--sequence.shuffle` to CI
 is worth doing **after** that file is fixed, and is worth doing then — it is
 the cheapest guard there is against this whole class, and it found four of
 these in one afternoon.
@@ -302,7 +328,7 @@ on its own branch.
 
 ---
 
-## 5. The offline media cache has no ceiling and no way out · **new, not fixed**
+## 5. The offline media cache had no size, no list, no ceiling and no way out · **fixed**
 
 `ENGINEERING-AUDIT.md` §5 fixed the *shell* cache growing without bound. The
 media cache was never in scope and has the same shape and a larger number.
@@ -330,11 +356,60 @@ nowhere to act on it. On iOS that matters more than the number suggests: Safari
 evicts by origin under pressure, so the media nobody chose to keep can take the
 shell and the offline promise with it.
 
-**What it wants** is the pair the rest of this app already builds for its
-storage: a number and a control. Downloads listed by course with their size,
-one button to clear them, and a cap past which the oldest goes — the same
-argument `lib/keep.ts` makes about shedding, and the same rule it holds to:
-shedding is reported, never silent.
+**All four are now built.** `lib/downloads.ts` reads the media caches
+— found by the `-media` suffix, so a `VERSION` bump cannot strand a screenful
+of files this is the only way to delete, and so the shell and the share
+handover are never in reach — measures each entry from its `content-length`,
+and groups it by the course every cached path names. `components/Downloads.tsx`
+draws it under **Room** on *Your data*, which is the screen whose own blurb
+promises "every record the app holds, what it weighs, and how much room is
+left" and which had nothing at all to say about the largest thing on the
+device. A size, a shelf per course with what is on it, a clear for one course
+and a clear for the lot.
+
+No confirmation, on purpose. `TypeToConfirm` states its own rule —
+*"everything else that removes something is undoable"* — and this is the
+ordinary case: nothing goes that pressing Play does not bring back. What the
+sentence beside the button has to be honest about is the one case where that
+is not free, which is the case the whole cache exists for, so it says it:
+*they download again the next time you play one, which needs a connection*.
+
+**The cap is built too.** `public/sw.js` holds the media cache under
+`MEDIA_CAP`, 150 MB — enough for every lesson of every course with room for the
+four or five podcast editions somebody actually listens to, against the 212 MB
+the site ships. A judgement rather than a measurement, and one line to change.
+
+What goes is the **least recently played**, which is the reason the worker now
+keeps a ledger at all. `cache.keys()` is insertion order — *first download*
+order — so evicting by it drops the lessons somebody is working through this
+week and keeps the edition they played once in the first week of term. That is
+the wrong answer and it is the one you get for free. The ledger holds only a
+time per file; sizes are read from each cached response's `content-length` when
+they are needed, so there is no second number to go stale. A file the ledger
+has never heard of sorts as the oldest thing there is, which is the right guess
+and the only one that leaves no entry beyond eviction's reach.
+
+And it is **reported, never silent** — `lib/keep.ts`'s rule, and the same
+argument: a cache that quietly threw away last month's lessons is the same
+betrayal in a smaller coat. The worker writes down what went, the screen says
+it: *Room was made on 3 December: 2 lessons and a podcast edition from BUS
+went, 41.0 MB in all.*
+
+Two things the tests are worth naming for. `lib/swmedia.test.ts` drives the
+real `public/sw.js` through its fetch handler and pins that a file downloaded
+first and replayed in December outlives one downloaded second and never touched
+— the whole reason the ledger exists, and invisible in the source. And
+`downloads.test.ts` reads `public/sw.js` for the cap and the ledger's name: a
+service worker is not a module this app can import from, so both are written
+twice, and a screen reporting a ceiling the worker is not holding would be
+worse than no ceiling, because it would be believed.
+
+**Opening it found the bug the tests could not.** Which clear was running was
+held as a string with `''` for none — and `''` is a real shelf, the one
+everything uncoursed is grouped under. That row's button therefore read
+*Clearing…*, disabled, from the moment the screen drew, on any device with
+something uncoursed cached. Nine component tests passed over it; a browser
+showed it in the first screenshot.
 
 ---
 
@@ -421,17 +496,20 @@ something once went wrong.
 | | Work | Cost | What it buys |
 | --- | --- | --- | --- |
 | 1 | ✅ **§1** — split reading from asking in the assistant | done | −6.6 kB gzipped off every first load, and one real bug |
-| 2 | ✅ **§3** — four order-dependent test files | done | a suite that can be shuffled, which is the precondition for 4 |
+| 2 | ✅ **§3** — five order-dependent test files | done | a suite that can be shuffled, which is the precondition for row 5 |
 | 3 | ✅ **§4**, **§6** — the registry guard and the lint ceiling | done | two things that cannot quietly get worse |
 | 4 | ✅ **§2a** — the unawaited, failure-cached `loadSeed()` | done | `npm test` stops being intermittently red on main, and a sample that failed once can load again |
-| 5 | **§2 step 2** — run `splash.test.tsx` to ground | half a day | the last known blocker, and §3's last open row |
-| 6 | **§2 step 3** — `isolate: false` with the nine exceptions | small, after 5 | ~45 s off every CI run, three runs deep |
-| 7 | **§5** — a size, a list and a clear button for downloaded media | medium | an installed app that does not quietly take 200 MB of a phone |
+| 5 | **§3's last row** — run `splash.test.tsx` to ground, then put `--sequence.shuffle` in CI | half a day | the guard that would have caught all six, on every push |
+| 6 | ✅ **§2** — `isolate: false`, with the mocking files as exceptions and a test that keeps the list honest | done, by another session | 42 s → 29.5 s a run, three runs deep |
+| 7 | ✅ **§5** — a size, a list and a clear button for downloaded media | done | an installed app that does not quietly take 200 MB of a phone with no way to see or stop it |
+| 7a | ✅ **§5, the rest** — a cap, least recently played first, and what it took said out loud | done | the same, without anybody having to go and look |
 | 8 | **§6 follow-on** — reshape `useModal`'s return | small | 20 of 45 warnings, in one change |
 | 9 | **§7** — direct tests for `rtc.ts`, `mic.ts` | medium | the part of the app that is hardest to check by hand |
 
-Items 1–4 are on this branch, one commit each, with `lint`, `tsc`, `test`,
-`test:zones`, `build` and `check:university` green after every one.
+Items 1–4 and 6 are on `main`; item 7 is this branch. Every one went in with
+`lint`, `tsc`, `test`, `test:zones`, `build` and `check:university` green.
+Item 6 arrived from another session, is on `main`, and is re-verified above
+rather than taken on trust.
 
 ## 9. What this audit deliberately did not do
 
@@ -441,6 +519,8 @@ Items 1–4 are on this branch, one commit each, with `lint`, `tsc`, `test`,
 - **It did not touch the product roadmap.** `SPEC-AUDIT.md` §"What is worth
   doing next" is the better list and it is about features rather than cost.
   §5 here is the one place the two meet, and it is filed as cost.
-- **It did not ship the change it most wanted to.** §2 is the largest number in
-  this document and the reasoning for holding it is the most important part of
-  the document.
+- **It did not ship the change it most wanted to, and somebody else did.** §2
+  is the largest number in this document. The reasoning for holding it is kept
+  in full, along with the re-run that shows the objection no longer holds —
+  an audit that quietly deletes the call it got wrong is worth less than one
+  that leaves it where the next reader can weigh it.
