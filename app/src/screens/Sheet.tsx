@@ -915,8 +915,21 @@ function Grid({ sheet }: { sheet: SheetModel }) {
         change(fill(body(), sel, key === 'd' ? 'down' : 'right'), `fill:${rangeLabel(sel)}`);
         return;
       }
+      /*
+       * Copy and cut, which over one cell only sometimes means the cell.
+       *
+       * Part of a cell's text selected inside the box is the text box's own
+       * copy, and has to stay that way: picking `B2:B9` out of `=SUM(B2:B9)`
+       * and pressing ⌘C means those characters, and must not disturb what the
+       * app is holding. Everything else means the cell — a block, a caret
+       * sitting in a cell with nothing selected, or a box whose whole value is
+       * selected, which is what focusing one does — and has to go through
+       * `cutOrCopy`, or `clip` is left holding the block copied before it and
+       * the next paste silently puts *that* down instead.
+       */
       if (key === 'c' || key === 'x') {
-        if (!many(sel)) return; // one cell is the text box's own copy
+        const all = input.selectionStart === 0 && input.selectionEnd === input.value.length;
+        if (!many(sel) && !ends && !all) return;
         e.preventDefault();
         cutOrCopy(key === 'x');
         return;
