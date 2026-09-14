@@ -167,6 +167,85 @@ describe('relations', () => {
   });
 });
 
+describe('polar and parametric', () => {
+  const frame: Frame = { x0: -10, x1: 10, y0: -10, y1: 10 };
+  const fine = { columns: 480, cells: 90, steps: 360, turns: 2 } as const;
+
+  it('takes r = as polar only when the angle is actually in it', () => {
+    expect(of('r = 2 + 2\\cos(\\theta)').kind).toBe('polar');
+    // The circle example defines r as a plain radius; turning that into a
+    // curve would take somebody's slider away from them.
+    expect(of('r = 5')).toMatchObject({ kind: 'value', name: 'r' });
+  });
+
+  it('takes a pair that mentions t as a curve, and one that does not as a point', () => {
+    expect(of('(\\cos(t), \\sin(t))').kind).toBe('parametric');
+    expect(of('(2, 3)').kind).toBe('point');
+  });
+
+  it('does not ask for a value for the letter it is drawing over', () => {
+    expect(missing(of('r = a\\cos(\\theta)'), {})).toEqual(['a']);
+    expect(missing(of('(\\cos(t), b\\sin(t))'), {})).toEqual(['b']);
+    expect(missing(of('r = 4\\sin(2\\theta)'), {})).toEqual([]);
+  });
+
+  it('draws a polar circle where the circle actually is', () => {
+    // r = 2cos θ is the circle of radius 1 about (1, 0) — every point on it.
+    const { paths } = draw(of('r = 2\\cos(\\theta)'), {}, frame, fine);
+    const points = paths.flat();
+    expect(points.length).toBeGreaterThan(100);
+    for (const p of points) {
+      expect(Math.hypot(p.x - 1, p.y)).toBeCloseTo(1, 6);
+    }
+  });
+
+  it('draws the petals a negative radius puts on the other side', () => {
+    const points = draw(of('r = 4\\sin(2\\theta)'), {}, frame, fine).paths.flat();
+    // Four petals: one in each quadrant, which only happens if a negative r is
+    // drawn opposite rather than dropped.
+    const quadrants = new Set(
+      points.filter((p) => Math.hypot(p.x, p.y) > 1).map((p) => `${Math.sign(p.x)}${Math.sign(p.y)}`),
+    );
+    expect(quadrants.size).toBeGreaterThanOrEqual(4);
+  });
+
+  it('draws a parametric circle, closed', () => {
+    const { paths } = draw(of('(5\\cos(t), 5\\sin(t))'), {}, frame, fine);
+    const points = paths.flat();
+    for (const p of points) expect(Math.hypot(p.x, p.y)).toBeCloseTo(5, 6);
+    // It comes back to where it started, which is what "closed" means here.
+    const first = points[0];
+    const last = points[points.length - 1];
+    expect(Math.hypot(first.x - last.x, first.y - last.y)).toBeLessThan(0.2);
+  });
+
+  it('draws one parametric curve per member of a list', () => {
+    const scope = scopeOf([of('a = [1, 2, 3]')]);
+    const { paths } = draw(of('(a\\cos(t), a\\sin(t))'), scope, frame, fine);
+    expect(paths).toHaveLength(3);
+    const radii = paths.map((path) => Math.hypot(path[0].x, path[0].y));
+    expect(radii.map((r) => Math.round(r))).toEqual([1, 2, 3]);
+  });
+
+  it('draws the whole run, on screen or not, so zooming out finds the rest', () => {
+    const small: Frame = { x0: -1, x1: 1, y0: -1, y1: 1 };
+    const points = draw(of('(5\\cos(t), 5\\sin(t))'), {}, small, fine).paths.flat();
+    expect(points.some((p) => Math.abs(p.x) > 1)).toBe(true);
+  });
+
+  it('breaks a polar curve where it has no value rather than joining across it', () => {
+    const { paths } = draw(of('r = 1/\\theta'), {}, frame, fine);
+    for (const path of paths) for (const p of path) expect(Number.isFinite(p.x)).toBe(true);
+  });
+
+  it('turns further when it is asked to', () => {
+    const one = draw(of('r = \\theta'), {}, frame, { ...fine, turns: 1 }).paths.flat();
+    const six = draw(of('r = \\theta'), {}, frame, { ...fine, turns: 6 }).paths.flat();
+    const far = (ps: { x: number; y: number }[]) => Math.max(...ps.map((p) => Math.hypot(p.x, p.y)));
+    expect(far(six)).toBeGreaterThan(far(one) * 3);
+  });
+});
+
 describe('the readings', () => {
   const frame: Frame = { x0: -10, x1: 10, y0: -10, y1: 10 };
   const f = (x: number) => x * x - 4;

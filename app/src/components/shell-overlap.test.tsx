@@ -17,7 +17,7 @@ import {reducer} from '../state/reducer';
 
 (globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
 let host:HTMLDivElement;let root:Root;
-function Screen(){const {state,dispatch}=useStore();return <div className="device"><TabStrip/><main data-work={state.screen} data-unit={state.openUnit} data-room={state.callCode}><button onClick={()=>dispatch({type:"openGuide",id:"econ",mode:"cards",unit:3})}>Study unit three</button><button onClick={()=>dispatch({type:"openGuide",id:"econ",mode:"cards",unit:1})}>Study unit one</button><input aria-label="Keep my draft" defaultValue="Keep this work"/><button onClick={()=>dispatch({type:'finder',open:true})}>Legacy search entry</button><button onClick={()=>dispatch({type:'apps',open:true})}>Legacy apps entry</button><button onClick={()=>dispatch({type:'quickAdd',open:true})}>Open the capture box</button></main>{state.finder&&<Command onClose={()=>dispatch({type:'finder',open:false})}/>} {state.apps&&<AllApps onClose={()=>dispatch({type:'apps',open:false})}/>} {state.quickAdd&&<QuickAdd onClose={()=>dispatch({type:'quickAdd',open:false})}/>}</div>;}
+function Screen(){const {state,dispatch}=useStore();return <div className="device"><TabStrip/><main data-work={state.screen} data-unit={state.openUnit} data-room={state.callCode} data-fav={state.favourites ?? ''} data-ground={state.ground}><button onClick={()=>dispatch({type:"openGuide",id:"econ",mode:"cards",unit:3})}>Study unit three</button><button onClick={()=>dispatch({type:"openGuide",id:"econ",mode:"cards",unit:1})}>Study unit one</button><input aria-label="Keep my draft" defaultValue="Keep this work"/><button onClick={()=>dispatch({type:'finder',open:true})}>Legacy search entry</button><button onClick={()=>dispatch({type:'apps',open:true})}>Legacy apps entry</button><button onClick={()=>dispatch({type:'quickAdd',open:true})}>Open the capture box</button></main>{state.finder&&<Command onClose={()=>dispatch({type:'finder',open:false})}/>} {state.apps&&<AllApps onClose={()=>dispatch({type:'apps',open:false})}/>} {state.quickAdd&&<QuickAdd onClose={()=>dispatch({type:'quickAdd',open:false})}/>}</div>;}
 function App(){const {state}=useStore();return <><TabsFollow/><GoogleShell title={state.screen}><Screen/></GoogleShell></>;}
 function button(name:string){const el=[...host.querySelectorAll('button')].find(b=>(b.getAttribute('aria-label')??b.textContent?.trim())===name);if(!el)throw new Error('Missing button '+name);return el;}
 function click(name:string){act(()=>button(name).click());}
@@ -107,6 +107,22 @@ it('does not use tab shortcuts inside a draft field or modal',()=>{
   click('Open the capture box');const modal=host.querySelector<HTMLElement>('[aria-modal="true"]')!;
   act(()=>modal.dispatchEvent(new KeyboardEvent('keydown',{key:'t',code:'KeyT',altKey:true,bubbles:true})));
   expect(strip().tabs).toHaveLength(1);
+});
+it('pins and switches ground into the app\u2019s own settings, not a copy of its own',()=>{
+  // The shell kept `favorites`, `showFavorites`, `lightHome` and `recent` in
+  // `semester.google.*`, where the sidebar, the search home and Settings could
+  // not see them — so a star pressed here disagreed with a star pressed there.
+  click('Legacy apps entry');click('Edit favorites');click('Pin AI Tutor');
+  const main=()=>host.querySelector('main')!;
+  expect(main().getAttribute('data-fav')!.split(',')).toContain('ask');
+  expect(localStorage.getItem('semester.google.favorites')).toBeNull();
+  click('Done');click('Semester home');
+  act(()=>host.querySelector<HTMLButtonElement>('.g-customize')!.click());
+  const [dark,light]=[...host.querySelectorAll<HTMLButtonElement>('.g-theme-options button')];
+  act(()=>light.click());expect(main().getAttribute('data-ground')).toBe('paper');
+  act(()=>host.querySelector<HTMLButtonElement>('.g-customize')!.click());
+  act(()=>dark.click());expect(main().getAttribute('data-ground')).toBe('ink');
+  expect(localStorage.getItem('semester.google.lightHome')).toBeNull();
 });
 it('clears remembered search text along with the visible search',()=>{
   click('Legacy search entry');type('calendar');expect(here().query).toBe('calendar');
