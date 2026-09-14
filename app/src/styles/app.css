@@ -4852,7 +4852,6 @@ input[type='search'].input {
 
 .desktop-clear,
 .desktop-star,
-.desktop-keys,
 .desktop-ai {
   flex: none;
   width: auto;
@@ -4873,14 +4872,10 @@ input[type='search'].input {
   cursor: default;
 }
 
-.desktop-keys {
-  padding: var(--sp-1) var(--sp-4);
-  border: 1px solid var(--app-line);
-  border-radius: var(--r-md);
-  font-size: var(--type-xs);
-  color: var(--app-faint);
-  white-space: nowrap;
-}
+/* `.desktop-keys` drew a `⌘ K` chip here, and `.deskhome-keys` an identical
+   one on the search home. Both were false — ⌘K opens the assistant, not a
+   search — and the second field they labelled is gone; see
+   `components/desk/barfocus.ts`. */
 
 .desktop-ai {
   display: flex;
@@ -4899,7 +4894,6 @@ input[type='search'].input {
 }
 
 @media (max-width: 759px) {
-  .desktop-keys,
   .desktop-ai span {
     display: none;
   }
@@ -5254,44 +5248,11 @@ input[type='search'].input {
   color: var(--app-dim);
 }
 
-.desk-sheet-pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--sp-6);
-}
+/* The Dark/Light pair that `.desk-sheet-pair` and the `.desk-swatch` rules
+   drew is gone from `components/desk/Customize.tsx`, and so are they. It was
+   a second writer of `ground` that could not express the setting it was
+   showing — the note at the top of that file has the whole of it. */
 
-.desk-swatch {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
-  padding: var(--sp-4);
-  border-radius: var(--r-lg);
-  border: 2px solid transparent;
-  color: var(--app-dim);
-  font-size: var(--type-sm);
-}
-
-.desk-swatch.is-on {
-  border-color: var(--app-accent);
-  color: var(--app-fg);
-}
-
-.desk-swatch-chip {
-  display: grid;
-  place-items: center;
-  height: 74px;
-  border-radius: var(--r-md);
-  border: 1px solid var(--app-line);
-  background: var(--app-bright, #f0f2f6);
-  color: #1a1c22;
-  font-size: calc(20px * var(--text-scale, 1));
-}
-
-.desk-swatch-chip.is-dark {
-  background: #2b2c31;
-  color: #f0f2f6;
-}
 
 .desk-sheet-toggle {
   display: flex;
@@ -5331,6 +5292,25 @@ input[type='search'].input {
 
 .desk-sheet-row:hover {
   background: var(--app-accent-wash);
+}
+
+/* A row that also reports what it opens onto. The name on the left, the
+   value on the right, the way a settings row reads — so the panel can say
+   which ground you are on without offering a second way to change it. */
+.desk-sheet-said {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  text-align: left;
+}
+
+.desk-sheet-value {
+  flex: none;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .desk-sheet-plain {
@@ -5378,9 +5358,7 @@ input[type='search'].input {
 }
 
 .deskhome-plus,
-.deskhome-box,
-.deskhome-keys,
-.deskhome-ai {
+.deskhome-box {
   color: inherit;
 }
 
@@ -5407,26 +5385,14 @@ input[type='search'].input {
   opacity: 0.55;
 }
 
-.deskhome-keys {
-  flex: none;
-  padding: var(--sp-1) var(--sp-4);
-  border: 1px solid rgba(0, 0, 0, 0.18);
-  border-radius: var(--r-md);
-  font-size: var(--type-xs);
-  opacity: 0.6;
-}
+/* `.deskhome-keys` and `.desktop-keys` drew a `⌘ K` chip in each of the two
+   search fields. Both were false — ⌘K opens the assistant, not a search — and
+   the second field is gone; see `components/desk/barfocus.ts`. */
 
-.deskhome-ai {
-  width: auto;
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-4) var(--sp-6);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.07);
-  font-size: var(--type-sm);
-}
+/* `.deskhome-ai` drew an AI Tutor button in this field. The bar above the
+   screen draws the same control with the same words, so the search home had
+   two of it one row apart — see the note where it was removed in
+   `screens/Search.tsx`. */
 
 .deskhome-shortcuts {
   display: flex;
