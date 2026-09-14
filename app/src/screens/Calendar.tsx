@@ -15,6 +15,8 @@ import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
 import { WeekGrid } from '../components/WeekGrid';
 import { WeekDue } from '../components/WeekDue';
+import { weekLabel, type Span } from '../lib/weekpage';
+import { WIDE, useMedia } from '../lib/media';
 import { PrintButton } from '../components/PrintButton';
 import { CAMPUS_KIND, kindOf } from '../lib/kinds';
 import { dayLabel, monthLabel, moveBy } from '../lib/monthgrid';
@@ -655,9 +657,25 @@ function WeekView() {
   const { state, dispatch, now, catalog } = useStore();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<{ date: string; at: number } | null>(null);
+  /*
+   * Seven days where there is room for seven, three on a phone.
+   *
+   * Measured on the deployed build at 390px: seven columns left each day about
+   * fifty pixels, so a block's title wrapped to one or two characters a line —
+   * "CO RE 25 00", "Tro un sti" — and fourteen pixels where two things share
+   * an hour. The grid was still readable as shape and useless as words. Three
+   * columns is what every phone calendar settled on, and this is that.
+   *
+   * A window rather than a third of a week: on three days it starts at the day
+   * you are on rather than at Sunday, and the arrows step three days, so
+   * moving through the term is continuous instead of jumping in thirds. The
+   * heading, the campus list and the deadlines under the grid all read the
+   * same span — `lib/weekpage.ts` holds it, so they cannot disagree.
+   */
+  const span: Span = useMedia(WIDE) ? 7 : 3;
   const anchor = state.calDay ? isoToDate(state.calDay) : now;
   const start = new Date(anchor);
-  start.setDate(start.getDate() - start.getDay());
+  if (span === 7) start.setDate(start.getDate() - start.getDay());
   /*
    * The source axis, which this view ignored entirely.
    *
@@ -684,7 +702,7 @@ function WeekView() {
    * place and a way in to the full listing.
    */
   const weekEnd = new Date(start);
-  weekEnd.setDate(start.getDate() + 7);
+  weekEnd.setDate(start.getDate() + span);
   const inWeek = (d: Date) => d >= start && d < weekEnd;
   const kind = eventFilter(state.calSource, state.evFilter as EvFilter);
   const campus = on.campus
@@ -697,7 +715,7 @@ function WeekView() {
       ? state.feedEvents.filter((e) => inWeek(isoToDate(e.date)))
       : [];
 
-  const days = Array.from({ length: 7 }, (_, i) => {
+  const days = Array.from({ length: span }, (_, i) => {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
     return {
@@ -732,12 +750,12 @@ function WeekView() {
 
   const step = (delta: number) => {
     const to = new Date(start);
-    to.setDate(start.getDate() + delta * 7);
+    to.setDate(start.getDate() + delta * span);
     dispatch({ type: 'setCalDay', date: dateToIso(to) });
   };
 
-  const last = new Date(start);
-  last.setDate(start.getDate() + 6);
+  /** What the arrows and the headings call what is on screen. */
+  const named = span === 7 ? 'week' : 'three days';
   const total = days.reduce((n, d) => n + d.blocks.length, 0);
   // What the week holds under this source, grid and list together — so the
   // count above the week and the empty state below it agree with each other.
@@ -773,7 +791,7 @@ function WeekView() {
           type="button"
           className="btn btn-ghost btn-icon"
           onClick={() => step(-1)}
-          aria-label="Previous week"
+          aria-label={`Previous ${named}`}
         >
           <ChevronLeft size={18} />
         </button>
@@ -782,9 +800,7 @@ function WeekView() {
             print, and should not. */}
         <div className="wk-head" style={{ textAlign: 'center' }}>
           <span className="chrome-text" style={{ fontSize: 'calc(18px * var(--text-scale, 1))', display: 'block' }}>
-            {MONTHS[start.getMonth()]} {start.getDate()} –{' '}
-            {start.getMonth() === last.getMonth() ? '' : `${MONTHS[last.getMonth()]} `}
-            {last.getDate()}
+            {weekLabel(start, span)}
           </span>
           <span className="kicker" style={{ display: 'block' }}>
             {anything} {anything === 1 ? 'thing' : 'things'} on
@@ -794,7 +810,7 @@ function WeekView() {
           type="button"
           className="btn btn-ghost btn-icon"
           onClick={() => step(1)}
-          aria-label="Next week"
+          aria-label={`Next ${named}`}
         >
           <ChevronRight size={18} />
         </button>
@@ -807,10 +823,10 @@ function WeekView() {
       {total > 0 && <KindKey compact />}
       {anything === 0 ? (
         <EmptyState
-          title="Nothing this week."
+          title={span === 7 ? 'Nothing this week.' : 'Nothing on these days.'}
           // Names what is missing rather than "this source", which describes
           // the chips to somebody who has forgotten which one is lit.
-          body={`Nothing from ${sourceName(state.calSource)} in this week.`}
+          body={`Nothing from ${sourceName(state.calSource)} in ${span === 7 ? 'this week' : 'these three days'}.`}
           // The sentence used to end "Add something under Mine → Events",
           // which is a set of directions to a screen the app could simply
           // open. Naming a destination in prose is what a dead end sounds
@@ -868,7 +884,7 @@ function WeekView() {
 
           {(campus.length > 0 || feedWeek.length > 0) && (
             <>
-              <SectionLabel>On campus this week</SectionLabel>
+              <SectionLabel>On campus {span === 7 ? 'this week' : 'these days'}</SectionLabel>
               {campus.map((e) => (
                 <button
                   key={e.id}
@@ -934,8 +950,8 @@ function WeekView() {
             </>
           )}
 
-          {on.deadlines && <WeekDue start={start} classes={classMeetings} />}
-          <PrintButton label="Print the week" style={{ marginTop: 14 }} />
+          {on.deadlines && <WeekDue start={start} classes={classMeetings} span={span} />}
+          <PrintButton label={`Print the ${named}`} style={{ marginTop: 14 }} />
         </>
       )}
       <div style={{ height: 22 }} />
@@ -2495,6 +2511,15 @@ function CampusList() {
 
 export function Calendar() {
   const { state, dispatch, catalog } = useStore();
+  /*
+   * The week chip says what it will draw.
+   *
+   * On a phone the week view is a three-day window — see the note in
+   * `WeekView` for why — and a chip reading "Week" that opens three days is
+   * the app telling a small lie about itself on the one control that is
+   * supposed to say where you are going.
+   */
+  const wide = useMedia(WIDE);
   if (nothingYet(catalog, state)) return <FirstRun where="on the calendar" />;
 
   return (
@@ -2520,7 +2545,7 @@ export function Calendar() {
         <Segmented
           options={[
             { id: 'day', label: 'Day' },
-            { id: 'week', label: 'Week' },
+            { id: 'week', label: wide ? 'Week' : '3 days' },
             { id: 'month', label: 'Month' },
             { id: 'semester', label: 'Semester' },
           ]}
