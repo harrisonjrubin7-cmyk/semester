@@ -1148,8 +1148,10 @@ function CurrentScreen() {
  * shell body and the screen itself are the same elements in the same order —
  * so a screen is one screen, drawn in a different frame, rather than a second
  * implementation that will drift. The overlays are the same objects too: the
- * command palette, the capture box, the undo toast and the assistant are
- * mounted here exactly as they are there.
+ * command palette, the capture box, the undo toast and the assistant are the
+ * ones the other layouts open. The three that cover the window hang off this
+ * layout's root rather than off its pane, which is a place and not a
+ * difference in what they are — see the note over them below.
  *
  * Two things are this layout's own: the launcher is a panel hanging off the
  * nine dots rather than a sheet over the window (`AppsPanel`), and Customize
@@ -1225,11 +1227,6 @@ function Workspace({
                 : 'device-pane deskwork-pane'
             }
           >
-            <Assistant />
-            {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
-            {state.quickAdd && (
-              <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />
-            )}
             {!ownTitle && <Header slim />}
             <Said />
             {/* The sample banner belongs over records, which is what it is
@@ -1257,6 +1254,40 @@ function Workspace({
           </div>
         </div>
 
+        {/*
+          The three that cover the window: beside the body, not inside the pane.
+
+          They are mounted in the pane on both other layouts, for the reason
+          written over them there — `.device .input`, `.device .btn` and
+          `.device .bare` are where this app's controls are drawn, and an
+          overlay outside `.device` is the one part of the app not drawn in
+          the app's own materials. That reason is satisfied here by the root
+          itself: the workspace's outer box *is* `.device`, so a child of it
+          is inside that scope wherever it sits in this subtree.
+
+          What is not satisfied inside the pane is the stacking. This layout
+          is the only one with chrome painted over the body — `.deskwork >
+          .deskstrip` at 21 and `.desktop-bar` at 20, so the bar's
+          suggestions are not covered by the pane the moment they open — and
+          `.device > *` puts every direct child, the body included, at 1. An
+          overlay in the pane is inside that 1: its own `z-index: 80` is
+          spent against its siblings and cannot lift its parent, so the tab
+          strip and the search bar painted straight over the top of it. The
+          capture box lost its field and its Close button to them — you
+          pressed +, saw the explanation with nothing to type into, and a
+          click where the field should be landed in the bar's search box
+          instead — and the palette opened under the bar with two search
+          fields on screen at once.
+
+          Out here each one is a sibling of those strips rather than a
+          grandchild of the body, so the number it already carries is
+          compared with theirs and wins. Nothing else changes: all three are
+          `position: fixed` above 1180px and laid out against the window
+          wherever they are mounted.
+        */}
+        <Assistant />
+        {state.finder && <Command onClose={() => dispatch({ type: 'finder', open: false })} />}
+        {state.quickAdd && <QuickAdd onClose={() => dispatch({ type: 'quickAdd', open: false })} />}
         {/* The launcher and Customize, last so they stack over the body
             without a z-index of their own to keep in step with anything. */}
         {state.apps && <AppsPanel onClose={() => dispatch({ type: 'apps', open: false })} />}
