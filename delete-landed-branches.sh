@@ -2,9 +2,14 @@
 #
 # Delete the claude/* branches whose work has landed in main.
 #
-# 149 claude/* branches: 144 here, 5 excluded for having an open pull request.
-# 140 were cleared by a merged pull request; the last 4 are an orphaned
+# 151 claude/* branches: 140 here, 11 excluded for having an open pull request.
+# 136 were cleared by a merged pull request; the last 4 are an orphaned
 # lineage and carry their own note below.
+#
+# Regenerated 2026-09-14 23:5x against main @ 6c229e0. The counts move fast —
+# this repo merged 12 commits and opened 6 pull requests in the half hour
+# before this refresh — so treat the SHAs as the authority and the numbers in
+# this comment as the day they were written.
 #
 # ── Why the list is pinned to SHAs ────────────────────────────────────────
 #
@@ -74,10 +79,7 @@ claude/assistant-blind-to-feeds	f754074a275f971404db9f8a4786ae61e5359fce
 claude/assistant-cut-stream	5553105bf8e4b4a2866e1b4c1a848949bc6bc666
 claude/awesome-rubin-63w34j	001c1251b3fcb19a1bc1bc6fed1a74ffef0d891d
 claude/backup-feeds	51733a6b6989562ac42e69539214e21cc6082ad6
-claude/beautiful-noether-3q3r5e	dd1a8505cf56673d950fcd71d7e391fe94c6ef83
 claude/bibtex-escapes	43fad71814cab924266b504059d86f6c699c11a1
-claude/bold-fermat-089zmf	ece03429958b6aac31aa8b529f35ff0a476bf28a
-claude/brave-hamilton-luax4r	9f20f787766fd5e0e6292930bee89105626c5a86
 claude/by-task-design-layout-4hnei5	5909a62922e195384012307e9962ddbb780f963f
 claude/by-task-page-redesign-a6xu4r	c4c995f86916a1af7bad420f8bdf5abb58b883e4
 claude/calendar-settings-tabs-mjg9ow	30d8bcd47dac41a91fbb2362c9ab105532887317
@@ -94,6 +96,8 @@ claude/course-color-coding-erznos	5b6ae85d7547dabe20420cab72adc0795150caf8
 claude/credentials-form	b3cf0bfcae3253bd0f773d4b174594678e9ed8cf
 claude/dazzling-pasteur-rsjad3	2f05fa856f097c7f5ede565e4f11dae1c1347504
 claude/db-open-timeout	a78224c1a147c8b8def5506df3646c565d9b0e5c
+claude/delete-landed-branches	6c43213ba19a105c202067a596e458da555fa2e9
+claude/delete-orphan-history	3ba1990abe4220e395916f3976e6319949e64359
 claude/determined-hopper-15h6vp	7b173f687f24cffe574a2ce0b6ea1691b977a9ce
 claude/docs-presentations-spreadsheets-7jjsgd	97d14ff2a67e85283b658e4f053b97120fad7373
 claude/draggable-elements-app-8cm3zv	926c6668e186c1621fb49151537b0a336000b675
@@ -102,7 +106,6 @@ claude/due-at-noon-was-untimed	a899197abe02ddb540e6cca700fe88c572eda90e
 claude/duetime-midday	d16abf53992513652d42cce526730758f8bbbdd0
 claude/embedded-assistant-layout-iera07	9eb18ffb93dd2d194eec6dad7f475a3265114e5c
 claude/epic-cannon-tbbrjb	b8640902e3877bae0c71cb6cd4340e63c210043c
-claude/epic-planck-mficqu	bae3609277681224e3c3c45ec716d5990bce01e9
 claude/erase-reaches-every-store	b274a63ec8e1f80477e988573d0a74fd1cb900b4
 claude/exam-default-shape	75614ff58f4d1257d9667d19dd5ec004e3462c45
 claude/expandable-collapsible-tabs-ghsciu	e892f23587f1928443a1ce3ecc2b98993e401b16
@@ -110,16 +113,14 @@ claude/fervent-sagan-8nvqn7	078e9a563d5abd4c132ee5276834e114e360f732
 claude/fifty-minutes-whatever-the-line-says	b59af38d028a33facf547cb2cc303193fa0668da
 claude/file-upload-drop-zone-7lfkf3	47400231d11fd805cd80885da8791fe4edff1b6e
 claude/final-is-a-qualifier	349f4d4062103d9b1e2ca9e7774623b7ee6ef776
-claude/friendly-knuth-493lyg	958f2621c07a77ef7e33c7a00259ba0dc8321033
 claude/function-upload-generation-rmjyr1	2cf1a4fc5b0dbb928b5756101d2afdadf654183e
-claude/gallant-johnson-obbzlj	a3042a33e493d36a05a03b86c2c20e1ee45eb1c5
+claude/gallant-johnson-obbzlj	29dcc184c17ed3fcac6c51d335cbf6a33ecde591
 claude/github-pages-allowlist-aas8n9	575869692940e6ccd235f5b124681582682ed9c4
 claude/gpa-band-high-below-low	e795b049cab73e757f5fc8f9b84ca626ce72245c
 claude/gracious-faraday-uou10k	5e145750e72edc66d654b67a70016ab0dff949c3
 claude/gracious-heisenberg-xj8836	51fbc090e1daca365ae4b3338b4493d51f4b698d
-claude/gracious-meitner-r5h2ir	d76c8eba2fc4fcf3c4a85035b7a158dc8f0a8025
 claude/great-allen-36k8pi	0eb046d35249c254fb1922878fde59038da4b7c9
-claude/great-bohr-1qbyey	13698ab19b98e060563b1d1fb170ef8dd11d63b9
+claude/great-bohr-1qbyey	4911a4ab265db8ab22097c9aa1a01489f8c679be
 claude/happy-maxwell-po3wn9	95aa2d57bcf5ddc84489ec701a65ca94c07ef290
 claude/hours-a-week	5dbffd1fdb2d96c078589f6916dc806439006b3a
 claude/ics-export-lines	3b4983c4b77cc9621506de78141265d66cedf722
@@ -129,8 +130,8 @@ claude/inspiring-gates-5wwd3d	f28112aa1b994c0d2dfd29ea5bc500b5b8c81945
 claude/keep-the-version-read	d74a9134e6e5b1dfa08e6737720a2da92a675600
 claude/legacy-term-export	efd80713b9b86639a953179855a30f2d7872ee5f
 claude/long-word-wrap	2efcd2681bc9e4b8d29a54af75d2d433404c655d
-claude/lucid-clarke-2uge62	origin/claude/lucid-clarke-2uge62
-claude/magical-johnson-xcy3pr	b12e4b37487c532e380592e052e9970dd1d079b4
+claude/lucid-clarke-2uge62	6c229e0ac9223b0cd9f59dc255ef9b21c915f44a
+claude/magical-johnson-xcy3pr	f0a2368e01024cee3cc535f7433c7f8d399b7e4d
 claude/map-feature-improvements-jdduvl	bed20dbcbe2fd1f91f3a03f67db7b64dcf1d02d8
 claude/map-timer	77ce8fb2f437232acfbc77014742b90d56d78e68
 claude/modest-davinci-08z56l	2927be64a6d28250096f20d81f5788a5466a169d
@@ -142,7 +143,7 @@ claude/one-reading-of-a-weight	d4bc5b33fb5ae0e89f3060dc436204eed25a9237
 claude/one-zip-limit	e5aede9c992d8a73c626463fc3a7f9003b68fc0f
 claude/own-entries-firstrun	67863351464fea9d71a67705d72b15463bf59cc5
 claude/paused-commitments	004527d66a04eb1f510afd3591099923e1a3a478
-claude/peaceful-cannon-7iq4u4	73fc5ec2753fd7bab397f3f7c7a444b7892ae6e0
+claude/peaceful-cannon-7iq4u4	54e1784b4eee40cc03a3f8bbab80b86ed8861410
 claude/penalty-counted-twice	2851aabde1cbec9910b7c310db9e31131df22bc2
 claude/pensive-pasteur-p7xamn	5d57f9c8d5132653b841f1ad7d4d04c41c924ff1
 claude/persist-write-failure	47fc41d2be0165658b083a83a044e5d5dc23cdb4
@@ -155,7 +156,7 @@ claude/print-rows	a1894c2969f08fa4c359f032b60e7c4c29f0fc81
 claude/privacy-storage-reads	2202f88cd269afe5fc365223617f723ec58345ec
 claude/progress-screen-design-fe8fiy	f6bb758b73a9328312f7fd3766529fab811fa733
 claude/progress-settings-redundancy-hbx6oo	11723c248cd95fc0599805cefc6ede945c11863e
-claude/quirky-shannon-tt7lla	3b80b7d0d68ecefa1b15a9ae0db2c09788d91df4
+claude/quirky-shannon-tt7lla	95973042a54ac3544bc85138f8aff3d4d148534d
 claude/readme-counts-derived	2784f92eaac4ded908dc52b43f1d467fe9d2d085
 claude/reduce-motion-when-it-cannot-ask	77a5c3482613d386376ffe9f2ab124b40bbd0b65
 claude/reminders-know-done	ca1cac707de3d94e52ffd7808a7aa142a83dbceb
@@ -174,7 +175,7 @@ claude/solve-photo-cap	040a0f519a046d60245bc7f0061c08aff8fcbc51
 claude/splash-screen-transition-72whnz	f5bb41b424c290d86734ba317a2c2299152fe9f2
 claude/stacked-untimed	c7a9f92159c39e1f450304127aa66f1b47e1ce24
 claude/stale-branch-cleanup	d0bdc2029d45d8a40e0ef32ca57254a099c7b7c8
-claude/sweet-dijkstra-wfhth2	32bd561cec9df54a7e877befbfc268bee06a6c1c
+claude/sweet-dijkstra-wfhth2	76a9294d221c32feba7d06d8b4b408147cdc83e4
 claude/tasks-calendar-formats-56lzd1	8e5d624d24f7f3ca59e1f4070f06ffde752109fe
 claude/the-end-of-a-span-unguarded	17aef2911ca1181aa42f2be00616fe70fee052aa
 claude/the-us-position-is-not-a-new-sentence	a12202e747479704531c8dbbba975f5616417635
