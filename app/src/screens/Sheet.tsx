@@ -921,11 +921,21 @@ function Grid({ sheet }: { sheet: SheetModel }) {
        * Part of a cell's text selected inside the box is the text box's own
        * copy, and has to stay that way: picking `B2:B9` out of `=SUM(B2:B9)`
        * and pressing ⌘C means those characters, and must not disturb what the
-       * app is holding. Everything else means the cell — a block, a caret
-       * sitting in a cell with nothing selected, or a box whose whole value is
-       * selected, which is what focusing one does — and has to go through
+       * app is holding. Everything else means the cell, and has to go through
        * `cutOrCopy`, or `clip` is left holding the block copied before it and
-       * the next paste silently puts *that* down instead.
+       * the next paste silently puts *that* down instead — two steps late, and
+       * with nothing on screen to say so.
+       *
+       * Everything else is three cases, not two. A block; a caret sitting in a
+       * cell with nothing selected, which is what a click and the grid's own
+       * arrow keys both leave; and a box whose whole value is selected, which
+       * is what tabbing into the grid from the ribbon or the formula bar
+       * leaves, because sequential focus navigation selects a text input's
+       * contents. Measured in Chromium, all three: a click gives (0, 0), an
+       * arrow move gives the caret at the end, and a Tab in gives (0, length).
+       * Only the third needs saying — a full selection copies the same
+       * characters either way, so taking it costs nothing and catches a cell
+       * somebody tabbed to and copied.
        */
       if (key === 'c' || key === 'x') {
         const all = input.selectionStart === 0 && input.selectionEnd === input.value.length;

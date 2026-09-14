@@ -436,6 +436,26 @@ describe('copy, cut and paste from the keyboard', () => {
     expect(cell('D2')).toBe('20');
   });
 
+  it('copies a cell whose whole value is selected, which is what tabbing in leaves', () => {
+    // Sequential focus navigation selects a text input's contents, so a cell
+    // reached with Tab from the ribbon arrives fully selected. Measured in
+    // Chromium: (0, length). Left to the browser it would copy the same
+    // characters and leave `clip` holding the block below.
+    type('Cell A1', '10');
+    type('Cell A2', '20');
+    at('A1');
+    key('A1', 'ArrowDown', { shift: true });
+    key('A1', 'c', { meta: true });
+    type('Cell B1', '99');
+    within('B1', 0, 2);
+    key('B1', 'c', { meta: true });
+    at('D1');
+    pressNamed('Paste');
+    away();
+    expect(cell('D1')).toBe('99');
+    expect(cell('D2')).toBe('');
+  });
+
   it('cuts the one cell the cursor is in, and pastes it back elsewhere', () => {
     type('Cell A1', '5');
     at('A1');
