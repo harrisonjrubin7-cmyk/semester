@@ -260,6 +260,21 @@ export const SYSTEM = [
   '· "say" is what the presenter says over that slide and does NOT write on it. This is where the',
   '  actual content goes. Two or three sentences.',
   '',
+  'Three slides are not a list of bullets, and a deck of nothing but bullets is a deck nobody',
+  'remembers. Use these where the content is actually that shape, instead of "bullets":',
+  '',
+  '· a comparison — "compare": {"left": {"heading": "...", "points": ["..."]},',
+  '  "right": {"heading": "...", "points": ["..."]}}. This is the argument against the objection,',
+  '  the before against the after. Two sides only.',
+  '· a quotation — "quote": {"text": "...", "source": "..."}. Word for word out of the material',
+  '  and nowhere else. If the material has no quotation in it, do not write this kind of slide:',
+  '  a quotation you composed is the single worst thing on a slide in front of a room.',
+  '· one figure — "figure": {"value": "61%", "says": "of the sample never replied"}. The number',
+  '  must be in the material. Where the deck wants one and the material has none, write the',
+  '  bracketed blank in "value" and say what is needed.',
+  '',
+  'A slide has one of "bullets", "compare", "quote" or "figure" — never two.',
+  '',
   'Rules that hold whatever the brief asks for:',
   '· Work only from what the student gave you. Do not invent a statistic, a date, a study, a',
   '  quotation, an author or a source. A figure on a slide is believed by a whole room at once.',
@@ -276,7 +291,29 @@ export const SYSTEM = [
 export interface Planned {
   title: string;
   subtitle: string;
-  slides: { title: string; note?: string; bullets: string[]; say?: string }[];
+  slides: PlannedSlide[];
+}
+
+/**
+ * One planned slide.
+ *
+ * `bullets` is always an array, empty where the slide is one of the three
+ * other shapes — which is the same thing `Slide` in `lib/pptx.ts` does, so a
+ * plan becomes a deck without a branch per field.
+ */
+export interface PlannedSlide {
+  title: string;
+  note?: string;
+  bullets: string[];
+  say?: string;
+  compare?: { left: Column; right: Column };
+  quote?: { text: string; source: string };
+  figure?: { value: string; says: string };
+}
+
+interface Column {
+  heading: string;
+  points: string[];
 }
 
 export interface Ask {
@@ -349,7 +386,7 @@ export function readPlan(text: string): Planned {
   const obj = raw as Partial<Planned>;
   const slides = Array.isArray(obj.slides) ? obj.slides : [];
   const clean = slides
-    .filter((s): s is Planned['slides'][number] => Boolean(s && typeof s.title === 'string' && s.title.trim()))
+    .filter((s): s is PlannedSlide => Boolean(s && typeof s.title === 'string' && s.title.trim()))
     .map((s) => ({
       title: String(s.title).trim(),
       note: typeof s.note === 'string' && s.note.trim() ? s.note.trim() : undefined,
@@ -357,6 +394,7 @@ export function readPlan(text: string): Planned {
         .filter((b) => typeof b === 'string' && b.trim())
         .map((b) => String(b).trim()),
       say: typeof s.say === 'string' && s.say.trim() ? s.say.trim() : undefined,
+      ...readShape(s),
     }));
 
   if (!clean.length) throw new Error('The plan had no slides in it. Try again.');
@@ -368,6 +406,63 @@ export function readPlan(text: string): Planned {
   };
 }
 
+/**
+ * The three shapes beyond a list of bullets, read back defensively.
+ *
+ * A model asked for one of four shapes returns two of them about as often as
+ * it returns none, so the order here is a decision rather than an accident:
+ * the most specific wins, and a slide keeps exactly one shape. The
+ * alternative is a slide that draws a quotation *and* a comparison on top of
+ * each other, which is a slide nobody can read and nobody can fix.
+ *
+ * Everything is tested for shape rather than trusted. This is JSON from a
+ * model — `points` comes back as a string about as often as as an array, and
+ * a `.filter` on a string is a crash on the screen that was waiting for a
+ * deck.
+ */
+function readShape(s: PlannedSlide): Partial<PlannedSlide> {
+  const line = (v: unknown): string => (typeof v === 'string' ? v.trim() : '');
+  /*
+   * A list of points, forgiving about the commonest malformation.
+   *
+   * A model asked for an array returns a single string when there is one
+   * item, often enough that refusing it would drop real content — and
+   * `readPlan` is documented as forgiving about everything except structure.
+   * A string is one point; anything else is none, and `.filter` is never
+   * called on something that has no `.filter`.
+   */
+  const points = (v: unknown): string[] =>
+    (typeof v === 'string' ? [v] : Array.isArray(v) ? v : []).map(line).filter(Boolean);
+  const column = (v: unknown): Column | null => {
+    const c = v as Partial<Column> | undefined;
+    if (!c || typeof c !== 'object') return null;
+    const heading = line(c.heading);
+    const list = points(c.points);
+    return heading || list.length ? { heading, points: list } : null;
+  };
+
+  const quote = s.quote as Partial<{ text: string; source: string }> | undefined;
+  if (quote && line(quote.text)) {
+    return { quote: { text: line(quote.text), source: line(quote.source) }, bullets: [] };
+  }
+
+  const figure = s.figure as Partial<{ value: string; says: string }> | undefined;
+  if (figure && line(figure.value)) {
+    return { figure: { value: line(figure.value), says: line(figure.says) }, bullets: [] };
+  }
+
+  const compare = s.compare as Partial<{ left: unknown; right: unknown }> | undefined;
+  if (compare) {
+    const left = column(compare.left);
+    const right = column(compare.right);
+    // Both halves or neither. A comparison with one side is a list with a
+    // heading on it, and it should be drawn as the list it is.
+    if (left && right) return { compare: { left, right }, bullets: [] };
+  }
+
+  return {};
+}
+
 /** A plan, with the title slide and the close the model was told not to write. */
 export function toDeck(plan: Planned): Deck {
   return {
@@ -375,7 +470,14 @@ export function toDeck(plan: Planned): Deck {
     subtitle: plan.subtitle,
     slides: [
       { title: plan.title, bullets: [], note: plan.subtitle || undefined, opening: true },
-      ...plan.slides.map((s) => ({ title: s.title, bullets: s.bullets, note: s.note })),
+      ...plan.slides.map((s) => ({
+        title: s.title,
+        bullets: s.bullets,
+        note: s.note,
+        ...(s.compare ? { columns: [s.compare.left, s.compare.right] } : {}),
+        ...(s.quote ? { quote: s.quote } : {}),
+        ...(s.figure ? { big: { value: s.figure.value, says: s.figure.says } } : {}),
+      })),
     ],
   };
 }
@@ -384,7 +486,27 @@ export function toDeck(plan: Planned): Deck {
 export function holes(plan: Planned): string[] {
   const found: string[] = [];
   for (const slide of plan.slides) {
-    for (const text of [slide.title, ...slide.bullets, slide.say ?? '']) {
+    /*
+     * Every field a bracketed blank can appear in, not just the bullets.
+     *
+     * A figure slide's whole content is its value, and that is exactly where
+     * the model is told to write `[the enrolment figure from the report]`. A
+     * count that read only the bullets would report no blanks on the one
+     * slide whose only content is one.
+     */
+    const inColumns = (slide.compare
+      ? [slide.compare.left, slide.compare.right].flatMap((c) => [c.heading, ...c.points])
+      : []) as string[];
+    for (const text of [
+      slide.title,
+      ...slide.bullets,
+      ...inColumns,
+      slide.quote?.text ?? '',
+      slide.quote?.source ?? '',
+      slide.figure?.value ?? '',
+      slide.figure?.says ?? '',
+      slide.say ?? '',
+    ]) {
       for (const hole of text.match(/\[[^\]\n]{3,}\]/g) ?? []) found.push(hole);
     }
   }
@@ -397,6 +519,13 @@ export function speakerNotes(plan: Planned): string {
   plan.slides.forEach((s, i) => {
     lines.push(`## ${i + 2}. ${s.title}`);
     if (s.bullets.length) lines.push(...s.bullets.map((b) => `- ${b}`));
+    if (s.compare) {
+      for (const side of [s.compare.left, s.compare.right]) {
+        lines.push(`**${side.heading}**`, ...side.points.map((p) => `- ${p}`));
+      }
+    }
+    if (s.quote) lines.push(`> ${s.quote.text}`, `>`, `> — ${s.quote.source}`);
+    if (s.figure) lines.push(`**${s.figure.value}** — ${s.figure.says}`);
     if (s.say) lines.push('', `**Say:** ${s.say}`);
     lines.push('');
   });

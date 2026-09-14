@@ -224,7 +224,112 @@ export function Canvas({
         </div>
       )}
 
-      {!opening && !slide.table && slide.equation === undefined && (
+      {slide.columns && (
+        <div className="slide-columns">
+          {slide.columns.map((column, i) => (
+            <div key={i} className="slide-column">
+              <Field
+                value={column.heading}
+                onChange={(heading) =>
+                  onChange({
+                    ...slide,
+                    columns: (slide.columns ?? []).map((c, j) =>
+                      j === i ? { ...c, heading } : c,
+                    ),
+                  })
+                }
+                placeholder={i === 0 ? 'This' : 'That'}
+                says={`Heading of column ${i + 1} ${on}`}
+                look={look}
+                style={{ fontSize: 'var(--type-md)', fontWeight: 600, height: 'auto' }}
+              />
+              <Field
+                value={column.points.join('\n')}
+                onChange={(text) =>
+                  onChange({
+                    ...slide,
+                    columns: (slide.columns ?? []).map((c, j) =>
+                      j === i
+                        ? {
+                            ...c,
+                            points: text
+                              .split('\n')
+                              .filter((l, k, all) => l !== '' || k < all.length - 1),
+                          }
+                        : c,
+                    ),
+                  })
+                }
+                placeholder="One point per line"
+                says={`Points in column ${i + 1} ${on}`}
+                lines={5}
+                look={look}
+                style={{
+                  fontSize: 'var(--type-sm)',
+                  lineHeight: 'var(--leading-relaxed)',
+                  flex: 1,
+                  minHeight: 0,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {slide.quote && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'var(--sp-4)' }}>
+          <Field
+            value={slide.quote.text}
+            onChange={(text) => onChange({ ...slide, quote: { ...slide.quote!, text } })}
+            placeholder="The passage, word for word"
+            says={`The quotation ${on}`}
+            lines={4}
+            look={look}
+            style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-normal)' }}
+          />
+          <Field
+            value={slide.quote.source}
+            onChange={(source) => onChange({ ...slide, quote: { ...slide.quote!, source } })}
+            placeholder="Where it came from"
+            says={`Where the quotation came from ${on}`}
+            look={{ ink: look.dim, dim: look.dim }}
+            style={{ fontSize: 'var(--type-sm)', height: 'auto' }}
+          />
+        </div>
+      )}
+
+      {slide.big && (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'var(--sp-4)' }}>
+          <Field
+            value={slide.big.value}
+            onChange={(value) => onChange({ ...slide, big: { ...slide.big!, value } })}
+            placeholder="61%"
+            says={`The figure ${on}`}
+            look={look}
+            style={{
+              fontSize: 'var(--type-xl)',
+              fontWeight: 700,
+              textAlign: 'center',
+              height: 'auto',
+            }}
+          />
+          <Field
+            value={slide.big.says}
+            onChange={(says) => onChange({ ...slide, big: { ...slide.big!, says } })}
+            placeholder="of the sample never opened the second email"
+            says={`What the figure means ${on}`}
+            look={{ ink: look.dim, dim: look.dim }}
+            style={{ fontSize: 'var(--type-md)', textAlign: 'center', height: 'auto' }}
+          />
+        </div>
+      )}
+
+      {!opening &&
+        !slide.table &&
+        !slide.columns &&
+        !slide.quote &&
+        !slide.big &&
+        slide.equation === undefined && (
         <Field
           value={slide.bullets.join('\n')}
           onChange={(text) =>
@@ -283,7 +388,16 @@ export function Canvas({
  * the wall: a deck built from a sheet is all table, and used to show as a bare
  * title.
  */
-export function Still({ slide, theme }: { slide: Slide; theme: Theme }) {
+export function Still({
+  slide,
+  theme,
+  foot,
+}: {
+  slide: Slide;
+  theme: Theme;
+  /** The deck's footer and this slide's number, where the deck has either. */
+  foot?: { footer: string; number: string };
+}) {
   const look = paint(theme);
   const opening = slide.opening === true;
   return (
@@ -334,6 +448,51 @@ export function Still({ slide, theme }: { slide: Slide; theme: Theme }) {
           </table>
         </div>
       )}
+      {slide.columns && slide.columns.length > 0 && (
+        <div className="slide-columns">
+          {slide.columns.map((column, i) => (
+            <div key={i} className="slide-column">
+              {column.heading.trim() && (
+                <div style={{ fontSize: 'var(--type-md)', fontWeight: 600 }}>{column.heading}</div>
+              )}
+              <ul
+                style={{
+                  margin: 0,
+                  paddingLeft: 'var(--sp-6)',
+                  fontSize: 'var(--type-sm)',
+                  lineHeight: 'var(--leading-relaxed)',
+                }}
+              >
+                {column.points
+                  .filter((p) => p.trim())
+                  .map((line, n) => (
+                    <li key={n}>{line}</li>
+                  ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+      {slide.quote && slide.quote.text.trim() && (
+        <blockquote style={{ margin: 'auto 0', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-normal)' }}>
+          {slide.quote.text}
+          {slide.quote.source.trim() && (
+            <footer style={{ marginTop: 'var(--sp-5)', color: look.dim, fontSize: 'var(--type-sm)' }}>
+              — {slide.quote.source}
+            </footer>
+          )}
+        </blockquote>
+      )}
+      {slide.big && slide.big.value.trim() && (
+        <div style={{ margin: 'auto 0', textAlign: 'center' }}>
+          <div style={{ fontSize: 'var(--type-xl)', fontWeight: 700 }}>{slide.big.value}</div>
+          {slide.big.says.trim() && (
+            <div style={{ marginTop: 'var(--sp-4)', color: look.dim, fontSize: 'var(--type-md)' }}>
+              {slide.big.says}
+            </div>
+          )}
+        </div>
+      )}
       {slide.bullets.length > 0 && (
         <ul
           style={{
@@ -347,6 +506,27 @@ export function Still({ slide, theme }: { slide: Slide; theme: Theme }) {
             <li key={n}>{line}</li>
           ))}
         </ul>
+      )}
+      {/*
+        The line along the bottom, on the drawing that stands for the exported
+        slide. A presenter view that did not show it would be a presenter view
+        disagreeing with the wall, which is the fault this one renderer exists
+        to prevent.
+      */}
+      {!opening && foot && (foot.footer.trim() || foot.number) && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: 'auto',
+            paddingTop: 'var(--sp-4)',
+            color: look.dim,
+            fontSize: 'var(--type-xs)',
+          }}
+        >
+          <span>{foot.footer}</span>
+          <span>{foot.number}</span>
+        </div>
       )}
     </div>
   );
@@ -386,6 +566,38 @@ export function Thumb({ slide, theme }: { slide: Slide; theme: Theme }) {
           {slide.note}
         </div>
       ) : null}
+      {/*
+        A thumbnail has to be recognisable, not readable. A quotation slide and
+        a figure slide both have an empty title more often than not, so a rail
+        that drew only titles and points showed them as blank rectangles —
+        which is the one thing a rail must never do.
+      */}
+      {slide.quote?.text ? (
+        <div style={{ fontSize: 'var(--type-xs)', color: look.dim, overflow: 'hidden' }}>
+          “{slide.quote.text}”
+        </div>
+      ) : null}
+      {slide.big?.value ? (
+        <div style={{ fontSize: 'var(--type-sm)', fontWeight: 700, overflow: 'hidden' }}>
+          {slide.big.value}
+        </div>
+      ) : null}
+      {slide.columns
+        ? slide.columns.map((column, i) => (
+            <div
+              key={i}
+              style={{
+                fontSize: 'var(--type-xs)',
+                color: look.dim,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {column.heading || column.points.find((p) => p.trim()) || ' '}
+            </div>
+          ))
+        : null}
       {slide.bullets.slice(0, 3).map((line, n) => (
         <div
           key={n}

@@ -316,3 +316,140 @@ describe('kind', () => {
     expect(kind('nonsense').id).toBe(KINDS[0].id);
   });
 });
+
+/**
+ * The three shapes a plan can come back in beyond a list of bullets.
+ *
+ * All of it is JSON from a model, which means every field arrives in the
+ * wrong type roughly as often as in the right one — `points` as a string, a
+ * comparison with one side, a quotation with no words. Each of those is a
+ * crash on the screen that was waiting for a deck, so each is a case here.
+ */
+describe('a plan with more than bullets in it', () => {
+  const plan = (slide: object) =>
+    readPlan(JSON.stringify({ title: 'A talk', subtitle: '', slides: [{ title: 'One', ...slide }] }))
+      .slides[0];
+
+  it('reads a comparison as two columns', () => {
+    const got = plan({
+      compare: {
+        left: { heading: 'For', points: ['a', 'b'] },
+        right: { heading: 'Against', points: ['c'] },
+      },
+    });
+    expect(got.compare?.left.points).toEqual(['a', 'b']);
+    expect(got.compare?.right.heading).toBe('Against');
+  });
+
+  it('refuses a comparison with only one side, because that is a list', () => {
+    expect(plan({ compare: { left: { heading: 'For', points: ['a'] } } }).compare).toBeUndefined();
+  });
+
+  /*
+   * A model asked for an array returns a bare string when there is one item,
+   * often enough that refusing it would drop real content. It is read as the
+   * one point it is — and, more to the point, `.filter` is never called on
+   * something that has no `.filter`, which is a crash on the screen that was
+   * waiting for a deck.
+   */
+  it('reads points that came back as one string rather than a list', () => {
+    const got = plan({
+      compare: { left: { heading: 'For', points: 'a' }, right: { heading: 'Against', points: ['c'] } },
+    });
+    expect(got.compare?.left.points).toEqual(['a']);
+  });
+
+  it('reads no points at all from a number, rather than throwing on it', () => {
+    const got = plan({
+      compare: { left: { heading: 'For', points: 7 }, right: { heading: 'Against', points: ['c'] } },
+    });
+    expect(got.compare?.left.points).toEqual([]);
+  });
+
+  it('reads a quotation and its source', () => {
+    const got = plan({ quote: { text: 'A tariff is a tax on exports.', source: 'Lerner' } });
+    expect(got.quote?.text).toBe('A tariff is a tax on exports.');
+    expect(got.bullets).toEqual([]);
+  });
+
+  it('drops a quotation with no words in it', () => {
+    expect(plan({ quote: { source: 'Lerner' } }).quote).toBeUndefined();
+  });
+
+  it('reads a figure and what it means', () => {
+    expect(plan({ figure: { value: '61%', says: 'never replied' } }).figure?.value).toBe('61%');
+  });
+
+  /*
+   * A model asked for one of four shapes returns two about as often as none.
+   * One shape per slide, most specific first — the alternative draws a
+   * quotation and a comparison on top of each other.
+   */
+  it('keeps one shape per slide when two come back', () => {
+    const got = plan({
+      quote: { text: 'A passage', source: 'Smith' },
+      figure: { value: '61%', says: 'x' },
+      bullets: ['a point'],
+    });
+    expect(got.quote).toBeDefined();
+    expect(got.figure).toBeUndefined();
+    expect(got.bullets).toEqual([]);
+  });
+
+  it('turns each shape into the slide that draws it', () => {
+    const made = toDeck(
+      readPlan(
+        JSON.stringify({
+          title: 'A talk',
+          subtitle: '',
+          slides: [
+            { title: 'Both sides', compare: { left: { heading: 'For', points: ['a'] }, right: { heading: 'Against', points: ['b'] } } },
+            { title: 'In their words', quote: { text: 'A passage', source: 'Smith' } },
+            { title: 'The headline', figure: { value: '61%', says: 'never replied' } },
+          ],
+        }),
+      ),
+    );
+    expect(made.slides[1].columns).toHaveLength(2);
+    expect(made.slides[2].quote?.source).toBe('Smith');
+    expect(made.slides[3].big?.value).toBe('61%');
+  });
+
+  /*
+   * A figure slide's whole content is its value, and that is exactly where
+   * the model is told to write `[the enrolment figure from the report]`. A
+   * count that read only the bullets reported no blanks on the one slide
+   * whose only content is one.
+   */
+  it('counts a blank wherever it can be written, not only in the bullets', () => {
+    const counted = holes(
+      readPlan(
+        JSON.stringify({
+          title: 'A talk',
+          subtitle: '',
+          slides: [
+            { title: 'The headline', figure: { value: '[the enrolment figure from the report]', says: 'x' } },
+          ],
+        }),
+      ),
+    );
+    expect(counted).toEqual(['[the enrolment figure from the report]']);
+  });
+
+  it('writes every shape into the speaker notes', () => {
+    const notes = speakerNotes(
+      readPlan(
+        JSON.stringify({
+          title: 'A talk',
+          subtitle: '',
+          slides: [
+            { title: 'In their words', quote: { text: 'A passage', source: 'Smith' } },
+            { title: 'The headline', figure: { value: '61%', says: 'never replied' } },
+          ],
+        }),
+      ),
+    );
+    expect(notes).toContain('> A passage');
+    expect(notes).toContain('**61%** — never replied');
+  });
+});

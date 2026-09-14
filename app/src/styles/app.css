@@ -3888,6 +3888,27 @@ input[type='search'].input {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
+/* ── Two columns on a slide ───────────────────────────────────────────────
+   A comparison: this against that. Equal halves on purpose — a pair whose
+   sides are different widths reads as a hierarchy rather than as a pair — and
+   they stay side by side at every width, because a comparison that stacks on
+   a phone is the one list the layout exists to stop being. */
+
+.slide-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-6);
+  flex: 1;
+  min-height: 0;
+}
+
+.slide-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+
 /* ── A document as a page ─────────────────────────────────────────────────
    What Word calls Print Layout and Docs calls Print layout: the document at
    the width of a sheet of paper, in the font and at the spacing it will
