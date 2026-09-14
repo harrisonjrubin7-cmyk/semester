@@ -159,7 +159,7 @@ describe('the header buttons a thumb has to hit', () => {
 
   it('decides the whole row in one place', () => {
     expect(src(), 'the row is one call, not five conditions').toContain(
-      'const row = headerRow({ atRoot, phone, counting, desk, sidebar });',
+      'const row = headerRow({ atRoot, phone, counting, desk });',
     );
     // The measurement itself stays in lib/header.ts. A second caller here is
     // a second opinion about the width, which is the shape that shipped the
@@ -253,14 +253,14 @@ describe('what the header can carry', () => {
    * The workspace, which is what `headerRow` was extracted to get right.
    *
    * Its bar draws a search field at every width and a cluster of four — the
-   * bell, settings, the launcher and the avatar — beside it; its sidebar
-   * draws New. Five of this row's controls are therefore already on screen,
-   * and the sixth thing in the row, the timer pill, is nobody else's.
+   * bell, settings, the launcher and the avatar — beside it. Four of this
+   * row's controls are therefore already on screen; the `+` is not, and the
+   * timer pill is nobody else's.
    */
   const AT_ROOT = { atRoot: true, phone: false, counting: false };
 
   it('draws all five outside the workspace, exactly as before', () => {
-    expect(headerRow({ ...AT_ROOT, desk: false, sidebar: false })).toEqual({
+    expect(headerRow({ ...AT_ROOT, desk: false })).toEqual({
       add: true,
       search: true,
       apps: true,
@@ -269,37 +269,49 @@ describe('what the header can carry', () => {
     });
   });
 
-  it('draws none of the five in a workspace wide enough for its sidebar', () => {
-    const row = headerRow({ ...AT_ROOT, desk: true, sidebar: true });
-    expect(Object.values(row).some(Boolean), 'the bar and the sidebar have all five').toBe(false);
+  it('draws only the + in the workspace, whose bar has the other four', () => {
+    const row = headerRow({ ...AT_ROOT, desk: true });
+    expect(row, 'the bar carries four of the five').toEqual({
+      add: true,
+      search: false,
+      apps: false,
+      alerts: false,
+      avatar: false,
+    });
   });
 
   /*
-   * The one exception, and the reason `sidebar` is a separate input rather
-   * than `desk && wide` worked out here: `chromeFor` draws the sidebar only
-   * where there is room for it, and the workspace's bar has no `+` of its
-   * own. On a narrow workspace this button is the only pointing route to the
-   * capture box, so it stays.
+   * The `+` used to ask about the sidebar, which drew a New button this one
+   * would have sat beside. That column no longer draws one — New opened the
+   * capture box, which the search home already opens from the + beside its
+   * field — so the premise went and the question with it.
+   *
+   * Asserted at every width and in both navigations rather than as a constant,
+   * because the failure it guards is two correct removals landing together:
+   * the sidebar dropping New, and this deferring to a New that is no longer
+   * there, leaving a wide workspace with no pointing route to the capture box.
    */
-  it('keeps the + in a workspace too narrow for the sidebar', () => {
-    const row = headerRow({ ...AT_ROOT, desk: true, sidebar: false });
-    expect(row.add).toBe(true);
-    expect(row.search, 'the bar’s field is drawn at every width').toBe(false);
+  it('draws the + everywhere, because nothing else carries the capture box', () => {
+    for (const desk of [true, false]) {
+      for (const phone of [true, false]) {
+        for (const atRoot of [true, false]) {
+          expect(headerRow({ atRoot, phone, counting: false, desk }).add, `${desk} ${phone}`).toBe(
+            true,
+          );
+        }
+      }
+    }
   });
 
   it('never draws the magnifier over the workspace’s own search field', () => {
-    for (const sidebar of [true, false]) {
-      for (const atRoot of [true, false]) {
-        expect(headerRow({ atRoot, phone: true, counting: false, desk: true, sidebar }).search).toBe(
-          false,
-        );
-      }
+    for (const atRoot of [true, false]) {
+      expect(headerRow({ atRoot, phone: true, counting: false, desk: true }).search).toBe(false);
     }
   });
 
   it('keeps the width rule in front of the avatar, on top of the workspace one', () => {
     // A phone with a timer counting: no room, workspace or not.
-    expect(headerRow({ atRoot: true, phone: true, counting: true, desk: false, sidebar: false }).avatar).toBe(false);
+    expect(headerRow({ atRoot: true, phone: true, counting: true, desk: false }).avatar).toBe(false);
   });
 
   it('does not depend on which navigation is on', () => {

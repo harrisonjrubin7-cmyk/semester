@@ -71,7 +71,7 @@ describe('the workspace draws each job once', () => {
   const AT_ROOT = { atRoot: true, phone: false, counting: false };
 
   it('leaves the header nothing the bar already carries', () => {
-    const row = headerRow({ ...AT_ROOT, desk: true, sidebar: false });
+    const row = headerRow({ ...AT_ROOT, desk: true });
     // The bar draws its field at every width, and its four tools beside it.
     expect(row.search, 'the bar has a search field').toBe(false);
     expect(row.apps, 'the bar has the nine dots').toBe(false);
@@ -79,27 +79,34 @@ describe('the workspace draws each job once', () => {
     expect(row.avatar, 'the bar has the avatar').toBe(false);
   });
 
-  it('leaves the header nothing the sidebar already carries', () => {
-    expect(headerRow({ ...AT_ROOT, desk: true, sidebar: true }).add, 'the sidebar has New').toBe(
-      false,
-    );
-  });
-
   /*
-   * Nothing becomes unreachable, which is the other half of every cut above.
+   * Nothing becomes unreachable, which is the other half of every cut above —
+   * and this is the one that nearly went wrong.
    *
-   * The sidebar is `desk && wide`, so the narrow workspace has no column —
-   * and there the header's `+` is the only pointing route to the capture box
-   * and has to stay. This is the case a rule written as `!desk` would have
-   * got wrong, and the reason `headerRow` takes both facts.
+   * The header's `+` used to stand down wherever the sidebar was drawn,
+   * because that column had a New button. `main` then removed New from both
+   * sidebars, correctly and for this pass's own reason: it opened the capture
+   * box, which the search home already opens from the + beside its field. Two
+   * correct removals, landing in the same week, would have left a wide
+   * workspace with no pointing route to the capture box at all.
+   *
+   * So the rule no longer asks, and this holds that nothing quietly picks the
+   * question back up: neither sidebar draws the capture box, and the header
+   * draws it at every width.
    */
-  it('keeps the one control the narrow workspace has nowhere else', () => {
-    const narrow = chromeFor('workspace', 'notifs', false);
-    expect(narrow.sidebar, 'a narrow workspace draws no sidebar').toBe(false);
-    expect(headerRow({ ...AT_ROOT, desk: true, sidebar: narrow.sidebar }).add).toBe(true);
-    expect(SIDE(), 'and the column it is standing in for is where New lives').toMatch(
-      /type: 'quickAdd', open: true/,
-    );
+  it('keeps the capture box reachable now that no sidebar carries it', () => {
+    for (const f of ['src/components/desk/Sidebar.tsx', 'src/components/GoogleShell.tsx']) {
+      const side = withoutComments(read(f));
+      const inSidebar = /g-sidebar[\s\S]*?<\/aside>/.exec(side)?.[0] ?? '';
+      expect(inSidebar, `${f}: the column is navigation, not the capture box`).not.toContain(
+        "type: 'quickAdd'",
+      );
+    }
+    expect(SIDE(), 'the workspace column has no New button').not.toContain("type: 'quickAdd'");
+    for (const wide of [true, false]) {
+      const c = chromeFor('workspace', 'notifs', wide);
+      expect(headerRow({ ...AT_ROOT, desk: c.desk }).add, `wide=${wide}`).toBe(true);
+    }
   });
 });
 

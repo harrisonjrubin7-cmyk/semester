@@ -1,31 +1,36 @@
 /**
  * The workspace's left column, where there is room for one.
  *
- * Four rows and a button, and every one of them is somewhere the app already
- * goes. That is the whole design: a sidebar earns its width by holding the
- * handful of places somebody returns to between everything else, not by being
- * a second copy of the directory — which is what the rail beside it is, and
- * why the two are never drawn together (see `lib/chrome.ts`).
+ * Three rows, and every one of them is somewhere the app already goes. That
+ * is the whole design: a sidebar earns its width by holding the handful of
+ * places somebody returns to between everything else, not by being a second
+ * copy of the directory — which is what the rail beside it is, and why the
+ * two are never drawn together (see `lib/chrome.ts`).
  *
- * ## Two rows went, because the bar above already had them
+ * ## It was six, and three went — for the same reason, from two directions
  *
- * It was six. **Search home** went to the same screen the bar's wordmark goes
- * to, and **Settings** to the same screen the bar's gear goes to — both drawn
- * in the same frame as the row that duplicated them, a few inches apart. The
- * bar's two survive because they are drawn at every width and this column is
- * not: `sidebar: desk && wide` in `lib/chrome.ts`, so on a phone-width
- * workspace there is no column at all and the wordmark and the gear are still
- * the way to both.
+ * **Search home** went to the same screen the bar's wordmark goes to, and
+ * **Settings** to the same screen the bar's gear goes to — both drawn in the
+ * same frame as the row that duplicated them, a few inches apart. The bar's
+ * two survive because they are drawn at every width and this column is not:
+ * `sidebar: desk && wide` in `lib/chrome.ts`, so on a phone-width workspace
+ * there is no column at all and the wordmark and the gear are still the way
+ * to both. Settings in particular failed this file's own test: a place you
+ * return to *between everything else* is what the middle of this column is
+ * for, and Settings is somewhere you go on purpose, twice a term.
  *
- * Settings in particular failed this file's own test. A place you return to
- * *between everything else* is what the middle of this column is for, and
- * Settings is not one — it is somewhere you go on purpose, twice a term, and
- * it is in the launcher, in the bar, in the directory and in search.
+ * **New** went too, and that one arrived from the other side. It opened the
+ * capture box, which the search home already opens from the + beside its
+ * field — one action, two places — and in a column of rows that all go
+ * somewhere it read as a seventh destination rather than as the one thing
+ * here that writes.
  *
- * **New** is the capture box, not a menu. One line, from anywhere, is the
- * fastest thing in this app and the thing people forget exists; at the top of
- * the column in the position every workspace puts its primary action, it is
- * the first thing the eye lands on.
+ * Its going changes a rule elsewhere, which is the part worth writing down.
+ * `lib/header.ts` suppressed the header's `+` wherever this column was drawn,
+ * *because* this column had New. With New gone the premise is gone, so the
+ * header draws it again at every width — see `headerRow` there. Two correct
+ * removals, landing together, would otherwise have left a wide workspace with
+ * no pointing route to the capture box at all.
  *
  * The favourites in the middle are the same five as the search home's
  * shortcuts, read through the same function, so moving one moves it in both
@@ -40,7 +45,7 @@ import { rootOf, saysFor, screenName } from '../../lib/nav';
 import type { Screen } from '../../lib/types';
 import { secondLine } from '../../lib/dim';
 import { glyphFor } from '../icons.pick';
-import { AppsIcon, ConnectIcon, Plus } from '../Icons';
+import { AppsIcon, ConnectIcon } from '../Icons';
 
 export function Sidebar() {
   const { state, dispatch, school, catalog } = useStore();
@@ -87,15 +92,6 @@ export function Sidebar() {
 
   return (
     <nav className="desk-side" aria-label="Semester">
-      <button
-        type="button"
-        className="bare desk-new"
-        onClick={() => dispatch({ type: 'quickAdd', open: true })}
-      >
-        <Plus size={22} />
-        <span>New</span>
-      </button>
-
       {/*
         "App directory", not "All apps".
 

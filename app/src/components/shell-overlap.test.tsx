@@ -17,7 +17,7 @@ import {reducer} from '../state/reducer';
 
 (globalThis as {IS_REACT_ACT_ENVIRONMENT?:boolean}).IS_REACT_ACT_ENVIRONMENT=true;
 let host:HTMLDivElement;let root:Root;
-function Screen(){const {state,dispatch}=useStore();return <div className="device"><TabStrip/><main data-work={state.screen} data-unit={state.openUnit} data-room={state.callCode}><button onClick={()=>dispatch({type:"openGuide",id:"econ",mode:"cards",unit:3})}>Study unit three</button><button onClick={()=>dispatch({type:"openGuide",id:"econ",mode:"cards",unit:1})}>Study unit one</button><input aria-label="Keep my draft" defaultValue="Keep this work"/><button onClick={()=>dispatch({type:'finder',open:true})}>Legacy search entry</button><button onClick={()=>dispatch({type:'apps',open:true})}>Legacy apps entry</button></main>{state.finder&&<Command onClose={()=>dispatch({type:'finder',open:false})}/>} {state.apps&&<AllApps onClose={()=>dispatch({type:'apps',open:false})}/>} {state.quickAdd&&<QuickAdd onClose={()=>dispatch({type:'quickAdd',open:false})}/>}</div>;}
+function Screen(){const {state,dispatch}=useStore();return <div className="device"><TabStrip/><main data-work={state.screen} data-unit={state.openUnit} data-room={state.callCode}><button onClick={()=>dispatch({type:"openGuide",id:"econ",mode:"cards",unit:3})}>Study unit three</button><button onClick={()=>dispatch({type:"openGuide",id:"econ",mode:"cards",unit:1})}>Study unit one</button><input aria-label="Keep my draft" defaultValue="Keep this work"/><button onClick={()=>dispatch({type:'finder',open:true})}>Legacy search entry</button><button onClick={()=>dispatch({type:'apps',open:true})}>Legacy apps entry</button><button onClick={()=>dispatch({type:'quickAdd',open:true})}>Open the capture box</button></main>{state.finder&&<Command onClose={()=>dispatch({type:'finder',open:false})}/>} {state.apps&&<AllApps onClose={()=>dispatch({type:'apps',open:false})}/>} {state.quickAdd&&<QuickAdd onClose={()=>dispatch({type:'quickAdd',open:false})}/>}</div>;}
 function App(){const {state}=useStore();return <><TabsFollow/><GoogleShell title={state.screen}><Screen/></GoogleShell></>;}
 function button(name:string){const el=[...host.querySelectorAll('button')].find(b=>(b.getAttribute('aria-label')??b.textContent?.trim())===name);if(!el)throw new Error('Missing button '+name);return el;}
 function click(name:string){act(()=>button(name).click());}
@@ -55,7 +55,7 @@ it('routes old app-launcher entry points to one modern launcher and keeps popove
   click('Open all apps');expect(host.querySelector('.g-suggestions')).toBeNull();expect(host.querySelectorAll('.g-launcher')).toHaveLength(1);
 });
 it('opens Quick Add visibly from search results and lets its own Escape close it',()=>{
-  click('Legacy search entry');click('New');
+  click('Legacy search entry');click('Open the capture box');
   expect(host.querySelector('.g-global-results')).toBeNull();
   const modal=host.querySelector<HTMLElement>('[aria-label="Add something quickly"]')!;
   expect(modal.closest('[hidden]')).toBeNull();expect(modal.style.position).toBe('fixed');
@@ -108,7 +108,7 @@ it('does not use tab shortcuts inside a draft field or modal',()=>{
   const draft=host.querySelector<HTMLInputElement>('[aria-label="Keep my draft"]')!;
   act(()=>draft.dispatchEvent(new KeyboardEvent('keydown',{key:'t',code:'KeyT',altKey:true,bubbles:true})));
   expect(strip().tabs).toHaveLength(1);
-  click('New');const modal=host.querySelector<HTMLElement>('[aria-modal="true"]')!;
+  click('Open the capture box');const modal=host.querySelector<HTMLElement>('[aria-modal="true"]')!;
   act(()=>modal.dispatchEvent(new KeyboardEvent('keydown',{key:'t',code:'KeyT',altKey:true,bubbles:true})));
   expect(strip().tabs).toHaveLength(1);
 });

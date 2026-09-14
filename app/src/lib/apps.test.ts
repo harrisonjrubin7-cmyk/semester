@@ -210,7 +210,7 @@ describe('the button in the header', () => {
      */
     for (const phone of [true, false]) {
       expect(
-        headerRow({ atRoot: false, phone, counting: false, desk: false, sidebar: false }).apps,
+        headerRow({ atRoot: false, phone, counting: false, desk: false }).apps,
         'All apps must not be gated on being at a root screen',
       ).toBe(true);
     }

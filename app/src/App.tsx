@@ -527,16 +527,15 @@ function Header({
    * magnifier directly under a search box and a `+` directly beside a New
    * button.
    *
-   * Two facts now rather than one flag, because they are two different facts:
-   * the bar is drawn at every width and the sidebar only where there is room
-   * for it. What the header draws from them is `headerRow` in
-   * `lib/header.ts`, which is where the argument and the exceptions are.
-   * What always stays is what no other chrome has: the way back, the screen's
-   * own name, and a running timer.
+   * One fact now rather than a list: is this the workspace, whose bar carries
+   * these controls. It was briefly two — the sidebar was the second, because
+   * that column drew New and this header's `+` stood down for it. The column
+   * no longer draws New, so the `+` is unconditional again; `headerRow` in
+   * `lib/header.ts` has that argument. What always stays is what no other
+   * chrome has: the way back, the screen's own name, and a running timer.
    */
   desk = false,
-  sidebar = false,
-}: { desk?: boolean; sidebar?: boolean } = {}) {
+}: { desk?: boolean } = {}) {
   const { state, dispatch, now, catalog } = useStore();
   const { kicker, title } = useHeader();
   /*
@@ -587,7 +586,7 @@ function Header({
    * of the same control. `lib/header.ts` answers for all five now, and the
    * markup below asks rather than decides.
    */
-  const row = headerRow({ atRoot, phone, counting, desk, sidebar });
+  const row = headerRow({ atRoot, phone, counting, desk });
 
   /*
    * Move focus into the new screen's heading whenever the screen changes.
@@ -1282,7 +1281,7 @@ function Workspace({
                 : 'device-pane deskwork-pane'
             }
           >
-            {!ownTitle && <Header desk sidebar={chrome.sidebar} />}
+            {!ownTitle && <Header desk />}
             <Said />
             {/* The sample banner belongs over records, which is what it is
                 about. The search home says the same thing in its own foot

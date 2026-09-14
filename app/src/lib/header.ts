@@ -92,13 +92,21 @@ export function showsAvatar({ atRoot, phone, counting }: Row): boolean {
  * rule spread across the elements it governs cannot be checked, and the one
  * that was spread is the one that was wrong.
  *
- * ## The two that are not simply `!desk`
+ * ## `add` is the one that is simply yes
  *
- * `add` asks about the *sidebar*, not the workspace, because `sidebar: desk &&
- * wide`. A narrow workspace has no New button and the top bar has no `+`, so
- * the header's is the only pointing route to the capture box and it stays.
- * Outside the workspace there is no sidebar at all, so the answer is yes,
- * which is what it has always been.
+ * It used to ask about the *sidebar* rather than the workspace, because that
+ * column drew a New button and this `+` would have been a second one beside
+ * it. That column no longer does: New went the same way the duplicates here
+ * went — it opened the capture box, which the search home already opens from
+ * the `+` beside its field.
+ *
+ * So the premise is gone and the question with it. Nothing else in any
+ * navigation's chrome carries the capture box, which makes this `+` the only
+ * pointing route to it and an unconditional yes. Held that way in
+ * `lib/onframe.test.ts` rather than left as a constant nobody rechecks:
+ * two correct removals landing in the same week — the sidebar's New, and this
+ * one deferring to it — would otherwise have left a wide workspace with no way
+ * to reach the capture box except the keyboard.
  *
  * `avatar` keeps `showsAvatar` in front of it: the workspace question is "is
  * this control already on screen" and the width question is "does it fit", and
@@ -112,11 +120,6 @@ export interface Frame extends Row {
    * it. See `components/desk/TopBar.tsx`.
    */
   desk: boolean;
-  /**
-   * The workspace's left column, which carries New. Wide only, so it is a
-   * separate question from `desk`. See `components/desk/Sidebar.tsx`.
-   */
-  sidebar: boolean;
 }
 
 /** Which of the row's five controls the header draws. */
@@ -135,7 +138,7 @@ export interface Drawn {
 
 export function headerRow(f: Frame): Drawn {
   return {
-    add: !f.sidebar,
+    add: true,
     search: !f.desk,
     apps: !f.desk,
     alerts: f.atRoot && !f.desk,

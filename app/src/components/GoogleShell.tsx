@@ -239,7 +239,13 @@ export function GoogleShell({ children, title }: { children: ReactNode; title: s
       <button className="g-browse-home" onClick={showDirectory}><AppsIcon size={17}/> Explore all {apps.length} apps <span>→</span></button>
       </div>
       <footer className="g-home-footer"><div className="g-footer-info"><span>{now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}</span><span>{state.sample ? 'Sample semester · ' : ''}{catalog.courses.length} courses this semester</span></div><button className="g-customize" onClick={()=>setCustomize(true)}><span>✎</span> Customize Semester</button></footer>
-    </section> : <div className="g-workspace-body"><aside className="g-sidebar"><button className="g-new" onClick={()=>{dispatch({type:'finder',open:false});dispatch({type:'quickAdd',open:true});}}><Plus size={26}/> New</button>
+    </section> : <div className="g-workspace-body"><aside className="g-sidebar">
+      {/* There was a **New** button at the top of this column, and it went the
+          way the workspace's did: it opened the capture box, which this
+          shell's own home already opens from the + beside its field — one
+          action, two places — and in a column of rows that all go somewhere it
+          read as another destination rather than as the one thing here that
+          writes. */}
       {/* "App directory", not "All apps". The nine dots in the bar above are
           already labelled Open all apps and they open the launcher — a panel
           over the page — rather than this screen. Two controls in one frame

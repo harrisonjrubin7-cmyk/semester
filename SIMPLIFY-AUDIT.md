@@ -552,6 +552,59 @@ separately.
 
 ---
 
+## 4c. What the third merge from `main` changed about a rule here
+
+`#240` took the **New** button off both sidebars, for this pass's own reason:
+it opened the capture box, which the search home already opens from the `+`
+beside its field, and in a column of rows that all go somewhere it read as
+another destination rather than as the one thing there that writes. Right, and
+landed independently.
+
+It also removed the premise of W1's exception. `headerRow`'s `add` asked about
+the *sidebar* — the header's `+` stood down wherever that column was drawn,
+because the column had New. With New gone, two correct removals would have
+cancelled into a gap: a wide workspace with no pointing route to the capture
+box at all.
+
+So `add` is unconditional now, and `lib/onframe.test.ts` holds it that way
+rather than as a constant nobody rechecks — it asserts that neither sidebar
+draws the capture box *and* that the header draws it at every width. Measured
+after the merge:
+
+| Frame | pointing routes to the capture box |
+| --- | --- |
+| Workspace, wide, inner | 1 — the header's `+` |
+| Workspace, narrow, inner | 1 |
+| Workspace, wide, home | 1 |
+| Tab bar, wide, inner | 1 |
+
+### The one that is still a gap · **OPEN, and not this branch's**
+
+The browser shell draws no header, so it had nothing to fall back on when its
+own sidebar lost New:
+
+```
+browser wide   #/notifs   pointing routes: []   q opens capture: true
+browser narrow #/notifs   pointing routes: []   q opens capture: false
+browser wide   #/search   pointing routes: ["Add a task or appointment"]
+browser narrow #/search   pointing routes: ["Add a task or appointment"]
+```
+
+On a **narrow browser shell, on any screen but its home, the capture box cannot
+be reached at all** — no control points at it, and `components/Keys.tsx`
+returns early below `WIDE`, so `q` does not fire either. Its home is fine; the
+inner screens are not.
+
+Not a regression from this branch: nothing here draws that shell's chrome, and
+the button that went was removed on `main`. Left alone rather than patched
+because the repair is a judgement about where that shell puts a write action —
+its bar, drawn on every screen, is the obvious place and is the shape the
+workspace uses, but it is main's shell and its chrome changed twice in the hour
+this was written. Recorded so the next pass has the measurement rather than the
+suspicion.
+
+---
+
 ## 5. Resolved
 
 Every row above is closed. Three commits, each green.

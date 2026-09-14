@@ -219,7 +219,7 @@ navigation the app no longer opens as.
   `screens/Directory.tsx`. Chrome at the top of the window rather than beside
   the screen: the tab strip drawn from the first tab, one search bar under it
   on every screen, the nine-dot launcher as a panel, and — above the desktop
-  breakpoint — a sidebar of New, All apps, Search home, your shortcuts,
+  breakpoint — a sidebar of All apps, Search home, your shortcuts,
   Connect accounts and Settings. The app lands on `search` (`firstScreen` in
   `lib/chrome.ts`) rather than on `home`, which is still Today. Shortcuts are
   the `favourites` look key and the row is switched by `shortcuts`; both are
