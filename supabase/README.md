@@ -58,11 +58,48 @@ branch would schedule its own job pointing at *production's* push endpoint. It
 also generates a secret, which is not a thing that should happen once per
 branch. See DEPLOY.md.
 
+## Running the checks, without a project
+
+Each suite needs an empty database, for the reason its own header gives: the
+counts are wrong wherever real rows already exist, and the live project has
+enrolments in the very rooms `classmates.check.sql` counts. `local.stub.sql`
+stands in for what the platform supplies, so a bare Postgres will do and
+nothing live is touched.
+
+    createdb semester_check
+    psql -1 -v ON_ERROR_STOP=1 -d semester_check -f supabase/local.stub.sql
+    for f in supabase/migrations/*.sql; do
+      psql -1 -v ON_ERROR_STOP=1 -d semester_check -f "$f" || break
+    done
+    psql -d semester_check <<'SQL'
+      grant usage on schema auth, public to anon, authenticated;
+      grant select, insert on auth.users to anon, authenticated;
+      grant all on all tables in schema public to anon, authenticated;
+    SQL
+    psql -v ON_ERROR_STOP=1 -d semester_check -f supabase/classmates.check.sql
+
+All five suites pass this way, and each rolls itself back. The grants come
+last because they are `on all tables` and there are no tables until the
+migrations have run; Supabase applies the equivalent as default privileges,
+which is why nothing in `migrations/` grants them itself.
+
+It is also how you find out whether the migrations still build the schema from
+nothing, which is the one thing a project that already has the schema cannot
+tell you.
+
 ## Deploying
 
 Preview branches and automatic deploys need the GitHub integration pointed at
 this repository, with **Working directory** set to `.` — the directory
 *containing* `supabase/`, which is the repository root.
+
+**How to tell whether it is actually connected**, which is worth knowing
+because the failure is silent: open any pull request that changes a file under
+`supabase/`. A working integration builds a preview branch and says so. A
+misconfigured one comments that there are *no changes detected* in a directory
+it then names — and the name it prints is the configured working directory, so
+that comment is the setting read back to you. A path that is not a path means
+the field holds something that is not one.
 
 Until **Deploy to production** is switched on, migrations are still applied by
 hand: SQL Editor → New query → paste a file's contents → Run, in filename
