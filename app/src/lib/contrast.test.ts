@@ -258,6 +258,27 @@ describe('the stylesheet uses the tokens the audit passed', () => {
     expect(ruleFor('.soft-caps-quiet')).not.toContain('var(--app-faint)');
   });
 
+  /*
+   * The same call, for the rest of the text that was making it.
+   *
+   * `.soft-caps-quiet` above was found by an audit over the tokens. These four
+   * were found by measuring what a browser actually painted, across all seven
+   * navigations and a light ground as well as a dark one — which is why they
+   * outlived the token audit: every one of them is text whose ground only
+   * exists once the app is running.
+   *
+   * Ratios at `--app-faint`, worst of the two grounds measured:
+   *   the foot line under the search home   2.90:1
+   *   a tab that is not the current one     2.98:1
+   *   both placeholders                     3.03:1
+   */
+  it('sets the foot line and both placeholders in dim, not faint', () => {
+    for (const selector of ['.deskhome-foot', '.device .input::placeholder', '.desktop-input::placeholder']) {
+      expect(ruleFor(selector), selector).toContain('var(--app-dim)');
+      expect(ruleFor(selector), selector).not.toContain('var(--app-faint)');
+    }
+  });
+
   it('fills the pill with the stop white survives on', () => {
     // The handoff's flagged failure: white on the accent's `deep` stop is
     // about 2.4:1. `--app-accent-fill` is `shade` on a light ground, which is
