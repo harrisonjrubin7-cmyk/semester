@@ -11,6 +11,7 @@ import {
   saveSettings,
   withAttachments,
   asSent,
+  strictly,
   wire,
   CUT_OFF,
 } from './claude';
@@ -303,6 +304,97 @@ describe('a tool the model wants to use', () => {
     catchRequest([said('ok')]);
     await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
     expect(sent!.body).not.toHaveProperty('tools');
+  });
+
+  it('closes a strict tool before it goes out', async () => {
+    // A strict tool whose schema does not close itself is a 400 on the whole
+    // request — not on that tool, on the question — so the closing happens on
+    // the way to the wire rather than in twenty schema literals.
+    catchRequest([said('ok')]);
+    await ask({
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      tools: [
+        {
+          name: 'tick_deadline',
+          description: 'x',
+          strict: true,
+          input_schema: {
+            type: 'object',
+            properties: { id: { type: 'string' }, title: { type: 'string' } },
+            required: ['id'],
+          },
+        },
+      ],
+    });
+
+    expect((sent!.body.tools as { input_schema: unknown }[])[0].input_schema).toEqual({
+      type: 'object',
+      properties: { id: { type: 'string' }, title: { type: 'string' } },
+      required: ['id', 'title'],
+      additionalProperties: false,
+    });
+  });
+});
+
+describe('a strict tool, as a strict API insists on it', () => {
+  const tool = (input_schema: Record<string, unknown>, strict = true) => ({
+    name: 't',
+    description: 'x',
+    ...(strict ? { strict: true as const } : {}),
+    input_schema: input_schema as never,
+  });
+
+  it('closes the object and requires everything it names', () => {
+    const [out] = strictly([
+      tool({ type: 'object', properties: { a: { type: 'string' }, b: { type: 'number' } } }),
+    ]);
+    expect(out.input_schema.additionalProperties).toBe(false);
+    expect(out.input_schema.required).toEqual(['a', 'b']);
+  });
+
+  it('closes nested objects and the objects inside a list', () => {
+    // The API walks the whole tree, so one unclosed object three levels down
+    // fails the request exactly as loudly as the top one.
+    const [out] = strictly([
+      tool({
+        type: 'object',
+        properties: {
+          who: { type: 'object', properties: { name: { type: 'string' } } },
+          rows: { type: 'array', items: { type: 'object', properties: { cell: { type: 'string' } } } },
+        },
+      }),
+    ]);
+    const props = out.input_schema.properties as Record<string, Record<string, unknown>>;
+    expect(props.who.additionalProperties).toBe(false);
+    expect(props.who.required).toEqual(['name']);
+    const items = props.rows.items as Record<string, unknown>;
+    expect(items.additionalProperties).toBe(false);
+    expect(items.required).toEqual(['cell']);
+  });
+
+  it('keeps the declared order and adds nothing twice', () => {
+    const [out] = strictly([
+      tool({
+        type: 'object',
+        properties: { a: { type: 'string' }, b: { type: 'string' }, c: { type: 'string' } },
+        required: ['c', 'a'],
+      }),
+    ]);
+    expect(out.input_schema.required).toEqual(['c', 'a', 'b']);
+  });
+
+  it('leaves a tool that is not strict exactly as it was', () => {
+    // Nothing here is a promise the API checks, so nothing needs closing —
+    // and a schema changed on its way out is a schema nobody can read back.
+    const loose = tool({ type: 'object', properties: { a: { type: 'string' } } }, false);
+    expect(strictly([loose])[0]).toBe(loose);
+  });
+
+  it('does not touch the schema it was handed', () => {
+    const schema = { type: 'object', properties: { a: { type: 'string' } } };
+    strictly([tool(schema)]);
+    expect(schema).toEqual({ type: 'object', properties: { a: { type: 'string' } } });
   });
 });
 

@@ -598,9 +598,61 @@ let structuredRefused = false;
 export interface ToolSpec {
   name: string;
   description: string;
-  input_schema: { type: 'object'; properties: Record<string, unknown>; required?: string[] };
+  input_schema: {
+    type: 'object';
+    properties: Record<string, unknown>;
+    required?: string[];
+    /** Filled in by `strictly` on the way out; no schema need write it. */
+    additionalProperties?: false;
+  };
   /** Guarantees the arguments validate against the schema. */
   strict?: boolean;
+}
+
+/**
+ * A strict tool's schema, closed the way a strict API insists on.
+ *
+ * `strict: true` is a promise the API will only make if it can check it, and
+ * the check has two conditions: every object in the schema must close itself
+ * with `additionalProperties: false`, and every property it names must be
+ * required. Miss either and nothing degrades gracefully — the whole request
+ * comes back 400 ("For 'object' type, 'additionalProperties' must be
+ * explicitly set to false"), so the student sees an error where an answer
+ * should be, on every question, however unrelated to tools.
+ *
+ * Done here rather than in each of the twenty schemas in `lib/tools.ts` and
+ * `lib/lookup.ts`, because a rule spread across twenty literals is a rule the
+ * twenty-first forgets — and it is not a thing the schemas are *about*.
+ */
+function closed(node: unknown): unknown {
+  if (!node || typeof node !== 'object' || Array.isArray(node)) return node;
+  const schema: Record<string, unknown> = { ...(node as Record<string, unknown>) };
+  const props = schema.properties;
+
+  if (schema.type === 'object' || (props && typeof props === 'object')) {
+    const properties = (props ?? {}) as Record<string, unknown>;
+    const names = Object.keys(properties);
+    // Nested objects are held to the same rule: the API walks the whole tree.
+    schema.properties = Object.fromEntries(names.map((n) => [n, closed(properties[n])]));
+    schema.additionalProperties = false;
+    // Declared order first, so a schema that already said what it wants reads
+    // on the wire the way it was written.
+    const declared = Array.isArray(schema.required) ? (schema.required as string[]) : [];
+    schema.required = [
+      ...declared.filter((n) => names.includes(n)),
+      ...names.filter((n) => !declared.includes(n)),
+    ];
+  }
+
+  if (schema.items) schema.items = closed(schema.items);
+  return schema;
+}
+
+/** Every strict tool, ready for the wire. Anything else is passed through. */
+export function strictly(tools: ToolSpec[]): ToolSpec[] {
+  return tools.map((t) =>
+    t.strict ? { ...t, input_schema: closed(t.input_schema) as ToolSpec['input_schema'] } : t,
+  );
 }
 
 /** A tool the model wants to use, with the arguments it chose. */
@@ -845,7 +897,7 @@ export async function ask(options: AskOptions): Promise<string> {
           : options.system,
         stream: true,
         ...(options.think ? { thinking: { type: 'adaptive' } } : {}),
-        ...(options.tools?.length ? { tools: options.tools } : {}),
+        ...(options.tools?.length ? { tools: strictly(options.tools) } : {}),
         // Never both: the API refuses a request that asks for citations and a
         // constrained shape at once, and the citations are worth more.
         ...(options.format && !options.cite && !structuredRefused
