@@ -287,3 +287,30 @@ describe('showing an answer', () => {
     expect(text(Array.from({ length: 20 }, (_, i) => i))).toContain('20 in all');
   });
 });
+
+/**
+ * A prime is part of the name.
+ *
+ * Second-order equations are written with the first derivative in them —
+ * `y'' = -y - 0.2y'` is a damped oscillator — so `y'` has to read as an
+ * ordinary quantity here and be bound by whoever is walking the equation.
+ */
+describe('primes in a name', () => {
+  it('reads y prime as one name, not as a name and a stray mark', () => {
+    const got = read("y' + 1");
+    expect(got.ok).toBe(true);
+    if (got.ok) expect(free(got.node)).toEqual(["y'"]);
+  });
+
+  it('works it out from a binding like any other letter', () => {
+    expect(calculate("-y - 0.2 y'", { vars: { y: 3, "y'": 5 } })).toEqual({ value: -4 });
+  });
+
+  it('stops at two, and says so rather than quietly reading three as two', () => {
+    // A third-order equation is not solved here, and the third prime is left
+    // over — which comes back as a fault somebody can see, rather than as a
+    // second-order equation they did not write.
+    const got = read("y''' + 1");
+    expect(got.ok).toBe(false);
+  });
+});
