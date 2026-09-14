@@ -331,9 +331,11 @@ merge as unions and are never shed by `lib/keep.ts`.
   app never quotes blind**), `table` (rows, header flag, caption), `image`
   (a drive file id + name, alt text and caption), `equation` (LaTeX +
   caption), `code` (text + language, and the one kind whose text is not marked
-  up), `toc`, `rule` (a divider) and `break` (a page break) — the last two
+  up), `toc`, `rule` (a divider) and `break` (a page break). The last two are
   distinct kinds, one line apart on the Insert bar and no longer sharing a
-  markdown spelling.
+  markdown spelling. `bullets` holds `(string | Line)[]`, a `Line` being
+  `{ text, level }` — see the indent entry below for why the union is the
+  stored type rather than a migration.
 - Inline runs (`runs()`, `unmarked()`), word count (`words()`), summary line,
   `hasContent()`.
 - Markdown out (`toMarkdown`) **and in** (`fromMarkdown`).
@@ -591,8 +593,25 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
 - No rich-text editing surface. The editor is block-structured, not WYSIWYG: no
   bold/italic toolbar, font family/size, text or highlight colour. (`**bold**`
   and `*italic*` are typed as marks and do reach the `.docx`.)
-- ~~No checkbox lists,~~ no indent/outdent, ~~no horizontal rules,~~ ~~no code
-  blocks.~~ — **all three closed.** The horizontal rule is a `rule` block, and
+- ~~No checkbox lists,~~ ~~no indent/outdent,~~ ~~no horizontal rules,~~ ~~no code
+  blocks.~~ — **all four closed.** Indent and outdent are list nesting: a
+  list's items carry their own `level`, five deep, with ← and → on each row.
+  Not Tab, deliberately — a list here is a column of ordinary `<input>`s on a
+  card and Tab is how a keyboard leaves one, so taking it would make the list
+  a trap for exactly the people who cannot reach for a mouse. `items` is a
+  union of `string | Line` because both shapes are on disk: a list written
+  before this is bare strings, and `listed()` reads either. Read rather than
+  migrated, following `settled` in `lib/files.ts` and for its reason — a
+  migration fixes the copy in localStorage and a document also arrives by
+  restore, by sync and by paste. `listed()` also clamps a level to one deeper
+  than the line above, because markdown, Word and HTML all describe a *tree*
+  and `[level 2, level 0]` is not one; a pasted list is where that turns up.
+  In markdown a sub-item is indented to its parent's *content* column — two
+  spaces under `- `, three under `1. ` — which is what CommonMark asks for and
+  what stops a numbered sub-item folding into the paragraph above. In the
+  `.docx` the numbering part defines all five levels, because `w:ilvl` is a
+  reference and pointing at an undefined level makes Word draw the item at the
+  margin with no marker at all. The horizontal rule is a `rule` block, and
   closing it meant taking `---` off the page break: `break` wrote markdown's
   *thematic break* and emitted `<w:br w:type="page"/>`, so the export said
   divider and meant page break, and the import agreed with it because both
@@ -803,12 +822,11 @@ Everything above that is not struck through, collected — so the next person
 reading this has one short list rather than a long one to re-check. Verified
 by grepping for each, not by re-reading the sentence.
 
-**Documents** — indent and outdent ·
-alignment, line spacing and margins · comments and margin notes · a generated
+**Documents** — alignment, line spacing and margins · comments and margin notes · a generated
 PDF, as against the browser's print-to-PDF, which is there · `.docx` *import* ·
 "Open in Docs" from a study guide · a WYSIWYG surface (the marks are typed).
-(Code blocks, checkbox lists, images and horizontal rules were on this list
-and are done.)
+(Code blocks, checkbox lists, images, horizontal rules and indent/outdent
+were on this list and are done.)
 
 **Sheets** — nothing. Every entry this section listed is either built or was
 already built when it was listed.
