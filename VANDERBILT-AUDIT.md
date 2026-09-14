@@ -217,7 +217,7 @@ The earlier fragment quoted below — exams and reading days 5–13 December,
 from a graduate calendar — is now positively **contradicted** by PSCI 1104's
 final on 17 December. Good evidence that leaving it out was right.
 
-### Meal plan tiers: the swipe counts, at the owner's direction
+### Meal plan tiers: the counts and the Meal Money, at the owner's direction
 
 `data.mealPlanTiers` is filled with two plans — First-Year 335 and
 Upper-Division 305, both per semester. Where they came from matters, because
@@ -236,12 +236,24 @@ decision to ship the two numbers is theirs. It is recorded here rather than
 left implicit, because the same source produced calendar dates this audit
 declined to write, one of which the syllabi later contradicted outright.
 
-**Meal Money is deliberately absent.** Every Vanderbilt plan carries it and no
-search result gave an amount for any plan, so `dollars` is `0` on both tiers —
-which the Meals screen draws as the swipe count alone rather than as "$0.00".
-A fabricated dollar figure would be the one number on that screen capable of
-producing a wrong answer about money, since the screen's whole job is the
-arithmetic on what a balance is worth.
+**Meal Money followed, from the same kind of source.** A later search returned
+both plans in one coherent shape — 335 meals with **$225** of Meal Money, 305
+meals with **$275** — alongside per-semester costs of roughly $4,260 and
+$4,216. That is the first corroboration the swipe counts had had, and it is
+why they now carry a dollar figure each.
+
+It is still not the dining page. The result's own links point at *The
+Vanderbilt Hustler*, the student newspaper, and two third-party sites; none of
+the three is reachable from here either, because the egress policy is an
+allowlist rather than a block on `vanderbilt.edu`. The search claimed the
+figures are 2026–27, but that attribution is the search engine's assertion
+rather than anything quoted from a page.
+
+What bounds the risk is that **nothing computes from `mealPlanTiers`**. Grepped
+across `app/src`, its only reader is the reference table on the Meal plan
+screen. The rate, the runway and the day-it-runs-out arithmetic all run on
+balances the student logs off their own account, so a wrong figure here misprints
+a row rather than producing a wrong answer about money.
 
 The screen also now says, in one clause, that the balance page is the thing to
 check these counts against. That is the same rule `data/campus.ts` keeps for
