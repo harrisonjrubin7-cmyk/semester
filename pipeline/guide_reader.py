@@ -57,7 +57,7 @@ def read_guide(course: str) -> dict:
     path = COURSES / course / "guide.ts"
     if not path.exists():
         raise SystemExit(f"No guide at {path}")
-    src = path.read_text()
+    src = path.read_text(encoding="utf-8")
 
     units = []
     for raw in re.split(r"\n {4}\{\n {6}name: '", src)[1:]:

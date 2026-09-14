@@ -2431,31 +2431,6 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
         (end.getUTCMonth() - start.getUTCMonth());
       return (months * 30 + (d2 - d1)) / 360;
     }
-    // ── Conditions over more than one column ──────────────────────────────
-    /**
-     * `AVERAGEIFS`, `MAXIFS`, `MINIFS` — the `SUMIFS` shape, with the other
-     * three answers.
-     *
-     * Range first, then the (range, criterion) pairs, exactly as `SUMIFS` has
-     * them, so the four read alike and a formula changes answer by changing
-     * one word. Nothing matching is 0 for the max and the min, as in Excel,
-     * and `#DIV/0!` for the average — a mean of no numbers is not a number,
-     * and a zero there is a mark somebody would believe.
-     */
-    case 'AVERAGEIFS':
-    case 'MAXIFS':
-    case 'MINIFS': {
-      const totals = groups[0];
-      const pairs = groups.slice(1);
-      if (!totals || pairs.length < 2) return '#VALUE!';
-      const rows = hits(pairs, totals.values.length);
-      if (isError(rows)) return rows;
-      const ns = numbers(rows.map((r) => totals.values[r]));
-      if (isError(ns)) return ns;
-      if (name === 'AVERAGEIFS') return ns.length ? mean(ns) : '#DIV/0!';
-      if (!ns.length) return 0;
-      return name === 'MAXIFS' ? Math.max(...ns) : Math.min(...ns);
-    }
     /** How many cells in a range have nothing in them. */
     case 'COUNTBLANK': {
       const where = groups[0];
