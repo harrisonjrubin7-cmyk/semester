@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
-import { configured, modelLabel, routeLabel } from '../lib/claude';
+import { configured, modelLabel, routeLabel } from '../lib/assistant';
 import { Blueprint } from '../components/Blueprint';
 import { ChipRow, FilePick, SectionLabel } from '../components/ui';
 import { parseIcs } from '../lib/ics';

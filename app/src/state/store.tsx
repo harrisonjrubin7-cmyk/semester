@@ -22,7 +22,7 @@ import type { CourseModule, Screen } from '../lib/types';
 import { buildCatalog, type Catalog } from '../data/catalog';
 import type { Named } from '../lib/forwork';
 import { arrange } from '../lib/yours';
-import { setSessionToken } from '../lib/claude';
+import { setSessionToken } from '../lib/token';
 import {
   accountOf,
   cloudConfigured,
@@ -789,9 +789,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!state.sample || seed.length > 0) return;
     let live = true;
-    void loadSeed().then((mods) => {
-      if (live) setSeed(mods);
-    });
+    void loadSeed()
+      .then((mods) => {
+        if (live) setSeed(mods);
+      })
+      /*
+       * Caught, because an uncaught one is worse than the failure.
+       *
+       * `loadSeed` is four dynamic imports and they reject for the two honest
+       * reasons in `data/seed.ts` — no connection, or a deploy since this copy
+       * opened. Without this that is an unhandled rejection: noise in a
+       * browser console, and a red test run whenever a test unmounts before
+       * the imports land, which `npm test` was hitting intermittently on main.
+       *
+       * There is nothing to show. The sample is an offer, the courses the
+       * account actually holds are unaffected, and the next time the toggle is
+       * touched the fetch is tried again for real.
+       */
+      .catch(() => {});
     return () => {
       live = false;
     };

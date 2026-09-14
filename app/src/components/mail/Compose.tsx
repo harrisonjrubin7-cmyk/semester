@@ -6,7 +6,8 @@ import { CheckIt } from '../CheckIt';
 import { Trouble } from '../Trouble';
 import { useTrouble } from '../../lib/trouble';
 import { secondLine } from '../../lib/dim';
-import { ask, configured, provider } from '../../lib/claude';
+import { ask } from '../../lib/claude';
+import { configured, provider } from '../../lib/assistant';
 import { datedItems } from '../../lib/select';
 import {
   PURPOSES,

@@ -1,22 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  ask,
-  configured,
-  explainAskError,
-  readCitation,
-  readMaterial,
-  proxyProblem,
-  route,
-  routeLabel,
-  saveSettings,
-  settings,
-  withAttachments,
-  asSent,
-  strictly,
-  wire,
-  CUT_OFF,
-} from './claude';
+import { ask, explainAskError, readCitation, readMaterial, withAttachments, asSent, strictly, wire, CUT_OFF } from './claude';
+import { configured, proxyProblem, route, routeLabel, saveSettings, settings } from './assistant';
 import type { Turn } from './claude';
 
 const user = [{ role: 'user' as const, content: 'What is due first?' }];
@@ -164,10 +149,23 @@ const citedAt = (text: string, page: number) => ({
 let sent: { url: string; body: Record<string, unknown> } | null = null;
 
 beforeEach(() => {
-  localStorage.setItem(
-    'semester.claude.v1',
-    JSON.stringify({ provider: 'anthropic', apiKey: 'sk-ant-test', model: 'claude-opus-5' }),
-  );
+  /*
+   * Through `saveSettings`, which is also what clears the three session-long
+   * memories in `lib/assistant.ts` — the stood-down proxy, the model that
+   * refused the strict promise, and the route that refused a constrained
+   * shape. Each is set by a test in this file and none of them was being
+   * cleared between tests, so three assertions here held on file order alone
+   * and failed the moment the order changed. Starting each test from the same
+   * door the app starts from is what makes them independent.
+   */
+  saveSettings({
+    provider: 'anthropic',
+    apiKey: 'sk-ant-test',
+    model: 'claude-opus-5',
+    proxy: '',
+    openaiKey: '',
+    openaiModel: '',
+  });
   sent = null;
 });
 
@@ -1010,11 +1008,32 @@ describe('which route a question takes', () => {
     });
   }
 
+  /*
+   * Through `saveSettings`, not straight into storage.
+   *
+   * `route` stands a proxy down for the session once it answers 404, 405 or
+   * 501 — and the test below for that behaviour leaves it stood down. Writing
+   * the next test's settings into `localStorage` behind the module's back left
+   * that memory in place, so a later test asking for the proxy route got
+   * `'own'`, correctly, for a reason that had nothing to do with what it was
+   * testing. It passed on file order alone and failed under
+   * `--sequence.shuffle`.
+   *
+   * `saveSettings` clears it, because somebody who has just been to that
+   * screen may have fixed the proxy. Going through the same door the app goes
+   * through is both the honest setup and the one that does not depend on which
+   * test ran first.
+   */
   const on = (device: Partial<{ apiKey: string; proxy: string }>) =>
-    localStorage.setItem(
-      'semester.claude.v1',
-      JSON.stringify({ provider: 'anthropic', model: 'claude-opus-5', apiKey: '', proxy: '', ...device }),
-    );
+    saveSettings({
+      provider: 'anthropic',
+      model: 'claude-opus-5',
+      apiKey: '',
+      proxy: '',
+      openaiKey: '',
+      openaiModel: '',
+      ...device,
+    });
 
   it('uses the build\'s proxy when nothing has been typed into the app', async () => {
     on({});

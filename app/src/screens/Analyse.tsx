@@ -10,7 +10,8 @@ import { ActionButton, FilePick, SectionLabel } from '../components/ui';
 import { Trouble } from '../components/Trouble';
 import { useTrouble } from '../lib/trouble';
 import { PrintButton } from '../components/PrintButton';
-import { ask, configured, provider } from '../lib/claude';
+import { ask } from '../lib/claude';
+import { configured, provider } from '../lib/assistant';
 import {
   correlation,
   describe,
