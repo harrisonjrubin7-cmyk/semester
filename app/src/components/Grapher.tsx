@@ -4,12 +4,13 @@ import { Plot, type Drawing } from './Plot';
 import { Surface } from './Surface';
 import { heightOf, heights, range } from '../lib/surface';
 import { asArrows, asContours } from '../lib/fields';
+import { asOde, rateOf, through } from '../lib/ode';
 import { ActionButton, PickChips, SectionLabel, Toggle } from './ui';
 import { secondLine } from '../lib/dim';
 import { ground as groundOf, resolveGround } from '../lib/look';
 import { usePrefersDark } from '../lib/prefers';
 import { anchorHue, tintAt } from '../lib/tint';
-import { text as showValue, type Val } from '../lib/calc';
+import { text as showValue, value, type Val } from '../lib/calc';
 import {
   DETAIL,
   EXAMPLES,
@@ -102,6 +103,30 @@ export function Grapher() {
   }, [lines, state.accent, state.hue, light]);
 
   /*
+   * Every `y(a) = b` on the list, as points.
+   *
+   * Gathered for the whole list rather than per equation: a student writing
+   * two initial conditions under one `y' =` means two solutions of the same
+   * equation, which is the picture a textbook draws, and nothing about the
+   * order they were typed in should change that.
+   */
+  const starts = useMemo(
+    () =>
+      read
+        .filter((line, at) => line.kind === 'start' && lines[at].on)
+        .map((line) => {
+          if (line.kind !== 'start') return null;
+          const x = value(line.at, scope);
+          const y = value(line.value, scope);
+          const at = Array.isArray(x) ? (x[0] ?? NaN) : x;
+          const to = Array.isArray(y) ? (y[0] ?? NaN) : y;
+          return Number.isFinite(at) && Number.isFinite(to) ? { x: at, y: to } : null;
+        })
+        .filter((p): p is { x: number; y: number } => p !== null),
+    [read, lines, scope],
+  );
+
+  /*
    * The contour map, and the levels it was cut at.
    *
    * Worked once and read twice: the lines go on the picture, and the levels go
@@ -122,6 +147,9 @@ export function Grapher() {
         .filter(({ line, at }) => line.on && read[at].kind !== 'blank')
         .map(({ line, at }) => {
           const reading = read[at];
+          if (reading.kind === 'ode') {
+            return { id: line.id, colour: colours[at], drawn: asOde(reading.body, starts, scope, frame) };
+          }
           if (reading.kind === 'field') {
             return { id: line.id, colour: colours[at], drawn: asArrows(reading.x, reading.y, scope, frame) };
           }
@@ -136,7 +164,7 @@ export function Grapher() {
           }
           return { id: line.id, colour: colours[at], drawn: draw(reading, scope, frame, { ...DETAIL, turns }) };
         }),
-    [lines, read, scope, frame, colours, turns, view, flat],
+    [lines, read, scope, frame, colours, turns, view, flat, starts],
   );
 
   /** Whether anything on the list is drawn by turning or running, rather than across x. */
@@ -318,6 +346,13 @@ export function Grapher() {
         <Heights body={solidLine.body} scope={scope} frame={frame} />
       ) : null}
 
+      {(() => {
+        const ode = read.find((line, at) => line.kind === 'ode' && lines[at].on);
+        return ode && ode.kind === 'ode' ? (
+          <Solutions body={ode.body} starts={starts} scope={scope} frame={frame} />
+        ) : null;
+      })()}
+
       <Readings
         lines={lines}
         read={read}
@@ -341,8 +376,10 @@ export function Grapher() {
         path a moving point takes — <code>{'(\\cos(t), \\sin(t))'}</code>. A <code>z =</code> line is a
         surface — <code>z = x^2 - y^2</code> — drawn over the window the axes are set to, as the solid
         thing or as its contour lines. A pair with <code>x</code> or <code>y</code> in it is a field
-        of arrows — <code>(y, -x)</code>, which is every phase diagram. It takes the same notation the
-        Write tab draws, so a formula you kept can be pasted in as it is.
+        of arrows — <code>(y, -x)</code>, which is every phase diagram. And{' '}
+        <code>{"y' = x + y"}</code> is a differential equation: the slope field, and the solution
+        through every <code>y(0) = 1</code> you write under it. It takes the same notation the Write
+        tab draws, so a formula you kept can be pasted in as it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
         <Toggle on={degrees} label="Work in degrees rather than radians" onChange={() => setDegrees(!degrees)} />
@@ -394,6 +431,11 @@ function Row({
     reading.kind === 'polar' ||
     reading.kind === 'parametric' ||
     reading.kind === 'field' ||
+    reading.kind === 'ode' ||
+    // An initial condition draws no line of its own — it picks which solution
+    // the equation above it draws — but its switch is live, because turning it
+    // off is how you get the whole family back.
+    reading.kind === 'start' ||
     reading.kind === 'surface';
 
   return (
@@ -769,6 +811,76 @@ function Heights({
           value={place(found.lowest)}
           note="Over the window the axes are set to — drag or zoom the flat view to change it."
         />
+      </div>
+    </>
+  );
+}
+
+/**
+ * What a differential equation's picture says.
+ *
+ * Where the solution has got to by the edge of the window, which is the
+ * question asked of one: how much is left after ten years, how big does the
+ * population get, where does it settle. And where it *stops*, when it stops
+ * early — a solution that runs to infinity before the edge is the interesting
+ * case and the one a picture alone makes look like a steep line.
+ */
+function Solutions({
+  body,
+  starts,
+  scope,
+  frame,
+}: {
+  body: Parameters<typeof rateOf>[0];
+  starts: Point[];
+  scope: Parameters<typeof rateOf>[1];
+  frame: Frame;
+}) {
+  const ends = useMemo(() => {
+    const f = rateOf(body, scope);
+    return starts.slice(0, 3).map((start) => {
+      const curve = through(f, start, frame);
+      const last = curve[curve.length - 1];
+      return { start, last, whole: !!last && last.x >= frame.x1 - (frame.x1 - frame.x0) / 200 };
+    });
+  }, [body, starts, scope, frame]);
+
+  if (starts.length === 0) {
+    return (
+      <>
+        <SectionLabel>What it says</SectionLabel>
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}>
+          Every point has a solution through it, so the whole family is drawn over the slope field.
+          Write <code>y(0) = 1</code> on a line of its own to pick one out — as many as you like, and
+          each gets its own curve.
+        </div>
+      </>
+    );
+  }
+
+  const span = frame.x1 - frame.x0;
+  return (
+    <>
+      <SectionLabel>What it says</SectionLabel>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
+        {ends.map(({ start, last, whole }) =>
+          !last ? null : (
+            <Fact
+              key={`${start.x},${start.y}`}
+              says={`From y(${showValue(neat(start.x, span))}) = ${showValue(neat(start.y, span))}`}
+              value={
+                whole
+                  ? `y = ${showValue(neat(last.y, Math.abs(last.y) || 1))} at x = ${showValue(neat(last.x, span))}`
+                  : `runs away before the edge — last a number at x = ${showValue(neat(last.x, span))}`
+              }
+              note={
+                whole
+                  ? 'Solved by walking the equation, not by rearranging it — see lib/ode.ts.'
+                  : 'The curve ends there because the solution does, rather than being drawn past it.'
+              }
+            />
+          ),
+        )}
       </div>
     </>
   );

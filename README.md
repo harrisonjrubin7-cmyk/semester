@@ -304,6 +304,14 @@ colour is one of twelve, and they are the same twelve a course can be pinned
 to: your accent, turned round the wheel, at a lightness measured against the
 ground you are actually reading on.
 
+The strip holds a hundred, which makes it somewhere to *keep* tabs rather than
+a row anybody reads end to end — so the caret at the end of it opens **the open
+tabs as a list**: every one of them in the strip's own order, with the group
+each belongs to beside it, filtered as you type and forgiving of a typo the
+same way the rest of the app's search is. Enter opens the one under the
+cursor. It appears once there are four tabs; below that the strip is the
+search.
+
 **Pinning** is the other half of a strip that has got long. The four or five
 places you are in every day — Today, the calendar, the guide you are working
 through — are never finished with, and everything else is opened beside them.
@@ -595,6 +603,19 @@ model in it or needs a key:
   difficulty and the choice is stated rather than hidden: drawn true, one fast
   corner turns every other arrow into a dot, so length is the magnitude against
   the largest under a square root, and the ink carries the rest.
+
+  **`y' = x + y` is a differential equation**, and it is solved by walking it:
+  the slope field underneath, and the solution through every `y(0) = 1` written
+  under it — as many as you like, each its own curve, and none at all draws the
+  whole family. Runge–Kutta, fourth order, checked against `y' = y` to ten
+  places of *e*; Euler's method is a line shorter and drifts off the true
+  solution smoothly enough to read as the answer. Nothing is solved
+  symbolically and nothing pretends to be: `y' = y` will never print `Ce^x`
+  here, because symbolic algebra is the different program this app has always
+  said it is. What it draws is the picture that answer is usually wanted for.
+  A solution that runs to infinity — `y' = y^2` from `y(0) = 1`, at x = 1 —
+  stops where it stops, and the reading says so rather than letting a steep
+  line stand in for a thing that has no value. See `app/src/lib/ode.ts`.
 
   **Polar and parametric** are the same box and the same notation, told apart
   by the letter in them: an `r =` line with the angle in it is polar —

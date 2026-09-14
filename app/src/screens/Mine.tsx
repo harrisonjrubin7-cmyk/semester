@@ -379,18 +379,217 @@ function clockFromInput(value: string): { at: number; time: string } {
   return { at, time: `${hour}:${String(m || 0).padStart(2, '0')}${h < 12 ? 'a' : 'p'}` };
 }
 
+/**
+ * One appointment, and the way to change it — the same way a task changes.
+ *
+ * The tab next door has done this since `TaskRow` was written: the row is the
+ * thing, pressing it turns that row into its fields, and Save puts it back.
+ * Appointments got their editing later and got it in the form at the top of
+ * the list instead, which worked and which meant Mine answered "how do I fix
+ * this?" two different ways on two adjacent tabs. One screen, one answer; the
+ * form above writes new ones and nothing else.
+ *
+ * Editing behind a press rather than always on, and saved explicitly, for the
+ * reason `TaskRow` gives: a list that is also a page of live inputs is a page
+ * where a stray tap lands in a field.
+ *
+ * Delete moves in here with it. On the row it was a two-letter button beside
+ * Join, which is the accident `TaskRow` avoids by keeping the destructive act
+ * inside the editor you had to open on purpose.
+ */
+function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
+  const { dispatch } = useStore();
+  const [editing, setEditing] = useState(false);
+  const [title, setTitle] = useState(a.title);
+  const [date, setDate] = useState(a.date);
+  const [when, setWhen] = useState(inputFromClock(a.at));
+  const [where, setWhere] = useState(a.where);
+  const [kind, setKind] = useState<EventKindId>((a.kind as EventKindId) ?? 'other');
+
+  const save = () => {
+    if (!title.trim()) return;
+    const { at, time } = clockFromInput(when);
+    dispatch({
+      type: 'editAppointment',
+      id: a.id,
+      patch: { title: title.trim(), date, at, time, where: where.trim(), kind },
+    });
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <Blueprint style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
+        <input
+          className="input"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') save();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          aria-label="What the appointment is"
+          // eslint-disable-next-line jsx-a11y/no-autofocus
+          autoFocus
+          style={{ height: 40, fontSize: 'var(--type-md)', width: '100%' }}
+        />
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
+          <input
+            className="input"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            aria-label="The day it is on"
+            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
+          />
+          <input
+            className="input"
+            type="time"
+            value={when}
+            onChange={(e) => setWhen(e.target.value)}
+            aria-label="The time it starts"
+            style={{ flex: 1, minWidth: 0, height: 40, fontSize: 'var(--type-base)' }}
+          />
+        </div>
+        <input
+          className="input"
+          value={where}
+          onChange={(e) => setWhere(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') save();
+            if (e.key === 'Escape') setEditing(false);
+          }}
+          placeholder="Where?"
+          aria-label="Where it is"
+          style={{ height: 40, fontSize: 'var(--type-base)', width: '100%', marginTop: 'var(--sp-4)' }}
+        />
+        {/* The same chips the form above draws, and the only place the kind of
+            an appointment could be changed at all before this. */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'var(--sp-5)' }}>
+          {EVENT_KINDS.map((k) => (
+            <button
+              key={k.id}
+              type="button"
+              className="btn"
+              onClick={() => setKind(k.id)}
+              aria-pressed={kind === k.id}
+              style={{
+                flex: 'none',
+                padding: '5px 10px',
+                fontSize: 'var(--type-xs)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                background: kind === k.id ? 'var(--app-hero)' : 'transparent',
+                borderColor: kind === k.id ? k.tint : 'var(--app-line)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--sp-3)',
+              }}
+            >
+              <span style={{ width: 3, height: 10, background: k.tint, flex: 'none' }} />
+              {k.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={save}
+            disabled={!title.trim()}
+            style={{ width: 'auto', padding: '0 16px', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            className="bare"
+            onClick={() => setEditing(false)}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.6 }}
+          >
+            Cancel
+          </button>
+          <div style={{ flex: 1 }} />
+          <button
+            type="button"
+            className="bare"
+            onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
+            aria-label={`Delete ${a.title}`}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.5 }}
+          >
+            Delete
+          </button>
+        </div>
+      </Blueprint>
+    );
+  }
+
+  return (
+    <Blueprint
+      plain
+      style={{
+        display: 'flex',
+        gap: 13,
+        padding: '12px 14px',
+        // The same tint the hour grid uses, so a row and its block on the
+        // day are recognisably the same thing.
+        borderLeft: `2px solid ${kindOf(a.kind).tint}`,
+      }}
+    >
+      <div style={{ width: 52, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1.1 }}>
+        <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}>{a.time}</div>
+        <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em' }}>
+          {longLabel(isoToDate(a.date)).replace(/^\w+ /, '')}
+        </div>
+      </div>
+      <button
+        type="button"
+        className="bare tappable"
+        onClick={() => {
+          // Re-seeded on open rather than kept in sync, for the reason
+          // `TaskRow` gives: a draft that follows the thing while you are
+          // typing in it is a draft that fights you.
+          setTitle(a.title);
+          setDate(a.date);
+          setWhen(inputFromClock(a.at));
+          setWhere(a.where);
+          setKind((a.kind as EventKindId) ?? 'other');
+          setEditing(true);
+        }}
+        aria-label={`Edit ${a.title}`}
+        style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}
+      >
+        <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</span>
+        <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+          {[kindOf(a.kind).label, a.where].filter(Boolean).join(' \u00b7 ')}
+        </span>
+      </button>
+      {/*
+        A call in the diary opens into the call.
+
+        This is the whole reason a scheduled call is an appointment rather
+        than a fifth kind of dated thing — see `whereFor` in `lib/call.ts`.
+        The code is on the row already, because `where` is where it was
+        written; this turns it into the way in.
+      */}
+      {codeOf(a) ? (
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => dispatch({ type: 'openCall', code: codeOf(a) })}
+          aria-label={`Join ${a.title}`}
+          style={{ flex: 'none', height: 32, paddingInline: 'var(--sp-6)', fontSize: 'var(--type-xs)', width: 'auto' }}
+        >
+          Join
+        </button>
+      ) : null}
+    </Blueprint>
+  );
+}
+
 function Appointments() {
   const { state, dispatch, now } = useStore();
   const [open, setOpen] = useState(false);
-  /**
-   * Which appointment the form is holding, or null for a new one.
-   *
-   * One form, two jobs, on purpose: the fields of an appointment are the same
-   * five whether you are writing it or fixing it, and a second form beside
-   * this one would be the duplicate control the seventh simplify pass spent
-   * its day removing. What changes is where Save sends them.
-   */
-  const [editing, setEditing] = useState<string | null>(null);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dateToIso(now));
   const [when, setWhen] = useState('09:00');
@@ -399,28 +598,22 @@ function Appointments() {
 
   const shut = () => {
     setOpen(false);
-    setEditing(null);
     setTitle('');
     setWhere('');
   };
 
-  /** The form, filled in from an appointment that already exists. */
-  const edit = (a: Appointment) => {
-    setEditing(a.id);
-    setTitle(a.title);
-    setDate(a.date);
-    setWhen(inputFromClock(a.at));
-    setWhere(a.where);
-    setKind((a.kind as EventKindId) ?? 'other');
-    setOpen(true);
-  };
-
-  const save = () => {
+  /*
+   * Writing one only. Fixing one happens in its own row, a few lines down —
+   * the pattern `TaskRow` set in the tab next door, and the note over
+   * `AppointmentRow` says why it is worth having one of rather than two.
+   */
+  const add = () => {
     if (!title.trim()) return;
     const { at, time } = clockFromInput(when);
-    const written = { title: title.trim(), date, at, time, where: where.trim(), kind };
-    if (editing) dispatch({ type: 'editAppointment', id: editing, patch: written });
-    else dispatch({ type: 'addAppointment', appointment: { ...written, note: '' } });
+    dispatch({
+      type: 'addAppointment',
+      appointment: { title: title.trim(), date, at, time, where: where.trim(), note: '', kind },
+    });
     shut();
   };
 
@@ -436,7 +629,7 @@ function Appointments() {
             className="input"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            onKeyDown={submitOnEnter(save, shut)}
+            onKeyDown={submitOnEnter(add, shut)}
             placeholder="Dentist, advisor meeting, shift…"
             style={{ height: 42, fontSize: 'var(--type-lg)' }}
             aria-label="Appointment"
@@ -465,7 +658,7 @@ function Appointments() {
             className="input"
             value={where}
             onChange={(e) => setWhere(e.target.value)}
-            onKeyDown={submitOnEnter(save, shut)}
+            onKeyDown={submitOnEnter(add, shut)}
             placeholder="Where?"
             style={inputStyle}
             aria-label="Place"
@@ -519,23 +712,15 @@ function Appointments() {
             <button
               type="button"
               className="btn btn-primary"
-              onClick={save}
+              onClick={add}
               style={{ flex: 1, height: 42, textTransform: 'uppercase', letterSpacing: '0.1em' }}
             >
-              {editing ? 'Save' : 'Add'}
+              Add
             </button>
           </div>
         </Blueprint>
       ) : (
-        <ActionButton
-          onClick={() => {
-            setEditing(null);
-            setTitle('');
-            setWhere('');
-            setOpen(true);
-          }}
-          tone="primary"
-        >
+        <ActionButton onClick={() => setOpen(true)} tone="primary">
           + New appointment
         </ActionButton>
       )}
@@ -549,78 +734,7 @@ function Appointments() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 14 }}>
         {upcoming.map((a) => (
-          <Blueprint
-            key={a.id}
-            plain
-            style={{
-              display: 'flex',
-              gap: 13,
-              padding: '12px 14px',
-              // The same tint the hour grid uses, so a row and its block on the
-              // day are recognisably the same thing.
-              borderLeft: `2px solid ${kindOf(a.kind).tint}`,
-            }}
-          >
-            <div
-              style={{
-                width: 52,
-                flex: 'none',
-                fontFamily: 'var(--font-heading)',
-                lineHeight: 1.1,
-              }}
-            >
-              <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}>{a.time}</div>
-              <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em' }}>
-                {longLabel(isoToDate(a.date)).replace(/^\w+ /, '')}
-              </div>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</div>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
-                {[kindOf(a.kind).label, a.where].filter(Boolean).join(' · ')}
-              </div>
-            </div>
-            {/*
-              A call in the diary opens into the call.
-
-              This is the whole reason a scheduled call is an appointment
-              rather than a fifth kind of dated thing — see `whereFor` in
-              `lib/call.ts`. The code is on the row already, because `where`
-              is where it was written; this turns it into the way in.
-            */}
-            {codeOf(a) ? (
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() => dispatch({ type: 'openCall', code: codeOf(a) })}
-                aria-label={`Join ${a.title}`}
-                style={{ flex: 'none', height: 32, paddingInline: 'var(--sp-6)', fontSize: 'var(--type-xs)', width: 'auto' }}
-              >
-                Join
-              </button>
-            ) : null}
-            {/* The way into the form above, filled in. Ghost and the same size
-                as Del, because fixing a room is not a bigger act than
-                deleting one and a primary button here would say it was. */}
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => edit(a)}
-              aria-label={`Edit ${a.title}`}
-              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
-              aria-label={`Delete ${a.title}`}
-              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
-            >
-              Del
-            </button>
-          </Blueprint>
+          <AppointmentRow key={a.id} appointment={a} />
         ))}
       </div>
       <div style={{ height: 22 }} />
