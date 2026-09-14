@@ -86,25 +86,46 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                 {next.block.title}
                 {next.block.meta ? ` · ${next.block.meta}` : ''}
               </div>
-            ) : yours ? (
+            ) : (
+              /*
+               * And when there are none, the sentence saying so — for every
+               * course rather than only your own.
+               *
+               * The doc at the top of this file already promised it: "Where
+               * it does not, it says so and offers the editor, because 'they
+               * are on your syllabus and the app does not have them' is the
+               * more useful sentence in that case than silence." The saying
+               * so and the offering were one branch, gated on the course
+               * being yours — so for the semester the app ships with, which
+               * is what every new student sees first, a section headed
+               * "Office hours worth going to" named a course, said what had
+               * gone wrong, and never mentioned an office hour at all.
+               *
+               * Two branches now. The sentence is always there; only the
+               * editor is yours-only, because a sample course cannot be
+               * edited and offering to is the dead end that gating was for.
+               */
               <>
                 <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
-                  The app does not have this course's office hours. They are on the syllabus, and
-                  they take a minute to add.
+                  {yours
+                    ? "The app does not have this course's office hours. They are on the syllabus, and they take a minute to add."
+                    : "The app does not have this course's office hours — it is one of the ones this app ships with, and there is no syllabus behind it to read them from."}
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-block"
-                  onClick={() => {
-                    dispatch({ type: 'openCourse', id: r.courseId });
-                    dispatch({ type: 'go', screen: 'edit' });
-                  }}
-                  style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
-                >
-                  Add them
-                </button>
+                {yours ? (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-block"
+                    onClick={() => {
+                      dispatch({ type: 'openCourse', id: r.courseId });
+                      dispatch({ type: 'go', screen: 'edit' });
+                    }}
+                    style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+                  >
+                    Add them
+                  </button>
+                ) : null}
               </>
-            ) : null}
+            )}
 
             {mod?.course.email ? (
               <button
