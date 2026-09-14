@@ -99,8 +99,41 @@ first** — throwing on empty is worth more than tidying the things that walk.
 
 | # | Row | Verdict |
 | --- | --- | --- |
-| G1 | `sources()` returns nothing, five guards pass anyway | **Throw on empty** |
+| G1 | `sources()` returns nothing, three guards pass anyway | **Throw on empty** |
 | G2 | six directory walkers | **Merge — later, after G1** |
+
+### G1, done — and the census above is wrong twice
+
+`sources()` throws when a directory yields no `.tsx`. Every caller passes
+`src`, `src/components`, `src/screens`, or a temporary tree it has just
+written a `.tsx` into, so an empty result is always a wrong path or a broken
+walk — a bug in the test, not a clean bill of health for the app. Re-running
+the experiment with the walk emptied, **all eight now fail**, where five did.
+
+**Eight, not ten.** The table above counted tests that *import from*
+`styles/rules`, and `lib/header.test.ts` and `lib/onframe.test.ts` import only
+`withoutComments`. They never call the walker: they read named files with
+`readFileSync`, which throws on a missing one. So the shared-walker set is
+eight, and the number that passed vacuously was **three** — `onecontrol`,
+`onehome`, `onelook` — not five.
+
+That is the second time in two passes that a census of mine over-counted by
+reading the wrong thing: F1's dispatcher count missed a call written
+`type:'writeMail'` without the space, and this one counted an import as a use.
+**A census that counts imports is counting a different question than one that
+counts calls**, and the difference is invisible until something forces the
+issue — the typechecker there, the throw here.
+
+**The proposed fix was also justified wrongly, and the code now says so.** The
+row claimed throwing would have caught E1, "the mistake of pointing a `.tsx`
+walker at `lib/`". It would not: `lib/` holds two `.tsx` files, so `sources()`
+returned two, the census ran against two files out of two hundred, and it
+passed against a planted second compiler. A throw on *nothing* cannot see a
+walk that returns *too few*.
+
+That case needs a walker told which extensions to keep — which is G2. So G2 is
+not the tidying this pass called it. It is the other half of this row, and the
+note on `sources()` says as much where somebody will read it.
 
 ---
 
