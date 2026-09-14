@@ -159,17 +159,28 @@ describe('the home screen', () => {
     for (const nav of MODES) expect(homeShape(nav)).toBeTruthy();
   });
 
-  it('lands the workspace on its search page and everything else on home', () => {
-    expect(firstScreen('workspace')).toBe('search');
-    for (const nav of MODES.filter((n) => n !== 'workspace')) {
+  it('lands the two top-chrome navigations on their search page and everything else on home', () => {
+    // Both open the way a browser opens on a new tab, rather than on the last
+    // page you read. Every other navigation opens on the day.
+    const onSearch: NavMode[] = ['workspace', 'browser'];
+    for (const nav of onSearch) expect(firstScreen(nav), nav).toBe('search');
+    for (const nav of MODES.filter((n) => !onSearch.includes(n))) {
       expect(firstScreen(nav), nav).toBe('home');
     }
   });
 });
 
 describe('reading a navigation back', () => {
-  it('keeps the six the app has', () => {
-    expect(MODES).toEqual(['tabs', 'feed', 'springboard', 'shelves', 'workspace', 'guides']);
+  it('keeps the seven the app has', () => {
+    expect(MODES).toEqual([
+      'tabs',
+      'feed',
+      'springboard',
+      'shelves',
+      'workspace',
+      'browser',
+      'guides',
+    ]);
     for (const nav of MODES) expect(navOf(nav)).toBe(nav);
   });
 

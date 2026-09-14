@@ -1,5 +1,6 @@
 import { Suspense, lazy, useRef, useState } from 'react';
 import { useStore } from '../state/store';
+import { GraphCalculator } from '../components/GraphCalculator';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { ActionButton, SectionLabel } from '../components/ui';
@@ -32,6 +33,10 @@ const Drawing = lazy(() =>
  * number in a sentence.
  */
 export function Draw() {
+ const [mode,setMode] = useState('graph');
+ return <div className="drawing-workspace portal-workspace"><div className="portal-tabs" role="tablist" aria-label="Drawing tools"><button role="tab" aria-selected={mode==='graph'} onClick={()=>setMode('graph')}>Graphing calculator</button><button role="tab" aria-selected={mode==='diagrams'} onClick={()=>setMode('diagrams')}>Diagrams & illustrations</button></div>{mode==='graph'?<GraphCalculator/>:<DiagramBuilder/>}</div>;
+}
+function DiagramBuilder() {
   const { state, catalog } = useStore();
   const { guide } = useLive(state.guideId);
 

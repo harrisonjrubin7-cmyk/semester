@@ -1,0 +1,10 @@
+import {describe,it,expect} from 'vitest';
+import {readAthletics,eventDays,overlaps,absenceDraft,type AthleticEvent} from './athletics';
+import {EMPTY_CAREER,newOpportunity,readOpportunities,readCareer,resumeMarkdown,coverLetter} from './career';
+const trip:AthleticEvent={id:'trip',title:'Away competition',team:'Team',kind:'Travel',start:'2026-09-18T16:00',end:'2026-09-20T00:00',where:'Venue',notes:'',steps:[]};
+describe('athletics and career boundaries',()=>{
+ it('includes overnight travel dates but not an exclusive midnight end',()=>{expect(eventDays(trip)).toEqual(['2026-09-18','2026-09-19']);expect(overlaps(trip,{start:trip.end,end:'2026-09-20T01:00'})).toBe(false);expect(overlaps(trip,{start:'2026-09-19T08:00',end:'2026-09-19T09:00'})).toBe(true);});
+ it('rejects reversed or excessively long trips and keeps absence requests unofficial',()=>{expect(()=>readAthletics({version:1,events:[{...trip,end:trip.start}]})).toThrow();expect(()=>readAthletics({version:1,events:[{...trip,end:'2027-09-20T12:00'}]})).toThrow();expect(absenceDraft(trip,['Friday exam'])).toContain('not an official travel authorization');});
+ it('rejects invalid opportunities and executable URLs',()=>{expect(()=>readOpportunities(JSON.stringify([{...newOpportunity(),title:'Internship',url:'javascript:alert(1)'}]))).toThrow();expect(()=>readOpportunities(JSON.stringify([{...newOpportunity(),title:'Internship',deadline:'2026-02-31'}]))).toThrow();const [o]=readOpportunities(JSON.stringify([{title:'Internship',organization:'Example'}]));expect(o.saved).toBe(false);expect(o.id).toBeTruthy();});
+ it('builds editable drafts only from supplied experiences',()=>{const c={...EMPTY_CAREER,name:'Test Student',experiences:[{id:'x',category:'Project' as const,title:'Water study',organization:'Lab',dates:'2026',details:'Analyzed supplied data.'}]};expect(resumeMarkdown(readCareer(c))).toContain('Analyzed supplied data.');const letter=coverLetter(c,{...newOpportunity(),title:'Research intern',organization:'Example lab'});expect(letter).toContain('Water study');expect(letter).toContain('[Explain your specific interest');expect(letter).not.toContain('expert');});
+});

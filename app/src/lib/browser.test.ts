@@ -86,12 +86,10 @@ describe('the strip', () => {
     expect(current(s).screen).toBeNull();
   });
 
-  it('drops the oldest tab that is not in use once the strip is full', () => {
+  it('preserves every open tab when the strip is full', () => {
     const full = strip(Array.from({ length: MAX_TABS }, () => 'home' as Screen), 0);
-    const s = add(full, 'new');
-    expect(s.tabs).toHaveLength(MAX_TABS);
-    // The one in use is kept, and the new one is the one you are on.
-    expect(current(s).screen).toBeNull();
+    expect(add(full,'new')).toBe(full);
+    expect(openBeside(full,'study','Study',justGo('study'))).toBe(full);
   });
 
   it('lands on the right-hand neighbour when the tab you are on closes', () => {
@@ -210,6 +208,7 @@ describe('the place a tab carries', () => {
   it('reopens the thing, not the kind of thing', () => {
     // The whole point of the strip: "Course" is not a place worth a tab.
     expect(placeFor('course', where)).toEqual([{ type: 'openCourse', id: 'econ' }]);
+    expect(placeFor('edit', where)).toEqual([{ type: 'openCourse', id: 'econ' }, { type: 'go', screen: 'edit' }]);
     expect(placeFor('item', where)).toEqual([{ type: 'openItem', id: 'econ-m1' }]);
     expect(placeFor('write', where)).toEqual([{ type: 'openDocument', id: 'd1' }]);
     expect(placeFor('deck', where)).toEqual([{ type: 'editDeck', id: 'k1' }]);

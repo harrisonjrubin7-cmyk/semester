@@ -64,6 +64,7 @@ import type { Corner } from './Popover';
 import { toneAt, useTones } from './tones';
 import type { CourseTint } from '../lib/tint';
 import type { AppTab, Seat, TabGroup } from '../lib/browser';
+import { useModernShell } from './shell-context';
 
 /**
  * The strip follows the app, wherever the app is driven from.
@@ -157,6 +158,8 @@ export function TabsFollow() {
     sheetId,
     deckId,
     mode,
+    openUnit,
+    callCode,
   } = state;
   const at = useMemo(
     () =>
@@ -170,8 +173,25 @@ export function TabsFollow() {
         sheetId,
         deckId,
         mode,
+        /* A study tab remembers the unit it is open on and a call tab its
+           room, so two study tabs come back to their own. See `placeFor`. */
+        openUnit,
+        callCode,
       }),
-    [screen, courseId, itemId, eventId, guideId, noteId, documentId, sheetId, deckId, mode],
+    [
+      screen,
+      courseId,
+      itemId,
+      eventId,
+      guideId,
+      noteId,
+      documentId,
+      sheetId,
+      deckId,
+      mode,
+      openUnit,
+      callCode,
+    ],
   );
   const seen = useRef<string | null>(null);
 
@@ -236,6 +256,7 @@ export function TabStrip({
   const tones = useTones();
   /** The tab or group menu, and where it was summoned from. See `TabMenu`. */
   const [menu, setMenu] = useState<{ on: MenuOn; corner: Corner } | null>(null);
+  const modern = useModernShell();
 
   /** Put the app where a tab says, or hand a new tab to the search page. */
   const land = (tab: AppTab) => {
@@ -267,7 +288,9 @@ export function TabStrip({
     const pointer = e.detail > 0 && e.clientY > 0;
     setMenu({ on, corner: { x: pointer ? e.clientX : box.left, y: pointer ? e.clientY : box.bottom + 2 } });
   };
-
+  /* Inside the browser shell the strip is the shell's, not ours — drawing
+     this one too is the doubling `lib/chrome.ts` exists to stop. */
+  if (modern) return null;
   if (!inOverlay && !alwaysOn && strip.tabs.length < 2) return null;
 
   const rows = lanes(strip);

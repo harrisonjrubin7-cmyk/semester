@@ -1213,7 +1213,24 @@ function MonthView() {
           if (!move) return;
           e.preventDefault();
           if (move.step) {
-            dispatch({ type: 'stepMonth', delta: move.step === 'next' ? 1 : -1 });
+            /*
+              Page Up and Page Down move a month, and the selection goes with
+              them — the same day number in the month next door, or its last
+              day when that month is shorter. Without this the selection fell
+              back to the 1st and keyboard focus was left behind on it.
+            */
+            const delta = move.step === 'next' ? 1 : -1;
+            const next = new Date(calYear, calMonth + delta, 1);
+            const day = Math.min(
+              selectedDay,
+              new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate(),
+            );
+            dispatch({ type: 'stepMonth', delta });
+            dispatch({
+              type: 'selectDate',
+              date: `${next.getFullYear()}-${next.getMonth()}-${day}`,
+            });
+            setChasing(day);
             return;
           }
           if (move.day === null || move.day === selectedDay) return;

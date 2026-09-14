@@ -26,12 +26,17 @@ import { saysFor, shortFor } from '../../lib/nav';
 import { Caps } from '../soft/Soft';
 import { AppGrid } from './AppGrid';
 import { TileSheet } from './TileSheet';
+import { useModernShell } from '../shell-context';
 
 export function AllApps({ onClose }: { onClose: () => void }) {
   const { state, dispatch, school } = useStore();
+  /* The shell draws its own launcher. One open menu at a time — fix #11. */
+  const modern = useModernShell();
   const caps = school.capabilities;
   const shelves = appShelves(caps, currentLook(state).groupOrder);
   const count = appCount(shelves);
+
+  if (modern) return null;
 
   return (
     <TileSheet

@@ -109,6 +109,8 @@ export interface Where {
   sheetId: string | null;
   deckId: string | null;
   mode: StudyMode;
+  openUnit?: number;
+  callCode?: string;
 }
 
 /**
@@ -127,21 +129,24 @@ export interface Where {
 export function placeFor(screen: Screen, at: Where): Action[] {
   switch (screen) {
     case 'course':
-    case 'edit':
       return at.courseId ? [{ type: 'openCourse', id: at.courseId }] : justGo(screen);
+    case 'edit':
+      return at.courseId ? [{ type: 'openCourse', id: at.courseId }, { type: 'go', screen: 'edit' }] : justGo(screen);
     case 'item':
       return at.itemId ? [{ type: 'openItem', id: at.itemId }] : justGo(screen);
     case 'event':
       return at.eventId ? [{ type: 'openEvent', id: at.eventId }] : justGo(screen);
     case 'guide':
-      return at.guideId ? [{ type: 'openGuide', id: at.guideId, mode: at.mode }] : justGo(screen);
+      return at.guideId ? [{ type: 'openGuide', id: at.guideId, mode: at.mode, ...(at.openUnit!==undefined?{unit:at.openUnit}:{}) }] : justGo(screen);
     case 'drill':
     case 'quiz':
     case 'lesson':
     case 'slides':
       return at.guideId
-        ? [{ type: 'openGuide', id: at.guideId, mode: at.mode }, { type: 'go', screen }]
+        ? [{ type: 'openGuide', id: at.guideId, mode: at.mode, ...(at.openUnit!==undefined?{unit:at.openUnit}:{}) }, { type: 'go', screen }]
         : justGo(screen);
+    case 'call':
+      return at.callCode ? [{type:'openCall',code:at.callCode}] : justGo(screen);
     case 'note':
       return at.noteId ? [{ type: 'openNote', id: at.noteId }] : justGo(screen);
     case 'write':
@@ -228,13 +233,20 @@ export const NEW_TAB = 'New tab';
 /**
  * How many tabs the strip will hold.
  *
- * A browser lets you open two hundred and then makes them illegible, which is
- * a bargain a phone-sized strip cannot make: below about this many each tab is
- * a favicon and half a letter, and a tab you cannot read is not a tab you can
- * return to. When the strip is full the oldest one that is not on gives way —
- * the same thing a person does by hand, done without asking.
+ * Ten was chosen when the strip drew every tab at once, where past about that
+ * many each one is a favicon and half a letter, and a tab you cannot read is
+ * not a tab you can return to. The strip scrolls and folds groups now, so
+ * legibility is no longer what the number is protecting: a run folded to its
+ * name costs one slot however many tabs are in it, and the row carries the
+ * ones you are actually working in.
+ *
+ * So the cap is high enough to stop being a limit anybody meets by accident,
+ * and stays a cap only to bound what is written to the device and replayed on
+ * load. When it is reached the strip refuses rather than making room — see
+ * `add` — because the tab that would give way is a page somebody meant to
+ * come back to.
  */
-export const MAX_TABS = 10;
+export const MAX_TABS = 100;
 
 /** Ids that are unique within a session and readable in a React tree. */
 let counter = 0;
@@ -265,7 +277,7 @@ export function current(strip: Strip): AppTab {
 }
 
 function clamp(strip: Strip, at: number): number {
-  return Math.min(Math.max(0, at), Math.max(0, strip.tabs.length - 1));
+  return Math.min(Math.max(0, Number.isFinite(at) ? Math.trunc(at) : 0), Math.max(0, strip.tabs.length - 1));
 }
 
 /**
@@ -276,8 +288,17 @@ function clamp(strip: Strip, at: number): number {
  * the strip stops being in any order at all by the fourth tab.
  */
 export function add(strip: Strip, id: string = tabId()): Strip {
-  const room = strip.tabs.length < MAX_TABS ? strip : evict(strip);
-  const at = clamp(room, room.at) + 1;
+  /*
+   * A full strip refuses rather than making room.
+   *
+   * It used to drop the oldest tab that was not in use, which reads as tidying
+   * and is actually deletion: the tab that goes is a page somebody opened and
+   * meant to come back to, and opening a search result is not consent to lose
+   * it. The cap is high enough now (see `MAX_TABS`) that reaching it is a
+   * deliberate act, and the callers say so rather than quietly obliging.
+   */
+  if (strip.tabs.length >= MAX_TABS) return strip;
+  const at = clamp(strip, strip.at) + 1;
   /*
    * And it joins the group it was opened out of.
    *
@@ -287,21 +308,9 @@ export function add(strip: Strip, id: string = tabId()): Strip {
    * middle of that run would split it in two. Opening a tab from inside the
    * essay group is nearly always another tab about the essay anyway.
    */
-  const from = room.tabs[clamp(room, room.at)];
+  const from = strip.tabs[clamp(strip, strip.at)];
   const born = from?.group ? { ...fresh(id), group: from.group } : fresh(id);
-  return { ...room, tabs: [...room.tabs.slice(0, at), born, ...room.tabs.slice(at)], at };
-}
-
-/** Drop the oldest tab that is not the one being used. */
-function evict(strip: Strip): Strip {
-  const at = clamp(strip, strip.at);
-  const drop = strip.tabs.findIndex((_, i) => i !== at);
-  if (drop === -1) return strip;
-  return tidy({
-    ...strip,
-    tabs: strip.tabs.filter((_, i) => i !== drop),
-    at: drop < at ? at - 1 : at,
-  });
+  return { ...strip, tabs: [...strip.tabs.slice(0, at), born, ...strip.tabs.slice(at)], at };
 }
 
 /**
@@ -391,7 +400,8 @@ export function openBeside(
   place: Action[],
   id: string = tabId(),
 ): Strip {
-  return visit(add(strip, id), screen, title, place);
+  const next=add(strip,id);
+  return next===strip?strip:visit(next, screen, title, place);
 }
 
 /**
@@ -652,6 +662,7 @@ export const TABS_KEY = 'semester.tabs.v1';
 export const PLACE_ACTIONS = [
   'go',
   'openItem',
+  'openCall',
   'openCourse',
   'openEvent',
   'openGuide',
@@ -694,7 +705,7 @@ export function load(raw: string | null, known: (screen: string) => boolean): St
     const tabs: AppTab[] = [];
     for (const entry of list) {
       const tab = entry as Partial<AppTab>;
-      if (typeof tab?.id !== 'string') continue;
+      if (typeof tab?.id !== 'string' || tabs.some(t=>t.id===tab.id)) continue;
       if (tab.screen === null || tab.screen === undefined) {
         tabs.push(fresh(tab.id));
         continue;
