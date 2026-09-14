@@ -794,6 +794,34 @@ says at the top why it writes the same keys as the settings page rather than
 keeping its own, and it does exactly that. The browser shell is the one that
 does not, and that is S1.
 
+**What none of the three scans above can see, and the test that can.** Every
+census in this half counts *pathways over time*: how many places dispatch one
+action, how many files route to one screen, how many write one setting. That
+is the right net for "one job, one home", and it is blind by construction to
+the fault A is about — two controls that are **on screen at the same time**.
+Reaching Settings from here and also from there costs nothing while you are
+using neither; two buttons in one frame cost a decision every time you look.
+The proof that the blindness is real rather than theoretical is that this
+half's own census ran clean over a workspace whose bar and header were each
+drawing a search, and whose header's `+` sat inches from the sidebar's New.
+
+`lib/onframe.test.ts` (from `0cb57a6`, recorded in A §5) is the census of what
+is co-present, and it is a test rather than a paragraph because the fault is
+invisible in a type check, in a screenshot at one width, and in every other
+test here. It matches on the **dispatch** rather than the label, which is the
+half a reading of the screenshots would miss: two rows can be called different
+things and still land you in the same place — and, as the *All apps* collision
+showed, two rows can carry one name and land you in different ones.
+
+It also holds a rule this half nearly broke. #240's removal of **New** from
+both sidebars was right on its own terms and is S-nothing here; it also
+removed the premise of a rule in the header, whose `+` stood down wherever a
+sidebar was drawn *because that column had New*. Two correct removals, landing
+in the same week from two different passes, would have cancelled into a wide
+workspace with no pointing route to the capture box. See A §4c: `add` is
+unconditional now, and the test holds both halves — neither sidebar draws the
+capture box, and the header draws it at every width.
+
 ---
 
 ## 2. S1 — the browser shell keeps four settings of its own · **MERGE**
@@ -1088,7 +1116,7 @@ destination and the second is the screen's own subject.
   tokeniser and recursive-descent evaluator, in an app that already has one
   it trusts enough to compute grades with.
 
-### E2 — Work opens on a list five screens already draw · **RECORDED, needs a decision**
+### E2 — Work opens on a list five screens already draw · **MERGED — into Courses**
 
 `screens/Work.tsx` renders `<AssignmentCenter>` as its *default* view;
 "Break it down", which is what the registry says the screen is, is behind an
@@ -1142,7 +1170,67 @@ than quietly widened: a class-based copy of a component is still a copy, and
 the next pass should decide whether the rule can see one without failing every
 `role="alert"` in the app.
 
-### E4 — a second workspace shell · **RECORDED**
+### E3, done — and four of its five rows were wrong
+
+Read one file at a time rather than by class name, the table above does not
+survive. Only the `portal-empty` row was the merge it claimed. The other four
+named a survivor that cannot take the job, and saying so is the point of
+writing the census down rather than acting on it directly.
+
+**`portal-empty` → `EmptyState`. Real, and done** for the three sites that
+fit: the cart, the saved schedules, and the directory's "no entries match".
+
+**`portal-warning` → `Notice`. Half real, and the half that was real needed a
+change to `Notice` first.** The two recovery notices — the ones with a
+"Download recovery copy" button inside the box — are exactly this component
+and are now drawing it. But they said `role="alert"` and `Notice` said
+`role="status"`, and those are not the same promise: status is polite and
+waits its turn, alert interrupts. Swapping them silently would have demoted
+"your saved copy could not be read" to something a reader hears after it
+finishes the sentence the student is typing. So `Notice` took an `alert` prop,
+defaulting to the polite role, and the box is shared rather than forked.
+
+The other five `portal-warning` uses are *not* notices. They are inline
+validation under the cart — "ECON 1020 and PSCI 1100 overlap on Mon, Wed" —
+which belongs beside the thing it is about and is not a live region at all.
+Rehoming those into a notice box would be the E2 mistake in miniature:
+a duplicate rehomed is not a duplicate removed.
+
+**`portal-tabs` → `Segmented`. Wrong survivor.** `Segmented` is a row of
+`aria-pressed` buttons; `portal-tabs` is `role="tablist"` with `role="tab"`
+and `aria-selected`. Those are different contracts and the substitution would
+lose the weaker-sighted half of it.
+
+The real finding on that row is bigger than the port: **`role="tablist"` is in
+ten files and wears four different stylings** — `rib-tabs`, `shelf-nav-row`,
+`mb-tabs` and the port's `portal-tabs`. Three of those four are the app's own.
+So this is not a port duplicate to delete, it is a shared tab-strip component
+the app never had; and `Segmented` cannot be it without growing the tablist
+contract, which would change every one of its 36 existing uses. Recorded for a
+later pass rather than half-done here.
+
+**`portal-filter-row` → `ChipRow` · `PickChips` · `Segmented`. Wrong
+survivor.** It is an `<input type="search">` beside a `<select>`. The three
+named components are chip and segment controls; none of them is a search
+field, and none takes a select. There is a real question underneath — whether
+that category `<select>` should be `PickChips` — but it is a design question
+about four screens, not a duplicate to fold away.
+
+**`directory-star` → the star in `screens/Directory.tsx`. Not a duplicate at
+all.** They share a glyph and nothing else. Directory's star pins a
+*destination* into `look.favourites`, which syncs with the account and is read
+by the launcher, the sidebar and the search home. `directory-star` saves an
+imported *listing* — a dorm, a dining hall, a club — into a device library
+under `semester.directory.<kind>.saved`. Different data, different store,
+different meaning. The census matched on the word "star".
+
+**What this row is really about**, then: one genuine shared-component merge,
+one that needed the component widened before it was safe, and three entries
+that a name-based census produced and a file-based one dissolves. The lesson
+is the same shape as E5's — *the tempting next step after finding a duplicate
+is to follow the name rather than the behaviour.*
+
+### E4 — a second workspace shell · **MERGED — `workspace` survives**
 
 `browser` is the seventh navigation, and the sixth is `workspace`. Both are
 browser-shaped: a strip of app tabs, a search field, an apps grid, a sidebar.
@@ -1161,9 +1249,10 @@ argument for finishing it: #239 folded the shell's tab organiser into the
 app's bookmarks and groups, and #240 took the New button off *both* sidebars.
 A fix that has to be applied to both sidebars is the definition of the problem.
 
-Left recorded rather than merged for the same reason as E2 — which of two
+Recorded first and merged second, for the same reason as E2 — which of two
 navigations survives is the owner's call, and `NAVS` is explicit that every
-one of them is a working app somebody may prefer.
+one of them is a working app somebody may prefer. They named `workspace`; see
+"E2 and E4, done" below.
 
 ### E5 — exports with no caller · **CLEAN**
 
@@ -1172,6 +1261,15 @@ keepPlace`. Thirty-one are read only by their own test, which is the same
 figure as last pass and the same three kinds as before — dead, a contract a
 test asserts, or wiring somebody stopped halfway. The port added almost no
 dead weight, and that is worth saying plainly alongside the rest.
+
+**Cut.** `keepPlace` had no caller anywhere, not even a test — it was the
+"save, and leave an existing one alone" half of a pair whose other half,
+`star`, is what the star in the search field actually calls. Nothing else is
+removed with it: the `keep` it wrapped lives in `lib/bookmarks.ts` and is
+still reached through `toggle`, which is how `star` saves. So this is the
+wrapper going, not the behaviour — which is the distinction worth checking
+before cutting a one-line export, because the tempting next step is to follow
+it down and take a function three other things depend on.
 
 ---
 
@@ -1195,8 +1293,8 @@ dead weight, and that is worth saying plainly alongside the rest.
 | --- | --- | --- | --- | --- |
 | E1 | One graphing calculator — `equations` survives, Draw goes back to diagrams | 0 | Merge | ✅ |
 | E3 | The port's `portal-*` idioms onto `Notice`, `EmptyState`, `Segmented` | 0 | Shared components | |
-| E2 | Work's default view against five screens | 0 | **Open** — survivor is the owner's call | |
-| E4 | `browser` against `workspace` | 0 | **Open** — same | |
+| E2 | Work's default view against five screens | 0 | Merge | ✅ list to Courses, Work restored |
+| E4 | `browser` against `workspace` | −1 navigation | Merge | ✅ `workspace` survives |
 | E5 | One dead export | 0 | Cut | |
 
 **E1 is the one this pass would do first and alone.** It removes a whole
@@ -1246,6 +1344,92 @@ caught is that both were tested by planting the regression rather than by
 reading the rule.
 
 ---
+
+
+### E2 and E4, done
+
+Both survivors were named by the app's owner, which is what §6 of this file
+says this class of question takes.
+
+**E2 — the list went to Courses and Work went back to reading an assignment.**
+`AssignmentCenter`, `lib/assignmentcenter.ts` and its test are gone, and
+`Work()` is the screen the registry describes again rather than a wrapper over
+somebody else's list.
+
+What came across is the two things the copy had that nothing else did: a
+**search** over titles, instructions and course codes, and **one course at a
+time**. Both are on Courses' Coming up now, filtered *before* `split`, so the
+counts on the four tabs are the counts of what you are looking at — a tab
+reading "Overdue 8" over a filtered list of one is the arithmetic disagreeing
+with the page. The course row is `CoursePicker`, the app's own, rather than a
+fifth copy of that control.
+
+What did not come across, and is not an oversight: a workload chart, a
+priority sort, a stat row and a "what should I do next" card. Those are
+`ahead`, `tonight`, `home` and `tonight` again. **Rehoming a duplicate is not
+the same as keeping it.** The detail panel went too — its checklist is
+`BreakItUp`, which Courses and `ForThis` already host.
+
+**E4 — `workspace` survives.** `GoogleShell`, `GoogleTabs`,
+`google-shell.css`, the `NAVS` entry, the `NavMode` member, the `Chrome` flag
+and `App`'s `BrowserShell` are gone; seven navigations are six.
+
+Less went than the line count suggested, because the port read the app's own
+registry rather than copying it: `TabMenu`, `Popover`, `Bookmarks`,
+`shell-context` and `lib/browser.hook` all stay, shared with the app's own tab
+strip in `components/Tabs.tsx`. That sharing is what #239 and #240 were
+doing, and finishing it is what this row was.
+
+**No migration, and that is now a test.** `navOf` falls back to `workspace`,
+not to the tab bar, so a saved `nav: 'browser'` lands on the shell of the same
+shape. Verified in a browser as well as in the suite: all six surviving
+navigations draw their own chrome, a seeded `browser` comes up identical to
+`workspace`, and none of them throws.
+
+**One test moved rather than died.** `shell-overlap.test.tsx` was otherwise
+about that shell, but one case tests the *reducer* — go, landed and back all
+dismiss the search overlay and the apps sheet — and touches no DOM. It is in
+`state/slices/navigate.test.ts` now. Deleting a rule along with the file that
+happened to hold it is how a rule stops being kept.
+
+**And one the base branch added while this was open.** Merging main landed a
+modify/delete on `google-shell.css`: two commits had gone in fixing the
+shell's contrast — #255 and #257 — one of them adding
+`components/browser-strip.test.ts`, a guard that reads that sheet and holds
+the strip's colours on the palette. Both are about the shell being *inverted*,
+`--app-fg` as a ground. The workspace's strip is not: `.deskwork .deskstrip`
+is `--app-void`, an ordinary surface, so the pair that guard checks no longer
+occurs anywhere, and the pairs that do occur are already held by
+`lib/contrast.test.ts` across every ground. So the guard goes with the sheet
+rather than being pointed at a strip it was not written about.
+
+The same merge found a third orphan the census had missed:
+`components/GlobalSearchResults.tsx`, the shell's full-page results view, 27
+lines rendered by `GoogleShell` and nothing else. It was invisible to the
+E4 census because that census read `NAVS` and the chrome — a component with
+exactly one caller looks wired until you delete the caller. The workspace
+answers the same question through the palette. The other half of #257, the
+placeholder and filled-button colours in `features.css`, is kept, minus four
+selectors naming screens these two rows removed: `.assignment-center`,
+`.graph-workspace`, `.assignment-plan` and `.g-organizer-panel`. **A merge
+that keeps a fix for a deleted screen is how dead CSS gets a reason to look
+alive.**
+
+### Recorded against myself, again
+
+The first CSS strip in E4 split selectors on every comma, including the one
+inside `:is(input,select)`, and left an orphan `select){…}` in
+`features.css`. **The whole suite passed** — vitest does not minify CSS — and
+`npm run build` failed on it. The splitter counts parentheses now.
+
+That is the third guard-or-tool of mine in three passes to be wrong in a way
+only an end-to-end run could show: a rule that scanned the wrong file
+extension, a rule that matched a class instead of a measurement, and now a
+parser that did not know about `:is()`. The pattern is worth stating plainly
+rather than apologising for each time — **a check that has never been run
+against the thing it is meant to catch is not yet a check**, and in this
+codebase the cheapest way to run it is `npm run build` and a browser, not the
+test suite alone.
 
 ---
 

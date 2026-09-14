@@ -91,17 +91,16 @@ describe('the workspace draws each job once', () => {
    * workspace with no pointing route to the capture box at all.
    *
    * So the rule no longer asks, and this holds that nothing quietly picks the
-   * question back up: neither sidebar draws the capture box, and the header
-   * draws it at every width.
+   * question back up: the sidebar does not draw the capture box, and the
+   * header draws it at every width.
+   *
+   * There is one sidebar to check now rather than two — the browser shell's
+   * column went with the shell, `SIMPLIFY-AUDIT.md` E4 — which changes the
+   * arithmetic above not at all: the risk was the header standing down where
+   * a column had nothing to stand down for, and that is a question about the
+   * header.
    */
   it('keeps the capture box reachable now that no sidebar carries it', () => {
-    for (const f of ['src/components/desk/Sidebar.tsx', 'src/components/GoogleShell.tsx']) {
-      const side = withoutComments(read(f));
-      const inSidebar = /g-sidebar[\s\S]*?<\/aside>/.exec(side)?.[0] ?? '';
-      expect(inSidebar, `${f}: the column is navigation, not the capture box`).not.toContain(
-        "type: 'quickAdd'",
-      );
-    }
     expect(SIDE(), 'the workspace column has no New button').not.toContain("type: 'quickAdd'");
     for (const wide of [true, false]) {
       const c = chromeFor('workspace', 'notifs', wide);
@@ -320,128 +319,6 @@ describe('the + means one thing', () => {
     const at = app.indexOf('<Plus size=');
     const opening = app.slice(0, at).split('<button').pop() ?? '';
     expect(opening, 'and it opens the capture box').toContain("type: 'quickAdd'");
-  });
-});
-
-/**
- * The browser shell, held to the same census as the workspace.
- *
- * It arrived as a seventh navigation while this pass was open, ported whole,
- * and inside its own frame it repeated most of what the pass had just removed:
- * one `searchBox` rendered twice, so two inputs, two `⌘ K` hints and two AI
- * Tutor buttons on the screen it opens on; a sidebar whose Search home and
- * Settings rows went where the wordmark and the gear already go; an "All apps"
- * row sharing its name with the launcher; and a Dark/Light pair writing a
- * preference of its own.
- *
- * Checked on the source rather than through `chromeFor`, because this shell
- * draws its chrome itself rather than reading the rule — that is what makes it
- * able to drift, and what makes these worth holding.
- */
-describe('the browser shell draws each job once', () => {
-  const SHELL = () => withoutComments(read('src/components/GoogleShell.tsx'));
-
-  it('has one search field, not one per placement', () => {
-    // Counted by `role="combobox"`, not by `<input>`: the Customize panel has
-    // a checkbox, and a test that cannot tell a search field from a tickbox
-    // is one that fails for the wrong reason later.
-    expect(
-      [...SHELL().matchAll(/role="combobox"/g)].length,
-      'the omnibox is the only search field',
-    ).toBe(1);
-    // `placement` is gone with the second copy, and so is the state that
-    // tracked which of the two was being typed in.
-    expect(SHELL(), 'no second field to disambiguate').not.toContain('activeSearch');
-    expect(SHELL()).not.toContain('homeSearchRef');
-  });
-
-  it('puts the ⌘K hint and the tutor in the bar, once each', () => {
-    expect([...SHELL().matchAll(/g-key-hint/g)].length, 'one hint').toBe(1);
-    expect([...SHELL().matchAll(/AI Tutor<\/button>/g)].length, 'one tutor button').toBe(1);
-  });
-
-  /*
-   * Unlike the two chips this pass removed from the other shell, this hint is
-   * true: this shell's own listener binds ⌘K to focus the field. Held so a
-   * later tidy cannot leave the words without the binding.
-   */
-  it('means the ⌘K it advertises', () => {
-    expect(SHELL()).toMatch(/metaKey \|\| e\.ctrlKey\) && e\.key\.toLowerCase\(\) === 'k'/);
-    expect(SHELL(), 'and it focuses the field').toContain('searchRef.current?.focus()');
-  });
-
-  it('gives `/` the same field, through the same channel as the workspace', () => {
-    expect(SHELL(), 'the shell publishes its field').toContain('FocusBarProvider');
-    expect(SHELL()).toContain('const focusBar = useCallback(() => searchRef.current?.focus(), [])');
-  });
-
-  it('leaves the sidebar nothing the bar above already carries', () => {
-    expect(SHELL(), 'the wordmark goes to the search home').not.toContain('Search home');
-    // `go('settings')` survives once — the gear in the top actions. Two of it
-    // in one frame was the fault.
-    expect([...SHELL().matchAll(/go\('settings'\)/g)].length, 'one route to Settings').toBe(1);
-  });
-
-  it('keeps the launcher and the directory separately named', () => {
-    expect(SHELL(), 'the nine dots are the launcher').toContain('Open all apps');
-    expect(SHELL(), 'so the row opening the directory must not be').not.toContain('> All apps<');
-    expect(SHELL()).toContain('App directory');
-  });
-
-  /*
-   * One capture control per frame, and never none.
-   *
-   * The shell's home draws a `+` beside its centre box; every other screen had
-   * nothing. Its sidebar's New was the pointing route on a wide window until
-   * `#240` took it off both columns, and narrow never had one — `.g-sidebar`
-   * is `display:none` below 760px. `q` does not cover the difference, because
-   * `Keys` returns early below `WIDE`.
-   *
-   * So the bar draws it, gated as the mirror image of the centre's: exactly
-   * one on screen, never two. Asserted as the pair of gates rather than as a
-   * count, because a count cannot tell "both drawn" from "neither".
-   */
-  it('offers the capture box on every screen, and once', () => {
-    const src = SHELL();
-    const opens = [...src.matchAll(/type:'quickAdd',open:true/g)].length;
-    expect(opens, 'the centre box and the bar, and nothing else').toBe(2);
-    expect(src, 'the bar draws it everywhere the home centre does not').toContain(
-      '{!homePage && <button className="g-icon g-capture" aria-label="Add a task or appointment"',
-    );
-    /*
-     * `g-capture` is not decoration. A narrow window clears every `.g-icon`
-     * out of that row — alerts and settings go there safely, being one row
-     * down in the launcher — and the capture box is an overlay, not a screen,
-     * so the launcher cannot list it. Without the exemption it is swept up and
-     * the gap this test exists for comes back at one width only, which is the
-     * hardest kind to notice.
-     */
-    expect(
-      read('src/components/google-shell.css'),
-      'the narrow rule must exempt it',
-    ).toContain('.g-workspace .g-top-actions>.g-capture{display:inline-flex}');
-    // And the centre's own, which is the other half of that pair.
-    expect(src, 'the centre keeps its +').toMatch(
-      /g-plus" aria-label="Add a task or appointment"/,
-    );
-  });
-
-  it('calls the capture box one thing wherever you meet it', () => {
-    const names = [...SHELL().matchAll(/aria-label="([^"]*(?:task or appointment|one line)[^"]*)"/g)]
-      .map((m) => m[1]);
-    expect(new Set(names).size, `two names for one job: ${names.join(', ')}`).toBe(1);
-  });
-
-  it('takes light and dark from the app’s ground rather than a key of its own', () => {
-    expect(SHELL(), 'no preference of its own').not.toContain("usePreference('lightHome'");
-    // `look.ground` rather than `state.ground`: the shell reads the whole look
-    // through `currentLook`, which is the plumbing `main` put in when it moved
-    // this shell's four private preferences onto the app's own.
-    expect(SHELL(), 'it resolves the ground the app is on').toContain('resolveGround(look.ground');
-    // And it reports that ground rather than offering a second way to set it.
-    expect(SHELL()).toContain('groundName(look.ground)');
-    expect(SHELL(), 'no pair writing the ground from here').not.toContain('g-theme-options');
-    expect(SHELL(), 'the panel opens the page that owns it').toContain("go('setLook')");
   });
 });
 

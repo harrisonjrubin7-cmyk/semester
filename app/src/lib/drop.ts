@@ -123,8 +123,30 @@ export function dropHelped(scores: number[], drop: number): number {
   return withRule - without;
 }
 
-/** A stored drop count, made safe. */
+/**
+ * A stored drop count, made safe — including against the shapes `Number()`
+ * will not look at.
+ *
+ * `Number(raw)` on an object runs its `valueOf` and then its `toString`, and
+ * throws `TypeError` when neither can produce a primitive. `{"toString":null}`
+ * is valid JSON and does exactly that, so a hand-edited, truncated or
+ * downgraded save could reach this and throw.
+ *
+ * Throwing here is not a local failure. This runs inside `loadPersisted`,
+ * whose `catch` returns `DEFAULT_PERSISTED` — written for "a private window,
+ * or storage disabled", where defaults are the right answer. It cannot tell
+ * that case from this one, so one unreadable drop count discarded the whole
+ * of a saved term: the navigation, every ticked deadline, the recents, the
+ * day budget. The next dispatch then wrote the defaults back over it.
+ *
+ * `lib/list` is the same guarantee for the twenty-three arrays that found
+ * this hole before; see `state/storage.test.ts`. This is the scalar one.
+ * A reader on that path may return a fallback, and may never throw.
+ */
 export function readDrop(raw: unknown): number {
+  // The two shapes a drop count has ever been written as. Anything else is
+  // not a small number that needs clamping, it is not a drop count.
+  if (typeof raw !== 'number' && typeof raw !== 'string') return 0;
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? Math.min(Math.floor(n), 40) : 0;
 }

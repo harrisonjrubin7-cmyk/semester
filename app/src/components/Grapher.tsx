@@ -4,7 +4,7 @@ import { Plot, type Drawing } from './Plot';
 import { Surface } from './Surface';
 import { heightOf, heights, range } from '../lib/surface';
 import { asArrows, asContours } from '../lib/fields';
-import { asOde, rateOf, through } from '../lib/ode';
+import { asOde, asSecond, asSystem, rateOf, through } from '../lib/ode';
 import { ActionButton, PickChips, SectionLabel, Toggle } from './ui';
 import { secondLine } from '../lib/dim';
 import { ground as groundOf, resolveGround } from '../lib/look';
@@ -110,21 +110,60 @@ export function Grapher() {
    * equation, which is the picture a textbook draws, and nothing about the
    * order they were typed in should change that.
    */
-  const starts = useMemo(
+  const said = useMemo(
     () =>
       read
         .filter((line, at) => line.kind === 'start' && lines[at].on)
         .map((line) => {
           if (line.kind !== 'start') return null;
-          const x = value(line.at, scope);
-          const y = value(line.value, scope);
-          const at = Array.isArray(x) ? (x[0] ?? NaN) : x;
-          const to = Array.isArray(y) ? (y[0] ?? NaN) : y;
-          return Number.isFinite(at) && Number.isFinite(to) ? { x: at, y: to } : null;
+          const one = (node: Parameters<typeof value>[0]) => {
+            const got = value(node, scope);
+            return Array.isArray(got) ? (got[0] ?? NaN) : got;
+          };
+          const at = one(line.at);
+          const to = one(line.value);
+          return Number.isFinite(at) && Number.isFinite(to)
+            ? { of: line.of, rate: line.rate, at, to }
+            : null;
         })
-        .filter((p): p is { x: number; y: number } => p !== null),
+        .filter((c): c is { of: 'x' | 'y'; rate: boolean; at: number; to: number } => c !== null),
     [read, lines, scope],
   );
+
+  /** `y(a) = b` — where a solution passes, which is a point on the picture. */
+  const starts = useMemo(
+    () => said.filter((c) => c.of === 'y' && !c.rate).map((c) => ({ x: c.at, y: c.to })),
+    [said],
+  );
+
+  /**
+   * The two halves of a system, where both are on the list.
+   *
+   * `x' = …` and `y' = …` together are one picture in the plane they share;
+   * either on its own is the ordinary first-order kind. Both have to be first
+   * order — a second-order equation paired with a first is not a system, it is
+   * two equations somebody is part-way through writing.
+   */
+  const pair = useMemo(() => {
+    const across = read.find((line, at) => line.kind === 'ode' && line.of === 'x' && line.order === 1 && lines[at].on);
+    const up = read.find((line, at) => line.kind === 'ode' && line.of === 'y' && line.order === 1 && lines[at].on);
+    return across && across.kind === 'ode' && up ? { dx: across.body } : null;
+  }, [read, lines]);
+
+  /** Where a system starts: `x(0) = a` and `y(0) = b`, or nothing and it fills the plane. */
+  const together = useMemo(() => {
+    const across = said.find((c) => c.of === 'x' && !c.rate);
+    const up = said.find((c) => c.of === 'y' && !c.rate);
+    return across && up ? [{ x: across.to, y: up.to }] : [];
+  }, [said]);
+
+  /** Where a second-order equation starts: the value and the rate, at the same x. */
+  const second = useMemo(() => {
+    const at = said.find((c) => c.of === 'y' && !c.rate);
+    const speed = said.find((c) => c.of === 'y' && c.rate);
+    if (!at) return [];
+    return [{ x: at.at, y: at.to, v: speed?.to ?? 0 }];
+  }, [said]);
 
   /*
    * The contour map, and the levels it was cut at.
@@ -148,6 +187,31 @@ export function Grapher() {
         .map(({ line, at }) => {
           const reading = read[at];
           if (reading.kind === 'ode') {
+            /*
+             * Three pictures wear the same notation, and what else is on the
+             * list decides which: an `x' =` beside a `y' =` is a system, drawn
+             * in the plane the two quantities share; `y'' =` is a second-order
+             * equation; a lone `y' =` is the slope field it has always been.
+             *
+             * The system is drawn by the `y' =` line of the pair so that it is
+             * drawn once — the `x' =` line is half of one picture, not a
+             * picture of its own, and it says so in the list.
+             */
+            if (pair) {
+              if (reading.of === 'x') return { id: line.id, colour: colours[at], drawn: { paths: [], points: [] } };
+              return {
+                id: line.id,
+                colour: colours[at],
+                drawn: asSystem(pair.dx, reading.body, together, scope, frame),
+              };
+            }
+            if (reading.order === 2) {
+              return {
+                id: line.id,
+                colour: colours[at],
+                drawn: asSecond(reading.body, second, scope, frame),
+              };
+            }
             return { id: line.id, colour: colours[at], drawn: asOde(reading.body, starts, scope, frame) };
           }
           if (reading.kind === 'field') {
@@ -164,7 +228,7 @@ export function Grapher() {
           }
           return { id: line.id, colour: colours[at], drawn: draw(reading, scope, frame, { ...DETAIL, turns }) };
         }),
-    [lines, read, scope, frame, colours, turns, view, flat, starts],
+    [lines, read, scope, frame, colours, turns, view, flat, starts, pair, together, second],
   );
 
   /** Whether anything on the list is drawn by turning or running, rather than across x. */
@@ -378,7 +442,10 @@ export function Grapher() {
         thing or as its contour lines. A pair with <code>x</code> or <code>y</code> in it is a field
         of arrows — <code>(y, -x)</code>, which is every phase diagram. And{' '}
         <code>{"y' = x + y"}</code> is a differential equation: the slope field, and the solution
-        through every <code>y(0) = 1</code> you write under it. It takes the same notation the Write
+        through every <code>y(0) = 1</code> you write under it. <code>{"y'' = -y"}</code> is a
+        second-order one, which wants a <code>{"y'(0) = 0"}</code> as well; an{' '}
+        <code>{"x' = …"}</code> beside a <code>{"y' = …"}</code> is a system, drawn as the path the
+        two make in the plane they share. It takes the same notation the Write
         tab draws, so a formula you kept can be pasted in as it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
@@ -437,6 +504,8 @@ function Row({
     // off is how you get the whole family back.
     reading.kind === 'start' ||
     reading.kind === 'surface';
+  /** Whether it puts ink of its own on the picture — see the swatch below. */
+  const inked = drawn && reading.kind !== 'start';
 
   return (
     <div
@@ -459,8 +528,16 @@ function Row({
             height: 22,
             flex: '0 0 auto',
             borderRadius: '50%',
-            border: `2px solid ${drawn ? colour : 'var(--app-line)'}`,
-            background: on && drawn ? colour : 'transparent',
+            /*
+             * Filled where the line has ink of its own on the picture.
+             *
+             * An initial condition switches on and off like anything else —
+             * turning it off gets the family back — but it draws nothing in
+             * its own colour, and a filled swatch would promise a curve
+             * somewhere on the picture that nobody can find.
+             */
+            border: `2px solid ${inked ? colour : 'var(--app-line)'}`,
+            background: on && inked ? colour : 'transparent',
           }}
         />
         <input

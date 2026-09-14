@@ -11,7 +11,9 @@ import { sources, withoutComments } from '../styles/rules';
  * opening paragraph: a panel grown until it is a second settings screen, at
  * which point there are two that disagree.
  *
- * `components/GoogleShell.tsx` had grown exactly that. It kept four
+ * `components/GoogleShell.tsx` had grown exactly that. (That shell has since
+ * been removed outright — `SIMPLIFY-AUDIT.md` E4 — but it is what this rule
+ * was written against, and the shape is what recurs.) It kept four
  * preferences of its own — the shortcut row's contents, whether that row is
  * drawn, light versus dark, and a recents list — in `localStorage` under
  * `semester.google.*`, behind a private `usePreference` hook. Each of the four
@@ -92,19 +94,17 @@ describe('a look preference lives in the look', () => {
   });
 
   /*
-   * The shell that had them. Named directly, because "no rival storage" would
-   * also pass if somebody simply deleted the controls rather than connecting
-   * them — and the controls are worth keeping. They have to write `setLook`.
+   * There was a second case here, naming `GoogleShell.tsx` directly and
+   * asserting its Customize panel wrote `setLook` — because "no rival
+   * storage" would also pass if somebody deleted the controls rather than
+   * connecting them, and those controls were worth keeping.
+   *
+   * The shell itself is gone now (`SIMPLIFY-AUDIT.md` E4, `workspace`
+   * survives), so the case went with it rather than being pointed at a file
+   * that is not there. What it was protecting is not lost: the rule above is
+   * the general one, and it reads every UI file rather than a named list, so
+   * the next panel to grow a private `semester.google.*` store is caught by
+   * the same assertion that caught this one — without anybody having to
+   * remember to add it here.
    */
-  it('is what the browser shell’s Customize panel writes', () => {
-    const shell = sources(SRC).find(({ path }) => path.endsWith('GoogleShell.tsx'));
-    expect(shell, 'the browser shell').toBeDefined();
-    const text = withoutComments(shell!.text);
-    expect(text, 'the shortcut row is a look key').toContain('look.shortcuts');
-    expect(text, 'pinning writes through the resolver').toContain('toggleFavourite(');
-    expect(text, 'the row is resolved against the registry').toContain('readFavourites(');
-    expect(text, 'light and dark is the app’s ground').toContain('resolveGround(');
-    expect(text, 'and every one of them goes through setLook').toContain("type: 'setLook'");
-    expect(text, 'no private preference hook').not.toMatch(/function usePreference/);
-  });
 });

@@ -30,7 +30,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const src = join(here, '..', 'src');
 const ledgerPath = join(src, 'styles', 'budget.ts');
 
-const { AXES, check, counts, countsByFile, multipliers, overBudget, owed, render, ALLOWED } =
+const { AXES, check, counts, countsByFile, cycles, multipliers, overBudget, owed, render, ALLOWED } =
   await import(join(src, 'styles', 'rules.ts'));
 
 if (process.argv.includes('--fix')) {
@@ -57,6 +57,7 @@ const { BUDGET } = await import(ledgerPath);
 
 const problems = [
   ...check(src),
+  ...cycles(src),
   ...multipliers(readFileSync(join(src, 'styles', 'app.css'), 'utf8')),
   ...overBudget(src, BUDGET),
 ];
@@ -65,8 +66,9 @@ if (problems.length === 0) {
   const now = counts(src);
   const kept = AXES.map((a) => `${a} ${now[a]}`).join(' · ');
   console.log(
-    `styles ok — every font size is on the scale; ${kept} still off it across ` +
-      `${Object.keys(BUDGET).length} files; ${ALLOWED.length} allowed exceptions`,
+    `styles ok — every font size is on the scale, no token is defined as itself; ` +
+      `${kept} still off it across ${Object.keys(BUDGET).length} files; ` +
+      `${ALLOWED.length} allowed exceptions`,
   );
   process.exit(0);
 }

@@ -454,10 +454,14 @@ export function NavPicker() {
   return (
     <Folding name="Appearance">
       <SectionLabel style={LABEL_STYLE}>Navigation</SectionLabel>
+      {/* Counted from the list rather than written out. It said five when
+          there were seven, and seven for the hour between a navigation being
+          added and one being removed — a number in prose beside the list it
+          is counting is a number that will be wrong. */}
       <div style={BLURB_STYLE}>
-        Five ways of moving through the same screens. Only one is ever on screen at a time, and
-        none of them hides anything — every screen is reachable in all five, and search finds
-        everything whichever you pick.
+        {NAVS.length} ways of moving through the same screens. Only one is ever on screen at a
+        time, and none of them hides anything — every screen is reachable in all {NAVS.length},
+        and search finds everything whichever you pick.
       </div>
       <Row>
         {NAVS.map((n) => (

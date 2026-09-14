@@ -449,24 +449,48 @@ export function forgetClosed(strip: Strip): Strip {
 }
 
 /**
+ * The tab you are on is never folded away.
+ *
+ * A strip whose current tab sits inside a collapsed group is a strip that
+ * draws nothing for the page filling the window — the run is its name and a
+ * count, and the tab it is counting is the one you are reading. That is not a
+ * fold, it is the strip losing track of where you are.
+ *
+ * It is easier to reach than it looks. Put the tab you are on into a group
+ * that is already folded, close a tab and land inside one, or read back a
+ * strip an older build wrote: none of those is `select`, and all three used to
+ * end here. So the rule is held about the strip rather than at each of the
+ * ways in — `tidy` runs it, and `tidy` is what every structural change goes
+ * through.
+ *
+ * `collapse` is the one operation that must not run it, and does not: folding
+ * the group you are working in moves you *out* first, which is the same rule
+ * answered the other way round.
+ *
+ * A strip that already holds comes back by reference, so this can sit on the
+ * paths that run on every navigation.
+ */
+function reveal(strip: Strip): Strip {
+  const held = strip.tabs[clamp(strip, strip.at)]?.group;
+  const shut = held ? strip.groups.find((g) => g.id === held && g.collapsed) : undefined;
+  if (!shut) return strip;
+  return {
+    ...strip,
+    groups: strip.groups.map((g) => (g.id === shut.id ? { ...g, collapsed: false } : g)),
+  };
+}
+
+/**
  * Go to a tab. Out-of-range is clamped rather than thrown: it is a click.
  *
- * A tab inside a collapsed group opens the group on the way. Nothing else can
- * happen: its page is about to be the whole window, and a strip claiming it is
- * folded away would be lying about where you are. This is also what makes the
- * keyboard and the restored-strip cases safe, where the landing is not a click
- * on something visible.
+ * A tab inside a collapsed group opens the group on the way — `reveal`, which
+ * is the same rule the rest of the strip is held to. Nothing else can happen:
+ * its page is about to be the whole window, and a strip claiming it is folded
+ * away would be lying about where you are.
  */
 export function select(strip: Strip, which: number): Strip {
   const at = clamp(strip, which);
-  const held = strip.tabs[at]?.group;
-  const shut = held ? strip.groups.find((g) => g.id === held && g.collapsed) : undefined;
-  if (!shut) return { ...strip, at };
-  return {
-    ...strip,
-    at,
-    groups: strip.groups.map((g) => (g.id === shut.id ? { ...g, collapsed: false } : g)),
-  };
+  return reveal(at === strip.at ? strip : { ...strip, at });
 }
 
 /**
@@ -586,7 +610,10 @@ export function tidy(strip: Strip): Strip {
     order.length === strip.tabs.length &&
     order.every((t, i) => t === strip.tabs[i]) &&
     at === strip.at;
-  return same ? strip : { ...strip, tabs: order, at, groups };
+  // And the third rule, which is about where you are standing rather than
+  // about the order: **the tab you are on is never folded away**. See
+  // `reveal`. Last, because it reads the strip as this function leaves it.
+  return reveal(same ? strip : { ...strip, tabs: order, at, groups });
 }
 
 /** The same tab, out of whatever group it was in. */
@@ -777,7 +804,8 @@ export function toneGroup(strip: Strip, id: string, tone: number): Strip {
  * right. A strip that is nothing but this one group has nowhere to move to
  * and gets a new tab, which is the same answer `close` gives for the same
  * reason: the app always has a page, and the page it invents is the search
- * page.
+ * page. Unless the strip is full, in which case the fold does not happen:
+ * there is no page to invent and no tab this may take instead.
  */
 export function collapse(strip: Strip, id: string, shut: boolean): Strip {
   const group = strip.groups.find((g) => g.id === id);
@@ -792,10 +820,18 @@ export function collapse(strip: Strip, id: string, shut: boolean): Strip {
     }
     return -1;
   };
-  const to = out(at + 1, 1) === -1 ? out(at - 1, -1) : out(at + 1, 1);
+  const right = out(at + 1, 1);
+  const to = right === -1 ? out(at - 1, -1) : right;
   if (to !== -1) return { ...strip, groups, at: to };
-  const room = strip.tabs.length < MAX_TABS ? strip.tabs : strip.tabs.slice(1);
-  return { ...strip, tabs: [...room, fresh()], at: room.length, groups };
+  /*
+   * Nowhere to stand, so the strip invents a page — and a full strip refuses
+   * instead, which is the answer `add` gives for the same reason. It used to
+   * drop the leftmost tab to make room here, which is deletion wearing the
+   * word "fold": the tab that went was a page somebody opened, and folding a
+   * group is not consent to lose one.
+   */
+  if (strip.tabs.length >= MAX_TABS) return strip;
+  return { ...strip, tabs: [...strip.tabs, fresh()], at: strip.tabs.length, groups };
 }
 
 /** Undo the grouping. The tabs stay open and stay where they are. */

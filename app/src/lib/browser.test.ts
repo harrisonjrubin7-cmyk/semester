@@ -441,6 +441,61 @@ describe('collapsing a group', () => {
     const shut = collapse(grouped(['home', 'calendar', 'study'], [0, 1], 2), 'g', true);
     expect(select(shut, 0).groups[0].collapsed).toBe(false);
   });
+
+  it('refuses rather than dropping somebody\u2019s tab to stand on', () => {
+    // The group is the whole strip and the strip is full, so there is nowhere
+    // to move to and no room for the new tab that would be invented. It used
+    // to take the leftmost tab to pay for one, which is deletion wearing the
+    // word "fold". See `collapse`.
+    const screens = Array.from({ length: MAX_TABS }, () => 'home' as Screen);
+    const whole = grouped(screens, screens.map((_, i) => i), 0);
+    const s = collapse(whole, 'g', true);
+    expect(s).toBe(whole);
+    expect(s.groups[0].collapsed).toBe(false);
+  });
+});
+
+/**
+ * The third invariant: the tab you are on is never folded away.
+ *
+ * Every one of these is a way into the same broken strip — a run drawn as a
+ * name and a count, where the thing being counted is the page filling the
+ * window. It was held in one of the two components that draw the strip and in
+ * neither of the four operations that can cause it. See `reveal`.
+ */
+describe('the tab you are on', () => {
+  it('opens the group it is put into, when that group was folded', () => {
+    const shut = collapse(grouped(['home', 'calendar', 'study'], [0], 2), 'g', true);
+    const s = joinGroup(shut, shut.at, 'g');
+    expect(current(s).screen).toBe('study');
+    expect(s.groups[0].collapsed).toBe(false);
+  });
+
+  it('is not folded away by a tab closing beside it', () => {
+    const shut = collapse(grouped(['home', 'calendar', 'study', 'mine'], [1, 2], 0), 'g', true);
+    const s = close(shut, 0);
+    expect(s.groups[0].collapsed).toBe(false);
+  });
+
+  it('comes back visible from a store that folded it away', () => {
+    const raw = JSON.stringify({
+      tabs: [
+        { id: 'a', screen: 'home', title: 'home', place: justGo('home'), group: 'g' },
+        { id: 'b', screen: 'study', title: 'study', place: justGo('study') },
+      ],
+      at: 0,
+      groups: [{ id: 'g', name: 'Essay', tone: 0, collapsed: true }],
+    });
+    const s = load(raw, known);
+    expect(current(s).screen).toBe('home');
+    expect(s.groups[0].collapsed).toBe(false);
+  });
+
+  it('leaves a folded group you are not standing in folded', () => {
+    const shut = collapse(grouped(['home', 'calendar', 'study'], [0, 1], 2), 'g', true);
+    expect(tidy(shut).groups[0].collapsed).toBe(true);
+    expect(tidy(shut)).toBe(shut);
+  });
 });
 
 describe('the strip as it is drawn', () => {

@@ -465,8 +465,13 @@ function Transcript({ rows }: { rows?: Taken[] }) {
           Taking it now
         </button>
       </div>
+      {/* Off until there is a code to record. `add` opens with
+          `if (!code.trim()) return`, which left this pressable and silent —
+          the same `disabled` Mine and Maps already put on their own. */}
       <ActionButton
         onClick={add}
+        disabled={!code.trim()}
+        title={code.trim() ? undefined : 'Enter the course code first'}
         spacing="0.09em"
         style={{ marginTop: 'var(--sp-6)' }}
       >
@@ -600,8 +605,13 @@ function Rules() {
           lineHeight: 'var(--leading-relaxed)',
         }}
       />
+      {/* And the same, for the two this one guards on. */}
       <ActionButton
         onClick={add}
+        disabled={!programme.trim() || !name.trim()}
+        title={
+          programme.trim() && name.trim() ? undefined : 'Name the programme and the requirement first'
+        }
         spacing="0.09em"
         style={{ marginTop: 'var(--sp-5)' }}
       >
