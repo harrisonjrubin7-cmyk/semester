@@ -32,9 +32,15 @@ import { describe, expect, it } from 'vitest';
  * after the last test. Unmounting in a `beforeEach` does not count, which is
  * exactly the shape five of the seven had.
  *
- * It reads source rather than running anything, so it is a heuristic: a file
- * could satisfy it and still leak, by unmounting one root and not another. It
- * is the cheap check that catches the shape that actually happened, not a
+ * It reads source rather than running anything, so it is a heuristic and wrong
+ * in both directions. A file can satisfy it and still leak, by unmounting one
+ * root and not another. And a file can be flagged while leaking nothing:
+ * `screens/call/leaving.test.tsx` unmounts inside both its tests, because
+ * unmounting is the thing it is testing. The answer there was to add the hook
+ * anyway rather than to loosen this — unmounting twice is a no-op, so it costs
+ * nothing, and it is the third test somebody adds that would have leaked.
+ *
+ * It is the cheap check that catches the shape that actually happened, not a
  * proof. `lib/prefers.test.tsx` is the file to copy when a helper hands roots
  * out — it collects them and takes them all down.
  */

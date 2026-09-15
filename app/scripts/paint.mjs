@@ -19,6 +19,19 @@
  * of a screenshot, not computed from a stylesheet. Whatever a component did to
  * arrive at that colour, this sees the colour.
  *
+ * ## And the other half, which is `scripts/contrast-sweep.mjs`
+ *
+ * That one composites the style tree instead of reading the screen, and the
+ * two are halves rather than copies. It walks all six navigations at two
+ * widths and forces hover and focus, which this does not; it returns null for
+ * anything painted over a gradient, deliberately, because `backgroundColor`
+ * reads transparent there and unknown beats wrong — a hundred and thirty-two
+ * elements on one pass of one navigation. Gradients and `background-clip:
+ * text` are exactly what a screenshot can answer, which is why this exists.
+ *
+ * Run both. Where they disagree, one of them is wrong, and finding out which
+ * is how the `color()` branch in the parser below got written.
+ *
  * ## Running it
  *
  *   npm run build && node scripts/paint.mjs
@@ -212,8 +225,25 @@ const UNPAINT = '[data-paint-clip]{background:none!important}';
  * the home screen re-renders on a clock tick.
  */
 const COLLECT = `(() => {
-  const px = (c) => { const m = String(c).match(/-?[\\d.]+/g) || [];
-    return { r: +m[0] || 0, g: +m[1] || 0, b: +m[2] || 0, a: m.length > 3 ? +m[3] : 1 }; };
+  const px = (c) => {
+    const s = String(c);
+    const m = s.match(/-?[\\d.]+/g) || [];
+    /*
+     * A colour written in color() notation is on a nought-to-one scale.
+     *
+     * Chromium resolves color-mix() to color(srgb 0.575294 0.589804 0.614902),
+     * and this read those three as if they were channels out of 255 — a light
+     * grey came back as rgb(1,1,1). It invents a failure where the text is
+     * light on a dark surface and hides one where it is dark on a light one,
+     * which is the direction that matters: Industry restates twenty rules in
+     * color-mix, and a mid-grey misread as near-black on a white panel reads
+     * as eighteen to one. scripts/contrast-audit.js has had this branch since
+     * it was written; this is the same branch.
+     */
+    const unit = s.startsWith('color(') ? 255 : 1;
+    return { r: (+m[0] || 0) * unit, g: (+m[1] || 0) * unit, b: (+m[2] || 0) * unit,
+      a: m.length > 3 ? +m[3] : 1 };
+  };
   const clipsText = (cs) => cs.webkitBackgroundClip === 'text' || cs.backgroundClip === 'text';
   window.__paint = [];
   const meta = [];
@@ -301,8 +331,15 @@ const SAMPLE = `(spec) => {
     const lum = (r, g, b) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
     const ratio = (a, b) => { const L1 = lum(a[0], a[1], a[2]), L2 = lum(b[0], b[1], b[2]);
       return (Math.max(L1, L2) + 0.05) / (Math.min(L1, L2) + 0.05); };
-    const parse = (s) => { const m = String(s).match(/-?[\\d.]+/g) || [];
-      return { r: +m[0] || 0, g: +m[1] || 0, b: +m[2] || 0, a: m.length > 3 ? +m[3] : 1 }; };
+    // color() notation is on a nought-to-one scale — see the note beside the
+    // same branch in COLLECT above.
+    const parse = (s) => {
+      const t = String(s);
+      const m = t.match(/-?[\\d.]+/g) || [];
+      const unit = t.startsWith('color(') ? 255 : 1;
+      return { r: (+m[0] || 0) * unit, g: (+m[1] || 0) * unit, b: (+m[2] || 0) * unit,
+        a: m.length > 3 ? +m[3] : 1 };
+    };
     const out = [];
     for (const it of items) {
       const need = it.large ? ${AA_LARGE} : ${AA_TEXT};

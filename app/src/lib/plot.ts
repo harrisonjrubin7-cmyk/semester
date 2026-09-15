@@ -56,6 +56,7 @@ import {
 } from './discrete';
 import { averageFrequency, envelope, loudestMoment } from './hilbert';
 import { banded, bandRange, bestBasis, shares as bandShares, takes } from './packet';
+import { bestOrder, fractionalOf, gathering, MOST as TURNABLE, sizesOf } from './fractional';
 import {
   D4,
   HAAR,
@@ -253,6 +254,18 @@ export type Line =
    * every level and separates the fast ones too. See `lib/packet.ts`.
    */
   | { kind: 'packet'; body: Node; rest: Node[]; filter: Filter }
+  /**
+   * `frft([…], 0.5)` — the spectrum, part of the way there.
+   *
+   * A chirp is smeared across every bin of an ordinary spectrum, because every
+   * frequency is in it for a moment and none of them for long. Turn the plane
+   * that has time on one axis and frequency on the other, and at the right
+   * angle the chirp lines up and collapses into a single spike — the way a
+   * plain wobble does in an ordinary spectrum, which is that same turn at
+   * order 1. Drawn as stems, like any spectrum of data. See
+   * `lib/fractional.ts`.
+   */
+  | { kind: 'fractional'; body: Node; rest: Node[] }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -336,6 +349,9 @@ const WAVELETS: Record<string, Filter> = {
   db: D4,
   daubechies: D4,
 };
+
+/** `frft([…], 0.5)`: the transform turned part of the way rather than all of it. */
+const FRACTIONAL = new Set(['frft', 'fractional', 'fracfourier']);
 
 /** `packet([…], 3)` and `dbpacket([…], 3)`: the whole tree rather than one branch of it. */
 const PACKETS: Record<string, Filter> = {
@@ -487,6 +503,15 @@ export function readLine(source: string): Line {
       }
       return { kind: 'envelope', body: call.args[0], count: call.args[1] ?? null };
     }
+    if ((call.kind === 'apply' || call.kind === 'call') && FRACTIONAL.has(call.name)) {
+      if (call.args.length < 1 || call.args.length > 3) {
+        return {
+          kind: 'fault',
+          says: 'A fractional transform wants the data: frft([…], 0.5), or a formula, how many samples, and which order.',
+        };
+      }
+      return { kind: 'fractional', body: call.args[0], rest: call.args.slice(1) };
+    }
     if ((call.kind === 'apply' || call.kind === 'call') && PACKETS[call.name]) {
       if (call.args.length < 1 || call.args.length > 3) {
         return { kind: 'fault', says: 'A packet transform wants the data: packet([…], 3), or a formula, how many samples, and how many splits.' };
@@ -636,6 +661,10 @@ export function missing(line: Line, scope: Scope): string[] {
       return [...free(line.body, scope), ...line.rest.flatMap((r) => free(r, scope))].filter(
         (n) => n !== BEAT && !table(n),
       );
+    case 'fractional':
+      return [...free(line.body, scope), ...line.rest.flatMap((r) => free(r, scope))].filter(
+        (n) => n !== BEAT && !table(n),
+      );
     case 'wavelet':
       return [...free(line.body, scope), ...line.rest.flatMap((r) => free(r, scope))].filter(
         (n) => n !== BEAT && !table(n),
@@ -686,6 +715,28 @@ export function missing(line: Line, scope: Scope): string[] {
  * beside it are the same piece of arithmetic and a picture that disagreed with
  * the reading over it would be the worst of the three outcomes.
  */
+/**
+ * What a fractional transform found, said in a sentence.
+ *
+ * The whole point is which order gathers the run, so that is what the reading
+ * leads on — but only calling it a chirp when it is one. A plain wobble
+ * gathers best at the ordinary spectrum, and telling somebody their sine wave
+ * is a chirp sweeping at order 1 would be a reading that sounds like an answer
+ * and is not.
+ */
+function verdict(best: { order: number; gathered: number }, plainly: number, top: number, most: number): string {
+  if (!(most > 1e-9)) return 'This run is empty, so there is nothing to turn.';
+  const share = Math.round(best.gathered * 100);
+  const where = `Biggest at k = ${top}.`;
+  // Order 3 is order 1 seen from the other side — the same ordinary spectrum,
+  // read backwards — so both count as "not a chirp".
+  const plain = Math.min(Math.abs(best.order - 1), Math.abs(best.order - 3)) < 0.05;
+  if (plain) {
+    return `${where} Nothing gathers it better than the ordinary spectrum does, which holds ${share}% of it in one place — so this is a wobble at a fixed frequency rather than a chirp.`;
+  }
+  return `${where} It gathers best at order ${Number(best.order.toPrecision(3))}, which holds ${share}% of it in one place against the ordinary spectrum's ${Math.round(plainly * 100)}% — so this is a chirp, and that order is the sweep it is sweeping at.`;
+}
+
 export function answered(
   line: Line,
   scope: Scope,
@@ -827,6 +878,47 @@ export function answered(
         share[top] > 0
           ? `Band ${top} holds the most — ${Math.round(share[top] * 100)}% — which is ${tidy(range.from)} to ${tidy(range.to)} cycles a sample. The most compact description of this run uses ${basis.length} ${basis.length === 1 ? 'band' : 'bands'} rather than ${bands.length}, which is the one thing a tree can say that a single split cannot.`
           : 'This run never moves, so every band is empty.',
+    };
+  }
+  if (line.kind === 'fractional') {
+    /*
+     * The same argument rule `wavelet` and `packet` read by: a list needs no
+     * count, so what follows it is the order; a formula needs one, so the
+     * count comes first and the order third.
+     */
+    const listed = value(line.body, scope);
+    const asList = Array.isArray(listed);
+    const countNode = asList ? null : (line.rest[0] ?? null);
+    const orderNode = asList ? (line.rest[0] ?? null) : (line.rest[1] ?? null);
+    const xs = samplesOf(line.body, countNode, scope);
+    if (!xs.ok) return { says: xs.fault };
+    if (xs.it.length > TURNABLE) {
+      return {
+        says: `Turning the plane wants every eigenvector of the run, which costs a cube of the count — ${TURNABLE} samples is as many as this does at once, and there are ${xs.it.length}.`,
+      };
+    }
+    /*
+     * The best order is worked out whether or not one was asked for.
+     *
+     * Asked for, it is what the note reports the run against; not asked for,
+     * it is the order drawn — because "which order lines this up" is the
+     * question the whole transform exists to answer, and defaulting to 1 would
+     * just draw `dft` again under a longer name.
+     */
+    const best = bestOrder(xs.it);
+    const asked = orderNode ? value(orderNode, scope) : best.order;
+    const order = Array.isArray(asked) || !Number.isFinite(asked) ? best.order : asked;
+    const sizes = sizesOf(fractionalOf(xs.it, order));
+    const most = Math.max(...sizes);
+    const top = sizes.indexOf(most);
+    const tidy = (v: number) => Number(v.toPrecision(3));
+    return {
+      lead: `${xs.it.length} samples, turned ${tidy(order)} of the way round:`,
+      latex: '',
+      over: 'k',
+      at: (k: number) => sizes[Math.round(k)] ?? NaN,
+      upto: sizes.length - 1,
+      note: verdict(best, gathering(fractionalOf(xs.it, 1)), top, most),
     };
   }
   if (line.kind === 'wavelet') {
@@ -1258,6 +1350,7 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
       return { paths: step.length ? [step] : [], points };
     }
     case 'packet':
+    case 'fractional':
     case 'bins':
     case 'sequence': {
       const got = answered(line, scope);
@@ -1741,6 +1834,13 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'Two fast wobbles, told apart',
     says: 'A packet tree: bands of equal width, so a fast thing is placed as finely as a slow one.',
     lines: ['packet(\\cos(2\\pi 0.3 n) + \\cos(2\\pi 0.45 n), 32, 3)'],
+  },
+  {
+    name: 'A wobble that speeds up',
+    says: 'A fractional transform: turn the plane until a chirp lines up, and the order that does it is the sweep.',
+    // A chirp rather than a plain wobble, because a plain wobble is already a
+    // spike at order 1 and there would be nothing to see in turning further.
+    lines: ['frft(\\cos(0.014 n^2), 32)'],
   },
   {
     name: 'A flow',

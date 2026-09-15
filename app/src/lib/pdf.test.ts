@@ -78,6 +78,22 @@ describe('the one byte WinAnsi has', () => {
     expect(winAnsi('○ sub')).toBe('o sub');
   });
 
+  /*
+   * Found by printing a study guide rather than by reading this file. These
+   * ten are what the four shipped courses actually contain, and every one of
+   * them used to come out as a space — so ECON's one elasticity formula
+   * printed as `= [(Q −Q ) ÷ …]`: not mangled, which somebody would notice,
+   * but silently short a variable.
+   */
+  it('spells out the maths a course guide is written in', () => {
+    expect(winAnsi('ε = [(Q₂−Q₁) ÷ ((Q₁+Q₂)/2)]')).toBe('epsilon = [(Q2-Q1) ÷ ((Q1+Q2)/2)]');
+    expect(winAnsi('%ΔQ ÷ %ΔP')).toBe('%deltaQ ÷ %deltaP');
+    expect(winAnsi('play → ritual → sport')).toBe('play -> ritual -> sport');
+    expect(winAnsi('≈ 1 ÷ √n')).toBe('~ 1 ÷ sqrtn');
+    expect(winAnsi('p ≠ 0, p ≤ .05, p ≥ .05')).toBe('p != 0, p <= .05, p >= .05');
+    expect(winAnsi('Σ and π')).toBe('sum and pi');
+  });
+
   it('leaves a space rather than a box for anything else', () => {
     expect(winAnsi('a中b')).toBe('a b');
   });
@@ -195,6 +211,84 @@ describe('laying the document onto pages', () => {
         expect(drawing.y + drawing.height).toBeLessThanOrEqual(frame.height - frame.margin + 0.001);
       }
     }
+  });
+
+  /*
+   * The other half of what `spend` is for. A row is never cut in two; a
+   * heading is never left alone at the foot of a page either, and neither is
+   * a table's `Question | Answer` strip with its first answer overleaf —
+   * which is what printing a fourteen-unit study guide put on page nine.
+   */
+  it('never leaves a heading alone at the foot of a page', () => {
+    const last = (page: (typeof pages)[number]) => {
+      const drawn = page.drawings.filter((d) => d.at === 'text');
+      const line = drawn[drawn.length - 1];
+      return line && line.at === 'text' ? line.pieces.map((x) => x.text).join('') : '';
+    };
+    const blocks: Block[] = [];
+    for (let i = 0; i < 40; i += 1) {
+      blocks.push({ kind: 'heading', level: 2, text: `Section ${i + 1}` });
+      blocks.push({ kind: 'text', text: `Body ${i + 1}. `.repeat(12) });
+    }
+    const { pages } = laid(doc(blocks));
+    expect(pages.length).toBeGreaterThan(3);
+    for (const page of pages) expect(last(page), 'last line on a page').not.toMatch(/^Section \d+$/);
+  });
+
+  /*
+   * The same rule where reserving a fixed amount under the heading would get
+   * it wrong: a table's first row is far taller than a line of prose, and a
+   * study guide is a heading over a table the whole way down. So the heading
+   * is carried across after the fact rather than measured for in advance.
+   */
+  it('carries a heading across rather than stranding it over a table', () => {
+    const rows = [
+      ['Question', 'Answer'],
+      ...Array.from({ length: 8 }, (_, i) => [`Q${i + 1}`, 'An answer long enough to take three or four lines in a narrow column of a printed page']),
+    ];
+    let checked = 0;
+    for (let filler = 1; filler < 40; filler += 1) {
+      const blocks: Block[] = Array.from({ length: filler }, (_, i) => ({
+        kind: 'text' as const,
+        text: `Filler ${i}. `.repeat(10),
+      }));
+      blocks.push({ kind: 'heading', level: 2, text: 'A unit heading' });
+      blocks.push({ kind: 'table', rows, header: true, caption: '' });
+      for (const [i, page] of laid(doc(blocks)).pages.entries()) {
+        const words = page.drawings
+          .filter((d) => d.at === 'text')
+          .flatMap((d) => (d.at === 'text' ? d.pieces.map((x) => x.text) : []));
+        if (!words.includes('A unit heading')) continue;
+        checked += 1;
+        expect(words, `filler ${filler}, page ${i + 1}`).toContain('Question');
+      }
+    }
+    expect(checked).toBe(39);
+  });
+
+  it('never leaves a table’s header row alone at the foot of a page', () => {
+    const rows = [
+      ['Question', 'Answer'],
+      ...Array.from({ length: 10 }, (_, i) => [`Q${i + 1}`, 'An answer with a few words in it']),
+    ];
+    let seen = 0;
+    for (let filler = 1; filler < 40; filler += 1) {
+      const blocks: Block[] = Array.from({ length: filler }, (_, i) => ({
+        kind: 'text' as const,
+        text: `Filler ${i}. `.repeat(10),
+      }));
+      blocks.push({ kind: 'table', rows, header: true, caption: '' });
+      for (const [i, page] of laid(doc(blocks)).pages.entries()) {
+        const words = page.drawings
+          .filter((d) => d.at === 'text')
+          .flatMap((d) => (d.at === 'text' ? d.pieces.map((x) => x.text) : []));
+        if (!words.includes('Question')) continue;
+        seen += 1;
+        expect(words.some((w) => /^Q\d+$/.test(w)), `filler ${filler}, page ${i + 1}`).toBe(true);
+      }
+    }
+    // The guard against the assertion above never running at all.
+    expect(seen).toBe(39);
   });
 
   it('numbers every page when the layout asks for numbers', () => {

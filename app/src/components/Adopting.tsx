@@ -56,7 +56,7 @@ export function Adopting({
    * stopped from *showing* beside a dialog that says `aria-modal`, and Tab
    * could still walk into them.
    */
-  const modal = useModal<HTMLDivElement>();
+  const { ref: modalRef, onKeyDown } = useModal<HTMLDivElement>();
   const wide = useMedia(DESKTOP);
   const list = options(sides);
 
@@ -71,8 +71,8 @@ export function Adopting({
       role="dialog"
       aria-modal="true"
       aria-label="Which copy to keep"
-      ref={modal.ref}
-      onKeyDown={modal.onKeyDown}
+      ref={modalRef}
+      onKeyDown={onKeyDown}
       tabIndex={-1}
       style={{
         /*

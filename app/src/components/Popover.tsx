@@ -97,8 +97,7 @@ export function Popover({
   onClose: () => void;
   children: ReactNode;
 }) {
-  const modal = useModal<HTMLDivElement>({ onClose });
-  const box = modal.ref;
+  const { ref: box, onKeyDown } = useModal<HTMLDivElement>({ onClose });
   /*
    * Where it actually opens, once its height is known.
    *
@@ -147,7 +146,7 @@ export function Popover({
       role="dialog"
       aria-modal="false"
       aria-label={label}
-      onKeyDown={modal.onKeyDown}
+      onKeyDown={onKeyDown}
       style={{
         position: 'fixed',
         left: Math.max(EDGE, Math.min(corner.x, window.innerWidth - width - EDGE)),
