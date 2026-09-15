@@ -205,8 +205,8 @@ internal consistency is what makes these worth shipping.
   certainly *includes* 15–17 December. That is a lower bound, not the period,
   and writing it as the period would understate it for anybody whose exam
   falls outside.
-- **Four of the six registrar deadlines.** See below: three were later
-  written, three were not.
+- **Four of the six registrar deadlines.** See below: four were later
+  written, two were refused on evidence.
 
 The earlier fragment quoted below — exams and reading days 5–13 December,
 from a graduate calendar — is now positively **contradicted** by PSCI 1104's
@@ -222,6 +222,7 @@ search-index evidence as the meal plans:
 | Open enrollment ends | Fri 4 Sep 2026 | `add-deadline` |
 | Last day to drop without a W | Fri 4 Sep 2026 | `drop-clean` |
 | Last day to withdraw from a course | Fri 30 Oct 2026 | `withdraw` |
+| Last day to change to pass/fail | Fri 30 Oct 2026 | `passfail` |
 
 **The label on the first one is the whole point of this entry.** The source's
 own phrase for 4 September is *"add/drop deadline"* — and `HINTS` in
@@ -270,13 +271,48 @@ close equals drop-without-record — is well supported, from two of the
 university's own pages. The **date** itself, 4 September, rests on the same
 search-index evidence as before and is no stronger for this finding.
 
-### Three still missing
+### 30 October carries two meanings as well
 
-`passfail`, `registration` and `grades`. A partly-filled door is a hazard of
-its own — a student who sees deadlines listed under "What Vanderbilt
-publishes" may reasonably infer the list is complete. It is not. A test
-asserts these three stay absent, so a future edit that adds them has to do so
-deliberately, ideally with the registrar's page in hand.
+The same shape as 4 September, and again it is a policy rather than a date
+that settles it:
+
+> Students may elect the pass/fail option or change a course from pass/fail
+> to graded status **until the deadline for withdrawal for each term.**
+
+Corroborated across the Enrollment Bulletin's Pass/Fail page and the College
+of Arts and Science's own pass/fail policy. So `passfail` is not a date of its
+own at this university: it is the withdrawal date, and 30 October now carries
+both landmarks for the same reason 4 September carries two.
+
+### Two refusals, each with a reason
+
+`registration` and `grades` stay empty, and not for want of a candidate date.
+Each had one, and each was rejected on evidence:
+
+- **Registration.** The only date found is Friday 13 November 2026 — and it is
+  when Spring 2027 registration *windows close*. The landmark is "Registration
+  opens for next term", whose cost line reads "Assigned by hour, and the
+  sections you need go in the first morning". Filing a closing date there
+  would tell a student registration opens on the day it actually shuts, and
+  every label containing the word "registration" resolves to that landmark, so
+  there is no safe wording for it either.
+- **Grades.** The only date found is 15 December, as a "final grading due
+  date" — and the syllabi in `project/uploads` contradict it outright. ECON
+  1020 sits a final exam slot **on** 15 December and another on the 16th, and
+  PSCI 1104's final is the 17th. Grades cannot be due before the exams are
+  sat, so whatever that date belongs to, it is not Fall 2026 undergraduate
+  grading.
+
+That second one is the third time primary sources in this repository have
+caught a search result that looked fine: first the graduate calendar's
+5–13 December exam window, then the "add/drop deadline" wording that resolved
+to the wrong landmark, now this.
+
+A partly-filled door remains a hazard of its own — a student who sees
+deadlines listed under "What Vanderbilt publishes" may reasonably infer the
+list is complete. It is not. A test asserts both stay absent and records the
+reasoning, so a future edit that adds them has to do so deliberately, ideally
+with the registrar's page in hand.
 
 ### Meal plan tiers: the counts and the Meal Money, at the owner's direction
 

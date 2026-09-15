@@ -19,11 +19,23 @@ describe('Vanderbilt, Fall 2026', () => {
     expect(term?.termName).toBe('Fall 2026');
   });
 
-  it('carries the three registrar deadlines that could be sourced', () => {
+  it('carries the four registrar deadlines that could be sourced', () => {
     expect(term?.deadlines).toEqual([
       { label: 'Open enrollment ends', on: '2026-09-04' },
       { label: 'Last day to drop without a W', on: '2026-09-04' },
       { label: 'Last day to withdraw from a course', on: '2026-10-30' },
+      { label: 'Last day to change to pass/fail', on: '2026-10-30' },
+    ]);
+  });
+
+  it('gives 30 October both of the meanings it carries', () => {
+    // Vanderbilt's own policy, corroborated across the Enrollment Bulletin
+    // and Arts and Science: pass/fail may be elected, or reversed, "until the
+    // deadline for withdrawal for each term". So it is not a date of its own.
+    const rows = fromCalendar(term!);
+    expect(rows.filter((r) => r.iso === '2026-10-30').map((r) => r.id)).toEqual([
+      'withdraw',
+      'passfail',
     ]);
   });
 
@@ -50,11 +62,18 @@ describe('Vanderbilt, Fall 2026', () => {
     expect(rows.find((r) => r.iso === '2026-10-30')?.id).toBe('withdraw');
   });
 
-  it('still has nothing for pass/fail, registration or grades', () => {
-    // Deliberately absent. A future edit filling these should come with the
-    // registrar's own page rather than a search result.
+  it('still has nothing for registration or grades, and both refusals are reasoned', () => {
+    // Registration: the only date found — Fri 13 Nov 2026 — is when Spring
+    // 2027 registration *windows close*. The landmark is "Registration opens
+    // for next term", whose cost line is "the sections you need go in the
+    // first morning". Filing a closing date there would tell a student
+    // registration opens on the day it actually shuts.
+    //
+    // Grades: the only date found — 15 December — is contradicted by the
+    // syllabi in project/uploads. ECON 1020 sits a final exam slot ON 15
+    // December and another on the 16th, and PSCI 1104's final is the 17th.
+    // Grades cannot be due before the exams are sat.
     const labels = (term?.deadlines ?? []).map((d) => d.label.toLowerCase());
-    expect(labels.some((l) => /pass|fail|audit/.test(l))).toBe(false);
     expect(labels.some((l) => /registration/.test(l))).toBe(false);
     expect(labels.some((l) => /grade/.test(l))).toBe(false);
   });
@@ -84,7 +103,7 @@ describe('Vanderbilt, Fall 2026', () => {
     ]);
   });
 
-  it('proposes the term start, both breaks and all three deadlines', () => {
+  it('proposes the term start, both breaks and all four deadlines', () => {
     const rows = fromCalendar(term!);
     expect(rows.map((r) => [r.id, r.iso, r.until])).toEqual([
       ['classes-begin', '2026-08-26', ''],
@@ -96,6 +115,7 @@ describe('Vanderbilt, Fall 2026', () => {
       ['add-deadline', '2026-09-04', ''],
       ['drop-clean', '2026-09-04', ''],
       ['withdraw', '2026-10-30', ''],
+      ['passfail', '2026-10-30', ''],
     ]);
   });
 
