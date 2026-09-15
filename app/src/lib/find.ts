@@ -236,6 +236,13 @@ function score(q: string, name: string, body = '', spelling = name): number {
  * that kind of content unsearchable.
  */
 function textOfBlock(b: Block): string {
+  // The notes in the margin are words somebody wrote, and "where did I say to
+  // check that citation" is exactly the question search is for.
+  const notes = b.notes?.length ? ` ${b.notes.map((n) => n.text).join(' ')}` : '';
+  return `${bodyOfBlock(b)}${notes}`;
+}
+
+function bodyOfBlock(b: Block): string {
   switch (b.kind) {
     case 'heading':
     case 'text':

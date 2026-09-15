@@ -621,6 +621,17 @@ model in it or needs a key:
   written before this still work: an item that is a bare string is read as a
   line at the left margin, which is what it always was.
 
+  A **note in the margin** goes against a block — press ✎ on its card, write
+  it, and it sits out beside that block on the page. Tick it when you have
+  dealt with it and it stays, struck through, because the reason to tick
+  rather than delete is to be able to see you dealt with it. Notes never
+  print, and they are not part of the word count. Against a block rather than
+  against a run of words you select, which is what Word does: a block here is
+  edited as one text box, so an offset into it would be wrong the moment you
+  typed in front of it. Against the block, a note follows it when you move it.
+  They go out as real Word comments — resolved ones still resolved — and a
+  Word file's comments come back in the same way.
+
   A **Word file opens here.** Insert → *Notes, Markdown or a Word file…* takes
   a `.docx` and reads it in as blocks: headings, nested lists, checklists,
   tables, quotations, code, page breaks, dividers, pictures, alignment, and
