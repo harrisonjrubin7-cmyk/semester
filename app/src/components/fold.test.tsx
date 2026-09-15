@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { ReactNode } from 'react';
@@ -55,16 +55,35 @@ function tap(said: string) {
 beforeEach(() => {
   localStorage.clear();
   forgetFolds();
-  // Unmounted, not just dropped: a section registers itself while it is on
-  // screen, and a root left mounted goes on counting towards the next test's
-  // "how many sections are here".
-  if (root) act(() => root.unmount());
-  host?.remove();
   host = document.createElement('div');
   document.body.append(host);
   act(() => {
     root = createRoot(host);
   });
+});
+
+/*
+ * The last test's root, which nothing else was going to take down.
+ *
+ * Tearing down in `beforeEach` takes down every root but the final one: that
+ * one is still mounted when the file ends, and under `isolate: false` the file
+ * ending is not the run ending. React goes on holding it, and work scheduled
+ * on it fires after the environment has gone — the unhandled `ReferenceError:
+ * window is not defined` out of `react-dom` that `screens/deadends.test.tsx`
+ * was fixed for, which lands on whichever file happens to be running.
+ *
+ * Unmounted, not just dropped, and that reasoning moves here from the
+ * `beforeEach` it used to sit in: a section registers itself while it is on
+ * screen, so a root left mounted goes on counting towards the next test's
+ * "how many sections are here". Doing it on the way out rather than on the
+ * way in answers that and the leak with one line.
+ *
+ * Measured before the change: a live root with 1.8 KB of rendered tree still
+ * attached at the end of this file.
+ */
+afterEach(() => {
+  act(() => root.unmount());
+  host.remove();
 });
 
 describe('a screen’s sections', () => {

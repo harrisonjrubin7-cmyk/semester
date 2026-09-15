@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { TabFind } from './TabFind';
@@ -94,13 +94,29 @@ beforeEach(() => {
   localStorage.clear();
   forgetStrip();
   forgetSound();
-  if (root) act(() => root.unmount());
-  host?.remove();
   host = document.createElement('div');
   document.body.append(host);
   act(() => {
     root = createRoot(host);
   });
+});
+
+/*
+ * The last test's root, which nothing else was going to take down.
+ *
+ * Tearing down in `beforeEach` takes down every root but the final one: that
+ * one is still mounted when the file ends, and under `isolate: false` the file
+ * ending is not the run ending. React goes on holding it, and work scheduled
+ * on it fires after the environment has gone — the unhandled `ReferenceError:
+ * window is not defined` out of `react-dom` that `screens/deadends.test.tsx`
+ * was fixed for, which lands on whichever file happens to be running.
+ *
+ * Measured before the change: a live root with 5.7 KB of rendered tree
+ * still attached at the end of this file.
+ */
+afterEach(() => {
+  act(() => root.unmount());
+  host.remove();
 });
 
 describe('the tab list, on sound', () => {

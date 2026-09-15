@@ -55,16 +55,43 @@ function fakeMedia(matches: Record<string, boolean>) {
   };
 }
 
+/*
+ * Every probe this file mounts, so they can be taken down again.
+ *
+ * One test below unmounts its own root, because the unsubscribing is what it
+ * is asserting. The other seven had no reason to, and nothing else was doing
+ * it: measured before this list existed, seven live roots were still attached
+ * to the body when the file ended.
+ *
+ * That is the leak `screens/deadends.test.tsx` was fixed for, and it bites
+ * harder here. These probes subscribe to `matchMedia`, and the fake this file
+ * stubs in counts its listeners — so a probe left mounted from an earlier
+ * test is still a listener, and `vi.unstubAllGlobals()` takes the fake away
+ * from underneath it rather than unsubscribing it. Under `isolate: false` the
+ * survivors outlive the file, where React schedules work on them after the
+ * environment has gone.
+ */
+const mounted: Root[] = [];
+
 function mount(hook: () => boolean): { root: Root; said: () => string | null; host: HTMLElement } {
   const host = document.createElement('div');
   document.body.appendChild(host);
   const root = createRoot(host);
+  mounted.push(root);
   const Probe = () => <span data-said={String(hook())} />;
   act(() => root.render(<Probe />));
   return { root, host, said: () => host.querySelector('span')?.getAttribute('data-said') ?? null };
 }
 
+/** Taken down before the globals go, so a probe unsubscribes from the real fake. */
+function drop(root: Root): void {
+  const at = mounted.indexOf(root);
+  if (at >= 0) mounted.splice(at, 1);
+  act(() => root.unmount());
+}
+
 afterEach(() => {
+  while (mounted.length) drop(mounted[0]);
   vi.unstubAllGlobals();
 });
 
@@ -135,7 +162,7 @@ describe('when it can', () => {
     const probe = mount(usePrefersDark);
     expect(media.counted('(prefers-color-scheme: dark)')).toBe(1);
 
-    act(() => probe.root.unmount());
+    drop(probe.root);
     expect(media.counted('(prefers-color-scheme: dark)')).toBe(0);
   });
 });
