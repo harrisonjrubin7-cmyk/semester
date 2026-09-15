@@ -127,6 +127,19 @@ export const STATED: Stated[] = [
     keys: ['screens'],
     nouns: { screens: 'destinations' },
   },
+  /*
+   * The completion plan states how many study modes there are, and its whole
+   * argument is that a claim about this app should be a measurement of it. A
+   * hand-written "eleven" in that file would be the one number in it nothing
+   * checked — and the count it states is the count of the list its longest
+   * section walks, so the two drifting apart is the failure that document
+   * exists to stop.
+   */
+  {
+    path: 'COMPLETION-PLAN.md',
+    keys: ['modes'],
+    nouns: { modes: 'study modes' },
+  },
 ];
 
 /** The counts one of those files states, in the order `counts` returned them. */
