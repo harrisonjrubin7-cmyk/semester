@@ -41,7 +41,7 @@
  */
 
 import { outline } from './doctools';
-import { listed, runs, type Align, type Block, type Doc, type Line } from './document';
+import { listed, runs, type Align, type Block, type Doc, type Line, type Note } from './document';
 import { layoutOf, lineHeight, pageSize, type Layout } from './doclayout';
 import { omml, parse } from './maths';
 import { HEAD, REL, xml } from './ooxml';
@@ -445,6 +445,129 @@ function table(block: Extract<Block, { kind: 'table' }>, links?: Links): string 
   return block.caption.trim() ? `${tbl}${para(block.caption, 'Caption', '', links)}` : `${tbl}<w:p/>`;
 }
 
+/**
+ * The notes in the margin, as the comments Word actually shows.
+ *
+ * A comment is four things in four places: a `commentRangeStart` before the
+ * words it is about, a `commentRangeEnd` and a `commentReference` after them,
+ * an entry in `word/comments.xml`, and a content type and a relationship for
+ * that part. Leave out any one and Word opens the file as unreadable rather
+ * than as a document with a comment missing — which is why this is one object
+ * that hands out the id and remembers the rest, the same shape as `Links` and
+ * `Pictures` and for the same reason.
+ *
+ * ## Resolved notes go out resolved
+ *
+ * Word stores that in a second part, `commentsExtended.xml`, which finds a
+ * comment by the `w14:paraId` of its *paragraph* rather than by the comment's
+ * own id — an id it therefore has to invent and put in both places. Eight hex
+ * digits, and not `00000000`, which the format reserves.
+ *
+ * Only a document with a resolved note gets that part at all: a reader older
+ * than it copes with its absence, and writing an empty one is a part that
+ * says nothing and can still be got wrong.
+ */
+class Comments {
+  private readonly at: { id: number; paraId: string; note: Note }[] = [];
+
+  /** The range, the reference, and the entry — for one block's notes. */
+  wrap(notes: Note[] | undefined, body: string): string {
+    const mine = (notes ?? []).filter((n) => n.text.trim());
+    /* A block that wrote nothing — an empty paragraph, a picture whose file
+       has gone — has nothing to anchor a comment to, and a comment anchored
+       to nothing is a part Word cannot place. The note stays in the app. */
+    if (mine.length === 0 || !body.startsWith('<w:p')) return body;
+    const starts = mine
+      .map((note) => {
+        const id = this.at.length;
+        this.at.push({ id, paraId: paraId(this.at.length), note });
+        return id;
+      })
+      .map((id) => `<w:commentRangeStart w:id="${id}"/>`)
+      .join('');
+    const ends = this.at
+      .slice(this.at.length - mine.length)
+      .map(
+        ({ id }) =>
+          `<w:commentRangeEnd w:id="${id}"/>` +
+          `<w:r><w:rPr><w:rStyle w:val="CommentReference"/></w:rPr>` +
+          `<w:commentReference w:id="${id}"/></w:r>`,
+      )
+      .join('');
+    /*
+     * Inside the paragraph, not around it. A range that opens before `<w:p>`
+     * and closes after it is a range over a paragraph mark, which Word draws
+     * as a comment anchored to nothing.
+     */
+    return body.replace(/^(<w:p(?:>|\s[^>]*>))/, `$1${starts}`).replace(/<\/w:p>$/, `${ends}</w:p>`);
+  }
+
+  any(): boolean {
+    return this.at.length > 0;
+  }
+
+  resolved(): boolean {
+    return this.at.some(({ note }) => note.done);
+  }
+
+  /** `word/comments.xml`, one paragraph per note. */
+  part(): string {
+    return (
+      `${HEAD}<w:comments xmlns:w="${W}" xmlns:w14="${W14}" ` +
+      `mc:Ignorable="w14" xmlns:mc="${MC}">` +
+      this.at
+        .map(
+          ({ id, paraId: para, note }) =>
+            `<w:comment w:id="${id}" w:author="${xml(NOTE_AUTHOR)}" ` +
+            `w:initials="${xml(NOTE_INITIALS)}" w:date="${when(note.at)}">` +
+            `<w:p w14:paraId="${para}"><w:pPr><w:pStyle w:val="CommentText"/></w:pPr>` +
+            `<w:r><w:rPr><w:rStyle w:val="CommentReference"/></w:rPr>` +
+            '<w:annotationRef/></w:r>' +
+            `<w:r><w:t xml:space="preserve">${xml(note.text)}</w:t></w:r></w:p></w:comment>`,
+        )
+        .join('') +
+      '</w:comments>'
+    );
+  }
+
+  /** `word/commentsExtended.xml`, which is where "resolved" lives. */
+  extended(): string {
+    return (
+      `${HEAD}<w15:commentsEx xmlns:w15="${W15}" xmlns:mc="${MC}" mc:Ignorable="w15">` +
+      this.at
+        .map(
+          ({ paraId: para, note }) =>
+            `<w15:commentEx w15:paraId="${para}" w15:done="${note.done ? '1' : '0'}"/>`,
+        )
+        .join('') +
+      '</w15:commentsEx>'
+    );
+  }
+}
+
+/** Word's own namespaces for the two comment parts. */
+const W14 = 'http://schemas.microsoft.com/office/word/2010/wordml';
+const W15 = 'http://schemas.microsoft.com/office/word/2012/wordml';
+const MC = 'http://schemas.openxmlformats.org/markup-compatibility/2006';
+
+/**
+ * Who a note is from, in a file that will be opened by somebody else.
+ *
+ * The app knows no name and will not invent one — a comment attributed to a
+ * guess is worse than a comment attributed to the thing that wrote it.
+ */
+const NOTE_AUTHOR = 'Semester';
+const NOTE_INITIALS = 'S';
+
+/** Eight hex digits, never the all-zero one the format reserves. */
+function paraId(n: number): string {
+  return (0x0d000001 + n).toString(16).toUpperCase().padStart(8, '0');
+}
+
+function when(at: number): string {
+  return new Date(at || Date.now()).toISOString().replace(/\.\d+Z$/, 'Z');
+}
+
 function blockXml(
   block: Block,
   doc: Doc,
@@ -677,6 +800,14 @@ function stylesXml(layout: Layout): string {
     '<w:style w:type="paragraph" w:styleId="TableText"><w:name w:val="Table Text"/>' +
     '<w:basedOn w:val="Normal"/><w:pPr><w:spacing w:before="40" w:after="40" w:line="240" w:lineRule="auto"/></w:pPr>' +
     `<w:rPr><w:sz w:val="${step(0.91)}"/></w:rPr></w:style>` +
+    // The two a comment names. Without them Word still shows the comment and
+    // draws its marker in the body text's own size, which is a paragraph with
+    // a stray superscript number in it.
+    '<w:style w:type="paragraph" w:styleId="CommentText"><w:name w:val="annotation text"/>' +
+    '<w:basedOn w:val="Normal"/><w:pPr><w:spacing w:line="240" w:lineRule="auto"/></w:pPr>' +
+    '<w:rPr><w:sz w:val="20"/></w:rPr></w:style>' +
+    '<w:style w:type="character" w:styleId="CommentReference"><w:name w:val="annotation reference"/>' +
+    '<w:rPr><w:sz w:val="16"/></w:rPr></w:style>' +
     '<w:style w:type="table" w:styleId="TableGrid"><w:name w:val="Table Grid"/>' +
     '<w:tblPr><w:tblCellMar><w:top w:w="80" w:type="dxa"/><w:left w:w="108" w:type="dxa"/>' +
     '<w:bottom w:w="80" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr>' +
@@ -768,6 +899,7 @@ export function parts(
   const ids = new Ids(header ? 3 : 2);
   const links = new Links(ids);
   const pictures = new Pictures(ids);
+  const comments = new Comments();
   const heading =
     (doc.title.trim() ? para(doc.title, 'Title', '', links) : '') +
     (doc.subtitle.trim() ? para(doc.subtitle, 'Subtitle', '', links) : '') +
@@ -776,7 +908,9 @@ export function parts(
     // stray page break behind in the document itself.
     (layout.titlePage && doc.title.trim() ? '<w:p><w:r><w:br w:type="page"/></w:r></w:p>' : '');
   const body = doc.blocks
-    .map((block, i) => blockXml(block, doc, links, pictures, found, i + 1))
+    .map((block, i) =>
+      comments.wrap(block.notes, blockXml(block, doc, links, pictures, found, i + 1)),
+    )
     .join('');
 
   out['word/_rels/document.xml.rels'] =
@@ -786,6 +920,17 @@ export function parts(
     (header ? `<Relationship Id="rId3" Type="${REL}/header" Target="header1.xml"/>` : '') +
     links.relationships() +
     pictures.relationships() +
+    /* Numbered above everything the body handed out, because these are known
+       only once the body has been walked — and an id used twice is a document
+       Word offers to repair. See `Ids`. */
+    (comments.any()
+      ? `<Relationship Id="${ids.next()}" Type="${REL}/comments" Target="comments.xml"/>`
+      : '') +
+    (comments.resolved()
+      ? `<Relationship Id="${ids.next()}" ` +
+        'Type="http://schemas.microsoft.com/office/2011/relationships/commentsExtended" ' +
+        'Target="commentsExtended.xml"/>'
+      : '') +
     '</Relationships>';
 
   out['word/document.xml'] =
@@ -814,10 +959,18 @@ export function parts(
     (header
       ? '<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>'
       : '') +
+    (comments.any()
+      ? '<Override PartName="/word/comments.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.comments+xml"/>'
+      : '') +
+    (comments.resolved()
+      ? '<Override PartName="/word/commentsExtended.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.commentsExtended+xml"/>'
+      : '') +
     '<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>' +
     '<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>' +
     '</Types>';
 
+  if (comments.any()) out['word/comments.xml'] = comments.part();
+  if (comments.resolved()) out['word/commentsExtended.xml'] = comments.extended();
   if (header) out['word/header1.xml'] = headerXml(layout);
   out['word/styles.xml'] = stylesXml(layout);
   out['word/numbering.xml'] = NUMBERING;

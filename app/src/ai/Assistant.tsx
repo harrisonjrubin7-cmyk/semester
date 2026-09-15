@@ -83,19 +83,71 @@ const loadPanel = (): Promise<PanelComponent> =>
 
 
 /** How far the button lifts when something it would cover is underneath. */
-const LIFT = 58;
+export const LIFT = 58;
+
+/**
+ * How far apart the places it tries are, which is not the same as `LIFT`.
+ *
+ * It was the same, and a list is what showed the difference. On `#/links`
+ * every row is 63px and ends in a small EDIT; the button is 52px and was
+ * stepping 58 — so close to the row pitch that lifting moved it off one row's
+ * EDIT and squarely onto the next one's. Measured at the three places it could
+ * reach: 100% covered, 100%, and 100%. Not a rule failing to find the good
+ * position so much as a step that could only ever land on the same feature of
+ * a different row.
+ *
+ * Half a lift breaks the resonance without widening the search: the same
+ * `2 × LIFT` ceiling, the same two-lifts-and-no-wandering promise, five places
+ * inside it instead of three. On that screen the best available goes from
+ * 100% to 57%.
+ */
+const STEP = LIFT / 2;
+
+/** How many places it tries, so the last of them is exactly `2 × LIFT`. */
+export const TRIES = 5;
+
+/**
+ * How much of a control has to be under the button before it counts.
+ *
+ * Half, and it is a number rather than a literal because `costOf` compares
+ * against it twice: once to say a position is occupied, and once as the floor
+ * under the two kinds of control that count at any overlap at all.
+ */
+const COVERED = 0.5;
 
 
 /**
- * Whether an element is something a person would tap.
+ * How much it costs to sit on this element — 0 for anything that does not
+ * matter, and at or above `COVERED` for a position that has to move.
  *
  * The question the button is asking of the point beneath it. Deliberately
  * generous — a card that navigates is as much a primary action as a button
  * labelled Save, and the cost of lifting unnecessarily is a button two
  * centimetres higher than it might have been.
+ *
+ * ## Why this is a number and not the `boolean` it was
+ *
+ * Because a yes/no answer cannot tell two occupied positions apart, and
+ * `clearOf` has to choose between them when *every* position is occupied.
+ * Measured on `#/write/<id>`, which is how this was found: at rest the button
+ * clipped 4% of the document's textarea, which counts at any overlap, so it
+ * lifted; at one lift the same 4%, so it lifted again; and at two lifts — the
+ * cap — it came down on a 30×30 "Remove this paragraph" and buried 76% of it,
+ * centre and all. Three occupied positions, and the old rule took the last one
+ * tried rather than the least bad.
+ *
+ * The number is the fraction of the control the button would hide, with a
+ * floor of `COVERED` under the two kinds that count whatever the fraction. So
+ * the ranking is honest — a 4% corner clip of a textarea and a 76% burial of a
+ * button are both "covered", and the first is plainly the cheaper place to be.
+ *
+ * Exported for `ai/dock.test.ts`. It touches only `closest`, `tagName`,
+ * `hasAttribute` and `getBoundingClientRect`, so the ranking can be tested for
+ * real in a file with no DOM — unlike `clearOf` around it, which needs
+ * `elementsFromPoint` and therefore a browser.
  */
-function tappable(el: Element | null, self: Element | null, at: DOMRect | null): boolean {
-  if (!el) return false;
+export function costOf(el: Element | null, self: Element | null, at: DOMRect | null): number {
+  if (!el) return 0;
   /*
    * The button is not something the button covers.
    *
@@ -104,12 +156,12 @@ function tappable(el: Element | null, self: Element | null, at: DOMRect | null):
    * itself, lifts, finds the space it left empty, drops, and flips between
    * two positions for as long as the screen is open.
    */
-  if (self && (el === self || self.contains(el))) return false;
+  if (self && (el === self || self.contains(el))) return 0;
   const node = el.closest('button, a, input, textarea, select, [role="button"]');
-  if (!node) return false;
+  if (!node) return 0;
   // The tab bar is always under it and is not something it covers: the button
   // sits above the bar by construction, and its own hit area does not reach.
-  if (node.closest('.app-tabs')) return false;
+  if (node.closest('.app-tabs')) return 0;
 
   /*
    * Covered is not the same as unusable, and the rule is about the second.
@@ -125,8 +177,23 @@ function tappable(el: Element | null, self: Element | null, at: DOMRect | null):
    * a caret you cannot see is unusable even when most of the box shows. Past
    * that it is proportional: something the button hides half of is hidden.
    */
+  /*
+   * What fraction of it the button would hide, which every rule below is
+   * expressed in — the two absolute ones as a floor under it rather than as an
+   * answer that throws it away. A control with no box, or a question asked
+   * with no position to ask it about, is worst-case by definition.
+   */
+  const r = node.getBoundingClientRect();
+  const area = r.width * r.height;
+  const share =
+    !at || area === 0
+      ? 1
+      : (Math.max(0, Math.min(r.right, at.right) - Math.max(r.left, at.left)) *
+          Math.max(0, Math.min(r.bottom, at.bottom) - Math.max(r.top, at.top))) /
+        area;
+
   const tag = node.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return Math.max(COVERED, share);
 
   /*
    * And a destructive control, at any overlap at all.
@@ -145,16 +212,9 @@ function tappable(el: Element | null, self: Element | null, at: DOMRect | null):
    * than matched on the label, for the reason `lib/onframe.test.ts` gives
    * about labels: they drift, and a rule that reads them drifts with them.
    */
-  if (node.hasAttribute('data-danger')) return true;
+  if (node.hasAttribute('data-danger')) return Math.max(COVERED, share);
 
-  if (!at) return true;
-  const r = node.getBoundingClientRect();
-  const area = r.width * r.height;
-  if (area === 0) return true;
-  const over =
-    Math.max(0, Math.min(r.right, at.right) - Math.max(r.left, at.left)) *
-    Math.max(0, Math.min(r.bottom, at.bottom) - Math.max(r.top, at.top));
-  return over / area >= 0.5;
+  return share;
 }
 
 /**
@@ -199,19 +259,44 @@ export function probes(rest: DOMRect, lifted = 0): [number, number][] {
   ];
 }
 
-function clearOf(rest: DOMRect, self: Element | null, tries = 3): number {
-  let lifted = 0;
+function clearOf(rest: DOMRect, self: Element | null, tries = TRIES): number {
+  /*
+   * The least bad place found so far, which is the answer when there is no
+   * clear one.
+   *
+   * Walking up and taking whatever the last try happened to be is how the
+   * button ended up buried in the document editor's "Remove this paragraph" —
+   * see `costOf`. Every position there was occupied, and the one it stopped on
+   * was the worst of the three. Keeping the cheapest instead costs a
+   * comparison, and it cannot make any screen worse: a position that is really
+   * clear scores nothing and still wins outright, below.
+   */
+  let best = 0;
+  let least = Infinity;
+
   for (let i = 0; i < tries; i += 1) {
+    const lifted = i * STEP;
     // Where the button would actually be, so the overlap below is the real
     // overlap rather than one measured against where it is now.
     const would = new DOMRect(rest.left, rest.top - lifted, rest.width, rest.height);
-    const covered = probes(rest, lifted).some(([x, y]) =>
-      document.elementsFromPoint(x, y).some((el) => tappable(el, self, would)),
-    );
-    if (!covered) return lifted;
-    lifted += LIFT;
+    let cost = 0;
+    for (const [x, y] of probes(rest, lifted)) {
+      for (const el of document.elementsFromPoint(x, y)) {
+        cost = Math.max(cost, costOf(el, self, would));
+      }
+    }
+
+    if (cost < COVERED) return lifted;
+    // Strictly cheaper, so a tie keeps the lower position: of two places that
+    // cost the same, the one that has not moved is the one somebody's thumb
+    // already knows.
+    if (cost < least) {
+      least = cost;
+      best = lifted;
+    }
   }
-  return lifted;
+
+  return best;
 }
 
 /** Where the button can rest. Dragging it across the middle moves it. */
@@ -552,6 +637,39 @@ export function Assistant() {
       window.clearTimeout(t);
     };
   }, [ai.open]);
+
+  /*
+   * Give focus back when the sheet closes.
+   *
+   * A dialog that takes focus has to return it, and this one did not: a
+   * keyboard reader who opened the assistant and pressed Escape was put on
+   * `<body>` and had to tab from the top of the document to get anywhere.
+   *
+   * The panel used to try, and could not. It captured `document.activeElement`
+   * when it mounted, and child effects run before the parent's — so the
+   * composer inside it had already focused itself, and what the panel
+   * remembered was the box it was about to unmount. `ai/store.tsx` records the
+   * answer at `show()` instead, which is the last moment it is still true.
+   *
+   * Then the fallback, which is not an edge case but the common path: the
+   * button unmounts while the sheet is open, so opening the sheet *by the
+   * button* leaves a detached node to go back to. `isConnected` catches that,
+   * and the button React has just re-rendered is the right place to land —
+   * it is where the reader was. Cmd+K from somewhere else keeps the honest
+   * answer, because that element is still in the document.
+   *
+   * Runs on the close, not on the open: `was` is the previous value, so this
+   * fires exactly once per open-and-shut and never on a first render.
+   */
+  const was = useRef(false);
+  useEffect(() => {
+    if (was.current && !ai.open) {
+      const back = ai.cameFrom();
+      if (back?.isConnected) back.focus();
+      else fab.current?.focus();
+    }
+    was.current = ai.open;
+  }, [ai]);
 
   return (
     <>

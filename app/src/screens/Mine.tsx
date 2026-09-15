@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
@@ -32,6 +32,7 @@ import { Dictate } from '../components/Dictate';
 import { RecordButton } from '../components/RecordButton';
 import { PrintButton } from '../components/PrintButton';
 import { Folding } from '../components/Fold';
+import { goMine } from '../lib/openmine';
 
 /**
  * Everything you added yourself.
@@ -383,7 +384,8 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
 }
 
 function Tasks({ rows }: { rows?: PersonalTask[] }) {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dateToIso(now));
@@ -1099,7 +1101,8 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
 }
 
 function Appointments() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(dateToIso(now));
@@ -1484,8 +1487,7 @@ export function NoteEditor() {
           onClick: () => {
             // The notes tab specifically — landing on Tasks after asking for a
             // note is the second half of the same wrong turn.
-            dispatch({ type: 'setMineTab', tab: 'notes' });
-            dispatch({ type: 'go', screen: 'mine' });
+            goMine(dispatch, 'notes');
           },
         }}
       />

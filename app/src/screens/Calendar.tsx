@@ -1,6 +1,6 @@
 import { useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
 import { MarkClass } from '../components/MarkClass';
@@ -71,6 +71,7 @@ import type {
   PersonalTask,
 } from '../lib/types';
 import { Folding } from '../components/Fold';
+import { goMine } from '../lib/openmine';
 
 /**
  * The calendar has two independent axes.
@@ -141,7 +142,8 @@ function BackToToday({ onClick }: { onClick: () => void }) {
 function DayView() {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const dayRow = useRowStyle(12);
-  const { state, dispatch, now, catalog, say, tint } = useStore();
+  const { state, dispatch, catalog, say, tint } = useStore();
+  const now = useNow();
   const moving = useCalendarMove();
   const [addAt, setAddAt] = useState<number | null>(null);
   const day = state.calDay ? isoToDate(state.calDay) : now;
@@ -331,8 +333,7 @@ function DayView() {
             // Straight to the row that edits it. A bar is a thing you own or
             // a thing a feed says; only the first has somewhere to go.
             if (!run.appointmentId) return;
-            dispatch({ type: 'setMineTab', tab: 'appointments' });
-            dispatch({ type: 'go', screen: 'mine' });
+            goMine(dispatch, 'appointments');
           }}
         />
       )}
@@ -688,7 +689,8 @@ const arrow = {
  */
 function WeekView() {
   const weekEventRow = useRowStyle(11);
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<{ date: string; at: number } | null>(null);
   /*
@@ -898,8 +900,7 @@ function WeekView() {
             onClick: () => {
               // Onto the right tab, not just the right screen — landing on
               // Mine's task list is a second thing to work out.
-              dispatch({ type: 'setMineTab', tab: 'appointments' });
-              dispatch({ type: 'go', screen: 'mine' });
+              goMine(dispatch, 'appointments');
             },
           }}
         />
@@ -912,8 +913,7 @@ function WeekView() {
               style={{ marginTop: 'var(--sp-7)' }}
               onOpen={(run) => {
                 if (!run.appointmentId) return;
-                dispatch({ type: 'setMineTab', tab: 'appointments' });
-                dispatch({ type: 'go', screen: 'mine' });
+                goMine(dispatch, 'appointments');
               }}
             />
           )}
@@ -1037,7 +1037,8 @@ function WeekView() {
 
 function MonthView() {
   const monthTaskRow = useRowStyle('var(--sp-5) 0');
-  const { state, dispatch, now, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
   const { calYear, calMonth, calSource } = state;
   const cells = monthGrid(calYear, calMonth);
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -1613,8 +1614,7 @@ function MonthView() {
           {...drag.handlers({ kind: 'task', id: t.id, title: t.title })}
           onClick={() => {
             if (drag.tookDrop()) return;
-            dispatch({ type: 'setMineTab', tab: 'tasks' });
-            dispatch({ type: 'go', screen: 'mine' });
+            goMine(dispatch, 'tasks');
           }}
           style={{
             display: 'flex',
@@ -1691,8 +1691,7 @@ function MonthView() {
               type="button"
               className="bare tappable"
               onClick={() => {
-                dispatch({ type: 'setMineTab', tab: 'appointments' });
-                dispatch({ type: 'go', screen: 'mine' });
+                goMine(dispatch, 'appointments');
               }}
               style={{
                 display: 'flex',
@@ -1910,7 +1909,8 @@ const WEEK_ROW: CSSProperties = {
  */
 function SemesterView() {
   const weekRow = useRowStyle(10);
-  const { state, dispatch, now, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<string | null>(null);
   /*
@@ -2453,8 +2453,7 @@ function SemesterView() {
                           // A task has no detail screen of its own, so this
                           // opens the list it lives on rather than pretending
                           // to and doing nothing.
-                          dispatch({ type: 'setMineTab', tab: 'tasks' });
-                          dispatch({ type: 'go', screen: 'mine' });
+                          goMine(dispatch, 'tasks');
                         }}
                         style={{
                           ...WEEK_ROW,
@@ -2484,8 +2483,7 @@ function SemesterView() {
                         type="button"
                         className="bare"
                         onClick={() => {
-                          dispatch({ type: 'setMineTab', tab: 'appointments' });
-                          dispatch({ type: 'go', screen: 'mine' });
+                          goMine(dispatch, 'appointments');
                         }}
                         style={WEEK_ROW}
                       >
@@ -2582,7 +2580,8 @@ function DateStamp({ mon, day, dow }: { mon: string; day: number; dow: string })
 }
 
 function CampusList() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const filter = state.evFilter as EvFilter;
   /*
    * Saved is the one filter that looks backwards. Everything else is a list of
@@ -2823,7 +2822,8 @@ export function Calendar() {
 }
 
 export function EventDetail() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const all = datedEvents(now, state.schoolId, state.sample);
   const event = all.find((e) => e.id === state.eventId) ?? all[0];
   if (!event) return null;

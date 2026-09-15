@@ -11,7 +11,7 @@
  */
 
 import { useMemo } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { asItems } from '../lib/apply';
@@ -19,7 +19,8 @@ import { adviceFor, clashes, whenLine, worstAhead, type Clash } from '../lib/cla
 import { Folding } from './Fold';
 
 function useClashes(): Clash[] {
-  const { state, now, catalog, courseCode } = useStore();
+  const { state, catalog, courseCode } = useStore();
+  const now = useNow();
   return useMemo(
     () =>
       clashes(

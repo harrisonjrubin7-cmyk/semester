@@ -11,7 +11,13 @@ function time(v:unknown):number {
 export function parseCatalog(text:string):InstitutionCatalog {
  if(text.length>2_000_000)throw new Error('Use a catalog smaller than 2 MB.');
  let raw:unknown;
- if(text.trim().startsWith('{')||text.trim().startsWith('['))raw=JSON.parse(text);
+ // Every other refusal in this function is a sentence a student can act on,
+ // and malformed JSON was the one that reached them as the browser's own
+ // "Unexpected token } in JSON at position 412".
+ if(text.trim().startsWith('{')||text.trim().startsWith('[')){
+  try{raw=JSON.parse(text);}
+  catch{throw new Error('That file starts like JSON but is not valid JSON. Export it again, or paste the catalog as a CSV table instead.');}
+ }
  else {const [header,...rows]=readTable(text);if(!header)throw new Error('The catalog is empty.');raw={institution:'Imported institution',courses:rows.map(row=>Object.fromEntries(header.map((h,i)=>[h.trim(),row[i]||''])))};}
  if(!raw||typeof raw!=='object')throw new Error('Provide a JSON catalog or CSV table.');
  const obj=raw as Record<string,unknown>;const rows=Array.isArray(raw)?raw:obj.courses;

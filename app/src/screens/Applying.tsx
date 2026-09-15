@@ -18,7 +18,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Suggested } from '../components/Suggested';
 import { Blueprint } from '../components/Blueprint';
@@ -41,7 +41,8 @@ import {
 import { Folding } from '../components/Fold';
 
 export function Applying() {
-  const { state, now } = useStore();
+  const { state } = useStore();
+  const now = useNow();
   const [tab, setTab] = useState<'open' | 'add' | 'closed'>('open');
 
   const open = order(
@@ -136,7 +137,8 @@ export function Applying() {
 }
 
 function Row({ a }: { a: Application }) {
-  const { dispatch, now } = useStore();
+  const { dispatch } = useStore();
+  const now = useNow();
   const [open, setOpen] = useState(false);
   const url = safeUrl(a.url);
 

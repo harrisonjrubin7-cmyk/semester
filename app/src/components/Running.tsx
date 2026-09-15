@@ -13,14 +13,15 @@
  * strip at the top of an unrelated screen.
  */
 
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { useSitting } from '../lib/sitting.hook';
 import { abandoned, clockLine, elapsed, running } from '../lib/session';
 
 export function Running() {
   // The store's clock ticks every thirty seconds already, so this follows it
   // rather than keeping an interval of its own alive on every screen.
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const [sitting] = useSitting();
 
   // Nothing while paused: a paused timer is not costing anybody anything, and

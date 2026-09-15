@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { ChevronLeft, CloseIcon, SendIcon, TrashIcon } from '../Icons';
 import { ChipRow, SectionLabel } from '../ui';
 import { CheckIt } from '../CheckIt';
@@ -65,7 +65,8 @@ export function Compose({
   onDiscard: () => void;
   onHanded: () => void;
 }) {
-  const { catalog, now } = useStore();
+  const { catalog } = useStore();
+  const now = useNow();
 
   const [to, setTo] = useState(draft.to);
   const [cc, setCc] = useState(draft.cc);

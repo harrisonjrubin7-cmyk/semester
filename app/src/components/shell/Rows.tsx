@@ -135,7 +135,13 @@ export function Group({
           <div
             style={{
               fontSize: 'var(--type-base)',
-              opacity: 0.65,
+              // The last hand-written number in this file, and the same fix as
+              // the four above it. 0.65 clears AA on every ground — by 0.03 on
+              // Industry — so this is not a legibility failure the way they
+              // were; it is the same text as the note under a plain group,
+              // dimmed to a different strength in the other layout, and out of
+              // reach of "Increase contrast" either way. See `lib/dim.ts`.
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-relaxed)',
               marginBottom: 'var(--sp-5)',
               textWrap: 'pretty',

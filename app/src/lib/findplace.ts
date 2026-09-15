@@ -20,6 +20,8 @@
  * searches on a keystroke, and it caches, and those are the reasons.
  */
 
+import { fetchWithin } from './net';
+
 export interface Found {
   id: string;
   /** The short name — "Rand Dining Center". */
@@ -160,7 +162,10 @@ export async function findPlaces(
   await mine;
   if (signal?.aborted) return [];
 
-  const res = await fetch(searchUrl(text, scope), {
+  // A deadline as well as the caller's signal: the donated service this talks
+  // to is slow under load and occasionally simply stops, and the screens that
+  // call this show a spinner until it settles. See `lib/net.ts`.
+  const res = await fetchWithin(searchUrl(text, scope), {
     signal,
     headers: { Accept: 'application/json' },
   });

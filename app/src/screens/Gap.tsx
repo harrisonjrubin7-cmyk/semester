@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { EmptyState } from '../components/ui';
 import { allCards } from '../data/catalog';
 import { liveGuide } from '../lib/live';
@@ -53,7 +53,8 @@ export function Gap() {
 }
 
 function Run({ win }: { win: GapWindow }) {
-  const { state, dispatch, catalog, now } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
 
   const [idx, setIdx] = useState(0);
   const [shown, setShown] = useState(false);
@@ -224,17 +225,23 @@ function Run({ win }: { win: GapWindow }) {
             <button
               type="button"
               /*
-               * `tap-y`, not `tap`. This drew 38x17 — a fingertip and a half
-               * short — and survived the audit that took 104 targets under
-               * 30px down to none, because a walk of the screens never sees
-               * it: it is drawn only inside a running gap session, behind a
-               * start button and behind a browser that can speak.
+               * A box, not an overlay. This drew 38×17 — a fingertip and a
+               * half short — and survived the audit that took 104 targets
+               * under 30px down to none, because a walk of the screens never
+               * sees it: it is drawn only inside a running gap session,
+               * behind a start button and behind a browser that can speak.
                *
-               * Vertical only, for the reason that audit gives: the card
-               * counter shares this row, and a target that grew sideways
-               * would reach across the gap towards it.
+               * `tap-y` was the first answer, vertical only, because the card
+               * counter shares this row and a target that grew sideways would
+               * reach across the gap towards it. But an overlay is measured
+               * by nothing: axe reads the element, sees 38×17 against WCAG
+               * 2.2's 24, and is right to — and 44px of vertical reach lands
+               * on the card below, which begins where this row ends and is
+               * itself the tap target for flipping. Same shape as Today's
+               * grip, same answer: `min-height` on the control, and the row
+               * grows by seven pixels to hold it.
                */
-              className="bare tap-y"
+              className="bare"
               aria-pressed={aloud}
               aria-label={aloud ? 'Stop reading cards aloud' : 'Read cards aloud'}
               onClick={() => {
@@ -248,8 +255,22 @@ function Run({ win }: { win: GapWindow }) {
                 fontSize: 'var(--type-xs)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                opacity: aloud ? 1 : 0.5,
-                color: aloud ? 'var(--app-accent)' : 'var(--app-fg)',
+                minHeight: 24,
+                display: 'inline-flex',
+                alignItems: 'center',
+                /*
+                 * Off, it takes the row's own dimming and adds none of its
+                 * own — which is `lib/dim.ts`'s whole argument. The row is at
+                 * `opacity: 0.55` and this was at 0.5 inside it, so what
+                 * rendered was 0.275: about 2.2:1 against the ground, on the
+                 * one control in a running session that turns the reading
+                 * voice off. Nobody chose 0.275, and a control quieter than
+                 * the label beside it is backwards anyway.
+                 *
+                 * On, it is raised rather than stacked — an opacity that only
+                 * ever goes up cannot take contrast away.
+                 */
+                ...(aloud ? { opacity: 1, color: 'var(--app-accent)' } : {}),
               }}
             >
               {aloud ? 'Aloud ON' : 'Aloud'}

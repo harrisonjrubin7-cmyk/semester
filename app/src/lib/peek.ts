@@ -45,6 +45,17 @@ export interface Peek {
   sound?: 'playing' | 'muted';
   /** What this tab last searched for, if it searched. */
   query?: string;
+  /**
+   * That Alt and the arrows move it, when there is anywhere to move it to.
+   *
+   * A hint rather than a fact about the tab, and the only line here that is
+   * about the card's reader rather than its subject. It earns the room
+   * because the shortcut has existed since the strip became draggable and
+   * nothing in the app has ever said so: it is not one of the twelve global
+   * keys `keys.ts` lists, and a key you can only learn by reading the
+   * repository is a key nobody has.
+   */
+  moves?: boolean;
 }
 
 /** Everything the card can say about one tab. */
@@ -52,6 +63,8 @@ export function peekAt(
   tab: AppTab,
   group: TabGroup | null | undefined,
   sound: { talking: boolean } = { talking: false },
+  /** How many tabs the strip has. One has nowhere to be moved to. */
+  among = 0,
 ): Peek {
   const title = tab.title || NEW_TAB;
   const kind = tab.screen ? plainly(screenName(tab.screen)) : undefined;
@@ -61,6 +74,7 @@ export function peekAt(
     ...(group ? { group: group.name || 'Group' } : {}),
     ...(sound.talking ? { sound: tab.muted ? ('muted' as const) : ('playing' as const) } : {}),
     ...(tab.query ? { query: tab.query } : {}),
+    ...(among > 1 ? { moves: true } : {}),
   };
 }
 
@@ -119,6 +133,13 @@ export function peekSaid(peek: Peek): string {
     peek.group ? `in ${peek.group}` : '',
     peek.sound === 'playing' ? 'playing' : peek.sound === 'muted' ? 'playing, muted' : '',
     peek.query ? `searched for ${peek.query}` : '',
+    /*
+     * The shortcut is deliberately absent. It goes on the tab as
+     * `aria-keyshortcuts`, which is the attribute for exactly this and is
+     * announced once in the way a reader's own settings decide — where a
+     * line in the description would be read out on every tab you moved to,
+     * which is the noise this card was careful to avoid in the first place.
+     */
   ]
     .filter(Boolean)
     .join(' · ');

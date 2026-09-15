@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
 import { DraftNote } from '../components/DraftNote';
@@ -63,7 +63,8 @@ const TABS: { id: Tab; label: string }[] = [
  * went back to being the one that reads an assignment.
  */
 export function Work() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const courseId: CourseId = state.guideId;
   const { guide } = useLive(courseId);
 

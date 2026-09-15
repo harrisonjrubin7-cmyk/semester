@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { configured, modelLabel, routeLabel } from '../lib/assistant';
@@ -57,7 +57,8 @@ import type { FeedSource } from '../lib/types';
  * send one to.
  */
 export function Connect() {
-  const { state, dispatch, now, catalog, account, school } = useStore();
+  const { state, dispatch, catalog, account, school } = useStore();
+  const now = useNow();
   const rowTen = useRowStyle(10);
   const rowEleven = useRowStyle(11);
   const [busy, setBusy] = useState<string>('');

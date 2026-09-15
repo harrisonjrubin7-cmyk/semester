@@ -120,7 +120,37 @@ export function nested(items: (string | Line)[]): Branch[] {
  */
 export type Align = 'left' | 'center' | 'right' | 'justify';
 
-export type Block =
+/**
+ * A note in the margin, against one block.
+ *
+ * Word anchors a comment to a *range* of characters. This app cannot: a block
+ * is edited as a whole `<textarea>` with no persisted selection, so an offset
+ * into its text would be wrong the moment somebody typed in front of it, and
+ * repairing offsets on every keystroke is a system with its own bugs. A note
+ * belongs to the block, which is the unit this app actually has — and it then
+ * moves when the block moves and goes when the block goes, both for free.
+ *
+ * `done` rather than deleting: a note you have dealt with is a note you may
+ * want to see you dealt with. `lib/docx.ts` writes it out as a real Word
+ * comment, resolved ones included.
+ */
+export interface Note {
+  id: string;
+  text: string;
+  /** When it was written, for ordering and for what Word shows. */
+  at: number;
+  done: boolean;
+}
+
+/**
+ * The block kinds, before notes are added to every one of them.
+ *
+ * Split out so `Block` can be this union *and* a note-holder without the
+ * eleven members each repeating the same optional field — eleven chances to
+ * leave it off the twelfth. The intersection distributes over the union, so
+ * `kind` still narrows and `Extract<Block, { kind: 'table' }>` still works.
+ */
+type Kinded =
   | { kind: 'heading'; level: 1 | 2 | 3; text: string; align?: Align }
   | { kind: 'text'; text: string; align?: Align }
   /**
@@ -218,6 +248,8 @@ export type Block =
    */
   | { kind: 'rule' }
   | { kind: 'break' };
+
+export type Block = Kinded & { notes?: Note[] };
 
 export type BlockKind = Block['kind'];
 

@@ -60,7 +60,7 @@ import type { SavedEquation } from '../lib/maths';
 import type { PlotLine } from '../lib/plot';
 import type { Folder } from '../lib/folders';
 import type { StoredDeck } from '../lib/decks';
-import { type Reviews } from '../lib/review';
+import { type CardReview, type Reviews } from '../lib/review';
 import { DEFAULT_ORDER } from '../lib/feed';
 import type { Found, TermDate } from '../lib/registrar';
 import type { Spent } from '../lib/pace';
@@ -904,6 +904,19 @@ export interface Ephemeral {
   drillGot: number;
   revealed: boolean;
   /**
+   * The last card answered in this run, and what its record looked like
+   * before the answer — so a mis-tap can be taken back.
+   *
+   * Ephemeral, like the rest of the run. An undo that survived a reload would
+   * offer to rewind a card answered yesterday, which is not a mis-tap, it is
+   * a lie about what you know.
+   *
+   * `was: null` means the card had no record at all — a first answer — and
+   * undoing it has to *remove* the row rather than write a blank one, or the
+   * card stops counting as never met. See `undoCard` in `state/slices/study.ts`.
+   */
+  lastAnswer: { key: string; was: CardReview | null; got: boolean } | null;
+  /**
    * One sentence for the app's live region, or empty.
    *
    * Ephemeral, and set only for outcomes somebody would otherwise have to look
@@ -1384,6 +1397,7 @@ export function initialEphemeral(now: Date): Ephemeral {
     drillIdx: 0,
     drillGot: 0,
     revealed: false,
+    lastAnswer: null,
     said: '',
     saidTo: null,
     saidAt: 0,
@@ -1957,6 +1971,8 @@ export type Action =
   | { type: 'startDrill'; unit: number | null; courseId?: CourseId }
   | { type: 'flip' }
   | { type: 'markCard'; got: boolean; key: string; sure?: Sure; courseId?: string }
+  /** Take back the answer just given, schedule and all. */
+  | { type: 'undoCard' }
   /** An answer recorded against a card, with no drill run around it. */
   | { type: 'recordCard'; got: boolean; key: string }
   | { type: 'redrill' }

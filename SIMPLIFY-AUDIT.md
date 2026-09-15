@@ -1,3 +1,240 @@
+# One app — the twelfth pass: the instrument, and one invariant held by hand
+
+Against `main` at `e4bf976`. **Two findings, and one of them is about this
+file.**
+
+**<!--screens-->sixty<!--/--> destinations** in `lib/nav.ts`, unchanged for
+twelve passes — and that number is now written by `npm run counts` rather than
+typed, which is the first finding.
+
+The second is what used to sit beside it. Every pass since the sixth also
+printed a screen-file and component count, and this one does not, because
+those two numbers were wrong and are not worth keeping right. Measured on the
+day: 102 screen files, 151 components. The reasoning is below.
+
+## K1 — the headline census was prose, and it drifted
+
+Every pass since the sixth opens with a line like *"60 destinations, unchanged.
+79 screens, 134 components."* It is the first counted claim a reader meets, it
+has been copied into pull-request bodies, and **nothing checks it.**
+
+Counted against the tree at each commit, `.tsx` under `screens/` and
+`components/` excluding tests:
+
+| commit | pass | this file claimed | the tree held |
+|---|---|---|---|
+| `71f8c10` | A | 100 screens, 134 components | **100, 134** ✓ |
+| `a382158` | ninth | 79 screens, 134 components | 102, 147 |
+| `bb6e8d4` | tenth | 79 screens, 134 components | 102, 147 |
+| `003bcee` | eleventh | 79 screens, 134 components | 102, 149 |
+| `e4bf976` | this one | — | 102, 151 |
+
+Two different failures, and they are worth separating.
+
+**`134` was true once.** At `71f8c10` the component count really was 134. It
+was then copied forward through three passes while the tree went 134 → 147 →
+149 → 151. That is an ordinary stale number: right when written, never
+re-derived.
+
+**`79` was never true at all.** It is not the screen count under any rule this
+repository can be read by. At `003bcee`, where the eleventh pass printed it:
+
+| counting rule | value |
+|---|---|
+| `.tsx` under `screens/`, excluding tests | 102 |
+| `.tsx` under `screens/`, including tests | 109 |
+| `.tsx` directly in `screens/`, excluding subdirectories | 72 |
+| `.tsx` and `.ts`, excluding tests | 103 |
+| members of the `Screen` union in `lib/types.ts` | 73 |
+| destinations in `lib/nav.ts` | 60 |
+| `case` arms in `App.tsx` | 159 |
+
+None is 79. Every commit in the last thirty that touched `screens/` was
+checked; the count is 79 in none of them. **The number has no referent.** It
+was not a measurement that went stale — it was never a measurement.
+
+### Why no earlier pass could see it
+
+Because every pass audited the *app*, and this is a defect in the *instrument*.
+Eleven passes have counted screens, routes, controls, actions, guards, walkers
+and derivations, each time writing the result into this file — and the one
+number nobody counted was the one at the top of the page.
+
+The repository's answer to a counted claim is a census test: roughly thirty of
+them, each asserting an empty offender list, because a claim a human maintains
+by hand is a claim that rots.
+
+### The mechanism already existed
+
+This is the part worth sitting with. `lib/counts.ts` was written for precisely
+this failure, and says so at the top: *"every one of those is a fact about a
+registry sitting somewhere else in this repo, and every one of them had
+drifted at least once."* Its answer is that the number is **generated** —
+`npm run counts` writes it into the prose between markers — and the test's job
+shrinks to proving the script was run. It has been guarding `README.md` and
+`app/README.md` for months.
+
+`SIMPLIFY-AUDIT.md` was never added to `STATED`. Not overruled, not
+considered and rejected — omitted. The file arguing that every job should have
+exactly one home was the one file stating counts that had not been given one,
+and it drifted in exactly the way the module two directories away exists to
+prevent.
+
+So the twelfth pass finds no new mechanism. It finds a mechanism already built,
+already reasoned about, already passing — and one caller missing.
+
+**Resolution: merge**, onto the generator that already exists — for the one
+count worth stating. Both historical faults were planted back first and the
+guard watched catching each: `134` components fails with a diff naming the
+line, and so does `79` screen files.
+
+### The first attempt was wrong, and CI said so in a minute
+
+It registered all three — `screens`, `screenfiles` and `components`, the last
+two new to `counts()`. `build` went red on the merge with main:
+
+> `src/components says 152, so SIMPLIFY-AUDIT.md should read "one hundred and
+> fifty-two components".`
+
+Main had gained one component between `npm run counts` and the merge. The
+generated number, committed minutes earlier, was already a word out.
+
+That is the fortnight `counts.ts` opens by describing, repeated by somebody
+who had just read it. Generation stops a number **rotting**; it does not stop
+it **churning**, because the test still compares committed prose against the
+tree at merge time. What lets the five existing counts survive that is not the
+generator — it is that each is a *decision*. A destination, a tab, a mode, a
+recording: somebody chose that, rarely, on purpose. A component file appears
+in nearly every pull request as a side effect of doing something else, so
+pinning it makes every concurrent branch red on a word.
+
+So the honest reading of that fortnight — `counts.ts` records it as *"stop
+stating the count"* — applies unchanged to those two. They are gone from the
+generator and from the headline. The destination count stays, generated,
+because it is both stable and the one a reader actually wants.
+
+**The row's own fix needed the row's own lesson applied to it**, and it took a
+red build to notice. Twelve passes of auditing a codebase, and the instrument
+still had to be corrected by the thing it was measuring.
+
+### What this says about the eleven passes
+
+Very little, and it is worth saying so rather than letting the reader wonder.
+The headline is scene-setting; no merge, cut or keep decision in this file
+rests on it. The per-row counts — nine `standingOf` calls, fourteen walkers,
+seventeen dead CSS rules, eight inline overdue filters — were each derived by a
+grep printed beside the claim, and those greps re-run correctly today. The rot
+is confined to the one line nobody re-derived because it read like a heading
+rather than like a result.
+
+That is the general shape of it: **a number stops being checked at the moment
+it starts looking like decoration.**
+
+## K2 — one pairing invariant, thirteen hand-written copies, one of them missing
+
+There is no screen for a single task or a single appointment. Opening one means
+two dispatches, in order:
+
+```ts
+dispatch({ type: 'setMineTab', tab: 'tasks' });
+dispatch({ type: 'go', screen: 'mine' });
+```
+
+The comments already know this is a pair and say why. `Calendar.tsx:902`:
+*"Onto the right tab, not just the right screen — landing on Mine's task list
+is a second thing to work out."* And `openhit.ts:54`: *"landing there with the
+list open beats landing nowhere."*
+
+Counted:
+
+| file | pair sites |
+|---|---|
+| `screens/Calendar.tsx` | 7 |
+| `screens/Today.tsx` | 3 |
+| `lib/openhit.ts` | 2 |
+| `screens/Mine.tsx` | 1 |
+| **total** | **13** |
+
+Thirteen copies of a two-line invariant that nothing enforces. `openhit.ts`
+writes it as an `Action[]` pair rather than two dispatches, which is the same
+invariant in a second shape.
+
+**And one site does not hold it.** `screens/Today.tsx:141` dispatches
+`go → mine` with no tab:
+
+```tsx
+onClick={() => dispatch({ type: 'go', screen: 'mine' })}
+```
+
+It is the aside on the *Yours today* section, and its label is
+
+```tsx
+{left > 0 ? `${left} left` : 'All done'}   // left = mine.filter((t) => !t.done).length
+```
+
+— a count of undone **tasks**. So the button counts tasks and lands you on
+whatever tab Mine was last showing.
+
+### Driven, not deduced
+
+`mineTab` lives in `Ephemeral`, so it resets to `tasks` on load and a first
+visit is correct. Within a session it is not. In Chromium at 420px, one seeded
+task due today:
+
+| step | observed |
+|---|---|
+| open Mine, click **Events** | Mine on `Events` |
+| back to Today | section renders |
+| the aside reads | `1 LEFT` — the one undone task |
+| click it | lands on **Events** |
+
+The label counted tasks; the click delivered appointments. Zero `pageerror`s.
+
+**Resolution: merge.** One function returns the pair, every site uses it, and
+the tab stops being something thirteen call sites remember separately. Then a
+census test for `go → mine` written without it, so the fourteenth copy cannot
+be written by hand at all.
+
+### Three probes were wrong before one was right
+
+Worth recording, because it is the same lesson as G1 and it cost three runs:
+
+1. Probed for `role="tab"`. Mine uses `Segmented`, which is `aria-pressed`
+   buttons — no `role="tab"` on the screen at all.
+2. Matched the appointments tab as `/appointment/i`. Its label is **Events**.
+3. Checked `innerText.includes('Yours today')` — false, while the section was
+   plainly on screen, because `SectionLabel` is `text-transform: uppercase` and
+   `innerText` reports the rendering. `.claude/skills/run/SKILL.md` warns about
+   exactly this in a section called *Never match a caps label exactly*, and I
+   walked into it anyway.
+
+Each of the three reported a clean, plausible, entirely wrong "nothing here".
+**Silence from a probe is not evidence of absence until the probe has been
+shown catching the thing.**
+
+## What this pass deliberately leaves
+
+- **`Segmented` versus `TabList`.** Mine's four panels are semantically tabs
+  and are drawn with `aria-pressed` buttons. The tab-strip pass decided where
+  each belongs and `onetablist.test.ts` guards it; re-opening that on the
+  strength of one screen would be re-litigating a settled row.
+- **`AllDayBand` and `mail/Rules`,** the only two components added since the
+  eleventh pass. `AllDayBand` is imported by `Calendar.tsx` alone, in two
+  grains — a shared component, which is what this audit asks for, not a rival.
+- **Seventeen unused classes in `industry.css`**, recorded in the E3b row and
+  still unclaimed. They are design-system vocabulary, not app dead weight.
+
+## To do
+
+| row | what | resolution |
+|---|---|---|
+| K1 | the headline census, unchecked and drifted | **merged** onto `lib/counts.ts`, which already did this for both READMEs |
+| K2 | 13 hand-written copies of the Mine pairing, 1 missing | **merged** into `lib/openmine.ts`, guarded by `openmine.test.ts` |
+
+Both done in this pass. The screen count is unchanged at sixty, because
+neither row was a screen: one was the audit's own instrument and the other a
+two-line invariant. Twelve passes in, that is what is left to find.
+
 # One app — the eleventh pass: one fact, derived how many ways?
 
 Against `main` at `924d0ab`. **A near-null, and the short write-up is the
@@ -3248,125 +3485,190 @@ dispute: whatever the grade table is, it is not two things at once.
 
 ---
 
-## 7. The assistant's button, and the sixty screens it rests on
+## 7. The assistant's button, and the seventy-four screens it rests on
 
 An axis neither half of this audit looks at. A and B both ask which *markup*
 repeats; this asks which markup **collides** — specifically with the one
 control that is not drawn by any screen and appears on all of them, the
 assistant's floating button (`ai/Assistant.tsx`).
 
-The button lifts by its own height when something tappable is beneath it, up
-to twice. Whether that is enough is not a question a unit test can answer:
-jsdom has no layout, so `elementsFromPoint` — the whole mechanism — does not
-exist there, and `ai/dock.test.ts` can only check which points get asked.
-The answer has to be measured in a browser, and this is that measurement.
+The button lifts by half its height at a time when something tappable is
+beneath it, up to twice its height. Whether that is enough is not a question a
+unit test can answer: jsdom has no layout, so `elementsFromPoint` — the whole
+mechanism — does not exist there, and `ai/dock.test.ts` can only check which
+points get asked and how the answers are ranked. The rest has to be measured
+in a browser, and this is that measurement.
 
-### The instrument
+### The instrument, and the six ways it lied first
 
-Chromium at 402×874, all 60 destinations in `lib/nav.ts`, 2.6s per screen so
-the lift's own timers settle. For each visible control in `main`, its overlap
-with the button's resting rect as a fraction of the control's own area.
+Chromium at 402×874, 2.6s per screen so the lift's own timers settle. All 60
+destinations in `lib/nav.ts`, and the fourteen `NAMED` screens at a real id —
+marked with a trailing `#`. For each visible control in `main`, how much of it
+a tap can no longer reach.
 
-The table below is one run, on the production build at `b5000de`. The count of
-screens *touching* moves with the content — three screens left it and one
-gained a second hit between that commit and the one before it, on changes that
-had nothing to do with the assistant — so it is the last two rows that are the
-claim, and they are what the script exits non-zero on.
+Every correction below was made because the version before it gave a confident
+wrong answer. They are worth more than the numbers, and they are guarded in
+`scripts/dock.mjs` rather than remembered:
 
-Three corrections to the instrument are worth more than the numbers, because
-each produced a confident wrong answer first. Two are below; the third is the
-padded tap target, which needs the census's own result to explain and is at
-the end of this section.
+1. **The button was found by its label.** `aria-label^="Ask about"` also
+   matches Progress's in-content "Ask about: …" affordance, so that screen was
+   measured against itself and reported 100% covered. It is
+   `aria-keyshortcuts="a"` *and* `position: fixed`.
+2. **Laid out is not on screen.** Chrome gives content inside a closed
+   `<details>` a real `getBoundingClientRect` — right size, right place, and
+   invisible. On `study` that was 14 of 50 "controls", one of which was
+   reported as centre-blocked by a button resting nowhere near it. The filter
+   is `checkVisibility()`, never a non-zero rect.
+3. **A padded target is not its border box.** `.tap`, `.tap-x` and `.tap-y`
+   grow a small control's target to 44px with a transparent `::after`, and
+   `elementsFromPoint` hit-tests the overlay — so reading the border box
+   measures a different element than the one the probes find.
+4. **The bare address is the library, not the screen.** `#/write` is a shelf
+   of blank templates; `#/write/<id>` is the editor, with a paragraph toolbar
+   in the corner the button rests in. The first run of this swept only bare
+   addresses and so measured the emptiest version of the fourteen screens that
+   have the most in that corner. It is where the one real bug was hiding.
+5. **"Blocked" was two questions.** `elementFromPoint` answers about whatever
+   is frontmost, which on `study` was a panel a hundred pixels away; and it is
+   viewport-relative, so a centre below the fold answers `null`. Both read as
+   blocked, and the second lit up seven unrelated screens at once. The centre
+   is asked about only where it falls inside the button's own rect.
+6. **Rectangles are not a circle.** The button is `border-radius: 50%`, so
+   about a fifth of the box the arithmetic claims is not occupied by anything.
+   Coverage is now sampled on a 2px grid — how many points of the target a tap
+   still reaches — and it moves the answer in *both* directions, which is how
+   you can tell it is a measurement and not an excuse: `links`' EDIT drops
+   from 53% to 44%, and the spreadsheet's cells rise from 52% to 90%.
 
-- **Matching the button by its label caught something else.** `aria-label^="Ask
-  about"` also matches Progress's in-content "Ask about: …" affordance, so that
-  screen was measured against itself and reported as 100% covered. The button
-  is `button[aria-keyshortcuts="a"]` with `position: fixed`.
-- **Laid out is not the same as on screen.** Chrome gives content inside a
-  *closed* `<details>` a real `getBoundingClientRect` — non-zero, correctly
-  positioned, and invisible. On `study` that is 14 of 50 "controls", among them
-  `StudyJournal`'s course `<select>`, which the first run reported as covered
-  with its centre blocked. Nobody can see it: `details.open` is `false` and
-  `checkVisibility()` is `false`. The filter is `checkVisibility()`, not a
-  non-zero rect.
+### What it found
 
-### What it found, after all three
+| | 60 destinations | + the 14 at an id |
+| --- | --- | --- |
+| Screens swept | 60 | **74** |
+| Button drawn | 57 | **71** — the other three are `FILLS` in `components/shell/exempt.ts` |
+| Touching any visible control | 27 | **29** |
+| Half covered, outside a table cell | 0 | **0**, after W1 and W2 |
+| Centre under the button | 0 | **0**, after W1 and W2 |
 
-| | |
+The first column is why this section originally said it changed no code. The
+second is what the same instrument says once it looks at the editors.
+
+### W1 — the button climbed into something worse · **FIXED**
+
+On the document editor the assistant came to rest on top of "Remove this
+paragraph", a 30×30 control, covering **76% of it including its centre**. The
+exact failure the lift exists to prevent, caused by the lift.
+
+| lift | what is under it |
 | --- | --- |
-| Destinations swept | 60 |
-| Button drawn | 57 — the other three are `FILLS` in `components/shell/exempt.ts` |
-| Touching any visible control | 27 |
-| Covered ≥50% (the rule's own threshold) | **0** |
-| Centre of a control unreachable | **0** |
-| Closest to the threshold | `links` EDIT at 48%, and see below |
+| 0 | the paragraph `<textarea>`, 4% — a corner clip |
+| 58 | the same textarea, 3% |
+| 116 | **"Remove this paragraph", 76%**, and the document's title at 6% |
 
-So the lift works. Every remaining overlap is a full-width row or a wide
-button with a corner clipped, which is the case `tappable()`'s proportional
-rule was written to allow: a row you can still tap has lost nothing you
-needed.
+A form field counts at *any* overlap — "a caret you cannot see is unusable
+even when most of the box shows" — so 4% was enough to send it climbing. Two
+lifts later it landed on the Remove control, and every position being occupied,
+the rule kept the last one it had tried.
 
-### The worst of them, and a third correction to the instrument
+**The fix is that "occupied" became a number.** `tappable()` answered yes or
+no, and a yes/no answer cannot rank two occupied positions. It is now
+`costOf()`, returning the fraction of the control the button would hide, with
+a floor of 50% under the two kinds that count whatever the fraction. Which
+positions are acceptable did not change — a clear one still wins outright, and
+everything the old rule called covered the new one still does. What changed is
+the answer when *nothing* is clear: take the cheapest, and on a tie keep the
+lowest, which is the position somebody's thumb already knows.
 
-`links` draws an EDIT button at the tail of each row, 27×17. It is the closest
-thing in the census to a collision, and getting a number out of it took three
-goes.
+A second, smaller bug came out with it. The old loop incremented before
+returning, so an exhausted search returned `tries * LIFT` — a **third** lift,
+at a position the probes had never been asked about, and one the comment
+directly above it forbids. Every candidate is now a position it has examined.
 
-**27×17 is not what a finger aims at.** The button carries `.tap-y`, so its
-real target is the 27×44 `::after` overlay `styles/app.css` describes — the
-mark stays put and the *target* grows to 44px in the axis that has room. The
-first measurement read `getBoundingClientRect()` and so measured a different
-element than the one `elementsFromPoint` finds.
+### W2 — the step and the row pitch were the same length · **FIXED**
 
-**Padding it does not always help the fraction.** Measured on the border box
-the lower EDIT is 41% covered; measured on the target it is **48%**, because
-the button sits above it and the padding reaches up into the button. Higher,
-not lower, and two points off the threshold — the nearest miss in the app.
+On `#/links` every row is 63px and ends in a small EDIT. The button is 52px
+and stepped 58 — near enough to the pitch that lifting moved it off one row's
+EDIT and squarely onto the next one's. All three places it could reach buried
+an EDIT completely: 100%, 100%, 100%.
 
-**And a circle is not its bounding box.** Sampled on a 1px grid, 65% of that
-target is actually reachable: 35% covered, not 48%. The assistant is
-`border-radius: 50%` and `tappable()` compares rectangles, so its arithmetic
-claims about a fifth of the button's area that the button does not occupy.
+Half a lift breaks it without widening the search — the same `2 × LIFT`
+ceiling and the same promise not to wander, five places inside it instead of
+three. The best available on that screen goes from 100% to 57% by the box, and
+44% as a finger actually finds it.
 
-The direction of that error is the useful part. It over-reports coverage, so
-the rule lifts a little sooner than it strictly must, and a control the
-arithmetic calls half covered is less than half covered in the hand. That is
-the safe side of the threshold, and it is why nothing here is worth changing:
-correcting it would cost every probe a distance calculation to make the button
-*less* willing to move out of the way.
+### The probes still have a hole, and this is how we know
 
-### Verdict · **no change**
+Worth recording, because it is the reason to keep the census rather than trust
+the rule. `clearOf` samples five points — centre and four inset corners — and
+at *none* of them did it ever see the Remove control of W1. A 30×30 button
+inside a 52×52 one can sit in the dead ground between centre and corners,
+invisible to the sampling however totally it is covered. The same species of
+hole the corners were added to close, one level down.
 
-Sixty screens, and the lift is right on all of them. `study` is recorded by
-name because it was reported as broken before it was checked: the select that
-finding named is inside a collapsed `<details>`, and the button rests clear of
-everything visible on that screen.
+It is not closed. A 3×3 grid would catch that one and a 5×5 anything wider
+than 13px, at 9 or 25 `elementsFromPoint` calls a position instead of 5 — and
+it would have changed nothing about W1, whose fix keeps the button away from
+that region entirely. So the hole stays, named, and the thing that sees into
+it is this census, which measures from the control's side instead of sampling
+from the button's.
 
-The honest summary of this section is that it changed no screen. That is the
-result — the rule in `tappable()`, its 50% threshold and its two-lift cap were
-arrived at by measurement once already, and measuring again at sixty screens
-agrees with them.
+### The one that is exempt · `sheet#` · **ACCEPTED**
+
+The spreadsheet editor covers one cell almost completely — 90% as a finger
+finds it — and no lift can help: rows are 26px and the grid tiles the screen,
+so the button covers a cell and part of its neighbour **wherever it sits**.
+Every position scores the same, measured rather than assumed. This is not a
+rule failing to find the good position; there is no good position.
+
+Accepted, because a cell is not a control you can lose. The same affordance
+repeats across hundreds of cells, the table is navigable from the keyboard,
+and the cell under the button is one arrow-key from a clear one — none of
+which is true of W1's Remove control, or of `links`' EDIT, where each one
+edits a different link. The exemption is `el.closest('td, th')`: real cells of
+a real `<table>`, the only part of that markup which cannot drift, and
+narrower than anything keyed on a class or a label. Exempt hits are still
+counted and still printed, marked `cell`, so a screen that quietly becomes a
+grid shows up here rather than being silently forgiven.
+
+Everything else that remains is a full-width row or a wide button with a
+corner clipped, which is the case the proportional rule was written to allow:
+a row you can still tap has lost nothing you needed.
+
+### Verdict · **two bugs, both found by widening the instrument**
+
+Seventy-four screens. `study` is still recorded by name because it was
+reported as broken before it was checked — the select that finding named is
+inside a closed `<details>`, and the button rests clear of everything visible
+there.
+
+But the first pass's verdict of "no change" was a verdict about 60 screens and
+about a measure that flattered them, and it survived neither. The rule's 50%
+threshold and its two-lift ceiling were right; the search that used them was
+not, in the one case the bare addresses never produce and every editor does —
+and the step it searched with was the wrong length for a list. A census that
+stops at the library measures the emptiest version of the screens that have
+the most in the corner.
 
 What it leaves behind is the instrument, committed as `app/scripts/dock.mjs`
 for the reason `scripts/baseline.mjs` gives about its pictures: a number
-nobody can regenerate is a number nobody can argue with. All three failure
-modes above are guarded in it rather than remembered, and it exits non-zero on
-anything half covered or with its centre blocked, so the next person to ask
-this question runs
+nobody can regenerate is a number nobody can argue with. All six failure modes
+above are guarded in it rather than remembered, and it exits non-zero on
+anything half covered or with its centre under the button outside a table
+cell, so the next person to ask this question runs
 
     npm run build && node scripts/dock.mjs
 
-rather than spending an afternoon re-discovering that a closed `<details>`
-has a rect.
+rather than spending an afternoon re-discovering that a closed `<details>` has
+a rect.
 
 It is run by hand rather than by CI, and deliberately has no `check:` entry in
 the scripts block — `lib/ci.test.ts` holds the rule that a script named that
 way must have a workflow step, and it failed this one for exactly the right
-reason. A browser download and a sixty-screen walk on every pull request is
-`scripts/baseline.mjs`'s trade, already made once in this repo and made the
-same way: a script that needs a real browser is a before-a-release job, and a
-scripts-block entry that promises otherwise is the promise `ci.test.ts` exists
-to stop.
+reason. A browser download and a seventy-four-screen walk on every pull
+request is `scripts/baseline.mjs`'s trade, already made once in this repo and
+made the same way: a script that needs a real browser is a before-a-release
+job, and a scripts-block entry that promises otherwise is the promise
+`ci.test.ts` exists to stop.
 
 ---
 

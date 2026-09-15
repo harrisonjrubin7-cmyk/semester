@@ -387,7 +387,9 @@ and its lesson are two results, one opening the cards and one the audio.
 **Resting on a tab** says what it is: the full name — which the strip cuts at
 190 pixels, and which a pinned tab does not show at all — what kind of place
 it is, the work it belongs to, whether it is the one playing, and what it last
-searched for. No thumbnail, and that is the architecture rather than a
+searched for — and, under a rule at the bottom, that **Alt** and the arrows
+move it, which is how anybody finds out. No thumbnail, and that is the
+architecture rather than a
 shortcut: a tab here is a saved place rather than a running page, so there is
 no rendered screen anywhere to take a picture of, and rendering one to
 photograph would mean going there. The keyboard gets the same card on focus,
@@ -620,6 +622,17 @@ model in it or needs a key:
   would trap exactly the people who cannot reach for the mouse instead. Lists
   written before this still work: an item that is a bare string is read as a
   line at the left margin, which is what it always was.
+
+  A **note in the margin** goes against a block — press ✎ on its card, write
+  it, and it sits out beside that block on the page. Tick it when you have
+  dealt with it and it stays, struck through, because the reason to tick
+  rather than delete is to be able to see you dealt with it. Notes never
+  print, and they are not part of the word count. Against a block rather than
+  against a run of words you select, which is what Word does: a block here is
+  edited as one text box, so an offset into it would be wrong the moment you
+  typed in front of it. Against the block, a note follows it when you move it.
+  They go out as real Word comments — resolved ones still resolved — and a
+  Word file's comments come back in the same way.
 
   A **Word file opens here.** Insert → *Notes, Markdown or a Word file…* takes
   a `.docx` and reads it in as blocks: headings, nested lists, checklists,
@@ -1182,6 +1195,37 @@ model in it or needs a key:
   a transform rather than a fault, and the reading says so rather than letting
   the first and last samples pass as though they were as trustworthy as the
   middle.
+
+  **`packet([…], 3)` is a wavelet packet transform** — the same tree, split
+  both ways. The ordinary transform halves the run, keeps the averages and
+  halves those again, so the differences it drops out are never split further
+  and the scales it reports get coarser as they get faster: it separates slow
+  things finely and fast things barely at all. A packet tree splits both halves
+  at every level, and what comes out is `2^L` bands of equal width. So
+  `\cos(2\pi\,0.28n)` and `\cos(2\pi\,0.47n)` come out in two different
+  bands rather than in the one band the wavelet transform puts them both in.
+
+  It also says something no other transform here can: the **best basis**. The
+  full tree at level 3 contains the ordinary wavelet transform, the even split
+  into eight, and every mixture of the two, and Coifman and Wickerhauser's
+  method picks between them — work out what each node costs by Shannon's
+  measure, and keep a node whenever it costs less than its two children
+  together. A single spike comes back as one band, because every split only
+  spreads it; a run with a frequency in it splits, because splitting gathers it
+  up.
+
+  The ordering is the part of this that goes wrong quietly, and it did. Every
+  high-pass branch turns the frequency axis over, so the bands do not arrive in
+  frequency order and nothing about them says so: read straight, a run's energy
+  is reported at the wrong frequencies, plausibly, with no error and no sign of
+  trouble. The fix is the Gray code — and **which way round it goes is the trap
+  inside the trap**. The band at frequency place `k` is the tree's node
+  `k ^ (k >> 1)`, not the other way about. At level two the Gray code is its
+  own inverse, so both readings agree and a wrong one looks right; at level
+  three they part company and the top four bands come back shuffled. Which is
+  exactly what happened here, and what caught it was the only test worth
+  writing for this: put a sinusoid of a known frequency in, and ask which band
+  it came out of — at level three as well as level two.
 
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms

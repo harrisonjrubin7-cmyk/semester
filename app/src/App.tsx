@@ -1,5 +1,5 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
-import { useStore } from './state/store';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { useNow, useStore } from './state/store';
 import { useBottomChrome } from './lib/bottomchrome.hook';
 import { currentLook } from './state/shape';
 import {
@@ -12,16 +12,18 @@ import {
 } from './components/Icons';
 import { Avatar } from './components/Avatar';
 import { headerRow } from './lib/header';
+import { creditHoursOr0 } from './lib/credits';
 import { useSitting } from './lib/sitting.hook';
 import { running } from './lib/session';
-import { creditHoursOr0 } from './lib/credits';
 import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
 import { scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
-import { DRAWN_AT, ground, homeTitle, resolveGround, scaleFrom, scaleOf, tokensFor, type Look } from './lib/look';
+import { Guides, SCREENS, Springboard } from './screens';
+import { headOf, type Head } from './headers';
+import { DRAWN_AT, ground, resolveGround, scaleFrom, scaleOf, tokensFor, type Look } from './lib/look';
 
 /**
  * Every screen but the first, fetched when it is opened.
@@ -39,100 +41,17 @@ import { DRAWN_AT, ground, homeTitle, resolveGround, scaleFrom, scaleOf, tokensF
  * the first thing a new account sees, so making either wait would move the
  * delay rather than remove it.
  */
-const AccountScreen = lazy(() => import('./screens/Account').then((m) => ({ default: m.AccountScreen })));
-const Activities = lazy(() => import('./screens/Activities').then((m) => ({ default: m.Activities })));
-const Clocks = lazy(() => import('./screens/Clocks').then((m) => ({ default: m.Clocks })));
-const Proof = lazy(() => import('./screens/Proof').then((m) => ({ default: m.Proof })));
-const Applying = lazy(() => import('./screens/Applying').then((m) => ({ default: m.Applying })));
-const Tonight = lazy(() => import('./screens/Tonight').then((m) => ({ default: m.Tonight })));
-const Behind = lazy(() => import('./screens/Behind').then((m) => ({ default: m.Behind })));
-const Degree = lazy(() => import('./screens/Degree').then((m) => ({ default: m.Degree })));
-const People = lazy(() => import('./screens/People').then((m) => ({ default: m.People })));
-const Meet = lazy(() => import('./screens/Meet').then((m) => ({ default: m.Meet })));
 // The call, and everything it drags in — a peer connection, an audio meter,
 // the signalling channel. Nobody opening Today should download any of it.
-const Call = lazy(() => import('./screens/call/Index').then((m) => ({ default: m.Call })));
-const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
-const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
-const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
-const Changes = lazy(() => import('./screens/Changes').then((m) => ({ default: m.Changes })));
 // The Ask tab *is* the conversation. There is one component for it and one
 // destination — see the note at the top of `ai/Chat.tsx`.
-const Ask = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
-const Reports = lazy(() => import('./screens/Reports').then((m) => ({ default: m.Reports })));
-const Calendar = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.Calendar })));
-const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
-const Connect = lazy(() => import('./screens/Connect').then((m) => ({ default: m.Connect })));
-const Links = lazy(() => import('./screens/Links').then((m) => ({ default: m.Links })));
-const Costs = lazy(() => import('./screens/Costs').then((m) => ({ default: m.Costs })));
-const CourseDetail = lazy(() => import('./screens/Courses').then((m) => ({ default: m.CourseDetail })));
-const Courses = lazy(() => import('./screens/Courses').then((m) => ({ default: m.Courses })));
-const Deck = lazy(() => import('./screens/Deck').then((m) => ({ default: m.Deck })));
-const Write = lazy(() => import('./screens/Write').then((m) => ({ default: m.Write })));
-const SheetScreen = lazy(() => import('./screens/Sheet').then((m) => ({ default: m.Sheet })));
-const Equations = lazy(() => import('./screens/Equations').then((m) => ({ default: m.Equations })));
-const Draw = lazy(() => import('./screens/Draw').then((m) => ({ default: m.Draw })));
-const Drill = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Drill })));
-const Guess = lazy(() => import('./screens/Guess').then((m) => ({ default: m.Guess })));
-const EditCourse = lazy(() => import('./screens/EditCourse').then((m) => ({ default: m.EditCourse })));
-const Essay = lazy(() => import('./screens/Essay').then((m) => ({ default: m.Essay })));
-const EventDetail = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.EventDetail })));
-const Exam = lazy(() => import('./screens/Exam').then((m) => ({ default: m.Exam })));
-const Export = lazy(() => import('./screens/Export').then((m) => ({ default: m.Export })));
-const Gap = lazy(() => import('./screens/Gap').then((m) => ({ default: m.Gap })));
-const Groupwork = lazy(() => import('./screens/Groupwork').then((m) => ({ default: m.Groupwork })));
-const Guide = lazy(() => import('./screens/Guide').then((m) => ({ default: m.Guide })));
-const Housing = lazy(() => import('./screens/Housing').then((m) => ({ default: m.Housing })));
-const Import = lazy(() => import('./screens/Import').then((m) => ({ default: m.Import })));
-const ItemDetail = lazy(() => import('./screens/Courses').then((m) => ({ default: m.ItemDetail })));
-const LessonPlayer = lazy(() => import('./screens/Lesson').then((m) => ({ default: m.LessonPlayer })));
-const Mail = lazy(() => import('./screens/Mail').then((m) => ({ default: m.Mail })));
-const Maps = lazy(() => import('./screens/Maps').then((m) => ({ default: m.Maps })));
-const Me = lazy(() => import('./screens/Me').then((m) => ({ default: m.Me })));
-const Meals = lazy(() => import('./screens/Meals').then((m) => ({ default: m.Meals })));
-const Mine = lazy(() => import('./screens/Mine').then((m) => ({ default: m.Mine })));
-const NoteEditor = lazy(() => import('./screens/Mine').then((m) => ({ default: m.NoteEditor })));
-const Notifications = lazy(() => import('./screens/Me').then((m) => ({ default: m.Notifications })));
-const Quiz = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Quiz })));
-const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
-const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
-const Settings = lazy(() => import('./screens/settings/Index').then((m) => ({ default: m.Settings })));
 // The settings pages. Lazy like every other screen: somebody who never opens
 // settings should not download the colour picker.
-const SettingsLook = lazy(() => import('./screens/settings/Look').then((m) => ({ default: m.SettingsLook })));
-const SettingsNav = lazy(() => import('./screens/settings/Nav').then((m) => ({ default: m.SettingsNav })));
-const SettingsAlerts = lazy(() => import('./screens/settings/Alerts').then((m) => ({ default: m.SettingsAlerts })));
-const SettingsCourses = lazy(() => import('./screens/settings/Courses').then((m) => ({ default: m.SettingsCourses })));
-const SettingsGrading = lazy(() => import('./screens/settings/Grading').then((m) => ({ default: m.SettingsGrading })));
-const SettingsWorkload = lazy(() => import('./screens/settings/Workload').then((m) => ({ default: m.SettingsWorkload })));
-const SettingsAbout = lazy(() => import('./screens/settings/About').then((m) => ({ default: m.SettingsAbout })));
-const SettingsAssistant = lazy(() => import('./screens/settings/Assistant').then((m) => ({ default: m.SettingsAssistant })));
-const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
-const Solve = lazy(() => import('./screens/Solve').then((m) => ({ default: m.Solve })));
-const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
-const Study = lazy(() => import('./screens/Study').then((m) => ({ default: m.Study })));
-const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work })));
-const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
-const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
-const Guides = lazy(() => import('./screens/Guides').then((m) => ({ default: m.Guides })));
-const University = lazy(() => import('./screens/University').then((m) => ({ default: m.University })));
-const Athletics = lazy(() => import('./screens/Athletics').then((m) => ({ default: m.Athletics })));
-const Career = lazy(() => import('./screens/Career').then((m) => ({ default: m.Career })));
-const Family = lazy(() => import('./screens/Family').then((m) => ({ default: m.Family })));
-const Pathway = lazy(() => import('./screens/Pathway').then((m) => ({ default: m.Pathway })));
-const Create = lazy(() => import('./screens/Create').then((m) => ({ default: m.Create })));
 /* The workspace's own two screens — the search home a new tab opens on, and
    the directory of everything behind it. See `lib/desk.ts`. */
-const SearchHome = lazy(() => import('./screens/Search').then((m) => ({ default: m.SearchHome })));
-const Directory = lazy(() => import('./screens/Directory').then((m) => ({ default: m.Directory })));
-const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
-const Profile = lazy(() => import('./screens/Profile').then((m) => ({ default: m.Profile })));
-const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
-const Help = lazy(() => import('./screens/Help').then((m) => ({ default: m.Help })));
 
-import { datedEvents, datedItems, nextExam } from './lib/select';
+import { datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
-import { settingsTitle } from './lib/settings';
 import { chromeFor, homeShape } from './lib/chrome';
 import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
@@ -169,7 +88,6 @@ import { Fresh } from './components/Fresh';
 import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
-import { provider } from './lib/assistant';
 import type { Screen } from './lib/types';
 
 /**
@@ -233,29 +151,11 @@ function SkipLink() {
  * only when the page is going away, and setting it back to `Semester` on the
  * way out would be the last thing the tab said.
  */
-function Titled() {
-  const { kicker, title } = useHeader();
-  const said = windowTitle(title, kicker);
-  useEffect(() => {
-    document.title = said;
-  }, [said]);
-  return null;
-}
-
 /** The kicker and title in the header, per screen. */
-function useHeader(): { kicker: string; title: string } {
-  const { state, now, catalog, school } = useStore();
-  // Not `guide.code`. Opening a study screen by its own URL — which is the
-  // point of having URLs — arrives with no course chosen, and the four study
-  // kickers below then read a field off `undefined` and take the whole app
-  // down before the screen renders. The screens themselves already survive
-  // this: `useLive` falls back to an empty guide. The header did not.
+function useHeader(): Head {
+  const { state, catalog, school } = useStore();
+  const now = useNow();
   const code = catalog.guides[state.guideId]?.code ?? '';
-  // A kicker of " · study guide" is a bug on show. Drop the empty half.
-  const about = (what: string) => (code ? `${code} · ${what}` : what);
-  const exam = nextExam(catalog, now);
-
-  const today = `${DOW[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`;
 
   // These read off the courses actually loaded. They used to say "Fall 2026 ·
   // 11 credits" and "Across 4 courses" to everyone, which is a lie to every
@@ -263,257 +163,29 @@ function useHeader(): { kicker: string; title: string } {
   const n = catalog.courses.length;
   const courseCount = `${n} ${n === 1 ? 'course' : 'courses'}`;
   const credits = catalog.courses.reduce((sum, c) => sum + creditHoursOr0(c.credits), 0);
-  const load = credits > 0 ? `${courseCount} · ${credits} credits` : courseCount;
 
-  switch (state.screen) {
-    case 'home':
-      return { kicker: today, title: homeTitle(state.nav) };
-    case 'courses':
-      return { kicker: load, title: 'Courses' };
-    case 'course': {
-      // Optional, for the same reason `code` above is. A course id can outlive
-      // the course: a link somebody shared, a bookmark to a course since
-      // deleted, an id from an archived term. Every one of those rendered a
-      // blank white screen, because the header threw before the screen it sits
-      // above ever ran — and a header that can take the app down is a header
-      // that must not assume anything is loaded.
-      const open = catalog.byId[state.courseId];
-      return { kicker: 'Course', title: open?.code ?? 'Not found' };
-    }
-    case 'item': {
-      const item = datedItems(catalog, now).find((i) => i.id === state.itemId);
-      return { kicker: item ? (catalog.byId[item.c]?.code ?? 'Item') : 'Item', title: item?.kind ?? 'Item' };
-    }
-    case 'study':
-      return {
-        kicker: exam ? `${exam.days} days to ${exam.code}` : courseCount,
-        title: 'Study',
-      };
-    case 'guide':
-      return { kicker: about('study guide'), title: 'Guide' };
-    case 'drill':
-      return { kicker: code, title: 'Drill' };
-    case 'guess':
-      return { kicker: about('before you read'), title: 'Guess first' };
-    case 'quiz':
-      return { kicker: about('multiple choice'), title: 'Quiz' };
-    case 'calendar': {
-      const source =
-        state.calSource === 'all'
-          ? 'Everything'
-          : state.calSource === 'classes'
-            ? 'Classes only'
-            : state.calSource === 'deadlines'
-              ? 'Deadlines only'
-              : 'Campus only';
-      if (state.calView === 'semester') return { kicker: source, title: 'Semester' };
-      if (state.calView === 'day') return { kicker: source, title: 'Day' };
-      return { kicker: `${source} · ${MONTHS[state.calMonth]}`, title: 'Calendar' };
-    }
-    case 'event': {
-      const event = datedEvents(now, state.schoolId, state.sample).find((e) => e.id === state.eventId);
-      return {
-        kicker: event?.kind ?? 'Event',
-        title: event ? `${event.mon} ${event.day}` : 'Event',
-      };
-    }
-    case 'me':
-      return { kicker: load, title: 'Progress' };
-    /*
-     * The one screen whose kicker is not about the semester.
-     *
-     * `load` — "4 courses · 11 credits" — is right above every screen that is
-     * about the term and wrong above this one, which is about the person
-     * holding it. The school is the context that belongs here, and where
-     * nobody has said which school it falls back to the app's own name rather
-     * than to an empty kicker, which draws as a gap where a line should be.
-     */
-    case 'profile':
-      return { kicker: school.name || 'Semester', title: 'Profile' };
-    case 'notifs':
-      return { kicker: 'Today', title: 'Alerts' };
-    case 'settings':
-      return { kicker: 'Preferences', title: 'Settings' };
-    /*
-     * The settings pages, named from the one list that names them.
-     *
-     * This was eight `case`s with the titles written out again, and they had
-     * already drifted: the bar said "Appearance" and "Navigation" over pages
-     * that call themselves "Colour and type" and "Layout and navigation",
-     * because renaming a page meant editing `lib/settings.ts`, the page
-     * itself, and this — and two out of three is what actually happens.
-     * `settingsTitle` reads the registry, so there is one name and a rename
-     * is one edit.
-     */
-    case 'setLook':
-    case 'setNav':
-    case 'setAlerts':
-    case 'setCourses':
-    case 'setGrading':
-    case 'setWorkload':
-    case 'setAbout':
-    // The assistant's page was the one of the eight this arm never listed, so
-    // it fell past the switch to `fallbackHeader` — and it is not in
-    // `DESTINATIONS` either, being a settings page rather than a destination,
-    // so it wore the last resort: "Today", with today's date over it, above
-    // the API key and the model picker. The exact failure the comment above
-    // describes, on the ninth screen. `settings.test` now walks the settings
-    // registry rather than the destination registry, so a page added to
-    // `lib/settings.ts` and not to this arm fails instead of lying.
-    case 'setAssistant':
-      return { kicker: 'Settings', title: settingsTitle(state.screen) };
-    case 'mine':
-      return { kicker: 'Yours, not the syllabus', title: 'Personal' };
-    case 'note':
-      return { kicker: 'Note', title: 'Editing' };
-    case 'lesson':
-      return { kicker: about('lesson'), title: 'Watch' };
-    case 'update':
-      return { kicker: about('into every study mode'), title: 'Add a reading' };
-    case 'connect':
-      return { kicker: 'Accounts and calendars', title: 'Connect' };
-    case 'links':
-      return { kicker: 'Everywhere you go', title: 'Links' };
-    case 'ask':
-      return { kicker: `${provider()} · this term`, title: 'Ask Claude' };
-    case 'work':
-      return { kicker: about('assignments'), title: 'Work on it' };
-    case 'maps':
-      return { kicker: 'Campus, city, and how to get there', title: 'Getting there' };
-    case 'mail':
-      return { kicker: 'Read here, sent by you', title: 'Email' };
-    case 'export':
-      return { kicker: 'Formats other software reads', title: 'Take it with you' };
-    case 'yes':
-      return { kicker: 'Registration, and the road back', title: 'YES' };
-    case 'draw':
-      return { kicker: about('as a picture'), title: 'Draw it' };
-    case 'solve':
-      return { kicker: about('step by step'), title: 'Work the problem' };
-    case 'edit':
-      return { kicker: 'A syllabus is a first draft', title: 'Edit the course' };
-    case 'analyse':
-      return { kicker: 'Computed here, not guessed', title: 'Analyse data' };
-    case 'classmates':
-      return { kicker: 'Confirmed Vanderbilt addresses', title: 'Classmates' };
-    case 'activities':
-      return { kicker: 'Everything that is not a class', title: 'Activities' };
-    case 'clocks':
-      return { kicker: 'Counting, and ringing', title: 'Timers and alarms' };
-    case 'proof':
-      return { kicker: 'Rules, not a judgement', title: 'Check the writing' };
-    case 'applying':
-      return { kicker: 'The other deadline set', title: 'Applications' };
-    case 'tonight':
-      return { kicker: 'Where the hours go', title: 'Tonight' };
-    case 'behind':
-      return { kicker: 'Counted, not felt', title: 'When you are behind' };
-    case 'degree':
-      return { kicker: 'Four years, not four months', title: 'The degree' };
-    case 'meet':
-      return { kicker: 'Words in common, not ideas', title: 'Where courses meet' };
-    case 'people':
-      return { kicker: 'Started late, invisibly', title: 'People and letters' };
-    case 'brief':
-      return { kicker: 'Counted, then read', title: 'Reports' };
-    case 'essay':
-      return { kicker: 'Everything but coursework', title: 'Draft it' };
-    case 'deck':
-      return { kicker: 'A real PowerPoint file', title: 'Make a deck' };
-    case 'write':
-      return { kicker: 'A real Word file', title: 'Write a document' };
-    case 'sheet':
-      return { kicker: 'Added up here, not guessed', title: 'Sheet or table' };
-    case 'equations':
-      return { kicker: 'Written, worked out, drawn', title: 'Equations' };
-    case 'exam':
-      return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
-    case 'ahead':
-      return { kicker: 'Counted, before it happens', title: 'The week ahead' };
-    case 'announce':
-      return { kicker: 'What moved, and what said so', title: 'A change to a date' };
-    case 'costs':
-      return { kicker: 'The bill, the aid, and what you paid', title: 'Money' };
-    case 'gap':
-      return { kicker: 'One thumb, and the walk taken off', title: 'Between classes' };
-    case 'groupwork':
-      return { kicker: 'Who has what, and by when', title: 'Group work' };
-    case 'call':
-      return { kicker: 'A code, a link, and who is in it', title: 'Video call' };
-    case 'meals':
-      return { kicker: 'Swipes, cash, and the week they run out', title: 'Meal plan' };
-    case 'housing':
-      return { kicker: 'The room, and the day you are out of it', title: 'Housing' };
-    case 'runway':
-      return { kicker: 'Counted backwards from the exam', title: 'Exam runway' };
-    case 'registrar':
-      return { kicker: 'The dates the university sets', title: 'Term deadlines' };
-    /*
-     * Its own case rather than the registry fallback, which would print the
-     * tab bar's nine-character `short` — "Uni" — as the page's heading. The
-     * kicker is the screen's whole argument in six words.
-     */
-    case 'university':
-      return { kicker: 'What it does, and what it cannot', title: 'University' };
-    /*
-     * The four that outlast the term get their own cases for the reason
-     * University does: the registry fallback prints the tab bar's
-     * nine-character `short`, so Athletics would be headed "Sport".
-     */
-    case 'athletics':
-      return { kicker: 'The season, against the term', title: 'Athletics' };
-    case 'career':
-      return { kicker: 'What is open, and what you have done', title: 'Career' };
-    case 'family':
-      return { kicker: 'What somebody else would see', title: 'Family' };
-    case 'pathway':
-      return { kicker: 'The part that outlasts this term', title: 'Pathway' };
-    case 'create':
-      return { kicker: 'Whatever it is you have to hand in', title: 'Create' };
-    case 'sources':
-      return { kicker: 'Yours, never invented', title: 'Sources' };
-    case 'account':
-      return { kicker: 'Your semester, everywhere', title: 'Account' };
-    case 'slides':
-      return { kicker: about('deck'), title: 'Slides' };
-    case 'import':
-      return { kicker: 'Syllabus in, course out', title: 'New course' };
-    /*
-     * Named, because the fallthrough below is not a default — it is a wrong
-     * answer given confidently. A screen missing from this switch gets
-     * "Today" and the date, so the full chat sat under a header announcing a
-     * screen the reader was not on. The kicker names what is answering
-     * rather than repeating the title, which is the one thing about this
-     * screen worth saying before you have asked anything.
-     */
-    default:
-      return fallbackHeader(state.screen, today);
-  }
+  return headOf({
+    screen: state.screen,
+    state,
+    catalog,
+    school,
+    now,
+    code,
+    about: (what: string) => (code ? `${code} · ${what}` : what),
+    exam: nextExam(catalog, now),
+    today: `${DOW[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`,
+    courseCount,
+    load: credits > 0 ? `${courseCount} · ${credits} credits` : courseCount,
+  });
 }
 
-/**
- * The title for a screen this switch has no case for.
- *
- * It used to be `{ kicker: today, title: 'Today' }` — flatly, for anything
- * unnamed above — and four screens were quietly wearing it: **Everything**,
- * **How this works**, **Your data** and **Privacy**. Each said "Today", with
- * today's date over it, above content that was plainly not today. A screen
- * that lies about which screen it is is worse than one with no title, and
- * nothing failed, because a default that always returns something can never
- * be missing a case.
- *
- * So the fallback asks the registry, which already holds a label and a
- * sentence for every screen and is what the directory, the shelves and search
- * all read. A screen added to `DESTINATIONS` is now named in the header for
- * free, and `header.test.ts` fails if one ever is not.
- *
- * `Today` remains the answer for `home` and for anything genuinely unlisted,
- * which is the honest last resort rather than the first one.
- */
-function fallbackHeader(screen: Screen, today: string): { kicker: string; title: string } {
-  const known = destination(screen);
-  if (!known) return { kicker: today, title: 'Today' };
-  return { kicker: 'In the app', title: known.short ?? known.label };
+function Titled() {
+  const { kicker, title } = useHeader();
+  const said = windowTitle(title, kicker);
+  useEffect(() => {
+    document.title = said;
+  }, [said]);
+  return null;
 }
 
 function Header({
@@ -537,7 +209,8 @@ function Header({
    */
   desk = false,
 }: { desk?: boolean } = {}) {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const { kicker, title } = useHeader();
   /*
    * The course this screen sits inside, when it sits inside one.
@@ -962,191 +635,47 @@ function TabBar() {
 
 function CurrentScreen() {
   const { state } = useStore();
-  switch (state.screen) {
-    case 'home':
-      // The home screen the chosen navigation calls for. The springboard is a
-      // way in rather than a different app: every icon goes to the same screen
-      // the tab bar would have. `Today` reads the same `homeShape` to decide
-      // between its two readings of the day, so the three cannot disagree.
-      //
-      // The workspace is not a case here, deliberately: its home is Today
-      // like everyone else's, and what it does differently is where the app
-      // *lands* — see `firstScreen` in `lib/chrome.ts`.
-      //
-      // The guides are the one home that is not a reading of the day at all:
-      // the courses themselves, because opening one is what this navigation
-      // is for. See `screens/Guides.tsx`.
-      switch (homeShape(state.nav)) {
-        case 'springboard':
-          return <Springboard />;
-        case 'guides':
-          return <Guides />;
-        default:
-          return <Today />;
-      }
-    case 'search':
-      return <SearchHome />;
-    case 'directory':
-      return <Directory />;
-    case 'university':
-      return <University />;
-    case 'athletics':
-      return <Athletics />;
-    case 'career':
-      return <Career />;
-    case 'family':
-      return <Family />;
-    case 'pathway':
-      return <Pathway />;
-    case 'create':
-      return <Create />;
-    case 'privacy':
-      return <Privacy />;
-    case 'data':
-      return <DataScreen />;
-    case 'help':
-      return <Help />;
-    case 'courses':
-      return <Courses />;
-    case 'course':
-      return <CourseDetail />;
-    case 'item':
-      return <ItemDetail />;
-    case 'calendar':
-      return <Calendar />;
-    case 'event':
-      return <EventDetail />;
-    case 'me':
-      return <Me />;
-    case 'profile':
-      return <Profile />;
-    case 'notifs':
-      return <Notifications />;
-    case 'settings':
-      return <Settings />;
-    case 'setLook':
-      return <SettingsLook />;
-    case 'setNav':
-      return <SettingsNav />;
-    case 'setAlerts':
-      return <SettingsAlerts />;
-    case 'setCourses':
-      return <SettingsCourses />;
-    case 'setGrading':
-      return <SettingsGrading />;
-    case 'setWorkload':
-      return <SettingsWorkload />;
-    case 'setAbout':
-      return <SettingsAbout />;
-    case 'setAssistant':
-      return <SettingsAssistant />;
-    case 'mine':
-      return <Mine />;
-    case 'note':
-      return <NoteEditor />;
-    case 'import':
-      return <Import />;
-    case 'study':
-      return <Study />;
-    case 'guide':
-      return <Guide />;
-    case 'drill':
-      return <Drill />;
-    case 'guess':
-      return <Guess />;
-    case 'quiz':
-      return <Quiz />;
-    case 'lesson':
-      return <LessonPlayer />;
-    case 'update':
-      return <AddMaterial />;
-    case 'connect':
-      return <Connect />;
-    case 'links':
-      return <Links />;
-    case 'ask':
-      return <Ask />;
-    case 'work':
-      return <Work />;
-    case 'maps':
-      return <Maps />;
-    case 'mail':
-      return <Mail />;
-    case 'export':
-      return <Export />;
-    case 'yes':
-      return <Yes />;
-    case 'draw':
-      return <Draw />;
-    case 'solve':
-      return <Solve />;
-    case 'edit':
-      return <EditCourse />;
-    case 'analyse':
-      return <Analyse />;
-    case 'classmates':
-      return <Classmates />;
-    case 'activities':
-      return <Activities />;
-    case 'clocks':
-      return <Clocks />;
-    case 'proof':
-      return <Proof />;
-    case 'applying':
-      return <Applying />;
-    case 'tonight':
-      return <Tonight />;
-    case 'behind':
-      return <Behind />;
-    case 'degree':
-      return <Degree />;
-    case 'meet':
-      return <Meet />;
-    case 'people':
-      return <People />;
-    case 'brief':
-      return <Reports />;
-    case 'essay':
-      return <Essay />;
-    case 'deck':
-      return <Deck />;
-    case 'write':
-      return <Write />;
-    case 'sheet':
-      return <SheetScreen />;
-    case 'equations':
-      return <Equations />;
-    case 'exam':
-      return <Exam />;
-    case 'ahead':
-      return <Ahead />;
-    case 'announce':
-      return <Changes />;
-    case 'costs':
-      return <Costs />;
-    case 'gap':
-      return <Gap />;
-    case 'groupwork':
-      return <Groupwork />;
-    case 'call':
-      return <Call />;
-    case 'meals':
-      return <Meals />;
-    case 'housing':
-      return <Housing />;
-    case 'runway':
-      return <Runway />;
-    case 'registrar':
-      return <Registrar />;
-    case 'sources':
-      return <Sources />;
-    case 'account':
-      return <AccountScreen />;
-    case 'slides':
-      return <SlideDeck />;
-    default:
-      return <Today />;
+  /*
+   * Home first, because it is the one screen whose component is a function of
+   * the navigation rather than of `state.screen`.
+   *
+   * The springboard is a way in rather than a different app: every icon goes
+   * to the same screen the tab bar would have. `Today` reads the same
+   * `homeShape` to decide between its two readings of the day, so the three
+   * cannot disagree. The workspace is deliberately not a case — its home is
+   * Today like everyone else's, and what it does differently is where the app
+   * *lands*, which is `firstScreen` in `lib/chrome.ts`. The guides are the one
+   * home that is not a reading of the day at all: the courses themselves,
+   * because opening one is what that navigation is for.
+   */
+  if (state.screen === 'home') {
+    switch (homeShape(state.nav)) {
+      case 'springboard':
+        return <Springboard />;
+      case 'guides':
+        return <Guides />;
+      default:
+        return <Today />;
+    }
   }
+  /*
+   * And everything else by lookup rather than by eighty cases.
+   *
+   * `onboarding` never reaches here — it is drawn above the router — so the
+   * table does not carry it and this narrows past it. The switch this replaced
+   * ended `default: return <Today />`, which meant a screen added to the union
+   * and forgotten rendered Today with nothing failing anywhere. `SCREENS` is
+   * exhaustive over the union, so that mistake is a type error now. See
+   * `screens.tsx`.
+   */
+  // `?? Today` for the same reason `headOf` has a fallback, and for that
+  // reason only: `state.screen` can hold a name that was never in the union —
+  // `fromHash` passes an unknown one through, so a bookmark to a deleted
+  // screen arrives as `{ screen: 'cloud' }`. A screen that *is* in the union
+  // and missing from `SCREENS` remains a build error; this catches the string
+  // that is not a screen at all, which used to land on Today and does again.
+  const Screen = SCREENS[state.screen as Exclude<typeof state.screen, 'home' | 'onboarding'>] ?? Today;
+  return <Screen />;
 }
 
 /**

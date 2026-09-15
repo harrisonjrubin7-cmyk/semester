@@ -38,7 +38,7 @@
  * is the whole reason `notes` exists.
  */
 
-import { blankDoc, type Align, type Block, type Doc, type Line } from './document';
+import { blankDoc, type Align, type Block, type Doc, type Line, type Note } from './document';
 import { entities } from './extract';
 import { tooPacked, tooPackedSaid } from './zips';
 
@@ -302,6 +302,55 @@ function styleNumbering(styles: string): Record<string, Numbering> {
   return out;
 }
 
+/**
+ * The comments a document carries, by the id the body refers to them with.
+ *
+ * Two parts. `comments.xml` holds the words; whether one is *resolved* is in
+ * `commentsExtended.xml`, which finds a comment by the `w14:paraId` of its
+ * paragraph rather than by the comment's own id — so the two are joined on
+ * that, and a file without the second part reads as nothing resolved, which
+ * is what it means.
+ */
+function remarksIn(comments: string, extended: string): Record<string, Note> {
+  const done = new Set<string>();
+  for (const ex of extended.matchAll(new RegExp(opening('commentEx'), 'g'))) {
+    const at = attr(ex[0], 'paraId');
+    const says = attr(ex[0], 'done');
+    if (at && says !== '0' && says !== 'false' && says !== '') done.add(at.toUpperCase());
+  }
+  const out: Record<string, Note> = {};
+  for (const one of comments.matchAll(
+    new RegExp(`<${ns('comment')}(\\s[^>]*)?>([\\s\\S]*?)</${ns('comment')}>`, 'g'),
+  )) {
+    const head = one[1] ?? '';
+    const id = attr(head, 'id');
+    if (!id) continue;
+    const text = chunks(one[2])
+      .filter((c) => c.kind === 'p')
+      .map((c) => textOf(c.xml, {}).trim())
+      .filter(Boolean)
+      .join('\n');
+    if (!text) continue;
+    const para = new RegExp(opening('p')).exec(one[2]);
+    const at = para ? attr(para[0], 'paraId').toUpperCase() : '';
+    const written = Date.parse(attr(head, 'date'));
+    out[id] = {
+      id: `c${id}`,
+      text,
+      at: Number.isFinite(written) ? written : Date.now(),
+      done: at !== '' && done.has(at),
+    };
+  }
+  return out;
+}
+
+/** Which comments a paragraph opens, in the order it opens them. */
+function commentIds(p: string): string[] {
+  return [...p.matchAll(new RegExp(opening('commentRangeStart'), 'g'))]
+    .map((m) => attr(m[0], 'id'))
+    .filter(Boolean);
+}
+
 const TICKED = /^\s*([☐☒☑✓✔])\s*/;
 
 export async function fromDocx(file: File): Promise<Read> {
@@ -327,6 +376,7 @@ export async function fromDocx(file: File): Promise<Read> {
   const links = relationships(part('word/_rels/document.xml.rels'));
   const lists = bulleted(part('word/numbering.xml'));
   const styled = styleNumbering(part('word/styles.xml'));
+  const remarks = remarksIn(part('word/comments.xml'), part('word/commentsExtended.xml'));
 
   const notes = new Set<string>();
   const blocks: Block[] = [];
@@ -345,146 +395,169 @@ export async function fromDocx(file: File): Promise<Read> {
   };
 
   const body = new RegExp(`<${ns('body')}(?:\\s[^>]*)?>([\\s\\S]*)</${ns('body')}>`).exec(xml);
-  for (const chunk of chunks(body ? body[1] : xml)) {
-    if (chunk.kind === 'tbl') {
-      close();
-      blocks.push(tableOf(chunk.xml, links));
-      continue;
-    }
-    const p = chunk.xml;
-    const style = styleOf(p);
-    const align = alignOf(p);
+  /*
+   * One chunk, placed. A function rather than the loop body it was, so
+   * that the loop can see *which* block a paragraph landed in and hang
+   * that paragraph's comments on it — a list's comment arrives on its
+   * first item and belongs to the whole list, which by then is the block
+   * still open rather than the last one pushed.
+   */
+  const place = (chunk: { kind: 'p' | 'tbl'; xml: string }) => {
+      if (chunk.kind === 'tbl') {
+        close();
+        blocks.push(tableOf(chunk.xml, links));
+        return;
+      }
+      const p = chunk.xml;
+      const style = styleOf(p);
+      const align = alignOf(p);
 
-    if (has(p, 'br') && /w:type="page"|\stype="page"/.test(p)) {
-      close();
-      blocks.push({ kind: 'break' });
-      continue;
-    }
+      if (has(p, 'br') && /w:type="page"|\stype="page"/.test(p)) {
+        close();
+        blocks.push({ kind: 'break' });
+        return;
+      }
 
-    const picture = pictureOf(p, links, zip, media);
-    if (picture) {
-      close();
-      blocks.push(picture);
-      continue;
-    }
+      const picture = pictureOf(p, links, zip, media);
+      if (picture) {
+        close();
+        blocks.push(picture);
+        return;
+      }
 
-    const words = textOf(p, links).trim();
+      const words = textOf(p, links).trim();
 
-    // An empty paragraph carrying a bottom border is a divider — which is
-    // what Word's own Borders button draws, and what `docx.ts` writes.
-    if (!words && has(p, 'pBdr') && /bottom/.test(p)) {
-      close();
-      blocks.push({ kind: 'rule' });
-      continue;
-    }
+      // An empty paragraph carrying a bottom border is a divider — which is
+      // what Word's own Borders button draws, and what `docx.ts` writes.
+      if (!words && has(p, 'pBdr') && /bottom/.test(p)) {
+        close();
+        blocks.push({ kind: 'rule' });
+        return;
+      }
 
-    if (has(p, 'oMath') || has(p, 'oMathPara')) {
-      notes.add('An equation came through as its words — Word stores one in a form this app cannot read back into a formula.');
-    }
+      if (has(p, 'oMath') || has(p, 'oMathPara')) {
+        notes.add('An equation came through as its words — Word stores one in a form this app cannot read back into a formula.');
+      }
 
-    if (style === 'Title' && words) {
-      close();
-      title ||= words;
-      continue;
-    }
-    if (style === 'Subtitle' && words) {
-      close();
-      subtitle ||= words;
-      continue;
-    }
+      if (style === 'Title' && words) {
+        close();
+        title ||= words;
+        return;
+      }
+      if (style === 'Subtitle' && words) {
+        close();
+        subtitle ||= words;
+        return;
+      }
 
-    if (!words) {
-      close();
-      continue;
-    }
+      if (!words) {
+        close();
+        return;
+      }
 
-    /* The paragraph's own numbering, or the one its style carries — see
-       `styleNumbering`, and the Word file that made it necessary. */
-    const numbering = new RegExp(`<${ns('numPr')}(?:\\s[^>]*)?>([\\s\\S]*?)</${ns('numPr')}>`).exec(p);
-    const fromStyle = styled[style];
-    if (numbering || fromStyle) {
-      const inner = numbering ? numbering[1] : '';
-      const levelTag = new RegExp(opening('ilvl')).exec(inner);
-      const idTag = new RegExp(opening('numId')).exec(inner);
-      const level = levelTag
-        ? Number(attr(levelTag[0], 'val')) || 0
-        : (fromStyle?.level ?? 0);
-      const numId = idTag ? attr(idTag[0], 'val') : (fromStyle?.numId ?? '');
-      const numbered = lists[numId] === false;
-      const tick = TICKED.exec(words);
-      if (tick) {
-        const done = tick[1] !== '☐';
+      /* The paragraph's own numbering, or the one its style carries — see
+         `styleNumbering`, and the Word file that made it necessary. */
+      const numbering = new RegExp(`<${ns('numPr')}(?:\\s[^>]*)?>([\\s\\S]*?)</${ns('numPr')}>`).exec(p);
+      const fromStyle = styled[style];
+      if (numbering || fromStyle) {
+        const inner = numbering ? numbering[1] : '';
+        const levelTag = new RegExp(opening('ilvl')).exec(inner);
+        const idTag = new RegExp(opening('numId')).exec(inner);
+        const level = levelTag
+          ? Number(attr(levelTag[0], 'val')) || 0
+          : (fromStyle?.level ?? 0);
+        const numId = idTag ? attr(idTag[0], 'val') : (fromStyle?.numId ?? '');
+        const numbered = lists[numId] === false;
+        const tick = TICKED.exec(words);
+        if (tick) {
+          const done = tick[1] !== '☐';
+          const text = words.replace(TICKED, '');
+          if (open?.kind === 'checks') open.items.push({ text, done });
+          else {
+            close();
+            open = { kind: 'checks', items: [{ text, done }] };
+          }
+          return;
+        }
+        const line: Line = { text: words, level };
+        if (open?.kind === 'bullets' && open.numbered === numbered) open.items.push(line);
+        else {
+          close();
+          open = { kind: 'bullets', items: [line], numbered };
+        }
+        return;
+      }
+
+      // A ticked line that lost its numbering — Pages writes one as an ordinary
+      // paragraph — is still a checklist to anybody reading it.
+      const loose = TICKED.exec(words);
+      if (loose) {
+        const done = loose[1] !== '☐';
         const text = words.replace(TICKED, '');
         if (open?.kind === 'checks') open.items.push({ text, done });
         else {
           close();
           open = { kind: 'checks', items: [{ text, done }] };
         }
-        continue;
+        return;
       }
-      const line: Line = { text: words, level };
-      if (open?.kind === 'bullets' && open.numbered === numbered) open.items.push(line);
-      else {
-        close();
-        open = { kind: 'bullets', items: [line], numbered };
+
+      if (style === 'Code' || style === 'HTMLPreformatted' || style === 'SourceCode') {
+        const line = textOf(p, links).replace(/^`|`$/g, '');
+        if (open?.kind === 'code') open.text += `\n${line}`;
+        else {
+          close();
+          open = { kind: 'code', text: line, language: '' };
+        }
+        return;
       }
-      continue;
-    }
 
-    // A ticked line that lost its numbering — Pages writes one as an ordinary
-    // paragraph — is still a checklist to anybody reading it.
-    const loose = TICKED.exec(words);
-    if (loose) {
-      const done = loose[1] !== '☐';
-      const text = words.replace(TICKED, '');
-      if (open?.kind === 'checks') open.items.push({ text, done });
-      else {
-        close();
-        open = { kind: 'checks', items: [{ text, done }] };
+      close();
+
+      const heading = /^Heading\s?([1-9])$/i.exec(style);
+      if (heading) {
+        const level = Math.min(3, Number(heading[1])) as 1 | 2 | 3;
+        if (Number(heading[1]) > 3) {
+          notes.add('Headings below level 3 came in as level 3 — this app has three.');
+        }
+        blocks.push({ kind: 'heading', level, text: words, ...(align ? { align } : null) });
+        return;
       }
-      continue;
-    }
 
-    if (style === 'Code' || style === 'HTMLPreformatted' || style === 'SourceCode') {
-      const line = textOf(p, links).replace(/^`|`$/g, '');
-      if (open?.kind === 'code') open.text += `\n${line}`;
-      else {
-        close();
-        open = { kind: 'code', text: line, language: '' };
+      if (style === 'Quote' || style === 'IntenseQuote' || style === 'BlockText') {
+        blocks.push({ kind: 'quote', text: words, source: '', ...(align ? { align } : null) });
+        return;
       }
-      continue;
-    }
 
-    close();
-
-    const heading = /^Heading\s?([1-9])$/i.exec(style);
-    if (heading) {
-      const level = Math.min(3, Number(heading[1])) as 1 | 2 | 3;
-      if (Number(heading[1]) > 3) {
-        notes.add('Headings below level 3 came in as level 3 — this app has three.');
+      /* A caption under a quotation is its attribution, which this app keeps as
+         a field of the quotation rather than as a paragraph of its own. */
+      const previous = blocks[blocks.length - 1];
+      if (style === 'Caption' && previous?.kind === 'quote' && !previous.source) {
+        previous.source = words.replace(/^[—–-]\s*/, '');
+        return;
       }
-      blocks.push({ kind: 'heading', level, text: words, ...(align ? { align } : null) });
-      continue;
-    }
 
-    if (style === 'Quote' || style === 'IntenseQuote' || style === 'BlockText') {
-      blocks.push({ kind: 'quote', text: words, source: '', ...(align ? { align } : null) });
-      continue;
-    }
+      blocks.push({ kind: 'text', text: words, ...(align ? { align } : null) });
+  };
 
-    /* A caption under a quotation is its attribution, which this app keeps as
-       a field of the quotation rather than as a paragraph of its own. */
-    const previous = blocks[blocks.length - 1];
-    if (style === 'Caption' && previous?.kind === 'quote' && !previous.source) {
-      previous.source = words.replace(/^[—–-]\s*/, '');
-      continue;
+  for (const chunk of chunks(body ? body[1] : xml)) {
+    const ids = commentIds(chunk.xml);
+    place(chunk);
+    if (ids.length) {
+      const target = open ?? blocks[blocks.length - 1];
+      const found = ids.map((id) => remarks[id]).filter((n): n is Note => Boolean(n));
+      if (target && found.length) target.notes = [...(target.notes ?? []), ...found];
     }
-
-    blocks.push({ kind: 'text', text: words, ...(align ? { align } : null) });
   }
   close();
 
-  if (has(xml, 'commentReference')) notes.add('Comments were left behind — this app has nowhere to put them yet.');
+  /* A comment whose range this reader never met — one anchored inside a
+     footnote, or to a run in a text box — is still a comment that did not
+     arrive, and saying nothing about it would be the silence this list
+     exists to avoid. */
+  if (has(xml, 'commentReference') && Object.keys(remarks).length === 0) {
+    notes.add('A comment could not be placed against any block, and was left behind.');
+  }
   if (has(xml, 'ins') || has(xml, 'del')) notes.add('Tracked changes were flattened: insertions are in, deletions are out.');
   if (part('word/footnotes.xml').includes('<w:footnote ')) {
     notes.add('Footnotes were left behind.');

@@ -22,7 +22,7 @@
  * manners.
  */
 
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -49,7 +49,8 @@ const GROUPS: { where: Step['where']; label: string; note: string }[] = [
 ];
 
 export function Behind() {
-  const { state, dispatch, now, catalog, courseCode } = useStore();
+  const { state, dispatch, catalog, courseCode } = useStore();
+  const now = useNow();
   if (catalog.empty) return <FirstRun where="to sort out a bad week" />;
 
   // The hours are the student's own, from their work windows. Where they have

@@ -170,7 +170,10 @@ jobs:
       # red this means the tests depend on each other, which is a different
       # fault from a broken test and wants a different fix — almost always in
       # the *earlier* file, which is the one the failure does not name.
-      - name: Test in a random order
+      #
+      # Deliberately unseeded. A fixed seed is one more arrangement, which is
+      # the thing this step exists to stop trusting.
+      - name: Test in a different order
         working-directory: app
         run: npm run test:shuffle
 

@@ -12,7 +12,7 @@
  * seen most of the app. The rules are in `lib/unseen.ts`.
  */
 
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { TabGlyph } from './TabIcon';
 import { dayOf, offer, seenLine } from '../lib/unseen';
@@ -20,7 +20,8 @@ import { saysFor } from '../lib/nav';
 import { Folding } from './Fold';
 
 export function NotYetOpened() {
-  const { state, dispatch, now, school } = useStore();
+  const { state, dispatch, school } = useStore();
+  const now = useNow();
 
   const three = offer(state.visited, dayOf(now));
   if (three.length === 0) return null;

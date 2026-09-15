@@ -60,10 +60,15 @@ describe('tap targets', () => {
     const used = tsx('src').filter((f) =>
       /className[=:]\s*["'`][^"'`]*\btap(-[xy])?\b/.test(readFileSync(f, 'utf8')),
     );
-    // The eight the audit named, plus Today's grip, plus the two screens that
-    // were built after it. Fewer than this means one was reverted without the
-    // measurement being redone.
-    expect(used.length, `only ${used.length} files use a tap class`).toBeGreaterThanOrEqual(12);
+    // The eight the audit named, plus the two screens that were built after
+    // it. Fewer than this means one was reverted without the measurement
+    // being redone.
+    //
+    // Two are deliberately not among them any more — Today's grip and Gap's
+    // Aloud button — because both stopped borrowing a target and took a real
+    // one. An overlay is invisible to a checker, which reads the element and
+    // is right to; see the test below.
+    expect(used.length, `only ${used.length} files use a tap class`).toBeGreaterThanOrEqual(10);
     for (const must of [
       'src/components/SampleMark.tsx',   // 112×20, on 65 screens
       'src/components/Reorder.tsx',      // 26×23, three lists
@@ -75,21 +80,6 @@ describe('tap targets', () => {
       // the form both it and the first run now render.
       'src/components/Credentials.tsx',
       'src/App.tsx',                     // 115×23, the way up to a course
-      // 17×16, one per section of Today, and the reason the measuring is
-      // written down twice: the first version of this grip was the size of
-      // the glyph, and on the first section its widened target came back
-      // clipped to 18×45 by the card frame painted over it. Re-measured at
-      // 390×844 against the running app: 32×45 for all five, stealing no
-      // other control's taps. Half the target is off the left edge of the
-      // screen, which is what the page's own margin leaves room for.
-      'src/screens/Today.tsx',
-      // 38×17, and it survived the audit that took 104 targets under 30px
-      // down to none — because a walk of the screens never sees it. It is
-      // drawn only inside a running gap session, behind a start button and
-      // behind a browser that can speak. `tap-y` rather than `tap`, for the
-      // reason the audit itself gives: the card counter shares its row, and
-      // a target that grew sideways would reach across the gap towards it.
-      'src/screens/Gap.tsx',
       /*
        * Two screens the audit could not have seen, because neither existed
        * when it ran, and both went straight back under the floor it cleared.
@@ -110,6 +100,46 @@ describe('tap targets', () => {
     ]) {
       expect(used, `${must} lost its tap class`).toContain(must);
     }
+  });
+
+  /*
+   * The one place an overlay could not do the job, and what it cost to find
+   * out.
+   *
+   * Today's grip was 17×16 with `tap` around it. That overlay is 44×44
+   * centred on the glyph, so it reaches 22px below the middle — and half of
+   * Today's sections fold, which makes their heading a button 296×25 across
+   * the whole column, five pixels under the grip or touching it. Probed with
+   * `document.elementFromPoint` at 420×900: the top 14px of "Due today" and
+   * the top 8px of "Office hours worth going to" answered as the grip, so
+   * tapping a heading to fold its section started a drag hold instead.
+   *
+   * `tap-x` stopped the theft and left the glyph 17×16, under the 24 WCAG 2.2
+   * asks for — and the twenty-pixel gap the handle hung in has room for
+   * neither 24×24 nor 24px of clearance, so no overlay of any axis could have
+   * finished it. It is in the flow now, at a real 24×24, where it can overlap
+   * nothing above or below by construction.
+   *
+   * This cannot measure pixels — that needs a browser, and it was done in one
+   * — but it can hold the shape: a box rather than an overlay, and the
+   * heading's own margin out of the way so the handle's room is the air above
+   * the heading rather than air on top of air.
+   */
+  it('gives Today’s grip a real target instead of an overlay', () => {
+    const today = readFileSync('src/screens/Today.tsx', 'utf8');
+    const grip = today.slice(today.indexOf('feed.grip('), today.indexOf('aria-label={`Move '));
+    expect(grip, 'an overlay cannot reach 24px out of a 20px gap').not.toMatch(
+      /className: '(tap|tap-x|tap-y)'/,
+    );
+    expect(grip, 'the handle should not be placed by arithmetic any more').not.toMatch(
+      /position: 'absolute'/,
+    );
+    expect(css, 'the grip needs a box, not a glyph').toMatch(
+      /\.grip \{[^}]*width: 24px;[^}]*height: 24px;/,
+    );
+    expect(css, 'the heading follows the handle, so its own margin goes').toMatch(
+      /section\[data-drop\] > \.grip \+ \* \{[^}]*margin-top: 0/,
+    );
   });
 
   /*

@@ -666,8 +666,33 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   **Markdown drops it** — markdown describes structure and has no centred
   paragraph — which `docalign.test.ts` pins rather than leaving to be
   discovered: the alignment goes, every word stays.
-- ~~No find-and-replace, no outline sidebar,~~ no comments/margin notes. —
-  both **closed** in `lib/doctools.ts` (`findAll`, `replaceAll`, `outline`).
+- ~~No find-and-replace, no outline sidebar, no comments/margin notes.~~ —
+  **all closed.** Find-and-replace and the outline are `lib/doctools.ts`
+  (`findAll`, `replaceAll`, `outline`). Notes are `Note` in
+  `lib/document.ts`, and the shape of them is the decision worth recording:
+  a note belongs to a **block**, not to a range of characters. Word anchors a
+  comment to a range; this app cannot, because a block is edited as one
+  `<textarea>` with no persisted selection, so a character offset would be
+  wrong the moment somebody typed in front of it — and repairing offsets on
+  every keystroke is a system with bugs of its own. Against the block, a note
+  moves when the block moves and goes when the block goes, both for free.
+  `Block` is `Kinded & { notes?: Note[] }` rather than the field being added
+  to each of the eleven members, which would be eleven chances to leave it
+  off the twelfth; the intersection distributes, so `kind` still narrows.
+  Out to `.docx` as **real Word comments** — a range start, a range end and a
+  reference in the body, an entry in `comments.xml`, a content type and a
+  relationship, all four or Word calls the whole file unreadable — and back
+  in through `lib/docxin.ts`, which used to say comments were left behind and
+  now says so only when one refers to an entry that is not in the file.
+  Resolved survives both ways, through `commentsExtended.xml`, which finds a
+  comment by its paragraph's `w14:paraId` rather than by the comment's own id.
+  Written only when something *is* resolved: an empty part is a part that says
+  nothing and can still be got wrong. On the page they sit in the margin,
+  absolutely positioned so they cannot shift the prose by a line — the page
+  view is what prints, and a note that moved the text would make it lie about
+  where the page breaks fall. They do not print, and below 1100px they come
+  back into the flow rather than off the side of a phone. Markdown has no
+  margin, so it drops them and keeps every word.
 - ~~**No version history and no restore.** No autosave indicator.~~ —
   **closed.** `lib/docversions.ts`, and the History panel in `screens/Write.tsx`.
 - No *generated* PDF — though File → "Print, or save as PDF" is there and is
@@ -863,11 +888,11 @@ Everything above that is not struck through, collected — so the next person
 reading this has one short list rather than a long one to re-check. Verified
 by grepping for each, not by re-reading the sentence.
 
-**Documents** — comments and margin notes · a generated
+**Documents** — a generated
 PDF, as against the browser's print-to-PDF, which is there ·
 "Open in Docs" from a study guide · a WYSIWYG surface (the marks are typed).
 (Code blocks, checkbox lists, images, horizontal rules, indent/outdent,
-alignment and `.docx` import were on this list and are done. Line spacing and margins were on it
+alignment, `.docx` import and margin notes were on this list and are done. Line spacing and margins were on it
 and had already been built when it was written.)
 
 **Sheets** — nothing. Every entry this section listed is either built or was
