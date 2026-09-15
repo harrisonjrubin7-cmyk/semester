@@ -1,3 +1,4 @@
+import { ChipScroll } from './ui';
 import { useStore } from '../state/store';
 import type { CourseId } from '../lib/types';
 
@@ -30,9 +31,18 @@ export function CoursePicker({
 }) {
   const { catalog } = useStore();
   return (
-    <div className="chiprow" style={{ marginTop: 'var(--sp-5)', ...style }}>
-      <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
-        {[{ id: null, label: none }, ...catalog.courses.map((c) => ({ id: c.id, label: c.code }))].map(
+    /*
+     * Through `ChipScroll` rather than `className="chiprow"`, which is what
+     * this wrote and is why it never faded at its end. A row of four courses
+     * fits; a row of five does not, and on the deployed build this one cut
+     * "BUS 1600" to "B" at the screen edge with nothing to say it scrolled.
+     * The class is the look; the component is the behaviour.
+     */
+    <ChipScroll
+      count={catalog.courses.length + 1}
+      style={{ marginTop: 'var(--sp-5)', ...style }}
+    >
+      {[{ id: null, label: none }, ...catalog.courses.map((c) => ({ id: c.id, label: c.code }))].map(
           (o) => {
             const on = value === o.id;
             return (
@@ -73,7 +83,6 @@ export function CoursePicker({
             );
           },
         )}
-      </div>
-    </div>
+    </ChipScroll>
   );
 }
