@@ -47,8 +47,8 @@ export function AccountScreen() {
             This build has no account service
           </div>
           <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
-            Everything works, and everything stays on this device. To turn on accounts, set
-            VITE_SUPABASE_URL and VITE_SUPABASE_KEY and redeploy — see SETUP.md.
+            Accounts are not switched on in this copy of Semester, so there is nothing to sign
+            in to. Everything works without one, and everything stays in this browser.
           </div>
         </Blueprint>
       </Page>

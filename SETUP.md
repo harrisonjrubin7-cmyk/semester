@@ -353,17 +353,28 @@ nothing runs after it.
 
 ## 5 · The optional connectors
 
-None of these are needed to use the app; each is documented in
-[`app/.env.example`](app/.env.example) and announces itself on the Connect
-screen when it is missing.
+None of these are needed to use the app. Each is documented at length in
+[`app/.env.example`](app/.env.example) — that file is the one to open, and it
+has the scopes, the caveats and the exact console paths.
 
-| What | Needs |
-| --- | --- |
-| Brightspace, iCloud, any calendar | Nothing — paste the .ics or webcal link |
-| Microsoft 365 | An app registration (single-page application) |
-| Google Calendar / Drive | An OAuth client (web application) |
-| Zoom | A General App with PKCE, plus the dev proxy |
-| Sign in with Apple | A paid developer account, an https redirect, a signing key |
+The Connect screen says only that a sign-in is not switched on, and offers the
+file route instead. It used to print the registration instructions themselves,
+which meant a student read a path through Azure and a filename in this
+repository; the audience for that is you, and it is here and in `.env.example`.
+`app/src/screens/rendered-words.test.ts` keeps it that way.
+
+| What | Register at | Into |
+| --- | --- | --- |
+| Brightspace, iCloud, any calendar | Nothing — paste the .ics or webcal link | — |
+| Microsoft 365 | portal.azure.com → App registrations → single-page application | `VITE_MS_CLIENT_ID` |
+| Google Calendar / Drive | console.cloud.google.com → Credentials → OAuth client → Web application | `VITE_GOOGLE_CLIENT_ID` |
+| Zoom | marketplace.zoom.us → Develop → Build App → General App (PKCE) | `VITE_ZOOM_CLIENT_ID` |
+| Sign in with Apple | developer.apple.com → Identifiers → Services ID (a paid account) | `VITE_APPLE_CLIENT_ID` |
+
+The redirect URI is wherever the app is served from — `http://localhost:5199`
+in development, your deployed origin otherwise. Zoom needs the proxy as well
+(`VITE_OAUTH_PROXY`), because its API sends no CORS headers; Apple needs it to
+sign the client secret, and refuses `http://localhost` as a redirect entirely.
 
 ## What a new user does
 

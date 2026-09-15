@@ -32,9 +32,13 @@
  *     VITE_APPLE_CLIENT_ID=…           # a Services ID, and see vite.config.ts
  *     VITE_OAUTH_PROXY=/oauth        # optional; see vite.config.ts
  *
- * Without one, the app says so on the Connect screen and offers the file route
- * instead — every one of these systems exports .ics, and that path needs no
- * registration, no key and no server.
+ * Those four lines, and where to register each client, are in
+ * `app/.env.example` — which is where they belong and where they already were.
+ * The Connect screen used to carry a copy of them, so a student opening it
+ * read a console path, a redirect URI and a filename they have no way to edit
+ * and no reason to see. It now says only that the sign-in is not switched on
+ * in this copy, and points at the file route: every one of these systems
+ * exports .ics, and that path needs no registration, no key and no server.
  *
  * Nothing leaves the device except the calls to the provider itself. Tokens are
  * held in this browser's storage, and there is no backend to send them to.
@@ -56,8 +60,6 @@ interface ProviderSpec {
   tokenUrl: string;
   scopes: string;
   clientId: string;
-  /** Where to register a client, shown when there is no client ID. */
-  console: string;
   /** True when the provider's API refuses browser calls without a proxy. */
   needsProxy: boolean;
   /** False when signing in gets you identity and nothing readable. */
@@ -82,7 +84,6 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
       'openid profile offline_access User.Read Calendars.ReadWrite Mail.Read ' +
       'Tasks.ReadWrite Files.ReadWrite',
     clientId: env.VITE_MS_CLIENT_ID ?? '',
-    console: 'portal.azure.com → App registrations → single-page application',
     needsProxy: false,
     calendar: true,
   },
@@ -106,7 +107,6 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
       'https://www.googleapis.com/auth/gmail.readonly ' +
       'https://www.googleapis.com/auth/tasks',
     clientId: env.VITE_GOOGLE_CLIENT_ID ?? '',
-    console: 'console.cloud.google.com → Credentials → OAuth client → Web application',
     needsProxy: false,
     calendar: true,
   },
@@ -118,7 +118,6 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     tokenUrl: 'https://zoom.us/oauth/token',
     scopes: 'user:read meeting:read recording:read',
     clientId: env.VITE_ZOOM_CLIENT_ID ?? '',
-    console: 'marketplace.zoom.us → Develop → Build App → General App (PKCE)',
     // Zoom's API sends no CORS headers, so browser calls have to go through
     // the dev proxy. Saying so beats a silent network error.
     needsProxy: true,
@@ -135,18 +134,23 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     // back on the query string, which is all this needs.
     scopes: '',
     clientId: env.VITE_APPLE_CLIENT_ID ?? '',
-    console: 'developer.apple.com → Identifiers → Services ID (a paid account)',
     // Apple's client secret is a JWT signed with a private key. That signing
     // cannot happen in a browser, so this one always goes through the proxy.
     needsProxy: true,
     calendar: false,
+    /*
+     * What is left of this is the half a student can act on. It used to end
+     * with the requirements for registering the client — a paid developer
+     * account, a Services ID on an https redirect, the proxy that signs the
+     * secret — which is a sentence for whoever deploys the app and was being
+     * read by whoever opened the screen. It is in `app/.env.example`, where it
+     * always was as well.
+     */
     caveat:
       'Apple gives no calendar API. To bring an iCloud calendar in, publish it — ' +
       'Calendar → share a calendar → Public Calendar — and paste the webcal link above. ' +
       'That route needs no account here at all. Signing in with Apple is only worth it ' +
-      'if you want the app to know who you are, and it needs a paid developer account, ' +
-      'a Services ID whose redirect is https (Apple rejects localhost), and the proxy ' +
-      'to sign the client secret.',
+      'if you want the app to know who you are.',
   },
 };
 

@@ -185,7 +185,7 @@ export function Lobby({
         {' '}
         {relayed
           ? 'A relay is configured, so a network that refuses a direct connection still works.'
-          : 'No relay is configured, so a network that refuses direct connections — some campus and hotel networks do — will not carry a call. SETUP.md says how to add one.'}
+          : 'No relay is configured, so a network that refuses direct connections — some campus and hotel networks do — will not carry a call. Whoever runs this copy can add one.'}
       </div>
 
       {/*
