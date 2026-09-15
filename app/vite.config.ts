@@ -403,6 +403,7 @@ const MOCKS_MODULES = [
   'src/lib/generate.test.ts',
   'src/lib/presence.test.ts',
   'src/screens/call/leaving.test.tsx',
+  'src/screens/addmaterial.test.tsx',
   'src/screens/pathway.test.tsx',
   'src/screens/university.test.tsx',
   'src/state/persist/firstrun.test.ts',
