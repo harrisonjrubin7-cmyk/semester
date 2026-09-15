@@ -1241,6 +1241,45 @@ model in it or needs a key:
   writing for this: put a sinusoid of a known frequency in, and ask which band
   it came out of — at level three as well as level two.
 
+  **`frft([…], 0.5)` is a fractional Fourier transform** — the spectrum, part
+  of the way there. A spectrum looks at the time-frequency plane from one fixed
+  side: at order 0 you get the run itself, at order 1 the ordinary transform,
+  at order 2 the run backwards, at order 4 back where you started. The orders
+  between are turns of that plane. A chirp — a wobble that speeds up as it goes
+  — is a sloping line in the plane, which is why it has no peak in an ordinary
+  spectrum: every frequency is in it, for a moment. Turn the plane until the
+  line points along an axis and the whole chirp collapses into one spike. So
+  `frft(\cos(0.014n^2), 32)` comes out smeared across a dozen bins at order 1
+  and gathered into one at order 0.76 — 16% of it in a single place against
+  57% — and that order is the sweep the chirp is sweeping at.
+
+  There is a fast way to do this, with three chirp multiplications and a
+  transform, and it is an approximation: at order 1 it is nearly but not
+  exactly the transform, and turning half way twice is nearly but not exactly
+  turning all the way once. Near-misses are hard to test and easy to be wrong
+  about, so this takes the exact route instead — the transform's own
+  eigenvectors, with their quarter turn of phase turned a fraction as far. Then
+  every property that ought to hold holds to the last bit, and the tests check
+  all of them as equalities rather than as tolerances.
+
+  Getting those eigenvectors is Candan's method: a real symmetric matrix that
+  commutes with the transform, taken apart with Jacobi rotations. **What it
+  gives is the order, not the turn**, and assuming otherwise is the trap. The
+  tempting shortcut — the k-th smoothest eigenvector turns k quarters — is
+  wrong twice over. Candan's matrix can have two eigenvectors sharing an
+  eigenvalue, and within that pair no method picks them apart, because every
+  direction in it is as good as every other; and even where the eigenvalues are
+  distinct, the ranking disagrees with the turns near the rough end, where the
+  matrix stops being a good stand-in for the smooth thing it copies. At sixteen
+  samples the turns run … 6, 8, 7, 10, 9 … rather than in order. Assume, and
+  order 1 is *not* the ordinary transform — it is something that looks like it,
+  off in the third decimal, which is the failure that actually happened here.
+  The turn is measured instead: each eigenvector is split into its four turning
+  pieces, and the piece with anything new left in it is the one kept. A pair
+  sharing an eigenvalue then sorts itself out on the way through, the first
+  claiming whichever turn it leans towards and the second, finding nothing new
+  left there, taking the other.
+
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms
   without complaint. A bracket after a letter is a multiplication or a function
