@@ -413,7 +413,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                   paddingLeft: 'calc(24px + var(--sp-4))',
                   fontSize: 'var(--type-xs)',
                   lineHeight: 'var(--leading-normal)',
-                  opacity: 0.55,
+                  color: 'var(--app-dim)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -737,7 +737,7 @@ const QUIET = {
   flex: 'none',
   fontSize: 'var(--type-xs)',
   letterSpacing: '0.1em',
-  opacity: 0.55,
+  color: 'var(--app-dim)',
 } as const;
 
 /**

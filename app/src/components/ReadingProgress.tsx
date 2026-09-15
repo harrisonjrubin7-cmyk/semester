@@ -188,7 +188,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
         <div
           style={{
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.55,
+            color: 'var(--app-dim)',
             marginTop: 7,
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',

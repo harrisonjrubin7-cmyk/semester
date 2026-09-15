@@ -242,7 +242,7 @@ export function Drill() {
             fontFamily: 'var(--font-heading)',
             fontSize: 'var(--type-sm)',
             letterSpacing: '0.12em',
-            opacity: 0.55,
+            color: 'var(--app-dim)',
           }}
         >
           {state.drillIdx + 1} / {pool.length}
@@ -268,7 +268,7 @@ export function Drill() {
           <div
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: 0.55,
+              color: 'var(--app-dim)',
               marginTop: 'var(--sp-3)',
               lineHeight: 'var(--leading-normal)',
               textWrap: 'pretty',
@@ -576,7 +576,7 @@ export function Quiz() {
             fontFamily: 'var(--font-heading)',
             fontSize: 'var(--type-sm)',
             letterSpacing: '0.12em',
-            opacity: 0.55,
+            color: 'var(--app-dim)',
           }}
         >
           {state.quizIdx + 1} / {state.quiz.length}

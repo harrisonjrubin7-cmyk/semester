@@ -247,5 +247,5 @@ const ACT = {
   width: 'auto',
   fontSize: 'var(--type-xs)',
   letterSpacing: '0.08em',
-  opacity: 0.55,
+  color: 'var(--app-dim)',
 } as const;

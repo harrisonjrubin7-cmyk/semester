@@ -99,7 +99,7 @@ export function Behind() {
           <div
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: 0.55,
+              color: 'var(--app-dim)',
               marginBottom: 9,
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
@@ -143,7 +143,7 @@ export function Behind() {
               <div
                 style={{
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 0.55,
+                  color: 'var(--app-dim)',
                   marginBottom: 9,
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',

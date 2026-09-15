@@ -85,7 +85,7 @@ export function SettingsCourses() {
               {ROLES.filter((r) => !r.ready).map((r) => (
                 <div key={r.id} style={{ marginBottom: 'var(--sp-4)' }}>
                   <div style={{ fontSize: 'var(--type-base)' }}>{r.label}</div>
-                  <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                     {r.needs}
                   </div>
                 </div>

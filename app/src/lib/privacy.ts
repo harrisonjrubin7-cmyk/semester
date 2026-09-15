@@ -105,8 +105,8 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     ],
   },
   {
-    says: 'the email you have drafted and how you have marked messages',
-    keys: ['mailDrafts', 'mailMarks', 'mailPane'],
+    says: 'the email you have drafted, how you have marked messages, and the mail rules you have written',
+    keys: ['mailDrafts', 'mailMarks', 'mailRules', 'mailPane'],
   },
   {
     says: 'your study history — cards drilled, practice papers sat and the answers you gave',

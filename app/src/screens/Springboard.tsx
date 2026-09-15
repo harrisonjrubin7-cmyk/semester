@@ -315,7 +315,7 @@ export function Springboard() {
 
       {searching ? (
         <>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)' }}>
             {found.length === 0
               ? 'Nothing here by that name.'
               : `${found.length} ${found.length === 1 ? 'place' : 'places'}`}

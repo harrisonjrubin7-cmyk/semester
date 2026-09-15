@@ -21,6 +21,16 @@
 export type Shape = { d: string } | { c: readonly [number, number, number] };
 
 export const SHAPES = {
+  /*
+   * The four alignments, as the stack of lines every toolbar draws them as.
+   * Same three rules each time; which ones are short and which end they are
+   * short at is the whole of the difference, which is why they have to be
+   * drawn rather than spelled with a character.
+   */
+  alignLeft: [{ d: 'M21 6H3' }, { d: 'M15 12H3' }, { d: 'M17 18H3' }],
+  alignCenter: [{ d: 'M21 6H3' }, { d: 'M17 12H7' }, { d: 'M19 18H5' }],
+  alignRight: [{ d: 'M21 6H3' }, { d: 'M21 12H9' }, { d: 'M21 18H7' }],
+  alignJustify: [{ d: 'M21 6H3' }, { d: 'M21 12H3' }, { d: 'M21 18H3' }],
   chevronRight: [{ d: 'm9 18 6-6-6-6' }],
   chevronLeft: [{ d: 'm15 18-6-6 6-6' }],
   chevronDown: [{ d: 'm6 9 6 6 6-6' }],

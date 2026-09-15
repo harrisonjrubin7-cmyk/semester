@@ -113,7 +113,7 @@ function Loading() {
             marginTop: i === 0 ? 0 : 12,
             borderRadius: 'var(--r-md)',
             background: 'var(--app-hero)',
-            opacity: 0.55,
+            color: 'var(--app-dim)',
           }}
         />
       ))}

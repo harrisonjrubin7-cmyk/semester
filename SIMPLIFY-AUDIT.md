@@ -1,3 +1,103 @@
+# One app — the eleventh pass: one fact, derived how many ways?
+
+Against `main` at `924d0ab`. **A near-null, and the short write-up is the
+honest length for it.**
+
+**60 destinations**, unchanged. 79 screens, 134 components.
+
+## The axis
+
+The one this file has been pointing at since the ninth pass and had not taken:
+not two screens answering one question, and not two implementations of one
+job, but **one fact derived two ways** — two pieces of code computing the same
+predicate by different rules. Nothing earlier could see it: each derivation has
+one home and one implementation, so a screen census, a control census and an
+implementation census all pass over it.
+
+The fact to take it against is the app's central one: **has this deadline gone
+by unticked?**
+
+## The result: they agree
+
+`lib/standing.ts` is the canonical home and argues the rule at length —
+
+> "today is never overdue, however late in the day it is: deadlines have
+> times, this app dates them to the day, and it would be a lie to call
+> something missed while the person could still be typing it."
+
+`standingOf` is called **nine** times. The same fact is re-derived inline as
+`i.isPast && !done[i.id]` **eight** more. All seventeen agree, and provably:
+`standingOf` *is* that expression once `done` is checked.
+
+Two other spellings exist and are also equivalent — `daysAway < 0` is
+`isPast` by definition in `lib/date.ts` — and the two places that use
+`daysAway <= 0`, which would include today, are not asking this question at
+all: one counts a seven-day window of *ticked* items, the other picks the
+wording "your first final today".
+
+**No disagreement anywhere.** The pass that was meant to find drift found none.
+
+## J1 — two guards against a case the rule already excludes
+
+`lib/weekly.ts` and `insights/pressure.ts` both write
+`i.isPast && !i.isToday && !done[i.id]`. `date.ts` sets `isPast: away < 0` and
+`isToday: away === 0`, so `!isToday` cannot change the answer. Two authors
+independently hedged against a case `isPast` already excludes — which is what
+it looks like when a carefully argued rule is not legible at the places that
+re-derive it.
+
+**Nearly a third.** `lib/brief.ts` writes `!i.isPast && !i.isToday`, and that
+one is *not* redundant: it is the negation, and without `!isToday` the ahead
+list would swallow today, which the line above it lists separately. Reading all
+three rather than matching the shape is what separated them — the fifth time in
+three passes that would have been a miscount, and the third caught before it
+cost anything.
+
+## What the coverage actually looks like
+
+The rule is held, in two halves that do not know about each other:
+
+| Where | What it pins |
+| --- | --- |
+| `lib/standing.test.ts` | "never calls today overdue, however late in the day" — given an item whose `isPast` is already right, because it fabricates its own |
+| `lib/select.test.ts` | that a today item comes out of `datedItems` with `isPast === false` |
+
+Together they are complete. Separately, neither says it is half of a pair, and
+the second reads as incidental — its name is about dating items against a
+clock. Change `date.ts` to `away <= 0` and `standing.test.ts` still passes.
+
+So J1 is two deletions and two notes: the guards go, and each half of the rule
+names the other.
+
+### J1, done — and two claims in the row above were wrong
+
+**"The only thing standing between `date.ts` and eight inline filters."** No.
+Measured by changing `date.ts` to `away <= 0` and running everything: **four
+files fail** — `select`, `weekly`, `brief` and `welcome`. `select.test.ts` is
+the only one that pins it *deliberately*; the other three fail through whatever
+they happened to be counting. The note in the file says that now, with the
+number, rather than the version that sounded better.
+
+**"The guards are redundant."** For correctness, yes. But the guess that
+followed — that removing them would leave `weekly` newly exposed to a `date.ts`
+change — was wrong too, and checking took one run: with the guard restored and
+`date.ts` broken, `weekly` still fails, just on a different assertion, because
+it uses `isPast` again in `slipped`. Removing them changes which line fails,
+not whether one does.
+
+Both were caught by running the thing rather than reasoning about it, which is
+this file's oldest lesson and still the one that earns its keep. **Two
+overstatements, in a row about two deletions** — the ratio is the point:
+nothing here was too small to be wrong about.
+
+## To do
+
+| # | Row | Verdict |
+| --- | --- | --- |
+| J1 | two impossible guards; a rule held in two unconnected halves | **Cut and connect** |
+
+---
+
 # One app — the tenth pass: read but never written, and the rest of the walkers
 
 Against `main` at `f0a2368`. No code in this commit.

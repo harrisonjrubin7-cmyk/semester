@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { matchCourse, parseIcs } from './ics';
+import { icsText } from './export';
 import { union } from './merge';
 import type { Course } from './types';
 
@@ -61,6 +62,39 @@ describe('parseIcs', () => {
       cal(event('UID:x', 'SUMMARY:A very long title that the\r\n  server wrapped', 'DTSTART:20260904T120000')),
     );
     expect(out.events[0].title).toBe('A very long title that the server wrapped');
+  });
+
+  /*
+   * A backslash survives the round trip.
+   *
+   * `icsText` doubles a backslash on the way out, as the format requires, so
+   * `S:\notes` is written `S:\\notes`. The reader undid the four escapes with
+   * four `replace` calls in a row, `\n` first — which found the *second*
+   * backslash of that pair followed by an `n` and turned it into a real
+   * newline, eating the letter:
+   *
+   *     S:\notes  →  written S:\\notes  →  read back S:\ + newline + otes
+   *
+   * A Windows path in an event description does it, and so does a LaTeX
+   * fragment: `\neq`, `\nabla`, `\newline`. The order cannot be rearranged to
+   * fix it — after any one replacement there is no telling which backslashes
+   * were escapes and which were escaped — so the reader makes one pass.
+   *
+   * Driven through the real `icsText` rather than hand-written escapes, so the
+   * writer and the reader are held to each other.
+   */
+  it('round-trips a backslash, including the one before an n', () => {
+    const roundTrip = (text: string) =>
+      parseIcs(
+        COURSES,
+        cal(event('UID:x', 'SUMMARY:x', 'DTSTART:20260904T120000', `DESCRIPTION:${icsText(text)}`)),
+      ).events[0].note;
+    expect(roundTrip('See S:\\notes\\week3')).toBe('See S:\\notes\\week3');
+    expect(roundTrip('C:\\new folder')).toBe('C:\\new folder');
+    expect(roundTrip('\\nabla f, where \\neq holds')).toBe('\\nabla f, where \\neq holds');
+    // The ordinary escapes still work, and a real newline is still a newline.
+    expect(roundTrip('One, two; three\nnext line')).toBe('One, two; three\nnext line');
+    expect(roundTrip('a\\\\b')).toBe('a\\\\b');
   });
 
   it('unescapes commas, semicolons and newlines in the description', () => {

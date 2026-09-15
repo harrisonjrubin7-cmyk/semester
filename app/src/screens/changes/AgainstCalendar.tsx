@@ -112,7 +112,7 @@ export function AgainstCalendar() {
       />
 
       {source === 'feed' ? (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
           {state.feedEvents.length > 0 ? (
             <>
               {state.feedEvents.length} entries from the calendars you have connected. Add or
@@ -169,7 +169,7 @@ export function AgainstCalendar() {
             >
               {summary(report)}
             </div>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               {report.agreed} matched and agreed · {report.onlyHere.length} here with no match in
               the feed
             </div>
@@ -199,7 +199,7 @@ export function AgainstCalendar() {
                         {m.was}
                       </span>
                       <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{m.now}</span>
-                      <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55 }}>{movedLine(m)}</span>
+                      <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{movedLine(m)}</span>
                     </div>
                     <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                       The feed calls it “{m.event.title}”.
@@ -241,7 +241,7 @@ export function AgainstCalendar() {
                       flex: 'none',
                       width: 82,
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                      opacity: 0.55,
+                      color: 'var(--app-dim)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
@@ -285,7 +285,7 @@ export function AgainstCalendar() {
                       flex: 'none',
                       width: 82,
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                      opacity: 0.55,
+                      color: 'var(--app-dim)',
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >

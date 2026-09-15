@@ -122,7 +122,7 @@ export function Timer({
 
   if (ended.kind === 'dropped') {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.55, padding: '9px 0' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', padding: '9px 0' }}>
         Under two minutes — not counted.
       </div>
     );
@@ -207,7 +207,7 @@ export function Timer({
                 width: 'auto',
                 padding: '8px 12px',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                opacity: 0.55,
+                color: 'var(--app-dim)',
               }}
             >
               Just start

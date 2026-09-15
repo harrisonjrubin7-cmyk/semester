@@ -311,7 +311,7 @@ function ThisTerm() {
             >
               <span>
                 {c.code}
-                <span style={{ opacity: 0.55 }}> · {c.hours} hrs</span>
+                <span style={{ color: 'var(--app-dim)' }}> · {c.hours} hrs</span>
               </span>
               {/* The letter band, not one letter: the middle alone would be
                   the same over-confident number this whole file avoids. */}
@@ -333,7 +333,7 @@ function ThisTerm() {
           <div
             style={{
               fontSize: 'var(--type-xs)',
-              opacity: 0.55,
+              color: 'var(--app-dim)',
               marginBottom: 'var(--sp-4)',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',

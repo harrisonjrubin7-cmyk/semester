@@ -242,7 +242,7 @@ function Row({ a }: { a: Application }) {
           <div
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: 0.55,
+              color: 'var(--app-dim)',
               marginTop: 11,
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
@@ -389,7 +389,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
       <div
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.55,
+          color: 'var(--app-dim)',
           marginTop: 7,
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',

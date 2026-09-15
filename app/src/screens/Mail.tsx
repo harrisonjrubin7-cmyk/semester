@@ -20,6 +20,8 @@ import {
   Search,
   TrashIcon,
 } from '../components/Icons';
+import { ruleFrom, ruleMarks, under, type Rule } from '../lib/mailrules';
+import { Rules } from '../components/mail/Rules';
 import { Rail } from '../components/mail/Rail';
 import { List } from '../components/mail/List';
 import { Reader } from '../components/mail/Reader';
@@ -109,6 +111,15 @@ export function Mail() {
    * read here and not rescued.
    */
   const [menu, setMenu] = useState<{ which: 'snooze' | 'move'; corner: Corner } | null>(null);
+  /*
+   * The rules panel, and the search it was opened on.
+   *
+   * `null` is closed; a `Rule` is "make a rule from this search", which is the
+   * entry point both clients put beside the box and the one that matters — a
+   * rule you write from scratch needs the query typing again, and the query
+   * you want is the one already on screen finding the right things.
+   */
+  const [rules, setRules] = useState<Rule | null | false>(false);
   const list = useRef<HTMLDivElement>(null);
   const search = useRef<HTMLInputElement>(null);
 
@@ -164,16 +175,34 @@ export function Mail() {
     [pool, state.mailDrafts, me],
   );
 
+  /*
+   * Your marks, with the rules' underneath them.
+   *
+   * The one place the two layers meet, so every list, count and reading pane
+   * on this screen sees the same mailbox. Rules go under, never over: a rule
+   * decides what happens to a message you have had no opinion about, and the
+   * moment you have one it is yours. `lib/mailrules.ts` has the argument, and
+   * the short version is that a rule re-run on every render would otherwise
+   * undo an unstar before the frame was drawn.
+   *
+   * Writes are unaffected — every dispatch on this screen still writes to
+   * `mailMarks`, which is exactly what makes yours win.
+   */
+  const marks = useMemo(
+    () => under(ruleMarks(mails, state.mailRules), state.mailMarks),
+    [mails, state.mailRules, state.mailMarks],
+  );
+
   const shown = useMemo(() => {
     const q = [query, label ? `"${label}"` : ''].filter(Boolean).join(' ');
     return listing(mails, {
       folder,
       category: folder === 'inbox' && !q ? category : null,
       query: q,
-      marks: state.mailMarks,
+      marks,
       now: now.getTime(),
     });
-  }, [mails, folder, category, query, label, state.mailMarks, now]);
+  }, [mails, folder, category, query, label, marks, now]);
 
   const threads = useMemo(() => conversations(shown), [shown]);
   const here = threads.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
@@ -486,17 +515,29 @@ export function Mail() {
             style={{ flex: 1, minWidth: 0 }}
           />
           {query && (
-            <button
-              type="button"
-              className="mb-folder-n"
-              onClick={() => {
-                setTyped('');
-                setQuery('');
-              }}
-              style={{ background: 'transparent', border: 0 }}
-            >
-              Clear
-            </button>
+            <>
+              <button
+                type="button"
+                className="mb-folder-n"
+                onClick={() => {
+                  setTyped('');
+                  setQuery('');
+                }}
+                style={{ background: 'transparent', border: 0 }}
+              >
+                Clear
+              </button>
+              {/* Gmail's "Create filter", in the one place it is worth being:
+                  beside a search that is already finding the right things. */}
+              <button
+                type="button"
+                className="mb-folder-n"
+                onClick={() => setRules(ruleFrom(query, `rule-${Date.now()}`, now.getTime()))}
+                style={{ background: 'transparent', border: 0 }}
+              >
+                Make a rule
+              </button>
+            </>
           )}
         </form>
 
@@ -624,7 +665,7 @@ export function Mail() {
           <Rail
             folder={folder}
             mails={mails}
-            marks={state.mailMarks}
+            marks={marks}
             now={now.getTime()}
             labels={catalog.courses.map((c) => ({ id: c.id, code: c.code }))}
             label={label}
@@ -641,6 +682,12 @@ export function Mail() {
               dispatch({ type: 'composeMail', draft: {} });
               setDrawer(false);
             }}
+            rules={state.mailRules}
+            rulesOpen={rules !== false}
+            onRules={() => {
+              setRules((was) => (was === false ? null : false));
+              setDrawer(false);
+            }}
           />
         )}
         {drawer && !wide && (
@@ -653,6 +700,25 @@ export function Mail() {
         )}
 
         <div className={`mb-main is-${pane}${open ? ' has-open' : ''}`} ref={list}>
+          {/*
+            Rules take the main pane rather than floating over it.
+            Writing one is a sit-down job with five fields and a live count
+            against your whole mailbox, and a popover that size is a dialog
+            pretending not to be one — with the focus trap and the escape
+            handling it would then owe. The list is one press away and the
+            rail stays where it is.
+          */}
+          {rules !== false ? (
+            <Rules
+              rules={state.mailRules}
+              mails={mails}
+              seed={rules}
+              onPut={(rule) => dispatch({ type: 'putMailRule', rule })}
+              onDrop={(id) => dispatch({ type: 'dropMailRule', id })}
+              onClose={() => setRules(false)}
+            />
+          ) : (
+          <>
           {/* On a phone the message replaces the list; on a wide window it sits
               beside it, unless the reading pane is switched off. */}
           {(wide || !open) && (pane !== 'off' || !open || !wide) && (
@@ -720,6 +786,8 @@ export function Mail() {
                 dispatch({ type: 'tellChange', text: `${mail.subject}\n\n${mail.body}` });
               }}
             />
+          )}
+          </>
           )}
         </div>
       </div>

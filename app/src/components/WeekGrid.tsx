@@ -36,7 +36,8 @@ export interface WeekDay {
 }
 
 const ROW = 46;
-const GUTTER = 30;
+/** As `HourGrid`'s, and narrower: seven columns need the room. See the note there. */
+export const GUTTER = 30;
 
 export function WeekGrid({
   days,

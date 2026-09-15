@@ -258,7 +258,7 @@ function Kept() {
               and for the same reason: a block with no days silently takes no
               hours out, which reads as the arithmetic being wrong. */}
           {keeps(r) ? null : (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
               Pick at least one day, and an end after the start. Counted as nothing until you do.
             </div>
           )}

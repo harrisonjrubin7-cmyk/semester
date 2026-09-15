@@ -1,6 +1,7 @@
-import { InboxIcon, ArchiveIcon, ClockIcon, EditIcon, NotesIcon, SendIcon, SpamIcon, StarIcon, TagIcon, TrashIcon } from '../Icons';
+import { InboxIcon, ArchiveIcon, ClockIcon, EditIcon, NotesIcon, SendIcon, SpamIcon, StarIcon, TagIcon, TrashIcon, UpkeepIcon } from '../Icons';
 import { FOLDERS, type FolderId, type Mail, type Marks } from '../../lib/mailbox';
 import { unread } from '../../lib/mailbox';
+import type { Rule } from '../../lib/mailrules';
 
 /**
  * The folder rail, which is the one part of a mail client nobody has ever had
@@ -23,6 +24,9 @@ export function Rail({
   onFolder,
   onLabel,
   onCompose,
+  onRules,
+  rulesOpen,
+  rules,
 }: {
   folder: FolderId;
   mails: Mail[];
@@ -35,7 +39,27 @@ export function Rail({
   onFolder: (id: FolderId) => void;
   onLabel: (code: string) => void;
   onCompose: () => void;
+  /**
+   * Open the rules.
+   *
+   * In the rail rather than in the toolbar, and in one place rather than two.
+   * The toolbar row it was in is drawn only on a wide window, so on a phone
+   * there was no way to reach rules at all unless you happened to have a
+   * search running. The rail is the part of a mail client that is always
+   * reachable at both widths — it is the drawer on a phone — and it is where
+   * Gmail keeps filters too, at the bottom, under the labels.
+   */
+  onRules: () => void;
+  /** Drawn pressed while the rules are up, since it replaces the list. */
+  rulesOpen: boolean;
+  /** The rules themselves, for the count beside the row. */
+  rules: Rule[];
 }) {
+  // How many are actually doing something, the way a folder shows a count.
+  // Zero is drawn as nothing rather than as "0", which is the rule every row
+  // above follows.
+  const running = rules.filter((r) => !r.off).length;
+
   const glyph = (id: FolderId) => {
     if (id === 'inbox') return <InboxIcon size={17} />;
     if (id === 'starred') return <StarIcon size={17} on={false} />;
@@ -105,6 +129,24 @@ export function Rail({
           ))}
         </>
       )}
+
+      <div
+        className="mb-folder-n"
+        style={{ padding: 'var(--sp-5) var(--sp-4) var(--sp-2)', letterSpacing: '0.09em', textTransform: 'uppercase' }}
+      >
+        Set up
+      </div>
+      <button
+        type="button"
+        className="mb-folder"
+        aria-current={rulesOpen}
+        title="Searches you kept, and what they do to what they find."
+        onClick={onRules}
+      >
+        <UpkeepIcon size={17} />
+        <span className="mb-folder-name">Rules</span>
+        {running > 0 && <span className="mb-folder-n">{running}</span>}
+      </button>
     </nav>
   );
 }

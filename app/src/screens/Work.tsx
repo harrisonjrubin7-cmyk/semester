@@ -218,7 +218,7 @@ export function Work() {
             </button>
           </div>
           {read && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)' }}>Read {read}</div>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>Read {read}</div>
           )}
 
           {plan && <PlanView plan={plan} saved={saved} onKeep={keepSteps} />}

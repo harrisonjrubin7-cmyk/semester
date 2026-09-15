@@ -422,7 +422,7 @@ export function You() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
             This week
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{weekLine(where.week)}</div>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{weekLine(where.week)}</div>
         </div>
         <WeekStrip days={days} />
       </div>
@@ -440,7 +440,7 @@ export function You() {
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
               The term
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
               {where.done} of {where.total} done
             </div>
           </div>
@@ -510,7 +510,7 @@ export function You() {
                 looks like.
               */}
               {cards.seen > 0 && (
-                <div style={{ flex: 'none', fontSize: 'var(--type-sm)', opacity: 0.55 }}>
+                <div style={{ flex: 'none', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
                   {cards.round > 0
                     ? `${cards.round} to review`
                     : cards.unmet > 0
@@ -570,7 +570,7 @@ export function You() {
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-md)' }}>
                 {b.code}
               </div>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>{b.n} left</div>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{b.n} left</div>
             </div>
             <div style={{ marginTop: 'var(--sp-3)' }}>
               {/* Four bars in one metal are four bars you have to read the

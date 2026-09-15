@@ -289,7 +289,7 @@ export function Export() {
                 <span style={{ fontSize: 'var(--type-xs)', ...secondLine() }}>{counts[part.id]}</span>
               )}
             </div>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>
               {part.blurb}
             </div>
           </div>
@@ -328,7 +328,7 @@ export function Export() {
       ))}
 
       {clouds.length === 0 && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
           Connect Google or Microsoft under Me → Connect accounts and the zip can go straight to
           Drive or OneDrive. Drive is asked only for permission to touch files this app creates —
           it gains no right to read what is already there.

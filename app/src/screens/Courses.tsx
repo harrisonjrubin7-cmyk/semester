@@ -217,7 +217,7 @@ export function Courses() {
                       fontSize: 'var(--type-xs)',
                       letterSpacing: '0.12em',
                       textTransform: 'uppercase',
-                      opacity: 0.55,
+                      color: 'var(--app-dim)',
                     }}
                   >
                     {c.meets}
@@ -356,7 +356,7 @@ function ComingUp() {
       />
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>{blurb}</div>
       {list.length === 0 && (
-        <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', opacity: 0.55 }}>
+        <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>
           {tab === 'overdue'
             ? 'Nothing has gone by unticked.'
             : tab === 'done'
@@ -693,7 +693,7 @@ export function ItemDetail() {
           <span
             style={{
               fontSize: 'var(--type-xs)',
-              opacity: 0.55,
+              color: 'var(--app-dim)',
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
