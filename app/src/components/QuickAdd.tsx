@@ -57,7 +57,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
   // The field, for the same reason the search palette opens on its own: a
   // capture box that opens on its Close button is one you have to tab into
   // before you can type the thing you opened it to say.
-  const modal = useModal<HTMLDivElement>({ onClose, initial: box });
+  const { ref: modalRef, onKeyDown } = useModal<HTMLDivElement>({ onClose, initial: box });
 
   const named = catalog.courses.map((c) => ({ id: c.id, code: c.code, title: c.name ?? '' }));
   const caught = capture(text, named, now);
@@ -92,8 +92,8 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
        * something nobody can see or reach. It is true now.
        */
       aria-modal="true"
-      ref={modal.ref}
-      onKeyDown={modal.onKeyDown}
+      ref={modalRef}
+      onKeyDown={onKeyDown}
       tabIndex={-1}
       style={{
         /*
