@@ -145,11 +145,21 @@
   --scrim: color-mix(in srgb, var(--app-bg) 72%, transparent);
 
   /* The assistant's button is fixed over the bottom-right of every screen —
-     52px square, 18px in from the right, 12px above the tab bar. This is its
-     footprint with the room around it, named once, because two rules now have
-     to agree about it: the space reserved under a screen so nothing sits
-     behind it, and the space the soft shell's pinned bar keeps clear on its
-     right so the button lands beside the primary action rather than on it. */
+     52px square, 18px in from the right, 12px above the tab bar where there
+     is one and 12px above the window's edge where there is not. This is its
+     footprint with the room around it — 12 + 52 + 12 — named once, because
+     two rules now have to agree about it: the space reserved under a screen
+     so nothing sits behind it, and the space the soft shell's pinned bar
+     keeps clear on its right so the button lands beside the primary action
+     rather than on it.
+
+     The number only works while the button is placed from the same two
+     numbers. It briefly was not: `ai/Assistant.tsx` fell back to a bar's own
+     height when `--bottom-chrome` was unset, which put the button 140px up in
+     a shell that has nothing along its bottom while this went on reserving 76
+     — so 64px of the last card on Today sat under an opaque circle with no
+     scroll left to bring it clear. The fallback is zero now. Change one of
+     these and the other has to move. */
   --assistant-strip: 76px;
 
   /* Leading. Distinct from --line-height, which is the reader's own setting
@@ -780,6 +790,43 @@ a:hover {
    */
   height: 100%;
 }
+
+/*
+ * And the room reserved for the assistant's button is reserved *here*.
+ *
+ * `.scrollarea` has a `padding-bottom` for it, and on this shell that padding
+ * was doing nothing at all. The reason is the `height: 100%` above: it makes
+ * this box exactly one screenful, so on any screen with more than a
+ * screenful the content overflows it rather than being laid out inside it —
+ * which the comment above says, and treats as harmless because the scroller
+ * counts what overflows its descendants.
+ *
+ * It is harmless for scrolling and not for the reservation. A scroll
+ * container's end padding sits after its *in-flow* content, and the in-flow
+ * content here ends at one screenful; the overflowing part runs past it to
+ * the true bottom of the scroll. Measured on Today at 390x844: `.pane-body`
+ * 552px tall, the feed inside it 1,288px and overflowing, and the last line
+ * of the last card at the very bottom of the scroll range with the button on
+ * top of it.
+ *
+ * A pseudo-element is the fix that does not touch the height chain. It is a
+ * child of this box rather than a sibling of it, so it comes after the
+ * overflowing content in the same flow and carries the reservation out to
+ * wherever that content actually ends. The padding on `.scrollarea` stays for
+ * the screens that do fit, where this sits inside the box and adds nothing.
+ *
+ * Not on a screen that is the whole box: the button is not drawn there — see
+ * `ai/Assistant.tsx` and `shell/exempt.ts` — and 76px of nothing under a
+ * composer meant to sit on the bottom edge is the fault `.is-filled` exists
+ * to avoid.
+ */
+.pane-body::after {
+  content: '';
+  display: block;
+  height: var(--assistant-strip);
+}
+
+
 .pane-body.is-canvas {
   max-width: var(--canvas);
 }
@@ -1372,6 +1419,18 @@ a:hover {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
+  /* The all-day band prints. A week with reading week on it is a week whose
+     shape is mostly that, and the rule above that strips backgrounds off
+     pressable things would otherwise leave the bars as white-on-white. */
+  .adband-bar {
+    color: #111318 !important;
+    background: none !important;
+    border: 1px solid #c8ccd4 !important;
+    border-left-width: 3px !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
   /* A moment, printed onto a week. It was true when you pressed print and is
      wrong by the time the page is warm. */
   .weekgrid .wg-now {
@@ -1547,15 +1606,31 @@ a:hover {
  *
  * The button is fixed above the tab bar on every screen, and a screen whose
  * last element is a primary action put that action underneath it — on Costs,
- * "Add it" sat directly behind it. Reserving the space here fixes it once for
- * every screen rather than sixty times: the padding makes even a
- * short screen scrollable by exactly the button's footprint, so anything at
- * the bottom can always be brought clear of it.
+ * "Add it" sat directly behind it. Reserving the space once here fixes it for
+ * every screen rather than sixty times: the reservation makes even a short
+ * screen scrollable by exactly the button's footprint, so anything at the
+ * bottom can always be brought clear of it.
+ *
+ * ## Why this is a box after the content and not padding on the scroller
+ *
+ * It was `padding-bottom` on `.scrollarea`, and it had stopped doing
+ * anything at all. `.pane-body` above takes `height: 100%` — deliberately,
+ * to keep the percentage-height chain intact — so every screen taller than
+ * the window overflows it rather than sitting in the scroller's own flow,
+ * and a scroll container's end padding is not applied below content that
+ * overflows a descendant. The scroll extent came from the overflowing box
+ * and stopped exactly where the text did.
+ *
+ * Nothing said so. The rule was still there, still computed 76px, and the
+ * space it claimed was simply absent: at the bottom of Study the last line
+ * ran under the button with no scroll left to bring it clear, and the same
+ * on a guide and on Me at the larger text sizes. Removing the padding
+ * changed no measurement on any screen, which is the proof it was dead.
+ *
+ * A block after the content is counted wherever the content ends, because it
+ * overflows alongside it. `::after` rather than a real element so no screen
+ * has to remember to render one.
  */
-.scrollarea {
-  padding-bottom: var(--assistant-strip);
-}
-
 /*
  * Except where the screen *is* the box.
  *
@@ -1578,8 +1653,18 @@ a:hover {
  * step with them.
  */
 .scrollarea.is-filled {
-  padding-bottom: 0;
   overflow: hidden;
+}
+
+/*
+ * And the same for the reservation `.pane-body` carries past its own
+ * overflow. Here rather than beside that rule so both of the things
+ * `.is-filled` takes back are in one place, and so the guard in
+ * `ai/dock.test.ts` — which reads the first `.scrollarea.is-filled` rule in
+ * this sheet — still finds the one it is about.
+ */
+.scrollarea.is-filled .pane-body::after {
+  content: none;
 }
 
 .app-tabs {
@@ -1707,6 +1792,29 @@ a:hover {
 .device .tag-accent {
   background: var(--app-accent-wash);
   color: var(--app-accent);
+}
+/*
+ * Not a second time, on a row that already carries it.
+ *
+ * `--app-accent-wash` is the accent at a tenth of itself over whatever is
+ * behind, and `.portal-workspace button` paints it on every row in the
+ * workspace. A tag inside one painted the same tenth again: two tenths
+ * compound, the surface came out darker than either rule intended, and the
+ * accent text on it read 4.40:1 on Fog against the 4.5:1 it needs. One wash
+ * is 5.03:1.
+ *
+ * The tint is already on the row, so dropping the tag's own is what keeps
+ * the surface the one tenth both rules were written for — the chip reads as
+ * accent text on the row's tint rather than a tint on a tint, which is what
+ * it nearly looked like anyway at a tenth over a tenth.
+ *
+ * Found by measuring what the browser painted: the wash is composited at
+ * paint time, so neither the token audit nor a reading of either rule on its
+ * own can see what the two of them do together.
+ */
+.device .portal-workspace button .tag-accent,
+.device .portal-button .tag-accent {
+  background: transparent;
 }
 .device .tag-neutral {
   background: rgba(233, 235, 239, 0.07);
@@ -2073,6 +2181,34 @@ a:hover {
   width: 100%;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+/*
+ * A disabled `.bare` looked exactly like an available one.
+ *
+ * `.bare` strips a button back to its text and keeps `cursor: pointer`, and
+ * nothing here answered `:disabled` — so a control the code had switched off
+ * still read as a control you could press, and still showed the hand cursor
+ * saying so. Found in the move picker on `screens/mine/Drive.tsx`: offering to
+ * move *Problem sets*, the rows for *Problem sets* and *Drive* are disabled,
+ * because a folder cannot go inside itself or stay where it already is. That
+ * guard works. It just could not be seen, so the only way to learn a row was
+ * unavailable was to tap it and watch nothing happen.
+ *
+ * It is not one picker. Around twenty `.bare` buttons in this app are disabled
+ * in some state — the reorder arrows at the ends of a list, a tab strip that
+ * is full, a drill question already answered, every `busy` guard on a form —
+ * and all of them were silent in the same way.
+ *
+ * The same answer `.bench-item:disabled` and `.desktop-star:disabled` already
+ * give, for the reason written there: `--app-faint` is held to 3:1, which is
+ * the contrast bar for a disabled control and is what makes it read as
+ * unavailable rather than merely quiet. `cursor: default` withdraws the other
+ * half of the claim.
+ */
+.bare:disabled {
+  color: var(--app-faint);
+  cursor: default;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2905,7 +3041,9 @@ input[type='search'].input {
  * it was, so the outline on the target is the only thing that moves.
  */
 .movable.is-held {
-  opacity: 0.55;
+  /* The row's own state, which is the one job an opacity is still for — the
+     tag and the coloured edge have to go with it. See `lib/dim.ts`. */
+  opacity: var(--app-row-dim);
 }
 
 .movable.is-over {
@@ -5896,7 +6034,7 @@ input[type='search'].input {
 }
 
 .deskhome-box-say {
-  opacity: 0.55;
+  color: var(--app-dim);
 }
 
 /* `.deskhome-keys` and `.desktop-keys` drew a `⌘ K` chip in each of the two
@@ -6407,4 +6545,232 @@ input[type='search'].input {
 
 .desk-panel-link {
   white-space: nowrap;
+}
+
+/* ── The all-day band ──────────────────────────────────────────────────────
+
+   The row above the first hour of the day and week grids. See
+   `components/AllDayBand.tsx` for why an entry with no hour cannot be drawn
+   inside a grid whose whole job is asserting hours.
+
+   Laid out as a gutter and a stack of rows, so the gutter lines up with the
+   hour labels below it and every row shares one set of columns. The column
+   count is handed in as `--adband-cols` — one for the day view, seven for the
+   week — which is what lets a bar say `grid-column: 3 / 6` and land on the
+   same three days the grid under it draws. */
+.adband {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: var(--sp-2);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--app-line);
+}
+
+.adband-gutter {
+  flex: none;
+  padding-top: 3px;
+  font-family: var(--font-heading);
+  font-size: calc(9px * var(--text-scale, 1));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  text-align: right;
+  padding-right: var(--sp-2);
+}
+
+.adband-rows {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.adband-row {
+  display: grid;
+  grid-template-columns: repeat(var(--adband-cols), minmax(0, 1fr));
+  gap: 2px;
+}
+
+.adband-bar {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-2);
+  overflow: hidden;
+  padding: 3px var(--sp-2);
+  border: 0;
+  text-align: left;
+  color: #fff;
+  font-size: var(--type-xs);
+  line-height: 1.3;
+  /* Square by default: a flat end is the honest drawing of a run that carries
+     on past the edge of the view. The ends that are real get their corners
+     back below. */
+  border-radius: 0;
+}
+
+.adband-bar.opens {
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+}
+
+.adband-bar.closes {
+  border-top-right-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+
+button.adband-bar {
+  cursor: pointer;
+}
+
+.adband-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.adband-meta {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.85;
+}
+
+/* ── Mail rules ────────────────────────────────────────────────────────────
+
+   The rules list and the form that writes one, in the mail screen's main
+   pane. See `components/mail/Rules.tsx` for why it takes the pane rather than
+   floating over it. */
+.mb-rules {
+  min-width: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-7);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.mb-rules-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-4);
+}
+
+.mb-rules-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--type-lg);
+}
+
+.mb-rules-said {
+  margin: 0;
+  max-width: 60ch;
+  font-size: var(--type-sm);
+  line-height: 1.45;
+  opacity: 0.72;
+}
+
+.mb-rules-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.mb-rules-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  border: 1px solid var(--app-line);
+}
+
+/* `width: auto` because `.bare` sets `width: 100%` and these are flex items.
+   With `flex: none` the basis comes from the width, so the tick took the whole
+   row — 610 of its 628 pixels — and squeezed the text beside it to nothing,
+   which `overflow-wrap: anywhere` then rendered one letter per line. */
+.mb-rules-onoff {
+  flex: none;
+  width: auto;
+  padding-top: 2px;
+}
+
+.mb-rules-what {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  text-align: left;
+}
+
+.mb-rules-name {
+  font-weight: 600;
+  font-size: var(--type-base);
+  overflow-wrap: anywhere;
+}
+
+.mb-rules-does {
+  font-size: var(--type-xs);
+  line-height: 1.4;
+  opacity: 0.7;
+  overflow-wrap: anywhere;
+}
+
+.mb-rules-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  max-width: 56ch;
+  padding: var(--sp-5);
+  border: 1px solid var(--app-line);
+}
+
+.mb-rules-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.mb-rules-legend {
+  font-family: var(--font-heading);
+  font-size: calc(10px * var(--text-scale, 1));
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  padding: 0;
+}
+
+.mb-rules-does-set {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/* Same reason as `.mb-rules-onoff`: a `.bare` button in a wrapping flex row
+   has to give up its 100% or the first one takes the line. */
+.mb-rules-tick {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: auto;
+  font-size: var(--type-sm);
+}
+
+.mb-rules-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-4);
 }

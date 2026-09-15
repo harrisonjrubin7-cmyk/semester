@@ -25,6 +25,8 @@
  * other number on the screen.
  */
 
+import { compareTerms } from './term';
+
 export type Kind = 'book' | 'access' | 'fee' | 'supplies' | 'other';
 
 export interface KindInfo {
@@ -137,9 +139,9 @@ export function forCourse(costs: Cost[], courseId: string): Cost[] {
   return costs.filter((c) => c.courseId === courseId);
 }
 
-/** Every term with anything recorded, newest id first. */
+/** Every term with anything recorded, newest first. */
 export function terms(costs: Cost[]): string[] {
-  return [...new Set(costs.map((c) => c.term))].sort().reverse();
+  return [...new Set(costs.map((c) => c.term))].sort((a, b) => compareTerms(b, a));
 }
 
 /**
@@ -188,7 +190,7 @@ export function lastTime(
   term: string,
 ): { term: string; cents: number } | null {
   const code = codeOf(courseId);
-  const earlier = costs.filter((c) => c.term < term && codeOf(c.courseId) === code);
+  const earlier = costs.filter((c) => compareTerms(c.term, term) < 0 && codeOf(c.courseId) === code);
   if (earlier.length === 0) return null;
   const last = terms(earlier)[0];
   return { term: last, cents: earlier.filter((c) => c.term === last).reduce((n, c) => n + c.cents, 0) };

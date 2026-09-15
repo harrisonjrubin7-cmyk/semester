@@ -141,7 +141,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
               }}
             >
               <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {option.blurb}
               </span>
             </button>
@@ -159,7 +159,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         style={{ width: '100%' }}
       />
       {dueDate ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 5 }}>{runway(dueDate, now)}</div>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>{runway(dueDate, now)}</div>
       ) : null}
       {catalog.courses.length > 0 && (
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5 }}>
@@ -177,7 +177,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
                   flex: 'none',
                   width: 74,
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 0.55,
+                  color: 'var(--app-dim)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
@@ -225,7 +225,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         courseId={courseId}
         onFill={(lines) => setSources((now) => appendTo(now, lines))}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         Yours only. Nothing here will invent an author, a title or a page number — a made-up
         citation looks exactly like a real one, and it goes in under your name.
       </div>

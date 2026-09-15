@@ -10,7 +10,6 @@ import {
   type ReactNode,
 } from 'react';
 import { ChevronRight } from './Icons';
-import { secondLine } from '../lib/dim';
 import { SectionLabel } from './ui';
 import { foldKey } from '../lib/folds';
 import { useFold, useFoldAll } from '../lib/folds.hook';
@@ -382,11 +381,23 @@ export function FoldHead({
         alignItems: 'center',
         gap: 'var(--sp-3)',
         width: '100%',
-        // Six pixels of reach above and below, handed straight back as a
-        // negative margin: the box grows, the layout does not move. See the
-        // note on this component's use above.
-        padding: 'var(--sp-3) 0',
-        margin: 'calc(-1 * var(--sp-3)) 0',
+        /*
+          Six pixels of reach above and below, handed straight back as a
+          negative margin: the box grows, the layout does not move. See the
+          note on this component's use above.
+
+          Six real pixels, not `--sp-3`. Every spacing token is multiplied by
+          the reader's density setting, and this is not spacing — it is the
+          part of the control a thumb lands on, and a thumb does not get
+          smaller because somebody asked for a tighter screen. Read off
+          `--sp-3` it went 12px of reach at Comfortable, 10.3 at Snug, 8.9 at
+          Tight, which put every folding heading in the app — Due today,
+          Today's schedule, Your courses, Classes — at 23px and then 22
+          against a floor of 24. The drawing is identical at all three: the
+          margin gives back exactly what the padding took, whatever it was.
+        */
+        padding: '6px 0',
+        margin: '-6px 0',
         background: 'none',
         border: 'none',
         font: 'inherit',
@@ -401,7 +412,7 @@ export function FoldHead({
         size={12}
         style={{
           flex: 'none',
-          opacity: 0.55,
+          color: 'var(--app-dim)',
           transform: shut ? 'none' : 'rotate(90deg)',
           transition: 'transform 160ms ease',
         }}
@@ -468,15 +479,7 @@ export function FoldAll({ style }: { style?: CSSProperties }) {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
-          /*
-           * The colour, not an opacity. This is 11px caps and it is the one
-           * control above every section on the screen; at 0.55 it measured
-           * 3.80:1 on Fog and 3.84:1 on Parchment, against the 4.5:1 the same
-           * repo holds its own tokens to. `--app-dim` is that strength on
-           * each ground and rises when the device asks for more contrast,
-           * which an opacity cannot. See `lib/dim.ts`.
-           */
-          ...secondLine(),
+          color: 'var(--app-dim)',
         }}
       >
         {said}

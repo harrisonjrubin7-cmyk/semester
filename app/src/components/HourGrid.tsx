@@ -65,7 +65,15 @@ export interface HourBlock {
 }
 
 const ROW = 54;
-const GUTTER = 46;
+/**
+ * The width of the hour labels down the left.
+ *
+ * Exported because the all-day band sits directly above this grid and has to
+ * start where the columns do. A band a few pixels out of line with the grid
+ * under it reads as a rendering fault, and the way that happens is somebody
+ * writing 46 in a second file and this one later becoming 48.
+ */
+export const GUTTER = 46;
 
 /** Half past nine reads as "9:30"; on the hour it reads as "9". */
 function clock(minutes: number): string {

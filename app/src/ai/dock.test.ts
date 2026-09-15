@@ -50,11 +50,14 @@ describe('the screens that fill their box', () => {
   it('and that class takes back the room reserved for a button it never draws', () => {
     const sheet = css();
     // The reservation is still there for every other screen — this test is
-    // about the exception, not about removing the rule.
-    expect(sheet).toContain('padding-bottom: var(--assistant-strip);');
-    const rule = sheet.slice(sheet.indexOf('.scrollarea.is-filled'));
+    // about the exception, not about removing the rule. It is a box after the
+    // content now rather than padding on the scroller, for the reason
+    // `ai/clearance.test.ts` sets out, and the exception is a second rule
+    // that takes the box back rather than a `:not()` in the first one.
+    expect(sheet).toContain('height: var(--assistant-strip);');
+    expect(sheet).toMatch(/\.scrollarea\.is-filled \.pane-body::after \{[^}]*content: none/s);
+    const rule = sheet.slice(sheet.indexOf('.scrollarea.is-filled {'));
     const body = rule.slice(0, rule.indexOf('}'));
-    expect(body).toContain('padding-bottom: 0');
     // And one scroller, not two nested inside each other.
     expect(body).toContain('overflow: hidden');
   });

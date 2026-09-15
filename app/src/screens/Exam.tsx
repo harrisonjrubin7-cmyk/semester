@@ -270,7 +270,7 @@ export function Exam() {
               .filter(Boolean)
               .join(', ')}
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5 }}>
             {shape.points} marks · {shape.minutes} minutes
           </div>
         </Blueprint>
@@ -463,7 +463,7 @@ export function Exam() {
                               : 'transparent',
                       }}
                     >
-                      <span style={{ flex: 'none', opacity: 0.55, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}>
+                      <span style={{ flex: 'none', color: 'var(--app-dim)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}>
                         {letter(n)}
                       </span>
                       <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.4 }}>
@@ -513,7 +513,7 @@ export function Exam() {
                   </div>
                 ) : (
                   <>
-                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, margin: '9px 0 6px' }}>
+                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', margin: '9px 0 6px' }}>
                       Mark it yourself against the key.
                     </div>
                     <Segmented
@@ -630,7 +630,7 @@ export function Exam() {
               >
                 {seedCode(seed)}
               </div>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 Enter it on the setup screen to sit these exact questions again, or give it to
                 somebody in your class and compare marks on the same paper.
               </div>

@@ -29,6 +29,49 @@
       "moveOutRule": "hours_after_last_exam",
       "hoursAfterLastExam": 24
     },
-    "gradingNotes": "Vanderbilt grades on a 4.0 scale with pluses and minuses; an A+ still counts as 4.0."
+    "gradingNotes": "Vanderbilt grades on a 4.0 scale with pluses and minuses; an A+ still counts as 4.0.",
+    "academicCalendar": [
+      {
+        "termName": "Fall 2026",
+        "startsOn": "2026-08-26",
+        "endsOn": "",
+        "deadlines": [
+          {
+            "label": "Open enrollment ends",
+            "on": "2026-09-04"
+          },
+          {
+            "label": "Last day to withdraw from a course",
+            "on": "2026-10-30"
+          }
+        ],
+        "breaks": [
+          {
+            "label": "Fall Break",
+            "from": "2026-10-22",
+            "to": "2026-10-23"
+          },
+          {
+            "label": "Thanksgiving Break",
+            "from": "2026-11-21",
+            "to": "2026-11-29"
+          }
+        ]
+      }
+    ],
+    "mealPlanTiers": [
+      {
+        "name": "First-Year Plan",
+        "swipes": 335,
+        "dollars": 225,
+        "period": "term"
+      },
+      {
+        "name": "Upper-Division Plan",
+        "swipes": 305,
+        "dollars": 275,
+        "period": "term"
+      }
+    ]
   }
 }

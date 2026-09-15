@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { sources } from '../styles/rules';
 
 /**
  * Every field of the state is a field something reads.
@@ -54,14 +55,8 @@ const COMPUTED = new Map<string, string>();
 
 const SRC = join(process.cwd(), 'src');
 
-function walk(dir: string, out: string[] = []): string[] {
-  for (const name of readdirSync(dir)) {
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) walk(p, out);
-    else if (/\.tsx?$/.test(p)) out.push(p);
-  }
-  return out;
-}
+/** The files this rule reads. `styles/rules.ts` walks; this names. */
+const walk = (dir: string): string[] => sources(dir, { ext: ['.ts', '.tsx'] }).map((s) => s.path);
 
 /** The declared field names of one interface in `shape.ts`. */
 function fieldsOf(shape: string, name: string): string[] {

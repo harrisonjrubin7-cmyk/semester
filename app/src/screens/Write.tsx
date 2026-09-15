@@ -9,7 +9,13 @@ import { Equation } from '../components/Equation';
 import { ActionButton, FilePick, SectionLabel, Toggle } from '../components/ui';
 import { Bench, Tool, ToolPick, ToolRule } from '../components/Bench';
 import { Gallery, type Starter } from '../components/Gallery';
-import { WriteIcon } from '../components/Icons';
+import {
+  AlignCenterIcon,
+  AlignJustifyIcon,
+  AlignLeftIcon,
+  AlignRightIcon,
+  WriteIcon,
+} from '../components/Icons';
 import { Folding } from '../components/Fold';
 import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
@@ -18,16 +24,20 @@ import { addFile, getFile, listFiles, settled, type Settled } from '../lib/files
 import { pictureLike, sizeOf } from '../lib/imagesize';
 import {
   BLOCK_LABEL,
+  DEEPEST,
   blankBlock,
   docFileName,
   fromMarkdown,
   hasContent,
+  listed,
   summary,
   toMarkdown,
   words,
   type Block,
   type BlockKind,
+  type Align,
   type Doc,
+  type Line,
 } from '../lib/document';
 import { filled } from '../lib/sheet';
 import { TEMPLATES, fromTemplate } from '../lib/doctemplates';
@@ -261,6 +271,34 @@ const MARK_BUTTONS: { id: Mark; label: string; glyph: string }[] = [
   { id: 'code', label: 'Monospace', glyph: '‹›' },
 ];
 
+/**
+ * The four alignments, drawn as the stack of lines each one makes.
+ *
+ * The same glyphs every toolbar since the first word processor has used, and
+ * they are read for their shape rather than their meaning — which is why each
+ * carries a real label as well. A screen reader says "Centre", not "three
+ * short lines".
+ */
+const ALIGN_BUTTONS: { id: Align; label: string; Icon: typeof AlignLeftIcon }[] = [
+  { id: 'left', label: 'Align left', Icon: AlignLeftIcon },
+  { id: 'center', label: 'Centre', Icon: AlignCenterIcon },
+  { id: 'right', label: 'Align right', Icon: AlignRightIcon },
+  { id: 'justify', label: 'Justify', Icon: AlignJustifyIcon },
+];
+
+/**
+ * Which blocks can be aligned.
+ *
+ * The paragraphs, and not the rest. A picture and an equation are centred by
+ * the exporter already and have no left-aligned form worth offering; a code
+ * block is characters in columns and centring one destroys the only thing its
+ * layout was carrying; a table sets its own width; and a list's alignment is
+ * a thing Word technically allows and nobody has ever wanted.
+ */
+function alignable(block: Block): boolean {
+  return block.kind === 'heading' || block.kind === 'text' || block.kind === 'quote';
+}
+
 function Editor({ doc }: { doc: Doc }) {
   const { state, dispatch, say } = useStore();
   const [busy, setBusy] = useState(false);
@@ -438,12 +476,37 @@ function Editor({ doc }: { doc: Doc }) {
   const restyle = (next: Style) => {
     if (openAt === null || !open || !plainText(open)) return;
     const text = open.kind === 'heading' || open.kind === 'text' ? open.text : '';
+    /* The alignment comes across. This function builds a *new* block rather
+       than patching the old one — it has to, the kind changes — and the first
+       version of that dropped a centred heading back to the margin the moment
+       somebody made it a paragraph. */
+    const align = open.kind === 'heading' || open.kind === 'text' ? open.align : undefined;
     setBlock(
       openAt,
       next === 'text'
-        ? { kind: 'text', text }
-        : { kind: 'heading', level: Number(next.slice(1)) as 1 | 2 | 3, text },
+        ? { kind: 'text', text, ...(align ? { align } : null) }
+        : {
+            kind: 'heading',
+            level: Number(next.slice(1)) as 1 | 2 | 3,
+            text,
+            ...(align ? { align } : null),
+          },
     );
+  };
+
+  /**
+   * Set — or clear — the open block's alignment.
+   *
+   * Pressing the alignment a block already has takes it off, the way every
+   * toggle in this toolbar works. That is not the same as setting it to left:
+   * a block with no alignment follows the document, and one set to left says
+   * *not this one* inside a justified paper. Both are worth being able to say.
+   */
+  const setAlign = (next: Align) => {
+    if (openAt === null || !open || !alignable(open)) return;
+    const had = 'align' in open ? open.align : undefined;
+    const { align: _was, ...rest } = open as Extract<Block, { align?: Align }>;
+    setBlock(openAt, (had === next ? rest : { ...rest, align: next }) as Block);
   };
 
   const saveWord = async () => {
@@ -551,6 +614,15 @@ function Editor({ doc }: { doc: Doc }) {
           label: m.label,
           on: markable && caret !== null && marked(caret.el.value, m.id),
           run: markable ? () => mark(m.id) : undefined,
+        })),
+        /* The same four as the toolbar, from the same list. Two lists of the
+           same controls is how a kind ends up on one surface and not the
+           other — see the note on `INSERT_GROUPS`. */
+        ALIGN_BUTTONS.map((a) => ({
+          id: `edit.align.${a.id}`,
+          label: a.label,
+          on: open !== null && 'align' in open && open.align === a.id,
+          run: open !== null && alignable(open) ? () => setAlign(a.id) : undefined,
         })),
         [
           {
@@ -755,6 +827,20 @@ function Editor({ doc }: { doc: Doc }) {
                 disabled={!markable}
                 pressed={markable && caret !== null && marked(caret.el.value, m.id)}
                 onClick={() => mark(m.id)}
+              />
+            ))}
+            <ToolRule />
+            {/* Alignment acts on the open *block*, not on the selection —
+                which is what alignment is everywhere, and why these sit after
+                the marks and behind a rule rather than among them. */}
+            {ALIGN_BUTTONS.map((a) => (
+              <Tool
+                key={a.id}
+                label={a.label}
+                icon={<a.Icon />}
+                disabled={open === null || !alignable(open)}
+                pressed={open !== null && 'align' in open && open.align === a.id}
+                onClick={() => setAlign(a.id)}
               />
             ))}
             {/* Its words rather than a glyph, like Outline and Find beside it:
@@ -1591,51 +1677,7 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
       );
 
     case 'bullets':
-      return (
-        <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-            {block.items.map((line, i) => (
-              <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
-                <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', width: 18 }}>
-                  {block.numbered ? `${i + 1}.` : '•'}
-                </div>
-                <input
-                  className="input"
-                  data-item={i}
-                  value={line}
-                  onChange={(e) =>
-                    onChange({
-                      ...block,
-                      items: block.items.map((x, j) => (j === i ? e.target.value : x)),
-                    })
-                  }
-                  aria-label={`Item ${i + 1}`}
-                  style={{ flex: 1, height: 38 }}
-                />
-                <SmallButton
-                  label={`Remove item ${i + 1}`}
-                  onClick={() =>
-                    onChange({
-                      ...block,
-                      items: block.items.length > 1 ? block.items.filter((_, j) => j !== i) : [''],
-                    })
-                  }
-                >
-                  ×
-                </SmallButton>
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
-            <ActionButton onClick={() => onChange({ ...block, items: [...block.items, ''] })}>
-              Add item
-            </ActionButton>
-            <ActionButton onClick={() => onChange({ ...block, numbered: !block.numbered })}>
-              {block.numbered ? 'Make it bulleted' : 'Make it numbered'}
-            </ActionButton>
-          </div>
-        </>
-      );
+      return <ListEditor block={block} onChange={onChange} />;
 
     case 'quote':
       return (
@@ -2020,6 +2062,159 @@ function ChecklistEditor({
         <div style={{ ...secondLine(), fontSize: 'var(--type-sm)' }}>
           {all === 0 ? 'Nothing on it yet' : `${done} of ${all} done`}
         </div>
+      </div>
+    </>
+  );
+}
+
+/**
+ * What each line of a list is marked with, at its own level.
+ *
+ * The same cycle the `.docx` writes — • ○ ▪ and 1. a. i. — so the card and
+ * the Word file agree about what a sub-item looks like. The numbers restart
+ * inside each sub-list and carry on when it ends, which is what the counters
+ * mean; taking the array index instead is how a nested numbered list comes
+ * out as 1, 2, 3, 4 down one column regardless of depth.
+ */
+const LIST_GLYPHS = ['\u2022', '\u25CB', '\u25AA', '\u2022', '\u25CB'];
+
+function markers(items: Line[], numbered: boolean): string[] {
+  const at: number[] = [];
+  return items.map((line) => {
+    at.length = line.level + 1;
+    at[line.level] = (at[line.level] ?? 0) + 1;
+    if (!numbered) return LIST_GLYPHS[line.level] ?? '\u2022';
+    const n = at[line.level];
+    if (line.level % 3 === 1) return `${String.fromCharCode(96 + ((n - 1) % 26) + 1)}.`;
+    if (line.level % 3 === 2) return `${roman(n)}.`;
+    return `${n}.`;
+  });
+}
+
+/** Lower-case roman, for the third level of a numbered list. */
+function roman(n: number): string {
+  const parts: [number, string][] = [
+    [1000, 'm'], [900, 'cm'], [500, 'd'], [400, 'cd'], [100, 'c'], [90, 'xc'],
+    [50, 'l'], [40, 'xl'], [10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i'],
+  ];
+  let left = n;
+  let out = '';
+  for (const [value, numeral] of parts) {
+    while (left >= value) {
+      out += numeral;
+      left -= value;
+    }
+  }
+  return out;
+}
+
+/**
+ * A list, with each line's depth under its own control.
+ *
+ * ## Why buttons rather than Tab
+ *
+ * Word, Docs and Notion all indent on Tab, and all three are one big editing
+ * surface with a focus model of their own. This is not: a list here is a
+ * column of ordinary `<input>`s on a card, and Tab is how a keyboard gets out
+ * of one and on to the next control. Taking Tab would make the list a trap
+ * for exactly the people who cannot reach for the mouse instead — so the
+ * indent is a button, which is also the version somebody can *see*.
+ *
+ * ## Why a line cannot jump two levels
+ *
+ * `listed` clamps a level to one deeper than the line above, because deeper
+ * than that is not a tree and markdown, Word and the page all draw trees. The
+ * button is disabled where the clamp would bite rather than letting somebody
+ * press it and watch nothing happen.
+ */
+function ListEditor({
+  block,
+  onChange,
+}: {
+  block: Extract<Block, { kind: 'bullets' }>;
+  onChange: (next: Block) => void;
+}) {
+  const items = listed(block.items);
+  const marks = markers(items, block.numbered);
+
+  const set = (next: Line[]) => onChange({ ...block, items: listed(next) });
+
+  const move = (at: number, by: 1 | -1) =>
+    set(items.map((l, j) => (j === at ? { ...l, level: l.level + by } : l)));
+
+  /* How deep this line is allowed to be: one past the line above it, and
+     never past the last level the exporters define. */
+  const deepest = (at: number) => Math.min(DEEPEST, at === 0 ? 0 : items[at - 1].level + 1);
+
+  return (
+    <>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        {items.map((line, i) => (
+          <div key={i} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
+            {/* The indent itself, drawn rather than described. */}
+            <div
+              aria-hidden="true"
+              style={{ width: line.level * 20, flexShrink: 0 }}
+            />
+            <div
+              style={{ ...secondLine(), fontSize: 'var(--type-sm)', minWidth: 20, flexShrink: 0 }}
+            >
+              {marks[i]}
+            </div>
+            <input
+              className="input"
+              data-item={i}
+              value={line.text}
+              onChange={(e) =>
+                set(items.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))
+              }
+              /* The level is in the name because the marker beside it is not
+                 read out — a screen reader gets "Item 3" and no idea it is a
+                 sub-item of item 2 otherwise. */
+              aria-label={
+                line.level === 0 ? `Item ${i + 1}` : `Item ${i + 1}, indented ${line.level}`
+              }
+              style={{ flex: 1, minWidth: 80, height: 38 }}
+            />
+            <SmallButton
+              label={`Outdent item ${i + 1}`}
+              disabled={line.level === 0}
+              onClick={() => move(i, -1)}
+            >
+              ←
+            </SmallButton>
+            <SmallButton
+              label={`Indent item ${i + 1}`}
+              disabled={line.level >= deepest(i)}
+              onClick={() => move(i, 1)}
+            >
+              →
+            </SmallButton>
+            <SmallButton
+              label={`Remove item ${i + 1}`}
+              onClick={() =>
+                set(items.length > 1 ? items.filter((_, j) => j !== i) : [{ text: '', level: 0 }])
+              }
+            >
+              ×
+            </SmallButton>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+        <ActionButton
+          onClick={() =>
+            /* At the depth of the line above it. Adding a sub-item and being
+               dropped back to the margin every time is the thing that makes a
+               nested list tedious to type. */
+            set([...items, { text: '', level: items[items.length - 1]?.level ?? 0 }])
+          }
+        >
+          Add item
+        </ActionButton>
+        <ActionButton onClick={() => onChange({ ...block, numbered: !block.numbered })}>
+          {block.numbered ? 'Make it bulleted' : 'Make it numbered'}
+        </ActionButton>
       </div>
     </>
   );

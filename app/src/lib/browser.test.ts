@@ -7,6 +7,7 @@ import {
   PLACE_ACTIONS,
   TABS_KEY,
   add,
+  arrangeLanes,
   blank,
   close,
   closeGroup,
@@ -21,6 +22,8 @@ import {
   freeTone,
   joinGroup,
   justGo,
+  laneId,
+  laneOrder,
   lanes,
   leaveGroup,
   load,
@@ -1084,6 +1087,83 @@ describe('the tab already at a place', () => {
     expect(tabAt(econ, [{ type: 'openCourse', id: 'psci' } as never])).toBeUndefined();
   });
 
+  it('matches a lesson result against the lesson tab already open on it', () => {
+    /*
+     * The fact everything about lessons in the overlay rests on: what
+     * `actionsFor` builds for a lesson hit and what `placeFor` records for a
+     * lesson tab have to be the *same actions*, or a result can never notice
+     * the tab. They are written in two files and only this compares them.
+     */
+    const fromResult = actionsFor({
+      kind: 'lesson',
+      courseId: 'econ' as never,
+      unit: 3,
+      title: 'Optimisation',
+      sub: '',
+      tag: 'ECON 1020',
+      score: 1,
+    } as Hit);
+    const fromTab = placeFor('lesson', {
+      courseId: 'econ' as never,
+      itemId: '',
+      eventId: '',
+      guideId: 'econ' as never,
+      noteId: null,
+      documentId: null,
+      sheetId: null,
+      deckId: null,
+      mode: 'cards',
+      lessonUnit: 3,
+    });
+    expect(fromResult).toEqual(fromTab);
+
+    const open: Strip = {
+      ...strip(['home'], 0),
+      tabs: [{ id: 'L', screen: 'lesson', title: 'Optimisation', place: fromTab }],
+    };
+    expect(tabAt(open, fromResult)?.id).toBe('L');
+  });
+
+  it('is a different place for a different unit of the same course', () => {
+    // Two lessons of one course used to be one place — the tab recorded only
+    // "the lesson screen of this guide" — so reopening either landed on
+    // whichever unit the app happened to be holding.
+    const at = (lessonUnit: number) =>
+      placeFor('lesson', {
+        courseId: 'econ' as never,
+        itemId: '',
+        eventId: '',
+        guideId: 'econ' as never,
+        noteId: null,
+        documentId: null,
+        sheetId: null,
+        deckId: null,
+        mode: 'cards',
+        lessonUnit,
+      });
+    expect(at(3)).not.toEqual(at(4));
+  });
+
+  it('does not depend on how you arrived — the guide\u2019s own scroll is not part of it', () => {
+    // Reaching unit 3's lesson from a guide open at unit 7 in `read` is the
+    // same place as reaching it from a search result. If it were not, the two
+    // routes would make two tabs that look identical and are not.
+    const base = {
+      courseId: 'econ' as never,
+      itemId: '',
+      eventId: '',
+      guideId: 'econ' as never,
+      noteId: null,
+      documentId: null,
+      sheetId: null,
+      deckId: null,
+      lessonUnit: 3,
+    };
+    expect(placeFor('lesson', { ...base, mode: 'read', openUnit: 7 })).toEqual(
+      placeFor('lesson', { ...base, mode: 'cards' }),
+    );
+  });
+
   it('will not match a guide in one mode against the same guide in another', () => {
     // The reason a search result carries no speaker: a unit result always
     // opens the guide in `cards` (`find.ts`), and the mode that plays is
@@ -1113,5 +1193,68 @@ describe('the tab already at a place', () => {
       ],
     };
     expect(tabAt(twice, justGo('calendar'))?.id).toBe('a');
+  });
+});
+
+/*
+ * Dragging a run rather than a tab.
+ *
+ * `rearrange` above answers "where does this tab go, and whose work is it
+ * now". This is the other question the strip can be asked — where does this
+ * whole group go — and the thing that must never happen is a group coming
+ * apart because somebody moved it.
+ */
+describe('moving a whole run', () => {
+  /** Home, then a group of two, then calendar. */
+  const banded = () => {
+    const s = makeGroup(strip(['home', 'study', 'mine', 'calendar'], 1), 1, 'Midterm');
+    const id = s.groups[0].id;
+    return { s: joinGroup(s, 2, id), id };
+  };
+
+  it('names each run by its group, or by the tab when it is alone', () => {
+    const { s, id } = banded();
+    expect(laneOrder(s)).toEqual(['t0', id, 't3']);
+    expect(laneId(lanes(s)[1])).toBe(id);
+  });
+
+  it('takes the group\u2019s tabs with it', () => {
+    const { s, id } = banded();
+    const moved = arrangeLanes(s, ['t0', 't3', id]);
+    expect(names(moved)).toEqual(['home', 'calendar', 'study', 'mine']);
+    // Still one run, which is the thing a move must not break.
+    expect(moved.tabs[2].group).toBe(id);
+    expect(moved.tabs[3].group).toBe(id);
+  });
+
+  it('keeps you on the tab you were on, wherever it went', () => {
+    const { s, id } = banded();
+    // On the second tab of the group.
+    const on = { ...s, at: 2 };
+    const moved = arrangeLanes(on, [id, 't0', 't3']);
+    expect(moved.tabs[moved.at].id).toBe(on.tabs[2].id);
+  });
+
+  it('is the same strip back when the order is the order it already had', () => {
+    const { s } = banded();
+    expect(arrangeLanes(s, laneOrder(s))).toBe(s);
+  });
+
+  it('refuses an order that has lost a run, or invented one', () => {
+    const { s, id } = banded();
+    // Both of these can arrive: the strip is rewritten by a navigation in
+    // another tab while a finger is still down, and half-applying a stale
+    // order would lose tabs rather than merely misplace them.
+    expect(arrangeLanes(s, ['t0', id])).toBe(s);
+    expect(arrangeLanes(s, ['t0', id, 't3', 'ghost'])).toBe(s);
+    expect(arrangeLanes(s, ['t0', 'ghost', 't3'])).toBe(s);
+  });
+
+  it('cannot drag a run in front of the pinned tabs', () => {
+    // `tidy` holds it, as it holds every other route into the strip.
+    const { s, id } = banded();
+    const pinned = pin(s, s.tabs.findIndex((t) => t.screen === 'calendar'));
+    const moved = arrangeLanes(pinned, [id, ...laneOrder(pinned).filter((x) => x !== id)]);
+    expect(moved.tabs[0].pinned).toBe(true);
   });
 });

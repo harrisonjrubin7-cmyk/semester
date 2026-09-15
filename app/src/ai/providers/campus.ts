@@ -3,6 +3,7 @@ import { forTerm as costsFor, money, total } from '../../lib/cost';
 import { aidKindOf, billFor, chargeKindOf, forTerm as billRowsFor } from '../../lib/bill';
 import { codeOf } from '../../lib/call';
 import { dateToIso } from '../../lib/date';
+import { byDateThenTime } from '../../lib/select';
 import { UNIVERSITY_AREAS } from '@semester/institution';
 import { gatewayConfigured } from '../../lib/university';
 import type { Provide } from '../shape';
@@ -279,7 +280,7 @@ export const call: Provide = (look) => {
   const iso = dateToIso(now);
   const booked = state.appointments
     .filter((a) => codeOf(a) && a.date >= iso)
-    .sort((a, b) => (a.date === b.date ? a.at - b.at : a.date < b.date ? -1 : 1));
+    .sort(byDateThenTime);
   return {
     summary:
       booked.length === 0

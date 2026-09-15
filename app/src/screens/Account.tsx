@@ -71,7 +71,7 @@ export function AccountScreen() {
             {account.email}
           </div>
           {account.via && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 3 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 3 }}>
               {/* Which button they pressed, which is what somebody needs to
                   know when signing in on a second device. */}
               Through {account.via}.
@@ -93,7 +93,7 @@ export function AccountScreen() {
             See `lib/merge.ts`.
           */}
           {state.lastSync ? (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
               {syncLine(state.lastSync.notes)}
             </div>
           ) : null}
@@ -171,7 +171,7 @@ export function AccountScreen() {
         >
           Sign out (keeps data on this device)
         </ActionButton>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Signing out leaves this device's copy alone — nothing is deleted here, and nothing stops
           working.
         </div>

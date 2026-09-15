@@ -57,7 +57,7 @@ import type { FeedSource } from '../lib/types';
  * send one to.
  */
 export function Connect() {
-  const { state, dispatch, now, catalog, account } = useStore();
+  const { state, dispatch, now, catalog, account, school } = useStore();
   const rowTen = useRowStyle(10);
   const rowEleven = useRowStyle(11);
   const [busy, setBusy] = useState<string>('');
@@ -166,8 +166,8 @@ export function Connect() {
    * published it from the address, and the connected list is labelled with what
    * it found.
    */
-  const subscribe = async () => {
-    const read = readLink(url);
+  const subscribe = async (from: string = url) => {
+    const read = readLink(from);
     if (!read.ok) {
       setNote(read.why);
       return;
@@ -445,7 +445,26 @@ export function Connect() {
             {busy === 'file' ? 'Reading…' : 'Add an .ics file'}
           </FilePick>
         </div>
-        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
+        {/*
+          The one feed a school can hand over without anybody pasting
+          anything. `SchoolData.athleticsFeedUrl` sat in the profile unread
+          until this button; where a school has not given one — Vanderbilt
+          has not — there is no button and no empty promise of one.
+        */}
+        {school.data.athleticsFeedUrl && (
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            disabled={busy === 'feed'}
+            onClick={() => void subscribe(school.data.athleticsFeedUrl)}
+            style={{ height: 42, marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm)' }}
+          >
+            {busy === 'feed'
+              ? 'Reading…'
+              : `Add the ${school.capabilities.athleticsName || school.shortName || 'athletics'} fixtures`}
+          </button>
+        )}
+        <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
           {dropping
             ? 'Let go to read it.'
             : 'A downloaded .ics works the same way, and needs nothing of the network — pick one, several at once, or drag them onto this card. Adding the same calendar again refreshes it rather than duplicating it.'}
@@ -470,7 +489,7 @@ export function Connect() {
             Open Brightspace
           </a>
         </div>
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
           What a Brightspace account can and cannot give this app, plainly: the{' '}
           <strong>calendar feed</strong> carries every due date and needs nothing but the link.{' '}
           <strong>Grades, submissions and files</strong> live behind D2L’s Valence API, whose keys
@@ -651,7 +670,7 @@ export function Connect() {
               )}
 
               {spec.needsProxy && spec.clientId && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 9 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 9 }}>
                   {spec.name}’s API refuses browser calls, so this one goes through the dev proxy
                   (<code style={{ fontSize: 'var(--type-xs)' }}>VITE_OAUTH_PROXY</code>).
                 </div>
@@ -814,7 +833,7 @@ export function Connect() {
                   style={{
                     display: 'block',
                     fontSize: 'var(--type-xs)',
-                    opacity: 0.55,
+                    color: 'var(--app-dim)',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
@@ -849,7 +868,7 @@ export function Connect() {
               </button>
             </div>
           ))}
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)' }}>
             Feed events show on the calendar under Campus, marked with where they came from. They
             never overwrite a deadline the syllabus stated.
           </div>

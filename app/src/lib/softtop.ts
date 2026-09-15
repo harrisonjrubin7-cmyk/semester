@@ -54,7 +54,7 @@ import type { State } from '../state/shape';
 import type { Screen } from './types';
 import type { Capabilities } from './school';
 import { swipeUnit } from './school';
-import { appointmentsOn, datedItems, nextClass, upcomingItems } from './select';
+import { appointmentsOn, byDateThenTime, datedItems, nextClass, upcomingItems } from './select';
 import { occurrences } from './repeat';
 import { overdueCount } from './standing';
 import { termProgress } from './you';
@@ -108,6 +108,19 @@ export interface TopInput {
    * conversation, and Settings is the screen somebody opens to ask about it.
    */
   sync?: string;
+  /**
+   * How many family plans there are, counted by whoever could read them.
+   *
+   * The same shape of exception as `sync`, and for a stronger reason: the
+   * figure is in a device library (`lib/device-library.ts`) that this
+   * function has no business opening during a render. `components/soft/
+   * SoftTop.tsx` reads it through the library's own hook and hands it over.
+   *
+   * Absent means nobody counted — the tile callers in `ByTask` build their
+   * input without one — and Family then leads with nought, which is what a
+   * screen nobody has opened holds anyway.
+   */
+  familyPlans?: number;
 }
 
 /**
@@ -622,9 +635,15 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
      * some distance.
      *
      * So each leads with the figure the *term* already has that the screen is
-     * about. Every one is a true number the reader can check, and none of
-     * them is a nought that would make a working screen look like an empty
-     * app before it has been opened.
+     * about — the commitments an athlete keeps, the applications Career
+     * embeds, the courses behind a next degree. Every one is a true number
+     * under a label that says what it is, and none of them is a nought that
+     * would make a working screen look like an empty app before it has been
+     * opened.
+     *
+     * Family is the one that could not be done that way, and `TopInput` grew
+     * a `familyPlans` for it: see the case below for what the stand-in was
+     * claiming.
      */
     case 'athletics':
       return holds('Commitments', state.commitments.length, 'commitment');
@@ -635,8 +654,28 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
     case 'pathway':
       return holds('Courses so far', catalog.courses.length, 'course');
 
+    /*
+     * The exception to the paragraph above, because its figure was not just a
+     * stand-in — it was a different thing wearing the right-sounding label.
+     *
+     * `state.people` is the contacts list behind People and letters: the
+     * professors, advisors and referees somebody logs against their term. On
+     * this screen it drew as "People — no people yet" directly above a plan
+     * the student had written, and on a student with four professors logged
+     * it would have read "People 4" over a Family screen holding nothing at
+     * all. Both readings are wrong in the direction that matters here: this
+     * is the screen whose whole argument is that nothing is shared until you
+     * choose it, so a number over it must be the number of people you chose.
+     *
+     * `familyPlans` is that count, read from the device library by the one
+     * caller that can — and it is plans rather than active plans, so that it
+     * agrees with the "n planned" the screen itself shows beside the list. A
+     * revoked plan is still a plan you wrote, and the screen says which are
+     * which; a hero that quietly dropped them would disagree with the list
+     * under it.
+     */
     case 'family':
-      return holds('People', state.people.length, 'person', 'people');
+      return holds('Family plans', input.familyPlans ?? 0, 'plan');
 
     // ── Campus ────────────────────────────────────────────────────────────
     /*
@@ -694,7 +733,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
        */
       const scheduled = state.appointments
         .filter((a) => codeOf(a) && a.date >= iso)
-        .sort((a, b) => (a.date === b.date ? a.at - b.at : a.date < b.date ? -1 : 1));
+        .sort(byDateThenTime);
       const next = scheduled[0];
       return {
         hero: next

@@ -138,6 +138,16 @@ export interface Where {
   deckId: string | null;
   mode: StudyMode;
   openUnit?: number;
+  /**
+   * Which unit's narration the lesson screen is on.
+   *
+   * Separate from `openUnit`, which is the unit the *guide* is open at, and
+   * they move independently — stepping to the next lesson does not scroll the
+   * guide. Without this a lesson tab recorded only "the lesson screen of this
+   * guide", so two lesson tabs on two units of one course were the same place
+   * and reopening either landed on whichever unit the app happened to hold.
+   */
+  lessonUnit?: number;
   callCode?: string;
 }
 
@@ -166,9 +176,29 @@ export function placeFor(screen: Screen, at: Where): Action[] {
       return at.eventId ? [{ type: 'openEvent', id: at.eventId }] : justGo(screen);
     case 'guide':
       return at.guideId ? [{ type: 'openGuide', id: at.guideId, mode: at.mode, ...(at.openUnit!==undefined?{unit:at.openUnit}:{}) }] : justGo(screen);
+    case 'lesson':
+      /*
+       * The one of the four with a unit of its own, and the one that does not
+       * carry the guide's.
+       *
+       * `openLesson` says which narration, so the tab comes back to the one
+       * it was on rather than to unit zero. The guide's `mode` and `openUnit`
+       * are left out on purpose: they are where the *guide* was scrolled to,
+       * which is not part of where the lesson screen is, and including them
+       * made this place depend on how you happened to arrive at it. Two
+       * routes to one lesson have to be one place, or the strip fills with
+       * tabs that look identical and are not — and `tabAt` could never match
+       * a search result against a lesson you already had open.
+       */
+      return at.guideId
+        ? [
+            { type: 'openGuide', id: at.guideId },
+            ...(at.lessonUnit !== undefined ? [{ type: 'openLesson' as const, unit: at.lessonUnit }] : []),
+            { type: 'go', screen },
+          ]
+        : justGo(screen);
     case 'drill':
     case 'quiz':
-    case 'lesson':
     case 'slides':
       return at.guideId
         ? [{ type: 'openGuide', id: at.guideId, mode: at.mode, ...(at.openUnit!==undefined?{unit:at.openUnit}:{}) }, { type: 'go', screen }]
@@ -186,6 +216,60 @@ export function placeFor(screen: Screen, at: Where): Action[] {
     default:
       return justGo(screen);
   }
+}
+
+/**
+ * What a drag of the strip's *runs* moves, and what it is called.
+ *
+ * The strip has always been draggable by the tab (`rearrange`), and that is a
+ * different question from this one. Dragging a tab asks "where does this tab
+ * go, and whose work is it now"; dragging a group asks "where does this whole
+ * run go", and the answer must take its tabs with it — a group that came
+ * apart because somebody moved it would not be a group.
+ *
+ * A lane's id is the group's id, or the tab's own when it is in no group.
+ * They cannot collide: a group id is minted by `makeGroup` and a tab id by
+ * `tabId`, and both are prefixed. Ids rather than indices because the strip
+ * is rewritten under the drag by every navigation in another tab.
+ */
+export function laneId(lane: Lane): string {
+  return lane.group ? lane.group.id : lane.seats[0].tab.id;
+}
+
+/** The strip's runs, in order, as the ids a drag moves. */
+export function laneOrder(strip: Strip): string[] {
+  return lanes(strip).map(laneId);
+}
+
+/**
+ * The strip with its runs in this order.
+ *
+ * Expanding each lane back to its tabs is the whole operation: a group's tabs
+ * move as one because they are emitted as one, and `tidy` then holds
+ * everything it always holds — pinned first, a group in one contiguous run,
+ * and the tab you are on still the tab you are on.
+ *
+ * An order naming a lane the strip does not have, or missing one it does, is
+ * answered with the strip unchanged. That is not defensiveness for its own
+ * sake: the strip can be rewritten by another tab's navigation while a finger
+ * is still down, and a drop that half-applied a stale order would lose tabs.
+ */
+export function arrangeLanes(strip: Strip, order: string[]): Strip {
+  const runs = lanes(strip);
+  if (order.length !== runs.length) return strip;
+  const byId = new Map(runs.map((lane) => [laneId(lane), lane]));
+  const moved: AppTab[] = [];
+  for (const id of order) {
+    const lane = byId.get(id);
+    if (!lane) return strip;
+    byId.delete(id);
+    for (const seat of lane.seats) moved.push(seat.tab);
+  }
+  if (moved.length !== strip.tabs.length) return strip;
+  if (moved.every((t, i) => t === strip.tabs[i])) return strip;
+  const on = strip.tabs[clamp(strip, strip.at)];
+  const at = Math.max(0, moved.findIndex((t) => t.id === on?.id));
+  return tidy({ ...strip, tabs: moved, at });
 }
 
 /**
@@ -565,21 +649,20 @@ export function sameplace(a: Action[], b: Action[]): boolean {
  * (nothing stops you opening the same course twice) and the one nearest the
  * front of the strip is the one a person means.
  *
- * ## Why the row this feeds carries no speaker
+ * ## The row this feeds carries a speaker, now
  *
- * It was going to. A result already open in the tab that is playing would
- * have said so, the way the strip and the tab list do — and it cannot
- * happen. Two places in this app play audio: the lesson screen, and a guide
- * in listen mode. No result lands on `lesson` at all (`landingOf` in
- * `lib/openhit.ts` has no case for it, and a `screen` hit's place is a bare
- * `justGo`, which is "the lesson screen" rather than *this* lesson), and
- * every unit hit is built with `mode: 'cards'` (`lib/find.ts`), so a unit
- * result opens the guide in a different place from the one that is playing —
- * which `sameplace` correctly refuses to match.
+ * It could not until lessons became searchable, and the reason is worth
+ * keeping: a mark saying "this is the tab making the noise" needs a result
+ * whose *place* is a place that plays, and for a while none existed. No
+ * result landed on `lesson` at all, and every unit hit is built with
+ * `mode: 'cards'` (`lib/find.ts`) while the other thing that plays is a guide
+ * in listen mode — so `sameplace` was right to refuse every comparison it was
+ * offered.
  *
- * Written down here rather than discovered twice. If lessons ever become
- * searchable, the mark is three lines and this paragraph is the reason it was
- * not three lines sooner.
+ * A lesson hit closed that: `actionsFor` builds it from the same three
+ * actions `placeFor` records for a lesson tab, which is what lets this match
+ * at all. `browser.test.ts` compares the two directly, because they are
+ * written in different files and nothing else would notice them drifting.
  */
 export function tabAt(strip: Strip, place: Action[]): AppTab | undefined {
   if (place.length === 0) return undefined;
@@ -1092,6 +1175,7 @@ export const PLACE_ACTIONS = [
   'openCourse',
   'openEvent',
   'openGuide',
+  'openLesson',
   'openNote',
   'openDocument',
   'openSheet',

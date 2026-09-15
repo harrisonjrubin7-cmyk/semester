@@ -128,7 +128,7 @@ export function EditCourse() {
     placeholder = '',
   ) => (
     <label style={{ display: 'block', marginBottom: 'var(--sp-5)' }}>
-      <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginBottom: 'var(--sp-2)' }}>
+      <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-2)' }}>
         {label}
       </span>
       <input
@@ -224,7 +224,7 @@ export function EditCourse() {
               }}
             >
               <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{option.label}</span>
-              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {stanceLine(option.id)}
               </span>
             </button>
@@ -532,7 +532,7 @@ export function EditCourse() {
         {dirty ? 'Save the changes' : saved ? 'Saved' : 'Nothing changed'}
       </ActionButton>
       {dirty ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Nothing is saved until you press that. A half-typed date would otherwise flow straight
           into the calendar and the overdue count while you were still typing it.
         </div>

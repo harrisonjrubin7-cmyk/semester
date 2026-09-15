@@ -44,6 +44,7 @@ import {
   Fragment,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
@@ -55,6 +56,7 @@ import {
   follow,
   here,
   lastFollowed,
+  moveLanes,
   moveTab,
   muteTab,
   openTab,
@@ -62,7 +64,7 @@ import {
   record,
   useStrip,
 } from '../lib/browser.hook';
-import { MAX_TABS, NEW_TAB, lanes, pinnedCount, placeFor, sameplace } from '../lib/browser';
+import { MAX_TABS, NEW_TAB, laneOrder, lanes, pinnedCount, placeFor, sameplace } from '../lib/browser';
 import { useMovable, type Movable } from '../lib/arrange';
 import { screenName } from '../lib/nav';
 import type { Catalog } from '../data/catalog';
@@ -70,6 +72,8 @@ import type { State } from '../state/shape';
 import { secondLine } from '../lib/dim';
 import { ChevronDown, Plus, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
 import { sounding } from '../lib/sound';
+import { peekAt } from '../lib/peek';
+import { TabPeek } from './TabPeek';
 import { useSound } from '../lib/sound.hook';
 import { TabGlyph } from './TabIcon';
 import { StripMenu, type MenuOn } from './TabMenu';
@@ -156,6 +160,15 @@ function nameFor(state: State, catalog: Catalog): string {
   }
 }
 
+/**
+ * How long a pointer rests on a tab before the card appears.
+ *
+ * Long enough that sweeping the strip on the way to the New tab button shows
+ * nothing, short enough that stopping on a tab feels answered rather than
+ * waited on. The number every browser has settled near.
+ */
+const PEEK_MS = 450;
+
 export function TabsFollow() {
   const { state, catalog } = useStore();
   // Destructured, so the memo below depends on the ten ids that make a place
@@ -173,6 +186,7 @@ export function TabsFollow() {
     deckId,
     mode,
     openUnit,
+    lessonUnit,
     callCode,
   } = state;
   const at = useMemo(
@@ -190,6 +204,9 @@ export function TabsFollow() {
         /* A study tab remembers the unit it is open on and a call tab its
            room, so two study tabs come back to their own. See `placeFor`. */
         openUnit,
+        /* And a lesson tab the narration it is on, which moves independently
+           of the guide's unit — two lessons of one course are two places. */
+        lessonUnit,
         callCode,
       }),
     [
@@ -204,6 +221,7 @@ export function TabsFollow() {
       deckId,
       mode,
       openUnit,
+      lessonUnit,
       callCode,
     ],
   );
@@ -302,6 +320,43 @@ export function TabStrip({
     items: rows,
     onMove: (order, moved) => moveTab(order, moved),
   });
+  /*
+   * A second drag, over the strip's runs rather than its tabs.
+   *
+   * Two movables rather than one, because they answer different questions and
+   * a single one could not. Dragging a tab asks where that tab goes *and*
+   * whose work it is now — `rearrange` reads the drop position for both.
+   * Dragging a group asks only where the run goes, and must never change what
+   * is in it. One movable over a mixed list would have had to guess which
+   * question a drop was, at exactly the position where the two disagree.
+   *
+   * They never contend: a tab's handle is the tab, a group's is its head, and
+   * `lib/drag.ts` hands a gesture to whichever took the pointer down.
+   */
+  const bands = useMovable<string>({
+    items: laneOrder(strip),
+    onMove: (order) => moveLanes(order),
+  });
+  /*
+   * Whether the run now under the pointer was being carried a moment ago.
+   *
+   * `tookDrop` answers "did a drop happen", which is not the same question,
+   * and the difference is only visible here. `lib/drag.ts` arms its flag when
+   * a drop *target* is found — so a group picked up and released over nothing
+   * (past the end of the strip, over the page) reports no drop, the click
+   * lands, and the group folds. Folding is a visible state change somebody
+   * did not ask for; a tab released the same way merely re-opens the tab that
+   * was already under the finger, which is why nothing noticed before.
+   *
+   * Held here rather than fixed in `drag.ts`, where the same flag serves the
+   * calendar, Today's sections, the bottom bar and the shelves. "A gesture
+   * that became a drag is not a click" is probably right for all of them, but
+   * that is a change to a shared primitive and its own piece of work.
+   */
+  const carried = useRef(false);
+  useEffect(() => {
+    if (bands.held !== null) carried.current = true;
+  }, [bands.held]);
   /** The tab or group menu, and where it was summoned from. See `TabMenu`. */
   const [menu, setMenu] = useState<{ on: MenuOn; corner: Corner } | null>(null);
   const modern = useModernShell();
@@ -359,6 +414,42 @@ export function TabStrip({
    * when it was a right-click. Both are read here rather than in the menu: by
    * the time it renders, the strip may have scrolled the control away.
    */
+  /*
+   * The hover card: which tab, and the rectangle it hangs under.
+   *
+   * One piece of state for the whole strip rather than one per tab, because
+   * only one card is ever up and a timer per tab would be a hundred timers on
+   * a full strip. `TabPeek` draws it; `lib/peek.ts` decides what it says.
+   */
+  const [peeking, setPeeking] = useState<{ id: string; at: { left: number; bottom: number } } | null>(null);
+  const timer = useRef<number | null>(null);
+  const forget = () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    timer.current = null;
+  };
+  /*
+   * A delay, because a card that appears the instant a pointer crosses a tab
+   * is a card that flashes four times on the way to the New tab button. Only
+   * resting on something is a question about it.
+   */
+  const rest = (id: string, box: DOMRect) => {
+    forget();
+    timer.current = window.setTimeout(() => setPeeking({ id, at: { left: box.left, bottom: box.bottom } }), PEEK_MS);
+  };
+  /* The keyboard has no resting: arriving is the whole gesture, so it shows
+     at once. Tabbing along a strip is deliberate in a way sweeping is not. */
+  const show = (id: string, box: DOMRect) => {
+    forget();
+    setPeeking({ id, at: { left: box.left, bottom: box.bottom } });
+  };
+  const hide = () => {
+    forget();
+    setPeeking(null);
+  };
+  // Nothing hovers while a tab is being dragged, and the card would be under
+  // the finger anyway.
+  useEffect(() => () => forget(), []);
+
   const summon = (on: MenuOn, e: ReactMouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -415,6 +506,13 @@ export function TabStrip({
                   on={seat.at === strip.at}
                   searching={searching}
                   talking={sounding(noise, seat.tab.id)}
+                  peek={{
+                    id: `peek-${seat.tab.id}`,
+                    open: peeking?.id === seat.tab.id,
+                    onRest: (box) => rest(seat.tab.id, box),
+                    onShow: (box) => show(seat.tab.id, box),
+                    onGone: hide,
+                  }}
                   hold={movable.props(seat.tab.id)}
                   onPick={() => pick(seat.at)}
                   onShut={() => shut(seat.at)}
@@ -424,10 +522,29 @@ export function TabStrip({
             );
           }
           const tint = toneAt(tones, group.tone);
+          /*
+           * Folded while it is in your hand, and open again when you let go.
+           *
+           * A run four tabs wide is a poor thing to move: it covers half the
+           * strip it is being dropped into, so the gap you are aiming at is
+           * under the thing you are aiming with. Collapsed it is a chip, and
+           * the strip behind it stays readable — which is what every browser
+           * does with a dragged group and the reason it does it.
+           *
+           * Drawn, not set. `collapse` in the model is a real fold: it moves
+           * you out of the group first, because folding the run you are
+           * working in would hide the page in front of you. Nothing about
+           * picking a group up should navigate, and letting go must leave the
+           * group exactly as open as it was — so this is the rendering
+           * knowing, and the strip on the device never hears about it.
+           */
+          const carrying = bands.held === group.id;
+          const folded = group.collapsed || carrying;
           return (
             <Fragment key={group.id}>
             {pins > 0 && lane.seats[0].at === pins && <PinEdge />}
             <div
+              {...bands.zone(group.id)}
               /*
                * The run, drawn as one object.
                *
@@ -454,8 +571,22 @@ export function TabStrip({
               <GroupHead
                 group={group}
                 held={lane.seats.length}
+                folded={folded}
                 tint={tint}
+                hold={bands.grip(group.id)}
                 onToggle={() => {
+                  /*
+                   * A drag of the run ends in a click on its head, and
+                   * without this every move of a group would also fold it.
+                   * `tookDrop` is still read, and still cleared, so a drop
+                   * suppresses exactly one click — but the ref above is what
+                   * covers the drag that landed on nothing.
+                   */
+                  const dropped = bands.tookDrop();
+                  if (dropped || carried.current) {
+                    carried.current = false;
+                    return;
+                  }
                   const landed = foldGroup(group.id, !group.collapsed);
                   // Only when it moved you: see `foldGroup`. Opening a group
                   // you were never inside leaves you exactly where you were.
@@ -464,8 +595,9 @@ export function TabStrip({
                 onMenu={(e) => summon({ kind: 'group', id: group.id }, e)}
               />
               {/* Folded, the run is its head and nothing else — which is the
-                  room a strip at ten tabs gets back for it. */}
-              {!group.collapsed &&
+                  room a strip at ten tabs gets back for it, and the shape it
+                  takes while it is being carried. */}
+              {!folded &&
                 lane.seats.map((seat) => (
                   <Tab
                     key={seat.tab.id}
@@ -473,6 +605,13 @@ export function TabStrip({
                     on={seat.at === strip.at}
                     searching={searching}
                     talking={sounding(noise, seat.tab.id)}
+                    peek={{
+                      id: `peek-${seat.tab.id}`,
+                      open: peeking?.id === seat.tab.id,
+                      onRest: (box) => rest(seat.tab.id, box),
+                      onShow: (box) => show(seat.tab.id, box),
+                      onGone: hide,
+                    }}
                     hold={movable.props(seat.tab.id)}
                     onPick={() => pick(seat.at)}
                     onShut={() => shut(seat.at)}
@@ -554,6 +693,30 @@ export function TabStrip({
           onNewTab={blank}
         />
       )}
+      {/*
+        * One card for the whole strip, drawn last and outside the scrolling
+        * box. It is `position: fixed`, so where it sits in the tree changes
+        * nothing about where it lands — but a card inside a box with
+        * `overflow-x: auto` is a card clipped to the height of one tab, and
+        * that is the bug this placement is avoiding rather than a preference.
+        *
+        * Not drawn while a menu is open: the menu was asked for and the card
+        * merely happened, and two panels over one tab is one of them being
+        * in the way.
+        */}
+      {peeking && !menu && (() => {
+        const seat = strip.tabs.find((t) => t.id === peeking.id);
+        if (!seat) return null;
+        const band = seat.group ? strip.groups.find((g) => g.id === seat.group) : null;
+        return (
+          <TabPeek
+            id={`peek-${seat.id}`}
+            at={peeking.at}
+            tone={band ? toneAt(tones, band.tone).fill : undefined}
+            peek={peekAt(seat, band, { talking: sounding(noise, seat.id) })}
+          />
+        );
+      })()}
     </div>
   );
 }
@@ -595,6 +758,7 @@ function Tab({
   on,
   searching,
   talking,
+  peek,
   hold,
   onPick,
   onShut,
@@ -605,6 +769,19 @@ function Tab({
   searching: string;
   /** This tab owns the player: it is the one making the noise. */
   talking: boolean;
+  /**
+   * The hover card's handlers, and what it would say.
+   *
+   * Passed down rather than kept here so that one card, one timer and one
+   * piece of state serve the whole strip — see `peeking` in `TabStrip`.
+   */
+  peek: {
+    id: string;
+    open: boolean;
+    onRest: (box: DOMRect) => void;
+    onShow: (box: DOMRect) => void;
+    onGone: () => void;
+  };
   /**
    * What makes this tab draggable: `props` from `useMovable`.
    *
@@ -643,7 +820,9 @@ function Tab({
     <div
       {...hold}
       onContextMenu={onMenu}
-      title={pinned ? title : undefined}
+      /* The native `title` is gone: the card says everything it said and more,
+         and a browser tooltip fading in over a card that is already up is two
+         answers to one question. */
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -660,6 +839,27 @@ function Tab({
         type="button"
         className="bare tappable"
         onClick={onPick}
+        /*
+         * The card, on the button rather than on the row: the row is also the
+         * drag handle, and a pointer that went down to move a tab is not
+         * asking what the tab is.
+         *
+         * `pointerenter` rather than `mouseenter` so a touch can be told from
+         * a mouse — a phone fires the mouse events too, and a card that
+         * appeared under a thumb would cover the tab it describes. The tab
+         * menu is the touch route to the same facts.
+         */
+        onPointerEnter={(e) => {
+          if (e.pointerType === 'touch') return;
+          peek.onRest(e.currentTarget.getBoundingClientRect());
+        }}
+        onPointerLeave={peek.onGone}
+        onPointerDown={peek.onGone}
+        // The keyboard gets the same card, at once: tabbing onto something is
+        // already deliberate, so there is nothing to wait to be sure of.
+        onFocus={(e) => peek.onShow(e.currentTarget.getBoundingClientRect())}
+        onBlur={peek.onGone}
+        aria-describedby={peek.open ? peek.id : undefined}
         aria-current={on ? 'page' : undefined}
         // The name is the button's text on an ordinary tab and has to be said
         // out loud on a pinned one, where the glyph is all there is to see.
@@ -783,13 +983,32 @@ function Tab({
 function GroupHead({
   group,
   held,
+  folded,
   tint,
+  hold,
   onToggle,
   onMenu,
 }: {
   group: TabGroup;
   held: number;
+  /**
+   * Drawn folded — because it is, or because it is being carried.
+   *
+   * Two reasons and one appearance: a run in your hand looks exactly like a
+   * folded one, which is what makes the gesture legible without anything
+   * being explained. The difference is that this one is not written down.
+   */
+  folded: boolean;
   tint: CourseTint;
+  /**
+   * What makes the head the handle for the whole run: `grip` from the
+   * strip's second movable.
+   *
+   * The handle rather than the run itself, because the tabs inside answer
+   * their own drag — two hold gestures on one element cannot both win, and
+   * the same split is why a section of Today has a grip beside its heading.
+   */
+  hold: ReturnType<Movable<string>['grip']>;
   onToggle: () => void;
   onMenu: (e: ReactMouseEvent) => void;
 }) {
@@ -797,8 +1016,9 @@ function GroupHead({
   const count = held === 1 ? '1 tab' : `${held} tabs`;
   return (
     <button
+      {...hold}
       type="button"
-      className="bare tappable"
+      className={`bare tappable${hold.className}`}
       onClick={onToggle}
       onContextMenu={onMenu}
       // Not `aria-expanded` alone: what folds is the run of tabs beside this,
@@ -818,6 +1038,7 @@ function GroupHead({
         borderRadius: 'var(--r-sm)',
         fontSize: 'var(--type-sm)',
         color: tint.ink,
+        ...hold.style,
       }}
     >
       <span
@@ -837,7 +1058,7 @@ function GroupHead({
       )}
       {/* The count only while it is folded: open, the tabs are right there
           and a number beside them is one more thing to read past. */}
-      {group.collapsed && <span aria-hidden="true">{held}</span>}
+      {folded && <span aria-hidden="true">{held}</span>}
     </button>
   );
 }

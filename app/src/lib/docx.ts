@@ -41,7 +41,7 @@
  */
 
 import { outline } from './doctools';
-import { runs, type Block, type Doc } from './document';
+import { listed, runs, type Align, type Block, type Doc, type Line } from './document';
 import { layoutOf, lineHeight, pageSize, type Layout } from './doclayout';
 import { omml, parse } from './maths';
 import { HEAD, REL, xml } from './ooxml';
@@ -348,6 +348,19 @@ class Pictures {
  * in the link's colour, with nothing behind them: visibly a link that goes
  * nowhere rather than an invalid relationship, which Word refuses to open.
  */
+/**
+ * A paragraph's alignment, as the property Word reads.
+ *
+ * `justify` is `both` in OOXML — the two edges — and `left` is written out
+ * rather than left off, because a block set to left inside a document whose
+ * style is justified means *this one is not*, and saying nothing would let
+ * the style win.
+ */
+function aligned(align?: Align): string {
+  if (!align) return '';
+  return `<w:jc w:val="${align === 'justify' ? 'both' : align}"/>`;
+}
+
 function para(text: string, style?: string, extra = '', links?: Links): string {
   const props = style || extra ? `<w:pPr>${style ? `<w:pStyle w:val="${style}"/>` : ''}${extra}</w:pPr>` : '';
   const body = runs(text)
@@ -361,9 +374,11 @@ function para(text: string, style?: string, extra = '', links?: Links): string {
 }
 
 /** A list item, at the numbering definition the list's kind points at. */
-function item(text: string, numbered: boolean, links?: Links): string {
-  const numbering = `<w:numPr><w:ilvl w:val="0"/><w:numId w:val="${numbered ? 2 : 1}"/></w:numPr>`;
-  return para(text, 'ListParagraph', numbering, links);
+function item(line: Line, numbered: boolean, links?: Links): string {
+  const numbering =
+    `<w:numPr><w:ilvl w:val="${line.level}"/>` +
+    `<w:numId w:val="${numbered ? 2 : 1}"/></w:numPr>`;
+  return para(line.text, 'ListParagraph', numbering, links);
 }
 
 /**
@@ -440,13 +455,15 @@ function blockXml(
 ): string {
   switch (block.kind) {
     case 'heading':
-      return block.text.trim() ? para(block.text, `Heading${block.level}`, '', links) : '';
+      return block.text.trim()
+        ? para(block.text, `Heading${block.level}`, aligned(block.align), links)
+        : '';
     case 'text':
-      return block.text.trim() ? para(block.text, undefined, '', links) : '';
+      return block.text.trim() ? para(block.text, undefined, aligned(block.align), links) : '';
     case 'bullets':
-      return block.items
-        .filter((i) => i.trim())
-        .map((i) => item(i, block.numbered, links))
+      return listed(block.items)
+        .filter((l) => l.text.trim())
+        .map((l) => item(l, block.numbered, links))
         .join('');
     case 'checks':
       return block.items
@@ -454,9 +471,13 @@ function blockXml(
         .map((i) => ticked(i, links))
         .join('');
     case 'quote': {
-      const body = block.text.trim() ? para(block.text, 'Quote', '', links) : '';
+      // The attribution takes the quotation's alignment too: the two are one
+      // block on screen and one thing on the page, and a centred passage with
+      // its source hard against the left margin reads as a mistake.
+      const jc = aligned(block.align);
+      const body = block.text.trim() ? para(block.text, 'Quote', jc, links) : '';
       return block.source.trim()
-        ? `${body}${para(`— ${block.source}`, 'Caption', '', links)}`
+        ? `${body}${para(`— ${block.source}`, 'Caption', jc, links)}`
         : body;
     }
     case 'table':
@@ -665,15 +686,53 @@ function stylesXml(layout: Layout): string {
 }
 
 /** Bullets at `numId` 1, decimals at 2 — what `item()` above points at. */
+/**
+ * The numbering part, one definition per level a list may reach.
+ *
+ * A `w:ilvl` in a paragraph is a *reference*: Word looks the level up here for
+ * its glyph, its indent and — for a numbered list — where its counter
+ * restarts. Point at a level this part does not define and Word draws the
+ * item at the left margin with no marker at all, which reads as a paragraph
+ * that lost its bullet rather than as anything wrong with the file.
+ *
+ * The glyphs and formats cycle the way Word's own defaults do, so a nested
+ * list looks like one a person made in Word: • ○ ▪ down the bullets, and
+ * 1. a. i. down the numbers. `%1` through `%5` name the counters, and each
+ * level shows only its own, which is the "1." "a." style rather than the
+ * "1.a.i." legal one.
+ *
+ * `w:start` and `w:lvlRestart` are left at their defaults on purpose: Word
+ * restarts a sub-list's numbering each time its parent advances, which is
+ * what a reader expects and what `listMarkdown` writes on the other side.
+ */
+const BULLET_GLYPHS = ['\u2022', '\u25CB', '\u25AA', '\u2022', '\u25CB'];
+const NUMBER_FORMATS = ['decimal', 'lowerLetter', 'lowerRoman', 'decimal', 'lowerLetter'];
+
+/** Half an inch a level, which is Word's own step, in twips. */
+const LEVEL_STEP = 720;
+
+function levels(numbered: boolean): string {
+  return Array.from({ length: 5 }, (_, at) => {
+    const left = LEVEL_STEP * (at + 1);
+    const format = numbered
+      ? `<w:numFmt w:val="${NUMBER_FORMATS[at]}"/><w:lvlText w:val="%${at + 1}."/>`
+      : `<w:numFmt w:val="bullet"/><w:lvlText w:val="${BULLET_GLYPHS[at]}"/>`;
+    // Symbol is the font Word writes its own bullets in, and is what makes
+    // the hollow and filled marks render as marks rather than as boxes.
+    const font = numbered
+      ? ''
+      : '<w:rPr><w:rFonts w:ascii="Symbol" w:hAnsi="Symbol" w:hint="default"/></w:rPr>';
+    return (
+      `<w:lvl w:ilvl="${at}"><w:start w:val="1"/>${format}<w:lvlJc w:val="left"/>` +
+      `<w:pPr><w:ind w:left="${left}" w:hanging="360"/></w:pPr>${font}</w:lvl>`
+    );
+  }).join('');
+}
+
 const NUMBERING =
   `${HEAD}<w:numbering xmlns:w="${W}">` +
-  '<w:abstractNum w:abstractNumId="0"><w:lvl w:ilvl="0">' +
-  '<w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/>' +
-  '<w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr>' +
-  '<w:rPr><w:rFonts w:ascii="Symbol" w:hAnsi="Symbol" w:hint="default"/></w:rPr></w:lvl></w:abstractNum>' +
-  '<w:abstractNum w:abstractNumId="1"><w:lvl w:ilvl="0">' +
-  '<w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%1."/><w:lvlJc w:val="left"/>' +
-  '<w:pPr><w:ind w:left="720" w:hanging="360"/></w:pPr></w:lvl></w:abstractNum>' +
+  `<w:abstractNum w:abstractNumId="0">${levels(false)}</w:abstractNum>` +
+  `<w:abstractNum w:abstractNumId="1">${levels(true)}</w:abstractNum>` +
   '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>' +
   '<w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num>' +
   '</w:numbering>';

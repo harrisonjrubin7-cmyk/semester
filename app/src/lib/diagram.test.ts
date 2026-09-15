@@ -65,6 +65,61 @@ describe('cleanSvg', () => {
     expect(out).toContain('width:100%');
   });
 
+  /*
+   * A prefix is not a disguise.
+   *
+   * These are parsed as XML, where `nodeName` carries the prefix: bind one to
+   * the SVG namespace and `<s:script>` reads as `s:script`, which matched
+   * nothing in the banned list. `XMLSerializer` then wrote it back out as a
+   * plain `<script>`, so the output held a live script element that the same
+   * payload without a prefix had correctly lost.
+   *
+   * Checked in Chromium at the time: it did not execute, because `innerHTML`
+   * never runs a script it inserts. That is the sink's protection, not this
+   * function's, and this function is the one that promises the tag is gone.
+   */
+  const NS = 'http://www.w3.org/2000/svg';
+
+  it('strips a banned tag wearing a namespace prefix', () => {
+    const out = cleanSvg(`<svg xmlns:s="${NS}" xmlns="${NS}"><s:script>alert(1)</s:script><circle r="1"/></svg>`);
+    expect(out).not.toContain('script');
+    expect(out).toContain('<circle');
+  });
+
+  it('strips a prefixed foreignObject', () => {
+    const out = cleanSvg(`<svg xmlns:s="${NS}" xmlns="${NS}"><s:foreignObject/><circle r="1"/></svg>`);
+    expect(out?.toLowerCase()).not.toContain('foreignobject');
+  });
+
+  it('strips a prefixed event handler', () => {
+    const out = cleanSvg(`<svg xmlns:s="${NS}" xmlns="${NS}"><circle r="1" s:onload="x()"/></svg>`);
+    expect(out).not.toContain('onload');
+  });
+
+  it('strips an outside reference under an unusual prefix', () => {
+    const out = cleanSvg(
+      `<svg xmlns="${NS}" xmlns:xl="http://www.w3.org/1999/xlink"><image xl:href="https://example.com/p.png"/></svg>`,
+    );
+    expect(out).not.toContain('example.com');
+  });
+
+  /*
+   * The root has to come back out as `<svg>`.
+   *
+   * With a prefix bound to the SVG namespace the serializer may write every
+   * element through it, root included, and `<s:svg>` is an unknown element to
+   * an HTML parser rather than a picture — so the drawing rendered as nothing.
+   */
+  it('serialises the root without a prefix', () => {
+    const out = cleanSvg(`<svg xmlns:s="${NS}" xmlns="${NS}"><circle r="1"/></svg>`);
+    expect(out?.startsWith('<svg')).toBe(true);
+  });
+
+  it('leaves a prefix that is not the SVG namespace alone', () => {
+    const out = cleanSvg(`<svg xmlns="${NS}" xmlns:xlink="http://www.w3.org/1999/xlink"><use xlink:href="#a"/></svg>`);
+    expect(out).toContain('#a');
+  });
+
   it('is null for something that is not an SVG at all', () => {
     // Which is the right answer for a model that replied with an apology.
     expect(cleanSvg('I cannot draw that.')).toBeNull();

@@ -25,13 +25,48 @@ function unfold(text: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * One left-to-right pass, because the escapes overlap.
+ *
+ * This was four `replace` calls in a row, undoing the backslash-doubling last
+ * so that a `\\,` produced by escaping a real backslash before a comma came out
+ * right. It does, and the case it misses is the one before the letter n.
+ *
+ * `S:\notes` is written to the file as `S:\\notes` — the backslash doubled,
+ * correctly. The first pass then looks for `\n` anywhere in that, finds the
+ * *second* backslash followed by `n`, and turns the pair into a real newline:
+ *
+ *     S:\notes   →  S:\\notes  →  S:\ + newline + otes
+ *
+ * The letter is eaten and the line breaks in half. A sequential pass cannot
+ * get this right, because after the first replacement there is no longer any
+ * way to tell which backslashes were escapes and which were escaped. Reading
+ * once, consuming each `\` together with the character it governs, can.
+ *
+ * An unrecognised escape keeps both of its characters, which is what the old
+ * code did and the more forgiving answer for a feed that never escaped its
+ * backslashes in the first place.
+ */
 function unescape(value: string): string {
-  return value
-    .replace(/\\n/gi, '\n')
-    .replace(/\\,/g, ',')
-    .replace(/\\;/g, ';')
-    .replace(/\\\\/g, '\\')
-    .trim();
+  let out = '';
+  for (let i = 0; i < value.length; i += 1) {
+    if (value[i] !== '\\') {
+      out += value[i];
+      continue;
+    }
+    const next = value[i + 1];
+    if (next === undefined) {
+      out += '\\';
+      break;
+    }
+    if (next === 'n' || next === 'N') out += '\n';
+    else if (next === '\\' || next === ',' || next === ';') out += next;
+    else {
+      out += '\\' + next;
+    }
+    i += 1;
+  }
+  return out.trim();
 }
 
 interface RawEvent {

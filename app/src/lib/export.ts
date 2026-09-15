@@ -23,7 +23,7 @@ import type { MailDraft } from './mailbox';
 import { standingOf, type DoneMap } from './standing';
 import { NO_TIME } from './duetime';
 import type { State } from '../state/shape';
-import { appointmentLength, spanOf } from './select';
+import { appointmentDays, appointmentLength, spanOf } from './select';
 import { rrule } from './repeat';
 import { readTerm, yearFor } from './term';
 
@@ -214,6 +214,14 @@ export interface IcsEvent {
   at?: number;
   minutes?: number;
   /**
+   * How many days an all-day entry covers, counting the first. Absent is one.
+   *
+   * Ignored when `at` names an hour, for the reason `Appointment.days` gives:
+   * a span is an all-day span. Read only to work out the exclusive `DTEND`
+   * below.
+   */
+  days?: number;
+  /**
    * An iCalendar `RRULE` body, for something that happens again.
    *
    * Written as the rule rather than as one entry per occurrence, which is the
@@ -332,7 +340,20 @@ export function toIcs(events: IcsEvent[], name = 'Semester'): string {
      */
     const at = Number.isInteger(e.at) && e.at! >= 0 && e.at! < 1440 ? e.at : undefined;
     if (at === undefined) {
-      const next = new Date(e.date.getFullYear(), e.date.getMonth(), e.date.getDate() + 1);
+      /*
+       * `DTEND` on an all-day event is **exclusive** — RFC 5545 §3.6.1 — so
+       * the day after the last one it covers. A one-day entry is therefore
+       * start+1, which is what this wrote before spans existed and is the
+       * same arithmetic: start + however many days it runs.
+       *
+       * Getting this wrong is the classic all-day bug and it is invisible on
+       * the writing side. Off by one the short way and a Friday-to-Sunday
+       * trip arrives ending Saturday; off by one the long way and every
+       * single-day entry eats the next morning. Both import without a
+       * warning, because both are valid files saying something else.
+       */
+      const span = Math.max(1, Math.floor(e.days ?? 1));
+      const next = new Date(e.date.getFullYear(), e.date.getMonth(), e.date.getDate() + span);
       lines.push(`DTSTART;VALUE=DATE:${dateStamp(e.date)}`);
       lines.push(`DTEND;VALUE=DATE:${dateStamp(next)}`);
     } else {
@@ -593,6 +614,10 @@ export function appointmentEvents(appts: Appointment[]): IcsEvent[] {
       // Its own length, so a four-hour shift is four hours in the calendar it
       // lands in rather than the hour every appointment used to get.
       minutes: appointmentLength(a),
+      // And how many days, for the one with no hour to be long for. A week
+      // off exported as a single Monday was the old behaviour, and it looked
+      // right in the file.
+      days: appointmentDays(a),
       // And its rule, so the Tuesday shift arrives as one repeating event.
       ...(a.repeat ? { rrule: rrule(a.repeat) } : {}),
       except: (a.repeat?.except ?? [])
@@ -703,6 +728,15 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valu
    */
   { key: 'plots', label: 'graphs', array: true },
   { key: 'mailDrafts', label: 'email drafts', array: true },
+  /*
+   * Rules are written, not derived. Losing one in a restore is silent in the
+   * particular way this list exists to prevent: the mailbox still works, and
+   * the newsletter it was archiving is back in the inbox with no message
+   * saying why. The marks a rule *produces* are not in the file and do not
+   * need to be — they are recomputed from the rule, which is the point of
+   * `lib/mailrules.ts` keeping them out of `mailMarks`.
+   */
+  { key: 'mailRules', label: 'mail rules', array: true },
   { key: 'folders', label: 'folders', array: true },
   { key: 'sources', label: 'sources', array: true },
   { key: 'sittings', label: 'practice papers', array: true },
@@ -940,6 +974,7 @@ export function backupOf(state: State) {
     equations: state.equations,
     plots: state.plots,
     mailDrafts: state.mailDrafts,
+    mailRules: state.mailRules,
     folders: state.folders,
     sources: state.sources,
     sittings: state.sittings,
