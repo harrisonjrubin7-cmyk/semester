@@ -57,6 +57,14 @@ export const STRATEGY: Record<string, Strategy> = {
   // rules — which is the honest outcome: a lost rule is silent, and what it
   // was doing quietly stops.
   mailRules: 'union',
+  /*
+   * `theirs`, not `union` — the one list here where a union is wrong. Muting
+   * is a *setting*, and unmuting removes an id: a union cannot express that,
+   * so a course silenced on the phone and un-silenced on the laptop would
+   * come back silenced forever. Last writer wins, which is what "I turned it
+   * back on" should mean.
+   */
+  mutedCourses: 'theirs',
   tasks: 'union',
   appointments: 'union',
   commitments: 'union',

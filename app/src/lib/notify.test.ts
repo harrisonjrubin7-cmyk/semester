@@ -370,6 +370,56 @@ describe('what has already been ticked off', () => {
     expect(without.map((r) => r.id)).toEqual(with_.map((r) => r.id));
   });
 });
+describe('a muted course', () => {
+  /*
+   * "A switch that lies is worse than no switch" is this file's own opening
+   * line, and a reminder about a course somebody explicitly silenced is that
+   * switch lying. These hold the silence.
+   */
+  const econ = (over: Partial<DatedItem> = {}): DatedItem => ({ ...item({}), c: 'econ', ...over });
+
+  it('says nothing about a course that is muted', () => {
+    const src = { items: [econ({ isToday: true })], classes: [], muted: ['econ'] };
+    // The day reads as free, which is the honest answer rather than a bug: a
+    // silenced course is one you have said you do not want counted, so the
+    // all-clear counts what is left. Muting every course is how somebody asks
+    // for a quiet phone, not how they ask to be told a deadline is hidden.
+    expect(dueReminders(THU, ALL, src).map((r) => r.rule)).toEqual(['free']);
+  });
+
+  it('still speaks about the courses that are not', () => {
+    const src = {
+      items: [econ({ isToday: true }), econ({ id: 'p2', c: 'psci', isToday: true })],
+      classes: [],
+      muted: ['econ'],
+    };
+    const out = dueReminders(THU, ALL, src);
+    expect(out.length).toBeGreaterThan(0);
+    expect(JSON.stringify(out)).not.toContain('econ');
+  });
+
+  it('silences the class nudge too, and leaves a block with no course alone', () => {
+    const src = {
+      items: [],
+      classes: [
+        { label: 'ECON 1020', at: 9 * 60 + 10, where: 'Buttrick', c: 'econ' },
+        { label: 'Shift', at: 9 * 60 + 10, where: 'Library', c: null },
+      ],
+      muted: ['econ'],
+    };
+    const said = JSON.stringify(dueReminders(THU, ALL, src));
+    expect(said).not.toContain('ECON 1020');
+    expect(said).toContain('Shift');
+  });
+
+  it('changes nothing when the list is empty', () => {
+    const src = { items: [econ({ isToday: true })], classes: [] };
+    expect(dueReminders(THU, ALL, src).length).toEqual(
+      dueReminders(THU, ALL, { ...src, muted: [] }).length,
+    );
+  });
+});
+
 describe('classesToNudge', () => {
   const block = (over: Record<string, unknown> = {}) =>
     ({ title: 'PSCI 1104', meta: 'Buttrick 101', at: 885, ...over }) as {
@@ -389,7 +439,9 @@ describe('classesToNudge', () => {
 
   it('keeps the ones that are happening, as label, hour and place', () => {
     expect(classesToNudge([block(), block({ title: 'Gone', canceled: true })])).toEqual([
-      { label: 'PSCI 1104', at: 885, where: 'Buttrick 101' },
+      // `c` rides along so a muted course's class can be left alone; null on
+      // a block that belongs to no course. See `Source.muted`.
+      { label: 'PSCI 1104', at: 885, where: 'Buttrick 101', c: null },
     ]);
   });
 

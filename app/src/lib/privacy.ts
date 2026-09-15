@@ -94,7 +94,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     says: 'the hours you plan to work and the rules that decide your reminders',
     keys: [
       'windows', 'spent', 'contract', 'floor', 'rest', 'dayBudget', 'myRules',
-      'quiet', 'notifs', 'accessLeadDays',
+      'quiet', 'notifs', 'mutedCourses', 'accessLeadDays',
     ],
   },
   {
