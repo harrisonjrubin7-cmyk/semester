@@ -1,6 +1,5 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { sources } from '../styles/rules';
 import { DESTINATIONS } from './nav';
 import { DEFAULT_TABS } from './tabbar';
 import { modesFor } from './modes';
@@ -100,15 +99,33 @@ export const STATED: Stated[] = [
    * README and for exactly this failure. The audit — the document arguing
    * that every job should have one home — was the one file stating counts
    * that had not been given one.
+   *
+   * ## Destinations, and not the file counts
+   *
+   * The first attempt at this row added `screenfiles` and `components` to
+   * `counts` as well, and CI caught it inside a minute: main had gained one
+   * component between `npm run counts` and the merge, so a generated number
+   * committed minutes earlier was already a word out.
+   *
+   * Which is the fortnight described above, repeated. Generation stops a
+   * number *rotting*; it does not stop it *churning*, because the test still
+   * compares committed prose against the tree as it is at merge time. What
+   * makes the five counts here survive that is not the generator — it is that
+   * every one of them is a **decision**. Adding a destination, a tab, a mode
+   * or a recording is a thing somebody chose to do, rarely, on purpose. A
+   * component file appears in almost every pull request, as a side effect of
+   * doing something else.
+   *
+   * So the honest reading of that fortnight applies unchanged to those two:
+   * stop stating them. The audit states the count that means something and
+   * that holds still — sixty destinations, unchanged across twelve passes —
+   * and the file counts appear in the twelfth pass's table as what they
+   * actually are, a measurement of named commits on a named day.
    */
   {
     path: 'SIMPLIFY-AUDIT.md',
-    keys: ['screens', 'screenfiles', 'components'],
-    nouns: {
-      screens: 'destinations',
-      screenfiles: 'screen files',
-      components: 'components',
-    },
+    keys: ['screens'],
+    nouns: { screens: 'destinations' },
   },
 ];
 
@@ -167,22 +184,6 @@ const MODULE: CourseModule = {
   frameLabel: 'Frames',
 };
 
-/**
- * How many component files live under a directory, tests excluded.
- *
- * On `sources` rather than a walk of its own. `G2` found six directory
- * walkers, five of them private copies of one another, and the whole point of
- * that row was that the next file wanting a walk asks for the shared one.
- * Reading each file's text to count it is more work than counting names, and
- * still cheaper than a fifteenth walker nobody maintains.
- *
- * `sources` throws on an empty result, which is the behaviour this wants: a
- * count of zero screens is a broken path, not a small app.
- */
-function files(dir: string): number {
-  return sources(dir, { ext: ['.tsx'], tests: false }).length;
-}
-
 /** How many `.mp3` files are directly in a directory. */
 function recordings(dir: string): number {
   return readdirSync(dir).filter((f) => f.endsWith('.mp3')).length;
@@ -212,8 +213,6 @@ export function counts(root: string): Count[] {
 
   return [
     said('screens', DESTINATIONS.length, 'lib/nav.ts'),
-    said('screenfiles', files(join(root, 'src', 'screens')), 'src/screens'),
-    said('components', files(join(root, 'src', 'components')), 'src/components'),
     said('tabs', DEFAULT_TABS.length, 'lib/tabbar.ts'),
     said('modes', modesFor(buildCatalog([MODULE]), 'econ', {
       guide: GUIDE,

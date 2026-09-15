@@ -4,12 +4,13 @@ Against `main` at `e4bf976`. **Two findings, and one of them is about this
 file.**
 
 **<!--screens-->sixty<!--/--> destinations** in `lib/nav.ts`, unchanged for
-twelve passes. <!--screenfiles-->one hundred and two<!--/--> screen files,
-<!--components-->one hundred and fifty-one<!--/--> components — and those two
-numbers are the finding, because this file has been printing 79 and 134.
+twelve passes — and that number is now written by `npm run counts` rather than
+typed, which is the first finding.
 
-Those three are written by `npm run counts` from the registries and the tree.
-They are the first numbers in this file that are not typed by hand.
+The second is what used to sit beside it. Every pass since the sixth also
+printed a screen-file and component count, and this one does not, because
+those two numbers were wrong and are not worth keeping right. Measured on the
+day: 102 screen files, 151 components. The reasoning is below.
 
 ## K1 — the headline census was prose, and it drifted
 
@@ -82,12 +83,39 @@ prevent.
 So the twelfth pass finds no new mechanism. It finds a mechanism already built,
 already reasoned about, already passing — and one caller missing.
 
-**Resolution: merge**, onto the generator that already exists. Three counts in
-the headline (`screens`, `screenfiles`, `components`), two of them new to
-`counts()` and built on `sources()` rather than a fifteenth private walker.
-Both historical faults were then planted back and the guard was watched
-catching each: `134` components fails with a diff naming the line, and so does
-`79` screen files.
+**Resolution: merge**, onto the generator that already exists — for the one
+count worth stating. Both historical faults were planted back first and the
+guard watched catching each: `134` components fails with a diff naming the
+line, and so does `79` screen files.
+
+### The first attempt was wrong, and CI said so in a minute
+
+It registered all three — `screens`, `screenfiles` and `components`, the last
+two new to `counts()`. `build` went red on the merge with main:
+
+> `src/components says 152, so SIMPLIFY-AUDIT.md should read "one hundred and
+> fifty-two components".`
+
+Main had gained one component between `npm run counts` and the merge. The
+generated number, committed minutes earlier, was already a word out.
+
+That is the fortnight `counts.ts` opens by describing, repeated by somebody
+who had just read it. Generation stops a number **rotting**; it does not stop
+it **churning**, because the test still compares committed prose against the
+tree at merge time. What lets the five existing counts survive that is not the
+generator — it is that each is a *decision*. A destination, a tab, a mode, a
+recording: somebody chose that, rarely, on purpose. A component file appears
+in nearly every pull request as a side effect of doing something else, so
+pinning it makes every concurrent branch red on a word.
+
+So the honest reading of that fortnight — `counts.ts` records it as *"stop
+stating the count"* — applies unchanged to those two. They are gone from the
+generator and from the headline. The destination count stays, generated,
+because it is both stable and the one a reader actually wants.
+
+**The row's own fix needed the row's own lesson applied to it**, and it took a
+red build to notice. Twelve passes of auditing a codebase, and the instrument
+still had to be corrected by the thing it was measuring.
 
 ### What this says about the eleven passes
 
