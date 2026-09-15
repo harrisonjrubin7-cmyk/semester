@@ -208,7 +208,7 @@ export function ReviewSheet({
                   type="button"
                   className="bare tappable"
                   onClick={() => setOpen((was) => ({ ...was, [verdict]: !was[verdict] }))}
-                  style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.6 }}
+                  style={{ width: 'auto', flex: 'none', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
                 >
                   {open[verdict] ? 'FEWER' : 'REVIEW EACH'}
                 </button>
@@ -272,7 +272,7 @@ export function ReviewSheet({
         <div
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             marginBottom: 'var(--sp-6)',
             lineHeight: 'var(--leading-normal)',
           }}
@@ -349,7 +349,7 @@ function Row({
           style={{
             display: 'block',
             fontSize: 'var(--type-sm)',
-            opacity: 0.7,
+            color: 'var(--app-dim)',
             marginTop: 3,
             lineHeight: 'var(--leading-normal)',
           }}
@@ -362,7 +362,7 @@ function Row({
         style={{
           display: 'block',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-3)',
           lineHeight: 'var(--leading-normal)',
         }}

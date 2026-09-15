@@ -242,7 +242,7 @@ export function SettingsLook() {
           >
             <CustomRow>
               <SectionLabel style={CAP}>The accent</SectionLabel>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
                 All metals and stones. The accent being a metal rather than a colour is most of why the
                 app looks drawn instead of like a dashboard, so these change the shade and not that.
               </div>

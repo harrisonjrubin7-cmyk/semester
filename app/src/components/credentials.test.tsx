@@ -309,3 +309,18 @@ describe('when the service says no', () => {
     expect(dispatched).not.toContainEqual({ type: 'registered' });
   });
 });
+
+/*
+ * The tree, taken down after each test.
+ *
+ * `beforeEach` made a root and nothing ever unmounted it, so every test left
+ * one mounted and the last one outlived the file. React's scheduler still has
+ * work queued against it, the environment is torn down underneath, and the
+ * callback then throws `ReferenceError: window is not defined` — reported
+ * against whichever file was running, not this one.
+ * `src/rootunmount.test.ts` is why this cannot quietly go away again.
+ */
+afterEach(() => {
+  if (root) act(() => root.unmount());
+  host?.remove();
+});

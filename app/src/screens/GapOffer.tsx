@@ -100,7 +100,7 @@ export function GapOffer() {
       <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 1.35, marginTop: 5, textWrap: 'pretty' }}>
         {fitsLine(win, cards)}
       </div>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
         {termsLine(win, pace)} One thumb, no typing.
       </div>
       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>

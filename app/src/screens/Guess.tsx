@@ -33,7 +33,7 @@ export function Guess() {
 
   if (!unit || asked.length === 0) {
     return (
-      <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', opacity: 0.6 }}>
+      <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>
         Nothing to guess at in this unit.
       </div>
     );
@@ -80,7 +80,7 @@ export function Guess() {
       </div>
 
       {state.guessIdx === 0 && !state.guessSaid && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {invite(asked.length, unitName(unit.name))}
         </div>
       )}

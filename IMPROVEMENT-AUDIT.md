@@ -274,7 +274,7 @@ on.
 
 ---
 
-## 3. Nine test files were passing on the order they ran in · **all nine fixed**
+## 3. Sixteen test files were passing on what ran before them · **all fixed, and guarded**
 
 Nobody had run the suite shuffled. It has never needed to be — one worker per
 file hides most of this — which is exactly why it is worth doing before §2 is
@@ -338,12 +338,27 @@ import line satisfies on its own — deleting the await and keeping the import
 left the guard green. It looks for a call now, and that was checked by
 breaking it.
 
-**Where shuffle stands.** Ten shuffled runs of the full suite, clean; shuffled
-again at one, two and four workers, clean. That is enough to put
-`--sequence.shuffle` in CI, which is what would have caught all nine of these
-on the push that introduced them. It is not in this branch — adding a step to
-the workflow is a change to how every push is judged, and worth being asked for
-rather than slipped in. Adding `--sequence.shuffle` to CI
+**Shuffle is in CI now**, as its own step beside the timezone one, and adding
+it found a tenth thing and then six more.
+
+The tenth was a different class: `ReferenceError: window is not defined`,
+thrown by React's scheduler against a tree still mounted when a file ended and
+the environment went. About one run in ten — and **replaying its seed never
+brought it back**, because a seed fixes the order and not the race. That is the
+one caveat on shuffle as a guard, and it is written into the CI comment:
+ordering faults are reproducible from the seed it prints, timing faults are
+found by running it a dozen times.
+
+Seven files were leaving a tree mounted. Five unmounted the *previous* test's
+tree in a `beforeEach`, which is every tree but the last; one never unmounted
+at all; one handed the root to the test and only one test gave it back.
+`src/rootunmount.test.ts` now fails when a file that calls `createRoot` has no
+`unmount` in an after hook — deliberately not counting a `beforeEach`, which is
+exactly the shape five of the seven had.
+
+Eighteen shuffled runs at one, two, three, four and six workers, clean. That is
+what the step was worth waiting for: a shuffled CI that goes red one push in
+ten is not a guard, it is a tax. Adding `--sequence.shuffle` to CI
 is worth doing **after** that file is fixed, and is worth doing then — it is
 the cheapest guard there is against this whole class, and it found four of
 these in one afternoon.
@@ -539,11 +554,11 @@ something once went wrong.
 | | Work | Cost | What it buys |
 | --- | --- | --- | --- |
 | 1 | ✅ **§1** — split reading from asking in the assistant | done | −6.6 kB gzipped off every first load, and one real bug |
-| 2 | ✅ **§3** — nine order-dependent test files, in three passes | done | a suite that can be shuffled, ten runs clean |
+| 2 | ✅ **§3** — sixteen order-dependent test files, in four passes | done | a suite that can be shuffled, eighteen runs clean |
 | 3 | ✅ **§4**, **§6** — the registry guard and the lint ceiling | done | two things that cannot quietly get worse |
 | 4 | ✅ **§2a** — the unawaited, failure-cached `loadSeed()` | done | `npm test` stops being intermittently red on main, and a sample that failed once can load again |
 | 5 | ✅ **§3's last rows** — `splash.test.tsx`, then the two it uncovered, with a guard for the class | done | shuffle is clean at every worker count tried |
-| 5a | **`--sequence.shuffle` in CI** | one line | the guard that would have caught all nine, on every push — not taken, see §3 |
+| 5a | ✅ **`--sequence.shuffle` in CI** — and the seven mounted trees it found | done | every one of the sixteen would now fail the push that introduced it |
 | 6 | ✅ **§2** — `isolate: false`, with the mocking files as exceptions and a test that keeps the list honest | done, by another session | 42 s → 29.5 s a run, three runs deep |
 | 7 | ✅ **§5** — a size, a list and a clear button for downloaded media | done | an installed app that does not quietly take 200 MB of a phone with no way to see or stop it |
 | 7a | ✅ **§5, the rest** — a cap, least recently played first, and what it took said out loud | done | the same, without anybody having to go and look |

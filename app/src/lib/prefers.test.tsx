@@ -70,14 +70,16 @@ function fakeMedia(matches: Record<string, boolean>) {
  * from underneath it rather than unsubscribing it. Under `isolate: false` the
  * survivors outlive the file, where React schedules work on them after the
  * environment has gone.
+ *
+ * `src/rootunmount.test.ts` is what holds this open.
  */
-const mounted: Root[] = [];
+const mounted: { root: Root; host: HTMLElement }[] = [];
 
 function mount(hook: () => boolean): { root: Root; said: () => string | null; host: HTMLElement } {
   const host = document.createElement('div');
   document.body.appendChild(host);
   const root = createRoot(host);
-  mounted.push(root);
+  mounted.push({ root, host });
   const Probe = () => <span data-said={String(hook())} />;
   act(() => root.render(<Probe />));
   return { root, host, said: () => host.querySelector('span')?.getAttribute('data-said') ?? null };
@@ -85,13 +87,27 @@ function mount(hook: () => boolean): { root: Root; said: () => string | null; ho
 
 /** Taken down before the globals go, so a probe unsubscribes from the real fake. */
 function drop(root: Root): void {
-  const at = mounted.indexOf(root);
-  if (at >= 0) mounted.splice(at, 1);
+  const at = mounted.findIndex((m) => m.root === root);
+  if (at >= 0) {
+    mounted[at].host.remove();
+    mounted.splice(at, 1);
+  }
   act(() => root.unmount());
 }
 
 afterEach(() => {
-  while (mounted.length) drop(mounted[0]);
+  /*
+   * The unmount is written here rather than behind `drop`, because
+   * `src/rootunmount.test.ts` reads this hook's body looking for one — it is
+   * a source heuristic, and a hook that only calls a helper reads to it like
+   * a hook that takes nothing down. `drop` stays for the test below that
+   * unmounts its own root as the thing it is asserting; taking a root down
+   * twice is a no-op, so the two cannot collide.
+   */
+  for (const { root, host } of mounted.splice(0)) {
+    act(() => root.unmount());
+    host.remove();
+  }
   vi.unstubAllGlobals();
 });
 

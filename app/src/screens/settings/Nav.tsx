@@ -277,7 +277,7 @@ export function SettingsNav() {
             </CustomRow>
             <CustomRow>
               <SectionLabel style={LABEL_STYLE}>Your Today</SectionLabel>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
                 The right order is not the same for everyone. Somebody with a job and one class wants the
                 rail first; somebody with a paper due wants the checklist and would rather not scroll past
                 a countdown to a lecture they are already walking to.

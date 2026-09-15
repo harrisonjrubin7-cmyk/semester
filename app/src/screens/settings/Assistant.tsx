@@ -315,7 +315,7 @@ export function SettingsAssistant() {
               go wrong. */}
           <Group header="What it can see" lit={lights('privacy sees reads context what is sent', lit)}>
             <CustomRow>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
                 Your course codes and today’s date, always — and what the screen you are on says it
                 is showing, after its own filters. For a question about your own records: the
                 deadlines in the window you asked about, and the grades, attendance and unit names
@@ -333,7 +333,7 @@ export function SettingsAssistant() {
 
           <Group header="What it can do" lit={lights('tools actions change undo permissions', lit)}>
             <CustomRow>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
                 Offer to tick off a deadline, add or move one of your own tasks, mark you at a class,
                 start a timer, keep a note, add a source, track or move an application, set your
                 study budget, change the accent, text size, background or spacing, or take you to a

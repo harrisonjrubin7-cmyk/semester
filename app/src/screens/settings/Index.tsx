@@ -67,7 +67,7 @@ export function SettingsIndex() {
             <div
               style={{
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                opacity: 0.6,
+                color: 'var(--app-dim)',
                 lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
               }}

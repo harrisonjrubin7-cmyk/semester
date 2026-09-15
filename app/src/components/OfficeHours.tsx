@@ -27,7 +27,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
     return (
       <Folding name="OfficeHours">
         <SectionLabel style={{ margin: '22px 0 6px' }}>Office hours</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
           None recorded. They are on the syllabus, and having them here means the app can point at
           them in a week that is going badly.
         </div>
@@ -62,11 +62,11 @@ export function OfficeHours({ courseId }: { courseId: string }) {
             {h.title}
             {h.meta ? <span style={{ color: 'var(--app-dim)' }}> · {h.meta}</span> : null}
           </span>
-          <span style={{ flex: 'none', fontSize: 'var(--type-sm)', opacity: 0.7 }}>{h.time}</span>
+          <span style={{ flex: 'none', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{h.time}</span>
         </div>
       ))}
       {next ? (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Next: {whenLine(next, now)}.
         </div>
       ) : null}

@@ -121,7 +121,7 @@ export function Applied({
               width: 'auto',
               fontSize: 'var(--type-xs)',
               letterSpacing: '0.1em',
-              opacity: 0.7,
+              color: 'var(--app-dim)',
             }}
           >
             UNDO
@@ -166,7 +166,7 @@ export function Locally({
             <div
               style={{
                 fontSize: 'var(--type-xs)',
-                opacity: 0.7,
+                color: 'var(--app-dim)',
                 lineHeight: 'var(--leading-normal)',
                 marginTop: 'var(--sp-1)',
               }}

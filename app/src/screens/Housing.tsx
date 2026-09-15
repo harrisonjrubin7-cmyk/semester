@@ -127,7 +127,7 @@ function HousingDetails() {
           {moveOutLine(moveOut, now)}
         </div>
         {packLine(exams, moveOut, now) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
             {packLine(exams, moveOut, now)}
           </div>
         ) : null}
@@ -178,7 +178,7 @@ function HousingDetails() {
       ) : null}
 
       <SectionLabel>What it says</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 9, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 9, lineHeight: 'var(--leading-relaxed)' }}>
         The building is the only field that matters. Give it a move-out date if housing named one,
         or the hours after your last exam if that is how they put it — the app will not do both.
       </div>

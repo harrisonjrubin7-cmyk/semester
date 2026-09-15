@@ -446,7 +446,7 @@ function Build() {
                 {slide.bullets.map((b, n) => (
                   <div
                     key={`${b}-${n}`}
-                    style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 5, lineHeight: 'var(--leading-normal)' }}
+                    style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}
                   >
                     · {b}
                   </div>
@@ -480,7 +480,7 @@ function Build() {
           </div>
 
           {left.length > 0 && (
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
               {left.length} {left.length === 1 ? 'blank' : 'blanks'} in square brackets. Those are
               the facts it would have had to invent — fill them before you present.
             </div>

@@ -45,12 +45,20 @@
             "on": "2026-09-04"
           },
           {
+            "label": "Spring 2027 registration opens",
+            "on": "2026-10-26"
+          },
+          {
             "label": "Last day to withdraw from a course",
             "on": "2026-10-30"
           },
           {
             "label": "Last day to change to pass/fail",
             "on": "2026-10-30"
+          },
+          {
+            "label": "Final grades due",
+            "on": "2026-12-21"
           }
         ],
         "breaks": [

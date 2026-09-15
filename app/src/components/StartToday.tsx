@@ -162,7 +162,7 @@ export function StartList() {
       <div
         style={{
           fontSize: 'var(--type-sm)',
-          opacity: 0.68,
+          color: 'var(--app-dim)',
           marginBottom: 9,
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',

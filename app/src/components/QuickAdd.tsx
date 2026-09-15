@@ -136,7 +136,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           type="button"
           className="bare"
           onClick={onClose}
-          style={{ width: 'auto', fontSize: 'var(--type-sm)', opacity: 0.6 }}
+          style={{ width: 'auto', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
         >
           Close
         </button>
@@ -209,7 +209,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
         <div
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-7)',
             lineHeight: 1.6,
             textWrap: 'pretty',
