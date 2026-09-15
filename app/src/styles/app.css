@@ -1442,6 +1442,20 @@ a:hover {
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
+  /* A study guide, whole.
+
+     Read mode is an accordion, so on screen one unit is open and the rest are
+     `display: none`. A guide printed as eight headings with nothing under
+     them is the failure this exists to stop — `!important` because the rule
+     it has to beat is an inline style, which is where the open/shut state
+     lives. See the note in `screens/Guide.tsx`.
+
+     The buttons inside each unit are already dropped by the rule above that
+     hides anything pressable. */
+  .guide-unit.is-shut {
+    display: flex !important;
+  }
+
   /* The all-day band prints. A week with reading week on it is a week whose
      shape is mostly that, and the rule above that strips backgrounds off
      pressable things would otherwise leave the bars as white-on-white. */
@@ -6142,8 +6156,24 @@ section[data-drop] > .grip + * {
   font-size: var(--type-lg);
 }
 
+/*
+ * Dimmed the way the field is, not the way the page is.
+ *
+ * `.deskhome-field` inverts — `background: var(--app-fg)` with
+ * `color: var(--app-void)` — and `.deskhome-plus, .deskhome-box` carry that
+ * inverted ink down with `color: inherit`. This line broke the chain by
+ * naming `--app-dim`, which is `--app-fg` faded: the same colour as the
+ * surface it sits on. Measured at 0.00:1 on all thirteen grounds. The
+ * placeholder of the app's front-door search was invisible, and had been
+ * since the field was drawn.
+ *
+ * So it fades the *inverted* ink toward the field's own background instead,
+ * which is what `--app-dim` does for a page and what this needed all along.
+ * 70% keeps it clearly quieter than the typed text while holding 6.06:1 at
+ * worst, on Fog.
+ */
 .deskhome-box-say {
-  color: var(--app-dim);
+  color: color-mix(in srgb, var(--app-void) 70%, var(--app-fg));
 }
 
 /* `.deskhome-keys` and `.desktop-keys` drew a `⌘ K` chip in each of the two

@@ -20,6 +20,7 @@ import { ask, mine, playHere, seekTo, usePlayback } from '../lib/sound.hook';
 import { clock, through } from '../lib/sound';
 import { secondLine } from '../lib/dim';
 import { FigureCard } from '../components/FigureCard';
+import { PrintButton } from '../components/PrintButton';
 import { buildQuiz } from '../lib/quiz';
 import { asset } from '../lib/asset';
 import { Folding } from '../components/Fold';
@@ -71,7 +72,7 @@ export function Guide() {
       {state.mode !== 'field' && (
         <>
           <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{guide.name}</div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 3 }}>{guide.blurb}</div>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 3 }}>{guide.blurb}</div>
         </>
       )}
 
@@ -171,7 +172,7 @@ export function Guide() {
         <div
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            opacity: 0.62,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
             margin: '10px 0 2px',
             textWrap: 'pretty',
@@ -191,7 +192,7 @@ export function Guide() {
         <div
           style={{
             fontSize: 'var(--type-base)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
             marginTop: 'var(--sp-7)',
             textWrap: 'pretty',
@@ -365,7 +366,7 @@ export function Guide() {
           <div
             style={{
               fontSize: 'var(--type-base)',
-              opacity: 0.7,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-normal)',
               marginTop: 'var(--sp-2)',
               textWrap: 'pretty',
@@ -415,9 +416,14 @@ export function Guide() {
             const fig = figMap[i];
             return (
               <div key={u.name} style={tallRow}>
+                {/* `on-paper`: a unit's name is the document's heading, not a
+                    control. The print sheet hides `button:not(.on-paper)` —
+                    see the note there about the printed week that came out
+                    with its headings and none of its deadlines — and without
+                    this the guide would print as bodies under nothing. */}
                 <button
                   type="button"
-                  className="bare"
+                  className="bare on-paper"
                   onClick={() => dispatch({ type: 'toggleUnit', index: i })}
                   aria-expanded={open}
                   style={{ display: 'flex', gap: 11, alignItems: 'center' }}
@@ -448,15 +454,33 @@ export function Guide() {
                   </span>
                 </button>
 
-                {open && (
-                  <div
-                    style={{
-                      padding: '8px 0 2px 25px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 14,
-                    }}
-                  >
+                {/*
+                  Hidden rather than unrendered when the unit is shut, so that
+                  printing can show it.
+
+                  `PrintButton` prints the screen rather than building a second
+                  document, and says why: a second rendering path is a second
+                  thing to keep correct and it always drifts. That rule and an
+                  accordion do not get along — a collapsed unit is not in the
+                  DOM, so a printed guide would have been eight headings and
+                  nothing under them. Keeping the body in the DOM and hiding it
+                  with `display` is what lets the print sheet put it back,
+                  with no second render of the guide to maintain.
+
+                  `display: none` takes it out of the accessibility tree too,
+                  so a closed unit is as closed to a screen reader as it was
+                  when it did not exist; `aria-expanded` on the button above
+                  says which it is.
+                */}
+                <div
+                  className={`guide-unit${open ? '' : ' is-shut'}`}
+                  style={{
+                    padding: '8px 0 2px 25px',
+                    display: open ? 'flex' : 'none',
+                    flexDirection: 'column',
+                    gap: 14,
+                  }}
+                >
                     {u.cards.map((c, ci) => {
                       // Anything past the count the guide shipped with is
                       // something you added, and says so.
@@ -541,11 +565,25 @@ export function Guide() {
                         Add to this unit
                       </button>
                     </div>
-                  </div>
-                )}
+                </div>
               </div>
             );
           })}
+
+          {/*
+            The guide is the longest thing this app makes and was the one
+            substantial screen with no way onto paper — the calendar, the
+            exam, the deck, the essay and six others have had one for a while.
+            `PrintButton`'s own note says what it is for: "a cram sheet goes
+            on a wall", and a guide the week before an exam is that.
+
+            Here rather than at the top of the screen, and worded for what it
+            gives you: what prints is every unit, open or shut. The button
+            prints whichever mode you are in, which is what "print the screen"
+            means — Read is the only one that had to be taught to show its
+            whole self on paper.
+          */}
+          <PrintButton label="Print the whole guide" style={{ marginTop: 'calc(var(--sp-7) + var(--sp-3))' }} />
         </div>
       )}
 
@@ -607,7 +645,7 @@ function Watch() {
 
   return (
     <>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
         {made} {made === 1 ? 'lesson' : 'lessons'} · {Math.round(total / 60)} minutes. Each unit
         taught out loud, with the slide changing as the voice moves. Headphones on the walk to
         Buttrick and you have covered a unit.
@@ -679,7 +717,7 @@ function Decks() {
 
   return (
     <>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
         One point per slide, question before answer. Better than Read for a unit you have not met
         yet; worse than Cards for one you nearly know.
       </div>
@@ -831,7 +869,7 @@ function Documents() {
 
   return (
     <Folding name="Documents">
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
         The same {guide.units.length} units as a document — every card, the terms and the
         self-test, in reading order.
       </div>
@@ -882,7 +920,7 @@ function Documents() {
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{guide.code} study guide</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {f.note}
                   </span>
                 </span>
@@ -959,7 +997,7 @@ function Figures() {
 
   if (unitFigures.length === 0 && extras.length === 0) {
     return (
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14 }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14 }}>
         No figures in this guide yet.
       </div>
     );
@@ -967,7 +1005,7 @@ function Figures() {
 
   return (
     <>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
         Every figure the guide draws, at phone size. These are the ones worth being able to sketch
         from memory.
       </div>
@@ -993,7 +1031,7 @@ function Cases() {
 
   return (
     <Folding name="Cases">
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
         The concepts pointed at things you can actually see. All four professors grade on applying
         an idea to a case you have not met before — this is the rep for that.
       </div>
@@ -1184,7 +1222,7 @@ function Cram() {
                   display: 'block',
                   marginTop: 'var(--sp-2)',
                   fontSize: 'var(--type-xs)',
-                  opacity: 0.62,
+                  color: 'var(--app-dim)',
                   textAlign: 'left',
                   textDecoration: 'underline',
                   textUnderlineOffset: '2px',
@@ -1315,7 +1353,7 @@ function Script({ courseId, episodeId }: { courseId: string; episodeId: string }
         <div
           role="status"
           aria-live="polite"
-          style={{ fontSize: 'var(--type-base)', opacity: 0.6, padding: 'var(--sp-4) 0' }}
+          style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', padding: 'var(--sp-4) 0' }}
         >
           Fetching the words…
         </div>
@@ -1554,7 +1592,7 @@ function Listen() {
         <div
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 0.65,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-5)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',

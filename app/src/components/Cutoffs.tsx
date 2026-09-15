@@ -104,7 +104,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
           <div
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: 0.6,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-normal)',
               marginBottom: 'var(--sp-4)',
               textWrap: 'pretty',

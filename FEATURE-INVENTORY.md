@@ -914,11 +914,19 @@ Everything above that is not struck through, collected — so the next person
 reading this has one short list rather than a long one to re-check. Verified
 by grepping for each, not by re-reading the sentence.
 
+<<<<<<< HEAD
 **Documents** — "Open in Docs" from a study guide · a WYSIWYG surface (the
 marks are typed).
 (Code blocks, checkbox lists, images, horizontal rules, indent/outdent,
 alignment, `.docx` import, margin notes and a generated PDF were on this list
 and are done. Line spacing and margins were on it
+=======
+**Documents** — a generated
+PDF, as against the browser's print-to-PDF, which is there ·
+"Open in Docs" from a study guide · a WYSIWYG surface (the marks are typed).
+(Code blocks, checkbox lists, images, horizontal rules, indent/outdent,
+alignment, `.docx` import and margin notes were on this list and are done. Line spacing and margins were on it
+>>>>>>> origin/main
 and had already been built when it was written.)
 
 **Sheets** — nothing. Every entry this section listed is either built or was

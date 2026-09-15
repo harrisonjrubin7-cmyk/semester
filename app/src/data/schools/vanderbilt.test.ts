@@ -19,13 +19,31 @@ describe('Vanderbilt, Fall 2026', () => {
     expect(term?.termName).toBe('Fall 2026');
   });
 
-  it('carries the four registrar deadlines that could be sourced', () => {
+  it('carries all six registrar deadlines', () => {
     expect(term?.deadlines).toEqual([
       { label: 'Open enrollment ends', on: '2026-09-04' },
       { label: 'Last day to drop without a W', on: '2026-09-04' },
+      { label: 'Spring 2027 registration opens', on: '2026-10-26' },
       { label: 'Last day to withdraw from a course', on: '2026-10-30' },
       { label: 'Last day to change to pass/fail', on: '2026-10-30' },
+      { label: 'Final grades due', on: '2026-12-21' },
     ]);
+  });
+
+  it('takes the opening of registration, not its closing', () => {
+    // Spring 2027 registration runs Mon 26 Oct to Fri 13 Nov. An earlier pass
+    // had only the 13th and refused it: the landmark is "Registration opens
+    // for next term", whose cost line is "the sections you need go in the
+    // first morning", so a closing date there would name the day it shuts.
+    expect(term?.deadlines.find((d) => /registration/.test(d.label))?.on).toBe('2026-10-26');
+  });
+
+  it('dates grades after the last exam is actually sat', () => {
+    // The check that rejected 15 December. ECON 1020 sits a final exam slot
+    // ON the 15th and another on the 16th, and PSCI 1104's is the 17th, so
+    // grades could not be due on the 15th. The 21st clears all three.
+    const grades = term?.deadlines.find((d) => /grade/.test(d.label))?.on ?? '';
+    expect(new Date(`${grades}T00:00:00`) > new Date('2026-12-17T00:00:00')).toBe(true);
   });
 
   it('gives 30 October both of the meanings it carries', () => {
@@ -62,22 +80,6 @@ describe('Vanderbilt, Fall 2026', () => {
     expect(rows.find((r) => r.iso === '2026-10-30')?.id).toBe('withdraw');
   });
 
-  it('still has nothing for registration or grades, and both refusals are reasoned', () => {
-    // Registration: the only date found — Fri 13 Nov 2026 — is when Spring
-    // 2027 registration *windows close*. The landmark is "Registration opens
-    // for next term", whose cost line is "the sections you need go in the
-    // first morning". Filing a closing date there would tell a student
-    // registration opens on the day it actually shuts.
-    //
-    // Grades: the only date found — 15 December — is contradicted by the
-    // syllabi in project/uploads. ECON 1020 sits a final exam slot ON 15
-    // December and another on the 16th, and PSCI 1104's final is the 17th.
-    // Grades cannot be due before the exams are sat.
-    const labels = (term?.deadlines ?? []).map((d) => d.label.toLowerCase());
-    expect(labels.some((l) => /registration/.test(l))).toBe(false);
-    expect(labels.some((l) => /grade/.test(l))).toBe(false);
-  });
-
   it('leaves the last day of classes blank rather than guessing between two', () => {
     expect(term?.endsOn).toBe('');
     expect(term?.finalsFrom).toBeUndefined();
@@ -103,7 +105,7 @@ describe('Vanderbilt, Fall 2026', () => {
     ]);
   });
 
-  it('proposes the term start, both breaks and all four deadlines', () => {
+  it('proposes the term start, both breaks and all six deadlines', () => {
     const rows = fromCalendar(term!);
     expect(rows.map((r) => [r.id, r.iso, r.until])).toEqual([
       ['classes-begin', '2026-08-26', ''],
@@ -114,8 +116,10 @@ describe('Vanderbilt, Fall 2026', () => {
       ['', '2026-11-21', '2026-11-29'],
       ['add-deadline', '2026-09-04', ''],
       ['drop-clean', '2026-09-04', ''],
+      ['registration', '2026-10-26', ''],
       ['withdraw', '2026-10-30', ''],
       ['passfail', '2026-10-30', ''],
+      ['grades', '2026-12-21', ''],
     ]);
   });
 

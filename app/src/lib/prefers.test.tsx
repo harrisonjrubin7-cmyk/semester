@@ -55,16 +55,33 @@ function fakeMedia(matches: Record<string, boolean>) {
   };
 }
 
+/*
+ * Every probe this makes, so `afterEach` can take them all down.
+ *
+ * One test unmounts its own — that is the thing it is testing — and the rest
+ * left a tree mounted with React's scheduler still queued against it. Once the
+ * file ends the environment goes, and the queued callback throws
+ * `ReferenceError: window is not defined`, reported against whichever file was
+ * running rather than this one. `src/rootunmount.test.ts` holds this open.
+ */
+const probes: { root: Root; host: HTMLElement }[] = [];
+
 function mount(hook: () => boolean): { root: Root; said: () => string | null; host: HTMLElement } {
   const host = document.createElement('div');
   document.body.appendChild(host);
   const root = createRoot(host);
   const Probe = () => <span data-said={String(hook())} />;
   act(() => root.render(<Probe />));
+  probes.push({ root, host });
   return { root, host, said: () => host.querySelector('span')?.getAttribute('data-said') ?? null };
 }
 
 afterEach(() => {
+  // Unmounting twice is a no-op, so the test that unmounts its own is fine.
+  for (const probe of probes.splice(0)) {
+    act(() => probe.root.unmount());
+    probe.host.remove();
+  }
   vi.unstubAllGlobals();
 });
 

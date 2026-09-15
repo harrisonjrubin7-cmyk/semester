@@ -170,7 +170,7 @@ export function Ringing() {
           <div style={{ fontSize: 'calc(38px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>
             {clockFace(0)}
           </div>
-          <div style={{ fontSize: 'var(--type-md)', opacity: 0.7 }}>
+          <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>
             {t.label || lengthLine(t.seconds)}
           </div>
         </div>
@@ -181,7 +181,7 @@ export function Ringing() {
           <div style={{ fontSize: 'calc(38px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>
             {timeLine(a.at)}
           </div>
-          <div style={{ fontSize: 'var(--type-md)', opacity: 0.7 }}>
+          <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>
             {a.label || 'Alarm'}
           </div>
         </div>

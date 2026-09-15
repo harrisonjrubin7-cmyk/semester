@@ -66,7 +66,7 @@ export function CheckIt({
           width: 'auto',
           padding: '8px 0 2px',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           textAlign: 'left',
         }}
       >
@@ -180,7 +180,7 @@ export function CheckIt({
           <p
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: 0.7,
+              color: 'var(--app-dim)',
               marginTop: 9,
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',

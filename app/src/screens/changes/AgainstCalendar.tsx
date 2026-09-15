@@ -96,7 +96,7 @@ export function AgainstCalendar() {
 
   return (
     <Folding name="AgainstCalendar">
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Every deadline here was read off a syllabus once, before term started. This checks them
         against what your LMS calendar says today, and shows both dates before changing anything.
       </div>
@@ -195,7 +195,7 @@ export function AgainstCalendar() {
                         fontVariantNumeric: 'tabular-nums',
                       }}
                     >
-                      <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.6, textDecoration: 'line-through' }}>
+                      <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', textDecoration: 'line-through' }}>
                         {m.was}
                       </span>
                       <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{m.now}</span>
@@ -222,7 +222,7 @@ export function AgainstCalendar() {
           {report.onlyThere.length > 0 && (
             <>
               <SectionLabel>In the feed, not in the app</SectionLabel>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
                 Either something added after the syllabus was written, or something the matcher
                 could not line up. Add anything real under Edit the course.
               </div>
@@ -261,7 +261,7 @@ export function AgainstCalendar() {
           {report.onlyHere.length > 0 && (
             <>
               <SectionLabel>Here, with nothing in the feed</SectionLabel>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
                 Usually fine — plenty of syllabus work never appears on an LMS calendar. Worth a
                 look only if something you expected to see is on this list.
               </div>

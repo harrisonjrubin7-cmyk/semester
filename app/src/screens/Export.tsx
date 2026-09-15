@@ -254,7 +254,7 @@ export function Export() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Plain formats, chosen because other software reads them. Nothing here is a bundle only this
         app understands — that would be the same trap with extra steps.
       </div>
@@ -354,7 +354,7 @@ export function Export() {
       </div>
 
       <SectionLabel>Bring one back</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         A backup file from this app, from any device. An export nobody can import is a museum
         piece.
       </div>
@@ -384,7 +384,7 @@ export function Export() {
           <div style={{ fontSize: 'var(--type-base)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
             {offered.parts.length > 0 ? offered.parts.join(', ') : 'an empty backup'}.
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             This replaces what is on this device for each of those, rather than merging — merging
             two semesters produces duplicate courses sharing an id and no way to tell which
             deadline belonged to which. Anything the file does not cover is left alone.

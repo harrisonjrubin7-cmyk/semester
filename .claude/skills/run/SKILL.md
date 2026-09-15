@@ -113,6 +113,10 @@ one:
 page.getByRole('button', { name: /^due$/i })
 ```
 
+Anchor the *start* freely. Anchoring the **end** is a chip-row rule only,
+and §3b is why — on anything card-shaped the name carries its subtitle and
+`$` matches nothing.
+
 Two things this rule does **not** cover, and both will mislead you the
 other way:
 
@@ -123,6 +127,50 @@ other way:
 - **Course codes are really uppercase.** `ECON`, `PSCI` and the rest are
   uppercase in the data, so an exact match on those works — it is `All`,
   `Due` and `Classes` beside them in the same row that do not.
+
+## 3b · …and do not anchor the end of one either
+
+The rule above ends with "anchor it", which is right for a chip row and
+wrong for a card. **A card-shaped button's accessible name is its whole
+text — the title and the subtitle run together, with no space between
+them.** So `$` matches nothing and you get the same silent 30-second
+timeout as a caps mismatch, on a control that is plainly on the screen.
+
+The three maker screens are the same job three times, and they do not
+agree:
+
+```
+#/write   "Blank document"
+#/deck    "Blank presentation"
+#/sheet   "Blank sheetNothing in it yet"      ← title + subtitle, no space
+```
+
+```js
+page.getByRole('button', { name: /^Blank sheet/i })   // ✅ prefix
+page.getByRole('button', { name: /^Blank sheet$/i })  // ✗ times out
+```
+
+Two screens out of three let an anchored match through, which is the worst
+possible distribution: it works, it keeps working, and then it does not.
+Measured on the sheet library, where every card in the row is built this
+way — `"To-do listWhat is due, when, and whether it is done"`,
+`"Monthly budgetWhat comes in, what goes out, what is left"` — and on
+`#/links`, where each row reads `"Meal plan & Commodore Cashget.cbord.com"`.
+
+So anchor the **start** and leave the end open, unless you have checked
+the name. The check is one line, and it is worth running before writing a
+selector against anything that draws as a card or a list row:
+
+```js
+await page.evaluate(() =>
+  [...document.querySelectorAll('main button')]
+    .filter((b) => b.checkVisibility())
+    .map((b) => JSON.stringify(b.textContent.replace(/\s+/g, ' ').trim())),
+);
+```
+
+`JSON.stringify` rather than the bare string, so the missing space is
+visible instead of being something you have to notice.
 
 ## 4 · Reach a screen
 

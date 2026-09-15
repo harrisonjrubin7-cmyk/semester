@@ -177,7 +177,7 @@ export function Links() {
                         aria-label={`${link.name} address`}
                       />
                       {link.note && (
-                        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-normal)', marginTop: 7 }}>
+                        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 7 }}>
                           {link.note}
                         </div>
                       )}

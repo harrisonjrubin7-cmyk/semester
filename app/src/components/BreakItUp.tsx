@@ -47,7 +47,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
         style={{
           marginTop: 'var(--sp-5)',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           lineHeight: 'var(--leading-relaxed)',
         }}
       >
@@ -70,7 +70,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           width: 'auto',
           padding: '8px 0 2px',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           textAlign: 'left',
         }}
       >

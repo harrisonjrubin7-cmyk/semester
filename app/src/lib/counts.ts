@@ -89,6 +89,44 @@ export const STATED: Stated[] = [
     keys: ['modes'],
     nouns: { modes: 'ways through the same material' },
   },
+  /*
+   * The audit opens every pass with a count of the app, and for six passes
+   * nobody re-derived it. `134 components` was true once and was copied
+   * forward while the tree went to 151; `79 screens` was never the count of
+   * anything — not the files, not the `Screen` union, not the destinations.
+   *
+   * The mechanism to stop that was already in this file, written for the
+   * README and for exactly this failure. The audit — the document arguing
+   * that every job should have one home — was the one file stating counts
+   * that had not been given one.
+   *
+   * ## Destinations, and not the file counts
+   *
+   * The first attempt at this row added `screenfiles` and `components` to
+   * `counts` as well, and CI caught it inside a minute: main had gained one
+   * component between `npm run counts` and the merge, so a generated number
+   * committed minutes earlier was already a word out.
+   *
+   * Which is the fortnight described above, repeated. Generation stops a
+   * number *rotting*; it does not stop it *churning*, because the test still
+   * compares committed prose against the tree as it is at merge time. What
+   * makes the five counts here survive that is not the generator — it is that
+   * every one of them is a **decision**. Adding a destination, a tab, a mode
+   * or a recording is a thing somebody chose to do, rarely, on purpose. A
+   * component file appears in almost every pull request, as a side effect of
+   * doing something else.
+   *
+   * So the honest reading of that fortnight applies unchanged to those two:
+   * stop stating them. The audit states the count that means something and
+   * that holds still — sixty destinations, unchanged across twelve passes —
+   * and the file counts appear in the twelfth pass's table as what they
+   * actually are, a measurement of named commits on a named day.
+   */
+  {
+    path: 'SIMPLIFY-AUDIT.md',
+    keys: ['screens'],
+    nouns: { screens: 'destinations' },
+  },
 ];
 
 /** The counts one of those files states, in the order `counts` returned them. */

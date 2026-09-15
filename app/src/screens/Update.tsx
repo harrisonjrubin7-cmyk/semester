@@ -675,7 +675,7 @@ export function AddMaterial() {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-3)',
         }}
       >
@@ -726,7 +726,7 @@ export function AddMaterial() {
               {readSummary}
             </div>
           )}
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
             {readCards.length} {readCards.length === 1 ? 'card' : 'cards'} and {readTerms.length}{' '}
             {readTerms.length === 1 ? 'term' : 'terms'} ready — they save with everything else below.
           </div>
@@ -807,7 +807,7 @@ export function AddMaterial() {
       <SectionLabel>Photograph it</SectionLabel>
       {claudeReady ? (
         <>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             The board at the end of a lecture, a page of a textbook, a printed handout. Read into
             cards from what is actually written — anything unreadable is left out and said so.
           </div>
@@ -827,7 +827,7 @@ export function AddMaterial() {
               <div className="kicker">What it saw</div>
               <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>{readNote}</div>
               {shotCards.length > 0 && (
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)' }}>
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
                   {shotCards.length} {shotCards.length === 1 ? 'card' : 'cards'} ready — they save
                   with everything else below.
                 </div>
@@ -850,7 +850,7 @@ export function AddMaterial() {
           )}
         </>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
           Reading a photograph needs {provider()}. Sign in to use the shared key, or add your own under
           Connect → Claude. You can still attach the photo as a file below.
         </div>
@@ -861,7 +861,7 @@ export function AddMaterial() {
           into the box above, so what was said becomes material the same way a
           reading does. */}
       <SectionLabel>Record the lecture</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Keeps the audio against this course, and can write it down as it goes. The transcript lands
         in the material box above, where it becomes cards, a quiz and a guide like anything else.
       </div>
@@ -973,7 +973,7 @@ export function AddMaterial() {
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  opacity: 0.6,
+                  color: 'var(--app-dim)',
                 }}
               >
                 {g.action.label}

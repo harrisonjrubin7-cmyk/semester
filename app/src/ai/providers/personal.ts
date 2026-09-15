@@ -131,14 +131,30 @@ export const me: Provide = (look) => {
  * finished in the time left, so the cards due and the shortest tasks travel
  * and nothing else does.
  */
+/** How many of each list travel. The rest are counted, not sent. */
+const SHOWN = 10;
+
 export const gap: Provide = (look) => {
   const { state, catalog, now } = look;
   const soon = datedItems(catalog, now).filter((i) => !i.isPast && i.daysAway <= 3);
-  const quick = state.tasks.filter((t) => !t.done).slice(0, 10);
+  /*
+   * Both numbers are counted before either list is cut.
+   *
+   * `soon` already was — filtered, counted, and sliced only on its way into
+   * `visible`. `quick` was sliced first and then counted, so the same
+   * sentence carried one true total and one that silently stopped at ten:
+   * twenty-five undone tasks read as ten, on the one screen whose whole job
+   * is deciding what fits in the time left.
+   */
+  const undone = state.tasks.filter((t) => !t.done);
+  const quick = undone.slice(0, SHOWN);
   return {
-    summary: `Between classes. ${soon.length} things due in the next three days, ${quick.length} undone tasks of your own.`,
+    summary:
+      `Between classes. ${soon.length} things due in the next three days, ` +
+      `${undone.length} undone tasks of your own` +
+      `${undone.length > quick.length ? `, the shortest ${quick.length} below` : ''}.`,
     visible: [
-      ...soon.slice(0, 10).map((i) => ({ course: catalog.byId[i.c]?.code, title: i.title, due: i.dueShort })),
+      ...soon.slice(0, SHOWN).map((i) => ({ course: catalog.byId[i.c]?.code, title: i.title, due: i.dueShort })),
       ...quick.map((t) => ({ task: t.title, date: t.date ?? 'no date' })),
     ],
     actions: ['start_timer', 'tick_deadline', 'open_screen'],

@@ -47,7 +47,7 @@ export function SettingsAlerts() {
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
                 Testing-centre lead time
               </SectionLabel>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 9 }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 9 }}>
                 If you book exams through Student Access, its lead time is stated in business days and
                 counting those backwards over a weekend is easy to get wrong. Set it here and the exam
                 runway does it. Leave it at zero if you do not use one.
@@ -63,7 +63,7 @@ export function SettingsAlerts() {
                   onChange={(e) => dispatch({ type: 'setAccessLead', days: Number(e.target.value) })}
                   style={{ width: 90, flex: 'none' }}
                 />
-                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>
+                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                   {state.accessLeadDays === 0
                     ? 'not used'
                     : `business days before an exam`}
@@ -84,7 +84,7 @@ export function SettingsAlerts() {
               <div
                 style={{
                   fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                  opacity: 0.65,
+                  color: 'var(--app-dim)',
                   lineHeight: 'var(--leading-relaxed)',
                   marginBottom: 9,
                 }}
@@ -107,7 +107,7 @@ export function SettingsAlerts() {
                   }
                   style={{ flex: 1, minWidth: 0 }}
                 />
-                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, flex: 'none' }}>
+                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', flex: 'none' }}>
                   and
                 </span>
                 <input

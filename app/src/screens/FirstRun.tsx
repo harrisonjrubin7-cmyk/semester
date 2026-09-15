@@ -46,7 +46,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
           <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>
             Add your first course
           </span>
-          <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+          <span style={{ display: 'block', fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
             PDF, Word, or paste the text
           </span>
         </span>

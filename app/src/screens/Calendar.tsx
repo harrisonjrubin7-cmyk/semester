@@ -71,6 +71,7 @@ import type {
   PersonalTask,
 } from '../lib/types';
 import { Folding } from '../components/Fold';
+import { goMine } from '../lib/openmine';
 
 /**
  * The calendar has two independent axes.
@@ -332,8 +333,7 @@ function DayView() {
             // Straight to the row that edits it. A bar is a thing you own or
             // a thing a feed says; only the first has somewhere to go.
             if (!run.appointmentId) return;
-            dispatch({ type: 'setMineTab', tab: 'appointments' });
-            dispatch({ type: 'go', screen: 'mine' });
+            goMine(dispatch, 'appointments');
           }}
         />
       )}
@@ -390,7 +390,7 @@ function DayView() {
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'var(--type-md)',
                     paddingTop: 'var(--sp-6)',
-                    opacity: 0.6,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   {b.time}
@@ -424,7 +424,7 @@ function DayView() {
                   >
                     {b.title}
                   </div>
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
                     {b.mine && (
                       <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
                         Yours
@@ -526,7 +526,7 @@ function DayView() {
                     flex: 'none',
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'var(--type-sm)',
-                    opacity: 0.6,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   {e.time}
@@ -900,8 +900,7 @@ function WeekView() {
             onClick: () => {
               // Onto the right tab, not just the right screen — landing on
               // Mine's task list is a second thing to work out.
-              dispatch({ type: 'setMineTab', tab: 'appointments' });
-              dispatch({ type: 'go', screen: 'mine' });
+              goMine(dispatch, 'appointments');
             },
           }}
         />
@@ -914,8 +913,7 @@ function WeekView() {
               style={{ marginTop: 'var(--sp-7)' }}
               onOpen={(run) => {
                 if (!run.appointmentId) return;
-                dispatch({ type: 'setMineTab', tab: 'appointments' });
-                dispatch({ type: 'go', screen: 'mine' });
+                goMine(dispatch, 'appointments');
               }}
             />
           )}
@@ -1616,8 +1614,7 @@ function MonthView() {
           {...drag.handlers({ kind: 'task', id: t.id, title: t.title })}
           onClick={() => {
             if (drag.tookDrop()) return;
-            dispatch({ type: 'setMineTab', tab: 'tasks' });
-            dispatch({ type: 'go', screen: 'mine' });
+            goMine(dispatch, 'tasks');
           }}
           style={{
             display: 'flex',
@@ -1694,8 +1691,7 @@ function MonthView() {
               type="button"
               className="bare tappable"
               onClick={() => {
-                dispatch({ type: 'setMineTab', tab: 'appointments' });
-                dispatch({ type: 'go', screen: 'mine' });
+                goMine(dispatch, 'appointments');
               }}
               style={{
                 display: 'flex',
@@ -2188,7 +2184,7 @@ function SemesterView() {
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
         {[
           on.deadlines && `${items.length} ${items.length === 1 ? 'deadline' : 'deadlines'}`,
           // Counted apart from the deadlines, the way the whole app counts
@@ -2457,8 +2453,7 @@ function SemesterView() {
                           // A task has no detail screen of its own, so this
                           // opens the list it lives on rather than pretending
                           // to and doing nothing.
-                          dispatch({ type: 'setMineTab', tab: 'tasks' });
-                          dispatch({ type: 'go', screen: 'mine' });
+                          goMine(dispatch, 'tasks');
                         }}
                         style={{
                           ...WEEK_ROW,
@@ -2488,8 +2483,7 @@ function SemesterView() {
                         type="button"
                         className="bare"
                         onClick={() => {
-                          dispatch({ type: 'setMineTab', tab: 'appointments' });
-                          dispatch({ type: 'go', screen: 'mine' });
+                          goMine(dispatch, 'appointments');
                         }}
                         style={WEEK_ROW}
                       >
@@ -2663,7 +2657,7 @@ function CampusList() {
                     </span>
                   </div>
                   <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{e.title}</div>
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {e.time} · {e.where}
                   </div>
                 </button>
@@ -2699,7 +2693,7 @@ function CampusList() {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 'var(--type-lg)' }}>{e.title}</div>
-                      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+                      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                         {[e.time, e.where].filter(Boolean).join(' · ')}
                       </div>
                     </div>
@@ -2861,7 +2855,7 @@ export function EventDetail() {
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
               {event.dow} {event.mon} {event.day}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>{event.time}</div>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{event.time}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
           <div style={{ flex: 1, padding: '11px 0 11px 14px' }}>

@@ -105,11 +105,32 @@ export function behind(input: WeeklyInput): Behind {
 
   const inWeek = dated.filter((i) => i.date >= start && i.date < end);
 
-  // Ticked this week, by when the box was ticked. Anything with a recorded
-  // time is judged on that time wherever the deadline itself sat.
+  /*
+   * Ticked this week, by when the box was ticked. Anything with a recorded
+   * time is judged on that time wherever the deadline itself sat.
+   *
+   * `done` is checked as well as the stamp, which reads like belt and braces
+   * and is not. `toggleDone` keeps the two in step — ticking stamps
+   * `tickedAt[id]`, un-ticking *deletes* it — so on one device a stamp exists
+   * only while the thing is done, and reading the stamp alone was sound.
+   *
+   * A merge cannot express a deletion. `tickedAt` merges with `ticks`, which
+   * is `{...local, ...remote}`, and a key the remote has removed is just a key
+   * the remote does not have, so the local stamp outlives the un-tick:
+   *
+   *     local   done {x: true}   tickedAt {x: Tuesday}
+   *     remote  done {x: false}  tickedAt {}
+   *     merged  done {x: false}  tickedAt {x: Tuesday}
+   *
+   * `done` comes out right and the stamp is orphaned, and this report then
+   * credited a deadline the student had explicitly un-ticked. `report/Term.tsx`
+   * reads the same map and filters on `done` first; this now agrees with it,
+   * which is the fix that does not require the reader to trust an invariant a
+   * merge is free to break.
+   */
   const ticked = dated.filter((i) => {
     const at = input.tickedAt[i.id];
-    return at !== undefined && at >= start.getTime() && at < end.getTime();
+    return Boolean(done[i.id]) && at !== undefined && at >= start.getTime() && at < end.getTime();
   });
   const tickedIds = new Set(ticked.map((i) => i.id));
 

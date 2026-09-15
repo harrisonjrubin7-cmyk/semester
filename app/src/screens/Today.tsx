@@ -56,6 +56,7 @@ import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
 import { CourseTag } from '../components/CourseTag';
 import { Folding } from '../components/Fold';
+import { goMine } from '../lib/openmine';
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -96,7 +97,7 @@ function NextClassCard() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             {next.block.title}
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
             {next.block.c ? catalog.byId[next.block.c].room : next.block.meta}
           </div>
         </div>
@@ -140,7 +141,10 @@ function YourTasks() {
           <button
             type="button"
             className="bare"
-            onClick={() => dispatch({ type: 'go', screen: 'mine' })}
+            // `tasks`, not whatever Mine last showed: the label beside this button
+            // is a count of undone tasks, so landing on Events would be a button
+            // that counts one list and opens another. See `lib/openmine.ts`.
+            onClick={() => goMine(dispatch, 'tasks')}
             style={{
               width: 'auto',
               fontFamily: 'var(--font-heading)',
@@ -265,7 +269,7 @@ function OverdueBanner() {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          opacity: 0.7,
+          color: 'var(--app-dim)',
         }}
       >
         See them
@@ -353,7 +357,7 @@ function ThisWeek() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{nextEvent.title}</div>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
                 {nextEvent.time} · {nextEvent.where}
               </div>
             </div>
@@ -366,7 +370,7 @@ function ThisWeek() {
       <div
         style={{
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginBottom: 'var(--sp-4)',
           lineHeight: 'var(--leading-relaxed)',
         }}
@@ -456,8 +460,7 @@ function ThisWeek() {
                 type="button"
                 className="bare tappable"
                 onClick={() => {
-                  dispatch({ type: 'setMineTab', tab: 'tasks' });
-                  dispatch({ type: 'go', screen: 'mine' });
+                  goMine(dispatch, 'tasks');
                 }}
                 style={{
                   display: 'flex',
@@ -524,7 +527,7 @@ function ThisWeek() {
             textAlign: 'left',
             marginTop: 'var(--sp-5)',
             fontSize: 'var(--type-sm)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
           }}
         >
@@ -607,7 +610,11 @@ function Feed_due() {
               fontFamily: 'var(--font-heading)',
               fontSize: 'var(--type-sm)',
               letterSpacing: '0.12em',
-              opacity: 0.5,
+              // Outside the 0.60–0.70 band the rest of this pass kept to, and
+              // converted anyway because it is not a look decision: at 0.5 on
+              // Fog this counter renders at 3.28:1 against the panel, which
+              // `scripts/paint.mjs` fails on. See `ENGINEERING-AUDIT.md` §7.
+              color: 'var(--app-dim)',
             }}
           >
             {doneCount} of {today.length} done
@@ -646,7 +653,7 @@ function Feed_due() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))' }}>
             {today.length === 0 ? 'Nothing due today.' : 'Nothing left today.'}
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 'var(--sp-2)' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
             {/* Not lowercased. It was, to make the date sit inside the
                 sentence, and "tue sep 15" reads as a typo rather than as
                 prose — a date is a name, and the app writes it one way
@@ -1057,7 +1064,7 @@ function Feed_registrar() {
             </span>
           </div>
           {d.cost ? (
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
               {d.cost}
             </div>
           ) : null}
@@ -1111,7 +1118,7 @@ function Feed_bill() {
                 : `in ${next.daysAway} ${next.daysAway === 1 ? 'day' : 'days'}`}
           </span>
         </div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
           {late
             ? "An unpaid balance is what puts a hold on next term's registration."
             : `Instalment ${next.instalment.n} of your payment plan.`}
@@ -1418,7 +1425,7 @@ function DoneToday() {
                     fontSize: 'var(--type-md)',
                     lineHeight: 'var(--leading-tight)',
                     textDecoration: 'line-through',
-                    opacity: 0.7,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   {i.title}
@@ -1483,7 +1490,7 @@ function HoursToday() {
 
   return (
     <>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-3)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-3)' }}>
         Classes from your syllabi, in the app's own colour. Anything you add is tinted by what it
         is for, and what is on around campus carries its own.
       </div>
@@ -1508,8 +1515,7 @@ function HoursToday() {
               type="button"
               className="bare tappable"
               onClick={() => {
-                dispatch({ type: 'setMineTab', tab: 'tasks' });
-                dispatch({ type: 'go', screen: 'mine' });
+                goMine(dispatch, 'tasks');
               }}
               style={{
                 display: 'flex',
@@ -1533,8 +1539,7 @@ function HoursToday() {
       )}
       <ActionButton
         onClick={() => {
-        dispatch({ type: 'setMineTab', tab: 'appointments' });
-        dispatch({ type: 'go', screen: 'mine' });
+        goMine(dispatch, 'appointments');
         }}
         style={{ marginTop: 18, fontSize: 'var(--type-xs)' }}
       >
@@ -1652,7 +1657,7 @@ function FeedHome() {
                 >
                   {f.title}
                 </div>
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>{f.meta}</div>
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{f.meta}</div>
               </div>
             </button>
           ))}

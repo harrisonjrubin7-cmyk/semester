@@ -650,6 +650,157 @@ miss on the style prop and re-render anyway. The two problems are the same
 problem seen twice, and the CSS-class direction the ledger is already pushing
 towards fixes both.
 
+*(Both counts above are as of when this section was written. Re-measured for
+the work below: the ledger stood at `type 649 · leading 211 · space 491 ·
+shorthand 471 · dim 740`, and `style={{ … }}` at **4,710** sites — 2,655 of
+them distinct — counting only objects with no nested braces, so if anything an
+undercount. The tree grew; the shape of the problem did not.)*
+
+### The runtime half's premise, checked · **it holds, and there is a shortcut**
+
+Before spending anything on 4,710 hand edits: React Compiler memoises inline
+JSX props automatically, which would fix every one of those sites at once with
+no diff at all. So the first question is whether it is already on, and the lint
+output makes it look like it is — `react(set-state-in-effect)`,
+`react(purity)`, `react(preserve-manual-memoization)` are all React Compiler
+diagnostics.
+
+It is not. `babel-plugin-react-compiler` is not in the dependency tree,
+`vite.config.ts` calls `react()` with no babel options, and the built bundle
+contains no `useMemoCache` and no `c[n] !== …` cache guards — grepped, zero.
+The warnings come from oxlint's own copy of those rules, which run without the
+compiler. So the claim above stands as written.
+
+It also means the cheapest possible fix for the whole runtime half is a build
+flag rather than a refactor. It is not free — those same lint warnings are the
+compiler's bailout conditions, so some components would silently opt out until
+they are cleaned up — but it is one line against 4,710, and it should be
+decided before anybody starts converting sites by hand.
+
+### What landed — the `dim` axis, on the sites where it costs nothing to fix
+
+`dim` was the largest of the five at **740**, and it is the one with a
+user-facing bug behind it rather than an inconsistency. `lib/dim.ts` sets it
+out: an `opacity` written into a component is not audited by
+`contrast.test.ts`, is not raised by "Increase contrast", and multiplies where
+two of them nest.
+
+That last one turns out to be **almost entirely fixed already**. Driving 79
+screens and computing the product of every text node's opacity chain found
+exactly **one** stacked pair in the whole app, on a `→` glyph, not on prose.
+The audit's own worry is spent; what remains is the setting that cannot reach.
+
+Measured on the built bundle, per screen — dimmed text nodes, split by whether
+`prefers-contrast: more` moves them:
+
+```
+                 before              after
+Today       24 of 44 reachable   30 of 44
+Courses      8 of 20             16 of 20
+Study       13 of 32             18 of 32
+Calendar    26 of 59             26 of 59   (unchanged, and deliberately)
+```
+
+**The rule for what was converted, and it is narrow on purpose.** `--app-dim`
+carries each ground's own `dimAlpha`, and those run **0.62 to 0.70** across the
+app's thirteen grounds. So a site written at 0.60–0.70 is *already inside the
+range the token spans*: swapping it moves the pixels by less than changing
+ground already does. Outside that band — 0.5 is the single biggest bucket at
+165 sites, and there are 0.3s and 0.85s — the swap is a decision about how the
+app looks, which §7 said from the start is not a cleanup. Those are left.
+
+Also skipped: any style object that paints a box (`background`, `border`,
+`boxShadow`), because there the opacity is dimming the box and a colour is not
+the same change; and any that already names a `color`, because it has already
+been thought about. Which is why Today's accent-inked countdown still reads in
+the accent.
+
+**325 sites across 122 files. `dim` 739 → 415**, and the whole ledger
+2,561 → 2,237. The other four axes did not move: this changed no font size, no
+line height and no spacing value.
+
+### What it costs, in pixels
+
+79 screens screenshotted before and after at 420×900 with animation off:
+
+```
+pixel-identical                                        29 of 79
+largest single-channel change, excluding two screens
+  with a live countdown in them                        57 / 255   (one line, on Courses)
+every other screen                                     ≤ 15 / 255
+largest loss of colour anywhere                        12 / 255   (same line)
+```
+
+The two exclusions are honest rather than convenient: `home` and `gap` both
+draw a running countdown, and capturing **the same build twice** reproduces
+their Δ143 and Δ127 at the same spots with zero change on the other 77. The
+control is what says those are the clock and not the change.
+
+The one visible difference is Courses' second lines — the lecturer, the meeting
+time — going from **97,102,112 to 154,155,160**. That is the multiplication
+`lib/dim.ts` was written about, caught in the act: a card that already dims its
+ink, with a line inside it dimming again. It is brighter now because it was
+wrong before, and it is the only site in the app where the change is visible at
+a glance.
+
+### Checked again with the repo's own instrument · **8 below AA → 0**
+
+While this was being written `main` landed `scripts/paint.mjs` — a sweep that
+samples the colour of every run of text out of a screenshot and compares it
+against the pixels behind it, so it sees the colour whatever a component did to
+arrive at it. That is a better answer than the harness above, and it turns the
+question from "how many sites still spend an opacity" into "is any of this
+illegible", which is the only version of the question about a reader.
+
+Run on Fog — `paint.mjs`'s own note says the light grounds fail first and Fog
+is the furthest of them — over `home`, `courses`, `study` and `settings`:
+
+```
+                                      main   after
+runs of text below WCAG AA              8       0
+```
+
+The four on Courses were **real failures on a shipped ground**, not cosmetics:
+
+```
+2.51:1  needs 4.5   "Prof. Jessica Trounstine"
+2.67:1  needs 4.5   "Dr. John Stromme"
+3.02:1  needs 4.5   "Quiz #1 — take-home + in-class"
+3.26:1  needs 4.5   "Midterm 1"
+```
+
+Which reframes the one visible change in the screenshots above. Courses' second
+lines are brighter because at 2.51:1 they were below the ratio this repo
+enforces on its own tokens, and the card dimming its ink with the line inside
+dimming again is exactly how they got there.
+
+The other four were `home`'s "0 of 3 done" counter at 3.28:1, written at **0.5
+— outside the band** this pass kept to. It is converted anyway, as the one
+deliberate exception, and the reason is that the band was a rule about *look*
+and this is not a look: `paint.mjs` fails on it. The comment beside it says so.
+
+Widening to ten screens, the same sweep on both trees, 312 runs measured each:
+
+```
+                                      main   after
+runs of text below AA                  40      31
+distinct                               32      23
+```
+
+Nine fixed, none broken. The 31 that remain fail on `main` too and are mostly
+not opacity at all — dark text on the mid-toned callout panels, which is a
+different problem than this one and not a ledger entry.
+
+### What is left of P7
+
+The runtime half is untouched — still 4,710 `style={{ … }}` sites, a number
+this change did not move in either direction, and the React Compiler question
+above is the decision that should come before any of it. The ledger is at 2,237
+across 164 files: `type 649 · leading 211 · space 491 · shorthand 471 · dim
+415`. The remaining `dim` is the 0.5s and the 0.8s, which need somebody to say
+how the app should look, and the icons and whole-row states, where `opacity` is
+the right tool and the ledger is counting something that is not debt.
+
 ---
 
 ## 7a. Focus was not given back · **FIXED**
@@ -733,7 +884,7 @@ Ordered by measured value per unit of risk, not by size.
 | 9 | ✅ **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | done on `main` as `nav.registry.test.ts`; the hole it was meant to close turned out not to exist |
 | 10 | ✅ **P4, places 3–5** — one table per list, `Record` over the union | large | a screen is declared once instead of three times; the `default` that had already lied about five screens is a build error now. Place 6 left, with its reason, in §4 |
 | 11 | ✅ **P2 proper** — split `now` out of the store context | large | 117 of 195 store consumers no longer re-render on a tick |
-| 12 | **P7** — keep paying the style ledger down | ongoing | the memoisation in 11 becomes worth having |
+| 12 | ◐ **P7** — the `dim` axis, where the token already spans the value | medium | 325 sites, `dim` 739 → 415; on Fog, `scripts/paint.mjs` goes from 8 runs of text below WCAG AA to 0 across four screens, and 40 → 31 across ten. The rest of the ledger, and all 4,710 inline style objects, are still open — see §7 |
 | 14 | ✅ **§7a** — give focus back when the assistant closes | small | a dialog that takes focus returns it, both ways in |
 | 15 | ✅ **§3's aside** — read the timezone at the call site, not at module load | tiny | calendar events written in the zone you are in |
 | 13 | ✅ **P1e** — move the assistant's context assembly off the store | medium | −7,543 lines and −12% of the gzipped critical path; `lib/sheet.ts`, `lib/maths.ts` and `lib/chart.ts` go with it |

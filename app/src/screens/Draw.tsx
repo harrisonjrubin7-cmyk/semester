@@ -118,7 +118,7 @@ export function Draw() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Drawing for {guide.code}. The picture comes back as code, so every label is yours to change
         — and nothing is invented into it: an axis you gave no numbers for is labelled with the
         quantity, not with a plausible figure.

@@ -127,7 +127,7 @@ export function SlideDeck() {
   }, [step]);
 
   if (!unit || slides.length === 0) {
-    return <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', opacity: 0.6 }}>Nothing to show here.</div>;
+    return <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>Nothing to show here.</div>;
   }
 
   const slide = slides[at];
@@ -268,7 +268,7 @@ export function SlideDeck() {
             <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08 }}>
               {slide.title}
             </div>
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)' }}>{slide.sub}</div>
+            <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{slide.sub}</div>
             <button
               type="button"
               className="btn btn-primary"

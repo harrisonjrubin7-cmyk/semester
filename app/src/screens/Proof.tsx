@@ -206,7 +206,7 @@ export function Proof() {
                 style={{
                   marginTop: 'var(--sp-3)',
                   fontSize: 'var(--type-xs)',
-                  opacity: 0.62,
+                  color: 'var(--app-dim)',
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
                 }}

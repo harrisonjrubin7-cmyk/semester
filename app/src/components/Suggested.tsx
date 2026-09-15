@@ -57,7 +57,7 @@ export function Suggested() {
   return (
     <div style={{ marginTop: 22 }}>
       <div className="kicker">Worth knowing about</div>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {NO_DATES}
       </div>
 
@@ -82,7 +82,7 @@ export function Suggested() {
 
       {open && (
         <div style={{ marginTop: 'var(--sp-5)' }}>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
             Which year are you in?
           </div>
           <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 7 }}>
@@ -104,7 +104,7 @@ export function Suggested() {
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-6)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)' }}>
             What are you interested in? Leaving these alone shows everything.
           </div>
           <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap', marginTop: 7 }}>
@@ -125,7 +125,7 @@ export function Suggested() {
       )}
 
       {rows.length === 0 ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {emptyLine(want)}
         </div>
       ) : (
