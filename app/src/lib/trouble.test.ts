@@ -17,6 +17,21 @@ describe('what a thrown thing says', () => {
     expect(troubleOf(stopped)).toBeNull();
   });
 
+  it('turns a deadline into a sentence, not "signal timed out"', () => {
+    // What `AbortSignal.timeout` actually rejects with. Every call in the app
+    // that reaches a server it does not own now has one of these behind it,
+    // so this is the message a bad connection produces app-wide.
+    const late = new DOMException('signal timed out', 'TimeoutError');
+    expect(troubleOf(late)).toBe('That took too long to answer. Check your connection and try again.');
+  });
+
+  it('tells a deadline apart from a cancellation', () => {
+    // Both arrive as an aborted fetch. One is worth a retry button and the
+    // other is the student having just pressed Stop.
+    expect(troubleOf(new DOMException('x', 'TimeoutError'))).not.toBeNull();
+    expect(troubleOf(new DOMException('x', 'AbortError'))).toBeNull();
+  });
+
   it('still reports a DOMException that is not an abort', () => {
     expect(troubleOf(new DOMException('quota exceeded', 'QuotaExceededError'))).toBe(
       'quota exceeded',

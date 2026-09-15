@@ -394,3 +394,59 @@ describe('mastery in the context', () => {
     expect(said('me')).not.toMatch(/"averageMastery":"\d+%"/);
   });
 });
+
+/**
+ * A capped list still reports the true size.
+ *
+ * Both of these counted the array *after* slicing it, so the number handed to
+ * the model saturated at the cap. That is worse than a thin context: a thin
+ * one is visibly thin, and this one looked complete.
+ *
+ *   sheet   two hundred rows described as thirty, under a suggestion
+ *           reading "Does this total look right?"
+ *   gap     twenty-five undone tasks described as ten, on the one screen
+ *           whose whole job is deciding what fits in the time left
+ *
+ * `gap` had it both ways in one sentence — `soon` counted and then sliced,
+ * `quick` sliced and then counted — which is what made the rule obvious:
+ * count the set, cut the copy that travels, and say when the two differ.
+ */
+describe('a capped list says how much it is not sending', () => {
+  it('gives the sheet its real row count, not the capped one', () => {
+    const sheet = {
+      id: 's1',
+      title: 'Grades',
+      courseId: null,
+      // `grid` walks `rows` x `cols`, so the sheet has to be that big.
+      rows: 80,
+      cols: 1,
+      cells: Object.fromEntries(
+        Array.from({ length: 80 }, (_, r) => [`A${r + 1}`, `row ${r + 1}`]),
+      ),
+    };
+    const out = providerFor('sheet')!(
+      look({ sheets: [sheet], sheetId: 's1' } as unknown as Partial<State>),
+    )!;
+    expect(out.summary, 'the sheet has 80 rows and should say so').toContain('80 rows');
+    expect(out.summary, 'and should admit the rest are not sent').toMatch(/first 30 are below/);
+    expect(out.visible).toHaveLength(30);
+  });
+
+  it('gives the gap its real undone count, not the capped one', () => {
+    const tasks = Array.from({ length: 25 }, (_, i) => ({
+      id: `t${i}`,
+      title: `Task ${i}`,
+      done: false,
+    }));
+    const out = providerFor('gap')!(look({ tasks } as unknown as Partial<State>))!;
+    expect(out.summary, '25 undone tasks should not read as 10').toContain('25 undone tasks');
+    expect(out.summary).toMatch(/shortest 10 below/);
+  });
+
+  it('says nothing about a cap when nothing was cut', () => {
+    const tasks = [{ id: 't0', title: 'One thing', done: false }];
+    const out = providerFor('gap')!(look({ tasks } as unknown as Partial<State>))!;
+    expect(out.summary).toContain('1 undone tasks');
+    expect(out.summary).not.toMatch(/below/);
+  });
+});

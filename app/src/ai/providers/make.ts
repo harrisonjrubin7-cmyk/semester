@@ -23,6 +23,9 @@ import { words } from '../../lib/document';
  * them — what the screen will not do.
  */
 
+/** How many rows of a sheet travel. The rest are counted, not sent. */
+const ROWS = 30;
+
 /** Draw it — a graph, a flow, a timeline, a matrix. */
 export const draw: Provide = (look) => {
   const course = look.catalog.byId[look.state.guideId];
@@ -130,11 +133,27 @@ export const sheet: Provide = (look) => {
       suggestions: ['Build me a gradebook for this course', 'Make a table of these figures'],
     };
   }
-  const rows = filledRows(open).slice(0, 30);
+  /*
+   * Counted before the cap, not after.
+   *
+   * This read `filledRows(open).slice(0, 30)` and then reported that array's
+   * own length, so a two-hundred-row sheet described itself as thirty rows —
+   * and the suggestion directly below is "Does this total look right?". The
+   * model was being handed a sixth of a gradebook and told it was the whole
+   * of it, which is the one way a capped context turns into a wrong answer
+   * rather than a thin one.
+   *
+   * The cap stays; what changes is that the number is the sheet's and the
+   * truncation is said out loud.
+   */
+  const all = filledRows(open);
+  const rows = all.slice(0, ROWS);
+  const clipped = all.length > rows.length;
   return {
     summary:
-      `A sheet, “${open.title || 'Untitled'}” — ${rows.length} rows of values` +
+      `A sheet, “${open.title || 'Untitled'}” — ${all.length} rows of values` +
       `${open.courseId ? `, filed under ${catalog.byId[open.courseId]?.code ?? 'a course'}` : ''}. ` +
+      `${clipped ? `The first ${rows.length} are below; the rest are not sent. ` : ''}` +
       'These are the computed values; the arithmetic is done on the device.',
     visible: rows.map((row) => ({ row: row.join(' | ') })),
     actions: ['make_sheet', 'open_screen'],

@@ -28,6 +28,7 @@ import { Trouble } from './Trouble';
 import { useTrouble } from '../lib/trouble';
 import { ActionButton, SectionLabel } from './ui';
 import { DEFAULT_RADIUS } from '../lib/place';
+import { fetchWithin } from '../lib/net';
 import {
   NEARBY,
   SERVICES,
@@ -66,7 +67,12 @@ export function FindPlace() {
     abort.current?.abort();
     const controller = new AbortController();
     abort.current = controller;
-    const res = await fetch(url, {
+    // A deadline as well as the abort above. The abort covers a second search
+    // replacing a first; it does not cover the lookup service accepting the
+    // connection and then never answering, which on a phone that has joined
+    // the wifi but not yet got past its login page is the usual outcome — and
+    // left `busy` true with no error and no way back but a reload.
+    const res = await fetchWithin(url, {
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     });
