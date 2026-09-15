@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { ReactNode } from 'react';
@@ -116,13 +116,30 @@ beforeAll(async () => {
 
 beforeEach(() => {
   localStorage.clear();
-  if (root) act(() => root.unmount());
-  host?.remove();
   host = document.createElement('div');
   document.body.append(host);
   act(() => {
     root = createRoot(host);
   });
+});
+
+/*
+ * The last test's root, which nothing else was going to take down.
+ *
+ * Tearing down in `beforeEach` takes down every root but the final one: that
+ * one is still mounted when the file ends, and under `isolate: false` the file
+ * ending is not the run ending. React had work scheduled on it, the scheduler
+ * fired the callback after the environment had gone, and the run failed with
+ * `ReferenceError: window is not defined` raised from `react-dom` — an
+ * unhandled error with no failing test next to it, blamed on whichever file
+ * happened to be running at the time.
+ *
+ * So the file cleans up after itself, the way `components/softtop.test.tsx`
+ * does, and no root outlives the test that made it.
+ */
+afterEach(() => {
+  act(() => root.unmount());
+  host.remove();
 });
 
 describe('arriving at the quiz cold', () => {

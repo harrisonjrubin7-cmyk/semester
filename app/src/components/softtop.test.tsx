@@ -99,6 +99,23 @@ async function settle() {
 }
 
 beforeEach(() => {
+  /*
+   * The address, before the storage.
+   *
+   * `store.tsx` reads `fromHash(window.location.hash)` at init and the URL
+   * wins over what storage says — and it writes the current screen back into
+   * the hash as it goes. Under `isolate: false` the jsdom `location` outlives
+   * the file that moved it, so any earlier test that landed on a screen leaves
+   * its name in the address and this store starts there however clean the
+   * storage written below is. The hero is then correctly drawn for that screen
+   * — "Sheets / No sheets yet" off `#/sheet` — and a test about Today's hero
+   * fails holding a hero that is right about the wrong screen.
+   *
+   * Same fault and same fix as `splash.test.tsx`, which has the long version:
+   * `replaceState` rather than `location.hash = ''`, because that leaves a
+   * bare `#` behind and fires a `hashchange` at a store listening for one.
+   */
+  history.replaceState(null, '', '/');
   localStorage.clear();
   host = document.createElement('div');
   document.body.append(host);
