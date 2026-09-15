@@ -109,7 +109,7 @@ export function Ringing() {
   // Before the early return, because that is where a hook has to be. `on`
   // is what makes "the alarm went off" the moment focus moves, rather than
   // app start, which is when this component mounts.
-  const modal = useModal<HTMLDivElement>({ on: all.length > 0 });
+  const { ref: modalRef, onKeyDown } = useModal<HTMLDivElement>({ on: all.length > 0 });
 
   if (all.length === 0) return null;
 
@@ -136,8 +136,8 @@ export function Ringing() {
        * an alarm that did not go off.
        */
       aria-modal="true"
-      ref={modal.ref}
-      onKeyDown={modal.onKeyDown}
+      ref={modalRef}
+      onKeyDown={onKeyDown}
       tabIndex={-1}
       style={{
         position: 'absolute',

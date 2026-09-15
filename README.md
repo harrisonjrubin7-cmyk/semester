@@ -623,7 +623,6 @@ model in it or needs a key:
   written before this still work: an item that is a bare string is read as a
   line at the left margin, which is what it always was.
 
-<<<<<<< HEAD
   A **PDF is written here**, not by the print dialog. File → Download as PDF
   makes the same file on every machine — the print route depends on the
   browser, a phone often has no print-to-PDF at all, and neither can be
@@ -635,8 +634,6 @@ model in it or needs a key:
   the writer is a pure function of the document. Margin notes never print, the
   same as everywhere else.
 
-=======
->>>>>>> origin/main
   A **note in the margin** goes against a block — press ✎ on its card, write
   it, and it sits out beside that block on the page. Tick it when you have
   dealt with it and it stays, struck through, because the reason to tick
@@ -659,6 +656,17 @@ model in it or needs a key:
   leaving you to notice. Reading a file into a document that already has
   writing in it adds to the end; into an empty one, it takes the file's title
   as well.
+
+  A **study guide opens as a document you can edit.** On the Guide screen,
+  under Documents, *Open it in Write* makes a copy — the cards as
+  question-and-answer tables, the framings under the name your course gives
+  them, the worked examples, the case files, the self-test and the terms, in
+  the order the field guide reads them. A copy rather than a view: cut the
+  four units the exam does not cover, write your own worked example in, and
+  the guide itself is untouched, so the cards you drill against still match
+  the source they cite. The diagrams are the one part that cannot come — they
+  are drawn rather than written — and the note at the foot says how many
+  stayed behind rather than letting you find out.
 
   A paragraph, a heading or a quotation can be **aligned** — left, centred,
   right or justified, from the toolbar or the Edit menu. It is a property of

@@ -211,7 +211,7 @@ export function SlideDeck() {
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'calc(17px * var(--text-scale, 1))',
                 lineHeight: 1.2,
-                opacity: 0.5,
+                color: 'var(--app-dim)',
                 textWrap: 'pretty',
               }}
             >

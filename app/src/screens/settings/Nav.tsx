@@ -21,7 +21,7 @@ import { usesBar } from '../../lib/chrome';
 
 const HINT = {
   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-  opacity: 0.5,
+  color: 'var(--app-dim)',
   marginTop: 'var(--sp-3)',
   lineHeight: 'var(--leading-normal)',
   textWrap: 'pretty',

@@ -145,7 +145,7 @@ export function Guide() {
             fontSize: 'calc(10px * var(--text-scale, 1))',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             fontFamily: 'var(--font-heading)',
           }}
         >
@@ -154,7 +154,7 @@ export function Guide() {
         <ChevronRight
           size={14}
           style={{
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             flex: 'none',
             transform: state.waysOpen ? 'rotate(90deg)' : 'none',
           }}
@@ -277,7 +277,7 @@ export function Guide() {
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                   width: 54,
                   textAlign: 'right',
                   flex: 'none',
@@ -347,7 +347,7 @@ export function Guide() {
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                   flex: 'none',
                 }}
               >
@@ -401,7 +401,7 @@ export function Guide() {
           >
             Sit it as a timed paper
           </button>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             The paper is the same questions with a clock, marks and a key at the end instead of
             after each one — closer to the real thing, and worse for learning a card you have
             just met.
@@ -432,7 +432,7 @@ export function Guide() {
                     size={14}
                     style={{
                       flex: 'none',
-                      opacity: 0.5,
+                      color: 'var(--app-dim)',
                       transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
                       transition: 'transform 140ms ease',
                     }}
@@ -851,10 +851,13 @@ function Decks() {
  * writes a real .pptx in the browser, so every course can have one now.
  */
 function Documents() {
-  const { state, dispatch, say } = useStore();
-  const { guide } = useLive(state.guideId);
+  const { state, dispatch, say, catalog } = useStore();
+  const { guide, figures, extras } = useLive(state.guideId);
   const stem = `/handouts/${state.guideId}`;
   const prebuilt = hasPrebuiltDocs(state.guideId);
+  // The one part of the guide a document cannot hold, counted so the copy can
+  // say how much of it stayed behind rather than leaving it out in silence.
+  const diagrams = Object.keys(figures).length + extras.length;
 
   const files = prebuilt
     ? [
@@ -870,8 +873,8 @@ function Documents() {
   return (
     <Folding name="Documents">
       <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
-        The same {guide.units.length} units as a document — every card, the terms and the
-        self-test, in reading order.
+        The same {guide.units.length} units as a document — every card, the framings, the
+        worked examples, the case files, the terms and the self-test, in reading order.
       </div>
 
       {/*
@@ -888,7 +891,10 @@ function Documents() {
           // reading a line telling them it had happened somewhere else.
           dispatch({
             type: 'makeDocument',
-            doc: fromGuide(guide, state.guideId),
+            doc: fromGuide(guide, state.guideId, {
+              frameLabel: catalog.frameLabels[state.guideId],
+              diagrams,
+            }),
             open: true,
           });
           say('Opened as a document you can edit. The guide itself is unchanged.');
@@ -1095,7 +1101,7 @@ function Cases() {
                 <div
                   style={{
                     fontSize: 'var(--type-sm)',
-                    opacity: 0.6,
+                    color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-normal)',
                     marginTop: 'var(--sp-5)',
                     paddingTop: 9,

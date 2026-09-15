@@ -23,7 +23,7 @@
  */
 
 import { blankDoc, type Block, type Doc } from './document';
-import type { CourseId, Term, Unit } from './types';
+import type { CaseFile, CourseId, Example, Frame, Term, Unit } from './types';
 
 export interface Template {
   id: string;
@@ -263,22 +263,54 @@ export function templateById(id: string): Template | undefined {
  * way round: a guide the student had rewritten would be a guide whose cards no
  * longer match the source it cites.
  *
+ * ## The whole guide, not the drillable half
+ *
+ * It carried the cards, the self-test and the terms — the three parts that are
+ * already question-and-answer — and silently left behind the three that are
+ * not: the framings, the worked examples and the case files. Those are the
+ * long-form end of the guide, the part `lib/study.ts` exists to keep growing
+ * as readings arrive, and they are what the field guide and the cram sheet are
+ * mostly made of. A copy without them was a copy of the flashcards.
+ *
+ * They are here now, in the order the field guide reads them. A case is a
+ * heading and four labelled lines rather than a six-column table, because six
+ * columns of prose is a table nobody can read on paper and the point of this
+ * document is that it gets printed.
+ *
  * Where it came from is written into the document, in `subtitle` and in a
  * quotation block at the end, because the app's standing rule is that
- * generated material says what it was generated from.
+ * generated material says what it was generated from. The same block names
+ * what could not come — the diagrams, which are drawn rather than written —
+ * following `Read.notes` and `lib/xlsxin.ts`: a student who can see that four
+ * figures stayed behind can go and look at them, where a student handed a
+ * document that never mentions them cannot.
  */
 export function fromGuide(
   guide: {
     code: string;
     name: string;
+    blurb?: string;
     source: string;
     units: Unit[];
     terms: Term[];
+    frames?: Frame[];
+    examples?: Example[];
+    cases?: CaseFile[];
     selfTest?: { q: string; a: string }[];
   },
   courseId: CourseId | null = null,
+  /**
+   * What this course calls its framings, and how many diagrams stayed behind.
+   *
+   * The label because the Guide screen reads it from the module rather than
+   * printing "Frames" at everybody — PSCI's are debates and ECON's are
+   * question types, and a document that renamed them would be a document that
+   * does not match the screen it was made from.
+   */
+  said: { frameLabel?: string; diagrams?: number } = {},
 ): Omit<Doc, 'id'> {
   const blocks: Block[] = [head(1, `${guide.code} — ${guide.name}`)];
+  if (guide.blurb) blocks.push(para(guide.blurb));
 
   for (const unit of guide.units) {
     if (unit.cards.length === 0) continue;
@@ -292,6 +324,65 @@ export function fromGuide(
       header: true,
       caption: '',
     });
+  }
+
+  // A framing is what an exam question about this material actually looks
+  // like. Two columns, like the terms below, because that is the shape it is.
+  if (guide.frames && guide.frames.length > 0) {
+    blocks.push(head(2, said.frameLabel || 'Frames'));
+    blocks.push({
+      kind: 'table',
+      rows: [
+        ['Framing', 'What it is really asking'],
+        ...guide.frames.map((frame) => [frame.t, frame.d]),
+      ],
+      header: true,
+      caption: '',
+    });
+  }
+
+  // The concept pointed at something the material actually works through. The
+  // tag is the concept, so it leads: skimming this column is how you find the
+  // example for the thing you are stuck on.
+  if (guide.examples && guide.examples.length > 0) {
+    blocks.push(head(2, 'Worked examples'));
+    blocks.push({
+      kind: 'table',
+      rows: [
+        ['Concept', 'Example', 'What it shows'],
+        ...guide.examples.map((ex) => [ex.tag, ex.t, ex.d]),
+      ],
+      header: true,
+      caption: '',
+    });
+  }
+
+  /*
+   * Claim, test, verdict, so what — the four the screen labels, as four lines
+   * under a heading. The year goes beside the title rather than in a column of
+   * its own, because it is a fact about the episode and not a field anybody
+   * sorts by.
+   *
+   * `lib/study.ts` drops a case missing any of its six fields, so in practice
+   * all four lines are here; they are guarded anyway, because a case file also
+   * arrives from a module's own data and nothing there is checked by that.
+   */
+  if (guide.cases && guide.cases.length > 0) {
+    blocks.push(head(2, 'Case files'));
+    for (const file of guide.cases) {
+      blocks.push(head(3, file.when ? `${file.title} · ${file.when}` : file.title));
+      const lines = (
+        [
+          ['Claim', file.claim],
+          ['Test', file.test],
+          ['Verdict', file.verdict],
+          ['So what', file.lesson],
+        ] as const
+      )
+        .filter(([, body]) => body)
+        .map(([label, body]) => `**${label}** — ${body}`);
+      if (lines.length > 0) blocks.push(list(lines));
+    }
   }
 
   // The guide's own self-test. Part of what the Guide screen shows as the
@@ -318,9 +409,14 @@ export function fromGuide(
 
   blocks.push(head(2, 'My notes'));
   blocks.push(para());
+  const left = said.diagrams ?? 0;
   blocks.push({
     kind: 'quote',
-    text: 'This started as the study guide the app built for this course. Anything you add here is yours; the guide itself is unchanged.',
+    text:
+      'This started as the study guide the app built for this course. Anything you add here is yours; the guide itself is unchanged.' +
+      (left > 0
+        ? ` The ${left === 1 ? 'diagram is' : `${left} diagrams are`} not here — ${left === 1 ? 'it is' : 'they are'} drawn rather than written, and ${left === 1 ? 'it stays' : 'they stay'} on the guide.`
+        : ''),
     source: guide.source,
   });
 

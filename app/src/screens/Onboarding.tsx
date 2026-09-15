@@ -255,7 +255,7 @@ export function Onboarding() {
                 <div
                   style={{
                     fontSize: 'var(--type-xs)',
-                    opacity: 0.5,
+                    color: 'var(--app-dim)',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.08em',
                   }}

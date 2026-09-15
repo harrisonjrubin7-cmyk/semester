@@ -55,7 +55,7 @@ export function TypeToConfirm({
   const box = useRef<HTMLInputElement>(null);
   const ok = typedRight(typed, want);
   // The field, because typing the word is the whole of what this asks.
-  const modal = useModal<HTMLDivElement>({ onClose: onCancel, initial: box });
+  const { ref: modalRef, onKeyDown } = useModal<HTMLDivElement>({ onClose: onCancel, initial: box });
 
   /*
    * Drawn on the device, not where it was asked for.
@@ -79,8 +79,8 @@ export function TypeToConfirm({
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      ref={modal.ref}
-      onKeyDown={modal.onKeyDown}
+      ref={modalRef}
+      onKeyDown={onKeyDown}
       tabIndex={-1}
       style={{
         position: 'absolute',

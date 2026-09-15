@@ -84,6 +84,14 @@ interface Options {
   italic?: boolean;
 }
 
+/** A point in the page, for taking back what was drawn after it. */
+interface Mark {
+  page: number;
+  from: number;
+  links: number;
+  y: number;
+}
+
 /**
  * The pen: where it is, what page it is on, and the only ways to move it.
  */
@@ -93,6 +101,8 @@ class Pen {
   readonly pages: Page[] = [];
   private page: Page = { drawings: [], links: [] };
   private y: number;
+  /** A heading just drawn, waiting for something to fit under it. */
+  private held: Mark | null = null;
 
   constructor(layout: Layout) {
     this.layout = layout;
@@ -106,9 +116,30 @@ class Pen {
    * Turns the page first when what is asked for will not fit — so a table row
    * asks for its whole height at once and is never cut in half, which is the
    * thing that makes a printed table unreadable.
+   *
+   * `withNext` is space that must fit too but is not taken: what the caller
+   * is about to place *under* this and will not be parted from. A heading
+   * keeps two lines of what it heads, and a table's header row keeps its
+   * first real row — because a heading alone at the foot of a page, or a
+   * `Question | Answer` strip with nothing under it, is a page break put in
+   * the one place a reader reads as a mistake. It is only ever a request:
+   * asking for more than a whole page turns one page and then places anyway,
+   * which is right, since nothing would ever fit.
    */
-  spend(height: number): number {
-    if (this.y - height < this.frame.margin && this.page.drawings.length > 0) this.turn();
+  spend(height: number, withNext = 0): number {
+    /* Whatever is about to be placed goes under the held heading, so the
+       heading is no longer alone whether or not the page turns. */
+    const held = this.held;
+    this.held = null;
+    const wanted = height + withNext;
+    // `held.from` is how much was on the page before the heading: if it is
+    // zero the heading is already at the top of a fresh page, and carrying it
+    // to another one would only leave that page blank as well.
+    const room = held ? held.from > 0 : this.page.drawings.length > 0;
+    if (this.y - wanted < this.frame.margin && room) {
+      if (held) this.carry(held);
+      else this.turn();
+    }
     const top = this.y;
     this.y -= height;
     return top;
@@ -118,7 +149,44 @@ class Pen {
     this.y -= points;
   }
 
+  /** Where the page stands, so what is drawn next can be taken back. */
+  mark(): Mark {
+    return { page: this.pages.length, from: this.page.drawings.length, links: this.page.links.length, y: this.y };
+  }
+
+  /**
+   * Everything drawn since `mark` is a heading, and must not stand alone.
+   *
+   * Word calls this *keep with next*, and it is the rule that stops a page
+   * ending on a section title with its first line overleaf. It is armed after
+   * the heading is drawn rather than reserved before it, because reserving
+   * means guessing how tall the thing under it will be — two lines of prose
+   * and a table's first row are not the same guess, and a study guide is
+   * headings over tables the whole way down, which is where the guess was
+   * wrong and this is not.
+   *
+   * It disarms on the next `spend`: once one line has fitted under it the
+   * heading is not alone, and the rest of a paragraph breaking across the
+   * page is what every document does.
+   */
+  hold(mark: Mark) {
+    this.held = mark.page === this.pages.length ? mark : null;
+  }
+
+  /** Turn the page, taking the held heading across with it. */
+  private carry(held: Mark) {
+    const used = held.y - this.y;
+    const drawings = this.page.drawings.splice(held.from);
+    const links = this.page.links.splice(held.links);
+    this.turn();
+    const shift = this.y - held.y;
+    for (const d of drawings) this.page.drawings.push({ ...d, y: d.y + shift });
+    for (const l of links) this.page.links.push({ ...l, y: l.y + shift });
+    this.y -= used;
+  }
+
   turn() {
+    this.held = null;
     this.pages.push(this.page);
     this.page = { drawings: [], links: [] };
     this.y = this.frame.height - this.frame.margin;
@@ -250,7 +318,15 @@ function table(pen: Pen, base: { font: string; size: number }, block: Extract<Bl
   const size = pen.layout.size * 0.92;
   const leading = size * 1.25;
 
-  for (const [r, row] of block.rows.entries()) {
+  /*
+   * Every row wrapped before any of it is drawn.
+   *
+   * Because the header row has to know how tall the row under it is: it is
+   * spent with that height held back, so a `Question | Answer` strip is never
+   * left alone at the foot of a page with its first answer overleaf. Nothing
+   * else here needs the second pass — it is the price of that one question.
+   */
+  const measured = block.rows.map((row, r) => {
     const heading = block.header && r === 0;
     const wrapped = Array.from({ length: width }, (_, c) =>
       wrap(
@@ -261,8 +337,14 @@ function table(pen: Pen, base: { font: string; size: number }, block: Extract<Bl
         cell - pad * 2,
       ),
     );
-    const height = Math.max(leading, ...wrapped.map((lines) => lines.length * leading)) + pad * 2;
-    const top = pen.spend(height);
+    return {
+      wrapped,
+      height: Math.max(leading, ...wrapped.map((lines) => lines.length * leading)) + pad * 2,
+    };
+  });
+
+  for (const [r, { wrapped, height }] of measured.entries()) {
+    const top = pen.spend(height, block.header && r === 0 ? (measured[1]?.height ?? 0) : 0);
     for (let c = 0; c < width; c += 1) {
       const x = pen.frame.margin + cell * c;
       pen.draw({ at: 'box', x, y: top - height, width: cell, height });
@@ -286,12 +368,14 @@ function block(pen: Pen, base: { font: string; size: number }, b: Block) {
     case 'heading': {
       const size = layout.size * HEADING_SCALE[b.level - 1];
       pen.gap(layout.size * 0.4);
+      const before = pen.mark();
       paragraph(pen, base, piecesOf(b.text, { ...base, size }), {
         align: b.align,
         bold: true,
         leading: size * 1.25,
         after: layout.size * 0.2,
       });
+      pen.hold(before);
       return;
     }
     case 'text':

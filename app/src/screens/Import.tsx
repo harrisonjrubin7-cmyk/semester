@@ -533,14 +533,14 @@ export function Import() {
           <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {f.name}
           </span>
-          <span style={{ fontSize: 'var(--type-xs)', opacity: 0.5, flex: 'none' }}>
+          <span style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', flex: 'none' }}>
             {f.words.toLocaleString()} words
           </span>
           <button
             type="button"
             className="bare"
             onClick={() => setFiles((list) => list.filter((x) => x.name !== f.name))}
-            style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+            style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
           >
             REMOVE
           </button>
@@ -974,7 +974,7 @@ function Preview({
                 style={{
                   display: 'block',
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                   marginTop: 'var(--sp-2)',
                   lineHeight: 'var(--leading-normal)',
                   paddingLeft: 92,

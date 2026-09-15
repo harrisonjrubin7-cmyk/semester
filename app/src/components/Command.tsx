@@ -159,7 +159,7 @@ export function Command({ onClose }: { onClose: () => void }) {
   // The field, not the first button — opening a search anywhere but in its
   // box is opening it wrong. `useModal` takes Escape and the tab ring; where
   // focus starts stays this component's decision.
-  const modal = useModal<HTMLDivElement>({ onClose, initial: box });
+  const { ref: modalRef, onKeyDown } = useModal<HTMLDivElement>({ onClose, initial: box });
 
   /*
    * The caret stays in the box across the page it is drawn on.
@@ -421,7 +421,7 @@ export function Command({ onClose }: { onClose: () => void }) {
         display: 'flex',
         flexDirection: 'column',
       }}
-      ref={modal.ref}
+      ref={modalRef}
       tabIndex={-1}
       onKeyDown={(e) => {
         /*
@@ -460,7 +460,7 @@ export function Command({ onClose }: { onClose: () => void }) {
         // Escape and Tab first, then this page's own keys. `defaultPrevented`
         // rather than a second copy of the Escape branch, so there is one
         // answer to "what closes a dialog" and it is not written out here.
-        modal.onKeyDown(e);
+        onKeyDown(e);
         if (e.defaultPrevented) return;
         if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
           e.preventDefault();

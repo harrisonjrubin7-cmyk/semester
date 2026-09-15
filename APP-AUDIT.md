@@ -870,6 +870,116 @@ makes a seek move anything.
   where both arrows are live, a one-cue unit where neither is, and the empty
   unit that used to throw.
 
+---
+
+# Pass eight — two instruments, run against each other
+
+`main` landed `scripts/contrast-sweep.mjs` within a day of this branch landing
+`scripts/paint.mjs`, from a different pass, and neither knew about the other.
+Both drive a real browser and measure the contrast of what the app paints. The
+cheapest audit available was to point them at the same ground and the same
+screens and see whether they agreed.
+
+They did not, and the one that was wrong was mine.
+
+## What was wrong
+
+### 1. `paint.mjs` read `color()` notation as if it were out of 255
+
+On the front door, Fog, `.deskhome-box-say` — the words **Search your
+semester** — measured **1.16:1** and was the only finding of that run. The
+sweep measured the same screen and reported nothing.
+
+The sweep was right. The computed colour is
+
+```
+color(srgb 0.575294 0.589804 0.614902)
+```
+
+which is rgb(147,150,157), a light grey on the inverted field's rgb(20,23,28)
+— about 6:1, and correct. `paint.mjs` read the three components as channels out
+of 255 and got rgb(1,1,1).
+
+`scripts/contrast-audit.js` has had the branch for this since it was written.
+The pair only disagreed because one of them had it.
+
+**The misread always pulls a colour toward black**, so it invents a failure
+where the text is light on a dark surface and flatters one where it is dark on
+a light one. Chromium resolves `color-mix()` this way, and `color-mix` is how
+`main`'s own fix for this element was written four commits earlier — so the
+instrument had begun mis-reading exactly the colours the newest work produces.
+
+**Measured, and smaller than it sounds.** Of the seven `color-mix` rules that
+set text colour, five (`.text-muted`, `figcaption`, `.table th`,
+`.field > label`, `.card-meta`) match nothing in the app, and
+`.blueprint > .corner` matches forty elements that hold no text. A full sweep
+of Industry — the ground whose stylesheet carries twenty of the twenty-six
+`color-mix` uses — reports **46 runs below AA, 39 distinct, identical before
+and after the fix**. One element, then: the one the app opens on, in every
+ground, and a hundred per cent of what that run had to say.
+
+### 2. The sweep threw away its own count of what it had not measured
+
+`contrast-audit.js` returns `{ rows, measured, skipped, gradient }`, and its
+header says why: *"the counts matter as much as the rows, because a pass that
+measured nothing is not a pass that found nothing."* `groundOf` returns null
+for anything painted over a gradient — deliberately, because `backgroundColor`
+reads transparent there and unknown beats wrong.
+
+`contrast-sweep.mjs` read `measured` and `rows` and dropped the other two on
+the floor. So:
+
+```
+PASSES: 12   ELEMENTS MEASURED: 298   GROUNDS: 13
+FINDINGS: 0
+```
+
+was printed over **132 elements it had looked away from** — thirty-one per cent
+of the four hundred and thirty it walked. The number existed on every pass and
+never reached the report. It prints now, and points at the instrument that can
+measure them:
+
+```
+NOT MEASURED: 132 on a gradient (see scripts/paint.mjs), 2 with no text or no colour
+```
+
+This is the same failure `pipeline/validate.mjs` had in pass six, one layer up:
+a check that can quietly stop checking, with the only trace in a number nobody
+prints.
+
+### 3. Neither instrument named the other
+
+Which is how there came to be two, and how a third would arrive. They are not
+duplicates — they are halves:
+
+| | `contrast-sweep.mjs` | `paint.mjs` |
+|---|---|---|
+| reads | the composited style tree | the screenshot's pixels |
+| covers | six navigations, two widths, hover and focus | sixty destinations, resting only |
+| blind to | anything over a gradient — 132 in one pass | hover, focus, navigations other than the default |
+| sees | compounded translucent surfaces no token names | gradients, and `background-clip: text` headings |
+
+Each header now says what the other is for, and `lib/ci.test.ts` holds it.
+
+## What guards it now
+
+- `lib/ci.test.ts` gains two cases under **the instruments in scripts/**. The
+  first walks `app/scripts` and requires every file that reads a computed style
+  and parses numbers out of it to know that `color()` is on a nought-to-one
+  scale; checked by dropping in `paint.mjs` exactly as `main` shipped it and
+  watching it be named. The second holds the two cross-references, and failed
+  before the second one was written.
+- The `NOT MEASURED` line, which is the sweep's own honesty restored rather
+  than a new rule.
+
+## Checked and found clean
+
+- Both instruments now agree on Fog across `search`, `courses`, `study`,
+  `work` and `draw`: zero findings each, 107 runs and 298 elements.
+- Industry, sixty destinations: 46 runs below AA, 39 distinct — unchanged by
+  the parser fix, which is the measurement that sized finding 1 honestly
+  rather than the one that flattered it.
+
 # Pass nine — the keyboard: can you use this app without a mouse?
 
 Pass eight pressed every control. It pressed them the way a script does —

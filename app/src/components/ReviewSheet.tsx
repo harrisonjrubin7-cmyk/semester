@@ -377,7 +377,7 @@ function Row({
           style={{
             display: 'block',
             fontSize: 'var(--type-sm)',
-            opacity: 0.62,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-3)',
             paddingLeft: 9,
             borderLeft: `2px solid ${conflict ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
@@ -396,7 +396,7 @@ function Row({
             fontFamily: 'var(--font-heading)',
             fontSize: 'var(--type-xs)',
             letterSpacing: '0.06em',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-3)',
           }}
         >

@@ -19,10 +19,23 @@ import { readFileSync } from 'node:fs';
  * fields on screen at once and its Close button behind the strip.
  *
  * Nothing about that is visible to jsdom — there is no layout and no
- * painting — and it is invisible in the other two layouts, which have no
- * chrome over the body to lose to. So the rule is held on the source: in
- * `Workspace`, the three overlays are siblings of the strips, not
- * grandchildren of the body.
+ * painting — so the rule is held on the source: in `Workspace`, the three
+ * overlays are siblings of the strips, not grandchildren of the body.
+ *
+ * This note used to end by saying the fault was "invisible in the other two
+ * layouts, which have no chrome over the body to lose to". That was wrong,
+ * and the way it was wrong is worth keeping. The phone and the wide layout
+ * have no chrome *raised* over the body, but `.device > *` flattens every
+ * one of their children to 1, and the header comes after the tab strip — so
+ * the header wins on document order alone, without a z-index above 1 to its
+ * name. What that hid was the strip's own menu: on a phone **Pin this tab**
+ * was painted behind the screen's title and the page text, and the tap went
+ * to the heading. The menu portals onto `.device` now and its 90 counts, as
+ * does the hover card, which was behind the header on the wide layout for
+ * the same reason; `components/fromframe.test.tsx` holds both. What is *not*
+ * fixed by that move is anything that has to stay in the flow — a raised
+ * strip is still the workspace's answer, and the overlays still have to
+ * clear it.
  *
  * Moving one back inside the pane is the easy mistake, because that is
  * exactly where it belongs on both other layouts — there the pane *is*

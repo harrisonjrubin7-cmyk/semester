@@ -475,7 +475,7 @@ function Alarms() {
                     className="bare tappable"
                     onClick={() => dispatch({ type: 'removeAlarm', id: a.id })}
                     aria-label={`Delete the ${timeLine(a.at)} alarm`}
-                    style={{ width: 'auto', padding: '7px 10px', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5 }}
+                    style={{ width: 'auto', padding: '7px 10px', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}
                   >
                     Delete
                   </button>

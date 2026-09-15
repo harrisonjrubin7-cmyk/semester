@@ -383,7 +383,7 @@ function PanelGone({ error, onClose }: { error: Error; onClose: () => void }) {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
-          // `secondLine()`, not `opacity: 0.5`. The audited rung against
+          // `secondLine()`, not `color: 'var(--app-dim)'`. The audited rung against
           // whichever ground is on — see `lib/dim.ts`, and the `dim` axis in
           // `styles/rules.ts` that counts the hand-written kind.
           ...secondLine(),

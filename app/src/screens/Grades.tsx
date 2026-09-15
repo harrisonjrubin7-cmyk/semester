@@ -168,7 +168,7 @@ export function Grades() {
                   <div
                     style={{
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.5,
+                      color: 'var(--app-dim)',
                       marginTop: 'var(--sp-1)',
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.1em',
@@ -203,7 +203,7 @@ export function Grades() {
                 <div
                   style={{
                     fontSize: 'var(--type-xs)',
-                    opacity: 0.5,
+                    color: 'var(--app-dim)',
                     margin: '14px 0 6px',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.12em',
@@ -238,7 +238,7 @@ export function Grades() {
                     >
                       <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
                         {t.label}
-                        <span style={{ fontSize: 'var(--type-xs)', opacity: 0.5 }}> · {t.target}%</span>
+                        <span style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}> · {t.target}%</span>
                       </span>
                       <span
                         style={{
@@ -285,7 +285,7 @@ export function Grades() {
                   <div
                     style={{
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.5,
+                      color: 'var(--app-dim)',
                       marginBottom: 'var(--sp-3)',
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.12em',
@@ -325,7 +325,7 @@ export function Grades() {
         );
       })}
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 22, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 22, lineHeight: 'var(--leading-relaxed)' }}>
         This is your own arithmetic, not a gradebook — nothing here is read from Brightspace, and
         nothing is sent anywhere. A syllabus that drops your lowest score, curves, or rounds will
         not match exactly.
@@ -417,7 +417,7 @@ function PaperTag({ paper }: { paper: Sitting }) {
         'Remove?'
       ) : (
         <>
-          {paper.pct}%<span style={{ opacity: 0.5 }}> · {when}</span>
+          {paper.pct}%<span style={{ color: 'var(--app-dim)' }}> · {when}</span>
         </>
       )}
     </button>

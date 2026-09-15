@@ -46,7 +46,7 @@ export function AppsPanel({ onClose }: { onClose: () => void }) {
 
   // Escape, the focus ring and the return of focus to the nine dots — every
   // dialog in this app uses the same one so this cannot drift from the rest.
-  const modal = useModal<HTMLDivElement>({ onClose, initial: first });
+  const { ref: modalRef, onKeyDown } = useModal<HTMLDivElement>({ onClose, initial: first });
 
   const pin = (screen: Parameters<typeof isFavourite>[1]) =>
     dispatch({
@@ -60,9 +60,9 @@ export function AppsPanel({ onClose }: { onClose: () => void }) {
       role="dialog"
       aria-modal="true"
       aria-label="All apps"
-      ref={modal.ref}
+      ref={modalRef}
       tabIndex={-1}
-      onKeyDown={modal.onKeyDown}
+      onKeyDown={onKeyDown}
     >
       <div className="desk-panel-fav">
         <div className="desk-panel-head">
