@@ -198,3 +198,44 @@ describe('what sits beside it, and what is left', () => {
     expect(beside(ALL, step).map((w) => w.id)).toEqual(['read', 'field', 'watch']);
   });
 });
+describe('cards that are up because a test is near', () => {
+  it('says the test rather than claiming they came round', () => {
+    /*
+     * Directly under a standing that reads "nothing come round", the sentence
+     * "4 cards have come round for review" is a contradiction a reader cannot
+     * resolve — and both halves are individually right, which is why looking
+     * at the screen found it and no test did. `lib/intime.ts` pulls cards back
+     * ahead of a test; `dueOwn` is how many the interval brought round by
+     * itself.
+     */
+    const step = nextStep(input({ due: 4, dueOwn: 0, testIn: 15, testKind: 'Exam' }));
+    expect(step?.label).toBe('Review 4 cards');
+    expect(step?.why).toBe('4 cards are back ahead of the exam.');
+  });
+
+  it('still says came round where the interval did the work', () => {
+    expect(nextStep(input({ due: 4, dueOwn: 4, testIn: 15, testKind: 'Exam' }))?.why).toBe(
+      '4 cards have come round for review.',
+    );
+  });
+
+  it('keeps the old sentence for a caller that says nothing about intervals', () => {
+    // `dueOwn` defaults to `due`, so every call written before this reads the
+    // same as it always did.
+    expect(nextStep(input({ due: 4, testIn: 15, testKind: 'Exam' }))?.why).toBe(
+      '4 cards have come round for review.',
+    );
+  });
+
+  it('does not blame a test that is not there', () => {
+    expect(nextStep(input({ due: 4, dueOwn: 0, testIn: null, testKind: null }))?.why).toBe(
+      '4 cards have come round for review.',
+    );
+  });
+
+  it('counts one card as one', () => {
+    expect(nextStep(input({ due: 1, dueOwn: 0, testIn: 3, testKind: 'Quiz' }))?.why).toBe(
+      'One card is back ahead of the quiz.',
+    );
+  });
+});
