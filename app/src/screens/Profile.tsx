@@ -89,12 +89,18 @@ export function Profile() {
           <Avatar name={state.myName} size={64} />
           <div style={{ minWidth: 0 }}>
             <div
-              className="chrome-text"
+              /* The prompt is not the name, and should not be set like one —
+                 so it is not set in the chrome gradient at all. That was the
+                 only way to say it before, and saying it with `opacity` on
+                 `background-clip: text` took a 22px line to 2.20:1, because a
+                 gradient has no colour to dim and the whole glyph faded. Plain
+                 text at the audited rung is both the larger distinction and
+                 the legible one. */
+              className={named(state.myName) ? 'chrome-text' : undefined}
               style={{
                 fontSize: 'calc(22px * var(--text-scale, 1))',
                 lineHeight: 1.1,
-                // The prompt is not the name, and should not be set like one.
-                opacity: named(state.myName) ? 1 : 0.55,
+                ...(named(state.myName) ? {} : { color: 'var(--app-dim)' }),
               }}
             >
               {heading(state.myName)}

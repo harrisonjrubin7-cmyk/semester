@@ -243,7 +243,11 @@ export function Runway() {
           }
           style={{ height: 52, marginTop: 14, display: 'block', textAlign: 'center' }}
         >
-          <span style={{ display: 'block', fontSize: 'var(--type-xs)', letterSpacing: '0.12em', opacity: 0.75 }}>
+          {/* No opacity: this sits on a filled button, where the only ink is
+              the button's own and dimming it is what took it to 4.12:1. The
+              kicker reads as a kicker from its size and letter-spacing, which
+              is how `.kicker` does it everywhere else. */}
+          <span style={{ display: 'block', fontSize: 'var(--type-xs)', letterSpacing: '0.12em' }}>
             {worst.seen === 0 ? 'NEVER OPENED' : 'FURTHEST BEHIND'}
           </span>
           {/* The unit's own name, which in most guides carries its number. */}
@@ -266,7 +270,10 @@ export function Runway() {
           <div
             style={{
               fontSize: 'var(--type-xs)',
-              opacity: covers.source === 'whole' ? 0.6 : 0.75,
+              /* One rung, not two. The assumed reading used to be fainter than
+                 the stated one, and at 11px neither value cleared the bar. The
+                 wording already says which it is. */
+              ...secondLine(),
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -314,8 +321,10 @@ export function Runway() {
               style={{
                 flex: 'none',
                 fontSize: 'var(--type-sm)',
-                opacity: u.seen === 0 ? 0.9 : 0.55,
-                color: u.seen === 0 && u.cards > 0 ? 'var(--app-warn)' : undefined,
+                /* Colour rather than opacity, which is what let a `--app-warn`
+                   count render at 4.40:1 — the token is audited, the 0.9 over
+                   it was not. */
+                color: u.seen === 0 && u.cards > 0 ? 'var(--app-warn)' : 'var(--app-dim)',
                 fontVariantNumeric: 'tabular-nums',
               }}
             >
