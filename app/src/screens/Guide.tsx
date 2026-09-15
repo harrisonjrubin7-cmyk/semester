@@ -20,6 +20,7 @@ import { ask, mine, playHere, seekTo, usePlayback } from '../lib/sound.hook';
 import { clock, through } from '../lib/sound';
 import { secondLine } from '../lib/dim';
 import { FigureCard } from '../components/FigureCard';
+import { PrintButton } from '../components/PrintButton';
 import { buildQuiz } from '../lib/quiz';
 import { asset } from '../lib/asset';
 import { Folding } from '../components/Fold';
@@ -415,9 +416,14 @@ export function Guide() {
             const fig = figMap[i];
             return (
               <div key={u.name} style={tallRow}>
+                {/* `on-paper`: a unit's name is the document's heading, not a
+                    control. The print sheet hides `button:not(.on-paper)` —
+                    see the note there about the printed week that came out
+                    with its headings and none of its deadlines — and without
+                    this the guide would print as bodies under nothing. */}
                 <button
                   type="button"
-                  className="bare"
+                  className="bare on-paper"
                   onClick={() => dispatch({ type: 'toggleUnit', index: i })}
                   aria-expanded={open}
                   style={{ display: 'flex', gap: 11, alignItems: 'center' }}
@@ -448,15 +454,33 @@ export function Guide() {
                   </span>
                 </button>
 
-                {open && (
-                  <div
-                    style={{
-                      padding: '8px 0 2px 25px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 14,
-                    }}
-                  >
+                {/*
+                  Hidden rather than unrendered when the unit is shut, so that
+                  printing can show it.
+
+                  `PrintButton` prints the screen rather than building a second
+                  document, and says why: a second rendering path is a second
+                  thing to keep correct and it always drifts. That rule and an
+                  accordion do not get along — a collapsed unit is not in the
+                  DOM, so a printed guide would have been eight headings and
+                  nothing under them. Keeping the body in the DOM and hiding it
+                  with `display` is what lets the print sheet put it back,
+                  with no second render of the guide to maintain.
+
+                  `display: none` takes it out of the accessibility tree too,
+                  so a closed unit is as closed to a screen reader as it was
+                  when it did not exist; `aria-expanded` on the button above
+                  says which it is.
+                */}
+                <div
+                  className={`guide-unit${open ? '' : ' is-shut'}`}
+                  style={{
+                    padding: '8px 0 2px 25px',
+                    display: open ? 'flex' : 'none',
+                    flexDirection: 'column',
+                    gap: 14,
+                  }}
+                >
                     {u.cards.map((c, ci) => {
                       // Anything past the count the guide shipped with is
                       // something you added, and says so.
@@ -541,11 +565,25 @@ export function Guide() {
                         Add to this unit
                       </button>
                     </div>
-                  </div>
-                )}
+                </div>
               </div>
             );
           })}
+
+          {/*
+            The guide is the longest thing this app makes and was the one
+            substantial screen with no way onto paper — the calendar, the
+            exam, the deck, the essay and six others have had one for a while.
+            `PrintButton`'s own note says what it is for: "a cram sheet goes
+            on a wall", and a guide the week before an exam is that.
+
+            Here rather than at the top of the screen, and worded for what it
+            gives you: what prints is every unit, open or shut. The button
+            prints whichever mode you are in, which is what "print the screen"
+            means — Read is the only one that had to be taught to show its
+            whole self on paper.
+          */}
+          <PrintButton label="Print the whole guide" style={{ marginTop: 'calc(var(--sp-7) + var(--sp-3))' }} />
         </div>
       )}
 

@@ -184,6 +184,16 @@ export interface Answer {
   given: string;
   /** Self-marked, for written answers only. */
   mark?: 'right' | 'partly' | 'wrong';
+  /**
+   * Come back to this one.
+   *
+   * Every computer-based exam a student has sat has this — the GRE and the
+   * LSAT call it Mark, Canvas and Blackboard call it Flag — and it matters
+   * more here than in any of them, because this paper is one long page rather
+   * than one question at a time. "I will come back to seven" is otherwise a
+   * thing you have to hold in your head while answering fifteen more.
+   */
+  flagged?: boolean;
 }
 
 /**
@@ -211,6 +221,38 @@ export interface Result {
   pct: number;
   /** Questions still waiting on a self-mark. */
   unmarked: number;
+}
+
+/** What is still open on a paper: nothing answered yet, and anything flagged. */
+export interface Outstanding {
+  /** Question numbers, 1-based, with no answer written or chosen. */
+  blank: number[];
+  /** Question numbers, 1-based, the student marked to come back to. */
+  flagged: number[];
+}
+
+/**
+ * What a paper still has open, for the panel above the Finish button.
+ *
+ * Numbers rather than ids, because the only thing a student can act on is
+ * "question 7" — it is what the paper calls it and what a jump link has to
+ * say. The two lists overlap on purpose: a question can be both flagged and
+ * blank, and leaving it out of one would make the counts stop adding up
+ * against the paper in front of them.
+ *
+ * Whitespace is blank. A written answer of three spaces is not an answer, and
+ * counting it as one is the version of this that lets somebody hand in a
+ * question they thought they had done.
+ */
+export function outstanding(questions: Question[], answers: Record<string, Answer>): Outstanding {
+  const blank: number[] = [];
+  const flagged: number[] = [];
+  questions.forEach((q, i) => {
+    const a = answers[q.id];
+    if (!a || !a.given.trim()) blank.push(i + 1);
+    if (a?.flagged) flagged.push(i + 1);
+  });
+  return { blank, flagged };
 }
 
 export function result(questions: Question[], answers: Record<string, Answer>): Result {

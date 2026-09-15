@@ -24,6 +24,7 @@ import {
   letter,
   marksFor,
   paper,
+  outstanding,
   readExam,
   readSeed,
   result,
@@ -40,6 +41,47 @@ import { UseSources, appendTo } from '../components/UseSources';
 import { NeedsKey } from '../components/NeedsKey';
 
 type Stage = 'setup' | 'sitting' | 'marking';
+
+/**
+ * One line of the "before you finish" panel: a count, then a number per
+ * question you can press to go there.
+ *
+ * Buttons rather than `<a href="#q7">`: a hash link writes to the address
+ * bar, and this app is hash-routed — `#q7` is not a route and navigating to
+ * it would take the screen apart. `scrollIntoView` does the one thing that
+ * was wanted.
+ */
+function Jumps({ said, numbers, what }: { said: string; numbers: number[]; what: string }) {
+  return (
+    <div style={{ marginTop: 'var(--sp-4)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-normal)' }}>{said}</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)' }}>
+        {numbers.map((n) => (
+          <button
+            key={n}
+            type="button"
+            className="bare tappable"
+            onClick={() => document.getElementById(`q${n}`)?.scrollIntoView({ block: 'start' })}
+            aria-label={`Go to question ${n}, ${what}`}
+            style={{
+              width: 'auto',
+              flex: 'none',
+              minWidth: 30,
+              paddingBlock: 'var(--sp-1)',
+              paddingInline: 'var(--sp-4)',
+              border: '1px solid var(--app-line)',
+              borderRadius: 'var(--r-md)',
+              fontSize: 'var(--type-sm)',
+              textAlign: 'center',
+            }}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /**
  * A practice paper, sat and marked.
@@ -96,6 +138,8 @@ export function Exam() {
 
   const shape = useMemo(() => shapeFor(minutes, formatId), [minutes, formatId]);
   const missed = useMemo(() => missedFrom(questions, answers), [questions, answers]);
+  /** What the paper still has open — see the panel above the Finish button. */
+  const open = useMemo(() => outstanding(questions, answers), [questions, answers]);
   const [kept, setKept] = useState<'no' | 'result' | 'cards' | 'both'>('no');
 
   // Dropped as soon as it has been read, so coming back later opens on your
@@ -419,7 +463,11 @@ export function Exam() {
         const chosen = answer?.given ?? '';
         const right = q.kind === 'choice' && chosen === q.answer;
         return (
-          <div key={q.id} style={{ marginTop: 18 }}>
+          /* Anchored so "question 7" in the panel below can actually go
+             there. The id is the question number rather than its id: a
+             student reads the number, and a jump that lands somewhere the
+             heading does not match is worse than no jump. */
+          <div key={q.id} id={`q${i + 1}`} style={{ marginTop: 18, scrollMarginTop: 'var(--sp-7)' }}>
             <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
               <span className="kicker" style={{ flex: 'none' }}>
                 {i + 1} · {q.points} {q.points === 1 ? 'mark' : 'marks'}
@@ -432,6 +480,33 @@ export function Exam() {
                   {marksFor(q, answer)}/{q.points}
                 </span>
               ) : null}
+              {/* Only while sitting. During marking the paper is a record, and
+                  a control that changes it would be inviting somebody to edit
+                  their own script. */}
+              {!marking && (
+                <button
+                  type="button"
+                  className="bare no-print"
+                  onClick={() => say(q.id, { flagged: !answer?.flagged })}
+                  aria-pressed={Boolean(answer?.flagged)}
+                  aria-label={
+                    answer?.flagged
+                      ? `Question ${i + 1}: remove the flag`
+                      : `Question ${i + 1}: flag it to come back to`
+                  }
+                  style={{
+                    width: 'auto',
+                    flex: 'none',
+                    marginLeft: 'auto',
+                    fontSize: 'var(--type-xs)',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: answer?.flagged ? 'var(--app-accent-deep)' : 'var(--app-dim)',
+                  }}
+                >
+                  {answer?.flagged ? 'Flagged' : 'Flag'}
+                </button>
+              )}
             </div>
             <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4, marginTop: 5, textWrap: 'pretty' }}>
               {q.prompt}
@@ -738,6 +813,39 @@ export function Exam() {
         </>
       ) : (
         <>
+          {/*
+            What is still open, before the paper is closed.
+
+            Every computer-based exam shows this on the way out, and here it
+            is load-bearing rather than a nicety: the whole paper is one long
+            page, so "I left seven blank" is otherwise something you find out
+            after pressing Finish, when the answer is on the screen next to a
+            key and it is too late to mean anything.
+
+            A jump per number rather than a count. "Three unanswered" tells
+            somebody they have a problem and not where it is, which on a
+            twenty-question page is most of the work.
+          */}
+          {(open.blank.length > 0 || open.flagged.length > 0) && (
+            <Blueprint plain style={{ padding: 'var(--sp-7)', marginTop: 'calc(var(--sp-7) + var(--sp-3))' }}>
+              <div className="kicker">Before you finish</div>
+              {open.blank.length > 0 && (
+                <Jumps
+                  said={`${open.blank.length} unanswered`}
+                  numbers={open.blank}
+                  what="unanswered"
+                />
+              )}
+              {open.flagged.length > 0 && (
+                <Jumps
+                  said={`${open.flagged.length} flagged to come back to`}
+                  numbers={open.flagged}
+                  what="flagged"
+                />
+              )}
+            </Blueprint>
+          )}
+
           <ActionButton
             onClick={() => {
             setStage('marking');

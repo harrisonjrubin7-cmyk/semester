@@ -79,11 +79,32 @@ export function Grades() {
                     </span>
                   ) : null}
                 </div>
-                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
-                  {s.remaining > 0
-                    ? `${Math.round(s.remaining)}% still to play for`
-                    : 'Everything is in'}
-                </div>
+                {/*
+                  Nothing where nothing could be weighted.
+
+                  `remaining` is `total - counted`, so it is nought in two
+                  quite different situations: every weighted row has a score,
+                  and *no row is weighted at all*. The second is an ordinary
+                  state — a syllabus stating points beside a row nobody can
+                  read a figure from is refused by `asWeights` rather than
+                  converted on a guess — and it was printing "Everything is
+                  in" beside "Nothing graded yet", on a card whose own rows
+                  showed two of four with no score. Seen on CORE 2500: eight
+                  quizzes and thirteen reflections entered, a final reflection
+                  and an attendance row empty, and the summary claiming the
+                  course was finished.
+                  Saying nothing is the honest answer: the paragraph under
+                  this already explains that the weights add to 0% and which
+                  rows could not be read, and a second line contradicting the
+                  first is worse than one line fewer.
+                */}
+                {s.counted > 0 || s.remaining > 0 ? (
+                  <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+                    {s.remaining > 0
+                      ? `${Math.round(s.remaining)}% still to play for`
+                      : 'Everything is in'}
+                  </div>
+                ) : null}
               </div>
               {s.current !== null && (
                 <div style={{ marginTop: 'var(--sp-5)' }}>
