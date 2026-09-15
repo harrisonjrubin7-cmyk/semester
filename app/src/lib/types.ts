@@ -108,8 +108,14 @@ export interface Item {
    * "the app says the syllabus says this" into something a student can go and
    * check in ten seconds. Absent on every course imported before citations,
    * and on anything built from pasted text rather than a PDF.
+   *
+   * `doc` is the name of the file that page is in. A page number alone is
+   * only an answer where one document went up, and two do often enough — a
+   * syllabus and a separately posted schedule — that "p. 4" would otherwise
+   * name a page in each. It is what `lib/topage.ts` matches against the drive
+   * to decide whether the page can actually be opened.
    */
-  checked?: { confirmed: boolean; page?: number };
+  checked?: { confirmed: boolean; page?: number; doc?: string };
   source: string;
 }
 

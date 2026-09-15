@@ -4,6 +4,65 @@ September 14, 2026 · Compared with the supplied complete product requirements a
 
 The existing app is preserved and expanded. **This build is a working student workspace with local planning tools and an institutional integration foundation. It is not yet a complete replacement for a university's LMS, email, registration, billing or campus-service systems.** The user confirmed that school-approved access is not yet available.
 
+## September 15, 2026 — the page number became a page
+
+Every imported deadline carries the sentence it came from, `app/src/lib/cite.ts`
+checks that sentence against the spans the API says it read, and the screen
+printed the page underneath: `· p. 12`, under a comment claiming this was what
+turned *"the app says the syllabus says this"* into something a student could
+check in ten seconds.
+
+It was a string. `Item` had no link to any document, and the import path did
+not keep one — `intakeFiles` read the text out of the PDF and let the bytes go.
+The app was printing a footnote to a library nobody could visit.
+
+Three seams, and no new persisted field:
+
+- **The syllabus is kept.** `keepSources` files each PDF the import carried
+  whole into the drive against the course it built, deduplicated on name and
+  size so a re-import does not leave two. Not awaited by the import and never
+  fatal to it: a browser that refuses storage costs the link and nothing else.
+- **The citation says which document.** `document_title` already came back on
+  every citation and was being dropped; it now reaches `Item.checked.doc`. Two
+  PDFs go up together often enough — a syllabus and a separately posted
+  schedule — that a page number alone names a page in each.
+- **The page is a press.** `app/src/lib/topage.ts` matches the named document
+  against the drive, and `openFile(id, page)` appends `#page=N`.
+
+**It refuses rather than guesses.** The drive holds readings and past papers
+filed against the same course, so "use the only PDF here" would open a
+student's week-three reading at page 12 under the words *straight from the
+syllabus* — a stronger false claim than this app has ever made. Where the
+document cannot be named, the page prints exactly as it did before. That is
+most courses for now: everything imported before this, everything built from
+pasted text, every deadline the API did not cite, and any syllabus somebody
+has binned.
+
+**What the press promises is "open it, at that page", not "land on it".**
+`#page=` is a PDF open parameter that Chrome's viewer and Firefox's pdf.js
+honour and some others ignore, with no way to ask beforehand and no answer
+afterwards. A viewer that ignores it opens at page one, which is what pressing
+the file in the drive already did. The label and the module header both say so
+rather than claiming the page.
+
+Verified with the full gate set — types, lint, 8,979 tests in file order and
+shuffled, two timezones, production build, institution type-check — and driven
+in Chromium at phone width against the real IndexedDB: the syllabus stored and
+deduplicated, the bytes round-tripped, the named document resolved, an unkept
+one refused, and `window.open` handed a blob URL ending `#page=3`. Seventeen
+mutations were reverted under the new tests and watched go red, with a control
+edit that left them green.
+
+Two things were found by looking at the screen with every test passing. The
+button drew as the app's default grey box in the middle of a caption — the
+other text buttons borrow `.bare`, which ends in `width: 100%` and would have
+taken the whole line — and the target was twelve-point text on a phone until
+`tap-y` grew it to 44px without moving the caption. A contrast sweep across
+eight grounds put the pressable part at 5.5:1 at worst and 10.8–13.8:1 with
+"Increase contrast" on; its own first probe read `color` and ignored `opacity`,
+reported the button and the filename identical everywhere, and had to be fixed
+before any of that was worth reading.
+
 ## September 15, 2026 — study evidence, the plan, the hint ladder, and two kept promises
 
 Five changes, none of which needs a university, an account service or an AI

@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { check, flatten, tally, worthCiting } from './cite';
 import type { Citation } from './claude';
 
-const cite = (text: string, page?: number): Citation => ({ text, ...(page ? { page } : {}) });
+const cite = (text: string, page?: number, title?: string): Citation => ({
+  text,
+  ...(page ? { page } : {}),
+  ...(title ? { title } : {}),
+});
 
 const REAL =
   'Problem sets are due Fridays at 11:59 PM on Gradescope. The lowest score is dropped.';
@@ -64,6 +68,27 @@ describe('checking a quote against what the API cited', () => {
     const out = check(REAL, [cite(REAL)]);
     expect(out.confirmed).toBe(true);
     expect(out.page).toBeUndefined();
+  });
+
+  it('says which document the page is in', () => {
+    // A page number is only an answer where one document went up. Two do —
+    // a syllabus and a schedule posted separately — and the API returns the
+    // title it was given, so the app need not guess. `lib/topage.ts` matches
+    // it against the drive to decide whether the page can be opened.
+    expect(check(REAL, [cite(REAL, 4, 'Econ1020_Fall.pdf')]).doc).toBe('Econ1020_Fall.pdf');
+  });
+
+  it('names no document where the citation named none', () => {
+    // Claiming the only PDF is how the wrong document gets opened at p. 4.
+    expect(check(REAL, [cite(REAL, 4)]).doc).toBeUndefined();
+  });
+
+  it('names the document the matching citation came from, not the first one', () => {
+    const out = check(REAL, [
+      cite('Attendance is recorded from the second week.', 2, 'Schedule.pdf'),
+      cite(REAL, 4, 'Econ1020_Fall.pdf'),
+    ]);
+    expect(out).toMatchObject({ page: 4, doc: 'Econ1020_Fall.pdf' });
   });
 });
 

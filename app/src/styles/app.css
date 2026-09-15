@@ -2254,6 +2254,44 @@ a:hover {
   color: var(--app-fg);
 }
 
+/* The page number under a quote, where the document behind it is in the drive.
+
+   Sat outside the source line's own fade rather than inside it. `opacity` on
+   a parent cannot be undone by a child, and the line it belongs to is drawn
+   at 0.45 — which is right for a filename nobody needs to read and far too
+   faint for something you are meant to press. `--app-dim` is brighter, and it
+   is the token "Increase contrast" raises, so this one reaches the reader who
+   turned that on. The line's filename, being text, does not need to.
+
+   Underlined for the reason `.standing-clear` is: at this size it is the only
+   affordance that survives both themes and forced colours.
+
+   It carries its own reset rather than borrowing `.bare`, which the other
+   text buttons in the app use. `.bare` ends in `width: 100%` — right for a
+   row that fills its panel, and wrong for two words inside a sentence, which
+   would take the whole line and push the filename onto its own. Everything
+   above that line is what was wanted; the screenshot is what said so, because
+   without the reset this drew as the app's default button, a grey box around
+   "p. 3" in the middle of a caption. */
+.to-page {
+  appearance: none;
+  background: none;
+  border: 0;
+  margin: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--app-dim);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  padding-inline: 0;
+  padding-block: var(--sp-1);
+}
+.to-page:hover {
+  color: var(--app-fg);
+}
+
 /* Rows and cards the prototype made clickable with an inline cursor. */
 .tappable {
   cursor: pointer;
