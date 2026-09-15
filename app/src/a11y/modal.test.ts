@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources } from '../styles/rules';
 import { focusablesIn, nextInRing } from './modal';
 
 /**
@@ -104,14 +104,8 @@ describe('where Tab goes', () => {
  * `a11y/modal.ts` — so a dialog added next term cannot quietly ship without
  * one.
  */
-function tsx(dir: string, out: string[] = []): string[] {
-  for (const e of readdirSync(dir)) {
-    const p = join(dir, e);
-    if (statSync(p).isDirectory()) tsx(p, out);
-    else if (/\.tsx$/.test(e) && !/\.test\./.test(e)) out.push(p);
-  }
-  return out;
-}
+/** The files this rule reads. `styles/rules.ts` walks; this names. */
+const tsx = (dir: string): string[] => sources(dir, { tests: false }).map((s) => s.path);
 
 describe('every dialog that says aria-modal', () => {
   const files = tsx('src').map((f) => ({ file: f, src: readFileSync(f, 'utf8') }));

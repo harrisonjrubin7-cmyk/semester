@@ -24,22 +24,17 @@ const course = (id: string) => ({
 });
 
 /*
- * A getter, so the answer is read when the import is, not when the factory
- * ran.
+ * The failure is thrown when the module is *read*, not when it is registered.
  *
- * A factory that throws on `failing` bakes in whichever value `failing` had
- * the first time anything in this file imported the module: vitest runs it
- * once and keeps the result, and `vi.resetModules()` below does not reach it.
- * So the two tests here passed in the order they are written and failed in
- * the other one — whichever ran first decided for both, and the failure only
- * appeared under `npm run test:shuffle`.
- *
- * `loadSeed` reads `.default` off each module inside its own `.then`, so a
- * getter that throws there rejects the promise exactly as a failed chunk
- * does, and it is asked afresh on every attempt.
+ * A factory that threw outright read `failing` whenever Vitest chose to
+ * evaluate it, which is once per registry and not once per test — so the test
+ * that sets `failing = false` could evaluate it for the test that needs it
+ * true, and this file passed or failed on the order its two tests ran in.
+ * A getter is read on every `m.default`, which is where `loadSeed` reads it,
+ * so the flag is consulted at the moment the test means it to be.
  */
 vi.mock('./courses/econ', () => ({
-  get default() {
+  get default(): unknown {
     if (failing) throw new Error('Failed to fetch dynamically imported module');
     return course('econ').default;
   },

@@ -46,16 +46,21 @@ beforeEach(() => {
   vi.useFakeTimers();
   localStorage.clear();
   /*
-   * A page load is an address as well as a module, and the address is the
-   * half that was being left behind.
+   * And the address, which is the third thing a launch depends on.
    *
-   * The third test below opens onboarding, and the store writes the screen it
-   * lands on into the hash. jsdom keeps one `location` for the whole file, so
-   * the next test started with `#/onboarding` still in the bar, the store read
-   * it back, and the curtain correctly declined to cover onboarding — which
-   * looked exactly like the curtain failing to appear. It only showed up when
-   * the tests ran in a different order, which is to say: on some other day,
-   * in CI, on a change that had nothing to do with it.
+   * `store.tsx` reads `screenFromUrl() ?? firstScreen(nav)`, and the URL wins —
+   * deliberately, because that is how a deep link and a notification tap open
+   * the screen they name. It also writes the current screen back into the hash.
+   * So the test below that mounts on onboarding leaves `#/onboarding` in the
+   * address bar, and the next test's store reads it and starts there however
+   * clean its storage is. The splash then correctly declines to cover
+   * onboarding and draws nothing, and a test about the curtain fails with no
+   * curtain and nothing wrong.
+   *
+   * It passed on the order the tests happened to run in and failed under
+   * `--sequence.shuffle`, which is the only reason it was ever visible.
+   * `replaceState` rather than `location.hash = ''`, which leaves a bare `#`
+   * behind and fires a `hashchange` at a store that is listening for one.
    */
   history.replaceState(null, '', '/');
   // A new launch: what the module flag means is "this page load", and each

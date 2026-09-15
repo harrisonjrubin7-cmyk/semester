@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources } from '../styles/rules';
 
 /**
  * One main, one h1, and a navigation you can jump to.
@@ -14,14 +14,8 @@ import { join } from 'node:path';
  * written as though it were the whole page, mounted inside a shell that
  * already provides what it was providing for itself.
  */
-function tsx(dir: string, out: string[] = []): string[] {
-  for (const e of readdirSync(dir)) {
-    const p = join(dir, e);
-    if (statSync(p).isDirectory()) tsx(p, out);
-    else if (/\.tsx$/.test(e) && !/\.test\./.test(e)) out.push(p);
-  }
-  return out;
-}
+/** The files this rule reads. `styles/rules.ts` walks; this names. */
+const tsx = (dir: string): string[] => sources(dir, { tests: false }).map((s) => s.path);
 
 /**
  * The file with its comments taken out.

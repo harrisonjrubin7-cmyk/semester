@@ -381,11 +381,23 @@ export function FoldHead({
         alignItems: 'center',
         gap: 'var(--sp-3)',
         width: '100%',
-        // Six pixels of reach above and below, handed straight back as a
-        // negative margin: the box grows, the layout does not move. See the
-        // note on this component's use above.
-        padding: 'var(--sp-3) 0',
-        margin: 'calc(-1 * var(--sp-3)) 0',
+        /*
+          Six pixels of reach above and below, handed straight back as a
+          negative margin: the box grows, the layout does not move. See the
+          note on this component's use above.
+
+          Six real pixels, not `--sp-3`. Every spacing token is multiplied by
+          the reader's density setting, and this is not spacing — it is the
+          part of the control a thumb lands on, and a thumb does not get
+          smaller because somebody asked for a tighter screen. Read off
+          `--sp-3` it went 12px of reach at Comfortable, 10.3 at Snug, 8.9 at
+          Tight, which put every folding heading in the app — Due today,
+          Today's schedule, Your courses, Classes — at 23px and then 22
+          against a floor of 24. The drawing is identical at all three: the
+          margin gives back exactly what the padding took, whatever it was.
+        */
+        padding: '6px 0',
+        margin: '-6px 0',
         background: 'none',
         border: 'none',
         font: 'inherit',

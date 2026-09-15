@@ -446,27 +446,53 @@ export function parse(text: string, year: number): Found[] {
  */
 export function fromCalendar(term: TermCalendar): Found[] {
   const out: Found[] = [];
-  const add = (id: string, label: string, iso: string, until: string, kind: RegistrarKind) => {
+
+  /**
+   * The three fields that name one specific thing each.
+   *
+   * A row from one of these is the school's answer for that landmark, so a
+   * later entry matching the same landmark is the same fact restated and is
+   * dropped. Anything matching a landmark a *list* already claimed is a
+   * different thing that happened to match — see below.
+   */
+  const canonical = new Set<string>();
+  const term_ = (id: string, label: string, iso: string, until: string, kind: RegistrarKind) => {
     if (!iso) return;
-    // First writer wins, so a school listing "Classes begin" both as its term
-    // start and again among its deadlines contributes one row, not two.
-    if (id && out.some((f) => f.id === id)) return;
+    canonical.add(id);
     out.push({ id, label, iso, until, kind });
   };
 
-  add('classes-begin', 'Classes begin', term.startsOn, '', 'deadline');
-  add('last-class', 'Last day of classes', term.endsOn, '', 'deadline');
-  add('finals', 'Final exam period', term.finalsFrom ?? '', term.finalsTo ?? '', 'exams');
+  /**
+   * One entry from `breaks` or `deadlines`.
+   *
+   * The subtlety, and it cost a dropped row before this comment existed: a
+   * term has *two* breaks and `HINTS` matches both of them to `break`, so
+   * taking the landmark as an identity and skipping the duplicate loses
+   * Thanksgiving entirely. It is not a duplicate — it is a second break.
+   *
+   * So a landmark is proposed once, and anything else that matched it is kept
+   * in the school's own words with no landmark, exactly as an unmatched line
+   * from a pasted page is. `apply` gives those a generated id and files them
+   * beside the landmarks. Nothing the school published is silently dropped,
+   * which is the rule the paste door already keeps.
+   */
+  const listed = (id: string, label: string, iso: string, until: string, kind: RegistrarKind) => {
+    if (!iso) return;
+    if (id && canonical.has(id)) return;
+    out.push({ id: id && out.some((f) => f.id === id) ? '' : id, label, iso, until, kind });
+  };
+
+  term_('classes-begin', 'Classes begin', term.startsOn, '', 'deadline');
+  term_('last-class', 'Last day of classes', term.endsOn, '', 'deadline');
+  term_('finals', 'Final exam period', term.finalsFrom ?? '', term.finalsTo ?? '', 'exams');
 
   for (const b of term.breaks ?? []) {
-    const id = HINTS.find((h) => h.words.test(b.label))?.id ?? '';
-    add(id, b.label, b.from, b.to, 'break');
+    listed(HINTS.find((h) => h.words.test(b.label))?.id ?? '', b.label, b.from, b.to, 'break');
   }
 
   for (const d of term.deadlines) {
     const id = HINTS.find((h) => h.words.test(d.label))?.id ?? '';
-    const known = LANDMARKS.find((l) => l.id === id);
-    add(id, d.label, d.on, '', known?.kind ?? 'deadline');
+    listed(id, d.label, d.on, '', LANDMARKS.find((l) => l.id === id)?.kind ?? 'deadline');
   }
 
   return out;

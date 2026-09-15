@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources } from '../styles/rules';
 
 /**
  * Two things the app draws and never says.
@@ -11,14 +11,8 @@ import { join } from 'node:path';
  * only for somebody who is not looking at the screen, which is exactly the
  * class of bug a suite has to hold because nobody stumbles over it.
  */
-function tsx(dir: string, out: string[] = []): string[] {
-  for (const e of readdirSync(dir)) {
-    const p = join(dir, e);
-    if (statSync(p).isDirectory()) tsx(p, out);
-    else if (/\.tsx$/.test(e) && !/\.test\./.test(e)) out.push(p);
-  }
-  return out;
-}
+/** The files this rule reads. `styles/rules.ts` walks; this names. */
+const tsx = (dir: string): string[] => sources(dir, { tests: false }).map((s) => s.path);
 
 const FILES = tsx('src').map((f) => ({ file: f, src: readFileSync(f, 'utf8') }));
 
