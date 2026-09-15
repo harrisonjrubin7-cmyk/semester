@@ -406,10 +406,10 @@ Adding or removing one destination today means editing, at minimum:
 
 1. `lib/types.ts` — the `Screen` union (82 members)
 2. `lib/nav.ts` — the registry row: label, blurb, keywords, group, taskTags
-3. `App.tsx` — the `lazy()` const (82 of them, lines 41–133)
-4. `App.tsx` — a case in `CurrentScreen` (the switch at `:949`)
-5. `App.tsx` — a case in `useHeader` (the switch at `:266`)
-6. `lib/softtop.ts` — a case in the 60-case hero switch
+3. `App.tsx` — the `lazy()` const (82 of them, lines 41–133) · **DONE**
+4. `App.tsx` — a case in `CurrentScreen` (the switch at `:949`) · **DONE**
+5. `App.tsx` — a case in `useHeader` (the switch at `:266`) · **DONE**
+6. `lib/softtop.ts` — a case in the 60-case hero switch · **left, see below**
 7. `lib/role.ts` — the student-only / faculty lists
 8. …then whichever of `lib/springboard.ts`, `lib/capture.ts`, `lib/guidebook.ts`
    applies
@@ -463,6 +463,83 @@ took in 39 commits across three merges in a single evening. A restructure of the
 router that cannot be reviewed in one sitting and conflicts with every PR
 touching a screen is a poor trade for a convenience with no symptom. It wants a
 quiet week and a decision, not a slot at the end of an audit.
+
+### What landed · **places 3, 4 and 5**
+
+The three lists inside `App.tsx` are one table each, and both tables are
+`Record`s over the `Screen` union, so the list that used to be kept in step by
+hand is now kept in step by the compiler.
+
+**`src/screens.tsx`** — 82 `lazy()` declarations and
+`SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentType>`.
+`CurrentScreen` is a lookup. `App.tsx` went 1,870 → 1,639 lines.
+
+**`src/headers.ts`** — `HEADERS: Record<Screen, (c: HeaderCtx) => Head>`, all 82
+rows, and `fallbackHeader` with it. `useHeader` stays in `App.tsx` as the
+twenty lines that gather the context and hand it to one row; the table itself
+imports no React, so `header.test.ts` reads it in node and calls every entry
+rather than matching `case` labels in a file, which is what it used to do.
+`App.tsx` went 1,639 → 1,397 lines.
+
+Both replaced a `default`. That is the point of the change rather than a side
+effect of it: a default that always returns something can never be *missing* a
+case, so a screen added to the union and forgotten rendered Today, with today's
+date over it, and nothing failed anywhere. It had already happened five times —
+Everything, How this works, Your data, Privacy, and then the assistant's
+settings page after the first four were fixed. `Record<Screen, …>` has no room
+for a missing key, so the sixth is a build error.
+
+**Measured, not assumed.** The header each of the 82 screens draws — kicker,
+title and tab title — captured from the built bundle before and after, by
+driving the production build in Chromium: 68 screens by hash, the remaining 14
+(the seven id-requiring detail screens, the four study modes, the two shell
+screens, onboarding) as 16 routes including the bare no-id forms. **Byte-
+identical on all 84 rows, zero page errors.**
+
+### The one thing this broke, found by driving it · **FIXED**
+
+Both tables are exhaustive over `Screen`, and `state.screen` is not always a
+`Screen`. `fromHash` passes an unknown name through on purpose — see "the
+rename table is not a licence to guess" in its own test — so a bookmark to
+`#/cloud`, a screen `/simplify` deleted, arrives as `{ screen: 'cloud' }` and
+reaches both tables as a key neither has ever had. The switches absorbed that
+in their `default`. The bare lookups did not.
+
+Measured on the built bundle: `TypeError: su[e.screen] is not a function`,
+thrown from `useHeader`, which runs above the router and therefore outside
+`ScreenTrouble` — **an empty body and a blank white page**. The router half was
+milder and still wrong: `SCREENS['cloud']` is `undefined`, so React threw
+"Element type is invalid" into the boundary and drew an error card where the
+app used to draw the day.
+
+This shipped in the screens commit and was found here, by driving the deleted
+route rather than by any test. The fix is `?? Today` in `CurrentScreen` and
+`headOf`'s `?? fromRegistry` in `headers.ts`, and it is deliberately not the
+old default coming back: a screen *in* the union and missing from a table is
+still a build error, because `Record<Screen, …>` has no room for one. What the
+`??` catches is a string that was never a screen at all, and the honest answer
+for that is the one the app has always given. Held by two tests — one that
+calls `headOf` with a dead name, one on the router's source — and confirmed on
+the rebuilt bundle: `#/cloud` now titles itself "Today · Semester" and renders
+the day, with no page error.
+
+### Place 6 is left, and the reason is that it is already right
+
+`lib/softtop.ts`'s 60-case switch ends `default: return nothing`, and `nothing`
+renders as the plain body the screen already was. That is an honest absence
+rather than a confident wrong answer — it is the opposite of the `useHeader`
+default — and `softtop.test.ts` already fails when a *registry* screen is in
+that state, so "unadorned" is a decision and not an oversight. There is no bug
+of the kind places 4 and 5 had.
+
+Turning it into a `Record<Screen, …>` would force all 82 rows on a file where
+22 screens deliberately want none, and its case bodies close over about fifteen
+computed locals rather than being one-line returns, so the transform is not the
+mechanical one the header's was. On a 972-line file that `main` merges into
+often, that is a worse shape bought with a wide diff. Left, and said so.
+
+Places 1, 2, 7 and 8 are untouched: they are genuinely different lists about
+genuinely different things, which is what this section said from the start.
 
 ---
 
@@ -654,7 +731,7 @@ Ordered by measured value per unit of risk, not by size.
 | 7 | ✅ **P3** — two projects: 354 shared, 9 isolated | an afternoon | −51s per CI run (135s → 84s, −37%) |
 | 8 | ✅ **P1d** — gate the hero at its mount, not inside it | small | −3,919 lines, −4.7% of the gzipped critical path, and a spec no longer built and thrown away on every render |
 | 9 | ✅ **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | done on `main` as `nav.registry.test.ts`; the hole it was meant to close turned out not to exist |
-| 10 | ⏸ **P4 proper** — one module per screen | large, own branch | adding a screen becomes adding a file — recommended against for now, see §4 |
+| 10 | ✅ **P4, places 3–5** — one table per list, `Record` over the union | large | a screen is declared once instead of three times; the `default` that had already lied about five screens is a build error now. Place 6 left, with its reason, in §4 |
 | 11 | ✅ **P2 proper** — split `now` out of the store context | large | 117 of 195 store consumers no longer re-render on a tick |
 | 12 | **P7** — keep paying the style ledger down | ongoing | the memoisation in 11 becomes worth having |
 | 14 | ✅ **§7a** — give focus back when the assistant closes | small | a dialog that takes focus returns it, both ways in |
@@ -663,8 +740,9 @@ Ordered by measured value per unit of risk, not by size.
 
 Items 1–5 are done, in that order, one commit each, with `lint`, `test`,
 `test:zones` and `build` green after every one. They touch nothing a student
-can see. Items 10–11 are architecture and should be argued before they are
-written.
+can see. Items 10 and 11 are architecture; both were argued in their sections
+before they were written, and 10 was written against my own recommendation
+after the owner read the argument and asked for it anyway.
 
 Two of the five changed shape once they were written rather than described, and
 both corrections are in the sections above rather than quietly applied: the

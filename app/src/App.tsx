@@ -12,9 +12,9 @@ import {
 } from './components/Icons';
 import { Avatar } from './components/Avatar';
 import { headerRow } from './lib/header';
+import { creditHoursOr0 } from './lib/credits';
 import { useSitting } from './lib/sitting.hook';
 import { running } from './lib/session';
-import { creditHoursOr0 } from './lib/credits';
 import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
@@ -22,7 +22,8 @@ import { SampleMark } from './components/SampleMark';
 import { scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
 import { Guides, SCREENS, Springboard } from './screens';
-import { DRAWN_AT, ground, homeTitle, resolveGround, scaleFrom, scaleOf, tokensFor, type Look } from './lib/look';
+import { headOf, type Head } from './headers';
+import { DRAWN_AT, ground, resolveGround, scaleFrom, scaleOf, tokensFor, type Look } from './lib/look';
 
 /**
  * Every screen but the first, fetched when it is opened.
@@ -49,9 +50,8 @@ import { DRAWN_AT, ground, homeTitle, resolveGround, scaleFrom, scaleOf, tokensF
 /* The workspace's own two screens — the search home a new tab opens on, and
    the directory of everything behind it. See `lib/desk.ts`. */
 
-import { datedEvents, datedItems, nextExam } from './lib/select';
+import { datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
-import { settingsTitle } from './lib/settings';
 import { chromeFor, homeShape } from './lib/chrome';
 import { ScreenTrouble } from './components/Boundary';
 import { courseFieldFor, insideCourse } from './lib/parent';
@@ -88,7 +88,6 @@ import { Fresh } from './components/Fresh';
 import { useTier } from './lib/media';
 import { DOW, MONTHS } from './lib/date';
 import { windowTitle } from './a11y/title';
-import { provider } from './lib/assistant';
 import type { Screen } from './lib/types';
 
 /**
@@ -152,30 +151,11 @@ function SkipLink() {
  * only when the page is going away, and setting it back to `Semester` on the
  * way out would be the last thing the tab said.
  */
-function Titled() {
-  const { kicker, title } = useHeader();
-  const said = windowTitle(title, kicker);
-  useEffect(() => {
-    document.title = said;
-  }, [said]);
-  return null;
-}
-
 /** The kicker and title in the header, per screen. */
-function useHeader(): { kicker: string; title: string } {
+function useHeader(): Head {
   const { state, catalog, school } = useStore();
   const now = useNow();
-  // Not `guide.code`. Opening a study screen by its own URL — which is the
-  // point of having URLs — arrives with no course chosen, and the four study
-  // kickers below then read a field off `undefined` and take the whole app
-  // down before the screen renders. The screens themselves already survive
-  // this: `useLive` falls back to an empty guide. The header did not.
   const code = catalog.guides[state.guideId]?.code ?? '';
-  // A kicker of " · study guide" is a bug on show. Drop the empty half.
-  const about = (what: string) => (code ? `${code} · ${what}` : what);
-  const exam = nextExam(catalog, now);
-
-  const today = `${DOW[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`;
 
   // These read off the courses actually loaded. They used to say "Fall 2026 ·
   // 11 credits" and "Across 4 courses" to everyone, which is a lie to every
@@ -183,257 +163,29 @@ function useHeader(): { kicker: string; title: string } {
   const n = catalog.courses.length;
   const courseCount = `${n} ${n === 1 ? 'course' : 'courses'}`;
   const credits = catalog.courses.reduce((sum, c) => sum + creditHoursOr0(c.credits), 0);
-  const load = credits > 0 ? `${courseCount} · ${credits} credits` : courseCount;
 
-  switch (state.screen) {
-    case 'home':
-      return { kicker: today, title: homeTitle(state.nav) };
-    case 'courses':
-      return { kicker: load, title: 'Courses' };
-    case 'course': {
-      // Optional, for the same reason `code` above is. A course id can outlive
-      // the course: a link somebody shared, a bookmark to a course since
-      // deleted, an id from an archived term. Every one of those rendered a
-      // blank white screen, because the header threw before the screen it sits
-      // above ever ran — and a header that can take the app down is a header
-      // that must not assume anything is loaded.
-      const open = catalog.byId[state.courseId];
-      return { kicker: 'Course', title: open?.code ?? 'Not found' };
-    }
-    case 'item': {
-      const item = datedItems(catalog, now).find((i) => i.id === state.itemId);
-      return { kicker: item ? (catalog.byId[item.c]?.code ?? 'Item') : 'Item', title: item?.kind ?? 'Item' };
-    }
-    case 'study':
-      return {
-        kicker: exam ? `${exam.days} days to ${exam.code}` : courseCount,
-        title: 'Study',
-      };
-    case 'guide':
-      return { kicker: about('study guide'), title: 'Guide' };
-    case 'drill':
-      return { kicker: code, title: 'Drill' };
-    case 'guess':
-      return { kicker: about('before you read'), title: 'Guess first' };
-    case 'quiz':
-      return { kicker: about('multiple choice'), title: 'Quiz' };
-    case 'calendar': {
-      const source =
-        state.calSource === 'all'
-          ? 'Everything'
-          : state.calSource === 'classes'
-            ? 'Classes only'
-            : state.calSource === 'deadlines'
-              ? 'Deadlines only'
-              : 'Campus only';
-      if (state.calView === 'semester') return { kicker: source, title: 'Semester' };
-      if (state.calView === 'day') return { kicker: source, title: 'Day' };
-      return { kicker: `${source} · ${MONTHS[state.calMonth]}`, title: 'Calendar' };
-    }
-    case 'event': {
-      const event = datedEvents(now, state.schoolId, state.sample).find((e) => e.id === state.eventId);
-      return {
-        kicker: event?.kind ?? 'Event',
-        title: event ? `${event.mon} ${event.day}` : 'Event',
-      };
-    }
-    case 'me':
-      return { kicker: load, title: 'Progress' };
-    /*
-     * The one screen whose kicker is not about the semester.
-     *
-     * `load` — "4 courses · 11 credits" — is right above every screen that is
-     * about the term and wrong above this one, which is about the person
-     * holding it. The school is the context that belongs here, and where
-     * nobody has said which school it falls back to the app's own name rather
-     * than to an empty kicker, which draws as a gap where a line should be.
-     */
-    case 'profile':
-      return { kicker: school.name || 'Semester', title: 'Profile' };
-    case 'notifs':
-      return { kicker: 'Today', title: 'Alerts' };
-    case 'settings':
-      return { kicker: 'Preferences', title: 'Settings' };
-    /*
-     * The settings pages, named from the one list that names them.
-     *
-     * This was eight `case`s with the titles written out again, and they had
-     * already drifted: the bar said "Appearance" and "Navigation" over pages
-     * that call themselves "Colour and type" and "Layout and navigation",
-     * because renaming a page meant editing `lib/settings.ts`, the page
-     * itself, and this — and two out of three is what actually happens.
-     * `settingsTitle` reads the registry, so there is one name and a rename
-     * is one edit.
-     */
-    case 'setLook':
-    case 'setNav':
-    case 'setAlerts':
-    case 'setCourses':
-    case 'setGrading':
-    case 'setWorkload':
-    case 'setAbout':
-    // The assistant's page was the one of the eight this arm never listed, so
-    // it fell past the switch to `fallbackHeader` — and it is not in
-    // `DESTINATIONS` either, being a settings page rather than a destination,
-    // so it wore the last resort: "Today", with today's date over it, above
-    // the API key and the model picker. The exact failure the comment above
-    // describes, on the ninth screen. `settings.test` now walks the settings
-    // registry rather than the destination registry, so a page added to
-    // `lib/settings.ts` and not to this arm fails instead of lying.
-    case 'setAssistant':
-      return { kicker: 'Settings', title: settingsTitle(state.screen) };
-    case 'mine':
-      return { kicker: 'Yours, not the syllabus', title: 'Personal' };
-    case 'note':
-      return { kicker: 'Note', title: 'Editing' };
-    case 'lesson':
-      return { kicker: about('lesson'), title: 'Watch' };
-    case 'update':
-      return { kicker: about('into every study mode'), title: 'Add a reading' };
-    case 'connect':
-      return { kicker: 'Accounts and calendars', title: 'Connect' };
-    case 'links':
-      return { kicker: 'Everywhere you go', title: 'Links' };
-    case 'ask':
-      return { kicker: `${provider()} · this term`, title: 'Ask Claude' };
-    case 'work':
-      return { kicker: about('assignments'), title: 'Work on it' };
-    case 'maps':
-      return { kicker: 'Campus, city, and how to get there', title: 'Getting there' };
-    case 'mail':
-      return { kicker: 'Read here, sent by you', title: 'Email' };
-    case 'export':
-      return { kicker: 'Formats other software reads', title: 'Take it with you' };
-    case 'yes':
-      return { kicker: 'Registration, and the road back', title: 'YES' };
-    case 'draw':
-      return { kicker: about('as a picture'), title: 'Draw it' };
-    case 'solve':
-      return { kicker: about('step by step'), title: 'Work the problem' };
-    case 'edit':
-      return { kicker: 'A syllabus is a first draft', title: 'Edit the course' };
-    case 'analyse':
-      return { kicker: 'Computed here, not guessed', title: 'Analyse data' };
-    case 'classmates':
-      return { kicker: 'Confirmed Vanderbilt addresses', title: 'Classmates' };
-    case 'activities':
-      return { kicker: 'Everything that is not a class', title: 'Activities' };
-    case 'clocks':
-      return { kicker: 'Counting, and ringing', title: 'Timers and alarms' };
-    case 'proof':
-      return { kicker: 'Rules, not a judgement', title: 'Check the writing' };
-    case 'applying':
-      return { kicker: 'The other deadline set', title: 'Applications' };
-    case 'tonight':
-      return { kicker: 'Where the hours go', title: 'Tonight' };
-    case 'behind':
-      return { kicker: 'Counted, not felt', title: 'When you are behind' };
-    case 'degree':
-      return { kicker: 'Four years, not four months', title: 'The degree' };
-    case 'meet':
-      return { kicker: 'Words in common, not ideas', title: 'Where courses meet' };
-    case 'people':
-      return { kicker: 'Started late, invisibly', title: 'People and letters' };
-    case 'brief':
-      return { kicker: 'Counted, then read', title: 'Reports' };
-    case 'essay':
-      return { kicker: 'Everything but coursework', title: 'Draft it' };
-    case 'deck':
-      return { kicker: 'A real PowerPoint file', title: 'Make a deck' };
-    case 'write':
-      return { kicker: 'A real Word file', title: 'Write a document' };
-    case 'sheet':
-      return { kicker: 'Added up here, not guessed', title: 'Sheet or table' };
-    case 'equations':
-      return { kicker: 'Written, worked out, drawn', title: 'Equations' };
-    case 'exam':
-      return { kicker: 'Sat against a clock, marked', title: 'Practice paper' };
-    case 'ahead':
-      return { kicker: 'Counted, before it happens', title: 'The week ahead' };
-    case 'announce':
-      return { kicker: 'What moved, and what said so', title: 'A change to a date' };
-    case 'costs':
-      return { kicker: 'The bill, the aid, and what you paid', title: 'Money' };
-    case 'gap':
-      return { kicker: 'One thumb, and the walk taken off', title: 'Between classes' };
-    case 'groupwork':
-      return { kicker: 'Who has what, and by when', title: 'Group work' };
-    case 'call':
-      return { kicker: 'A code, a link, and who is in it', title: 'Video call' };
-    case 'meals':
-      return { kicker: 'Swipes, cash, and the week they run out', title: 'Meal plan' };
-    case 'housing':
-      return { kicker: 'The room, and the day you are out of it', title: 'Housing' };
-    case 'runway':
-      return { kicker: 'Counted backwards from the exam', title: 'Exam runway' };
-    case 'registrar':
-      return { kicker: 'The dates the university sets', title: 'Term deadlines' };
-    /*
-     * Its own case rather than the registry fallback, which would print the
-     * tab bar's nine-character `short` — "Uni" — as the page's heading. The
-     * kicker is the screen's whole argument in six words.
-     */
-    case 'university':
-      return { kicker: 'What it does, and what it cannot', title: 'University' };
-    /*
-     * The four that outlast the term get their own cases for the reason
-     * University does: the registry fallback prints the tab bar's
-     * nine-character `short`, so Athletics would be headed "Sport".
-     */
-    case 'athletics':
-      return { kicker: 'The season, against the term', title: 'Athletics' };
-    case 'career':
-      return { kicker: 'What is open, and what you have done', title: 'Career' };
-    case 'family':
-      return { kicker: 'What somebody else would see', title: 'Family' };
-    case 'pathway':
-      return { kicker: 'The part that outlasts this term', title: 'Pathway' };
-    case 'create':
-      return { kicker: 'Whatever it is you have to hand in', title: 'Create' };
-    case 'sources':
-      return { kicker: 'Yours, never invented', title: 'Sources' };
-    case 'account':
-      return { kicker: 'Your semester, everywhere', title: 'Account' };
-    case 'slides':
-      return { kicker: about('deck'), title: 'Slides' };
-    case 'import':
-      return { kicker: 'Syllabus in, course out', title: 'New course' };
-    /*
-     * Named, because the fallthrough below is not a default — it is a wrong
-     * answer given confidently. A screen missing from this switch gets
-     * "Today" and the date, so the full chat sat under a header announcing a
-     * screen the reader was not on. The kicker names what is answering
-     * rather than repeating the title, which is the one thing about this
-     * screen worth saying before you have asked anything.
-     */
-    default:
-      return fallbackHeader(state.screen, today);
-  }
+  return headOf({
+    screen: state.screen,
+    state,
+    catalog,
+    school,
+    now,
+    code,
+    about: (what: string) => (code ? `${code} · ${what}` : what),
+    exam: nextExam(catalog, now),
+    today: `${DOW[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}`,
+    courseCount,
+    load: credits > 0 ? `${courseCount} · ${credits} credits` : courseCount,
+  });
 }
 
-/**
- * The title for a screen this switch has no case for.
- *
- * It used to be `{ kicker: today, title: 'Today' }` — flatly, for anything
- * unnamed above — and four screens were quietly wearing it: **Everything**,
- * **How this works**, **Your data** and **Privacy**. Each said "Today", with
- * today's date over it, above content that was plainly not today. A screen
- * that lies about which screen it is is worse than one with no title, and
- * nothing failed, because a default that always returns something can never
- * be missing a case.
- *
- * So the fallback asks the registry, which already holds a label and a
- * sentence for every screen and is what the directory, the shelves and search
- * all read. A screen added to `DESTINATIONS` is now named in the header for
- * free, and `header.test.ts` fails if one ever is not.
- *
- * `Today` remains the answer for `home` and for anything genuinely unlisted,
- * which is the honest last resort rather than the first one.
- */
-function fallbackHeader(screen: Screen, today: string): { kicker: string; title: string } {
-  const known = destination(screen);
-  if (!known) return { kicker: today, title: 'Today' };
-  return { kicker: 'In the app', title: known.short ?? known.label };
+function Titled() {
+  const { kicker, title } = useHeader();
+  const said = windowTitle(title, kicker);
+  useEffect(() => {
+    document.title = said;
+  }, [said]);
+  return null;
 }
 
 function Header({
@@ -910,13 +662,19 @@ function CurrentScreen() {
    * And everything else by lookup rather than by eighty cases.
    *
    * `onboarding` never reaches here — it is drawn above the router — so the
-   * table does not carry it and this narrows past it. There is no fallback on
-   * purpose: the switch this replaced ended `default: return <Today />`, which
-   * meant a screen added to the union and forgotten rendered Today with
-   * nothing failing anywhere. `SCREENS` is exhaustive over the union, so that
-   * mistake is a type error now. See `screens.tsx`.
+   * table does not carry it and this narrows past it. The switch this replaced
+   * ended `default: return <Today />`, which meant a screen added to the union
+   * and forgotten rendered Today with nothing failing anywhere. `SCREENS` is
+   * exhaustive over the union, so that mistake is a type error now. See
+   * `screens.tsx`.
    */
-  const Screen = SCREENS[state.screen as Exclude<typeof state.screen, 'home' | 'onboarding'>];
+  // `?? Today` for the same reason `headOf` has a fallback, and for that
+  // reason only: `state.screen` can hold a name that was never in the union —
+  // `fromHash` passes an unknown one through, so a bookmark to a deleted
+  // screen arrives as `{ screen: 'cloud' }`. A screen that *is* in the union
+  // and missing from `SCREENS` remains a build error; this catches the string
+  // that is not a screen at all, which used to land on Today and does again.
+  const Screen = SCREENS[state.screen as Exclude<typeof state.screen, 'home' | 'onboarding'>] ?? Today;
   return <Screen />;
 }
 

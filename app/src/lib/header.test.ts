@@ -1,40 +1,90 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { DESTINATIONS } from './nav';
+import { DESTINATIONS, destination } from './nav';
 import { SETTINGS, pageTitle, settingsTitle } from './settings';
 import { headerRow, showsAvatar } from './header';
 import { withoutComments } from '../styles/rules';
+import { HEADERS, fallbackHeader, headOf, type HeaderCtx } from '../headers';
+import { DEFAULT_PERSISTED, initialEphemeral } from '../state/shape';
+import { buildCatalog } from '../data/catalog';
+import { resolveSchool } from '../data/schools';
+import type { Screen } from './types';
 
 /**
  * Every screen wears its own name in the header.
  *
- * `useHeader` in `App.tsx` is a switch with a `default`, and a default that
- * always returns something can never be *missing* a case — so four screens
- * quietly wore "Today", with today's date over them, above content that was
- * plainly not today: Everything, How this works, Your data and Privacy.
- * Nothing failed. Nothing could.
+ * `useHeader` was a switch of eighty-two arms with a `default`, and a default
+ * that always returns something can never be *missing* a case — so four
+ * screens quietly wore "Today", with today's date over them, above content
+ * that was plainly not today: Everything, How this works, Your data and
+ * Privacy. Nothing failed. Nothing could. A fifth, the assistant's settings
+ * page, shipped the same way after those four were fixed.
  *
- * The fallback reads `DESTINATIONS` now, so a screen in the registry is named
- * for free. This checks the other half: that a screen the switch *does* name
- * has not been left with a stale title after a rename, and that the settings
- * pages take their name from the settings registry rather than a fourth copy.
+ * The switch is a `Record<Screen, …>` in `src/headers.ts` now, so the hole is
+ * closed at compile time: a screen added to the union and not to the table
+ * does not build. What a type cannot say is whether the line a screen gets is
+ * the *right* one, so that is what is checked here — by calling every entry
+ * and reading what comes back, rather than by matching `case` labels in a
+ * file, which is what this test used to do and which stopped being possible
+ * the moment the switch became a table.
  */
-function headerSource(): string {
-  const src = readFileSync('src/App.tsx', 'utf8');
-  const fn = /function useHeader\(\)[\s\S]*?\n}\n/.exec(src);
-  if (!fn) throw new Error('useHeader has moved; point this test at it.');
-  return fn[0];
+const NOW = new Date(2026, 8, 15, 9, 30);
+/*
+ * A date string no screen would write by hand. `fallbackHeader`'s last resort
+ * is `{ kicker: today, title: 'Today' }`, and the only way to tell that apart
+ * from a screen that means to print the date is to make the date unmistakable.
+ */
+const MARK = 'THE·DATE';
+
+function ctx(screen: Screen): HeaderCtx {
+  return {
+    screen,
+    state: { ...DEFAULT_PERSISTED, ...initialEphemeral(NOW), screen },
+    catalog: buildCatalog([]),
+    school: resolveSchool('vanderbilt', null, []),
+    now: NOW,
+    code: 'ECON 1020',
+    about: (what: string) => `ECON 1020 · ${what}`,
+    exam: null,
+    today: MARK,
+    courseCount: '4 courses',
+    load: '4 courses · 11 credits',
+  };
 }
 
+/** What the header actually draws above a screen, with nothing mocked. */
+const headFor = (screen: Screen) => HEADERS[screen](ctx(screen));
+
 describe('the header', () => {
-  it('names every registry screen — by a case of its own or by the fallback', () => {
-    const src = headerSource();
-    const cased = new Set([...src.matchAll(/case '([A-Za-z]+)':/g)].map((m) => m[1]));
-    const usesRegistry = /fallbackHeader\(/.test(src);
-    const unnamed = DESTINATIONS.map((d) => d.screen).filter((s) => !cased.has(s));
-    // Either every screen has a case, or the fallback reads the registry.
-    // What is not allowed is a screen with neither, which is what shipped.
-    expect(usesRegistry || unnamed.length === 0, unnamed.join(', ')).toBe(true);
+  it('names every registry screen — by a line of its own or from the registry', () => {
+    const unnamed = DESTINATIONS.map((d) => d.screen)
+      // Home's kicker *is* the date; it is the one screen for which that is
+      // the answer rather than the absence of one.
+      .filter((s) => s !== 'home')
+      .filter((s) => {
+        const { kicker, title } = headFor(s);
+        return kicker === MARK && title === 'Today';
+      });
+    expect(unnamed, `${unnamed.join(', ')} would wear "Today" over today's date`).toEqual([]);
+  });
+
+  it('gives a registry screen the registry’s own name when it has no line', () => {
+    // The four the fallback exists for. Each is in `DESTINATIONS` and has no
+    // hand-written line, so the header reads the registry — one name, renamed
+    // in one place.
+    for (const screen of ['data', 'help', 'privacy'] as const) {
+      const known = destination(screen);
+      expect(known, `${screen} should be in DESTINATIONS`).toBeTruthy();
+      expect(headFor(screen)).toEqual({ kicker: 'In the app', title: known!.short ?? known!.label });
+    }
+  });
+
+  it('keeps Today as the last resort, and only for a screen no registry knows', () => {
+    // The two shell screens and onboarding: deliberately not destinations —
+    // the workspace looking at itself, the way a new-tab page is not a
+    // bookmark — so there is no name to read and the date is honest.
+    expect(destination('search')).toBeFalsy();
+    expect(fallbackHeader('search', MARK)).toEqual({ kicker: MARK, title: 'Today' });
   });
 
   /*
@@ -44,26 +94,63 @@ describe('the header', () => {
    * under Settings, not a destination of its own — so "every registry screen
    * is named" passed while `setAssistant` had no case, was not in the
    * registry the fallback reads, and therefore wore `fallbackHeader`'s last
-   * resort: "Today", dated, over the API key and the model picker. Every
-   * settings page needs a case; there is no fallback that can name one.
+   * resort: "Today", dated, over the API key and the model picker.
    */
-  it('gives every settings page a case of its own', () => {
-    const cased = new Set([...headerSource().matchAll(/case '([A-Za-z]+)':/g)].map((m) => m[1]));
-    const missing = SETTINGS.flatMap((s) => s.rows)
-      .map((r) => r.screen)
-      .filter((s) => /^set[A-Z]/.test(s) && !cased.has(s));
-    expect(missing, `${missing.join(', ')} would fall through to "Today"`).toEqual([]);
+  it('names every settings page from the settings registry', () => {
+    const rows = SETTINGS.flatMap((s) => s.rows).filter((r) => /^set[A-Z]/.test(r.screen));
+    expect(rows.length, 'there should be settings pages to check').toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(headFor(row.screen), row.screen).toEqual({
+        kicker: 'Settings',
+        title: settingsTitle(row.screen),
+      });
+      /*
+       * And one rule, not eight copies of it. This was eight `case`s with the
+       * titles written out again and they had already drifted — the bar said
+       * "Appearance" over a page calling itself "Colour and type". Identity,
+       * so a ninth page cannot be given its own slightly different arm.
+       */
+      expect(HEADERS[row.screen], `${row.screen} should share the settings rule`).toBe(HEADERS.setLook);
+    }
   });
 
-  it('never falls back to Today for a screen the registry knows', () => {
-    const src = headerSource();
-    // The literal that four screens used to wear. It may appear as the answer
-    // for `home` and for an unlisted screen, and nowhere else — so it lives
-    // inside `fallbackHeader`, behind the registry lookup.
-    const defaults = [...src.matchAll(/default:\s*\n\s*return ([^;]+);/g)].map((m) => m[1].trim());
-    for (const d of defaults) {
-      expect(d, 'the default must ask the registry, not assume Today').toContain('fallbackHeader');
-    }
+  /*
+   * A name that was never a screen.
+   *
+   * `fromHash` deliberately passes an unknown one through, so a bookmark to
+   * `#/cloud` — a screen `/simplify` deleted — reaches the store as
+   * `{ screen: 'cloud' }` and this table as a key it has never had. The
+   * switch this replaced absorbed it in its `default`; a bare lookup throws
+   * `is not a function`, from a hook that runs above the router and so
+   * outside `ScreenTrouble`, which draws as a blank white page. Measured on
+   * the built bundle before `headOf` had the fallback, and held here so it
+   * cannot come back with the next screen somebody deletes.
+   */
+  it('lands a stale bookmark on Today rather than taking the app down', () => {
+    const gone = 'cloud' as Screen;
+    expect(HEADERS[gone], 'the premise: no table entry').toBeUndefined();
+    expect(() => headOf(ctx(gone))).not.toThrow();
+    expect(headOf(ctx(gone))).toEqual({ kicker: MARK, title: 'Today' });
+  });
+
+  /*
+   * The guard on all of the above: the table is the whole union.
+   *
+   * `Record<Screen, …>` already makes a missing screen a build error, so this
+   * is not checking TypeScript. It is checking that the union in `types.ts`
+   * and the table in `headers.ts` are still the same list at runtime — that
+   * nobody has widened the table's key type to `string` to get a build
+   * through, which is the one edit that would quietly restore the default
+   * this whole shape exists to remove.
+   */
+  it('has an entry for every screen in the union, and no default', () => {
+    const types = readFileSync('src/lib/types.ts', 'utf8');
+    const union = /export type Screen =([\s\S]*?);\n/.exec(types);
+    if (!union) throw new Error('the Screen union has moved; point this test at it.');
+    const members = [...withoutComments(union[1]).matchAll(/\|\s*'([A-Za-z]+)'/g)].map((m) => m[1]);
+    expect(members.length).toBeGreaterThan(50);
+    expect(Object.keys(HEADERS).sort()).toEqual([...members].sort());
+    expect(readFileSync('src/headers.ts', 'utf8'), 'a table has no default to fall into').not.toContain('default:');
   });
 
   /*
@@ -78,28 +165,6 @@ describe('the header', () => {
     }
     const page = readFileSync('src/screens/settings/Page.tsx', 'utf8');
     expect(page, 'SettingsPage should not take a title prop').not.toMatch(/\btitle: string;/);
-  });
-
-  it('takes a settings page’s name from the settings registry', () => {
-    for (const row of SETTINGS.flatMap((s) => s.rows)) {
-      const name = settingsTitle(row.screen);
-      expect(name, row.screen).toBe(row.short ?? row.label);
-    }
-    /*
-     * And no `case 'setSomething':` writes a name out a second time. Checked
-     * on the settings arms alone rather than on the whole switch, because two
-     * ordinary screens legitimately share a name with a settings page — the
-     * Courses screen and the Alerts screen — and forbidding the string
-     * everywhere would be a test about coincidence.
-     */
-    const src = headerSource();
-    // `set[A-Z]`, so the settings *index* — `case 'settings'`, which is a
-    // screen of its own and rightly calls itself Settings — is not caught.
-    const settingsArms = [...src.matchAll(/case 'set[A-Z][A-Za-z]*':\s*(?:\n\s*case 'set[A-Z][A-Za-z]*':\s*)*\n\s*return ([^;]+);/g)];
-    expect(settingsArms.length, 'the settings pages should share one arm').toBeGreaterThan(0);
-    for (const arm of settingsArms) {
-      expect(arm[1], 'a settings page names itself from lib/settings.ts').toContain('settingsTitle');
-    }
   });
 });
 

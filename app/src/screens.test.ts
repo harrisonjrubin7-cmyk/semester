@@ -44,6 +44,26 @@ describe('every screen is declared once', () => {
     expect((body.match(/case '/g) ?? []).length).toBe(2);
   });
 
+  /*
+   * A name that was never a screen still lands on Today.
+   *
+   * `fromHash` passes an unknown one through on purpose, so a bookmark to
+   * `#/cloud` — a screen `/simplify` deleted — reaches the store as
+   * `{ screen: 'cloud' }` and this table as a key it has never had. The
+   * switch this replaced had `default: return <Today />` for that. The
+   * lookup needs `?? Today` to keep it, or the row is `undefined` and React
+   * throws "Element type is invalid" instead of drawing the day.
+   *
+   * Source rather than behaviour: rendering `CurrentScreen` means mounting
+   * the store, the router and a lazy chunk, and the thing being held is one
+   * operator. See `header.test.ts` for the same guard on the header, which
+   * *is* held by behaviour because that half can be called directly.
+   */
+  it('keeps a stale bookmark on Today rather than on nothing', () => {
+    const body = /function CurrentScreen\(\)[\s\S]*?\n\}/.exec(src('App.tsx'))?.[0] ?? '';
+    expect(body).toMatch(/SCREENS\[[^\]]+\]\s*\?\?\s*Today/);
+  });
+
   it('gives every row its own chunk, which is what `lazy` was for', () => {
     // The declarations moved; they did not merge. A row written as a plain
     // import would fold that screen into the entry bundle and nothing else
