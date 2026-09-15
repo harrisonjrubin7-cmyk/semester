@@ -1,5 +1,5 @@
-import { readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources } from '../styles/rules';
 import { describe, expect, it } from 'vitest';
 import { creditHours, creditHoursOr0 } from './credits';
 
@@ -58,11 +58,7 @@ describe('one reading, everywhere', () => {
    * readings of one string, drifting apart quietly.
    */
   const walk = (dir: string): string[] =>
-    readdirSync(dir, { withFileTypes: true }).flatMap((d) => {
-      const path = join(dir, d.name);
-      if (d.isDirectory()) return walk(path);
-      return /\.tsx?$/.test(d.name) && !/\.test\.tsx?$/.test(d.name) ? [path] : [];
-    });
+    sources(dir, { ext: ['.ts', '.tsx'], tests: false }).map((s) => s.path);
 
   it('is the only reading of a credits line in the app', () => {
     const offenders: string[] = [];

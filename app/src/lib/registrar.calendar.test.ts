@@ -48,7 +48,27 @@ describe('fromCalendar', () => {
     expect([b?.id, b?.iso, b?.until, b?.kind]).toEqual(['break', '2026-11-21', '2026-11-29', 'break']);
   });
 
-  it('offers a landmark once when the school lists it twice', () => {
+  it('keeps a second break rather than losing it to the first', () => {
+    // The bug this pins: `HINTS` matches both "Fall Break" and "Thanksgiving
+    // Break" to the `break` landmark, and treating that as an identity
+    // dropped Thanksgiving silently. A term has two breaks; that is ordinary.
+    const rows = fromCalendar(
+      term({
+        breaks: [
+          { label: 'Fall Break', from: '2026-10-22', to: '2026-10-23' },
+          { label: 'Thanksgiving Break', from: '2026-11-21', to: '2026-11-29' },
+        ],
+      }),
+    );
+    expect(rows.filter((r) => r.kind === 'break')).toHaveLength(2);
+    // The first keeps the landmark; the second keeps the school's words.
+    expect(rows.find((r) => r.label === 'Fall Break')?.id).toBe('break');
+    const thanks = rows.find((r) => r.label === 'Thanksgiving Break');
+    expect(thanks?.id).toBe('');
+    expect([thanks?.iso, thanks?.until]).toEqual(['2026-11-21', '2026-11-29']);
+  });
+
+  it('drops a deadline that only restates the term field above it', () => {
     const rows = fromCalendar(term({ deadlines: [{ label: 'Classes begin', on: '2026-09-01' }] }));
     expect(rows.filter((r) => r.id === 'classes-begin')).toHaveLength(1);
     // The term's own start wins, because it is the field made for it.

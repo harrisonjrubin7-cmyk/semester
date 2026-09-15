@@ -807,6 +807,43 @@ a:hover {
    */
   height: 100%;
 }
+
+/*
+ * And the room reserved for the assistant's button is reserved *here*.
+ *
+ * `.scrollarea` has a `padding-bottom` for it, and on this shell that padding
+ * was doing nothing at all. The reason is the `height: 100%` above: it makes
+ * this box exactly one screenful, so on any screen with more than a
+ * screenful the content overflows it rather than being laid out inside it —
+ * which the comment above says, and treats as harmless because the scroller
+ * counts what overflows its descendants.
+ *
+ * It is harmless for scrolling and not for the reservation. A scroll
+ * container's end padding sits after its *in-flow* content, and the in-flow
+ * content here ends at one screenful; the overflowing part runs past it to
+ * the true bottom of the scroll. Measured on Today at 390x844: `.pane-body`
+ * 552px tall, the feed inside it 1,288px and overflowing, and the last line
+ * of the last card at the very bottom of the scroll range with the button on
+ * top of it.
+ *
+ * A pseudo-element is the fix that does not touch the height chain. It is a
+ * child of this box rather than a sibling of it, so it comes after the
+ * overflowing content in the same flow and carries the reservation out to
+ * wherever that content actually ends. The padding on `.scrollarea` stays for
+ * the screens that do fit, where this sits inside the box and adds nothing.
+ *
+ * Not on a screen that is the whole box: the button is not drawn there — see
+ * `ai/Assistant.tsx` and `shell/exempt.ts` — and 76px of nothing under a
+ * composer meant to sit on the bottom edge is the fault `.is-filled` exists
+ * to avoid.
+ */
+.pane-body::after {
+  content: '';
+  display: block;
+  height: var(--assistant-strip);
+}
+
+
 .pane-body.is-canvas {
   max-width: var(--canvas);
 }
@@ -1574,13 +1611,35 @@ a:hover {
  *
  * The button is fixed above the tab bar on every screen, and a screen whose
  * last element is a primary action put that action underneath it — on Costs,
- * "Add it" sat directly behind it. Reserving the space here fixes it once for
- * every screen rather than sixty times: the padding makes even a
- * short screen scrollable by exactly the button's footprint, so anything at
- * the bottom can always be brought clear of it.
+ * "Add it" sat directly behind it. Reserving the space once here fixes it for
+ * every screen rather than sixty times: the reservation makes even a short
+ * screen scrollable by exactly the button's footprint, so anything at the
+ * bottom can always be brought clear of it.
+ *
+ * ## Why this is a box after the content and not padding on the scroller
+ *
+ * It was `padding-bottom` on `.scrollarea`, and it had stopped doing
+ * anything at all. `.pane-body` above takes `height: 100%` — deliberately,
+ * to keep the percentage-height chain intact — so every screen taller than
+ * the window overflows it rather than sitting in the scroller's own flow,
+ * and a scroll container's end padding is not applied below content that
+ * overflows a descendant. The scroll extent came from the overflowing box
+ * and stopped exactly where the text did.
+ *
+ * Nothing said so. The rule was still there, still computed 76px, and the
+ * space it claimed was simply absent: at the bottom of Study the last line
+ * ran under the button with no scroll left to bring it clear, and the same
+ * on a guide and on Me at the larger text sizes. Removing the padding
+ * changed no measurement on any screen, which is the proof it was dead.
+ *
+ * A block after the content is counted wherever the content ends, because it
+ * overflows alongside it. `::after` rather than a real element so no screen
+ * has to remember to render one.
  */
-.scrollarea {
-  padding-bottom: var(--assistant-strip);
+.scrollarea:not(.is-filled) .pane-body::after {
+  content: '';
+  display: block;
+  height: var(--assistant-strip);
 }
 
 /*
@@ -1605,8 +1664,18 @@ a:hover {
  * step with them.
  */
 .scrollarea.is-filled {
-  padding-bottom: 0;
   overflow: hidden;
+}
+
+/*
+ * And the same for the reservation `.pane-body` carries past its own
+ * overflow. Here rather than beside that rule so both of the things
+ * `.is-filled` takes back are in one place, and so the guard in
+ * `ai/dock.test.ts` — which reads the first `.scrollarea.is-filled` rule in
+ * this sheet — still finds the one it is about.
+ */
+.scrollarea.is-filled .pane-body::after {
+  content: none;
 }
 
 .app-tabs {
@@ -1734,6 +1803,29 @@ a:hover {
 .device .tag-accent {
   background: var(--app-accent-wash);
   color: var(--app-accent);
+}
+/*
+ * Not a second time, on a row that already carries it.
+ *
+ * `--app-accent-wash` is the accent at a tenth of itself over whatever is
+ * behind, and `.portal-workspace button` paints it on every row in the
+ * workspace. A tag inside one painted the same tenth again: two tenths
+ * compound, the surface came out darker than either rule intended, and the
+ * accent text on it read 4.40:1 on Fog against the 4.5:1 it needs. One wash
+ * is 5.03:1.
+ *
+ * The tint is already on the row, so dropping the tag's own is what keeps
+ * the surface the one tenth both rules were written for — the chip reads as
+ * accent text on the row's tint rather than a tint on a tint, which is what
+ * it nearly looked like anyway at a tenth over a tenth.
+ *
+ * Found by measuring what the browser painted: the wash is composited at
+ * paint time, so neither the token audit nor a reading of either rule on its
+ * own can see what the two of them do together.
+ */
+.device .portal-workspace button .tag-accent,
+.device .portal-button .tag-accent {
+  background: transparent;
 }
 .device .tag-neutral {
   background: rgba(233, 235, 239, 0.07);
@@ -2100,6 +2192,34 @@ a:hover {
   width: 100%;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+/*
+ * A disabled `.bare` looked exactly like an available one.
+ *
+ * `.bare` strips a button back to its text and keeps `cursor: pointer`, and
+ * nothing here answered `:disabled` — so a control the code had switched off
+ * still read as a control you could press, and still showed the hand cursor
+ * saying so. Found in the move picker on `screens/mine/Drive.tsx`: offering to
+ * move *Problem sets*, the rows for *Problem sets* and *Drive* are disabled,
+ * because a folder cannot go inside itself or stay where it already is. That
+ * guard works. It just could not be seen, so the only way to learn a row was
+ * unavailable was to tap it and watch nothing happen.
+ *
+ * It is not one picker. Around twenty `.bare` buttons in this app are disabled
+ * in some state — the reorder arrows at the ends of a list, a tab strip that
+ * is full, a drill question already answered, every `busy` guard on a form —
+ * and all of them were silent in the same way.
+ *
+ * The same answer `.bench-item:disabled` and `.desktop-star:disabled` already
+ * give, for the reason written there: `--app-faint` is held to 3:1, which is
+ * the contrast bar for a disabled control and is what makes it read as
+ * unavailable rather than merely quiet. `cursor: default` withdraws the other
+ * half of the claim.
+ */
+.bare:disabled {
+  color: var(--app-faint);
+  cursor: default;
 }
 
 @media (prefers-reduced-motion: reduce) {

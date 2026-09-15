@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources } from './rules';
 
 /**
  * Small controls declare which way their target may grow.
@@ -30,14 +30,8 @@ import { join } from 'node:path';
  */
 const css = readFileSync('src/styles/app.css', 'utf8');
 
-function tsx(dir: string, out: string[] = []): string[] {
-  for (const e of readdirSync(dir)) {
-    const p = join(dir, e);
-    if (statSync(p).isDirectory()) tsx(p, out);
-    else if (/\.tsx$/.test(e) && !/\.test\./.test(e)) out.push(p);
-  }
-  return out;
-}
+/** The files this rule reads. `styles/rules.ts` walks; this names. */
+const tsx = (dir: string): string[] => sources(dir, { tests: false }).map((s) => s.path);
 
 describe('tap targets', () => {
   it('defines the three, and each grows one way or both', () => {
@@ -70,9 +64,11 @@ describe('tap targets', () => {
     // it. Fewer than this means one was reverted without the measurement
     // being redone.
     //
-    // Today is deliberately not among them any more: its grip stopped
-    // borrowing a target and took a real one. See the test below.
-    expect(used.length, `only ${used.length} files use a tap class`).toBeGreaterThanOrEqual(11);
+    // Two are deliberately not among them any more — Today's grip and Gap's
+    // Aloud button — because both stopped borrowing a target and took a real
+    // one. An overlay is invisible to a checker, which reads the element and
+    // is right to; see the test below.
+    expect(used.length, `only ${used.length} files use a tap class`).toBeGreaterThanOrEqual(10);
     for (const must of [
       'src/components/SampleMark.tsx',   // 112×20, on 65 screens
       'src/components/Reorder.tsx',      // 26×23, three lists
@@ -84,13 +80,6 @@ describe('tap targets', () => {
       // the form both it and the first run now render.
       'src/components/Credentials.tsx',
       'src/App.tsx',                     // 115×23, the way up to a course
-      // 38×17, and it survived the audit that took 104 targets under 30px
-      // down to none — because a walk of the screens never sees it. It is
-      // drawn only inside a running gap session, behind a start button and
-      // behind a browser that can speak. `tap-y` rather than `tap`, for the
-      // reason the audit itself gives: the card counter shares its row, and
-      // a target that grew sideways would reach across the gap towards it.
-      'src/screens/Gap.tsx',
       /*
        * Two screens the audit could not have seen, because neither existed
        * when it ran, and both went straight back under the floor it cleared.

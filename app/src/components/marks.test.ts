@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { sources } from '../styles/rules';
 
 /*
  * Blueprint's own rule, quoted from its `plain` doc comment:
@@ -25,15 +25,8 @@ const HEROES = new Set([
   'src/screens/Grades.tsx',
 ]);
 
-function tsxFiles(dir: string): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir)) {
-    const path = join(dir, entry);
-    if (statSync(path).isDirectory()) out.push(...tsxFiles(path));
-    else if (path.endsWith('.tsx')) out.push(path);
-  }
-  return out;
-}
+/** The files this rule reads. `styles/rules.ts` walks; this names. */
+const tsxFiles = (dir: string): string[] => sources(dir, {}).map((s) => s.path);
 
 /**
  * Whether the tag at `at` is rendered inside a `.map()` callback: walk outward

@@ -176,15 +176,107 @@ Nor were the unread `capabilities` or the unread `data` branches populated,
 for the reason in finding 1: filling a field no screen reads is not an
 implementation.
 
+## The calendar, filled in from the syllabi rather than the registrar
+
+The registrar's page is still unreachable, so `data.academicCalendar` was
+filled from a source that *is* reachable: the Fall 2026 syllabi in
+`project/uploads`, written by the instructors teaching the courses. Each date
+below is corroborated by two of them independently, and the weekday each
+falls on was checked against the real calendar:
+
+| What | Date | Where it came from |
+| --- | --- | --- |
+| Classes begin | Wed 26 Aug 2026 | The BUS syllabus filename is dated 8/26/2026; PSCI 1104's first Tuesday/Thursday lecture is Thu 27 Aug, which a Wednesday start fits |
+| Fall Break | Thu 22 – Fri 23 Oct | ECON 1020: *"Fall Break: October 22–23rd (I.e., No Class Friday)"*. PSCI 1104: *"Lecture 17 October 22: Fall Break"* |
+| Thanksgiving Break | Sat 21 – Sun 29 Nov | ECON 1020: *"Thanksgiving Break: November 21st–29th (Full Week Off)"*. PSCI 1104 has no lectures on 24 and 26 Nov |
+
+PSCI 1104's 31 lectures fall on a clean Tuesday/Thursday without exception,
+and ECON 1020's two midterms land on the Wednesdays its syllabus claims. That
+internal consistency is what makes these worth shipping.
+
+### What was left blank, and why each one
+
+- **The last day of classes.** PSCI 1104's last lecture is Thu 10 December,
+  but a Monday/Wednesday/Friday course would still meet on Friday the 11th,
+  and nothing here says which of the two the term ends on. `endsOn` is the
+  empty string and `fromCalendar` skips it.
+- **The final exam period.** ECON 1020 names its registrar-assigned slots —
+  15 and 16 December — and PSCI 1104's final is the 17th, so the period
+  certainly *includes* 15–17 December. That is a lower bound, not the period,
+  and writing it as the period would understate it for anybody whose exam
+  falls outside.
+- **Every registrar deadline.** Drop-without-a-W, withdrawal, pass/fail,
+  registration, grades. These are the dates the screen exists for, the ones
+  that cost money rather than points, and not one of them appears in a
+  syllabus. A search index offered "add/drop deadline Friday, September 4"
+  and "withdrawal deadline Friday, October 30" — both land on the weekday
+  claimed, which rules out nonsense but establishes nothing, and neither is
+  attributable to the undergraduate calendar. They were not written.
+
+The earlier fragment quoted below — exams and reading days 5–13 December,
+from a graduate calendar — is now positively **contradicted** by PSCI 1104's
+final on 17 December. Good evidence that leaving it out was right.
+
+### Meal plan tiers: the counts and the Meal Money, at the owner's direction
+
+`data.mealPlanTiers` is filled with two plans — First-Year 335 and
+Upper-Division 305, both per semester. Where they came from matters, because
+it is a weaker source than the syllabi that produced the calendar above:
+
+- Not the dining page. `vanderbilt.edu/dining` is blocked here like the rest.
+- Not the repository. No syllabus or study guide mentions dining at all.
+- A **search index**, in two separate rounds: one returned "First-Year Plan:
+  With 335 meals", the other "Sophomores receive the Upper-Division Plan, with
+  305 meals per semester". Neither is attributed to a page or to an academic
+  year, and the two are one backend agreeing with itself rather than two
+  sources agreeing with each other.
+
+That was put to the repository's owner with the reasoning above, and the
+decision to ship the two numbers is theirs. It is recorded here rather than
+left implicit, because the same source produced calendar dates this audit
+declined to write, one of which the syllabi later contradicted outright.
+
+**Meal Money followed, from the same kind of source.** A later search returned
+both plans in one coherent shape — 335 meals with **$225** of Meal Money, 305
+meals with **$275** — alongside per-semester costs of roughly $4,260 and
+$4,216. That is the first corroboration the swipe counts had had, and it is
+why they now carry a dollar figure each.
+
+It is still not the dining page. The result's own links point at *The
+Vanderbilt Hustler*, the student newspaper, and two third-party sites; none of
+the three is reachable from here either, because the egress policy is an
+allowlist rather than a block on `vanderbilt.edu`. The search claimed the
+figures are 2026–27, but that attribution is the search engine's assertion
+rather than anything quoted from a page.
+
+What bounds the risk is that **nothing computes from `mealPlanTiers`**. Grepped
+across `app/src`, its only reader is the reference table on the Meal plan
+screen. The rate, the runway and the day-it-runs-out arithmetic all run on
+balances the student logs off their own account, so a wrong figure here misprints
+a row rather than producing a wrong answer about money.
+
+The screen also now says, in one clause, that the balance page is the thing to
+check these counts against. That is the same rule `data/campus.ts` keeps for
+every address it ships: a starting point somebody can correct, not a fact.
+
+### A bug the real data found
+
+Writing two breaks into one term surfaced a defect in `fromCalendar`: `HINTS`
+matches both "Fall Break" and "Thanksgiving Break" to the `break` landmark,
+and treating that landmark as an identity dropped Thanksgiving silently. A
+term having two breaks is ordinary, so a landmark is now proposed once and
+anything else matching it is kept in the school's own words with no landmark
+— exactly what the paste door does with a line it cannot place. A date the
+school published is never silently dropped.
+
 ## What the live site would still settle
 
 Everything here needs a page actually read, which this session could not do:
 
-1. **The 2026–27 undergraduate academic calendar.** The pages exist —
-   `registrar.vanderbilt.edu/calendars/2026-27-academic.php` and
-   `…/2026-27.php` — and `data.academicCalendar` now has a screen waiting
-   for it: fill it in and the third door on Term deadlines appears, with
-   every date offered for confirmation.
+1. **The registrar deadlines, and the two bounds left blank above.** The
+   pages exist — `registrar.vanderbilt.edu/calendars/2026-27-academic.php`
+   and `…/2026-27.php`. The calendar is now partly filled from the syllabi;
+   what it is missing is exactly the part only the registrar publishes.
 2. **Undergraduate meal plan tiers** — the swipe and dollar figures per plan,
    for `data.mealPlanTiers`, from `vanderbilt.edu/dining/meal-plans/undergraduate-plans/`.
 3. **Whether `healthUrl` and `advisingUrl` still resolve.** Both were in the

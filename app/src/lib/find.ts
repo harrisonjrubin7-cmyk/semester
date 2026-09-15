@@ -90,6 +90,23 @@ export type Hit =
       tag: string;
       score: number;
     }
+  /**
+   * One unit's narration — the thing you put on walking across campus.
+   *
+   * Its own kind rather than a unit hit with a flag, because it lands
+   * somewhere else and opens with different actions: a unit hit opens the
+   * guide at its cards, and this opens the lesson screen at this unit's
+   * audio. Sharing a kind would have meant a `mode` that meant two things.
+   */
+  | {
+      kind: 'lesson';
+      courseId: CourseId;
+      unit: number;
+      title: string;
+      sub: string;
+      tag: string;
+      score: number;
+    }
   | { kind: 'note'; id: string; title: string; sub: string; tag: string; score: number }
   | { kind: 'document'; id: string; title: string; sub: string; tag: string; score: number }
   | { kind: 'sheet'; id: string; title: string; sub: string; tag: string; score: number }
@@ -426,6 +443,46 @@ export function findEverything(
       });
     }
 
+    /*
+     * The narrated lessons.
+     *
+     * Searched by their own title and by what the narration actually says —
+     * `cues` is the transcript the renderer emitted, so "elasticity" finds
+     * the lesson that explains it rather than only the one named after it.
+     * The course's code and name join the haystack for the same reason they
+     * do on a unit: "1020 monopoly" is how somebody with two courses covering
+     * monopoly says which one they mean.
+     *
+     * Only lessons that exist. A unit with no recording is not a lesson, and
+     * a result that lands on "this unit has not been recorded" is a result
+     * that wasted a press.
+     */
+    const lessonHits: Hit[] = [];
+    for (const c of cat.courses) {
+      const lessons = cat.lessons[c.id];
+      if (!lessons) continue;
+      for (const lesson of Object.values(lessons)) {
+        const said = lesson.cues.map((cue) => cue.text).join(' ');
+        const s = score(
+          q,
+          lesson.title,
+          `${said} ${c.code} ${c.name}`,
+          spell ? `${lesson.title} ${c.code} ${c.name}` : '',
+        );
+        if (s) {
+          lessonHits.push({
+            kind: 'lesson',
+            courseId: c.id,
+            unit: lesson.unit,
+            title: lesson.title,
+            sub: `Unit ${lesson.unit + 1} · ${lesson.len} of narration`,
+            tag: c.code,
+            score: s,
+          });
+        }
+      }
+    }
+
     const noteHits: Hit[] = [];
     for (const n of notes) {
       const s = score(q, n.title || 'Untitled', n.body, spell ? n.title : '');
@@ -592,6 +649,7 @@ export function findEverything(
     const groups: HitGroup[] = [
       { label: 'Deadlines', hits: items },
       { label: 'Study units', hits: units },
+      { label: 'Lessons', hits: lessonHits },
       { label: 'Courses', hits: courses },
       { label: 'Your notes', hits: noteHits },
       { label: 'Your tasks', hits: taskHits },

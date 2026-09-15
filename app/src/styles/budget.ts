@@ -52,7 +52,7 @@ export const BUDGET: Budget = {
   'components/FigureCard.tsx': { type: 2, leading: 3, space: 4, shorthand: 1, dim: 5 },
   'components/FillPlaces.tsx': { dim: 3 },
   'components/FindPlace.tsx': { type: 7, leading: 2, space: 7, shorthand: 6, dim: 6 },
-  'components/Fold.tsx': { dim: 2 },
+  'components/Fold.tsx': { shorthand: 2, dim: 2 },
   'components/Fresh.tsx': { type: 1, shorthand: 2, dim: 1 },
   'components/GpaScale.tsx': { type: 2, shorthand: 3, dim: 3 },
   'components/HomeWalk.tsx': { type: 1, leading: 1, space: 2, shorthand: 1 },

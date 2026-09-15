@@ -3,6 +3,7 @@ import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
+import { Downloads } from '../components/Downloads';
 import { useStore } from '../state/store';
 import { pickPersisted } from '../state/shape';
 import { bytesOf, elsewhere, inventory, space, type Elsewhere, type Row, type Space } from '../lib/inventory';
@@ -240,6 +241,16 @@ export function DataScreen() {
               )}
             </>
           )}
+
+          {/*
+            Under Room, because it is the largest part of the answer to it and
+            the only part a person can act on without giving anything up. The
+            figures above this come from `navigator.storage.estimate()`, which
+            counts the media cache — so before this section existed, a student
+            watching that number climb past two hundred megabytes had nothing
+            on the screen naming what it was.
+          */}
+          <Downloads />
 
           <Blueprint plain style={{ padding: '11px 13px', marginTop: 'var(--sp-6)' }}>
             <div className="kicker">How it is stored</div>
