@@ -281,7 +281,7 @@ export function Timer({
           onClick={() =>
             setSitting(running(mine) ? hold(mine, Date.now()) : carryOn(mine, Date.now()))
           }
-          style={{ width: 'auto', padding: '0 10px', height: 32, fontSize: 'var(--type-sm)', opacity: 0.75 }}
+          style={{ width: 'auto', padding: '0 10px', height: 32, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
         >
           {running(mine) ? 'Pause' : 'Carry on'}
         </button>

@@ -243,6 +243,22 @@ export function Runway() {
           }
           style={{ height: 52, marginTop: 14, display: 'block', textAlign: 'center' }}
         >
+          {/*
+            The one place in the app where `opacity` is right and `--app-dim`
+            is wrong, so it keeps its number.
+
+            `--app-dim` is the ground's ink at the ground's dim strength, and
+            this sits on `.btn-primary`, whose fill is bright and whose ink is
+            therefore near-black by design. Handing it the ground's ink paints
+            light-on-light: measured at 218/255 on one channel, a kicker that
+            all but disappeared. An opacity softens whatever ink it inherits,
+            which is the whole of what is wanted here.
+
+            A sweep converting hand-written opacities to the token should skip
+            this one. See `ENGINEERING-AUDIT.md` §7 — it was the only inverted
+            ink among 79 screens, and it is why the sweep now checks the ink it
+            is standing on rather than only the style object it is in.
+          */}
           <span style={{ display: 'block', fontSize: 'var(--type-xs)', letterSpacing: '0.12em', opacity: 0.75 }}>
             {worst.seen === 0 ? 'NEVER OPENED' : 'FURTHEST BEHIND'}
           </span>

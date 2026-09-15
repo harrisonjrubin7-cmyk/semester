@@ -108,7 +108,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
         <div
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 0.75,
+            color: 'var(--app-dim)',
             marginTop: 7,
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',

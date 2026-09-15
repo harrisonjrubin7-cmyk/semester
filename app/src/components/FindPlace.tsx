@@ -121,7 +121,7 @@ export function FindPlace() {
           <p
             style={{
               fontSize: 'calc(12.5px * var(--text-scale, 1))',
-              opacity: 0.72,
+              color: 'var(--app-dim)',
               lineHeight: 1.55,
               textWrap: 'pretty',
             }}

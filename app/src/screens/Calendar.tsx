@@ -2875,13 +2875,13 @@ export function EventDetail() {
       </Blueprint>
 
       <div
-        style={{ fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 18, opacity: 0.85, textWrap: 'pretty' }}
+        style={{ fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 18, color: 'var(--app-dim)', textWrap: 'pretty' }}
       >
         {event.detail}
       </div>
 
       <SectionLabel style={{ margin: '22px 0 6px' }}>Getting in</SectionLabel>
-      <div style={{ fontSize: 'var(--type-md)', opacity: 0.8 }}>{event.ticket}</div>
+      <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>{event.ticket}</div>
 
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 24 }}>
         <button

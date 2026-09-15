@@ -159,7 +159,7 @@ export function Onboarding() {
       >
         {soft && state.onb === 0 ? welcomeLine(catalog, now) : step.t}
       </div>
-      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', opacity: 0.72, maxWidth: '30ch' }}>
+      <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', maxWidth: '30ch' }}>
         {soft && state.onb === 0 ? welcomeLead(catalog) : step.b}
       </div>
 

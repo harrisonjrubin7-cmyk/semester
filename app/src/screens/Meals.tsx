@@ -111,7 +111,7 @@ function MealsDetails() {
           {paceLine(latest, p)}
         </div>
         {cashLine(latest) ? (
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-4)' }}>{cashLine(latest)}</div>
+          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{cashLine(latest)}</div>
         ) : null}
         {latest ? (
           <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>{staleLine(latest, now)}</div>

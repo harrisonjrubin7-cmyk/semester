@@ -89,7 +89,7 @@ export function Insights({
             <div
               style={{
                 fontSize: 'var(--type-base)',
-                opacity: 0.75,
+                color: 'var(--app-dim)',
                 lineHeight: 'var(--leading-relaxed)',
                 marginTop: 5,
                 textWrap: 'pretty',
