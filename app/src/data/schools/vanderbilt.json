@@ -41,6 +41,10 @@
             "on": "2026-09-04"
           },
           {
+            "label": "Last day to drop without a W",
+            "on": "2026-09-04"
+          },
+          {
             "label": "Last day to withdraw from a course",
             "on": "2026-10-30"
           }
