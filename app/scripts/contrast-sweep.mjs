@@ -54,8 +54,13 @@ import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const AUDIT = readFileSync(join(here, 'contrast-audit.js'), 'utf8');
+const STATES = readFileSync(join(here, 'contrast-states.js'), 'utf8');
 const BASE = process.env.SWEEP_URL || 'http://localhost:5173/';
 const CHROME = process.env.SWEEP_CHROMIUM || '/opt/pw-browsers/chromium';
+// Narrow the run while working on the sweep itself; unset means everything.
+const ONLY_NAVS = process.env.SWEEP_NAVS?.split(',').map(s => s.trim()).filter(Boolean);
+const ONLY_GROUNDS = process.env.SWEEP_GROUNDS?.split(',').map(s => s.trim()).filter(Boolean);
+const SKIP_STATES = process.env.SWEEP_NO_STATES === '1';
 
 let chromium;
 try {
@@ -141,15 +146,110 @@ const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  */
 const groundPattern = (g) => new RegExp('^' + esc(g.label + ' ' + g.blurb.slice(0, 10)), 'i');
 
+/*
+ * Hover and focus, measured with the state actually on.
+ *
+ * A resting sweep cannot see these: `.semester-primary-nav button:hover` sets
+ * both a colour and a background, and so do about forty other rules — none of
+ * which exist as far as `getComputedStyle` is concerned until something is
+ * hovered.
+ *
+ * The state is forced through CDP rather than by moving the mouse. A real
+ * pointer can only be in one place, gets blocked by anything overlapping, and
+ * cannot produce `:focus-visible` at all without a keyboard round trip;
+ * `CSS.forcePseudoState` sets the state on a named element and is what the
+ * DevTools :hov panel uses.
+ *
+ * The element forced is not always the element measured. `.appicon:hover
+ * .appicon-tile` paints the tile and requires the *icon* to be hovered, so
+ * `contrast-states.js` returns both selectors and this forces one and audits
+ * the other. Forcing the tile would change nothing and report a clean pass.
+ */
+const forceStates = async (page, cdp) => {
+  const out = [];
+  let targets = [];
+  try { targets = await page.evaluate(STATES); } catch { return out; }
+  if (!targets.length) return out;
+
+  // One round trip to find which of them are actually on this screen, and to
+  // name the pair so CDP can be pointed at the host.
+  let matched = [];
+  try {
+    matched = await page.evaluate((list) => {
+      const hits = [];
+      /*
+       * Only ids this sweep added are removed again. An earlier version set
+       * `host.id` unconditionally and then stripped every id it had marked,
+       * which quietly deleted ids the app had put there itself — and an id is
+       * not decoration here: `aria-labelledby`, `aria-controls` and every
+       * label association are written in terms of it. A measuring tool that
+       * edits the thing it measures is measuring its own edit.
+       */
+      document.querySelectorAll('[data-sweep-added-id]').forEach((el) => {
+        el.removeAttribute('id'); el.removeAttribute('data-sweep-added-id');
+      });
+      list.forEach((t, i) => {
+        let measure;
+        // A selector this browser will not parse is not worth taking the run down for.
+        try { measure = document.querySelector(t.measure); } catch { return; }
+        if (!measure) return;
+        let host;
+        try { host = measure.closest(t.host); } catch { return; }
+        if (!host) return;
+        const mark = (el, name) => {
+          if (el.id) return el.id;
+          el.id = name;
+          el.setAttribute('data-sweep-added-id', '1');
+          return name;
+        };
+        hits.push({ i, state: t.state,
+                    measureId: mark(measure, `__sweepMeasure${i}`),
+                    hostId: mark(host, `__sweepHost${i}`) });
+      });
+      return hits;
+    }, targets);
+  } catch { return out; }
+
+  for (const m of matched) {
+    let nodeId;
+    try {
+      const { root } = await cdp.send('DOM.getDocument', { depth: 0 });
+      ({ nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: `#${m.hostId}` }));
+    } catch { continue; }
+    if (!nodeId) continue;
+    try {
+      // `:focus-visible` is forced alongside `:focus`: the app draws its rings
+      // on the former, and a forced `:focus` alone would not light them.
+      const forced = m.state === 'focus-visible' ? ['focus', 'focus-visible']
+                   : m.state === 'focus' ? ['focus'] : ['hover'];
+      await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: forced });
+      const res = await page.evaluate(([src, root]) => {
+        window.__sweepRoot = root;
+        // eslint-disable-next-line no-eval
+        const r = eval(src);
+        delete window.__sweepRoot;
+        return r;
+      }, [AUDIT, `#${m.measureId}`]);
+      if (res && !res.missingRoot) out.push({ state: m.state, measured: res.measured, rows: res.rows });
+    } catch { /* the element went away mid-pass; nothing measured, nothing claimed */ }
+    finally {
+      try { await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] }); } catch { /* page gone */ }
+    }
+  }
+  return out;
+};
+
 const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
 const findings = [], coverage = [], unverified = [];
 const t0 = Date.now();
 
-for (const [nav, navLabel, firstScreen, proof] of NAVS) {
+for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS || ONLY_NAVS.includes(n[0]))) {
   for (const [vp, tag] of [[{width:420,height:900},'phone'], [{width:1280,height:900},'desktop']]) {
     const ctx = await browser.newContext({ viewport: vp });
     const page = await ctx.newPage();
     const errs = []; page.on('pageerror', e => errs.push(String(e)));
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
     await page.goto(BASE, { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2500);
     const skip = page.getByRole('button', { name: /skip/i }).first();
@@ -180,7 +280,7 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS) {
                       [name, async (p) => { await p.evaluate(h => { location.hash = h; }, hash); }]),
                     ...(EXTRAS[nav] || [])];
 
-    for (const g of GROUNDS) {
+    for (const g of GROUNDS.filter(x => !ONLY_GROUNDS || ONLY_GROUNDS.includes(x.id))) {
       await page.evaluate(()=>{ location.hash='#/setLook'; }); await page.waitForTimeout(1500);
       const gBtn = page.getByRole('button', { name: groundPattern(g) });
       /*
@@ -206,6 +306,15 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS) {
         coverage.push({ nav, ground: g.id, width: tag, state, reached, verified: groundOk && navOk,
                         measured: res ? res.measured : 0 });
         for (const r of (res ? res.rows : [])) findings.push({ nav, ground: g.id, width: tag, state, ...r });
+
+        if (!SKIP_STATES) {
+          const hits = await forceStates(page, cdp);
+          for (const h of hits) {
+            coverage.push({ nav, ground: g.id, width: tag, state: `${state}:${h.state}`, reached: true,
+                            verified: groundOk && navOk, measured: h.measured });
+            for (const r of h.rows) findings.push({ nav, ground: g.id, width: tag, state: `${state}:${h.state}`, ...r });
+          }
+        }
       }
     }
     if (errs.length) console.log('pageerrors', nav, tag, errs.slice(0,2));
@@ -237,6 +346,26 @@ for (const g of GROUNDS) {
   console.log(`  ${(g.id + (g.light ? ' (light)' : '')).padEnd(22)} ${String(mine.reduce((n,c)=>n+c.measured,0)).padStart(6)} elements over ${String(mine.length).padStart(3)} passes` +
               (bad ? `   ⚠ ${bad} UNVERIFIED` : '') + (empty ? `   ⚠ ${empty} measured nothing` : ''));
 }
+/*
+ * Resting and forced states, counted apart.
+ *
+ * Without this the state work is invisible in the output: a run with the
+ * forcing silently broken looks identical to a run where every hover rule
+ * happened to pass.
+ */
+const kindOf = (c) => (c.state.includes(':') ? c.state.split(':')[1] : 'resting');
+const kinds = [...new Set(coverage.map(kindOf))];
+console.log('\nBY STATE');
+for (const k of kinds) {
+  const mine = coverage.filter(c => kindOf(c) === k);
+  const found = rows.filter(r => kindOf(r) === k).length;
+  console.log(`  ${k.padEnd(14)} ${String(mine.length).padStart(5)} passes  ${String(mine.reduce((n,c)=>n+c.measured,0)).padStart(6)} elements  ${found} findings`);
+}
+if (!kinds.some(k => k !== 'resting') && !SKIP_STATES) {
+  console.log('  ⚠ no hover or focus pass ran — the state rules found nothing to force,');
+  console.log('    which is a result about this sweep, not about the app.');
+}
+
 if (unverified.length) {
   console.log(`\nSETUP NOT CONFIRMED (${unverified.length}) — these prove nothing:`);
   for (const u of unverified.slice(0, 40)) console.log(`  ${u.nav}/${u.ground}/${u.width}  ground=${u.groundOk} (saw ${u.gotBg}, wanted ${u.want}, picker matched ${u.clicked})  nav=${u.navOk}`);
