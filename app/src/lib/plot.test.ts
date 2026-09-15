@@ -933,8 +933,8 @@ describe('a fractional transform on the list', () => {
     if (!got || 'says' in got) throw new Error('no answer');
     // A chirp is smeared at order 1 and gathered somewhere else; which order
     // is what the reading is for, so the lead and the note agree on it.
-    const at = Number(/turned ([\-0-9.]+) of the way/.exec(got.lead)?.[1]);
-    const best = Number(/gathers best at order ([\-0-9.]+)/.exec(got.note ?? '')?.[1]);
+    const at = Number(/turned ([-0-9.]+) of the way/.exec(got.lead)?.[1]);
+    const best = Number(/gathers best at order ([-0-9.]+)/.exec(got.note ?? '')?.[1]);
     expect(at).toBe(best);
     expect(Math.abs(best - 1)).toBeGreaterThan(0.05);
     expect(got.note).toMatch(/so this is a chirp/);
