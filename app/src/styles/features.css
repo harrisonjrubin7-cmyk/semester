@@ -46,7 +46,11 @@
 .portal-filter-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:15px 0 22px}
 .portal-filter-row>input{flex:1;min-width:180px}
 .portal-search{flex:1;min-width:220px;display:flex;border-radius:26px;background:var(--app-accent-wash);overflow:hidden}
-.portal-search input{border:0!important;background:none!important;width:100%;min-height:48px!important;padding:13px 21px!important;box-shadow:none!important;outline-offset:-3px!important}
+/* The pill clips to 26px and the field inside it had no radius of its own,
+   so the focus outline — inset by 3px, and square — had its corners cut off
+   and read as two loose horizontal lines. Matching the radius makes the ring
+   follow the pill it sits inside. */
+.portal-search input{border:0!important;background:none!important;width:100%;min-height:48px!important;padding:13px 21px!important;box-shadow:none!important;border-radius:26px!important;outline-offset:-3px!important}
 .portal-check{display:flex;align-items:center;gap:10px;font-size:13px;min-height:44px;color:var(--app-dim)}
 .portal-columns{display:grid;grid-template-columns:1.3fr 1fr;gap:24px}
 .portal-panel{padding:23px;background:var(--app-panel);border:1px solid var(--app-accent-wash);border-radius:18px;margin-bottom:20px;min-width:0}
