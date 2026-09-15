@@ -534,12 +534,12 @@ export function ThreadsOver({
    * more honest claim, and it arrives with the tab ring and the focus return
    * this had neither of.
    */
-  const modal = useModal<HTMLDivElement>({ onClose });
+  const { ref: modalRef, onKeyDown } = useModal<HTMLDivElement>({ onClose });
 
   return (
     <div
-      ref={modal.ref}
-      onKeyDown={modal.onKeyDown}
+      ref={modalRef}
+      onKeyDown={onKeyDown}
       tabIndex={-1}
       role="dialog"
       aria-modal="true"

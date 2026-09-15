@@ -71,7 +71,7 @@ export function TileSheet({
    * keep Tab inside while it is open. `a11y/modal.ts` is every dialog's, so
    * this one cannot drift from the rest of them.
    */
-  const modal = useModal<HTMLDivElement>({ onClose, initial: shut });
+  const { ref: modalRef, onKeyDown } = useModal<HTMLDivElement>({ onClose, initial: shut });
 
   const sheet = (
     <div
@@ -79,9 +79,9 @@ export function TileSheet({
       role="dialog"
       aria-modal="true"
       aria-label={name}
-      ref={modal.ref}
+      ref={modalRef}
       tabIndex={-1}
-      onKeyDown={modal.onKeyDown}
+      onKeyDown={onKeyDown}
       onTouchStart={(e) => {
         down.current = e.touches[0]?.clientY ?? 0;
       }}

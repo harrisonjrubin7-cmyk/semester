@@ -48,7 +48,7 @@ export function Customize({ onClose }: { onClose: () => void }) {
   const { state, dispatch } = useStore();
   const look = currentLook(state);
   const shut = useRef<HTMLButtonElement>(null);
-  const modal = useModal<HTMLDivElement>({ onClose, initial: shut });
+  const { ref: modalRef, onKeyDown } = useModal<HTMLDivElement>({ onClose, initial: shut });
 
   return (
     <div
@@ -56,9 +56,9 @@ export function Customize({ onClose }: { onClose: () => void }) {
       role="dialog"
       aria-modal="true"
       aria-label="Customize Semester"
-      ref={modal.ref}
+      ref={modalRef}
       tabIndex={-1}
-      onKeyDown={modal.onKeyDown}
+      onKeyDown={onKeyDown}
     >
       <div className="desk-sheet-head">
         <div className="desk-sheet-name chrome-text">Customize Semester</div>

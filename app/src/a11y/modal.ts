@@ -139,6 +139,24 @@ export interface Modal<T extends HTMLElement> {
   onKeyDown: (e: KeyboardEvent) => void;
 }
 
+/*
+ * Take these apart at the call site — `const { ref, onKeyDown } = useModal(…)`
+ * — rather than holding the object and writing `modal.ref` in the JSX.
+ *
+ * Not style. The React Compiler tracks where a ref goes, and it loses the
+ * thread through a property read: every `modal.ref` and `modal.onKeyDown` in a
+ * render was reported as *"Cannot access refs during render"*, which is not
+ * what the code does — it hands the ref to `ref=`, it never reads `.current`.
+ * Eleven files did it and that was **nineteen of the app's forty-four lint
+ * warnings**, all false, and all sitting in the list where a true one would
+ * have to be noticed among them.
+ *
+ * Destructuring is the shape React's own hooks return for the same reason, and
+ * it costs nothing: the compiler can see which binding is the ref, the
+ * warnings go, and the code reads the same. The ceiling in `npm run lint` is
+ * what catches a reversion — put the object back and the count goes over.
+ */
+
 /**
  * A dialog that keeps focus, and gives it back.
  *
