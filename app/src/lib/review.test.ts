@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  A_SITTING,
+  KEEPS_CATCHING,
+  aSitting,
   cardKey,
+  catching,
+  keepsCatching,
   tallyBy,
   comeRound,
   dueCount,
@@ -295,5 +300,76 @@ describe('a right answer the student says they guessed at', () => {
 
   it('changes nothing about a wrong answer', () => {
     expect(score(undefined, false, NOW, true)).toEqual(score(undefined, false, NOW));
+  });
+});
+
+
+/** Miss a card `n` times running. */
+function fail(n: number, from = T0) {
+  let r = score(undefined, false, from);
+  for (let i = 1; i < n; i++) r = score(r, false, from + i * DAY);
+  return r;
+}
+
+describe('aSitting', () => {
+  const deck = Array.from({ length: 60 }, (_, i) => ({ key: `k${i}` }));
+
+  it('hands over one sitting and counts what it left', () => {
+    const run = aSitting(deck);
+    expect(run.cards).toHaveLength(A_SITTING);
+    expect(run.left).toBe(60 - A_SITTING);
+  });
+
+  it('keeps the order it was given', () => {
+    // The cap must never change which cards come first — that is `dueFirst`'s
+    // job, and a limit that reordered would read as "it keeps showing me the
+    // easy ones".
+    expect(aSitting(deck).cards.map((c) => c.key)).toEqual(deck.slice(0, A_SITTING).map((c) => c.key));
+  });
+
+  it('leaves nothing behind on a short deck', () => {
+    const run = aSitting([{ key: 'a' }, { key: 'b' }]);
+    expect(run.cards).toHaveLength(2);
+    expect(run.left).toBe(0);
+  });
+
+  it('never reports a negative remainder', () => {
+    expect(aSitting([], 25).left).toBe(0);
+  });
+});
+
+describe('keepsCatching', () => {
+  it('says nothing about a card nobody has answered', () => {
+    expect(keepsCatching(undefined)).toBe(false);
+    expect(keepsCatching(emptyReview(T0))).toBe(false);
+  });
+
+  it('holds off until the misses have piled up', () => {
+    expect(keepsCatching(fail(KEEPS_CATCHING - 1))).toBe(false);
+    expect(keepsCatching(fail(KEEPS_CATCHING))).toBe(true);
+  });
+
+  it('lets go once the card is being got right', () => {
+    /*
+     * The condition that matters more than the count. A card missed six times
+     * two months ago and since got right twice running is a card that was
+     * learned, and calling it a problem reads the history backwards.
+     */
+    let r = fail(KEEPS_CATCHING);
+    expect(keepsCatching(r)).toBe(true);
+    r = score(r, true, T0 + 10 * DAY);
+    expect(keepsCatching(r)).toBe(true);
+    r = score(r, true, T0 + 11 * DAY);
+    expect(keepsCatching(r)).toBe(false);
+  });
+
+  it('picks the worst out of a deck, worst first', () => {
+    const reviews: Reviews = {
+      fine: pass(3),
+      bad: fail(KEEPS_CATCHING),
+      worse: fail(KEEPS_CATCHING + 4),
+    };
+    const deck = [{ key: 'fine' }, { key: 'bad' }, { key: 'worse' }];
+    expect(catching(deck, reviews).map((c) => c.key)).toEqual(['worse', 'bad']);
   });
 });

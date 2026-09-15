@@ -6,11 +6,12 @@ import { SayIt } from '../components/SayIt';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { buildQuiz } from '../lib/quiz';
-import { cardKey, dueCount, dueFirst } from '../lib/review';
+import { A_SITTING, aSitting, cardKey, catching, dueCount, dueFirst } from '../lib/review';
 import { interleave, mixLine, worthMixing } from '../lib/interleave';
 import { useKeepAwake } from '../lib/awake';
 import { unitName } from '../lib/unit';
 import { ActionButton, EmptyState, Toggle } from '../components/ui';
+import { secondLine } from '../lib/dim';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
 export function Drill() {
@@ -25,7 +26,7 @@ export function Drill() {
   // what you have never seen, then what you already know — weakest first
   // inside each band. The run is fixed when it starts so answering a card does
   // not reshuffle the deck under your thumb.
-  const pool = useMemo(() => {
+  const ordered = useMemo(() => {
     /*
      * Mixing pulls from every course, not from this one.
      *
@@ -58,6 +59,19 @@ export function Drill() {
     // recorded 34. The order is decided when the run starts and then held.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.guideId, state.drillUnit, state.drillMix]);
+
+  /*
+   * One sitting off the front, and the rest counted rather than dropped.
+   *
+   * The cap goes on *after* the ordering, so a run always takes the cards
+   * that matter most and never a different set — see `A_SITTING`. Derived in
+   * render rather than inside the memo above because the end-of-run screen
+   * has to count what is due across the whole deck, and a memo that returned
+   * only the 25 would have made "nothing is due" sit directly above "43 more
+   * are waiting". It did, for one build.
+   */
+  const sitting = aSitting(ordered);
+  const pool = sitting.cards;
 
   /*
    * Whether mixing is even on the table.
@@ -102,10 +116,13 @@ export function Drill() {
     // hash, which would be worse than saying nothing.
     const cardText = (key: string) => pool.find((c) => c.key === key)?.q ?? '';
     const waiting = dueCount(
-      pool.map((c) => c.key),
+      // The whole deck, not the sitting: what is due in this course does not
+      // stop at the twenty-fifth card.
+      ordered.map((c) => c.key),
       state.reviews,
       now.getTime(),
     );
+    const stubborn = catching(pool, state.reviews);
     const verdict =
       got === pool.length
         ? 'Cold locked.'
@@ -148,7 +165,41 @@ export function Drill() {
               Missed cards return in ten minutes. A card you get right three times running moves out
               to weeks.
             </div>
+            {/*
+              What the cap held back, said out loud.
+              A run that silently dropped two hundred cards would be lying by
+              omission — and the number is what makes going again a decision
+              rather than a guess. See `A_SITTING` in `lib/review.ts`.
+            */}
+            {sitting.left > 0 && (
+              <div style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                {`${sitting.left} more ${sitting.left === 1 ? 'card was' : 'cards were'} waiting and held back for the next run. A sitting is ${A_SITTING} cards so it stays finishable.`}
+              </div>
+            )}
           </Blueprint>
+
+          {/*
+            The cards that keep catching you out.
+
+            A miss puts a card back in ten minutes, which is right for one you
+            nearly knew and a treadmill for one you do not — the schedule has
+            no way of ever concluding that the *card* is the problem. So this
+            names them and stops there: they are generated from the student's
+            own course material, and hiding part of a syllabus to make a
+            number go up is the wrong trade. See `keepsCatching`.
+          */}
+          {stubborn.length > 0 && (
+            <Blueprint plain style={{ padding: 'var(--sp-7)', marginTop: 'var(--sp-7)', textAlign: 'left' }}>
+              <div className="kicker">These keep catching you</div>
+              <div style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+                {stubborn.slice(0, 3).map((c) => c.q).join(' · ')}
+              </div>
+              <div style={{ fontSize: 'var(--type-sm)', ...secondLine(), marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                Pressing Again a ninth time is not going to do it. Go back to the reading these came
+                from — the answer is usually that the card asks two things at once.
+              </div>
+            </Blueprint>
+          )}
 
           {/*
             How well you know what you know.
@@ -236,15 +287,38 @@ export function Drill() {
             }}
           />
         </div>
-        <div
-          style={{
-            fontFamily: 'var(--font-heading)',
-            fontSize: 'var(--type-sm)',
-            letterSpacing: '0.12em',
-            opacity: 0.55,
-          }}
-        >
-          {state.drillIdx + 1} / {pool.length}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
+          {/*
+            Taking back the card just answered.
+            Only while there is one to take back, and only within this run.
+            Recording answers is what made this necessary: a mis-tapped
+            "Again" halves the ease, zeroes the interval and puts the card
+            back in ten minutes, and this was the one screen in the app that
+            writes to a scheduler and could not be corrected.
+          */}
+          {state.lastAnswer && (
+            <button
+              type="button"
+              className="bare"
+              onClick={() => {
+                dispatch({ type: 'undoCard' });
+                say('Took back the last answer.');
+              }}
+              style={{ width: 'auto', fontSize: 'var(--type-sm)', ...secondLine() }}
+            >
+              Undo
+            </button>
+          )}
+          <div
+            style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: 'var(--type-sm)',
+              letterSpacing: '0.12em',
+              opacity: 0.55,
+            }}
+          >
+            {state.drillIdx + 1} / {pool.length}
+          </div>
         </div>
       </div>
 
