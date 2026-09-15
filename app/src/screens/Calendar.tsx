@@ -72,6 +72,7 @@ import type {
 } from '../lib/types';
 import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
+import { goCal } from '../lib/opencal';
 
 /**
  * The calendar has two independent axes.
@@ -2891,9 +2892,7 @@ export function EventDetail() {
           type="button"
           className="btn btn-secondary"
           onClick={() => {
-            dispatch({ type: 'setCalDay', date: dateToIso(event.date) });
-            dispatch({ type: 'setCalView', view: 'day' });
-            dispatch({ type: 'go', screen: 'calendar' });
+            goCal(dispatch, dateToIso(event.date));
           }}
           style={{ height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
