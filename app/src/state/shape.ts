@@ -626,6 +626,21 @@ export interface Persisted {
   done: Record<string, boolean>;
   saved: Record<string, boolean>;
   notifs: Record<NotifKey, boolean>;
+  /**
+   * Courses that may not raise a reminder.
+   *
+   * The nine rules are global — "two days before anything", "a class starts
+   * soon" — and a term usually has one course that does not want them: the
+   * one being audited, the pass/fail, the one whose deadlines live in a lab
+   * notebook. Without this the only way to stop them is to turn the rule off
+   * for every course, which is how somebody ends up with no reminders at all.
+   *
+   * A list of ids rather than a switch per rule per course. Nine rules times
+   * four courses is a settings page nobody finishes, and it answers a
+   * question nobody asks — what people want is "stop telling me about this
+   * one". `lib/notify.ts` filters on it before any rule runs.
+   */
+  mutedCourses: CourseId[];
   seenOnboarding: boolean;
   /**
    * Whether an account has ever been made or signed into on this device.
@@ -1171,6 +1186,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   done: {},
   saved: { e1: true, e16: true },
   notifs: { ...DEFAULT_NOTIFS },
+  mutedCourses: [],
   seenOnboarding: false,
   registered: false,
   // Vanderbilt by default, because that is who this was built for and a fresh
@@ -1464,6 +1480,7 @@ export function loadPersisted(): Persisted {
       ...DEFAULT_PERSISTED,
       ...saved,
       notifs: { ...DEFAULT_PERSISTED.notifs, ...record(saved.notifs) },
+      mutedCourses: list(saved.mutedCourses),
       done: record(saved.done),
       saved: record(saved.saved ?? DEFAULT_PERSISTED.saved),
       tasks: list(saved.tasks),
@@ -1647,6 +1664,7 @@ export function pickPersisted(state: State): Persisted {
     done: state.done,
     saved: state.saved,
     notifs: state.notifs,
+    mutedCourses: state.mutedCourses,
     seenOnboarding: state.seenOnboarding,
     registered: state.registered,
     cleared: state.cleared,
@@ -1919,6 +1937,8 @@ export type Action =
   | { type: 'setMyName'; name: string }
   | { type: 'markAttendance'; courseId: CourseId; date: string; mark: Attended['mark'] | null }
   | { type: 'setAttendPolicy'; courseId: CourseId; policy: AttendPolicy }
+  /** Stop, or resume, reminders about one course. */
+  | { type: 'muteCourse'; courseId: CourseId; on: boolean }
   | { type: 'setPieces'; key: string; text: string }
   | { type: 'setExamCovers'; id: string; text: string }
   | { type: 'setDrop'; key: string; drop: number }

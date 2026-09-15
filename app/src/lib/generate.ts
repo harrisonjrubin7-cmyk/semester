@@ -23,6 +23,7 @@ import { realMonthDay } from './date';
 
 import { ask, type Citation, type Doc } from './claude';
 import { courseId } from './edit';
+import { hasPolicy, readPolicy, type AttendPolicy } from './attend';
 import type { Course, CourseModule, GradeRow, Item, RecurringBlock } from './types';
 import { check, flatten, tally, worthCiting, type Checked } from './cite';
 import { MOST, capsFor, countsSay, shapeSays, type Controls } from './controls';
@@ -61,6 +62,16 @@ export interface GenerationInput {
 
 export interface GenerationResult {
   module: CourseModule;
+  /**
+   * The attendance rule the syllabus states, or nothing stated.
+   *
+   * Beside the module rather than on it, because that is where the app keeps
+   * it: a policy lives in `attendPolicy` keyed by course, not on `Course`.
+   * See `components/Attendance.tsx`, whose note asked for this — the importer
+   * read dates and weights and never the one rule that can cost a letter
+   * grade without a single mark being missed.
+   */
+  attendance: AttendPolicy;
   /** What was adjusted or thrown out on the way in, for the preview to show. */
   notes: string[];
   /** How the quotes stood up against the file, in a sentence. Empty if unchecked. */
@@ -83,6 +94,10 @@ Return ONLY JSON matching this shape:
     "credits": "3 credits",
     "lms": "the course's Brightspace/Canvas URL if the syllabus gives one, else empty",
     "grading": [{ "what": "Problem sets", "pct": "20%" }]
+  },
+  "attendance": {
+    "allowed": 0, "penaltyPer": 0, "worth": 0,
+    "note": "the sentence from the syllabus stating the attendance rule, verbatim"
   },
   "schedule": [{ "days": [1,3,5], "at": 545, "time": "9:05a", "title": "ECON 1020", "meta": "room · professor" }],
   "items": [{
@@ -114,7 +129,16 @@ Rules, in order of importance:
    own topic list when they are not.
 5. Units follow the course's own structure — its weeks, chapters or sessions.
 6. Keep every id lowercase, hyphenated, and prefixed with the course id.
-7. mastery is 0 everywhere: the student has not studied any of it yet.`;
+7. mastery is 0 everywhere: the student has not studied any of it yet.
+8. "attendance" is the syllabus's attendance rule, and rule 1 applies hardest
+   here. "allowed" is unexcused absences permitted before anything happens;
+   "penaltyPer" is percentage points of the final grade lost for each one
+   after that; "worth" is what attendance is worth if it is a graded category
+   instead. Use only the numbers the syllabus states, leave the rest 0, and
+   quote the rule verbatim in "note". A syllabus that says nothing about
+   attendance gets all three zeros and an empty note — never a guess at a
+   common policy, because a student who is told they have three absences and
+   has none will use them.`;
 
 /** Ask for the course, then check what comes back before believing it. */
 export async function generateCourse(
@@ -209,6 +233,8 @@ function validate(
     schedule?: RecurringBlock[];
     items?: Partial<Item>[];
     guide?: CourseModule['guide'];
+    /** Unknown, not `Partial<AttendPolicy>`: `readPolicy` is what types it. */
+    attendance?: unknown;
   };
 
   try {
@@ -252,6 +278,23 @@ function validate(
     .map((g) => ({ what: g.what as string, pct: g.pct as string }));
   if (raw.course.grading !== undefined && grading.length === 0) {
     notes.push('The grade weightings did not come back in a usable shape, so none were kept.');
+  }
+
+  /*
+   * The attendance rule, if the syllabus stated one.
+   *
+   * Noted for the preview only when something was actually read. A line
+   * saying "no attendance policy found" on every import that never had one
+   * would be noise on the screen where the student is checking the things
+   * that *did* come back.
+   */
+  const attendance = readPolicy(raw.attendance);
+  if (hasPolicy(attendance)) {
+    notes.push(
+      attendance.note
+        ? `Read an attendance rule: “${attendance.note}”. Check it on the course before you rely on it.`
+        : 'Read an attendance rule from the syllabus. Check it on the course before you rely on it.',
+    );
   }
 
   const course: Course = {
@@ -399,6 +442,14 @@ function validate(
     // Only where there was a document to cite. An import from pasted text
     // gets silence rather than a reassurance the app cannot back.
     ...(citations.length > 0 ? { quotesLine: tally(items) } : {}),
+    /*
+     * Through `readPolicy`, which is the same gate a policy off the disk goes
+     * through and exactly the one a model reply needs: it caps the numbers and
+     * turns anything it cannot read into "nothing stated" rather than a guess.
+     * A syllabus that says nothing about attendance and a model that answered
+     * with prose come out the same way here, which is the right answer to both.
+     */
+    attendance,
     module: {
       course,
       schedule,

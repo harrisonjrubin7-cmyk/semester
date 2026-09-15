@@ -161,7 +161,7 @@ export function Privacy() {
               }}
             >
               <span>{DESTINATIONS.find((d) => d.screen === t.screen)?.label ?? t.screen}</span>
-              <span style={{ opacity: 0.6, fontVariantNumeric: 'tabular-nums' }}>{t.n}</span>
+              <span style={{ color: 'var(--app-dim)', fontVariantNumeric: 'tabular-nums' }}>{t.n}</span>
             </div>
           ))}
           <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>

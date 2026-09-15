@@ -71,9 +71,12 @@
  *
  * **"Blocked" meant "something else is on top", which is two questions.** The
  * subject here is one button, and `elementFromPoint` answers about whatever is
- * frontmost — a panel elsewhere on the page, or `null` for a centre below the
- * fold, since it is viewport-relative. Both read as blocked and neither is.
- * The centre is asked about only when it falls inside the button's own rect.
+ * frontmost — a panel elsewhere on the page, a toolbar clipping its own
+ * overflow, or `null` for a point below the fold, since it is
+ * viewport-relative. All of those read as blocked and none of them are. Both
+ * the centre check and the area sampling name the button now: the centre is
+ * asked about only where it falls inside the button's rect, and a sampled
+ * point counts only when the button itself is what answers.
  *
  * ## What it still over-reports, deliberately
  *
@@ -298,14 +301,28 @@ function census() {
      * as buried. That confusion has already produced one round of nonsense on
      * seven screens at once; see the note at the top.
      */
-    let reached = 0;
+    let blocked = 0;
     let asked = 0;
     for (let x = Math.ceil(t.left); x < t.right; x += 2) {
       for (let y = Math.ceil(t.top); y < t.bottom; y += 2) {
         if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) continue;
         asked += 1;
         const hit = document.elementFromPoint(x, y);
-        if (hit === el || el.contains(hit)) reached += 1;
+        /*
+         * Blocked *by the button*, not by anything.
+         *
+         * This counted every point the control did not answer at, which is a
+         * different question and a much larger number: a toolbar that clips
+         * its own overflow, a card that stacks over its neighbour, a control
+         * half off the side of the window. On the soft shell's spreadsheet it
+         * reported Underline as 93% covered, of which 3% was the assistant and
+         * 90% was the toolbar's own scroll container — and it is not this
+         * census's business whether a screen covers itself.
+         *
+         * The same conflation as the centre check above, one measurement
+         * along, and the same fix: name the element.
+         */
+        if (hit === fab || fab.contains(hit)) blocked += 1;
       }
     }
     /*
@@ -347,8 +364,9 @@ function census() {
       /* What the rectangles say, kept because it is what `costOf` in the app
          reasons with — and so the gap between the two stays visible. */
       boxPct: Math.round((over / (t.width * t.height)) * 100),
-      /* What a finger finds. `null` when none of it was on screen to ask. */
-      pct: asked ? Math.round(((asked - reached) / asked) * 100) : null,
+      /* How much of it the button takes. `null` when none of it was on
+         screen to ask about. */
+      pct: asked ? Math.round((blocked / asked) * 100) : null,
       asked,
       centreClear: top === el || el.contains(top),
     });

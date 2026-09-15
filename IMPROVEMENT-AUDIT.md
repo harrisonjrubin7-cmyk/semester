@@ -37,7 +37,7 @@ Run from `app/`, on a clean `npm install`:
 | | Baseline `253d34f` | This branch `5f3406f` |
 | --- | --- | --- |
 | `npx tsc -b` | exit 0 | exit 0 |
-| `npm run lint` | exit 0, 45 warnings | exit 0, 45 warnings, **now capped at 45** |
+| `npm run lint` | exit 0, 45 warnings, no ceiling | exit 0, **25 warnings, capped at 25** |
 | `npm test` | 372 files, 7,678 passed, 10 skipped — **exit 1 on some runs**, see §2a | 376 files, 7,687 passed, 10 skipped, exit 0 |
 | `npm run test:zones` | exit 0, twice | exit 0, twice |
 | `npm run build` | exit 0 | exit 0 |
@@ -338,8 +338,12 @@ import line satisfies on its own — deleting the await and keeping the import
 left the guard green. It looks for a call now, and that was checked by
 breaking it.
 
-**Shuffle is in CI now**, as its own step beside the timezone one, and adding
-it found a tenth thing and then six more.
+**Shuffle is in CI now**, as *Test in a different order* beside the timezone
+one. It was added twice, from both ends — this branch wrote a step while
+another session landed the same thing on `main`, and the duplicate was resolved
+in favour of main's. Worth recording, because what either half did is only
+worth what the other half found: this half found a tenth thing, and then
+seven more.
 
 The tenth was a different class: `ReferenceError: window is not defined`,
 thrown by React's scheduler against a tree still mounted when a file ended and
@@ -356,12 +360,18 @@ at all; one handed the root to the test and only one test gave it back.
 `unmount` in an after hook — deliberately not counting a `beforeEach`, which is
 exactly the shape five of the seven had.
 
+An eighth file says what kind of check this is. Pointed at a newer `main`, the
+guard immediately flagged `screens/call/leaving.test.tsx`, which leaks nothing:
+unmounting is the thing both its tests test. The guard reads source, so it is a
+heuristic and wrong in both directions — a file can satisfy it and still leak by
+unmounting one root and not another, and this one was flagged while leaking
+nothing. The answer was to add the hook anyway rather than to loosen the check:
+unmounting twice is a no-op, and it is the third test somebody adds to that file
+that would have leaked.
+
 Eighteen shuffled runs at one, two, three, four and six workers, clean. That is
 what the step was worth waiting for: a shuffled CI that goes red one push in
-ten is not a guard, it is a tax. Adding `--sequence.shuffle` to CI
-is worth doing **after** that file is fixed, and is worth doing then — it is
-the cheapest guard there is against this whole class, and it found four of
-these in one afternoon.
+ten is not a guard, it is a tax.
 
 ---
 
@@ -477,7 +487,8 @@ showed it in the first screenshot.
 §6 of the engineering audit took the count from 155 to 41 and read the
 remainder as worth keeping visible — but nothing stopped it drifting back up,
 one pull request at a time, each warning invisible among the ones already
-there. `--max-warnings=45` is the ratchet; the way past it is to fix the
+there. `--max-warnings` is the ratchet — 45 when it went in, 25 once the
+`useModal` nineteen were gone; the way past it is to fix the
 warning or raise the number in a diff, with a reason.
 
 **It found one on the way in.** Merging main took the count to 48, and the
@@ -492,19 +503,42 @@ is still 45 rather than 48: the ratchet's whole point is that a warning is
 fixed or the number is raised on purpose, and raising it for three true
 findings on the first merge would have been the number's first lie.
 
-**The next thing to do with the number is one hook.** 45 warnings, and 20 of
-them are the same idiom:
+**The hook that was half the list is done.** The count is **25** now, and the
+ceiling with it. `a11y/modal.ts` returns `{ ref, onKeyDown }`, and ten files
+held that object and wrote `modal.ref` in their JSX. The React Compiler tracks
+where a ref goes and loses the thread through a property read, so every one of
+those was reported as *"Cannot access refs during render"* — which is not what
+the code does: it hands the ref to `ref=`, it never reads `.current`. Nineteen
+false warnings, sitting in the list where a true one would have to be noticed
+among them.
+
+Destructuring at the call site is all it took — the shape React's own hooks
+return, and the compiler can then see which binding is the ref. No rule
+disabled and no comment suppressing anything. The reasoning is in the hook's
+own note so the next caller does not put the object back, and the ceiling is
+what catches them if they do.
+
+Verified in a browser rather than only in the suite, because a focus trap is
+the kind of thing jsdom will agree with and a user will not: the launcher
+dialog still takes focus on open, holds it through fourteen tabs, closes on
+Escape and gives focus back to the button that opened it. One of the ten,
+`components/Command.tsx`, could not be opened in either navigation tried and
+has no test file of its own — its change is sound by reading and by the type
+checker, and is the one not exercised at runtime.
+
+**What the 25 are now:**
 
 | Rule | Count | |
 | --- | --- | --- |
-| `react(refs)` | 22 | 20 are `a11y/modal.ts` — it returns `{ ref, onKeyDown }`, and the compiler reads every `modal.ref` in a render as a ref access, in 10 of the 11 files that use it |
 | `react(set-state-in-effect)` | 12 | genuine, spread across 9 files |
 | `react(purity)` | 4 | `Date.now()` read once per render, deliberately, so a list and its headings agree about what "now" is |
 | `react(preserve-manual-memoization)` | 4 | all in `screens/Sheet.tsx` |
-| `react-hooks(exhaustive-deps)` | 3 | |
+| `react(refs)` | 3 | `room/Talk.tsx`, `call/Green.tsx`, `screens/Calendar.tsx` — none of them `useModal`, so three separate readings rather than one idiom |
+| `react-hooks(exhaustive-deps)` | 2 | |
 
-Changing the hook's return shape clears nearly half the list in one change and
-is worth doing on its own rather than as a side effect of something else.
+The twelve `set-state-in-effect` are the next real block, and unlike the
+nineteen they are not false: each is an effect that could be a derivation. They
+want reading one at a time rather than a pass.
 
 ---
 
@@ -562,7 +596,7 @@ something once went wrong.
 | 6 | ✅ **§2** — `isolate: false`, with the mocking files as exceptions and a test that keeps the list honest | done, by another session | 42 s → 29.5 s a run, three runs deep |
 | 7 | ✅ **§5** — a size, a list and a clear button for downloaded media | done | an installed app that does not quietly take 200 MB of a phone with no way to see or stop it |
 | 7a | ✅ **§5, the rest** — a cap, least recently played first, and what it took said out loud | done | the same, without anybody having to go and look |
-| 8 | **§6 follow-on** — reshape `useModal`'s return | small | 20 of 45 warnings, in one change |
+| 8 | ✅ **§6 follow-on** — destructure `useModal` at the call site | done | 19 of 44 warnings, and the ceiling down from 45 to 25 |
 | 9 | **§7** — direct tests for `rtc.ts`, `mic.ts` | medium | the part of the app that is hardest to check by hand |
 
 Items 1–4 and 6–7a are on `main`; item 5 finished on this branch. Every one

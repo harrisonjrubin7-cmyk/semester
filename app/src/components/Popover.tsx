@@ -28,6 +28,34 @@
  * room under it, which is what a context menu does everywhere else. A panel
  * taller than the whole window scrolls inside itself rather than being cut.
  *
+ * ## Drawn from `.device`, not from where it was opened
+ *
+ * `z-index: 90` above is the top of the app's ladder — over the palette at
+ * 80, the confirmations at 85, the first-run question at 88 — and for a long
+ * time it bought none of that. `.device > *` gives every direct child
+ * `position: relative; z-index: 1` and `isolation: isolate` on `.device`
+ * closes the context around the lot, so a panel opened from the tab strip was
+ * a 90 spent inside the strip's 1. The header is a later sibling at 3. It won.
+ *
+ * On a phone that is the whole of the tab menu: **Pin this tab** was painted
+ * behind the screen's title, the sample banner and the page text, and a tap
+ * where the row was went to the heading instead — `elementFromPoint` over it
+ * returned `H1.chrome-text`. The strip's own menu, unreachable, on the layout
+ * whose only route to pinning a tab it is. Mail's snooze menu and the
+ * bookmarks bar's are the same panel with the same 1 over them.
+ *
+ * So it portals onto `.device`, where its 90 is finally a 90 and the ladder
+ * means what it reads as. The frame rather than the body because every
+ * control in this app is scoped `.device .bare` — outside it the rows would
+ * be browser buttons — and it is the answer `Adopting` and `TypeToConfirm`
+ * already give. Nothing else moves: `position: fixed` puts the panel against
+ * the window from wherever it is mounted, and a portal keeps React's tree, so
+ * the events a caller listens for still reach it.
+ *
+ * The workspace raised its own strip to 21 to fix its half of this, which is
+ * why the menu worked there and nowhere else. That is still right for the
+ * strip — the pane must not paint over it — and no longer load-bearing here.
+ *
  * ## `role="dialog"`, and not `menu`
  *
  * The app says elsewhere what it means by an ARIA role and does not claim
@@ -39,6 +67,7 @@
  */
 
 import { useEffect, useLayoutEffect, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useModal } from '../a11y/modal';
 import { secondLine } from '../lib/dim';
 
@@ -68,8 +97,7 @@ export function Popover({
   onClose: () => void;
   children: ReactNode;
 }) {
-  const modal = useModal<HTMLDivElement>({ onClose });
-  const box = modal.ref;
+  const { ref: box, onKeyDown } = useModal<HTMLDivElement>({ onClose });
   /*
    * Where it actually opens, once its height is known.
    *
@@ -112,13 +140,13 @@ export function Popover({
     return () => window.removeEventListener('pointerdown', away, true);
   }, [box, onClose]);
 
-  return (
+  const panel = (
     <div
       ref={box}
       role="dialog"
       aria-modal="false"
       aria-label={label}
-      onKeyDown={modal.onKeyDown}
+      onKeyDown={onKeyDown}
       style={{
         position: 'fixed',
         left: Math.max(EDGE, Math.min(corner.x, window.innerWidth - width - EDGE)),
@@ -141,6 +169,13 @@ export function Popover({
       {children}
     </div>
   );
+
+  // See the note at the top: the frame, so the 90 above is measured against
+  // the app's other overlays rather than against the strip's own siblings —
+  // and so the rows are still drawn in the app's materials, which is what
+  // `.device` is scoped on.
+  const frame = typeof document === 'undefined' ? null : document.querySelector('.device');
+  return frame ? createPortal(panel, frame) : panel;
 }
 
 /** One line of a panel: a label, and a dot ahead of it where one says a colour. */

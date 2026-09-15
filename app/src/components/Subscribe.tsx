@@ -220,7 +220,7 @@ const LEAD = {
 const FRESH = {
   margin: 'var(--sp-3) 0 var(--sp-3)',
   fontSize: 'var(--type-xs)',
-  opacity: 0.6,
+  color: 'var(--app-dim)',
 } as const;
 
 const WARN = {

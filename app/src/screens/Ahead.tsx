@@ -177,7 +177,7 @@ export function Ahead() {
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         Classes and commitments at the length they meet for; a commitment given as hours a week
         spread evenly across the seven, because it has no day of its own; an appointment counted
         as an hour, because it has a start and no end. A dot marks a day with something due on it.
@@ -215,7 +215,7 @@ export function Ahead() {
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
                 {p.item.title}
-                <span style={{ opacity: 0.5 }}> · {code(p.item.c)}</span>
+                <span style={{ color: 'var(--app-dim)' }}> · {code(p.item.c)}</span>
               </span>
               <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                 {p.minutes >= 60 ? `${Math.round((p.minutes / 60) * 10) / 10}h` : `${p.minutes}m`}
@@ -237,12 +237,12 @@ export function Ahead() {
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35, opacity: 0.75 }}>
                 {s.item.title}
-                <span style={{ opacity: 0.6 }}> · due {s.item.dueShort}, and no day has room</span>
+                <span style={{ color: 'var(--app-dim)' }}> · due {s.item.dueShort}, and no day has room</span>
               </span>
             </div>
           ))}
           {readings.unsized.length > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               {readings.unsized.length} could not be sized — the app has not seen you time a
               reading in that course yet, and it will not invent one.
             </div>
@@ -281,7 +281,7 @@ export function Ahead() {
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
                 {i.title}
-                <span style={{ opacity: 0.5 }}> · {code(i.c)}</span>
+                <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
               </span>
             </button>
           ))}

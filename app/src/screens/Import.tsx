@@ -12,6 +12,7 @@ import { Trouble } from '../components/Trouble';
 import { troubleOf, useTrouble } from '../lib/trouble';
 import { intakeFiles, intakeText, type Intake } from '../lib/intake';
 import { generateCourse, type GenerationResult } from '../lib/generate';
+import { NO_POLICY, hasPolicy } from '../lib/attend';
 import { packSummary, provenance, readPack } from '../lib/handoff';
 import { configured } from '../lib/assistant';
 import { readTerm } from '../lib/term';
@@ -253,6 +254,10 @@ export function Import() {
       setResult({
         module: opened.module,
         notes: [packSummary(opened), provenance(opened)],
+        // A shared pack is somebody else's built course, not a syllabus being
+        // read, so there is no rule to have found. `NO_POLICY` says that
+        // rather than leaving the field to be guessed at downstream.
+        attendance: NO_POLICY,
       });
     } catch (e) {
       trouble.failed(e, () => void openShared(file));
@@ -320,9 +325,24 @@ export function Import() {
     // Replacing rather than adding, when it is the same course, and with the
     // surviving items keeping the ids their ticks are filed under — otherwise
     // a re-import silently un-ticks everything already done.
+    /*
+     * The attendance rule, filed against the course it was read from.
+     *
+     * Only when the syllabus stated one. An empty policy dispatched anyway
+     * would overwrite a rule the student had typed by hand on a re-import —
+     * which is the one case where reading a syllabus again should cost them
+     * nothing, and is why this is a guard rather than an unconditional write.
+     */
+    const fileAttendance = (courseId: string) => {
+      if (hasPolicy(result.attendance)) {
+        dispatch({ type: 'setAttendPolicy', courseId, policy: result.attendance });
+      }
+    };
+
     if (existing) {
       const merged = keepIds(existing, reviewed);
       dispatch({ type: 'replaceCourse', module: merged });
+      fileAttendance(merged.course.id);
       dispatch({ type: 'openCourse', id: merged.course.id });
       return;
     }
@@ -333,6 +353,7 @@ export function Import() {
       course: { ...reviewed.course, term: reviewed.course.term ?? term.id },
     };
     dispatch({ type: 'addCourse', module: filed });
+    fileAttendance(filed.course.id);
     // The screen changes underneath, which is no confirmation at all if you
     // are not looking at it.
     say(
@@ -533,14 +554,14 @@ export function Import() {
           <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {f.name}
           </span>
-          <span style={{ fontSize: 'var(--type-xs)', opacity: 0.5, flex: 'none' }}>
+          <span style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', flex: 'none' }}>
             {f.words.toLocaleString()} words
           </span>
           <button
             type="button"
             className="bare"
             onClick={() => setFiles((list) => list.filter((x) => x.name !== f.name))}
-            style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+            style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
           >
             REMOVE
           </button>
@@ -974,7 +995,7 @@ function Preview({
                 style={{
                   display: 'block',
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                   marginTop: 'var(--sp-2)',
                   lineHeight: 'var(--leading-normal)',
                   paddingLeft: 92,

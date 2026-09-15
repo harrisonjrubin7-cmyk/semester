@@ -126,6 +126,20 @@ export function settings(state: State, action: Action): State | null {
         attendPolicy: { ...state.attendPolicy, [action.courseId]: readPolicy(action.policy) },
       };
 
+    /*
+     * Muting is a list rather than a flag per course, so a course dropped
+     * from the term leaves nothing behind: its id simply stops matching.
+     */
+    case 'muteCourse':
+      return {
+        ...state,
+        mutedCourses: action.on
+          ? state.mutedCourses.includes(action.courseId)
+            ? state.mutedCourses
+            : [...state.mutedCourses, action.courseId]
+          : state.mutedCourses.filter((id) => id !== action.courseId),
+      };
+
     case 'setPieces':
       return { ...state, pieces: { ...state.pieces, [action.key]: action.text } };
 

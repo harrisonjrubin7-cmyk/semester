@@ -360,7 +360,7 @@ export function Runway() {
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
                 {i.title}
-                <span style={{ opacity: 0.5 }}> · {code(i.c)}</span>
+                <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
               </span>
             </button>
           ))}

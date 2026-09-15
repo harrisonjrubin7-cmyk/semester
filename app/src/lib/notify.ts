@@ -81,8 +81,25 @@ interface Source {
    * off, and it costs the ones that matter their credibility.
    */
   done?: Record<string, boolean>;
-  /** Blocks on today's rail: label and minutes-from-midnight. */
-  classes: { label: string; at: number; where: string }[];
+  /** Blocks on today's rail: label, minutes-from-midnight, and whose they are. */
+  classes: { label: string; at: number; where: string; c?: string | null }[];
+  /**
+   * Courses the student has asked not to be reminded about.
+   *
+   * Filtered here rather than by the caller, unlike `atRisk` below, and the
+   * difference is worth stating: `atRisk` is a *computation* the caller is
+   * better placed to do, while this is a *rule about what may fire at all*.
+   * A rule enforced in one of three callers is a rule that leaks, and the
+   * thing it leaks is a notification somebody explicitly switched off — which
+   * is the failure this whole file was written to stop ("a switch that lies
+   * is worse than no switch").
+   *
+   * Muting a course silences its deadlines, its exams and its class nudges.
+   * It does not touch the rules that are not about one course — the bill, the
+   * registrar's dates, the weekly summary — because those are not a course's
+   * to silence.
+   */
+  muted?: string[];
   /** The university's own dates, if the student has filled any in. */
   registrar?: TermDate[];
   /**
@@ -128,11 +145,14 @@ interface Source {
  * one is not a class you are late for. Neither earns a buzz.
  */
 export function classesToNudge(
-  rail: { title: string; meta: string; at: number; canceled?: boolean; optional?: boolean }[],
-): { label: string; at: number; where: string }[] {
+  rail: { title: string; meta: string; at: number; c?: string | null; canceled?: boolean; optional?: boolean }[],
+): { label: string; at: number; where: string; c: string | null }[] {
   return rail
     .filter((b) => !b.optional && !b.canceled)
-    .map((b) => ({ label: b.title, at: b.at, where: b.meta }));
+    // The course comes with it so a muted one can be left alone. Null for a
+    // block that belongs to no course — a shift, a dinner — which nothing
+    // mutes because nothing filed it under a course in the first place.
+    .map((b) => ({ label: b.title, at: b.at, where: b.meta, c: b.c ?? null }));
 }
 
 /** A class meeting worth a warning, and why it is worth one. */
@@ -218,11 +238,26 @@ export function dueReminders(
    * three does not, which is the setting doing what it was asked to.
    */
   if (inQuiet(minutes, src.quiet ?? null)) return out;
+
+  /*
+   * A muted course is silent before any rule looks at it.
+   *
+   * At the top rather than inside each rule, so a rule added next year is
+   * muted by default rather than by somebody remembering. `items` and
+   * `classes` are the only two things here that belong to a course; the bill,
+   * the registrar and the weekly summary do not, and are untouched.
+   */
+  const muted = src.muted ?? [];
+  const items = muted.length ? src.items.filter((i) => !muted.includes(i.c)) : src.items;
+  const classes = muted.length
+    ? src.classes.filter((c) => !c.c || !muted.includes(c.c))
+    : src.classes;
+
   const done = src.done ?? {};
   const left = (i: DatedItem): boolean => !done[i.id];
   // Two different questions, and only one of them is about work still to do.
   // `onToday` is what the day holds; `todays` is what is left of it.
-  const onToday = src.items.filter((i) => i.isToday);
+  const onToday = items.filter((i) => i.isToday);
   const todays = onToday.filter(left);
 
   // Before the class rather than after the absence. Everything that decides
@@ -247,7 +282,7 @@ export function dueReminders(
   }
 
   if (on.class) {
-    for (const c of src.classes) {
+    for (const c of classes) {
       const away = c.at - minutes;
       if (away > 0 && away <= 15) {
         out.push({
@@ -284,7 +319,7 @@ export function dueReminders(
   }
 
   if (on.two) {
-    for (const i of src.items.filter((x) => x.daysAway === 2 && left(x))) {
+    for (const i of items.filter((x) => x.daysAway === 2 && left(x))) {
       out.push({
         id: `two:${today}:${i.id}`,
         rule: 'two',
@@ -337,7 +372,7 @@ export function dueReminders(
   // At four weeks as well as at one. Four is where the runway starts, and the
   // whole point of it is that the week to act is not the week before.
   if (on.exam) {
-    for (const i of src.items) {
+    for (const i of items) {
       if (i.daysAway !== 7 && i.daysAway !== 28) continue;
       if (!isExam(i) || !left(i)) continue;
       out.push({
@@ -361,7 +396,7 @@ export function dueReminders(
   // what has had no attention — and staying silent on it meant the report
   // never arrived in the weeks it would have helped most.
   if (on.sun && now.getDay() === 0 && minutes >= 18 * 60) {
-    const week = src.items.filter((i) => i.daysAway > 0 && i.daysAway <= 7 && left(i));
+    const week = items.filter((i) => i.daysAway > 0 && i.daysAway <= 7 && left(i));
     out.push({
       id: `sun:${today}`,
       rule: 'sun',

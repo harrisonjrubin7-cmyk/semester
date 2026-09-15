@@ -470,7 +470,7 @@ function PlanView({
                 <div
                   style={{
                     fontSize: 'calc(10.5px * var(--text-scale, 1))',
-                    opacity: 0.5,
+                    color: 'var(--app-dim)',
                     marginTop: 5,
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',

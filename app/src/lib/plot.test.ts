@@ -893,3 +893,86 @@ describe('a packet tree on the list', () => {
     expect(of('packet()')).toMatchObject({ kind: 'fault' });
   });
 });
+
+/**
+ * A fractional transform on the list.
+ *
+ * `lib/fractional.test.ts` checks it is a rotation — that order 1 is the
+ * ordinary transform to the last bit, and that turning twice is turning twice
+ * as far. This checks the joint, and the one thing a person would type it for:
+ * a chirp, which an ordinary spectrum smears across every bin, has an order
+ * that gathers it and the reading says which.
+ */
+describe('a fractional transform on the list', () => {
+  it('is its own kind, by any of its names', () => {
+    expect(of('frft([1, 2, 3, 4], 0.5)').kind).toBe('fractional');
+    expect(of('fractional([1, 2, 3, 4], 0.5)').kind).toBe('fractional');
+    expect(of('dft([1, 2, 3, 4])').kind).toBe('bins');
+  });
+
+  it('draws the ordinary spectrum at order 1', () => {
+    // The same eight samples through `dft` and through `frft(…, 1)`: the sizes
+    // match but for the scaling a rotation has to have, which is a root of 8.
+    const plain = answered(of('dft([3, -1, 4, 1, -5, 9, 2, 6])'), {});
+    const turned = answered(of('frft([3, -1, 4, 1, -5, 9, 2, 6], 1)'), {});
+    if (!plain || 'says' in plain || !turned || 'says' in turned) throw new Error('no answer');
+    for (let k = 0; k < 8; k += 1) {
+      expect(turned.at(k) * Math.sqrt(8)).toBeCloseTo(plain.at(k), 9);
+    }
+  });
+
+  it('gives the run back at order 0', () => {
+    const got = answered(of('frft([3, -1, 4, 1], 0)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toBe('4 samples, turned 0 of the way round:');
+    [3, 1, 4, 1].forEach((size, k) => expect(got.at(k)).toBeCloseTo(size, 9));
+  });
+
+  it('finds the order a chirp lines up at, and draws it there when none is asked', () => {
+    const got = answered(of('frft(\\cos(0.02 n^2), 64)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    // A chirp is smeared at order 1 and gathered somewhere else; which order
+    // is what the reading is for, so the lead and the note agree on it.
+    const at = Number(/turned ([-0-9.]+) of the way/.exec(got.lead)?.[1]);
+    const best = Number(/gathers best at order ([-0-9.]+)/.exec(got.note ?? '')?.[1]);
+    expect(at).toBe(best);
+    expect(Math.abs(best - 1)).toBeGreaterThan(0.05);
+    expect(got.note).toMatch(/so this is a chirp/);
+  });
+
+  it('does not call a plain wobble a chirp', () => {
+    // A sine gathers best at the ordinary spectrum, and saying it sweeps at
+    // order 1 would be a reading that sounds like an answer and is not.
+    const got = answered(of('frft(\\cos(2\\pi 0.25 n), 32)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.note).toMatch(/a wobble at a fixed frequency rather than a chirp/);
+    expect(got.note).not.toMatch(/is a chirp, and/);
+  });
+
+  it('gathers a chirp better at its own order than at the ordinary one', () => {
+    const spread = answered(of('frft(\\cos(0.02 n^2), 64, 1)'), {});
+    const lined = answered(of('frft(\\cos(0.02 n^2), 64)'), {});
+    if (!spread || 'says' in spread || !lined || 'says' in lined) throw new Error('no answer');
+    const peak = (a: { at: (k: number) => number }) =>
+      Math.max(...Array.from({ length: 64 }, (_, k) => a.at(k)));
+    expect(peak(lined)).toBeGreaterThan(peak(spread));
+  });
+
+  it('draws a stem per bin, and no more than there are', () => {
+    const drawn = draw(of('frft([1, 2, 3, 4], 0.5)'), {}, { x0: -2, x1: 12, y0: -1, y1: 5 });
+    expect(drawn.points.map((p) => p.x)).toEqual([0, 1, 2, 3]);
+    for (const path of drawn.paths) expect(path[0].y).toBe(0);
+  });
+
+  it('refuses a run longer than it can take apart', () => {
+    const got = answered(of('frft(\\cos(n), 512)'), {});
+    if (!got || !('says' in got)) throw new Error('meant to be refused');
+    expect(got.says).toMatch(/256 samples is as many as this does at once, and there are 512/);
+  });
+
+  it('asks for the letters it needs and no others', () => {
+    expect(missing(of('frft([1, 2, 3, 4], 0.5)'), {})).toEqual([]);
+    expect(missing(of('frft(k \\cos(n), 32, 0.5)'), {})).toEqual(['k']);
+    expect(of('frft()')).toMatchObject({ kind: 'fault' });
+  });
+});

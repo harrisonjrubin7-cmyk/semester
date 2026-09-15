@@ -100,7 +100,7 @@ export function Opening({
       <div
         style={{
           fontSize: 'var(--type-xs)',
-          opacity: 0.5,
+          color: 'var(--app-dim)',
           lineHeight: 'var(--leading-normal)',
           marginTop: 'var(--sp-6)',
           textWrap: 'pretty',

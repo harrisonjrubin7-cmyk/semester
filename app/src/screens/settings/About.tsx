@@ -41,7 +41,7 @@ export function SettingsAbout() {
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 'var(--type-md)' }}>{s.label}</div>
-                    <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5 }}>{s.meta}</div>
+                    <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>{s.meta}</div>
                   </div>
                   <span className="tag tag-outline">{s.state}</span>
                 </div>

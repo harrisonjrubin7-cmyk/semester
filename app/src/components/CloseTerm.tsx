@@ -86,7 +86,7 @@ export function CloseTerm() {
               <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
                 {r.code}
               </span>
-              <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {r.hours > 0 ? `${r.hours} credit ${r.hours === 1 ? 'hour' : 'hours'}` : 'No credit hours stated'}
               </span>
             </span>
@@ -137,7 +137,7 @@ export function CloseTerm() {
           Close it
         </button>
       </div>
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         Then {after.label} is the term you are in, and it starts empty.
       </div>
     </div>

@@ -56,6 +56,17 @@ const here = dirname(fileURLToPath(import.meta.url));
 const AUDIT = readFileSync(join(here, 'contrast-audit.js'), 'utf8');
 const STATES = readFileSync(join(here, 'contrast-states.js'), 'utf8');
 const BASE = process.env.SWEEP_URL || 'http://localhost:5173/';
+/*
+ * The browser to drive.
+ *
+ * This container keeps a Chromium at a fixed path and playwright's own
+ * download is skipped, so the default points there — but that path is a fact
+ * about this machine, not about the sweep. Anywhere else (a CI runner, a
+ * laptop) playwright has installed its own and knows where it is, so when the
+ * default is absent and nothing was named, `launch` is left to find it. The
+ * earlier version always passed the path and failed on any machine that was
+ * not this one.
+ */
 const CHROME = process.env.SWEEP_CHROMIUM || '/opt/pw-browsers/chromium';
 // Narrow the run while working on the sweep itself; unset means everything.
 const ONLY_NAVS = process.env.SWEEP_NAVS?.split(',').map(s => s.trim()).filter(Boolean);
@@ -230,7 +241,8 @@ const forceStates = async (page, cdp) => {
         delete window.__sweepRoot;
         return r;
       }, [AUDIT, `#${m.measureId}`]);
-      if (res && !res.missingRoot) out.push({ state: m.state, measured: res.measured, rows: res.rows });
+      if (res && !res.missingRoot) out.push({ state: m.state, measured: res.measured, rows: res.rows,
+        skipped: res.skipped, gradient: res.gradient });
     } catch { /* the element went away mid-pass; nothing measured, nothing claimed */ }
     finally {
       try { await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] }); } catch { /* page gone */ }
@@ -239,7 +251,11 @@ const forceStates = async (page, cdp) => {
   return out;
 };
 
-const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
+const { existsSync } = await import('node:fs');
+const browser = await chromium.launch({
+  ...(existsSync(CHROME) ? { executablePath: CHROME } : {}),
+  args: ['--no-sandbox'],
+});
 const findings = [], coverage = [], unverified = [];
 const t0 = Date.now();
 
@@ -304,14 +320,16 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
         try { res = await page.evaluate(AUDIT); }
         catch (e) { console.log('AUDIT FAILED', nav, g.id, state, String(e).slice(0,110)); }
         coverage.push({ nav, ground: g.id, width: tag, state, reached, verified: groundOk && navOk,
-                        measured: res ? res.measured : 0 });
+                        measured: res ? res.measured : 0,
+                        skipped: res ? res.skipped : 0, gradient: res ? res.gradient : 0 });
         for (const r of (res ? res.rows : [])) findings.push({ nav, ground: g.id, width: tag, state, ...r });
 
         if (!SKIP_STATES) {
           const hits = await forceStates(page, cdp);
           for (const h of hits) {
             coverage.push({ nav, ground: g.id, width: tag, state: `${state}:${h.state}`, reached: true,
-                            verified: groundOk && navOk, measured: h.measured });
+                            verified: groundOk && navOk, measured: h.measured,
+                            skipped: h.skipped, gradient: h.gradient });
             for (const r of h.rows) findings.push({ nav, ground: g.id, width: tag, state: `${state}:${h.state}`, ...r });
           }
         }
@@ -338,7 +356,26 @@ for (const f of findings) {
 const rows = [...uniq.values()].sort((a,b) => a.ratio - b.ratio);
 
 const total = coverage.reduce((n,c)=>n+c.measured, 0);
+/*
+ * And what it could not measure, which `contrast-audit.js` has always counted
+ * and this has always thrown away.
+ *
+ * That file's own header says why the counts matter as much as the rows — "a
+ * pass that measured nothing is not a pass that found nothing" — and
+ * `groundOf` returns null on anything painted over a gradient, deliberately,
+ * because unknown beats wrong. Both numbers came back on every pass and were
+ * dropped on the floor here, so a screen whose text all sits on gradients
+ * printed a confident FINDINGS: 0 with nothing to say it had looked away.
+ *
+ * `scripts/paint.mjs` is the half that can measure those: it samples the
+ * screenshot rather than compositing the style tree, so a gradient and a
+ * `background-clip: text` heading are exactly what it reads. This number is
+ * the size of the hole it fills.
+ */
+const skipped = coverage.reduce((n,c)=>n+(c.skipped||0), 0);
+const gradient = coverage.reduce((n,c)=>n+(c.gradient||0), 0);
 console.log(`\nPASSES: ${coverage.length}   ELEMENTS MEASURED: ${total}   GROUNDS: ${GROUNDS.length}`);
+console.log(`NOT MEASURED: ${gradient} on a gradient (see scripts/paint.mjs), ${skipped} with no text or no colour`);
 for (const g of GROUNDS) {
   const mine = coverage.filter(c => c.ground === g.id);
   const bad = mine.filter(c => !c.verified).length;

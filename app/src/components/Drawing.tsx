@@ -117,7 +117,7 @@ export function Drawing({ code, language }: { code: string; language: Language }
 
   if (!svg) {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.5, padding: '20px 0' }}>Drawing…</div>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', padding: '20px 0' }}>Drawing…</div>
     );
   }
 

@@ -296,7 +296,7 @@ export function SettingsAssistant() {
                 <div style={{ fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
                   About {money(month.dollars)} this month, over {month.asks}{' '}
                   {month.asks === 1 ? 'answer' : 'answers'}.{' '}
-                  <span style={{ opacity: 0.6 }}>
+                  <span style={{ color: 'var(--app-dim)' }}>
                     Tokens are counted by the API; the money is an estimate at list prices as at{' '}
                     {RATES_READ}, so treat it as a scale rather than a bill.
                     {month.unpriced > 0
