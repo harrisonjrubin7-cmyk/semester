@@ -84,6 +84,8 @@ describe('the shortcuts', () => {
 });
 
 describe('searching the apps', () => {
+  const STUDY = DESTINATIONS.find((d) => d.screen === 'study')!;
+
   it('puts the screen you named first', () => {
     expect(findApps('calendar', ALL)[0].screen).toBe('calendar');
     expect(findApps('courses', ALL)[0].screen).toBe('courses');
@@ -105,6 +107,93 @@ describe('searching the apps', () => {
         const words = `${d.blurb} ${d.keywords} ${d.group}`.toLowerCase();
         expect(new RegExp('(^|[^a-z])ap').test(words), `${d.screen} matched mid-word`).toBe(true);
       }
+    }
+  });
+
+  it('answers a phrase whose words sit apart in the registry', () => {
+    /*
+     * The bar said "No app matches that" to `study guide`, which is the
+     * thing this app is best at. Study's label says *study* and its keywords
+     * say *guide*, never adjacently, and the four ranking tiers all ask
+     * about the query as one unbroken run — so no screen scored above zero.
+     */
+    expect(scoreApp(STUDY, 'study guide', ALL)).toBeGreaterThan(0);
+    expect(findApps('study guide', ALL).map((d) => d.screen)).toContain('study');
+  });
+
+  it('reads a phrase in either order, the way people type it', () => {
+    /*
+     * `nav.ts`'s `taskMatch` states the rule this tier borrows: the two
+     * words somebody remembers, in whichever order they arrive.
+     *
+     * Asserted on the tier and not just on membership, because the first
+     * draft of this test passed against the unfixed matcher. `guide study`
+     * scored 40 there — Study's keywords end in *guide* and its shelf is
+     * *Study*, so the space joining the two fields spelled the phrase out at
+     * the seam. The test was reading an accident. The seam is a newline now
+     * (see `scoreApp`), so both orders reach the same tier for the same
+     * reason, and neither can be answered by a run nobody wrote.
+     */
+    /*
+     * Pinned to the tier's *shape* rather than to one number. #432 wrote this
+     * as `toBe(20)` when the tier was flat; it is graded now — the mean of
+     * what each word scores, scaled into the band below the whole-query tiers
+     * — so the literal moved to 27 while the property it was written to hold
+     * did not. Both orders still score identically, for the same reason, and
+     * neither can be answered by a run nobody wrote.
+     */
+    const forward = scoreApp(STUDY, 'study guide', ALL);
+    const back = scoreApp(STUDY, 'guide study', ALL);
+    expect(forward).toBe(back);
+    expect(forward).toBeGreaterThan(0);
+    expect(forward).toBeLessThanOrEqual(SCATTERED);
+    expect(findApps('guide study', ALL).map((d) => d.screen)).toContain('study');
+  });
+
+  it('does not score a phrase that only exists where two fields were joined', () => {
+    // The control that caught the test above. Every field pair, every
+    // registry row: the last word of one and the first of the next are not
+    // a phrase, and must not out-rank the screens that hold both properly.
+    for (const d of DESTINATIONS) {
+      const fields = [d.blurb, d.keywords, d.group].map((f) => f.toLowerCase().trim());
+      for (let i = 0; i < fields.length - 1; i++) {
+        const left = fields[i].split(/[^a-z]+/).filter(Boolean).at(-1);
+        const right = fields[i + 1].split(/[^a-z]+/).filter(Boolean)[0];
+        if (!left || !right) continue;
+        expect(scoreApp(d, `${left} ${right}`, ALL), `${d.screen} scored the seam "${left} ${right}"`).not.toBe(40);
+      }
+    }
+  });
+
+  it('still ranks a name above a phrase scattered across a blurb', () => {
+    // The tier is below the four, not among them: `calendar` is a label and
+    // must keep beating every screen whose sentence happens to hold it.
+    expect(findApps('calendar', ALL)[0].screen).toBe('calendar');
+    expect(scoreApp(STUDY, 'study guide', ALL)).toBeLessThan(scoreApp(STUDY, 'study', ALL));
+  });
+
+  it('leaves every one-word query scoring exactly what it scored before', () => {
+    /*
+     * The control on the change. A word starting anywhere in a label is
+     * already caught by `includes` at 60, so the new tier is unreachable
+     * with one word — asserted across the whole registry rather than argued,
+     * because "it cannot happen" is what the four tiers said about phrases.
+     */
+    const words = new Set(
+      DESTINATIONS.flatMap((d) => `${d.label} ${d.short ?? ''} ${d.keywords}`.toLowerCase().split(/[^a-z]+/)).filter(Boolean),
+    );
+    for (const w of words) {
+      for (const d of DESTINATIONS) {
+        expect(scoreApp(d, w, ALL), `${d.screen} scored the phrase tier on the single word "${w}"`).not.toBe(20);
+      }
+    }
+  });
+
+  it('does not answer a phrase with a screen that is missing one of its words', () => {
+    for (const d of findApps('study guide', ALL)) {
+      const hay = `${d.label} ${d.short ?? ''} ${d.blurb} ${d.keywords} ${d.group}`.toLowerCase();
+      expect(hay, `${d.screen} answered without one of the words`).toMatch(/(^|[^a-z])study/);
+      expect(hay, `${d.screen} answered without one of the words`).toMatch(/(^|[^a-z])guide/);
     }
   });
 

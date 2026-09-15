@@ -125,6 +125,9 @@ export function isFavourite(
  * question of one word that the whole query asks of itself, and get an answer
  * on the same scale.
  */
+const atWordStart = (hay: string, word: string): boolean =>
+  new RegExp(`(^|[^a-z])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(hay);
+
 function tier(d: Destination, q: string, caps: Capabilities): number {
   const said = saysFor(d, caps);
   const label = said.label.toLowerCase();
@@ -144,16 +147,20 @@ function tier(d: Destination, q: string, caps: Capabilities): number {
    *
    * A newline is still `[^a-z]`, so a word at the start of any field is as
    * findable as it ever was, and a one-word query cannot straddle a seam at
-   * all. Found and fixed first in #432, which reached this function from the
-   * other side; carried here because the every-word tier below would
-   * otherwise be shadowed by phantom whole-query hits, and because the
-   * `read aloud` keyword this branch adds creates one of its own.
+   * all.
+   *
+   * Found independently from both sides — #432 reached this function first
+   * and named `guide study`; this branch named `aloud study`, a seam its own
+   * `read aloud` keyword had just created — and measured at 60 twice, by two
+   * probes that do not share a line of code. It matters more under the tier
+   * below than it did on its own: a phantom whole-query hit returns before
+   * the every-word tier is reached, and would have shadowed it.
    */
   const words = [said.blurb, d.keywords, d.group].join('\n').toLowerCase();
   // Word-start rather than bare `includes`: "map" inside "compare" is not a
   // hit anybody meant, and a search that answers with a screen whose only
   // connection is a substring in the middle of a word reads as broken.
-  if (new RegExp(`(^|[^a-z])${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(words)) return 40;
+  if (atWordStart(words, q)) return 40;
   return 0;
 }
 
@@ -164,10 +171,16 @@ function tier(d: Destination, q: string, caps: Capabilities): number {
  * built around rather than a number that happened to look right: a screen
  * whose keywords contain the exact phrase typed is a better answer than a
  * screen that merely contains both words somewhere, and it stays ahead of one
- * however well the scattered words score. So this change can only ever add
- * rows to the end of a result list. It cannot reorder the rows that were
- * already there, which is what makes it safe to run under every existing
- * search test rather than beside them.
+ * however well the scattered words score. So *this tier* can only add rows to
+ * the end of a result list; it cannot reorder the rows already there, which
+ * is what made it safe to run under every existing search test rather than
+ * beside them.
+ *
+ * The claim is about the tier and not about the change, and the difference is
+ * not pedantry: the seam fix above does move rows, deliberately, and an
+ * earlier draft of this comment said nothing moved. #432 caught the same
+ * overstatement on its own side before merging. What moves is counted in
+ * `scoreApp` below.
  */
 export const SCATTERED = 39;
 
@@ -180,7 +193,7 @@ export const SCATTERED = 39;
  * ## Why the fifth
  *
  * Until it, the whole query had to appear as one unbroken run of characters in
- * one field, so the bar answered "No app matches that" to 32 of 43 ordinary
+ * one field, so the bar answered "No app matches that" to 32 of 44 ordinary
  * two- and three-word queries — "study guide", "pay bill", "practice exam",
  * "my grades", "email professor". The screen named in the first of those is
  * Study, whose keywords have said `guide` all along; the query failed because
@@ -198,21 +211,37 @@ export const SCATTERED = 39;
  * instruments, one registry, one of them wrong. The two now share the filler
  * list they filter by, in `lib/search.ts`.
  *
- * With the tier, 31 of those 43 are answered. The twelve that are still not
+ * With the tier, 32 of those 44 are answered. The twelve that are still not
  * divide cleanly, and the division is the point: "submit assignment" has no
  * screen because the app has no submissions, and saying so is the honest
  * answer; "make a study guide" fails on `make`, a word the registry does not
  * carry and should not be taught to carry for one query. Neither is this
  * function's to fix.
  *
- * Measured over 10,115 queries — every word in the registry, every adjacent
+ * ## Against the tier that got here first
+ *
+ * #432 merged the same rule as a flat 20, and this replaced it rather than
+ * joined it. Two differences, both measured on the 44 queries above: it does
+ * not filter the words nobody searches by, so `pay my bill`, `my grades`,
+ * `where are my grades` and `delete my account` need `my`, `where` and `are`
+ * to land on a screen and none of them can; and a flat score leaves ranking
+ * to registry order, where the mean of what each word scored puts the screen
+ * with the better word first. 19 of 44 answered nothing under it, 12 here,
+ * and there is no query it answers that this does not.
+ *
+ * Swept over the same 10,115 — every word in the registry, every adjacent
  * pair and triple of them, and 4,000 seeded pairs drawn from two screens at
- * once — 1,968 gained rows, 1,253 of which had been answered with nothing at
- * all, and nine had an existing row move. Eight of the nine are the seam fix
- * below taking away a match that was never real: `test study` led with Exam
- * runway on a phrase that existed only where two fields met, and now leads
- * with Practice paper, which holds both words. The ninth is `create`, which
- * keeps Create first and gains Study second.
+ * once — against `main` carrying that tier:
+ *
+ *     gained rows, lost none      488     same rows, better order      66
+ *     of those, had been empty    102     lost a row                  138
+ *
+ * Every one of the 138 gained a row as well; none lost without gaining, and
+ * the 8-row cap is what moved them. 134 are queries that come down to one
+ * real word or to no real word at all — `and an` answered with eight screens
+ * under a tier that had to match `and` and `an`, and answers with the two
+ * that mean something here. The remaining four are pronouns (`you your`,
+ * `me you your`), which are not queries anybody types.
  *
  * ## Every word, not any of them
  *
