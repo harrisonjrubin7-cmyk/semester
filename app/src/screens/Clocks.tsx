@@ -21,7 +21,15 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useStore } from '../state/store';
+/*
+ * Aliased, because this file has a `useNow` of its own a few lines down and
+ * they are not the same clock: the local one ticks every second for the
+ * stopwatch, the store's is the minute the whole app shares. Importing the
+ * store's under its own name shadowed it, and an alarm's countdown started
+ * being handed a number where it wanted a Date — caught by the typechecker,
+ * which is the only thing that would have.
+ */
+import { useNow as useMinute, useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
 import { ActionButton, SectionLabel, Segmented } from '../components/ui';
@@ -316,7 +324,9 @@ function Small({ children, onClick }: { children: React.ReactNode; onClick: () =
 
 
 function Alarms() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  // The shared minute, not the local second-by-second clock below.
+  const now = useMinute();
   const [time, setTime] = useState('07:30');
   const [label, setLabel] = useState('');
   const [days, setDays] = useState<number[]>([]);

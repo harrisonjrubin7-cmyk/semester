@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
@@ -61,7 +61,8 @@ const NOBODY: Profile[] = [];
 const NOTHING: PartRow[] = [];
 
 export function Groupwork() {
-  const { state, dispatch, now, account, catalog } = useStore();
+  const { state, dispatch, account, catalog } = useStore();
+  const now = useNow();
   // Spread rather than wrapped, so a button row stays one tap target.
   const rowStyle = useRowStyle(12);
   const rowNine = useRowStyle(9);

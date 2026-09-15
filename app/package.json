@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:zones": "TZ=America/Chicago vitest run && TZ=Pacific/Kiritimati vitest run",
+    "test:shuffle": "vitest run --sequence.shuffle",
     "lint:labels": "node scripts/labels.mjs",
     "sweep:contrast": "node scripts/contrast-sweep.mjs",
     "transcripts": "node scripts/transcripts.mjs",

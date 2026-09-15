@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Group, ItemRow } from '../components/shell/Rows';
@@ -35,7 +35,8 @@ import { SEMESTER_YEAR, isoToDate, longLabel } from '../lib/date';
  * an empty field that asks.
  */
 export function Registrar() {
-  const { state, dispatch, now, school } = useStore();
+  const { state, dispatch, school } = useStore();
+  const now = useNow();
   const rowEleven = useRowStyle(11);
   const [tab, setTab] = useState<'dates' | 'paste' | 'school'>('dates');
   const [text, setText] = useState('');

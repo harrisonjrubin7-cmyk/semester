@@ -13,7 +13,7 @@
  * Nothing at all on a day where nothing has to start, which is most days.
  */
 
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
@@ -22,7 +22,8 @@ import { adjustedLine, calibrate } from '../lib/worth';
 import { Folding } from './Fold';
 
 export function StartToday() {
-  const { state, dispatch, now, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
   const bias = calibrate(
     state.spent
       .filter((s) => typeof s.guess === 'number')
@@ -134,7 +135,8 @@ export function StartToday() {
  * Ordered by start date rather than by deadline, which is the entire point.
  */
 export function StartList() {
-  const { state, dispatch, now, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
   const bias = calibrate(
     state.spent
       .filter((s) => typeof s.guess === 'number')

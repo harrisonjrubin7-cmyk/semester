@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { ClashList, DayBudget } from '../components/Clashes';
 import { StartList } from '../components/StartToday';
@@ -30,7 +30,8 @@ import { DOW, decorateItem } from '../lib/date';
  * cannot know and which would be believed anyway.
  */
 export function Ahead() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   // The padding and hairline a row wears in whichever layout is on. Spread
   // into the row's own style so a button row stays one tap target.
   const rowStyle = useRowStyle(10);

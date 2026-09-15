@@ -826,3 +826,70 @@ describe('a Hilbert envelope on the list', () => {
     expect(of('hilbert()')).toMatchObject({ kind: 'fault' });
   });
 });
+
+/**
+ * A packet tree on the list.
+ *
+ * `lib/packet.test.ts` checks the bands against the frequencies they claim to
+ * hold. This checks the joint, and the thing the whole tree is for: two fast
+ * wobbles that the ordinary wavelet transform lumps into one band come out in
+ * two different ones here.
+ */
+describe('a packet tree on the list', () => {
+  it('is its own kind, with the filter named by the call', () => {
+    expect(of('packet([1, 2, 3, 4, 5, 6, 7, 8], 2)').kind).toBe('packet');
+    expect(of('dbpacket([1, 2, 3, 4, 5, 6, 7, 8], 2)')).toMatchObject({
+      kind: 'packet',
+      filter: { name: 'Daubechies-4' },
+    });
+    expect(of('wavelet([1, 2, 3, 4, 5, 6, 7, 8], 2)').kind).toBe('wavelet');
+  });
+
+  it('puts a wobble in the band whose frequencies it belongs to', () => {
+    // 0.3 cycles a sample, at level 3: bands are an eighth of a half each, so
+    // band 4 runs from 0.25 to 0.3125.
+    const got = answered(of('packet(\\cos(2\\pi 0.3 n), 64, 3)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toBe('64 samples, Haar, in 8 bands of equal width:');
+    expect(got.over).toBe('k');
+    expect(got.note).toMatch(/^Band 4 holds the most/);
+    expect(got.note).toMatch(/0\.25 to 0\.313 cycles a sample/);
+  });
+
+  it('tells two fast wobbles apart, which is what the tree is for', () => {
+    const near = answered(of('dbpacket(\\cos(2\\pi 0.28 n), 128, 3)'), {});
+    const far = answered(of('dbpacket(\\cos(2\\pi 0.47 n), 128, 3)'), {});
+    if (!near || 'says' in near || !far || 'says' in far) throw new Error('no answer');
+    expect(near.note).toMatch(/^Band 4 holds the most/);
+    expect(far.note).toMatch(/^Band 7 holds the most/);
+  });
+
+  it('says how compactly the run could be described, which one split cannot', () => {
+    const got = answered(of('packet([0, 0, 0, 5, 0, 0, 0, 0], 2)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    // One spike: splitting only spreads it, so the whole run is the best basis.
+    expect(got.note).toMatch(/uses 1 band rather than 4/);
+  });
+
+  it('draws a stem per band, and no more than there are', () => {
+    const drawn = draw(of('packet([1, 2, 3, 4, 5, 6, 7, 8], 2)'), {}, { x0: -2, x1: 12, y0: -1, y1: 2 });
+    expect(drawn.points.map((p) => p.x)).toEqual([0, 1, 2, 3]);
+    // Shares of one, so they add to one.
+    expect(drawn.points.reduce((t, p) => t + p.y, 0)).toBeCloseTo(1, 9);
+    for (const path of drawn.paths) expect(path[0].y).toBe(0);
+  });
+
+  it('refuses a run it cannot split that many times, and says which way', () => {
+    const short = answered(of('packet([1, 2, 3, 4], 3)'), {});
+    const odd = answered(of('packet([1, 2, 3, 4, 5], 2)'), {});
+    if (!short || !('says' in short) || !odd || !('says' in odd)) throw new Error('meant to be refused');
+    expect(short.says).toMatch(/wants 8 samples at least, and there are 4/);
+    expect(odd.says).toMatch(/wants a power of two — 4 or 8, not 5/);
+  });
+
+  it('asks for the letters it needs and no others', () => {
+    expect(missing(of('packet([1, 2, 3, 4], 2)'), {})).toEqual([]);
+    expect(missing(of('packet(k \\cos(n), 32, 3)'), {})).toEqual(['k']);
+    expect(of('packet()')).toMatchObject({ kind: 'fault' });
+  });
+});

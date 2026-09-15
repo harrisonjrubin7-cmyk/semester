@@ -44,6 +44,7 @@ import type { Course, FeedEvent } from './types';
 import { matchCourse } from './ics';
 import { parseAddress, parseAddresses, type FolderId, type Mail } from './mailbox';
 import { PENDING_KEY } from './redirected';
+import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 
 export type ProviderId = 'microsoft' | 'google' | 'zoom' | 'apple';
 
@@ -300,7 +301,7 @@ export async function completeAuth(): Promise<{ id: ProviderId; error?: string }
   });
 
   try {
-    const res = await fetch(tokenEndpoint(spec), {
+    const res = await fetchWithin(tokenEndpoint(spec), {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body,
@@ -332,7 +333,7 @@ async function accessToken(id: ProviderId): Promise<string> {
   if (!token.refresh) throw new Error(`${PROVIDERS[id].name} needs signing in again.`);
 
   const spec = PROVIDERS[id];
-  const res = await fetch(tokenEndpoint(spec), {
+  const res = await fetchWithin(tokenEndpoint(spec), {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -354,6 +355,9 @@ async function accessToken(id: ProviderId): Promise<string> {
 }
 
 export function describe(e: unknown): string {
+  // A deadline first: the message on a timeout is "signal timed out", which
+  // reads like a bug in this app rather than a fact about the connection.
+  if (timedOut(e)) return tookTooLong('The provider');
   const message = e instanceof Error ? e.message : String(e);
   if (/failed to fetch|networkerror/i.test(message)) {
     return 'The browser blocked the call. This provider needs the proxy — see VITE_OAUTH_PROXY.';
@@ -405,7 +409,7 @@ function toFeedEvent(
 
 async function get<T>(id: ProviderId, url: string): Promise<T> {
   const token = await accessToken(id);
-  const res = await fetch(apiBase(id, url), { headers: { Authorization: `Bearer ${token}` } });
+  const res = await fetchWithin(apiBase(id, url), { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) throw new Error(`${PROVIDERS[id].name} said ${res.status}.`);
   return (await res.json()) as T;
 }
@@ -435,7 +439,7 @@ export async function upload(
       blob,
       `\r\n--${boundary}--\r\n`,
     ]);
-    const res = await fetch(
+    const res = await fetchWithin(
       'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',
       {
         method: 'POST',
@@ -445,6 +449,7 @@ export async function upload(
         },
         body,
       },
+      MOVE_MS,
     );
     if (!res.ok) throw new Error(await explainUpload(res, 'Google Drive'));
     const json = (await res.json()) as { name?: string; webViewLink?: string; id?: string };
@@ -456,7 +461,7 @@ export async function upload(
 
   if (id === 'microsoft') {
     const path = `${encodeURIComponent(folder)}/${encodeURIComponent(name)}`;
-    const res = await fetch(
+    const res = await fetchWithin(
       `https://graph.microsoft.com/v1.0/me/drive/root:/${path}:/content`,
       {
         method: 'PUT',
@@ -466,6 +471,7 @@ export async function upload(
         },
         body: blob,
       },
+      MOVE_MS,
     );
     if (!res.ok) throw new Error(await explainUpload(res, 'OneDrive'));
     const json = (await res.json()) as { name?: string; webUrl?: string };
@@ -972,7 +978,7 @@ export function gmailFolder(labels: string[], asked: FolderId): FolderId {
 
 async function post<T>(id: ProviderId, url: string, body: unknown): Promise<T> {
   const token = await accessToken(id);
-  const res = await fetch(apiBase(id, url), {
+  const res = await fetchWithin(apiBase(id, url), {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -1001,7 +1007,26 @@ function localIso(date: string, minutes: number): string {
   return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:00`;
 }
 
-const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+/**
+ * The zone this device is in, asked at the moment it is needed.
+ *
+ * It was a module-level `const`, read once when the file first loaded and
+ * never again. That is wrong for the one app this is: a semester lives in an
+ * installed PWA that stays open for days, and the moment somebody is most
+ * likely to be adding things to a calendar is the moment they have just
+ * changed timezone — a flight, a term abroad, a drive across a state line.
+ * Every event written after that carried the zone the app started in, so a
+ * 10am class landed in Google an hour or three out and nothing said so.
+ *
+ * Reading it per call costs a `DateTimeFormat` construction on a request that
+ * is already crossing the network, which is nothing, and the value cannot go
+ * stale because there is no value to keep.
+ *
+ * Found by `lib/realdate.test.ts` corrupting the process clock and this const
+ * capturing the corruption for the rest of the run — a test-only failure with
+ * a real bug behind it. See `ENGINEERING-AUDIT.md` §3.
+ */
+const zone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 /** Put one thing on the calendar you actually use. */
 export async function addEvent(id: ProviderId, event: OutgoingEvent): Promise<void> {
@@ -1014,8 +1039,8 @@ export async function addEvent(id: ProviderId, event: OutgoingEvent): Promise<vo
       subject: event.title,
       body: { contentType: 'text', content: event.note },
       isAllDay: allDay,
-      start: { dateTime: allDay ? `${start}T00:00:00` : start, timeZone: TZ },
-      end: { dateTime: allDay ? `${end}T23:59:00` : end, timeZone: TZ },
+      start: { dateTime: allDay ? `${start}T00:00:00` : start, timeZone: zone() },
+      end: { dateTime: allDay ? `${end}T23:59:00` : end, timeZone: zone() },
     });
     return;
   }
@@ -1023,8 +1048,8 @@ export async function addEvent(id: ProviderId, event: OutgoingEvent): Promise<vo
     await post('google', 'https://www.googleapis.com/calendar/v3/calendars/primary/events', {
       summary: event.title,
       description: event.note,
-      start: allDay ? { date: start } : { dateTime: `${start}`, timeZone: TZ },
-      end: allDay ? { date: end } : { dateTime: `${end}`, timeZone: TZ },
+      start: allDay ? { date: start } : { dateTime: `${start}`, timeZone: zone() },
+      end: allDay ? { date: end } : { dateTime: `${end}`, timeZone: zone() },
     });
     return;
   }
@@ -1049,7 +1074,7 @@ export async function addTask(
       title: task.title,
       body: { content: task.note, contentType: 'text' },
       ...(task.date
-        ? { dueDateTime: { dateTime: `${task.date}T12:00:00`, timeZone: TZ } }
+        ? { dueDateTime: { dateTime: `${task.date}T12:00:00`, timeZone: zone() } }
         : {}),
     });
     return;

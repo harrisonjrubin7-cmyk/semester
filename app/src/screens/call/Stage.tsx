@@ -183,6 +183,21 @@ export function Stage({
     session?.announce(flags);
   }, [session, local, flags]);
 
+  /*
+   * The shared screen has an owner too, for the same reason the camera does.
+   *
+   * It was stopped in one place — `present`, when sharing is toggled off — so
+   * navigating away mid-share left the capture running and the browser's "you
+   * are sharing your screen" bar up, for a call already left. Same shape as
+   * the effect in `Index.tsx`: keyed on the stream rather than written as an
+   * unmount-only cleanup, because `StrictMode` doubles the first mount and
+   * `screen` is null for that pass.
+   */
+  useEffect(() => {
+    if (!screen) return;
+    return () => shut(screen);
+  }, [screen]);
+
   /* Who is talking, mine and everybody else's. */
   const speaking = useSpeaking(local, streams, flags.muted);
 
@@ -190,7 +205,8 @@ export function Stage({
   const started = useRef(false);
   const present = useCallback(async () => {
     if (screen) {
-      shut(screen);
+      // No `shut` here: clearing it runs the cleanup above, which is the one
+      // place the capture is stopped however sharing ends.
       setScreen(null);
       await session?.present(null);
       setFlags((f) => ({ ...f, sharing: false }));

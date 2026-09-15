@@ -26,6 +26,7 @@
 import type { Usage } from './spend';
 import type { CaseFile, Example, Figure, Frame, StudyCard } from './types';
 import { figureShapes, readFigures } from './figure';
+import { fetchWithin, timedOut, tookTooLong } from './net';
 import { readStudyParts, studyShapes } from './study';
 import {
   DEFAULTS as NO_CONTROLS,
@@ -1093,7 +1094,12 @@ export async function checkKey(apiKey: string): Promise<{ ok: boolean; detail: s
   }
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    // Bounded, because this one blocks a button: the check is the only thing
+    // the settings screen is doing while it runs, and a connection that
+    // accepts and then says nothing would spin it for the rest of the
+    // session. The streaming call above cannot take a fixed deadline — a long
+    // answer legitimately takes minutes — but a one-token key check can.
+    const res = await fetchWithin('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1122,6 +1128,7 @@ export async function checkKey(apiKey: string): Promise<{ ok: boolean; detail: s
     }
     return { ok: false, detail: said };
   } catch (e) {
+    if (timedOut(e)) return { ok: false, detail: tookTooLong('The API') };
     return {
       ok: false,
       detail: `${e instanceof Error ? e.message : String(e)}\n\nCould not reach the API to check.`,

@@ -43,7 +43,7 @@
  * membership are the student's.
  */
 
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { currentLook } from '../state/shape';
 import { centreHidden, readFavourites } from '../lib/desk';
 import { saysFor, shortFor } from '../lib/nav';
@@ -56,7 +56,8 @@ import { longLabel } from '../lib/date';
 import { BookmarkChips } from '../components/Bookmarks';
 
 export function SearchHome() {
-  const { state, dispatch, school, now, catalog } = useStore();
+  const { state, dispatch, school, catalog } = useStore();
+  const now = useNow();
   const caps = school.capabilities;
   const look = currentLook(state);
   const favourites = readFavourites(look.favourites, caps, state.role);

@@ -34,7 +34,7 @@
  */
 
 import { useRef, useState, type HTMLAttributes } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { outstanding } from '../lib/select';
 import { TabGlyph } from '../components/TabIcon';
 import { TabList } from '../components/ui';
@@ -236,7 +236,8 @@ function FolderTile({
 }
 
 export function Springboard() {
-  const { state, dispatch, school, catalog, now } = useStore();
+  const { state, dispatch, school, catalog } = useStore();
+  const now = useNow();
   const [page, setPage] = useState(0);
   const [query, setQuery] = useState('');
 

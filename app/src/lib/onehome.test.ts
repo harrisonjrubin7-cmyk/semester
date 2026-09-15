@@ -128,10 +128,26 @@ describe('what it catches', () => {
 /** `case 'x': … return <Component` — App.tsx's own screen-to-body mapping. */
 function destinationBodies(): Map<string, string> {
   const app = readFileSync(join(process.cwd(), 'src', 'App.tsx'), 'utf8');
+  const registry = readFileSync(join(process.cwd(), 'src', 'screens.tsx'), 'utf8');
   const nav = readFileSync(join(process.cwd(), 'src', 'lib', 'nav.ts'), 'utf8');
   const listed = new Set([...nav.matchAll(/^ {4}screen: '([a-zA-Z]+)'/gm)].map((m) => m[1]));
 
   const bodies = new Map<string, string>();
+  /*
+   * The table in `screens.tsx`, which used to be eighty cases in `App.tsx`.
+   *
+   * The guard below is what noticed the move: it asserts this parse finds more
+   * than fifty, and when the switch became a lookup it found none — which is
+   * exactly the vacuous pass it was written to prevent. Worth saying plainly,
+   * because a guard that fires once and is then deleted was never a guard.
+   */
+  for (const [, screen, component] of registry.matchAll(/^ {2}(\w+): (\w+),$/gm)) {
+    if (listed.has(screen)) bodies.set(component, screen);
+  }
+  /*
+   * And `home`, which is still a switch in `App.tsx` because which component
+   * draws it depends on the navigation rather than on `state.screen`.
+   */
   for (const chunk of withoutComments(app).split(/\n {4}case '/).slice(1)) {
     const screen = chunk.slice(0, chunk.indexOf("'"));
     const body = chunk.match(/return <([A-Z]\w*)/);

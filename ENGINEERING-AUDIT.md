@@ -112,8 +112,34 @@ modules is a pure refactor with no behaviour to change.
 
 **P1d — the soft shell's fact registry.** `lib/softtop.ts` is a 60-case switch
 computing hero figures, and it is excellent — data, not markup, testable without
-a DOM. It is also only read when the *Soft* shell is on. `SoftTop.tsx` can take
-it through `import()` behind the same condition that decides to draw it.
+a DOM. It is also only read when the *Soft* shell is on, and the guard that
+knew that was *inside* the module: `App.tsx` renders `<SoftTop />` on all three
+shells, so every reader parsed the registry and the ten modules behind it in
+order to decide not to draw anything.
+
+**Done**, and it was worth more than this section estimated — the registry has
+grown since:
+
+```
+253 modules, 74,986 lines  →  242 modules, 71,067 lines
+initial gzipped JS: 279,323 bytes  →  266,257 bytes     (−4.7%)
+files on the critical path: 17 → 14
+```
+
+Re-measured on `1855396` after the rebase, against a build of the same tree
+with the split taken back out. The absolute figures moved by about 3 kB
+between measurements because `main` keeps growing; the difference between them
+did not, which is the number this row is about.
+
+The second half is not in the byte count. `useTop()` is a hook, so it ran
+*above* the `if (!soft) return null` beneath it: every render on every shell
+built a spec — which walks the term's deadlines — and discarded it. Gating at
+the mount is what stops that, and it is the reason the fix is a second file
+rather than an `import()` inside the same one.
+
+Unlike P1a, this one does **not** prefetch on idle. A Soft reader needs the
+hero in the first paint and nobody else ever needs it, so the fetch is the
+answer to the question rather than a guess ahead of it.
 
 ### Two cuts that measure as zero, and why that matters
 
@@ -237,12 +263,24 @@ the minute has not moved, and `state/clock.test.ts` asserts identity rather than
 equality — the same minute must come back as the *same object*, or React cannot
 tell that nothing happened.
 
-**The real fix** is to take `now` out of the omnibus context — its own provider,
-read through a `useNow()` hook by the handful of components that show a relative
-time. Then the minute boundary re-renders a countdown and a class rail rather
-than sixty screens' worth of tree. That is a larger change and wants its own
-pass; the bail-out above is worth taking today regardless, because it is correct
-on its own terms even if the context is never split.
+**Done.** `NowContext`, nested inside `StoreContext` so a tick makes a new
+value for the inner provider only — 117 of the 195 files that read the store no
+longer re-render on the minute, and `state/clocksplit.test.ts` pins both the
+absence of `now` from the store type and the nesting, because putting either
+back is silent.
+
+The sweep is worth one line of warning for whoever does the next one: of 78 call
+sites, 75 rewrote mechanically and three did not, and one of those had a
+`useNow` of its own — a per-second clock in `screens/Clocks.tsx` — so importing
+the store's under the same name shadowed it and an alarm countdown started
+being handed a number where it wanted a `Date`. Nothing about that reads wrong.
+`tsc` caught it and nothing else would have.
+
+It corrected one guess of its own on the way: this section expected the clock
+to matter to "the handful of components that show a relative time". It is 78 of
+195 — closer to half than to a handful, because a great many screens compute
+what is due from `now` rather than merely printing it. The saving is real and it
+is 117 files, not 190.
 
 ---
 
@@ -297,6 +335,23 @@ time* keeps the broken value — which is how `lib/connect.ts`, whose `TZ` is a
 module-level `const`, wrote a calendar event with no `timeZone` on it about one
 run in six, from a file that has nothing to do with timezones.
 
+### 7c — this class of split is only verifiable in a browser
+
+Both P1a and P1d hold a module in state and fetch it with `import()` from an
+effect, and **vitest cannot exercise that path**: the effect runs, and the
+promise it creates neither resolves nor rejects, through fifty macrotasks.
+Traced with a counter inside `SoftTop`'s own effect; the same `import()`
+awaited directly from a test resolves immediately, and the production build
+fetches the chunk and draws the hero.
+
+So `components/softtop.test.tsx` imports the body statically to put it in the
+registry before the gate asks, which takes the timing out of it without
+weakening what is asserted. It is worth naming as a standing limit rather than
+a quirk of one file: as more of the app moves behind this pattern, the only
+thing that can prove the fetching half works is driving the built app — which
+is what `.claude/skills/run/SKILL.md` exists for, and what both of these were
+checked with.
+
 ### 7b — two more things the stress test found, left alone
 
 Running with `--sequence.shuffle.files` eight times found no failures. Running
@@ -313,14 +368,37 @@ fixed:
   after its environment is gone. Also present at baseline. CI does not shuffle,
   so neither reaches it today; both are real and both want their own pass.
 
-### The `lib/connect.ts` capture is worth a second look
+  **Since reproduced deterministically.** Any test that mounts `StoreProvider`
+  and ends without awaiting `loadSeed()` gets it every time — the provider
+  starts that on mount and it dynamically imports four course modules. It is
+  not only noise: vitest exits non-zero on unhandled errors, so it is a green
+  suite that fails anyway. `components/softtop.test.tsx` awaits the seed for
+  exactly this reason, and that is the shape of the fix wherever else it
+  bites.
 
-Not a test problem. `const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone`
-is read once when the module loads and never again, so a PWA left open across a
-timezone change — a flight, which is exactly when somebody adds calendar events
-— writes them with the zone it started in. An app whose CI runs in three
-timezones because of an off-by-one should probably read it at the call site.
-Out of scope here, and named so it is not lost.
+### The `lib/connect.ts` capture · **FIXED**
+
+Not a test problem, and the only one of its kind in the app —
+`resolvedOptions` appears in exactly one place.
+
+`const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone` was read once
+when the module loaded and never again, and five writes used it: both
+calendars and the Microsoft task due date. A PWA stays open for days, and the
+moment somebody is most likely to be adding calendar events is the moment they
+have just changed timezone — a flight, a term abroad, a drive across a state
+line. Every event after that carried the zone the app started in, an hour or
+three out, with nothing to say so.
+
+Read per call now. It costs a `DateTimeFormat` construction on a request
+already crossing the network, and there is no kept value to go stale.
+
+**How it was found is the part worth keeping.** `lib/realdate.test.ts` was
+corrupting `process.env.TZ` process-wide (§3), and this const captured the
+corruption for the rest of the run — which made it look like a test-only
+problem. Fixing the test would have closed the symptom and left the bug. The
+test that now guards it stubs `Intl.DateTimeFormat` rather than setting
+`process.env.TZ`, because a process-wide clock change is exactly the leak that
+caused the thing it is testing.
 
 ## 4. P4 — a screen is registered in eight places
 
@@ -328,10 +406,10 @@ Adding or removing one destination today means editing, at minimum:
 
 1. `lib/types.ts` — the `Screen` union (82 members)
 2. `lib/nav.ts` — the registry row: label, blurb, keywords, group, taskTags
-3. `App.tsx` — the `lazy()` const (82 of them, lines 41–133)
-4. `App.tsx` — a case in `CurrentScreen` (the switch at `:949`)
-5. `App.tsx` — a case in `useHeader` (the switch at `:266`)
-6. `lib/softtop.ts` — a case in the 60-case hero switch
+3. `App.tsx` — the `lazy()` const (82 of them, lines 41–133) · **DONE**
+4. `App.tsx` — a case in `CurrentScreen` (the switch at `:949`) · **DONE**
+5. `App.tsx` — a case in `useHeader` (the switch at `:266`) · **DONE**
+6. `lib/softtop.ts` — a case in the 60-case hero switch · **left, see below**
 7. `lib/role.ts` — the student-only / faculty lists
 8. …then whichever of `lib/springboard.ts`, `lib/capture.ts`, `lib/guidebook.ts`
    applies
@@ -342,25 +420,126 @@ This is not duplication in the sense the simplify passes were hunting; every one
 of those lists is about a genuinely different thing. It is *co-location*: eight
 lists keyed by the same value, kept in step by hand.
 
-**The symptom is already visible in the numbers.** The `Screen` union has 82
-members and the registry has 60. Twenty-two screens exist, render, and are
-navigable, but carry no `blurb`, no `keywords` and no `taskTags` — so the
-directory does not list them and search cannot find them. Some of that is
-correct by design (`search` and `directory` are the shell looking at itself, and
-`lib/types.ts:481` says so). Some of it is a screen that quietly fell out of the
-index.
+### The symptom this section claimed does not exist · **CORRECTED**
+
+This said: *"The `Screen` union has 82 members and the registry has 60. Twenty-
+two screens exist, render, and are navigable, but the directory does not list
+them and search cannot find them… some of it is a screen that quietly fell out
+of the index."*
+
+That was wrong, and it was wrong in the direction that makes a maintenance
+refactor look like a bug fix. The twenty-two are, in full: `search`,
+`directory`, `onboarding`; the seven detail screens that need an id (`course`,
+`item`, `event`, `note`, `guide`, `lesson`, `slides`); the four study modes
+reached from a guide (`drill`, `quiz`, `guess`, `gap`); and the eight `set*`
+pages. **Every one is deliberately not a destination** — putting `item` in the
+launcher would mean "a deadline", unanswerably, and putting `setLook` there
+would be a second door into a page Settings already lists.
+
+Nor were they unnamed. `screenName` has always read three registries —
+`DESTINATIONS`, `settingsTitle`, and a `NESTED_NAMES` table — and
+`lib/nav.test.ts` already walked the union out of the source to prove no screen
+falls through to its own id. The "cheap first step" proposed below was, in the
+part that mattered, already there.
+
+**And the rest of it now is too.** `lib/nav.registry.test.ts` lands the
+allowlist: every union member is either registered or named with the reason it
+is not. It was written on `main` rather than here, and it cites this section
+while correcting it.
+
+So what is left of P4 is **only** the maintenance cost — eight lists keyed by
+the same value, kept in step by hand — with no user-facing symptom behind it.
 
 **The shape of the fix**, if it is worth doing: one module per screen exporting
 everything that screen needs registered — the lazy component, the header, its
 soft-top facts, its registry row — and `nav.ts` built by collecting them. The
-registry stays the one list it already is; the three switches in `App.tsx` and
-`softtop.ts` become lookups; adding a screen becomes adding a file.
+three switches in `App.tsx` and `softtop.ts` become lookups; adding a screen
+becomes adding a file.
 
-That is a large refactor of a working app, so it belongs on a branch of its own
-and probably behind a cheaper first step: **a test that asserts every `Screen`
-union member either appears in `DESTINATIONS` or is on an explicit
-shell-screens allowlist.** That closes the findability hole this week, and turns
-the eight-place registration from an invisible cost into a named one.
+**Recommended against, for now, and the reason is not the size.** It touches
+`App.tsx` (1,868 lines, 82 `lazy()` consts, 159 case labels) and `lib/softtop.ts`
+(933 lines, 60 cases) — the two files `main` merges into most often; this branch
+took in 39 commits across three merges in a single evening. A restructure of the
+router that cannot be reviewed in one sitting and conflicts with every PR
+touching a screen is a poor trade for a convenience with no symptom. It wants a
+quiet week and a decision, not a slot at the end of an audit.
+
+### What landed · **places 3, 4 and 5**
+
+The three lists inside `App.tsx` are one table each, and both tables are
+`Record`s over the `Screen` union, so the list that used to be kept in step by
+hand is now kept in step by the compiler.
+
+**`src/screens.tsx`** — 82 `lazy()` declarations and
+`SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentType>`.
+`CurrentScreen` is a lookup. `App.tsx` went 1,870 → 1,639 lines.
+
+**`src/headers.ts`** — `HEADERS: Record<Screen, (c: HeaderCtx) => Head>`, all 82
+rows, and `fallbackHeader` with it. `useHeader` stays in `App.tsx` as the
+twenty lines that gather the context and hand it to one row; the table itself
+imports no React, so `header.test.ts` reads it in node and calls every entry
+rather than matching `case` labels in a file, which is what it used to do.
+`App.tsx` went 1,639 → 1,397 lines.
+
+Both replaced a `default`. That is the point of the change rather than a side
+effect of it: a default that always returns something can never be *missing* a
+case, so a screen added to the union and forgotten rendered Today, with today's
+date over it, and nothing failed anywhere. It had already happened five times —
+Everything, How this works, Your data, Privacy, and then the assistant's
+settings page after the first four were fixed. `Record<Screen, …>` has no room
+for a missing key, so the sixth is a build error.
+
+**Measured, not assumed.** The header each of the 82 screens draws — kicker,
+title and tab title — captured from the built bundle before and after, by
+driving the production build in Chromium: 68 screens by hash, the remaining 14
+(the seven id-requiring detail screens, the four study modes, the two shell
+screens, onboarding) as 16 routes including the bare no-id forms. **Byte-
+identical on all 84 rows, zero page errors.**
+
+### The one thing this broke, found by driving it · **FIXED**
+
+Both tables are exhaustive over `Screen`, and `state.screen` is not always a
+`Screen`. `fromHash` passes an unknown name through on purpose — see "the
+rename table is not a licence to guess" in its own test — so a bookmark to
+`#/cloud`, a screen `/simplify` deleted, arrives as `{ screen: 'cloud' }` and
+reaches both tables as a key neither has ever had. The switches absorbed that
+in their `default`. The bare lookups did not.
+
+Measured on the built bundle: `TypeError: su[e.screen] is not a function`,
+thrown from `useHeader`, which runs above the router and therefore outside
+`ScreenTrouble` — **an empty body and a blank white page**. The router half was
+milder and still wrong: `SCREENS['cloud']` is `undefined`, so React threw
+"Element type is invalid" into the boundary and drew an error card where the
+app used to draw the day.
+
+This shipped in the screens commit and was found here, by driving the deleted
+route rather than by any test. The fix is `?? Today` in `CurrentScreen` and
+`headOf`'s `?? fromRegistry` in `headers.ts`, and it is deliberately not the
+old default coming back: a screen *in* the union and missing from a table is
+still a build error, because `Record<Screen, …>` has no room for one. What the
+`??` catches is a string that was never a screen at all, and the honest answer
+for that is the one the app has always given. Held by two tests — one that
+calls `headOf` with a dead name, one on the router's source — and confirmed on
+the rebuilt bundle: `#/cloud` now titles itself "Today · Semester" and renders
+the day, with no page error.
+
+### Place 6 is left, and the reason is that it is already right
+
+`lib/softtop.ts`'s 60-case switch ends `default: return nothing`, and `nothing`
+renders as the plain body the screen already was. That is an honest absence
+rather than a confident wrong answer — it is the opposite of the `useHeader`
+default — and `softtop.test.ts` already fails when a *registry* screen is in
+that state, so "unadorned" is a decision and not an oversight. There is no bug
+of the kind places 4 and 5 had.
+
+Turning it into a `Record<Screen, …>` would force all 82 rows on a file where
+22 screens deliberately want none, and its case bodies close over about fifteen
+computed locals rather than being one-line returns, so the transform is not the
+mechanical one the header's was. On a 972-line file that `main` merges into
+often, that is a worse shape bought with a wide diff. Left, and said so.
+
+Places 1, 2, 7 and 8 are untouched: they are genuinely different lists about
+genuinely different things, which is what this section said from the start.
 
 ---
 
@@ -473,28 +652,43 @@ towards fixes both.
 
 ---
 
-## 7a. Found while splitting the assistant — focus is not given back
+## 7a. Focus was not given back · **FIXED**
 
-Not a finding of the audit, and not caused by the split: `ai/Panel.tsx` says it
-remembers what had focus and gives it back on close, and it does not. Focus
-lands on `<body>` instead.
+Found while splitting the assistant, and not caused by it: `ai/Panel.tsx` said
+it remembered what had focus and gave it back on close, and it did not — focus
+landed on `<body>`, leaving a keyboard reader the whole document to tab through
+to get anywhere.
 
-The cause is ordering. Child effects run before parent effects in the same
-commit, and `Composer` focuses itself on mount — so by the time the panel's own
-effect reads `document.activeElement`, the answer is already the composer it is
-about to unmount. Restoring focus to a detached node is the same as restoring
-nothing.
+The cause is ordering. Child effects run before the parent's, and `Composer`
+focuses itself on mount — so by the time the panel's own effect read
+`document.activeElement`, the answer was already the box it was about to
+unmount. Restoring focus to a detached node is the same as restoring nothing.
 
-**Checked against the pre-split build, not assumed**: swapped `Assistant.tsx`
-back to its committed version, drove the same probe, and focus was lost there
-too. So it predates this work by however long the composer has focused itself.
+**Checked against the pre-split build rather than assumed**: `Assistant.tsx`
+swapped back to its committed version, the same probe driven again, and focus
+was lost there too.
 
-The fix is to capture the element at the moment `show()` is called rather than
-when the panel mounts — one place, `ai/store.tsx`, which is what every opener
-goes through. It is left out of this pass deliberately: it is a behaviour
-change in a file the split does not otherwise touch, and widening a
-code-splitting commit into an accessibility fix is how neither gets reviewed
-properly.
+### The fallback turned out to be the common case
+
+The fix is to capture at `show()` — the last moment the answer is still true,
+and one place because every way in goes through it. But that on its own would
+still have failed the ordinary path, and the reason is worth keeping: **the
+button unmounts while the sheet is open**, so opening the sheet *by the button*
+leaves a detached node to go back to, and "focus what you remembered" lands on
+`<body>` every time — the same place the bug already put people. `isConnected`
+catches it, and the button React has just re-rendered is where the reader was
+standing. A shortcut pressed from elsewhere keeps the honest answer, because
+that element is still in the document.
+
+Driven on the production build, both ways in:
+
+```
+opened by the button   Escape → "Ask about Today"
+opened by Cmd+K        from "Courses" → composer → Escape → "Courses"
+```
+
+`ai/focus.test.tsx` covers both, and was checked by taking the fix back out:
+both land on `BODY` without it, which is what the browser did before.
 
 ## 8. What I checked and found healthy
 
@@ -535,17 +729,20 @@ Ordered by measured value per unit of risk, not by size.
 | 5 | ✅ **P6** — silence the one noisy lint rule | one config edit | 155 warnings → 41 |
 | 6 | ✅ **P1a** — split the panel out behind its button | medium | −6,608 lines measured, and the panel opens no slower |
 | 7 | ✅ **P3** — two projects: 354 shared, 9 isolated | an afternoon | −51s per CI run (135s → 84s, −37%) |
-| 8 | **P1d** — lazy `softtop.ts` behind the soft shell | small | −1,518 lines |
-| 9 | **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | closes the 82-vs-60 findability hole |
-| 10 | **P4 proper** — one module per screen | large, own branch | adding a screen becomes adding a file |
-| 11 | **P2 proper** — split `now` out of the store context | large | the minute boundary stops being an app-wide event |
+| 8 | ✅ **P1d** — gate the hero at its mount, not inside it | small | −3,919 lines, −4.7% of the gzipped critical path, and a spec no longer built and thrown away on every render |
+| 9 | ✅ **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | done on `main` as `nav.registry.test.ts`; the hole it was meant to close turned out not to exist |
+| 10 | ✅ **P4, places 3–5** — one table per list, `Record` over the union | large | a screen is declared once instead of three times; the `default` that had already lied about five screens is a build error now. Place 6 left, with its reason, in §4 |
+| 11 | ✅ **P2 proper** — split `now` out of the store context | large | 117 of 195 store consumers no longer re-render on a tick |
 | 12 | **P7** — keep paying the style ledger down | ongoing | the memoisation in 11 becomes worth having |
+| 14 | ✅ **§7a** — give focus back when the assistant closes | small | a dialog that takes focus returns it, both ways in |
+| 15 | ✅ **§3's aside** — read the timezone at the call site, not at module load | tiny | calendar events written in the zone you are in |
 | 13 | ✅ **P1e** — move the assistant's context assembly off the store | medium | −7,543 lines and −12% of the gzipped critical path; `lib/sheet.ts`, `lib/maths.ts` and `lib/chart.ts` go with it |
 
 Items 1–5 are done, in that order, one commit each, with `lint`, `test`,
 `test:zones` and `build` green after every one. They touch nothing a student
-can see. Items 10–11 are architecture and should be argued before they are
-written.
+can see. Items 10 and 11 are architecture; both were argued in their sections
+before they were written, and 10 was written against my own recommendation
+after the owner read the argument and asked for it anyway.
 
 Two of the five changed shape once they were written rather than described, and
 both corrections are in the sections above rather than quietly applied: the

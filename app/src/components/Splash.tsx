@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { greeting, welcomeLine } from '../lib/welcome';
 import { prefersLessMotion } from '../lib/prefers';
 import { splashDone, splashPlayed } from '../lib/splash';
@@ -47,7 +47,8 @@ const HOLD = 1250;
 const FADE = 340;
 
 export function Splash() {
-  const { state, catalog, now } = useStore();
+  const { state, catalog } = useStore();
+  const now = useNow();
   /*
    * Whether this instance plays at all, decided once and held as state.
    *
