@@ -6156,8 +6156,24 @@ section[data-drop] > .grip + * {
   font-size: var(--type-lg);
 }
 
+/*
+ * Dimmed the way the field is, not the way the page is.
+ *
+ * `.deskhome-field` inverts — `background: var(--app-fg)` with
+ * `color: var(--app-void)` — and `.deskhome-plus, .deskhome-box` carry that
+ * inverted ink down with `color: inherit`. This line broke the chain by
+ * naming `--app-dim`, which is `--app-fg` faded: the same colour as the
+ * surface it sits on. Measured at 0.00:1 on all thirteen grounds. The
+ * placeholder of the app's front-door search was invisible, and had been
+ * since the field was drawn.
+ *
+ * So it fades the *inverted* ink toward the field's own background instead,
+ * which is what `--app-dim` does for a page and what this needed all along.
+ * 70% keeps it clearly quieter than the typed text while holding 6.06:1 at
+ * worst, on Fog.
+ */
 .deskhome-box-say {
-  color: var(--app-dim);
+  color: color-mix(in srgb, var(--app-void) 70%, var(--app-fg));
 }
 
 /* `.deskhome-keys` and `.desktop-keys` drew a `⌘ K` chip in each of the two
