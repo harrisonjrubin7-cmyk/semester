@@ -914,6 +914,44 @@ In pixels, once that was fixed: the largest single-channel change anywhere is
 nothing but the two live countdowns above it and no colour lost. Larger than
 either pass before it, which is what a move from 0.8 to 0.64 is.
 
+### Every `paint.mjs` figure above was taken on a broken instrument · **CORRECTED**
+
+`main` #429 found a bug in `paint.mjs` — the tool all three passes were
+measured with. It read `color(srgb 0.57 0.58 0.61)` as channels out of 255
+rather than out of one, which pulls a colour toward black: it invents failures
+where text is light on a dark surface and flatters them where it is dark on a
+light one. Every sweep in this section ran on Fog, a light ground.
+
+So the measurements were taken again on the fixed tool, both sides, same ten
+screens, 308 runs measured each:
+
+```
+                        buggy instrument      fixed instrument
+main                    24 below AA           3
+this branch              3                    3
+```
+
+**The "24 → 3" was the bug, not the change.** Converting these sites does not
+reduce the number of runs of text below AA, because they were not below it: at
+0.5 and at 0.8 this text was already clear of the line, and `--app-dim` keeps
+it there. The honest claim is the narrower one, and it is the one `lib/dim.ts`
+makes:
+
+```
+text dimmed by a hand-written opacity   main 169   this branch 68
+```
+
+**101 pieces of text** move from a number nobody audited, that "Increase
+contrast" cannot reach and that multiplies where two of them nest, to a token
+audited at 4.5:1 on every ground and panel and raised to 0.9 when the device
+asks. That is worth doing on its own. It is not a legibility rescue, and the
+earlier figures in this section — 40 → 31 → 9, and 24 → 3 — should be read as
+an instrument's error rather than as this work's result.
+
+What survives unchanged is the part measured with screenshots rather than with
+`paint.mjs`: the pixel costs, the same-build controls, and the one site that
+broke and was found by the diff. Those never went through the faulty path.
+
 ### What is left of P7
 
 The runtime half is untouched — still 4,710 `style={{ … }}` sites, a number
