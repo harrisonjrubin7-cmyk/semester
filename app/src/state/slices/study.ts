@@ -56,7 +56,9 @@ export function study(state: State, action: Action): State | null {
       };
 
     case 'mixCourses':
-      return state.drillMix === action.on ? state : { ...state, drillMix: action.on, drillIdx: 0 };
+      return state.drillMix === action.on
+        ? state
+        : { ...state, drillMix: action.on, drillIdx: 0, lastAnswer: null };
 
     case 'setMode':
       return { ...state, mode: action.mode };
@@ -83,6 +85,7 @@ export function study(state: State, action: Action): State | null {
           openUnit: action.unit ?? state.openUnit,
           drillUnit: action.unit,
           drillIdx: 0,
+          lastAnswer: null,
           drillGot: 0,
           revealed: false,
           // A run on one named unit is not a mixed run. Leaving this on would
@@ -107,6 +110,14 @@ export function study(state: State, action: Action): State | null {
         revealed: false,
         drillIdx: state.drillIdx + 1,
         drillGot: state.drillGot + (action.got ? 1 : 0),
+        /*
+         * What this answer replaced, kept so it can be put back.
+         *
+         * `null` where the card had no record: a first answer creates the row
+         * and undoing it has to take the row away again, not leave a blank
+         * one behind that would stop the card counting as never met.
+         */
+        lastAnswer: { key: action.key, was: state.reviews[action.key] ?? null, got: action.got },
         reviews: {
           ...state.reviews,
           [action.key]: score(state.reviews[action.key], action.got, now, h?.soon ?? false),
@@ -120,6 +131,37 @@ export function study(state: State, action: Action): State | null {
               at: now,
             })
           : state.answers,
+      };
+    }
+
+    /*
+     * The last answer, taken back — the schedule with it.
+     *
+     * A mis-tap on a card you knew is not a small thing once answers are
+     * recorded: "Again" halves the ease, zeroes the interval and puts the
+     * card back in ten minutes, and there was no way to say it had not
+     * happened. Every other list in this app can be corrected; the one screen
+     * that writes to a scheduler could not be.
+     *
+     * One step and only within the run, because that is the whole of the
+     * mistake it exists for. `lib/undo.ts` says why a stack is the wrong
+     * shape for something that also syncs.
+     */
+    case 'undoCard': {
+      const last = state.lastAnswer;
+      if (!last) return state;
+      const reviews = { ...state.reviews };
+      if (last.was) reviews[last.key] = last.was;
+      else delete reviews[last.key];
+      return {
+        ...state,
+        reviews,
+        // Back to the card, face down: an undo that left the answer showing
+        // would be asking somebody to re-grade a card they can already see.
+        revealed: false,
+        drillIdx: Math.max(0, state.drillIdx - 1),
+        drillGot: Math.max(0, state.drillGot - (last.got ? 1 : 0)),
+        lastAnswer: null,
       };
     }
 
@@ -137,7 +179,9 @@ export function study(state: State, action: Action): State | null {
       };
 
     case 'redrill':
-      return { ...state, drillIdx: 0, drillGot: 0, revealed: false };
+      // `lastAnswer` with it: a new run must not be able to undo into the
+      // one before it.
+      return { ...state, drillIdx: 0, drillGot: 0, revealed: false, lastAnswer: null };
 
     case 'startQuiz':
       return push(
