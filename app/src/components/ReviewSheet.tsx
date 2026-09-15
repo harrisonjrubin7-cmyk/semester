@@ -81,16 +81,39 @@ function describe(change: Change): string {
  */
 const PASSAGE = 260;
 
-/** The passage, trimmed at a word, and how much of it is not shown. */
+/**
+ * The first `units` code units, never stopping inside a character.
+ *
+ * `slice` counts UTF-16 units and an emoji is two of them, so a cut at 260
+ * can leave a lone high surrogate and the row ends in a replacement glyph.
+ * The same guard, for the same reason, as `cut` in `lib/xlsx.ts` and the
+ * surrogate filter in `lib/ooxml.ts`.
+ */
+function wholeChars(text: string, units: number): string {
+  let out = '';
+  for (const ch of text) {
+    if (out.length + ch.length > units) break;
+    out += ch;
+  }
+  return out;
+}
+
+/**
+ * The passage, trimmed at a word where there is one, and how much is not shown.
+ *
+ * Counted in characters rather than words, which is the only unit that is true
+ * of every passage this renders. Counting words meant splitting the tail on
+ * whitespace, and a reading with none — Japanese or Chinese prose, a URL, a
+ * base64 blob — has exactly one "word" however much of it is left: a 3,000
+ * character passage reported one more word remaining. A character count cannot
+ * be wrong that way.
+ */
 function shorten(text: string): { said: string; more: number } {
   if (text.length <= PASSAGE) return { said: text, more: 0 };
-  const cut = text.slice(0, PASSAGE);
+  const cut = wholeChars(text, PASSAGE);
   const at = cut.lastIndexOf(' ');
   const said = at > PASSAGE * 0.6 ? cut.slice(0, at) : cut;
-  return {
-    said,
-    more: text.slice(said.length).trim().split(/\s+/).filter(Boolean).length,
-  };
+  return { said, more: text.length - said.length };
 }
 
 /** The second line: what the card actually says, where there is more to say. */
@@ -200,9 +223,17 @@ export function ReviewSheet({
                 lineHeight: 'var(--leading-normal)',
               }}
             >
+              {/*
+                True whichever unit was chosen above. "It goes on the unit"
+                was not: with the screen's default — a unit of its own —
+                `mergeGuide` skips a card-less update and `place()` sends the
+                photograph to the shared rail, so no unit was made and no unit
+                gained a figure. It is on the course's figures either way,
+                which is what this now says.
+              */}
               {attaching === 1
-                ? 'The file is still yours to keep — it goes on the unit, and if it is an image it becomes one of that unit\u2019s figures.'
-                : `The ${attaching} files are still yours to keep \u2014 they go on the unit, and any image among them becomes one of its figures.`}
+                ? `The file is still yours to keep — it stays with ${course}, and an image joins its figures.`
+                : `The ${attaching} files are still yours to keep — they stay with ${course}, and any image among them joins its figures.`}
             </div>
             <button
               type="button"
@@ -441,7 +472,8 @@ function Row({
           {/* Counted rather than cut off in silence: what is accepted is the
               whole passage, and a row that ends mid-sentence with nothing
               said reads as material that was lost. */}
-          {passage.more > 0 && `… and ${passage.more} more words, all of them kept`}
+          {passage.more > 0 &&
+            `… and ${passage.more} more ${passage.more === 1 ? 'character' : 'characters'}, all of them kept`}
         </span>
       )}
 
