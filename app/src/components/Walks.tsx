@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { lengthOf, railFor } from '../lib/select';
 import { daySummary, hopLine, hops, tight } from '../lib/rooms';
@@ -21,7 +21,8 @@ import { Folding } from './Fold';
  * so an absent number is visible rather than merely missing.
  */
 export function Walks({ date }: { date?: Date }) {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const row = useRowStyle(9);
   const day = date ?? now;
 

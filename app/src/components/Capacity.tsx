@@ -11,7 +11,7 @@
  * asked for it is the fastest way to have it turned off for good.
  */
 
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { forecast } from '../lib/pace';
@@ -26,7 +26,8 @@ function clock(minutes: number): string {
 }
 
 export function Capacity() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
 
   const week = datedItems(catalog, now).filter(
     (i) => !state.done[i.id] && i.daysAway >= 0 && i.daysAway <= 7,

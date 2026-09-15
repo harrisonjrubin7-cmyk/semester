@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { datedItems } from '../lib/select';
 import { pickable } from '../lib/forwork';
 import { secondLine } from '../lib/dim';
@@ -62,7 +62,8 @@ export function DeadlinePicker({
   onShowAll?: () => void;
   style?: React.CSSProperties;
 }) {
-  const { catalog, now } = useStore();
+  const { catalog } = useStore();
+  const now = useNow();
   const options = useMemo(() => pickable(datedItems(catalog, now), courseId), [catalog, now, courseId]);
 
   /*

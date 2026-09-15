@@ -463,6 +463,58 @@ describe('drilling', () => {
     expect(s.reviews.card1).toMatchObject({ right: 1, wrong: 1, streak: 0 });
   });
 
+  it('takes back the last answer, schedule and all', () => {
+    /*
+     * The mistake this exists for: "Again" on a card you knew halves the ease,
+     * zeroes the interval and puts the card back in ten minutes. Every other
+     * list in the app could be corrected and the one screen that writes to a
+     * scheduler could not.
+     */
+    let s = reducer(blank(), { type: 'markCard', got: true, key: 'card1' });
+    const earned = s.reviews.card1;
+    s = reducer(s, { type: 'markCard', got: false, key: 'card1' });
+    expect(s.reviews.card1.wrong).toBe(1);
+    s = reducer(s, { type: 'undoCard' });
+    expect(s.reviews.card1).toEqual(earned);
+    expect(s.drillIdx).toBe(1);
+    expect(s.drillGot).toBe(1);
+  });
+
+  it('removes the row entirely when the answer was the first one', () => {
+    // Not a blank record: a card with a row but no answers would stop
+    // counting as never met, and "new material" would quietly shrink.
+    let s = reducer(blank(), { type: 'markCard', got: true, key: 'card1' });
+    s = reducer(s, { type: 'undoCard' });
+    expect('card1' in s.reviews).toBe(false);
+    expect(s.drillIdx).toBe(0);
+    expect(s.drillGot).toBe(0);
+  });
+
+  it('turns the card back face down', () => {
+    let s = reducer(blank(), { type: 'markCard', got: true, key: 'card1' });
+    s = reducer({ ...s, revealed: true }, { type: 'undoCard' });
+    expect(s.revealed).toBe(false);
+  });
+
+  it('undoes one step and no further', () => {
+    let s = reducer(blank(), { type: 'markCard', got: true, key: 'a' });
+    s = reducer(s, { type: 'markCard', got: true, key: 'b' });
+    s = reducer(s, { type: 'undoCard' });
+    expect('b' in s.reviews).toBe(false);
+    // The second press does nothing rather than walking back through the run.
+    const again = reducer(s, { type: 'undoCard' });
+    expect(again).toBe(s);
+    expect(again.reviews.a.right).toBe(1);
+  });
+
+  it('cannot undo across the start of a run', () => {
+    // A new run must not be able to rewind a card from the one before it.
+    let s = reducer(blank(), { type: 'markCard', got: true, key: 'card1' });
+    s = reducer(s, { type: 'redrill' });
+    expect(s.lastAnswer).toBeNull();
+    expect(reducer(s, { type: 'undoCard' }).reviews.card1.right).toBe(1);
+  });
+
   it('ignores a second answer to the same quiz question', () => {
     const started = reducer(blank(), {
       type: 'startQuiz',

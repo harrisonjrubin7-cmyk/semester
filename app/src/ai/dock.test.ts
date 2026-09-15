@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fills, FILLS } from '../components/shell/exempt';
-import { probes } from './Assistant';
+import { costOf, LIFT, probes, TRIES } from './Assistant';
 
 /**
  * The chat ends at the bottom of the window.
@@ -145,6 +145,104 @@ describe('the assistant button, and what it sits on', () => {
   it('asks about where it would be once lifted, not where it is', () => {
     const rest = rect(300, 700, 52, 52);
     expect(probes(rest, 58).map(([, y]) => y)).toEqual([668, 643, 643, 693, 693]);
+  });
+
+  /**
+   * The climb into something worse, which is how `#/write/<id>` was found.
+   *
+   * The old rule answered yes or no, and `clearOf` walked upward until the
+   * answer was no or it ran out of tries — then took the last position it had
+   * tried. On the document editor every position was occupied: at rest the
+   * button clipped 4% of the paragraph textarea, which counts at any overlap
+   * at all, so it climbed; and two lifts up it came down on a 30x30 "Remove
+   * this paragraph" and buried 76% of it, centre included. Three bad places,
+   * and it chose the worst because it was the last.
+   *
+   * A yes/no answer cannot rank those. A number can, which is the whole of the
+   * change, and these are the four facts the ranking rests on.
+   */
+  describe('what it costs to sit somewhere', () => {
+    /* An element without a DOM. `costOf` asks only these four things, so a
+       plain object answers all of them — see the note on `rect` above. */
+    const control = (
+      tag: string,
+      box: DOMRect,
+      attrs: { danger?: boolean; tabs?: boolean } = {},
+    ) => {
+      const el = {
+        tagName: tag,
+        getBoundingClientRect: () => box,
+        hasAttribute: (n: string) => n === 'data-danger' && !!attrs.danger,
+        closest: (sel: string) => (sel === '.app-tabs' ? (attrs.tabs ? el : null) : el),
+        contains: () => false,
+      };
+      return el as unknown as Element;
+    };
+    const at = rect(300, 700, 52, 52);
+
+    it('costs nothing to sit on something that is not a control', () => {
+      const bare = { closest: () => null } as unknown as Element;
+      expect(costOf(bare, null, at)).toBe(0);
+      expect(costOf(null, null, at)).toBe(0);
+    });
+
+    it('costs nothing to sit on the tab bar, which it always does', () => {
+      expect(costOf(control('BUTTON', rect(0, 700, 400, 52), { tabs: true }), null, at)).toBe(0);
+    });
+
+    it('costs a plain control the share of it that is hidden', () => {
+      // A full-width row clipped at the corner: 52 of 400 wide, all 52 tall.
+      const row = control('BUTTON', rect(0, 700, 400, 52));
+      expect(costOf(row, null, at)).toBeCloseTo(52 / 400, 5);
+      // Half of it, which is the threshold the rule has always used.
+      expect(costOf(control('BUTTON', rect(300, 700, 104, 52)), null, at)).toBeCloseTo(0.5, 5);
+    });
+
+    /*
+     * The two that count at any overlap — and the point of the floor is that
+     * they still rank. Both of these trip the rule; the textarea clipped at
+     * the corner is plainly the cheaper of the two places to stand, and before
+     * this they were indistinguishable.
+     */
+    it('floors a form field and a destructive control, without flattening them', () => {
+      const textarea = costOf(control('TEXTAREA', rect(0, 700, 340, 700)), null, at);
+      const remove = costOf(control('BUTTON', rect(310, 700, 30, 30), { danger: true }), null, at);
+      expect(textarea, 'a 1% clip of a big textarea still counts').toBe(0.5);
+      expect(remove, 'a buried Delete counts for what it is').toBeGreaterThan(0.5);
+      expect(textarea).toBeLessThan(remove);
+    });
+
+    it('is worst-case when there is no box to measure, or no position to measure from', () => {
+      expect(costOf(control('BUTTON', rect(0, 0, 0, 0)), null, at)).toBe(1);
+      expect(costOf(control('BUTTON', rect(0, 700, 400, 52)), null, null)).toBe(1);
+    });
+  });
+
+  it('keeps the cheapest place when no place is clear', () => {
+    const code = assistant();
+    // The search records the least-bad rather than returning the last try.
+    expect(code, 'it remembers a best').toContain('let least = Infinity');
+    expect(code, 'a clear position still wins outright').toContain('if (cost < COVERED) return lifted;');
+    // Strictly cheaper, so a tie keeps the lower — the position already under
+    // somebody's thumb.
+    expect(code).toContain('if (cost < least) {');
+    /*
+     * And the cap is a position it has actually looked at. The old loop
+     * incremented before returning, so an exhausted search returned
+     * `tries * LIFT` — a third lift, one the probes had never been asked
+     * about, and one the comment above it says is not allowed.
+     */
+    expect(code, 'every candidate is a multiple it examined').toContain('const lifted = i * STEP;');
+    expect(code).not.toContain('lifted += LIFT;');
+    /*
+     * And the places it tries are half a lift apart, not a whole one. A 58px
+     * step against `#/links`' 63px rows moved the button off one row's EDIT
+     * and onto the next one's, three times over. The ceiling is unchanged:
+     * five tries at half a lift is still exactly `2 * LIFT`.
+     */
+    expect(code).toContain('const STEP = LIFT / 2;');
+    expect(code).toContain('const TRIES = 5;');
+    expect((TRIES - 1) * (LIFT / 2), 'the ceiling is still two lifts').toBe(2 * LIFT);
   });
 
   it('re-measures when the pane changes shape without a scroll', () => {

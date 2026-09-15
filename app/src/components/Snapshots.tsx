@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from './ui';
 import { backupOf } from '../lib/export';
@@ -36,7 +36,8 @@ import { Folding } from './Fold';
  * right now is taken first, and it never runs as a side effect of anything.
  */
 export function Snapshots() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const row = useRowStyle('9px 2px');
   const [list, setList] = useState<Snapshot[] | null>(null);
   const [picked, setPicked] = useState<Snapshot | null>(null);

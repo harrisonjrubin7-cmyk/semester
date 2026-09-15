@@ -315,7 +315,7 @@ export const GROUNDS: Ground[] = [
     ramp: ['#e4e0d9', '#ece9e3', '#faf9f7', '#ffffff', '#ffffff'],
     fg: '#1a1a18',
     /*
-     * 0.64, for the surfaces under the card.
+     * 0.68, for the surfaces under the card.
      *
      * This was 0.62, chosen for the muted ink the references name, and over
      * the card it is comfortable either way — 4.80:1 at 0.62. The measurement
@@ -324,11 +324,20 @@ export const GROUNDS: Ground[] = [
      * Bone lifts its cards off a warm ground, so that is not a rare placement
      * — it is the search home and every course row.
      *
-     * 0.64 carries all four surfaces (4.57:1 at the worst) and lands nearer
-     * the reference than 0.62 did: the ink over the card is #6b6a68, where
-     * the note above claimed #6b6862 and 0.62 actually gave #6f6f6d.
+     * 0.64 carried all four surfaces, but only just: 4.70:1 on the void, which
+     * made Bone the weakest dim ink in the palette while every other light
+     * ground sat between 5.25 and 5.42. Passing at the third decimal is not
+     * the same as passing, and it is the one that goes under first when a
+     * surface moves. 0.68 is the smallest step that clears Fog's 5.25 — the
+     * floor the other light grounds already keep — and it measures 5.31:1 on
+     * the void and 5.88:1 over the card.
+     *
+     * The cost is the muted ink the note above is about: #6b6a68 over the
+     * card becomes #62615f, nine levels darker and still grey rather than
+     * black. Bone reads slightly firmer than its reference and is legible on
+     * its own void, which is the trade this takes.
      */
-    dimAlpha: 0.64,
+    dimAlpha: 0.68,
     faintAlpha: 0.47,
   },
   /*
@@ -357,10 +366,18 @@ export const GROUNDS: Ground[] = [
      * Higher than the dark grounds', and it has to be. Industry's text is
      * #1d1f20 on a #f5f5f8 panel — a very light panel, so a given alpha buys
      * less separation here than the same alpha does on near-black. 0.45, the
-     * value the dark grounds use, measures 2.76:1 and fails the 3:1 a faint
-     * label needs; 0.52 measures 3.35:1.
+     * value the dark grounds use, measures 2.76:1 against the 3:1 a faint
+     * label needs; `faintAlpha` below is 0.52, which measures 3.35:1.
+     *
+     * Dim ink was 0.66, and that is the figure this raises. Measured against
+     * every opaque surface the ground has, its worst is the void: 4.87:1 —
+     * over the 4.5 bar and under every other light ground, which sit between
+     * 5.25 and 5.42. 0.68 would reach 5.18, still the lowest of them; 0.7
+     * reaches 5.51, and is the value Fog already uses, so it introduces no
+     * number the palette did not have. The ink over the card goes #666869 to
+     * #5e5f61.
      */
-    dimAlpha: 0.66,
+    dimAlpha: 0.7,
     faintAlpha: 0.52,
     corners: 'square',
   },

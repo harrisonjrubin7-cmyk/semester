@@ -18,7 +18,7 @@
  */
 
 import { useEffect, useRef } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { enrolled, lastRefill, markRefilled, needsRefill, queueFor } from '../lib/push';
 import { atRiskToday } from '../lib/atrisk';
 import { classesToNudge } from '../lib/notify';
@@ -26,7 +26,8 @@ import { saveQueue } from '../lib/cloud';
 import { datedItems, railFor } from '../lib/select';
 
 export function PushTop() {
-  const { state, catalog, now, account, courseCode } = useStore();
+  const { state, catalog, account, courseCode } = useStore();
+  const now = useNow();
   // Once per mount, not once per render: `now` ticks every thirty seconds and
   // the effect's other dependencies change whenever anything is ticked off.
   const tried = useRef(false);

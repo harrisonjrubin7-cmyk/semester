@@ -205,8 +205,8 @@ internal consistency is what makes these worth shipping.
   certainly *includes* 15–17 December. That is a lower bound, not the period,
   and writing it as the period would understate it for anybody whose exam
   falls outside.
-- **Four of the six registrar deadlines.** See below: two were later written,
-  four were not.
+- **Four of the six registrar deadlines.** See below: three were later
+  written, three were not.
 
 The earlier fragment quoted below — exams and reading days 5–13 December,
 from a graduate calendar — is now positively **contradicted** by PSCI 1104's
@@ -220,6 +220,7 @@ search-index evidence as the meal plans:
 | Deadline | Date | Landmark |
 | --- | --- | --- |
 | Open enrollment ends | Fri 4 Sep 2026 | `add-deadline` |
+| Last day to drop without a W | Fri 4 Sep 2026 | `drop-clean` |
 | Last day to withdraw from a course | Fri 30 Oct 2026 | `withdraw` |
 
 **The label on the first one is the whole point of this entry.** The source's
@@ -240,18 +241,41 @@ So the label is chosen for the landmark it resolves to rather than copied:
 "Open enrollment ends" matches `add-deadline`, which is what the date is. A
 test pins both mappings.
 
-### The four still missing, and why that matters here
+### 4 September carries two meanings, and the first pass only wrote one
 
-`drop-clean`, `passfail`, `registration` and `grades` are still empty — and
-**the most consequential of the six is among them**. Nothing reachable from
-here carries a drop-without-a-W date for Fall 2026: the syllabi do not mention
-it, and the one search that went looking returned the registrar's own PDF with
-an excerpt too garbled to read.
+The entry above was, at first, filed under `add-deadline` alone, and the
+audit recorded `drop-clean` as unfillable — "nothing reachable from here
+carries a drop-without-a-W date for Fall 2026". That was too cautious, and the
+thing that settled it is Vanderbilt's own policy rather than any date:
 
-A partly-filled door is a hazard of its own — a student who sees deadlines
-listed under "What Vanderbilt publishes" may reasonably infer the list is
-complete and not go looking for the rest. It is not complete. A test asserts
-these four stay absent, so a future edit that adds them has to do so
+> A course dropped during Open Enrollment does not show on a transcript.
+> Courses dropped after the deadline to "drop with no entry on the record"
+> will be entered on the student's record with a grade of W.
+
+Two searches returned that independently, citing the Enrollment Bulletin's
+Open Enrollment page and the College of Arts and Science's course-withdrawal
+page. It means the close of open enrollment **is** the last day to drop
+without a W at this university: they are not two deadlines a week apart, they
+are one date with two consequences.
+
+So 4 September is now written twice, once per landmark, because the app has a
+different cost line for each — "After this, adding anything needs a signature
+and a good reason" against "The big one. After this the course stays on your
+transcript with a W against it." A student ticking both sees both. A test
+pins that the date resolves to `add-deadline` and `drop-clean` and to nothing
+else.
+
+Note what is and is not corroborated here. The **policy** — open enrollment
+close equals drop-without-record — is well supported, from two of the
+university's own pages. The **date** itself, 4 September, rests on the same
+search-index evidence as before and is no stronger for this finding.
+
+### Three still missing
+
+`passfail`, `registration` and `grades`. A partly-filled door is a hazard of
+its own — a student who sees deadlines listed under "What Vanderbilt
+publishes" may reasonably infer the list is complete. It is not. A test
+asserts these three stay absent, so a future edit that adds them has to do so
 deliberately, ideally with the registrar's page in hand.
 
 ### Meal plan tiers: the counts and the Meal Money, at the owner's direction

@@ -770,3 +770,59 @@ describe('a wavelet on the list', () => {
     expect(of('wavelet()')).toMatchObject({ kind: 'fault' });
   });
 });
+
+/**
+ * A Hilbert envelope on the list.
+ *
+ * `lib/hilbert.test.ts` checks the arithmetic against exact quarter turns.
+ * This checks the joint, and the one thing peculiar to the picture: the
+ * envelope is drawn both above and below, because it is the size of a wobble
+ * and a wobble goes both ways.
+ */
+describe('a Hilbert envelope on the list', () => {
+  it('is its own kind, under any of its names', () => {
+    expect(of('hilbert([1, 0, -1, 0])').kind).toBe('envelope');
+    expect(of('envelope(\\cos(n), 64)').kind).toBe('envelope');
+    expect(of('analytic([1, 0, -1, 0])').kind).toBe('envelope');
+    expect(of('dft([1, 0, -1, 0])').kind).toBe('bins');
+  });
+
+  it('is flat at the amplitude for a plain wave, and says how fast it turns', () => {
+    const got = answered(of('hilbert(3\\cos(2\\pi n/16), 64)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toBe('64 samples, as a wobble inside an envelope:');
+    expect(got.over).toBe('n');
+    for (const n of [4, 20, 50]) expect(got.at(n)).toBeCloseTo(3, 6);
+    // One cycle every sixteen samples is a sixteenth of a cycle a sample.
+    expect(got.note).toMatch(/turns at about 0\.0625 cycles a sample/);
+  });
+
+  it('follows a fading wobble rather than the wobble itself', () => {
+    const got = answered(of('hilbert(e^{-n/40}\\cos(n), 128)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    // The envelope falls away with the decay, and never rises back.
+    expect(got.at(10)).toBeGreaterThan(got.at(60));
+    expect(got.at(60)).toBeGreaterThan(got.at(100));
+    expect(got.note).toMatch(/Loudest at sample \d+/);
+  });
+
+  it('draws the data as dots inside an envelope drawn both ways', () => {
+    const drawn = draw(of('hilbert([0, 2, 0, -2, 0, 2, 0, -2])'), {}, { x0: -2, x1: 20, y0: -4, y1: 4 });
+    expect(drawn.points).toHaveLength(8);
+    // Two step paths: the envelope, and its mirror under the axis.
+    expect(drawn.paths).toHaveLength(2);
+    expect(drawn.paths[0]).toHaveLength(16);
+    drawn.paths[0].forEach((p, i) => expect(p.y).toBeCloseTo(-drawn.paths[1][i].y, 12));
+    // A wave of amplitude two has an envelope of two.
+    for (const p of drawn.paths[0]) expect(p.y).toBeCloseTo(2, 6);
+  });
+
+  it('asks for the letters it needs, and for data when it has none', () => {
+    expect(missing(of('hilbert([1, 0, -1, 0])'), {})).toEqual([]);
+    expect(missing(of('hilbert(k \\cos(n), 64)'), {})).toEqual(['k']);
+    const got = answered(of('hilbert(\\cos(n))'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/wants the data/);
+    expect(of('hilbert()')).toMatchObject({ kind: 'fault' });
+  });
+});

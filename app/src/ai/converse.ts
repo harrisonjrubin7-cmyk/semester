@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { ask, type ToolCall, type Turn } from '../lib/claude';
 import { provider, settings } from '../lib/assistant';
 import type { Usage } from '../lib/spend';
@@ -111,7 +111,8 @@ export interface Conversation {
 }
 
 export function useConversation(): Conversation {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const ai = useAI();
   const trouble = useTrouble();
 

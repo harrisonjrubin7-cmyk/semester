@@ -41,14 +41,37 @@ export function Call() {
   const [title, setTitle] = useState('');
   const [wantShare, setWantShare] = useState(false);
 
-  /* A different call is a different everything. Also the case that matters:
-     leaving drops the code, and the stream has to stop with it. */
+  /* A different call is a different everything. Leaving drops the code, and
+     the stream stops with it — by way of the effect below, which owns that. */
   useEffect(() => {
-    if (!code && live) {
-      shut(live.stream);
-      setLive(null);
-    }
+    if (!code && live) setLive(null);
   }, [code, live]);
+
+  /*
+   * One owner for the camera, and it is this screen's lifetime.
+   *
+   * The paragraph above promises that unmounting hangs up and nothing goes on
+   * running where you cannot see it. Half of it was true: `Stage`'s cleanup
+   * calls `session.leave()`, which closes every peer connection and the
+   * channel. None of that touches the `MediaStream` — `leave` tears down
+   * connections, and `shut` was only ever reached from the Leave button and
+   * from the code-dropped effect above.
+   *
+   * This screen is a `switch` arm in `App.tsx`, so tapping any other
+   * destination unmounts it without either of those running. The camera light
+   * stayed on and the microphone kept capturing, on a screen already left.
+   *
+   * Keyed on `live` rather than written as an unmount-only effect because
+   * `StrictMode` is on: it runs setup, cleanup, setup on the *initial* mount,
+   * and an unmount-only cleanup would stop the camera in development the
+   * moment it was acquired. `live` is null for that first pass, so the
+   * cleanup is a no-op, and the run that carries a real stream is an ordinary
+   * dependency change that React does not double-invoke.
+   */
+  useEffect(() => {
+    if (!live) return;
+    return () => shut(live.stream);
+  }, [live]);
 
   if (!code) {
     return (
@@ -85,8 +108,9 @@ export function Call() {
       name={live.name}
       start={live.flags}
       wantShare={wantShare}
+      // No `shut` here: clearing `live` runs the cleanup above, which is the
+      // one place the stream is stopped however the screen is left.
       onLeave={() => {
-        shut(live.stream);
         setLive(null);
         dispatch({ type: 'openCall', code: '' });
       }}

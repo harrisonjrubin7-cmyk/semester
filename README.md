@@ -621,6 +621,18 @@ model in it or needs a key:
   written before this still work: an item that is a bare string is read as a
   line at the left margin, which is what it always was.
 
+  A **Word file opens here.** Insert → *Notes, Markdown or a Word file…* takes
+  a `.docx` and reads it in as blocks: headings, nested lists, checklists,
+  tables, quotations, code, page breaks, dividers, pictures, alignment, and
+  the bold, italic, strike-through, monospace and links inside a line. The
+  pictures go into your drive and the blocks point at them, the same way a
+  picture you added yourself does. Whatever it cannot bring — an equation
+  (Word stores those in a form that will not read back into a formula),
+  comments, tracked changes, footnotes, a text box — it names, rather than
+  leaving you to notice. Reading a file into a document that already has
+  writing in it adds to the end; into an empty one, it takes the file's title
+  as well.
+
   A paragraph, a heading or a quotation can be **aligned** — left, centred,
   right or justified, from the toolbar or the Edit menu. It is a property of
   that one block rather than of the document: a centred heading in a
@@ -1133,6 +1145,43 @@ model in it or needs a key:
   that Haar found correctly. Wrong in exactly the dimension this transform
   exists to be right in, and now pinned by a test that asks both filters to
   find the same step.
+
+  **`hilbert([…])` is a Hilbert transform**, and it is the one that answers a
+  question about every *moment* rather than about the whole run. The six before
+  it say which frequencies, which scales, which poles; this one says how big
+  the wobble is here and how fast it is turning here. A signal that swells and
+  fades, or drifts from one frequency to another, is the ordinary case in
+  anything measured, and it is the case none of the others say much about.
+
+  The transform turns every component a quarter turn — a cosine becomes a sine,
+  a sine becomes minus a cosine. Written as an integral it is a principal value
+  over the whole line; written as a spectrum it is one sentence: take the
+  transform, throw the negative frequencies away, double the rest. So this is
+  thirty lines on top of the discrete transform rather than an integrator of
+  its own, and `Re(analytic(x))` is `x` to the last bit of the float — checked,
+  because it is the claim the whole approach rests on.
+
+  What comes back is the *analytic signal*, and its size at each moment is the
+  **envelope**: the shape the wobble is wobbling inside, which is what somebody
+  means by "it is dying away" or "it swells in March". The rate its angle turns
+  is the **instantaneous frequency** — one number per sample, where a spectrum
+  gives one set of numbers for the whole run. A chirp that starts slow and ends
+  fast has a spectrum saying "everything in between" and saying nothing about
+  which end is which; this reports the rate at sample 40 and at sample 210, and
+  a test checks both against the chirp they were built from.
+
+  It is drawn as the envelope above the data *and its mirror below*, because
+  the envelope is the size of a wobble and a wobble goes both ways: one line
+  above a run that dips below zero reads as a ceiling rather than as the shape
+  it is inside. The average turn rate in the reading is weighted by the
+  envelope — a plain average is dominated by the quiet stretches, where the
+  angle of something near nothing wanders about and means very little.
+
+  The spectrum of a finite run assumes it repeats, so the envelope near the two
+  ends is affected by the other end. That is inherent to computing this through
+  a transform rather than a fault, and the reading says so rather than letting
+  the first and last samples pass as though they were as trustworthy as the
+  middle.
 
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms

@@ -117,8 +117,6 @@ export type SyncStatus =
 interface Store {
   state: State;
   dispatch: (action: Action) => void;
-  /** The current time, refreshed each minute so countdowns stay honest. */
-  now: Date;
   /** The current term's courses, with every lookup derived from them. */
   catalog: Catalog;
   /** Every term the account has a course in, newest first. */
@@ -220,6 +218,41 @@ interface Store {
 }
 
 const StoreContext = createContext<Store | null>(null);
+
+/**
+ * The minute, on a context of its own.
+ *
+ * It used to be a field on the store's one context value, and the store's
+ * value is read at 195 call sites. So every tick — twice a minute, because the
+ * timer checks twice as often as the thing it watches — made a new context
+ * value and re-rendered all of them, including the ninety-five that have
+ * nothing to do with time. There is no `React.memo` anywhere in this app to
+ * stop that, which is a deliberate choice and a reasonable one; what was not
+ * reasonable was the clock making it expensive.
+ *
+ * Split, a tick reaches only what asks for the clock. The store's own effects
+ * — reminders, the class rail, the daily snapshot — keep using the local
+ * `now`, so there is still exactly one timer and one source. See
+ * `ENGINEERING-AUDIT.md` §2.
+ *
+ * The default is a real date rather than null: `useNow()` outside the provider
+ * is a programming error, but it is the kind that should render a stale label
+ * rather than take the app down, and the value below is replaced on the first
+ * tick anyway.
+ */
+const NowContext = createContext<Date>(currentMinute());
+
+/**
+ * The current time, to the minute.
+ *
+ * Ask for this rather than pulling `now` off `useStore()` — that is what the
+ * split is for. A component that reads both re-renders on the minute, which is
+ * correct and is what it is for; a component that reads only the store no
+ * longer does.
+ */
+export function useNow(): Date {
+  return useContext(NowContext);
+}
 
 function currentMinute(): Date {
   const d = new Date();
@@ -1232,10 +1265,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ state, dispatch, now, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt }),
-    [state, now, catalog, terms, courseCode, allItems, tint, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt],
+    () => ({ state, dispatch, catalog, terms, courseCode, allItems, tint, lastSeen: lastSeen.current, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt }),
+    [state, catalog, terms, courseCode, allItems, tint, account, sync, saveTrouble, refresh, say, school, facts, asking, settle, adopt],
   );
-  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
+  /*
+   * The clock is published beside the store, not inside it.
+   *
+   * Nested rather than side by side, and that is the whole mechanism: when the
+   * minute changes, only this provider's value is new. `StoreContext`'s is
+   * unchanged, so the ninety-five components that read the store without
+   * reading the clock are not re-rendered — and `children` is a prop whose
+   * element identity does not change, so React bails out of the subtree and
+   * visits only the `useNow()` consumers.
+   */
+  return (
+    <StoreContext.Provider value={value}>
+      <NowContext.Provider value={now}>{children}</NowContext.Provider>
+    </StoreContext.Provider>
+  );
 }
 
 export function useStore(): Store {

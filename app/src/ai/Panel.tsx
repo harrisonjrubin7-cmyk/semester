@@ -178,23 +178,6 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
   }, [wide, full, side]);
 
 
-  /*
-   * Remember what had focus, and give it back on close.
-   *
-   * Focusing *into* the box is the composer's own job — it mounts with the
-   * sheet and focuses itself, which is one fewer thing that can race.
-   *
-   * This watched `ai.open` when the file was mounted all the time. Now the
-   * component *is* the open panel, so mount and unmount say open and shut,
-   * and the two resets that used to be in the close branch — `setFull(false)`
-   * and `setShowing(false)` — are what unmounting does for nothing. A ref to
-   * carry the value across a flag change is not needed either: a closure over
-   * the mount is the value, and it cannot be overwritten by a later open.
-   */
-  useEffect(() => {
-    const cameFrom = document.activeElement as HTMLElement | null;
-    return () => cameFrom?.focus?.();
-  }, []);
 
   useEffect(() => {
     if (seed.seeded) {

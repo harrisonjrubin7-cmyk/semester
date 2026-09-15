@@ -191,6 +191,85 @@ export function dueFirst<T extends { key: string }>(cards: T[], reviews: Reviews
 }
 
 /**
+ * The most cards one sitting hands you.
+ *
+ * A drill with no ceiling is the thing that ends studying. Come back after
+ * reading week and `dueFirst` is perfectly happy to deal out two hundred and
+ * forty cards, and the screen's only honest promise is that it will take an
+ * hour — so it does not get started, and the backlog grows again. Anki's
+ * daily limit is the oldest setting in spaced repetition and it exists for
+ * exactly this: the work has to look finishable from the first card.
+ *
+ * Twenty-five rather than a number somebody tunes. It is about ten minutes at
+ * this app's pace, it is the length of the gap between two classes — which is
+ * when this screen is actually opened — and a cap you can change is a cap
+ * somebody raises once, drowns, and never comes back to. Going again is one
+ * press (`redrill`), so the ceiling costs nothing to anybody who wants more.
+ */
+export const A_SITTING = 25;
+
+/** A sitting's worth of cards, and how many it left behind. */
+export interface Sitting<T> {
+  cards: T[];
+  /** Still waiting after this run. Zero means the deck is clear. */
+  left: number;
+}
+
+/**
+ * The front of an ordered deck, with the remainder counted rather than hidden.
+ *
+ * Takes an already-ordered list — `dueFirst` decides *which* cards matter, and
+ * this only decides how many of them one sitting is. Keeping those apart means
+ * the cap can never quietly change the order, which is the way a limit turns
+ * into "it keeps showing me the easy ones".
+ *
+ * The count comes back because a run that silently dropped two hundred cards
+ * would be lying by omission: the end of the sitting says what is left, which
+ * is the number that makes going again a decision rather than a guess.
+ */
+export function aSitting<T>(ordered: T[], most = A_SITTING): Sitting<T> {
+  return { cards: ordered.slice(0, most), left: Math.max(0, ordered.length - most) };
+}
+
+/**
+ * Misses before a card is called out as one you keep failing.
+ *
+ * Anki calls these leeches and suspends them at eight lapses. Six here, and
+ * the streak condition matters more than the number: a card you missed six
+ * times two months ago and have since got right four times running is a card
+ * you learned, and calling it a problem would be reading your history
+ * backwards.
+ */
+export const KEEPS_CATCHING = 6;
+
+/**
+ * A card that keeps catching you out.
+ *
+ * Worth naming rather than grinding. A miss sets the interval to zero and the
+ * next showing to ten minutes, which is right for a card you nearly knew and
+ * is a treadmill for one you do not: it comes back, and back, and the schedule
+ * has no way of ever concluding that the *card* is the problem — that it asks
+ * two things at once, or that the answer is a paragraph.
+ *
+ * So the app says so and leaves it there. It does not suspend the card the way
+ * Anki does, because these cards are generated from the student's own course
+ * material rather than typed by them, and hiding part of a syllabus to make a
+ * number go up is the wrong trade in a study app. Naming it is what lets
+ * somebody go and look at the reading instead of pressing Again for the ninth
+ * time.
+ */
+export function keepsCatching(r: CardReview | undefined): boolean {
+  return Boolean(r && r.wrong >= KEEPS_CATCHING && r.streak < 2);
+}
+
+/** The ones out of this deck that keep catching you, worst first. */
+export function catching<T extends { key: string }>(cards: T[], reviews: Reviews): T[] {
+  return cards
+    .filter((c) => keepsCatching(reviews[c.key]))
+    .sort((a, b) => (reviews[b.key]?.wrong ?? 0) - (reviews[a.key]?.wrong ?? 0));
+}
+
+/**
  * How many of these are waiting: never met, or come round again.
  *
  * The lumped number, and the right one for a queue — a drill has the same
