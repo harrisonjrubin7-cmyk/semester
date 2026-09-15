@@ -105,16 +105,17 @@ interface Seen {
 /**
  * The distinct cards of a guide.
  *
- * `allCards` returns what the units hold, and across the four shipped decks
- * five questions are written out twice in two different units — so the deck
- * that says "68 cards" has 67 distinct `cardKey`s. Counting the list rather
- * than the set made this census report 31 stranded cards where `inTime` dealt
- * 30, and one day of the histogram hold three where the dealer can only put
- * two. A third probe in this change that was wrong before it was right.
+ * `allCards` used to return what the guide *wrote*, and each shipped guide's
+ * self-test recaps a question or two from its units — so the deck that said
+ * "68 cards" had 67 distinct `cardKey`s. Counting the list rather than the set
+ * made this census report 31 stranded cards where `inTime` dealt 30, and one
+ * day of the histogram hold three where the dealer can only put two. A third
+ * probe in this change that was wrong before it was right.
  *
- * The duplication is real and is not this module's to fix — see the note in
- * the commit. A measurement of the scheduler has to count cards, and a card
- * is a key.
+ * That duplication is fixed at the source now: `allCards` collapses the recap,
+ * so this set takes nothing out. It stays because it says the thing this
+ * census depends on — a measurement of the scheduler counts cards, and a card
+ * is a key — rather than because `allCards` cannot be trusted to.
  */
 function deckKeys(m: (typeof MODULES)[number]): string[] {
   return [...new Set(allCards(m.guide).map((c) => cardKey(m.course.id, c.q)))];
@@ -215,8 +216,9 @@ describe('what a test does to the schedule, on the shipped decks', () => {
     // error: the figure quoted for this change.
     const missed = rows.reduce((n, r) => n + r.missed, 0);
     const cards = rows.reduce((n, r) => n + r.cards, 0);
-    // 325 questions across the four decks, 320 distinct cards: five are
-    // written out twice. See `deckKeys`.
+    // 320 cards across the four decks. The guides write 325 questions: five
+    // are asked once in a unit and again in that guide's self-test, and
+    // `allCards` deals each card once. See `deckKeys`.
     expect(cards).toBe(320);
     expect(missed).toBeGreaterThan(cards * 0.1);
   });

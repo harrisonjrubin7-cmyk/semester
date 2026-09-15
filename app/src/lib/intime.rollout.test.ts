@@ -35,7 +35,7 @@ import { HORIZON, TESTS, inTime, testsNear } from './intime';
 const DAY = 86_400_000;
 const CAT = buildCatalog([econ]);
 
-/** The distinct cards of the deck — five questions are repeated across the four decks. */
+/** The distinct cards of the deck. A no-op since `allCards` collapses a self-test's recap; see `deckKeys` in `intime.census.test.ts` for why it is still written this way. */
 const QS = [...new Set(allCards(econ.guide).map((c) => c.q))];
 const KEYS = QS.map((q) => cardKey('econ', q));
 

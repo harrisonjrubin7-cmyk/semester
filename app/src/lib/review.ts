@@ -270,6 +270,32 @@ export function catching<T extends { key: string }>(cards: T[], reviews: Reviews
 }
 
 /**
+ * The caller's keys, with any key named twice read once.
+ *
+ * Every count below is a count of *cards*, and a key is a card — so a list
+ * naming one twice has to be read as naming it once, whoever built the list.
+ * The four counts here take the keys rather than the deck, which is what keeps
+ * this file clear of the catalogue, and is also what makes the assumption
+ * silent: nothing in a `string[]` says the caller de-duplicated it.
+ *
+ * It had not. Each shipped guide's self-test recaps a question or two from its
+ * units, and the flattening that built these lists emitted both copies — so
+ * one card counted twice in five decks, and the Study screen's figures ran one
+ * high per course against reviews that only ever held one row. `allCards` in
+ * `data/catalog` collapses that at the source now. This is the half of the fix
+ * that does not depend on the next caller knowing to.
+ *
+ * Applied to the five that count or sum per key — {@link dueCount},
+ * {@link comeRound}, {@link neverMet}, {@link tallyKeys} and {@link tallyBy}.
+ * Not to {@link unitMastery}, which averages, so a key twice contributes the
+ * same value to both halves of the fraction and the percentage does not move;
+ * nor to {@link anyAnswered}, which asks whether any key at all qualifies.
+ * Those two are right on a repeated list already, and a `Set` they do not need
+ * would only suggest they had been wrong.
+ */
+const distinct = (keys: string[]): string[] => (keys.length > 1 ? [...new Set(keys)] : keys);
+
+/**
  * How many of these are waiting: never met, or come round again.
  *
  * The lumped number, and the right one for a queue — a drill has the same
@@ -279,7 +305,7 @@ export function catching<T extends { key: string }>(cards: T[], reviews: Reviews
  * It is the wrong number to call *due*. See {@link comeRound}.
  */
 export function dueCount(keys: string[], reviews: Reviews, now: number): number {
-  return keys.filter((k) => {
+  return distinct(keys).filter((k) => {
     const r = reviews[k];
     return !r || r.seen === 0 || r.due <= now;
   }).length;
@@ -297,7 +323,7 @@ export function dueCount(keys: string[], reviews: Reviews, now: number): number 
  * produce a hundred-card debt.
  */
 export function comeRound(keys: string[], reviews: Reviews, now: number): number {
-  return keys.filter((k) => {
+  return distinct(keys).filter((k) => {
     const r = reviews[k];
     return !!r && r.seen > 0 && r.due <= now;
   }).length;
@@ -305,7 +331,7 @@ export function comeRound(keys: string[], reviews: Reviews, now: number): number
 
 /** Cards nobody has answered yet — new material rather than a backlog. */
 export function neverMet(keys: string[], reviews: Reviews): number {
-  return keys.filter((k) => {
+  return distinct(keys).filter((k) => {
     const r = reviews[k];
     return !r || r.seen === 0;
   }).length;
@@ -357,7 +383,7 @@ export function tally(reviews: Reviews): Tally {
  * count them. Hand over the keys of the decks that exist and it cannot.
  */
 export function tallyKeys(keys: string[], reviews: Reviews): Tally {
-  return totals(keys.map((k) => reviews[k]).filter((r): r is CardReview => Boolean(r)));
+  return totals(distinct(keys).map((k) => reviews[k]).filter((r): r is CardReview => Boolean(r)));
 }
 
 /** The arithmetic both of the above are, so there is one copy of it. */
@@ -388,7 +414,7 @@ export function tallyBy(
   for (const deck of decks) {
     let right = 0;
     let wrong = 0;
-    for (const q of deck.questions) {
+    for (const q of distinct(deck.questions)) {
       const r = reviews[cardKey(deck.courseId, q)];
       if (!r || r.seen === 0) continue;
       right += r.right;

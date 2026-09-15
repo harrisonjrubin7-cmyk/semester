@@ -231,10 +231,26 @@ export function ladderFor(question: Askable, terms: Term[]): Rung[] {
  * Checked against **every** option rather than only the right one, because the
  * failure is the same either way: a rung that singles out any one option has
  * decided the question.
+ *
+ * And in **both directions**, because `buildQuiz` clips an option at 118
+ * characters and an opening runs to the answer's first punctuation — so which
+ * of the two is longer depends on where the comma falls, and the first version
+ * only asked whether the option started with the opening. CORE's Cooper
+ * question is the other way round: its answer's first clause is 158 characters,
+ * the option is that same text cut to 116 with an ellipsis, and the option
+ * therefore does not start with the opening — the opening starts with the
+ * option. The rung quoted the correct option back in full and then some, and
+ * `answerShown` said nothing was shown. Whichever is the prefix of the other,
+ * the student is reading the same words twice.
  */
 export function answerShown(question: Askable, head: string): boolean {
   const start = head.toLowerCase().trim();
-  return question.opts.some((o) => o.text.toLowerCase().trim().startsWith(start));
+  return question.opts.some((o) => {
+    // The clip's trailing ellipsis is punctuation the clip added, not words the
+    // option says, and leaving it on is what makes the shorter side never match.
+    const text = o.text.toLowerCase().trim().replace(/…+$/, '').trim();
+    return text.length > 0 && (text.startsWith(start) || start.startsWith(text));
+  });
 }
 
 /** What the button offering the next rung should say. */
