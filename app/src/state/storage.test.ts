@@ -190,7 +190,7 @@ describe('the version written back', () => {
    * what stops it, which makes this the test holding that door shut.
    */
   const state = (over: Partial<Persisted> = {}) =>
-    ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date(2026, 8, 10)), ...over }) as State;
+    ({ ...DEFAULT_PERSISTED, ...initialEphemeral(), ...over }) as State;
 
   it('stamps this build for a copy this build understands', () => {
     expect(pickPersisted(state({ schemaVersion: SCHEMA })).schemaVersion).toBe(SCHEMA);

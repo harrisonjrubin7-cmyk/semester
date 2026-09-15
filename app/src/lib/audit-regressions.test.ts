@@ -9,7 +9,7 @@ import {DEFAULT_PERSISTED, initialEphemeral, type State} from '../state/shape';
 import {CATALOG_TEMPLATE, parseCatalog} from './registration';
 import {readRegistration, readHousingDraft, readMealDraft} from './portal-storage';
 
-const blank = (): State => ({...DEFAULT_PERSISTED, ...initialEphemeral(new Date('2026-09-13T12:00:00Z'))});
+const blank = (): State => ({...DEFAULT_PERSISTED, ...initialEphemeral()});
 
 describe('saved work continuity', () => {
   it('restores authored files and formulas through the actual backup and reducer path', () => {

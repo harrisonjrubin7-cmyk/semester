@@ -1040,9 +1040,20 @@ function MonthView() {
   const monthTaskRow = useRowStyle('var(--sp-5) 0');
   const { state, dispatch, catalog, tint } = useStore();
   const now = useNow();
-  const { calYear, calMonth, calSource } = state;
-  const cells = monthGrid(calYear, calMonth);
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const { calSource } = state;
+  /*
+   * The month on screen, and the day selected in it, both read off `calDay`.
+   *
+   * They used to be three fields — `calMonth`, `calYear` and a `selDate` this
+   * view alone read — so the grid could be showing one day while the day view
+   * showed another. Deriving all three from the single date is what makes the
+   * selection survive a change of grain; see `calDay` in `state/shape.ts`.
+   */
+  const anchor = state.calDay ? isoToDate(state.calDay) : now;
+  const shownYear = anchor.getFullYear();
+  const shownMonth = anchor.getMonth();
+  const cells = monthGrid(shownYear, shownMonth);
+  const daysInMonth = new Date(shownYear, shownMonth + 1, 0).getDate();
   // The flat run of cells, cut into weeks, so each can be a row.
   const weeks = Array.from({ length: Math.ceil(cells.length / 7) }, (_, w) =>
     cells.slice(w * 7, w * 7 + 7),
@@ -1058,7 +1069,7 @@ function MonthView() {
   const [adding, setAdding] = useState<number | null>(null);
   const moving = useCalendarMove();
   const iso = (day: number) =>
-    `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    `${shownYear}-${String(shownMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   /*
    * A month cell is a day and nothing finer, so a drop here moves the date and
    * leaves the hour alone. `data-drop` on each cell is what `lib/drag.ts`
@@ -1118,7 +1129,7 @@ function MonthView() {
         aria-label={`Carrying ${what.title}. Arrow keys choose a day, Enter drops it, Escape cancels.`}
         style={CARRY}
       >
-        {MONTHS[calMonth]} {carrying.day} · ENTER
+        {MONTHS[shownMonth]} {carrying.day} · ENTER
       </button>
     ) : (
       <button
@@ -1135,7 +1146,7 @@ function MonthView() {
   // What lands on each day of this month, per the current source filter.
   const marks: Record<number, { c: CourseId | null; kind: string; tint?: string; title?: string }[]> = {};
   const add = (d: Date, mark: { c: CourseId | null; kind: string; tint?: string; title?: string }) => {
-    if (d.getFullYear() !== calYear || d.getMonth() !== calMonth) return;
+    if (d.getFullYear() !== shownYear || d.getMonth() !== shownMonth) return;
     (marks[d.getDate()] ??= []).push(mark);
   };
 
@@ -1189,8 +1200,8 @@ function MonthView() {
    * somebody scans to find what is due.
    */
   if (on.classes) {
-    for (let d = 1; d <= new Date(calYear, calMonth + 1, 0).getDate(); d++) {
-      const date = new Date(calYear, calMonth, d);
+    for (let d = 1; d <= new Date(shownYear, shownMonth + 1, 0).getDate(); d++) {
+      const date = new Date(shownYear, shownMonth, d);
       railFor(catalog, date, []).forEach((b) => add(date, { c: b.c, kind: 'class' }));
     }
   }
@@ -1200,16 +1211,12 @@ function MonthView() {
   // came to look at nine times out of ten, so it starts selected — and when
   // you are looking at another month, its first day stands in rather than
   // nothing at all.
-  const inThisMonth = now.getFullYear() === calYear && now.getMonth() === calMonth;
-  const selectedDay = state.selDate
-    ? Number(state.selDate.split('-')[2])
-    : inThisMonth
-      ? now.getDate()
-      : 1;
-  const selItems = itemsOn(catalog, now, calYear, calMonth, selectedDay);
+  const selectedDay = anchor.getDate();
+  const inThisMonth = now.getFullYear() === shownYear && now.getMonth() === shownMonth;
+  const selItems = itemsOn(catalog, now, shownYear, shownMonth, selectedDay);
   const selTasks = state.tasks.filter((t) => t.date === iso(selectedDay) && !t.done);
-  const selDate = new Date(calYear, calMonth, selectedDay);
-  const selEvents = campus.filter((e) => sameDay(e.date, selDate));
+  const selected = new Date(shownYear, shownMonth, selectedDay);
+  const selEvents = campus.filter((e) => sameDay(e.date, selected));
   const selFeed = feedAll.filter((e) => e.date === iso(selectedDay));
   /*
    * Your own appointments, which the grid above marks and the panel left out.
@@ -1222,7 +1229,7 @@ function MonthView() {
    * Gated on `on.classes` to match the marks exactly, so a chip that takes
    * appointments off the grid takes them out of the panel too.
    */
-  const selAppts = on.classes ? appointmentsOn(state.appointments, selDate) : [];
+  const selAppts = on.classes ? appointmentsOn(state.appointments, selected) : [];
   /*
    * And the classes themselves, for the same reason.
    *
@@ -1231,7 +1238,7 @@ function MonthView() {
    * disagreement the two comments above record fixing for campus events and
    * for appointments. Gated on `on.classes` to match the marks exactly.
    */
-  const selClasses = on.classes ? railFor(catalog, selDate, []) : [];
+  const selClasses = on.classes ? railFor(catalog, selected, []) : [];
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
@@ -1256,7 +1263,7 @@ function MonthView() {
           className="chrome-text"
           style={{ fontSize: 'calc(20px * var(--text-scale, 1))', letterSpacing: '0.06em', textTransform: 'uppercase' }}
         >
-          {MONTHS[calMonth]} {calYear}
+          {MONTHS[shownMonth]} {shownYear}
         </div>
         <button
           type="button"
@@ -1275,13 +1282,10 @@ function MonthView() {
           or the panel underneath would still be showing a day in December. */}
       {!inThisMonth && (
         <BackToToday
-          onClick={() => {
-            dispatch({
-              type: 'stepMonth',
-              delta: (now.getFullYear() - calYear) * 12 + (now.getMonth() - calMonth),
-            });
-            dispatch({ type: 'selectDate', date: null });
-          }}
+          // One dispatch. It was a `stepMonth` by a computed delta followed by
+          // clearing the selection, because the month and the selected day were
+          // different fields; today is a date, so setting it says both.
+          onClick={() => dispatch({ type: 'setCalDay', date: dateToIso(now) })}
         />
       )}
 
@@ -1323,9 +1327,9 @@ function MonthView() {
       <Blueprint style={{ background: 'var(--app-line)', padding: 1 }}>
       <div
         role="grid"
-        aria-label={`${monthLabel(calYear, calMonth)}. Arrow keys move by day, Page Up and Page Down change month.`}
+        aria-label={`${monthLabel(shownYear, shownMonth)}. Arrow keys move by day, Page Up and Page Down change month.`}
         onKeyDown={(e) => {
-          const move = moveBy(e.key, selectedDay, daysInMonth, new Date(calYear, calMonth, 1).getDay());
+          const move = moveBy(e.key, selectedDay, daysInMonth, new Date(shownYear, shownMonth, 1).getDay());
           if (!move) return;
           e.preventDefault();
           if (move.step) {
@@ -1336,21 +1340,21 @@ function MonthView() {
               back to the 1st and keyboard focus was left behind on it.
             */
             const delta = move.step === 'next' ? 1 : -1;
-            const next = new Date(calYear, calMonth + delta, 1);
+            const next = new Date(shownYear, shownMonth + delta, 1);
             const day = Math.min(
               selectedDay,
               new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate(),
             );
+            // `stepMonth` carries the day across and clamps it, so the second
+            // dispatch this used to need is gone. The day is still worked out
+            // here because focus has to chase it, which is this view's business
+            // rather than the reducer's.
             dispatch({ type: 'stepMonth', delta });
-            dispatch({
-              type: 'selectDate',
-              date: `${next.getFullYear()}-${next.getMonth()}-${day}`,
-            });
             setChasing(day);
             return;
           }
           if (move.day === null || move.day === selectedDay) return;
-          dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${move.day}` });
+          dispatch({ type: 'setCalDay', date: iso(move.day) });
           setChasing(move.day);
         }}
         style={{ display: 'grid', gridTemplateColumns: 'repeat(7,minmax(0,1fr))', gap: 1 }}
@@ -1379,7 +1383,7 @@ function MonthView() {
               />
             );
           }
-          const isToday = sameDay(now, new Date(calYear, calMonth, d));
+          const isToday = sameDay(now, new Date(shownYear, shownMonth, d));
           const isSelected = selectedDay === d;
           const dots = (marks[d] ?? []).slice(0, 4);
           return (
@@ -1389,7 +1393,7 @@ function MonthView() {
               role="gridcell"
               // The whole sentence, so the weekday, the standing and what is on
               // the day all survive without the colour.
-              aria-label={dayLabel(new Date(calYear, calMonth, d), marks[d] ?? [], {
+              aria-label={dayLabel(new Date(shownYear, shownMonth, d), marks[d] ?? [], {
                 today: isToday,
                 selected: isSelected,
               })}
@@ -1406,7 +1410,7 @@ function MonthView() {
                   setChasing(null);
                 }
               }}
-              onClick={() => dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${d}` })}
+              onClick={() => dispatch({ type: 'setCalDay', date: iso(d) })}
               /*
                * Two taps on a day is "put something here".
                *
@@ -1416,7 +1420,7 @@ function MonthView() {
                * day being added to, which is what makes it checkable.
                */
               onDoubleClick={() => {
-                dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${d}` });
+                dispatch({ type: 'setCalDay', date: iso(d) });
                 setAdding(d);
               }}
               /*
@@ -1556,7 +1560,7 @@ function MonthView() {
       />
 
       <SectionLabel style={{ margin: '20px 0 6px' }}>
-        {DOW[new Date(calYear, calMonth, selectedDay).getDay()]} · {MONTHS[calMonth]}{' '}
+        {DOW[new Date(shownYear, shownMonth, selectedDay).getDay()]} · {MONTHS[shownMonth]}{' '}
         {selectedDay}
         {inThisMonth && selectedDay === now.getDate() ? ' · today' : ''}
       </SectionLabel>
@@ -1821,7 +1825,7 @@ function MonthView() {
       {/* Where a carried thing would land, said rather than only drawn. */}
       <div role="status" aria-live="polite" className="sr-only">
         {carrying
-          ? `${carrying.what.title} would move to ${MONTHS[calMonth]} ${carrying.day}.`
+          ? `${carrying.what.title} would move to ${MONTHS[shownMonth]} ${carrying.day}.`
           : ''}
       </div>
 
@@ -1847,7 +1851,7 @@ function MonthView() {
         onClick={() => {
         dispatch({
         type: 'setCalDay',
-        date: `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
+        date: `${shownYear}-${String(shownMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`,
         });
         dispatch({ type: 'setCalView', view: 'day' });
         }}

@@ -18,8 +18,7 @@ import { directoryOf } from '../lib/look';
  * to be asserted instead.
  */
 
-const at = new Date('2026-09-03T09:00:00');
-const blank = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral(at) });
+const blank = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral() });
 
 describe('every action is handled somewhere', () => {
   const here = join(process.cwd(), 'src/state');

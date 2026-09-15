@@ -303,7 +303,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const [state, dispatch] = useReducer(reducer, undefined, () => {
     const persisted = loadPersisted();
-    const ephemeral = initialEphemeral(startedAt.current);
+    const ephemeral = initialEphemeral();
     if (!persisted.seenOnboarding) {
       return { ...persisted, ...ephemeral, screen: 'onboarding' as Screen };
     }

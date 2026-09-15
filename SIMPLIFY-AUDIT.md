@@ -95,13 +95,54 @@ setting the month, and `openCal(date, 'month')` starts working on its own.
 
 The malformed string in M2 disappears with the field that held it.
 
+### Driven after
+
+Same script, same seed, today still Tue 15 September:
+
+| step | before | after |
+|---|---|---|
+| tap *"Thursday 24 September"* in the grid | **THU · SEP 24** | **THU · SEP 24** |
+| switch to **Day** | **"Today · SEP 15"** ✗ | **"Thu · SEP 24"** ✓ |
+
+The *Back to today* control now appears in the day view, because the calendar
+knows it is not on today — which it could not know before, since the field
+that had moved was not the one it read.
+
+### Two things the merge turned up on its way out
+
+**`initialEphemeral(now)` no longer needs `now`.** Seeding `calMonth` and
+`calYear` with the month the app opened in was the parameter's only use. A
+parameter nothing reads is a claim the signature cannot keep, so it went too —
+sixteen callers, all but one of them tests, and two of those kept a `const NOW`
+alive for no other purpose.
+
+**`readstate.test.ts` used `calYear` as its specimen.** The eighth pass's guard
+proves it can see a destructured field at all by naming one, and the one it
+named was a field this pass deletes. It now names `calSource`, with a note
+that the named field is only there to make the failure readable — the real
+assertion is that *some* field is seen. A test whose example is a field
+somebody may legitimately remove fails for a reason unrelated to what it
+checks.
+
+### Saved state needs no migration, and that is checkable
+
+All three deleted fields were `Ephemeral`, and none appeared in the persisted
+snapshot — verified against `HEAD`'s `shape.ts` rather than assumed. Nothing
+written to `semester.v1` has ever carried them, so no stored copy can land on
+a field that no longer exists.
+
 ## To do
 
 | row | what | resolution |
 |---|---|---|
-| M1 | one day, three fields, none in step | **merge** onto `calDay` |
+| M1 | one day, three fields, none in step | **merged** onto `calDay`, guarded by `state/oneday.test.ts` |
 | M2 | `selDate` written by a hand-rolled formatter, thirty lines from the right one | **cut** with the field |
 | L3 | *(from the thirteenth pass)* the month settable only by delta | **closed by M1** |
+
+Three fields become one, one action (`selectDate`) is deleted, `stepMonth`
+becomes `stepDay`'s sibling rather than a separate mechanism, and a dead
+parameter goes with them. Sixty destinations, unchanged — this pass removed no
+screen, because the duplicate was never a screen.
 
 # One app — the thirteenth pass: the helper that was written and not shared
 

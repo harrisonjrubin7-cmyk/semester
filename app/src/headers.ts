@@ -8,6 +8,7 @@ import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination } from './lib/nav';
 import { settingsTitle } from './lib/settings';
 import { provider } from './lib/assistant';
+import { isoToDate } from './lib/date';
 
 /** The two lines the header draws: the small one over the big one. */
 export type Head = { kicker: string; title: string };
@@ -160,7 +161,11 @@ export const HEADERS: Record<Screen, (c: HeaderCtx) => Head> = {
             : 'Campus only';
     if (c.state.calView === 'semester') return { kicker: source, title: 'Semester' };
     if (c.state.calView === 'day') return { kicker: source, title: 'Day' };
-    return { kicker: `${source} · ${MONTHS[c.state.calMonth]}`, title: 'Calendar' };
+    // The month of `calDay`, not a `calMonth` of its own. The header used to
+    // read a second field, so it could name a different month from the grid
+    // under it once the two drifted apart. See `calDay` in `state/shape.ts`.
+    const on = c.state.calDay ? isoToDate(c.state.calDay) : c.now;
+    return { kicker: `${source} · ${MONTHS[on.getMonth()]}`, title: 'Calendar' };
   },
   event: (c) => {
     const event = datedEvents(c.now, c.state.schoolId, c.state.sample).find((e) => e.id === c.state.eventId);
