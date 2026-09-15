@@ -2,7 +2,7 @@ import { DESTINATIONS } from '../../lib/nav';
 import { datedItems } from '../../lib/select';
 import { tally } from '../../lib/review';
 import type { Provide } from '../shape';
-import { guideNow, startedNow } from '../shape';
+import { guideNow, standingNow } from '../shape';
 
 /**
  * The three screens the registry keeps outside its groups.
@@ -86,17 +86,29 @@ export const me: Provide = (look) => {
   const t = tally(state.reviews);
   const rows = catalog.courses.map((c) => {
     const guide = guideNow(look, c.id);
-    // An average of declared figures is still a declared figure. See
-    // `startedNow`: before the first answer in a course there is nothing here
-    // to average, and a percentage would be read as though there were.
-    const started = guide ? startedNow(look, c.id, guide) : false;
-    const mastery = guide
-      ? Math.round(guide.units.reduce((n, u) => n + u.mastery, 0) / Math.max(1, guide.units.length))
-      : 0;
+    /*
+     * An average of declared figures is still a declared figure — and the
+     * guard that said so only covered the case where *nothing* had been
+     * answered. After one card the average was still, for every other unit,
+     * the number the guide's author wrote down, sent to the model as
+     * `averageMastery`. See `standingNow`.
+     *
+     * A course does not get one state, because it does not have one: eleven
+     * units in five different places is the fact, and flattening it to a
+     * single word would be the same averaging one step further along. So the
+     * row carries the tally of units per state, which is a count of units and
+     * says exactly what it is.
+     */
+    const units = guide?.units ?? [];
+    const spread: Record<string, number> = {};
+    for (const u of units) {
+      const { state: where } = standingNow(look, c.id, u);
+      spread[where] = (spread[where] ?? 0) + 1;
+    }
     return {
       course: catalog.byId[c.id].code,
-      units: guide?.units.length ?? 0,
-      averageMastery: started ? `${mastery}%` : 'not started',
+      units: units.length,
+      unitsByStanding: spread,
       ahead: datedItems(catalog, now).filter((i) => i.c === c.id && !i.isPast).length,
     };
   });

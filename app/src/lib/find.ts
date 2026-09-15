@@ -25,12 +25,13 @@
  * scan the first three results; being obvious matters more than being clever.
  */
 
+import { knowingOf, says } from './knowing';
 import type { Catalog } from '../data/catalog';
 import { datedItems } from './select';
 import { forLine } from './forwork';
 import { dueLabel, isoToDate } from './date';
 import { DESTINATIONS, saysFor } from './nav';
-import { anyAnswered, cardKey, type Reviews } from './review';
+import { cardKey, type Reviews } from './review';
 import { nearAny } from './near';
 import { allowed, type Capabilities } from './school';
 import { DEFAULT_ROLE, forRole, type Role } from './role';
@@ -435,14 +436,22 @@ export function findEverything(
             unit: index,
             mode: 'cards',
             title: u.name,
-            sub: `${u.cards.length} cards · ${
-              anyAnswered(
+            /*
+              Was `${u.mastery}% known` — the blend again, and here with the
+              worst word on it. `unitMastery` mixes in the guide's own written
+              estimate for every card not answered, so a search result claimed
+              to know what the student knew about a unit they had never
+              opened. `anyAnswered` guarded the wording and not the figure: one
+              answer anywhere in the unit and the percentage was mostly still
+              the estimate. See `lib/knowing.ts`.
+            */
+            sub: `${u.cards.length} cards · ${says(
+              knowingOf(
                 u.cards.map((card) => cardKey(c.id, card.q)),
                 reviews,
-              )
-                ? `${u.mastery}% known`
-                : 'not started'
-            }`,
+                Date.now(),
+              ).state,
+            ).toLowerCase()}`,
             tag: c.code,
             score: s,
           });

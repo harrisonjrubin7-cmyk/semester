@@ -2233,6 +2233,27 @@ a:hover {
   height: 100%;
 }
 
+/* ── The standing reset ───────────────────────────────────────────────────
+   "Not right?" under a unit's standing, and the two buttons it opens onto.
+   A class rather than inline padding for the reason `.pill-soft` gives: the
+   style rule counts inline `padding:` in TSX against a per-file budget, and
+   the handoff's version of the same rule is "every new pill is a class".
+
+   Underlined rather than coloured. It is the only affordance a text button of
+   this size has that survives both themes and forced colours, and this one is
+   deliberately quiet — it sits under a count somebody is reading, not in a
+   row of actions. */
+.standing-clear {
+  font-size: var(--type-xs);
+  color: var(--app-dim);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  padding-block: var(--sp-2);
+}
+.standing-clear:hover {
+  color: var(--app-fg);
+}
+
 /* Rows and cards the prototype made clickable with an inline cursor. */
 .tappable {
   cursor: pointer;

@@ -121,10 +121,33 @@ describe('a course not started', () => {
 });
 
 describe('the unit furthest behind', () => {
-  it('names it and gives its figure', () => {
+  it('names it without claiming to have measured it', () => {
+    // Was `Unit 2 is at 40%, the lowest here.` — and forty per cent of what,
+    // measured how? `unit.mastery` is `unitMastery`'s blend, which for a unit
+    // nobody has answered is entirely the figure a person wrote into the
+    // guide. Printing it put a confident two-digit measurement on ten units
+    // nothing had measured. See `lib/knowing.ts`.
     const s = nextStep(input({ guide: guide([90, 40, 70]) }));
     expect(s).toMatchObject({ id: 'cards', label: 'Drill the weakest unit' });
-    expect(s?.why).toBe('Unit 2 is at 40%, the lowest here.');
+    expect(s?.why).toBe('Unit 2 is the least studied here.');
+    expect(s?.why).not.toMatch(/\d+%/);
+  });
+
+  it('says where it stands when the caller passes the evidence', () => {
+    const s = nextStep(
+      input({ guide: guide([90, 40, 70]), standings: ['retained', 'review', 'practising'] }),
+    );
+    expect(s?.why).toBe('Unit 2 is the least studied here — needs review.');
+  });
+
+  it('still ranks on the blend, which is what the blend is for', () => {
+    // The standings are for the sentence only. Passing a set that would rank
+    // differently must not change which unit is picked — otherwise the
+    // ordering silently depends on whether a caller supplied them.
+    const s = nextStep(
+      input({ guide: guide([90, 40, 70]), standings: ['unseen', 'retained', 'retained'] }),
+    );
+    expect(s?.why?.startsWith('Unit 2 ')).toBe(true);
   });
 
   it('does not pick a weakest of one', () => {

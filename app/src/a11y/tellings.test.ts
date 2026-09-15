@@ -60,7 +60,7 @@ describe('every bar that carries a number', () => {
       [...src.matchAll(/<Meter[\s\S]{0,320}?\/>/g)].map((m) => ({ file, text: m[0] })),
     );
     /*
-     * Six, and it was seven.
+     * Five, and it was six, and before that seven.
      *
      * The seventh was Progress's week bar — one length for "2 of 5 done",
      * which is the same picture whether the five are spread over seven days
@@ -68,10 +68,19 @@ describe('every bar that carries a number', () => {
      * one is a button carrying its own date and counts in words rather than a
      * bar with a label. See `screens/me/You.tsx`.
      *
+     * The sixth went the other way: Study's course bar and the Guide's unit
+     * bar were two sites drawing the same thing — `unitMastery`'s blend — and
+     * both are now one `<Meter>` inside `components/Standing.tsx`, drawing a
+     * count of cards holding instead. Two call sites became one, so the floor
+     * drops by one while the number of bars on screen does not. See
+     * `lib/knowing.ts`.
+     *
      * The floor is a canary for a renamed component, not the rule: the rule is
      * `mute` below, and it is what fails when a bar ships with nothing to say.
+     * A shared component is the case the floor reads most pessimistically —
+     * which is the right direction for a canary to be wrong in.
      */
-    expect(calls.length, 'the meters have moved or been renamed').toBeGreaterThanOrEqual(6);
+    expect(calls.length, 'the meters have moved or been renamed').toBeGreaterThanOrEqual(5);
     const mute = calls.filter((c) => !/\blabel=/.test(c.text)).map((c) => c.file);
     expect(mute, 'a bar with no label decision').toEqual([]);
   });

@@ -1,3 +1,4 @@
+import { evidenceForCards, knowing, says, why } from './knowing';
 import { budget, hasPolicy, tally } from './attend';
 import { standing } from './grades';
 import { datedItems } from './select';
@@ -333,8 +334,36 @@ export function build(
     const guide = liveGuide(catalog, course.id, state.updates, state.reviews);
     const aboutStudy = /\bstud|revis|unit|topic|cold|weak|know|understand|explain\b/i.test(question);
     if (guide && guide.units.length > 0 && aboutStudy) {
+      /*
+       * What each unit's evidence supports, not what the guide estimated.
+       *
+       * This line used to send the assistant `- Monopoly (30% mastered)` per
+       * unit, and `mastery` is `unitMastery`'s blend — the guide's own
+       * hand-written figure standing in for every card not yet answered. So
+       * the model was handed a confident measurement of material nothing had
+       * measured, and did the obvious thing with it: repeated it back to the
+       * student as a fact about them, in a sentence they had no way to check.
+       *
+       * Of every site that printed the blend this is the one that mattered
+       * most, because it is the only one where the number left the app in
+       * prose. A figure on a screen sits next to the counts that made it; the
+       * same figure in an answer arrives with nothing attached.
+       *
+       * `why` comes through with the state so the model has the counts and can
+       * be asked where a claim came from. See `lib/knowing.ts`.
+       */
       parts.push(
-        `${course.code} units:\n${guide.units.map((u) => `- ${u.name} (${u.mastery}% mastered)`).join('\n')}`,
+        `${course.code} units:\n${guide.units
+          .map((u) => {
+            const ev = evidenceForCards(
+              course.id,
+              u.cards.map((card) => card.q),
+              state.reviews,
+              Date.now(),
+            );
+            return `- ${u.name} (${says(knowing(ev)).toLowerCase()}: ${why(ev)})`;
+          })
+          .join('\n')}`,
       );
       used.push(`${course.code} unit names`);
 

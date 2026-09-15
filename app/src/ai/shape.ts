@@ -3,6 +3,7 @@ import type { State } from '../state/shape';
 import type { Screen } from '../lib/types';
 import { liveGuide, type LiveGuide } from '../lib/live';
 import { anyAnswered, cardKey } from '../lib/review';
+import { evidenceForCards, knowing, says as saysKnowing, why } from '../lib/knowing';
 
 /**
  * What a screen tells the assistant about what you are looking at.
@@ -94,6 +95,36 @@ export function startedNow(look: Look, courseId: string, guide?: LiveGuide): boo
     g.units.flatMap((u) => u.cards.map((card) => cardKey(courseId, card.q))),
     look.state.reviews,
   );
+}
+
+/**
+ * Where a unit stands, for the model, in words and with the counts behind it.
+ *
+ * `startedNow` above is the guard that was here first, and it only ever
+ * covered one end of the range: it stopped a percentage being sent for a
+ * course nobody had opened, and let it through the moment any card anywhere in
+ * the course was answered. One answer in a deck of a hundred leaves the blend
+ * ninety-nine hundredths estimate, so `mastered: "47%"` after the first card
+ * is the same unearned claim with a thinner excuse — and it is the assistant
+ * that receives it, which is the reader least able to check.
+ *
+ * So nothing sends the blend now. This returns the state and the sentence of
+ * counts it was read from, both from `lib/knowing.ts`, and both computed off
+ * the answers alone. The counts travel deliberately: the model can be asked
+ * where a claim came from, and the answer is in what it was given.
+ */
+export function standingNow(
+  look: Look,
+  courseId: string,
+  unit: { cards: { q: string }[] },
+): { state: string; evidence: string } {
+  const ev = evidenceForCards(
+    courseId,
+    unit.cards.map((card) => card.q),
+    look.state.reviews,
+    look.now.getTime(),
+  );
+  return { state: saysKnowing(knowing(ev)).toLowerCase(), evidence: why(ev) };
 }
 
 /**

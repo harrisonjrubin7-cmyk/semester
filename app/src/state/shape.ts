@@ -2012,6 +2012,16 @@ export type Action =
   | { type: 'undoCard' }
   /** An answer recorded against a card, with no drill run around it. */
   | { type: 'recordCard'; got: boolean; key: string }
+  /*
+   * Throw away what the app thinks it knows about these cards.
+   *
+   * The reset behind a unit's standing — see `lib/knowing.ts`. A state read
+   * off evidence has to be arguable by the person it is about, and the only
+   * honest way to argue with a count is to be allowed to clear it. The keys
+   * come from `forgetting`, which returns only the cards that carry evidence,
+   * so this never writes when there is nothing to remove.
+   */
+  | { type: 'forgetCards'; keys: string[] }
   | { type: 'redrill' }
   | { type: 'startQuiz'; quiz: QuizQuestion[] }
   | { type: 'pickAnswer'; index: number }

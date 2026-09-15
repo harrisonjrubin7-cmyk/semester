@@ -178,6 +178,35 @@ export function study(state: State, action: Action): State | null {
         },
       };
 
+    /*
+     * Clear the evidence for a set of cards.
+     *
+     * The "that's not right" behind a unit's standing. `lib/knowing.ts` reads
+     * five named states off the review rows, and a state read off evidence is
+     * only honest if the person it is about can throw the evidence away — the
+     * percentage it replaced could not be argued with at all.
+     *
+     * The rows are **deleted**, not zeroed. A row with `seen: 0` left behind
+     * would keep the card out of `neverMet` and out of `dueFirst`'s unseen
+     * band, so the unit would read Unseen and drill as if already met. That is
+     * the same distinction `undoCard` makes two cases up, for the same reason.
+     *
+     * `lastAnswer` goes with them: an undo that reached back past a reset
+     * would restore one card of an evidence set the student had just cleared.
+     */
+    case 'forgetCards': {
+      if (action.keys.length === 0) return state;
+      const reviews = { ...state.reviews };
+      for (const key of action.keys) delete reviews[key];
+      return {
+        ...state,
+        reviews,
+        answers: state.answers.filter((a) => !action.keys.includes(a.key)),
+        lastAnswer:
+          state.lastAnswer && action.keys.includes(state.lastAnswer.key) ? null : state.lastAnswer,
+      };
+    }
+
     case 'redrill':
       // `lastAnswer` with it: a new run must not be able to undo into the
       // one before it.

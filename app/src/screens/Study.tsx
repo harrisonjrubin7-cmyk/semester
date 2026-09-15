@@ -10,7 +10,9 @@ import { FirstRun } from './FirstRun';
 import { extraFigures, forCourse, liveGuide, mergeFigures } from '../lib/live';
 import { modesFor } from '../lib/modes';
 import { Blueprint } from '../components/Blueprint';
-import { ActionButton, Meter, SectionLabel, Segmented } from '../components/ui';
+import { ActionButton, SectionLabel, Segmented } from '../components/ui';
+import { Standing } from '../components/Standing';
+import { knowingOf } from '../lib/knowing';
 import { ChevronRight } from '../components/Icons';
 import { AppGrid } from '../components/nav/AppGrid';
 import { nextExam, testedIn } from '../lib/select';
@@ -241,9 +243,33 @@ export function Study() {
               if (!anyAnswered(keys, state.reviews)) {
                 return `${guide.units.length} units on it and ${cards} cards, none of them answered yet. Nothing here knows what you know until you drill some — start with the first unit.`;
               }
-              const coldUnits = guide.units.filter((u) => u.mastery < 40);
+              /*
+                Cold by evidence, not by the guide's estimate.
+                 
+                This filtered on the blended figure being under forty, and the
+                guard above only half fixed it. `anyAnswered` asks about the *course*: answer one card in
+                unit 1 and the branch opens, and the other ten units are then
+                sorted by a number that is still entirely `unitMastery`'s
+                seeded stand-in — so the screen would name four units as warm
+                on the strength of a figure nobody had earned, which is the
+                exact contradiction the comment above describes.
+
+                A unit is cold here when its own answers do not yet say
+                otherwise: `retained` is warm, everything else is work. That
+                includes `unseen`, which is the honest reading — a unit nobody
+                has opened before an exam is the first place to go, not a unit
+                that has been graded 49% by nothing at all.
+              */
+              const coldUnits = guide.units.filter(
+                (u) =>
+                  knowingOf(
+                    u.cards.map((card) => cardKey(exam.item.c, card.q)),
+                    state.reviews,
+                    now.getTime(),
+                  ).state !== 'retained',
+              );
               if (coldUnits.length === 0) {
-                return `All ${guide.units.length} units in ${guide.code} are above 40%. Keep them warm.`;
+                return `Every one of the ${guide.units.length} units in ${guide.code} is holding. Keep them warm.`;
               }
               const coldCards = coldUnits.reduce((n, u) => n + u.cards.length, 0);
               return `${guide.units.length} units on it, and ${coldUnits.length} ${
@@ -417,10 +443,24 @@ export function Study() {
           const due = comeRound(keys, state.reviews, now.getTime());
           const fresh = neverMet(keys, state.reviews);
           const started = anyAnswered(keys, state.reviews);
+          // Where the course stands, off the answers alone. `due`, `fresh` and
+          // `started` above are the same evidence counted three other ways;
+          // this is the one that gets a word put to it.
+          const standing = knowingOf(keys, state.reviews, now.getTime());
           const test = testedIn(catalog, now, c.id);
           const step = nextStep({
             ways,
             guide: g,
+            // For the sentence only — the ranking inside still uses the
+            // blend. See `standings` on `StepInput`.
+            standings: g.units.map(
+              (u) =>
+                knowingOf(
+                  u.cards.map((card) => cardKey(c.id, card.q)),
+                  state.reviews,
+                  now.getTime(),
+                ).state,
+            ),
             due,
             testIn: test?.days ?? null,
             testKind: test?.kind ?? null,
@@ -478,29 +518,29 @@ export function Study() {
               </div>
               <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{g.blurb}</div>
               {/*
-                Nothing measured, nothing claimed.
+                Nothing measured, nothing claimed — now all the way down.
 
-                `unitMastery` blends what you have answered with what the guide
-                declared, and the declared figure stands in for every card you
-                have not answered — which, before the first answer, is all of
-                them. So this meter sat at 49% for a course nobody had opened,
-                three lines above the recommendation on the same card saying
+                This was a meter of `g.mastery`: `unitMastery`'s blend of what
+                you have answered with the figure a person wrote into the
+                guide, where the written figure stands in for every card you
+                have not answered. Before the first answer that is all of them,
+                so the meter read 49% for a course nobody had opened, three
+                lines above the recommendation on the same card saying
                 "Nothing answered in this course yet." Both were drawn from the
                 same state and they disagreed.
 
-                The seeded number is right for what it was built for — it keeps
-                a part-answered course moving by one card's worth per answer —
-                and this changes none of that. It changes the one case where
-                the blend is not a blend: nothing on this side of it is
-                measured, so the meter shows nothing rather than an estimate
-                wearing a measurement's clothes.
+                Zeroing the bar until the first answer fixed the worst case and
+                left the rest: after one answer the bar went back to being
+                mostly somebody's estimate, and a percentage cannot say which
+                part of itself was measured. So the bar is now a count — cards
+                holding, out of cards — and the state above it is read off the
+                answers only. See `lib/knowing.ts`. The blend is untouched and
+                still does the job it was built for, which is ranking units in
+                `lib/revise.ts`; it is no longer printed as if it were a
+                measurement.
               */}
               <div style={{ marginTop: 11 }}>
-                <Meter
-                  pct={started ? g.mastery : 0}
-                  fill={tint(c.id).fill}
-                  label={`Mastery, ${c.code}`}
-                />
+                <Standing state={standing.state} evidence={standing.evidence} name={c.code} />
               </div>
               {/*
                 What is true of this course today, beside what is true of it
@@ -524,11 +564,29 @@ export function Study() {
                   textTransform: 'uppercase',
                 }}
               >
-                {started ? `${g.mastery}% mastered` : 'Not started'}
-                {due > 0 && ` · ${due} due`}
-                {started && due === 0 && ' · nothing due'}
-                {fresh > 0 && ` · ${fresh} unseen`}
-                {mine.length > 0 && ` · ${mine.length} added`}
+                {/*
+                  The counts that change day to day, and nothing the standing
+                  above already said.
+
+                  This line used to open with the mastery percentage, and
+                  replacing that with the answered count printed the same
+                  sentence twice — "Introduced · 4 of 68 cards answered"
+                  directly above "4 OF 68 ANSWERED · NOTHING DUE · 64 UNSEEN".
+                  Caught by looking at it rather than by any test: both halves
+                  were individually right.
+
+                  So coverage is said once, up there, and this line is now due,
+                  unseen and added only. Joined rather than concatenated with
+                  leading separators, because dropping the first segment turned
+                  "· 64 unseen" into a line that began with a bullet.
+                */}
+                {[
+                  due > 0 ? `${due} due` : started ? 'nothing due' : null,
+                  fresh > 0 ? `${fresh} unseen` : null,
+                  mine.length > 0 ? `${mine.length} added` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </div>
               </button>
 
