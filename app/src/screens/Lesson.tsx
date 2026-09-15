@@ -10,6 +10,12 @@ import { FigureCard } from '../components/FigureCard';
 import { ask, mine, playHere, seekTo, setRate, usePlayback } from '../lib/sound.hook';
 import { clock } from '../lib/sound';
 import type { Figure, LessonCue, StudyCard } from '../lib/types';
+import {
+  atFirstBeat,
+  atLastBeat,
+  showingExtra as isShowingExtra,
+  type BeatPosition,
+} from '../lib/beats';
 
 const SPEEDS = [1, 1.25, 1.5];
 
@@ -183,7 +189,16 @@ export function LessonPlayer() {
   const cue = cues[index];
   const pct = lesson.seconds ? Math.min(100, (time / lesson.seconds) * 100) : 0;
   const finished = ending;
-  const showingExtra = finished && added.length > 0 && extra > 0;
+  // Where the playhead is, and so which arrows have anywhere to go. The rule
+  // lives in `lib/beats.ts`; this screen asks it rather than restating it.
+  const where: BeatPosition = {
+    index,
+    cues: cues.length,
+    added: added.length,
+    extra,
+    finished,
+  };
+  const showingExtra = isShowingExtra(where);
   const beat = showingExtra ? added[Math.min(extra - 1, added.length - 1)] : null;
 
   return (
@@ -299,6 +314,7 @@ export function LessonPlayer() {
         <button
           type="button"
           className="btn btn-secondary btn-icon"
+          disabled={atFirstBeat(where)}
           onClick={() => (showingExtra ? setExtra(extra - 1) : seek(cues[Math.max(0, index - 1)].at))}
           aria-label="Previous beat"
         >
@@ -336,6 +352,7 @@ export function LessonPlayer() {
         <button
           type="button"
           className="btn btn-secondary btn-icon"
+          disabled={atLastBeat(where)}
           onClick={() => {
             if (finished && added.length > 0 && extra < added.length) setExtra(extra + 1);
             else if (index < cues.length - 1) seek(cues[index + 1].at);
