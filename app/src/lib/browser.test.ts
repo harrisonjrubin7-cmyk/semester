@@ -7,6 +7,7 @@ import {
   PLACE_ACTIONS,
   TABS_KEY,
   add,
+  arrangeLanes,
   blank,
   close,
   closeGroup,
@@ -21,6 +22,8 @@ import {
   freeTone,
   joinGroup,
   justGo,
+  laneId,
+  laneOrder,
   lanes,
   leaveGroup,
   load,
@@ -1190,5 +1193,68 @@ describe('the tab already at a place', () => {
       ],
     };
     expect(tabAt(twice, justGo('calendar'))?.id).toBe('a');
+  });
+});
+
+/*
+ * Dragging a run rather than a tab.
+ *
+ * `rearrange` above answers "where does this tab go, and whose work is it
+ * now". This is the other question the strip can be asked — where does this
+ * whole group go — and the thing that must never happen is a group coming
+ * apart because somebody moved it.
+ */
+describe('moving a whole run', () => {
+  /** Home, then a group of two, then calendar. */
+  const banded = () => {
+    const s = makeGroup(strip(['home', 'study', 'mine', 'calendar'], 1), 1, 'Midterm');
+    const id = s.groups[0].id;
+    return { s: joinGroup(s, 2, id), id };
+  };
+
+  it('names each run by its group, or by the tab when it is alone', () => {
+    const { s, id } = banded();
+    expect(laneOrder(s)).toEqual(['t0', id, 't3']);
+    expect(laneId(lanes(s)[1])).toBe(id);
+  });
+
+  it('takes the group\u2019s tabs with it', () => {
+    const { s, id } = banded();
+    const moved = arrangeLanes(s, ['t0', 't3', id]);
+    expect(names(moved)).toEqual(['home', 'calendar', 'study', 'mine']);
+    // Still one run, which is the thing a move must not break.
+    expect(moved.tabs[2].group).toBe(id);
+    expect(moved.tabs[3].group).toBe(id);
+  });
+
+  it('keeps you on the tab you were on, wherever it went', () => {
+    const { s, id } = banded();
+    // On the second tab of the group.
+    const on = { ...s, at: 2 };
+    const moved = arrangeLanes(on, [id, 't0', 't3']);
+    expect(moved.tabs[moved.at].id).toBe(on.tabs[2].id);
+  });
+
+  it('is the same strip back when the order is the order it already had', () => {
+    const { s } = banded();
+    expect(arrangeLanes(s, laneOrder(s))).toBe(s);
+  });
+
+  it('refuses an order that has lost a run, or invented one', () => {
+    const { s, id } = banded();
+    // Both of these can arrive: the strip is rewritten by a navigation in
+    // another tab while a finger is still down, and half-applying a stale
+    // order would lose tabs rather than merely misplace them.
+    expect(arrangeLanes(s, ['t0', id])).toBe(s);
+    expect(arrangeLanes(s, ['t0', id, 't3', 'ghost'])).toBe(s);
+    expect(arrangeLanes(s, ['t0', 'ghost', 't3'])).toBe(s);
+  });
+
+  it('cannot drag a run in front of the pinned tabs', () => {
+    // `tidy` holds it, as it holds every other route into the strip.
+    const { s, id } = banded();
+    const pinned = pin(s, s.tabs.findIndex((t) => t.screen === 'calendar'));
+    const moved = arrangeLanes(pinned, [id, ...laneOrder(pinned).filter((x) => x !== id)]);
+    expect(moved.tabs[0].pinned).toBe(true);
   });
 });
