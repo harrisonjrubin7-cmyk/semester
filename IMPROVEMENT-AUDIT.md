@@ -338,8 +338,12 @@ import line satisfies on its own — deleting the await and keeping the import
 left the guard green. It looks for a call now, and that was checked by
 breaking it.
 
-**Shuffle is in CI now**, as its own step beside the timezone one, and adding
-it found a tenth thing and then six more.
+**Shuffle is in CI now**, as *Test in a different order* beside the timezone
+one. It was added twice, from both ends — this branch wrote a step while
+another session landed the same thing on `main`, and the duplicate was resolved
+in favour of main's. Worth recording, because what either half did is only
+worth what the other half found: this half found a tenth thing, and then
+seven more.
 
 The tenth was a different class: `ReferenceError: window is not defined`,
 thrown by React's scheduler against a tree still mounted when a file ended and
@@ -358,10 +362,7 @@ exactly the shape five of the seven had.
 
 Eighteen shuffled runs at one, two, three, four and six workers, clean. That is
 what the step was worth waiting for: a shuffled CI that goes red one push in
-ten is not a guard, it is a tax. Adding `--sequence.shuffle` to CI
-is worth doing **after** that file is fixed, and is worth doing then — it is
-the cheapest guard there is against this whole class, and it found four of
-these in one afternoon.
+ten is not a guard, it is a tax.
 
 ---
 
