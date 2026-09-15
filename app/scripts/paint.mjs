@@ -345,14 +345,40 @@ const SAMPLE = `(spec) => {
  * drawn on top is not what the text sits on, and the assistant's button sits
  * on top of the foot of the home screen.
  */
-const UNCOVERED = `(spec) => spec.map(({ i, points }) => ({
-  i,
-  points: points.filter(([x, y]) => {
-    const p = window.__paint[i];
-    const hit = document.elementFromPoint(x + 0.5, y + 0.5);
-    return !!hit && (hit === p.el || p.el.contains(hit) || hit.contains(p.el));
-  }),
-}))`;
+const UNCOVERED = `(spec) => {
+  /*
+   * What floats over the page, as boxes rather than as hit areas.
+   *
+   * A hit test alone is not enough for the assistant's button: it is a circle
+   * with a glow, so the pixels in the corners of its box are outside the shape
+   * elementFromPoint answers for and still carry its light. One of them, half a
+   * pixel outside the circle, was the worst reading in a whole census — a
+   * caption at 1.38:1 against a button that is nowhere near it. The box, grown
+   * by the widest shadow this app draws, is the honest edge of "something is on
+   * top here".
+   */
+  const over = [];
+  for (const el of document.querySelectorAll('*')) {
+    const cs = getComputedStyle(el);
+    if (cs.position !== 'fixed' && cs.position !== 'sticky') continue;
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0) continue;
+    over.push({ el, left: r.left - 10, right: r.right + 10, top: r.top - 10, bottom: r.bottom + 10 });
+  }
+  return spec.map(({ i, points }) => ({
+    i,
+    points: points.filter(([x, y]) => {
+      const p = window.__paint[i];
+      const hit = document.elementFromPoint(x + 0.5, y + 0.5);
+      if (!hit || !(hit === p.el || p.el.contains(hit) || hit.contains(p.el))) return false;
+      for (const o of over) {
+        if (o.el.contains(p.el)) continue;
+        if (x >= o.left && x <= o.right && y >= o.top && y <= o.bottom) return false;
+      }
+      return true;
+    }),
+  }));
+}`;
 
 /** One stylesheet, by name, so the screen can be put back without a reload. */
 function style(page, id, css) {
@@ -516,7 +542,7 @@ console.log(`\nbelow AA: ${words.length} runs of text (${worst.size} distinct), 
 for (const f of [...worst.values()].sort((a, b) => a.ratio - b.ratio)) {
   console.log(
     `  ${f.ratio.toFixed(2)}:1 needs ${f.need}  ${Math.round(f.size)}px/${f.weight}  ` +
-      `${f.ground}/${f.screen}  "${f.text}"  rgb(${f.fg}) on rgb(${f.bg})`,
+      `${f.ground}/${f.screen}  "${f.text}"  rgb(${f.fg}) on rgb(${f.bg}) at=${f.at}`,
   );
 }
 

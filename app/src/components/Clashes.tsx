@@ -94,7 +94,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
         style={{
           display: 'block',
           fontSize: 'var(--type-sm)',
-          opacity: 0.7,
+          color: 'var(--app-dim)',
           marginTop: 5,
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
@@ -145,7 +145,7 @@ export function DayBudget() {
         gap: 'var(--sp-5)',
         marginTop: 'var(--sp-6)',
         fontSize: 'var(--type-sm)',
-        opacity: 0.7,
+        color: 'var(--app-dim)',
       }}
     >
       <span style={{ textWrap: 'pretty' }}>

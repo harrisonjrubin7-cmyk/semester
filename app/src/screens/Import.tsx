@@ -467,7 +467,7 @@ export function Import() {
                 fontSize: 'var(--type-sm)',
                 fontFamily: 'var(--font-body)',
                 fontWeight: 400,
-                opacity: 0.62,
+                color: 'var(--app-dim)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
               }}
@@ -746,7 +746,7 @@ function ByHand() {
       <div
         style={{
           fontSize: 'var(--type-sm)',
-          opacity: 0.65,
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
@@ -792,7 +792,7 @@ function Rediff({
       }}
     >
       <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>{label}</span>
-      <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6 }}>{right}</span>
+      <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{right}</span>
     </div>
   );
 
@@ -803,11 +803,11 @@ function Rediff({
         <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 1.2, textWrap: 'pretty' }}>
           {rediffSummary(changes)}
         </div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
           {changes.same} unchanged. Saving replaces the course you have rather than adding a second
           copy of it.
         </div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           {kept.lost === 0
             ? `Everything you have ticked off stays ticked${kept.kept > 0 ? ` — all ${kept.kept} of them` : ''}.`
             : `${kept.kept} of your ticks carry over; ${kept.lost} ${kept.lost === 1 ? 'belongs' : 'belong'} to a deadline this syllabus no longer has.`}
@@ -900,7 +900,7 @@ function Preview({
           {m.course.code}
         </div>
         <div style={{ fontSize: 'var(--type-md)', marginTop: 3 }}>{m.course.name}</div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           {[m.course.prof, m.course.meets, m.course.room, m.course.credits]
             .filter(Boolean)
             .join(' · ')}
@@ -947,7 +947,7 @@ function Preview({
         later. Here, the sentence it was read out of is still next to it, which
         is the only thing that tells you whether it is wrong.
       */}
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-2)', lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'var(--sp-2)', lineHeight: 'var(--leading-relaxed)' }}>
         {m.items.length} found
         {dropped.size > 0 ? ` \u00b7 ${dropped.size} taken off \u00b7 ${keeping} will be added` : ' \u00b7 untick anything the syllabus does not say'}
       </div>

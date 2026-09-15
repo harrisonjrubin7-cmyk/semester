@@ -32,7 +32,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
     return (
       <div style={{ marginTop: 'var(--sp-5)' }}>
         {done ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {doneLine(done, units.map((u) => unitName(u.name)))}
           </div>
         ) : (

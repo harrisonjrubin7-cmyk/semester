@@ -376,7 +376,7 @@ export function HourGrid({
               style={{
                 display: 'block',
                 fontSize: 'calc(10.5px * var(--text-scale, 1))',
-                opacity: 0.6,
+                color: 'var(--app-dim)',
                 marginTop: 1,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',

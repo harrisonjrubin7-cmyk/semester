@@ -49,7 +49,7 @@ export function Walks({ date }: { date?: Date }) {
   return (
     <Folding name="Walks">
       <SectionLabel>Getting between them</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-4)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-4)' }}>
         {daySummary(list)}
       </div>
 

@@ -239,7 +239,7 @@ export function Credentials({
             setError('');
             setNote('');
           }}
-          style={{ fontSize: 'var(--type-sm)', opacity: 0.7, width: 'auto' }}
+          style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', width: 'auto' }}
         >
           {mode === 'in' ? 'Make an account' : 'I already have one'}
         </button>

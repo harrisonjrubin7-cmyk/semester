@@ -142,7 +142,7 @@ export function Drill() {
           <div
             style={{
               fontSize: 'var(--type-md)',
-              opacity: 0.65,
+              color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               maxWidth: '32ch',
               marginInline: 'auto',
@@ -162,7 +162,7 @@ export function Drill() {
                 ? 'Nothing in this course is due right now. Come back tomorrow.'
                 : `${waiting} ${waiting === 1 ? 'card is' : 'cards are'} due again in ${guide.code}.`}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
               Missed cards return in ten minutes. A card you get right three times running moves out
               to weeks.
             </div>
@@ -219,7 +219,7 @@ export function Drill() {
               <div
                 style={{
                   fontSize: 'var(--type-sm)',
-                  opacity: 0.7,
+                  color: 'var(--app-dim)',
                   marginTop: 'var(--sp-4)',
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
@@ -586,7 +586,7 @@ export function Quiz() {
           <div
             style={{
               fontSize: 'var(--type-md)',
-              opacity: 0.65,
+              color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               maxWidth: '32ch',
               marginInline: 'auto',

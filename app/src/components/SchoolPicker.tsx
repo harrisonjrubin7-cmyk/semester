@@ -68,7 +68,7 @@ export function SchoolPicker() {
             eleven versions of Ohio State, and the eleventh is the empty one. */}
         {dupes.length > 0 && (
           <div style={{ marginTop: 'var(--sp-4)' }}>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-3)' }}>
               Already here — use one of these instead?
             </div>
             {dupes.map((s) => (
@@ -194,7 +194,7 @@ export function SchoolPicker() {
       />
 
       {hint && hint.id !== state.schoolId && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {/* Suggested from the address you signed in with. Never enforced —
               plenty of students sign in with a personal address, and plenty of
               people have one at a school they left. */}
@@ -250,7 +250,7 @@ export function SchoolPicker() {
             type="button"
             className="bare tappable"
             onClick={() => dispatch({ type: 'setSchool', id: '' })}
-            style={{ ...chip(false), fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 'var(--type-xs)', opacity: 0.7 }}
+            style={{ ...chip(false), fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
           >
             Set no school
           </button>

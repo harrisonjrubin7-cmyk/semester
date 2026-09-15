@@ -1,3 +1,240 @@
+# One app — the twelfth pass: the instrument, and one invariant held by hand
+
+Against `main` at `e4bf976`. **Two findings, and one of them is about this
+file.**
+
+**<!--screens-->sixty<!--/--> destinations** in `lib/nav.ts`, unchanged for
+twelve passes — and that number is now written by `npm run counts` rather than
+typed, which is the first finding.
+
+The second is what used to sit beside it. Every pass since the sixth also
+printed a screen-file and component count, and this one does not, because
+those two numbers were wrong and are not worth keeping right. Measured on the
+day: 102 screen files, 151 components. The reasoning is below.
+
+## K1 — the headline census was prose, and it drifted
+
+Every pass since the sixth opens with a line like *"60 destinations, unchanged.
+79 screens, 134 components."* It is the first counted claim a reader meets, it
+has been copied into pull-request bodies, and **nothing checks it.**
+
+Counted against the tree at each commit, `.tsx` under `screens/` and
+`components/` excluding tests:
+
+| commit | pass | this file claimed | the tree held |
+|---|---|---|---|
+| `71f8c10` | A | 100 screens, 134 components | **100, 134** ✓ |
+| `a382158` | ninth | 79 screens, 134 components | 102, 147 |
+| `bb6e8d4` | tenth | 79 screens, 134 components | 102, 147 |
+| `003bcee` | eleventh | 79 screens, 134 components | 102, 149 |
+| `e4bf976` | this one | — | 102, 151 |
+
+Two different failures, and they are worth separating.
+
+**`134` was true once.** At `71f8c10` the component count really was 134. It
+was then copied forward through three passes while the tree went 134 → 147 →
+149 → 151. That is an ordinary stale number: right when written, never
+re-derived.
+
+**`79` was never true at all.** It is not the screen count under any rule this
+repository can be read by. At `003bcee`, where the eleventh pass printed it:
+
+| counting rule | value |
+|---|---|
+| `.tsx` under `screens/`, excluding tests | 102 |
+| `.tsx` under `screens/`, including tests | 109 |
+| `.tsx` directly in `screens/`, excluding subdirectories | 72 |
+| `.tsx` and `.ts`, excluding tests | 103 |
+| members of the `Screen` union in `lib/types.ts` | 73 |
+| destinations in `lib/nav.ts` | 60 |
+| `case` arms in `App.tsx` | 159 |
+
+None is 79. Every commit in the last thirty that touched `screens/` was
+checked; the count is 79 in none of them. **The number has no referent.** It
+was not a measurement that went stale — it was never a measurement.
+
+### Why no earlier pass could see it
+
+Because every pass audited the *app*, and this is a defect in the *instrument*.
+Eleven passes have counted screens, routes, controls, actions, guards, walkers
+and derivations, each time writing the result into this file — and the one
+number nobody counted was the one at the top of the page.
+
+The repository's answer to a counted claim is a census test: roughly thirty of
+them, each asserting an empty offender list, because a claim a human maintains
+by hand is a claim that rots.
+
+### The mechanism already existed
+
+This is the part worth sitting with. `lib/counts.ts` was written for precisely
+this failure, and says so at the top: *"every one of those is a fact about a
+registry sitting somewhere else in this repo, and every one of them had
+drifted at least once."* Its answer is that the number is **generated** —
+`npm run counts` writes it into the prose between markers — and the test's job
+shrinks to proving the script was run. It has been guarding `README.md` and
+`app/README.md` for months.
+
+`SIMPLIFY-AUDIT.md` was never added to `STATED`. Not overruled, not
+considered and rejected — omitted. The file arguing that every job should have
+exactly one home was the one file stating counts that had not been given one,
+and it drifted in exactly the way the module two directories away exists to
+prevent.
+
+So the twelfth pass finds no new mechanism. It finds a mechanism already built,
+already reasoned about, already passing — and one caller missing.
+
+**Resolution: merge**, onto the generator that already exists — for the one
+count worth stating. Both historical faults were planted back first and the
+guard watched catching each: `134` components fails with a diff naming the
+line, and so does `79` screen files.
+
+### The first attempt was wrong, and CI said so in a minute
+
+It registered all three — `screens`, `screenfiles` and `components`, the last
+two new to `counts()`. `build` went red on the merge with main:
+
+> `src/components says 152, so SIMPLIFY-AUDIT.md should read "one hundred and
+> fifty-two components".`
+
+Main had gained one component between `npm run counts` and the merge. The
+generated number, committed minutes earlier, was already a word out.
+
+That is the fortnight `counts.ts` opens by describing, repeated by somebody
+who had just read it. Generation stops a number **rotting**; it does not stop
+it **churning**, because the test still compares committed prose against the
+tree at merge time. What lets the five existing counts survive that is not the
+generator — it is that each is a *decision*. A destination, a tab, a mode, a
+recording: somebody chose that, rarely, on purpose. A component file appears
+in nearly every pull request as a side effect of doing something else, so
+pinning it makes every concurrent branch red on a word.
+
+So the honest reading of that fortnight — `counts.ts` records it as *"stop
+stating the count"* — applies unchanged to those two. They are gone from the
+generator and from the headline. The destination count stays, generated,
+because it is both stable and the one a reader actually wants.
+
+**The row's own fix needed the row's own lesson applied to it**, and it took a
+red build to notice. Twelve passes of auditing a codebase, and the instrument
+still had to be corrected by the thing it was measuring.
+
+### What this says about the eleven passes
+
+Very little, and it is worth saying so rather than letting the reader wonder.
+The headline is scene-setting; no merge, cut or keep decision in this file
+rests on it. The per-row counts — nine `standingOf` calls, fourteen walkers,
+seventeen dead CSS rules, eight inline overdue filters — were each derived by a
+grep printed beside the claim, and those greps re-run correctly today. The rot
+is confined to the one line nobody re-derived because it read like a heading
+rather than like a result.
+
+That is the general shape of it: **a number stops being checked at the moment
+it starts looking like decoration.**
+
+## K2 — one pairing invariant, thirteen hand-written copies, one of them missing
+
+There is no screen for a single task or a single appointment. Opening one means
+two dispatches, in order:
+
+```ts
+dispatch({ type: 'setMineTab', tab: 'tasks' });
+dispatch({ type: 'go', screen: 'mine' });
+```
+
+The comments already know this is a pair and say why. `Calendar.tsx:902`:
+*"Onto the right tab, not just the right screen — landing on Mine's task list
+is a second thing to work out."* And `openhit.ts:54`: *"landing there with the
+list open beats landing nowhere."*
+
+Counted:
+
+| file | pair sites |
+|---|---|
+| `screens/Calendar.tsx` | 7 |
+| `screens/Today.tsx` | 3 |
+| `lib/openhit.ts` | 2 |
+| `screens/Mine.tsx` | 1 |
+| **total** | **13** |
+
+Thirteen copies of a two-line invariant that nothing enforces. `openhit.ts`
+writes it as an `Action[]` pair rather than two dispatches, which is the same
+invariant in a second shape.
+
+**And one site does not hold it.** `screens/Today.tsx:141` dispatches
+`go → mine` with no tab:
+
+```tsx
+onClick={() => dispatch({ type: 'go', screen: 'mine' })}
+```
+
+It is the aside on the *Yours today* section, and its label is
+
+```tsx
+{left > 0 ? `${left} left` : 'All done'}   // left = mine.filter((t) => !t.done).length
+```
+
+— a count of undone **tasks**. So the button counts tasks and lands you on
+whatever tab Mine was last showing.
+
+### Driven, not deduced
+
+`mineTab` lives in `Ephemeral`, so it resets to `tasks` on load and a first
+visit is correct. Within a session it is not. In Chromium at 420px, one seeded
+task due today:
+
+| step | observed |
+|---|---|
+| open Mine, click **Events** | Mine on `Events` |
+| back to Today | section renders |
+| the aside reads | `1 LEFT` — the one undone task |
+| click it | lands on **Events** |
+
+The label counted tasks; the click delivered appointments. Zero `pageerror`s.
+
+**Resolution: merge.** One function returns the pair, every site uses it, and
+the tab stops being something thirteen call sites remember separately. Then a
+census test for `go → mine` written without it, so the fourteenth copy cannot
+be written by hand at all.
+
+### Three probes were wrong before one was right
+
+Worth recording, because it is the same lesson as G1 and it cost three runs:
+
+1. Probed for `role="tab"`. Mine uses `Segmented`, which is `aria-pressed`
+   buttons — no `role="tab"` on the screen at all.
+2. Matched the appointments tab as `/appointment/i`. Its label is **Events**.
+3. Checked `innerText.includes('Yours today')` — false, while the section was
+   plainly on screen, because `SectionLabel` is `text-transform: uppercase` and
+   `innerText` reports the rendering. `.claude/skills/run/SKILL.md` warns about
+   exactly this in a section called *Never match a caps label exactly*, and I
+   walked into it anyway.
+
+Each of the three reported a clean, plausible, entirely wrong "nothing here".
+**Silence from a probe is not evidence of absence until the probe has been
+shown catching the thing.**
+
+## What this pass deliberately leaves
+
+- **`Segmented` versus `TabList`.** Mine's four panels are semantically tabs
+  and are drawn with `aria-pressed` buttons. The tab-strip pass decided where
+  each belongs and `onetablist.test.ts` guards it; re-opening that on the
+  strength of one screen would be re-litigating a settled row.
+- **`AllDayBand` and `mail/Rules`,** the only two components added since the
+  eleventh pass. `AllDayBand` is imported by `Calendar.tsx` alone, in two
+  grains — a shared component, which is what this audit asks for, not a rival.
+- **Seventeen unused classes in `industry.css`**, recorded in the E3b row and
+  still unclaimed. They are design-system vocabulary, not app dead weight.
+
+## To do
+
+| row | what | resolution |
+|---|---|---|
+| K1 | the headline census, unchecked and drifted | **merged** onto `lib/counts.ts`, which already did this for both READMEs |
+| K2 | 13 hand-written copies of the Mine pairing, 1 missing | **merged** into `lib/openmine.ts`, guarded by `openmine.test.ts` |
+
+Both done in this pass. The screen count is unchanged at sixty, because
+neither row was a screen: one was the audit's own instrument and the other a
+two-line invariant. Twelve passes in, that is what is left to find.
+
 # One app — the eleventh pass: one fact, derived how many ways?
 
 Against `main` at `924d0ab`. **A near-null, and the short write-up is the

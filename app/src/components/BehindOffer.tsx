@@ -62,7 +62,7 @@ export function BehindOffer() {
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.65,
+            color: 'var(--app-dim)',
             marginTop: 5,
             lineHeight: 'var(--leading-normal)',
           }}

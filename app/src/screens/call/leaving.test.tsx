@@ -69,6 +69,15 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  /*
+   * Both tests below unmount the root themselves — that is the thing they are
+   * testing — so this is here for the case where one throws before reaching
+   * its own `root.unmount()` and leaves a tree mounted past the end of the
+   * file. Unmounting twice is a no-op, which is the same reasoning
+   * `lib/prefers.test.tsx` writes down, and `src/rootunmount.test.ts` is what
+   * asks for it here rather than leaving it to whoever reads this next.
+   */
+  act(() => root.unmount());
   host.remove();
 });
 

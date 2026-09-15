@@ -59,7 +59,7 @@ export function Capacity() {
       >
         {verdict(needed, cap, state.contract)}
         {taken ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-3)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
             {taken}
           </div>
         ) : null}
@@ -76,7 +76,7 @@ export function Capacity() {
           aria-label="Hours a week school gets"
           style={{ width: 72, height: 40, textAlign: 'center' }}
         />
-        <span style={{ fontSize: 'var(--type-sm)', opacity: 0.65, flex: 1, textWrap: 'pretty' }}>
+        <span style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', flex: 1, textWrap: 'pretty' }}>
           hours a week, decided by you. Without one the week is measured against whatever happens
           to be left, which is how a term reaches October before anybody notices it was overloaded
           in September.
@@ -110,7 +110,7 @@ export function Capacity() {
       <p
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginTop: 9,
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
@@ -295,7 +295,7 @@ function Kept() {
       <p
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginTop: 9,
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',

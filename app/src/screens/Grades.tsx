@@ -74,16 +74,37 @@ export function Grades() {
                       has cutoffs to read it against. The line under the
                       targets below says whose cutoffs those are. */}
                   {s.current !== null && letterFor(s.current, system) ? (
-                    <span style={{ fontSize: 'calc(17px * var(--text-scale, 1))', opacity: 0.6, marginLeft: 'var(--sp-4)' }}>
+                    <span style={{ fontSize: 'calc(17px * var(--text-scale, 1))', color: 'var(--app-dim)', marginLeft: 'var(--sp-4)' }}>
                       {letterFor(s.current, system)}
                     </span>
                   ) : null}
                 </div>
-                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7 }}>
-                  {s.remaining > 0
-                    ? `${Math.round(s.remaining)}% still to play for`
-                    : 'Everything is in'}
-                </div>
+                {/*
+                  Nothing where nothing could be weighted.
+
+                  `remaining` is `total - counted`, so it is nought in two
+                  quite different situations: every weighted row has a score,
+                  and *no row is weighted at all*. The second is an ordinary
+                  state — a syllabus stating points beside a row nobody can
+                  read a figure from is refused by `asWeights` rather than
+                  converted on a guess — and it was printing "Everything is
+                  in" beside "Nothing graded yet", on a card whose own rows
+                  showed two of four with no score. Seen on CORE 2500: eight
+                  quizzes and thirteen reflections entered, a final reflection
+                  and an attendance row empty, and the summary claiming the
+                  course was finished.
+                  Saying nothing is the honest answer: the paragraph under
+                  this already explains that the weights add to 0% and which
+                  rows could not be read, and a second line contradicting the
+                  first is worse than one line fewer.
+                */}
+                {s.counted > 0 || s.remaining > 0 ? (
+                  <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+                    {s.remaining > 0
+                      ? `${Math.round(s.remaining)}% still to play for`
+                      : 'Everything is in'}
+                  </div>
+                ) : null}
               </div>
               {s.current !== null && (
                 <div style={{ marginTop: 'var(--sp-5)' }}>
@@ -92,7 +113,7 @@ export function Grades() {
                 </div>
               )}
               {s.extraCredit > 0 && (
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-4)' }}>
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
                   Plus {s.extraCredit.toFixed(1)} points of extra credit.
                 </div>
               )}
@@ -120,7 +141,7 @@ export function Grades() {
                 )}
               </div>
               {needCaveat(s) ? (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
                   {/* Names the number the weights actually add to. "Do not add
                       to 100" leaves the student to work out by how much, from
                       a table they cannot easily sum in their head. */}
@@ -192,7 +213,7 @@ export function Grades() {
                   To finish with, you need
                 </div>
                 {targets.length === 0 && (
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
                     {NO_CUTOFFS}
                   </div>
                 )}
@@ -277,7 +298,7 @@ export function Grades() {
                     {trendLine(t, sat)}
                   </div>
                   {target !== null && t.papers > 0 ? (
-                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
                       {against(t.average, target)}
                     </div>
                   ) : null}
@@ -331,7 +352,7 @@ export function Grades() {
    */
   return (
     <div>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {intro}
       </div>
       {body(catalog.courses)}

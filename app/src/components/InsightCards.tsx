@@ -94,7 +94,7 @@ function One({ insight }: { insight: Insight }) {
             fontSize: 'var(--type-xs)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
           }}
         >
           {open ? 'HIDE' : 'WHY THIS'} · from {insight.evidence.length}{' '}

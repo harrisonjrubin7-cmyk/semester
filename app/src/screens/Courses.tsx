@@ -226,7 +226,7 @@ export function Courses() {
                 <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-1)' }}>
                   {nameFor(c, state.yours)}
                 </div>
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>{c.prof}</div>
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{c.prof}</div>
                 <div
                   style={{
                     display: 'flex',
@@ -241,7 +241,7 @@ export function Courses() {
                   <span
                     style={{
                       fontSize: 'var(--type-sm)',
-                      opacity: 0.7,
+                      color: 'var(--app-dim)',
                       flex: 1,
                       minWidth: 0,
                       overflow: 'hidden',
@@ -354,7 +354,7 @@ function ComingUp() {
         onChange={(t) => dispatch({ type: 'setDueTab', tab: t })}
         style={{ marginBottom: 'var(--sp-6)' }}
       />
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>{blurb}</div>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>{blurb}</div>
       {list.length === 0 && (
         <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>
           {tab === 'overdue'
@@ -453,7 +453,7 @@ function LmsLink({ course }: { course: Course }) {
             style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
             aria-label={`${course.code} Brightspace address`}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-normal)', marginTop: 7 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 7 }}>
             Open the course in Brightspace and copy the address from the bar. Grades and
             submissions need D2L’s Valence API, which only Vanderbilt can issue a key for — so
             this is a link, and the dates come from the calendar feed under Connect.
@@ -505,7 +505,7 @@ function CourseInformation() {
       {renamed(course, state.yours) ? (
         <div style={{ fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 'var(--sp-1)' }}>{course.name}</div>
       ) : null}
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 3 }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 3 }}>
         {course.prof} · {course.email}
       </div>
       <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 'var(--sp-6)' }}>
@@ -730,7 +730,7 @@ export function ItemDetail() {
               Due
             </div>
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{item.dueShort}</div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>{item.dueTime}</div>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{item.dueTime}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
           <div style={{ flex: 1, minWidth: 0, padding: '11px 0 11px 14px' }}>
@@ -738,7 +738,7 @@ export function ItemDetail() {
               Weight
             </div>
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{item.weight}</div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>{item.where}</div>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{item.where}</div>
           </div>
         </div>
       </Blueprint>
@@ -820,7 +820,7 @@ export function ItemDetail() {
         <div
           style={{
             fontSize: 'var(--type-xs)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-3)',
             lineHeight: 'var(--leading-normal)',
           }}
@@ -860,7 +860,7 @@ export function ItemDetail() {
         <div
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-4)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',

@@ -122,7 +122,7 @@ export function DataScreen() {
     >
         <>
           <SectionLabel>What you have</SectionLabel>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Largest first, so what is taking the room is at the top.
           </div>
 
@@ -171,13 +171,13 @@ export function DataScreen() {
             is measured by prefix rather than by a list, so the next feature
             to write a key of its own is counted the day it does.
           */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-5)', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
             <span>Drafts in progress</span>
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>
               {drafts ? formatBytes(drafts) : 'None'}
             </span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-2)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-2)', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
             <span>Attachments</span>
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>
               {files === null ? 'Not available' : formatBytes(files)}
@@ -192,7 +192,7 @@ export function DataScreen() {
               {other.bytes ? formatBytes(other.bytes) : 'None'}
             </span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-2)', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-5)', marginTop: 'var(--sp-2)', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
             <span>Document history</span>
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>
               {history === null ? 'Not available' : history ? formatBytes(history) : 'None'}
@@ -201,9 +201,9 @@ export function DataScreen() {
 
           <SectionLabel>Room</SectionLabel>
           {room === null ? (
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.6 }}>Asking the browser…</div>
+            <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)' }}>Asking the browser…</div>
           ) : room.unknown ? (
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
               This browser will not say how much room it has given the app. That is normal in a
               private window, and it means the figures above are the only ones there are.
             </div>
@@ -267,7 +267,7 @@ export function DataScreen() {
                 ? 'Your records, your files, the document history and the daily copies are in IndexedDB. The smaller stores counted above — drafts, the assistant’s conversations, open tabs, bookmarks — are keys in localStorage.'
                 : 'localStorage only — this browser has no IndexedDB, so the records are one key there, and files cannot be kept at all.'}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
               {room?.persisted === true
                 ? 'The browser has promised not to clear it to make room for other sites.'
                 : room?.persisted === false
@@ -374,7 +374,7 @@ function Collection({
               type="button"
               className="bare tappable"
               onClick={() => setShown((n) => n + PAGE)}
-              style={{ width: 'auto', marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', opacity: 0.6, letterSpacing: '0.1em' }}
+              style={{ width: 'auto', marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em' }}
             >
               {records.length - shown} MORE
             </button>

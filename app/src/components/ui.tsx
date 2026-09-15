@@ -782,7 +782,7 @@ export function EmptyState({
       <div
         style={{
           fontSize: 'var(--type-base)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginTop: inline ? 5 : 6,
           textWrap: 'pretty',
           lineHeight: 'var(--leading-relaxed)',

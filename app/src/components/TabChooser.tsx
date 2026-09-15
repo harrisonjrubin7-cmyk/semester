@@ -144,7 +144,7 @@ export function TabChooser() {
       >
         The bar
       </SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
         Which screens are one tap away. Up to {MOST}, because that is what fits across a phone —
         everything else stays here in Me, which is why Me itself does not move.
       </div>
@@ -240,7 +240,7 @@ export function TabChooser() {
 
       {hasRoom(tabs) ? (
         <>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, margin: '14px 0 4px', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', margin: '14px 0 4px', textWrap: 'pretty' }}>
             Add one:
           </div>
           {spare.map(({ group, items }) => (
@@ -282,7 +282,7 @@ export function TabChooser() {
           ))}
         </>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-6)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', textWrap: 'pretty' }}>
           The bar is full. Take one out to put another in.
         </div>
       )}

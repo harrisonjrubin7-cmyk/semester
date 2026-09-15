@@ -65,8 +65,18 @@
    * one navigation out of several. Pointed at any other it matched nothing
    * and printed a confident zero. The root has to mean the same thing in
    * every navigation, and only the body does.
+   *
+   * `window.__sweepRoot` narrows it to one element and its descendants, which
+   * the hover and focus passes use: those force a state on a single element,
+   * so re-walking the page would re-report every resting finding once per
+   * forced state. The ground is still resolved by walking *up* from each
+   * element, so a narrowed root never changes what a surface is — only which
+   * elements are asked about.
    */
-  for (const el of document.body.querySelectorAll('*')) {
+  const rootEl = window.__sweepRoot ? document.querySelector(window.__sweepRoot) : document.body;
+  if (!rootEl) return { rows: [], measured: 0, skipped: 0, gradient: 0, missingRoot: true };
+  const within = [rootEl, ...rootEl.querySelectorAll('*')];
+  for (const el of within) {
     const cs = getComputedStyle(el);
     if (cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity === 0) continue;
     // WCAG 1.4.3 exempts inactive controls, and a disabled button's ground
