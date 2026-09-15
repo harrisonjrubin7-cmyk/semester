@@ -1183,6 +1183,37 @@ model in it or needs a key:
   the first and last samples pass as though they were as trustworthy as the
   middle.
 
+  **`packet([…], 3)` is a wavelet packet transform** — the same tree, split
+  both ways. The ordinary transform halves the run, keeps the averages and
+  halves those again, so the differences it drops out are never split further
+  and the scales it reports get coarser as they get faster: it separates slow
+  things finely and fast things barely at all. A packet tree splits both halves
+  at every level, and what comes out is `2^L` bands of equal width. So
+  `\cos(2\pi\,0.28n)` and `\cos(2\pi\,0.47n)` come out in two different
+  bands rather than in the one band the wavelet transform puts them both in.
+
+  It also says something no other transform here can: the **best basis**. The
+  full tree at level 3 contains the ordinary wavelet transform, the even split
+  into eight, and every mixture of the two, and Coifman and Wickerhauser's
+  method picks between them — work out what each node costs by Shannon's
+  measure, and keep a node whenever it costs less than its two children
+  together. A single spike comes back as one band, because every split only
+  spreads it; a run with a frequency in it splits, because splitting gathers it
+  up.
+
+  The ordering is the part of this that goes wrong quietly, and it did. Every
+  high-pass branch turns the frequency axis over, so the bands do not arrive in
+  frequency order and nothing about them says so: read straight, a run's energy
+  is reported at the wrong frequencies, plausibly, with no error and no sign of
+  trouble. The fix is the Gray code — and **which way round it goes is the trap
+  inside the trap**. The band at frequency place `k` is the tree's node
+  `k ^ (k >> 1)`, not the other way about. At level two the Gray code is its
+  own inverse, so both readings agree and a wrong one looks right; at level
+  three they part company and the top four bands come back shuffled. Which is
+  exactly what happened here, and what caught it was the only test worth
+  writing for this: put a sinusoid of a known frequency in, and ask which band
+  it came out of — at level three as well as level two.
+
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms
   without complaint. A bracket after a letter is a multiplication or a function
