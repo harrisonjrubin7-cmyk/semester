@@ -131,6 +131,49 @@ jobs:
         working-directory: app
         run: npm run test:zones
 
+      # The same suite again, in a random order.
+      #
+      # This step exists because of nine bugs it would have caught, all of one
+      # shape: a test that passed on what the test before it happened to leave
+      # behind. A clock still running, a dialog still in the body, a proxy
+      # stood down for the session, `#/onboarding` still in the address bar, a
+      # module registry already holding the unmocked version of what a file was
+      # about to replace. Every one of them was green here, on every push, for
+      # as long as the file order held — and the file order is not a promise
+      # anybody made. `isolate: false` made it worse by sharing a worker, but
+      # none of the nine were caused by it; it only stopped hiding them.
+      #
+      # Shuffling is what turns that class from invisible into a red build.
+      # Vitest reorders both the files and the tests inside them, so the run
+      # below is a different arrangement every push, and a suite that only
+      # passes in one arrangement fails here sooner or later.
+      #
+      # An ordering failure is reproducible, which is most of why this is a
+      # step rather than a bad idea. Vitest prints the arrangement it chose —
+      #
+      #     Running tests with seed "1789432569705"
+      #
+      # and `npm run test:shuffle -- --sequence.seed=1789432569705` runs that
+      # arrangement again, here or on a laptop, as many times as it takes.
+      #
+      # A *timing* failure is not, and that distinction was learned the hard
+      # way while this step was being added: a React tree left mounted when a
+      # file ended threw `ReferenceError: window is not defined` about one run
+      # in ten, and replaying its seed never brought it back, because the seed
+      # fixes the order and not the race. Those are found by running this a
+      # dozen times, not by replaying one. `src/rootunmount.test.ts` and
+      # `src/seedawait.test.ts` exist so that the two known kinds cannot come
+      # back at all, and a new one would want the same treatment rather than a
+      # re-run.
+      #
+      # A separate step, for the reason the timezone run is one: green Test and
+      # red this means the tests depend on each other, which is a different
+      # fault from a broken test and wants a different fix — almost always in
+      # the *earlier* file, which is the one the failure does not name.
+      - name: Test in a random order
+        working-directory: app
+        run: npm run test:shuffle
+
       - name: Build
         working-directory: app
         run: npm run build
