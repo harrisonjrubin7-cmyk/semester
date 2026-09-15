@@ -663,6 +663,12 @@ that is `main`'s migration rather than this branch, which is the honest
 accounting: what this branch adds is the number, the instrument that produces
 it, one of the six, and a test that stops the last one coming back.
 
+Re-run at `b83568e`, after four more passes landed on `main` including the
+faint rung's own correction in #391: **eighty-five, sixty-seven distinct, still
+nothing on Ink** — the same figure to the run. That is a useful thing to know
+about the number rather than a coincidence: what is left is not the sort of
+thing a pass about something else moves by accident.
+
 ## What was not fixed, deliberately
 
 Each remaining run is a screen's own `opacity`, they are counted in
@@ -693,6 +699,14 @@ app:
   reports three rows of page background as its own;
 - something drawn on top is not the background — the assistant's button parks
   over the foot of the home screen;
+- and a hit test alone does not settle that, which is the one that got past
+  the first version of this page. The button is a circle with a glow, so the
+  pixels in the corners of its box are outside the shape `elementFromPoint`
+  answers for and still carry its light; one of them, half a pixel outside the
+  circle, was the worst reading in a whole census at 1.38:1 — a caption against
+  a button nowhere near it. What floats is excluded by its box now, and **the
+  two censuses above were re-run from scratch afterwards**: the figures this
+  page first carried, 180 and 102, were that artefact;
 - a disabled button has no contrast requirement, and the first full census
   opened with five greyed-out primary buttons at 1.41:1, which is the state
   they are supposed to be in;
