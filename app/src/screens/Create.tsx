@@ -39,15 +39,26 @@ import type { Screen } from '../lib/types';
  * course and assignment without anybody filing it afterwards.
  */
 
-/** The nine, and where each one goes. `kind` means this screen owns it. */
-const MAKE: { title: string; sub: string; kind?: CreativeProject['kind']; go?: Screen; act?: 'write' | 'sheet' | 'deck' }[] = [
+/**
+ * The nine, and where each one goes. `kind` means this screen owns it.
+ *
+ * Exported for `create-routes.test.ts`, which holds every tile naming a
+ * registry screen to the screen the registry gives that name. The Maths tile
+ * went to Draw It for as long as it existed: two screens draw a curve, and
+ * the one whose registry name is *Maths* is Equations. Its own subtitle here
+ * said so — "Functions, graphs and tables" is what Equations has and what
+ * Draw It, which makes flowcharts and timelines from a description, does not.
+ * All Apps had the route right the whole time, so the same name opened two
+ * different screens depending on which of them you reached it from.
+ */
+export const MAKE: { title: string; sub: string; kind?: CreativeProject['kind']; go?: Screen; act?: 'write' | 'sheet' | 'deck' }[] = [
   { title: 'Document', sub: 'Papers, notes and research', act: 'write' },
   { title: 'Presentation', sub: 'Slides and speaker notes', act: 'deck' },
   { title: 'Spreadsheet', sub: 'Data, formulas and charts', act: 'sheet' },
   { title: 'Form', sub: 'Questions and practice quizzes', kind: 'form' },
   { title: 'Design', sub: 'Posters, graphics and diagrams', kind: 'design' },
   { title: 'Video', sub: 'Trim, arrange and caption clips', kind: 'video' },
-  { title: 'Maths', sub: 'Functions, graphs and tables', go: 'draw' },
+  { title: 'Maths', sub: 'Functions, graphs and tables', go: 'equations' },
   { title: 'Study guide', sub: 'One course, eleven ways', go: 'study' },
   { title: 'Notes', sub: 'Catch and connect ideas', go: 'mine' },
 ];
