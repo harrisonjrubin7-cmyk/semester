@@ -55,6 +55,7 @@ import { saysFor } from '../../lib/nav';
 import { secondLine } from '../../lib/dim';
 import { glyphFor } from '../icons.pick';
 import { recordSearch } from '../../lib/browser.hook';
+import { Mark } from '../Brand';
 import { Avatar } from '../Avatar';
 import { BookmarkStar } from '../Bookmarks';
 import {
@@ -146,9 +147,9 @@ export function TopBar({
         aria-label="Semester — the search home"
       >
         <span className="desktop-mark" aria-hidden="true">
-          S
+          <Mark size={17} />
         </span>
-        <span className="desktop-word chrome-text">Semester</span>
+        <span className="desktop-word brandword chrome-text">Semester</span>
       </button>
 
       <div className="desktop-search">

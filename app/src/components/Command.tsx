@@ -64,6 +64,7 @@ import { actionsFor, flatten, hitKey, landingOf } from '../lib/openhit';
 import { DESKTOP, useMedia } from '../lib/media';
 import { offered, screenName } from '../lib/nav';
 import { secondLine } from '../lib/dim';
+import { Wordmark } from './Brand';
 import { AskIcon, ClocksIcon, Search as SearchIcon, SpeakerIcon, SpeakerOffIcon } from './Icons';
 import { TabGlyph } from './TabIcon';
 import { TabStrip } from './Tabs';
@@ -559,23 +560,20 @@ export function Command({ onClose }: { onClose: () => void }) {
               gap: size.gap,
             }}
           >
-            {/* The wordmark, which is the one piece of this that is decoration
+            {/* The logo, which is the one piece of this that is decoration
                 — and it earns its place: a new tab that opens on a blank grey
                 field reads as a screen that has failed to load. */}
-            <div
+            <Wordmark
               style={{
                 // Down the page a little on a laptop, the way every page of
                 // this shape sits: hard against the tab strip it reads as a
                 // header rather than as the middle of a page.
                 marginTop: wide ? '7vh' : 'var(--sp-6)',
-                fontFamily: 'var(--font-heading)',
+                // One size drives the glyph and the word both — `.brandlock`
+                // in `app.css` sizes the mark in `em` off exactly this.
                 fontSize: `calc(${size.mark}px * var(--text-scale, 1))`,
-                letterSpacing: '-0.03em',
-                lineHeight: 'var(--leading-tight)',
               }}
-            >
-              Semester
-            </div>
+            />
             <div style={{ width: '100%', position: 'relative' }} onMouseDown={(e) => e.stopPropagation()}>
               <Box
                 box={box}

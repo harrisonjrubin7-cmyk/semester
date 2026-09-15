@@ -54,6 +54,7 @@ import { useSuggesting } from '../components/desk/suggesting';
 import { useFocusBar } from '../components/desk/barfocus';
 import { longLabel } from '../lib/date';
 import { BookmarkChips } from '../components/Bookmarks';
+import { Wordmark } from '../components/Brand';
 
 export function SearchHome() {
   const { state, dispatch, school, catalog } = useStore();
@@ -87,7 +88,7 @@ export function SearchHome() {
 
   return (
     <div className="deskhome">
-      <div className="deskhome-mark chrome-text">Semester</div>
+      <Wordmark className="deskhome-mark" />
 
       {/*
         Hidden rather than dimmed — see the note at the top of this file. The

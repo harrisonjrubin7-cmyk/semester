@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Mark } from './Brand';
 import { useNow, useStore } from '../state/store';
 import { greeting, welcomeLine } from '../lib/welcome';
 import { prefersLessMotion } from '../lib/prefers';
@@ -6,6 +7,10 @@ import { splashDone, splashPlayed } from '../lib/splash';
 
 /**
  * The screen the app opens on: the mark, the name, and one true sentence.
+ *
+ * The mark and the word are the app's own logo — `components/Brand.tsx`, which
+ * is also what the installed icon is generated from, so the tile somebody
+ * tapped and the first thing they see after tapping it are one drawing.
  *
  * ## Why there is one at all
  *
@@ -101,8 +106,8 @@ export function Splash() {
   return (
     <div className="splash" data-going={phase === 'going' ? 'yes' : undefined} aria-hidden="true">
       <div className="splash-in">
-        <Mark />
-        <div className="splash-name">Semester</div>
+        <Mark className="splash-mark" size={92} />
+        <div className="splash-name brandword chrome-text">Semester</div>
         <div className="splash-said">
           <span className="splash-hello">{greeting(now)}</span>
           <span className="splash-what">{welcomeLine(catalog, now)}</span>
@@ -112,38 +117,3 @@ export function Splash() {
   );
 }
 
-/**
- * The app's own icon, drawn rather than fetched.
- *
- * `public/icon.svg` is the same drawing and could have been an `<img>`, but the
- * one thing this element must not do is arrive late — a request that misses the
- * cache would put a hole in the middle of the opening screen. Inline it cannot
- * miss, and drawn in `currentColor` it wears the accent of whatever ground the
- * person chose instead of the fixed chrome gradient the file needs for a home
- * screen tile.
- */
-function Mark() {
-  return (
-    <svg className="splash-mark" viewBox="0 0 512 512" role="presentation" focusable="false">
-      {/* The blueprint frame and its four registration marks — the same
-          signature every framed object in the app wears. */}
-      <rect x="96" y="96" width="320" height="320" fill="none" stroke="currentColor" strokeWidth="6" />
-      <g stroke="currentColor" strokeWidth="5">
-        <path d="M96 68v56M68 96h56" />
-        <path d="M416 68v56M388 96h56" />
-        <path d="M96 388v56M68 416h56" />
-        <path d="M416 388v56M388 416h56" />
-      </g>
-      {/* A calendar tick: the semester, cleared. */}
-      <path
-        className="splash-tick"
-        d="M168 258l58 58 118-118"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="34"
-        strokeLinecap="square"
-        strokeLinejoin="miter"
-      />
-    </svg>
-  );
-}

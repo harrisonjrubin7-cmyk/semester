@@ -11,6 +11,7 @@ import {
   Search as SearchIcon,
 } from './components/Icons';
 import { Avatar } from './components/Avatar';
+import { Wordmark } from './components/Brand';
 import { headerRow } from './lib/header';
 import { creditHoursOr0 } from './lib/credits';
 import { useSitting } from './lib/sitting.hook';
@@ -900,7 +901,7 @@ function Rail() {
 
   return (
     <nav className="rail" aria-label="Sections">
-      <div className="rail-mark chrome-text">Semester</div>
+      <Wordmark className="rail-mark" />
       {tabs.map((id) => {
         const label = tabLabel(id);
         const on = here === id;

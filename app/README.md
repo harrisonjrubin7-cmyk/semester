@@ -23,7 +23,12 @@ own application.
 - **Installed** — `public/manifest.webmanifest`, PNG icons (iOS ignores an SVG
   `apple-touch-icon`, so `apple-touch-icon.png` is rendered from the SVG) and
   `public/sw.js` make it installable as a standalone window, and keep the app shell
-  and anything you have played working offline. Audio is cached as you play it,
+  and anything you have played working offline. The icons themselves are
+  generated: `npm run icons` writes `public/icon.svg` and
+  `public/icon-maskable.svg` from `src/components/mark.data.ts`, which is the
+  same drawing `components/Brand.tsx` puts in the app, and
+  `src/components/mark.test.ts` fails if what is committed is not what the
+  generator writes. Audio is cached as you play it,
   never up front — 46 MB of lessons downloaded on first open would be a hostile
   thing to do to a phone plan.
 
