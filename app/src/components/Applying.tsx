@@ -130,7 +130,7 @@ export function ApplyingOn({ day }: { day: Date }) {
               style={{
                 display: 'block',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                opacity: 0.6,
+                color: 'var(--app-dim)',
                 marginTop: 'var(--sp-1)',
               }}
             >

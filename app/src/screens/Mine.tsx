@@ -272,7 +272,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             type="button"
             className="bare"
             onClick={() => setEditing(false)}
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.6 }}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Cancel
           </button>
@@ -1006,7 +1006,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             type="button"
             className="bare"
             onClick={() => setEditing(false)}
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.6 }}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Cancel
           </button>
@@ -1062,7 +1062,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
         style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}
       >
         <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</span>
-        <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+        <span style={{ display: 'block', fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
           {/* How long and how often, on the row: a shelf of appointments that
               all read alike is a shelf where the four-hour shift and the
               coffee are indistinguishable. The repeat is not lower-cased —

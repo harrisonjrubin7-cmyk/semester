@@ -75,7 +75,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
             <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
               <CourseTag id={r.courseId}>{mod?.course.code ?? r.courseId}</CourseTag>
               {when ? (
-                <span style={{ flex: 1, textAlign: 'right', fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+                <span style={{ flex: 1, textAlign: 'right', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
                   {when}
                 </span>
               ) : null}
@@ -83,7 +83,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
             <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4, marginTop: 7 }}>{r.said}</div>
 
             {next ? (
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 {next.block.title}
                 {next.block.meta ? ` · ${next.block.meta}` : ''}
               </div>
@@ -107,7 +107,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                * edited and offering to is the dead end that gating was for.
                */
               <>
-                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                   {yours
                     ? "The app does not have this course's office hours. They are on the syllabus, and they take a minute to add."
                     : "The app does not have this course's office hours — it is one of the ones this app ships with, and there is no syllabus behind it to read them from."}

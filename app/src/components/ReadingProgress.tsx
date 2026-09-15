@@ -69,7 +69,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
           width: 'auto',
           padding: '8px 0 2px',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           textAlign: 'left',
         }}
       >
@@ -296,7 +296,7 @@ export function ReadingsOnTheGo() {
                   style={{
                     display: 'block',
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                    opacity: 0.62,
+                    color: 'var(--app-dim)',
                     textWrap: 'pretty',
                   }}
                 >

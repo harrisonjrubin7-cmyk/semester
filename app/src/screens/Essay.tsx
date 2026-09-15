@@ -144,7 +144,7 @@ export function Essay() {
 
   return (
     <Page className="prose" bottom={26}>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         A real draft, for the writing that is not coursework — the cover letter, the club
         newsletter, the scholarship statement, the memo. For a class, the project file under
         Work on it is the tool: it gives you the document to write in, not the writing.
@@ -370,7 +370,7 @@ export function Essay() {
           <Produced style={{ background: 'var(--app-panel)' }}>{draft}</Produced>
           <DraftNote field={outField} />
 
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 1.55 }}>
             {count} words against {aim}.{' '}
             {left.length > 0
               ? `${left.length} ${left.length === 1 ? 'blank' : 'blanks'} left for you — fill every one before this goes anywhere.`

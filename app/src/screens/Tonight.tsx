@@ -127,7 +127,7 @@ export function Tonight() {
           style={{
             marginTop: 20,
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
           }}
         >
@@ -224,7 +224,7 @@ function Row({
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.62,
+            color: 'var(--app-dim)',
             marginTop: 3,
           }}
         >
@@ -237,7 +237,7 @@ function Row({
         <span
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 0.7,
+            color: 'var(--app-dim)',
             fontVariantNumeric: 'tabular-nums',
             whiteSpace: 'nowrap',
           }}

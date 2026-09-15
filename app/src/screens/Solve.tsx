@@ -118,7 +118,7 @@ export function Solve() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Working on {guide.code}. It will not write the answer you are handing in — for a maths
         question the worked solution is the submitted work. It will teach the method on numbers
         that are not yours, and read your attempt and find the first step that is wrong.

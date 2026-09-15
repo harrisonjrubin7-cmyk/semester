@@ -130,7 +130,7 @@ export function Rework({
   return (
     <Folding name="Rework">
       <SectionLabel>Rebuild the guide around this</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Everything you have added already shows up in every study format. This goes further and
         reorganises the guide itself — new material put in the unit it belongs to, units split or
         renamed where they have outgrown themselves, cards written from prose that never became
@@ -138,7 +138,7 @@ export function Rework({
       </div>
 
       {!owned && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
           This is one of the built-in sample courses, so its guide cannot be replaced. Your own
           courses can be.
         </div>
@@ -221,7 +221,7 @@ export function Rework({
           </div>
 
           {cost.examples.length > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
               {cost.examples.map((e, i) => (
                 <div key={i} style={{ marginBottom: 'var(--sp-3)' }}>
                   <div style={{ textDecoration: 'line-through', opacity: 0.6 }}>{e.before}</div>
@@ -231,7 +231,7 @@ export function Rework({
             </div>
           )}
 
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
             {cost.unitsBefore} units → {cost.unitsAfter}.{' '}
             {plan.guide.units.reduce((n, u) => n + u.cards.length, 0)} cards,{' '}
             {plan.guide.terms.length} terms.

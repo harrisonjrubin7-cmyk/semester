@@ -128,7 +128,7 @@ export function Meet() {
             style={{
               marginTop: 'var(--sp-4)',
               fontSize: 'var(--type-xs)',
-              opacity: 0.62,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -143,7 +143,7 @@ export function Meet() {
           style={{
             marginTop: 'var(--sp-6)',
             fontSize: 'var(--type-base)',
-            opacity: 0.7,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -216,7 +216,7 @@ function Row({
         style={{
           marginTop: 'var(--sp-2)',
           fontSize: 'var(--type-xs)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}

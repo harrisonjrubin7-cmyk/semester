@@ -376,7 +376,7 @@ export function LessonPlayer() {
         <div
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 0.65,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-5)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',

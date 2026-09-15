@@ -155,7 +155,7 @@ export function Work() {
 
   return (
     <Page>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         Working on {guide.code}. Switch course from Study.
       </div>
 
@@ -174,7 +174,7 @@ export function Work() {
       {tab === 'plan' && (
         <>
           <SectionLabel>The instructions</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             Paste them, or drop the file your professor posted. You get back what is being asked,
             how it is marked, a plan with dates, and the questions worth asking in office hours.
             You do not get the assignment written — that is yours to write.
@@ -229,7 +229,7 @@ export function Work() {
       {tab === 'draft' && (
         <>
           <SectionLabel>Your draft</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             Feedback against the rubric and the course material — what is working, what would move
             the grade most, and anything the guide does not support. Nothing is rewritten for you.
           </div>
@@ -282,7 +282,7 @@ export function Work() {
       {tab === 'ask' && (
         <>
           <SectionLabel>What do you need</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.62, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
             A revision timetable, practice questions, a summary of a reading, an email to a
             professor, an outline of your own argument to react to. This one has {guide.code} in
             front of it, so answers are about your course.
@@ -407,7 +407,7 @@ function PlanView({
           {plan.title}
         </div>
         {plan.due && (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 5 }}>Due {plan.due}</div>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>Due {plan.due}</div>
         )}
       </Blueprint>
 
@@ -463,7 +463,7 @@ function PlanView({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{s.do}</div>
                 {s.why && (
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
                     {s.why}
                   </div>
                 )}
@@ -511,7 +511,7 @@ function PlanView({
       {plan.unclear.length > 0 && (
         <>
           <SectionLabel>Worth asking about</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>
             The instructions do not settle these. Ask in office hours or on the discussion board —
             getting this right early is worth more than any amount of redrafting.
           </div>

@@ -72,7 +72,7 @@ export function Guide() {
       {state.mode !== 'field' && (
         <>
           <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{guide.name}</div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 3 }}>{guide.blurb}</div>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 3 }}>{guide.blurb}</div>
         </>
       )}
 
@@ -172,7 +172,7 @@ export function Guide() {
         <div
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            opacity: 0.62,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
             margin: '10px 0 2px',
             textWrap: 'pretty',
@@ -192,7 +192,7 @@ export function Guide() {
         <div
           style={{
             fontSize: 'var(--type-base)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
             marginTop: 'var(--sp-7)',
             textWrap: 'pretty',
@@ -366,7 +366,7 @@ export function Guide() {
           <div
             style={{
               fontSize: 'var(--type-base)',
-              opacity: 0.7,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-normal)',
               marginTop: 'var(--sp-2)',
               textWrap: 'pretty',
@@ -645,7 +645,7 @@ function Watch() {
 
   return (
     <>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
         {made} {made === 1 ? 'lesson' : 'lessons'} · {Math.round(total / 60)} minutes. Each unit
         taught out loud, with the slide changing as the voice moves. Headphones on the walk to
         Buttrick and you have covered a unit.
@@ -717,7 +717,7 @@ function Decks() {
 
   return (
     <>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
         One point per slide, question before answer. Better than Read for a unit you have not met
         yet; worse than Cards for one you nearly know.
       </div>
@@ -869,7 +869,7 @@ function Documents() {
 
   return (
     <Folding name="Documents">
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
         The same {guide.units.length} units as a document — every card, the terms and the
         self-test, in reading order.
       </div>
@@ -920,7 +920,7 @@ function Documents() {
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{guide.code} study guide</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {f.note}
                   </span>
                 </span>
@@ -997,7 +997,7 @@ function Figures() {
 
   if (unitFigures.length === 0 && extras.length === 0) {
     return (
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14 }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14 }}>
         No figures in this guide yet.
       </div>
     );
@@ -1005,7 +1005,7 @@ function Figures() {
 
   return (
     <>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
         Every figure the guide draws, at phone size. These are the ones worth being able to sketch
         from memory.
       </div>
@@ -1031,7 +1031,7 @@ function Cases() {
 
   return (
     <Folding name="Cases">
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginTop: 14, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
         The concepts pointed at things you can actually see. All four professors grade on applying
         an idea to a case you have not met before — this is the rep for that.
       </div>
@@ -1222,7 +1222,7 @@ function Cram() {
                   display: 'block',
                   marginTop: 'var(--sp-2)',
                   fontSize: 'var(--type-xs)',
-                  opacity: 0.62,
+                  color: 'var(--app-dim)',
                   textAlign: 'left',
                   textDecoration: 'underline',
                   textUnderlineOffset: '2px',
@@ -1353,7 +1353,7 @@ function Script({ courseId, episodeId }: { courseId: string; episodeId: string }
         <div
           role="status"
           aria-live="polite"
-          style={{ fontSize: 'var(--type-base)', opacity: 0.6, padding: 'var(--sp-4) 0' }}
+          style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', padding: 'var(--sp-4) 0' }}
         >
           Fetching the words…
         </div>
@@ -1592,7 +1592,7 @@ function Listen() {
         <div
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 0.65,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-5)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
