@@ -205,8 +205,8 @@ internal consistency is what makes these worth shipping.
   certainly *includes* 15–17 December. That is a lower bound, not the period,
   and writing it as the period would understate it for anybody whose exam
   falls outside.
-- **Four of the six registrar deadlines.** See below: four were later
-  written, two were refused on evidence.
+- **All six registrar deadlines.** See below: four written on the first pass,
+  two refused and then written on better dates.
 
 The earlier fragment quoted below — exams and reading days 5–13 December,
 from a graduate calendar — is now positively **contradicted** by PSCI 1104's
@@ -223,6 +223,8 @@ search-index evidence as the meal plans:
 | Last day to drop without a W | Fri 4 Sep 2026 | `drop-clean` |
 | Last day to withdraw from a course | Fri 30 Oct 2026 | `withdraw` |
 | Last day to change to pass/fail | Fri 30 Oct 2026 | `passfail` |
+| Spring 2027 registration opens | Mon 26 Oct 2026 | `registration` |
+| Final grades due | Mon 21 Dec 2026 | `grades` |
 
 **The label on the first one is the whole point of this entry.** The source's
 own phrase for 4 September is *"add/drop deadline"* — and `HINTS` in
@@ -284,20 +286,38 @@ of Arts and Science's own pass/fail policy. So `passfail` is not a date of its
 own at this university: it is the withdrawal date, and 30 October now carries
 both landmarks for the same reason 4 September carries two.
 
-### Two refusals, each with a reason
+### Both refusals were later overturned — by better dates, not by relenting
+
+The two entries below were refused on the evidence available at the time. Asked
+to add them anyway, the pass that followed searched again rather than writing
+the rejected dates, and found that in each case the refusal had been right
+about the date and wrong to stop there:
+
+| | Refused | Written | Why the first one failed |
+| --- | --- | --- | --- |
+| Registration | Fri 13 Nov | **Mon 26 Oct** | The 13th is when registration *closes*. Registration runs 26 Oct – 13 Nov, and the landmark means the opening |
+| Grades | 15 Dec | **Mon 21 Dec** | The 15th falls before two of the four courses sit their finals |
+
+Both new dates land on the weekday their source claims, and 21 December clears
+PSCI 1104's final on the 17th by four days where 15 December preceded it by
+two. The original reasoning is kept below because it is what sent the second
+pass looking for a different date instead of writing the wrong one.
+
+### The two refusals, as they stood
 
 `registration` and `grades` stay empty, and not for want of a candidate date.
 Each had one, and each was rejected on evidence:
 
-- **Registration.** The only date found is Friday 13 November 2026 — and it is
+- **Registration.** The only date found *at the time* was Friday 13 November 2026 — and it is
   when Spring 2027 registration *windows close*. The landmark is "Registration
   opens for next term", whose cost line reads "Assigned by hour, and the
   sections you need go in the first morning". Filing a closing date there
   would tell a student registration opens on the day it actually shuts, and
   every label containing the word "registration" resolves to that landmark, so
   there is no safe wording for it either.
-- **Grades.** The only date found is 15 December, as a "final grading due
-  date" — and the syllabi in `project/uploads` contradict it outright. ECON
+- **Grades.** The only date found *at the time* was 15 December, as a "final
+  grading due date" — and the syllabi in `project/uploads` contradict it
+  outright. ECON
   1020 sits a final exam slot **on** 15 December and another on the 16th, and
   PSCI 1104's final is the 17th. Grades cannot be due before the exams are
   sat, so whatever that date belongs to, it is not Fall 2026 undergraduate

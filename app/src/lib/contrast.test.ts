@@ -390,6 +390,31 @@ describe('the stylesheet uses the tokens the audit passed', () => {
     }
   });
 
+  /*
+   * The front door's search placeholder, which was invisible.
+   *
+   * `.deskhome-field` inverts, and this line named `--app-dim` — `--app-fg`
+   * faded — on a surface that *is* `--app-fg`. 0.00:1 on all thirteen. Both
+   * halves are asserted: that the rule no longer reaches for the page's dim,
+   * and that what it reaches for instead is readable on every ground, since
+   * the first without the second would pass for any colour at all.
+   */
+  it('dims the search placeholder against the field, not against the page', () => {
+    expect(ruleFor('.deskhome-box-say')).not.toContain('var(--app-dim)');
+    expect(ruleFor('.deskhome-box-say')).toContain('var(--app-void)');
+    const bad: Check[] = [];
+    for (const g of GROUNDS) {
+      const t = tokensFor({ ground: g.id });
+      const field = t['--app-fg'];
+      bad.push({
+        what: `${g.label} · the search placeholder on the inverted field`,
+        ratio: contrast(over(t['--app-void'], field, 0.7) ?? '', field) ?? 0,
+        needs: AA_TEXT,
+      });
+    }
+    expect(bad.filter((c) => !passes(c)).map(failLine)).toEqual([]);
+  });
+
   it('fills the pill with the stop white survives on', () => {
     // The handoff's flagged failure: white on the accent's `deep` stop is
     // about 2.4:1. `--app-accent-fill` is `shade` on a light ground, which is
