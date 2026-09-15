@@ -9,6 +9,7 @@ import {
   isFavourite,
   narrowApps,
   readFavourites,
+  SCATTERED,
   scoreApp,
   toggleFavourite,
   writeFavourites,
@@ -133,8 +134,19 @@ describe('searching the apps', () => {
      * (see `scoreApp`), so both orders reach the same tier for the same
      * reason, and neither can be answered by a run nobody wrote.
      */
-    expect(scoreApp(STUDY, 'study guide', ALL)).toBe(20);
-    expect(scoreApp(STUDY, 'guide study', ALL)).toBe(20);
+    /*
+     * Pinned to the tier's *shape* rather than to one number. #432 wrote this
+     * as `toBe(20)` when the tier was flat; it is graded now — the mean of
+     * what each word scores, scaled into the band below the whole-query tiers
+     * — so the literal moved to 27 while the property it was written to hold
+     * did not. Both orders still score identically, for the same reason, and
+     * neither can be answered by a run nobody wrote.
+     */
+    const forward = scoreApp(STUDY, 'study guide', ALL);
+    const back = scoreApp(STUDY, 'guide study', ALL);
+    expect(forward).toBe(back);
+    expect(forward).toBeGreaterThan(0);
+    expect(forward).toBeLessThanOrEqual(SCATTERED);
     expect(findApps('guide study', ALL).map((d) => d.screen)).toContain('study');
   });
 
@@ -192,6 +204,136 @@ describe('searching the apps', () => {
 
   it('never offers a screen the school gate has closed', () => {
     expect(findApps('meal', BARE).map((d) => d.screen)).not.toContain('meals');
+  });
+});
+
+describe('a query of more than one word', () => {
+  const screens = (q: string) => findApps(q, ALL).map((d) => d.screen);
+
+  it('finds the screen the audit could not', () => {
+    /*
+     * "study guide" answered "No app matches that" while Study — whose
+     * keywords have said `guide` since they were written, and whose own button
+     * reads Create study guide — sat one row down the registry. Nothing was
+     * missing from the registry. The matcher only ever looked for the whole
+     * query as one unbroken run of characters, so two words that each land
+     * squarely on a screen landed nowhere together.
+     */
+    expect(screens('study guide')[0]).toBe('study');
+    expect(screens('create study guide')[0]).toBe('study');
+  });
+
+  it('knows the names of the formats the screen it belongs to makes', () => {
+    /*
+     * The other half of the same failure, and the half a matcher cannot fix:
+     * Study builds flashcards and a read-aloud guide, and the registry had no
+     * word for either. Only the formats that cost nothing to name are here —
+     * "outline", "summary", "formula", "notes", "concept map" and "key terms"
+     * were measured and put back, because each one is a common prefix that
+     * starts answering other queries with Study: "out" reaches "outline",
+     * "form" reaches "formula", "term" reaches "terms", and bare "map" reached
+     * Study ahead of Getting there. A screen that answers to everything is the
+     * same fault as one that answers to nothing.
+     */
+    expect(screens('flash cards')).toContain('study');
+    expect(screens('read aloud')).toContain('study');
+  });
+
+  it('finds a screen by its own name minus an article', () => {
+    // The worst of the class: a screen labelled "Add a reading", unfindable by
+    // "add reading". Whatever else a search does, it has to do this.
+    expect(screens('add reading')).toContain('update');
+  });
+
+  it('handles the words people put in between', () => {
+    // The same queries `lib/find.ts` learned to answer. The bar sat above the
+    // palette and disagreed with it about the same registry.
+    expect(screens('pay my bill')).toContain('costs');
+    expect(screens('where are my grades')).toContain('courses');
+    expect(screens('delete my account')).toContain('privacy');
+  });
+
+  it('needs every word, not any of them', () => {
+    // Otherwise the commonest word carries the query and somebody who typed
+    // two words is worse off than somebody who typed one.
+    expect(screens('study parsnip')).toEqual([]);
+    expect(screens('parsnip velocity brigade')).toEqual([]);
+  });
+
+  it('finds nothing for words nobody searches by', () => {
+    expect(screens('the a my')).toEqual([]);
+  });
+
+  it('does not answer a phrase that exists only where two fields were joined', () => {
+    /*
+     * Found in #432, which reached this function from the other side, and
+     * carried here with its fix. The three matched fields were joined with a
+     * space, so the last word of one and the first of the next spelled out a
+     * phrase nobody wrote — and that run scored the *whole-query* tier, above
+     * every screen holding both words properly. 60 of them across the
+     * registry, one per screen: `agenda semester`, `average courses`,
+     * `analyze study`. This branch added a 61st by giving Study the keyword
+     * `read aloud`, whose last word sits against the shelf name: `aloud
+     * study`.
+     *
+     * The seams are newlines now. Every field pair on every row, asserted
+     * rather than argued, because "it cannot happen" is what the four tiers
+     * said about phrases.
+     */
+    for (const d of DESTINATIONS) {
+      const fields = [d.blurb, d.keywords, d.group].map((f) => f.toLowerCase().trim());
+      for (let i = 0; i < fields.length - 1; i += 1) {
+        const left = fields[i].split(/[^a-z]+/).filter(Boolean).at(-1);
+        const right = fields[i + 1].split(/[^a-z]+/).filter(Boolean)[0];
+        if (!left || !right) continue;
+        expect(
+          scoreApp(d, `${left} ${right}`, ALL),
+          `${d.screen} scored the seam "${left} ${right}" as a whole query`,
+        ).not.toBe(40);
+      }
+    }
+  });
+
+  it('weighs a word that lands on a name above one that lands in a blurb', () => {
+    // "practice exam" has to reach Practice paper before the other screens on
+    // the Study shelf whose keywords merely mention practice.
+    expect(screens('practice exam')[0]).toBe('exam');
+  });
+
+  it('never outranks a whole-query match', () => {
+    /*
+     * The property the whole tier is built around, and the reason this change
+     * could be made under the existing search tests rather than beside them: a
+     * screen carrying the exact phrase typed stays ahead of one that merely
+     * carries both words, so scattered words can only ever append rows to a
+     * result list and never reorder the rows already in it.
+     *
+     * Asserted as the invariant rather than as one example: every score is
+     * either one of the four whole-query tiers or inside the band below them.
+     */
+    const WHOLE = [40, 60, 80, 100];
+    for (const d of DESTINATIONS) {
+      for (const q of [
+        'study guide', 'pay my bill', 'add reading', 'office hours', 'meal plan',
+        'where are my grades', 'practice exam', 'email professor', 'make a deck',
+      ]) {
+        const score = scoreApp(d, q, ALL);
+        if (score === 0 || WHOLE.includes(score)) continue;
+        expect(score, `${d.screen} scored ${score} for "${q}"`).toBeLessThanOrEqual(SCATTERED);
+      }
+    }
+    expect(SCATTERED).toBeLessThan(Math.min(...WHOLE));
+  });
+
+  it('leaves a one-word query to the four tiers above it', () => {
+    // A single word has already been tried against the label, the name and the
+    // keywords; running it again here would only duplicate the row it made.
+    for (const d of DESTINATIONS) {
+      for (const q of ['study', 'calendar', 'powerpoint', 'gmail', 'meal']) {
+        const score = scoreApp(d, q, ALL);
+        expect([0, 40, 60, 80, 100], `${d.screen} scored ${score} for "${q}"`).toContain(score);
+      }
+    }
   });
 });
 

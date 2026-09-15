@@ -250,7 +250,7 @@ export const DESTINATIONS: Destination[] = [
     screen: 'study',
     label: 'Study',
     blurb: 'Pick a course and a way through it — cards, read, watch, slides.',
-    keywords: 'revise revision learn practice guide',
+    keywords: 'revise revision learn practice guide create flashcards flash cards read aloud',
     group: 'Study',
     taskTags: ['study'],
     root: 'study',
