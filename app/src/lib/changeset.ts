@@ -112,6 +112,11 @@ function describeNumbers(f: Figure): string {
       return f.kind;
     case 'image':
       return f.fileId;
+    case 'drawn':
+      // The code, because the code is the drawing. Two figures with one title
+      // and different labels on the axes are two different claims, and the
+      // only place that difference is written down is here.
+      return f.code;
   }
 }
 

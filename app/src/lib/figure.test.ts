@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { MOST_FIGURES, describeFigure, figureShapes, readFigure, readFigures } from './figure';
+import {
+  MOST_FIGURES,
+  describeFigure,
+  figureShapes,
+  readDrawn,
+  readFigure,
+  readFigures,
+} from './figure';
 import { capsFor } from './controls';
 import { DIAGRAM_KINDS } from './types';
 
@@ -232,5 +239,122 @@ describe('the ceiling a student chose', () => {
     const caps = capsFor({ depth: 'full', level: 'course', cards: 0 });
     expect(figureShapes(caps)).toContain(`0 to ${caps.figures} figures`);
     expect(figureShapes()).toContain(`0 to ${MOST_FIGURES} figures`);
+  });
+});
+
+
+describe('a drawing kept as a figure', () => {
+  const svg = '<svg viewBox="0 0 600 420"><text x="10" y="20">Titration curve</text></svg>';
+
+  const drawn = (over: Record<string, unknown> = {}) => ({
+    title: 'A titration curve for a weak acid',
+    caption: 'Drawn for CHEM 1601 — a graph with axes.',
+    language: 'svg',
+    code: svg,
+    ...over,
+  });
+
+  it('keeps the code, the language and what it was called', () => {
+    expect(readDrawn(drawn())).toEqual({
+      type: 'drawn',
+      title: 'A titration curve for a weak acid',
+      caption: 'Drawn for CHEM 1601 — a graph with axes.',
+      language: 'svg',
+      code: svg,
+    });
+  });
+
+  it('takes Mermaid, checked as Mermaid', () => {
+    const f = readDrawn(drawn({ language: 'mermaid', code: 'flowchart TD\n  A[Bill] --> B[Law]' }));
+    expect(f).toMatchObject({ type: 'drawn', language: 'mermaid' });
+  });
+
+  it('stores the Mermaid with its init directive already gone', () => {
+    /*
+     * `%%{init}%%` can set configuration including a font loaded from
+     * elsewhere. `cleanMermaid` strips it on the way to the renderer, and
+     * keeping the original would mean storing the thing that was stripped and
+     * stripping it again on every render for as long as the course exists.
+     */
+    const f = readDrawn(
+      drawn({ language: 'mermaid', code: '%%{init: {"theme":"forest"}}%%\nflowchart TD\n  A --> B' }),
+    );
+    expect(f).toMatchObject({ code: 'flowchart TD\n  A --> B' });
+  });
+
+  it('refuses an apology, in either language', () => {
+    // The commonest non-drawing there is: the model explains instead of
+    // drawing. Stored, it is a Figures card showing a paragraph of prose.
+    const said = 'I am sorry, I cannot draw that without more detail.';
+    expect(readDrawn(drawn({ code: said }))).toBeNull();
+    expect(readDrawn(drawn({ language: 'mermaid', code: said }))).toBeNull();
+  });
+
+  it('refuses a language it does not have', () => {
+    expect(readDrawn(drawn({ language: 'latex' }))).toBeNull();
+    expect(readDrawn(drawn({ language: '' }))).toBeNull();
+  });
+
+  it('refuses one with no title, since a figure card leads with it', () => {
+    expect(readDrawn(drawn({ title: '   ' }))).toBeNull();
+  });
+
+  it('refuses code past the ceiling rather than storing it', () => {
+    expect(readDrawn(drawn({ code: `<svg>${'x'.repeat(20_001)}</svg>` }))).toBeNull();
+  });
+
+  it('takes a caption of none, because a drawing names itself', () => {
+    expect(readDrawn(drawn({ caption: undefined }))).toMatchObject({ caption: '' });
+  });
+
+  it('says what it is in a line', () => {
+    expect(describeFigure(readDrawn(drawn())!)).toBe(
+      'A titration curve for a weak acid — a drawing, in SVG',
+    );
+    expect(
+      describeFigure(readDrawn(drawn({ language: 'mermaid', code: 'flowchart TD\n A --> B' }))!),
+    ).toBe('A titration curve for a weak acid — a drawing, in Mermaid');
+  });
+});
+
+describe('what a model reading material may put in a guide', () => {
+  /*
+   * The closure is the safety argument, so it is asserted rather than
+   * described. Everything `readFigure` accepts is a shape whose every field it
+   * checked; `drawn` holds generated markup, which has no such floor. If this
+   * ever passes, any reading added to any course can put a drawing of its own
+   * choosing into the guide unasked — which is a different product.
+   */
+  it('is not a drawing, however well-formed', () => {
+    expect(
+      readFigure({
+        type: 'drawn',
+        title: 'A supply curve',
+        caption: 'From the reading.',
+        language: 'svg',
+        code: '<svg viewBox="0 0 600 420"><path d="M0 0" /></svg>',
+      }),
+    ).toBeNull();
+  });
+
+  it('is not a drawing even in a list of otherwise good figures', () => {
+    const out = readFigures([
+      bars(),
+      { type: 'drawn', title: 'A curve', caption: '', language: 'svg', code: '<svg></svg>' },
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0].type).toBe('bars');
+  });
+
+  it('does not offer the shape to the model either', () => {
+    // The prompt and the validator are in one file precisely so they cannot
+    // drift. Asking for a shape nothing accepts wastes a reply and teaches the
+    // model a door that is not there.
+    //
+    // Matched on the shape rather than on the word: the prompt says "these
+    // seventeen drawn diagrams" about `kind`, which is the closed arm and the
+    // opposite of what this is checking for.
+    expect(figureShapes()).not.toContain('"type":"drawn"');
+    expect(figureShapes()).toContain('exactly three shapes');
   });
 });

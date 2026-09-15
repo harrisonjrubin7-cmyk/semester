@@ -204,6 +204,23 @@ export function figureSlide(figure: Figure): Slide {
         bullets: [`Drawn in the app — open ${figure.kind.replace(/-/g, ' ')} under Figures.`],
         note: figure.caption,
       };
+    case 'drawn':
+      /*
+       * A drawing cannot travel either, and it is the one figure whose source
+       * is worth naming rather than only pointing at. The code is the picture
+       * — an `.svg` opens in Word and a `.mmd` renders in Notion — so somebody
+       * holding this deck and wanting the diagram in it has a route that does
+       * not involve redrawing it by hand.
+       */
+      return {
+        title: figure.title,
+        bullets: [
+          `Drawn in the app from a description — open it under Figures, where the ${
+            figure.language === 'svg' ? 'SVG' : 'Mermaid'
+          } it is written in can be saved as a file.`,
+        ],
+        note: figure.caption,
+      };
     case 'image':
       return {
         title: figure.title,

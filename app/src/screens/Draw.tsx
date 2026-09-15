@@ -9,6 +9,7 @@ import { PrintButton } from '../components/PrintButton';
 import { ask } from '../lib/claude';
 import { configured } from '../lib/assistant';
 import { KINDS, drawingName, kind as kindById, systemFor, unfence } from '../lib/diagram';
+import { readDrawn } from '../lib/figure';
 import { download } from '../lib/deliver';
 import { NeedsKey } from '../components/NeedsKey';
 
@@ -68,13 +69,15 @@ const Drawing = lazy(() =>
  * hardcoded, which is the same defect from the other end.
  */
 export function Draw() {
-  const { state, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
   const { guide } = useLive(state.guideId);
 
   const [kindId, setKindId] = useState(KINDS[0].id);
   const [prompt, setPrompt] = useState('');
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
+  /** What the last keep did, said on the screen rather than as a toast. */
+  const [kept, setKept] = useState('');
   const trouble = useTrouble();
   const abort = useRef<AbortController | null>(null);
   const k = kindById(kindId);
@@ -84,6 +87,7 @@ export function Draw() {
     setBusy(true);
     trouble.clear();
     setCode('');
+    setKept('');
     abort.current = new AbortController();
     let sofar = '';
     try {
@@ -112,6 +116,62 @@ export function Draw() {
     } finally {
       setBusy(false);
     }
+  };
+
+  /**
+   * Keep the drawing as a figure of this course.
+   *
+   * It goes in as a `CourseUpdate`, which is the same door a reading and a
+   * photograph of the board already come through — so it is placed by
+   * `lib/live.ts`'s one placement pass, it appears in the Figures tab beside
+   * the guide's own, it is counted by the mode card, and it can be taken back
+   * out by the same undo. Writing it anywhere else would have been a second
+   * kind of added figure, which is the duplication this app keeps removing.
+   *
+   * `readDrawn` is the gate, and the refusal is worth a sentence on the
+   * screen rather than a silent no-op: the commonest way to arrive here is
+   * with a reply that came back as an apology instead of a diagram, and
+   * "nothing happened" is the least useful thing to say about that.
+   */
+  const keep = () => {
+    const figure = readDrawn({
+      title: prompt.trim().slice(0, 80) || k.label,
+      /*
+       * The kind and nothing else. `lib/live.ts`'s placement pass appends
+       * ` — ${source}` to every added figure's caption, so a caption naming
+       * the course here rendered as "Drawn for ECON 1020 — a graph with
+       * axes. — Drawn here": the course is already the guide you are reading
+       * and the provenance is already on the end.
+       */
+      caption: `${k.label}.`,
+      language: k.language,
+      code,
+    });
+    if (!figure) {
+      setKept(
+        'That is not a drawing yet — the code above did not come back as ' +
+          `${k.language === 'svg' ? 'an SVG' : 'Mermaid'}. Draw it again, or fix it above.`,
+      );
+      return;
+    }
+    dispatch({
+      type: 'addUpdate',
+      update: {
+        courseId: state.guideId,
+        // No unit: a drawing is about the course rather than about one week of
+        // it, and `place` sends a figure with no unit to the shared rail —
+        // which is where somebody looking for "the diagram I drew" will look.
+        unit: null,
+        title: figure.title,
+        source: 'Drawn here',
+        body: '',
+        cards: [],
+        terms: [],
+        figures: [figure],
+        fileIds: [],
+      },
+    });
+    setKept(`Kept. It is in ${guide.code}’s Figures now.`);
   };
 
   if (!configured()) return <NeedsKey frame />;
@@ -204,7 +264,25 @@ export function Draw() {
               fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
             }}
           />
-          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)' }}>
+          <ActionButton onClick={keep} disabled={!code.trim()} style={{ marginTop: 'var(--sp-5)' }}>
+            Keep it in {guide.code}
+          </ActionButton>
+          <div
+            style={{
+              fontSize: 'var(--type-xs)',
+              color: kept.startsWith('That') ? 'var(--app-fg)' : 'var(--app-dim)',
+              marginTop: 'var(--sp-3)',
+              lineHeight: 'var(--leading-normal)',
+              textWrap: 'pretty',
+            }}
+            aria-live="polite"
+          >
+            {kept ||
+              'A kept drawing joins this course’s Figures, alongside the guide’s own — labelled as ' +
+                'drawn from a description rather than as the guide’s, and still yours to edit here.'}
+          </div>
+
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
             <button
               type="button"
               className="btn btn-secondary"

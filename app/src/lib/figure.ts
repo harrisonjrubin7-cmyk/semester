@@ -34,7 +34,16 @@
  * shakier ones. `figure.test.ts` is mostly a list of malformed replies.
  */
 
-import { DIAGRAM_KINDS, type BarRow, type DiagramKind, type Figure, type Step } from './types';
+import {
+  DIAGRAM_KINDS,
+  DRAWING_LANGUAGES,
+  type BarRow,
+  type DiagramKind,
+  type DrawingLanguage,
+  type Figure,
+  type Step,
+} from './types';
+import { cleanMermaid } from './diagram';
 import { MOST as DEFAULT_CAPS, type Caps } from './controls';
 
 /** At most this many figures out of one piece of material. */
@@ -49,6 +58,19 @@ const STEPS = { least: 2, most: 8 };
 /** Long enough to name the thing, short enough to sit under it. */
 const TITLE = 80;
 const CAPTION = 200;
+
+/**
+ * The most code a kept drawing may carry.
+ *
+ * A drawing that fits on a phone is a dozen nodes — `systemFor` asks for that
+ * in as many words — and a dozen nodes is a couple of thousand characters in
+ * either language. The ceiling is well above what that needs and well below
+ * what would make a course's stored state a problem: a figure is persisted
+ * with the update that brought it, and `lib/quota.ts` exists because this app
+ * has already met the disk filling up once. Twenty thousand characters is
+ * roughly ten of the largest drawings anybody has produced here.
+ */
+const DRAWN_CODE = 20_000;
 
 /**
  * The vocabulary, written out for the model.
@@ -181,12 +203,86 @@ export function readFigure(raw: unknown): Figure | null {
       if (!kind) return null;
       return { type: 'diagram', title, caption, kind };
     }
-    // `image` is deliberately absent. Its `fileId` points into this device's
-    // IndexedDB, so a model naming one is either guessing or pointing at
-    // somebody else's file, and neither should render.
+    /*
+     * `image` and `drawn` are both deliberately absent, for one reason said
+     * two ways: neither is a claim a model reading course material is in a
+     * position to make.
+     *
+     * `image`'s `fileId` points into this device's IndexedDB, so a reply
+     * naming one is either guessing or pointing at somebody else's file.
+     *
+     * `drawn` is the newer and the more tempting of the two, because a model
+     * asked for figures could plainly write the SVG for one — and that is
+     * precisely what this function must not let it do. Everything else here
+     * is a *closed* shape: a table of numbers the text stated, a process the
+     * text set out, or one of seventeen pictures the app draws itself. That
+     * closure is the whole safety argument — a figure cannot say anything the
+     * validator above did not check, because there is nowhere in the shape to
+     * say it. An arm holding arbitrary generated markup has no such floor, and
+     * granting it here would mean any reading added to any course could put a
+     * drawing of its own choosing into the guide, unasked.
+     *
+     * So a drawn figure arrives the other way: a person opens Draw, describes
+     * the picture, reads what came back, and keeps it. {@link readDrawn} is
+     * that door, and it is a narrow one on purpose.
+     */
     default:
       return null;
   }
+}
+
+function language(v: unknown): DrawingLanguage | null {
+  return DRAWING_LANGUAGES.find((l) => l === v) ?? null;
+}
+
+/**
+ * A drawing, checked before it becomes part of a course.
+ *
+ * The other door into {@link Figure}, and the one a person walks through
+ * rather than a model: what comes back from Draw is looked at, edited, and
+ * kept deliberately. See {@link readFigure}'s `default` for why that
+ * distinction is load-bearing rather than procedural.
+ *
+ * What is checked here is that the code **is** a drawing of the language it
+ * claims — not that it is safe, which is a different question answered in a
+ * different place. `components/Drawing.tsx` sanitises on every render, so the
+ * safety of what reaches the screen does not depend on what this function
+ * decided when the figure was saved. What this prevents is a figure that will
+ * never draw at all: an apology stored as a diagram is a card in the Figures
+ * tab that shows a paragraph of prose where a picture should be, and it is
+ * far better caught here, while the person is looking at it, than three weeks
+ * later on the way into an exam.
+ *
+ * Mermaid is checked with `cleanMermaid`, which is pure string work and
+ * answers exactly this question. SVG is checked for an `<svg` element and no
+ * further: the real parse needs a DOM, `cleanSvg` does it at render time and
+ * returns null when it fails, and the screen shows the code with "it is often
+ * one label away from working" rather than nothing. Refusing to save at that
+ * point would throw away a drawing a person could have fixed in one edit.
+ */
+export function readDrawn(raw: unknown): Figure | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const f = raw as Record<string, unknown>;
+  const title = text(f.title, TITLE);
+  const caption = text(f.caption, CAPTION);
+  const lang = language(f.language);
+  if (!title || !lang) return null;
+
+  const code = typeof f.code === 'string' ? f.code.trim() : '';
+  if (!code || code.length > DRAWN_CODE) return null;
+
+  if (lang === 'mermaid') {
+    const body = cleanMermaid(code);
+    if (!body) return null;
+    // The directive-stripped body, not what was typed: `cleanMermaid` removes
+    // the `%%{init}%%` line that can load a font from elsewhere, and keeping
+    // the original would mean storing the thing that was stripped and
+    // stripping it again on every render forever.
+    return { type: 'drawn', title, caption, language: lang, code: body };
+  }
+
+  if (!/<svg[\s>]/i.test(code)) return null;
+  return { type: 'drawn', title, caption, language: lang, code };
 }
 
 /** Every figure in a reply that survives {@link readFigure}, capped. */
@@ -212,5 +308,7 @@ export function describeFigure(f: Figure): string {
       return `${f.title} — the ${f.kind.replace(/-/g, ' ')} diagram`;
     case 'image':
       return `${f.title} — an image`;
+    case 'drawn':
+      return `${f.title} — a drawing, in ${f.language === 'svg' ? 'SVG' : 'Mermaid'}`;
   }
 }

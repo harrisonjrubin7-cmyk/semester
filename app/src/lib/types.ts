@@ -232,12 +232,49 @@ export const DIAGRAM_KINDS = [
  */
 export type DiagramKind = (typeof DIAGRAM_KINDS)[number];
 
+/**
+ * The two languages a drawn diagram is written in.
+ *
+ * A list first and the type from it, for the same reason `DIAGRAM_KINDS` is
+ * one: `lib/figure.ts` has to reject a language a reply made up, and a
+ * hand-kept copy of these two strings would be wrong the first time a third
+ * is added. `lib/diagram.ts` takes its `Language` from here rather than
+ * declaring its own — the drawing and the figure it is kept as must agree
+ * about what they are, and two unions cannot be made to.
+ */
+export const DRAWING_LANGUAGES = ['mermaid', 'svg'] as const;
+
+export type DrawingLanguage = (typeof DRAWING_LANGUAGES)[number];
+
 export type Figure =
   | { type: 'bars'; title: string; caption: string; unit: string; max: number; rows: BarRow[] }
   | { type: 'steps'; title: string; caption: string; steps: Step[] }
   | { type: 'diagram'; title: string; caption: string; kind: DiagramKind }
   /** A picture you added — a slide, a photo of the board. Held in IndexedDB. */
-  | { type: 'image'; title: string; caption: string; fileId: string };
+  | { type: 'image'; title: string; caption: string; fileId: string }
+  /**
+   * A diagram drawn from a description, rather than chosen from the seventeen.
+   *
+   * `diagram` above names a picture this app already knows how to draw, which
+   * is why it is safe and why it is narrow: a course whose figure is a
+   * titration curve or a free-body diagram gets no figure at all, because
+   * there is no arm of this union for one. This is that arm. The drawing is
+   * kept as the **code it was written as** — Mermaid or SVG — and not as
+   * rendered markup, for two reasons that both matter more than the saving.
+   *
+   * The code is editable, which is the property the Draw screen is built on:
+   * a picture you can retitle and relabel is worth more than one you can only
+   * look at, and a wrong label is fixed rather than regenerated.
+   *
+   * And rendered markup kept in storage is markup nothing sanitises twice.
+   * `components/Drawing.tsx` puts every drawing through `cleanSvg` or through
+   * Mermaid's strict mode on the way to the screen; storing the output of
+   * that would move the one place the guarantee is made from the render to a
+   * write that happened once, months ago, under whichever version of the
+   * sanitiser was current. Keeping the source means the sanitiser that runs is
+   * always today's.
+   */
+  | { type: 'drawn'; title: string; caption: string; language: DrawingLanguage; code: string };
 
 /** Figures are keyed by the index of the unit they illustrate. */
 export type FigureMap = Partial<Record<number, Figure>>;

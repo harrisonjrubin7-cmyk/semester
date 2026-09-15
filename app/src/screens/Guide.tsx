@@ -1055,7 +1055,7 @@ function Documents() {
 }
 
 function Figures() {
-  const { state } = useStore();
+  const { state, dispatch } = useStore();
   const { guide, figures: figMap, extras } = useLive(state.guideId);
 
   const unitFigures = Object.keys(figMap)
@@ -1063,11 +1063,42 @@ function Figures() {
     .sort((a, b) => a - b)
     .map((i) => ({ figure: figMap[i]!, unit: guide.units[i]?.name }));
 
+  /**
+   * The way out of an empty Figures tab, and the way to a picture the app has
+   * no drawing of.
+   *
+   * The seventeen hand-drawn diagrams are the ones four economics, politics
+   * and marketing courses needed. A course built from somebody else's syllabus
+   * gets whichever of them its material is about and, for everything else,
+   * nothing at all — and a course the app generated gets no figures whatever,
+   * because figures belong to a course built by hand (`lib/generate.ts`).
+   *
+   * Draw has been able to produce that missing picture since it shipped. What
+   * it could not do was give it to the guide: it drew, you saved a file, and
+   * the Figures tab said "No figures in this guide yet" as though nothing had
+   * happened. This is the join — from the tab that is empty, to the screen
+   * that can fill it.
+   */
+  const drawOne = (
+    <button
+      type="button"
+      className="btn btn-secondary btn-block"
+      onClick={() => dispatch({ type: 'go', screen: 'draw' })}
+      style={{ height: 44, marginTop: 'var(--sp-6)' }}
+    >
+      Draw one
+    </button>
+  );
+
   if (unitFigures.length === 0 && extras.length === 0) {
     return (
-      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14 }}>
-        No figures in this guide yet.
-      </div>
+      <>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
+          No figures in this guide yet. Describe the picture this course turns on — a curve, a
+          process, the causal chain in an argument — and what comes back can be kept here.
+        </div>
+        {drawOne}
+      </>
     );
   }
 
@@ -1085,6 +1116,7 @@ function Figures() {
           <FigureCard key={`x${i}`} figure={f} unit="Also worth knowing" />
         ))}
       </div>
+      {drawOne}
     </>
   );
 }
