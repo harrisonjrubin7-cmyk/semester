@@ -274,7 +274,7 @@ on.
 
 ---
 
-## 3. Seven test files were passing on the order they ran in · **six fixed**
+## 3. Nine test files were passing on the order they ran in · **all nine fixed**
 
 Nobody had run the suite shuffled. It has never needed to be — one worker per
 file hides most of this — which is exactly why it is worth doing before §2 is
@@ -303,24 +303,47 @@ and it is `splash.test.tsx` all three times. Three more on the merged head:
 8,080 passed, one failed, `splash.test.tsx` all three times again — and four on
 `924d0ab`, where it is still the only file that fails.
 
-**Fixing it moved the problem rather than ending it, and that is worth stating
-plainly.** With `splash.test.tsx` clean, four shuffled runs of the full suite
-show two files that main never got far enough to reach:
+**Fixing it uncovered two more**, which is what a guard does the first time it
+is pointed at something. Both are now fixed too, and neither turned out to be
+what the first reading of it said.
 
-| File | What it is |
-| --- | --- |
-| `lib/idb.test.ts` | four tests time out at 5 s. Its fake IndexedDB never answers, which is what a leaked global — most likely a fake clock left on by whichever file ran before it — looks like from inside |
-| `screens/Calendar.keyboard.test.tsx` | `EnvironmentTeardownError` loading `data/courses/psci/lessons.ts`. The chain names `components/tabsound.test.tsx` → `TabFind.tsx` → `store.tsx` → `seed.ts`: the same unawaited `loadSeed()` as §2a, from a different file, and the suite-level error it raises is not the unhandled rejection that fix removed |
+**`lib/idb.test.ts` — a fake clock left running, and it was this audit's own
+doing.** Four of its tests sat until the five-second timeout. Its fake
+IndexedDB fires `onsuccess` from a `setTimeout(…, 0)`, and against a clock
+nobody is advancing that callback never runs. The clock belonged to
+`lib/swmedia.test.ts`, added by §5's cap three commits earlier: it called
+`vi.useFakeTimers()` in a `beforeEach` and never put the clock back, and under
+`isolate: false` a clock installed in one file is still installed in the next.
+Of the seven files in the suite that install fake timers it was the only one
+that did not restore. Proved by pairing the two and shuffling: **four failures
+in six without the restore, none in eight with it.**
 
-Both are pre-existing and neither is caused by the splash fix — measured by
-running the pair `splash.test.tsx` + `idb.test.ts` shuffled five times each
-way: **two failures in five on `main`, none in five with the fix.** Shuffle
-picks a different pairing each run, so main's shuffle failures were the splash
-file shadowing whatever else was behind it.
+**`screens/Calendar.keyboard.test.tsx` — innocent, and already doing it
+right.** The `EnvironmentTeardownError` it died on names the chain
+`components/tabsound.test.tsx` → `TabFind.tsx` → `store.tsx` → `seed.ts`: a
+store mounted with the sample on starts four dynamic imports and awaits none of
+them, and Vitest tears the environment down underneath. The error is reported
+against whatever file is *running* when the import lands, which is somebody
+else's — `Calendar.keyboard.test.tsx` already awaited `loadSeed`, as six of the
+eight store-mounting files did. `tabsound.test.tsx` and `splash.test.tsx` did
+not. They do now.
 
-So `--sequence.shuffle` is two files closer to being a CI step and is not one
-yet. The two are named above with what they look like; neither diagnosis has
-been run to ground. Adding `--sequence.shuffle` to CI
+That one is the same root cause as §2a and the same fix `screens/deadends.test.tsx`
+had already written up in its own comment — which is the argument for
+`src/seedawait.test.ts`, a guard that reads the tree and fails when a file
+mounts `StoreProvider` without calling `loadSeed`. Six files had worked the
+problem out independently and two had not; the ninth should not have to work it
+out at all. Its first version looked for the *name* `loadSeed`, which the
+import line satisfies on its own — deleting the await and keeping the import
+left the guard green. It looks for a call now, and that was checked by
+breaking it.
+
+**Where shuffle stands.** Ten shuffled runs of the full suite, clean; shuffled
+again at one, two and four workers, clean. That is enough to put
+`--sequence.shuffle` in CI, which is what would have caught all nine of these
+on the push that introduced them. It is not in this branch — adding a step to
+the workflow is a change to how every push is judged, and worth being asked for
+rather than slipped in. Adding `--sequence.shuffle` to CI
 is worth doing **after** that file is fixed, and is worth doing then — it is
 the cheapest guard there is against this whole class, and it found four of
 these in one afternoon.
@@ -516,19 +539,20 @@ something once went wrong.
 | | Work | Cost | What it buys |
 | --- | --- | --- | --- |
 | 1 | ✅ **§1** — split reading from asking in the assistant | done | −6.6 kB gzipped off every first load, and one real bug |
-| 2 | ✅ **§3** — five order-dependent test files | done | a suite that can be shuffled, which is the precondition for row 5 |
+| 2 | ✅ **§3** — nine order-dependent test files, in three passes | done | a suite that can be shuffled, ten runs clean |
 | 3 | ✅ **§4**, **§6** — the registry guard and the lint ceiling | done | two things that cannot quietly get worse |
 | 4 | ✅ **§2a** — the unawaited, failure-cached `loadSeed()` | done | `npm test` stops being intermittently red on main, and a sample that failed once can load again |
-| 5 | ✅ **§3's last row** — `splash.test.tsx` run to ground | done | and it named two more behind it, in §3 |
-| 5a | **§3's two new rows** — `lib/idb.test.ts` and `screens/Calendar.keyboard.test.tsx`, then `--sequence.shuffle` in CI | half a day | the guard that would have caught all seven, on every push |
+| 5 | ✅ **§3's last rows** — `splash.test.tsx`, then the two it uncovered, with a guard for the class | done | shuffle is clean at every worker count tried |
+| 5a | **`--sequence.shuffle` in CI** | one line | the guard that would have caught all nine, on every push — not taken, see §3 |
 | 6 | ✅ **§2** — `isolate: false`, with the mocking files as exceptions and a test that keeps the list honest | done, by another session | 42 s → 29.5 s a run, three runs deep |
 | 7 | ✅ **§5** — a size, a list and a clear button for downloaded media | done | an installed app that does not quietly take 200 MB of a phone with no way to see or stop it |
 | 7a | ✅ **§5, the rest** — a cap, least recently played first, and what it took said out loud | done | the same, without anybody having to go and look |
 | 8 | **§6 follow-on** — reshape `useModal`'s return | small | 20 of 45 warnings, in one change |
 | 9 | **§7** — direct tests for `rtc.ts`, `mic.ts` | medium | the part of the app that is hardest to check by hand |
 
-Items 1–4, 6, 7 and 7a are on `main`; item 5 is this branch. Every one went in
-with `lint`, `tsc`, `test`, `test:zones`, `build` and `check:university` green.
+Items 1–4 and 6–7a are on `main`; item 5 finished on this branch. Every one
+went in with `lint`, `tsc`, `test`, `test:zones`, `build` and
+`check:university` green.
 Item 6 arrived from another session, is on `main`, and is re-verified above
 rather than taken on trust.
 
