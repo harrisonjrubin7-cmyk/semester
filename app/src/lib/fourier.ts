@@ -554,8 +554,20 @@ export function dft(xs: number[]): Bin[] {
  * other way, over N.
  */
 export function idft(bins: Bin[]): number[] {
+  return icdft(bins).map((b) => b.re);
+}
+
+/**
+ * The inverse with its imaginary half kept.
+ *
+ * `idft` throws that half away because a run of real numbers is what went in
+ * and what comes back. `lib/hilbert.ts` wants the other half: it builds a
+ * spectrum that is deliberately *not* symmetric, and the imaginary part of
+ * what comes back from one of those is the whole answer.
+ */
+export function icdft(bins: Bin[]): Bin[] {
   const n = bins.length;
-  return both(bins, 1).map((b) => b.re / n);
+  return both(bins, 1).map((b) => ({ re: b.re / n, im: b.im / n }));
 }
 
 /** How big a bin is — the height of its line in a spectrum. */

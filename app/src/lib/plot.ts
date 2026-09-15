@@ -54,6 +54,7 @@ import {
   readZed,
   transform as zTransform,
 } from './discrete';
+import { averageFrequency, envelope, loudestMoment } from './hilbert';
 import {
   D4,
   HAAR,
@@ -234,6 +235,15 @@ export type Line =
    * Drawn as the smoothing over the data it came from. See `lib/wavelet.ts`.
    */
   | { kind: 'wavelet'; body: Node; rest: Node[]; filter: Filter }
+  /**
+   * `hilbert([…])` — the shape a wobble is wobbling inside.
+   *
+   * Every other transform here answers a question about a whole run at once.
+   * This one answers one about every moment of it: how big is the wobble here,
+   * and how fast is it turning here. Drawn as the envelope either side of the
+   * data. See `lib/hilbert.ts`.
+   */
+  | { kind: 'envelope'; body: Node; count: Node | null }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -300,6 +310,9 @@ const HARMONIC = new Set(['fourier', 'harmonics']);
 
 /** `dft([…])` and `fft(x[n], N)`: the transform of a run of numbers. */
 const BINNED = new Set(['dft', 'fft']);
+
+/** `hilbert([…])` and `envelope(x[n], N)`: the run's own shape over time. */
+const HILBERT = new Set(['hilbert', 'envelope', 'analytic']);
 
 /**
  * `wavelet([…])` and `daubechies([…])`: the filter is named by the call.
@@ -452,6 +465,12 @@ export function readLine(source: string): Line {
     if ('says' in got) return { kind: 'fault', says: got.says };
     if (CONVOLVE.test(text)) return { kind: 'convolution', body: got.node };
     const call = got.node;
+    if ((call.kind === 'apply' || call.kind === 'call') && HILBERT.has(call.name)) {
+      if (call.args.length < 1 || call.args.length > 2) {
+        return { kind: 'fault', says: 'An envelope wants the data: hilbert([…]), or a formula and how many samples.' };
+      }
+      return { kind: 'envelope', body: call.args[0], count: call.args[1] ?? null };
+    }
     if ((call.kind === 'apply' || call.kind === 'call') && WAVELETS[call.name]) {
       if (call.args.length < 1 || call.args.length > 3) {
         return { kind: 'fault', says: 'A wavelet transform wants the data: wavelet([…]), or a formula, how many samples, and which level.' };
@@ -584,6 +603,10 @@ export function missing(line: Line, scope: Scope): string[] {
     case 'sequence':
       return free(line.body, scope).filter((n) => n !== ZED && !table(n));
     case 'bins':
+      return [...free(line.body, scope), ...(line.count ? free(line.count, scope) : [])].filter(
+        (n) => n !== BEAT && !table(n),
+      );
+    case 'envelope':
       return [...free(line.body, scope), ...(line.count ? free(line.count, scope) : [])].filter(
         (n) => n !== BEAT && !table(n),
       );
@@ -720,6 +743,26 @@ export function answered(
        * out which of the two lines is the answer.
        */
       note: 'The function is faint under it. Outside that interval a series repeats, which is what makes it a series.',
+    };
+  }
+  if (line.kind === 'envelope') {
+    const xs = samplesOf(line.body, line.count, scope);
+    if (!xs.ok) return { says: xs.fault };
+    const shape = envelope(xs.it);
+    const top = loudestMoment(xs.it);
+    const rate = averageFrequency(xs.it);
+    const tidy = (v: number) => Number(v.toPrecision(4));
+    return {
+      lead: `${xs.it.length} samples, as a wobble inside an envelope:`,
+      latex: '',
+      over: BEAT,
+      at: (n: number) => shape[Math.round(n)] ?? NaN,
+      upto: xs.it.length - 1,
+      data: xs.it,
+      note:
+        top.size > 1e-9
+          ? `Loudest at sample ${top.at}, where it reaches ${tidy(top.size)}. It turns at about ${tidy(rate)} cycles a sample where there is something to turn — one number per moment, where a spectrum gives one set for the whole run. The ends are where the wrap-around shows.`
+          : 'This run never moves, so there is no envelope to draw round it.',
     };
   }
   if (line.kind === 'wavelet') {
@@ -1099,6 +1142,32 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
         // others, and at a third it disappeared into the grid on a phone.
         shades: [...under.map(() => 0.5), ...over.map(() => 1)],
       };
+    }
+    case 'envelope': {
+      const got = answered(line, scope);
+      if (!got || 'says' in got) return EMPTY;
+      /*
+       * The envelope above the data and its mirror below it.
+       *
+       * Both halves, because the envelope is the size of the wobble and a
+       * wobble goes both ways: one line above a run that dips below zero would
+       * read as a ceiling rather than as the shape it is inside. Stepped, like
+       * every other sequence on this list, since there is no value between two
+       * samples to draw through.
+       */
+      const points: Point[] = [];
+      const over: Point[] = [];
+      const under: Point[] = [];
+      const last = Math.min(Math.floor(frame.x1), got.upto ?? Infinity);
+      for (let n = Math.max(0, Math.ceil(frame.x0)); n <= last && points.length < 2048; n += 1) {
+        const size = got.at(n);
+        const raw = got.data?.[n];
+        if (raw !== undefined && Number.isFinite(raw)) points.push({ x: n, y: raw });
+        if (!Number.isFinite(size)) continue;
+        over.push({ x: n - 0.5, y: size }, { x: n + 0.5, y: size });
+        under.push({ x: n - 0.5, y: -size }, { x: n + 0.5, y: -size });
+      }
+      return { paths: over.length ? [over, under] : [], points };
     }
     case 'wavelet': {
       const got = answered(line, scope);
@@ -1593,6 +1662,15 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'Where the jump was',
     says: 'A wavelet: which scales a run wobbles at, and where — the part a spectrum loses.',
     lines: ['wavelet([1, 1, 2, 1, 1, 9, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2], 2)'],
+  },
+  {
+    name: 'A wobble that fades',
+    says: 'A Hilbert transform: the shape a wobble is wobbling inside, moment by moment.',
+    // Sixteen rather than the hundred and twenty-eight this is interesting at,
+    // because an example opens on the ten-by-ten window every other one does
+    // and a run longer than the window would show a tenth of itself and read
+    // as a flat line. Press fit, or ask for more, and it is the same thing.
+    lines: ['hilbert(e^{-n/5}\\cos(n), 16)'],
   },
   {
     name: 'A flow',

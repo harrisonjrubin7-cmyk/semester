@@ -514,7 +514,8 @@ export function Grapher() {
         And <code>{'dft([1, 0, -1, 0])'}</code> is the transform that runs on data rather than on a
         formula — the frequencies a run of numbers is made of — while{' '}
         <code>{'wavelet([…], 2)'}</code> says which scales it wobbles at and, unlike a spectrum,
-        where. It takes the same notation the Write tab draws, so a formula you kept can be pasted
+        where, and <code>{'hilbert([…])'}</code> draws the envelope a wobble lives inside, moment by
+        moment. It takes the same notation the Write tab draws, so a formula you kept can be pasted
         in as it is.
       </div>
       <div style={{ marginTop: 'var(--sp-6)' }}>
@@ -585,6 +586,7 @@ function Row({
     reading.kind === 'sequence' ||
     reading.kind === 'bins' ||
     reading.kind === 'wavelet' ||
+    reading.kind === 'envelope' ||
     reading.kind === 'surface';
   /** Whether it puts ink of its own on the picture — see the swatch below. */
   const inked = drawn && reading.kind !== 'start';
