@@ -22,6 +22,7 @@ import { download } from '../lib/deliver';
 import { docx, type Picture } from '../lib/docx';
 import { addFile, getFile, listFiles, settled, type Settled } from '../lib/files';
 import { fromDocx } from '../lib/docxin';
+import { newId } from '../lib/idb';
 import { pictureLike, sizeOf } from '../lib/imagesize';
 import {
   BLOCK_LABEL,
@@ -39,6 +40,7 @@ import {
   type Align,
   type Doc,
   type Line,
+  type Note,
 } from '../lib/document';
 import { filled } from '../lib/sheet';
 import { TEMPLATES, fromTemplate } from '../lib/doctemplates';
@@ -1659,12 +1661,89 @@ function BlockCard({
         >
           ↓
         </SmallButton>
+        <SmallButton
+          label={`Add a note to this ${BLOCK_LABEL[block.kind].toLowerCase()}`}
+          onClick={() =>
+            onChange({
+              ...block,
+              notes: [
+                ...(block.notes ?? []),
+                { id: newId('note'), text: '', at: Date.now(), done: false },
+              ],
+            })
+          }
+        >
+          ✎
+        </SmallButton>
         <SmallButton label={`Remove this ${BLOCK_LABEL[block.kind].toLowerCase()}`} onClick={onRemove}>
           ×
         </SmallButton>
       </div>
       <BlockEditor block={block} onChange={onChange} />
+      <Notes block={block} onChange={onChange} />
     </Blueprint>
+  );
+}
+
+/**
+ * The notes against one block, under it.
+ *
+ * Under rather than beside, on the card: a margin needs a margin, and the
+ * editor is a single column on a phone. The page view is where they sit in
+ * the margin, which is where they are actually read — see `Paper`.
+ *
+ * A note is struck through rather than hidden when it is done. Hiding it
+ * would make the tick a delete with an extra step, and the reason to tick
+ * instead of deleting is to be able to see you dealt with it.
+ */
+function Notes({ block, onChange }: { block: Block; onChange: (next: Block) => void }) {
+  const notes = block.notes ?? [];
+  if (notes.length === 0) return null;
+
+  const set = (next: Note[]) => onChange({ ...block, notes: next.length ? next : undefined });
+
+  return (
+    <div
+      style={{
+        marginTop: 'var(--sp-5)',
+        paddingTop: 'var(--sp-5)',
+        borderTop: '1px solid var(--app-line)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--sp-3)',
+      }}
+    >
+      {notes.map((note, i) => (
+        <div key={note.id} style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
+          <input
+            type="checkbox"
+            checked={note.done}
+            onChange={(e) =>
+              set(notes.map((n, j) => (j === i ? { ...n, done: e.target.checked } : n)))
+            }
+            aria-label={`${note.text.trim() || `Note ${i + 1}`} — dealt with`}
+          />
+          <input
+            className="input"
+            value={note.text}
+            onChange={(e) =>
+              set(notes.map((n, j) => (j === i ? { ...n, text: e.target.value } : n)))
+            }
+            placeholder="A note to yourself about this block"
+            aria-label={`Note ${i + 1}`}
+            style={{
+              flex: 1,
+              height: 34,
+              fontSize: 'var(--type-sm)',
+              textDecoration: note.done ? 'line-through' : undefined,
+            }}
+          />
+          <SmallButton label={`Remove note ${i + 1}`} onClick={() => set(notes.filter((_, j) => j !== i))}>
+            ×
+          </SmallButton>
+        </div>
+      ))}
+    </div>
   );
 }
 

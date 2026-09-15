@@ -90,6 +90,18 @@ describe('the rows that print', () => {
     'components/StartToday.tsx',
     'screens/Ahead.tsx',
     'screens/Calendar.tsx',
+    /*
+     * A unit's name, on the printed guide.
+     *
+     * Read mode is an accordion, so each unit's heading is the button that
+     * opens it — which is the same collision this list exists for. Without
+     * the name, a printed guide is bodies under nothing: the cards for unit
+     * one run straight into the cards for unit two with no line saying where
+     * one ended. The two controls *inside* each unit — Drill this unit, Add
+     * to this unit — are not named here and stay off the page, which is the
+     * line this row is on the right side of.
+     */
+    'screens/Guide.tsx',
     'screens/Runway.tsx',
   ];
 

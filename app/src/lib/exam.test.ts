@@ -15,6 +15,7 @@ import {
   paper,
   readExam,
   readSeed,
+  outstanding,
   result,
   seedCode,
   shapeFor,
@@ -104,6 +105,49 @@ describe('marksFor', () => {
     expect(marksFor(written, { given: 'my answer', mark: 'partly' })).toBe(3);
     expect(marksFor(written, { given: 'my answer', mark: 'right' })).toBe(6);
     expect(marksFor(written, { given: 'my answer', mark: 'wrong' })).toBe(0);
+  });
+});
+
+describe('outstanding', () => {
+  const paper = [q({ id: 'a' }), q({ id: 'b', kind: 'short', options: [], answer: 'Key' }), q({ id: 'c' })];
+
+  it('numbers the ones with nothing in them', () => {
+    // Numbers rather than ids: "question 3" is what the paper calls it and
+    // what the jump link has to say.
+    expect(outstanding(paper, { a: { given: '0' } })).toEqual({ blank: [2, 3], flagged: [] });
+  });
+
+  it('counts whitespace as blank', () => {
+    /*
+     * The version of this feature that does not do this is the one that lets
+     * somebody hand in a question they thought they had done.
+     */
+    expect(outstanding(paper, { b: { given: '   ' } }).blank).toEqual([1, 2, 3]);
+  });
+
+  it('lists what was flagged, answered or not', () => {
+    const answers: Record<string, Answer> = {
+      a: { given: '0', flagged: true },
+      b: { given: '', flagged: true },
+    };
+    expect(outstanding(paper, answers)).toEqual({ blank: [2, 3], flagged: [1, 2] });
+  });
+
+  it('puts a question that is both in both lists', () => {
+    // Hiding it from one would make the counts stop adding up against the
+    // paper in front of them.
+    const both = outstanding(paper, { b: { given: '', flagged: true } });
+    expect(both.blank).toContain(2);
+    expect(both.flagged).toContain(2);
+  });
+
+  it('is empty on a finished paper', () => {
+    const done = { a: { given: '0' }, b: { given: 'an answer' }, c: { given: '1' } };
+    expect(outstanding(paper, done)).toEqual({ blank: [], flagged: [] });
+  });
+
+  it('calls everything blank before anything is touched', () => {
+    expect(outstanding(paper, {}).blank).toEqual([1, 2, 3]);
   });
 });
 
