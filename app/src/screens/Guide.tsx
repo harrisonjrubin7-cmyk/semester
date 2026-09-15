@@ -28,7 +28,7 @@ import { hasTranscript, load, readingTime, speaker, type Transcript } from '../l
 /** The note under a heading saying part of what follows arrived later. */
 const SINCE = {
   fontSize: 'var(--type-sm)',
-  opacity: 0.55,
+  color: 'var(--app-dim)',
   lineHeight: 'var(--leading-relaxed)',
   marginBottom: 'var(--sp-4)',
 } as const;
@@ -232,7 +232,7 @@ export function Guide() {
               <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25, marginTop: 'var(--sp-1)' }}>
                 {weak.unit.name}
               </span>
-              <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
                 {weak.unit.mastery}% — drill this one first
               </span>
             </span>
@@ -650,7 +650,7 @@ function Watch() {
                   style={{
                     display: 'block',
                     fontSize: 'var(--type-xs)',
-                    opacity: 0.55,
+                    color: 'var(--app-dim)',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
@@ -781,7 +781,7 @@ function Decks() {
                 style={{
                   display: 'block',
                   fontSize: 'var(--type-xs)',
-                  opacity: 0.55,
+                  color: 'var(--app-dim)',
                   fontFamily: 'var(--font-heading)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
@@ -911,7 +911,7 @@ function Documents() {
       </button>
 
       <div
-        style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}
+        style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}
       >
         {prebuilt ? (
           <>
@@ -1345,7 +1345,7 @@ function Script({ courseId, episodeId }: { courseId: string; episodeId: string }
                 style={{
                   flex: 'none',
                   fontSize: 'var(--type-xs)',
-                  opacity: 0.55,
+                  color: 'var(--app-dim)',
                   letterSpacing: '0.08em',
                 }}
               >

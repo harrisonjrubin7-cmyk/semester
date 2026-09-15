@@ -93,7 +93,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'var(--type-xs)',
                 letterSpacing: '0.08em',
-                opacity: 0.55,
+                color: 'var(--app-dim)',
                 width: 46,
                 flex: 'none',
               }}

@@ -636,7 +636,7 @@ export function AddMaterial() {
               </div>
             )}
             {told.because.length > 0 && (
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 because: {told.because.map((b) => `“${b}”`).join(', ')}
               </div>
             )}
@@ -699,14 +699,14 @@ export function AddMaterial() {
               >
                 {studying ? 'Reading it…' : 'Make cards and terms from this'}
               </ActionButton>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 {provider()} reads what you pasted or attached and writes cards and definitions from
                 what is in it — nothing from general knowledge. Optional: the text is kept as the
                 unit's notes either way.
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               Turning a reading into cards needs {provider()}. Sign in to use the shared key, or add
               your own under Connect → Claude. The text is still kept as the unit's notes.
             </div>
@@ -791,7 +791,7 @@ export function AddMaterial() {
             </Blueprint>
           ))}
           {parsed.cards.length > 3 && (
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55 }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
               and {parsed.cards.length - 3} more
             </div>
           )}
@@ -908,7 +908,7 @@ export function AddMaterial() {
           <span style={{ opacity: 0.5, flex: 'none' }}>{formatBytes(f.size)}</span>
         </div>
       ))}
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         Images become figures for the unit. A PDF, a Word file or a text file is read into the box
         above as well as attached, so what is in it can become cards. Everything stays on this
         device.
@@ -1002,7 +1002,7 @@ export function AddMaterial() {
                   style={{
                     display: 'block',
                     fontSize: 'var(--type-xs)',
-                    opacity: 0.55,
+                    color: 'var(--app-dim)',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',

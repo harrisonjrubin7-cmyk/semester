@@ -15,6 +15,7 @@
     "test:watch": "vitest",
     "test:zones": "TZ=America/Chicago vitest run && TZ=Pacific/Kiritimati vitest run",
     "lint:labels": "node scripts/labels.mjs",
+    "sweep:contrast": "node scripts/contrast-sweep.mjs",
     "transcripts": "node scripts/transcripts.mjs",
     "check:university": "tsc -p tsconfig.university.json",
     "dev:university": "node --env-file=server/institution/.env server/institution/start.ts"

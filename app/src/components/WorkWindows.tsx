@@ -135,7 +135,7 @@ export function WorkWindows() {
             />
           </div>
 
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
             {tidy(w)
               ? `${daysLine(w.days)} · ${spanLine(w)} · ${hoursAWeek([w])} hours a week`
               : 'Pick at least one day, and an end after the start. Counted as nothing until you do.'}
@@ -171,7 +171,7 @@ export function WorkWindows() {
       </div>
 
       {windows.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           {hoursAWeek(windows)} hours a week before anything is promised. Nothing is ever scheduled
           into a window — this only says how many hours are actually there.
         </div>

@@ -219,6 +219,60 @@ export function placeFor(screen: Screen, at: Where): Action[] {
 }
 
 /**
+ * What a drag of the strip's *runs* moves, and what it is called.
+ *
+ * The strip has always been draggable by the tab (`rearrange`), and that is a
+ * different question from this one. Dragging a tab asks "where does this tab
+ * go, and whose work is it now"; dragging a group asks "where does this whole
+ * run go", and the answer must take its tabs with it — a group that came
+ * apart because somebody moved it would not be a group.
+ *
+ * A lane's id is the group's id, or the tab's own when it is in no group.
+ * They cannot collide: a group id is minted by `makeGroup` and a tab id by
+ * `tabId`, and both are prefixed. Ids rather than indices because the strip
+ * is rewritten under the drag by every navigation in another tab.
+ */
+export function laneId(lane: Lane): string {
+  return lane.group ? lane.group.id : lane.seats[0].tab.id;
+}
+
+/** The strip's runs, in order, as the ids a drag moves. */
+export function laneOrder(strip: Strip): string[] {
+  return lanes(strip).map(laneId);
+}
+
+/**
+ * The strip with its runs in this order.
+ *
+ * Expanding each lane back to its tabs is the whole operation: a group's tabs
+ * move as one because they are emitted as one, and `tidy` then holds
+ * everything it always holds — pinned first, a group in one contiguous run,
+ * and the tab you are on still the tab you are on.
+ *
+ * An order naming a lane the strip does not have, or missing one it does, is
+ * answered with the strip unchanged. That is not defensiveness for its own
+ * sake: the strip can be rewritten by another tab's navigation while a finger
+ * is still down, and a drop that half-applied a stale order would lose tabs.
+ */
+export function arrangeLanes(strip: Strip, order: string[]): Strip {
+  const runs = lanes(strip);
+  if (order.length !== runs.length) return strip;
+  const byId = new Map(runs.map((lane) => [laneId(lane), lane]));
+  const moved: AppTab[] = [];
+  for (const id of order) {
+    const lane = byId.get(id);
+    if (!lane) return strip;
+    byId.delete(id);
+    for (const seat of lane.seats) moved.push(seat.tab);
+  }
+  if (moved.length !== strip.tabs.length) return strip;
+  if (moved.every((t, i) => t === strip.tabs[i])) return strip;
+  const on = strip.tabs[clamp(strip, strip.at)];
+  const at = Math.max(0, moved.findIndex((t) => t.id === on?.id));
+  return tidy({ ...strip, tabs: moved, at });
+}
+
+/**
  * A group: several tabs under one name, in one colour.
  *
  * The strip solved "I was reading the guide, let me check when it is due" and

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DIMMED_ROW, secondLine } from '../lib/dim';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Dictate } from '../components/Dictate';
@@ -244,7 +244,18 @@ export function Exam() {
                   borderRadius: 'var(--r-md)',
                   border: `1px solid ${on && !unavailable ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                   background: on && !unavailable ? 'var(--app-accent-wash)' : 'transparent',
-                  opacity: unavailable ? DIMMED_ROW : 1,
+                  /*
+                    Said once. `.bare:disabled` already answers `disabled`
+                    with `--app-faint`, which is held to the 3:1 a switched-off
+                    control is meant to read at, and this said it a second time
+                    with `DIMMED_ROW` on top. The two do not average, they
+                    multiply: 0.42 of ink dimmed again to 0.64 of itself is
+                    0.27, and "A real paper" rendered at 2.14:1 on Ink — under
+                    the bar the faint rung exists to hold, and a number nobody
+                    picked. It is the exact failure `lib/dim.ts` was written
+                    about, one line below a comment already refusing to dim the
+                    blurb twice for the same reason.
+                  */
                 }}
               >
                 <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{f.label}</span>
@@ -270,7 +281,7 @@ export function Exam() {
               .filter(Boolean)
               .join(', ')}
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 5 }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5 }}>
             {shape.points} marks · {shape.minutes} minutes
           </div>
         </Blueprint>
@@ -463,7 +474,7 @@ export function Exam() {
                               : 'transparent',
                       }}
                     >
-                      <span style={{ flex: 'none', opacity: 0.55, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}>
+                      <span style={{ flex: 'none', color: 'var(--app-dim)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}>
                         {letter(n)}
                       </span>
                       <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.4 }}>
@@ -513,7 +524,7 @@ export function Exam() {
                   </div>
                 ) : (
                   <>
-                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, margin: '9px 0 6px' }}>
+                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', margin: '9px 0 6px' }}>
                       Mark it yourself against the key.
                     </div>
                     <Segmented
@@ -630,7 +641,7 @@ export function Exam() {
               >
                 {seedCode(seed)}
               </div>
-              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 Enter it on the setup screen to sit these exact questions again, or give it to
                 somebody in your class and compare marks on the same paper.
               </div>

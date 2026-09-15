@@ -59,7 +59,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
         >
           <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
             {h.title}
-            {h.meta ? <span style={{ opacity: 0.55 }}> · {h.meta}</span> : null}
+            {h.meta ? <span style={{ color: 'var(--app-dim)' }}> · {h.meta}</span> : null}
           </span>
           <span style={{ flex: 'none', fontSize: 'var(--type-sm)', opacity: 0.7 }}>{h.time}</span>
         </div>

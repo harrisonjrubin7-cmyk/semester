@@ -61,7 +61,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
           >
             Look at the sample semester
           </ActionButton>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-4)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-4)' }}>
             {SEED_SUMMARY.courses} real courses — {SEED_SUMMARY.units} units, {SEED_SUMMARY.cards}{' '}
             cards and {SEED_SUMMARY.lessons} narrated lessons — to see what a finished one looks
             like. Switch it off again in Settings.

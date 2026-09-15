@@ -291,6 +291,19 @@ export interface AppNotification {
 // yourself, and the app keeps the two visibly apart.
 
 /** A task you added — not something a syllabus asked for. */
+/**
+ * One piece of a task.
+ *
+ * `TaskStep` rather than `Step`, which this file already uses for a worked
+ * example's line in a study guide — a different thing in a different domain,
+ * and the collision is only in the word.
+ */
+export interface TaskStep {
+  id: string;
+  text: string;
+  done: boolean;
+}
+
 export interface PersonalTask {
   id: string;
   title: string;
@@ -299,7 +312,33 @@ export interface PersonalTask {
   /** Free text — "6:30 PM", "before work". Never parsed. */
   time: string;
   note: string;
+  /**
+   * Whether it is finished.
+   *
+   * On a repeating task this means the *series* is finished, which happens
+   * only when the rule runs out — ticking one off before then moves `date` to
+   * the next occurrence and leaves this false. See `tick` in `lib/chores.ts`
+   * for why that is the model rather than a list of completed dates.
+   */
   done: boolean;
+  /**
+   * The rule that brings it back — a weekly reading, a Sunday reset, laundry
+   * every fortnight. Absent is once. See `lib/repeat.ts`.
+   *
+   * The same `Repeat` an appointment carries, deliberately: "every weekday
+   * until the end of term" is one idea, and a second rule engine for tasks
+   * would be the same five cases written twice and diverging on the sixth.
+   */
+  repeat?: Repeat;
+  /**
+   * The pieces it breaks into, in order. Absent or empty is a task with none.
+   *
+   * To Do calls these Steps and Google Tasks calls them subtasks; both stop
+   * at one level, and so does this. A step that could itself have steps is an
+   * outline, and an outline of work is a document — which this app already
+   * has a better editor for than a list row could ever be.
+   */
+  steps?: TaskStep[];
   created: number;
   /** Filed against a course, or null when it is nothing to do with school. */
   courseId: CourseId | null;
@@ -337,9 +376,31 @@ export interface Appointment {
    * to know about the rule.
    */
   date: string;
-  /** Minutes past midnight, so it sorts into the rail with classes. */
-  at: number;
-  /** How the time is written — "6:30p". */
+  /**
+   * Minutes past midnight, so it sorts into the rail with classes — or `null`
+   * when it is an all-day entry.
+   *
+   * `null` rather than a separate `allDay` flag, because that is already what
+   * "no hour" means everywhere else in this app: `FeedEvent.at` is nullable
+   * for exactly this, `campusHours` reads `at !== null` to decide whether a
+   * thing can be drawn on a grid at all, and a listing whose time is "TBD"
+   * takes the same route. A boolean beside a number would be a second way to
+   * say one thing, and the two would disagree the first time something wrote
+   * one without the other.
+   */
+  at: number | null;
+  /**
+   * How many days it covers, counting the first. Absent is one.
+   *
+   * Only meaningful when `at` is null. A timed entry that ran past midnight
+   * would have to be drawn as a block in two different hour columns, and
+   * neither Google Calendar nor Outlook does that either — both move anything
+   * spanning days up into the all-day banner, which is where this puts it too.
+   * So the rule is the one those clients already taught everybody: **a span is
+   * an all-day span.**
+   */
+  days?: number;
+  /** How the time is written — "6:30p", or "All day". */
   time: string;
   /**
    * How long it runs, in minutes.
@@ -377,6 +438,15 @@ export interface Note {
   itemId?: string | null;
   /** Ids of files attached to this note, held in IndexedDB. */
   fileIds: string[];
+  /**
+   * Kept at the top of the list.
+   *
+   * The list is ordered by when a note was last touched, which is the right
+   * default and is exactly wrong for the one note somebody is living in for a
+   * fortnight: every other note they open pushes it down. Keep, OneNote and
+   * Apple Notes all answer this the same way, with a pin.
+   */
+  pinned?: boolean;
 }
 
 /**

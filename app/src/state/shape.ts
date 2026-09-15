@@ -52,6 +52,7 @@ import { readDrop } from '../lib/drop';
 import { DEFAULT_BUDGET } from '../lib/clash';
 import type { Sitting } from '../lib/sitting';
 import type { FolderId, MailDraft, Mark, Marks } from '../lib/mailbox';
+import type { Rule } from '../lib/mailrules';
 import type { NewSource, Source } from '../lib/sources';
 import type { Doc } from '../lib/document';
 import type { Sheet } from '../lib/sheet';
@@ -713,6 +714,16 @@ export interface Persisted {
    * mailbox reads every message through these; Gmail never hears about them.
    */
   mailMarks: Marks;
+  /**
+   * Searches you kept, and what they do to what they find.
+   *
+   * Yours rather than the provider's: Gmail's own filters live in the account
+   * and this app has the account read-only, so these are this mailbox's and
+   * are applied here. They sit *under* `mailMarks` when a message is read —
+   * see `under` in `lib/mailrules.ts` for why that ordering is what stops a
+   * rule from undoing something you just did.
+   */
+  mailRules: Rule[];
   /** Where the message being read sits beside the list, Outlook's three ways. */
   mailPane: 'right' | 'bottom' | 'off';
 }
@@ -1166,6 +1177,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   extraLinks: [],
   mailDrafts: [],
   mailMarks: {},
+  mailRules: [],
   mailPane: 'right',
   courses: [],
   /**
@@ -1450,6 +1462,7 @@ export function loadPersisted(): Persisted {
       extraLinks: list(saved.extraLinks),
       mailDrafts: list(saved.mailDrafts),
       mailMarks: record(saved.mailMarks),
+      mailRules: list(saved.mailRules),
       mailPane: saved.mailPane === 'bottom' || saved.mailPane === 'off' ? saved.mailPane : 'right',
       // Not `list()`: that checks the list is a list and casts what is in it.
       // The catalogue is built from these before any screen is drawn, so there
@@ -1633,6 +1646,7 @@ export function pickPersisted(state: State): Persisted {
     extraLinks: state.extraLinks,
     mailDrafts: state.mailDrafts,
     mailMarks: state.mailMarks,
+    mailRules: state.mailRules,
     mailPane: state.mailPane,
     courses: state.courses,
     sample: state.sample,
@@ -2099,6 +2113,13 @@ export type Action =
    */
   | { type: 'editTask'; id: string; patch: Partial<Omit<PersonalTask, 'id' | 'created'>> }
   | { type: 'toggleTask'; id: string }
+  /*
+   * The steps inside a task, one at a time. See the note over `toggleStep` in
+   * `state/slices/mine.ts` for why these are not `editTask` with a new array.
+   */
+  | { type: 'toggleStep'; id: string; stepId: string }
+  | { type: 'addStep'; id: string; text: string }
+  | { type: 'dropStep'; id: string; stepId: string }
   | { type: 'deleteTask'; id: string }
   | { type: 'addAppointment'; appointment: Omit<Appointment, 'id' | 'created'> }
   /*
@@ -2126,6 +2147,7 @@ export type Action =
   | { type: 'updateNote'; id: string; patch: Partial<Pick<Note, 'title' | 'body' | 'courseId' | 'itemId'>> }
   | { type: 'attachFile'; noteId: string; fileId: string }
   | { type: 'detachFile'; noteId: string; fileId: string }
+  | { type: 'pinNote'; id: string }
   | { type: 'deleteNote'; id: string }
   /* ── The mailbox ─────────────────────────────────────────────────────── */
   /** Hand a message to the screen that reads announcements into dates. */
@@ -2157,6 +2179,13 @@ export type Action =
    * and there was no way to add one. Toggling, because a label button that
    * only ever adds is a label you cannot take off.
    */
+  /**
+   * Write a rule, or change one. The whole rule each time rather than a patch:
+   * a rule is five short fields edited in one form, and a patch would let a
+   * half-saved one exist.
+   */
+  | { type: 'putMailRule'; rule: Rule }
+  | { type: 'dropMailRule'; id: string }
   | { type: 'labelMail'; ids: string[]; label: string }
   /** Open the composer on a new draft, or `null` to shut it. */
   | { type: 'composeMail'; draft: Partial<MailDraft> | null }

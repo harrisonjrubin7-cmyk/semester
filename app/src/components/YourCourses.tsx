@@ -148,7 +148,7 @@ export function YourCourses() {
                       this, "ECON 1020" broke across two lines and shoved the
                       name into the middle of the row. The name gives way to
                       it instead, which is the same rule the Study list uses. */}
-                  <span style={{ opacity: 0.55, flex: 'none', whiteSpace: 'nowrap' }}>
+                  <span style={{ color: 'var(--app-dim)', flex: 'none', whiteSpace: 'nowrap' }}>
                     {c.code}
                   </span>
                   <span

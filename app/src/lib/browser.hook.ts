@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import {
   MAX_TABS,
   add,
+  arrangeLanes,
   asked,
   blank,
   close,
@@ -286,6 +287,17 @@ export function forgetWhatClosed(): void {
 export function muteTab(id: string, muted: boolean): void {
   const at = strip().tabs.findIndex((t) => t.id === id);
   if (at >= 0) put(mute(strip(), at, muted));
+}
+
+/**
+ * Put the strip's runs in this order — a group dragged by its head.
+ *
+ * Separate from `moveTab` because it answers a different question. Moving a
+ * tab can change which work it belongs to; moving a run never does, and a
+ * group that came apart because somebody dragged it would not be a group.
+ */
+export function moveLanes(order: string[]): void {
+  put(arrangeLanes(strip(), order));
 }
 
 /** Keep a tab at the front of the strip, as its glyph. Or let it go. */

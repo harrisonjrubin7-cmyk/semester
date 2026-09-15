@@ -140,9 +140,11 @@ await page.waitForTimeout(1500);
 
 ## 5 · Choose the layout and the navigation
 
-These are two independent axes (see `lib/types.ts` on `NavMode` and
+These are independent axes (see `lib/types.ts` on `NavMode` and
 `components/shell/useShell.ts` on `Shell`), and every combination is a valid
-app. A change to one is not exercised by looking at the other.
+app. A change to one is not exercised by looking at the other. The two below
+are the ones worth seeding on most runs; `directory` is a third, and the
+table says where it lives.
 
 Seed them before the first load — much faster than clicking through
 Settings. **`schemaVersion` is part of the seed, not decoration:**
@@ -157,13 +159,44 @@ await ctx.addInitScript(() => {
 });
 ```
 
-| Setting | Values in code | Labels on screen |
-|---|---|---|
-| `shell` | `plain` · `grouped` · `soft` · `list` · `tiles` · `hue` | Drawn · Grouped · Soft · A list · Tiles · Hue |
-| `nav` | `tabs` · `feed` · `springboard` · `shelves` · `workspace` · `guides` | Tab bar · One feed · Home screen · Shelves · Workspace · Study guides |
+| Setting | Source | Values in code | Labels on screen |
+|---|---|---|---|
+| `shell` | `SHELLS` | `plain` · `grouped` · `soft` | Drawn · Grouped · Soft |
+| `nav` | `NAVS` | `tabs` · `feed` · `springboard` · `shelves` · `workspace` · `guides` | Tab bar · One feed · Home screen · Shelves · Workspace · Study guides |
 
-Six and six, so **thirty-six pairings**, and each is a working app. A change
+Three and six, so **eighteen pairings**, and each is a working app. A change
 to one is not exercised by looking at another.
+
+**`list`, `tiles` and `hue` are not shells,** though this table said they were
+for several releases. They are two other settings entirely, and seeding any of
+them as `shell` falls through to plain without a word:
+
+| Setting | Source | Values | What it is |
+|---|---|---|---|
+| `directory` | `DIRECTORIES` | `list` · `tiles` · `''` | How the directory of every screen is drawn. `''` is *nobody has chosen*, and `directoryOf` then answers from the layout — tiles under soft, the list otherwise. Not a consequence of the shell: somebody on soft who asked for the list keeps it. |
+| `accent` | `ACCENTS` | `sterling`, … | The colour, by name. `hue` is not one of its values — it is the id `accentFromHue()` stamps on a *dragged* colour, which is seeded as its own number: `hue` (0–360, `-1` for "use the named accent"). So `hue: 210` is a real seed and `accent: 'hue'` is not. |
+
+So there are three axes here, not one, and the old row had flattened all
+three into the shell's. That is the same failure this section warns about one
+paragraph down, committed by the warning's own table: every wrong value in it
+came up plain, working, and silent.
+
+Measured, reading the directory's own view toggle: `shell: 'tiles'`, `'hue'`
+and `'list'` each drew *exactly* what `shell: 'plain'` drew, while
+`shell: 'soft'` differed — the three were falling through, as claimed. The
+sting is in `tiles`: seeded as a shell it produces **the list**, because plain
+is not soft and `directoryOf` answers list for everything that is not. The
+wrong seed does not merely fail to work, it draws the opposite of its own
+name. Seed it on the right axis — `directory: 'tiles'` — and it draws tiles
+under plain, and `directory: 'list'` keeps the list under soft.
+
+The probe matters as much as the seed. **Both** view buttons carry
+`aria-pressed` — the list one as `aria-pressed={!grid}` — so a probe asking
+"is any of them pressed" is true in every state and reports tiles forever.
+Read the one named `Show as a grid`. The first run of this check reported all
+seven cases identical and looked like proof the seed was dead; it was the
+probe that was dead. Point a probe at the fault it is meant to see before you
+trust the run it is in.
 
 **The default is `workspace`,** not the tab bar (`state/shape.ts`). So a run
 that seeds nothing is a run in the workspace shell — a browser-shaped strip
@@ -174,9 +207,14 @@ believing you are looking at the tab bar.
 moved without this file noticing, and in both directions. `NAVS` was four
 when this was written, six once the Workspace and Study-guides ports landed,
 then seven when a `browser` nav arrived — and six again when that nav merged
-back into the workspace and was deleted from the union. `SHELLS` was three
-here for far longer than it was three in the code. `NAVS` in `lib/look.ts` is
-the list; `SHELLS` beside it is the other axis.
+back into the workspace and was deleted from the union. `SHELLS` has been
+three throughout; it was this file that claimed six, by folding `directory`
+and `accent` into it. `NAVS` in `lib/look.ts` is the list; `SHELLS` beside it
+is the other axis, and `DIRECTORIES` beside *that* is a third.
+
+The instruction survived being wrong, which is the argument for it: following
+it is what turned up the six-shell row, and the row is what the instruction
+was for. Check the unions on the day you seed them.
 
 **A value that no longer exists fails silently, which is why this matters.**
 `useShell` returns plain for anything it does not recognise and the nav

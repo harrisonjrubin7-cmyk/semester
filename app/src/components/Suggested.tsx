@@ -141,7 +141,7 @@ export function Suggested() {
               <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
                 {p.role}
               </div>
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {p.org}
               </div>
               <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
