@@ -23,6 +23,7 @@ import { docx, type Picture } from '../lib/docx';
 import { addFile, getFile, listFiles, settled, type Settled } from '../lib/files';
 import { fromDocx } from '../lib/docxin';
 import { newId } from '../lib/idb';
+import { pdfFile } from '../lib/pdfout';
 import { pictureLike, sizeOf } from '../lib/imagesize';
 import {
   BLOCK_LABEL,
@@ -573,6 +574,21 @@ function Editor({ doc }: { doc: Doc }) {
     }
   };
 
+  /**
+   * The PDF, written by this app rather than by the print dialog.
+   *
+   * Synchronous, unlike the Word file: there is no zip to build and nothing
+   * to fetch, because a picture's bytes do not go in — see `lib/pdfout.ts`.
+   */
+  const savePdf = () => {
+    download({
+      name: docFileName(doc.title, 'pdf'),
+      body: pdfFile(doc),
+      mime: 'application/pdf',
+    });
+    say('PDF saved.');
+  };
+
   const saveMarkdown = () => {
     download({
       name: docFileName(doc.title, 'md'),
@@ -612,6 +628,12 @@ function Editor({ doc }: { doc: Doc }) {
             id: 'file.docx',
             label: busy ? 'Writing the Word file…' : 'Download as Word (.docx)',
             run: empty || busy ? undefined : () => void saveWord(),
+          },
+          {
+            id: 'file.pdf',
+            label: 'Download as PDF (.pdf)',
+            hint: 'Made here, so it is the same file on every machine.',
+            run: empty ? undefined : savePdf,
           },
           {
             id: 'file.md',

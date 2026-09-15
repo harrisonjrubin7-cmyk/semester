@@ -695,8 +695,34 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   margin, so it drops them and keeps every word.
 - ~~**No version history and no restore.** No autosave indicator.~~ —
   **closed.** `lib/docversions.ts`, and the History panel in `screens/Write.tsx`.
-- No *generated* PDF — though File → "Print, or save as PDF" is there and is
-  how a browser makes one. ~~No DOCX *import*~~ — **closed**, in
+- ~~No *generated* PDF~~ — **closed**, in `lib/pdf.ts` (measure and break) and
+  `lib/pdfout.ts` (place and write). File → "Print, or save as PDF" is still
+  there and is still how most people will make one; this is the other kind, a
+  file made with no dialog that is byte-identical on every machine. The print
+  route depends on the browser — Chrome and Safari paginate the same HTML
+  differently, a phone often has no print-to-PDF at all, and neither can be
+  attached to an email without somebody standing there.
+  Written without a library, for the reason `docx.ts` gives about OOXML.
+  **A PDF does not wrap text**: nothing in the file says how wide a paragraph
+  is, so the writer decides where every line ends and places each one — which
+  is why `pdfwidths.data.ts` exists. It holds Adobe's published metrics for
+  the standard fourteen fonts, generated rather than typed, because a table of
+  three thousand numbers entered by hand is a table with a mistake in it. The
+  fonts are the ones a reader already has (Helvetica, Times, Courier), so
+  nothing is embedded and the file is a few kilobytes; the five
+  `lib/doclayout.ts` offers map onto them, a serif to a serif.
+  Every placement goes through `Pen.spend`, which is the only thing that
+  knows where the pen is — a table row asks for its whole height at once and
+  is therefore never cut in half by a page break.
+  **What it cannot carry:** an equation (the app holds LaTeX and draws it with
+  KaTeX; placing that is a typesetting engine, so the LaTeX prints as typed),
+  a picture (its bytes are in IndexedDB and this is a pure function of the
+  document — the caption still prints, so a figure is visibly not here rather
+  than silently missing), and a margin note, which never prints anywhere.
+  Characters WinAnsi has no byte for become what they meant: `☒` is `[x]`,
+  `○` is `o`. The cross-reference table is byte offsets, so every string is
+  encoded Latin-1 — one UTF-8 accent and every offset after it is wrong and a
+  reader refuses the file outright. ~~No DOCX *import*~~ — **closed**, in
   `lib/docxin.ts`: headings, paragraphs, nested lists, checklists, tables,
   quotations, code, page breaks, dividers, pictures, alignment, and bold,
   italic, strike-through, monospace and links inside a line. It is a separate
@@ -888,11 +914,19 @@ Everything above that is not struck through, collected — so the next person
 reading this has one short list rather than a long one to re-check. Verified
 by grepping for each, not by re-reading the sentence.
 
+<<<<<<< HEAD
+**Documents** — "Open in Docs" from a study guide · a WYSIWYG surface (the
+marks are typed).
+(Code blocks, checkbox lists, images, horizontal rules, indent/outdent,
+alignment, `.docx` import, margin notes and a generated PDF were on this list
+and are done. Line spacing and margins were on it
+=======
 **Documents** — a generated
 PDF, as against the browser's print-to-PDF, which is there ·
 "Open in Docs" from a study guide · a WYSIWYG surface (the marks are typed).
 (Code blocks, checkbox lists, images, horizontal rules, indent/outdent,
 alignment, `.docx` import and margin notes were on this list and are done. Line spacing and margins were on it
+>>>>>>> origin/main
 and had already been built when it was written.)
 
 **Sheets** — nothing. Every entry this section listed is either built or was
