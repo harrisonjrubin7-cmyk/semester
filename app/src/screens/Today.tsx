@@ -1168,18 +1168,27 @@ const FEED_PARTS: Record<string, () => React.JSX.Element | null> = {
  *
  * ## Where the grip goes, and when it appears at all
  *
- * Beside the section's own first heading, found and measured rather than
- * assumed: these eighteen sections were written over months and head
- * themselves differently — `SectionLabel`, a kicker, or nothing at all — and
- * a grip pinned to a guessed offset would sit beside the title on some and in
- * mid-air on others.
+ * At the top of its section, in the flow, taking twenty-four pixels of its
+ * own. That is the second answer to this question. The first was to measure
+ * the section's own first heading and hang the handle in the margin above it,
+ * on the reasoning that eighteen sections written over months head themselves
+ * differently — `SectionLabel`, a kicker, or nothing at all — so a fixed
+ * offset would sit beside the title on some and in mid-air on others.
  *
- * Most of them are also silent most days: `Feed_since` draws nothing within a
- * sitting, `WorstDay` nothing on an ordinary fortnight. A grip floating above
- * a section that drew nothing would be a control for a thing that is not
- * there, so it appears only once the section has laid something out — which
- * is a measurement too, because whether a section is empty today is a
- * question only it can answer.
+ * True, and it bought a handle that could not be made big enough. The gap it
+ * hung in is about twenty pixels, WCAG 2.2's 2.5.8 wants 24×24 or 24px of
+ * clear space, and no overlay reaching out of twenty pixels can find either
+ * without reaching into the heading below — which on half of these sections
+ * is itself a button, and which it was measurably stealing presses from. A
+ * handle that takes its own room needs no measurement and can overlap
+ * nothing, so it does that instead.
+ *
+ * What is still measured is whether the section drew anything at all. Most of
+ * them are silent most days: `Feed_since` draws nothing within a sitting,
+ * `WorstDay` nothing on an ordinary fortnight. A handle above a section that
+ * drew nothing would be a control for a thing that is not there — and the
+ * measurement has to ignore the handle itself, or the handle is the thing it
+ * finds and every empty section keeps one for ever.
  */
 function FeedPart({
   id,
@@ -1192,29 +1201,32 @@ function FeedPart({
 }) {
   const box = useRef<HTMLElement>(null);
   const Part = FEED_PARTS[id];
-  /** Where the grip sits, or null while the section has drawn nothing. */
-  const [at, setAt] = useState<number | null>(null);
+  /** Whether this section has laid anything out — see the note above. */
+  const [drew, setDrew] = useState(false);
 
   useLayoutEffect(() => {
     const el = box.current;
     if (!el) return;
-    const place = () => {
-      // Its own first heading, and only the first: the kicker inside a card
-      // further down is that card's, and a section that moved when you took
-      // hold of a line in the middle of it would be a surprise.
-      const head = el.querySelector<HTMLElement>('.section-label, .kicker');
-      const seen = head ?? (el.firstElementChild as HTMLElement | null);
-      if (!seen || el.getBoundingClientRect().height === 0) {
-        setAt(null);
-        return;
-      }
-      setAt(seen.getBoundingClientRect().top - el.getBoundingClientRect().top);
+    const look = () => {
+      /*
+       * Anything but the handle.
+       *
+       * The question is whether the *section* drew something, and the handle
+       * is part of the section now rather than floating over it — so asking
+       * "is this section taller than nothing" would answer yes the moment the
+       * handle appeared, and the handle would keep itself alive on every
+       * section that draws nothing all term.
+       */
+      const drawn = [...el.children].some(
+        (c) => !c.classList.contains('grip') && c.getBoundingClientRect().height > 0,
+      );
+      setDrew((was) => (was === drawn ? was : drawn));
     };
-    place();
+    look();
     // A section can fill in after its first paint — a fetch, a timer, a store
     // change — and the grip has to arrive with it rather than at the next
     // render that happens to touch this component.
-    const watch = new ResizeObserver(place);
+    const watch = new ResizeObserver(look);
     watch.observe(el);
     return () => watch.disconnect();
   });
@@ -1225,70 +1237,48 @@ function FeedPart({
     <section
       ref={box}
       {...feed.zone(id, { style: { position: 'relative' } })}
-      aria-label={at === null ? undefined : label}
+      aria-label={drew ? label : undefined}
     >
-      {at === null ? null : (
+      {!drew ? null : (
         <button
           type="button"
           {...feed.grip(id, {
             /*
-             * `tap`, both ways, because this one really does stand alone.
+             * No `tap` class, because the handle is now the size a handle
+             * should be.
              *
-             * The drawn grip is 17×16 on a phone, which is the size the tap
-             * audit was about — a fingertip is 44px and does not shrink to
-             * meet a braille glyph. `tap` rather than `tap-x` or `tap-y`
-             * because the nearest other target is the next section's grip, a
-             * whole section away: there is room in every direction, which is
-             * the condition `app.css` names for using it.
+             * It was 17×16 with a `tap` overlay reaching 44×44 around it, and
+             * then `tap-x` reaching sideways only. Both were ways of buying a
+             * target for a glyph too small to be one, and the first was worse
+             * than the fault it fixed: a 44×44 box centred on the glyph
+             * reaches 22px below its middle, and what sits directly below is
+             * the heading — which on half of these sections *is* a button,
+             * 296×25, the full width of the column. Probed with
+             * `document.elementFromPoint` at 420×900, in the grip's own
+             * column: a press on the top 14 pixels of "Due today" and the top
+             * 8 of "Office hours worth going to" landed on the grip, so
+             * tapping a heading to fold its section started a drag hold
+             * instead.
+             *
+             * An overlay cannot fix that, because there is no free direction:
+             * the handle lived in a twenty-pixel gap with the section above it
+             * and the heading below, and WCAG 2.2's 2.5.8 wants either 24×24
+             * or 24px of clear space, neither of which fits in twenty.
+             *
+             * So the handle takes the room instead of borrowing it. In the
+             * flow at the top of its section it is a real 24×24 target that
+             * cannot overlap anything, above or below, by construction — and
+             * the arithmetic that used to place it in a margin, and the
+             * measurement that fed it, are gone with it. The box is in
+             * `app.css` under `.grip`, with the heading's own top margin
+             * zeroed there so this is the air above a heading rather than air
+             * on top of air.
              */
-            className: 'tap',
             style: {
-              position: 'absolute',
-              /*
-               * Just above its heading, and inside the column rather than out
-               * in the page's margin.
-               *
-               * The margin was the obvious place — level with the heading,
-               * clear of the words, no layout to change — and it is the one
-               * band of a phone screen a control must not sit in. The
-               * leftmost strip is where iOS Safari's back-swipe starts, so a
-               * drag begun there is a gesture the browser takes before the
-               * page ever hears about it. A handle the system can quietly
-               * steal is a handle that does not work, and it fails in the way
-               * that teaches somebody the feature is broken.
-               *
-               * So the grip comes inside, to the column's own left edge, and
-               * moves up into the gap above the heading instead — which is
-               * empty on every section, being the margin that separates it
-               * from the one before. That keeps it out of both the swipe band
-               * and the heading's words, without indenting eighteen sections
-               * written by eighteen different hands.
-               *
-               * The offset is negative on purpose. A section's box begins at
-               * its heading — the gap above is margin, which is outside the
-               * box — so reaching into that gap means drawing above the box,
-               * and clamping at zero puts the grip back on top of the words.
-               */
-              top: at - 21,
-              left: 0,
-              width: 17,
-              /*
-               * Above the section's own frame, or the widened target is not
-               * widened at all.
-               *
-               * Measured: without this the grip on the next-class section
-               * came back 18×45 while every other one was 32×45, because the
-               * card's frame is painted after it and takes the points to its
-               * right. Nothing interactive is there — the frame is a drawing
-               * — so lifting the grip over it costs no other control a tap,
-               * which is the thing that was checked rather than assumed.
-               */
-              zIndex: 1,
               padding: 0,
               border: 'none',
               background: 'transparent',
               color: 'inherit',
-              lineHeight: 'var(--leading-tight)',
               fontSize: 'var(--type-sm)',
               // How it looks, and what it does on hover and focus, is in
               // `app.css` under `.grip`. No `touch-action: none` here, unlike

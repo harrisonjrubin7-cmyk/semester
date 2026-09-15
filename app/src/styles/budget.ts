@@ -25,7 +25,7 @@ export const BUDGET: Budget = {
   'ai/Chat.tsx': { dim: 2 },
   'ai/Opening.tsx': { dim: 1 },
   'ai/Panel.tsx': { space: 1, shorthand: 1, dim: 3 },
-  'ai/Threads.tsx': { dim: 7 },
+  'ai/Threads.tsx': { dim: 5 },
   'ai/Turns.tsx': { space: 1, dim: 6 },
   'components/Adopting.tsx': { type: 1, space: 2, shorthand: 2, dim: 2 },
   'components/Appearance.tsx': { space: 1, shorthand: 4, dim: 2 },
