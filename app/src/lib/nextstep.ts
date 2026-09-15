@@ -26,6 +26,7 @@
  * can be disagreed with.
  */
 
+import { says, type Knowing } from './knowing';
 import type { Guide, StudyMode } from './types';
 
 /**
@@ -44,6 +45,20 @@ export interface StepInput {
   ways: Way[];
   /** The merged guide, for its units and mastery. */
   guide: Guide;
+  /**
+   * Where each unit stands, in the same order as `guide.units`.
+   *
+   * Optional, and only ever used to *say* the reason — never to choose. The
+   * choosing below still ranks on `unit.mastery`, which is the blend's proper
+   * job: an estimate is a fine tiebreak between units nobody has answered and
+   * a poor thing to print as a measurement. This is what gets printed
+   * instead. See `lib/knowing.ts`.
+   *
+   * Absent, the sentence falls back to naming the unit without a claim about
+   * it, which is the honest thing to say when the caller has not passed the
+   * evidence to make one.
+   */
+  standings?: Knowing[];
   /**
    * Cards that have genuinely come round. From `comeRound`, not `dueCount`.
    *
@@ -116,7 +131,7 @@ const has = (ways: Way[], id: StudyMode) => ways.some((w) => w.id === id);
  * talking for the sake of it.
  */
 export function nextStep(input: StepInput): Step | null {
-  const { ways, guide, due, testIn, testKind, started } = input;
+  const { ways, guide, due, testIn, testKind, started, standings } = input;
   if (ways.length === 0) return null;
 
   // Before anything about cards. A card that has never been seen counts as
@@ -165,10 +180,25 @@ export function nextStep(input: StepInput): Step | null {
     });
     const unit = guide.units[worst];
     if (unit && unit.mastery < 100) {
+      /*
+       * Was `${unit.name} is at 30%, the lowest here.`
+       *
+       * Thirty per cent of what, measured how? `unit.mastery` is
+       * `unitMastery`'s blend, and for a unit nobody has answered it is
+       * entirely the figure a person wrote into the guide — so a course with
+       * one answered card printed a confident two-digit measurement of ten
+       * units nothing had measured, under a heading saying what to do about
+       * it. The ranking is unchanged and is fine: something has to be picked,
+       * and an estimate picks better than nothing. What it cannot do is claim
+       * to have counted.
+       */
+      const state = standings?.[worst];
       return {
         id: 'cards',
         label: 'Drill the weakest unit',
-        why: `${unit.name} is at ${Math.round(unit.mastery)}%, the lowest here.`,
+        why: state
+          ? `${unit.name} is the least studied here — ${says(state).toLowerCase()}.`
+          : `${unit.name} is the least studied here.`,
       };
     }
   }

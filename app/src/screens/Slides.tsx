@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { FigureCard } from '../components/FigureCard';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
 import type { Figure } from '../lib/types';
 import { cardKey } from '../lib/review';
+import { knowingOf, says } from '../lib/knowing';
 
 type Slide =
   | { kind: 'title'; title: string; sub: string }
@@ -28,6 +29,7 @@ type Slide =
  */
 export function SlideDeck() {
   const { state, dispatch } = useStore();
+  const now = useNow();
   const { guide, figuresOn, onUnit } = useLive(state.guideId);
   const unitIndex = state.lessonUnit;
   const unit = guide.units[unitIndex];
@@ -42,6 +44,17 @@ export function SlideDeck() {
       !!unit &&
       unit.cards.some((c) => (state.reviews[cardKey(state.guideId, c.q)]?.seen ?? 0) > 0),
     [unit, state.reviews, state.guideId],
+  );
+
+  /* And where it stands, in the same words Study and the guide use. */
+  const standing = useMemo(
+    () =>
+      knowingOf(
+        (unit?.cards ?? []).map((c) => cardKey(state.guideId, c.q)),
+        state.reviews,
+        now.getTime(),
+      ),
+    [unit, state.reviews, state.guideId, now],
   );
 
   const slides = useMemo<Slide[]>(() => {
@@ -93,13 +106,18 @@ export function SlideDeck() {
        * declared estimate wearing a measurement's clothes. Study said this
        * first and says it this way; a second wording for one fact would be
        * worse than the bug.
+       *
+       * Now the state rather than the percentage, which is the same argument
+       * carried one step further: the blend was still mostly the estimate
+       * after the first answer, and a percentage cannot say which part of
+       * itself was measured. `lib/knowing.ts` reads the answers only.
        */
       sub: started
-        ? `${unit.cards.length} cards · ${unit.mastery}% mastered`
+        ? `${unit.cards.length} cards · ${says(standing.state).toLowerCase()}`
         : `${unit.cards.length} cards · not started`,
     });
     return out;
-  }, [unit, guide.code, unitFigures, added, started]);
+  }, [unit, guide.code, unitFigures, added, started, standing]);
 
   const [at, setAt] = useState(0);
   const last = slides.length - 1;

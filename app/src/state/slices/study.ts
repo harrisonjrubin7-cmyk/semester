@@ -10,6 +10,7 @@
  */
 
 import { score } from '../../lib/review';
+import { moveOn } from '../../lib/sessions';
 import { handle, remember } from '../../lib/sure';
 import { unitKey } from '../../lib/pretest';
 import type { Action, State } from '../shape';
@@ -178,6 +179,79 @@ export function study(state: State, action: Action): State | null {
         },
       };
 
+    /*
+     * Clear the evidence for a set of cards.
+     *
+     * The "that's not right" behind a unit's standing. `lib/knowing.ts` reads
+     * five named states off the review rows, and a state read off evidence is
+     * only honest if the person it is about can throw the evidence away — the
+     * percentage it replaced could not be argued with at all.
+     *
+     * The rows are **deleted**, not zeroed. A row with `seen: 0` left behind
+     * would keep the card out of `neverMet` and out of `dueFirst`'s unseen
+     * band, so the unit would read Unseen and drill as if already met. That is
+     * the same distinction `undoCard` makes two cases up, for the same reason.
+     *
+     * `lastAnswer` goes with them: an undo that reached back past a reset
+     * would restore one card of an evidence set the student had just cleared.
+     */
+    case 'forgetCards': {
+      if (action.keys.length === 0) return state;
+      const reviews = { ...state.reviews };
+      for (const key of action.keys) delete reviews[key];
+      return {
+        ...state,
+        reviews,
+        answers: state.answers.filter((a) => !action.keys.includes(a.key)),
+        lastAnswer:
+          state.lastAnswer && action.keys.includes(state.lastAnswer.key) ? null : state.lastAnswer,
+      };
+    }
+
+    /*
+     * A plan, committed to days.
+     *
+     * Replaces everything from `from` forward and keeps what is behind it.
+     * Keeping the past is the point: those are the sittings that were missed,
+     * and a replan that swept them up would make the plan unmissable again —
+     * which is the state the app was in before `lib/sessions.ts`.
+     */
+    case 'planSessions':
+      return {
+        ...state,
+        sessions: [...state.sessions.filter((s) => s.on < action.from), ...action.sessions],
+      };
+
+    case 'finishSession':
+      return {
+        ...state,
+        sessions: state.sessions.map((s) =>
+          s.id === action.id ? { ...s, doneAt: action.at } : s,
+        ),
+      };
+
+    /*
+     * Every missed sitting moved forward, in one press.
+     *
+     * The arithmetic is `moveOn`'s, not repeated here — the screen shows a
+     * preview from `willMove`, which calls the same function, so the sentence
+     * on the button and the thing the button does cannot come apart.
+     *
+     * Returns `state` itself when nothing moved, so a press with nothing
+     * missed is not a re-render and a sync write for nothing.
+     */
+    case 'moveMissed': {
+      const out = moveOn(state.sessions, {
+        today: action.today,
+        ...(action.dayMinutes === undefined ? {} : { dayMinutes: action.dayMinutes }),
+      });
+      if (out.count === 0 && out.dropped.length === 0) return state;
+      return { ...state, sessions: out.sessions };
+    }
+
+    case 'clearPlan':
+      return state.sessions.length === 0 ? state : { ...state, sessions: [] };
+
     case 'redrill':
       // `lastAnswer` with it: a new run must not be able to undo into the
       // one before it.
@@ -192,6 +266,8 @@ export function study(state: State, action: Action): State | null {
           quizPicked: null,
           quizScore: 0,
           quizSeed: state.quizSeed + 7,
+          quizRungs: 0,
+          quizHelped: 0,
         },
         'quiz',
       );
@@ -206,8 +282,25 @@ export function study(state: State, action: Action): State | null {
       };
     }
 
+    /*
+     * One more rung, and the question is marked as helped from the first one.
+     *
+     * Marked here rather than at `nextQuestion`, so a question you take a hint
+     * on and then leave still counted. The alternative records help only for
+     * the questions somebody stayed on, which flatters the run in exactly the
+     * cases it should not.
+     */
+    case 'takeHint':
+      return { ...state, quizRungs: state.quizRungs + 1 };
+
     case 'nextQuestion':
-      return { ...state, quizIdx: state.quizIdx + 1, quizPicked: null };
+      return {
+        ...state,
+        quizIdx: state.quizIdx + 1,
+        quizPicked: null,
+        quizRungs: 0,
+        quizHelped: state.quizHelped + (state.quizRungs > 0 ? 1 : 0),
+      };
 
     default:
       return null;

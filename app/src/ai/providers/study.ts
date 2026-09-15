@@ -1,10 +1,9 @@
 import { datedItems } from '../../lib/select';
 import { cardKey, dueCount } from '../../lib/review';
 import type { Provide } from '../shape';
-import { guideNow, startedNow } from '../shape';
+import { guideNow, standingNow, startedNow, type Look } from '../shape';
 import { coverage } from '../../lib/covers';
 import { meetings, pairings } from '../../lib/meet';
-import { pct } from './core';
 
 /**
  * The Study group — turning what a course holds into something testable.
@@ -163,7 +162,12 @@ export const runway: Provide = (look) => {
           ? {
               unitsToCover: on.units.length,
               coverage: on.source === 'whole' ? 'not stated — counting the whole course' : on.source,
-              coldest: coldest({ units: on.units.map((u) => guide.units[u]) }, startedNow(look, i.c, guide)),
+              coldest: coldest(
+                look,
+                i.c,
+                { units: on.units.map((u) => guide.units[u]) },
+                startedNow(look, i.c, guide),
+              ),
             }
           : {}),
       };
@@ -190,10 +194,21 @@ export const runway: Provide = (look) => {
  * the lowest number beside. The model is then asked to explain that one as if
  * you had not read it, which is a fine answer to a question nobody asked.
  */
-function coldest(guide: { units: { name: string; mastery: number }[] }, started: boolean): string {
+function coldest(
+  look: Look,
+  courseId: string,
+  guide: { units: { name: string; mastery: number; cards: { q: string }[] }[] },
+  started: boolean,
+): string {
   if (!started) return 'nothing answered yet — no unit is colder than another';
   const cold = [...guide.units].sort((a, b) => a.mastery - b.mastery)[0];
-  return cold ? `${cold.name} (${cold.mastery}%)` : '';
+  if (!cold) return '';
+  // Ranked on the blend, which is what the blend is for, and named with the
+  // state it can actually support. `(30%)` was the guide author's own number
+  // for every card not answered — sent to a model that is then asked to
+  // explain "the coldest unit". See `standingNow`.
+  const { state, evidence } = standingNow(look, courseId, cold);
+  return `${cold.name} (${state}: ${evidence})`;
 }
 
 /**
@@ -220,7 +235,7 @@ export const tonight: Provide = (look) => {
     return {
       course: catalog.byId[c.id].code,
       cardsDue: ready,
-      coldest: guide ? coldest(guide, startedNow(look, c.id, guide)) : '',
+      coldest: guide ? coldest(look, c.id, guide, startedNow(look, c.id, guide)) : '',
       ...(next ? { nextDeadline: `${next.title}, ${next.dueShort}` } : {}),
     };
   });
@@ -241,18 +256,27 @@ export const drillLike: Provide = (look) => {
   const it = open(look);
   if (!it) return null;
   const unit = it.guide.units[look.state.drillUnit ?? look.state.openUnit ?? 0];
-  const started = startedNow(look, it.course.id, it.guide);
+  // No `startedNow` here any more: `standingNow` answers per unit, and
+  // "unseen" is what it says for a unit nobody has opened. The course-wide
+  // flag was only ever a stand-in for that, and it was the wrong shape — one
+  // answered unit made the other ten look measured.
   return {
     summary: `Drilling ${it.course.code}${
-      unit ? ` — ${unit.name}, ${started ? `${pct(unit.mastery)} mastered` : 'nothing answered yet'}` : ''
+      unit
+        ? ` — ${unit.name}, ${standingNow(look, it.course.id, unit).state}`
+        : ''
     }.`,
     focus: unit
-      ? { unit: unit.name, cards: unit.cards.length, ...(started ? { mastery: unit.mastery } : {}) }
+      ? {
+          unit: unit.name,
+          cards: unit.cards.length,
+          ...standingNow(look, it.course.id, unit),
+        }
       : undefined,
     visible: it.guide.units.map((u) => ({
       name: u.name,
       cards: u.cards.length,
-      mastered: started ? `${u.mastery}%` : 'not started',
+      ...standingNow(look, it.course.id, u),
     })),
     actions: ['start_timer', 'open_screen'],
     suggestions: ['Explain the one I keep getting wrong.', 'Which unit should I do next?'],

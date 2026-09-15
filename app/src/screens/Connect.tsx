@@ -8,6 +8,7 @@ import { ChipRow, FilePick, SectionLabel } from '../components/ui';
 import { parseIcs } from '../lib/ics';
 import { fetchCalendar, isCalendar, notCalendar, readLink } from '../lib/feedlink';
 import { cloudConfigured, fetchIcsVia } from '../lib/cloud';
+import { aboutWhere, lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
 import {
   PROVIDERS,
   addEvent,
@@ -841,8 +842,40 @@ export function Connect() {
                     marginTop: 'var(--sp-1)',
                   }}
                 >
+                  {/*
+                    The status message, and — new — *when*.
+
+                    This row said `{f.kind} · {f.status}`, which is the text of
+                    the last pull and nothing about its age. A subscription
+                    that succeeded three weeks ago read "ics · 14 events read",
+                    byte for byte what one that succeeded a minute ago reads,
+                    and the difference between those two is the whole question
+                    somebody opens this screen to answer.
+
+                    `lastPulled` is left off a one-off import: it has no URL to
+                    re-read, so "checked 40 days ago" would be a complaint
+                    about a fault nobody can fix. See `lib/where.ts`.
+                  */}
                   {f.kind} · {f.status}
+                  {f.url ? ` · ${lastPulled(f.synced, now.getTime())}` : ''}
                 </span>
+                {/*
+                  And the word for it, when the word is worth saying. A fresh
+                  subscription says nothing — a badge on every row is a badge
+                  nobody reads.
+                */}
+                {worthSaying(whereFeed(f, now.getTime())) && (
+                  <span
+                    style={{
+                      display: 'block',
+                      fontSize: 'var(--type-xs)',
+                      color: 'var(--app-fg)',
+                      marginTop: 'var(--sp-2)',
+                    }}
+                  >
+                    {saysWhere(whereFeed(f, now.getTime()))} — {aboutWhere(whereFeed(f, now.getTime()))}
+                  </span>
+                )}
               </span>
               {/*
                 A subscribed link is worth fetching again; an imported file has

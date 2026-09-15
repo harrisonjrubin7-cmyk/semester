@@ -1,6 +1,7 @@
 import { useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
+import { lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
 import { MarkClass } from '../components/MarkClass';
@@ -540,6 +541,26 @@ function DayView() {
                     {feed?.name ?? 'Calendar'}
                     {e.where ? ` · ${e.where}` : ''}
                   </span>
+                  {/*
+                    Whether that source is still current, which the row named
+                    it without saying.
+
+                    A section headed "From your calendars" and a row naming the
+                    feed answer *where this came from*, and the screen was
+                    right to answer it. What neither answers is *when* — so an
+                    entry out of a subscription that stopped three weeks ago
+                    sat here looking exactly as authoritative as one pulled
+                    this morning, and the cost of that is turning up to a
+                    seminar that moved.
+
+                    Only when it is worth saying: a live subscription and a
+                    file you imported both stay quiet. See `lib/where.ts`.
+                  */}
+                  {feed && worthSaying(whereFeed(feed, now.getTime())) && (
+                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-fg)' }}>
+                      {saysWhere(whereFeed(feed, now.getTime()))} · {lastPulled(feed.synced, now.getTime())}
+                    </span>
+                  )}
                 </span>
               </div>
             );

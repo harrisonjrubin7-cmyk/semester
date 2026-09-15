@@ -4,7 +4,7 @@ import { datedItems } from '../../lib/select';
 import { forScope, insights } from '../../insights';
 import { factsFrom } from '../../insights/facts';
 import type { Provide, Look } from '../shape';
-import { guideNow, startedNow } from '../shape';
+import { guideNow, standingNow, startedNow } from '../shape';
 
 /**
  * What each screen tells the assistant it is showing.
@@ -217,7 +217,9 @@ export const study: Provide = (look) => {
       unit: i + 1,
       name: u.name,
       cards: u.cards.length,
-      mastered: started ? `${u.mastery}%` : 'not started',
+      // Not `mastered: "47%"`. That was the blend, and `started` guarded only
+      // its unmeasured end — see `standingNow`.
+      ...standingNow(look, state.guideId, u),
     })),
     actions: ['open_screen', 'start_timer'],
     suggestions: [

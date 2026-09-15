@@ -31,6 +31,7 @@
 
 import type { Reviews } from './review';
 import { strength } from './review';
+import { knowingOf, says, type Knowing } from './knowing';
 
 /** How long one card takes, end to end: read, try to remember, judge yourself. */
 export const SECONDS_PER_CARD = 20;
@@ -122,7 +123,18 @@ function staleness(keys: string[], reviews: Reviews, now: number): number {
  * A plan with no reasons is an instruction, and the student is the one who
  * knows whether the reason holds — they were in the lecture.
  */
-export function reasonFor(s: UnitFacts & { due: number; cards: number }): string {
+export function reasonFor(
+  s: UnitFacts & { due: number; cards: number },
+  /**
+   * Where the unit stands, if the caller has the answers to say.
+   *
+   * Optional only so the shape of this function does not decide whether a
+   * caller can call it; `rank` always passes it. Without it the line says the
+   * counts and stops, which is worse than saying the state and better than
+   * the percentage it replaced.
+   */
+  state?: Knowing,
+): string {
   const parts: string[] = [];
   if (s.testInDays !== null && s.testInDays <= EXAM_HORIZON_DAYS) {
     const what = (s.testKind ?? 'exam').toLowerCase();
@@ -134,8 +146,19 @@ export function reasonFor(s: UnitFacts & { due: number; cards: number }): string
   }
   if (s.due === s.cards && s.cards > 0) parts.push(`all ${s.cards} cards waiting`);
   else if (s.due > 0) parts.push(`${s.due} of ${s.cards} cards due`);
-  if (s.mastery < 40) parts.push(`${s.mastery}% mastered`);
-  else if (parts.length === 0) parts.push(`${s.mastery}% mastered — keeping it warm`);
+  /*
+   * Was `30% mastered` and `72% mastered — keeping it warm`.
+   *
+   * `mastery` here is `unitMastery`'s blend, which stands the guide's own
+   * hand-written estimate in for every card not answered — so a plan built on
+   * the first evening of term told the student, in a line headed "why this
+   * unit is here", a two-digit figure about material nothing had measured.
+   * The *ranking* above still uses it and should: it is a reasonable ordering
+   * and the plan has to put something first. It is the printing that was the
+   * claim. See `lib/knowing.ts`.
+   */
+  if (state && state !== 'retained') parts.push(says(state).toLowerCase());
+  else if (parts.length === 0) parts.push('holding — keeping it warm');
   // Sentence case, and the parts read as one clause rather than a list of tags.
   const line = parts.join(' · ');
   return line.charAt(0).toUpperCase() + line.slice(1);
@@ -168,7 +191,7 @@ export function rank(units: UnitFacts[], reviews: Reviews, now: number): Stretch
         minutes: Math.max(1, Math.round((working * SECONDS_PER_CARD) / 60)),
         cardsToDo: working,
         score,
-        why: reasonFor(facts),
+        why: reasonFor(facts, knowingOf(u.keys, reviews, now).state),
       };
     })
     .sort((a, b) => b.score - a.score || a.code.localeCompare(b.code));

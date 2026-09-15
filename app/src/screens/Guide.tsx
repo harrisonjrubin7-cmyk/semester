@@ -1,14 +1,17 @@
 import { allCards, weakestUnit } from '../data/catalog';
 import { useEffect, useMemo, useState } from 'react';
 import { useKeepAwake } from '../lib/awake';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
 import { liveGuide, useLive } from '../lib/live';
 import { alsoLine, elsewhere, meetings, type Also } from '../lib/meet';
 import { Blueprint } from '../components/Blueprint';
 import { hasPrebuiltDeck, hasPrebuiltDocs } from '../lib/handout';
-import { ActionButton, ChipRow, Meter, SectionLabel } from '../components/ui';
+import { ActionButton, ChipRow, SectionLabel } from '../components/ui';
+import { ClearEvidence, Standing } from '../components/Standing';
+import { knowingOf, noEvidence, says as saysKnowing } from '../lib/knowing';
+import { cardKey } from '../lib/review';
 import { fromGuide } from '../lib/doctemplates';
 import { addedLine } from '../lib/study';
 import { ModePicker } from '../components/ModePicker';
@@ -38,6 +41,7 @@ export function Guide() {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const tallRow = useRowStyle(13);
   const { state, dispatch, catalog } = useStore();
+  const now = useNow();
 
   // A study guide is a long read with long pauses. See `lib/awake.ts`.
   useKeepAwake();
@@ -46,6 +50,30 @@ export function Guide() {
   const { guide, figures: figMap, updates, onUnit } = live;
   const cards = allCards(guide);
   const weak = weakestUnit(guide);
+
+  /*
+   * Where each unit stands, read off the answers rather than off the guide.
+   *
+   * One pass for the screen rather than one per row: `evidenceFor` walks a
+   * unit's cards, the unit list is redrawn on every answer, and the rows used
+   * to each recompute a percentage nobody could act on anyway.
+   *
+   * `now` is `useNow()` — the minute clock in `state/store.tsx` — rather than
+   * `Date.now()` in render. Two reasons, and the second is the load-bearing
+   * one. A call to `Date.now()` during render is impure and the linter says
+   * so; more to the point, the whole screen has to agree about the minute. A
+   * row that read the clock for itself could decide a card had come round
+   * while the row above it, rendered a microsecond earlier, decided it had
+   * not — which is precisely the two-instruments-disagreeing failure
+   * `lib/knowing.ts` exists to end.
+   */
+  const standings = useMemo(() => {
+    const at = now.getTime();
+    return guide.units.map((u) => {
+      const keys = u.cards.map((c) => cardKey(state.guideId, c.q));
+      return { keys, ...knowingOf(keys, state.reviews, at) };
+    });
+  }, [guide.units, state.guideId, state.reviews, now]);
   // What each way of studying holds for this course, so the picker can say so
   // rather than making every mode look equally full.
   const modes = modesFor(catalog, state.guideId, live);
@@ -233,8 +261,16 @@ export function Guide() {
               <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25, marginTop: 'var(--sp-1)' }}>
                 {weak.unit.name}
               </span>
+              {/*
+                Was `{weak.unit.mastery}% — drill this one first`. The figure
+                was `unitMastery`'s blend, and on a course nobody had opened it
+                was entirely the guide's own hand-written estimate — a
+                measurement's clothes on a number nothing had measured. The
+                state says the same thing and can be checked: see
+                `lib/knowing.ts`.
+              */}
               <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
-                {weak.unit.mastery}% — drill this one first
+                {saysKnowing(standings[weak.index]?.state ?? 'unseen')} — drill this one first
               </span>
             </span>
             <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
@@ -268,7 +304,11 @@ export function Guide() {
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{u.name}</span>
                 <span style={{ display: 'block', marginTop: 'var(--sp-3)' }}>
-                  <Meter pct={u.mastery} height={5} label={`Mastery, ${u.name}`} />
+                  <Standing
+                    state={standings[i]?.state ?? 'unseen'}
+                    evidence={standings[i]?.evidence ?? noEvidence()}
+                    name={u.name}
+                  />
                 </span>
               </span>
               <span
@@ -287,31 +327,53 @@ export function Guide() {
               </span>
             </button>
             {/*
-              Offered only on units nobody has touched — see `lib/pretest.ts`.
-              On a unit already drilled this would not be a guess, it would be
-              a quiz with the wrong label on it.
+              The two things you can do to a unit from outside its row, in one
+              line under it.
+
+              Outside deliberately: the row is a `<button>`, and a button
+              inside a button is invalid markup browsers resolve by dropping
+              one of them, silently and differently in each engine. "Guess
+              first" was already out here for that reason and "Not right?"
+              joins it.
             */}
-            {worthGuessing(state.guideId, i, u.cards, state.reviews, state.pretested) && (
-              <button
-                type="button"
-                className="bare tappable"
-                onClick={() => dispatch({ type: 'guessFirst', courseId: state.guideId, unit: i })}
-                style={{
-                  width: 'auto',
-                  padding: '5px 9px',
-                  margin: '0 0 12px 38px',
-                  borderRadius: 'var(--r-sm)',
-                  border: '1px solid var(--app-line)',
-                  fontSize: 'calc(10.5px * var(--text-scale, 1))',
-                  fontFamily: 'var(--font-heading)',
-                  letterSpacing: '0.1em',
-                  textTransform: 'uppercase',
-                  opacity: 0.75,
-                }}
-              >
-                Guess first
-              </button>
-            )}
+            <div style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'center', margin: '0 0 12px 38px' }}>
+              {/*
+                Offered only on units nobody has touched — see `lib/pretest.ts`.
+                On a unit already drilled this would not be a guess, it would be
+                a quiz with the wrong label on it.
+              */}
+              {worthGuessing(state.guideId, i, u.cards, state.reviews, state.pretested) && (
+                <button
+                  type="button"
+                  className="bare tappable tap-y"
+                  onClick={() => dispatch({ type: 'guessFirst', courseId: state.guideId, unit: i })}
+                  style={{
+                    width: 'auto',
+                    padding: '5px 9px',
+                    borderRadius: 'var(--r-sm)',
+                    border: '1px solid var(--app-line)',
+                    fontSize: 'calc(10.5px * var(--text-scale, 1))',
+                    fontFamily: 'var(--font-heading)',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    opacity: 0.75,
+                  }}
+                >
+                  Guess first
+                </button>
+              )}
+              {/*
+                And the reset behind the standing above. Renders nothing when
+                the unit carries no evidence, so the two are never both absent
+                and leaving an empty line: the flex row collapses to nothing.
+              */}
+              <ClearEvidence
+                keys={standings[i]?.keys ?? []}
+                reviews={state.reviews}
+                name={u.name}
+                onClear={(keys) => dispatch({ type: 'forgetCards', keys })}
+              />
+            </div>
             </div>
           ))}
 

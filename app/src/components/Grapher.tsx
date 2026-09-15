@@ -35,6 +35,7 @@ import {
   type Line,
   type Point,
 } from '../lib/plot';
+import { asLine, fit, fitLine, saysFit, type Fit } from '../lib/fit';
 
 /**
  * The graph, and the list of things on it.
@@ -284,6 +285,60 @@ export function Grapher() {
     [lines, read, scope, frame, colours, turns, view, flat, starts, pair, together, second],
   );
 
+  /*
+   * The least-squares line through every dot on the screen.
+   *
+   * `lib/nav.ts` has advertised "regression" as something this screen does
+   * since search learned about the screen, and it did not — the spreadsheet's
+   * `SLOPE` is the coefficient without the picture, the intercept or the fit,
+   * so search sent somebody typing "regression" to a grapher that had never
+   * drawn one.
+   *
+   * Everything needed was already here. A `point` line takes *lists* — `case
+   * 'point'` in `lib/plot.ts` pairs `flat(value(x))` against `flat(value(y))`
+   * — so `([1,2,3], [2,4.1,5.9])` has always been three dots. What was missing
+   * is the line through them.
+   *
+   * Read off `drawings` rather than recomputed: those are the points actually
+   * on screen, after every list was flattened and every non-finite value
+   * dropped, so the fit cannot be of a different scatter from the one somebody
+   * is looking at. Gathered across lines because a scatter split over two
+   * lines to colour it is still one scatter.
+   */
+  const bestFit = useMemo(
+    () => fit(drawings.flatMap((d) => d.drawn.points)),
+    [drawings],
+  );
+
+  /*
+   * And the same line as something to draw, across the whole window.
+   *
+   * Appended to the drawings rather than folded into them, because it is not
+   * one of the student's lines: it has no row in the list, no switch, and
+   * nothing to edit. Drawn in the dim colour for the same reason — a fit is
+   * derived from what is on screen, and giving it a colour of its own would
+   * make it look like another thing somebody had entered.
+   */
+  const fitDrawing: Drawing[] = useMemo(() => {
+    if (!bestFit) return [];
+    const at = asLine(bestFit);
+    return [
+      {
+        id: 'best-fit',
+        colour: 'var(--app-dim)',
+        drawn: {
+          paths: [
+            [
+              { x: frame.x0, y: at(frame.x0) },
+              { x: frame.x1, y: at(frame.x1) },
+            ],
+          ],
+          points: [],
+        },
+      },
+    ];
+  }, [bestFit, frame]);
+
   /** Whether anything on the list is drawn by turning or running, rather than across x. */
   const winding = read.some((line) => line.kind === 'polar' || line.kind === 'parametric');
 
@@ -324,8 +379,9 @@ export function Grapher() {
           says={`A surface of ${lines[solid?.at ?? 0]?.text}, seen from above and to one side. Drag to turn it.`}
         />
       ) : (
+      /* The fit goes on last so it sits over the dots it was fitted to. */
       <Plot
-        drawings={drawings}
+        drawings={[...drawings, ...fitDrawing]}
         frame={frame}
         onFrame={(next) => {
           setFrame(next);
@@ -335,6 +391,9 @@ export function Grapher() {
         }}
         square={square}
         onFit={() => {
+          // The student's own lines, not the fit: a derived line runs the
+          // width of the window by construction, so including it would make
+          // "fit the window" mean "keep the window".
           setFrame(fitted(frame, drawings.map((d) => d.drawn)));
           setSquare(false);
         }}
@@ -477,6 +536,7 @@ export function Grapher() {
         scope={scope}
         colours={colours}
         frame={frame}
+        bestFit={bestFit}
         trace={trace}
         from={from}
         to={to}
@@ -848,6 +908,7 @@ function Readings({
   scope,
   colours,
   frame,
+  bestFit,
   trace,
   from,
   to,
@@ -859,6 +920,8 @@ function Readings({
   scope: ReturnType<typeof scopeOf>;
   colours: string[];
   frame: Frame;
+  /** The least-squares line through every plotted point, or null. */
+  bestFit: Fit | null;
   trace: Point | null;
   from: string;
   to: string;
@@ -889,13 +952,31 @@ function Readings({
   /** How wide the window is, which is the precision every reading off it has. */
   const span = frame.x1 - frame.x0;
 
-  if (curves.length === 0 && !trace) return null;
+  if (curves.length === 0 && !trace && !bestFit) return null;
 
   const traced = trace && curves[0] ? slopeAt(curves[0].fn, trace.x) : null;
 
   return (
     <>
       <SectionLabel>What it says</SectionLabel>
+
+      {/*
+        The fitted line, first, because on a screen with a scatter on it that
+        is what was asked for. Absent entirely when `fit` declines — under
+        three points, or every point on one vertical — rather than a row
+        explaining why there is no row.
+      */}
+      {bestFit && (
+        <div style={{ marginBottom: 'var(--sp-5)' }}>
+          <div className="kicker" style={{ color: 'var(--app-fg)' }}>
+            Line of best fit
+          </div>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-2)' }}>{fitLine(bestFit)}</div>
+          <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+            {saysFit(bestFit)}
+          </div>
+        </div>
+      )}
 
       {trace ? (
         <Fact

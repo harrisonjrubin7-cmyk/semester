@@ -340,6 +340,18 @@ describe('what a rendered context looks like', () => {
  *
  * A wrong number on a card is read by somebody who can see the rest of the
  * card. This one comes back as prose.
+ *
+ * ## The guard only covered one end, and the figure is gone now
+ *
+ * `startedNow` stopped the percentage for a course nobody had opened and let
+ * it through the moment any card anywhere in the course was answered. One
+ * answer in a deck of a hundred leaves the blend ninety-nine hundredths
+ * estimate, so `mastered: "47%"` after the first card was the same unearned
+ * claim with a thinner excuse — and the same suggestions sat under it.
+ *
+ * So no provider sends the blend at all now. Each unit travels as a state
+ * from `lib/knowing.ts` with the counts it was read from, and the assertions
+ * below check that: no percentage in any of these contexts, answered or not.
  */
 describe('mastery in the context', () => {
   const said = (screen: Screen, over: Partial<State> = {}) => {
@@ -368,9 +380,9 @@ describe('mastery in the context', () => {
     } as Partial<State>;
   };
 
-  it('says not started rather than a percentage, before the first answer', () => {
+  it('says unseen rather than a percentage, before the first answer', () => {
     const ctx = said('study');
-    expect(ctx).toContain('not started');
+    expect(ctx).toContain('unseen');
     expect(ctx).not.toMatch(/"mastered":"\d+%"/);
   });
 
@@ -378,8 +390,44 @@ describe('mastery in the context', () => {
     expect(said('study')).toContain('Nothing in this course has been answered yet.');
   });
 
-  it('gives the figure once one card has been answered', () => {
-    expect(said('study', answered())).toMatch(/"mastered":"\d+%"/);
+  it('moves that unit off unseen once one card has been answered', () => {
+    const ctx = JSON.parse(said('study', answered())) as { visible: { state: string }[] };
+    expect(ctx.visible[0].state).not.toBe('unseen');
+    // And only that unit. The others were not answered and must not be
+    // carried along by it — which is exactly what the course-wide guard did.
+    expect(ctx.visible.slice(1).every((u) => u.state === 'unseen')).toBe(true);
+  });
+
+  it('sends no mastery percentage anywhere, answered or not', () => {
+    /*
+     * The property all of these are cases of — and scoped to the blend rather
+     * than to every `%`, because one percentage in these contexts is real.
+     * `Progress — 41 cards answered, 78% right` is `tally`: right over answers
+     * actually given, which is a count of things that happened and is the
+     * thing this module has always been trying to protect. A blanket "no
+     * digits followed by a per-cent sign" would have deleted the honest one
+     * along with the four unearned ones.
+     */
+    const UNEARNED = /"(mastered|averageMastery|mastery|known)":\s*"?\d+%?/;
+    for (const screen of ['study', 'me', 'tonight', 'drill'] as Screen[]) {
+      for (const over of [{}, answered()]) {
+        expect(said(screen, over), `${screen}`).not.toMatch(UNEARNED);
+        // And no percentage inside a unit row, whatever the key is called.
+        const ctx = JSON.parse(said(screen, over) || '{}') as { visible?: unknown[] };
+        for (const row of ctx.visible ?? []) {
+          if (row && typeof row === 'object' && 'name' in row && 'cards' in row) {
+            expect(JSON.stringify(row), `${screen} unit row`).not.toMatch(/\d+%/);
+          }
+        }
+      }
+    }
+  });
+
+  it('sends the counts beside the state, so a claim can be traced', () => {
+    const ctx = JSON.parse(said('study', answered())) as {
+      visible: { evidence: string }[];
+    };
+    expect(ctx.visible[0].evidence).toMatch(/\d+ of \d+ cards?/);
   });
 
   it('does not name a coldest unit out of declared figures', () => {
@@ -390,8 +438,20 @@ describe('mastery in the context', () => {
   });
 
   it('does not average declared figures into one', () => {
-    expect(said('me')).toContain('not started');
+    expect(said('me')).not.toMatch(/"averageMastery"/);
     expect(said('me')).not.toMatch(/"averageMastery":"\d+%"/);
+  });
+
+  it('sends the spread of units per state instead of an average', () => {
+    // A course does not have one standing: eleven units in five different
+    // places is the fact, and one number for it is the same averaging one
+    // step further along.
+    const ctx = JSON.parse(said('me', answered())) as {
+      visible: { unitsByStanding?: Record<string, number> }[];
+    };
+    const row = ctx.visible.find((r) => r.unitsByStanding);
+    expect(row?.unitsByStanding).toBeTruthy();
+    expect(Object.values(row!.unitsByStanding!).reduce((a, b) => a + b, 0)).toBeGreaterThan(0);
   });
 });
 

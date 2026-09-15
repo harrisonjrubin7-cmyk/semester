@@ -6,6 +6,7 @@ import { SayIt } from '../components/SayIt';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { buildQuiz } from '../lib/quiz';
+import { ladderFor, nextRungLabel, scoreLine } from '../lib/ladder';
 import { A_SITTING, aSitting, cardKey, catching, dueCount, dueFirst } from '../lib/review';
 import { interleave, mixLine, worthMixing } from '../lib/interleave';
 import { useKeepAwake } from '../lib/awake';
@@ -583,6 +584,32 @@ export function Quiz() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(24px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
             {verdict}
           </div>
+          {/*
+            What the score cost, said beside it and only when it cost
+            something.
+
+            A run where three answers came after a hint is a different run from
+            one where none did, and a number that cannot tell them apart is a
+            number about the quiz rather than about the student — which is the
+            thing `lib/knowing.ts` was written to stop one screen along. The
+            hinted ones are not deducted: getting there with help beats not
+            getting there, and a rule that punishes asking teaches people not
+            to ask.
+          */}
+          {state.quizHelped > 0 && (
+            <div
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'var(--type-sm)',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: 'var(--app-dim)',
+                marginTop: 'var(--sp-3)',
+              }}
+            >
+              {scoreLine(score, n, state.quizHelped)}
+            </div>
+          )}
           <div
             style={{
               fontSize: 'var(--type-md)',
@@ -635,6 +662,23 @@ export function Quiz() {
   }
 
   const answered = state.quizPicked !== null;
+
+  /*
+   * The hints this question can offer, and the ones already taken.
+   *
+   * Built from the guide's own key terms and the question's own options — see
+   * `lib/ladder.ts`. Nothing is generated and nothing is fetched, which is the
+   * point: the moment a student needs a hint is eleven at night, and a hint
+   * that needs a configured model is a hint that is not there.
+   */
+  const rungs = ladderFor(current, guide.terms ?? []);
+  const taken = rungs.slice(0, state.quizRungs);
+  // Options a `narrow` rung has struck out. Struck through rather than
+  // removed: an option that vanishes takes the student's place on the list
+  // with it, and the answer they were half-considering disappears without
+  // their having decided anything about it.
+  const struck = new Set(taken.flatMap((r) => r.out ?? []));
+  const nextHint = answered ? null : nextRungLabel(rungs, state.quizRungs);
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
@@ -700,7 +744,8 @@ export function Quiz() {
                       : 'var(--app-line)'
                 }`,
                 background: reveal && o.ok ? 'var(--app-accent-wash)' : chosen ? 'var(--app-track)' : 'transparent',
-                opacity: reveal && !o.ok && !chosen ? 0.5 : 1,
+                opacity: (reveal && !o.ok && !chosen) || struck.has(i) ? 0.5 : 1,
+                textDecoration: struck.has(i) && !reveal ? 'line-through' : undefined,
                 cursor: answered ? 'default' : 'pointer',
               }}
             >
@@ -723,6 +768,48 @@ export function Quiz() {
           );
         })}
       </div>
+
+      {/*
+        The ladder. Rungs already taken stay on screen — a hint you have to
+        remember is a hint you read once and then re-read the question wishing
+        you had it, and the whole point is to leave the student climbing.
+      */}
+      {taken.length > 0 && (
+        <div style={{ marginTop: 'var(--sp-6)' }}>
+          {taken.map((rung, i) => (
+            <div
+              /*
+                By position, not by `rung.kind`. There are two `narrow` rungs
+                now that options are struck one at a time, and keying by kind
+                gave React two children with the same key — which it warns
+                about and then resolves by dropping one. Caught in the browser;
+                no test sees a key.
+              */
+              key={i}
+              style={{
+                fontSize: 'var(--type-base)',
+                color: 'var(--app-dim)',
+                lineHeight: 'var(--leading-relaxed)',
+                marginTop: 'var(--sp-3)',
+                textWrap: 'pretty',
+              }}
+            >
+              {rung.says}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {nextHint && (
+        <button
+          type="button"
+          className="bare tappable tap-y standing-clear"
+          onClick={() => dispatch({ type: 'takeHint' })}
+          style={{ marginTop: 'var(--sp-6)' }}
+        >
+          {nextHint}
+        </button>
+      )}
 
       {answered && (
         <>

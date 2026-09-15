@@ -143,15 +143,39 @@ describe('reasonFor', () => {
     expect(why).not.toContain('xam');
   });
 
-  it('says what is waiting and what is known', () => {
-    const why = reasonFor({ ...unit({ mastery: 22 }), due: 2, cards: 9 });
+  it('says what is waiting and where the unit stands', () => {
+    const why = reasonFor({ ...unit({ mastery: 22 }), due: 2, cards: 9 }, 'practising');
     expect(why).toContain('2 of 9 cards due');
-    expect(why).toContain('22% mastered');
+    expect(why).toContain('practising');
+  });
+
+  it('says no percentage, whatever the blend claims', () => {
+    // Was `22% mastered`. `mastery` is `unitMastery`'s blend, which stands the
+    // guide's written estimate in for every unanswered card — so on the first
+    // evening of term the line headed "why this unit is here" carried a
+    // two-digit figure about material nothing had measured. The ranking still
+    // uses it; the printing was the claim. See `lib/knowing.ts`.
+    for (const state of ['unseen', 'introduced', 'practising', 'retained', 'review'] as const) {
+      expect(reasonFor({ ...unit({ mastery: 22 }), due: 2, cards: 9 }, state)).not.toMatch(/\d+%/);
+    }
+    expect(reasonFor({ ...unit({ mastery: 22 }), due: 2, cards: 9 })).not.toMatch(/\d+%/);
   });
 
   it('has something to say about a warm unit with nothing due', () => {
-    const why = reasonFor({ ...unit({ mastery: 88 }), due: 0, cards: 9 });
-    expect(why).toContain('88%');
+    const why = reasonFor({ ...unit({ mastery: 88 }), due: 0, cards: 9 }, 'retained');
+    expect(why).toBe('Holding — keeping it warm');
+  });
+
+  it('leads with the state for a unit that is behind, even with nothing due', () => {
+    // The old rule only spoke below 40%, so a unit at 41 with nothing due fell
+    // through to "keeping it warm" — which is the wrong advice for a unit that
+    // has never been opened.
+    expect(reasonFor({ ...unit({ mastery: 88 }), due: 0, cards: 9 }, 'unseen')).toBe('Unseen');
+  });
+
+  it('still says something useful when the caller cannot supply a state', () => {
+    const why = reasonFor({ ...unit({ mastery: 22 }), due: 2, cards: 9 });
+    expect(why).toContain('2 of 9 cards due');
   });
 });
 
