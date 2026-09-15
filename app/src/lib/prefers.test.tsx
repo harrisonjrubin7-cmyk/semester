@@ -56,31 +56,57 @@ function fakeMedia(matches: Record<string, boolean>) {
 }
 
 /*
- * Every probe this makes, so `afterEach` can take them all down.
+ * Every probe this file mounts, so they can be taken down again.
  *
- * One test unmounts its own — that is the thing it is testing — and the rest
- * left a tree mounted with React's scheduler still queued against it. Once the
- * file ends the environment goes, and the queued callback throws
- * `ReferenceError: window is not defined`, reported against whichever file was
- * running rather than this one. `src/rootunmount.test.ts` holds this open.
+ * One test below unmounts its own root, because the unsubscribing is what it
+ * is asserting. The other seven had no reason to, and nothing else was doing
+ * it: measured before this list existed, seven live roots were still attached
+ * to the body when the file ended.
+ *
+ * That is the leak `screens/deadends.test.tsx` was fixed for, and it bites
+ * harder here. These probes subscribe to `matchMedia`, and the fake this file
+ * stubs in counts its listeners — so a probe left mounted from an earlier
+ * test is still a listener, and `vi.unstubAllGlobals()` takes the fake away
+ * from underneath it rather than unsubscribing it. Under `isolate: false` the
+ * survivors outlive the file, where React schedules work on them after the
+ * environment has gone.
+ *
+ * `src/rootunmount.test.ts` is what holds this open.
  */
-const probes: { root: Root; host: HTMLElement }[] = [];
+const mounted: { root: Root; host: HTMLElement }[] = [];
 
 function mount(hook: () => boolean): { root: Root; said: () => string | null; host: HTMLElement } {
   const host = document.createElement('div');
   document.body.appendChild(host);
   const root = createRoot(host);
+  mounted.push({ root, host });
   const Probe = () => <span data-said={String(hook())} />;
   act(() => root.render(<Probe />));
-  probes.push({ root, host });
   return { root, host, said: () => host.querySelector('span')?.getAttribute('data-said') ?? null };
 }
 
+/** Taken down before the globals go, so a probe unsubscribes from the real fake. */
+function drop(root: Root): void {
+  const at = mounted.findIndex((m) => m.root === root);
+  if (at >= 0) {
+    mounted[at].host.remove();
+    mounted.splice(at, 1);
+  }
+  act(() => root.unmount());
+}
+
 afterEach(() => {
-  // Unmounting twice is a no-op, so the test that unmounts its own is fine.
-  for (const probe of probes.splice(0)) {
-    act(() => probe.root.unmount());
-    probe.host.remove();
+  /*
+   * The unmount is written here rather than behind `drop`, because
+   * `src/rootunmount.test.ts` reads this hook's body looking for one — it is
+   * a source heuristic, and a hook that only calls a helper reads to it like
+   * a hook that takes nothing down. `drop` stays for the test below that
+   * unmounts its own root as the thing it is asserting; taking a root down
+   * twice is a no-op, so the two cannot collide.
+   */
+  for (const { root, host } of mounted.splice(0)) {
+    act(() => root.unmount());
+    host.remove();
   }
   vi.unstubAllGlobals();
 });
@@ -152,7 +178,7 @@ describe('when it can', () => {
     const probe = mount(usePrefersDark);
     expect(media.counted('(prefers-color-scheme: dark)')).toBe(1);
 
-    act(() => probe.root.unmount());
+    drop(probe.root);
     expect(media.counted('(prefers-color-scheme: dark)')).toBe(0);
   });
 });

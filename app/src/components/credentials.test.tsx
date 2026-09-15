@@ -116,6 +116,31 @@ beforeEach(() => {
   root = createRoot(host);
 });
 
+/*
+ * Every root this file made, none of which was being taken down.
+ *
+ * The others in this class tore down in `beforeEach` and leaked only the last
+ * one. This file had no teardown at all, so each test mounted a fresh root
+ * over the top of a live one and left the lot standing.
+ *
+ * That matters here beyond the tidying. `signUp`, `signIn` and `sendReset`
+ * are mocks this file counts calls on, and a form still mounted from an
+ * earlier test is still subscribed and can still answer a promise — so a
+ * stray call lands in the next test's tally, and the failure appears in a
+ * test that did nothing wrong. Under `isolate: false` the last one outlives
+ * the file, where React schedules work on it after the environment has gone:
+ * the unhandled `ReferenceError: window is not defined` out of `react-dom`
+ * that `screens/deadends.test.tsx` was fixed for, which lands on whichever
+ * file happens to be running.
+ *
+ * Measured before the change: a live root with 2.4 KB of rendered tree still
+ * attached at the end of this file.
+ */
+afterEach(() => {
+  act(() => root.unmount());
+  host.remove();
+});
+
 describe('the first time', () => {
   it('offers to make an account rather than asking to sign in', () => {
     show(<Credentials />);
