@@ -4,11 +4,12 @@ September 14, 2026 · Compared with the supplied complete product requirements a
 
 The existing app is preserved and expanded. **This build is a working student workspace with local planning tools and an institutional integration foundation. It is not yet a complete replacement for a university's LMS, email, registration, billing or campus-service systems.** The user confirmed that school-approved access is not yet available.
 
-## September 15, 2026 — study evidence, the plan, and the hint ladder
+## September 15, 2026 — study evidence, the plan, the hint ladder, and two kept promises
 
-Three capabilities the product blueprint names and this build did not have.
-All three are device-local and need no university, no account service and no
-AI key; that boundary is the whole point of the batch.
+Five changes, none of which needs a university, an account service or an AI
+key. That boundary is the whole point of the batch. Three are capabilities the
+product blueprint names and this build did not have; two are promises the app
+already made on screen and did not keep.
 
 **Mastery is no longer a percentage.** `unitMastery` blends what has been
 answered with the figure a person wrote into each guide, and the written figure
@@ -38,18 +39,42 @@ be built honestly is not offered, and the score reports what it cost
 (`7 of 10, 3 with help`) without deducting for asking. Censused across the four
 shipped decks: every question offers two or three rungs.
 
-Verified with the full gate set — types, lint, 8,851 tests in file order and in
+**A calendar that had stopped looked exactly like one that had not.**
+`FeedSource.synced` was read by one thing — the "since you last looked" panel,
+for what *arrived*. Nothing used it for what hasn't, so the Connect screen drew
+the last pull's status text and never its age, and a subscription that
+succeeded three weeks ago read identically to one that succeeded a minute ago.
+`app/src/lib/where.ts` is the data-state vocabulary the blueprint asks for —
+Official, Connected, Made here, Yours, Sample, Out of date — as one axis of how
+far a row should be trusted. It marks a quiet subscription on Connect and, more
+importantly, on the calendar entries that came out of it: Connect already told
+students those were "marked with where they came from", which named the feed
+without saying whether it was current. **Official ships unused on purpose** —
+no adapter exists to earn it — and a test asserts the registry is still empty,
+so the day one lands somebody has to decide what the word means.
+
+**Search had promised regression since it learned about the maths screen.**
+`nav.ts` lists it beside intersection, tangent and area under the curve; those
+three are real and wired, and regression was not. A `point` line already takes
+lists, so a scatter was always possible; `app/src/lib/fit.ts` is the
+least-squares line through it, with the coefficient, the intercept, R² and the
+count, drawn across the window in the dim colour because it is derived rather
+than entered.
+
+Verified with the full gate set — types, lint, 8,924 tests in file order and in
 shuffled order, two timezones, production build, institution type-check — and
 driven in a real browser at phone width with zero page errors. Thirty-odd
 mutations were reverted under the new tests and watched go red; three of them
 found weak tests rather than weak code, and one found a clause that could never
 have been the deciding one, which was deleted rather than commented.
 
-Three defects were found by looking at the screen with every test passing: a
-count printed twice three lines apart, a percentage in a module the source grep
-never reached, and a hint that quoted text visible verbatim as an option. A
-fourth — two React children sharing a key — is not the kind of thing a test in
-this suite sees at all.
+Six defects were found by looking at the screen with every test passing: a
+count printed twice three lines apart; a percentage in a module the source grep
+never reached; a hint that quoted text visible verbatim as an option; a plan
+that put eight consecutive sittings of one course on a single evening, from a
+comment claiming an interleaving the code did not do; two React children
+sharing a key; and a fitted line that read "y = 1x + 1.2", which nobody
+writes.
 
 ### What still gates full operation, and what does not
 
