@@ -52,7 +52,7 @@ function One({ insight }: { insight: Insight }) {
         <div
           style={{
             fontSize: 'var(--type-base)',
-            opacity: 0.72,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-3)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',

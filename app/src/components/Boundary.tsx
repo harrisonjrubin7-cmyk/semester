@@ -144,7 +144,7 @@ export class ScreenTrouble extends Component<Props, State> {
           style={{
             marginTop: 'var(--sp-5)',
             fontSize: 'var(--type-base)',
-            opacity: 0.75,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}

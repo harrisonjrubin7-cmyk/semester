@@ -177,7 +177,7 @@ export function LessonPlayer() {
           <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 1.1 }}>
             {guide.units[unit]?.name ?? 'This unit'} has not been recorded
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             Lessons are rendered by the pipeline, one per unit:{' '}
             <code style={{ fontSize: 'var(--type-sm)' }}>python3 pipeline/lessons.py {state.guideId}</code>
           </div>

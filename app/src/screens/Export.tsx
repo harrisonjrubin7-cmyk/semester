@@ -336,7 +336,7 @@ export function Export() {
       )}
 
       {done ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', opacity: 0.85 }}>{done}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>{done}</div>
       ) : null}
       {error ? (
         <div
@@ -421,7 +421,7 @@ export function Export() {
 
       <Blueprint style={{ padding: '13px 14px', marginTop: 18 }}>
         <div className="kicker">The backup file</div>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           It holds your courses, notes, tasks, appointments, grades, saved places and what you have
           ticked off — everything except the attachments, which are in the zip beside it. Keys and
           the tokens for connected accounts are deliberately left out: a backup that carries your

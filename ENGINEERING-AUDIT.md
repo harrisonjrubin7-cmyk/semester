@@ -846,16 +846,80 @@ the right tool and the count is measuring something that is not debt. The
 remaining alphas are the 0.75–0.85 group, which is barely dimmed and where
 `--app-dim` would make text *dimmer*, and a thin tail at 0.25–0.45.
 
+### And the 0.75–0.85s, which run the other way · **and the one site that broke**
+
+The two passes before this made text brighter. This one cannot: `--app-dim` is
+about 0.64, so a caption written at 0.8 comes out **dimmer**. The question is
+therefore not "does this help" but "does it cost anything", and that is a
+measurement.
+
+It does not. `paint.mjs` on Fog over twelve screens chosen to cover the files
+carrying these sites, **324 runs measured on both sides and 18 runs of
+punctuation on both**:
+
+```
+before   10 runs of text below AA   (10 distinct)
+after    10                         (10 distinct)      no new failure in the diff
+```
+
+The text was well clear of the line at 0.8 and is still clear at `--app-dim` —
+which is the point of using a token audited at 4.5:1 rather than a number. And
+"Increase contrast" raises `--app-dim` to 0.9, so for the reader who needs it
+these are now *brighter* than the 0.8 they replaced, where before the setting
+could not reach them at all.
+
+```
+103 sites, 54 files
+dim          271 → 169
+the ledger  2,093 → 1,991
+```
+
+**And then one of them broke, which the contrast sweep did not catch.**
+
+`runway`'s "NEVER OPENED" kicker sits inside `.btn-primary` — a bright fill,
+whose ink is near-black by design. `--app-dim` is *the ground's* ink at the
+ground's dim strength, so handing it to that span painted light on light: a
+218/255 single-channel change, a kicker that all but disappeared.
+
+`paint.mjs` reported no new failure, and was right to: that run of text was
+already below AA at 4.12:1 before the change, so it never left the failure set
+and the count did not move. **A count of failures cannot see a failure getting
+worse.** The screenshot diff is what caught it, and only because the same-build
+control had already ruled out the two screens that always move.
+
+The filter was wrong rather than unlucky. It skipped any style object that
+paints a box, which is the right rule for an opacity dimming its own
+background — and says nothing about an opacity dimming ink **inherited from a
+parent that paints one**. So the whole tree was swept for it: every element
+these passes gave `--app-dim`, on all 79 screens, whose parent paints its own
+ink, and of those, the ones where the parent's ink is *inverted* against the
+app's.
+
+```
+elements given --app-dim inside differently-inked chrome   247
+  …of those, where the parent's ink is inverted              1
+```
+
+One. The other 246 sit under the same ink at a dimmer strength — a card's
+`rgb(156,163,178)` against the app's `rgb(236,238,242)` — where `--app-dim` is
+right and, on Courses, was the fix. The one is restored to its `opacity: 0.75`
+with the reason written beside it, so the next sweep does not take it again.
+
+In pixels, once that was fixed: the largest single-channel change anywhere is
+**49/255**, uniformly, on captions going `202,204,208 → 154,155,160`, with
+nothing but the two live countdowns above it and no colour lost. Larger than
+either pass before it, which is what a move from 0.8 to 0.64 is.
+
 ### What is left of P7
 
 The runtime half is untouched — still 4,710 `style={{ … }}` sites, a number
-this change did not move in either direction, and the React Compiler question
-above is the decision that should come before any of it. The ledger is at 2,093
-across 161 files: `type 649 · leading 211 · space 491 · shorthand 471 · dim
-271`. The remaining `dim` is the 0.75–0.85 group, where `--app-dim` would make text
-dimmer rather than brighter, and the icons and whole-row states, where
-`opacity` is the right tool and the ledger is counting something that is not
-debt.
+these changes did not move in either direction, and the React Compiler question
+above is the decision that should come before any of it. The ledger is at 1,991
+across 159 files: `type 649 · leading 211 · space 491 · shorthand 471 · dim
+169`. What is left of `dim` is mostly not text at all: the icons, chips and
+whole-row states with no `fontSize` in sight, where `opacity` is the right tool
+and the ledger is counting something that is not debt. The text that remains is
+the thin tail at 0.25–0.45 and the handful at 0.9 and above.
 
 ---
 
@@ -940,7 +1004,7 @@ Ordered by measured value per unit of risk, not by size.
 | 9 | ✅ **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | done on `main` as `nav.registry.test.ts`; the hole it was meant to close turned out not to exist |
 | 10 | ✅ **P4, places 3–5** — one table per list, `Record` over the union | large | a screen is declared once instead of three times; the `default` that had already lied about five screens is a build error now. Place 6 left, with its reason, in §4 |
 | 11 | ✅ **P2 proper** — split `now` out of the store context | large | 117 of 195 store consumers no longer re-render on a tick |
-| 12 | ◐ **P7** — the `dim` axis | medium | 467 sites in two passes, `dim` 739 → 271 and the ledger 2,561 → 2,093. On Fog across ten screens `scripts/paint.mjs` goes **24 → 3** runs of text below WCAG AA against the `main` this sits on, with no new failure in the diff of the two lists. The other four axes, and all 4,710 inline style objects, are still open — see §7 |
+| 12 | ◐ **P7** — the `dim` axis | medium | 570 sites in three passes, `dim` 739 → 169 and the ledger 2,561 → 1,991. On Fog across ten screens `scripts/paint.mjs` goes **24 → 3** runs of text below WCAG AA against the `main` this sits on, with no new failure in the diff of the two lists. The other four axes, and all 4,710 inline style objects, are still open — see §7 |
 | 14 | ✅ **§7a** — give focus back when the assistant closes | small | a dialog that takes focus returns it, both ways in |
 | 15 | ✅ **§3's aside** — read the timezone at the call site, not at module load | tiny | calendar events written in the zone you are in |
 | 13 | ✅ **P1e** — move the assistant's context assembly off the store | medium | −7,543 lines and −12% of the gzipped critical path; `lib/sheet.ts`, `lib/maths.ts` and `lib/chart.ts` go with it |

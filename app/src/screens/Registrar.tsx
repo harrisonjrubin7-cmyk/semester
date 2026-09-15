@@ -223,7 +223,7 @@ export function Registrar() {
         <div className="kicker">
           {done.done} of {done.of} filled in
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
           Every other date in this app came off a syllabus. These come from your registrar, and
           they are the ones that cost money rather than points — a withdrawal deadline missed is a
           course you are graded on whatever happens next.
@@ -244,7 +244,7 @@ export function Registrar() {
               title={d.label}
               meta={longLabel(isoToDate(d.iso))}
               trailing={
-                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.8 }}>
+                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                   {line(d, now)}
                 </span>
               }

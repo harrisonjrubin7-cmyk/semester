@@ -118,7 +118,7 @@ export function Adopting({
       <div
         style={{
           fontSize: 'var(--type-base)',
-          opacity: 0.75,
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',

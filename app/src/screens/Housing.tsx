@@ -123,7 +123,7 @@ function HousingDetails() {
         >
           {mine ? homeLine(mine) : 'No room on file yet.'}
         </div>
-        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
           {moveOutLine(moveOut, now)}
         </div>
         {packLine(exams, moveOut, now) ? (

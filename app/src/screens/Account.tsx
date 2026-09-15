@@ -46,7 +46,7 @@ export function AccountScreen() {
           <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 1.1 }}>
             This build has no account service
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             Everything works, and everything stays on this device. To turn on accounts, set
             VITE_SUPABASE_URL and VITE_SUPABASE_KEY and redeploy — see SETUP.md.
           </div>
@@ -123,7 +123,7 @@ export function AccountScreen() {
               aria-live="polite"
               style={{
                 fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                opacity: 0.8,
+                color: 'var(--app-dim)',
                 marginTop: 9,
                 lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
@@ -135,7 +135,7 @@ export function AccountScreen() {
         </Blueprint>
 
         <SectionLabel>What syncs</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
           Everything you have typed into this app, not a selection from it: your courses and what
           you have added to them, your tasks, appointments, notes and connected calendars, the
           documents, spreadsheets, decks and graphs you have made, the email you have drafted,
@@ -145,21 +145,21 @@ export function AccountScreen() {
         </div>
 
         <SectionLabel>What does not</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
           Files you attach stay on the device that has them — a lecture deck can be tens of
           megabytes and uploading it on a phone plan is not a choice the app should make for you.
           The sample semester's audio ships with the app, so it plays anywhere.
         </div>
 
         <SectionLabel>How conflicts resolve</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
           Nothing you added on one device is dropped because you added something on the other.
           Write a note on the laptop and another on your phone while it is offline, and you end up
           with both; tick one box here and a different one there, and both stay ticked. Settings
           are the exception, and deliberately so — your colours are whatever you last chose,
           wherever you chose it.
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty', marginTop: 'var(--sp-4)' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty', marginTop: 'var(--sp-4)' }}>
           What still does not merge is the same note edited on both: the later edit is the one that
           survives. The app would rather say so than pretend.
         </div>
@@ -179,7 +179,7 @@ export function AccountScreen() {
             button that appears to do nothing is the worst thing this screen
             could do with an account still signed in. */}
         {note && (
-          <div role="status" aria-live="polite" style={{ fontSize: 'var(--type-base)', opacity: 0.85, marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div role="status" aria-live="polite" style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-7)', lineHeight: 'var(--leading-relaxed)' }}>
             {note}
           </div>
         )}
@@ -200,7 +200,7 @@ export function AccountScreen() {
       <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
         {state.registered ? 'Pick up where you left off.' : 'One semester, every device.'}
       </div>
-      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         An account keeps your courses, notes and progress in step between your phone and your
         laptop. The app works without one — this only decides whether it follows you.
       </div>

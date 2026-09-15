@@ -192,7 +192,7 @@ export function Groupwork() {
       <Page>
         <Blueprint style={{ padding: '15px 16px' }}>
           <div className="kicker">Sign in first</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>
             A group is other people, so it needs an account. Everything else in the app works
             signed out.
           </div>
@@ -317,7 +317,7 @@ export function Groupwork() {
             >
               {open.name}
             </div>
-            <div style={{ fontSize: 'var(--type-md)', opacity: 0.8, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               {headline(s)}
             </div>
             {/* The sentence a group can argue with. See `lib/groupwork.ts`. */}

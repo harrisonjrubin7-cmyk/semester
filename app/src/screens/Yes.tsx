@@ -161,7 +161,7 @@ function EnrolledSchedule() {
                     )}
                   </div>
                   {c.title ? (
-                    <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-1)' }}>{c.title}</div>
+                    <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{c.title}</div>
                   ) : null}
                   {c.lines.map((line) => (
                     <div
@@ -192,7 +192,7 @@ function EnrolledSchedule() {
       )}
 
       {added ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', opacity: 0.85 }}>{added}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>{added}</div>
       ) : null}
 
       <SectionLabel>The other way</SectionLabel>

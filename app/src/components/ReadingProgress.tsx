@@ -119,7 +119,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
       <div
         style={{
           fontSize: 'var(--type-sm)',
-          opacity: 0.72,
+          color: 'var(--app-dim)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}

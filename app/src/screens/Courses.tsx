@@ -748,7 +748,7 @@ export function ItemDetail() {
           fontSize: 'var(--type-md)',
           lineHeight: 1.55,
           marginTop: 18,
-          opacity: 0.85,
+          color: 'var(--app-dim)',
           textWrap: 'pretty',
         }}
       >

@@ -94,7 +94,7 @@ export function NeedsKey({
             fontSize: 'var(--type-md)',
             marginTop: 'var(--sp-4)',
             lineHeight: 'var(--leading-relaxed)',
-            opacity: 0.8,
+            color: 'var(--app-dim)',
             textWrap: 'pretty',
           }}
         >

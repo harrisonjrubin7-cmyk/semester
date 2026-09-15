@@ -214,7 +214,7 @@ export function Snapshots() {
         </button>
 
         {said ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)', opacity: 0.85, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', textWrap: 'pretty' }}>
             {said}
           </div>
         ) : null}

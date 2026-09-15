@@ -202,7 +202,7 @@ export function Rework({
         </div>
       ) : null}
       {done ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-5)', opacity: 0.8, lineHeight: 'var(--leading-relaxed)' }}>{done}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 'var(--sp-5)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>{done}</div>
       ) : null}
 
       {plan && cost && (
@@ -238,7 +238,7 @@ export function Rework({
           </div>
 
           {plan.notes.length > 0 && (
-            <ul style={{ fontSize: 'var(--type-sm)', opacity: 0.75, margin: '10px 0 0', paddingLeft: 18, lineHeight: 1.55 }}>
+            <ul style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '10px 0 0', paddingLeft: 18, lineHeight: 1.55 }}>
               {plan.notes.map((n, i) => (
                 <li key={i}>{n}</li>
               ))}
@@ -247,7 +247,7 @@ export function Rework({
 
           <div style={{ marginTop: 'var(--sp-6)' }}>
             {plan.guide.units.map((u, i) => (
-              <div key={i} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.8, padding: '3px 0' }}>
+              <div key={i} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', padding: '3px 0' }}>
                 {u.name} <span style={{ opacity: 0.5 }}>· {u.cards.length}</span>
               </div>
             ))}

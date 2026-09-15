@@ -261,7 +261,7 @@ export function Credentials({
           aria-live="polite"
           style={{
             fontSize: 'var(--type-base)',
-            opacity: 0.85,
+            color: 'var(--app-dim)',
             marginTop: 14,
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',

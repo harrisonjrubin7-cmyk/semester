@@ -1373,7 +1373,7 @@ function DoneToday() {
           <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
             {done.length}
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75 }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)' }}>
             {done.length === 1 ? 'thing ticked off' : 'things ticked off'}
           </div>
         </div>
@@ -1613,7 +1613,7 @@ function FeedHome() {
                 >
                   {f.top}
                 </div>
-                <div style={{ fontSize: 'calc(17px * var(--text-scale, 1))', opacity: 0.85 }}>{f.bottom}</div>
+                <div style={{ fontSize: 'calc(17px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{f.bottom}</div>
               </div>
               <div
                 style={{

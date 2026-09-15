@@ -105,7 +105,7 @@ export function Applied({
               flex: 1,
               minWidth: 0,
               fontSize: 'var(--type-xs)',
-              opacity: 0.75,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-normal)',
             }}
           >

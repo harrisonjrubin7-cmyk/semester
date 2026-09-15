@@ -652,7 +652,7 @@ export function Maps() {
           marginTop: 'var(--sp-7)',
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.08em',
-          opacity: 0.75,
+          color: 'var(--app-dim)',
         }}
       >
         {/*
@@ -936,7 +936,7 @@ export function Maps() {
           style={{
             fontSize: 'var(--type-md)',
             marginTop: 'var(--sp-6)',
-            opacity: 0.75,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
           }}
         >

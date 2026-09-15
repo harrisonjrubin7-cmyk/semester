@@ -226,7 +226,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           role="status"
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            opacity: 0.75,
+            color: 'var(--app-dim)',
             marginTop: 14,
           }}
         >
