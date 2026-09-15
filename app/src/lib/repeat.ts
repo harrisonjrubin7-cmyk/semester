@@ -150,6 +150,30 @@ export function occurrences(
   return out;
 }
 
+/**
+ * The next day the series lands on strictly after `iso`, or undefined when it
+ * has run out.
+ *
+ * What a repeating *task* needs and a repeating appointment never did. An
+ * appointment is drawn on whichever day is on screen, so the views ask
+ * "does it land here"; a task sits on one date at a time and moves forward
+ * when it is ticked, so it has to ask "and then when".
+ *
+ * Bounded by {@link FURTHEST} through `occurrences`, and `until` bounds it
+ * sooner in every real case — a rule always names its last day.
+ */
+export function nextAfter(
+  from: string,
+  repeat: Repeat | undefined,
+  iso: string,
+): string | undefined {
+  if (!repeat || !real(from) || !real(iso)) return undefined;
+  // From the day after, to the day the rule stops. Both ends come out of the
+  // rule rather than from a window a caller has to guess at.
+  const [next] = occurrences(from, repeat, shiftIso(iso, 1), repeat.until);
+  return next;
+}
+
 /** How many times it happens between two dates, which is what a count line says. */
 export function howMany(from: string, repeat: Repeat | undefined, toIso: string): number {
   return occurrences(from, repeat, from, toIso).length;
