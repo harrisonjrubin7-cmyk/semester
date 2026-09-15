@@ -8,6 +8,7 @@ import { Blueprint } from '../components/Blueprint';
 import { buildQuiz } from '../lib/quiz';
 import { ladderFor, nextRungLabel, scoreLine } from '../lib/ladder';
 import { A_SITTING, aSitting, cardKey, catching, dueCount, dueFirst } from '../lib/review';
+import { inTime, testsNear } from '../lib/intime';
 import { interleave, mixLine, worthMixing } from '../lib/interleave';
 import { useKeepAwake } from '../lib/awake';
 import { unitName } from '../lib/unit';
@@ -28,6 +29,24 @@ export function Drill() {
   // what you have never seen, then what you already know — weakest first
   // inside each band. The run is fixed when it starts so answering a card does
   // not reshuffle the deck under your thumb.
+  /*
+   * The schedule, with a test in the next three weeks taken into account.
+   *
+   * SM-2 does not know what a semester is: a card answered right three times
+   * goes away for sixteen days, and the exam is in ten. `lib/intime.ts` brings
+   * those back for one last look before the test without touching what is
+   * stored, so this deck is dealt against a schedule that knows what the
+   * revision is *for*. Identity is preserved when nothing moved, which is what
+   * keeps the memo below from re-sorting the deck under your thumb.
+   */
+  const schedule = useMemo(
+    () => inTime(state.reviews, testsNear(catalog, now), now.getTime()),
+    // Same dependencies as the deck itself, and deliberately not `state.reviews`:
+    // see the note in the memo below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [catalog, state.guideId, state.drillUnit, state.drillMix],
+  );
+
   const ordered = useMemo(() => {
     /*
      * Mixing pulls from every course, not from this one.
@@ -46,7 +65,7 @@ export function Drill() {
           courseId: m.course.id,
         })),
       );
-      return interleave(dueFirst(every, state.reviews, now.getTime()), (c) => c.courseId);
+      return interleave(dueFirst(every, schedule, now.getTime()), (c) => c.courseId);
     }
     const all = allCards(guide).map((c) => ({
       ...c,
@@ -54,13 +73,13 @@ export function Drill() {
       courseId: state.guideId,
     }));
     const scoped = state.drillUnit === null ? all : all.filter((c) => c.ui === state.drillUnit);
-    return dueFirst(scoped, state.reviews, now.getTime());
+    return dueFirst(scoped, schedule, now.getTime());
     // Deliberately NOT depending on `guide` or `state.reviews`. Both change on
     // every answer now that mastery is measured, and re-sorting the deck under
     // your thumb mid-run skips cards and repeats others — a full pass of 68
     // recorded 34. The order is decided when the run starts and then held.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.guideId, state.drillUnit, state.drillMix]);
+  }, [state.guideId, state.drillUnit, state.drillMix, schedule]);
 
   /*
    * One sitting off the front, and the rest counted rather than dropped.
@@ -121,7 +140,7 @@ export function Drill() {
       // The whole deck, not the sitting: what is due in this course does not
       // stop at the twenty-fifth card.
       ordered.map((c) => c.key),
-      state.reviews,
+      schedule,
       now.getTime(),
     );
     const stubborn = catching(pool, state.reviews);

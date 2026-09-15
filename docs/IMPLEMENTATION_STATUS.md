@@ -4,6 +4,87 @@ September 14, 2026 · Compared with the supplied complete product requirements a
 
 The existing app is preserved and expanded. **This build is a working student workspace with local planning tools and an institutional integration foundation. It is not yet a complete replacement for a university's LMS, email, registration, billing or campus-service systems.** The user confirmed that school-approved access is not yet available.
 
+## September 15, 2026 — the scheduler had never been told the exam exists
+
+`lib/review.ts` schedules cards on a plain SM-2 variant, and SM-2 does not
+know what a semester is. Measured on the app's own numbers, a card answered
+right every time it comes up goes away for one day, then six, then **sixteen**,
+then **forty-five**. So a card answered right four times is gone for six weeks,
+and a midterm three weeks out never sees it again.
+
+The blueprint names the inputs spaced repetition should use — "accuracy,
+confidence, response time, item difficulty, and **exam proximity**". The first
+four were there. Nothing in the scheduler had ever been told when the exam is,
+although `testedIn` in `lib/select.ts` has answered exactly that since the study
+plan needed it; it was only ever read to write a sentence.
+
+`app/src/lib/intime.ts` is the missing input. It promises one thing and says so
+plainly: **every card gets at least one look in the three weeks before a test.**
+Not a second, and not a revision plan — the card's own schedule is the revision
+plan, and this is the floor under it.
+
+**Adjusted where it is read, never where it is written.** Nothing here touches a
+stored record: `inTime` returns a copy of the reviews with stranded cards
+brought forward, and three things follow that are worth more than the
+simplicity. It expires by itself the day after the test. It reaches cards
+*already* scheduled past the exam, which is most of them for anybody who has
+been studying, where a rule applying on the next answer would never fire. And
+every existing reader — `dueFirst`, `dueCount`, `comeRound`, `catching` — gets it
+for nothing, so the Drill, Gap, Study and You screens and the assistant's
+context each opt in on one line. The card's course comes out of its key, which
+`cardKey` already writes as `${courseId}:${hash}`.
+
+The last looks are **dealt across the days that are left, least-certain first**,
+ranked by the interval the scheduler itself assigned. Two earlier rules were
+measured and thrown away: putting every stranded card on the eve of the test
+(52 cards on one evening and nothing on the other thirteen), and spreading them
+by `strength` (45 of those 52 still on the eve, because `strength` saturates at
+a streak of three and every revised card is already there).
+
+Verified with the full gate set — types, lint, 9,022 tests in file order and
+shuffled, two timezones, production build, institution type-check — and driven
+in Chromium at phone width. Twenty mutations were reverted under the new tests
+and watched go red.
+
+**Three probes in this change were wrong before they were right**, and each one
+had reported a clean result first:
+
+- The first census answered every card correctly on every day, sent all 325
+  down one trajectory, and reported that **every card in every deck** would miss
+  its test. A finding and a broken probe look identical at 100%.
+- The census is a *snapshot*, and the feature is a *rollout*. Walking the
+  twenty evenings before the shipped ECON midterm one at a time — which no
+  other test did — found two faults that made the feature useless while
+  everything passed: room counted in elapsed milliseconds rather than calendar
+  days, so nothing ever became due and the whole deck fell on the eve; and a
+  guarantee with no end, re-forcing cards it had already delivered, 209 answers
+  dealt for a 67-card deck. `intime.rollout.test.ts` is that walk, kept.
+- The census then disagreed with the dealer by exactly one card. It was neither:
+  five questions are written out twice across the four shipped decks, so a deck
+  that says "68 cards" has 67 distinct ones. That is a real defect in the
+  shipped data — a drill can deal the same question twice in one sitting — and
+  it is filed rather than fixed here.
+
+After the fix the rollout is 3–5 cards an evening for twenty evenings, the whole
+deck covered, each card asked for once, and nothing left for the morning of the
+exam.
+
+Two contradictions were found by looking at the screen with every test passing.
+"nothing due · 68 back for the exam" on one line, where both halves were right —
+the 68 are dealt across the fortnight, so none is due today. And then, after
+that was reworded, "4 due" sitting three lines under a standing that reads
+"nothing come round", which is the same word for two different things. The row
+now says "4 of 68 up for the exam" where the test is the whole reason, and the
+button under it says "4 cards are back ahead of the exam" rather than claiming
+they came round.
+
+One guard cannot be checked by the default suite and says so in its own
+comment: `daysBack` round-trips through a `Date` because a day is not always
+86,400,000 milliseconds, and vitest runs in UTC where both spellings agree. The
+test for it uses dates straddling the 1 November clock change, so it is a guard
+only under `npm run test:zones` — which runs Chicago, where the mutation is
+caught.
+
 ## September 15, 2026 — the page number became a page
 
 Every imported deadline carries the sentence it came from, `app/src/lib/cite.ts`
