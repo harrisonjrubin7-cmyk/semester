@@ -424,7 +424,7 @@ export function FieldGuide() {
                     style={{
                       display: 'block',
                       fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                      opacity: 0.7,
+                      color: 'var(--app-dim)',
                       lineHeight: 1.55,
                       marginTop: 'var(--sp-2)',
                       textWrap: 'pretty',

@@ -100,7 +100,7 @@ export function Ahead() {
           {headline(w)}
         </div>
         {pressure(w) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             {pressure(w)}
           </div>
         ) : null}
@@ -125,7 +125,7 @@ export function Ahead() {
                 width: 34,
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'var(--type-base)',
-                opacity: 0.7,
+                color: 'var(--app-dim)',
               }}
             >
               {d.name}
@@ -296,7 +296,7 @@ export function Ahead() {
             : `${showHours(w.spare)} of waking time, after everything already promised.`}
         </div>
         {asked.stated > 0 ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
             Your syllabi ask for about {showHours(asked.hours)} of study a week
             {asked.stated < asked.total
               ? ` — and that is only the ${asked.stated} of ${asked.total} courses that say so`

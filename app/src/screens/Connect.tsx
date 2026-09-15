@@ -339,7 +339,7 @@ export function Connect() {
       <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', lineHeight: 1.1 }}>
         Everything in one place
       </div>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
         Brightspace, Outlook, Google and Zoom all publish calendars. Point the app at them and
         their dates sit on the same day rail as your classes — kept apart, and labelled.
       </div>
@@ -417,7 +417,7 @@ export function Connect() {
           <div
             style={{
               fontSize: 'var(--type-xs)',
-              opacity: 0.7,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-normal)',
               marginTop: 'var(--sp-3)',
               textWrap: 'pretty',
@@ -713,7 +713,7 @@ export function Connect() {
                 href={f.link}
                 target="_blank"
                 rel="noreferrer"
-                style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', flex: 'none', opacity: 0.7 }}
+                style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', flex: 'none', color: 'var(--app-dim)' }}
               >
                 OPEN
               </a>
@@ -742,7 +742,7 @@ export function Connect() {
           <div
             style={{
               fontSize: 'var(--type-base)',
-              opacity: 0.68,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}

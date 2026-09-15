@@ -142,7 +142,7 @@ export function Drill() {
           <div
             style={{
               fontSize: 'var(--type-md)',
-              opacity: 0.65,
+              color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               maxWidth: '32ch',
               marginInline: 'auto',
@@ -219,7 +219,7 @@ export function Drill() {
               <div
                 style={{
                   fontSize: 'var(--type-sm)',
-                  opacity: 0.7,
+                  color: 'var(--app-dim)',
                   marginTop: 'var(--sp-4)',
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
@@ -586,7 +586,7 @@ export function Quiz() {
           <div
             style={{
               fontSize: 'var(--type-md)',
-              opacity: 0.65,
+              color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               maxWidth: '32ch',
               marginInline: 'auto',

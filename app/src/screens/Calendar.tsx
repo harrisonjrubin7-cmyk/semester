@@ -2184,7 +2184,7 @@ function SemesterView() {
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
         {[
           on.deadlines && `${items.length} ${items.length === 1 ? 'deadline' : 'deadlines'}`,
           // Counted apart from the deadlines, the way the whole app counts

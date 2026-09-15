@@ -131,7 +131,7 @@ function OutOfPocket() {
           {line(t)}
         </div>
         {todo(t) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>{todo(t)}</div>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>{todo(t)}</div>
         ) : null}
       </Blueprint>
 

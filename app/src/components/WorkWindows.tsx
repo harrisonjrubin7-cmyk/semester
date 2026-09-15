@@ -41,7 +41,7 @@ export function WorkWindows() {
   return (
     <Folding name="WorkWindows">
       <SectionLabel>When you actually work</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         The app counts a day as sixteen waking hours until you say otherwise, which is a default
         rather than a fact about you. Two or three windows here make every hour figure in the app
         true — the week ahead, the exam runway, what is left over.

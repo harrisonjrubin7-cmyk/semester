@@ -166,7 +166,7 @@ export function Registrar() {
               {found.length} {found.length === 1 ? 'date' : 'dates'} found
             </SectionLabel>
             {found.length === 0 ? (
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
                 Nothing in that had both a date and something to call it. Paste the rows
                 themselves rather than a link to them, or fill the dates in by hand.
               </div>
@@ -195,7 +195,7 @@ export function Registrar() {
                     {f.label}
                     {f.id ? '' : ' — kept in your words'}
                   </span>
-                  <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.65 }}>
+                  <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                     {longLabel(isoToDate(f.iso))}
                     {f.until ? ` – ${longLabel(isoToDate(f.until))}` : ''}
                   </span>

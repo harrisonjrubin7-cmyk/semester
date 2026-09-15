@@ -250,7 +250,7 @@ export function SchoolPicker() {
             type="button"
             className="bare tappable"
             onClick={() => dispatch({ type: 'setSchool', id: '' })}
-            style={{ ...chip(false), fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 'var(--type-xs)', opacity: 0.7 }}
+            style={{ ...chip(false), fontFamily: 'var(--font-heading)', letterSpacing: '0.1em', textTransform: 'uppercase', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
           >
             Set no school
           </button>

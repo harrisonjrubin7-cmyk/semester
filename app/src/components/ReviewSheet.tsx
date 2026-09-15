@@ -349,7 +349,7 @@ function Row({
           style={{
             display: 'block',
             fontSize: 'var(--type-sm)',
-            opacity: 0.7,
+            color: 'var(--app-dim)',
             marginTop: 3,
             lineHeight: 'var(--leading-normal)',
           }}

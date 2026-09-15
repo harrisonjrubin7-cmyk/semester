@@ -99,7 +99,7 @@ export function Grades() {
                   first is worse than one line fewer.
                 */}
                 {s.counted > 0 || s.remaining > 0 ? (
-                  <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7 }}>
+                  <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                     {s.remaining > 0
                       ? `${Math.round(s.remaining)}% still to play for`
                       : 'Everything is in'}
@@ -113,7 +113,7 @@ export function Grades() {
                 </div>
               )}
               {s.extraCredit > 0 && (
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-4)' }}>
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
                   Plus {s.extraCredit.toFixed(1)} points of extra credit.
                 </div>
               )}
@@ -352,7 +352,7 @@ export function Grades() {
    */
   return (
     <div>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {intro}
       </div>
       {body(catalog.courses)}

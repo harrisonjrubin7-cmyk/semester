@@ -107,7 +107,7 @@ function EnrolledSchedule() {
       </div>
 
       <SectionLabel>Bring your schedule back</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Open your enrolled classes in YES, select them, copy, and paste here. Nothing is read from
         the page — a browser will not let this app see a tab it does not own, and it should not.
       </div>

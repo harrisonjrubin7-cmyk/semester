@@ -151,7 +151,7 @@ export function Bill() {
             key={s}
             style={{
               fontSize: 'var(--type-base)',
-              opacity: 0.7,
+              color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               lineHeight: 'var(--leading-relaxed)',
             }}

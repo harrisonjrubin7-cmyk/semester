@@ -163,7 +163,7 @@ function Row({ a }: { a: Application }) {
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.62,
+            color: 'var(--app-dim)',
             marginTop: 3,
             textWrap: 'pretty',
           }}

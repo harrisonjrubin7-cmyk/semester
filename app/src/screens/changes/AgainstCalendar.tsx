@@ -96,7 +96,7 @@ export function AgainstCalendar() {
 
   return (
     <Folding name="AgainstCalendar">
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Every deadline here was read off a syllabus once, before term started. This checks them
         against what your LMS calendar says today, and shows both dates before changing anything.
       </div>

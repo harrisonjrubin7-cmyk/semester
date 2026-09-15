@@ -72,7 +72,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
         <label
           style={{
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.7,
+            color: 'var(--app-dim)',
             display: 'flex',
             alignItems: 'center',
             gap: 'var(--sp-3)',

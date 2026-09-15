@@ -74,7 +74,7 @@ export function CloseTerm() {
   return (
     <div style={{ marginTop: 18 }}>
       <div className="kicker">Closing {readTerm(term).label}</div>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         The grade your registrar posted, as they wrote it — a letter, or whatever your school
         awards. Leave one blank if it has not come back yet.
       </div>

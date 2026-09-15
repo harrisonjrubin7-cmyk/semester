@@ -44,7 +44,7 @@ export function SettingsCourses() {
           >
             <CustomRow>
               <SectionLabel style={{ margin: '0 0 6px' }}>You are here as</SectionLabel>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-4)', textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', textWrap: 'pretty' }}>
                 {roleOf(state.role).blurb}
               </div>
               <select

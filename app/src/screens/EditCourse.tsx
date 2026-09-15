@@ -146,7 +146,7 @@ export function EditCourse() {
       bottom={26}
     >
     <>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Everything a syllabus states, changeable. Dates move, weightings get corrected, rooms
         change — none of that should mean re-importing the course and losing what you have drilled.
       </div>

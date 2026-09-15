@@ -66,7 +66,7 @@ export function ClosingWindows() {
                   style={{
                     display: 'block',
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                    opacity: 0.7,
+                    color: 'var(--app-dim)',
                     marginTop: 3,
                     textWrap: 'pretty',
                   }}

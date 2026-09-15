@@ -39,7 +39,7 @@ export function HowMuch() {
       <div
         style={{
           fontSize: 'calc(12.5px * var(--text-scale, 1))',
-          opacity: 0.65,
+          color: 'var(--app-dim)',
           lineHeight: 'var(--leading-relaxed)',
           marginBottom: 9,
         }}

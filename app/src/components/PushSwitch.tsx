@@ -99,7 +99,7 @@ export function PushSwitch() {
       </button>
 
       {(said || blocked) && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
           {blocked || said}
         </div>
       )}

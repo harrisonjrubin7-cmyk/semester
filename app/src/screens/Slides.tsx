@@ -268,7 +268,7 @@ export function SlideDeck() {
             <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08 }}>
               {slide.title}
             </div>
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)' }}>{slide.sub}</div>
+            <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{slide.sub}</div>
             <button
               type="button"
               className="btn btn-primary"

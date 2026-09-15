@@ -446,7 +446,7 @@ export function Import() {
                 fontSize: 'var(--type-sm)',
                 fontFamily: 'var(--font-body)',
                 fontWeight: 400,
-                opacity: 0.62,
+                color: 'var(--app-dim)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
               }}
@@ -725,7 +725,7 @@ function ByHand() {
       <div
         style={{
           fontSize: 'var(--type-sm)',
-          opacity: 0.65,
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',

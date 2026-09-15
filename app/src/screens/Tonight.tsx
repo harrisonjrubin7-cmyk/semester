@@ -224,7 +224,7 @@ function Row({
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.62,
+            color: 'var(--app-dim)',
             marginTop: 3,
           }}
         >
@@ -237,7 +237,7 @@ function Row({
         <span
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 0.7,
+            color: 'var(--app-dim)',
             fontVariantNumeric: 'tabular-nums',
             whiteSpace: 'nowrap',
           }}

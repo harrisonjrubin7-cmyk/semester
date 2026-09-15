@@ -160,7 +160,7 @@ export function Analyse() {
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Every number here is computed on this device by tested code, not guessed at by a model.
         {provider()} is given the finished statistics and asked what they mean — it never reads a column
         and reports a figure.

@@ -241,7 +241,7 @@ export function Groupwork() {
         <>
           <SectionLabel>Groups in {code}</SectionLabel>
           {groups.length === 0 ? (
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
               None yet. Whoever starts one is in it, and anybody else in the class can join.
             </div>
           ) : (
@@ -322,7 +322,7 @@ export function Groupwork() {
             </div>
             {/* The sentence a group can argue with. See `lib/groupwork.ts`. */}
             {paceLine(asGroup(open), parts.map(asPart), now) ? (
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
                 {paceLine(asGroup(open), parts.map(asPart), now)}
               </div>
             ) : null}

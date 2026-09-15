@@ -97,7 +97,7 @@ function NextClassCard() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.1 }}>
             {next.block.title}
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
             {next.block.c ? catalog.byId[next.block.c].room : next.block.meta}
           </div>
         </div>
@@ -269,7 +269,7 @@ function OverdueBanner() {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          opacity: 0.7,
+          color: 'var(--app-dim)',
         }}
       >
         See them
@@ -610,6 +610,10 @@ function Feed_due() {
               fontFamily: 'var(--font-heading)',
               fontSize: 'var(--type-sm)',
               letterSpacing: '0.12em',
+              // Outside the 0.60–0.70 band the rest of this pass kept to, and
+              // converted anyway because it is not a look decision: at 0.5 on
+              // Fog this counter renders at 3.28:1 against the panel, which
+              // `scripts/paint.mjs` fails on. See `ENGINEERING-AUDIT.md` §7.
               color: 'var(--app-dim)',
             }}
           >
@@ -1421,7 +1425,7 @@ function DoneToday() {
                     fontSize: 'var(--type-md)',
                     lineHeight: 'var(--leading-tight)',
                     textDecoration: 'line-through',
-                    opacity: 0.7,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   {i.title}

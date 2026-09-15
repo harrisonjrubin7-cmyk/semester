@@ -169,7 +169,7 @@ export function Runway() {
         >
           {headline(r)}
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
           {r.stage.label}. {r.stage.shape}
         </div>
         {r.daysAway > 0 ? (
@@ -227,7 +227,7 @@ export function Runway() {
 
       <SectionLabel>Where you stand</SectionLabel>
       <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}>{standing(r)}</div>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>{paperLine(r)}</div>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>{paperLine(r)}</div>
 
       {worst ? (
         <button

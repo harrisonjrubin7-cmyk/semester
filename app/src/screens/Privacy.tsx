@@ -144,7 +144,7 @@ export function Privacy() {
         on={state.countScreens}
         onChange={() => dispatch({ type: 'countScreens', on: !state.countScreens })}
       />
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 1.55, marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.55, marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>
         {usageLine(state.countScreens, counts)}
       </div>
       {total(counts) > 0 && (
@@ -246,7 +246,7 @@ export function Privacy() {
         <div
           role="status"
           aria-live="polite"
-          style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}
+          style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}
         >
           {saved}
         </div>

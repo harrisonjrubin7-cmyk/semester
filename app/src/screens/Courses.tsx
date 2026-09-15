@@ -241,7 +241,7 @@ export function Courses() {
                   <span
                     style={{
                       fontSize: 'var(--type-sm)',
-                      opacity: 0.7,
+                      color: 'var(--app-dim)',
                       flex: 1,
                       minWidth: 0,
                       overflow: 'hidden',

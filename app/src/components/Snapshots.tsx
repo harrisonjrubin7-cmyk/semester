@@ -84,7 +84,7 @@ export function Snapshots() {
     <Folding name="Snapshots">
       <div>
         <SectionLabel>Go back a day</SectionLabel>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
           {LOCAL_LINE}
         </div>
 
@@ -154,7 +154,7 @@ export function Snapshots() {
                 ))}
               </ul>
             )}
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {RESTORE_LINE}
             </div>
             <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>

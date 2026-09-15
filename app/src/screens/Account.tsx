@@ -77,7 +77,7 @@ export function AccountScreen() {
               Through {account.via}.
             </div>
           )}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             {sync.status === 'syncing' && 'Catching up with your account…'}
             {sync.status === 'synced' &&
               `Synced ${sync.at ? new Date(sync.at).toLocaleTimeString() : ''} · ${counts}`}
@@ -216,7 +216,7 @@ export function AccountScreen() {
       <Credentials />
 
       <SectionLabel>Before you sign up</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 1.55, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
         What you already have on this device is kept. The first sync sends it up, and if the
         account already holds a semester the two are merged rather than one replacing the other —
         you end up with both sides' courses, notes and ticked boxes.

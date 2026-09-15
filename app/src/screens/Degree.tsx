@@ -173,7 +173,7 @@ function WhatIsLeft() {
                   <div
                     style={{
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                      opacity: 0.7,
+                      color: 'var(--app-dim)',
                       marginTop: 3,
                       textWrap: 'pretty',
                     }}
@@ -217,7 +217,7 @@ function WhatIsLeft() {
           {/* Either they really are free electives, or a requirement has not
               been entered yet. Both are worth knowing and the app does not
               guess which. */}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {loose.map((c) => c.code).join(', ')}. Either these are free electives, or a
             requirement they satisfy has not been entered yet.
           </div>

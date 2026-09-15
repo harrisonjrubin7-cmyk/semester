@@ -183,7 +183,7 @@ export function Behind() {
                     style={{
                       display: 'block',
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                      opacity: 0.62,
+                      color: 'var(--app-dim)',
                       marginTop: 3,
                       textWrap: 'pretty',
                     }}
@@ -203,7 +203,7 @@ export function Behind() {
       <div
         style={{
           fontSize: 'var(--type-sm)',
-          opacity: 0.7,
+          color: 'var(--app-dim)',
           marginBottom: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
@@ -240,7 +240,7 @@ export function Behind() {
               style={{
                 display: 'block',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                opacity: 0.62,
+                color: 'var(--app-dim)',
                 marginTop: 'var(--sp-2)',
                 lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',

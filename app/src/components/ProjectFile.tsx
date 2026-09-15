@@ -116,7 +116,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
 
   return (
     <Folding name="ProjectFile">
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         A document to write the thing <em>in</em> — headings, the question each section has to
         answer, your sources with a column for what each is for, the rubric as a checklist, and
         blanks where your claims go. Not the essay: that is the part with your name on it.

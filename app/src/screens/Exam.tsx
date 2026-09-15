@@ -240,7 +240,7 @@ export function Exam() {
   if (stage === 'setup') {
     return (
       <Page bottom={26}>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           A paper with a shape, a total and a clock — not another round of cards. The marks and
           the timing are worked out here; only the questions come from anywhere else.
         </div>
@@ -476,7 +476,7 @@ export function Exam() {
                 <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: 1, minWidth: 0 }}>{q.from}</span>
               ) : null}
               {marking ? (
-                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', flex: 'none', opacity: 0.7 }}>
+                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', flex: 'none', color: 'var(--app-dim)' }}>
                   {marksFor(q, answer)}/{q.points}
                 </span>
               ) : null}

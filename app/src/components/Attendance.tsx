@@ -61,7 +61,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
               >
                 {b.over > 0 ? `−${Math.round(b.cost * 10) / 10}%` : b.left}
               </span>
-              <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7 }}>
+              <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                 {b.over > 0 ? 'already lost to absences' : b.left === 1 ? 'absence left' : 'absences left'}
               </span>
             </div>
@@ -124,7 +124,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
       {open && (
         <div style={{ paddingBottom: 'var(--sp-4)' }}>
           <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
-            <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7 }}>
+            <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
               Absences allowed
               <input
                 className="input"
@@ -135,7 +135,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
                 style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
               />
             </label>
-            <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7 }}>
+            <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
               Then % off, each
               <input
                 className="input"
@@ -146,7 +146,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
                 style={{ width: '100%', height: 38, marginTop: 'var(--sp-2)', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}
               />
             </label>
-            <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7 }}>
+            <label style={{ flex: '1 1 130px', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
               Or worth % of grade
               <input
                 className="input"

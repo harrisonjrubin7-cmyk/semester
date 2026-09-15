@@ -163,7 +163,7 @@ export function Sources() {
             />
           ) : (
             <>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
                 {completeness(list)}
               </div>
               {list.map((s) => {
@@ -172,7 +172,7 @@ export function Sources() {
                   <Blueprint plain key={s.id} style={{ padding: '12px 13px', marginBottom: 'var(--sp-4)' }}>
                     <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>{s.raw}</div>
                     {s.role.trim() ? (
-                      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                         For: {s.role}
                       </div>
                     ) : (

@@ -190,7 +190,7 @@ export function Profile() {
         <div
           style={{
             fontSize: 'var(--type-base)',
-            opacity: 0.65,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
