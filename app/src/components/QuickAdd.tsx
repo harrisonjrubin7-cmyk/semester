@@ -27,7 +27,7 @@
 import { useRef, useState } from 'react';
 import { useModal } from '../a11y/modal';
 import { useModernShell } from './shell-context';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { capture, enough, readBack } from '../lib/capture';
 import { ActionButton } from './ui';
 import { DESKTOP, useMedia } from '../lib/media';
@@ -43,7 +43,8 @@ import { DESKTOP, useMedia } from '../lib/media';
 const COLUMN = 620;
 
 export function QuickAdd({ onClose }: { onClose: () => void }) {
-  const { catalog, dispatch, now } = useStore();
+  const { catalog, dispatch } = useStore();
+  const now = useNow();
   const [text, setText] = useState('');
   const [said, setSaid] = useState('');
   const wide = useMedia(DESKTOP);

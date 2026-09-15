@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
@@ -90,7 +90,8 @@ const PARTS: { id: PartId; label: string; blurb: string; format: string }[] = [
  * right to read anything else in your Drive, and that is worth knowing.
  */
 export function Export() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   // No padding in the drawn layout, because the row's own content supplies
   // it there. Grouped adds its own. See `useRowStyle`.
   const rowStyle = useRowStyle(0);

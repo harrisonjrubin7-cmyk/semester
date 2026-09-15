@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { cardKey } from '../lib/review';
 import { KINDS, OFFER, doneLine, newMortem, saidSomething, type MissKind, type PostMortem as Mortem } from '../lib/postmortem';
@@ -19,7 +19,8 @@ import { unitName } from '../lib/unit';
  * in it is never stored.
  */
 export function PostMortem({ record, courseId }: { record: Returned; courseId: string }) {
-  const { dispatch, now } = useStore();
+  const { dispatch } = useStore();
+  const now = useNow();
   const { guide } = useLive(courseId);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Mortem>(() => record.mortem ?? newMortem(now.getTime()));

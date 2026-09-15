@@ -22,7 +22,7 @@
 
 import { useMemo, useState } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel, Segmented } from '../components/ui';
@@ -53,7 +53,8 @@ export function Bill() {
   // `now` from the store rather than `new Date()` here: it is the one clock
   // every screen reads, so "overdue" changes at midnight on this screen at the
   // same moment it changes on Today.
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
 
   const charges = useMemo(() => forTerm(state.charges, state.term), [state.charges, state.term]);
   const awards = useMemo(() => forTerm(state.aid, state.term), [state.aid, state.term]);

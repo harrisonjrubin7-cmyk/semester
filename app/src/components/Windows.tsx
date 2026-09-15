@@ -10,14 +10,15 @@
  * task, and one that has been raised is finished.
  */
 
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { NO_WINDOW, closing, windowLine } from '../lib/returned';
 import { Folding } from './Fold';
 
 export function ClosingWindows() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const soon = closing(
     state.returned,
     (courseId) => state.regradeWindows[courseId] ?? NO_WINDOW,

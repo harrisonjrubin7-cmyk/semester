@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { secondLine } from '../../lib/dim';
 import { Produced } from '../../components/Produced';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { Trouble } from '../../components/Trouble';
 import { useTrouble } from '../../lib/trouble';
 import { Blueprint } from '../../components/Blueprint';
@@ -46,7 +46,8 @@ import {
  * upstairs now.
  */
 export function WeekReport() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
 
   const [said, setSaid] = useState('');
   const [busy, setBusy] = useState(false);

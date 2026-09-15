@@ -3457,125 +3457,190 @@ dispute: whatever the grade table is, it is not two things at once.
 
 ---
 
-## 7. The assistant's button, and the sixty screens it rests on
+## 7. The assistant's button, and the seventy-four screens it rests on
 
 An axis neither half of this audit looks at. A and B both ask which *markup*
 repeats; this asks which markup **collides** — specifically with the one
 control that is not drawn by any screen and appears on all of them, the
 assistant's floating button (`ai/Assistant.tsx`).
 
-The button lifts by its own height when something tappable is beneath it, up
-to twice. Whether that is enough is not a question a unit test can answer:
-jsdom has no layout, so `elementsFromPoint` — the whole mechanism — does not
-exist there, and `ai/dock.test.ts` can only check which points get asked.
-The answer has to be measured in a browser, and this is that measurement.
+The button lifts by half its height at a time when something tappable is
+beneath it, up to twice its height. Whether that is enough is not a question a
+unit test can answer: jsdom has no layout, so `elementsFromPoint` — the whole
+mechanism — does not exist there, and `ai/dock.test.ts` can only check which
+points get asked and how the answers are ranked. The rest has to be measured
+in a browser, and this is that measurement.
 
-### The instrument
+### The instrument, and the six ways it lied first
 
-Chromium at 402×874, all 60 destinations in `lib/nav.ts`, 2.6s per screen so
-the lift's own timers settle. For each visible control in `main`, its overlap
-with the button's resting rect as a fraction of the control's own area.
+Chromium at 402×874, 2.6s per screen so the lift's own timers settle. All 60
+destinations in `lib/nav.ts`, and the fourteen `NAMED` screens at a real id —
+marked with a trailing `#`. For each visible control in `main`, how much of it
+a tap can no longer reach.
 
-The table below is one run, on the production build at `b5000de`. The count of
-screens *touching* moves with the content — three screens left it and one
-gained a second hit between that commit and the one before it, on changes that
-had nothing to do with the assistant — so it is the last two rows that are the
-claim, and they are what the script exits non-zero on.
+Every correction below was made because the version before it gave a confident
+wrong answer. They are worth more than the numbers, and they are guarded in
+`scripts/dock.mjs` rather than remembered:
 
-Three corrections to the instrument are worth more than the numbers, because
-each produced a confident wrong answer first. Two are below; the third is the
-padded tap target, which needs the census's own result to explain and is at
-the end of this section.
+1. **The button was found by its label.** `aria-label^="Ask about"` also
+   matches Progress's in-content "Ask about: …" affordance, so that screen was
+   measured against itself and reported 100% covered. It is
+   `aria-keyshortcuts="a"` *and* `position: fixed`.
+2. **Laid out is not on screen.** Chrome gives content inside a closed
+   `<details>` a real `getBoundingClientRect` — right size, right place, and
+   invisible. On `study` that was 14 of 50 "controls", one of which was
+   reported as centre-blocked by a button resting nowhere near it. The filter
+   is `checkVisibility()`, never a non-zero rect.
+3. **A padded target is not its border box.** `.tap`, `.tap-x` and `.tap-y`
+   grow a small control's target to 44px with a transparent `::after`, and
+   `elementsFromPoint` hit-tests the overlay — so reading the border box
+   measures a different element than the one the probes find.
+4. **The bare address is the library, not the screen.** `#/write` is a shelf
+   of blank templates; `#/write/<id>` is the editor, with a paragraph toolbar
+   in the corner the button rests in. The first run of this swept only bare
+   addresses and so measured the emptiest version of the fourteen screens that
+   have the most in that corner. It is where the one real bug was hiding.
+5. **"Blocked" was two questions.** `elementFromPoint` answers about whatever
+   is frontmost, which on `study` was a panel a hundred pixels away; and it is
+   viewport-relative, so a centre below the fold answers `null`. Both read as
+   blocked, and the second lit up seven unrelated screens at once. The centre
+   is asked about only where it falls inside the button's own rect.
+6. **Rectangles are not a circle.** The button is `border-radius: 50%`, so
+   about a fifth of the box the arithmetic claims is not occupied by anything.
+   Coverage is now sampled on a 2px grid — how many points of the target a tap
+   still reaches — and it moves the answer in *both* directions, which is how
+   you can tell it is a measurement and not an excuse: `links`' EDIT drops
+   from 53% to 44%, and the spreadsheet's cells rise from 52% to 90%.
 
-- **Matching the button by its label caught something else.** `aria-label^="Ask
-  about"` also matches Progress's in-content "Ask about: …" affordance, so that
-  screen was measured against itself and reported as 100% covered. The button
-  is `button[aria-keyshortcuts="a"]` with `position: fixed`.
-- **Laid out is not the same as on screen.** Chrome gives content inside a
-  *closed* `<details>` a real `getBoundingClientRect` — non-zero, correctly
-  positioned, and invisible. On `study` that is 14 of 50 "controls", among them
-  `StudyJournal`'s course `<select>`, which the first run reported as covered
-  with its centre blocked. Nobody can see it: `details.open` is `false` and
-  `checkVisibility()` is `false`. The filter is `checkVisibility()`, not a
-  non-zero rect.
+### What it found
 
-### What it found, after all three
+| | 60 destinations | + the 14 at an id |
+| --- | --- | --- |
+| Screens swept | 60 | **74** |
+| Button drawn | 57 | **71** — the other three are `FILLS` in `components/shell/exempt.ts` |
+| Touching any visible control | 27 | **29** |
+| Half covered, outside a table cell | 0 | **0**, after W1 and W2 |
+| Centre under the button | 0 | **0**, after W1 and W2 |
 
-| | |
+The first column is why this section originally said it changed no code. The
+second is what the same instrument says once it looks at the editors.
+
+### W1 — the button climbed into something worse · **FIXED**
+
+On the document editor the assistant came to rest on top of "Remove this
+paragraph", a 30×30 control, covering **76% of it including its centre**. The
+exact failure the lift exists to prevent, caused by the lift.
+
+| lift | what is under it |
 | --- | --- |
-| Destinations swept | 60 |
-| Button drawn | 57 — the other three are `FILLS` in `components/shell/exempt.ts` |
-| Touching any visible control | 27 |
-| Covered ≥50% (the rule's own threshold) | **0** |
-| Centre of a control unreachable | **0** |
-| Closest to the threshold | `links` EDIT at 48%, and see below |
+| 0 | the paragraph `<textarea>`, 4% — a corner clip |
+| 58 | the same textarea, 3% |
+| 116 | **"Remove this paragraph", 76%**, and the document's title at 6% |
 
-So the lift works. Every remaining overlap is a full-width row or a wide
-button with a corner clipped, which is the case `tappable()`'s proportional
-rule was written to allow: a row you can still tap has lost nothing you
-needed.
+A form field counts at *any* overlap — "a caret you cannot see is unusable
+even when most of the box shows" — so 4% was enough to send it climbing. Two
+lifts later it landed on the Remove control, and every position being occupied,
+the rule kept the last one it had tried.
 
-### The worst of them, and a third correction to the instrument
+**The fix is that "occupied" became a number.** `tappable()` answered yes or
+no, and a yes/no answer cannot rank two occupied positions. It is now
+`costOf()`, returning the fraction of the control the button would hide, with
+a floor of 50% under the two kinds that count whatever the fraction. Which
+positions are acceptable did not change — a clear one still wins outright, and
+everything the old rule called covered the new one still does. What changed is
+the answer when *nothing* is clear: take the cheapest, and on a tie keep the
+lowest, which is the position somebody's thumb already knows.
 
-`links` draws an EDIT button at the tail of each row, 27×17. It is the closest
-thing in the census to a collision, and getting a number out of it took three
-goes.
+A second, smaller bug came out with it. The old loop incremented before
+returning, so an exhausted search returned `tries * LIFT` — a **third** lift,
+at a position the probes had never been asked about, and one the comment
+directly above it forbids. Every candidate is now a position it has examined.
 
-**27×17 is not what a finger aims at.** The button carries `.tap-y`, so its
-real target is the 27×44 `::after` overlay `styles/app.css` describes — the
-mark stays put and the *target* grows to 44px in the axis that has room. The
-first measurement read `getBoundingClientRect()` and so measured a different
-element than the one `elementsFromPoint` finds.
+### W2 — the step and the row pitch were the same length · **FIXED**
 
-**Padding it does not always help the fraction.** Measured on the border box
-the lower EDIT is 41% covered; measured on the target it is **48%**, because
-the button sits above it and the padding reaches up into the button. Higher,
-not lower, and two points off the threshold — the nearest miss in the app.
+On `#/links` every row is 63px and ends in a small EDIT. The button is 52px
+and stepped 58 — near enough to the pitch that lifting moved it off one row's
+EDIT and squarely onto the next one's. All three places it could reach buried
+an EDIT completely: 100%, 100%, 100%.
 
-**And a circle is not its bounding box.** Sampled on a 1px grid, 65% of that
-target is actually reachable: 35% covered, not 48%. The assistant is
-`border-radius: 50%` and `tappable()` compares rectangles, so its arithmetic
-claims about a fifth of the button's area that the button does not occupy.
+Half a lift breaks it without widening the search — the same `2 × LIFT`
+ceiling and the same promise not to wander, five places inside it instead of
+three. The best available on that screen goes from 100% to 57% by the box, and
+44% as a finger actually finds it.
 
-The direction of that error is the useful part. It over-reports coverage, so
-the rule lifts a little sooner than it strictly must, and a control the
-arithmetic calls half covered is less than half covered in the hand. That is
-the safe side of the threshold, and it is why nothing here is worth changing:
-correcting it would cost every probe a distance calculation to make the button
-*less* willing to move out of the way.
+### The probes still have a hole, and this is how we know
 
-### Verdict · **no change**
+Worth recording, because it is the reason to keep the census rather than trust
+the rule. `clearOf` samples five points — centre and four inset corners — and
+at *none* of them did it ever see the Remove control of W1. A 30×30 button
+inside a 52×52 one can sit in the dead ground between centre and corners,
+invisible to the sampling however totally it is covered. The same species of
+hole the corners were added to close, one level down.
 
-Sixty screens, and the lift is right on all of them. `study` is recorded by
-name because it was reported as broken before it was checked: the select that
-finding named is inside a collapsed `<details>`, and the button rests clear of
-everything visible on that screen.
+It is not closed. A 3×3 grid would catch that one and a 5×5 anything wider
+than 13px, at 9 or 25 `elementsFromPoint` calls a position instead of 5 — and
+it would have changed nothing about W1, whose fix keeps the button away from
+that region entirely. So the hole stays, named, and the thing that sees into
+it is this census, which measures from the control's side instead of sampling
+from the button's.
 
-The honest summary of this section is that it changed no screen. That is the
-result — the rule in `tappable()`, its 50% threshold and its two-lift cap were
-arrived at by measurement once already, and measuring again at sixty screens
-agrees with them.
+### The one that is exempt · `sheet#` · **ACCEPTED**
+
+The spreadsheet editor covers one cell almost completely — 90% as a finger
+finds it — and no lift can help: rows are 26px and the grid tiles the screen,
+so the button covers a cell and part of its neighbour **wherever it sits**.
+Every position scores the same, measured rather than assumed. This is not a
+rule failing to find the good position; there is no good position.
+
+Accepted, because a cell is not a control you can lose. The same affordance
+repeats across hundreds of cells, the table is navigable from the keyboard,
+and the cell under the button is one arrow-key from a clear one — none of
+which is true of W1's Remove control, or of `links`' EDIT, where each one
+edits a different link. The exemption is `el.closest('td, th')`: real cells of
+a real `<table>`, the only part of that markup which cannot drift, and
+narrower than anything keyed on a class or a label. Exempt hits are still
+counted and still printed, marked `cell`, so a screen that quietly becomes a
+grid shows up here rather than being silently forgiven.
+
+Everything else that remains is a full-width row or a wide button with a
+corner clipped, which is the case the proportional rule was written to allow:
+a row you can still tap has lost nothing you needed.
+
+### Verdict · **two bugs, both found by widening the instrument**
+
+Seventy-four screens. `study` is still recorded by name because it was
+reported as broken before it was checked — the select that finding named is
+inside a closed `<details>`, and the button rests clear of everything visible
+there.
+
+But the first pass's verdict of "no change" was a verdict about 60 screens and
+about a measure that flattered them, and it survived neither. The rule's 50%
+threshold and its two-lift ceiling were right; the search that used them was
+not, in the one case the bare addresses never produce and every editor does —
+and the step it searched with was the wrong length for a list. A census that
+stops at the library measures the emptiest version of the screens that have
+the most in the corner.
 
 What it leaves behind is the instrument, committed as `app/scripts/dock.mjs`
 for the reason `scripts/baseline.mjs` gives about its pictures: a number
-nobody can regenerate is a number nobody can argue with. All three failure
-modes above are guarded in it rather than remembered, and it exits non-zero on
-anything half covered or with its centre blocked, so the next person to ask
-this question runs
+nobody can regenerate is a number nobody can argue with. All six failure modes
+above are guarded in it rather than remembered, and it exits non-zero on
+anything half covered or with its centre under the button outside a table
+cell, so the next person to ask this question runs
 
     npm run build && node scripts/dock.mjs
 
-rather than spending an afternoon re-discovering that a closed `<details>`
-has a rect.
+rather than spending an afternoon re-discovering that a closed `<details>` has
+a rect.
 
 It is run by hand rather than by CI, and deliberately has no `check:` entry in
 the scripts block — `lib/ci.test.ts` holds the rule that a script named that
 way must have a workflow step, and it failed this one for exactly the right
-reason. A browser download and a sixty-screen walk on every pull request is
-`scripts/baseline.mjs`'s trade, already made once in this repo and made the
-same way: a script that needs a real browser is a before-a-release job, and a
-scripts-block entry that promises otherwise is the promise `ci.test.ts` exists
-to stop.
+reason. A browser download and a seventy-four-screen walk on every pull
+request is `scripts/baseline.mjs`'s trade, already made once in this repo and
+made the same way: a script that needs a real browser is a before-a-release
+job, and a scripts-block entry that promises otherwise is the promise
+`ci.test.ts` exists to stop.
 
 ---
 

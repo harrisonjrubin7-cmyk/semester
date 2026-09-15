@@ -1,5 +1,5 @@
 import type { HTMLAttributes, ReactNode } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { TickBox } from './ui';
 import { lateBy, type Standing } from '../lib/standing';
 import { isUnderway, openLine } from '../lib/underway';
@@ -72,7 +72,8 @@ export function DeadlineRow({
 }) {
   // `now` rather than `Date.now()`: the store's clock ticks once a minute, so
   // "open 4 days" stays right without making the render impure.
-  const { state, dispatch, catalog, now, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
   // Only the row and timeline styles take it. A card already has its own edge
   // and inset, and a card inside a grouped panel would be a card in a card.
   const row = useRowStyle(0);

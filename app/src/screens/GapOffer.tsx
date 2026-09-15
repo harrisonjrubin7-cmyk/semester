@@ -10,7 +10,7 @@
  * tap that opens it.
  */
 import { useMemo } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { nextClass, railFor } from '../lib/select';
 import {
   cardsThatFit,
@@ -37,7 +37,8 @@ import { current } from '../lib/housing';
  * and fails somewhere else entirely.
  */
 export function useWindow(): GapWindow | null {
-  const { state, catalog, now } = useStore();
+  const { state, catalog } = useStore();
+  const now = useNow();
 
   const rail = useMemo(
     () => railFor(catalog, now, state.appointments, state.commitments),

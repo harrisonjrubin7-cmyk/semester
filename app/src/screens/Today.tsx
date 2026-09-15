@@ -1,5 +1,5 @@
 import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle, useSoft } from '../components/shell/useShell';
 import { WorstDay } from '../components/Clashes';
@@ -60,7 +60,8 @@ import { goMine } from '../lib/openmine';
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
-  const { now, catalog, tint } = useStore();
+  const { catalog, tint } = useStore();
+  const now = useNow();
   const next = nextClass(catalog, now);
   if (!next) return null;
 
@@ -123,7 +124,8 @@ function NextClassCard() {
  * citation attached; this does not, and says so.
  */
 function YourTasks() {
-  const { state, dispatch, now, courseCode, tint } = useStore();
+  const { state, dispatch, courseCode, tint } = useStore();
+  const now = useNow();
   const rowTen = useRowStyle(10);
   const mine = tasksOn(state.tasks, now);
   const appts = appointmentsOn(state.appointments, now);
@@ -227,7 +229,8 @@ function YourTasks() {
  * screen you open first, and goes straight to the list of them.
  */
 function OverdueBanner() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const missed = overdueCount(datedItems(catalog, now), state.done);
   if (missed === 0) return null;
 
@@ -296,7 +299,8 @@ function OverdueBanner() {
  * pin up, here rows you tap to open.
  */
 function ThisWeek() {
-  const { state, dispatch, now, catalog, tint, courseCode } = useStore();
+  const { state, dispatch, catalog, tint, courseCode } = useStore();
+  const now = useNow();
   const row = useRowStyle(9);
   const nextEvent = datedEvents(now, state.schoolId, state.sample).find((e) => !e.isPast);
 
@@ -589,7 +593,8 @@ function Feed_next() {
 
 /** One section of the Today feed, so its place in the order can be yours. */
 function Feed_due() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const today = itemsDueToday(catalog, now);
   const doneCount = today.filter((i) => state.done[i.id]).length;
   const left = today.length - doneCount;
@@ -759,7 +764,8 @@ const sessionStart = Date.now();
  * who just ticked four things does not need telling they ticked four things.
  */
 function Feed_since() {
-  const { state, now, lastSeen } = useStore();
+  const { state, lastSeen } = useStore();
+  const now = useNow();
 
   const list = useMemo(
     () =>
@@ -824,7 +830,8 @@ const RAIL_GUTTER = 56;
 const RAIL_GAP = 14;
 
 function Feed_rail() {
-  const { state, now, catalog, tint } = useStore();
+  const { state, catalog, tint } = useStore();
+  const now = useNow();
   // Deadlines with a real hour on them belong on the rail where they happen,
   // not only in a list above it. See `lib/duetime.ts`.
   const due = datedItems(catalog, now).filter((i) => i.isToday && !state.done[i.id]);
@@ -1025,7 +1032,8 @@ function Feed_dropby() {
  * everything.
  */
 function Feed_registrar() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const soon = pressing(state.registrar, now);
   if (soon.length === 0) return null;
 
@@ -1072,7 +1080,8 @@ function Feed_registrar() {
  * so for most students this section never draws at all, which is the point.
  */
 function Feed_bill() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const { next } = billFor(state, state.term, now);
   if (!next) return null;
   if (next.daysAway > 14) return null;
@@ -1356,7 +1365,8 @@ function TodayFeed() {
  * the work disappears exactly when it would be worth seeing.
  */
 function DoneToday() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const rowTwelve = useRowStyle(12);
   const done = datedItems(catalog, now).filter((i) => state.done[i.id]);
   const cards = tally(state.reviews);
@@ -1448,7 +1458,8 @@ function DoneToday() {
  * cannot show a gap, and a gap is usually the thing you are looking for.
  */
 function HoursToday() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   /*
    * Your tasks are on this grid, which for a long time they were not.
    *
@@ -1547,7 +1558,8 @@ function HoursToday() {
 
 /** Nav mode 1B — one chronological scroll, sliced by the chip row. */
 function FeedHome() {
-  const { state, dispatch, now, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
   const rowThirteen = useRowStyle(13);
   const entries = filterFeed(catalog, feed(catalog, now, state.done), state.filter as FeedFilter);
 

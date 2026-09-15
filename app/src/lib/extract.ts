@@ -110,8 +110,12 @@ async function fromPdf(file: File): Promise<string> {
  * writing the literal characters "&lt;" encodes them "&amp;lt;"; decoding the
  * ampersand first leaves "&lt;", which the next pass turns into a tag where
  * the professor had only written the name of one.
+ *
+ * Exported for `lib/docxin.ts`, which reads the same XML for a different
+ * purpose and would otherwise carry a second copy of this — and a second copy
+ * is a second chance to get that ordering wrong.
  */
-function entities(text: string): string {
+export function entities(text: string): string {
   return text
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')

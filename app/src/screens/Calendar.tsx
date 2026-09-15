@@ -1,6 +1,6 @@
 import { useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { DeadlineRow } from '../components/DeadlineRow';
 import { MarkClass } from '../components/MarkClass';
@@ -142,7 +142,8 @@ function BackToToday({ onClick }: { onClick: () => void }) {
 function DayView() {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const dayRow = useRowStyle(12);
-  const { state, dispatch, now, catalog, say, tint } = useStore();
+  const { state, dispatch, catalog, say, tint } = useStore();
+  const now = useNow();
   const moving = useCalendarMove();
   const [addAt, setAddAt] = useState<number | null>(null);
   const day = state.calDay ? isoToDate(state.calDay) : now;
@@ -688,7 +689,8 @@ const arrow = {
  */
 function WeekView() {
   const weekEventRow = useRowStyle(11);
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<{ date: string; at: number } | null>(null);
   /*
@@ -1035,7 +1037,8 @@ function WeekView() {
 
 function MonthView() {
   const monthTaskRow = useRowStyle('var(--sp-5) 0');
-  const { state, dispatch, now, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
   const { calYear, calMonth, calSource } = state;
   const cells = monthGrid(calYear, calMonth);
   const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -1906,7 +1909,8 @@ const WEEK_ROW: CSSProperties = {
  */
 function SemesterView() {
   const weekRow = useRowStyle(10);
-  const { state, dispatch, now, catalog, tint } = useStore();
+  const { state, dispatch, catalog, tint } = useStore();
+  const now = useNow();
   const moving = useCalendarMove();
   const [adding, setAdding] = useState<string | null>(null);
   /*
@@ -2576,7 +2580,8 @@ function DateStamp({ mon, day, dow }: { mon: string; day: number; dow: string })
 }
 
 function CampusList() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const filter = state.evFilter as EvFilter;
   /*
    * Saved is the one filter that looks backwards. Everything else is a list of
@@ -2817,7 +2822,8 @@ export function Calendar() {
 }
 
 export function EventDetail() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const all = datedEvents(now, state.schoolId, state.sample);
   const event = all.find((e) => e.id === state.eventId) ?? all[0];
   if (!event) return null;

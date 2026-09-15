@@ -15,7 +15,7 @@
 
 import { useState } from 'react';
 import { Panel } from './Produced';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { extent, isReading } from '../lib/reading';
 import { PickChips, SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
@@ -231,7 +231,8 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
  * Nothing at all when there is nothing on the go, which is most days.
  */
 export function ReadingsOnTheGo() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const going = openReadings(state.progress);
   if (going.length === 0) return null;
 

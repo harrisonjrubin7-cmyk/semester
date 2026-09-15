@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { readFileSync } from 'node:fs';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 /**
  * The cap on played media, driven rather than read.
@@ -147,6 +147,22 @@ describe('the cap on played media', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-09-01T09:00:00Z'));
     w = loadWorker();
+  });
+
+  /*
+   * The clock goes back, and that is not housekeeping.
+   *
+   * Test files share a worker — see `MOCKS_MODULES` in `vite.config.ts` — so a
+   * fake clock installed here is still installed in whatever file runs next.
+   * `lib/idb.test.ts` fires its fake IndexedDB's `onsuccess` from a
+   * `setTimeout(…, 0)`, and against a clock nobody is advancing that callback
+   * never runs: four of its tests sat there until the five-second timeout,
+   * with nothing in either file to say why. It depended on which file the
+   * shuffle put first, so it failed about two runs in three and passed the
+   * rest.
+   */
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('keeps everything while there is room', async () => {

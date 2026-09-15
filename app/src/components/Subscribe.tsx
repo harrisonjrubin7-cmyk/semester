@@ -34,7 +34,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { ALARMS, appointmentEvents, classEvents, deadlineEvents, toIcs } from '../lib/export';
 import { datedItems } from '../lib/select';
@@ -53,7 +53,8 @@ import {
 import { Folding } from './Fold';
 
 export function Subscribe() {
-  const { state, catalog, now, courseCode, account } = useStore();
+  const { state, catalog, courseCode, account } = useStore();
+  const now = useNow();
   const [feed, setFeed] = useState<Published | null>(null);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');

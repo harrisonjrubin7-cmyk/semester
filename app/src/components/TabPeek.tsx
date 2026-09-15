@@ -40,6 +40,23 @@ const GAP = 4;
 /** Wide enough for a long course name, and no wider. */
 const WIDE = 248;
 
+/** A key, drawn as one. Small enough that three of them are a hint, not a row. */
+const KEY = {
+  display: 'inline-block',
+  minWidth: 16,
+  // Two axes, two properties: the ledger counts a `padding` shorthand and it
+  // is right to — a string is one value where these are two decisions.
+  paddingBlock: 'var(--sp-1)',
+  paddingInline: 'var(--sp-2)',
+  borderRadius: 'var(--r-xs)',
+  border: '1px solid var(--app-line)',
+  background: 'var(--app-hero)',
+  fontFamily: 'var(--font-heading)',
+  fontSize: 'var(--type-xs)',
+  lineHeight: 'var(--leading-tight)',
+  textAlign: 'center',
+} as const;
+
 export function TabPeek({ peek, at, tone, id }: {
   peek: Peek;
   /** The tab's rectangle, read when the pointer arrived. */
@@ -149,6 +166,33 @@ export function TabPeek({ peek, at, tone, id }: {
       {peek.query && (
         <div aria-hidden="true" style={{ marginTop: 'var(--sp-3)', fontSize: 'var(--type-xs)', ...secondLine() }}>
           Searched “{peek.query}”
+        </div>
+      )}
+
+      {peek.moves && (
+        <div
+          aria-hidden="true"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--sp-2)',
+            marginTop: 'var(--sp-4)',
+            paddingTop: 'var(--sp-3)',
+            borderTop: '1px solid var(--app-line)',
+            fontSize: 'var(--type-xs)',
+            ...secondLine(),
+          }}
+        >
+          {/*
+            * Under a rule, because it is the one line here that is not about
+            * the tab. Everything above answers "what is this"; this answers
+            * "what can you do with it", and a reader who wants the first
+            * should be able to stop at the line.
+            */}
+          <kbd style={KEY}>Alt</kbd>
+          <kbd style={KEY}>←</kbd>
+          <kbd style={KEY}>→</kbd>
+          <span>to move it</span>
         </div>
       )}
     </div>

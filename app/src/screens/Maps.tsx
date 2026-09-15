@@ -1,5 +1,5 @@
 import { Suspense, lazy, useMemo, useRef, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
 import { Trouble } from '../components/Trouble';
@@ -119,7 +119,8 @@ const SAME = 30;
  * different jobs and the app is only better at the first one.
  */
 export function Maps() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   // A row's padding and hairline, from the layout rather than hard-coded.
   const linkRow = useRowStyle(13);
   const [mode, setMode] = useState<Travel>('walking');
