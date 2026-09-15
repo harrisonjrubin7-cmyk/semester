@@ -30,6 +30,7 @@ import type {
   StudyMode,
 } from '../lib/types';
 import { DEFAULT_NOTIFS, type NotifKey } from '../data/misc';
+import type { Session } from '../lib/sessions';
 import type { SavedPlace } from '../lib/place';
 import type { Commitment } from '../lib/activities';
 import type { Alarm, Timer } from '../lib/clocks';
@@ -352,6 +353,20 @@ export interface Persisted {
    * produces and the oldest is the least useful.
    */
   sittings: Sitting[];
+  /**
+   * The study plan, as sittings on days — the thing that can be missed.
+   *
+   * Every other view of what to study is computed on render: `lib/revise.ts`
+   * ranks the units and `planFor` fills tonight's minutes, both fresh each
+   * time. That is honest and it means nothing in the app has a yesterday, so
+   * an evening nobody studied leaves no trace and the next evening offers the
+   * same four units as though the skipped night had not happened.
+   *
+   * Committed to days, a plan can be behind. See `lib/sessions.ts`, which also
+   * says why the backlog has a ceiling and is allowed to give up rather than
+   * turn four missed evenings into a four-hour Thursday.
+   */
+  sessions: Session[];
   /**
    * Sources you have collected, per course and per project.
    *
@@ -1288,6 +1303,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   dayBudget: DEFAULT_BUDGET,
   recent: [],
   sittings: [],
+  sessions: [],
   sources: [],
   documents: [],
   sheets: [],
@@ -1626,6 +1642,7 @@ export function loadPersisted(): Persisted {
       // "opened at some point", which is what an empty entry says.
       lastOpened: saved.lastOpened ?? {},
       sittings: list(saved.sittings),
+      sessions: list(saved.sessions),
       sources: list(saved.sources),
       documents: list(saved.documents),
       sheets: list(saved.sheets),
@@ -1748,6 +1765,7 @@ export function pickPersisted(state: State): Persisted {
     visited: state.visited,
     lastOpened: state.lastOpened,
     sittings: state.sittings,
+    sessions: state.sessions,
     sources: state.sources,
     documents: state.documents,
     sheets: state.sheets,
@@ -2012,6 +2030,21 @@ export type Action =
   | { type: 'undoCard' }
   /** An answer recorded against a card, with no drill run around it. */
   | { type: 'recordCard'; got: boolean; key: string }
+  /**
+   * Commit a plan: these sittings, on these days, replacing anything from
+   * today forward.
+   *
+   * Yesterday's sittings are kept — they are the evidence that something was
+   * missed, and dropping them on every replan would make the plan
+   * unmissable again.
+   */
+  | { type: 'planSessions'; sessions: Session[]; from: string }
+  /** One sitting finished, at this moment. */
+  | { type: 'finishSession'; id: string; at: number }
+  /** Every missed sitting moved forward at once. See `moveOn`. */
+  | { type: 'moveMissed'; today: string; dayMinutes?: number }
+  /** Throw the plan away. */
+  | { type: 'clearPlan' }
   /*
    * Throw away what the app thinks it knows about these cards.
    *

@@ -71,6 +71,23 @@ export const STRATEGY: Record<string, Strategy> = {
   updates: 'union',
   places: 'union',
   sittings: 'union',
+  /*
+   * `theirs`, not `union`, and it is the second exception on this table.
+   *
+   * A union of two study plans is not a study plan. Plan a week on the laptop,
+   * plan it again on the phone, and a union gives you both — every evening
+   * doubled, every ceiling in `lib/sessions.ts` broken, and the backlog the
+   * whole module exists to refuse arriving through the back door. The lists
+   * are not additive because they are not *records of things that happened*,
+   * which is what every `union` above is. They are one intention, and the
+   * later intention is the one that meant it.
+   *
+   * The cost is real and small: replan on the phone while the laptop is
+   * offline and the laptop's plan is the one that goes. What is lost is a
+   * plan, not evidence — the answers are in `reviews`, which unions, and
+   * tomorrow's ranking will find the same units.
+   */
+  sessions: 'theirs',
   sources: 'union',
   // Made in the app and held nowhere else. A document written on the laptop
   // and a sheet made on the phone are two things, not a conflict.
@@ -544,6 +561,7 @@ const LABELS: Record<string, string> = {
   done: 'What you have ticked off',
   reviews: 'Study card history',
   sittings: 'Practice papers',
+  sessions: 'Your study plan',
   documents: 'Documents',
   sheets: 'Sheets',
   equations: 'Equations',

@@ -10,6 +10,7 @@
  */
 
 import { score } from '../../lib/review';
+import { moveOn } from '../../lib/sessions';
 import { handle, remember } from '../../lib/sure';
 import { unitKey } from '../../lib/pretest';
 import type { Action, State } from '../shape';
@@ -206,6 +207,50 @@ export function study(state: State, action: Action): State | null {
           state.lastAnswer && action.keys.includes(state.lastAnswer.key) ? null : state.lastAnswer,
       };
     }
+
+    /*
+     * A plan, committed to days.
+     *
+     * Replaces everything from `from` forward and keeps what is behind it.
+     * Keeping the past is the point: those are the sittings that were missed,
+     * and a replan that swept them up would make the plan unmissable again —
+     * which is the state the app was in before `lib/sessions.ts`.
+     */
+    case 'planSessions':
+      return {
+        ...state,
+        sessions: [...state.sessions.filter((s) => s.on < action.from), ...action.sessions],
+      };
+
+    case 'finishSession':
+      return {
+        ...state,
+        sessions: state.sessions.map((s) =>
+          s.id === action.id ? { ...s, doneAt: action.at } : s,
+        ),
+      };
+
+    /*
+     * Every missed sitting moved forward, in one press.
+     *
+     * The arithmetic is `moveOn`'s, not repeated here — the screen shows a
+     * preview from `willMove`, which calls the same function, so the sentence
+     * on the button and the thing the button does cannot come apart.
+     *
+     * Returns `state` itself when nothing moved, so a press with nothing
+     * missed is not a re-render and a sync write for nothing.
+     */
+    case 'moveMissed': {
+      const out = moveOn(state.sessions, {
+        today: action.today,
+        ...(action.dayMinutes === undefined ? {} : { dayMinutes: action.dayMinutes }),
+      });
+      if (out.count === 0 && out.dropped.length === 0) return state;
+      return { ...state, sessions: out.sessions };
+    }
+
+    case 'clearPlan':
+      return state.sessions.length === 0 ? state : { ...state, sessions: [] };
 
     case 'redrill':
       // `lastAnswer` with it: a new run must not be able to undo into the

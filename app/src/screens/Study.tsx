@@ -12,6 +12,8 @@ import { modesFor } from '../lib/modes';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { Standing } from '../components/Standing';
+import { Plan } from '../components/Plan';
+import { today as todayKey } from '../lib/sessions';
 import { knowingOf } from '../lib/knowing';
 import { ChevronRight } from '../components/Icons';
 import { AppGrid } from '../components/nav/AppGrid';
@@ -733,6 +735,31 @@ export function Study() {
 
       {tab === 'revise' && (
         <>
+      {/*
+        The committed plan, above the live ranking that feeds it.
+
+        Above rather than below because it is the part with a yesterday. The
+        ranking answers "what is worth an evening"; this answers "what did I
+        say I would do, and what did I not do" — and the second question is the
+        one that goes unanswered every other night. See `lib/sessions.ts`.
+      */}
+      <Plan
+        sessions={state.sessions}
+        ranked={ranked}
+        now={now}
+        dayMinutes={minutes}
+        onPlan={(sessions, from) => dispatch({ type: 'planSessions', sessions, from })}
+        onMove={() => dispatch({ type: 'moveMissed', today: todayKey(now), dayMinutes: minutes })}
+        onOpen={(session) => {
+          // Started counts as done. A sitting you open and abandon is a sitting
+          // you did some of, and a plan that only counts a finished deck is a
+          // plan that says you did nothing on the night you did twenty cards.
+          dispatch({ type: 'finishSession', id: session.id, at: Date.now() });
+          startStretch(session);
+        }}
+        onClear={() => dispatch({ type: 'clearPlan' })}
+      />
+
       <SectionLabel style={{ margin: '20px 0 4px' }}>Tonight’s sitting</SectionLabel>
       <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-6)', textWrap: 'pretty' }}>
         Say how long you have. The app ranks every unit in every course by what is due, how
