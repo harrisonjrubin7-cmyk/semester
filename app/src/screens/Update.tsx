@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Capture } from '../components/Capture';
 import { RecordButton } from '../components/RecordButton';
 import { Rework } from '../components/Rework';
@@ -21,6 +21,7 @@ import type { StudyCard } from '../lib/types';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
+import { revealKindly } from '../lib/prefers';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
 import { HowMuch } from '../components/HowMuch';
@@ -129,6 +130,27 @@ export function AddMaterial() {
    */
   const [pastedAs, setPastedAs] = useState<Where | null>(null);
   const [looking, setLooking] = useState(false);
+
+  /**
+   * Where the review is drawn, and the fact that you can watch it arrive.
+   *
+   * The sheet used to be five sections above the button that makes it — up
+   * beside "What it is", with the material box, the recorder and the file list
+   * in between. Measured on a 420×900 phone with a reading attached: pressing
+   * "Review and add" put the sheet's own button 567px above the top of the
+   * viewport. The screen did not change. The press read as a dead button, and
+   * pressing it again rebuilt the same invisible sheet.
+   *
+   * So the sheet is drawn under the press, and the page moves to it. Both,
+   * rather than either: a change set long enough to fill the screen can put
+   * its heading on view with the decision below the fold, and a scroll to
+   * something five sections up is a scroll away from the control just used.
+   */
+  const reviewAt = useRef<HTMLDivElement | null>(null);
+  const show = () => revealKindly(reviewAt.current, { block: 'start' });
+  useEffect(() => {
+    if (set) revealKindly(reviewAt.current, { block: 'start' });
+  }, [set]);
 
   const parsed = useMemo(() => parseMaterial(text), [text]);
 
@@ -310,23 +332,60 @@ export function AddMaterial() {
     if (!where) return;
     const module_ = state.courses.find((c) => c.course.id === courseId) ?? null;
     const out = adopt(accepted, module_ ?? catalog.moduleById[courseId] ?? null, where);
+    /*
+     * Files attached by hand carry no pieces of their own — they are the
+     * material itself, kept, not a claim about the course — so there is
+     * nothing to review about them and they ride along with whatever was
+     * accepted. `adopt` returns none because the file path stores its own
+     * separately.
+     */
+    const attached = files.map((f) => f.id);
     if (out.update) {
       dispatch({
         type: 'addUpdate',
         update: {
           ...out.update,
           courseId,
-          /*
-           * Files attached by hand carry no pieces of their own — they are the
-           * material itself, kept, not a claim about the course — so there is
-           * nothing to review about them and they ride along with whatever was
-           * accepted. `adopt` returns none because the file path stores its
-           * own separately.
-           */
-          fileIds: out.update.fileIds.length ? out.update.fileIds : files.map((f) => f.id),
+          fileIds: out.update.fileIds.length ? out.update.fileIds : attached,
           // The unit chosen above the box, when the reader chose one. `adopt`
           // can only infer a unit from a name that matches one the guide has.
           unit: out.update.unit ?? unit,
+        },
+      });
+    } else if (attached.length > 0) {
+      /*
+       * Nothing was accepted, and there are still files.
+       *
+       * `adopt` writes an update only where a piece was taken, which is right
+       * — it is given pieces and nothing else. It meant that a photograph of
+       * the board, which produces no pieces at all, went through this whole
+       * screen and dispatched nothing: the bytes were in storage under the
+       * course, and the course had never heard of them, so the unit drew no
+       * figure, the guide listed no reading and there was nothing to undo.
+       * The one way to find out was that nothing had changed.
+       *
+       * So the files get the update `adopt` had no reason to make. Same
+       * shape, same provenance, same single entry in the undo history.
+       */
+      dispatch({
+        type: 'addUpdate',
+        update: {
+          courseId,
+          unit,
+          title: title.trim() || where.source,
+          source: where.source,
+          body: '',
+          cards: [],
+          terms: [],
+          figures: [],
+          frames: [],
+          selfTest: [],
+          cases: [],
+          examples: [],
+          fileIds: attached,
+          sourceHash: where.sourceHash,
+          as: where.as,
+          addedItems: [],
         },
       });
     }
@@ -397,7 +456,21 @@ export function AddMaterial() {
   const review = () => {
     if (already) return;
     const where: Where = {
-      source: source.trim() || title.trim() || 'What you pasted',
+      /*
+       * What to call it, in the order somebody would recognise it.
+       *
+       * The fallback used to end at "What you pasted", which is a lie about a
+       * file: attaching a photograph of the board and nothing else produced a
+       * sheet reading "Nothing came out of What you pasted", and an entry in
+       * the course's own list of readings under that name. A file brought a
+       * name with it; use it before inventing one.
+       */
+      source:
+        source.trim() ||
+        title.trim() ||
+        (files.length === 1 ? files[0].name : '') ||
+        (files.length > 1 ? `${files.length} files` : '') ||
+        'What you pasted',
       sourceHash: mine,
       // Not a classifier's verdict, because nothing classified it. `reading`
       // is what pasted prose is, and the shape it is read into.
@@ -617,44 +690,9 @@ export function AddMaterial() {
       />
 
       {/*
-        What arrived, and what it was taken to be — before the change set
-        below is worth reading. The class decides which shape the material is
-        forced into, so a wrong one is cheapest to catch here.
+        What arrived and what it would change are drawn under the button that
+        makes them, not here. See `reviewAt` above for the measurement.
       */}
-      {told && arrived && (
-        <>
-          <SectionLabel>What you added</SectionLabel>
-          <Blueprint plain style={{ padding: '11px 13px' }}>
-            <div className="kicker">{arrived.name}</div>
-            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)' }}>
-              {looking && !set
-                ? `Reading it — this looks like ${told.says || KIND_LABEL[told.kind]}.`
-                : `This is ${told.says || KIND_LABEL[told.kind]}${told.about ? ` — ${told.about}` : ''}.`}
-            </div>
-            {told.confidence < SURE && (
-              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-warn)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
-                It is not sure about that. Check it before taking anything below.
-              </div>
-            )}
-            {told.because.length > 0 && (
-              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
-                because: {told.because.map((b) => `“${b}”`).join(', ')}
-              </div>
-            )}
-          </Blueprint>
-        </>
-      )}
-
-      {set && (arrived || pastedAs) && (
-        <ReviewSheet
-          set={set}
-          says={arrived ? saidOf : readSummary}
-          dropped={arrived ? droppedBy : []}
-          source={arrived?.name ?? pastedAs?.source ?? 'what you pasted'}
-          course={guide.code}
-          onApply={applyChanges}
-        />
-      )}
 
       {/* Same component as Add a course, for the same reason it is beside the
           build button there: the deck this makes is the deck you are about to
@@ -929,14 +967,73 @@ export function AddMaterial() {
           Change something above to add it as a separate piece, or leave it — it is all still here.
         </div>
       )}
+      {/*
+        One button, and it always ends with the review on screen.
+
+        It used to call `review()` every press, which was wrong twice over
+        once a file had been read: the file's own change set — harvested with
+        its quotes, its slide numbers and its dates — was overwritten by one
+        re-derived from the raw text, and the second press looked as dead as
+        the first because the sheet it rebuilt was off the top of the screen.
+        So with a review already standing, the press takes you to it.
+      */}
       <ActionButton
         disabled={empty || Boolean(already)}
-        onClick={review}
+        onClick={() => (set ? show() : review())}
         tone="primary"
         style={{ fontSize: 'var(--type-lg)', marginTop: already ? 'var(--sp-4)' : 'var(--sp-7)', opacity: empty || already ? 0.4 : 1 }}
       >
-        {already ? 'Already added' : `Review and add to ${guide.code}`}
+        {already
+          ? 'Already added'
+          : set
+            ? `What it would change in ${guide.code}`
+            : `Review and add to ${guide.code}`}
       </ActionButton>
+
+      {/*
+        What arrived, what it was taken to be, and what it would change —
+        under the press that asked for it.
+
+        The class decides which shape the material is forced into, so a wrong
+        one is cheapest to catch above the change set rather than after it.
+      */}
+      <div ref={reviewAt}>
+        {told && arrived && (
+          <>
+            <SectionLabel>What you added</SectionLabel>
+            <Blueprint plain style={{ padding: '11px 13px' }}>
+              <div className="kicker">{arrived.name}</div>
+              <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)' }}>
+                {looking && !set
+                  ? `Reading it — this looks like ${told.says || KIND_LABEL[told.kind]}.`
+                  : `This is ${told.says || KIND_LABEL[told.kind]}${told.about ? ` — ${told.about}` : ''}.`}
+              </div>
+              {told.confidence < SURE && (
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-warn)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                  It is not sure about that. Check it before taking anything below.
+                </div>
+              )}
+              {told.because.length > 0 && (
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                  because: {told.because.map((b) => `“${b}”`).join(', ')}
+                </div>
+              )}
+            </Blueprint>
+          </>
+        )}
+
+        {set && (arrived || pastedAs) && (
+          <ReviewSheet
+            set={set}
+            says={arrived ? saidOf : readSummary}
+            dropped={arrived ? droppedBy : []}
+            source={arrived?.name ?? pastedAs?.source ?? 'what you pasted'}
+            course={guide.code}
+            attaching={files.length}
+            onApply={applyChanges}
+          />
+        )}
+      </div>
 
       <Rework courseId={courseId} guide={guide} updates={updates} />
 
