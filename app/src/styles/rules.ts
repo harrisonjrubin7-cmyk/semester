@@ -591,8 +591,20 @@ function countIn(text: string): Counted {
    * dimming a whole row — tag, rule and all — and no regex can tell that case
    * from a caption. So this is a ledger like the three above it: it may shrink
    * and it may not grow, and the way to spend nothing is `secondLine()`.
+   *
+   * The value is read to its delimiter rather than from the colon, because a
+   * hand-written alpha hides just as well behind a condition: `opacity: unit
+   * === i ? 1 : 0.55` is the same number picked by eye, and `opacity: 0\.` did
+   * not see it. Sixty-three sites were off the ledger that way — a third of
+   * the axis — and two separate sweeps of this axis missed the same ones for
+   * the same reason, because a sweep and this counter were reading with the
+   * same eyes. One declaration counts once however many rungs it names: the
+   * ledger is about the site, not the arithmetic.
+   *
+   * A token is still free: `opacity: DIMMED_ROW` and `opacity: 1` name no
+   * literal, so neither matches.
    */
-  add('dim', [...code.matchAll(/\bopacity: 0\.\d+/g)].length);
+  add('dim', [...code.matchAll(/\bopacity:[^,}\n]*\b0\.\d+/g)].length);
 
   return out;
 }

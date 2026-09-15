@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Blueprint } from './Blueprint';
 import { SectionLabel } from './ui';
@@ -181,7 +182,7 @@ export function Insights({
                   flex: 1,
                   minWidth: 0,
                   fontSize: 'var(--type-xs)',
-                  opacity: 0.45,
+                  ...secondLine(),
                   lineHeight: 1.4,
                   textWrap: 'pretty',
                 }}

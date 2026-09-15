@@ -4,6 +4,7 @@ import { Capture } from '../components/Capture';
 import { RecordButton } from '../components/RecordButton';
 import { Rework } from '../components/Rework';
 import { readMaterial, readShots } from '../lib/claude';
+import { DIMMED_ROW } from '../lib/dim';
 import { configured, provider } from '../lib/assistant';
 import { extractText } from '../lib/extract';
 import { classify, guess, KIND_LABEL, SURE, type Verdict as Told } from '../lib/classify';
@@ -567,7 +568,7 @@ export function AddMaterial() {
             gap: 'var(--sp-5)',
             ...row11,
             textAlign: 'left',
-            opacity: unit === null ? 1 : 0.55,
+            opacity: unit === null ? 1 : DIMMED_ROW,
           }}
         >
           <span style={{ width: 26, flex: 'none', color: 'var(--app-accent)' }}>
@@ -586,7 +587,7 @@ export function AddMaterial() {
               gap: 'var(--sp-5)',
               ...row11,
               textAlign: 'left',
-              opacity: unit === i ? 1 : 0.55,
+              opacity: unit === i ? 1 : DIMMED_ROW,
             }}
           >
             <span style={{ width: 26, flex: 'none', color: 'var(--app-accent)' }}>

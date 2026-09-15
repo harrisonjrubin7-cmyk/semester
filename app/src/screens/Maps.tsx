@@ -493,8 +493,7 @@ export function Maps() {
               color:
                 setOff?.urgency === 'late' || setOff?.urgency === 'now'
                   ? 'var(--app-warn)'
-                  : 'inherit',
-              opacity: setOff ? 1 : 0.55,
+                  : 'var(--app-dim)',
             }}
           >
             {setOff
