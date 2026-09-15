@@ -206,8 +206,11 @@ nothing` of 84 passes per ground, and hover covers only 84 elements across 144
 passes. The hover axis is close to unmeasured.
 
 **Not completed here:** the full `sweep:contrast` (6 navs × 13 grounds × 2
-viewports × states) ran for over an hour without finishing, and this audit does
-not claim its result. Two narrowed runs stand in for it — the four light grounds
+viewports × states) ran for over an hour and was still going when the dev
+server was stopped under it — it died on `fog`, the thirteenth and last ground,
+without printing a summary. This audit does not claim its result. Budget well
+over an hour for a full run, and do not stop the server while one is in
+flight. Two narrowed runs stand in for it — the four light grounds
 (`parchment`, `paper`, `bone`, `fog`), which is the class CLAUDE.md names as
 recurrently wrong, and a resting-plus-hover pass on `paper` and `ink`. Both came
 back **0 findings**. A full run is still owed.
