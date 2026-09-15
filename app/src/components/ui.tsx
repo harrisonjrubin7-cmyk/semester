@@ -150,6 +150,50 @@ function useEdges(count: number) {
   return [row, at] as const;
 }
 
+/**
+ * The row itself: the scroller, the fade, and the flex line inside it.
+ *
+ * A component rather than the hook alone, because the hook alone is what
+ * there was and two of the app's three chip rows never got it. `ChipRow`
+ * below wired `useEdges` to `data-more` and the other two — `CoursePicker`
+ * and the course row on Update — wrote `<div className="chiprow">` by hand,
+ * so they scrolled with no fade at all: exactly the fault the comment above
+ * describes fixing, still live on the two rows that had copied the class
+ * instead of calling the component.
+ *
+ * Measured on the deployed build at 390x420: the Coming-up filter held 403px
+ * of chips in 354px and cut "BUS 1600" to "B" at the screen edge, with
+ * `data-more` absent and `mask-image` none.
+ *
+ * So the wrapper owns all three parts. A row that forgets the fade now has
+ * to forget the scroller with it, which is not a thing anybody does by
+ * accident.
+ *
+ * `count` is what re-measures: chips arrive with the catalogue, and a row
+ * measured before its courses exist has nothing to say about its own edges.
+ */
+export function ChipScroll({
+  count,
+  style,
+  children,
+}: {
+  /** How many chips are in the row, so a change re-measures it. */
+  count: number;
+  style?: CSSProperties;
+  children: ReactNode;
+}) {
+  const [row, more] = useEdges(count);
+
+  return (
+    <div className="chiprow" data-more={more} ref={row} style={style}>
+      {/* The trailing padding is the row's, not a caller's: it keeps the last
+          chip off the edge once the row is scrolled to its end, and it was
+          another thing only `ChipRow` had. */}
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', paddingRight: 18 }}>{children}</div>
+    </div>
+  );
+}
+
 /** A horizontally scrolling row of filter chips. */
 export function ChipRow<T extends string>({
   options,
@@ -171,12 +215,9 @@ export function ChipRow<T extends string>({
    */
   labels?: Record<string, string>;
 }) {
-  const [row, more] = useEdges(options.length);
-
   return (
-    <div className="chiprow" data-more={more} ref={row} style={style}>
-      <div style={{ display: 'flex', gap: 'var(--sp-3)', paddingRight: 18 }}>
-        {options.map((o) => {
+    <ChipScroll count={options.length} style={style}>
+      {options.map((o) => {
           const on = o === value;
           return (
             <button
@@ -204,13 +245,12 @@ export function ChipRow<T extends string>({
                 borderColor: on ? 'rgba(255,255,255,.5)' : 'var(--app-line)',
                 fontWeight: on ? 600 : 400,
               }}
-            >
-              {labels?.[o] ?? o}
-            </button>
-          );
-        })}
-      </div>
-    </div>
+          >
+            {labels?.[o] ?? o}
+          </button>
+        );
+      })}
+    </ChipScroll>
   );
 }
 

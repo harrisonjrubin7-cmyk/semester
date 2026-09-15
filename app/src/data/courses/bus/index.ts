@@ -16,7 +16,7 @@ const bus: CourseModule = {
     name: 'Marketing Management',
     prof: 'Dr. Eric Hogue',
     email: 'eric.d.hogue@vanderbilt.edu',
-    meets: 'T/R · Alumni Hall 201',
+    meets: 'T/R · 11:00a',
     room: 'Alumni Hall 201',
     credits: '2 credits',
     source: 'Syllabus Draft 8262026.pdf',
