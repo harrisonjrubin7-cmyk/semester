@@ -740,7 +740,7 @@ export function AddMaterial() {
           {describeStudyParts(readLong) !== '' && (
             <div style={{ marginTop: 'var(--sp-3)' }}>
               <div className="kicker">For the field guide and the cram sheet</div>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.75, marginTop: 'var(--sp-2)' }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
                 {describeStudyParts(readLong)}
               </div>
             </div>
@@ -754,7 +754,7 @@ export function AddMaterial() {
               {readFigs.map((f, i) => (
                 <div
                   key={i}
-                  style={{ fontSize: 'var(--type-sm)', opacity: 0.75, marginTop: 'var(--sp-2)' }}
+                  style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}
                 >
                   {describeFigure(f)}
                 </div>
@@ -786,7 +786,7 @@ export function AddMaterial() {
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)', lineHeight: 1.2 }}>
                 {c.q}
               </div>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-normal)', marginTop: 3 }}>
+              <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 3 }}>
                 {c.a}
               </div>
             </Blueprint>

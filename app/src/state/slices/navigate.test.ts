@@ -19,7 +19,7 @@ import { LIBRARIES, NAMED } from '../../lib/route';
  * funnel they all pass through rather than in a listener inside each panel.
  */
 
-const start = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date(2026, 8, 15)) });
+const start = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral() });
 
 const run = (state: State, ...actions: Action[]): State => actions.reduce((s, a) => reducer(s, a), state);
 
@@ -125,7 +125,7 @@ describe('the overlays close on the way past', () => {
   it('dismisses the search overlay and the apps sheet on go, landed and back', () => {
     const open = {
       ...DEFAULT_PERSISTED,
-      ...initialEphemeral(new Date()),
+      ...initialEphemeral(),
       screen: 'home',
       finder: true,
       apps: true,

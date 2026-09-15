@@ -1,3 +1,149 @@
+# One app — the fourteenth pass: one day, three fields
+
+Against `main` at `a2cdfd7`. **<!--screens-->sixty<!--/--> destinations**,
+unchanged.
+
+The thirteenth pass ended by recording L3 and deferring it: *"a pass of its
+own."* This is that pass, and the row is larger than L3 described.
+
+## M1 — "which day is the calendar on" has more than one answer
+
+Four fields carry the calendar's position, and no two of them agree on what a
+position is:
+
+| field | type | read by | written by |
+|---|---|---|---|
+| `calView` | the grain | all | `setCalView` |
+| `calDay` | `string \| null`, ISO | **Day** view, **Week** view, the assistant | `setCalDay` |
+| `selDate` | `string \| null`, *not* ISO | **Month** view only | `selectDate` |
+| `calMonth` + `calYear` | two numbers | **Month** view, the screen header | `stepMonth`, by a **delta** |
+
+`calDay` and `selDate` answer the same question — which day is selected — and
+nothing keeps them in step. `calMonth`/`calYear` answers *which month is on
+screen*, which is the same fact at a coarser grain, held a third way.
+
+### Two symptoms, both user-visible
+
+**The selection does not survive a change of grain.** Driven in Chromium at
+420px, today being Tue 15 September:
+
+| step | observed |
+|---|---|
+| open the calendar (Month) | grid for September |
+| tap the cell labelled *"Thursday 24 September. 2 deadlines, 4 classes."* | detail panel reads **THU · SEP 24** ✓ |
+| switch to **Day** | header reads **"Today · SEP 15"** ✗ |
+
+The tap wrote `selDate`. The Day view reads `calDay`. Zero `pageerror`s —
+nothing failed, the two fields simply do not know about each other.
+
+**The assistant is told the wrong day.** `ai/providers/core.ts` sends
+`focus: { selectedDay: state.calDay }`. So with the Month view open on the
+24th, the assistant is told the 15th is selected, and answers about it.
+
+## M2 — `selDate` does not hold the kind of value it is typed as
+
+The two sites that write it:
+
+```tsx
+dispatch({ type: 'selectDate', date: `${calYear}-${calMonth}-${d}` })
+```
+
+`calMonth` is zero-indexed and nothing is padded, so tapping 24 September 2026
+stores **`"2026-8-24"`** — the wrong month, in the wrong shape, in a field
+typed `string | null` exactly like `calDay`, which is real ISO.
+
+It is survivable only because the one reader throws most of it away:
+
+```tsx
+const selectedDay = state.selDate ? Number(state.selDate.split('-')[2]) : ...
+```
+
+Only the day-of-month is ever used. The month in that string has never been
+read, which is why nobody noticed it was wrong.
+
+**And the correct helper is thirty lines above, in the same component:**
+
+```tsx
+const iso = (day: number) =>
+  `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+```
+
+`calMonth + 1`, both parts padded. `Calendar.tsx` formats ISO dates correctly
+at line 1060 and incorrectly at 1353 and 1409.
+
+That is the thirteenth pass's finding for a third time — L1 was a rule in a
+private function, L2 a rule in the field next door, and this is a rule in a
+`const` thirty lines up. **Three passes, three shapes of the same fault: the
+work was done and did not reach the place that needed it.**
+
+## Resolution: merge, onto `calDay`
+
+One field answers the question, for every grain:
+
+- The Month view derives its year and month from `calDay`, and selects
+  `calDay`'s day. `calMonth`, `calYear` and `selDate` are deleted.
+- `selectDate` is deleted; the cells dispatch `setCalDay`, which is what every
+  other part of the calendar already uses.
+- `stepMonth` moves `calDay` by a month, keeping today's date when it lands on
+  the current month — the fallback the Month view spelled out inline, moved to
+  the one place that owns the rule.
+- `headers.ts` reads the month name off `calDay`.
+
+This also closes L3 without needing the "go to this month" action that row
+said was missing: once the month is *derived* from a date, setting the date is
+setting the month, and `openCal(date, 'month')` starts working on its own.
+
+The malformed string in M2 disappears with the field that held it.
+
+### Driven after
+
+Same script, same seed, today still Tue 15 September:
+
+| step | before | after |
+|---|---|---|
+| tap *"Thursday 24 September"* in the grid | **THU · SEP 24** | **THU · SEP 24** |
+| switch to **Day** | **"Today · SEP 15"** ✗ | **"Thu · SEP 24"** ✓ |
+
+The *Back to today* control now appears in the day view, because the calendar
+knows it is not on today — which it could not know before, since the field
+that had moved was not the one it read.
+
+### Two things the merge turned up on its way out
+
+**`initialEphemeral(now)` no longer needs `now`.** Seeding `calMonth` and
+`calYear` with the month the app opened in was the parameter's only use. A
+parameter nothing reads is a claim the signature cannot keep, so it went too —
+sixteen callers, all but one of them tests, and two of those kept a `const NOW`
+alive for no other purpose.
+
+**`readstate.test.ts` used `calYear` as its specimen.** The eighth pass's guard
+proves it can see a destructured field at all by naming one, and the one it
+named was a field this pass deletes. It now names `calSource`, with a note
+that the named field is only there to make the failure readable — the real
+assertion is that *some* field is seen. A test whose example is a field
+somebody may legitimately remove fails for a reason unrelated to what it
+checks.
+
+### Saved state needs no migration, and that is checkable
+
+All three deleted fields were `Ephemeral`, and none appeared in the persisted
+snapshot — verified against `HEAD`'s `shape.ts` rather than assumed. Nothing
+written to `semester.v1` has ever carried them, so no stored copy can land on
+a field that no longer exists.
+
+## To do
+
+| row | what | resolution |
+|---|---|---|
+| M1 | one day, three fields, none in step | **merged** onto `calDay`, guarded by `state/oneday.test.ts` |
+| M2 | `selDate` written by a hand-rolled formatter, thirty lines from the right one | **cut** with the field |
+| L3 | *(from the thirteenth pass)* the month settable only by delta | **closed by M1** |
+
+Three fields become one, one action (`selectDate`) is deleted, `stepMonth`
+becomes `stepDay`'s sibling rather than a separate mechanism, and a dead
+parameter goes with them. Sixty destinations, unchanged — this pass removed no
+screen, because the duplicate was never a screen.
+
 # One app — the thirteenth pass: the helper that was written and not shared
 
 Against `main` at `376c62f`. **<!--screens-->sixty<!--/--> destinations**,

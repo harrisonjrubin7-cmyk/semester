@@ -192,7 +192,7 @@ export function Ahead() {
       {(readings.placed.length > 0 || readings.unplaced.length > 0 || readings.unsized.length > 0) && (
         <>
           <SectionLabel>Reading, and where it goes</SectionLabel>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-4)' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-4)' }}>
             {planLine(readings)}
           </div>
           {readings.placed.map((p) => (
@@ -235,7 +235,7 @@ export function Ahead() {
               <span style={{ flex: 'none', width: 40, fontSize: 'var(--type-sm)', color: 'var(--app-warn)' }}>
                 —
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35, opacity: 0.75 }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35, color: 'var(--app-dim)' }}>
                 {s.item.title}
                 <span style={{ color: 'var(--app-dim)' }}> · due {s.item.dueShort}, and no day has room</span>
               </span>

@@ -24,7 +24,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
       >
         Start with a syllabus.
       </div>
-      <div style={{ fontSize: 'var(--type-md)', opacity: 0.72, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Upload the PDF your professor posted — the readings too, if you have them — and the app
         builds the course from it: every dated obligation with the sentence it came from, a study
         guide, cards, a quiz and slides.

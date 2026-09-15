@@ -322,7 +322,7 @@ export function useCalendarMove() {
           role="status"
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 0.75,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-5)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',

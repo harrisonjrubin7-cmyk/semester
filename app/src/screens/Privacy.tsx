@@ -107,7 +107,7 @@ export function Privacy() {
         >
           What this app holds
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
           In plain language, and short enough to actually read.
           {where ? ` Your account, if you have one, is on ${where}.` : ''}
           {!cloudConfigured && ' This build has no account service at all — nothing can leave the device.'}
@@ -120,7 +120,7 @@ export function Privacy() {
           <div
             style={{
               fontSize: 'calc(13.5px * var(--text-scale, 1))',
-              opacity: 0.8,
+              color: 'var(--app-dim)',
               lineHeight: 1.6,
               textWrap: 'pretty',
             }}
@@ -196,13 +196,13 @@ export function Privacy() {
       )}
 
       <SectionLabel style={{ margin: '22px 0 5px' }}>If something is wrong</SectionLabel>
-      <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 1.6, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>
         There is no form. Email <strong>{SUPPORT}</strong> and a person will answer — including if
         you want your account removed by hand rather than by the button below.
       </div>
 
       <SectionLabel style={{ margin: '22px 0 5px' }}>Export diagnostics</SectionLabel>
-      <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 1.6, textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>
         Saves a plain text file of the last {KEEP} things that went wrong on this device — error
         messages, which screen you were on, which build. It holds none of your work, and it is
         readable, so you can see what is in it before you send it. Nothing is uploaded on its own.
@@ -255,7 +255,7 @@ export function Privacy() {
       <SectionLabel style={{ margin: '26px 0 5px' }}>Delete my account</SectionLabel>
       {account ? (
         <>
-          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 1.6, textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>
             Removes every row belonging to {account.email}: courses, deadlines, notes, grades,
             cards and any queued reminders. It does not touch this device — signing out and
             deleting the account both leave your semester here.
@@ -285,7 +285,7 @@ export function Privacy() {
           )}
         </>
       ) : (
-        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 1.6, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.6, textWrap: 'pretty' }}>
           You are not signed in, so there is no account to delete — nothing about this semester
           has ever left the device.
         </div>
@@ -295,7 +295,7 @@ export function Privacy() {
           this file is at its own budget in `styles/rules.ts`, and a new
           section is the wrong place to spend the last of it. */}
       <SectionLabel>Erase from this device</SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.8, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Removes everything this app has put in this browser: your semester, the courses you added,
         notes, tasks, attachments, the assistant's threads, the daily copies, and any keys or
         connected accounts. {account ? 'Your account is not touched — what has synced stays on the server, and this device signs out.' : 'Nothing has ever left this device, so this is all of it.'} The app restarts empty, as it was

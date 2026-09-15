@@ -979,3 +979,134 @@ Each header now says what the other is for, and `lib/ci.test.ts` holds it.
 - Industry, sixty destinations: 46 runs below AA, 39 distinct — unchanged by
   the parser fix, which is the measurement that sized finding 1 honestly
   rather than the one that flattered it.
+
+# Pass nine — the keyboard: can you use this app without a mouse?
+
+Pass eight pressed every control. It pressed them the way a script does —
+`element.click()`, addressed by accessible name — which is not how somebody
+without a mouse reaches a control. This one presses Tab.
+
+The static guards were already good, and they sweep the whole source:
+`a11y/modal.test.ts` asserts that every file declaring `aria-modal` imports the
+shared Tab trap; `landmarks`, `dragging`, `labels`, `motion`, `title` and
+`type` each hold their own rule; `styles/taps.test.ts` holds 44px targets and
+`styles/fields.test.ts` the 16px that stops iOS zooming a field. What none of
+them can hold — and `a11y/modal.test.ts` says so itself — is what a browser
+actually does: *"The check is on the source rather than in a browser … what can
+be held here is the mechanism."*
+
+This is the browser half, and it is the same split pass seven proved was worth
+having. The token audit passed a compounded `--app-accent-wash`; the sweep that
+read painted pixels did not.
+
+## What was measured
+
+Every screen loaded fresh, then Tab pressed until the focus cycle closed. Three
+questions, each falsifiable: is every interactive control on the Tab path at
+all; when a control has focus, can you see which one; and does focus move down
+the page or jump back up it.
+
+| | Before | After |
+| --- | --- | --- |
+| Controls reachable by Tab | 2,876 / 2,876 | 2,876 / 2,876 |
+| Focused with nothing drawn | **144 on 75 of 81 screens** | **0** |
+| Backward jumps in tab order | 0 | 0 |
+| Threw | 0 | 0 |
+
+## Reachability: clean
+
+Every interactive control on all eighty-one screens is on the Tab path. No
+`[role="button"]` shipped without a `tabindex`; no row drawn as a button that
+the keyboard cannot get to; no screen where the order runs backwards.
+
+## Visibility: 144 controls took focus with nothing drawn
+
+The assistant button on nearly every screen (74 of the 144), the four search
+fields, the study-mode tiles, the university portal's thirty-odd doors, the
+Create tiles, the Pathway tabs.
+
+Not one was missing a rule. `app.css` had the rule and something was beating
+it, because the ring was carried on `box-shadow`:
+
+```css
+/* A ring rather than a hard outline — visible on any ground, and it does not
+   change the element's size or clip against a neighbour. */
+.device :focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px var(--app-bg), 0 0 0 3px var(--app-accent-deep);
+}
+```
+
+The reasoning was sound and the carrier was not. `box-shadow` is the one
+property an element is most likely to be using already, for its own elevation,
+and two things beat a stylesheet rule however specific it is:
+
+- **An inline `boxShadow`.** The assistant button carries `var(--glow)` inline
+  and appears on nearly every screen. `styles/fields.test.ts` documents the
+  identical trap on `font-size` — *"an inline style beats a stylesheet rule of
+  any specificity"* — and this is the same bug one property over.
+- **`box-shadow: none !important`**, on `.portal-search input` in
+  `features.css`, which took the ring off every search field in the app.
+
+Two further rules switched the outline off and left `box-shadow` to carry it:
+`.device .input:focus-visible`, which is every field in the app, and
+`.device .ai-composer-field:focus-visible`.
+
+## The fix
+
+The ring is an `outline` now, and both worries in the old comment turn out not
+to apply to it — measured in the same browser rather than assumed. It follows
+`border-radius`; it is drawn outside the box, so focusing moves no geometry
+(the focused control's rect did not change by a pixel); `outline-offset` keeps
+it clear of a neighbour; and it survives an `overflow: hidden` ancestor, which
+the box-shadow ring did not.
+
+`.device .input:focus-visible` keeps its accent border and wash but no longer
+switches the outline off. The composer's bare treatment moves to
+`:focus:not(:focus-visible)`, so it stays chrome-less under a mouse and gains
+the ring under a keyboard. `.appicon:focus-visible` still sets `outline: none`
+and is the one rule allowed to, because it draws the same ring on the tile
+inside — the icon itself is a transparent box around it.
+
+One thing the fix surfaced that the sweep could not: `.portal-search input`
+also sets `outline-offset: -3px`, and the field had no radius of its own inside
+a pill clipped to 26px, so the inset ring had its corners cut off and read as
+two loose horizontal lines. It has a matching radius now. Worth recording
+because the numbers said this control was fixed and the screenshot said it was
+not — a computed style is evidence that a ring exists, not that it is legible.
+
+## What it cost
+
+Three instrument bugs, each caught by looking at a flagged screen before
+writing it down. That is now four passes in a row where the instrument was
+wrong before the app was.
+
+1. **The walk stopped walking.** It ended the Tab loop the first time focus
+   returned to a control it had already recorded. `<input type="time">` is one
+   element with four internal tab stops, so `document.activeElement` reports it
+   four times running — and on `#/setAlerts` the walk stopped at the
+   quiet-hours field and called the nineteen controls after it unreachable, the
+   bottom tab bar included. Printing the sequence showed all thirty-seven in
+   order, then a clean wrap. The loop ends when focus returns to *where it
+   started* now.
+2. **A closed `<details>` keeps layout boxes** for its content in this
+   Chromium, so the rects are real while the content is correctly unfocusable.
+   Thirteen controls on `#/study` were counted unreachable for that reason.
+3. **The style was read in the same tick as the keypress.** Buttons resolve
+   `:focus-visible` synchronously and were never affected, which is exactly why
+   this looked like a finding: after the fix, twenty-four `input[type=date]`
+   fields came back as "focused with nothing drawn" when the ring was there a
+   frame later. Reading one frame after the key cleared all twenty-four. The
+   four `<input>` rows in the *before* count are text search fields, not date
+   fields, and were verified by hand — focused and unfocused screenshots of
+   `Search your courses` were byte-identical.
+
+## What guards it now
+
+- `a11y/focus.test.ts` holds that the app-wide `:focus-visible` rule draws an
+  outline, that it is offset, that no other rule takes the outline away without
+  redrawing it, and that the one rule allowed to — `.appicon:focus-visible` —
+  still puts the ring on its tile. It distinguishes `:focus-visible` from
+  `:focus:not(:focus-visible)`, which is the opposite claim and reads as its
+  own negation if you only look for the substring. Verified against the old
+  CSS, where three of its five cases fail.

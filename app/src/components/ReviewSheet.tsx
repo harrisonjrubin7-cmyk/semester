@@ -125,7 +125,7 @@ export function ReviewSheet({
       <div style={{ marginTop: 'var(--sp-7)' }}>
         <Folding name="ReviewSheet">
         <SectionLabel>Already in</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', opacity: 0.75 }}>
+        <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>
           You have added this exact file to {course} before. Nothing in it is new, so there is
           nothing to review.
         </div>
@@ -139,7 +139,7 @@ export function ReviewSheet({
       <div style={{ marginTop: 'var(--sp-7)' }}>
         <Folding name="ReviewSheet">
         <SectionLabel>Nothing new</SectionLabel>
-        <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', opacity: 0.75 }}>
+        <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>
           {set.duplicates > 0
             ? `Everything in ${source} is already covered by ${course} — ${set.duplicates} ${set.duplicates === 1 ? 'piece' : 'pieces'} checked, none of them new. That is a good answer, not a failure.`
             : `Nothing came out of ${source} that this could add.`}
@@ -161,7 +161,7 @@ export function ReviewSheet({
           style={{
             fontSize: 'var(--type-base)',
             lineHeight: 'var(--leading-relaxed)',
-            opacity: 0.75,
+            color: 'var(--app-dim)',
             marginBottom: 'var(--sp-6)',
           }}
         >

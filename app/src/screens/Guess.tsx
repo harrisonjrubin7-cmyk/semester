@@ -52,7 +52,7 @@ export function Guess() {
         >
           {state.guessRight} of {asked.length}
         </div>
-        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 'var(--sp-5)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 1.55, textWrap: 'pretty' }}>
           {verdict(state.guessRight, asked.length)}
         </div>
         <ActionButton
@@ -130,7 +130,7 @@ export function Guess() {
           {said.trim() && (
             <Blueprint plain style={{ padding: 14, marginTop: 'var(--sp-5)' }}>
               <div className="kicker">What you said</div>
-              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-3)', opacity: 0.8, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-3)', color: 'var(--app-dim)', textWrap: 'pretty' }}>
                 {said}
               </div>
             </Blueprint>

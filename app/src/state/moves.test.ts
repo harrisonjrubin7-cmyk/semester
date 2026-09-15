@@ -11,10 +11,9 @@ import type { CourseModule } from '../lib/types';
  * refuses to touch, and whether it can be taken back.
  */
 
-const NOW = new Date(2026, 8, 8);
 
 function fresh(over: Partial<State> = {}): State {
-  return { ...DEFAULT_PERSISTED, ...initialEphemeral(NOW), ...over } as State;
+  return { ...DEFAULT_PERSISTED, ...initialEphemeral(), ...over } as State;
 }
 
 const act = (s: State, a: Action) => reducer(s, a);

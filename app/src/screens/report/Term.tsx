@@ -154,7 +154,7 @@ export function TermReport() {
       {calibrationLine(bias) ? (
         <>
           <SectionLabel style={{ margin: '22px 0 6px' }}>Your own estimates</SectionLabel>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {calibrationLine(bias)}
           </div>
         </>
@@ -177,7 +177,7 @@ export function TermReport() {
       ) : null}
 
       {found.length === 0 ? (
-        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-7)', lineHeight: 1.55 }}>
+        <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-7)', lineHeight: 1.55 }}>
           {nothing || 'Nothing stood out far enough above the noise to be worth saying.'}
         </div>
       ) : (

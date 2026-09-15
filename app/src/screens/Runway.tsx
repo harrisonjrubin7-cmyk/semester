@@ -243,10 +243,27 @@ export function Runway() {
           }
           style={{ height: 52, marginTop: 14, display: 'block', textAlign: 'center' }}
         >
-          {/* No opacity: this sits on a filled button, where the only ink is
-              the button's own and dimming it is what took it to 4.12:1. The
-              kicker reads as a kicker from its size and letter-spacing, which
-              is how `.kicker` does it everywhere else. */}
+          {/*
+            `--app-dim` is wrong here, and main is right about why: it is the
+            ground's ink at the ground's dim strength, and this sits on
+            `.btn-primary`, whose fill is bright and whose ink is therefore
+            near-black by design. Handing it the ground's ink paints
+            light-on-light — measured at 218/255 on one channel, a kicker that
+            all but disappeared. See `ENGINEERING-AUDIT.md` §7.
+
+            The `opacity: 0.75` that stood here instead does not work either,
+            and no other number does. Sampling the button's real fill on all
+            thirteen grounds, the light ones put light ink (247,245,240) on a
+            mid-dark fill with very little headroom: at full strength Paper
+            reaches 4.55:1, Industry 4.82 and Parchment 4.88, against the 4.5
+            an 11px line needs. At 0.75 they are 3.34, 3.50 and 3.53, which is
+            what `scripts/paint.mjs` reports as a failure by sampling pixels.
+            The lowest step of 0.05 that clears the bar on every ground is 1.
+
+            So the kicker keeps the button's own ink, undimmed, and reads as a
+            kicker from its size and letter-spacing — which is how `.kicker`
+            does it everywhere else in the app.
+          */}
           <span style={{ display: 'block', fontSize: 'var(--type-xs)', letterSpacing: '0.12em' }}>
             {worst.seen === 0 ? 'NEVER OPENED' : 'FURTHEST BEHIND'}
           </span>

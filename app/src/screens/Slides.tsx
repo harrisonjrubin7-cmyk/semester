@@ -251,7 +251,7 @@ export function SlideDeck() {
             <div
               style={{
                 fontSize: 'var(--type-md)',
-                opacity: 0.8,
+                color: 'var(--app-dim)',
                 marginTop: 'var(--sp-5)',
                 lineHeight: 'var(--leading-relaxed)',
                 whiteSpace: 'pre-wrap',

@@ -164,7 +164,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                   style={{
                     display: 'block',
                     fontSize: 'var(--type-sm)',
-                    opacity: 0.75,
+                    color: 'var(--app-dim)',
                     marginTop: 5,
                     lineHeight: 'var(--leading-normal)',
                     textWrap: 'pretty',
@@ -218,7 +218,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                             alignItems: 'baseline',
                             fontSize: 'var(--type-sm)',
                             lineHeight: 'var(--leading-normal)',
-                            opacity: 0.8,
+                            color: 'var(--app-dim)',
                             textWrap: 'pretty',
                           }}
                         >

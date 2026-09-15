@@ -382,7 +382,7 @@ export function Connect() {
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
           Paste a calendar link
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 5, textWrap: 'pretty' }}>
           In Brightspace, open <strong>Calendar</strong>, click <strong>Subscribe</strong>, and copy
           the link it gives you. It already carries your access — no password, and nothing to
           install. <strong>Outlook, Google, iCloud, Canvas and Zoom</strong> all publish the same
@@ -547,7 +547,7 @@ export function Connect() {
                 <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>{spec.name}</div>
                 {token && <span className="tag tag-accent">Connected</span>}
               </div>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.75, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
+              <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>
                 {spec.blurb}
               </div>
 

@@ -260,7 +260,7 @@ export function LiveMap({
             border: '1px solid var(--app-line)',
           }}
         >
-          <span style={{ fontSize: 'var(--type-base)', opacity: 0.75, textWrap: 'pretty' }}>
+          <span style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', textWrap: 'pretty' }}>
             The map itself needs a connection.
           </span>
           <span style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', textWrap: 'pretty', lineHeight: 'var(--leading-normal)' }}>

@@ -82,7 +82,7 @@ export function EditCourse() {
       <Page>
         <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Shipped with the app</div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', opacity: 0.8 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>
             This course is built into the app rather than held in your account, which is why there
             is nothing to change yet. Take the semester on and all four become yours — editable,
             shareable, and keeping everything you have already ticked off.
@@ -538,7 +538,7 @@ export function EditCourse() {
         </div>
       ) : null}
       {saved ? (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           Saved. The calendar, Grades, Today and every study mode are using it already. What you
           have ticked off and drilled is untouched.
         </div>

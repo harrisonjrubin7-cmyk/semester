@@ -31,7 +31,7 @@ import { fromHash, toHash } from '../lib/route';
  *   *does* have is addressable, so a deletion can never quietly strand a live
  *   one.
  */
-const state = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date()) });
+const state = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral() });
 
 describe('what a restart can land on', () => {
   it('never saves which screen you were on', () => {

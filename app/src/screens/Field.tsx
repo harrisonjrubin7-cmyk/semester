@@ -91,7 +91,7 @@ export function FieldGuide() {
         <div
           style={{
             fontSize: 'var(--type-md)',
-            opacity: 0.75,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             marginTop: 'var(--sp-4)',
             textWrap: 'pretty',
@@ -232,7 +232,7 @@ export function FieldGuide() {
                   style={{
                     fontSize: 'var(--type-md)',
                     lineHeight: 1.6,
-                    opacity: 0.85,
+                    color: 'var(--app-dim)',
                     marginTop: 5,
                     textWrap: 'pretty',
                   }}
@@ -271,7 +271,7 @@ export function FieldGuide() {
                 <div
                   style={{
                     fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                    opacity: 0.75,
+                    color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-relaxed)',
                     marginTop: 'var(--sp-2)',
                     textWrap: 'pretty',
@@ -331,7 +331,7 @@ export function FieldGuide() {
                         style={{
                           fontSize: 'calc(13.5px * var(--text-scale, 1))',
                           lineHeight: 'var(--leading-relaxed)',
-                          opacity: 0.85,
+                          color: 'var(--app-dim)',
                           marginTop: 'var(--sp-1)',
                           textWrap: 'pretty',
                         }}
@@ -369,7 +369,7 @@ export function FieldGuide() {
               <div
                 style={{
                   fontSize: 'var(--type-base)',
-                  opacity: 0.72,
+                  color: 'var(--app-dim)',
                   lineHeight: 'var(--leading-relaxed)',
                   marginTop: 'var(--sp-1)',
                   textWrap: 'pretty',

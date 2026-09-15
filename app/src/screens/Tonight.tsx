@@ -94,7 +94,7 @@ export function Tonight() {
           <div
             style={{
               fontSize: 'var(--type-sm)',
-              opacity: 0.72,
+              color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',

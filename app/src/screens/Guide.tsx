@@ -503,7 +503,7 @@ export function Guide() {
                             style={{
                               fontSize: 'var(--type-md)',
                               lineHeight: 'var(--leading-relaxed)',
-                              opacity: 0.78,
+                              color: 'var(--app-dim)',
                               marginTop: 3,
                               textWrap: 'pretty',
                             }}
@@ -525,7 +525,7 @@ export function Guide() {
                             style={{
                               fontSize: 'calc(13.5px * var(--text-scale, 1))',
                               lineHeight: 1.55,
-                              opacity: 0.82,
+                              color: 'var(--app-dim)',
                               marginTop: 'var(--sp-3)',
                               whiteSpace: 'pre-wrap',
                               textWrap: 'pretty',
@@ -635,7 +635,7 @@ function Watch() {
         <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 1.1 }}>
           Not recorded yet
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.78, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
           One narrated lesson per unit, rendered by the pipeline:{' '}
           <code style={{ fontSize: 'var(--type-sm)' }}>python3 pipeline/lessons.py {state.guideId}</code>
         </div>
@@ -981,7 +981,7 @@ function Documents() {
           {u.cards.map((c) => (
             <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
               <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontWeight: 600, lineHeight: 1.35 }}>{c.q}</div>
-              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.8, lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>
+              <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-1)' }}>
                 {c.a}
               </div>
             </div>
@@ -1089,7 +1089,7 @@ function Cases() {
                       style={{
                         fontSize: 'calc(13.5px * var(--text-scale, 1))',
                         lineHeight: 'var(--leading-relaxed)',
-                        opacity: 0.8,
+                        color: 'var(--app-dim)',
                         marginTop: 'var(--sp-1)',
                         textWrap: 'pretty',
                       }}
@@ -1137,7 +1137,7 @@ function Cases() {
               style={{
                 fontSize: 'var(--type-md)',
                 lineHeight: 'var(--leading-relaxed)',
-                opacity: 0.78,
+                color: 'var(--app-dim)',
                 marginTop: 'var(--sp-2)',
                 textWrap: 'pretty',
               }}
@@ -1196,7 +1196,7 @@ function Cram() {
                 <div
                   style={{
                     fontSize: 'var(--type-base)',
-                    opacity: 0.72,
+                    color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-normal)',
                     marginTop: 'var(--sp-2)',
                     textWrap: 'pretty',
@@ -1216,7 +1216,7 @@ function Cram() {
         return (
           <div key={t.t} style={shortRow}>
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{t.t}</div>
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.72, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-1)' }}>{t.d}</div>
+            <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-1)' }}>{t.d}</div>
             {others && others.length > 0 && (
               // A button rather than a note, because the useful next move is
               // the other course's own words for it, and they are one tap away.
@@ -1257,7 +1257,7 @@ function Cram() {
                 <div
                   style={{
                     fontSize: 'var(--type-base)',
-                    opacity: 0.75,
+                    color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-relaxed)',
                     marginTop: 'var(--sp-2)',
                     whiteSpace: 'pre-wrap',
@@ -1298,7 +1298,7 @@ function Cram() {
               <div
                 style={{
                   fontSize: 'calc(13.5px * var(--text-scale, 1))',
-                  opacity: 0.78,
+                  color: 'var(--app-dim)',
                   lineHeight: 'var(--leading-relaxed)',
                   marginTop: 'var(--sp-3)',
                   textWrap: 'pretty',
@@ -1472,7 +1472,7 @@ function Listen() {
         <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)' }}>
           Not recorded yet
         </div>
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.8, marginTop: 'var(--sp-3)' }}>{pod.blurb}</div>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>{pod.blurb}</div>
       </Blueprint>
     );
   }
@@ -1523,7 +1523,7 @@ function Listen() {
         <div
           style={{
             fontSize: 'var(--type-base)',
-            opacity: 0.82,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
             marginTop: 'var(--sp-3)',
             textWrap: 'pretty',

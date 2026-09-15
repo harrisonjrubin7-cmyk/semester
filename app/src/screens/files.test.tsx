@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { ReactNode } from 'react';
@@ -131,6 +131,24 @@ beforeEach(() => {
   localStorage.clear();
   viewport(1280);
   remount();
+});
+
+/*
+ * The last test's root, which `remount` was never going to reach.
+ *
+ * `remount` takes the previous root down on the way in, which covers every
+ * root but the final one — and that one is still mounted when the file ends.
+ * Under `isolate: false` that is not the run ending: React goes on holding
+ * it, and work scheduled on it fires after the environment has gone, as the
+ * unhandled `ReferenceError: window is not defined` out of `react-dom` that
+ * `screens/deadends.test.tsx` was fixed for.
+ *
+ * Measured before the change: a live root with 11 KB of rendered tree still
+ * attached at the end of this file.
+ */
+afterEach(() => {
+  if (root) act(() => root.unmount());
+  host?.remove();
 });
 
 /**
@@ -399,18 +417,4 @@ describe('the block the caret is in', () => {
     expect(style()).toBe('text');
     expect(host.querySelector('[aria-label="Heading text"]')).toBe(null);
   });
-});
-
-/*
- * The last root, unmounted before the file ends.
- *
- * `beforeEach` takes down the *previous* test's tree, which leaves the final
- * one mounted when the file finishes. React's scheduler still has work queued
- * against it, the environment is torn down underneath, and the callback then
- * throws `ReferenceError: window is not defined` — reported against whichever
- * file was running, not this one. `src/rootunmount.test.ts` is why this cannot
- * quietly go away again.
- */
-afterAll(() => {
-  if (root) act(() => root.unmount());
 });

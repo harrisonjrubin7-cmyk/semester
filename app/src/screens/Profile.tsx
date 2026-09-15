@@ -111,7 +111,7 @@ export function Profile() {
             <div
               style={{
                 fontSize: 'var(--type-base)',
-                opacity: 0.75,
+                color: 'var(--app-dim)',
                 marginTop: 3,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',

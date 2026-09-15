@@ -16,7 +16,7 @@ import { DEFAULT_PERSISTED, initialEphemeral, type Action, type State } from '..
  * closing the compose window safe, and it is why Drafts is a folder rather
  * than a promise.
  */
-const start = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date(2026, 8, 10)) });
+const start = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral() });
 
 const run = (state: State, ...actions: Action[]): State =>
   actions.reduce((s, a) => reducer(s, a), state);

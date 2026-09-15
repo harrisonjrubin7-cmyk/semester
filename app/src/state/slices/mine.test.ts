@@ -19,7 +19,7 @@ import { DEFAULT_PERSISTED, initialEphemeral, type Action, type State } from '..
  * cannot — a form that always sends all five fields would pass a test that
  * only ever changed one.
  */
-const start = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date(2026, 8, 15)) });
+const start = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral() });
 
 const run = (state: State, ...actions: Action[]): State =>
   actions.reduce((s, a) => reducer(s, a), state);

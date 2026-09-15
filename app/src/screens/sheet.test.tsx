@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { StoreProvider } from '../state/store';
@@ -176,8 +176,6 @@ beforeAll(async () => {
 beforeEach(() => {
   localStorage.clear();
   viewport(1280);
-  if (root) act(() => root.unmount());
-  host?.remove();
   host = document.createElement('div');
   document.body.append(host);
   act(() => {
@@ -191,6 +189,24 @@ beforeEach(() => {
     );
   });
   press(/^Blank sheet/);
+});
+
+/*
+ * The last test's root, which nothing else was going to take down.
+ *
+ * Tearing down in `beforeEach` takes down every root but the final one: that
+ * one is still mounted when the file ends, and under `isolate: false` the file
+ * ending is not the run ending. React goes on holding it, and work scheduled
+ * on it fires after the environment has gone — the unhandled `ReferenceError:
+ * window is not defined` out of `react-dom` that `screens/deadends.test.tsx`
+ * was fixed for, which lands on whichever file happens to be running.
+ *
+ * Measured before the change: a live root with 25 KB of rendered tree
+ * still attached at the end of this file.
+ */
+afterEach(() => {
+  act(() => root.unmount());
+  host.remove();
 });
 
 /** A small gradebook with a total under it, which is what all of this is for. */
@@ -635,18 +651,4 @@ describe('copy, cut and paste from the keyboard', () => {
     expect(cell('A1')).toBe('');
     expect(cell('C1')).toBe('5');
   });
-});
-
-/*
- * The last root, unmounted before the file ends.
- *
- * `beforeEach` takes down the *previous* test's tree, which leaves the final
- * one mounted when the file finishes. React's scheduler still has work queued
- * against it, the environment is torn down underneath, and the callback then
- * throws `ReferenceError: window is not defined` — reported against whichever
- * file was running, not this one. `src/rootunmount.test.ts` is why this cannot
- * quietly go away again.
- */
-afterAll(() => {
-  if (root) act(() => root.unmount());
 });

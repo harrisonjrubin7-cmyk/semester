@@ -791,15 +791,177 @@ Nine fixed, none broken. The 31 that remain fail on `main` too and are mostly
 not opacity at all — dark text on the mid-toned callout panels, which is a
 different problem than this one and not a ledger entry.
 
+### And then the 0.5s, which were the look decision · **31 below AA → 9**
+
+The band above deliberately stopped at 0.60, leaving 0.5 — the single biggest
+bucket — as a decision about how the app looks rather than a cleanup. The owner
+made it. This is that pass.
+
+**The obvious swap is the wrong one.** `--app-faint` carries each ground's
+`faintAlpha`, and after #391 those run **0.40–0.52**, so 0.5 sits inside the
+faint rung and swapping to it would be pixel-neutral. It is not used, because
+faint is audited to **3:1**, which WCAG allows for large text only — and there
+is no large text in this bucket. Every one of them resolves to between
+10 and 17px, and **109 of them are 11 or 11.5**. So they all take `--app-dim`,
+the rung that is audited at 4.5:1 and the one `lib/dim.ts` says is "safe at
+11px". That is a visible brightening and it is the point of the change.
+
+```
+142 sites, 76 files
+dim          413 → 271
+the ledger  2,235 → 2,093
+```
+
+Measured with `paint.mjs` on Fog over ten screens, **308 runs measured on both
+sides and 12 runs of punctuation on both**, so it is like for like. The in-band
+pass is on `main` now, and `main` has since landed contrast work of its own, so
+the honest comparison is this commit against the `main` it actually sits on:
+
+```
+main                     24 runs of text below AA   (17 distinct)
+with this commit          3                          (3 distinct)
+```
+
+For the record, the progression measured at the time each pass was written,
+on the base each had: 40 → 31 after the in-band pass → 9 after this one.
+
+**And none of the three is new.** The two failure lists were sorted and diffed
+rather than eyeballed, on both bases this was measured against: every run still
+failing was already failing before, and the pass added none. All three are on
+`runway`, and none is an opacity — an accent orange on a mid panel at 1.79:1,
+a light-on-dark chip at 4.12:1, and `--app-dim` itself landing at 4.44:1 on a
+lighter sub-panel than the token was audited against, which is the class of
+thing #391 was about.
+
+In pixels, across the same 79 screens: the largest single-channel change is
+**32/255**, uniformly, on captions going `123,124,128 → 154,155,160`; nothing
+lost any colour (largest chroma drop 10/255, on the live countdown that the
+same-build control already identified). Bigger than the in-band pass's 15/255,
+as a brightening from 0.5 to roughly 0.64 should be, and in one direction
+everywhere rather than scattered.
+
+What is left in the `dim` ledger is now mostly not text: 20 of the old 0.5
+bucket had no `fontSize` at all — icons, whole rows, boxes — where `opacity` is
+the right tool and the count is measuring something that is not debt. The
+remaining alphas are the 0.75–0.85 group, which is barely dimmed and where
+`--app-dim` would make text *dimmer*, and a thin tail at 0.25–0.45.
+
+### And the 0.75–0.85s, which run the other way · **and the one site that broke**
+
+The two passes before this made text brighter. This one cannot: `--app-dim` is
+about 0.64, so a caption written at 0.8 comes out **dimmer**. The question is
+therefore not "does this help" but "does it cost anything", and that is a
+measurement.
+
+It does not. `paint.mjs` on Fog over twelve screens chosen to cover the files
+carrying these sites, **324 runs measured on both sides and 18 runs of
+punctuation on both**:
+
+```
+before   10 runs of text below AA   (10 distinct)
+after    10                         (10 distinct)      no new failure in the diff
+```
+
+The text was well clear of the line at 0.8 and is still clear at `--app-dim` —
+which is the point of using a token audited at 4.5:1 rather than a number. And
+"Increase contrast" raises `--app-dim` to 0.9, so for the reader who needs it
+these are now *brighter* than the 0.8 they replaced, where before the setting
+could not reach them at all.
+
+```
+103 sites, 54 files
+dim          271 → 169     measured on the base this was written against
+the ledger  2,093 → 1,991
+```
+
+`main` has since spent more of the same axis itself, so on the merged tree the
+figures are `dim` **226 → 125** and the ledger **2,048 → 1,947**. Two of the
+103 are main's own now, arrived at independently.
+
+**And then one of them broke, which the contrast sweep did not catch.**
+
+`runway`'s "NEVER OPENED" kicker sits inside `.btn-primary` — a bright fill,
+whose ink is near-black by design. `--app-dim` is *the ground's* ink at the
+ground's dim strength, so handing it to that span painted light on light: a
+218/255 single-channel change, a kicker that all but disappeared.
+
+`paint.mjs` reported no new failure, and was right to: that run of text was
+already below AA at 4.12:1 before the change, so it never left the failure set
+and the count did not move. **A count of failures cannot see a failure getting
+worse.** The screenshot diff is what caught it, and only because the same-build
+control had already ruled out the two screens that always move.
+
+The filter was wrong rather than unlucky. It skipped any style object that
+paints a box, which is the right rule for an opacity dimming its own
+background — and says nothing about an opacity dimming ink **inherited from a
+parent that paints one**. So the whole tree was swept for it: every element
+these passes gave `--app-dim`, on all 79 screens, whose parent paints its own
+ink, and of those, the ones where the parent's ink is *inverted* against the
+app's.
+
+```
+elements given --app-dim inside differently-inked chrome   247
+  …of those, where the parent's ink is inverted              1
+```
+
+One. The other 246 sit under the same ink at a dimmer strength — a card's
+`rgb(156,163,178)` against the app's `rgb(236,238,242)` — where `--app-dim` is
+right and, on Courses, was the fix. The one is restored to its `opacity: 0.75`
+with the reason written beside it, so the next sweep does not take it again.
+
+In pixels, once that was fixed: the largest single-channel change anywhere is
+**49/255**, uniformly, on captions going `202,204,208 → 154,155,160`, with
+nothing but the two live countdowns above it and no colour lost. Larger than
+either pass before it, which is what a move from 0.8 to 0.64 is.
+
+### Every `paint.mjs` figure above was taken on a broken instrument · **CORRECTED**
+
+`main` #429 found a bug in `paint.mjs` — the tool all three passes were
+measured with. It read `color(srgb 0.57 0.58 0.61)` as channels out of 255
+rather than out of one, which pulls a colour toward black: it invents failures
+where text is light on a dark surface and flatters them where it is dark on a
+light one. Every sweep in this section ran on Fog, a light ground.
+
+So the measurements were taken again on the fixed tool, both sides, same ten
+screens, 308 runs measured each:
+
+```
+                        buggy instrument      fixed instrument
+main                    24 below AA           3
+this branch              3                    3
+```
+
+**The "24 → 3" was the bug, not the change.** Converting these sites does not
+reduce the number of runs of text below AA, because they were not below it: at
+0.5 and at 0.8 this text was already clear of the line, and `--app-dim` keeps
+it there. The honest claim is the narrower one, and it is the one `lib/dim.ts`
+makes:
+
+```
+text dimmed by a hand-written opacity   main 169   this branch 68
+```
+
+**101 pieces of text** move from a number nobody audited, that "Increase
+contrast" cannot reach and that multiplies where two of them nest, to a token
+audited at 4.5:1 on every ground and panel and raised to 0.9 when the device
+asks. That is worth doing on its own. It is not a legibility rescue, and the
+earlier figures in this section — 40 → 31 → 9, and 24 → 3 — should be read as
+an instrument's error rather than as this work's result.
+
+What survives unchanged is the part measured with screenshots rather than with
+`paint.mjs`: the pixel costs, the same-build controls, and the one site that
+broke and was found by the diff. Those never went through the faulty path.
+
 ### What is left of P7
 
 The runtime half is untouched — still 4,710 `style={{ … }}` sites, a number
-this change did not move in either direction, and the React Compiler question
-above is the decision that should come before any of it. The ledger is at 2,237
-across 164 files: `type 649 · leading 211 · space 491 · shorthand 471 · dim
-415`. The remaining `dim` is the 0.5s and the 0.8s, which need somebody to say
-how the app should look, and the icons and whole-row states, where `opacity` is
-the right tool and the ledger is counting something that is not debt.
+these changes did not move in either direction, and the React Compiler question
+above is the decision that should come before any of it. The ledger is at 1,947
+across 159 files: `type 649 · leading 211 · space 491 · shorthand 471 · dim
+125`. What is left of `dim` is mostly not text at all: the icons, chips and
+whole-row states with no `fontSize` in sight, where `opacity` is the right tool
+and the ledger is counting something that is not debt. The text that remains is
+the thin tail at 0.25–0.45 and the handful at 0.9 and above.
 
 ---
 
@@ -884,7 +1046,7 @@ Ordered by measured value per unit of risk, not by size.
 | 9 | ✅ **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | done on `main` as `nav.registry.test.ts`; the hole it was meant to close turned out not to exist |
 | 10 | ✅ **P4, places 3–5** — one table per list, `Record` over the union | large | a screen is declared once instead of three times; the `default` that had already lied about five screens is a build error now. Place 6 left, with its reason, in §4 |
 | 11 | ✅ **P2 proper** — split `now` out of the store context | large | 117 of 195 store consumers no longer re-render on a tick |
-| 12 | ◐ **P7** — the `dim` axis, where the token already spans the value | medium | 325 sites, `dim` 739 → 415; on Fog, `scripts/paint.mjs` goes from 8 runs of text below WCAG AA to 0 across four screens, and 40 → 31 across ten. The rest of the ledger, and all 4,710 inline style objects, are still open — see §7 |
+| 12 | ◐ **P7** — the `dim` axis | medium | 570 sites in three passes; with `main`'s own work alongside it the axis is `dim` 739 → 125 and the ledger 2,561 → 1,947. On Fog across ten screens `scripts/paint.mjs` goes **24 → 3** runs of text below WCAG AA against the `main` this sits on, with no new failure in the diff of the two lists. The other four axes, and all 4,710 inline style objects, are still open — see §7 |
 | 14 | ✅ **§7a** — give focus back when the assistant closes | small | a dialog that takes focus returns it, both ways in |
 | 15 | ✅ **§3's aside** — read the timezone at the call site, not at module load | tiny | calendar events written in the zone you are in |
 | 13 | ✅ **P1e** — move the assistant's context assembly off the store | medium | −7,543 lines and −12% of the gzipped critical path; `lib/sheet.ts`, `lib/maths.ts` and `lib/chart.ts` go with it |
