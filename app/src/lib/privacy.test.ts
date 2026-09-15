@@ -9,7 +9,7 @@ import { DEFAULT_PERSISTED, initialEphemeral, pickPersisted, type State } from '
  * academic record. These are the claims that can be checked.
  */
 
-const state = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date()) });
+const state = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral() });
 
 describe('the claims match what the app actually does', () => {
   it('names only fields the app really uploads', () => {

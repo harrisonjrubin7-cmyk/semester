@@ -47,7 +47,7 @@ const look = (over: Partial<State> = {}): Look => ({
      * against an account with four courses. That is a wrong test, not a
      * wrong provider.
      */
-    ...initialEphemeral(NOW),
+    ...initialEphemeral(),
     courses: [ECON, BUS],
     term: '2026FA',
     grades: { 'econ:0': '91', 'bus:0': '88', 'bus:1': '74' },

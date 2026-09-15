@@ -39,7 +39,7 @@ const MARK = 'THE·DATE';
 function ctx(screen: Screen): HeaderCtx {
   return {
     screen,
-    state: { ...DEFAULT_PERSISTED, ...initialEphemeral(NOW), screen },
+    state: { ...DEFAULT_PERSISTED, ...initialEphemeral(), screen },
     catalog: buildCatalog([]),
     school: resolveSchool('vanderbilt', null, []),
     now: NOW,

@@ -551,7 +551,7 @@ describe('a backup carries the semester, not the look', () => {
   ];
 
   it('names no look key', () => {
-    const keys = Object.keys(backupOf({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date()) } as State));
+    const keys = Object.keys(backupOf({ ...DEFAULT_PERSISTED, ...initialEphemeral() } as State));
     expect(keys.filter((k) => LOOK.includes(k))).toEqual([]);
   });
 
@@ -580,7 +580,7 @@ describe('a backup that can be restored from', () => {
     count: 12,
   };
   const withFeed = () =>
-    ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date()), feeds: [feed] }) as State;
+    ({ ...DEFAULT_PERSISTED, ...initialEphemeral(), feeds: [feed] }) as State;
 
   /*
    * The failure this catches, and why it is written as a set difference.
@@ -703,7 +703,7 @@ describe('every field the store holds is a decision about the backup', () => {
 
 describe('the work the app grew after the backup was written', () => {
   const state = (over: Partial<State> = {}): State =>
-    ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date()), ...over }) as State;
+    ({ ...DEFAULT_PERSISTED, ...initialEphemeral(), ...over }) as State;
 
   const draft = {
     id: 'd1',

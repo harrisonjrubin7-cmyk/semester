@@ -24,7 +24,7 @@ const NOW = new Date(2026, 8, 7, 11, 30);
 const CAPS: Capabilities = { mealPlan: 'none', housing: false, campusMap: false };
 
 function input(over: Partial<State> = {}, courses: State['courses'] = []): TopInput {
-  const state = { ...DEFAULT_PERSISTED, ...initialEphemeral(NOW), courses, ...over } as State;
+  const state = { ...DEFAULT_PERSISTED, ...initialEphemeral(), courses, ...over } as State;
   return {
     state,
     catalog: buildCatalog(state.courses),

@@ -795,7 +795,23 @@ export interface Ephemeral {
   calView: 'day' | 'week' | 'month' | 'semester';
   /** Which sources the calendar is showing — combined, or one at a time. */
   calSource: 'all' | 'classes' | 'deadlines' | 'campus';
-  /** Day the Day view is on, as an ISO date. Null means today. */
+  /**
+   * The day the calendar is on, as an ISO date. Null means today.
+   *
+   * One field for every grain. It used to be one of three: the day and week
+   * views read this, the month view read a `selDate` of its own, and which
+   * month was on screen was a separate `calMonth`/`calYear` pair movable only
+   * by a delta. Nothing kept them in step, so tapping the 24th in the month
+   * grid and switching to the day view landed you back on today, and the
+   * assistant — which reads this field — was told about a day you were not
+   * looking at.
+   *
+   * `selDate` also was not an ISO date. Both of its writers built
+   * `${calYear}-${calMonth}-${d}` with a zero-indexed, unpadded month, so the
+   * 24th of September was stored as `2026-8-24`. It survived because its only
+   * reader took `split('-')[2]` and threw the rest away — the month in that
+   * string was never read by anything.
+   */
   calDay: string | null;
   /**
    * Which section of a tab is open.
@@ -902,9 +918,6 @@ export interface Ephemeral {
   updateUnit: number | null;
   query: string;
   onb: number;
-  selDate: string | null;
-  calMonth: number;
-  calYear: number;
   openUnit: number;
   drillUnit: number | null;
   /**
@@ -1356,7 +1369,15 @@ export function currentLook(state: Persisted): Look {
   };
 }
 
-export function initialEphemeral(now: Date): Ephemeral {
+/*
+ * No `now` any more.
+ *
+ * It had one job here: seeding `calMonth` and `calYear` with the month the app
+ * opened in. Those fields are gone — the month on screen is the month of
+ * `calDay`, which starts null and means today — so the parameter went with
+ * them. A parameter nothing reads is a claim the signature cannot keep.
+ */
+export function initialEphemeral(): Ephemeral {
   return {
     // Ephemeral on purpose: a capture box left open is not a state worth
     // restoring, and reopening the app into a modal is a way to lose people.
@@ -1404,9 +1425,6 @@ export function initialEphemeral(now: Date): Ephemeral {
     updateUnit: null,
     query: '',
     onb: 0,
-    selDate: null,
-    calMonth: now.getMonth(),
-    calYear: now.getFullYear(),
     openUnit: 0,
     drillUnit: null,
     drillMix: false,
@@ -1949,7 +1967,6 @@ export type Action =
   | { type: 'setFilter'; filter: string }
   | { type: 'setEvFilter'; filter: string }
   | { type: 'setQuery'; query: string }
-  | { type: 'selectDate'; date: string | null }
   | { type: 'stepMonth'; delta: number }
   | { type: 'toggleUnit'; index: number }
   | { type: 'clearNotifs' }

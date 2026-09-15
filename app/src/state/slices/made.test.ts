@@ -18,7 +18,7 @@ import { fromRows } from '../../lib/sheet';
  * to nothing — which is the shape of bug `screens/deadends.test.tsx` exists
  * for, arrived at from the other direction.
  */
-const start = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral(new Date(2026, 8, 15)) });
+const start = (): State => ({ ...DEFAULT_PERSISTED, ...initialEphemeral() });
 
 const run = (state: State, ...actions: Action[]): State =>
   actions.reduce((s, a) => reducer(s, a), state);

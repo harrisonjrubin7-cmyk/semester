@@ -101,7 +101,18 @@ describe('the state', () => {
      * accusation against a live field, which is the expensive way to find out.
      */
     expect(destructured.size).toBeGreaterThan(0);
-    expect(destructured.has('calYear'), 'Calendar pulls this one out of state').toBe(true);
+    /*
+     * The specimen was `calYear` until the fourteenth pass deleted it — the
+     * calendar's month is now derived from `calDay` rather than held beside
+     * it. Which is the hazard of naming one: a test whose example is a field
+     * somebody may legitimately remove fails for a reason that has nothing to
+     * do with what it checks.
+     *
+     * `calSource` is a safer specimen only in degree, so the assertion below
+     * is the real one — *some* field is seen being destructured — and the
+     * named one is a readable failure message when that stops being true.
+     */
+    expect(destructured.has('calSource'), 'Calendar pulls this one out of state').toBe(true);
   });
 
   it('needs no exceptions, and says so', () => {
