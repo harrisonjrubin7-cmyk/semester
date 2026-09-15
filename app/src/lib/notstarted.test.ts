@@ -85,7 +85,12 @@ describe('what the guide card prints', () => {
     // put the sentence on the card twice, three lines apart. Both halves were
     // individually right, which is why no test caught it and a screenshot did.
     expect(study).not.toContain('${standing.evidence.answered} of ${standing.evidence.cards}');
-    expect(study).toMatch(/due > 0 \? `\$\{due\} due`/);
+    // The meta line reports what is up tonight, in one of its two wordings.
+    // It grew the second when `lib/intime.ts` began pulling cards back for a
+    // test: "4 due" under a standing that reads "nothing come round" is the
+    // same shape of contradiction as the one above, found the same way.
+    expect(study).toContain('`${due} due`');
+    expect(study).toContain('`${due} of ${forTest} up for the ${test.kind.toLowerCase()}`');
   });
 
   it('still hands the blend to the ranking, which is what it is for', () => {

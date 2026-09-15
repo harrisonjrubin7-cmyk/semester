@@ -4,6 +4,7 @@ import { EmptyState } from '../components/ui';
 import { allCards } from '../data/catalog';
 import { liveGuide } from '../lib/live';
 import { cardKey, dueFirst } from '../lib/review';
+import { inTime, testsNear } from '../lib/intime';
 import {
   addSample,
   cardsThatFit,
@@ -90,7 +91,14 @@ function Run({ win }: { win: GapWindow }) {
         key: cardKey(c.id, card.q),
       }));
     });
-    return dueFirst(all, state.reviews, startedAt.current).slice(0, budget);
+    /*
+     * Against a schedule that knows about the week's tests — see
+     * `lib/intime.ts`. A gap between classes is exactly when the cards an
+     * exam would otherwise strand are worth dealing, and this screen was
+     * dealing from a schedule that had never heard of the exam.
+     */
+    const schedule = inTime(state.reviews, testsNear(catalog, now), startedAt.current);
+    return dueFirst(all, schedule, startedAt.current).slice(0, budget);
     // Deliberately not depending on `state.reviews`: it changes on every
     // answer, and a deck that reshuffles mid-run is a deck you cannot finish.
     // eslint-disable-next-line react-hooks/exhaustive-deps

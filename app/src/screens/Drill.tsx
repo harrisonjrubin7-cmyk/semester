@@ -8,6 +8,7 @@ import { Blueprint } from '../components/Blueprint';
 import { buildQuiz } from '../lib/quiz';
 import { ladderFor, nextRungLabel, scoreLine } from '../lib/ladder';
 import { A_SITTING, aSitting, catching, dueCount } from '../lib/review';
+import { inTime, testsNear } from '../lib/intime';
 import { mixLine, worthMixing } from '../lib/interleave';
 import { guideDeck, mixedDeck } from '../lib/drilldeck';
 import { useKeepAwake } from '../lib/awake';
@@ -29,20 +30,40 @@ export function Drill() {
   // what you have never seen, then what you already know — weakest first
   // inside each band. The run is fixed when it starts so answering a card does
   // not reshuffle the deck under your thumb.
+  /*
+   * The schedule, with a test in the next three weeks taken into account.
+   *
+   * SM-2 does not know what a semester is: a card answered right three times
+   * goes away for sixteen days, and the exam is in ten. `lib/intime.ts` brings
+   * those back for one last look before the test without touching what is
+   * stored, so this deck is dealt against a schedule that knows what the
+   * revision is *for*. Identity is preserved when nothing moved, which is what
+   * keeps the memo below from re-sorting the deck under your thumb.
+   */
+  const schedule = useMemo(
+    () => inTime(state.reviews, testsNear(catalog, now), now.getTime()),
+    // Same dependencies as the deck itself, and deliberately not `state.reviews`:
+    // see the note in the memo below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [catalog, state.guideId, state.drillUnit, state.drillMix],
+  );
+
   const ordered = useMemo(() => {
     // What is in the deck, and in what order, is `lib/drilldeck` — including
     // why a mixed run reads the whole catalogue and a scoped one reads its
-    // unit's own cards. What is left here is the React question: when to
-    // rebuild it.
+    // unit's own cards. Dealt against `schedule` rather than `state.reviews`,
+    // so a card the exam is close enough to have brought forward is dealt
+    // where the test wants it. What is left here is the React question: when
+    // to rebuild it.
     return state.drillMix
-      ? mixedDeck(catalog.modules, state.reviews, now.getTime())
-      : guideDeck(guide, state.guideId, state.drillUnit, state.reviews, now.getTime());
+      ? mixedDeck(catalog.modules, schedule, now.getTime())
+      : guideDeck(guide, state.guideId, state.drillUnit, schedule, now.getTime());
     // Deliberately NOT depending on `guide` or `state.reviews`. Both change on
     // every answer now that mastery is measured, and re-sorting the deck under
     // your thumb mid-run skips cards and repeats others — a full pass of 68
     // recorded 34. The order is decided when the run starts and then held.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.guideId, state.drillUnit, state.drillMix]);
+  }, [state.guideId, state.drillUnit, state.drillMix, schedule]);
 
   /*
    * One sitting off the front, and the rest counted rather than dropped.
@@ -103,7 +124,7 @@ export function Drill() {
       // The whole deck, not the sitting: what is due in this course does not
       // stop at the twenty-fifth card.
       ordered.map((c) => c.key),
-      state.reviews,
+      schedule,
       now.getTime(),
     );
     const stubborn = catching(pool, state.reviews);
