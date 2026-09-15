@@ -391,7 +391,7 @@ function DayView() {
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'var(--type-md)',
                     paddingTop: 'var(--sp-6)',
-                    opacity: 0.6,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   {b.time}
@@ -425,7 +425,7 @@ function DayView() {
                   >
                     {b.title}
                   </div>
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
                     {b.mine && (
                       <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
                         Yours
@@ -527,7 +527,7 @@ function DayView() {
                     flex: 'none',
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'var(--type-sm)',
-                    opacity: 0.6,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   {e.time}
@@ -2185,7 +2185,7 @@ function SemesterView() {
 
   return (
     <div style={{ padding: 'var(--page-pad)' }}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-7)', textWrap: 'pretty' }}>
         {[
           on.deadlines && `${items.length} ${items.length === 1 ? 'deadline' : 'deadlines'}`,
           // Counted apart from the deadlines, the way the whole app counts
@@ -2658,7 +2658,7 @@ function CampusList() {
                     </span>
                   </div>
                   <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{e.title}</div>
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {e.time} · {e.where}
                   </div>
                 </button>
@@ -2694,7 +2694,7 @@ function CampusList() {
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 'var(--type-lg)' }}>{e.title}</div>
-                      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+                      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                         {[e.time, e.where].filter(Boolean).join(' · ')}
                       </div>
                     </div>
@@ -2856,7 +2856,7 @@ export function EventDetail() {
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
               {event.dow} {event.mon} {event.day}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>{event.time}</div>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{event.time}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
           <div style={{ flex: 1, padding: '11px 0 11px 14px' }}>

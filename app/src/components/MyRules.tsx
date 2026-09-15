@@ -46,7 +46,7 @@ export function MyRules() {
       >
         Your own reminders
       </SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
         The seven above are defaults. These are yours — a lead time you choose, on the kind of
         thing you choose, for one course or all of them. They add to the ones above rather than
         replacing any, so nothing here can make a reminder stop arriving.

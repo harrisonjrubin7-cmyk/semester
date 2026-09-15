@@ -131,7 +131,7 @@ function OutOfPocket() {
           {line(t)}
         </div>
         {todo(t) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>{todo(t)}</div>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>{todo(t)}</div>
         ) : null}
       </Blueprint>
 
@@ -147,7 +147,7 @@ function OutOfPocket() {
               <CustomRow key={c.id}>
                 <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
                   <CourseTag id={c.id} style={{ flex: 'none' }} />
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                     {theirs.length === 0
                       ? 'nothing recorded'
                       : `${theirs.length} ${theirs.length === 1 ? 'thing' : 'things'}`}

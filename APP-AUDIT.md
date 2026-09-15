@@ -513,6 +513,10 @@ Everything, Import and Settings without a throw.
 Nothing found by this audit is left unaddressed. Every `Action` variant in
 `state/shape.ts` has a sender, and no state field is read by nothing.
 
+One thing was found by the later interaction-depth pass and fixed there: the
+lesson beat arrows were enabled at both ends of a lesson, where the rest of the
+app disables a direction that is not available. See pass eight below.
+
 **Out of scope by design.** `docs/IMPLEMENTATION_STATUS.md` lists the work that
 needs a real institutional integration — SIS transactions, official
 transcripts, faculty grading, family billing. Nothing in the app pretends
@@ -576,14 +580,14 @@ measurement is the record of what was wrong, not because this branch fixed it.
 Sixty destinations, two grounds, phone width, on `f0a2368`:
 
 ```
-runs measured 3120   skipped, off screen or moved between the shots 2652
-below AA: 180 runs of text (120 distinct), 134 runs of punctuation
+runs measured 3146   skipped, off screen or moved between the shots 2820
+below AA: 168 runs of text (113 distinct), 132 runs of punctuation
 ```
 
-**Two of the hundred and eighty are on Ink.** Everything else is Fog, and the
-reason is one line in `lib/dim.ts`: dark ink on a light page fades faster than
-light ink on a dark one. Three clusters account for seventy-eight of the
-hundred and twenty distinct runs, and each is one number:
+**Not one of the hundred and sixty-eight is on Ink.** Every one is on Fog, and
+the reason is one line in `lib/dim.ts`: dark ink on a light page fades faster
+than light ink on a dark one. Three clusters account for seventy-seven of the
+hundred and thirteen distinct runs, and each is one number:
 
 | painted | ratio | what wrote it |
 |---|---|---|
@@ -650,11 +654,24 @@ is worth more than the exception.
 
 ## What the branch leaves behind
 
-Measured on the merged tree, same sixty screens and two grounds:
+Measured on the merged tree — `3c0c0f0` plus this branch — same sixty screens,
+same two grounds, same instrument:
 
 ```
-PLACEHOLDER
+runs measured 3152   skipped, off screen or moved between the shots 2852
+below AA: 85 runs of text (67 distinct), 132 runs of punctuation
 ```
+
+A hundred and sixty-eight to eighty-five, and still nothing on Ink. Most of
+that is `main`'s migration rather than this branch, which is the honest
+accounting: what this branch adds is the number, the instrument that produces
+it, one of the six, and a test that stops the last one coming back.
+
+Re-run at `b83568e`, after four more passes landed on `main` including the
+faint rung's own correction in #391: **eighty-five, sixty-seven distinct, still
+nothing on Ink** — the same figure to the run. That is a useful thing to know
+about the number rather than a coincidence: what is left is not the sort of
+thing a pass about something else moves by accident.
 
 ## What was not fixed, deliberately
 
@@ -686,6 +703,14 @@ app:
   reports three rows of page background as its own;
 - something drawn on top is not the background — the assistant's button parks
   over the foot of the home screen;
+- and a hit test alone does not settle that, which is the one that got past
+  the first version of this page. The button is a circle with a glow, so the
+  pixels in the corners of its box are outside the shape `elementFromPoint`
+  answers for and still carry its light; one of them, half a pixel outside the
+  circle, was the worst reading in a whole census at 1.38:1 — a caption against
+  a button nowhere near it. What floats is excluded by its box now, and **the
+  two censuses above were re-run from scratch afterwards**: the figures this
+  page first carried, 180 and 102, were that artefact;
 - a disabled button has no contrast requirement, and the first full census
   opened with five greyed-out primary buttons at 1.41:1, which is the state
   they are supposed to be in;
@@ -708,3 +733,139 @@ have.
   a screen's own do not dim text with an `opacity` at all — it fails against
   `main` as it stood at `3c0c0f0`, on the 0.65 that migration left, which is
   the whole reason that one number is in this branch.
+
+# Pass eight — interaction depth: does pressing it do anything?
+
+The earlier passes asked whether every screen could be reached and whether
+every capability had a control. This one asks the next question down: press
+every control on every screen, and see whether anything happens.
+
+That is a different kind of question, and it needs a different kind of
+evidence. A unit test passes its inputs in by hand, so it cannot tell you that
+nothing on screen sends them. A route walk opens a screen, so it cannot tell
+you that the button on it is wired to nothing. Only pressing the button
+answers it.
+
+## What was exercised
+
+2,497 controls across 81 screens, each one pressed from a freshly reloaded app,
+sorted into what the press did:
+
+| Outcome | Count |
+| --- | --- |
+| Changed the screen | 1,500 |
+| Went somewhere (151 distinct destinations) | 700 |
+| Not there when revisited | 243 |
+| Correctly inert — already in its target state | 28 |
+| Changed nothing measurable | 26 |
+| **Threw** | **0** |
+
+Nothing threw. Not one of the 2,497.
+
+## What it found
+
+Nothing. All 26 "changed nothing measurable" were hand-checked one at a time,
+and every one of them is correct:
+
+- **Twelve were the sweep's blindness, not the app's.** Its fingerprint was
+  `innerText` + node count + route, which cannot see a control whose entire job
+  is to change a colour, a glyph or an `aria-pressed`. Re-measured on the
+  attributes and computed styles of every control, the export tick-boxes, the
+  AI-stance rows, the day toggles, the exam and proof chips, the Saved tab and
+  the look pickers all flip exactly what they should. `Copper` moves
+  `--app-accent` from `#d4d9e2` to `#d6a98d` and repaints fifteen controls with
+  it; `Soft` moves the stored corners from `auto` to `soft`.
+- **Six ask the operating system something a headless container will not
+  answer.** Instrumenting the browser APIs rather than the DOM showed each one
+  making its call and getting nothing back: `window.print` from the two print
+  buttons, `geolocation` from Where am I, `Notification.requestPermission` from
+  Allow notifications, and `createObjectURL` + a download click from Download
+  school template and Export.
+- **Five are correctly inert.** Four drag handles, which move a card when
+  dragged and should do nothing when merely clicked, and Add a grade with an
+  empty field, which returns early by design.
+- **Two were already in their target state**, but signal it with a glyph or
+  not at all, so the "already on" check did not catch them: the unit chooser's
+  `■`, which is the default and re-selects the default; and Previous beat on
+  the first beat, which seeks to the cue you are already sitting on.
+
+  Previous beat is the one thing here that was worth a second look, and it is
+  the one thing this pass changed. `Reorder` disables its arrow at the ends of
+  a list — that is the app's own idiom for "this way is not available", and the
+  reason `.bare:disabled` exists — while the beat arrows stayed enabled at both
+  ends of a lesson and seeked to the beat you were already on. Fixed below.
+- **One was measured against the wrong store.** Save plan writes to
+  `semester.family.v1:<account>` through `useDeviceLibrary`; the check was
+  reading `semester.v1`, which is the first-run seed and never changes. So was
+  a shell check — everything after first run lands in IndexedDB, a quarter of a
+  second after the last change.
+
+The 243 "not there when revisited" are the sweep's own doing, not dead
+controls. Every click persists, and a reload restores what was persisted, so by
+click 2,000 the app being walked was not the app that had been enumerated —
+adopting a course replaces the gate in front of its editor, reordering a list
+renames every Move control in it, and `setNav` alone accounts for 98 of the
+243. Ten were re-checked on a clean seed: eight are present and work, and the
+two that are absent are conditionally rendered — one inside a collapsed
+section, one a suggestion that only appears when the week is actually heavy.
+
+## What it cost to get an answer worth quoting
+
+Five attempts, four of which produced findings that were not findings. They are
+recorded because the next sweep will be tempted by all four:
+
+1. **Clicking by index.** Re-navigating between clicks means any shift in the
+   DOM clicks a different button than the one being reported. It named the tab
+   bar and the calendar month arrows dead; both work by hand. Controls are
+   addressed by accessible name plus ordinal now.
+2. **Diffing `innerText`.** It calls an already-selected tab inert, when doing
+   nothing is the correct response to being told to do what you are already
+   doing. That is read off `aria-pressed`/`aria-current`/`aria-selected` and
+   classified apart.
+3. **A reload that was not one.** `page.goto` to a URL differing only in its
+   hash does not fetch a new document, and does nothing whatsoever when the
+   hash already matches — so after any click that navigated, the app stayed
+   where the click had left it and every control on the real screen was
+   legitimately absent. 59 of 113 controls came back "gone". A `?v=N` query
+   makes each visit a different URL; the count fell to one.
+4. **Reading the seed instead of the store.** `semester.v1` in localStorage is
+   what first run reads; everything after it is written to IndexedDB after
+   `SETTLE_MS`. Two controls looked like they saved nothing.
+
+The one that survived every attempt is the useful number: zero throws, and —
+after the one fix below — zero controls that do nothing.
+
+## The one thing it changed
+
+The two arrows under a narrated lesson now say which way is available.
+
+`lib/beats.ts` holds the rule, because it was written twice inside the two
+`onClick` handlers where nothing could read it:
+
+- `atFirstBeat` — the first cue of the narration, and only there. Inside the
+  tail of slides added after the recording there is always somewhere back:
+  stepping off the first added slide returns to the last cue.
+- `atLastBeat` — the last cue, unless the narration has finished and there are
+  added slides still ahead. Then the last of those.
+
+Both also answer true for a unit that arrived with no cues at all, which is the
+second thing this fixes rather than a side effect of it. `Previous` read
+`cues[Math.max(0, index - 1)].at`, so an empty list had it throwing rather than
+merely lying about what was available.
+
+Confirmed in the browser rather than only in the suite: on the first beat of
+ECON 1020 unit 1, Previous reads `disabled=true` with `cursor: not-allowed`
+while Next stays live; seeking to the last of its fourteen beats swaps them.
+
+Worth recording about that check, because it wasted a run: seeking does nothing
+until the tab owns the player. Jumping to a beat from the chapter list left the
+playhead on beat 0 and both arrows as they were, and looked exactly like the
+fix not working. Pressing Play first — which is what takes the player — is what
+makes a seek move anything.
+
+## What guards it now
+
+- `lib/beats.test.ts` covers `atFirstBeat`, `atLastBeat` and `showingExtra`:
+  each end of the narration, each end of the tail of added slides, the middle
+  where both arrows are live, a one-cue unit where neither is, and the empty
+  unit that used to throw.

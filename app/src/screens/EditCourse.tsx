@@ -146,13 +146,13 @@ export function EditCourse() {
       bottom={26}
     >
     <>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Everything a syllabus states, changeable. Dates move, weightings get corrected, rooms
         change — none of that should mean re-importing the course and losing what you have drilled.
       </div>
 
       {missing.length > 0 && (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
           Currently: {missing.join(', ')}.
         </div>
       )}
@@ -199,7 +199,7 @@ export function EditCourse() {
       </div>
 
       <SectionLabel>What the syllabus says about AI</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Recorded here, and read by the drafting tool, which will not write for a course unless
         this says plainly that it may. Nothing recorded counts as no.
       </div>
@@ -299,7 +299,7 @@ export function EditCourse() {
         + Add a grading row
       </button>
       {note ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)' }}>{note}</div>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{note}</div>
       ) : null}
 
       <SectionLabel>When it meets</SectionLabel>

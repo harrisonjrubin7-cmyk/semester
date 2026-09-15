@@ -37,7 +37,7 @@ export function CameBack({ item }: { item: DatedItem }) {
           width: 'auto',
           padding: '8px 0 2px',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           textAlign: 'left',
         }}
       >

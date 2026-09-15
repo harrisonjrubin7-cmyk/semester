@@ -58,7 +58,7 @@ export function WeekDue({
   return (
     <Folding name="WeekDue">
       <SectionLabel>Due {when}</SectionLabel>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
         {weekLabel(start, span)} · {weekLine(days, classes, when)}
       </div>
 

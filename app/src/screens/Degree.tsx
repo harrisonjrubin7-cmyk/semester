@@ -113,7 +113,7 @@ function WhatIsLeft() {
   if (list.length === 0) {
     return (
       <Folding name="WhatIsLeft">
-        <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
           Nothing recorded yet. Add your requirements under Requirements — one row per line of
           your audit — and the courses you have taken under Taken.
         </p>
@@ -173,7 +173,7 @@ function WhatIsLeft() {
                   <div
                     style={{
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                      opacity: 0.7,
+                      color: 'var(--app-dim)',
                       marginTop: 3,
                       textWrap: 'pretty',
                     }}
@@ -217,7 +217,7 @@ function WhatIsLeft() {
           {/* Either they really are free electives, or a requirement has not
               been entered yet. Both are worth knowing and the app does not
               guess which. */}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {loose.map((c) => c.code).join(', ')}. Either these are free electives, or a
             requirement they satisfy has not been entered yet.
           </div>
@@ -366,7 +366,7 @@ function ThisTerm() {
           style={{
             marginTop: 'var(--sp-5)',
             fontSize: 'var(--type-xs)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -760,7 +760,7 @@ function TakenRow({ course: c }: { course: Taken }) {
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
             textWrap: 'pretty',
           }}
@@ -924,7 +924,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
             textWrap: 'pretty',
           }}

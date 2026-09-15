@@ -76,7 +76,7 @@ export function YourCourses() {
       >
         Your courses, your way
       </SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
         Call them what you call them and put the one you are living in this week at the top.
         Each already has a colour — your accent, divided between your classes, and worn on every
         deadline, block and dot that belongs to it. Open a course to hold it to a different one.

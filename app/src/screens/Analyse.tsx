@@ -153,14 +153,14 @@ export function Analyse() {
 
   const stat = (label: string, value: string) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', gap: 'var(--sp-6)' }}>
-      <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>{label}</span>
+      <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{label}</span>
       <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
   );
 
   return (
     <Page bottom={26}>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         Every number here is computed on this device by tested code, not guessed at by a model.
         {provider()} is given the finished statistics and asked what they mean — it never reads a column
         and reports a figure.

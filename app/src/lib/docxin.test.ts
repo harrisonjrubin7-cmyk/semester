@@ -279,11 +279,14 @@ describe('a document Word wrote', () => {
     expect(back.doc.title).toBe('Word');
   });
 
+  /* Comments themselves now come in — see `docnotes.test.ts`. This is the
+     case where one refers to an entry that is not in the file, which is a
+     comment that did not arrive and is worth saying so about. */
   it('says what it left behind rather than dropping it in silence', async () => {
     const back = await fromDocx(
       wrap('<w:p><w:commentReference w:id="1"/><w:r><w:t>Body.</w:t></w:r></w:p>'),
     );
-    expect(back.notes.join(' ')).toContain('Comments');
+    expect(back.notes.join(' ')).toContain('comment could not be placed');
   });
 
   it('refuses a file that is not a zip, in words that say what to do', async () => {

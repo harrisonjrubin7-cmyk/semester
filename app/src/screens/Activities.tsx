@@ -237,7 +237,7 @@ function Row({ commitment }: { commitment: Commitment }) {
           href={commitment.url}
           target="_blank"
           rel="noreferrer"
-          style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.6, textDecoration: 'none' }}
+          style={{ flex: 'none', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', textDecoration: 'none' }}
         >
           OPEN
         </a>
@@ -509,7 +509,7 @@ function FindThings() {
       </div>
 
       <SectionLabel>Bring your involvement list back</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         Open your involvement page on AnchorLink, select it, copy, and paste here. Nothing is read
         from the page — a browser will not let this app see a tab it does not own, and it should
         not.
@@ -524,7 +524,7 @@ function FindThings() {
       />
 
       {text.trim() && found.length === 0 && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           Nothing in there reads as an organisation name. Navigation, counts and links are dropped
           rather than filed as clubs.
         </div>

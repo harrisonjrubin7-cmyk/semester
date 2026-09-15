@@ -116,7 +116,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
 
   return (
     <Folding name="ProjectFile">
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         A document to write the thing <em>in</em> — headings, the question each section has to
         answer, your sources with a column for what each is for, the rubric as a checklist, and
         blanks where your claims go. Not the essay: that is the part with your name on it.
@@ -256,7 +256,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
           <SectionLabel>Your project file</SectionLabel>
           <Produced style={{ background: 'var(--app-panel)' }}>{document}</Produced>
 
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
             {left > 0
               ? `${left} blanks in square brackets — those are yours, and the file is not finished until none are left.`
               : 'No blanks left in it. Read it carefully: if it has written the argument rather than asking for it, that is not a file to hand in.'}

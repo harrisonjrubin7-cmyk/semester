@@ -288,3 +288,50 @@ describe('document', () => {
     expect(document(b, ahead, code, 'A sentence.')).toContain('Read against it');
   });
 });
+
+/**
+ * An un-ticked deadline is not work done, even after a sync.
+ *
+ * `toggleDone` keeps two maps in step: ticking sets `done[id] = true` and
+ * stamps `tickedAt[id]`, and un-ticking sets `done[id] = false` and *deletes*
+ * the stamp. So on one device the invariant holds — a stamp exists only while
+ * the thing is done — and `ticked` below reads `tickedAt` alone on the
+ * strength of it.
+ *
+ * A merge cannot express a deletion. `tickedAt` merges with `ticks`, which is
+ * `{...local, ...remote}`, and a key the remote has *removed* is simply a key
+ * the remote does not have — so the local stamp survives:
+ *
+ *     local   done {x: true}   tickedAt {x: Tuesday}
+ *     remote  done {x: false}  tickedAt {}            ← un-ticked here
+ *     merged  done {x: false}  tickedAt {x: Tuesday}  ← orphan
+ *
+ * `done` is right and the stamp outlives it. The weekly report then credits a
+ * deadline the student explicitly said was not finished. `report/Term.tsx`
+ * reads the same map and filters on `done` first, which is what this should
+ * have been doing.
+ */
+describe('a stamp left behind by a sync', () => {
+  const TUESDAY = new Date(2026, 8, 8, 10, 0).getTime();
+
+  it('does not count a deadline whose box is not ticked', () => {
+    const paper = item('p1', 9, 8);
+    const b = behind(
+      input({
+        catalog: catalog([paper]),
+        // What a merge leaves: un-ticked, but the stamp survived.
+        done: { p1: false },
+        tickedAt: { p1: TUESDAY },
+      }),
+    );
+    expect(b.done.map((i) => i.id), 'an un-ticked deadline is not done').toEqual([]);
+  });
+
+  it('still counts one that is ticked', () => {
+    const paper = item('p1', 9, 8);
+    const b = behind(
+      input({ catalog: catalog([paper]), done: { p1: true }, tickedAt: { p1: TUESDAY } }),
+    );
+    expect(b.done.map((i) => i.id)).toEqual(['p1']);
+  });
+});

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { ReactNode } from 'react';
@@ -399,4 +399,18 @@ describe('the block the caret is in', () => {
     expect(style()).toBe('text');
     expect(host.querySelector('[aria-label="Heading text"]')).toBe(null);
   });
+});
+
+/*
+ * The last root, unmounted before the file ends.
+ *
+ * `beforeEach` takes down the *previous* test's tree, which leaves the final
+ * one mounted when the file finishes. React's scheduler still has work queued
+ * against it, the environment is torn down underneath, and the callback then
+ * throws `ReferenceError: window is not defined` — reported against whichever
+ * file was running, not this one. `src/rootunmount.test.ts` is why this cannot
+ * quietly go away again.
+ */
+afterAll(() => {
+  if (root) act(() => root.unmount());
 });

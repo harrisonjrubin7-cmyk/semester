@@ -144,7 +144,7 @@ export function WeekReport() {
           {behindLine(back)}
         </div>
         {slippedLine(back) ? (
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             {slippedLine(back)}
           </div>
         ) : null}
@@ -207,7 +207,7 @@ export function WeekReport() {
             .
           </div>
           {forward.heaviest ? (
-            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
               {forward.heaviest.name} carries most of it, at {showHours(forward.heaviest.promised)}
               {forward.freest && forward.freest !== forward.heaviest
                 ? `; ${forward.freest.name} has the most room`

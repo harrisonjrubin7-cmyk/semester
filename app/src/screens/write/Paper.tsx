@@ -7,6 +7,7 @@ import {
   type Block,
   type Branch,
   type Doc,
+  type Note,
   type Run,
 } from '../../lib/document';
 import { fontStack, layoutOf, lineHeight, pageSize } from '../../lib/doclayout';
@@ -94,6 +95,7 @@ export function Paper({ doc, onGo }: { doc: Doc; onGo?: (at: number) => void }) 
           onClick={onGo ? () => onGo(at) : undefined}
         >
           <Drawn block={block} headings={headings} />
+          <Margin notes={block.notes} />
         </div>
       ))}
     </article>
@@ -214,6 +216,33 @@ function Drawn({ block, headings }: { block: Block; headings: ReturnType<typeof 
     case 'break':
       return <div className="docpaper-break" aria-hidden="true" />;
   }
+}
+
+/**
+ * The notes against a block, out in the margin beside it.
+ *
+ * Out in the margin and not in the flow, because a note is not part of the
+ * document: it must not shift the text it is about, and it must not print.
+ * `.docpaper-note` is absolutely positioned and the print rule hides it — the
+ * page this draws is the page that comes out of the printer, which is the
+ * whole reason this component exists.
+ *
+ * Where the margin is too narrow to hold one — a phone — the stylesheet
+ * brings them back into the flow rather than off the side of the screen,
+ * because a note nobody can reach is a note nobody wrote.
+ */
+function Margin({ notes }: { notes?: Note[] }) {
+  const said = (notes ?? []).filter((n) => n.text.trim());
+  if (said.length === 0) return null;
+  return (
+    <aside className="docpaper-notes" aria-label="Notes on this block">
+      {said.map((note) => (
+        <p key={note.id} className={`docpaper-note${note.done ? ' docpaper-note-done' : ''}`}>
+          {note.text}
+        </p>
+      ))}
+    </aside>
+  );
 }
 
 /**

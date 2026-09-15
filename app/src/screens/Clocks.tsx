@@ -216,7 +216,7 @@ function Timers() {
           style={{
             marginTop: 22,
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -261,7 +261,7 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
         <span
           style={{
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            opacity: 0.65,
+            color: 'var(--app-dim)',
             textWrap: 'pretty',
           }}
         >
@@ -432,7 +432,7 @@ function Alarms() {
                     <div
                       style={{
                         fontSize: 'var(--type-sm)',
-                        opacity: 0.62,
+                        color: 'var(--app-dim)',
                         marginTop: 'var(--sp-1)',
                         textWrap: 'pretty',
                       }}
@@ -490,7 +490,7 @@ function Alarms() {
       <p
         style={{
           fontSize: 'calc(12.5px * var(--text-scale, 1))',
-          opacity: 0.68,
+          color: 'var(--app-dim)',
           lineHeight: 1.55,
           textWrap: 'pretty',
         }}

@@ -200,7 +200,7 @@ export function Study() {
               <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(19px * var(--text-scale, 1))', lineHeight: 1.1 }}>
                 {exam.days === 1 ? 'day' : 'days'} to {exam.code} {exam.item.title}
               </div>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7 }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
                 {exam.item.mon} {exam.item.day} · {exam.item.dueTime} · {exam.item.weight}
               </div>
             </div>
@@ -306,7 +306,7 @@ export function Study() {
             know which — so two or three tiles are said out loud above the
             grid, with the deadline that asked for them. See `lib/toolnow.ts`.
           */}
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', margin: '14px 0 2px', lineHeight: 'var(--leading-relaxed)' }}>
             Everything the app can do with a course. What is at the top is picked from what you
             actually have due.
           </div>
@@ -476,7 +476,7 @@ export function Study() {
                   {g.units.length} units · {cards} cards
                 </div>
               </div>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-1)' }}>{g.blurb}</div>
+              <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{g.blurb}</div>
               {/*
                 Nothing measured, nothing claimed.
 
@@ -564,7 +564,7 @@ export function Study() {
                     <div
                       style={{
                         fontSize: 'var(--type-base)',
-                        opacity: 0.7,
+                        color: 'var(--app-dim)',
                         marginBottom: 'var(--sp-5)',
                         lineHeight: 'var(--leading-normal)',
                         textWrap: 'pretty',
@@ -676,7 +676,7 @@ export function Study() {
       {tab === 'revise' && (
         <>
       <SectionLabel style={{ margin: '20px 0 4px' }}>Tonight’s sitting</SectionLabel>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.65, marginBottom: 'var(--sp-6)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginBottom: 'var(--sp-6)', textWrap: 'pretty' }}>
         Say how long you have. The app ranks every unit in every course by what is due, how
         cold it is and what is being tested soon, then fills the time — and says why each one
         is there.
@@ -812,7 +812,7 @@ export function Study() {
                     style={{
                       display: 'block',
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.6,
+                      color: 'var(--app-dim)',
                       marginTop: 'var(--sp-1)',
                       lineHeight: 'var(--leading-normal)',
                       textWrap: 'pretty',

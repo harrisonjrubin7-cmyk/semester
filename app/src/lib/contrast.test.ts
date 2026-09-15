@@ -130,16 +130,45 @@ function chromeStops(g: (typeof GROUNDS)[number], panel: string): string[] {
       { what: `${where} · accent-fill on bg`, ratio: contrast(t['--app-accent-fill'], bg) ?? 0, needs: AA_LARGE },
       // The ground's own text, at all three strengths, on its own panel.
       { what: `${where} · fg on panel`, ratio: contrast(g.fg, panel) ?? 0, needs: AA_TEXT },
-      {
-        what: `${where} · dim text on panel`,
-        ratio: contrast(over(g.fg, panel, g.dimAlpha) ?? '', panel) ?? 0,
-        needs: AA_TEXT,
-      },
-      {
-        what: `${where} · faint text on panel`,
-        ratio: contrast(over(g.fg, panel, g.faintAlpha) ?? '', panel) ?? 0,
-        needs: AA_LARGE,
-      },
+
+      /*
+       * The two faded strengths, on every surface rather than on the panel.
+       *
+       * This was `panel` alone for both, and the panel is not where either is
+       * weakest — a fade of the foreground has least to work with on the
+       * *darkest* surface a light ground has, which is the void, two steps
+       * below the panel. So the check passed on the one surface and the app
+       * drew the other.
+       *
+       * It showed up twice, and both times the palette moved without the
+       * check moving. Dim ink on Bone was 4.70:1 on the void against 5.88 on
+       * the panel — over its bar, but the panel figure was the one on record
+       * and it was half a point flattering; raised in #379. Faint ink was
+       * worse: actually under its own 3:1 bar on five grounds — Parchment
+       * 2.90, Paper 2.93, Bone 2.88, Fog 2.86 and Industry Dark 2.99 — with
+       * every one of them passing here; raised in #391.
+       *
+       * So the dim rung below is not a failure this caught. It is the same
+       * fade on the same surfaces, held at the figure it actually draws
+       * rather than the one it sampled best on.
+       *
+       * Industry Dark is why it walks the whole ramp rather than adding the
+       * void to the panel: its ramp inverts, so its weakest surface is the
+       * near-white raise at the top, not the void at the bottom. Sampling any
+       * one surface is the bug; sampling two is the bug with better odds.
+       */
+      ...g.ramp.flatMap((surface, i) => [
+        {
+          what: `${where} · dim text on ramp ${i}`,
+          ratio: contrast(over(g.fg, surface, g.dimAlpha) ?? '', surface) ?? 0,
+          needs: AA_TEXT,
+        },
+        {
+          what: `${where} · faint text on ramp ${i}`,
+          ratio: contrast(over(g.fg, surface, g.faintAlpha) ?? '', surface) ?? 0,
+          needs: AA_LARGE,
+        },
+      ]),
 
       /*
        * The accent read against its own wash.
@@ -359,6 +388,31 @@ describe('the stylesheet uses the tokens the audit passed', () => {
       expect(ruleFor(selector), selector).toContain('var(--app-dim)');
       expect(ruleFor(selector), selector).not.toContain('var(--app-faint)');
     }
+  });
+
+  /*
+   * The front door's search placeholder, which was invisible.
+   *
+   * `.deskhome-field` inverts, and this line named `--app-dim` — `--app-fg`
+   * faded — on a surface that *is* `--app-fg`. 0.00:1 on all thirteen. Both
+   * halves are asserted: that the rule no longer reaches for the page's dim,
+   * and that what it reaches for instead is readable on every ground, since
+   * the first without the second would pass for any colour at all.
+   */
+  it('dims the search placeholder against the field, not against the page', () => {
+    expect(ruleFor('.deskhome-box-say')).not.toContain('var(--app-dim)');
+    expect(ruleFor('.deskhome-box-say')).toContain('var(--app-void)');
+    const bad: Check[] = [];
+    for (const g of GROUNDS) {
+      const t = tokensFor({ ground: g.id });
+      const field = t['--app-fg'];
+      bad.push({
+        what: `${g.label} · the search placeholder on the inverted field`,
+        ratio: contrast(over(t['--app-void'], field, 0.7) ?? '', field) ?? 0,
+        needs: AA_TEXT,
+      });
+    }
+    expect(bad.filter((c) => !passes(c)).map(failLine)).toEqual([]);
   });
 
   it('fills the pill with the stop white survives on', () => {
