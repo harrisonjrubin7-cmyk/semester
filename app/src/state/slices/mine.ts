@@ -11,6 +11,7 @@
 
 import { newId } from '../../lib/idb';
 import { skip } from '../../lib/repeat';
+import { newStep, tick } from '../../lib/chores';
 import { newAlarm, newTimer } from '../../lib/clocks';
 import { moveTo, newApplication } from '../../lib/apply';
 import { mark, newProgress } from '../../lib/progress';
@@ -113,10 +114,56 @@ export function mine(state: State, action: Action): State | null {
       };
     }
 
+    /*
+     * Ticking, which on a repeating task is a move rather than a finish.
+     * `tick` in `lib/chores.ts` decides; this only writes what it returns.
+     */
     case 'toggleTask':
       return {
         ...state,
-        tasks: state.tasks.map((t) => (t.id === action.id ? { ...t, done: !t.done } : t)),
+        tasks: state.tasks.map((t) => (t.id === action.id ? { ...t, ...tick(t, !t.done) } : t)),
+      };
+
+    /*
+     * One step, ticked. Per step rather than through `editTask` with a whole
+     * new array, because a row toggling a checkbox should not have to send
+     * back a copy of every other step to do it — that is the shape that loses
+     * a rename typed into the step below while the checkbox was being pressed.
+     */
+    case 'toggleStep':
+      return {
+        ...state,
+        tasks: state.tasks.map((t) =>
+          t.id === action.id
+            ? {
+                ...t,
+                steps: (t.steps ?? []).map((s) =>
+                  s.id === action.stepId ? { ...s, done: !s.done } : s,
+                ),
+              }
+            : t,
+        ),
+      };
+
+    case 'addStep': {
+      const text = action.text.trim();
+      if (!text) return state;
+      return {
+        ...state,
+        tasks: state.tasks.map((t) =>
+          t.id === action.id ? { ...t, steps: [...(t.steps ?? []), newStep(newId(), text)] } : t,
+        ),
+      };
+    }
+
+    case 'dropStep':
+      return {
+        ...state,
+        tasks: state.tasks.map((t) =>
+          t.id === action.id
+            ? { ...t, steps: (t.steps ?? []).filter((s) => s.id !== action.stepId) }
+            : t,
+        ),
       };
 
     case 'deleteTask':

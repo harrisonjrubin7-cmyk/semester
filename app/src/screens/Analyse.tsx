@@ -196,7 +196,7 @@ export function Analyse() {
       />
       <DraftNote field={textField} />
       {table.rows.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
           {name ? `${name} · ` : ''}
           {table.rows.length} rows · {table.headers.length} columns · {numericCols.length} numeric
         </div>

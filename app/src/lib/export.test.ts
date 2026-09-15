@@ -303,6 +303,31 @@ describe('appointmentEvents', () => {
     expect(ics).not.toContain('appt-bad');
   });
 
+  it('ends an all-day entry on the day after it, because DTEND is exclusive', () => {
+    // One day: start Friday, end Saturday. The end is the first day NOT
+    // covered — RFC 5545 §3.6.1 — and both readings of that are importable
+    // files that say the wrong thing, so it is asserted rather than assumed.
+    const ics = toIcs(appointmentEvents([{ ...appt, at: null } as Appointment]));
+    expect(ics).toContain('DTSTART;VALUE=DATE:20261002');
+    expect(ics).toContain('DTEND;VALUE=DATE:20261003');
+  });
+
+  it('carries a span into the file instead of exporting a week off as one day', () => {
+    // Monday to Friday is five days, so the exclusive end is the Saturday.
+    const week = { ...appt, at: null, days: 5 } as Appointment;
+    const ics = toIcs(appointmentEvents([week]));
+    expect(ics).toContain('DTSTART;VALUE=DATE:20261002');
+    expect(ics).toContain('DTEND;VALUE=DATE:20261007');
+  });
+
+  it('ignores a span on something that names an hour', () => {
+    // A span is an all-day span. A timed entry with a stray `days` on it —
+    // which a hand-edited backup can hold — is still one timed event.
+    const ics = toIcs(appointmentEvents([{ ...appt, at: 540, days: 4 } as Appointment]));
+    expect(ics).toContain('DTSTART:20261002T090000');
+    expect(ics).not.toContain('VALUE=DATE');
+  });
+
   it.each([
     ['2026-09-15T02:30:00Z', 'the evening, west of Greenwich'],
     ['2026-09-14T11:30:00Z', 'the next morning, east of it'],

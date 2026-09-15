@@ -20,9 +20,10 @@
  *     or OneDrive, a term's calendar coming down. A minute, because a real
  *     upload on a bad connection is slow rather than broken.
  *
- * The caller's own signal still wins where there is one: `AbortSignal.any`
- * means closing the screen aborts the request as it always did, and the
- * timeout is simply a second reason the same abort can happen.
+ * The caller's own signal still wins where there is one: closing the screen
+ * aborts the request as it always did, and the timeout is simply a second
+ * reason the same abort can happen. See `whicheverFirst` for why that is not
+ * a bare `AbortSignal.any`.
  */
 
 /** A request with a small answer: a token, a page of events, a list of mail. */
@@ -46,8 +47,40 @@ export function fetchWithin(
   const deadline = AbortSignal.timeout(ms);
   return fetch(input, {
     ...init,
-    signal: init.signal ? AbortSignal.any([init.signal, deadline]) : deadline,
+    signal: init.signal ? whicheverFirst(init.signal, deadline) : deadline,
   });
+}
+
+/**
+ * The first of two signals to abort, without `AbortSignal.any` where there
+ * isn't one.
+ *
+ * `AbortSignal.any` is the obvious way to write this and it is newer than
+ * this app can assume: Safari shipped it in 17.4, in March 2024. That is not
+ * an abstract concern here — the front page of the README tells people to
+ * open this on a phone and add it to the home screen, and a phone on iOS 16
+ * or on 17.0 through 17.3 would have got `AbortSignal.any is not a function`
+ * where it used to get a map. Only the two place-search calls pass a signal
+ * of their own, so it would have been the search on the Maps screen, throwing
+ * before it asked.
+ *
+ * Nothing else here is that new: `AbortSignal.timeout` is Safari 16, and
+ * `AbortController` older than anything this runs on.
+ *
+ * The reason is carried across deliberately. It is what tells a deadline from
+ * somebody pressing Stop — `timedOut` below, and `troubleOf` in
+ * `lib/trouble.ts` — and a controller aborted with no reason reports both as
+ * the same thing.
+ */
+function whicheverFirst(a: AbortSignal, b: AbortSignal): AbortSignal {
+  if (typeof AbortSignal.any === 'function') return AbortSignal.any([a, b]);
+  if (a.aborted) return a;
+  if (b.aborted) return b;
+  const relay = new AbortController();
+  const pass = (from: AbortSignal) => () => relay.abort(from.reason);
+  a.addEventListener('abort', pass(a), { once: true });
+  b.addEventListener('abort', pass(b), { once: true });
+  return relay.signal;
 }
 
 /**

@@ -262,7 +262,7 @@ export function Links() {
             </ActionButton>
           )}
 
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
             These open the system itself — the app on a phone that recognises the address, the site
             otherwise. None of them expose an API a student can use alone, so the app links out rather
             than pretending to read them. Correct any address here and the correction is what sticks.

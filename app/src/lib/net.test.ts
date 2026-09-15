@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { MOVE_MS, TALK_MS, fetchWithin, timedOut, tookTooLong } from './net';
 
 /**
@@ -29,6 +29,14 @@ function silent(): { seen: () => RequestInit | undefined } {
   globalThis.fetch = ((_input: unknown, init?: RequestInit) => {
     last = init;
     return new Promise<Response>((_resolve, reject) => {
+      // A signal that is already aborted fires no event, and the real `fetch`
+      // rejects on one straight away. Without this line the fake waits for an
+      // `abort` that has already happened, which is a hang in the test rather
+      // than a fault in the code.
+      if (init?.signal?.aborted) {
+        reject(init.signal.reason);
+        return;
+      }
       init?.signal?.addEventListener('abort', () => reject(init.signal?.reason));
     });
   }) as typeof fetch;
@@ -87,6 +95,58 @@ describe('fetchWithin', () => {
     expect(fake.seen()?.method).toBe('PUT');
     expect(fake.seen()?.headers).toEqual({ Accept: 'text/calendar' });
     expect(fake.seen()?.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  /*
+   * The same four promises again, on a browser without `AbortSignal.any`.
+   *
+   * It is newer than this app can assume — Safari 17.4, March 2024 — and the
+   * README's front page tells people to open this on a phone. These stand the
+   * function aside and re-run the cases that depend on it, which is the only
+   * way to be sure the fallback is the one being exercised: with the real
+   * `AbortSignal.any` present it would pass either way.
+   */
+  describe('where AbortSignal.any does not exist', () => {
+    const had = AbortSignal.any;
+
+    beforeEach(() => {
+      (AbortSignal as { any?: unknown }).any = undefined;
+    });
+
+    afterEach(() => {
+      (AbortSignal as { any?: unknown }).any = had;
+    });
+
+    it('still gives up on a server that never answers', async () => {
+      silent();
+      const e = await fetchWithin('https://example.test/thing', {}, BLINK).catch(
+        (err: unknown) => err,
+      );
+      expect(timedOut(e)).toBe(true);
+    });
+
+    it('still lets the caller’s own abort through, with its reason', async () => {
+      silent();
+      const mine = new AbortController();
+      const caught = fetchWithin('https://example.test/thing', { signal: mine.signal }).catch(
+        (e: unknown) => e,
+      );
+      mine.abort(new DOMException('Gone', 'AbortError'));
+      const e = await caught;
+      expect((e as DOMException).name).toBe('AbortError');
+      // The reason has to survive, or a deadline and a Stop read the same.
+      expect(timedOut(e)).toBe(false);
+    });
+
+    it('takes a signal that had already aborted before the call', async () => {
+      silent();
+      const mine = new AbortController();
+      mine.abort(new DOMException('Gone', 'AbortError'));
+      const e = await fetchWithin('https://example.test/thing', { signal: mine.signal }).catch(
+        (err: unknown) => err,
+      );
+      expect((e as DOMException).name).toBe('AbortError');
+    });
   });
 
   it('returns the answer when there is one', async () => {

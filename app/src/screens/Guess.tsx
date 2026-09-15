@@ -107,7 +107,7 @@ export function Guess() {
             rows={3}
             style={{ marginTop: 14, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
             {NUDGE}
           </div>
           <ActionButton

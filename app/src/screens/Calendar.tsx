@@ -11,9 +11,11 @@ import { Blueprint } from '../components/Blueprint';
 import { ActionButton, ChipRow, EmptyState, SectionLabel, Segmented, TickBox } from '../components/ui';
 import { CallIcon, ChevronLeft, ChevronRight } from '../components/Icons';
 import { codeOf } from '../lib/call';
-import { HourGrid } from '../components/HourGrid';
+import { HourGrid, GUTTER as DAY_GUTTER } from '../components/HourGrid';
+import { AllDayBand } from '../components/AllDayBand';
+import { bandRows } from '../lib/band';
 import { KindKey } from '../components/KindKey';
-import { WeekGrid } from '../components/WeekGrid';
+import { WeekGrid, GUTTER as WEEK_GUTTER } from '../components/WeekGrid';
 import { WeekDue } from '../components/WeekDue';
 import { weekLabel, type Span } from '../lib/weekpage';
 import { WIDE, useMedia } from '../lib/media';
@@ -34,6 +36,8 @@ import {
 } from '../lib/date';
 import {
   appointmentsOn,
+  bannersOn,
+  byDateThenTime,
   campusHours,
   datedEvents,
   datedItems,
@@ -233,8 +237,20 @@ function DayView() {
     })),
   ];
 
+  /*
+   * The all-day band, above the first hour.
+   *
+   * Filtered by the same two chips the grid is: an all-day entry of yours is
+   * one of your classes-and-commitments, and one off a connected calendar
+   * rides with the rest of the feed. A band that ignored the source chips
+   * would be the one row of the day that "just my classes" could not turn
+   * off.
+   */
+  const band = bannersOn(on.classes ? state.appointments : [], feedToday, day);
+
   const empty =
     rail.length === 0 &&
+    band.length === 0 &&
     gridBlocks.length === 0 &&
     due.length === 0 &&
     events.length === 0 &&
@@ -306,6 +322,21 @@ function DayView() {
         and the list gives each thing room for its detail. Neither replaces the
         other, and the grid is the one you want first.
       */}
+      {band.length > 0 && (
+        <AllDayBand
+          columns={[band]}
+          gutter={DAY_GUTTER}
+          style={{ marginTop: 'var(--sp-7)' }}
+          onOpen={(run) => {
+            // Straight to the row that edits it. A bar is a thing you own or
+            // a thing a feed says; only the first has somewhere to go.
+            if (!run.appointmentId) return;
+            dispatch({ type: 'setMineTab', tab: 'appointments' });
+            dispatch({ type: 'go', screen: 'mine' });
+          }}
+        />
+      )}
+
       {gridBlocks.length > 0 && (
         <>
           <SectionLabel style={{ margin: '0 0 6px' }}>By the hour</SectionLabel>
@@ -464,7 +495,7 @@ function DayView() {
               <span className="tag tag-outline">{e.kind}</span>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{e.title}</span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
                   {e.time} · {e.where}
                 </span>
               </span>
@@ -503,7 +534,7 @@ function DayView() {
                   <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>
                     {e.title}
                   </span>
-                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
                     {feed?.name ?? 'Calendar'}
                     {e.where ? ` · ${e.where}` : ''}
                   </span>
@@ -628,7 +659,7 @@ const CARRY = {
   fontFamily: 'var(--font-heading)',
   fontSize: 'var(--type-xs)',
   letterSpacing: '0.08em',
-  opacity: 0.55,
+  color: 'var(--app-dim)',
 } as const;
 
 const arrow = {
@@ -637,7 +668,7 @@ const arrow = {
   fontFamily: 'var(--font-heading)',
   fontSize: 'var(--type-xs)',
   letterSpacing: '0.06em',
-  opacity: 0.55,
+  color: 'var(--app-dim)',
 } as const;
 
 // ── Week ──
@@ -752,6 +783,16 @@ function WeekView() {
     };
   });
 
+  /*
+   * The all-day band across the whole window.
+   *
+   * One array per column, in the order the columns are drawn, because that is
+   * what `bandRows` packs: a break running Wednesday to Sunday has to be one
+   * bar over five columns, and no per-day call could know that. The same two
+   * source chips the grid reads, for the reason the day view's band gives.
+   */
+  const band = days.map((d) => bannersOn(on.classes ? state.appointments : [], feedWeek, d.date));
+
   /** The campus events this week that the grid could give an hour to. */
   const drawn = days.reduce((n, d) => n + d.blocks.filter((b) => b.kind === CAMPUS_KIND).length, 0);
 
@@ -768,7 +809,21 @@ function WeekView() {
   // count above the week and the empty state below it agree with each other.
   // An event with an hour on it is in both halves and is one thing, not two,
   // which is what `drawn` is subtracted for.
-  const anything = total + campus.length + feedWeek.length - drawn;
+  /*
+   * Your all-day entries, counted as runs rather than as days.
+   *
+   * They are in none of the three terms above — not a block, not a campus
+   * listing, not a feed entry — so a week whose only entry was "Reading week,
+   * Monday to Friday" reported itself empty and drew the "nothing on" panel
+   * over the band saying otherwise. Counted through `bandRows` so a five-day
+   * break is the one thing it is and not five, and filtered to the ones you
+   * own because an all-day feed entry is already in `feedWeek`.
+   */
+  const bandRuns = bandRows(band).reduce(
+    (n, row) => n + row.filter((r) => r.appointmentId).length,
+    0,
+  );
+  const anything = total + campus.length + feedWeek.length + bandRuns - drawn;
   /*
    * Class meetings this week, counted from the syllabi rather than from the
    * grid.
@@ -850,6 +905,18 @@ function WeekView() {
         />
       ) : (
         <>
+          {band.some((c) => c.length > 0) && (
+            <AllDayBand
+              columns={band}
+              gutter={WEEK_GUTTER}
+              style={{ marginTop: 'var(--sp-7)' }}
+              onOpen={(run) => {
+                if (!run.appointmentId) return;
+                dispatch({ type: 'setMineTab', tab: 'appointments' });
+                dispatch({ type: 'go', screen: 'mine' });
+              }}
+            />
+          )}
           {total > 0 && (
           <WeekGrid
             days={days}
@@ -908,7 +975,7 @@ function WeekView() {
                       fontSize: 'var(--type-xs)',
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
-                      opacity: 0.55,
+                      color: 'var(--app-dim)',
                     }}
                   >
                     {DOW_INITIALS[e.date.getDay()]} {e.date.getDate()}
@@ -917,7 +984,7 @@ function WeekView() {
                     <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
                       {e.title}
                     </span>
-                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                       {e.time} · {e.where}
                     </span>
                   </span>
@@ -937,7 +1004,7 @@ function WeekView() {
                       fontSize: 'var(--type-xs)',
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
-                      opacity: 0.55,
+                      color: 'var(--app-dim)',
                     }}
                   >
                     {DOW_INITIALS[isoToDate(e.date).getDay()]} {isoToDate(e.date).getDate()}
@@ -948,7 +1015,7 @@ function WeekView() {
                     </span>
                     {/* Said out loud, every time: a feed is what somebody
                         else's calendar claims, not what a syllabus stated. */}
-                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                    <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                       From a connected calendar
                     </span>
                   </span>
@@ -1562,7 +1629,7 @@ function MonthView() {
           <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
             {t.title}
           </span>
-          <span style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+          <span style={{ flex: 'none', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
             {t.courseId ? (catalog.byId[t.courseId]?.code ?? '') : 'Yours'}
           </span>
         </button>
@@ -1727,7 +1794,7 @@ function MonthView() {
                 <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
                   {e.title}
                 </span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
                   {e.time} · {e.where}
                 </span>
               </span>
@@ -1742,7 +1809,7 @@ function MonthView() {
                 </span>
                 {/* Said out loud, every time: a feed is what somebody else's
                     calendar claims, not what a syllabus stated. */}
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
                   {[e.time, e.where].filter(Boolean).join(' · ') || 'From a connected calendar'}
                 </span>
               </span>
@@ -2090,7 +2157,7 @@ function SemesterView() {
        */
       appts: appts
         .filter((a) => a.date >= from && a.date < to)
-        .sort((a, b) => a.date.localeCompare(b.date) || a.at - b.at),
+        .sort(byDateThenTime),
       classes,
     });
   }
@@ -2312,7 +2379,7 @@ function SemesterView() {
                         style={{ ...WEEK_ROW, opacity: drag.held?.id === it.id ? 0.4 : 1 }}
                       >
                         <span>
-                          <span style={{ opacity: 0.55 }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
+                          <span style={{ color: 'var(--app-dim)' }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
                           {it.title.length > 42 ? `${it.title.slice(0, 40)}…` : it.title}
                         </span>
                       </button>
@@ -2342,7 +2409,7 @@ function SemesterView() {
                         style={WEEK_ROW}
                       >
                         <span>
-                          <span style={{ opacity: 0.55 }}>{e.dow}</span>{' '}
+                          <span style={{ color: 'var(--app-dim)' }}>{e.dow}</span>{' '}
                           {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
                         </span>
                       </button>
@@ -2358,7 +2425,7 @@ function SemesterView() {
                     ).map((e) => (
                       <div key={e.id} style={{ ...WEEK_ROW, display: 'flex' }}>
                         <span>
-                          <span style={{ opacity: 0.55 }}>{DOW[isoToDate(e.date).getDay()]}</span>{' '}
+                          <span style={{ color: 'var(--app-dim)' }}>{DOW[isoToDate(e.date).getDay()]}</span>{' '}
                           {e.title.length > 42 ? `${e.title.slice(0, 40)}…` : e.title}
                         </span>
                       </div>
@@ -2396,7 +2463,7 @@ function SemesterView() {
                         }}
                       >
                         <span>
-                          <span style={{ opacity: 0.55 }}>Yours</span>{' '}
+                          <span style={{ color: 'var(--app-dim)' }}>Yours</span>{' '}
                           {t.title.length > 42 ? `${t.title.slice(0, 40)}…` : t.title}
                         </span>
                       </button>
@@ -2581,7 +2648,7 @@ function CampusList() {
                     <span
                       style={{
                         fontSize: 'var(--type-xs)',
-                        opacity: 0.55,
+                        color: 'var(--app-dim)',
                         fontFamily: 'var(--font-heading)',
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',

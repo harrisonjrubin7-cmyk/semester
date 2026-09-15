@@ -342,6 +342,13 @@ a line separates them from what you merely have open, and they carry no cross,
 because a target that small with a close on it is a tab you lose to a thumb
 landing an inch out. Closing one is in the same menu, where it takes saying so.
 
+A **whole group is dragged by its head**, and folds while you carry it: a run
+four tabs wide covers half the strip it is being dropped into, so the gap you
+are aiming at ends up under the thing you are aiming with. Collapsed it is a
+chip. The fold is drawn rather than written down — let go and the group is as
+open as it was — and its tabs travel with it, because a group that came apart
+when you moved it would not be a group.
+
 Tabs are dragged into the order you want them in, the same hold-move-let-go
 the rest of the app uses for anything with an order — and on the strip the
 drop means something as well: let a tab go among a group's tabs and it joins

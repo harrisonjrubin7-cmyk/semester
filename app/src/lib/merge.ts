@@ -51,6 +51,12 @@ export const STRATEGY: Record<string, Strategy> = {
   // Emails written here. A draft started on the laptop and one on the phone
   // are two drafts, not a conflict.
   mailDrafts: 'union',
+  // A rule is a thing you wrote, and one written on the laptop should not
+  // vanish because the phone synced later. Union by id, so editing one on
+  // both is the usual last-writer-wins and writing two different ones is two
+  // rules — which is the honest outcome: a lost rule is silent, and what it
+  // was doing quietly stops.
+  mailRules: 'union',
   tasks: 'union',
   appointments: 'union',
   commitments: 'union',
