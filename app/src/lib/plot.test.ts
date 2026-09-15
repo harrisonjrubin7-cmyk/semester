@@ -770,3 +770,126 @@ describe('a wavelet on the list', () => {
     expect(of('wavelet()')).toMatchObject({ kind: 'fault' });
   });
 });
+
+/**
+ * A Hilbert envelope on the list.
+ *
+ * `lib/hilbert.test.ts` checks the arithmetic against exact quarter turns.
+ * This checks the joint, and the one thing peculiar to the picture: the
+ * envelope is drawn both above and below, because it is the size of a wobble
+ * and a wobble goes both ways.
+ */
+describe('a Hilbert envelope on the list', () => {
+  it('is its own kind, under any of its names', () => {
+    expect(of('hilbert([1, 0, -1, 0])').kind).toBe('envelope');
+    expect(of('envelope(\\cos(n), 64)').kind).toBe('envelope');
+    expect(of('analytic([1, 0, -1, 0])').kind).toBe('envelope');
+    expect(of('dft([1, 0, -1, 0])').kind).toBe('bins');
+  });
+
+  it('is flat at the amplitude for a plain wave, and says how fast it turns', () => {
+    const got = answered(of('hilbert(3\\cos(2\\pi n/16), 64)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toBe('64 samples, as a wobble inside an envelope:');
+    expect(got.over).toBe('n');
+    for (const n of [4, 20, 50]) expect(got.at(n)).toBeCloseTo(3, 6);
+    // One cycle every sixteen samples is a sixteenth of a cycle a sample.
+    expect(got.note).toMatch(/turns at about 0\.0625 cycles a sample/);
+  });
+
+  it('follows a fading wobble rather than the wobble itself', () => {
+    const got = answered(of('hilbert(e^{-n/40}\\cos(n), 128)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    // The envelope falls away with the decay, and never rises back.
+    expect(got.at(10)).toBeGreaterThan(got.at(60));
+    expect(got.at(60)).toBeGreaterThan(got.at(100));
+    expect(got.note).toMatch(/Loudest at sample \d+/);
+  });
+
+  it('draws the data as dots inside an envelope drawn both ways', () => {
+    const drawn = draw(of('hilbert([0, 2, 0, -2, 0, 2, 0, -2])'), {}, { x0: -2, x1: 20, y0: -4, y1: 4 });
+    expect(drawn.points).toHaveLength(8);
+    // Two step paths: the envelope, and its mirror under the axis.
+    expect(drawn.paths).toHaveLength(2);
+    expect(drawn.paths[0]).toHaveLength(16);
+    drawn.paths[0].forEach((p, i) => expect(p.y).toBeCloseTo(-drawn.paths[1][i].y, 12));
+    // A wave of amplitude two has an envelope of two.
+    for (const p of drawn.paths[0]) expect(p.y).toBeCloseTo(2, 6);
+  });
+
+  it('asks for the letters it needs, and for data when it has none', () => {
+    expect(missing(of('hilbert([1, 0, -1, 0])'), {})).toEqual([]);
+    expect(missing(of('hilbert(k \\cos(n), 64)'), {})).toEqual(['k']);
+    const got = answered(of('hilbert(\\cos(n))'), {});
+    if (!got || !('says' in got)) throw new Error('that was meant to be refused');
+    expect(got.says).toMatch(/wants the data/);
+    expect(of('hilbert()')).toMatchObject({ kind: 'fault' });
+  });
+});
+
+/**
+ * A packet tree on the list.
+ *
+ * `lib/packet.test.ts` checks the bands against the frequencies they claim to
+ * hold. This checks the joint, and the thing the whole tree is for: two fast
+ * wobbles that the ordinary wavelet transform lumps into one band come out in
+ * two different ones here.
+ */
+describe('a packet tree on the list', () => {
+  it('is its own kind, with the filter named by the call', () => {
+    expect(of('packet([1, 2, 3, 4, 5, 6, 7, 8], 2)').kind).toBe('packet');
+    expect(of('dbpacket([1, 2, 3, 4, 5, 6, 7, 8], 2)')).toMatchObject({
+      kind: 'packet',
+      filter: { name: 'Daubechies-4' },
+    });
+    expect(of('wavelet([1, 2, 3, 4, 5, 6, 7, 8], 2)').kind).toBe('wavelet');
+  });
+
+  it('puts a wobble in the band whose frequencies it belongs to', () => {
+    // 0.3 cycles a sample, at level 3: bands are an eighth of a half each, so
+    // band 4 runs from 0.25 to 0.3125.
+    const got = answered(of('packet(\\cos(2\\pi 0.3 n), 64, 3)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    expect(got.lead).toBe('64 samples, Haar, in 8 bands of equal width:');
+    expect(got.over).toBe('k');
+    expect(got.note).toMatch(/^Band 4 holds the most/);
+    expect(got.note).toMatch(/0\.25 to 0\.313 cycles a sample/);
+  });
+
+  it('tells two fast wobbles apart, which is what the tree is for', () => {
+    const near = answered(of('dbpacket(\\cos(2\\pi 0.28 n), 128, 3)'), {});
+    const far = answered(of('dbpacket(\\cos(2\\pi 0.47 n), 128, 3)'), {});
+    if (!near || 'says' in near || !far || 'says' in far) throw new Error('no answer');
+    expect(near.note).toMatch(/^Band 4 holds the most/);
+    expect(far.note).toMatch(/^Band 7 holds the most/);
+  });
+
+  it('says how compactly the run could be described, which one split cannot', () => {
+    const got = answered(of('packet([0, 0, 0, 5, 0, 0, 0, 0], 2)'), {});
+    if (!got || 'says' in got) throw new Error('no answer');
+    // One spike: splitting only spreads it, so the whole run is the best basis.
+    expect(got.note).toMatch(/uses 1 band rather than 4/);
+  });
+
+  it('draws a stem per band, and no more than there are', () => {
+    const drawn = draw(of('packet([1, 2, 3, 4, 5, 6, 7, 8], 2)'), {}, { x0: -2, x1: 12, y0: -1, y1: 2 });
+    expect(drawn.points.map((p) => p.x)).toEqual([0, 1, 2, 3]);
+    // Shares of one, so they add to one.
+    expect(drawn.points.reduce((t, p) => t + p.y, 0)).toBeCloseTo(1, 9);
+    for (const path of drawn.paths) expect(path[0].y).toBe(0);
+  });
+
+  it('refuses a run it cannot split that many times, and says which way', () => {
+    const short = answered(of('packet([1, 2, 3, 4], 3)'), {});
+    const odd = answered(of('packet([1, 2, 3, 4, 5], 2)'), {});
+    if (!short || !('says' in short) || !odd || !('says' in odd)) throw new Error('meant to be refused');
+    expect(short.says).toMatch(/wants 8 samples at least, and there are 4/);
+    expect(odd.says).toMatch(/wants a power of two — 4 or 8, not 5/);
+  });
+
+  it('asks for the letters it needs and no others', () => {
+    expect(missing(of('packet([1, 2, 3, 4], 2)'), {})).toEqual([]);
+    expect(missing(of('packet(k \\cos(n), 32, 3)'), {})).toEqual(['k']);
+    expect(of('packet()')).toMatchObject({ kind: 'fault' });
+  });
+});

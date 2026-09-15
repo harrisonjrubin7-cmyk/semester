@@ -18,8 +18,9 @@
  *
  *   npm run build && node scripts/dock.mjs
  *
- * A couple of minutes — every destination in `lib/nav.ts` once, with a pause
- * on each for the lift's own timers to settle. It exits non-zero when a
+ * A couple of minutes — every destination in `lib/nav.ts` once, then the
+ * fourteen `NAMED` screens at a real id, with a pause on each for the lift's
+ * own timers to settle. An id-addressed row is marked with a trailing `#`. It exits non-zero when a
  * visible control is half covered or has its centre blocked, and prints the
  * whole census either way. `SIMPLIFY-AUDIT.md` §7 holds the last full run and
  * what it concluded.
@@ -68,6 +69,12 @@
  * and 48% by its target, because the assistant sits above it and the padding
  * reaches up into the assistant.
  *
+ * **"Blocked" meant "something else is on top", which is two questions.** The
+ * subject here is one button, and `elementFromPoint` answers about whatever is
+ * frontmost — a panel elsewhere on the page, or `null` for a centre below the
+ * fold, since it is viewport-relative. Both read as blocked and neither is.
+ * The centre is asked about only when it falls inside the button's own rect.
+ *
  * ## What it still over-reports, deliberately
  *
  * Rectangles. The assistant is `border-radius: 50%`, and both this and
@@ -80,7 +87,7 @@
  */
 
 import { createServer } from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import { join, extname, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -132,6 +139,72 @@ async function destinations() {
   if (all.length === 0) throw new Error('cannot find any screens in lib/nav.ts');
   return [...new Set(all)];
 }
+
+/**
+ * The screens that are only a place once something exists.
+ *
+ * `NAMED` in `lib/route.ts` addresses fourteen screens by id, and the first
+ * census swept none of them — it walked `#/<screen>` and stopped, so `course`,
+ * `item`, `event`, the five study modes and the four makers were counted as
+ * their *library*, which is a different screen with different controls under
+ * the button. `write` and `sheet` are the ones that matter: dense editor
+ * chrome, a toolbar along the bottom, and nothing like the empty library the
+ * bare address draws.
+ *
+ * Ids come from the registry wherever there is one, for the reason
+ * `destinations()` gives — a list written into this file fails on a correct
+ * app the first time the data moves.
+ */
+async function ids() {
+  const data = join(HERE, '..', 'src', 'data');
+
+  // The course id *is* the directory name: `#/course/econ` and
+  // `src/data/courses/econ/` are the same string, so the listing is the list.
+  const courses = (await readdir(join(data, 'courses'), { withFileTypes: true }))
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name)
+    .sort();
+  if (!courses.length) throw new Error('no courses in src/data/courses');
+  const course = courses[0];
+
+  // One deadline and one campus event, read out of the files that hold them.
+  const one = (src, re, what) => {
+    const m = re.exec(src);
+    if (!m) throw new Error(`cannot find ${what} — has the data moved?`);
+    return m[1];
+  };
+  const item = one(
+    await readFile(join(data, 'courses', course, 'index.ts'), 'utf8'),
+    new RegExp(`id: '(${course}-[^']+)'`),
+    `an item id in src/data/courses/${course}/index.ts`,
+  );
+  const event = one(
+    await readFile(join(data, 'events.ts'), 'utf8'),
+    /id: '([^']+)'/,
+    'an event id in src/data/events.ts',
+  );
+
+  return { course, item, event };
+}
+
+/**
+ * The three that cannot be addressed at all until one has been made.
+ *
+ * An id the app does not know falls back to the library on these — measured:
+ * `#/write/nope` draws the same 2,159 characters as `#/write`. So the only way
+ * to the editor is to make a document, which means clicking the affordance
+ * that makes one, which means matching a label. That is the fragile step in
+ * this script and it is written to fail loudly rather than quietly skip: a
+ * renamed button throws here instead of silently reporting one fewer screen.
+ *
+ * `note` is not in this list. It takes any id and opens a blank editor, which
+ * is the same screen a real note draws.
+ */
+const MAKERS = [
+  ['write', /^Blank document/i],
+  ['sheet', /^Blank sheet/i],
+  ['deck', /^Blank presentation/i],
+];
 
 /** The same thing GitHub Pages does with `dist`, so the base path is real. */
 const TYPES = {
@@ -209,20 +282,74 @@ function census() {
       Math.max(0, Math.min(t.right, f.right) - Math.max(t.left, f.left)) *
       Math.max(0, Math.min(t.bottom, f.bottom) - Math.max(t.top, f.top));
     if (over <= 0) continue;
+
     /*
-     * The centre of the *mark*, not of the target.
+     * How much of it is really gone, which the rectangles above overstate.
      *
-     * A person aims at the word or the glyph they can see. The padded target
-     * is what catches a tap that lands near it, and a control whose visible
-     * middle belongs to something else is mis-tapped however generous the
-     * padding around it is.
+     * The assistant is `border-radius: 50%`, so a fifth of the box the
+     * arithmetic claims is not occupied by anything; and a padded target is
+     * only reachable where its `::after` is actually frontmost. Both are
+     * settled by asking, on a 2px grid over the target: how many of these
+     * points does a tap still reach?
+     *
+     * `elementFromPoint` is viewport-relative and answers `null` outside it,
+     * which is not the same as covered — points off screen are not sampled,
+     * and a target entirely off screen is reported as unmeasured rather than
+     * as buried. That confusion has already produced one round of nonsense on
+     * seven screens at once; see the note at the top.
      */
-    const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    let reached = 0;
+    let asked = 0;
+    for (let x = Math.ceil(t.left); x < t.right; x += 2) {
+      for (let y = Math.ceil(t.top); y < t.bottom; y += 2) {
+        if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) continue;
+        asked += 1;
+        const hit = document.elementFromPoint(x, y);
+        if (hit === el || el.contains(hit)) reached += 1;
+      }
+    }
+    /*
+     * Is the *button* on the centre of the mark — not "is anything".
+     *
+     * A person aims at the word or the glyph they can see, and a control whose
+     * visible middle belongs to something else is mis-tapped however generous
+     * the padding around it is. But the subject of this census is one button,
+     * and asking the looser question has now produced two separate rounds of
+     * confident nonsense:
+     *
+     *   - `study`, where the answer was a `.blueprint` panel a hundred pixels
+     *     away and the button was nowhere near it;
+     *   - seven screens at once, where the centre lay *below the fold* —
+     *     `elementFromPoint` is viewport-relative and returns `null` for a
+     *     point outside it, which read as "blocked" and is not.
+     *
+     * So the question is asked only where it can mean anything: the centre has
+     * to be inside the button's own rect before it is worth asking who is on
+     * top of it. That is also why the off-screen case cannot come back — the
+     * button is on screen, so any point inside it is too.
+     */
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const underButton = cx >= f.left && cx <= f.right && cy >= f.top && cy <= f.bottom;
+    const top = underButton ? document.elementFromPoint(cx, cy) : el;
     hits.push({
       what: (el.getAttribute('aria-label') || el.textContent || el.tagName).replace(/\s+/g, ' ').trim().slice(0, 34),
       tag: el.tagName,
       padded: el.classList.contains('tap') || el.classList.contains('tap-x') || el.classList.contains('tap-y'),
-      pct: Math.round((over / (t.width * t.height)) * 100),
+      /*
+       * One cell of a table, which is a different kind of control.
+       *
+       * `td`/`th` rather than a class or a label: the spreadsheet's cells are
+       * real `<input>`s in a real `<table>`, and the markup is the only part
+       * of that which cannot drift. See the note on the grid at the top.
+       */
+      celled: !!el.closest('td, th'),
+      /* What the rectangles say, kept because it is what `costOf` in the app
+         reasons with — and so the gap between the two stays visible. */
+      boxPct: Math.round((over / (t.width * t.height)) * 100),
+      /* What a finger finds. `null` when none of it was on screen to ask. */
+      pct: asked ? Math.round(((asked - reached) / asked) * 100) : null,
+      asked,
       centreClear: top === el || el.contains(top),
     });
   }
@@ -271,10 +398,52 @@ await page.waitForTimeout(2500);
 await page.getByRole('button', { name: /skip/i }).first().click({ timeout: 3000 }).catch(() => {});
 
 const rows = [];
-for (const s of screens) {
-  await page.evaluate((x) => { location.hash = `#/${x}`; }, s);
+const visit = async (label, hash) => {
+  await page.evaluate((h) => { location.hash = h; }, hash);
   await page.waitForTimeout(SETTLE);
-  rows.push({ screen: s, ...(await page.evaluate(census)) });
+  rows.push({ screen: label, ...(await page.evaluate(census)) });
+};
+
+for (const s of screens) await visit(s, `#/${s}`);
+
+// The id-addressed screens, each at a real id rather than at its library.
+const { course, item, event } = await ids();
+for (const [label, hash] of [
+  ['course', `#/course/${course}`],
+  ['edit', `#/edit/${course}`],
+  ['guide', `#/guide/${course}`],
+  ['drill', `#/drill/${course}`],
+  ['quiz', `#/quiz/${course}`],
+  ['lesson', `#/lesson/${course}`],
+  ['slides', `#/slides/${course}`],
+  ['item', `#/item/${item}`],
+  ['event', `#/event/${event}`],
+  // Any id opens a blank note, which is the note editor. See `MAKERS`.
+  ['note', '#/note/one'],
+  ['call', '#/call/abc-defg'],
+]) await visit(`${label}#`, hash);
+
+for (const [screen, label] of MAKERS) {
+  await page.evaluate((x) => { location.hash = `#/${x}`; }, screen);
+  await page.waitForTimeout(SETTLE);
+  await page
+    .locator('main')
+    .getByRole('button', { name: label })
+    .first()
+    .click({ timeout: 8000 })
+    .catch(() => {
+      throw new Error(
+        `cannot make a ${screen}: nothing in \`main\` is named ${label}. ` +
+          'The affordance has been renamed — fix the pattern in MAKERS rather ' +
+          'than letting the screen go unmeasured.',
+      );
+    });
+  await page.waitForTimeout(SETTLE);
+  const at = await page.evaluate(() => location.hash);
+  if (!new RegExp(`^#/${screen}/.`).test(at)) {
+    throw new Error(`making a ${screen} left the address at ${at}, so the editor never opened`);
+  }
+  rows.push({ screen: `${screen}#`, ...(await page.evaluate(census)) });
 }
 
 await browser.close();
@@ -283,10 +452,31 @@ server.close();
 const drawn = rows.filter((r) => r.drawn);
 const touching = drawn.filter((r) => r.hits.length);
 const problems = [];
+const spared = [];
 for (const r of touching) {
   for (const h of r.hits) {
-    if (h.pct >= COVERED * 100) problems.push(`${r.screen}: "${h.what}" is ${h.pct}% covered`);
-    if (!h.centreClear) problems.push(`${r.screen}: the centre of "${h.what}" is not reachable`);
+    const bad = (h.pct !== null && h.pct >= COVERED * 100) || !h.centreClear;
+    if (!bad) continue;
+    /*
+     * A cell of a table is exempt, and it is the only exemption.
+     *
+     * Measured on the spreadsheet editor, at every position the button can
+     * take: rows are 26px and the grid tiles the screen, so a 52px button
+     * covers 52% of one cell and 30-38% of its neighbour *wherever it sits* —
+     * lift 0, 58 and 116 score identically, which is not a rule failing to
+     * find the good position but the absence of one.
+     *
+     * It is exempt because a cell is not a control you can lose. The same
+     * affordance repeats across hundreds of cells, the table is navigable from
+     * the keyboard, and the cell under the button is one arrow-key from a
+     * clear one — none of which is true of the "Remove this paragraph" this
+     * run was written to catch. Still counted and still printed, marked
+     * `cell`, so that a screen which quietly becomes a grid is visible here
+     * rather than silently forgiven.
+     */
+    (h.celled ? spared : problems).push(
+      `${r.screen}: ${h.centreClear ? `"${h.what}" is ${h.pct}% covered` : `the centre of "${h.what}" is under the button`}`,
+    );
   }
 }
 
@@ -295,14 +485,25 @@ console.log(`button drawn: ${drawn.length}   not drawn (FILLS in components/shel
 console.log(`touching a visible control: ${touching.length}\n`);
 for (const r of touching) {
   const what = r.hits
-    .map((h) => `${h.what} [${h.tag} ${h.pct}%${h.padded ? ' padded' : ''}${h.centreClear ? '' : ' CENTRE BLOCKED'}]`)
+    .map(
+      (h) =>
+        `${h.what} [${h.tag} ${h.pct === null ? 'off screen' : `${h.pct}%`}` +
+        `${h.pct !== null && h.boxPct !== h.pct ? ` (${h.boxPct}% by box)` : ''}` +
+        `${h.padded ? ' padded' : ''}${h.celled ? ' cell' : ''}` +
+        `${h.centreClear ? '' : ' CENTRE BLOCKED'}]`,
+    )
     .join(' | ');
   console.log(`  ${r.screen.padEnd(12)} ${what}`);
 }
 if (errors.length) console.log(`\npage errors: ${errors.length}\n  ${errors[0]}`);
 
+if (spared.length) {
+  console.log(`\n${spared.length} in a table cell, exempt and counted — see the note in this file:`);
+  for (const p of spared) console.log(`  ${p}`);
+}
+
 if (problems.length === 0) {
-  console.log('\nnothing half covered, nothing with its centre blocked');
+  console.log('\nnothing half covered, nothing with its centre blocked, outside a table cell');
 } else {
   console.log(`\n${problems.length} problems:`);
   for (const p of problems) console.log(`  ${p}`);

@@ -10,7 +10,7 @@
  * and what the collision warning counts are the same fortnight.
  */
 
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { ahead, missed, title, type Standing } from '../lib/apply';
 import { Folding } from './Fold';
@@ -59,7 +59,8 @@ function Row({ s, onOpen, late }: { s: Standing; onOpen: () => void; late?: bool
 
 /** The Today section. Nothing at all when there is nothing dated. */
 export function ApplyingSoon() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const soon = ahead(state.applications, now, HORIZON);
   // Only what is your own to do is chased when it has gone by. A closing date
   // that has passed is not a task, it is a fact, and a warning about it every
@@ -88,7 +89,8 @@ export function ApplyingSoon() {
 
 /** What one day carries, for the calendar's day view. */
 export function ApplyingOn({ day }: { day: Date }) {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const iso = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
   const onDay = ahead(state.applications, now, 365)
     .concat(missed(state.applications, now))

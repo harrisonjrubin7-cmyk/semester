@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { secondLine } from '../../lib/dim';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { Group, ItemRow } from '../../components/shell/Rows';
 import { Blueprint } from '../../components/Blueprint';
 import { SectionLabel } from '../../components/ui';
@@ -45,7 +45,8 @@ import { Folding } from '../../components/Fold';
  * over about four rows.
  */
 export function TermReport() {
-  const { state, now, catalog, courseCode } = useStore();
+  const { state, catalog, courseCode } = useStore();
+  const now = useNow();
 
   const input: TermInput = useMemo(() => {
     const items = datedItems(catalog, now);

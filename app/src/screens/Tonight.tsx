@@ -25,7 +25,7 @@
 
 import { useState } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
@@ -36,7 +36,8 @@ import { bestBuys, calibrate, calibrationLine, eveningLine, fits, overHours } fr
 const HOURS = [1, 2, 3, 4, 6, 8];
 
 export function Tonight() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   /*
    * Tonight starts from the hours a day you already told the app you have,
    * rather than from a three nobody chose. `state.dayBudget` is that standing

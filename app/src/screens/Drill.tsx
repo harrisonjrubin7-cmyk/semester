@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { allCards } from '../data/catalog';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SURES, beliefs, calibration, calibrationLine } from '../lib/sure';
 import { SayIt } from '../components/SayIt';
 import { useLive } from '../lib/live';
@@ -15,7 +15,8 @@ import { secondLine } from '../lib/dim';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
 export function Drill() {
-  const { state, dispatch, now, catalog, courseCode, say } = useStore();
+  const { state, dispatch, catalog, courseCode, say } = useStore();
+  const now = useNow();
   const { guide } = useLive(state.guideId);
 
   // A drill has pauses in it while you try to remember, which is exactly what

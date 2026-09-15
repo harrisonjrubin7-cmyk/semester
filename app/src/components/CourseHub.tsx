@@ -2,7 +2,7 @@ import { StudyStudio } from './StudyStudio';
 import { TabList } from './ui';
 import { draftFor } from '../lib/mail';
 import {useState,type ReactNode} from 'react';
-import {useStore} from '../state/store';
+import { useNow, useStore } from '../state/store';
 import {useLive} from '../lib/live';
 import {modesFor} from '../lib/modes';
 import {datedItems} from '../lib/select';
@@ -12,7 +12,7 @@ import {DeadlineRow} from './DeadlineRow';
 import {type Course} from '../lib/types';
 import {ForThis} from './ForThis';
 export function CourseHub({course,information}:{course:Course;information:ReactNode}){
- const {state,dispatch,now,catalog}=useStore();const live=useLive(course.id);const modes=modesFor(catalog,course.id,live);
+ const {state,dispatch,catalog}=useStore();const now=useNow();const live=useLive(course.id);const modes=modesFor(catalog,course.id,live);
  const [studio,setStudio]=useState(false);const [tab,setTab]=useState('overview');const [filter,setFilter]=useState('upcoming');const [query,setQuery]=useState('');
  const all=datedItems(catalog,now).filter(i=>i.c===course.id);const groups=split(all,state.done);const next=groups.ahead[0];
  const matches=(text:string)=>text.toLowerCase().includes(query.trim().toLowerCase());

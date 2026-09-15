@@ -546,3 +546,165 @@ honest.
   needs `onChange`: counting says nothing happened, comparing says it did.
 - `src/styles/budget.ts` regenerated for the files that grew in §3 and §5. The
   seven needed no raise.
+
+
+---
+
+# Pass seven — the contrast of what is actually painted
+
+The palette audit is the strongest thing in this repo and it checks the wrong
+half. `lib/contrast.test.ts` holds every token of every ground against every
+panel — a hundred and forty-three pairings, in milliseconds — and it is worth
+exactly as much as the number of places that use the tokens. `lib/dim.ts` was
+written about the places that do not, and `styles/rules.ts` counts them. But a
+count says a file owes nine. It does not say that any of the nine is
+illegible, and those are different questions.
+
+So this pass measured the other half. `app/scripts/paint.mjs` walks every
+destination in a ground, photographs each screen twice — once with every glyph
+hidden, once with the clip-to-text gradients repainted over their own boxes —
+and compares the colour each run of text is painted in against the pixels it is
+painted over. Whatever a component did to arrive at that colour, it sees the
+colour.
+
+**Most of what it found was fixed on `main` while this ran**, and that is
+recorded below rather than quietly absorbed: the entries are kept because the
+measurement is the record of what was wrong, not because this branch fixed it.
+
+## What was measured
+
+Sixty destinations, two grounds, phone width, on `f0a2368`:
+
+```
+runs measured 3120   skipped, off screen or moved between the shots 2652
+below AA: 180 runs of text (120 distinct), 134 runs of punctuation
+```
+
+**Two of the hundred and eighty are on Ink.** Everything else is Fog, and the
+reason is one line in `lib/dim.ts`: dark ink on a light page fades faster than
+light ink on a dark one. Three clusters account for seventy-eight of the
+hundred and twenty distinct runs, and each is one number:
+
+| painted | ratio | what wrote it |
+|---|---|---|
+| `rgb(116,119,124)` on the panel | 3.80:1 | `opacity: 0.55` |
+| `rgb(127,130,135)` on the panel | 3.28:1 | `opacity: 0.5` |
+| `rgb(105,108,113)` on the panel | 4.44:1 | `opacity: 0.6` |
+
+## The line, and why nobody saw it
+
+It is computable, and it is not one number — it is the ground's:
+
+```
+ink 0.49   graphite 0.51   midnight 0.50   basalt 0.50   oxide 0.49
+forest 0.49   wine 0.50   industry-dark 0.50
+parchment 0.61   paper 0.60   bone 0.61   fog 0.61   industry 0.62
+```
+
+That is the smallest alpha at which 11–13px text clears 4.5:1 on that ground's
+panel. `opacity: 0.55` — at the time the most common number in the tree, 176
+style objects — is **above** the line on all seven dark grounds and **below**
+it on all six light ones. Which is why it survived being looked at: it is
+legible on the ground the app was designed on.
+
+Every ground's own `dimAlpha` is at or above its line, by 0.08 at the tightest.
+`--app-dim` is not a better guess than 0.55; it is the audited answer. That is
+now a test rather than a paragraph.
+
+## The six that were not any screen's own — *five of them fixed on `main`*
+
+`components/shell/Rows.tsx` is, in its own words, "the row this app did not
+have — thirty-one screens drew their own". Five of its style objects dimmed
+text with a hand-written number, and one of them dimmed an already-audited
+colour:
+
+| where | was | measured on Fog |
+|---|---|---|
+| the second line under a label | `opacity: 0.55` | 3.80:1 |
+| the right-hand value | `opacity: 0.55` | 3.80:1 |
+| the note under a group | `opacity: 0.55` | 3.80:1 |
+| the heading over a group | `opacity: 0.55` over `--app-accent-deep` | 2.4:1 |
+| the note under a framed group | `opacity: 0.65` | passes, by 0.03 |
+
+The heading is the sharp one. `.section-label` is set in `--app-accent-deep`,
+which `contrast.test.ts` holds to 4.5:1 on every panel of every ground; the
+0.55 laid over the top of it was undoing that audit at the one place the audit
+could not see. The grouped layout had it and the plain layout did not, so the
+same heading was legible in one layout and not the other.
+
+`components/Fold.tsx` had the sixth: **Collapse all**, the one control above
+every set of sections in the app, at 3.80:1.
+
+Both files were fixed on `main` between `f0a2368` and `3c0c0f0`, as part of the
+same migration — four of the five in `Rows.tsx` and the Fold control, all to
+`color: var(--app-dim)`, which is the same answer. `main`'s version is what
+ships; the merge took it rather than adding a third spelling of it. The tree-
+wide count went 934 → 740 in those commits.
+
+**The framed group's note is the one this branch fixed**, and it is the one
+the measurement would not have called a failure: 0.65 clears the line on every
+ground, by 0.03 on Industry. It is here because it is the same text as the note
+under a plain group, dimmed to a different strength in the other layout, and
+out of reach of "Increase contrast" either way — and because the guard below
+is worth more than the exception.
+
+## What the branch leaves behind
+
+Measured on the merged tree, same sixty screens and two grounds:
+
+```
+PLACEHOLDER
+```
+
+## What was not fixed, deliberately
+
+Each remaining run is a screen's own `opacity`, they are counted in
+`styles/budget.ts`, and migrating them is the work `lib/dim.ts` already
+describes and `secondLine` already exists for. Picking nine of a hundred to fix
+in an audit would be arbitrary; what an audit can do is leave behind the
+instrument that says which, and a number the next pass can compare against.
+
+The clearest single example of what is left, because it shows the shape: the
+profile heading writes `opacity: named ? 1 : 0.55` on `.chrome-text`, with the
+comment "the prompt is not the name, and should not be set like one". The
+intent is right and the execution puts **Add your name** at 2.20:1 on Fog. It
+is not a mistake anybody could have seen in the source.
+
+Icons are out of scope here: the chevron at the end of every row is 0.4, and
+1.4.11 is a different rule with a different threshold. This measures runs of
+text and says so.
+
+## What the instrument got wrong first
+
+Recorded in the script's own header, because each one read as a fault in the
+app:
+
+- a clip-to-text gradient is not a background, and hiding text does not hide
+  it — the first run photographed the headings it meant to erase and reported
+  every one at 1.00:1 against itself;
+- a run's client rect overhangs the box painted behind it, so a 23px serif
+  reports three rows of page background as its own;
+- something drawn on top is not the background — the assistant's button parks
+  over the foot of the home screen;
+- a disabled button has no contrast requirement, and the first full census
+  opened with five greyed-out primary buttons at 1.41:1, which is the state
+  they are supposed to be in;
+- the look is spread across the top level of `Persisted`, so a seed nested
+  under `look` is accepted, ignored, and measures all thirteen grounds as Ink.
+
+The tell in every case was the same: a number that did not vary when it should
+have.
+
+## What guards it now
+
+- `app/scripts/paint.mjs`, run as `npm run build && node scripts/paint.mjs`.
+  No `check:` prefix, for the reason `scripts/dock.mjs` gives about its own:
+  a browser download and a sixty-screen walk on every pull request is not a
+  trade this app should make, and `lib/ci.test.ts` is right to demand that
+  anything named `check:` is run.
+- `lib/dim.test.ts` gains two cases. The first computes each ground's floor and
+  holds `dimAlpha` at or above it, so the token stays the answer rather than
+  merely a better number. The second holds that the two components that are not
+  a screen's own do not dim text with an `opacity` at all — it fails against
+  `main` as it stood at `3c0c0f0`, on the 0.65 that migration left, which is
+  the whole reason that one number is in this branch.

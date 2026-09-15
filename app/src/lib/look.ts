@@ -278,7 +278,26 @@ export const GROUNDS: Ground[] = [
     ramp: ['#e8e4dc', '#f4f1ea', '#fbf9f4', '#ffffff', '#ffffff'],
     fg: '#1b1a17',
     dimAlpha: 0.68,
-    faintAlpha: 0.47,
+    /*
+     * The same 0.52 Industry reasons its way to above, for the same reason
+     * and now measured the same way.
+     *
+     * A faint label is held to 3:1 — the bar for large text, and the bar a
+     * disabled control reads at, which is most of what this rung draws. The
+     * light grounds were at 0.47 and 0.48, and against one panel that looks
+     * like a pass. Against *every* opaque surface each ground has it is not:
+     * the worst is Parchment 2.90, Paper 2.93, Bone 2.88 and Fog 2.87, all
+     * under the bar, and all of them on the lightest surface rather than the
+     * one they were sampled on. Dark ink on a light page fades faster than
+     * light ink on a dark one, and four grounds had each stopped a little
+     * short of noticing.
+     *
+     * 0.52 is Industry's already, so the palette gains no new number, and it
+     * carries every one of them past 3.3:1 at their worst surface. The cost
+     * is that a disabled label is a little less faint; it is still plainly
+     * the quietest ink on the screen.
+     */
+    faintAlpha: 0.52,
   },
   {
     id: 'paper',
@@ -288,7 +307,8 @@ export const GROUNDS: Ground[] = [
     ramp: ['#dfe2e8', '#f2f4f7', '#fbfcfd', '#ffffff', '#ffffff'],
     fg: '#15181d',
     dimAlpha: 0.68,
-    faintAlpha: 0.47,
+    // As Parchment above: 0.52 is the floor a faint label needs here.
+    faintAlpha: 0.52,
   },
   {
     /*
@@ -315,7 +335,7 @@ export const GROUNDS: Ground[] = [
     ramp: ['#e4e0d9', '#ece9e3', '#faf9f7', '#ffffff', '#ffffff'],
     fg: '#1a1a18',
     /*
-     * 0.64, for the surfaces under the card.
+     * 0.68, for the surfaces under the card.
      *
      * This was 0.62, chosen for the muted ink the references name, and over
      * the card it is comfortable either way — 4.80:1 at 0.62. The measurement
@@ -324,12 +344,22 @@ export const GROUNDS: Ground[] = [
      * Bone lifts its cards off a warm ground, so that is not a rare placement
      * — it is the search home and every course row.
      *
-     * 0.64 carries all four surfaces (4.57:1 at the worst) and lands nearer
-     * the reference than 0.62 did: the ink over the card is #6b6a68, where
-     * the note above claimed #6b6862 and 0.62 actually gave #6f6f6d.
+     * 0.64 carried all four surfaces, but only just: 4.70:1 on the void, which
+     * made Bone the weakest dim ink in the palette while every other light
+     * ground sat between 5.25 and 5.42. Passing at the third decimal is not
+     * the same as passing, and it is the one that goes under first when a
+     * surface moves. 0.68 is the smallest step that clears Fog's 5.25 — the
+     * floor the other light grounds already keep — and it measures 5.31:1 on
+     * the void and 5.88:1 over the card.
+     *
+     * The cost is the muted ink the note above is about: #6b6a68 over the
+     * card becomes #62615f, nine levels darker and still grey rather than
+     * black. Bone reads slightly firmer than its reference and is legible on
+     * its own void, which is the trade this takes.
      */
-    dimAlpha: 0.64,
-    faintAlpha: 0.47,
+    dimAlpha: 0.68,
+    // As Parchment above: 0.52 is the floor a faint label needs here.
+    faintAlpha: 0.52,
   },
   /*
    * Industry, as one ground among many.
@@ -357,10 +387,18 @@ export const GROUNDS: Ground[] = [
      * Higher than the dark grounds', and it has to be. Industry's text is
      * #1d1f20 on a #f5f5f8 panel — a very light panel, so a given alpha buys
      * less separation here than the same alpha does on near-black. 0.45, the
-     * value the dark grounds use, measures 2.76:1 and fails the 3:1 a faint
-     * label needs; 0.52 measures 3.35:1.
+     * value the dark grounds use, measures 2.76:1 against the 3:1 a faint
+     * label needs; `faintAlpha` below is 0.52, which measures 3.35:1.
+     *
+     * Dim ink was 0.66, and that is the figure this raises. Measured against
+     * every opaque surface the ground has, its worst is the void: 4.87:1 —
+     * over the 4.5 bar and under every other light ground, which sit between
+     * 5.25 and 5.42. 0.68 would reach 5.18, still the lowest of them; 0.7
+     * reaches 5.51, and is the value Fog already uses, so it introduces no
+     * number the palette did not have. The ink over the card goes #666869 to
+     * #5e5f61.
      */
-    dimAlpha: 0.66,
+    dimAlpha: 0.7,
     faintAlpha: 0.52,
     corners: 'square',
   },
@@ -385,7 +423,17 @@ export const GROUNDS: Ground[] = [
     ramp: ['#141516', '#1b1c1e', '#232426', '#2b2b2d', '#424244'],
     fg: '#f2f2f3',
     dimAlpha: 0.64,
-    faintAlpha: 0.42,
+    /*
+     * Higher than the other dark grounds', for the mirror of Industry's
+     * reason above. This ground's raised surface is #424244 — far lighter
+     * than the near-black the others lift to — and the faint rung is measured
+     * against every surface a ground has, not the one it was drawn on. 0.42
+     * is 3.52:1 on Ink's void and 2.98:1 here, under the 3:1 a faint label
+     * needs, and the only place it falls short is that one light panel.
+     *
+     * 0.46 reaches 3.27:1 there, which is where Industry sits at 3.25.
+     */
+    faintAlpha: 0.46,
     corners: 'square',
   },
   {
@@ -396,7 +444,8 @@ export const GROUNDS: Ground[] = [
     ramp: ['#c9cdd4', '#dde1e7', '#e9ecf1', '#f4f6f9', '#fdfdfe'],
     fg: '#14171c',
     dimAlpha: 0.7,
-    faintAlpha: 0.48,
+    // As Parchment above: 0.52 is the floor a faint label needs here.
+    faintAlpha: 0.52,
   },
 ];
 

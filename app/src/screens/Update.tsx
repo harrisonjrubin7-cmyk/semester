@@ -23,7 +23,7 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
 import { HowMuch } from '../components/HowMuch';
-import { ActionButton, FilePick, SectionLabel } from '../components/ui';
+import { ActionButton, ChipScroll, FilePick, SectionLabel } from '../components/ui';
 import { addFile, formatBytes, type FileMeta } from '../lib/files';
 import { gather } from '../lib/bundle';
 import { describeParse, parseMaterial } from '../lib/parse';
@@ -527,9 +527,10 @@ export function AddMaterial() {
     >
 
       <SectionLabel>Which course</SectionLabel>
-      <div className="chiprow">
-        <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
-          {catalog.courses.map((c) => {
+      {/* The third of the app's chip rows, and the second that had copied the
+          class without the behaviour. See `ChipScroll` in `components/ui.tsx`. */}
+      <ChipScroll count={catalog.courses.length}>
+        {catalog.courses.map((c) => {
             const on = c.id === courseId;
             return (
               <button
@@ -553,8 +554,7 @@ export function AddMaterial() {
               </button>
             );
           })}
-        </div>
-      </div>
+      </ChipScroll>
 
       <SectionLabel>Where it belongs</SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column' }}>

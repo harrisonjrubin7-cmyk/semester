@@ -54,6 +54,8 @@ import {
   readZed,
   transform as zTransform,
 } from './discrete';
+import { averageFrequency, envelope, loudestMoment } from './hilbert';
+import { banded, bandRange, bestBasis, shares as bandShares, takes } from './packet';
 import {
   D4,
   HAAR,
@@ -234,6 +236,23 @@ export type Line =
    * Drawn as the smoothing over the data it came from. See `lib/wavelet.ts`.
    */
   | { kind: 'wavelet'; body: Node; rest: Node[]; filter: Filter }
+  /**
+   * `hilbert([…])` — the shape a wobble is wobbling inside.
+   *
+   * Every other transform here answers a question about a whole run at once.
+   * This one answers one about every moment of it: how big is the wobble here,
+   * and how fast is it turning here. Drawn as the envelope either side of the
+   * data. See `lib/hilbert.ts`.
+   */
+  | { kind: 'envelope'; body: Node; count: Node | null }
+  /**
+   * `packet([…], 3)` — the tree split both ways, into bands of equal width.
+   *
+   * `lib/wavelet.ts` never splits its detail bands, so it tells slow things
+   * apart finely and fast things barely at all. This splits both halves at
+   * every level and separates the fast ones too. See `lib/packet.ts`.
+   */
+  | { kind: 'packet'; body: Node; rest: Node[]; filter: Filter }
   | { kind: 'point'; x: Node; y: Node };
 
 /** The letter a polar curve turns through, and the one a parametric curve runs on. */
@@ -301,6 +320,9 @@ const HARMONIC = new Set(['fourier', 'harmonics']);
 /** `dft([…])` and `fft(x[n], N)`: the transform of a run of numbers. */
 const BINNED = new Set(['dft', 'fft']);
 
+/** `hilbert([…])` and `envelope(x[n], N)`: the run's own shape over time. */
+const HILBERT = new Set(['hilbert', 'envelope', 'analytic']);
+
 /**
  * `wavelet([…])` and `daubechies([…])`: the filter is named by the call.
  *
@@ -313,6 +335,13 @@ const WAVELETS: Record<string, Filter> = {
   haar: HAAR,
   db: D4,
   daubechies: D4,
+};
+
+/** `packet([…], 3)` and `dbpacket([…], 3)`: the whole tree rather than one branch of it. */
+const PACKETS: Record<string, Filter> = {
+  packet: HAAR,
+  packets: HAAR,
+  dbpacket: D4,
 };
 
 /** `conv(f, g)` at the start of a line: a convolution, which is a function of t. */
@@ -452,6 +481,18 @@ export function readLine(source: string): Line {
     if ('says' in got) return { kind: 'fault', says: got.says };
     if (CONVOLVE.test(text)) return { kind: 'convolution', body: got.node };
     const call = got.node;
+    if ((call.kind === 'apply' || call.kind === 'call') && HILBERT.has(call.name)) {
+      if (call.args.length < 1 || call.args.length > 2) {
+        return { kind: 'fault', says: 'An envelope wants the data: hilbert([…]), or a formula and how many samples.' };
+      }
+      return { kind: 'envelope', body: call.args[0], count: call.args[1] ?? null };
+    }
+    if ((call.kind === 'apply' || call.kind === 'call') && PACKETS[call.name]) {
+      if (call.args.length < 1 || call.args.length > 3) {
+        return { kind: 'fault', says: 'A packet transform wants the data: packet([…], 3), or a formula, how many samples, and how many splits.' };
+      }
+      return { kind: 'packet', body: call.args[0], rest: call.args.slice(1), filter: PACKETS[call.name] };
+    }
     if ((call.kind === 'apply' || call.kind === 'call') && WAVELETS[call.name]) {
       if (call.args.length < 1 || call.args.length > 3) {
         return { kind: 'fault', says: 'A wavelet transform wants the data: wavelet([…]), or a formula, how many samples, and which level.' };
@@ -587,6 +628,14 @@ export function missing(line: Line, scope: Scope): string[] {
       return [...free(line.body, scope), ...(line.count ? free(line.count, scope) : [])].filter(
         (n) => n !== BEAT && !table(n),
       );
+    case 'envelope':
+      return [...free(line.body, scope), ...(line.count ? free(line.count, scope) : [])].filter(
+        (n) => n !== BEAT && !table(n),
+      );
+    case 'packet':
+      return [...free(line.body, scope), ...line.rest.flatMap((r) => free(r, scope))].filter(
+        (n) => n !== BEAT && !table(n),
+      );
     case 'wavelet':
       return [...free(line.body, scope), ...line.rest.flatMap((r) => free(r, scope))].filter(
         (n) => n !== BEAT && !table(n),
@@ -720,6 +769,64 @@ export function answered(
        * out which of the two lines is the answer.
        */
       note: 'The function is faint under it. Outside that interval a series repeats, which is what makes it a series.',
+    };
+  }
+  if (line.kind === 'envelope') {
+    const xs = samplesOf(line.body, line.count, scope);
+    if (!xs.ok) return { says: xs.fault };
+    const shape = envelope(xs.it);
+    const top = loudestMoment(xs.it);
+    const rate = averageFrequency(xs.it);
+    const tidy = (v: number) => Number(v.toPrecision(4));
+    return {
+      lead: `${xs.it.length} samples, as a wobble inside an envelope:`,
+      latex: '',
+      over: BEAT,
+      at: (n: number) => shape[Math.round(n)] ?? NaN,
+      upto: xs.it.length - 1,
+      data: xs.it,
+      note:
+        top.size > 1e-9
+          ? `Loudest at sample ${top.at}, where it reaches ${tidy(top.size)}. It turns at about ${tidy(rate)} cycles a sample where there is something to turn — one number per moment, where a spectrum gives one set for the whole run. The ends are where the wrap-around shows.`
+          : 'This run never moves, so there is no envelope to draw round it.',
+    };
+  }
+  if (line.kind === 'packet') {
+    // A list needs no count, so what follows it is the number of splits; a
+    // formula needs one, so the count comes first and the splits third. The
+    // same rule `wavelet` reads its arguments by.
+    const listed = value(line.body, scope);
+    const asList = Array.isArray(listed);
+    const countNode = asList ? null : (line.rest[0] ?? null);
+    const deepNode = asList ? (line.rest[0] ?? null) : (line.rest[1] ?? null);
+    const xs = samplesOf(line.body, countNode, scope);
+    if (!xs.ok) return { says: xs.fault };
+    const asked = deepNode ? value(deepNode, scope) : 3;
+    const want = Math.max(1, Math.min(8, Math.round(Array.isArray(asked) ? 3 : asked)));
+    if (!takes(xs.it.length, want)) {
+      const under = 2 ** Math.floor(Math.log2(Math.max(2, xs.it.length)));
+      return {
+        says: halvable(xs.it.length)
+          ? `Splitting ${want} times wants ${2 ** want} samples at least, and there are ${xs.it.length}.`
+          : `A packet tree halves the run at every split, so it wants a power of two — ${under} or ${under * 2}, not ${xs.it.length}.`,
+      };
+    }
+    const bands = banded(xs.it, line.filter, want);
+    const share = bandShares(bands);
+    const top = share.indexOf(Math.max(...share));
+    const range = bandRange(top, want);
+    const basis = bestBasis(xs.it, line.filter, want);
+    const tidy = (v: number) => Number(v.toPrecision(3));
+    return {
+      lead: `${xs.it.length} samples, ${line.filter.name}, in ${bands.length} bands of equal width:`,
+      latex: '',
+      over: 'k',
+      at: (k: number) => share[Math.round(k)] ?? NaN,
+      upto: bands.length - 1,
+      note:
+        share[top] > 0
+          ? `Band ${top} holds the most — ${Math.round(share[top] * 100)}% — which is ${tidy(range.from)} to ${tidy(range.to)} cycles a sample. The most compact description of this run uses ${basis.length} ${basis.length === 1 ? 'band' : 'bands'} rather than ${bands.length}, which is the one thing a tree can say that a single split cannot.`
+          : 'This run never moves, so every band is empty.',
     };
   }
   if (line.kind === 'wavelet') {
@@ -1100,6 +1207,32 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
         shades: [...under.map(() => 0.5), ...over.map(() => 1)],
       };
     }
+    case 'envelope': {
+      const got = answered(line, scope);
+      if (!got || 'says' in got) return EMPTY;
+      /*
+       * The envelope above the data and its mirror below it.
+       *
+       * Both halves, because the envelope is the size of the wobble and a
+       * wobble goes both ways: one line above a run that dips below zero would
+       * read as a ceiling rather than as the shape it is inside. Stepped, like
+       * every other sequence on this list, since there is no value between two
+       * samples to draw through.
+       */
+      const points: Point[] = [];
+      const over: Point[] = [];
+      const under: Point[] = [];
+      const last = Math.min(Math.floor(frame.x1), got.upto ?? Infinity);
+      for (let n = Math.max(0, Math.ceil(frame.x0)); n <= last && points.length < 2048; n += 1) {
+        const size = got.at(n);
+        const raw = got.data?.[n];
+        if (raw !== undefined && Number.isFinite(raw)) points.push({ x: n, y: raw });
+        if (!Number.isFinite(size)) continue;
+        over.push({ x: n - 0.5, y: size }, { x: n + 0.5, y: size });
+        under.push({ x: n - 0.5, y: -size }, { x: n + 0.5, y: -size });
+      }
+      return { paths: over.length ? [over, under] : [], points };
+    }
     case 'wavelet': {
       const got = answered(line, scope);
       if (!got || 'says' in got) return EMPTY;
@@ -1124,6 +1257,7 @@ export function draw(line: Line, scope: Scope, frame: Frame, detail: Detail = DE
       }
       return { paths: step.length ? [step] : [], points };
     }
+    case 'packet':
     case 'bins':
     case 'sequence': {
       const got = answered(line, scope);
@@ -1593,6 +1727,20 @@ export const EXAMPLES: { name: string; says: string; lines: string[] }[] = [
     name: 'Where the jump was',
     says: 'A wavelet: which scales a run wobbles at, and where — the part a spectrum loses.',
     lines: ['wavelet([1, 1, 2, 1, 1, 9, 2, 1, 1, 2, 1, 1, 2, 1, 1, 2], 2)'],
+  },
+  {
+    name: 'A wobble that fades',
+    says: 'A Hilbert transform: the shape a wobble is wobbling inside, moment by moment.',
+    // Sixteen rather than the hundred and twenty-eight this is interesting at,
+    // because an example opens on the ten-by-ten window every other one does
+    // and a run longer than the window would show a tenth of itself and read
+    // as a flat line. Press fit, or ask for more, and it is the same thing.
+    lines: ['hilbert(e^{-n/5}\\cos(n), 16)'],
+  },
+  {
+    name: 'Two fast wobbles, told apart',
+    says: 'A packet tree: bands of equal width, so a fast thing is placed as finely as a slow one.',
+    lines: ['packet(\\cos(2\\pi 0.3 n) + \\cos(2\\pi 0.45 n), 32, 3)'],
   },
   {
     name: 'A flow',

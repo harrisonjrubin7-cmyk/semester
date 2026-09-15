@@ -652,9 +652,26 @@ a:hover {
 .rail .rail-item:hover {
   color: var(--app-accent-bright);
 }
+/*
+ * The second group in the sidebar — Ask Claude, Add a course, Account,
+ * Connect accounts, Settings.
+ *
+ * It had `opacity: 0.75` on top of `--app-dim`, which is the multiplication
+ * `lib/dim.ts` exists to stop: 0.64 × 0.75 = 0.48, and axe measured the
+ * result at **4.42:1** on Ink against the 4.5 this repo enforces on the token
+ * itself. Nobody chose 0.48. It is what "quiet text" and "and quieter still"
+ * come to when they meet, on the five rows one of which is the only way into
+ * the assistant from this navigation.
+ *
+ * The other half of the argument in `dim.ts` applies here too: "Increase
+ * contrast" raises `--app-dim` and cannot reach an `opacity`, so the setting
+ * was lifting these rows and then dimming them back down again.
+ *
+ * What separates the two groups is `.rail-gap` — a rule and eighteen pixels
+ * of air — and the smaller size, which is what was always doing the work.
+ */
 .rail .rail-quiet {
   font-size: 11px;
-  opacity: 0.75;
   padding: 9px 20px;
 }
 .rail .rail-item:hover {
@@ -3076,8 +3093,34 @@ input[type='search'].input {
  * and comes up to meet a pointer or the focus ring.
  */
 .grip {
+  /*
+   * Twenty-four by twenty-four, which is what WCAG 2.2's 2.5.8 asks of a
+   * target with no room around it — and this one has none in either
+   * direction. The glyph inside stays the size it was drawn; the box around
+   * it is what a finger aims at. See the long note in `screens/Today.tsx` for
+   * what the two overlay classes tried before this and why neither could
+   * work.
+   */
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
   opacity: 0.3;
   cursor: grab;
+}
+
+/*
+ * The heading follows the handle, not the section's top edge.
+ *
+ * Its own top margin was the air above a heading while nothing was drawn
+ * there. Now the handle is, so the margin would be air on top of air — and
+ * these headings do not agree on how much: 26px on a `SectionLabel`, 14 or 12
+ * on the sections that head themselves with a card, none on a kicker. The
+ * handle's own 24 is the same on all of them, which is the rhythm this screen
+ * did not have before.
+ */
+section[data-drop] > .grip + * {
+  margin-top: 0;
 }
 
 .grip:hover,

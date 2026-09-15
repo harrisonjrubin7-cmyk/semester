@@ -387,7 +387,9 @@ and its lesson are two results, one opening the cards and one the audio.
 **Resting on a tab** says what it is: the full name — which the strip cuts at
 190 pixels, and which a pinned tab does not show at all — what kind of place
 it is, the work it belongs to, whether it is the one playing, and what it last
-searched for. No thumbnail, and that is the architecture rather than a
+searched for — and, under a rule at the bottom, that **Alt** and the arrows
+move it, which is how anybody finds out. No thumbnail, and that is the
+architecture rather than a
 shortcut: a tab here is a saved place rather than a running page, so there is
 no rendered screen anywhere to take a picture of, and rendering one to
 photograph would mean going there. The keyboard gets the same card on focus,
@@ -620,6 +622,18 @@ model in it or needs a key:
   would trap exactly the people who cannot reach for the mouse instead. Lists
   written before this still work: an item that is a bare string is read as a
   line at the left margin, which is what it always was.
+
+  A **Word file opens here.** Insert → *Notes, Markdown or a Word file…* takes
+  a `.docx` and reads it in as blocks: headings, nested lists, checklists,
+  tables, quotations, code, page breaks, dividers, pictures, alignment, and
+  the bold, italic, strike-through, monospace and links inside a line. The
+  pictures go into your drive and the blocks point at them, the same way a
+  picture you added yourself does. Whatever it cannot bring — an equation
+  (Word stores those in a form that will not read back into a formula),
+  comments, tracked changes, footnotes, a text box — it names, rather than
+  leaving you to notice. Reading a file into a document that already has
+  writing in it adds to the end; into an empty one, it takes the file's title
+  as well.
 
   A paragraph, a heading or a quotation can be **aligned** — left, centred,
   right or justified, from the toolbar or the Edit menu. It is a property of
@@ -1133,6 +1147,74 @@ model in it or needs a key:
   that Haar found correctly. Wrong in exactly the dimension this transform
   exists to be right in, and now pinned by a test that asks both filters to
   find the same step.
+
+  **`hilbert([…])` is a Hilbert transform**, and it is the one that answers a
+  question about every *moment* rather than about the whole run. The six before
+  it say which frequencies, which scales, which poles; this one says how big
+  the wobble is here and how fast it is turning here. A signal that swells and
+  fades, or drifts from one frequency to another, is the ordinary case in
+  anything measured, and it is the case none of the others say much about.
+
+  The transform turns every component a quarter turn — a cosine becomes a sine,
+  a sine becomes minus a cosine. Written as an integral it is a principal value
+  over the whole line; written as a spectrum it is one sentence: take the
+  transform, throw the negative frequencies away, double the rest. So this is
+  thirty lines on top of the discrete transform rather than an integrator of
+  its own, and `Re(analytic(x))` is `x` to the last bit of the float — checked,
+  because it is the claim the whole approach rests on.
+
+  What comes back is the *analytic signal*, and its size at each moment is the
+  **envelope**: the shape the wobble is wobbling inside, which is what somebody
+  means by "it is dying away" or "it swells in March". The rate its angle turns
+  is the **instantaneous frequency** — one number per sample, where a spectrum
+  gives one set of numbers for the whole run. A chirp that starts slow and ends
+  fast has a spectrum saying "everything in between" and saying nothing about
+  which end is which; this reports the rate at sample 40 and at sample 210, and
+  a test checks both against the chirp they were built from.
+
+  It is drawn as the envelope above the data *and its mirror below*, because
+  the envelope is the size of a wobble and a wobble goes both ways: one line
+  above a run that dips below zero reads as a ceiling rather than as the shape
+  it is inside. The average turn rate in the reading is weighted by the
+  envelope — a plain average is dominated by the quiet stretches, where the
+  angle of something near nothing wanders about and means very little.
+
+  The spectrum of a finite run assumes it repeats, so the envelope near the two
+  ends is affected by the other end. That is inherent to computing this through
+  a transform rather than a fault, and the reading says so rather than letting
+  the first and last samples pass as though they were as trustworthy as the
+  middle.
+
+  **`packet([…], 3)` is a wavelet packet transform** — the same tree, split
+  both ways. The ordinary transform halves the run, keeps the averages and
+  halves those again, so the differences it drops out are never split further
+  and the scales it reports get coarser as they get faster: it separates slow
+  things finely and fast things barely at all. A packet tree splits both halves
+  at every level, and what comes out is `2^L` bands of equal width. So
+  `\cos(2\pi\,0.28n)` and `\cos(2\pi\,0.47n)` come out in two different
+  bands rather than in the one band the wavelet transform puts them both in.
+
+  It also says something no other transform here can: the **best basis**. The
+  full tree at level 3 contains the ordinary wavelet transform, the even split
+  into eight, and every mixture of the two, and Coifman and Wickerhauser's
+  method picks between them — work out what each node costs by Shannon's
+  measure, and keep a node whenever it costs less than its two children
+  together. A single spike comes back as one band, because every split only
+  spreads it; a run with a frequency in it splits, because splitting gathers it
+  up.
+
+  The ordering is the part of this that goes wrong quietly, and it did. Every
+  high-pass branch turns the frequency axis over, so the bands do not arrive in
+  frequency order and nothing about them says so: read straight, a run's energy
+  is reported at the wrong frequencies, plausibly, with no error and no sign of
+  trouble. The fix is the Gray code — and **which way round it goes is the trap
+  inside the trap**. The band at frequency place `k` is the tree's node
+  `k ^ (k >> 1)`, not the other way about. At level two the Gray code is its
+  own inverse, so both readings agree and a wrong one looks right; at level
+  three they part company and the top four bands come back shuffled. Which is
+  exactly what happened here, and what caught it was the only test worth
+  writing for this: put a sinusoid of a known frequency in, and ask which band
+  it came out of — at level three as well as level two.
 
   It also found a bug that had been there all along. `s(s + 2)^2` was read as
   `(s(s + 2))^2` — a different function, which works out, draws and transforms

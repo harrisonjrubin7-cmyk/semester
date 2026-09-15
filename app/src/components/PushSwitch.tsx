@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { secondLine } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { canPush, enrol, enrolled, leave, markRefilled, PUSH_NOTE, queueFor } from '../lib/push';
 import { atRiskToday } from '../lib/atrisk';
 import { classesToNudge } from '../lib/notify';
@@ -23,7 +23,8 @@ const VAPID = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined) ?? '
  * lives on the account, and there is nowhere to put it otherwise.
  */
 export function PushSwitch() {
-  const { state, catalog, now, account, courseCode } = useStore();
+  const { state, catalog, account, courseCode } = useStore();
+  const now = useNow();
   const [on, setOn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');

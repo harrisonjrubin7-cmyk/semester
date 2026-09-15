@@ -12,13 +12,14 @@
  * rule, and a default would be wrong quietly and in the dangerous direction.
  */
 
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { NO_WINDOW, windowLine, windowSummary } from '../lib/returned';
 import type { DatedItem } from '../lib/types';
 import { PostMortem } from './PostMortem';
 
 export function CameBack({ item }: { item: DatedItem }) {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   const record = state.returned.find((r) => r.id === item.id);
   const window = state.regradeWindows[item.c] ?? NO_WINDOW;
   const code = catalog.byId[item.c]?.code ?? item.c;

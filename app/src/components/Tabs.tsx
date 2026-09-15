@@ -713,7 +713,7 @@ export function TabStrip({
             id={`peek-${seat.id}`}
             at={peeking.at}
             tone={band ? toneAt(tones, band.tone).fill : undefined}
-            peek={peekAt(seat, band, { talking: sounding(noise, seat.id) })}
+            peek={peekAt(seat, band, { talking: sounding(noise, seat.id) }, strip.tabs.length)}
           />
         );
       })()}
@@ -860,6 +860,13 @@ function Tab({
         onFocus={(e) => peek.onShow(e.currentTarget.getBoundingClientRect())}
         onBlur={peek.onGone}
         aria-describedby={peek.open ? peek.id : undefined}
+        /*
+         * The keys, declared rather than described. `useMovable`'s own
+         * `onKeyDown` is what answers them — this is the attribute that says
+         * so, the same one the search button uses for `/`, and the reason the
+         * card's spoken sentence does not mention them.
+         */
+        aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
         aria-current={on ? 'page' : undefined}
         // The name is the button's text on an ordinary tab and has to be said
         // out loud on a pinned one, where the glyph is all there is to see.
@@ -1025,6 +1032,9 @@ function GroupHead({
       // which is not a region this button owns. The label says the state in
       // words, which is the honest version of the same information.
       aria-label={`${says} — ${count}, ${group.collapsed ? 'open' : 'fold away'}`}
+      // The head is a drag handle now, so it answers the arrows too — and a
+      // run is the thing somebody most wants to move without a pointer.
+      aria-keyshortcuts="Alt+ArrowLeft Alt+ArrowRight"
       aria-haspopup="dialog"
       title={`${says} — ${count}`}
       style={{

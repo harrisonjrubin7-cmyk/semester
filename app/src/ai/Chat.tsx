@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { chromeFor } from '../lib/chrome';
 import { useKeyboardInset } from '../lib/keyboard';
@@ -45,7 +45,8 @@ import { Trouble } from '../components/Trouble';
  * fills its box and `.scrollarea.is-filled` takes the reservation back.
  */
 export function Chat() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const talk = useConversation();
   const touch = useMedia(TOUCH);
   const wide = useMedia(WIDE);

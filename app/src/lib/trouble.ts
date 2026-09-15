@@ -27,9 +27,23 @@ import { useCallback, useState } from 'react';
  * fetch arrives here as a throw like any other. Showing "signal is aborted
  * without reason" to someone who just pressed Stop reports their own decision
  * back to them as a fault.
+ *
+ * A deadline is the other half of that, and arrives the same way: `fetchWithin`
+ * in `lib/net.ts` gives every call to a server this app does not own a time to
+ * answer in, and the platform rejects those with a `TimeoutError` whose own
+ * message is "signal timed out". That is the same fault as the one above —
+ * machinery reported as if it were the answer — so it is turned into a
+ * sentence here, once, rather than at each of the places that catch it.
+ *
+ * Matched on `name` rather than `instanceof DOMException` because the reason
+ * `AbortSignal.any` re-throws need not be the page's own `DOMException`.
  */
 export function troubleOf(e: unknown): string | null {
-  if (e instanceof DOMException && e.name === 'AbortError') return null;
+  const named = typeof e === 'object' && e !== null ? (e as { name?: unknown }).name : undefined;
+  if (named === 'AbortError') return null;
+  if (named === 'TimeoutError') {
+    return 'That took too long to answer. Check your connection and try again.';
+  }
   if (e instanceof Error) return e.message || String(e);
   const said = String(e);
   return said === '[object Object]' ? 'Something went wrong.' : said;
