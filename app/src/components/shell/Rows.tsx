@@ -4,6 +4,7 @@ import { ForcedProvider, InsetProvider, SIDE, useGrouped } from './useShell';
 import { Blueprint } from '../Blueprint';
 import { SectionLabel } from '../ui';
 import { FoldHead, useSection } from '../Fold';
+import { secondLine } from '../../lib/dim';
 
 /**
  * The pieces every screen is built from, in whichever layout is on.
@@ -135,7 +136,7 @@ export function Group({
           <div
             style={{
               fontSize: 'var(--type-base)',
-              opacity: 0.65,
+              ...secondLine(),
               lineHeight: 'var(--leading-relaxed)',
               marginBottom: 'var(--sp-5)',
               textWrap: 'pretty',
@@ -181,11 +182,20 @@ export function Group({
         <h2
           id={id}
           className="section-label"
+          /*
+           * No opacity on this one, rather than a colour for it.
+           *
+           * `.section-label` is already set in `--app-accent-deep`, which
+           * `contrast.test.ts` holds to 4.5:1 on every panel of every ground.
+           * The 0.55 over the top of it was undoing exactly that audit: 11px
+           * caps at a bit over half strength measure 2.4:1 on Fog. Taking the
+           * opacity off gives the heading the colour the palette already
+           * chose for it, which is what the class was for.
+           */
           style={{
             margin: `0 0 calc(5px * var(--density, 1)) ${SIDE}px`,
             fontSize: 'var(--type-xs)',
             fontWeight: 'inherit',
-            opacity: 0.55,
           }}
         >
           {foldable ? (
@@ -217,7 +227,7 @@ export function Group({
           style={{
             margin: `calc(7px * var(--density, 1)) ${SIDE}px 0`,
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.55,
+            ...secondLine(),
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -307,7 +317,7 @@ function Label({ label, sub }: { label: ReactNode; sub?: ReactNode }) {
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.55,
+            ...secondLine(),
             marginTop: 'var(--sp-1)',
             lineHeight: 1.4,
           }}
@@ -325,7 +335,7 @@ function Value({ children }: { children: ReactNode }) {
     <span
       style={{
         fontSize: 'calc(12.5px * var(--text-scale, 1))',
-        opacity: 0.55,
+        ...secondLine(),
         maxWidth: '45%',
         overflow: 'hidden',
         textOverflow: 'ellipsis',

@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { AA_TEXT, contrast, failLine, over, passes, type Check } from './contrast';
 import { GROUNDS, tokensFor } from './look';
@@ -98,5 +101,95 @@ describe('a row that is behind you', () => {
       expect(now).toBeGreaterThanOrEqual(was);
       expect(plain['--app-dim']).not.toBe(loud['--app-dim']);
     }
+  });
+});
+
+/**
+ * Where the line actually falls, and the two components that draw across it.
+ *
+ * `styles/rules.ts` counts every hand-written `opacity` in the tree and calls
+ * it drift. That is a ledger, and a ledger says a file owes nine — not that
+ * any of the nine is illegible. This says which side of the line a number is
+ * on, and holds the two components that are not a screen's own to the right
+ * side of it.
+ *
+ * Measured with `scripts/paint.mjs`, which photographs the app and samples the
+ * pixels under every run of text: on Fog, the shared row's second line read
+ * 3.80:1 and the guide's course line 2.51:1, against the 4.5:1 this repo holds
+ * its own tokens to. Nothing about those numbers was visible from the source,
+ * because the source says `opacity: 0.55` and 0.55 is legible on Ink.
+ */
+describe('a hand-written opacity', () => {
+  /**
+   * The smallest alpha that clears AA for small text, ground by ground.
+   *
+   * Dark ink on a light page fades faster than light ink on a dark one, so
+   * this is not one number: it is 0.49 on Ink and 0.62 on Industry. Every
+   * `opacity: 0.55` in the tree is above the line on the seven dark grounds
+   * and below it on all six light ones, which is why it survived being looked
+   * at — and why it had to be measured rather than read.
+   */
+  const floor = (ground: string, key: '--app-panel' | '--app-bg') => {
+    const t = tokensFor({ ground });
+    const g = GROUNDS.find((x) => x.id === ground)!;
+    for (let step = 30; step <= 100; step += 1) {
+      const a = step / 100;
+      if ((contrast(over(g.fg, t[key], a) ?? '', t[key]) ?? 0) >= AA_TEXT) return a;
+    }
+    return 1;
+  };
+
+  /**
+   * `--app-dim` is at or above that floor everywhere, which is what makes
+   * `secondLine()` a fix rather than a better guess.
+   *
+   * Each ground's `dimAlpha` was chosen for the ground; this checks that the
+   * choice clears the bar rather than merely beating the number it replaced.
+   */
+  it('is answered by the token on every ground', () => {
+    const bad: Check[] = [];
+    for (const g of GROUNDS) {
+      for (const key of ['--app-panel', '--app-bg'] as const) {
+        bad.push({
+          what: `${g.label} · dimAlpha on ${key.slice(6)}`,
+          ratio: g.dimAlpha,
+          needs: floor(g.id, key),
+        });
+      }
+    }
+    expect(bad.filter((c) => !passes(c)).map(failLine)).toEqual([]);
+  });
+
+  /**
+   * And the shared chrome does not write one.
+   *
+   * Only these two files, deliberately. A screen's own opacity is that
+   * screen's, it is counted in `styles/budget.ts`, and there are still some
+   * hundreds of them — a rule against all of them would be a rule nobody could
+   * land. These two are different in kind: `shell/Rows.tsx` is the row thirty
+   * screens share, and `Fold.tsx` draws the one control above every set of
+   * sections in the app. A number picked by eye in either of them is picked
+   * for the whole app at once, and is the reason the same 3.80:1 turned up on
+   * Settings, on Courses and on Today in one sweep.
+   *
+   * A style object that dims without also setting a size is left alone: that
+   * is `opacity` doing the job `lib/dim.ts` leaves it — the state of a whole
+   * row, tag and tick and rule together.
+   */
+  it('is not what the rows every screen shares dim with', () => {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const shared = ['../components/shell/Rows.tsx', '../components/Fold.tsx'];
+    const found: string[] = [];
+    for (const file of shared) {
+      const code = readFileSync(join(here, file), 'utf8');
+      // Style objects, which are the braced runs with no brace inside them.
+      for (const block of code.match(/\{[^{}]*\}/g) ?? []) {
+        const dimmed = /\bopacity:\s*(0\.\d+)/.exec(block);
+        if (!dimmed) continue;
+        if (!/\bfontSize:/.test(block)) continue;
+        found.push(`${file.slice(3)} dims text with opacity ${dimmed[1]}`);
+      }
+    }
+    expect(found).toEqual([]);
   });
 });

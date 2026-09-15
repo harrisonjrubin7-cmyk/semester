@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { ChevronRight } from './Icons';
+import { secondLine } from '../lib/dim';
 import { SectionLabel } from './ui';
 import { foldKey } from '../lib/folds';
 import { useFold, useFoldAll } from '../lib/folds.hook';
@@ -467,7 +468,15 @@ export function FoldAll({ style }: { style?: CSSProperties }) {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.14em',
           textTransform: 'uppercase',
-          opacity: 0.55,
+          /*
+           * The colour, not an opacity. This is 11px caps and it is the one
+           * control above every section on the screen; at 0.55 it measured
+           * 3.80:1 on Fog and 3.84:1 on Parchment, against the 4.5:1 the same
+           * repo holds its own tokens to. `--app-dim` is that strength on
+           * each ground and rises when the device asks for more contrast,
+           * which an opacity cannot. See `lib/dim.ts`.
+           */
+          ...secondLine(),
         }}
       >
         {said}
