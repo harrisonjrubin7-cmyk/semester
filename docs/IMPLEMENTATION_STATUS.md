@@ -4,6 +4,61 @@ September 14, 2026 · Compared with the supplied complete product requirements a
 
 The existing app is preserved and expanded. **This build is a working student workspace with local planning tools and an institutional integration foundation. It is not yet a complete replacement for a university's LMS, email, registration, billing or campus-service systems.** The user confirmed that school-approved access is not yet available.
 
+## September 15, 2026 — study evidence, the plan, and the hint ladder
+
+Three capabilities the product blueprint names and this build did not have.
+All three are device-local and need no university, no account service and no
+AI key; that boundary is the whole point of the batch.
+
+**Mastery is no longer a percentage.** `unitMastery` blends what has been
+answered with the figure a person wrote into each guide, and the written figure
+stands in for every card not yet answered. It is a reasonable ranking and it is
+not a measurement, so it is no longer printed as one. `app/src/lib/knowing.ts`
+reads five named states off the answers alone — **Unseen, Introduced,
+Practising, Retained, Needs review** — each shown with the counts it was read
+from, and each resettable by the student (`forgetCards`). Nine sites changed,
+including the course context handed to the assistant, which had been sending
+`mastered: "68%"` per unit for a model to repeat back as a fact about the
+student. Two earlier fixes had guarded only the case where *nothing* had been
+answered; one answer in a deck of a hundred leaves the blend ninety-nine
+hundredths estimate. The blend still ranks. It is no longer quoted.
+
+**The study plan can now be missed.** Every view of what to study was computed
+on render, so the app had no yesterday: an evening nobody studied left no trace.
+`app/src/lib/sessions.ts` commits a plan to days, detects what was missed, and
+moves it forward in one press — with a ceiling. What will not fit inside the
+horizon is dropped rather than stacked, and the button says so before it is
+pressed. Conserving a backlog is what turns four missed evenings into a
+four-hour Thursday and a plan into something somebody deletes.
+
+**A quiz question you are stuck on has a third option.** `app/src/lib/ladder.ts`
+builds hints in rungs out of the guide's own key terms and the question's own
+options — nothing generated, nothing fetched, works offline. A rung that cannot
+be built honestly is not offered, and the score reports what it cost
+(`7 of 10, 3 with help`) without deducting for asking. Censused across the four
+shipped decks: every question offers two or three rungs.
+
+Verified with the full gate set — types, lint, 8,851 tests in file order and in
+shuffled order, two timezones, production build, institution type-check — and
+driven in a real browser at phone width with zero page errors. Thirty-odd
+mutations were reverted under the new tests and watched go red; three of them
+found weak tests rather than weak code, and one found a clause that could never
+have been the deciding one, which was deleted rather than commented.
+
+Three defects were found by looking at the screen with every test passing: a
+count printed twice three lines apart, a percentage in a module the source grep
+never reached, and a hint that quoted text visible verbatim as an option. A
+fourth — two React children sharing a key — is not the kind of thing a test in
+this suite sees at all.
+
+### What still gates full operation, and what does not
+
+| Gate | What it blocks | Whose it is |
+| --- | --- | --- |
+| University approval | Live rosters, registration, grades, billing, official records | The institution's. Nothing in this batch touches it; `app/server/institution/` still has an empty production adapter registry |
+| A Supabase project (`VITE_SUPABASE_URL`, `VITE_SUPABASE_KEY`) | Accounts, multi-device sync, shared rooms, classmates | Configuration, not code. See `supabase/DEPLOY.md`. Signed out, the app is fully usable on one device |
+| An AI route | Generated study drafts, the tutor, `Solve` | Configuration. Everything in this batch works without it |
+
 ## Changes included in this update
 
 - Google-style search home, persistent top search, independent app tabs, new tabs, bookmarks and named/color-coded tab groups. Top search finds apps and saved courses, assignments, notes and documents. The central search is suppressed while the top search or app launcher is active.
