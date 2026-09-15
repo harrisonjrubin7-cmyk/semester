@@ -1959,9 +1959,12 @@ a:hover {
 .device .input:hover {
   border-color: rgba(236, 238, 242, 0.24);
 }
+/* The field's own answer to being focused. The ring itself is the outline
+   from `.device :focus-visible`, which this no longer switches off: the wash
+   was the whole indicator, and `features.css`'s `.portal-search input` takes
+   it away with `box-shadow: none !important` on every search field. */
 .device .input:focus-visible {
   border-color: var(--app-accent);
-  outline: none;
   box-shadow: 0 0 0 3px var(--app-accent-wash);
 }
 
@@ -2020,11 +2023,17 @@ a:hover {
      than as a search field. `Composer.tsx` grows it past this by measuring. */
   min-height: 32px;
 }
+/* The composer draws no chrome of its own — it is a field inside a field. It
+   still has to say when the keyboard is in it, so `:focus-visible` keeps the
+   outline and only `:hover` and mouse `:focus` stay bare. */
 .device .ai-composer-field:hover,
-.device .ai-composer-field:focus,
-.device .ai-composer-field:focus-visible {
+.device .ai-composer-field:focus:not(:focus-visible) {
   border: 0;
   outline: none;
+  box-shadow: none;
+}
+.device .ai-composer-field:focus-visible {
+  border: 0;
   box-shadow: none;
 }
 /* Round, and the size of a thumb. 34x32 was the old one and it was a small
@@ -2074,11 +2083,41 @@ a:hover {
   filter: invert(1) hue-rotate(180deg) saturate(0.25) contrast(0.92);
 }
 
-/* A ring rather than a hard outline — visible on any ground, and it does not
-   change the element's size or clip against a neighbour. */
+/*
+ * Where you are, when you are moving by keyboard.
+ *
+ * This used to carry the ring on `box-shadow`, with `outline: none` — "a ring
+ * rather than a hard outline — visible on any ground, and it does not change
+ * the element's size or clip against a neighbour". The reasoning was sound and
+ * the carrier was not: `box-shadow` is the property an element is most likely
+ * to be using already, for its own elevation, so anything that sets its own
+ * silently erased the ring.
+ *
+ * Measured by tabbing through all eighty-one screens: 72 controls on 57 of
+ * them focused with nothing drawn at all. Two causes, both of which beat a
+ * stylesheet rule no matter how specific it is:
+ *
+ *   - an inline `boxShadow`, which no stylesheet can outrank. The assistant
+ *     button carries `var(--glow)` inline and appears on nearly every screen,
+ *     which is most of the 72 on its own. `styles/fields.test.ts` documents
+ *     the same trap on `font-size`: "an inline style beats a stylesheet rule
+ *     of any specificity".
+ *   - `box-shadow: none !important`, in `features.css`'s `.portal-search
+ *     input`, which took the ring off every search field in the app.
+ *
+ * `outline` is the carrier that does not collide, and both worries in the old
+ * comment turn out not to apply to it — measured in this Chromium rather than
+ * assumed. It follows `border-radius`; it is drawn outside the box, so it
+ * changes no geometry (focusing moved nothing by a pixel); `outline-offset`
+ * keeps it clear of a neighbour; and it survives an `overflow: hidden`
+ * ancestor, which the box-shadow ring did not.
+ *
+ * `a11y/focus.test.ts` holds the rule, and holds that nothing sets
+ * `outline: none` on `:focus-visible` again.
+ */
 .device :focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 1px var(--app-bg), 0 0 0 3px var(--app-accent-deep);
+  outline: 2px solid var(--app-accent-deep);
+  outline-offset: 2px;
   border-radius: var(--r-sm);
   /* Tabbing scrolls the focused control into view, and the frosted header sits
      on top of the scroller — so without this the thing you just focused lands
