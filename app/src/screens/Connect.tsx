@@ -637,7 +637,7 @@ export function Connect() {
                           forget(id);
                           setNote(`${spec.name} disconnected. The token is gone from this device.`);
                         }}
-                        style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em' }}
+                        style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em' }}
                       >
                         DISCONNECT
                       </button>
@@ -707,7 +707,7 @@ export function Connect() {
                 >
                   {f.name}
                 </span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5 }}>{f.modified}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>{f.modified}</span>
               </span>
               <a
                 href={f.link}
@@ -854,7 +854,7 @@ export function Connect() {
                   className="bare"
                   disabled={busy !== ''}
                   onClick={() => void refresh(f)}
-                  style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
+                  style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none' }}
                 >
                   {busy === f.id ? 'READING…' : 'REFRESH'}
                 </button>
@@ -863,7 +863,7 @@ export function Connect() {
                 type="button"
                 className="bare"
                 onClick={() => dispatch({ type: 'removeFeed', id: f.id })}
-                style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
+                style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE
               </button>

@@ -177,7 +177,7 @@ export function Ahead() {
           </div>
         ))}
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         Classes and commitments at the length they meet for; a commitment given as hours a week
         spread evenly across the seven, because it has no day of its own; an appointment counted
         as an hour, because it has a start and no end. A dot marks a day with something due on it.
@@ -242,7 +242,7 @@ export function Ahead() {
             </div>
           ))}
           {readings.unsized.length > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
               {readings.unsized.length} could not be sized — the app has not seen you time a
               reading in that course yet, and it will not invent one.
             </div>

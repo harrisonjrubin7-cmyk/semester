@@ -791,15 +791,71 @@ Nine fixed, none broken. The 31 that remain fail on `main` too and are mostly
 not opacity at all — dark text on the mid-toned callout panels, which is a
 different problem than this one and not a ledger entry.
 
+### And then the 0.5s, which were the look decision · **31 below AA → 9**
+
+The band above deliberately stopped at 0.60, leaving 0.5 — the single biggest
+bucket — as a decision about how the app looks rather than a cleanup. The owner
+made it. This is that pass.
+
+**The obvious swap is the wrong one.** `--app-faint` carries each ground's
+`faintAlpha`, and after #391 those run **0.40–0.52**, so 0.5 sits inside the
+faint rung and swapping to it would be pixel-neutral. It is not used, because
+faint is audited to **3:1**, which WCAG allows for large text only — and there
+is no large text in this bucket. Every one of them resolves to between
+10 and 17px, and **109 of them are 11 or 11.5**. So they all take `--app-dim`,
+the rung that is audited at 4.5:1 and the one `lib/dim.ts` says is "safe at
+11px". That is a visible brightening and it is the point of the change.
+
+```
+142 sites, 76 files
+dim          413 → 271
+the ledger  2,235 → 2,093
+```
+
+Measured with `paint.mjs` on Fog over ten screens, **308 runs measured on both
+sides and 12 runs of punctuation on both**, so it is like for like. The in-band
+pass is on `main` now, and `main` has since landed contrast work of its own, so
+the honest comparison is this commit against the `main` it actually sits on:
+
+```
+main                     24 runs of text below AA   (17 distinct)
+with this commit          3                          (3 distinct)
+```
+
+For the record, the progression measured at the time each pass was written,
+on the base each had: 40 → 31 after the in-band pass → 9 after this one.
+
+**And none of the three is new.** The two failure lists were sorted and diffed
+rather than eyeballed, on both bases this was measured against: every run still
+failing was already failing before, and the pass added none. All three are on
+`runway`, and none is an opacity — an accent orange on a mid panel at 1.79:1,
+a light-on-dark chip at 4.12:1, and `--app-dim` itself landing at 4.44:1 on a
+lighter sub-panel than the token was audited against, which is the class of
+thing #391 was about.
+
+In pixels, across the same 79 screens: the largest single-channel change is
+**32/255**, uniformly, on captions going `123,124,128 → 154,155,160`; nothing
+lost any colour (largest chroma drop 10/255, on the live countdown that the
+same-build control already identified). Bigger than the in-band pass's 15/255,
+as a brightening from 0.5 to roughly 0.64 should be, and in one direction
+everywhere rather than scattered.
+
+What is left in the `dim` ledger is now mostly not text: 20 of the old 0.5
+bucket had no `fontSize` at all — icons, whole rows, boxes — where `opacity` is
+the right tool and the count is measuring something that is not debt. The
+remaining alphas are the 0.75–0.85 group, which is barely dimmed and where
+`--app-dim` would make text *dimmer*, and a thin tail at 0.25–0.45.
+
 ### What is left of P7
 
 The runtime half is untouched — still 4,710 `style={{ … }}` sites, a number
 this change did not move in either direction, and the React Compiler question
-above is the decision that should come before any of it. The ledger is at 2,237
-across 164 files: `type 649 · leading 211 · space 491 · shorthand 471 · dim
-415`. The remaining `dim` is the 0.5s and the 0.8s, which need somebody to say
-how the app should look, and the icons and whole-row states, where `opacity` is
-the right tool and the ledger is counting something that is not debt.
+above is the decision that should come before any of it. The ledger is at 2,093
+across 161 files: `type 649 · leading 211 · space 491 · shorthand 471 · dim
+271`. The remaining `dim` is the 0.75–0.85 group, where `--app-dim` would make text
+dimmer rather than brighter, and the icons and whole-row states, where
+`opacity` is the right tool and the ledger is counting something that is not
+debt.
 
 ---
 
@@ -884,7 +940,7 @@ Ordered by measured value per unit of risk, not by size.
 | 9 | ✅ **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | done on `main` as `nav.registry.test.ts`; the hole it was meant to close turned out not to exist |
 | 10 | ✅ **P4, places 3–5** — one table per list, `Record` over the union | large | a screen is declared once instead of three times; the `default` that had already lied about five screens is a build error now. Place 6 left, with its reason, in §4 |
 | 11 | ✅ **P2 proper** — split `now` out of the store context | large | 117 of 195 store consumers no longer re-render on a tick |
-| 12 | ◐ **P7** — the `dim` axis, where the token already spans the value | medium | 325 sites, `dim` 739 → 415; on Fog, `scripts/paint.mjs` goes from 8 runs of text below WCAG AA to 0 across four screens, and 40 → 31 across ten. The rest of the ledger, and all 4,710 inline style objects, are still open — see §7 |
+| 12 | ◐ **P7** — the `dim` axis | medium | 467 sites in two passes, `dim` 739 → 271 and the ledger 2,561 → 2,093. On Fog across ten screens `scripts/paint.mjs` goes **24 → 3** runs of text below WCAG AA against the `main` this sits on, with no new failure in the diff of the two lists. The other four axes, and all 4,710 inline style objects, are still open — see §7 |
 | 14 | ✅ **§7a** — give focus back when the assistant closes | small | a dialog that takes focus returns it, both ways in |
 | 15 | ✅ **§3's aside** — read the timezone at the call site, not at module load | tiny | calendar events written in the zone you are in |
 | 13 | ✅ **P1e** — move the assistant's context assembly off the store | medium | −7,543 lines and −12% of the gzipped critical path; `lib/sheet.ts`, `lib/maths.ts` and `lib/chart.ts` go with it |

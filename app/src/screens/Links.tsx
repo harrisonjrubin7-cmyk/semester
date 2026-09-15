@@ -109,7 +109,7 @@ export function Links() {
                           style={{
                             display: 'block',
                             fontSize: 'var(--type-xs)',
-                            opacity: 0.5,
+                            color: 'var(--app-dim)',
                             fontFamily: 'var(--font-heading)',
                             letterSpacing: '0.1em',
                             textTransform: 'uppercase',
@@ -128,7 +128,7 @@ export function Links() {
                           style={{
                             display: 'block',
                             fontSize: 'var(--type-xs)',
-                            opacity: 0.5,
+                            color: 'var(--app-dim)',
                             fontFamily: 'var(--font-heading)',
                             letterSpacing: '0.1em',
                             textTransform: 'uppercase',
@@ -149,7 +149,7 @@ export function Links() {
                         setDraft(url);
                         setEditing(open ? null : link.id);
                       }}
-                      style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                      style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
                     >
                       {open ? 'CANCEL' : url ? 'EDIT' : 'ADD'}
                     </button>
@@ -158,7 +158,7 @@ export function Links() {
                         type="button"
                         className="bare"
                         onClick={() => dispatch({ type: 'removeLink', id: link.id })}
-                        style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+                        style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
                       >
                         REMOVE
                       </button>

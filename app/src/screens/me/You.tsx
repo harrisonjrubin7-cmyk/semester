@@ -333,7 +333,7 @@ export function You() {
                     fontSize: 'var(--type-xs)',
                     letterSpacing: '0.14em',
                     textTransform: 'uppercase',
-                    opacity: 0.5,
+                    color: 'var(--app-dim)',
                     fontFamily: 'var(--font-heading)',
                     marginTop: 'var(--sp-2)',
                   }}

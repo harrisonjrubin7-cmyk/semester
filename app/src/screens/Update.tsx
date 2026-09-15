@@ -1026,7 +1026,7 @@ export function AddMaterial() {
                 type="button"
                 className="bare"
                 onClick={() => undoImport(u)}
-                style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
+                style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE
               </button>

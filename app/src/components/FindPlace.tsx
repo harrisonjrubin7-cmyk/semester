@@ -328,7 +328,7 @@ export function FindPlace() {
               width: 'auto',
               marginTop: 'var(--sp-7)',
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: 0.5,
+              color: 'var(--app-dim)',
             }}
           >
             Turn it all off again

@@ -279,7 +279,7 @@ function Row({ a }: { a: Application }) {
                 width: 'auto',
                 padding: '7px 12px',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                opacity: 0.5,
+                color: 'var(--app-dim)',
               }}
             >
               Delete

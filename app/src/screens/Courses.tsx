@@ -632,7 +632,7 @@ function CourseInformation() {
 
       <SectionLabel style={{ margin: '24px 0 6px' }}>Still ahead</SectionLabel>
       {mine.ahead.length === 0 && (
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.5, padding: '8px 0' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', padding: '8px 0' }}>
           Nothing left in this course.
         </div>
       )}

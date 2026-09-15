@@ -107,7 +107,7 @@ export function WeekDue({
                       syllabus's own words. "Before class" is what it says and
                       is more use than the kind's label, which for anything
                       uncategorised reads "Other". */}
-                  <span style={{ opacity: 0.5, fontSize: 'calc(11.5px * var(--text-scale, 1))' }}>
+                  <span style={{ color: 'var(--app-dim)', fontSize: 'calc(11.5px * var(--text-scale, 1))' }}>
                     {' '}
                     {hasTime(i.dueTime) ? clock(i.dueAt) : i.dueTime.trim()}
                   </span>

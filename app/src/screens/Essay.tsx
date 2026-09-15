@@ -220,7 +220,7 @@ export function Essay() {
                   {course.ai ? 'Change what is recorded' : 'Record the policy'}
                 </button>
               ) : (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
                   A sample course, so this is fixed. Your own courses record their own policy under
                   Edit the course.
                 </div>
@@ -338,7 +338,7 @@ export function Essay() {
         value={lengthId}
         onChange={setLengthId}
       />
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 5 }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>
         About {aim} words. {LENGTHS.find((l) => l.id === lengthId)?.blurb}
       </div>
 

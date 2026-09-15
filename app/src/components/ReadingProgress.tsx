@@ -211,7 +211,7 @@ export function ReadingProgress({ item }: { item: DatedItem }) {
             width: 'auto',
             marginTop: 11,
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
           }}
         >
           Forget where I was

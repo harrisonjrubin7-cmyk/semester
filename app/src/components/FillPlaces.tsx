@@ -115,7 +115,7 @@ export function FillPlaces({ buildings }: { buildings: string[] }) {
           <div
             style={{
               fontSize: 'var(--type-xs)',
-              opacity: 0.5,
+              color: 'var(--app-dim)',
               marginTop: 'var(--sp-3)',
               lineHeight: 'var(--leading-normal)',
             }}

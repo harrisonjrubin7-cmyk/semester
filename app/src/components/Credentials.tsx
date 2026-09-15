@@ -248,7 +248,7 @@ export function Credentials({
             type="button"
             className="bare tap-y"
             onClick={() => void run(() => sendReset(email.trim()))}
-            style={{ fontSize: 'var(--type-sm)', opacity: 0.5, width: 'auto' }}
+            style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', width: 'auto' }}
           >
             Send a reset link
           </button>

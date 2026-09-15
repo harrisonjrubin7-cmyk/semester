@@ -348,7 +348,7 @@ function ThisWeek() {
                   fontSize: 'calc(10px * var(--text-scale, 1))',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                 }}
               >
                 {nextEvent.mon}
@@ -898,7 +898,7 @@ function Feed_rail() {
     <Folding name="Feed_rail">
       <SectionLabel>Today’s schedule</SectionLabel>
       {rail.length === 0 ? (
-        <div style={{ fontSize: 'var(--type-md)', opacity: 0.5, paddingBottom: 'var(--sp-4)' }}>
+        <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', paddingBottom: 'var(--sp-4)' }}>
           No classes today. Your schedule picks up again on your next teaching day.
         </div>
       ) : (
@@ -1430,7 +1430,7 @@ function DoneToday() {
                 >
                   {i.title}
                 </span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                   {i.dueShort} · {i.kind}
                 </span>
               </span>
@@ -1608,7 +1608,7 @@ function FeedHome() {
                     fontSize: 'calc(10px * var(--text-scale, 1))',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
-                    opacity: 0.5,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   {f.top}

@@ -114,7 +114,7 @@ function MealsDetails() {
           <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: 0.75, marginTop: 'var(--sp-4)' }}>{cashLine(latest)}</div>
         ) : null}
         {latest ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)' }}>{staleLine(latest, now)}</div>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>{staleLine(latest, now)}</div>
         ) : null}
       </Blueprint>
 

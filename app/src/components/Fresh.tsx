@@ -66,7 +66,7 @@ export function Fresh() {
         className="bare"
         onClick={() => setReady(false)}
         aria-label="Not now"
-        style={{ width: 'auto', flex: 'none', opacity: 0.5, fontSize: 'var(--type-sm)', padding: '0 6px' }}
+        style={{ width: 'auto', flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-sm)', padding: '0 6px' }}
       >
         Later
       </button>

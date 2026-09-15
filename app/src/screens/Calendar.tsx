@@ -945,7 +945,7 @@ function WeekView() {
           />
           )}
           {total > 0 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 14, lineHeight: 'var(--leading-relaxed)' }}>
               Tap a date to open that day in full, hold a block to move it, and double-tap an empty
               hour to put something there. Deadlines and events with no hour on them are listed
               under the grid rather than drawn on it.
@@ -1534,7 +1534,7 @@ function MonthView() {
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              opacity: 0.5,
+              color: 'var(--app-dim)',
             }}
           >
             {(
@@ -2254,7 +2254,7 @@ function SemesterView() {
                   color: isNow ? 'var(--app-accent)' : 'var(--app-fg)',
                 }}
               >
-                <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', opacity: 0.5 }}>
+                <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', color: 'var(--app-dim)' }}>
                   {MONTHS[w.start.getMonth()].toUpperCase()}
                 </div>
                 <div style={{ fontSize: 'calc(19px * var(--text-scale, 1))' }}>{w.start.getDate()}</div>

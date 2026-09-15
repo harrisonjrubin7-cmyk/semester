@@ -99,7 +99,7 @@ export function SchoolPicker() {
               {a.ask}
             </div>
             {a.note && (
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 3, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 3, lineHeight: 1.4 }}>
                 {a.note}
               </div>
             )}
@@ -257,7 +257,7 @@ export function SchoolPicker() {
         )}
       </div>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         {state.schoolId === '' ? SKIP_LINE : schoolLine(school)}
       </div>
     </div>
@@ -294,7 +294,7 @@ function Row({
       >
         <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{school.name}</div>
         {!school.verified && (
-          <div style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
+          <div style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
             {ADDED_LINE}
           </div>
         )}

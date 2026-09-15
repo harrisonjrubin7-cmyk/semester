@@ -396,7 +396,7 @@ function Row({
             fontFamily: 'var(--font-heading)',
             fontSize: 'var(--type-xs)',
             letterSpacing: '0.06em',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-3)',
           }}
         >

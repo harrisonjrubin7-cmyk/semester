@@ -81,7 +81,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                 <span style={{ opacity: 0.75 }}>{r.l}</span>
                 <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-md)' }}>
                   {r.v.toLocaleString()}
-                  <span style={{ opacity: 0.5, fontSize: 'var(--type-xs)' }}> {figure.unit}</span>
+                  <span style={{ color: 'var(--app-dim)', fontSize: 'var(--type-xs)' }}> {figure.unit}</span>
                 </span>
               </div>
               <div style={{ height: 8, background: 'var(--app-track)', marginTop: 3 }}>

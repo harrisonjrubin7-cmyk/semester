@@ -146,7 +146,7 @@ export function Reply({
     <div style={{ fontSize: 'var(--type-sm)' }}>
       <Answer text={text} />
       {incomplete && (
-        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-2)' }}>
+        <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
           Stopped here.
         </div>
       )}
