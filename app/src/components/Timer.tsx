@@ -154,7 +154,7 @@ export function Timer({
             type="button"
             className="bare"
             onClick={() => setEnded({ kind: 'none' })}
-            style={{ height: 32, fontSize: 'var(--type-sm)', opacity: 0.5, width: 'auto', padding: '0 8px' }}
+            style={{ height: 32, fontSize: 'var(--type-sm)', color: 'var(--app-dim)', width: 'auto', padding: '0 8px' }}
           >
             Forget it
           </button>
@@ -216,7 +216,7 @@ export function Timer({
           <div
             style={{
               fontSize: 'var(--type-xs)',
-              opacity: 0.5,
+              color: 'var(--app-dim)',
               marginTop: 7,
               lineHeight: 'var(--leading-normal)',
               textWrap: 'pretty',
@@ -243,7 +243,7 @@ export function Timer({
           Start working on this
         </button>
         {elsewhere ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
             {/* Said rather than prevented: the student may well have moved on
                 to this and forgotten the other one, and starting here should
                 not be blocked by a timer they have already abandoned. */}
@@ -301,7 +301,7 @@ export function Timer({
         </div>
       ) : null}
       {!running(mine) ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 7 }}>Paused. Nothing is counting.</div>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7 }}>Paused. Nothing is counting.</div>
       ) : null}
     </div>
   );

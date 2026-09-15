@@ -240,7 +240,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         {busy ? 'Building it…' : out ? 'Build it again' : 'Build the project file'}
       </ActionButton>
       {!dueDate ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
           Needs a due date — the schedule is the half of this that saves you.
         </div>
       ) : null}
@@ -256,7 +256,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
           <SectionLabel>Your project file</SectionLabel>
           <Produced style={{ background: 'var(--app-panel)' }}>{document}</Produced>
 
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
             {left > 0
               ? `${left} blanks in square brackets — those are yours, and the file is not finished until none are left.`
               : 'No blanks left in it. Read it carefully: if it has written the argument rather than asking for it, that is not a file to hand in.'}
@@ -290,7 +290,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
             </button>
           </div>
           <PrintButton label="Print it" style={{ marginTop: 'var(--sp-4)' }} />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Kept as a note it is editable in the app and comes out in an export. Saved as .md it
             opens in Word, Google Docs, Notion or anything else.
           </div>

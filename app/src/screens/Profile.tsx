@@ -231,7 +231,7 @@ export function Profile() {
               <div
                 style={{
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 0.6,
+                  color: 'var(--app-dim)',
                   marginTop: 3,
                   lineHeight: 'var(--leading-normal)',
                 }}

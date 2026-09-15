@@ -184,7 +184,7 @@ export function Draw() {
       {code && (
         <>
           <SectionLabel>The drawing</SectionLabel>
-          <Suspense fallback={<div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.5 }}>Drawing…</div>}>
+          <Suspense fallback={<div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>Drawing…</div>}>
             <Drawing code={code} language={k.language} />
           </Suspense>
 
@@ -228,7 +228,7 @@ export function Draw() {
               Copy
             </button>
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             {k.language === 'svg'
               ? 'An .svg opens in a browser, drops into Word and Google Docs, and stays sharp at any size.'
               : 'A .mmd is Mermaid — it renders in GitHub, Notion and Obsidian as it stands.'}{' '}

@@ -237,7 +237,7 @@ function Row({ commitment }: { commitment: Commitment }) {
           href={commitment.url}
           target="_blank"
           rel="noreferrer"
-          style={{ flex: 'none', fontSize: 'var(--type-xs)', opacity: 0.6, textDecoration: 'none' }}
+          style={{ flex: 'none', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', textDecoration: 'none' }}
         >
           OPEN
         </a>
@@ -377,7 +377,7 @@ function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|
               style={{ width: 96, flex: 'none' }}
             />
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
             Start time and how many minutes it runs. It goes on your day and week grids.
           </div>
         </>
@@ -392,7 +392,7 @@ function AddOne({ onDone,initial }: { onDone: () => void;initial?:CampusListing|
             placeholder="Hours a week"
             style={{ width: '100%' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Your figure, not a guess at one. It counts toward the week without being drawn on the
             grid, because there is no hour to draw it on.
           </div>
@@ -502,7 +502,7 @@ function FindThings() {
           </Blueprint>
         </a>
       ))}
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-2)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-2)' }}>
         No list of organisations is built into the app. There are several hundred and they turn
         over every year — a stale one would have you emailing a president who graduated in 2021.
         AnchorLink is the list, and it is always current.
@@ -524,7 +524,7 @@ function FindThings() {
       />
 
       {text.trim() && found.length === 0 && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           Nothing in there reads as an organisation name. Navigation, counts and links are dropped
           rather than filed as clubs.
         </div>

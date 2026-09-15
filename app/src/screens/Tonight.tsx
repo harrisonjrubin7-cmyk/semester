@@ -127,7 +127,7 @@ export function Tonight() {
           style={{
             marginTop: 20,
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
           }}
         >
@@ -155,7 +155,7 @@ export function Tonight() {
       <p
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.5,
+          color: 'var(--app-dim)',
           marginTop: 22,
           lineHeight: 1.55,
           textWrap: 'pretty',

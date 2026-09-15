@@ -74,7 +74,7 @@ export function Grades() {
                       has cutoffs to read it against. The line under the
                       targets below says whose cutoffs those are. */}
                   {s.current !== null && letterFor(s.current, system) ? (
-                    <span style={{ fontSize: 'calc(17px * var(--text-scale, 1))', opacity: 0.6, marginLeft: 'var(--sp-4)' }}>
+                    <span style={{ fontSize: 'calc(17px * var(--text-scale, 1))', color: 'var(--app-dim)', marginLeft: 'var(--sp-4)' }}>
                       {letterFor(s.current, system)}
                     </span>
                   ) : null}
@@ -120,7 +120,7 @@ export function Grades() {
                 )}
               </div>
               {needCaveat(s) ? (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
                   {/* Names the number the weights actually add to. "Do not add
                       to 100" leaves the student to work out by how much, from
                       a table they cannot easily sum in their head. */}
@@ -147,7 +147,7 @@ export function Grades() {
                   <div
                     style={{
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.5,
+                      color: 'var(--app-dim)',
                       marginTop: 'var(--sp-1)',
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.1em',
@@ -182,7 +182,7 @@ export function Grades() {
                 <div
                   style={{
                     fontSize: 'var(--type-xs)',
-                    opacity: 0.5,
+                    color: 'var(--app-dim)',
                     margin: '14px 0 6px',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.12em',
@@ -192,7 +192,7 @@ export function Grades() {
                   To finish with, you need
                 </div>
                 {targets.length === 0 && (
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
                     {NO_CUTOFFS}
                   </div>
                 )}
@@ -217,7 +217,7 @@ export function Grades() {
                     >
                       <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
                         {t.label}
-                        <span style={{ fontSize: 'var(--type-xs)', opacity: 0.5 }}> · {t.target}%</span>
+                        <span style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}> · {t.target}%</span>
                       </span>
                       <span
                         style={{
@@ -264,7 +264,7 @@ export function Grades() {
                   <div
                     style={{
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.5,
+                      color: 'var(--app-dim)',
                       marginBottom: 'var(--sp-3)',
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.12em',
@@ -277,7 +277,7 @@ export function Grades() {
                     {trendLine(t, sat)}
                   </div>
                   {target !== null && t.papers > 0 ? (
-                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
                       {against(t.average, target)}
                     </div>
                   ) : null}
@@ -304,7 +304,7 @@ export function Grades() {
         );
       })}
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 22, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 22, lineHeight: 'var(--leading-relaxed)' }}>
         This is your own arithmetic, not a gradebook — nothing here is read from Brightspace, and
         nothing is sent anywhere. A syllabus that drops your lowest score, curves, or rounds will
         not match exactly.
@@ -396,7 +396,7 @@ function PaperTag({ paper }: { paper: Sitting }) {
         'Remove?'
       ) : (
         <>
-          {paper.pct}%<span style={{ opacity: 0.5 }}> · {when}</span>
+          {paper.pct}%<span style={{ color: 'var(--app-dim)' }}> · {when}</span>
         </>
       )}
     </button>

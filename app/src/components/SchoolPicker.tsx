@@ -68,7 +68,7 @@ export function SchoolPicker() {
             eleven versions of Ohio State, and the eleventh is the empty one. */}
         {dupes.length > 0 && (
           <div style={{ marginTop: 'var(--sp-4)' }}>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-3)' }}>
               Already here — use one of these instead?
             </div>
             {dupes.map((s) => (
@@ -99,7 +99,7 @@ export function SchoolPicker() {
               {a.ask}
             </div>
             {a.note && (
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 3, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 3, lineHeight: 1.4 }}>
                 {a.note}
               </div>
             )}
@@ -194,7 +194,7 @@ export function SchoolPicker() {
       />
 
       {hint && hint.id !== state.schoolId && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {/* Suggested from the address you signed in with. Never enforced —
               plenty of students sign in with a personal address, and plenty of
               people have one at a school they left. */}
@@ -257,7 +257,7 @@ export function SchoolPicker() {
         )}
       </div>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         {state.schoolId === '' ? SKIP_LINE : schoolLine(school)}
       </div>
     </div>
@@ -294,7 +294,7 @@ function Row({
       >
         <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{school.name}</div>
         {!school.verified && (
-          <div style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
+          <div style={{ fontSize: 'calc(10.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
             {ADDED_LINE}
           </div>
         )}
@@ -311,7 +311,7 @@ function Row({
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             marginBottom: 7,
           }}
         >

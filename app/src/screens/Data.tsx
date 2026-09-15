@@ -122,7 +122,7 @@ export function DataScreen() {
     >
         <>
           <SectionLabel>What you have</SectionLabel>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Largest first, so what is taking the room is at the top.
           </div>
 
@@ -201,7 +201,7 @@ export function DataScreen() {
 
           <SectionLabel>Room</SectionLabel>
           {room === null ? (
-            <div style={{ fontSize: 'var(--type-base)', opacity: 0.6 }}>Asking the browser…</div>
+            <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)' }}>Asking the browser…</div>
           ) : room.unknown ? (
             <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)' }}>
               This browser will not say how much room it has given the app. That is normal in a
@@ -364,7 +364,7 @@ function Collection({
               <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {r.text}
               </span>
-              <span style={{ opacity: 0.5, flex: 'none', fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ color: 'var(--app-dim)', flex: 'none', fontVariantNumeric: 'tabular-nums' }}>
                 {formatBytes(r.bytes)}
               </span>
             </div>
@@ -374,7 +374,7 @@ function Collection({
               type="button"
               className="bare tappable"
               onClick={() => setShown((n) => n + PAGE)}
-              style={{ width: 'auto', marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', opacity: 0.6, letterSpacing: '0.1em' }}
+              style={{ width: 'auto', marginTop: 'var(--sp-4)', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em' }}
             >
               {records.length - shown} MORE
             </button>

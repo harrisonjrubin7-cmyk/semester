@@ -164,7 +164,7 @@ export function TabChooser() {
               },
             })}
           >
-            <div style={{ flex: 'none', width: 26, opacity: 0.5, display: 'flex' }}>
+            <div style={{ flex: 'none', width: 26, color: 'var(--app-dim)', display: 'flex' }}>
               <TabGlyph screen={id} size={16} />
             </div>
             {/* The name is the handle a keyboard lands on: a row that can be
@@ -195,7 +195,7 @@ export function TabChooser() {
               className="bare tap-y"
               onClick={() => tryToggle(id)}
               aria-label={`Take ${tabLabel(id)} out of the bar`}
-              style={{ width: 28, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
+              style={{ width: 28, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>
@@ -208,7 +208,7 @@ export function TabChooser() {
             gap: 'var(--sp-4)',
             alignItems: 'center',
             padding: '11px 0',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             fontSize: 'calc(13.5px * var(--text-scale, 1))',
           }}
         >
@@ -234,7 +234,7 @@ export function TabChooser() {
         </div>
       ) : null}
 
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.5, marginTop: 'var(--sp-6)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)' }}>
         {chosen.length} of {MOST_CHOSEN} chosen
       </div>
 
@@ -282,7 +282,7 @@ export function TabChooser() {
           ))}
         </>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-6)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', textWrap: 'pretty' }}>
           The bar is full. Take one out to put another in.
         </div>
       )}

@@ -33,7 +33,7 @@ export function NotYetOpened() {
       >
         Not opened yet
       </SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         {seenLine(state.visited)} These three change each day.
       </div>
 
@@ -54,7 +54,7 @@ export function NotYetOpened() {
               border: '1px solid var(--app-line)',
             }}
           >
-            <span style={{ flex: 'none', opacity: 0.5, paddingTop: 1 }}>
+            <span style={{ flex: 'none', color: 'var(--app-dim)', paddingTop: 1 }}>
               <TabGlyph screen={d.screen} size={16} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>

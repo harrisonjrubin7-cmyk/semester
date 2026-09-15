@@ -215,7 +215,7 @@ export function FindPlace() {
                       style={{
                         display: 'block',
                         fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                        opacity: 0.6,
+                        color: 'var(--app-dim)',
                         marginTop: 3,
                         textWrap: 'pretty',
                       }}
@@ -266,7 +266,7 @@ export function FindPlace() {
           <p
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: 0.6,
+              color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
@@ -298,7 +298,7 @@ export function FindPlace() {
             <p
               style={{
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                opacity: 0.6,
+                color: 'var(--app-dim)',
                 marginTop: 'var(--sp-4)',
                 lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
@@ -328,7 +328,7 @@ export function FindPlace() {
               width: 'auto',
               marginTop: 'var(--sp-7)',
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: 0.5,
+              color: 'var(--app-dim)',
             }}
           >
             Turn it all off again

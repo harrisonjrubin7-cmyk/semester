@@ -123,7 +123,7 @@ export class ScreenTrouble extends Component<Props, State> {
             fontSize: 'var(--type-xs)',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
           }}
         >
           {says.kicker}

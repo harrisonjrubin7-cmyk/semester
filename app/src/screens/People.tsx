@@ -223,7 +223,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                           }}
                         >
                           <span style={{ flex: 1, minWidth: 0 }}>
-                            <span style={{ opacity: 0.6 }}>
+                            <span style={{ color: 'var(--app-dim)' }}>
                               {new Date(v.at).toDateString().slice(4).replace(/\s\d{4}$/, '')}
                             </span>{' '}
                             — {v.what}
@@ -260,7 +260,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                       width: 'auto',
                       marginTop: 'var(--sp-6)',
                       fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                      opacity: 0.5,
+                      color: 'var(--app-dim)',
                     }}
                   >
                     Remove {p.name} and everything recorded about them
@@ -557,7 +557,7 @@ function LettersTab() {
                       type="button"
                       className="bare"
                       onClick={() => dispatch({ type: 'dropLetter', id: l.id })}
-                      style={{ width: 'auto', padding: '6px 10px', fontSize: 'var(--type-xs)', opacity: 0.5 }}
+                      style={{ width: 'auto', padding: '6px 10px', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
                     >
                       Remove
                     </button>

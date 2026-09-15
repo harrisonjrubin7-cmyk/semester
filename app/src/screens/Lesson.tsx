@@ -287,7 +287,7 @@ export function LessonPlayer() {
           fontFamily: 'var(--font-heading)',
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.1em',
-          opacity: 0.5,
+          color: 'var(--app-dim)',
           marginTop: 5,
         }}
       >

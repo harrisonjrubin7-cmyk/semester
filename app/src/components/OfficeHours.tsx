@@ -66,7 +66,7 @@ export function OfficeHours({ courseId }: { courseId: string }) {
         </div>
       ))}
       {next ? (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           Next: {whenLine(next, now)}.
         </div>
       ) : null}

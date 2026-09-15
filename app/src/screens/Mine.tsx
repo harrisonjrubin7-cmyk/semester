@@ -272,7 +272,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             type="button"
             className="bare"
             onClick={() => setEditing(false)}
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.6 }}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Cancel
           </button>
@@ -286,7 +286,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
                any overlap rather than at half of it — see `tappable` in
                `ai/Assistant.tsx`. */
             data-danger=""
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.5 }}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Delete
           </button>
@@ -294,7 +294,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         {/* Where it came from, when something put it here. A step in a plan
             found three weeks later says what it is for. */}
         {t.note ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             {t.note}
           </div>
         ) : null}
@@ -1006,7 +1006,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             type="button"
             className="bare"
             onClick={() => setEditing(false)}
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.6 }}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Cancel
           </button>
@@ -1017,7 +1017,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
             aria-label={`Delete ${a.title}`}
             data-danger=""
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', opacity: 0.5 }}
+            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Delete
           </button>
@@ -1040,7 +1040,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
     >
       <div style={{ width: 52, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1.1 }}>
         <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}>{a.time}</div>
-        <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', opacity: 0.5, letterSpacing: '0.1em' }}>
+        <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', color: 'var(--app-dim)', letterSpacing: '0.1em' }}>
           {longLabel(isoToDate(a.date)).replace(/^\w+ /, '')}
         </div>
       </div>
@@ -1062,7 +1062,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
         style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}
       >
         <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</span>
-        <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+        <span style={{ display: 'block', fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
           {/* How long and how often, on the row: a shelf of appointments that
               all read alike is a shelf where the four-hour shift and the
               coffee are indistinguishable. The repeat is not lower-cased —

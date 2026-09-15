@@ -70,7 +70,7 @@ export function WorkWindows() {
               className="bare"
               aria-label={`Remove ${w.label || 'this window'}`}
               onClick={() => dispatch({ type: 'dropWindow', id: w.id })}
-              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
+              style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>

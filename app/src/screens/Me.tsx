@@ -62,7 +62,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
     >
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 'var(--type-md)' }}>{c.course.code}</div>
-        <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5 }}>
+        <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
           {c.guide.units.length} units · {c.items.length} deadlines · from {c.course.source}
         </div>
       </div>
@@ -70,7 +70,7 @@ export function CourseRow({ module: c }: { module: CourseModule }) {
         type="button"
         className="bare"
         onClick={() => setAsking(true)}
-        style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
+        style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
       >
         REMOVE
       </button>
@@ -222,7 +222,7 @@ export function Notifications() {
             <span
               style={{
                 fontSize: 'var(--type-xs)',
-                opacity: 0.5,
+                color: 'var(--app-dim)',
                 fontFamily: 'var(--font-heading)',
                 letterSpacing: '0.1em',
               }}

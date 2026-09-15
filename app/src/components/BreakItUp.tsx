@@ -47,7 +47,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
         style={{
           marginTop: 'var(--sp-5)',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           lineHeight: 'var(--leading-relaxed)',
         }}
       >
@@ -70,7 +70,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           width: 'auto',
           padding: '8px 0 2px',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           textAlign: 'left',
         }}
       >
@@ -149,7 +149,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
           type="button"
           className="bare"
           onClick={() => setShown(false)}
-          style={{ width: 'auto', padding: '9px 4px', fontSize: 'var(--type-sm)', opacity: 0.5 }}
+          style={{ width: 'auto', padding: '9px 4px', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
         >
           Not now
         </button>
@@ -161,7 +161,7 @@ export function BreakItUp({ item }: { item: DatedItem }) {
       <div
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.5,
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',

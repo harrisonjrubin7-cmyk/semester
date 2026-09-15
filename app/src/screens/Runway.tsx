@@ -173,7 +173,7 @@ export function Runway() {
           {r.stage.label}. {r.stage.shape}
         </div>
         {r.daysAway > 0 ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
             {r.clearDays} of those days have nothing else standing on them.
           </div>
         ) : null}
@@ -293,7 +293,7 @@ export function Runway() {
         </div>
       ) : null}
       {r.units.length === 0 ? (
-        <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
           This course has no study guide yet, so there is nothing to count. Add the readings and
           the guide builds itself.
         </div>
@@ -360,7 +360,7 @@ export function Runway() {
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
                 {i.title}
-                <span style={{ opacity: 0.5 }}> · {code(i.c)}</span>
+                <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
               </span>
             </button>
           ))}

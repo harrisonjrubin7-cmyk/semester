@@ -122,7 +122,7 @@ export function GpaScale() {
             className="bare"
             aria-label={`Remove ${letter} from the scale`}
             onClick={() => drop(letter)}
-            style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
+            style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
           >
             ×
           </button>
@@ -167,7 +167,7 @@ export function GpaScale() {
       <p
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',

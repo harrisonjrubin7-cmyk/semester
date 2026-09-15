@@ -101,7 +101,7 @@ function EnrolledSchedule() {
           </Blueprint>
         </a>
       ))}
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-2)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-2)' }}>
         These open signed out and YES asks who you are — the app holds no student number, and the
         links carry none, because one student's id in a shared app would be sent by everybody.
       </div>
@@ -121,7 +121,7 @@ function EnrolledSchedule() {
       />
 
       {text.trim() && found.length === 0 && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           Nothing in there looks like a class. A line has to carry a course number, the days it
           meets and a time — anything else is dropped rather than guessed at.
         </div>
@@ -213,7 +213,7 @@ function EnrolledSchedule() {
         Add a course from its syllabus
       </button>
       {catalog.courses.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           {catalog.courses.length} course{catalog.courses.length === 1 ? '' : 's'} loaded.
         </div>
       )}

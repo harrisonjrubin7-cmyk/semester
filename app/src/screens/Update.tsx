@@ -675,7 +675,7 @@ export function AddMaterial() {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-3)',
         }}
       >
@@ -726,7 +726,7 @@ export function AddMaterial() {
               {readSummary}
             </div>
           )}
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
             {readCards.length} {readCards.length === 1 ? 'card' : 'cards'} and {readTerms.length}{' '}
             {readTerms.length === 1 ? 'term' : 'terms'} ready — they save with everything else below.
           </div>
@@ -827,7 +827,7 @@ export function AddMaterial() {
               <div className="kicker">What it saw</div>
               <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)' }}>{readNote}</div>
               {shotCards.length > 0 && (
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)' }}>
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
                   {shotCards.length} {shotCards.length === 1 ? 'card' : 'cards'} ready — they save
                   with everything else below.
                 </div>
@@ -850,7 +850,7 @@ export function AddMaterial() {
           )}
         </>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
           Reading a photograph needs {provider()}. Sign in to use the shared key, or add your own under
           Connect → Claude. You can still attach the photo as a file below.
         </div>
@@ -905,7 +905,7 @@ export function AddMaterial() {
           }}
         >
           <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
-          <span style={{ opacity: 0.5, flex: 'none' }}>{formatBytes(f.size)}</span>
+          <span style={{ color: 'var(--app-dim)', flex: 'none' }}>{formatBytes(f.size)}</span>
         </div>
       ))}
       <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
@@ -973,7 +973,7 @@ export function AddMaterial() {
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  opacity: 0.6,
+                  color: 'var(--app-dim)',
                 }}
               >
                 {g.action.label}
@@ -1026,7 +1026,7 @@ export function AddMaterial() {
                 type="button"
                 className="bare"
                 onClick={() => undoImport(u)}
-                style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
+                style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE
               </button>

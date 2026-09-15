@@ -323,7 +323,7 @@ export function Registrar() {
       ) : (
         <>
           <SectionLabel>Paste your registrar's calendar</SectionLabel>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
             Copy the academic calendar page and paste it here. Every row comes back for you to
             confirm — nothing is saved until you say so.
           </div>
@@ -337,7 +337,7 @@ export function Registrar() {
           />
 
           <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-4)', alignItems: 'center' }}>
-            <span style={{ fontSize: 'var(--type-sm)', opacity: 0.6, flex: 'none' }}>Year</span>
+            <span style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', flex: 'none' }}>Year</span>
             <input
               className="input"
               type="number"

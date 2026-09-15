@@ -214,7 +214,7 @@ export function Sources() {
                         className="bare"
                         onClick={() => dispatch({ type: 'dropSource', id: s.id })}
                         aria-label={`Remove ${s.raw.slice(0, 40)}`}
-                        style={{ padding: '6px 10px', opacity: 0.5, fontSize: 'var(--type-sm)' }}
+                        style={{ padding: '6px 10px', color: 'var(--app-dim)', fontSize: 'var(--type-sm)' }}
                       >
                         Remove
                       </button>

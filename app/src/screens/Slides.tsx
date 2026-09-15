@@ -127,7 +127,7 @@ export function SlideDeck() {
   }, [step]);
 
   if (!unit || slides.length === 0) {
-    return <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', opacity: 0.6 }}>Nothing to show here.</div>;
+    return <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>Nothing to show here.</div>;
   }
 
   const slide = slides[at];
@@ -211,7 +211,7 @@ export function SlideDeck() {
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'calc(17px * var(--text-scale, 1))',
                 lineHeight: 1.2,
-                opacity: 0.5,
+                color: 'var(--app-dim)',
                 textWrap: 'pretty',
               }}
             >

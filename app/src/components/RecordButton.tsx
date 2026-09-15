@@ -82,7 +82,7 @@ export function RecordButton({
 
   if (!micSupported()) {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
         This browser will not give the app a microphone. Safari and Chrome both will — and a page
         served over plain http never does, which is why this needs https.
       </div>
@@ -212,7 +212,7 @@ export function RecordButton({
             >
               {clockOf(seconds)}
             </span>
-            <span style={{ flex: 1, fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6 }}>
+            <span style={{ flex: 1, fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
               {state === 'saving' ? 'Saving…' : state === 'paused' ? 'Paused' : 'Recording'}
             </span>
           </div>

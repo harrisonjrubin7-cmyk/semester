@@ -77,7 +77,7 @@ export function MyRules() {
               className="bare"
               onClick={() => set(dropRule(rules, r.id))}
               aria-label={`Delete: ${ruleLine(r, courseCode)}`}
-              style={{ flex: 'none', width: 28, opacity: 0.5, fontSize: 'var(--type-lg)' }}
+              style={{ flex: 'none', width: 28, color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>

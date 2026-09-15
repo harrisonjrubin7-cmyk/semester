@@ -216,7 +216,7 @@ function Row({
         style={{
           marginTop: 'var(--sp-2)',
           fontSize: 'var(--type-xs)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}

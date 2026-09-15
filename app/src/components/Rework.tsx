@@ -138,7 +138,7 @@ export function Rework({
       </div>
 
       {!owned && (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
           This is one of the built-in sample courses, so its guide cannot be replaced. Your own
           courses can be.
         </div>
@@ -224,8 +224,8 @@ export function Rework({
             <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.7, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
               {cost.examples.map((e, i) => (
                 <div key={i} style={{ marginBottom: 'var(--sp-3)' }}>
-                  <div style={{ textDecoration: 'line-through', opacity: 0.6 }}>{e.before}</div>
-                  {e.after ? <div>→ {e.after}</div> : <div style={{ opacity: 0.6 }}>→ dropped</div>}
+                  <div style={{ textDecoration: 'line-through', color: 'var(--app-dim)' }}>{e.before}</div>
+                  {e.after ? <div>→ {e.after}</div> : <div style={{ color: 'var(--app-dim)' }}>→ dropped</div>}
                 </div>
               ))}
             </div>
@@ -248,7 +248,7 @@ export function Rework({
           <div style={{ marginTop: 'var(--sp-6)' }}>
             {plan.guide.units.map((u, i) => (
               <div key={i} style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.8, padding: '3px 0' }}>
-                {u.name} <span style={{ opacity: 0.5 }}>· {u.cards.length}</span>
+                {u.name} <span style={{ color: 'var(--app-dim)' }}>· {u.cards.length}</span>
               </div>
             ))}
           </div>

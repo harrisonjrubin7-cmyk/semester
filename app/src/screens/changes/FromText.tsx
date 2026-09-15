@@ -117,7 +117,7 @@ export function FromText() {
         ))}
       </select>
       {!module_ && shown ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
           This is one of the sample courses, which are built into the app. Changes can be read out
           of an announcement but not saved against it.
         </div>
@@ -202,7 +202,7 @@ export function FromText() {
                     style={{
                       display: 'block',
                       fontSize: 'var(--type-sm)',
-                      opacity: 0.6,
+                      color: 'var(--app-dim)',
                       marginTop: 'var(--sp-3)',
                       paddingLeft: 9,
                       borderLeft: '2px solid var(--app-line)',
@@ -225,7 +225,7 @@ export function FromText() {
                   Apply the {Object.values(taken).filter(Boolean).length} ticked
                 </button>
               ) : (
-                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
                   Nothing to apply them to — this is a sample course.
                 </div>
               )}

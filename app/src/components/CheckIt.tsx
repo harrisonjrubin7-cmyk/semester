@@ -66,7 +66,7 @@ export function CheckIt({
           width: 'auto',
           padding: '8px 0 2px',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           textAlign: 'left',
         }}
       >
@@ -109,7 +109,7 @@ export function CheckIt({
           type="button"
           className="bare"
           onClick={() => setOpen(false)}
-          style={{ width: 'auto', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5 }}
+          style={{ width: 'auto', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}
         >
           Close
         </button>

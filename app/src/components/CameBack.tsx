@@ -37,7 +37,7 @@ export function CameBack({ item }: { item: DatedItem }) {
           width: 'auto',
           padding: '8px 0 2px',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           textAlign: 'left',
         }}
       >
@@ -195,7 +195,7 @@ export function CameBack({ item }: { item: DatedItem }) {
           width: 'auto',
           marginTop: 11,
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.5,
+          color: 'var(--app-dim)',
         }}
       >
         It has not come back

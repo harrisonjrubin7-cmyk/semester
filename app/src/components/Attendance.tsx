@@ -76,7 +76,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           >
             {said}
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
             {t.marked === 0
               ? 'Nothing marked yet. Mark a class from the day view.'
               : `${t.marked} ${t.marked === 1 ? 'class' : 'classes'} marked · ${t.present} went, ${t.absent} missed${t.excused ? `, ${t.excused} excused` : ''}`}
@@ -96,7 +96,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           ) : null}
         </div>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {/* Stated rather than assumed. The importer does not read attendance
               rules yet, so "nothing here" means nothing was entered — not
               that the syllabus is silent. */}
@@ -114,7 +114,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
           width: 'auto',
           padding: '8px 0',
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           textAlign: 'left',
         }}
       >
@@ -166,7 +166,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
             onChange={(e) => set({ note: e.target.value })}
             style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'var(--type-base)' }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
             A course can have both: some free absences with a penalty after, and attendance as a
             weighted category. Leave what does not apply at zero.
           </div>

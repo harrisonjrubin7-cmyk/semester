@@ -113,7 +113,7 @@ function WhatIsLeft() {
   if (list.length === 0) {
     return (
       <Folding name="WhatIsLeft">
-        <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 1.55, textWrap: 'pretty' }}>
+        <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
           Nothing recorded yet. Add your requirements under Requirements — one row per line of
           your audit — and the courses you have taken under Taken.
         </p>
@@ -187,7 +187,7 @@ function WhatIsLeft() {
                     <div
                       style={{
                         fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                        opacity: 0.5,
+                        color: 'var(--app-dim)',
                         marginTop: 'var(--sp-2)',
                         textWrap: 'pretty',
                       }}
@@ -366,7 +366,7 @@ function ThisTerm() {
           style={{
             marginTop: 'var(--sp-5)',
             fontSize: 'var(--type-xs)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -760,7 +760,7 @@ function TakenRow({ course: c }: { course: Taken }) {
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
             textWrap: 'pretty',
           }}
@@ -780,7 +780,7 @@ function TakenRow({ course: c }: { course: Taken }) {
         className="bare"
         onClick={() => dispatch({ type: 'dropTaken', id: c.id })}
         aria-label={`Remove ${c.code}`}
-        style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
+        style={{ width: 'auto', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
       >
         Remove
       </button>
@@ -924,7 +924,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
             textWrap: 'pretty',
           }}
@@ -937,7 +937,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
         className="bare"
         onClick={() => dispatch({ type: 'dropRequirement', id: r.id })}
         aria-label={`Remove ${r.name}`}
-        style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
+        style={{ width: 'auto', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
       >
         Remove
       </button>

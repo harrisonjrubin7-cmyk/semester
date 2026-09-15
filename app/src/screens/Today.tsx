@@ -348,7 +348,7 @@ function ThisWeek() {
                   fontSize: 'calc(10px * var(--text-scale, 1))',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                 }}
               >
                 {nextEvent.mon}
@@ -357,7 +357,7 @@ function ThisWeek() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{nextEvent.title}</div>
-              <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6 }}>
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
                 {nextEvent.time} · {nextEvent.where}
               </div>
             </div>
@@ -370,7 +370,7 @@ function ThisWeek() {
       <div
         style={{
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginBottom: 'var(--sp-4)',
           lineHeight: 'var(--leading-relaxed)',
         }}
@@ -527,7 +527,7 @@ function ThisWeek() {
             textAlign: 'left',
             marginTop: 'var(--sp-5)',
             fontSize: 'var(--type-sm)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
           }}
         >
@@ -610,7 +610,7 @@ function Feed_due() {
               fontFamily: 'var(--font-heading)',
               fontSize: 'var(--type-sm)',
               letterSpacing: '0.12em',
-              opacity: 0.5,
+              color: 'var(--app-dim)',
             }}
           >
             {doneCount} of {today.length} done
@@ -649,7 +649,7 @@ function Feed_due() {
           <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))' }}>
             {today.length === 0 ? 'Nothing due today.' : 'Nothing left today.'}
           </div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 'var(--sp-2)' }}>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
             {/* Not lowercased. It was, to make the date sit inside the
                 sentence, and "tue sep 15" reads as a typo rather than as
                 prose — a date is a name, and the app writes it one way
@@ -894,7 +894,7 @@ function Feed_rail() {
     <Folding name="Feed_rail">
       <SectionLabel>Today’s schedule</SectionLabel>
       {rail.length === 0 ? (
-        <div style={{ fontSize: 'var(--type-md)', opacity: 0.5, paddingBottom: 'var(--sp-4)' }}>
+        <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', paddingBottom: 'var(--sp-4)' }}>
           No classes today. Your schedule picks up again on your next teaching day.
         </div>
       ) : (
@@ -1060,7 +1060,7 @@ function Feed_registrar() {
             </span>
           </div>
           {d.cost ? (
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
               {d.cost}
             </div>
           ) : null}
@@ -1114,7 +1114,7 @@ function Feed_bill() {
                 : `in ${next.daysAway} ${next.daysAway === 1 ? 'day' : 'days'}`}
           </span>
         </div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
           {late
             ? "An unpaid balance is what puts a hold on next term's registration."
             : `Instalment ${next.instalment.n} of your payment plan.`}
@@ -1426,7 +1426,7 @@ function DoneToday() {
                 >
                   {i.title}
                 </span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                   {i.dueShort} · {i.kind}
                 </span>
               </span>
@@ -1486,7 +1486,7 @@ function HoursToday() {
 
   return (
     <>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-3)' }}>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-3)' }}>
         Classes from your syllabi, in the app's own colour. Anything you add is tinted by what it
         is for, and what is on around campus carries its own.
       </div>
@@ -1604,7 +1604,7 @@ function FeedHome() {
                     fontSize: 'calc(10px * var(--text-scale, 1))',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
-                    opacity: 0.5,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   {f.top}
@@ -1653,7 +1653,7 @@ function FeedHome() {
                 >
                   {f.title}
                 </div>
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)' }}>{f.meta}</div>
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{f.meta}</div>
               </div>
             </button>
           ))}

@@ -31,7 +31,7 @@ export function CloseTerm() {
     return (
       <div style={{ marginTop: 18 }}>
         <div className="kicker">{readTerm(term).label}</div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {ARCHIVED_LINE}
         </div>
       </div>
@@ -42,7 +42,7 @@ export function CloseTerm() {
     return (
       <div style={{ marginTop: 18 }}>
         <div className="kicker">Closing the term</div>
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {offerLine(rows, term)}
         </div>
         {rows.length > 0 && (
@@ -86,7 +86,7 @@ export function CloseTerm() {
               <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
                 {r.code}
               </span>
-              <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                 {r.hours > 0 ? `${r.hours} credit ${r.hours === 1 ? 'hour' : 'hours'}` : 'No credit hours stated'}
               </span>
             </span>
@@ -102,7 +102,7 @@ export function CloseTerm() {
         ))}
       </div>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         {readyLine(rows)}
       </div>
 
@@ -137,7 +137,7 @@ export function CloseTerm() {
           Close it
         </button>
       </div>
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         Then {after.label} is the term you are in, and it starts empty.
       </div>
     </div>

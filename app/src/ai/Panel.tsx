@@ -473,7 +473,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                       {assembled.text || 'This screen tells the assistant nothing of its own.'}
                     </pre>
                     {assembled.dropped > 0 && (
-                      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.6, marginTop: 5 }}>
+                      <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 5 }}>
                         {assembled.dropped} more rows did not fit and were left out. The assistant
                         is told that too, so it will not count from a partial list.
                       </div>
@@ -729,7 +729,7 @@ const ICON = {
   placeItems: 'center',
   borderRadius: 'var(--r-sm)',
   fontSize: 'var(--type-md)',
-  opacity: 0.6,
+  color: 'var(--app-dim)',
 } as const;
 
 const QUIET = {

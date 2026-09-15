@@ -171,7 +171,7 @@ export function Keys() {
           className="bare"
           onClick={() => setOpen(false)}
           aria-label="Close"
-          style={{ width: 'auto', opacity: 0.5, fontSize: 'var(--type-md)' }}
+          style={{ width: 'auto', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
         >
           ×
         </button>

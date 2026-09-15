@@ -162,7 +162,7 @@ export function Drill() {
                 ? 'Nothing in this course is due right now. Come back tomorrow.'
                 : `${waiting} ${waiting === 1 ? 'card is' : 'cards are'} due again in ${guide.code}.`}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
               Missed cards return in ten minutes. A card you get right three times running moves out
               to weeks.
             </div>
@@ -478,7 +478,7 @@ export function Drill() {
             <span
               style={{
                 fontSize: 'var(--type-xs)',
-                opacity: 0.5,
+                color: 'var(--app-dim)',
                 fontFamily: 'var(--font-heading)',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',

@@ -153,7 +153,7 @@ export function Analyse() {
 
   const stat = (label: string, value: string) => (
     <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', gap: 'var(--sp-6)' }}>
-      <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>{label}</span>
+      <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{label}</span>
       <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
   );
@@ -308,7 +308,7 @@ export function Analyse() {
             {stat('R²', show(fit.r2))}
             {r === null ? null : stat('Pearson r', show(r))}
           </Blueprint>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Rows where either column was blank were dropped, not read as zero. No p-value: turning
             t into one needs the incomplete beta function, and an approximation that is wrong in
             the tail — exactly where a p-value is read — would be worse than a table.

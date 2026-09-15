@@ -155,7 +155,7 @@ export function Work() {
 
   return (
     <Page>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         Working on {guide.code}. Switch course from Study.
       </div>
 
@@ -463,14 +463,14 @@ function PlanView({
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>{s.do}</div>
                 {s.why && (
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 3, lineHeight: 'var(--leading-normal)' }}>
                     {s.why}
                   </div>
                 )}
                 <div
                   style={{
                     fontSize: 'calc(10.5px * var(--text-scale, 1))',
-                    opacity: 0.5,
+                    color: 'var(--app-dim)',
                     marginTop: 5,
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
@@ -511,7 +511,7 @@ function PlanView({
       {plan.unclear.length > 0 && (
         <>
           <SectionLabel>Worth asking about</SectionLabel>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>
             The instructions do not settle these. Ask in office hours or on the discussion board —
             getting this right early is worth more than any amount of redrafting.
           </div>

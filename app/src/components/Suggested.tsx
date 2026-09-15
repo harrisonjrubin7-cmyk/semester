@@ -57,7 +57,7 @@ export function Suggested() {
   return (
     <div style={{ marginTop: 22 }}>
       <div className="kicker">Worth knowing about</div>
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {NO_DATES}
       </div>
 
@@ -148,7 +148,7 @@ export function Suggested() {
               <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.78, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                 {p.what}
               </div>
-              <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 1.4, textWrap: 'pretty' }}>
+              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 1.4, textWrap: 'pretty' }}>
                 {whenLine(p, now)}
               </div>
               <div style={{ display: 'flex', gap: 7, marginTop: 'var(--sp-5)', flexWrap: 'wrap' }}>
@@ -175,7 +175,7 @@ export function Suggested() {
                   type="button"
                   className="bare tappable"
                   onClick={() => dispatch({ type: 'dismissProgramme', id: p.id })}
-                  style={{ ...chip(false), opacity: 0.6 }}
+                  style={{ ...chip(false), color: 'var(--app-dim)' }}
                 >
                   Not for me
                 </button>

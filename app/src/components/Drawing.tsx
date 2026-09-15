@@ -93,7 +93,7 @@ export function Drawing({ code, language }: { code: string; language: Language }
   if (failed) {
     return (
       <div>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
           {failed} The code is below — it is often one label away from working, and it is yours to
           edit.
         </div>
@@ -117,7 +117,7 @@ export function Drawing({ code, language }: { code: string; language: Language }
 
   if (!svg) {
     return (
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.5, padding: '20px 0' }}>Drawing…</div>
+      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', padding: '20px 0' }}>Drawing…</div>
     );
   }
 

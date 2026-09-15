@@ -63,7 +63,7 @@ export function SettingsAlerts() {
                   onChange={(e) => dispatch({ type: 'setAccessLead', days: Number(e.target.value) })}
                   style={{ width: 90, flex: 'none' }}
                 />
-                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6 }}>
+                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                   {state.accessLeadDays === 0
                     ? 'not used'
                     : `business days before an exam`}
@@ -107,7 +107,7 @@ export function SettingsAlerts() {
                   }
                   style={{ flex: 1, minWidth: 0 }}
                 />
-                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, flex: 'none' }}>
+                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', flex: 'none' }}>
                   and
                 </span>
                 <input

@@ -71,7 +71,7 @@ export function Guide() {
       {state.mode !== 'field' && (
         <>
           <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)' }}>{guide.name}</div>
-          <div style={{ fontSize: 'var(--type-base)', opacity: 0.6, marginTop: 3 }}>{guide.blurb}</div>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 3 }}>{guide.blurb}</div>
         </>
       )}
 
@@ -144,7 +144,7 @@ export function Guide() {
             fontSize: 'calc(10px * var(--text-scale, 1))',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             fontFamily: 'var(--font-heading)',
           }}
         >
@@ -153,7 +153,7 @@ export function Guide() {
         <ChevronRight
           size={14}
           style={{
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             flex: 'none',
             transform: state.waysOpen ? 'rotate(90deg)' : 'none',
           }}
@@ -191,7 +191,7 @@ export function Guide() {
         <div
           style={{
             fontSize: 'var(--type-base)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
             marginTop: 'var(--sp-7)',
             textWrap: 'pretty',
@@ -276,7 +276,7 @@ export function Guide() {
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                   width: 54,
                   textAlign: 'right',
                   flex: 'none',
@@ -346,7 +346,7 @@ export function Guide() {
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                   flex: 'none',
                 }}
               >
@@ -400,7 +400,7 @@ export function Guide() {
           >
             Sit it as a timed paper
           </button>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             The paper is the same questions with a clock, marks and a key at the end instead of
             after each one — closer to the real thing, and worse for learning a card you have
             just met.
@@ -426,7 +426,7 @@ export function Guide() {
                     size={14}
                     style={{
                       flex: 'none',
-                      opacity: 0.5,
+                      color: 'var(--app-dim)',
                       transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
                       transition: 'transform 140ms ease',
                     }}
@@ -882,7 +882,7 @@ function Documents() {
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{guide.code} study guide</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {f.note}
                   </span>
                 </span>
@@ -1057,7 +1057,7 @@ function Cases() {
                 <div
                   style={{
                     fontSize: 'var(--type-sm)',
-                    opacity: 0.6,
+                    color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-normal)',
                     marginTop: 'var(--sp-5)',
                     paddingTop: 9,
@@ -1315,7 +1315,7 @@ function Script({ courseId, episodeId }: { courseId: string; episodeId: string }
         <div
           role="status"
           aria-live="polite"
-          style={{ fontSize: 'var(--type-base)', opacity: 0.6, padding: 'var(--sp-4) 0' }}
+          style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', padding: 'var(--sp-4) 0' }}
         >
           Fetching the words…
         </div>

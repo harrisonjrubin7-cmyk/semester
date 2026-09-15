@@ -110,7 +110,7 @@ export function Capacity() {
       <p
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginTop: 9,
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
@@ -189,7 +189,7 @@ function Kept() {
               className="bare"
               aria-label={`Remove ${r.label || 'this block'}`}
               onClick={() => dispatch({ type: 'dropRest', id: r.id })}
-              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
+              style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>
@@ -295,7 +295,7 @@ function Kept() {
       <p
         style={{
           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           marginTop: 9,
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
