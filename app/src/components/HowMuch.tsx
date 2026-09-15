@@ -39,7 +39,7 @@ export function HowMuch() {
       <div
         style={{
           fontSize: 'calc(12.5px * var(--text-scale, 1))',
-          opacity: 0.65,
+          color: 'var(--app-dim)',
           lineHeight: 'var(--leading-relaxed)',
           marginBottom: 9,
         }}
@@ -85,7 +85,7 @@ export function HowMuch() {
           }
           style={{ width: 90, flex: 'none' }}
         />
-        <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-normal)' }}>
+        <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)' }}>
           {/* Zero is the default and is not "no cards" — said here rather than
               left to be discovered by typing it and getting a full deck. */}
           {c.cards === 0

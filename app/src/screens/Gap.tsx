@@ -152,7 +152,7 @@ function Run({ win }: { win: GapWindow }) {
                 ? `That is the window. ${goLine(win)}`
                 : `${deck.length} cards was the lot. ${goLine(win)}`}
           </div>
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-relaxed)' }}>
             Every answer is recorded against the card, the same as a sitting-down drill — what you
             missed comes back sooner and what you knew comes back later.
           </div>

@@ -74,12 +74,12 @@ export function Grades() {
                       has cutoffs to read it against. The line under the
                       targets below says whose cutoffs those are. */}
                   {s.current !== null && letterFor(s.current, system) ? (
-                    <span style={{ fontSize: 'calc(17px * var(--text-scale, 1))', opacity: 0.6, marginLeft: 'var(--sp-4)' }}>
+                    <span style={{ fontSize: 'calc(17px * var(--text-scale, 1))', color: 'var(--app-dim)', marginLeft: 'var(--sp-4)' }}>
                       {letterFor(s.current, system)}
                     </span>
                   ) : null}
                 </div>
-                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.7 }}>
+                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                   {s.remaining > 0
                     ? `${Math.round(s.remaining)}% still to play for`
                     : 'Everything is in'}
@@ -92,7 +92,7 @@ export function Grades() {
                 </div>
               )}
               {s.extraCredit > 0 && (
-                <div style={{ fontSize: 'var(--type-sm)', opacity: 0.7, marginTop: 'var(--sp-4)' }}>
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
                   Plus {s.extraCredit.toFixed(1)} points of extra credit.
                 </div>
               )}
@@ -120,7 +120,7 @@ export function Grades() {
                 )}
               </div>
               {needCaveat(s) ? (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
                   {/* Names the number the weights actually add to. "Do not add
                       to 100" leaves the student to work out by how much, from
                       a table they cannot easily sum in their head. */}
@@ -192,7 +192,7 @@ export function Grades() {
                   To finish with, you need
                 </div>
                 {targets.length === 0 && (
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
                     {NO_CUTOFFS}
                   </div>
                 )}
@@ -277,7 +277,7 @@ export function Grades() {
                     {trendLine(t, sat)}
                   </div>
                   {target !== null && t.papers > 0 ? (
-                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
+                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 5, lineHeight: 'var(--leading-normal)' }}>
                       {against(t.average, target)}
                     </div>
                   ) : null}
@@ -331,7 +331,7 @@ export function Grades() {
    */
   return (
     <div>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {intro}
       </div>
       {body(catalog.courses)}

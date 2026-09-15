@@ -346,7 +346,7 @@ function Code({ lang, body }: { lang: string; body: string }) {
               // reader can act on, and the label simply does not change.
               .catch(() => {});
           }}
-          style={{ flex: 'none', width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.6 }}
+          style={{ flex: 'none', width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', color: 'var(--app-dim)' }}
         >
           {copied ? 'COPIED' : 'COPY'}
         </button>

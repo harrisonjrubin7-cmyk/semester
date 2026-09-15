@@ -208,7 +208,7 @@ export function Onboarding() {
               >
                 {c.code}
               </div>
-              <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, flex: 1 }}>{c.name}</div>
+              <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', flex: 1 }}>{c.name}</div>
             </div>
           ))}
         </Blueprint>
@@ -329,7 +329,7 @@ export function Onboarding() {
             marginTop: 18,
             textAlign: 'left',
             fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-normal)',
             textDecoration: 'underline',
             textUnderlineOffset: 3,

@@ -152,7 +152,7 @@ export function Page({
         <div
           style={{
             fontSize: 'var(--type-sm)',
-            opacity: 0.65,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
             /*

@@ -339,7 +339,7 @@ export function Connect() {
       <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', lineHeight: 1.1 }}>
         Everything in one place
       </div>
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.7, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>
         Brightspace, Outlook, Google and Zoom all publish calendars. Point the app at them and
         their dates sit on the same day rail as your classes — kept apart, and labelled.
       </div>
@@ -417,7 +417,7 @@ export function Connect() {
           <div
             style={{
               fontSize: 'var(--type-xs)',
-              opacity: 0.7,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-normal)',
               marginTop: 'var(--sp-3)',
               textWrap: 'pretty',
@@ -524,7 +524,7 @@ export function Connect() {
           <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
             The assistant
           </span>
-          <span style={{ display: 'block', fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 'var(--sp-1)', textWrap: 'pretty' }}>
+          <span style={{ display: 'block', fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', textWrap: 'pretty' }}>
             {configured()
               ? `${modelLabel()} · ${routeLabel()}. Change it in Settings.`
               : 'No key yet, so the parts of the app that need Claude are switched off. Set one in Settings.'}
@@ -647,7 +647,7 @@ export function Connect() {
               )}
 
               {id === 'google' && spec.clientId && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, lineHeight: 'var(--leading-relaxed)', marginTop: 9 }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 9 }}>
                   Reading Gmail is a restricted scope: until the OAuth client passes Google's
                   review it works only for the test users listed in the console. Calendar, Drive
                   and Tasks are not restricted and work immediately.
@@ -713,7 +713,7 @@ export function Connect() {
                 href={f.link}
                 target="_blank"
                 rel="noreferrer"
-                style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', flex: 'none', opacity: 0.7 }}
+                style={{ fontSize: 'var(--type-xs)', letterSpacing: '0.1em', flex: 'none', color: 'var(--app-dim)' }}
               >
                 OPEN
               </a>
@@ -742,7 +742,7 @@ export function Connect() {
           <div
             style={{
               fontSize: 'var(--type-base)',
-              opacity: 0.68,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}

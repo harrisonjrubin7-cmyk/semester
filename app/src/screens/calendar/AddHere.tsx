@@ -132,7 +132,7 @@ export function AddHere({
             margin: 'var(--sp-4) 0 0',
             padding: 0,
             fontSize: 'var(--type-xs)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
           }}
         >
@@ -169,7 +169,7 @@ export function AddHere({
       </div>
 
       {said && (
-        <div role="status" style={{ fontSize: 'var(--type-xs)', opacity: 0.6, marginTop: 'var(--sp-3)' }}>
+        <div role="status" style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
           {said}
         </div>
       )}

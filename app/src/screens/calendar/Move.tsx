@@ -291,7 +291,7 @@ export function useCalendarMove() {
             Move <strong>{asking.what.code} {asking.what.title}</strong> to{' '}
             {longLabel(isoToDate(asking.to.date))}?
           </div>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.65, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
             The syllabus says {asking.was}. Both dates are kept, and the sentence it came from is
             not touched.
           </div>

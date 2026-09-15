@@ -196,7 +196,7 @@ export function Exam() {
   if (stage === 'setup') {
     return (
       <Page bottom={26}>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.65, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           A paper with a shape, a total and a clock — not another round of cards. The marks and
           the timing are worked out here; only the questions come from anywhere else.
         </div>
@@ -408,7 +408,7 @@ export function Exam() {
           </div>
         </div>
         {!marking && left === 0 && (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Time is up. Nothing has been taken away from you — finish when you want to.
           </div>
         )}
@@ -428,7 +428,7 @@ export function Exam() {
                 <span style={{ fontSize: 'var(--type-xs)', ...secondLine(), flex: 1, minWidth: 0 }}>{q.from}</span>
               ) : null}
               {marking ? (
-                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', flex: 'none', opacity: 0.7 }}>
+                <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', flex: 'none', color: 'var(--app-dim)' }}>
                   {marksFor(q, answer)}/{q.points}
                 </span>
               ) : null}
@@ -512,14 +512,14 @@ export function Exam() {
                       : q.answer}
                   </div>
                   {q.kind !== 'choice' && q.why ? (
-                    <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+                    <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
                       {q.why}
                     </div>
                   ) : null}
                 </Blueprint>
 
                 {q.kind === 'choice' ? (
-                  <div style={{ fontSize: 'var(--type-sm)', opacity: 0.6, marginTop: 7 }}>
+                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 7 }}>
                     {chosen === '' ? 'Left blank.' : right ? 'Right.' : 'Not this one.'}
                   </div>
                 ) : (
@@ -553,7 +553,7 @@ export function Exam() {
             <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1 }}>
               {marks.pct}%
             </div>
-            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.6, marginTop: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
               {marks.got} of {marks.outOf} marks
             </div>
             <div style={{ fontSize: 'var(--type-base)', marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>

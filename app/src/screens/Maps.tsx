@@ -448,7 +448,7 @@ export function Maps() {
           flex: 'none',
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.08em',
-          opacity: 0.7,
+          color: 'var(--app-dim)',
           textDecoration: 'none',
         }}
       >
@@ -480,7 +480,7 @@ export function Maps() {
             {upNext.block.c ? codeOf(catalog, upNext.block.c) : upNext.block.title} ·{' '}
             {upNext.block.time}
           </div>
-          <div style={{ fontSize: 'var(--type-md)', opacity: 0.7, marginTop: 'var(--sp-2)' }}>
+          <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
             {[nextStop?.detail ?? 'No room on the syllabus', nextReach?.line]
               .filter(Boolean)
               .join(' · ')}
@@ -731,7 +731,7 @@ export function Maps() {
           >
             {picked.label}
           </div>
-          <div style={{ fontSize: 'var(--type-md)', opacity: 0.7, marginTop: 'var(--sp-2)' }}>
+          <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
             {picked.detail}
           </div>
           <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-3)', opacity: 0.9 }}>
