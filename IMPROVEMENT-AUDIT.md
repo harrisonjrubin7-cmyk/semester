@@ -504,7 +504,7 @@ fixed or the number is raised on purpose, and raising it for three true
 findings on the first merge would have been the number's first lie.
 
 **The hook that was half the list is done.** The count is **25** now, and the
-ceiling with it. `a11y/modal.ts` returns `{ ref, onKeyDown }`, and eleven files
+ceiling with it. `a11y/modal.ts` returns `{ ref, onKeyDown }`, and ten files
 held that object and wrote `modal.ref` in their JSX. The React Compiler tracks
 where a ref goes and loses the thread through a property read, so every one of
 those was reported as *"Cannot access refs during render"* — which is not what
@@ -521,7 +521,7 @@ what catches them if they do.
 Verified in a browser rather than only in the suite, because a focus trap is
 the kind of thing jsdom will agree with and a user will not: the launcher
 dialog still takes focus on open, holds it through fourteen tabs, closes on
-Escape and gives focus back to the button that opened it. One of the eleven,
+Escape and gives focus back to the button that opened it. One of the ten,
 `components/Command.tsx`, could not be opened in either navigation tried and
 has no test file of its own — its change is sound by reading and by the type
 checker, and is the one not exercised at runtime.

@@ -147,7 +147,7 @@ export interface Modal<T extends HTMLElement> {
  * thread through a property read: every `modal.ref` and `modal.onKeyDown` in a
  * render was reported as *"Cannot access refs during render"*, which is not
  * what the code does — it hands the ref to `ref=`, it never reads `.current`.
- * Eleven files did it and that was **nineteen of the app's forty-four lint
+ * Ten files did it and that was **nineteen of the app's forty-four lint
  * warnings**, all false, and all sitting in the list where a true one would
  * have to be noticed among them.
  *
