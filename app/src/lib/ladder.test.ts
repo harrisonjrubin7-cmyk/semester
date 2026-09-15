@@ -311,6 +311,54 @@ describe('the ladder as a whole', () => {
     it('says nothing is shown when nothing starts that way', () => {
       expect(answerShown(shown(), 'Adverse selection is the reason')).toBe(false);
     });
+
+    /*
+     * The same failure with the two lengths swapped, which the first version
+     * of the check was blind to.
+     *
+     * `buildQuiz` clips an option at 118 characters; `opening` cuts at the
+     * answer's first punctuation, which can fall well past that. When it does,
+     * the option is a *prefix of the opening* rather than the other way round,
+     * so asking only whether the option starts with the opening came back
+     * false while the rung quoted that option back word for word and carried
+     * on past it.
+     *
+     * CORE 2500's "Cooper's most important point?" is the real one: a first
+     * clause of 158 characters against a 116-character clip of itself. Written
+     * out here because the census that caught it only reaches this question on
+     * one seeded deck, and a deck gaining or losing a card moves which
+     * questions it draws.
+     */
+    it('spots an option clipped shorter than the opening', () => {
+      // CORE 2500's own answer, verbatim: a 152-character first clause inside
+      // 258 characters of answer, so `opening` is happy to quote it and the
+      // clip lands 36 characters short of where the quote ends.
+      const full =
+        'The belief that physical superiority implies intellectual inferiority \u201Conly ' +
+        'developed when physical superiority became associated with African Americans,\u201D ' +
+        'around 1936. A result of bigotry, not a cause of it \u2014 and the answer is more ' +
+        'careful inquiry, not less.';
+      const head = opening(full);
+      expect(head, 'the fixture needs a first clause longer than the clip').not.toBeNull();
+      expect(head!.length).toBeGreaterThan(118);
+
+      const clipped = `${full.slice(0, 116)}…`;
+      const q: Askable = {
+        q: 'Cooper’s most important point?',
+        full,
+        opts: [
+          { text: clipped, ok: true },
+          { text: 'Adverse selection hides a type, before the deal', ok: false },
+          { text: 'A pure monopoly scores ten thousand on the index', ok: false },
+          { text: 'Memorizers do fine until asked to do something new', ok: false },
+        ],
+      };
+
+      // The option does not start with the opening — it is shorter than it.
+      expect(clipped.toLowerCase().startsWith(head!.toLowerCase())).toBe(false);
+      expect(answerShown(q, head!)).toBe(true);
+      expect(ladderFor(q, TERMS).some((r) => r.kind === 'opening')).toBe(false);
+    });
   });
 
   it('never puts the answer in a rung', () => {

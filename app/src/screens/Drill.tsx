@@ -7,8 +7,9 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { buildQuiz } from '../lib/quiz';
 import { ladderFor, nextRungLabel, scoreLine } from '../lib/ladder';
-import { A_SITTING, aSitting, cardKey, catching, dueCount, dueFirst } from '../lib/review';
-import { interleave, mixLine, worthMixing } from '../lib/interleave';
+import { A_SITTING, aSitting, catching, dueCount } from '../lib/review';
+import { mixLine, worthMixing } from '../lib/interleave';
+import { guideDeck, mixedDeck } from '../lib/drilldeck';
 import { useKeepAwake } from '../lib/awake';
 import { unitName } from '../lib/unit';
 import { ActionButton, EmptyState, Toggle } from '../components/ui';
@@ -29,32 +30,13 @@ export function Drill() {
   // inside each band. The run is fixed when it starts so answering a card does
   // not reshuffle the deck under your thumb.
   const ordered = useMemo(() => {
-    /*
-     * Mixing pulls from every course, not from this one.
-     *
-     * Interleaving within a single guide would be a different word for
-     * shuffling units — the whole result is about having to work out *which
-     * kind* of question this is, and two units of one course are not different
-     * kinds. So the mixed deck is built across the catalogue and the unit
-     * filter is dropped, because a unit belongs to one course by definition.
-     */
-    if (state.drillMix) {
-      const every = catalog.modules.flatMap((m) =>
-        allCards(m.guide).map((c) => ({
-          ...c,
-          key: cardKey(m.course.id, c.q),
-          courseId: m.course.id,
-        })),
-      );
-      return interleave(dueFirst(every, state.reviews, now.getTime()), (c) => c.courseId);
-    }
-    const all = allCards(guide).map((c) => ({
-      ...c,
-      key: cardKey(state.guideId, c.q),
-      courseId: state.guideId,
-    }));
-    const scoped = state.drillUnit === null ? all : all.filter((c) => c.ui === state.drillUnit);
-    return dueFirst(scoped, state.reviews, now.getTime());
+    // What is in the deck, and in what order, is `lib/drilldeck` — including
+    // why a mixed run reads the whole catalogue and a scoped one reads its
+    // unit's own cards. What is left here is the React question: when to
+    // rebuild it.
+    return state.drillMix
+      ? mixedDeck(catalog.modules, state.reviews, now.getTime())
+      : guideDeck(guide, state.guideId, state.drillUnit, state.reviews, now.getTime());
     // Deliberately NOT depending on `guide` or `state.reviews`. Both change on
     // every answer now that mastery is measured, and re-sorting the deck under
     // your thumb mid-run skips cards and repeats others — a full pass of 68

@@ -10,6 +10,7 @@ import type {
   Guide,
   Item,
   Lesson,
+  StudyCard,
 } from '../lib/types';
 import { sameDay } from '../lib/date';
 import { readTerm, yearFor } from '../lib/term';
@@ -133,16 +134,72 @@ export function classNote(cat: Catalog, date: Date, c: CourseId | null): string 
   )?.note;
 }
 
-/** Every card in a guide, flattened, with its unit index — the drill and quiz pool. */
-export function allCards(guide: Guide) {
-  const out: { q: string; a: string; unit: string; ui: number }[] = [];
-  guide.units.forEach((u, ui) => {
-    u.cards.forEach((c) => out.push({ q: c.q, a: c.a, unit: u.name, ui }));
-  });
-  guide.selfTest?.forEach((c) => {
-    out.push({ q: c.q, a: c.a, unit: 'Self-test', ui: -1 });
-  });
+export interface DeckCard {
+  q: string;
+  a: string;
+  unit: string;
+  /** The unit's index in `guide.units`, or `-1` for the guide's own self-test. */
+  ui: number;
+}
+
+/**
+ * Every card in a guide, once — the drill and quiz pool.
+ *
+ * A guide's self-test recaps, so it asks some of the units' questions a second
+ * time in its own words. All four shipped guides do it: five questions across
+ * them are written twice, once in the unit that teaches the thing and again at
+ * the end of the guide. That is the source's editing, not a slip — CORE's
+ * ten-question self-quiz and BUS's twelve-question one are ported whole — and
+ * the guide is right to read that way.
+ *
+ * A deck is not. A card's identity is its question (`cardKey` in `lib/review`
+ * hashes nothing else), so those two entries are one card with one review row,
+ * and flattening both into one deck put the same question in front of somebody
+ * twice in a sitting — the second time already answered, because answering the
+ * first wrote the row they share. It also added one to every deck-size figure
+ * the app prints, so ECON's 68 questions were 67 cards called 68.
+ *
+ * So the repeat is collapsed here, at the one place the whole-guide decks and
+ * counts are built, rather than at each of the twelve callers that would
+ * otherwise each have to remember. The unit's copy is the one kept: it is
+ * where the card is taught, and it carries the unit name a drill prints under
+ * the question. Nothing is lost from the guide itself — the field guide
+ * renders `guide.selfTest` directly, in the self-test's own wording.
+ *
+ * A deck scoped to one unit takes {@link unitCards} instead, which is faithful:
+ * see there for why the self-test still deals all ten.
+ */
+export function allCards(guide: Guide): DeckCard[] {
+  const out: DeckCard[] = [];
+  const seen = new Set<string>();
+  const add = (c: StudyCard, unit: string, ui: number) => {
+    if (seen.has(c.q)) return;
+    seen.add(c.q);
+    out.push({ q: c.q, a: c.a, unit, ui });
+  };
+  guide.units.forEach((u, ui) => u.cards.forEach((c) => add(c, u.name, ui)));
+  guide.selfTest?.forEach((c) => add(c, 'Self-test', -1));
   return out;
+}
+
+/**
+ * The cards one unit holds, in the guide's order — `-1` being the self-test,
+ * which the field guide drills with a button of its own.
+ *
+ * Faithful where {@link allCards} collapses, and deliberately so. A question
+ * the self-test recaps belongs to both decks: drilling unit 5 should ask it,
+ * and so should drilling the self-test, because each is a pass over its own
+ * material and neither repeats itself. Filtering the collapsed list by `ui`
+ * instead would have deleted the card from whichever of the two lost the
+ * tie — dealing eight cards under a button that says ten.
+ *
+ * The repeat only matters when both are in the same deck, and only `allCards`
+ * builds that one.
+ */
+export function unitCards(guide: Guide, ui: number): DeckCard[] {
+  const from = ui === -1 ? guide.selfTest : guide.units[ui]?.cards;
+  const name = ui === -1 ? 'Self-test' : (guide.units[ui]?.name ?? '');
+  return (from ?? []).map((c) => ({ q: c.q, a: c.a, unit: name, ui }));
 }
 
 /**
