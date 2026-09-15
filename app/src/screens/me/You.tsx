@@ -12,6 +12,7 @@ import { DOW, DOW_INITIALS, dateToIso } from '../../lib/date';
 import { liveGuide } from '../../lib/live';
 import { learned, showSpan } from '../../lib/pace';
 import { cardKey, comeRound, neverMet, tallyKeys } from '../../lib/review';
+import { inTime, testsNear } from '../../lib/intime';
 import { datedItems, loadByCourse } from '../../lib/select';
 import {
   doors,
@@ -135,11 +136,14 @@ export function You() {
       allCards(liveGuide(catalog, c.id, state.updates, state.reviews)).map((q) => cardKey(c.id, q.q)),
     );
     const t = tallyKeys(keys, state.reviews);
+    // The same schedule the drill deals from, so this row and that screen
+    // cannot disagree about how much is waiting. See `lib/intime.ts`.
+    const schedule = inTime(state.reviews, testsNear(catalog, now), now.getTime());
     return {
       deck: keys.length,
       seen: t.cards,
       pct: t.pct,
-      round: comeRound(keys, state.reviews, now.getTime()),
+      round: comeRound(keys, schedule, now.getTime()),
       unmet: neverMet(keys, state.reviews),
     };
   }, [catalog, state.updates, state.reviews, now]);

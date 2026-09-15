@@ -1,5 +1,6 @@
 import { datedItems } from '../../lib/select';
 import { cardKey, dueCount } from '../../lib/review';
+import { inTime, testsNear } from '../../lib/intime';
 import type { Provide } from '../shape';
 import { guideNow, standingNow, startedNow, type Look } from '../shape';
 import { coverage } from '../../lib/covers';
@@ -220,6 +221,10 @@ function coldest(
  */
 export const tonight: Provide = (look) => {
   const { state, catalog, now } = look;
+  // The same schedule the drill deals from, so what the model is told is
+  // waiting is what the student will actually be handed. `lib/intime.ts`
+  // brings cards a test would otherwise strand back inside the window.
+  const schedule = inTime(state.reviews, testsNear(catalog, now), now.getTime());
   const rows = catalog.courses.map((c) => {
     const guide = guideNow(look, c.id);
     // The same count the drill uses, from the same keys — a card is due when
@@ -227,7 +232,7 @@ export const tonight: Provide = (look) => {
     const ready = guide
       ? dueCount(
           guide.units.flatMap((u) => u.cards.map((card) => cardKey(c.id, card.q))),
-          state.reviews,
+          schedule,
           now.getTime(),
         )
       : 0;

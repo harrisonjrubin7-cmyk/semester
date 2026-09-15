@@ -70,6 +70,17 @@ export interface StepInput {
    */
   due: number;
   /**
+   * How many of those the card's *own* interval brought round.
+   *
+   * Everything above `dueOwn` is a card `lib/intime.ts` pulled back because a
+   * test is near. The two need different words: "4 cards have come round for
+   * review" is what the schedule says, and directly under a standing that
+   * reads "nothing come round" it is a contradiction a reader has no way to
+   * resolve. Optional, and defaulting to `due`, so every caller written before
+   * tests were taken into account keeps the sentence it had.
+   */
+  dueOwn?: number;
+  /**
    * Days until this course's next test, or null if none is known.
    *
    * Was `examIn`, and was fed the *app's* next exam rather than this course's:
@@ -131,7 +142,7 @@ const has = (ways: Way[], id: StudyMode) => ways.some((w) => w.id === id);
  * talking for the sake of it.
  */
 export function nextStep(input: StepInput): Step | null {
-  const { ways, guide, due, testIn, testKind, started, standings } = input;
+  const { ways, guide, due, dueOwn = due, testIn, testKind, started, standings } = input;
   if (ways.length === 0) return null;
 
   // Before anything about cards. A card that has never been seen counts as
@@ -152,10 +163,16 @@ export function nextStep(input: StepInput): Step | null {
   // deadline attached — a card reviewed late is a card half forgotten, and the
   // schedule is the student's own answer history rather than the app's idea.
   if (due > 0 && has(ways, 'cards')) {
+    // Where nothing came round on its own, the test is the whole reason these
+    // are up and the sentence has to say so — see `dueOwn`.
+    const byTest = dueOwn === 0 && testIn !== null;
+    const what = (testKind ?? 'exam').toLowerCase();
     return {
       id: 'cards',
       label: `Review ${due} ${due === 1 ? 'card' : 'cards'}`,
-      why: `${due === 1 ? 'One card has' : `${due} cards have`} come round for review.`,
+      why: byTest
+        ? `${due === 1 ? 'One card is' : `${due} cards are`} back ahead of the ${what}.`
+        : `${due === 1 ? 'One card has' : `${due} cards have`} come round for review.`,
     };
   }
 

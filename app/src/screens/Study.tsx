@@ -20,6 +20,7 @@ import { AppGrid } from '../components/nav/AppGrid';
 import { nextExam, testedIn } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
 import { anyAnswered, cardKey, comeRound, neverMet } from '../lib/review';
+import { inTime, missingCount, testsNear } from '../lib/intime';
 import { destinationsIn } from '../lib/nav';
 import { suggest, type Coming } from '../lib/toolnow';
 import { codeOf } from '../data/catalog';
@@ -95,6 +96,21 @@ export function Study() {
   const selectedStudioCourse = catalog.courses.find(c=>c.id===studioCourse)?.id ?? catalog.courses[0]?.id;
   const rowTwelve = useRowStyle(12);
   const exam = nextExam(catalog, now);
+  /*
+   * Each course's next test, and the card schedule read against it.
+   *
+   * `lib/intime.ts`: SM-2 sends a card that has been answered right three
+   * times away for sixteen days, which is longer than most exams are away, so
+   * the counts on this screen were quietly excluding most of a revised deck
+   * from the revision it was for. Computed once for the whole list — walking
+   * the catalogue four times to draw four rows is four times the work for the
+   * same answer.
+   */
+  const tests = useMemo(() => testsNear(catalog, now), [catalog, now]);
+  const schedule = useMemo(
+    () => inTime(state.reviews, tests, now.getTime()),
+    [state.reviews, tests, now],
+  );
 
   /*
    * Every unit in every course, with what is known about it: the live guide's
@@ -415,6 +431,13 @@ export function Study() {
       {tab === 'guides' && (
         <>
       <SectionLabel>Your courses</SectionLabel>
+      {/*
+        Each course's next test, and the schedule read against it.
+
+        Computed once for the whole list rather than per row: `testsNear`
+        walks the catalogue, and doing that four times to draw four rows is
+        four times the work for the same answer. See `lib/intime.ts`.
+      */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
         {catalog.courses.map((c) => {
           const g = liveGuide(catalog, c.id, state.updates, state.reviews);
@@ -442,7 +465,17 @@ export function Study() {
            * counted exams, so a quiz on Thursday changed nothing.
            */
           const keys = allCards(g).map((card) => cardKey(c.id, card.q));
-          const due = comeRound(keys, state.reviews, now.getTime());
+          /*
+           * Counted against a schedule that knows about the test — see
+           * `lib/intime.ts`. Without it this number is the one the drill
+           * would have dealt, and the drill was quietly dropping most of a
+           * revised deck before the exam it was being revised for.
+           */
+          const due = comeRound(keys, schedule, now.getTime());
+          /** What the card's own interval brought round, with no test involved. */
+          const dueOwn = comeRound(keys, state.reviews, now.getTime());
+          /** Every card the test pulled back into its run-up, across all its days. */
+          const forTest = missingCount(keys, state.reviews, tests[c.id]);
           const fresh = neverMet(keys, state.reviews);
           const started = anyAnswered(keys, state.reviews);
           // Where the course stands, off the answers alone. `due`, `fresh` and
@@ -464,6 +497,7 @@ export function Study() {
                 ).state,
             ),
             due,
+            dueOwn,
             testIn: test?.days ?? null,
             testKind: test?.kind ?? null,
             started,
@@ -583,7 +617,35 @@ export function Study() {
                   "· 64 unseen" into a line that began with a bullet.
                 */}
                 {[
-                  due > 0 ? `${due} due` : started ? 'nothing due' : null,
+                  /*
+                    What is up tonight, and why.
+
+                    Two wordings, because "due" and "come round" mean the same
+                    thing to a reader and the standing sentence three lines
+                    above this one says "nothing come round". Where every card
+                    up tonight was pulled back by the test rather than by its
+                    own interval, saying "4 due" there contradicts it — caught
+                    by looking at the screen with every test passing, both
+                    halves individually right. So that case says what it is:
+                    four tonight, sixty-eight in all, because of the exam.
+
+                    Where intervals brought some round on their own the first
+                    wording is the honest one, and the second clause then earns
+                    its place only when there is more coming than is already
+                    up. On the morning of the quiz itself everything is due at
+                    once and "107 due · 107 coming back before the quiz" says
+                    one number twice. See `lib/intime.ts`.
+                  */
+                  due > 0 && dueOwn === 0 && forTest > 0 && test
+                    ? `${due} of ${forTest} up for the ${test.kind.toLowerCase()}`
+                    : due > 0
+                      ? `${due} due`
+                      : started
+                        ? 'nothing due'
+                        : null,
+                  dueOwn > 0 && forTest > due && test
+                    ? `${forTest} coming back before the ${test.kind.toLowerCase()}`
+                    : null,
                   fresh > 0 ? `${fresh} unseen` : null,
                   mine.length > 0 ? `${mine.length} added` : null,
                 ]
