@@ -621,6 +621,18 @@ model in it or needs a key:
   written before this still work: an item that is a bare string is read as a
   line at the left margin, which is what it always was.
 
+  A **Word file opens here.** Insert → *Notes, Markdown or a Word file…* takes
+  a `.docx` and reads it in as blocks: headings, nested lists, checklists,
+  tables, quotations, code, page breaks, dividers, pictures, alignment, and
+  the bold, italic, strike-through, monospace and links inside a line. The
+  pictures go into your drive and the blocks point at them, the same way a
+  picture you added yourself does. Whatever it cannot bring — an equation
+  (Word stores those in a form that will not read back into a formula),
+  comments, tracked changes, footnotes, a text box — it names, rather than
+  leaving you to notice. Reading a file into a document that already has
+  writing in it adds to the end; into an empty one, it takes the file's title
+  as well.
+
   A paragraph, a heading or a quotation can be **aligned** — left, centred,
   right or justified, from the toolbar or the Edit menu. It is a property of
   that one block rather than of the document: a centred heading in a

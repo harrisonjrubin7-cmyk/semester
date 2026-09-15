@@ -21,6 +21,7 @@ import { secondLine } from '../lib/dim';
 import { download } from '../lib/deliver';
 import { docx, type Picture } from '../lib/docx';
 import { addFile, getFile, listFiles, settled, type Settled } from '../lib/files';
+import { fromDocx } from '../lib/docxin';
 import { pictureLike, sizeOf } from '../lib/imagesize';
 import {
   BLOCK_LABEL,
@@ -509,6 +510,52 @@ function Editor({ doc }: { doc: Doc }) {
     setBlock(openAt, (had === next ? rest : { ...rest, align: next }) as Block);
   };
 
+  /**
+   * A .docx, read in as blocks.
+   *
+   * The pictures are filed here rather than in the reader, which is the same
+   * split as the export: `fromDocx` stays a function of the bytes it is
+   * handed — that is what lets its tests open a Word file without a browser —
+   * and the drive is the screen's business. One entry per picture however
+   * many blocks point at it, because a figure used twice is one file.
+   */
+  const readWord = async (file: File) => {
+    setBusy(true);
+    try {
+      const read = await fromDocx(file);
+      const filed = new Map<string, string>();
+      for (const picture of read.media) {
+        if (filed.has(picture.name)) continue;
+        const saved = await addFile(
+          new File([new Uint8Array(picture.bytes)], picture.name, { type: picture.type }),
+          doc.courseId,
+        );
+        filed.set(picture.name, saved.id);
+      }
+      const blocks = read.doc.blocks.map((block) =>
+        block.kind === 'image' && !block.fileId && filed.has(block.name)
+          ? { ...block, fileId: filed.get(block.name)! }
+          : block,
+      );
+      /* An empty document takes the file's title and subtitle as its own;
+         one with writing in it keeps the name it already has, because
+         reading a second file in is adding to a document, not replacing it. */
+      patch(
+        empty
+          ? { title: read.doc.title, subtitle: read.doc.subtitle, blocks }
+          : { blocks: [...doc.blocks, ...blocks] },
+      );
+      setPasting(false);
+      say(
+        `Read in ${summary(blocks)}.${read.notes.length ? ` ${read.notes.join(' ')}` : ''}`,
+      );
+    } catch (e) {
+      say(e instanceof Error ? e.message : 'That file could not be read.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const saveWord = async () => {
     setBusy(true);
     try {
@@ -691,7 +738,7 @@ function Editor({ doc }: { doc: Doc }) {
         [
           {
             id: 'insert.paste',
-            label: 'Notes or Markdown…',
+            label: 'Notes, Markdown or a Word file…',
             hint: 'Headings, lists and tables are read in as blocks.',
             on: pasting,
             run: () => setPasting(!pasting),
@@ -975,6 +1022,32 @@ function Editor({ doc }: { doc: Doc }) {
               >
                 Read it in
               </ActionButton>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--sp-5)',
+                marginTop: 'var(--sp-6)',
+                flexWrap: 'wrap',
+              }}
+            >
+              <FilePick
+                accept=".docx"
+                multiple={false}
+                block={false}
+                disabled={busy}
+                onPick={(picked) => {
+                  if (picked[0]) void readWord(picked[0]);
+                }}
+                style={{ width: 'auto' }}
+              >
+                {busy ? 'Reading…' : 'Open a Word file'}
+              </FilePick>
+              <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', flex: 1, minWidth: 200 }}>
+                A `.docx` comes in as blocks — headings, lists, tables, pictures and the marks
+                inside a line. Anything it cannot bring is named rather than dropped in silence.
+              </div>
             </div>
           </Blueprint>
         </>

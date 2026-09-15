@@ -671,7 +671,31 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
 - ~~**No version history and no restore.** No autosave indicator.~~ —
   **closed.** `lib/docversions.ts`, and the History panel in `screens/Write.tsx`.
 - No *generated* PDF — though File → "Print, or save as PDF" is there and is
-  how a browser makes one. No DOCX *import* (Markdown import exists).
+  how a browser makes one. ~~No DOCX *import*~~ — **closed**, in
+  `lib/docxin.ts`: headings, paragraphs, nested lists, checklists, tables,
+  quotations, code, page breaks, dividers, pictures, alignment, and bold,
+  italic, strike-through, monospace and links inside a line. It is a separate
+  reader from the one in `extract.ts`, which opens a .docx too and
+  deliberately flattens it — that one pulls words out for *search* and for
+  the syllabus parser, this one keeps the structure, and one file growing a
+  flag would serve both badly. They share the entity decoder.
+  The pictures come out as bytes for the screen to file in the drive, the
+  same split as `pictureOf` on the way out and for the same reason: the
+  reader stays a function of what it is handed, so its tests open a Word file
+  without a browser. What cannot come — an equation (Word stores OMML, and
+  reading it back into LaTeX is a second parser), comments, tracked changes,
+  footnotes, text boxes — is named in `Read.notes` rather than dropped in
+  silence, the convention `lib/xlsxin.ts` set.
+  **Two bugs it is worth having written down.** `<a:blip …>` was matched with
+  `[^>]*`, which swallowed the `Fill` in `<pic:blipFill>` sitting four
+  characters earlier in every picture Word writes — so every picture read as
+  an empty paragraph and was dropped without a word; tag patterns end at the
+  name now. And Word does not put `<w:numPr>` on a list paragraph it styled
+  with *List Bullet*: the numbering is in the style, and the depth is in the
+  style's *name*, so every list in every Word-made file arrived as a run of
+  ordinary paragraphs. `styles.xml` is read for both. Neither was findable by
+  round-tripping this app's own export, which is why `__docs/word-styles.docx`
+  — made by python-docx on Word's default template — is in the suite.
   ~~No plain-text export.~~ — Markdown out is `toMarkdown`.
 - ~~No templates (essay/MLA/APA, lab report, reading response, etc.).~~ —
   **closed.** Seven, in `lib/doctemplates.ts`.
@@ -840,10 +864,10 @@ reading this has one short list rather than a long one to re-check. Verified
 by grepping for each, not by re-reading the sentence.
 
 **Documents** — comments and margin notes · a generated
-PDF, as against the browser's print-to-PDF, which is there · `.docx` *import* ·
+PDF, as against the browser's print-to-PDF, which is there ·
 "Open in Docs" from a study guide · a WYSIWYG surface (the marks are typed).
-(Code blocks, checkbox lists, images, horizontal rules, indent/outdent and
-alignment were on this list and are done. Line spacing and margins were on it
+(Code blocks, checkbox lists, images, horizontal rules, indent/outdent,
+alignment and `.docx` import were on this list and are done. Line spacing and margins were on it
 and had already been built when it was written.)
 
 **Sheets** — nothing. Every entry this section listed is either built or was
