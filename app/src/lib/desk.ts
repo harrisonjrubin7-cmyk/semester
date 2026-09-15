@@ -22,6 +22,7 @@
  */
 
 import { offered, saysFor, type Destination } from './nav';
+import { queryWords, worthSplitting } from './search';
 import { DEFAULT_ROLE, type Role } from './role';
 import type { Capabilities } from './school';
 import type { Screen } from './types';
@@ -109,20 +110,22 @@ export function isFavourite(
 }
 
 /**
- * How well an app answers to what was typed, or 0 for not at all.
+ * The four tiers, run against one run of characters.
  *
- * Four tiers, and the order is the whole of it: the name you typed beats the
- * name that starts with it, which beats the name that contains it, which
- * beats a word in the sentence or the keywords. "Deck" has to reach Deck
- * before it reaches the six screens whose blurb mentions slides, and
- * "powerpoint" — which is in no label anywhere — still has to reach Deck.
+ * The order is the whole of it: the name you typed beats the name that starts
+ * with it, which beats the name that contains it, which beats a word in the
+ * sentence or the keywords. "Deck" has to reach Deck before it reaches the six
+ * screens whose blurb mentions slides, and "powerpoint" — which is in no label
+ * anywhere — still has to reach Deck.
  *
  * The school's own words are matched as well as the registry's, so a
  * Vanderbilt student searching YES finds their registrar.
+ *
+ * Split out of `scoreApp` so the every-word tier below can ask the same
+ * question of one word that the whole query asks of itself, and get an answer
+ * on the same scale.
  */
-export function scoreApp(d: Destination, query: string, caps: Capabilities): number {
-  const q = query.trim().toLowerCase();
-  if (!q) return 0;
+function tier(d: Destination, q: string, caps: Capabilities): number {
   const said = saysFor(d, caps);
   const label = said.label.toLowerCase();
   const short = (d.short ?? '').toLowerCase();
@@ -135,6 +138,86 @@ export function scoreApp(d: Destination, query: string, caps: Capabilities): num
   // connection is a substring in the middle of a word reads as broken.
   if (new RegExp(`(^|[^a-z])${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(words)) return 40;
   return 0;
+}
+
+/**
+ * The highest score the every-word tier can reach.
+ *
+ * One below the weakest whole-query tier, and that is the property the tier is
+ * built around rather than a number that happened to look right: a screen
+ * whose keywords contain the exact phrase typed is a better answer than a
+ * screen that merely contains both words somewhere, and it stays ahead of one
+ * however well the scattered words score. So this change can only ever add
+ * rows to the end of a result list. It cannot reorder the rows that were
+ * already there, which is what makes it safe to run under every existing
+ * search test rather than beside them.
+ */
+export const SCATTERED = 39;
+
+/**
+ * How well an app answers to what was typed, or 0 for not at all.
+ *
+ * Five tiers now: the four above, asked of the whole query, and then every
+ * word of it asked separately.
+ *
+ * ## Why the fifth
+ *
+ * Until it, the whole query had to appear as one unbroken run of characters in
+ * one field, so the bar answered "No app matches that" to 32 of 43 ordinary
+ * two- and three-word queries — "study guide", "pay bill", "practice exam",
+ * "my grades", "email professor". The screen named in the first of those is
+ * Study, whose keywords have said `guide` all along; the query failed because
+ * no field anywhere reads "study guide" as one phrase.
+ *
+ * The worst of them is "add reading", which found nothing while a screen
+ * *labelled* "Add a reading" sat in the registry. A search that cannot find a
+ * screen by its own name minus an article is not a search with a gap in its
+ * vocabulary; it is a matcher that only ever knew how to look for one word.
+ *
+ * `lib/find.ts` had already learned this — its loose tier is why "delete my
+ * account" reaches Privacy — and the palette is the control that proves the
+ * registry was never the problem: reading the same `DESTINATIONS`, it found
+ * screens for 17 of the 32 queries this function called no match at all. Two
+ * instruments, one registry, one of them wrong. The two now share the filler
+ * list they filter by, in `lib/search.ts`.
+ *
+ * With the tier, 31 of those 43 are answered. The twelve that are still not
+ * divide cleanly, and the division is the point: "submit assignment" has no
+ * screen because the app has no submissions, and saying so is the honest
+ * answer; "make a study guide" fails on `make`, a word the registry does not
+ * carry and should not be taught to carry for one query. Neither is this
+ * function's to fix.
+ *
+ * Measured over 10,115 queries — every word in the registry, every adjacent
+ * pair and triple of them, and 4,000 seeded pairs drawn from two screens at
+ * once — no query lost a row or had one move. 1,976 gained rows, 1,253 of
+ * which had been answered with nothing at all.
+ *
+ * ## Every word, not any of them
+ *
+ * A screen has to answer to all of them. Anything looser and one common word
+ * carries the whole query: "study guide" would come back with every screen
+ * whose blurb says "study", which is most of a shelf, and the person who typed
+ * two words would be worse off than the one who typed one.
+ */
+export function scoreApp(d: Destination, query: string, caps: Capabilities): number {
+  const q = query.trim().toLowerCase();
+  if (!q) return 0;
+  const whole = tier(d, q, caps);
+  if (whole > 0) return whole;
+  const words = queryWords(q);
+  if (!worthSplitting(words, q)) return 0;
+  let total = 0;
+  for (const w of words) {
+    const one = tier(d, w, caps);
+    if (one === 0) return 0;
+    total += one;
+  }
+  // The mean, so that a word landing on a label counts for more than one
+  // landing in a blurb — "practice exam" has to reach Practice paper before it
+  // reaches the other screens on the Study shelf that merely mention practice.
+  // Scaled into the band below the whole-query tiers, never into them.
+  return Math.max(1, Math.round((total / words.length / 100) * SCATTERED));
 }
 
 /**

@@ -32,6 +32,7 @@ import { dueLabel, isoToDate } from './date';
 import { DESTINATIONS, saysFor } from './nav';
 import { anyAnswered, cardKey, type Reviews } from './review';
 import { nearAny } from './near';
+import { queryWords, worthSplitting } from './search';
 import { allowed, type Capabilities } from './school';
 import { DEFAULT_ROLE, forRole, type Role } from './role';
 
@@ -138,23 +139,6 @@ export const NEAR_MISS = 8;
 const NEAR_MISS_NEARBY = 5;
 
 /**
- * Words nobody is searching by.
- *
- * "delete my account" failed the every-word test because no screen's keywords
- * contain "my" — which is true of every possessive and article somebody puts in
- * a sentence. Requiring them makes the loose match useless for exactly the
- * queries it exists to serve.
- *
- * Deliberately short. A long stop list starts throwing away words that carry
- * meaning, and "work" or "check" are screens here.
- */
-const FILLER = new Set([
-  'a', 'an', 'the', 'my', 'me', 'i', 'is', 'are', 'was', 'to', 'of', 'in', 'on',
-  'for', 'at', 'and', 'or', 'do', 'does', 'did', 'can', 'how', 'where', 'what',
-  'when', 'it', 'this', 'that',
-]);
-
-/**
  * Score one candidate against the query.
  *
  * `name` is what the thing is called and carries the weight; `body` is
@@ -190,11 +174,10 @@ function score(q: string, name: string, body = '', spelling = name): number {
    * query of more than one word, since a single word has already been tried
    * against both halves above.
    */
-  const words = q.split(/\s+/).filter((w) => w && !FILLER.has(w));
-  // Whenever the filtered words are not simply the query again — so a
-  // multi-word query gets this, and so does "where are my grades", which comes
-  // down to the single word "grades" that the direct checks above never saw.
-  if (words.length > 0 && (words.length > 1 || words[0] !== q)) {
+  // The filler list and this test both live in `lib/search.ts`, because the
+  // app search runs the same tier and the two must not drift apart.
+  const words = queryWords(q);
+  if (worthSplitting(words, q)) {
     const all = `${n} ${body.toLowerCase()}`;
     if (words.every((w) => all.includes(w))) return 10;
   }
