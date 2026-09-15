@@ -568,7 +568,7 @@ export function ThreadsOver({
           className="bare"
           onClick={onClose}
           aria-label="Close the list"
-          style={{ width: 'auto', flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
+          style={{ width: 'auto', flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
         >
           ×
         </button>

@@ -238,7 +238,7 @@ function HousingDetails() {
       </button>
 
       {!lastExam && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           No exams on any syllabus yet, so a move-out counted from your last one stays a rule
           rather than a date. Import a syllabus with a final on it and the app will do the sum.
         </div>

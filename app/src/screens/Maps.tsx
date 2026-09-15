@@ -582,7 +582,7 @@ export function Maps() {
               style={{ textAlign: 'left', ...linkRow }}
             >
               <span style={{ fontSize: 'var(--type-md)' }}>{stop.label}</span>
-              <span style={{ fontSize: 'var(--type-xs)', opacity: 0.5 }}> · {stop.detail}</span>
+              <span style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}> · {stop.detail}</span>
             </button>
           ))}
         </div>
@@ -617,7 +617,7 @@ export function Maps() {
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 'var(--type-sm)',
-              opacity: 0.5,
+              color: 'var(--app-dim)',
             }}
           >
             Loading the map…
@@ -817,7 +817,7 @@ export function Maps() {
               <div
                 style={{
                   fontSize: 'var(--type-xs)',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                   marginTop: 'var(--sp-3)',
                   lineHeight: 'var(--leading-normal)',
                 }}
@@ -849,7 +849,7 @@ export function Maps() {
             <div
               style={{
                 fontSize: 'var(--type-xs)',
-                opacity: 0.5,
+                color: 'var(--app-dim)',
                 marginTop: 'var(--sp-5)',
                 lineHeight: 'var(--leading-normal)',
               }}
@@ -870,7 +870,7 @@ export function Maps() {
                 width: 'auto',
                 fontSize: 'var(--type-xs)',
                 letterSpacing: '0.1em',
-                opacity: 0.5,
+                color: 'var(--app-dim)',
                 marginTop: 'var(--sp-6)',
               }}
             >
@@ -1056,7 +1056,7 @@ function Clear({ onClick }: { onClick: () => void }) {
       type="button"
       className="bare"
       onClick={onClick}
-      style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.5 }}
+      style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', color: 'var(--app-dim)' }}
     >
       CLEAR
     </button>

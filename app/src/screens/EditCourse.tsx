@@ -192,7 +192,7 @@ export function EditCourse() {
           ))}
         </select>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
         The term decides which year this course's dates fall in, and keeps last semester out of
         Today without deleting it. Courses added before this existed are filed under Fall 2026,
         which is what their dates are.
@@ -284,7 +284,7 @@ export function EditCourse() {
               change(withGrading(draft, draft.course.grading.filter((_, n) => n !== i)))
             }
             aria-label={`Remove ${row.what || 'this row'}`}
-            style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
+            style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
           >
             ×
           </button>
@@ -389,7 +389,7 @@ export function EditCourse() {
               className="bare"
               onClick={() => change(withSchedule(draft, draft.schedule.filter((_, n) => n !== i)))}
               aria-label="Remove this meeting"
-              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
+              style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>
@@ -440,7 +440,7 @@ export function EditCourse() {
           + Office hours
         </button>
       </div>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         The time is written as it appears on screen, and the hour grid places a block by it — so
         "9:10a" and "2:45p" are understood and "morning" is not. Office hours sit dimmer on the
         rail than a class, and are what the app watches when it notices a course going badly.
@@ -507,7 +507,7 @@ export function EditCourse() {
               className="bare"
               onClick={() => change(dropItem(draft, i.id))}
               aria-label={`Remove ${i.title || 'this deadline'}`}
-              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
+              style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>

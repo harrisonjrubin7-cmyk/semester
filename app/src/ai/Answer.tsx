@@ -330,7 +330,7 @@ function Code({ lang, body }: { lang: string; body: string }) {
             fontSize: 'var(--type-xs)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
           }}
         >
           {lang || 'code'}

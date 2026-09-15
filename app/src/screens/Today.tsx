@@ -57,6 +57,8 @@ import { KindKey } from '../components/KindKey';
 import { CourseTag } from '../components/CourseTag';
 import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
+import { dateToIso } from '../lib/date';
+import { goCal } from '../lib/opencal';
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -315,11 +317,15 @@ function ThisWeek() {
   // is "after" — written out, because "after 14" is not a date.
   const last = weekDates(now)[6];
   const lastDay = `${MONTHS[last.getMonth()]} ${last.getDate()}`;
-  const beyond = useMemo(
-    () => upcomingItems(catalog, now).filter((i) => i.date > last).length,
+  // The list, not just its length: the aside below offers to show these, and
+  // "show them" means landing on the first of them rather than wherever the
+  // calendar was left. `datedItems` sorts by date, so `[0]` is the first.
+  const rest = useMemo(
+    () => upcomingItems(catalog, now).filter((i) => i.date > last),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [catalog, now],
   );
+  const beyond = rest.length;
   // Counted from the syllabi rather than from anything drawn, and cancelled
   // meetings left out — the same rule the Calendar's own week line uses.
   const classes = useMemo(
@@ -348,7 +354,7 @@ function ThisWeek() {
                   fontSize: 'calc(10px * var(--text-scale, 1))',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                 }}
               >
                 {nextEvent.mon}
@@ -520,7 +526,15 @@ function ThisWeek() {
         <button
           type="button"
           className="bare tappable"
-          onClick={() => dispatch({ type: 'go', screen: 'calendar' })}
+          // The week holding the first of them. This sentence names a period
+          // rather than a date, so the day grain would be too narrow — and
+          // `month` is not available: the month view anchors on `calYear` and
+          // `calMonth`, which `setCalDay` does not touch, so asking for it
+          // lands on the current month whatever date you pass. See the note in
+          // `lib/opencal.ts`. Going without a day at all, which is what this
+          // did, left you on whichever day the session last showed — often one
+          // inside the very week this line calls insufficient.
+          onClick={() => goCal(dispatch, dateToIso(rest[0].date), 'week')}
           style={{
             display: 'block',
             width: '100%',
@@ -898,7 +912,7 @@ function Feed_rail() {
     <Folding name="Feed_rail">
       <SectionLabel>Today’s schedule</SectionLabel>
       {rail.length === 0 ? (
-        <div style={{ fontSize: 'var(--type-md)', opacity: 0.5, paddingBottom: 'var(--sp-4)' }}>
+        <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', paddingBottom: 'var(--sp-4)' }}>
           No classes today. Your schedule picks up again on your next teaching day.
         </div>
       ) : (
@@ -1430,7 +1444,7 @@ function DoneToday() {
                 >
                   {i.title}
                 </span>
-                <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                   {i.dueShort} · {i.kind}
                 </span>
               </span>
@@ -1608,7 +1622,7 @@ function FeedHome() {
                     fontSize: 'calc(10px * var(--text-scale, 1))',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
-                    opacity: 0.5,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   {f.top}

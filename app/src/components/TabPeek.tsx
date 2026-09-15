@@ -26,9 +26,26 @@
  * anything positioned inside it is clipped to the height of one tab. The
  * caller reads the tab's rectangle at the moment the pointer arrives, and
  * this places itself against the window and keeps off both edges.
+ *
+ * ## And portalled, for the same reason again
+ *
+ * `z-index: 60` bought nothing where it was. `.device > *` puts the strip at
+ * 1 with `isolation: isolate` closing the context around it, and the header
+ * is a later sibling — so on the wide layout the card was painted behind the
+ * header entirely: hovering a tab there showed nothing at all, and with the
+ * card's `pointer-events: none` lifted for the measurement,
+ * `elementFromPoint` over its lower half returned `HEADER.app-header`. It
+ * looked right on the workspace only because that layout raises its own
+ * strip to 21 for an unrelated reason.
+ *
+ * So it draws from `.device`, as `Popover` does — the frame rather than the
+ * body, because the card is made of the app's own surfaces. `id` still
+ * reaches the tab's `aria-describedby` from here; that association is by id
+ * across the document and does not care where either end sits.
  */
 
 import { useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { secondLine } from '../lib/dim';
 import { SpeakerIcon, SpeakerOffIcon } from './Icons';
 import { peekSaid, type Peek } from '../lib/peek';
@@ -82,7 +99,7 @@ export function TabPeek({ peek, at, tone, id }: {
     setLeft(at.left + wide > room ? Math.max(EDGE, room - wide) : at.left);
   }, [at.left, peek]);
 
-  return (
+  const card = (
     <div
       ref={box}
       id={id}
@@ -197,4 +214,8 @@ export function TabPeek({ peek, at, tone, id }: {
       )}
     </div>
   );
+
+  // The frame, not the strip it was summoned from. See the note at the top.
+  const frame = typeof document === 'undefined' ? null : document.querySelector('.device');
+  return frame ? createPortal(card, frame) : card;
 }

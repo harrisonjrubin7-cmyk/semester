@@ -143,7 +143,7 @@ export function AgainstCalendar() {
               fontSize: 'var(--type-sm)',
             }}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Read here in your browser and never sent anywhere. {events.length > 0
               ? `${events.length} entries read.`
               : pasted.trim()
@@ -201,7 +201,7 @@ export function AgainstCalendar() {
                       <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>{m.now}</span>
                       <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{movedLine(m)}</span>
                     </div>
-                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                    <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                       The feed calls it “{m.event.title}”.
                     </div>
                     <button
@@ -250,7 +250,7 @@ export function AgainstCalendar() {
                   <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
                     {e.title}
                     {e.courseId ? (
-                      <span style={{ opacity: 0.5 }}> · {code(e.courseId)}</span>
+                      <span style={{ color: 'var(--app-dim)' }}> · {code(e.courseId)}</span>
                     ) : null}
                   </span>
                 </div>
@@ -293,7 +293,7 @@ export function AgainstCalendar() {
                   </span>
                   <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
                     {i.title}
-                    <span style={{ opacity: 0.5 }}> · {code(i.c)}</span>
+                    <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
                   </span>
                 </button>
               ))}

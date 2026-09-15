@@ -517,7 +517,7 @@ export function Study() {
               <div
                 style={{
                   fontSize: 'var(--type-xs)',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                   marginTop: 5,
                   fontFamily: 'var(--font-heading)',
                   letterSpacing: '0.1em',
@@ -665,7 +665,7 @@ export function Study() {
       >
         + Add a reading to a course
       </button>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
         A chapter, a handout, a lecture — paste or attach it and the cards, the quiz, the guide
         and the cram sheet all take it in.
       </div>
@@ -797,7 +797,7 @@ export function Study() {
                     flex: 'none',
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'var(--type-lg)',
-                    opacity: 0.5,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   {s.minutes}m
@@ -888,7 +888,7 @@ export function Study() {
           >
             Mix every course in one run
           </ActionButton>
-          <div style={{ fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Cards from all your courses, shuffled together, due ones first. Harder than one
             course at a time, and closer to what an exam asks of you.
           </div>
@@ -905,7 +905,7 @@ export function Study() {
           paddingTop: 'var(--sp-6)',
           borderTop: '1px solid var(--app-line)',
           fontSize: 'var(--type-xs)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
@@ -954,7 +954,7 @@ export function Study() {
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight)' }}>{s.name}</span>
-                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.5, marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {s.code} · {s.why}
                   </span>
                 </span>

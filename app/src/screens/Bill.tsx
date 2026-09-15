@@ -168,7 +168,7 @@ export function Bill() {
               <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
                 <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
                   {c.what}
-                  <span style={{ opacity: 0.5 }}>
+                  <span style={{ color: 'var(--app-dim)' }}>
                     {' · '}
                     {chargeKindOf(c.kind).label}
                   </span>
@@ -208,7 +208,7 @@ export function Bill() {
                     style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}
                   >
                     {a.what}
-                    <span style={{ opacity: 0.5 }}>
+                    <span style={{ color: 'var(--app-dim)' }}>
                       {' · '}
                       {kind.label}
                       {/* The two facts that change what the number means. Said
@@ -339,7 +339,7 @@ export function Bill() {
               <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
                 <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
                   {p.what}
-                  <span style={{ opacity: 0.5 }}>
+                  <span style={{ color: 'var(--app-dim)' }}>
                     {' · '}
                     {longLabel(isoToDate(p.on))}
                   </span>

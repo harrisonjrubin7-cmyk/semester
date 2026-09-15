@@ -29,6 +29,76 @@ where most of the findings are. **Where a fact could not be established
 without reading the page, it was left out rather than guessed at** — the rest
 of this file says exactly where that line fell.
 
+## What is verified, and what is not
+
+Every value this audit added is listed here with the strongest source behind
+it. The distinction that matters is not how confident the wording sounds but
+whether anything independent of the source could contradict it.
+
+**Independently corroborated.** Two Fall 2026 syllabi in `project/uploads`,
+written by the instructors teaching the courses, agreeing with each other and
+with the real calendar:
+
+| Value | Date | Checked against |
+| --- | --- | --- |
+| Classes begin | Wed 26 Aug 2026 | Two syllabi; PSCI 1104's Tue/Thu lecture series |
+| Fall Break | Thu 22 – Fri 23 Oct | ECON 1020 states the range; PSCI 1104 corroborates |
+| Thanksgiving Break | Sat 21 – Sun 29 Nov | ECON 1020 states the range; PSCI 1104 has no lectures inside it |
+
+**Not verified.** Everything below came from a search index. None of it was
+read from `vanderbilt.edu`, which the network egress policy refused for the
+whole of this work — the registrar's calendar, the dining pages, the
+enrollment bulletin, the student newspaper and a third-party aggregator
+alike:
+
+| Value | Date or figure | Status |
+| --- | --- | --- |
+| Open enrollment ends | Fri 4 Sep 2026 | unverified |
+| Last day to drop without a W | Fri 4 Sep 2026 | unverified date; the *policy* tying it to open enrollment is from two Vanderbilt pages |
+| Spring 2027 registration opens | Mon 26 Oct 2026 | unverified |
+| Last day to withdraw from a course | Fri 30 Oct 2026 | unverified |
+| Last day to change to pass/fail | Fri 30 Oct 2026 | unverified date; the *policy* tying it to withdrawal is from two Vanderbilt pages |
+| Final grades due | Mon 21 Dec 2026 | unverified |
+| First-Year Plan | 335 meals · $225 | unverified |
+| Upper-Division Plan | 305 meals · $275 | unverified |
+| The ten campus service addresses | — | unverified; each is editable in the app, as `data/campus.ts` says of every address it ships |
+
+### What "unverified" does and does not mean here
+
+It does **not** mean unchecked. Each date was held against what this
+repository *can* test, and that arithmetic rejected three values along the
+way: the graduate calendar's 5–13 December exam window, a registration date
+that was the window's closing rather than its opening, and a grades date
+falling before two of the four courses sit their finals.
+
+What those checks establish is internal consistency — the weekday is real,
+the ordering is possible, nothing contradicts the syllabi. What they cannot
+establish is that a date belongs to **this** academic year. A 2025–26
+deadline would pass every one of them.
+
+So the failure mode left open is a plausible date from the wrong year sitting
+under a heading that reads "What Vanderbilt publishes". The Term deadlines
+screen mitigates it by design — every row is proposed for confirmation and
+nothing is saved until a student ticks it — but that mitigation is a student
+reading carefully, not a check.
+
+### Closing this out
+
+One page settles all of them at once:
+`registrar.vanderbilt.edu/calendars/2026-27-academic.php`. Two routes,
+neither of which needs this session:
+
+1. Paste that page into the app's own **"Paste the page"** door on Term
+   deadlines. It parses the dates and matches each to a landmark through the
+   same `HINTS` this profile's labels were chosen against, so a student's own
+   confirmed dates override the bundled guesses.
+2. Or hand it to whoever next works on this profile, and the September,
+   October and December dates can be corrected at source in
+   `vanderbilt.json`.
+
+Until then the honest summary is: three dates in this profile are evidenced,
+and the rest are educated, checked, and unconfirmed.
+
 ## Where Vanderbilt lives in the app
 
 Three places, and only one of them reaches a screen.
@@ -205,8 +275,8 @@ internal consistency is what makes these worth shipping.
   certainly *includes* 15–17 December. That is a lower bound, not the period,
   and writing it as the period would understate it for anybody whose exam
   falls outside.
-- **Four of the six registrar deadlines.** See below: four were later
-  written, two were refused on evidence.
+- **All six registrar deadlines.** See below: four written on the first pass,
+  two refused and then written on better dates.
 
 The earlier fragment quoted below — exams and reading days 5–13 December,
 from a graduate calendar — is now positively **contradicted** by PSCI 1104's
@@ -223,6 +293,8 @@ search-index evidence as the meal plans:
 | Last day to drop without a W | Fri 4 Sep 2026 | `drop-clean` |
 | Last day to withdraw from a course | Fri 30 Oct 2026 | `withdraw` |
 | Last day to change to pass/fail | Fri 30 Oct 2026 | `passfail` |
+| Spring 2027 registration opens | Mon 26 Oct 2026 | `registration` |
+| Final grades due | Mon 21 Dec 2026 | `grades` |
 
 **The label on the first one is the whole point of this entry.** The source's
 own phrase for 4 September is *"add/drop deadline"* — and `HINTS` in
@@ -284,20 +356,38 @@ of Arts and Science's own pass/fail policy. So `passfail` is not a date of its
 own at this university: it is the withdrawal date, and 30 October now carries
 both landmarks for the same reason 4 September carries two.
 
-### Two refusals, each with a reason
+### Both refusals were later overturned — by better dates, not by relenting
+
+The two entries below were refused on the evidence available at the time. Asked
+to add them anyway, the pass that followed searched again rather than writing
+the rejected dates, and found that in each case the refusal had been right
+about the date and wrong to stop there:
+
+| | Refused | Written | Why the first one failed |
+| --- | --- | --- | --- |
+| Registration | Fri 13 Nov | **Mon 26 Oct** | The 13th is when registration *closes*. Registration runs 26 Oct – 13 Nov, and the landmark means the opening |
+| Grades | 15 Dec | **Mon 21 Dec** | The 15th falls before two of the four courses sit their finals |
+
+Both new dates land on the weekday their source claims, and 21 December clears
+PSCI 1104's final on the 17th by four days where 15 December preceded it by
+two. The original reasoning is kept below because it is what sent the second
+pass looking for a different date instead of writing the wrong one.
+
+### The two refusals, as they stood
 
 `registration` and `grades` stay empty, and not for want of a candidate date.
 Each had one, and each was rejected on evidence:
 
-- **Registration.** The only date found is Friday 13 November 2026 — and it is
+- **Registration.** The only date found *at the time* was Friday 13 November 2026 — and it is
   when Spring 2027 registration *windows close*. The landmark is "Registration
   opens for next term", whose cost line reads "Assigned by hour, and the
   sections you need go in the first morning". Filing a closing date there
   would tell a student registration opens on the day it actually shuts, and
   every label containing the word "registration" resolves to that landmark, so
   there is no safe wording for it either.
-- **Grades.** The only date found is 15 December, as a "final grading due
-  date" — and the syllabi in `project/uploads` contradict it outright. ECON
+- **Grades.** The only date found *at the time* was 15 December, as a "final
+  grading due date" — and the syllabi in `project/uploads` contradict it
+  outright. ECON
   1020 sits a final exam slot **on** 15 December and another on the 16th, and
   PSCI 1104's final is the 17th. Grades cannot be due before the exams are
   sat, so whatever that date belongs to, it is not Fall 2026 undergraduate
@@ -308,11 +398,9 @@ caught a search result that looked fine: first the graduate calendar's
 5–13 December exam window, then the "add/drop deadline" wording that resolved
 to the wrong landmark, now this.
 
-A partly-filled door remains a hazard of its own — a student who sees
-deadlines listed under "What Vanderbilt publishes" may reasonably infer the
-list is complete. It is not. A test asserts both stay absent and records the
-reasoning, so a future edit that adds them has to do so deliberately, ideally
-with the registrar's page in hand.
+Both were written in the end, on different and better dates — see the section
+above. The tests that once asserted their absence now pin the dates and the
+reasoning that rejected the first candidates for each.
 
 ### Meal plan tiers: the counts and the Meal Money, at the owner's direction
 
@@ -368,14 +456,20 @@ school published is never silently dropped.
 
 ## What the live site would still settle
 
-Everything here needs a page actually read, which this session could not do:
+Everything here needs a page actually read, which this session could not do
+at any point. Note the shift since the first pass: most of these are no
+longer blanks to fill but values to confirm.
 
-1. **The registrar deadlines, and the two bounds left blank above.** The
-   pages exist — `registrar.vanderbilt.edu/calendars/2026-27-academic.php`
-   and `…/2026-27.php`. The calendar is now partly filled from the syllabi;
-   what it is missing is exactly the part only the registrar publishes.
-2. **Undergraduate meal plan tiers** — the swipe and dollar figures per plan,
-   for `data.mealPlanTiers`, from `vanderbilt.edu/dining/meal-plans/undergraduate-plans/`.
+1. **Confirmation of all six registrar deadlines**, and the two bounds still
+   blank — the last day of classes and the final exam period. The pages exist
+   — `registrar.vanderbilt.edu/calendars/2026-27-academic.php` and
+   `…/2026-27.php`. The deadlines are filled now, but from a search index:
+   see the verification ledger near the top. This page would turn six
+   unverified dates into six checked ones and fill the two gaps.
+2. **Confirmation of the meal plan tiers** — the swipe and dollar figures are
+   in `data.mealPlanTiers`, also unverified, and
+   `vanderbilt.edu/dining/meal-plans/undergraduate-plans/` is where they can
+   be checked against what the university actually publishes.
 3. **Whether `healthUrl` and `advisingUrl` still resolve.** Both were in the
    profile before this pass and neither was verifiable from here.
 4. **The homepage's own navigation and footer** — the audit's original brief.

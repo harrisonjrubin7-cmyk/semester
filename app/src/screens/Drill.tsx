@@ -478,7 +478,7 @@ export function Drill() {
             <span
               style={{
                 fontSize: 'var(--type-xs)',
-                opacity: 0.5,
+                color: 'var(--app-dim)',
                 fontFamily: 'var(--font-heading)',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase',
