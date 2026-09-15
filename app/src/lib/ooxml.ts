@@ -43,5 +43,28 @@ export function xml(s: string): string {
     .replace(/'/g, '&apos;')
     // A control character is legal in a JS string and not in XML 1.0.
     // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '')
+    /*
+     * And a half of a character, which is the same problem one level down.
+     *
+     * A JavaScript string is UTF-16, so an emoji or a mathematical italic is
+     * two code units. Cut a string between them — `slice(0, 31)` on a sheet
+     * name, any cap counted in characters — and what is left ends in a lone
+     * surrogate: legal in a JS string, not a character at all in XML, and
+     * rejected by every parser that reads the file.
+     *
+     * `tabName` in `lib/xlsx.ts` is where this was reachable. A sheet called
+     * `ECON 1020 problem set four abc` plus an emoji lands the emoji across
+     * Excel's thirty-one character limit; the cut left U+D83C on the end and
+     * the workbook would not open. That cap now cuts whole characters, and
+     * this is the backstop for every other way one could arrive.
+     *
+     * The pair is matched before the single so a real emoji is kept: the
+     * two-unit alternative wins at that position, and only a surrogate with
+     * no partner falls through to be dropped.
+     */
+    .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g, (m) => (m.length === 2 ? m : ''))
+    // Not characters either, and the two XML names outright: `Char` excludes
+    // them at the top of its range.
+    .replace(/[\uFFFE\uFFFF]/g, '');
 }

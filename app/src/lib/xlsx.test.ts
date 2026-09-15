@@ -400,3 +400,32 @@ describe('what an exported sheet looks like', () => {
     expect(() => parse(files['xl/styles.xml'])).not.toThrow();
   });
 });
+
+/*
+ * Excel refuses a sheet name over thirty-one characters, so the name is cut —
+ * and the cut is what made a lone surrogate reachable. An emoji is two code
+ * units, `slice(0, 31)` counts units, and a title with one straddling the cap
+ * left U+D83C on the end of the name. That went into `<sheet name="...">` and
+ * the workbook would not open: measured against a real parser, "not
+ * well-formed (invalid token)".
+ */
+describe('a tab name cut at the cap', () => {
+  const C = String.fromCharCode;
+  const EMOJI = C(0xd83c, 0xdf89);
+
+  it('never ends on half a character', () => {
+    // Thirty characters, so the emoji sits across the thirty-first.
+    const name = tabName('ECON 1020 problem set four abc' + EMOJI + ' final');
+    expect(name.length).toBeLessThanOrEqual(31);
+    const last = name.charCodeAt(name.length - 1);
+    expect(last >= 0xd800 && last <= 0xdbff, 'a high surrogate is half an emoji').toBe(false);
+  });
+
+  it('keeps an emoji that fits', () => {
+    expect(tabName('Marks ' + EMOJI)).toBe('Marks ' + EMOJI);
+  });
+
+  it('still cuts a long plain name to the limit', () => {
+    expect(tabName('x'.repeat(40))).toBe('x'.repeat(31));
+  });
+});
