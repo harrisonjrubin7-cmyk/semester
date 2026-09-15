@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Capture } from '../components/Capture';
 import { RecordButton } from '../components/RecordButton';
 import { Rework } from '../components/Rework';
@@ -21,6 +21,7 @@ import type { StudyCard } from '../lib/types';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
+import { revealKindly } from '../lib/prefers';
 import { Blueprint } from '../components/Blueprint';
 import { Page } from '../components/Page';
 import { HowMuch } from '../components/HowMuch';
@@ -57,6 +58,19 @@ const ACCEPT = `${DOCUMENTS}.png,.jpg,.jpeg,.webp,.heic,text/*,image/*,applicati
  * a study guide out of it wastes a call and returns nothing useful.
  */
 const ENOUGH = 400;
+
+/**
+ * A file, as the duplicate check should see it.
+ *
+ * The name alone is not a file. Monday's photograph of the board and Friday's
+ * are both called board.png, and a scanner calls everything Scan.pdf — so
+ * hashing names meant the second one hashed identical to the first, and
+ * `alreadyAdded` refused it: the button read "Already added", disabled, with
+ * nothing on the screen to let the real second photograph through. Size and
+ * type are what the app holds that actually differ between two files, and
+ * they cost nothing to include.
+ */
+const nameSizeType = (f: FileMeta) => `${f.name}:${f.size}:${f.type}`;
 
 /**
  * Add material to a course that is already in the app.
@@ -106,6 +120,17 @@ export function AddMaterial() {
   const [readLong, setReadLong] = useState<StudyParts>(NO_PARTS);
   const [readSummary, setReadSummary] = useState('');
   const [readError, setReadError] = useState('');
+  /**
+   * What the apply press has to say, drawn where the apply press is.
+   *
+   * This used to be `readError`, which is rendered up beside the material box
+   * — five sections above the sheet now that the sheet is at the bottom. So
+   * accepting a deadline on one of the built-in courses cleared the sheet,
+   * said why off the top of the viewport, and looked exactly like the dead
+   * press this whole change is about. Its own comment says "Saying it beats a
+   * silent no", and that only holds where it can be read.
+   */
+  const [applyNote, setApplyNote] = useState('');
 
   /*
    * The one intake, and the review that follows it.
@@ -130,6 +155,24 @@ export function AddMaterial() {
   const [pastedAs, setPastedAs] = useState<Where | null>(null);
   const [looking, setLooking] = useState(false);
 
+  /**
+   * Where the review is drawn, and the fact that you can watch it arrive.
+   *
+   * The sheet used to be five sections above the button that makes it — up
+   * beside "What it is", with the material box, the recorder and the file list
+   * in between. Measured on a 420×900 phone with a reading attached: pressing
+   * "Review and add" put the sheet's own button 567px above the top of the
+   * viewport. The screen did not change. The press read as a dead button, and
+   * pressing it again rebuilt the same invisible sheet.
+   *
+   * So the sheet is drawn under the press, and the page moves to it. Both,
+   * rather than either: a change set long enough to fill the screen can put
+   * its heading on view with the decision below the fold, and a scroll to
+   * something five sections up is a scroll away from the control just used.
+   */
+  const reviewAt = useRef<HTMLDivElement | null>(null);
+  const show = () => revealKindly(reviewAt.current, { block: 'start' });
+
   const parsed = useMemo(() => parseMaterial(text), [text]);
 
   /*
@@ -141,10 +184,64 @@ export function AddMaterial() {
    * doubled every count in the app.
    */
   const mine = useMemo(
-    () => materialHash([text, ...shotCards.map((c) => `${c.q} ${c.a}`), ...files.map((f) => f.name)]),
+    () => materialHash([text, ...shotCards.map((c) => `${c.q} ${c.a}`), ...files.map(nameSizeType)]),
     [text, shotCards, files],
   );
+  /**
+   * The files alone, hashed the same way.
+   *
+   * What an attach-only import is *about*. The whole-material hash is wrong
+   * for it: untick every proposal from a pasted reading, press to keep the
+   * PDF, and an update stamped with the material's hash marks material that
+   * was refused as already added — after which `alreadyAdded` disables the
+   * button and those cards can never be added to the course at all.
+   */
+  const justFiles = useMemo(() => materialHash(files.map(nameSizeType)), [files]);
   const already = alreadyAdded(updates, courseId, mine);
+
+  /**
+   * A review is a claim about a particular snapshot, and it is dropped the
+   * moment that snapshot stops being what is on the screen.
+   *
+   * The press stops rebuilding once a review is standing, which is right —
+   * a file's harvested change set carries quotes, slide numbers and dates
+   * that re-deriving from the raw text throws away. But nothing then
+   * *invalidated* the standing set, and that combination loses material
+   * silently: paste two cards, press, paste a third, press again. The second
+   * press only scrolled, the sheet still held the first two, and accepting it
+   * wrote two cards and navigated away. The third was gone with nothing said.
+   * Measured in jsdom against both this commit and the one before it — before
+   * the guard the second press re-derived and the third card appeared as a row.
+   *
+   * The course is in the fingerprint as well as the material. A set is diffed
+   * against one course's guide by `held()`, and the chips above can change the
+   * course under a standing review; applying it then wrote ECON's change set
+   * onto PSCI.
+   *
+   * So: stamp what the review was built from when it arrives, and drop it when
+   * they disagree. The button goes back to reading "Review and add", and the
+   * next press builds a review of what is actually there.
+   */
+  const builtFrom = `${courseId}:${mine}`;
+  const reviewedFrom = useRef<string | null>(null);
+  useEffect(() => {
+    if (!set) {
+      reviewedFrom.current = null;
+      return;
+    }
+    if (reviewedFrom.current === null) {
+      // The render on which a review arrived: this is what made it, and the
+      // one moment worth moving the page for.
+      reviewedFrom.current = builtFrom;
+      revealKindly(reviewAt.current, { block: 'start' });
+      return;
+    }
+    if (reviewedFrom.current !== builtFrom) {
+      reviewedFrom.current = null;
+      setSet(null);
+      setPastedAs(null);
+    }
+  }, [set, builtFrom]);
   const empty =
     parsed.cards.length === 0 &&
     parsed.terms.length === 0 &&
@@ -301,6 +398,7 @@ export function AddMaterial() {
    * is one entry in the undo history rather than forty.
    */
   const applyChanges = (accepted: Change[]) => {
+    setApplyNote('');
     // Either origin. A file brings a name, a hash and a classifier's verdict;
     // a paste brings what the student typed above the box.
     const where: Where | null =
@@ -310,23 +408,72 @@ export function AddMaterial() {
     if (!where) return;
     const module_ = state.courses.find((c) => c.course.id === courseId) ?? null;
     const out = adopt(accepted, module_ ?? catalog.moduleById[courseId] ?? null, where);
+    /*
+     * Files attached by hand carry no pieces of their own — they are the
+     * material itself, kept, not a claim about the course — so there is
+     * nothing to review about them and they ride along with whatever was
+     * accepted. `adopt` returns none because the file path stores its own
+     * separately.
+     */
+    const attached = files.map((f) => f.id);
     if (out.update) {
       dispatch({
         type: 'addUpdate',
         update: {
           ...out.update,
           courseId,
-          /*
-           * Files attached by hand carry no pieces of their own — they are the
-           * material itself, kept, not a claim about the course — so there is
-           * nothing to review about them and they ride along with whatever was
-           * accepted. `adopt` returns none because the file path stores its
-           * own separately.
-           */
-          fileIds: out.update.fileIds.length ? out.update.fileIds : files.map((f) => f.id),
+          fileIds: out.update.fileIds.length ? out.update.fileIds : attached,
           // The unit chosen above the box, when the reader chose one. `adopt`
           // can only infer a unit from a name that matches one the guide has.
           unit: out.update.unit ?? unit,
+        },
+      });
+    } else if (attached.length > 0 || out.provenance.addedItems.length > 0) {
+      /*
+       * Nothing became an update, and there is still something to record.
+       *
+       * `adopt` writes an update only where a piece was taken, which is right
+       * — it is given pieces and nothing else. It meant that a photograph of
+       * the board, which produces no pieces at all, went through this whole
+       * screen and dispatched nothing: the bytes were in storage under the
+       * course, and the course had never heard of them, so the unit drew no
+       * figure, the guide listed no reading and there was nothing to undo.
+       * The one way to find out was that nothing had changed.
+       *
+       * Deadlines are the same shape of miss. An accepted date writes the
+       * course and no update, so `addedItems` — the list undo reads to take
+       * those dates back out — was recorded nowhere and the import could not
+       * be undone. It rides here for the same reason the files do.
+       */
+      dispatch({
+        type: 'addUpdate',
+        update: {
+          courseId,
+          unit,
+          title: title.trim() || where.source,
+          source: where.source,
+          body: '',
+          cards: [],
+          terms: [],
+          figures: [],
+          frames: [],
+          selfTest: [],
+          cases: [],
+          examples: [],
+          fileIds: attached,
+          /*
+           * The files' own hash, not the material's.
+           *
+           * Nothing in the box was accepted — that is what this branch means —
+           * so stamping this import with the hash of the whole material marks
+           * material that was *refused* as already added, and `alreadyAdded`
+           * then disables the button for it for good. `justFiles` says what
+           * this import actually is, so re-attaching the same photograph is
+           * still recognised and the text beside it stays addable.
+           */
+          sourceHash: attached.length > 0 ? justFiles : where.sourceHash,
+          as: where.as,
+          addedItems: out.provenance.addedItems,
         },
       });
     }
@@ -343,7 +490,7 @@ export function AddMaterial() {
     if (out.module && module_) {
       dispatch({ type: 'replaceCourse', module: out.module });
     } else if (out.module) {
-      setReadError(
+      setApplyNote(
         `The cards and terms were added. The ${out.provenance.addedItems.length === 1 ? 'deadline' : 'deadlines'} could not be — ${guide.code} is one of the sample courses built into the app, so its dates cannot be changed. Make it yours from the course screen first.`,
       );
       setSet(null);
@@ -397,7 +544,21 @@ export function AddMaterial() {
   const review = () => {
     if (already) return;
     const where: Where = {
-      source: source.trim() || title.trim() || 'What you pasted',
+      /*
+       * What to call it, in the order somebody would recognise it.
+       *
+       * The fallback used to end at "What you pasted", which is a lie about a
+       * file: attaching a photograph of the board and nothing else produced a
+       * sheet reading "Nothing came out of What you pasted", and an entry in
+       * the course's own list of readings under that name. A file brought a
+       * name with it; use it before inventing one.
+       */
+      source:
+        source.trim() ||
+        title.trim() ||
+        (files.length === 1 ? files[0].name : '') ||
+        (files.length > 1 ? `${files.length} files` : '') ||
+        'What you pasted',
       sourceHash: mine,
       // Not a classifier's verdict, because nothing classified it. `reading`
       // is what pasted prose is, and the shape it is read into.
@@ -617,44 +778,9 @@ export function AddMaterial() {
       />
 
       {/*
-        What arrived, and what it was taken to be — before the change set
-        below is worth reading. The class decides which shape the material is
-        forced into, so a wrong one is cheapest to catch here.
+        What arrived and what it would change are drawn under the button that
+        makes them, not here. See `reviewAt` above for the measurement.
       */}
-      {told && arrived && (
-        <>
-          <SectionLabel>What you added</SectionLabel>
-          <Blueprint plain style={{ padding: '11px 13px' }}>
-            <div className="kicker">{arrived.name}</div>
-            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)' }}>
-              {looking && !set
-                ? `Reading it — this looks like ${told.says || KIND_LABEL[told.kind]}.`
-                : `This is ${told.says || KIND_LABEL[told.kind]}${told.about ? ` — ${told.about}` : ''}.`}
-            </div>
-            {told.confidence < SURE && (
-              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-warn)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
-                It is not sure about that. Check it before taking anything below.
-              </div>
-            )}
-            {told.because.length > 0 && (
-              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
-                because: {told.because.map((b) => `“${b}”`).join(', ')}
-              </div>
-            )}
-          </Blueprint>
-        </>
-      )}
-
-      {set && (arrived || pastedAs) && (
-        <ReviewSheet
-          set={set}
-          says={arrived ? saidOf : readSummary}
-          dropped={arrived ? droppedBy : []}
-          source={arrived?.name ?? pastedAs?.source ?? 'what you pasted'}
-          course={guide.code}
-          onApply={applyChanges}
-        />
-      )}
 
       {/* Same component as Add a course, for the same reason it is beside the
           build button there: the deck this makes is the deck you are about to
@@ -929,14 +1055,90 @@ export function AddMaterial() {
           Change something above to add it as a separate piece, or leave it — it is all still here.
         </div>
       )}
+      {/*
+        One button, and it always ends with the review on screen.
+
+        It used to call `review()` every press, which was wrong twice over
+        once a file had been read: the file's own change set — harvested with
+        its quotes, its slide numbers and its dates — was overwritten by one
+        re-derived from the raw text, and the second press looked as dead as
+        the first because the sheet it rebuilt was off the top of the screen.
+        So with a review already standing, the press takes you to it.
+      */}
       <ActionButton
         disabled={empty || Boolean(already)}
-        onClick={review}
+        onClick={() => (set ? show() : review())}
         tone="primary"
         style={{ fontSize: 'var(--type-lg)', marginTop: already ? 'var(--sp-4)' : 'var(--sp-7)', opacity: empty || already ? 0.4 : 1 }}
       >
-        {already ? 'Already added' : `Review and add to ${guide.code}`}
+        {already
+          ? 'Already added'
+          : set
+            ? `What it would change in ${guide.code}`
+            : `Review and add to ${guide.code}`}
       </ActionButton>
+
+      {/*
+        What arrived, what it was taken to be, and what it would change —
+        under the press that asked for it.
+
+        The class decides which shape the material is forced into, so a wrong
+        one is cheapest to catch above the change set rather than after it.
+      */}
+      <div ref={reviewAt}>
+        {told && arrived && (
+          <>
+            <SectionLabel>What you added</SectionLabel>
+            <Blueprint plain style={{ padding: '11px 13px' }}>
+              <div className="kicker">{arrived.name}</div>
+              <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', marginTop: 'var(--sp-2)' }}>
+                {looking && !set
+                  ? `Reading it — this looks like ${told.says || KIND_LABEL[told.kind]}.`
+                  : `This is ${told.says || KIND_LABEL[told.kind]}${told.about ? ` — ${told.about}` : ''}.`}
+              </div>
+              {told.confidence < SURE && (
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-warn)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                  It is not sure about that. Check it before taking anything below.
+                </div>
+              )}
+              {told.because.length > 0 && (
+                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                  because: {told.because.map((b) => `“${b}”`).join(', ')}
+                </div>
+              )}
+            </Blueprint>
+          </>
+        )}
+
+        {set && (arrived || pastedAs) && (
+          <ReviewSheet
+            set={set}
+            says={arrived ? saidOf : readSummary}
+            dropped={arrived ? droppedBy : []}
+            source={arrived?.name ?? pastedAs?.source ?? 'what you pasted'}
+            course={guide.code}
+            attaching={files.length}
+            onApply={applyChanges}
+          />
+        )}
+
+        {/* What the press did and did not do, in the place the press left the
+            reader looking. The sheet has gone by the time this is drawn. */}
+        {applyNote && (
+          <div
+            role="alert"
+            style={{
+              fontSize: 'var(--type-sm)',
+              color: 'var(--app-accent)',
+              marginTop: 'var(--sp-7)',
+              lineHeight: 'var(--leading-normal)',
+              textWrap: 'pretty',
+            }}
+          >
+            {applyNote}
+          </div>
+        )}
+      </div>
 
       <Rework courseId={courseId} guide={guide} updates={updates} />
 
@@ -1010,9 +1212,18 @@ export function AddMaterial() {
                     marginTop: 'var(--sp-1)',
                   }}
                 >
+                  {/*
+                    "Own unit" only where there is one. A unit of its own is
+                    spliced by `mergeGuide` from the update's cards, so an
+                    import that is a photograph and nothing else makes no unit
+                    — and this row named one, which is a place to go and look
+                    for something that is not there.
+                  */}
                   {u.unit !== null && guide.units[u.unit]
                     ? guide.units[u.unit].name.slice(0, 28)
-                    : 'Own unit'}
+                    : u.cards.length > 0
+                      ? 'Own unit'
+                      : 'On the course'}
                   {u.cards.length > 0 && ` · ${u.cards.length} cards`}
                   {u.fileIds.length > 0 && ` · ${u.fileIds.length} files`}
                   {/* Where it came from, on the thing itself. "From Session 7

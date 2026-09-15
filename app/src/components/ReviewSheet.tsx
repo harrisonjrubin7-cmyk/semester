@@ -68,6 +68,54 @@ function describe(change: Change): string {
   }
 }
 
+/**
+ * How much of a passage a row shows.
+ *
+ * Every other detail here is a sentence — a card's answer, a definition, a
+ * figure's caption. A unit's detail is the reading itself, and a chapter
+ * rendered in full put the button that accepts it 1,400px below the top of
+ * the sheet: measured in Chromium at 420×900 against a 3KB reading, which is
+ * a short one. The row exists to be decided on, and a decision you have to
+ * scroll a chapter to reach is the same dead press this sheet was moved down
+ * the screen to fix.
+ */
+const PASSAGE = 260;
+
+/**
+ * The first `units` code units, never stopping inside a character.
+ *
+ * `slice` counts UTF-16 units and an emoji is two of them, so a cut at 260
+ * can leave a lone high surrogate and the row ends in a replacement glyph.
+ * The same guard, for the same reason, as `cut` in `lib/xlsx.ts` and the
+ * surrogate filter in `lib/ooxml.ts`.
+ */
+function wholeChars(text: string, units: number): string {
+  let out = '';
+  for (const ch of text) {
+    if (out.length + ch.length > units) break;
+    out += ch;
+  }
+  return out;
+}
+
+/**
+ * The passage, trimmed at a word where there is one, and how much is not shown.
+ *
+ * Counted in characters rather than words, which is the only unit that is true
+ * of every passage this renders. Counting words meant splitting the tail on
+ * whitespace, and a reading with none — Japanese or Chinese prose, a URL, a
+ * base64 blob — has exactly one "word" however much of it is left: a 3,000
+ * character passage reported one more word remaining. A character count cannot
+ * be wrong that way.
+ */
+function shorten(text: string): { said: string; more: number } {
+  if (text.length <= PASSAGE) return { said: text, more: 0 };
+  const cut = wholeChars(text, PASSAGE);
+  const at = cut.lastIndexOf(' ');
+  const said = at > PASSAGE * 0.6 ? cut.slice(0, at) : cut;
+  return { said, more: text.length - said.length };
+}
+
 /** The second line: what the card actually says, where there is more to say. */
 function detail(change: Change): string {
   const p = change.piece;
@@ -88,6 +136,7 @@ export function ReviewSheet({
   dropped,
   source,
   course,
+  attaching = 0,
   onApply,
   applying,
 }: {
@@ -98,6 +147,17 @@ export function ReviewSheet({
   dropped: string[];
   source: string;
   course: string;
+  /**
+   * Files riding along with whatever is accepted, counted.
+   *
+   * A file is the material itself rather than a claim about the course, so it
+   * has nothing to tick — but it is written by the same press, and a press
+   * this sheet refuses is a file that never reaches the course. Two things
+   * depend on the count: a photograph of the board produces no pieces at all
+   * and used to leave a sheet with nothing to press, and a reader who unticks
+   * every proposal still meant to keep the PDF.
+   */
+  attaching?: number;
   onApply: (accepted: Change[]) => void;
   applying?: boolean;
 }) {
@@ -144,6 +204,50 @@ export function ReviewSheet({
             ? `Everything in ${source} is already covered by ${course} — ${set.duplicates} ${set.duplicates === 1 ? 'piece' : 'pieces'} checked, none of them new. That is a good answer, not a failure.`
             : `Nothing came out of ${source} that this could add.`}
         </div>
+        {/*
+          And the file itself is still a thing to keep.
+
+          A photograph of the board reads as nothing — the camera path is what
+          sees it — so this branch was the whole of what happened when one was
+          attached: a sentence, and no way to press anything. The screen's own
+          hint says images become figures for the unit, and they could not,
+          because the only control that writes was not drawn.
+        */}
+        {attaching > 0 && (
+          <>
+            <div
+              style={{
+                fontSize: 'var(--type-sm)',
+                color: 'var(--app-dim)',
+                marginTop: 'var(--sp-4)',
+                lineHeight: 'var(--leading-normal)',
+              }}
+            >
+              {/*
+                True whichever unit was chosen above. "It goes on the unit"
+                was not: with the screen's default — a unit of its own —
+                `mergeGuide` skips a card-less update and `place()` sends the
+                photograph to the shared rail, so no unit was made and no unit
+                gained a figure. It is on the course's figures either way,
+                which is what this now says.
+              */}
+              {attaching === 1
+                ? `The file is still yours to keep — it stays with ${course}, and an image joins its figures.`
+                : `The ${attaching} files are still yours to keep — they stay with ${course}, and any image among them joins its figures.`}
+            </div>
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              disabled={applying}
+              onClick={() => onApply([])}
+              style={{ height: 46, marginTop: 'var(--sp-4)' }}
+            >
+              {applying
+                ? 'Adding…'
+                : `Attach ${attaching === 1 ? 'it' : `the ${attaching} files`} to ${course}`}
+            </button>
+          </>
+        )}
         </Folding>
       </div>
     );
@@ -281,14 +385,23 @@ export function ReviewSheet({
         </div>
       )}
 
+      {/*
+        Dead only when there is genuinely nothing to write. Ticking nothing
+        while a PDF is attached is a decision about the proposals, not about
+        the file, and a disabled button there loses the file.
+      */}
       <button
         type="button"
         className="btn btn-primary btn-block"
-        disabled={count === 0 || applying}
+        disabled={(count === 0 && attaching === 0) || applying}
         onClick={() => onApply(set.changes.filter((_, i) => taken[i]))}
         style={{ height: 46, marginTop: 'var(--sp-4)' }}
       >
-        {applying ? 'Adding…' : `Add the ${count} ticked`}
+        {applying
+          ? 'Adding…'
+          : count === 0 && attaching > 0
+            ? `Attach ${attaching === 1 ? 'the file' : `the ${attaching} files`} only`
+            : `Add the ${count} ticked`}
       </button>
 
       {conflicts > 0 && (
@@ -320,6 +433,7 @@ function Row({
 }) {
   const conflict = change.verdict === 'conflict';
   const p = change.piece;
+  const passage = shorten(detail(change));
   const quote = 'quote' in p ? p.quote : undefined;
   const page = p.where.page;
 
@@ -354,7 +468,12 @@ function Row({
             lineHeight: 'var(--leading-normal)',
           }}
         >
-          {detail(change)}
+          {passage.said}
+          {/* Counted rather than cut off in silence: what is accepted is the
+              whole passage, and a row that ends mid-sentence with nothing
+              said reads as material that was lost. */}
+          {passage.more > 0 &&
+            `… and ${passage.more} more ${passage.more === 1 ? 'character' : 'characters'}, all of them kept`}
         </span>
       )}
 
