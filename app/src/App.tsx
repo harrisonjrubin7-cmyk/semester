@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useNow, useStore } from './state/store';
 import { useBottomChrome } from './lib/bottomchrome.hook';
 import { currentLook } from './state/shape';
@@ -21,6 +21,7 @@ import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
 import { scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
+import { Guides, SCREENS, Springboard } from './screens';
 import { DRAWN_AT, ground, homeTitle, resolveGround, scaleFrom, scaleOf, tokensFor, type Look } from './lib/look';
 
 /**
@@ -39,96 +40,14 @@ import { DRAWN_AT, ground, homeTitle, resolveGround, scaleFrom, scaleOf, tokensF
  * the first thing a new account sees, so making either wait would move the
  * delay rather than remove it.
  */
-const AccountScreen = lazy(() => import('./screens/Account').then((m) => ({ default: m.AccountScreen })));
-const Activities = lazy(() => import('./screens/Activities').then((m) => ({ default: m.Activities })));
-const Clocks = lazy(() => import('./screens/Clocks').then((m) => ({ default: m.Clocks })));
-const Proof = lazy(() => import('./screens/Proof').then((m) => ({ default: m.Proof })));
-const Applying = lazy(() => import('./screens/Applying').then((m) => ({ default: m.Applying })));
-const Tonight = lazy(() => import('./screens/Tonight').then((m) => ({ default: m.Tonight })));
-const Behind = lazy(() => import('./screens/Behind').then((m) => ({ default: m.Behind })));
-const Degree = lazy(() => import('./screens/Degree').then((m) => ({ default: m.Degree })));
-const People = lazy(() => import('./screens/People').then((m) => ({ default: m.People })));
-const Meet = lazy(() => import('./screens/Meet').then((m) => ({ default: m.Meet })));
 // The call, and everything it drags in — a peer connection, an audio meter,
 // the signalling channel. Nobody opening Today should download any of it.
-const Call = lazy(() => import('./screens/call/Index').then((m) => ({ default: m.Call })));
-const AddMaterial = lazy(() => import('./screens/Update').then((m) => ({ default: m.AddMaterial })));
-const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
-const Analyse = lazy(() => import('./screens/Analyse').then((m) => ({ default: m.Analyse })));
-const Changes = lazy(() => import('./screens/Changes').then((m) => ({ default: m.Changes })));
 // The Ask tab *is* the conversation. There is one component for it and one
 // destination — see the note at the top of `ai/Chat.tsx`.
-const Ask = lazy(() => import('./ai/Chat').then((m) => ({ default: m.Chat })));
-const Reports = lazy(() => import('./screens/Reports').then((m) => ({ default: m.Reports })));
-const Calendar = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.Calendar })));
-const Classmates = lazy(() => import('./screens/Classmates').then((m) => ({ default: m.Classmates })));
-const Connect = lazy(() => import('./screens/Connect').then((m) => ({ default: m.Connect })));
-const Links = lazy(() => import('./screens/Links').then((m) => ({ default: m.Links })));
-const Costs = lazy(() => import('./screens/Costs').then((m) => ({ default: m.Costs })));
-const CourseDetail = lazy(() => import('./screens/Courses').then((m) => ({ default: m.CourseDetail })));
-const Courses = lazy(() => import('./screens/Courses').then((m) => ({ default: m.Courses })));
-const Deck = lazy(() => import('./screens/Deck').then((m) => ({ default: m.Deck })));
-const Write = lazy(() => import('./screens/Write').then((m) => ({ default: m.Write })));
-const SheetScreen = lazy(() => import('./screens/Sheet').then((m) => ({ default: m.Sheet })));
-const Equations = lazy(() => import('./screens/Equations').then((m) => ({ default: m.Equations })));
-const Draw = lazy(() => import('./screens/Draw').then((m) => ({ default: m.Draw })));
-const Drill = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Drill })));
-const Guess = lazy(() => import('./screens/Guess').then((m) => ({ default: m.Guess })));
-const EditCourse = lazy(() => import('./screens/EditCourse').then((m) => ({ default: m.EditCourse })));
-const Essay = lazy(() => import('./screens/Essay').then((m) => ({ default: m.Essay })));
-const EventDetail = lazy(() => import('./screens/Calendar').then((m) => ({ default: m.EventDetail })));
-const Exam = lazy(() => import('./screens/Exam').then((m) => ({ default: m.Exam })));
-const Export = lazy(() => import('./screens/Export').then((m) => ({ default: m.Export })));
-const Gap = lazy(() => import('./screens/Gap').then((m) => ({ default: m.Gap })));
-const Groupwork = lazy(() => import('./screens/Groupwork').then((m) => ({ default: m.Groupwork })));
-const Guide = lazy(() => import('./screens/Guide').then((m) => ({ default: m.Guide })));
-const Housing = lazy(() => import('./screens/Housing').then((m) => ({ default: m.Housing })));
-const Import = lazy(() => import('./screens/Import').then((m) => ({ default: m.Import })));
-const ItemDetail = lazy(() => import('./screens/Courses').then((m) => ({ default: m.ItemDetail })));
-const LessonPlayer = lazy(() => import('./screens/Lesson').then((m) => ({ default: m.LessonPlayer })));
-const Mail = lazy(() => import('./screens/Mail').then((m) => ({ default: m.Mail })));
-const Maps = lazy(() => import('./screens/Maps').then((m) => ({ default: m.Maps })));
-const Me = lazy(() => import('./screens/Me').then((m) => ({ default: m.Me })));
-const Meals = lazy(() => import('./screens/Meals').then((m) => ({ default: m.Meals })));
-const Mine = lazy(() => import('./screens/Mine').then((m) => ({ default: m.Mine })));
-const NoteEditor = lazy(() => import('./screens/Mine').then((m) => ({ default: m.NoteEditor })));
-const Notifications = lazy(() => import('./screens/Me').then((m) => ({ default: m.Notifications })));
-const Quiz = lazy(() => import('./screens/Drill').then((m) => ({ default: m.Quiz })));
-const Registrar = lazy(() => import('./screens/Registrar').then((m) => ({ default: m.Registrar })));
-const Runway = lazy(() => import('./screens/Runway').then((m) => ({ default: m.Runway })));
-const Settings = lazy(() => import('./screens/settings/Index').then((m) => ({ default: m.Settings })));
 // The settings pages. Lazy like every other screen: somebody who never opens
 // settings should not download the colour picker.
-const SettingsLook = lazy(() => import('./screens/settings/Look').then((m) => ({ default: m.SettingsLook })));
-const SettingsNav = lazy(() => import('./screens/settings/Nav').then((m) => ({ default: m.SettingsNav })));
-const SettingsAlerts = lazy(() => import('./screens/settings/Alerts').then((m) => ({ default: m.SettingsAlerts })));
-const SettingsCourses = lazy(() => import('./screens/settings/Courses').then((m) => ({ default: m.SettingsCourses })));
-const SettingsGrading = lazy(() => import('./screens/settings/Grading').then((m) => ({ default: m.SettingsGrading })));
-const SettingsWorkload = lazy(() => import('./screens/settings/Workload').then((m) => ({ default: m.SettingsWorkload })));
-const SettingsAbout = lazy(() => import('./screens/settings/About').then((m) => ({ default: m.SettingsAbout })));
-const SettingsAssistant = lazy(() => import('./screens/settings/Assistant').then((m) => ({ default: m.SettingsAssistant })));
-const SlideDeck = lazy(() => import('./screens/Slides').then((m) => ({ default: m.SlideDeck })));
-const Solve = lazy(() => import('./screens/Solve').then((m) => ({ default: m.Solve })));
-const Sources = lazy(() => import('./screens/Sources').then((m) => ({ default: m.Sources })));
-const Study = lazy(() => import('./screens/Study').then((m) => ({ default: m.Study })));
-const Work = lazy(() => import('./screens/Work').then((m) => ({ default: m.Work })));
-const Yes = lazy(() => import('./screens/Yes').then((m) => ({ default: m.Yes })));
-const Springboard = lazy(() => import('./screens/Springboard').then((m) => ({ default: m.Springboard })));
-const Guides = lazy(() => import('./screens/Guides').then((m) => ({ default: m.Guides })));
-const University = lazy(() => import('./screens/University').then((m) => ({ default: m.University })));
-const Athletics = lazy(() => import('./screens/Athletics').then((m) => ({ default: m.Athletics })));
-const Career = lazy(() => import('./screens/Career').then((m) => ({ default: m.Career })));
-const Family = lazy(() => import('./screens/Family').then((m) => ({ default: m.Family })));
-const Pathway = lazy(() => import('./screens/Pathway').then((m) => ({ default: m.Pathway })));
-const Create = lazy(() => import('./screens/Create').then((m) => ({ default: m.Create })));
 /* The workspace's own two screens — the search home a new tab opens on, and
    the directory of everything behind it. See `lib/desk.ts`. */
-const SearchHome = lazy(() => import('./screens/Search').then((m) => ({ default: m.SearchHome })));
-const Directory = lazy(() => import('./screens/Directory').then((m) => ({ default: m.Directory })));
-const Privacy = lazy(() => import('./screens/Privacy').then((m) => ({ default: m.Privacy })));
-const Profile = lazy(() => import('./screens/Profile').then((m) => ({ default: m.Profile })));
-const DataScreen = lazy(() => import('./screens/Data').then((m) => ({ default: m.DataScreen })));
-const Help = lazy(() => import('./screens/Help').then((m) => ({ default: m.Help })));
 
 import { datedEvents, datedItems, nextExam } from './lib/select';
 import { destination, rootOf } from './lib/nav';
@@ -964,191 +883,41 @@ function TabBar() {
 
 function CurrentScreen() {
   const { state } = useStore();
-  switch (state.screen) {
-    case 'home':
-      // The home screen the chosen navigation calls for. The springboard is a
-      // way in rather than a different app: every icon goes to the same screen
-      // the tab bar would have. `Today` reads the same `homeShape` to decide
-      // between its two readings of the day, so the three cannot disagree.
-      //
-      // The workspace is not a case here, deliberately: its home is Today
-      // like everyone else's, and what it does differently is where the app
-      // *lands* — see `firstScreen` in `lib/chrome.ts`.
-      //
-      // The guides are the one home that is not a reading of the day at all:
-      // the courses themselves, because opening one is what this navigation
-      // is for. See `screens/Guides.tsx`.
-      switch (homeShape(state.nav)) {
-        case 'springboard':
-          return <Springboard />;
-        case 'guides':
-          return <Guides />;
-        default:
-          return <Today />;
-      }
-    case 'search':
-      return <SearchHome />;
-    case 'directory':
-      return <Directory />;
-    case 'university':
-      return <University />;
-    case 'athletics':
-      return <Athletics />;
-    case 'career':
-      return <Career />;
-    case 'family':
-      return <Family />;
-    case 'pathway':
-      return <Pathway />;
-    case 'create':
-      return <Create />;
-    case 'privacy':
-      return <Privacy />;
-    case 'data':
-      return <DataScreen />;
-    case 'help':
-      return <Help />;
-    case 'courses':
-      return <Courses />;
-    case 'course':
-      return <CourseDetail />;
-    case 'item':
-      return <ItemDetail />;
-    case 'calendar':
-      return <Calendar />;
-    case 'event':
-      return <EventDetail />;
-    case 'me':
-      return <Me />;
-    case 'profile':
-      return <Profile />;
-    case 'notifs':
-      return <Notifications />;
-    case 'settings':
-      return <Settings />;
-    case 'setLook':
-      return <SettingsLook />;
-    case 'setNav':
-      return <SettingsNav />;
-    case 'setAlerts':
-      return <SettingsAlerts />;
-    case 'setCourses':
-      return <SettingsCourses />;
-    case 'setGrading':
-      return <SettingsGrading />;
-    case 'setWorkload':
-      return <SettingsWorkload />;
-    case 'setAbout':
-      return <SettingsAbout />;
-    case 'setAssistant':
-      return <SettingsAssistant />;
-    case 'mine':
-      return <Mine />;
-    case 'note':
-      return <NoteEditor />;
-    case 'import':
-      return <Import />;
-    case 'study':
-      return <Study />;
-    case 'guide':
-      return <Guide />;
-    case 'drill':
-      return <Drill />;
-    case 'guess':
-      return <Guess />;
-    case 'quiz':
-      return <Quiz />;
-    case 'lesson':
-      return <LessonPlayer />;
-    case 'update':
-      return <AddMaterial />;
-    case 'connect':
-      return <Connect />;
-    case 'links':
-      return <Links />;
-    case 'ask':
-      return <Ask />;
-    case 'work':
-      return <Work />;
-    case 'maps':
-      return <Maps />;
-    case 'mail':
-      return <Mail />;
-    case 'export':
-      return <Export />;
-    case 'yes':
-      return <Yes />;
-    case 'draw':
-      return <Draw />;
-    case 'solve':
-      return <Solve />;
-    case 'edit':
-      return <EditCourse />;
-    case 'analyse':
-      return <Analyse />;
-    case 'classmates':
-      return <Classmates />;
-    case 'activities':
-      return <Activities />;
-    case 'clocks':
-      return <Clocks />;
-    case 'proof':
-      return <Proof />;
-    case 'applying':
-      return <Applying />;
-    case 'tonight':
-      return <Tonight />;
-    case 'behind':
-      return <Behind />;
-    case 'degree':
-      return <Degree />;
-    case 'meet':
-      return <Meet />;
-    case 'people':
-      return <People />;
-    case 'brief':
-      return <Reports />;
-    case 'essay':
-      return <Essay />;
-    case 'deck':
-      return <Deck />;
-    case 'write':
-      return <Write />;
-    case 'sheet':
-      return <SheetScreen />;
-    case 'equations':
-      return <Equations />;
-    case 'exam':
-      return <Exam />;
-    case 'ahead':
-      return <Ahead />;
-    case 'announce':
-      return <Changes />;
-    case 'costs':
-      return <Costs />;
-    case 'gap':
-      return <Gap />;
-    case 'groupwork':
-      return <Groupwork />;
-    case 'call':
-      return <Call />;
-    case 'meals':
-      return <Meals />;
-    case 'housing':
-      return <Housing />;
-    case 'runway':
-      return <Runway />;
-    case 'registrar':
-      return <Registrar />;
-    case 'sources':
-      return <Sources />;
-    case 'account':
-      return <AccountScreen />;
-    case 'slides':
-      return <SlideDeck />;
-    default:
-      return <Today />;
+  /*
+   * Home first, because it is the one screen whose component is a function of
+   * the navigation rather than of `state.screen`.
+   *
+   * The springboard is a way in rather than a different app: every icon goes
+   * to the same screen the tab bar would have. `Today` reads the same
+   * `homeShape` to decide between its two readings of the day, so the three
+   * cannot disagree. The workspace is deliberately not a case — its home is
+   * Today like everyone else's, and what it does differently is where the app
+   * *lands*, which is `firstScreen` in `lib/chrome.ts`. The guides are the one
+   * home that is not a reading of the day at all: the courses themselves,
+   * because opening one is what that navigation is for.
+   */
+  if (state.screen === 'home') {
+    switch (homeShape(state.nav)) {
+      case 'springboard':
+        return <Springboard />;
+      case 'guides':
+        return <Guides />;
+      default:
+        return <Today />;
+    }
   }
+  /*
+   * And everything else by lookup rather than by eighty cases.
+   *
+   * `onboarding` never reaches here — it is drawn above the router — so the
+   * table does not carry it and this narrows past it. There is no fallback on
+   * purpose: the switch this replaced ended `default: return <Today />`, which
+   * meant a screen added to the union and forgotten rendered Today with
+   * nothing failing anywhere. `SCREENS` is exhaustive over the union, so that
+   * mistake is a type error now. See `screens.tsx`.
+   */
+  const Screen = SCREENS[state.screen as Exclude<typeof state.screen, 'home' | 'onboarding'>];
+  return <Screen />;
 }
 
 /**
