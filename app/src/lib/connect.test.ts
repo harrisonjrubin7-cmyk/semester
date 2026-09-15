@@ -1,3 +1,6 @@
+/// <reference types="node" />
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   PROVIDERS,
@@ -104,15 +107,44 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+const HERE = new URL('.', import.meta.url).pathname;
+
+/** The variable each client ID is read from, as `lib/connect.ts` reads it. */
+const ENV_VAR: Record<ProviderId, string> = {
+  microsoft: 'VITE_MS_CLIENT_ID',
+  google: 'VITE_GOOGLE_CLIENT_ID',
+  zoom: 'VITE_ZOOM_CLIENT_ID',
+  apple: 'VITE_APPLE_CLIENT_ID',
+};
+
+/** And where that ID is registered, which is a fact about somebody else's site. */
+const CONSOLE_HOST: Record<ProviderId, string> = {
+  microsoft: 'portal.azure.com',
+  google: 'console.cloud.google.com',
+  zoom: 'marketplace.zoom.us',
+  apple: 'developer.apple.com',
+};
+
 describe('the provider table', () => {
-  it('tells someone with no client ID where to go and get one', () => {
-    // Shown on the Connect screen when a build has no key registered. It is
-    // a path through somebody else's console rather than a link, because the
-    // page you actually need is several clicks in and its URL is not stable.
+  it('tells whoever deploys where to register each client, in the file they open', () => {
+    /*
+     * This used to assert a `console` field on the spec — a path through
+     * somebody else's admin console, which the Connect screen printed to
+     * whoever opened it. The reader was a student, and the instruction was for
+     * the person who deploys the app.
+     *
+     * The field is gone rather than moved, because `app/.env.example` already
+     * carried all four in more detail and is the file that person opens. The
+     * purpose of the old test survives it: somebody with no client ID can
+     * still find out where to get one. It is now asserted where the answer
+     * actually is, so deleting the registry copy cannot leave a provider
+     * undocumented.
+     */
+    const example = readFileSync(join(HERE, '..', '..', '.env.example'), 'utf8');
     for (const spec of Object.values(PROVIDERS)) {
-      expect(spec.console).toContain('→');
-      expect(spec.console.split('→')[0].trim()).toMatch(/\./);
       expect(spec.name).toBeTruthy();
+      expect(example, `${spec.id} has no env var in .env.example`).toContain(ENV_VAR[spec.id]);
+      expect(example, `${spec.id} does not say where to register`).toContain(CONSOLE_HOST[spec.id]);
     }
   });
 

@@ -50,9 +50,16 @@ import type { FeedSource } from '../lib/types';
  * subscribe link, Outlook and Google both export one, Zoom emails one with the
  * invitation. Paste the link or drop the file and the dates are in.
  *
- * The **account route** is a real sign-in over OAuth, which needs a client ID
- * registered by whoever runs this app. When one is missing the card says so and
- * says where to get it, rather than showing a button that fails.
+ * The **account route** is a real sign-in over OAuth, which has to be switched
+ * on by whoever runs this copy. When it is not, the card says so and points at
+ * the file route, rather than showing a button that fails.
+ *
+ * It used to say *how* to switch it on: a path through somebody else's admin
+ * console, this origin as the redirect URI, and `app/.env.local` to put the
+ * result in — four times over, once per provider, to a reader who has no way
+ * to edit that file and no reason to know it exists. Every word of it is in
+ * `app/.env.example` and in SETUP.md, where the person who can act on it
+ * looks. `screens/rendered-words.test.ts` is why it does not come back.
  *
  * The app never asks for a password to any of these, and there is no server to
  * send one to.
@@ -565,10 +572,10 @@ export function Connect() {
                     overflowWrap: 'anywhere',
                   }}
                 >
-                  No client ID yet. Register one at <strong>{spec.console}</strong>, allow{' '}
-                  <code style={{ fontSize: 'var(--type-xs)' }}>{window.location.origin}</code> as the redirect,
-                  and put it in <code style={{ fontSize: 'var(--type-xs)' }}>app/.env.local</code>. Until then,
-                  export a calendar from {spec.name} and add the .ics above — same dates, no setup.
+                  Signing in to {spec.name} is not switched on in this copy of Semester.{' '}
+                  {spec.calendar
+                    ? `Export a calendar from ${spec.name} and add the .ics above — same dates, and it needs no sign-in.`
+                    : 'Your calendar comes the other way, below.'}
                 </div>
               ) : (
                 <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)', flexWrap: 'wrap' }}>
@@ -649,9 +656,9 @@ export function Connect() {
 
               {id === 'google' && spec.clientId && (
                 <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 9 }}>
-                  Reading Gmail is a restricted scope: until the OAuth client passes Google's
-                  review it works only for the test users listed in the console. Calendar, Drive
-                  and Tasks are not restricted and work immediately.
+                  Reading Gmail may not be switched on for your account yet: Google reviews that
+                  one permission separately, and until it passes, only accounts this copy has
+                  named can use it. Calendar, Drive and Tasks work immediately.
                 </div>
               )}
 
@@ -671,12 +678,6 @@ export function Connect() {
                 </div>
               )}
 
-              {spec.needsProxy && spec.clientId && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 9 }}>
-                  {spec.name}’s API refuses browser calls, so this one goes through the dev proxy
-                  (<code style={{ fontSize: 'var(--type-xs)' }}>VITE_OAUTH_PROXY</code>).
-                </div>
-              )}
             </Blueprint>
           );
         })}

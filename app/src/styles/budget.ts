@@ -118,7 +118,7 @@ export const BUDGET: Budget = {
   'screens/Bill.tsx': { type: 4, leading: 3, space: 1, shorthand: 3, dim: 6 },
   'screens/Calendar.tsx': { type: 16, leading: 10, space: 15, shorthand: 15, dim: 12 },
   'screens/Clocks.tsx': { type: 8, leading: 1, space: 6, shorthand: 17, dim: 2 },
-  'screens/Connect.tsx': { type: 8, leading: 1, space: 5, shorthand: 4, dim: 1 },
+  'screens/Connect.tsx': { type: 7, leading: 1, space: 4, shorthand: 4, dim: 1 },
   'screens/Costs.tsx': { type: 4, leading: 2, space: 2, shorthand: 3, dim: 2 },
   'screens/Courses.tsx': { type: 10, leading: 2, space: 11, shorthand: 13, dim: 4 },
   'screens/Data.tsx': { shorthand: 4, dim: 1 },
