@@ -580,14 +580,14 @@ measurement is the record of what was wrong, not because this branch fixed it.
 Sixty destinations, two grounds, phone width, on `f0a2368`:
 
 ```
-runs measured 3120   skipped, off screen or moved between the shots 2652
-below AA: 180 runs of text (120 distinct), 134 runs of punctuation
+runs measured 3146   skipped, off screen or moved between the shots 2820
+below AA: 168 runs of text (113 distinct), 132 runs of punctuation
 ```
 
-**Two of the hundred and eighty are on Ink.** Everything else is Fog, and the
-reason is one line in `lib/dim.ts`: dark ink on a light page fades faster than
-light ink on a dark one. Three clusters account for seventy-eight of the
-hundred and twenty distinct runs, and each is one number:
+**Not one of the hundred and sixty-eight is on Ink.** Every one is on Fog, and
+the reason is one line in `lib/dim.ts`: dark ink on a light page fades faster
+than light ink on a dark one. Three clusters account for seventy-seven of the
+hundred and thirteen distinct runs, and each is one number:
 
 | painted | ratio | what wrote it |
 |---|---|---|
@@ -654,11 +654,24 @@ is worth more than the exception.
 
 ## What the branch leaves behind
 
-Measured on the merged tree, same sixty screens and two grounds:
+Measured on the merged tree — `3c0c0f0` plus this branch — same sixty screens,
+same two grounds, same instrument:
 
 ```
-PLACEHOLDER
+runs measured 3152   skipped, off screen or moved between the shots 2852
+below AA: 85 runs of text (67 distinct), 132 runs of punctuation
 ```
+
+A hundred and sixty-eight to eighty-five, and still nothing on Ink. Most of
+that is `main`'s migration rather than this branch, which is the honest
+accounting: what this branch adds is the number, the instrument that produces
+it, one of the six, and a test that stops the last one coming back.
+
+Re-run at `b83568e`, after four more passes landed on `main` including the
+faint rung's own correction in #391: **eighty-five, sixty-seven distinct, still
+nothing on Ink** — the same figure to the run. That is a useful thing to know
+about the number rather than a coincidence: what is left is not the sort of
+thing a pass about something else moves by accident.
 
 ## What was not fixed, deliberately
 
@@ -690,6 +703,14 @@ app:
   reports three rows of page background as its own;
 - something drawn on top is not the background — the assistant's button parks
   over the foot of the home screen;
+- and a hit test alone does not settle that, which is the one that got past
+  the first version of this page. The button is a circle with a glow, so the
+  pixels in the corners of its box are outside the shape `elementFromPoint`
+  answers for and still carry its light; one of them, half a pixel outside the
+  circle, was the worst reading in a whole census at 1.38:1 — a caption against
+  a button nowhere near it. What floats is excluded by its box now, and **the
+  two censuses above were re-run from scratch afterwards**: the figures this
+  page first carried, 180 and 102, were that artefact;
 - a disabled button has no contrast requirement, and the first full census
   opened with five greyed-out primary buttons at 1.41:1, which is the state
   they are supposed to be in;
