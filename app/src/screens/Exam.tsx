@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DIMMED_ROW, secondLine } from '../lib/dim';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Dictate } from '../components/Dictate';
@@ -244,7 +244,18 @@ export function Exam() {
                   borderRadius: 'var(--r-md)',
                   border: `1px solid ${on && !unavailable ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                   background: on && !unavailable ? 'var(--app-accent-wash)' : 'transparent',
-                  opacity: unavailable ? DIMMED_ROW : 1,
+                  /*
+                    Said once. `.bare:disabled` already answers `disabled`
+                    with `--app-faint`, which is held to the 3:1 a switched-off
+                    control is meant to read at, and this said it a second time
+                    with `DIMMED_ROW` on top. The two do not average, they
+                    multiply: 0.42 of ink dimmed again to 0.64 of itself is
+                    0.27, and "A real paper" rendered at 2.14:1 on Ink — under
+                    the bar the faint rung exists to hold, and a number nobody
+                    picked. It is the exact failure `lib/dim.ts` was written
+                    about, one line below a comment already refusing to dim the
+                    blurb twice for the same reason.
+                  */
                 }}
               >
                 <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{f.label}</span>
