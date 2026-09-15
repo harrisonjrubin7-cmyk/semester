@@ -137,7 +137,9 @@ export function behind(input: WeeklyInput): Behind {
       .filter((s) => s.at >= start.getTime() && s.at < end.getTime())
       .sort((a, b) => b.at - a.at),
     cardsDrilled,
-    overdue: dated.filter((i) => i.isPast && !i.isToday && !done[i.id]).length,
+    // Not `&& !i.isToday`: `date.ts` sets `isPast` to `away < 0`, so today is
+    // already out. See the rule in `lib/standing.ts`, which argues it.
+    overdue: dated.filter((i) => i.isPast && !done[i.id]).length,
     label: weekLabel(start),
     staleTicks: fallback.length,
   };

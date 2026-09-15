@@ -4,6 +4,7 @@ import { CAMPUS_CALENDARS } from '../data/events';
 import {
   dateToIso,
   daysBetween,
+  shiftIso,
   decorateEvent,
   decorateItem,
   minutesNow,
@@ -322,7 +323,7 @@ export function feedEventsOn(events: FeedEvent[], date: Date): FeedEvent[] {
   const iso = dateToIso(date);
   return events
     .filter((e) => e.date === iso)
-    .sort((a, b) => (a.at ?? -1) - (b.at ?? -1));
+    .sort(byTime);
 }
 
 /**
@@ -400,6 +401,39 @@ export function appointmentLength(a: Appointment): number {
 }
 
 /**
+ * Where an all-day entry sorts against a timed one: above all of them.
+ *
+ * One function rather than an `?? -1` at each call site, because it is one
+ * decision and it is not the obvious one. `null` could as easily have meant
+ * "unknown, so put it last" — it does exactly that for a deadline whose
+ * wording names no hour, which lists *under* the grid. An all-day entry is
+ * the opposite case: it is not missing an hour, it covers all of them, and
+ * both Google Calendar and Outlook draw it in a banner pinned above the
+ * first row. Anything reading `at` to order a day should get that answer
+ * without having to rediscover it.
+ */
+export function byTime(a: { at: number | null }, b: { at: number | null }): number {
+  return (a.at ?? -1) - (b.at ?? -1);
+}
+
+/**
+ * Date first, then the hour within it — the order a list of upcoming things
+ * is always in.
+ *
+ * Four screens had this comparator written out by hand and a fifth spelled
+ * the date half with `localeCompare`, which is the same thing for ISO dates
+ * and does not look like it. Making `at` nullable broke all five at once,
+ * which is how a copy this old gets found: they had agreed for as long as
+ * nobody edited one of them.
+ */
+export function byDateThenTime(
+  a: { date: string; at: number | null },
+  b: { date: string; at: number | null },
+): number {
+  return a.date === b.date ? byTime(a, b) : a.date < b.date ? -1 : 1;
+}
+
+/**
  * Appointments on a given day, in time order — the series expanded.
  *
  * The one seam every view reads appointments through, which is why the repeat
@@ -417,7 +451,132 @@ export function appointmentsOn(appointments: Appointment[], date: Date): Appoint
   return appointments
     .filter((a) => occursOn(a.date, a.repeat, iso))
     .map((a) => (a.date === iso ? a : { ...a, date: iso }))
-    .sort((a, b) => a.at - b.at);
+    .sort(byTime);
+}
+
+/**
+ * The longest span one all-day entry may cover, in days.
+ *
+ * A bound rather than a policy. `bannersOn` has to look backwards from the
+ * day it is drawing to find spans that began earlier, and without a limit
+ * that is a walk to the start of recorded time on every cell of every month
+ * grid. Ten weeks is longer than any break in a semester and longer than the
+ * semester's own reading period, so nothing a student would actually write
+ * hits it — and a span that did would be a term, which belongs in the
+ * registrar's dates rather than on the calendar as one entry.
+ */
+export const LONGEST_SPAN = 70;
+
+/** How many days one entry covers, counting the first. Always at least one. */
+export function appointmentDays(a: Appointment): number {
+  if (a.at !== null) return 1;
+  const days = Math.floor(a.days ?? 1);
+  return Math.min(Math.max(days, 1), LONGEST_SPAN);
+}
+
+/**
+ * One all-day entry as it appears on one day of its span.
+ *
+ * Shaped for drawing rather than for storage: a five-day span is five of
+ * these, one per day, each knowing where it sits in the run. That is what
+ * lets a week grid draw a bar with one rounded end on Monday, no ends in the
+ * middle, and the other on Friday, without any view having to work out the
+ * arithmetic for itself.
+ */
+export interface Banner {
+  id: string;
+  title: string;
+  meta: string;
+  /** An event kind id — what colours it. */
+  kind: string;
+  /** The day this instance is drawn on. */
+  on: string;
+  /** Which day of the span this is, 1-based, and how long the whole run is. */
+  day: number;
+  days: number;
+  /** True on the first and last day of the run, for the ends of the bar. */
+  first: boolean;
+  last: boolean;
+  /** The record behind it, where there is one the student owns. */
+  from: { kind: 'appointment'; id: string } | null;
+}
+
+/**
+ * The all-day band for a day: yours, and anything all-day off a connected
+ * calendar.
+ *
+ * The row Google Calendar and Outlook both pin above the first hour, and the
+ * one place in this app an entry with no hour can be *drawn* rather than
+ * listed. Before this, an all-day event read off a connected calendar landed
+ * in a list under the grid beside the "TBD" campus listings — which said the
+ * app did not know when it was, when in fact it knew exactly when it was and
+ * had nowhere to put it.
+ *
+ * ## Finding the spans that started earlier
+ *
+ * A span covering Wednesday may have begun on Monday, and Monday is not the
+ * day being asked about. So each entry is checked against every start date
+ * within its own length of the day wanted, and `occursOn` decides each — which
+ * means a repeating span works without a second rule: a Thursday-to-Sunday
+ * fortnightly trip is the repeat saying which Thursdays and the span saying
+ * how far each one reaches.
+ *
+ * The lookback is bounded by that entry's own length rather than by
+ * `LONGEST_SPAN`, so the common case — a one-day entry — checks exactly one
+ * date and costs what it did before.
+ */
+export function bannersOn(appointments: Appointment[], feed: FeedEvent[], date: Date): Banner[] {
+  const iso = dateToIso(date);
+  const out: Banner[] = [];
+
+  for (const a of appointments) {
+    if (a.at !== null) continue;
+    const days = appointmentDays(a);
+    for (let back = 0; back < days; back++) {
+      const start = shiftIso(iso, -back);
+      if (!occursOn(a.date, a.repeat, start)) continue;
+      out.push({
+        id: `appointment-${a.id}-${start}`,
+        title: a.title,
+        meta: a.where || 'Added by you',
+        kind: a.kind ?? 'other',
+        on: iso,
+        day: back + 1,
+        days,
+        first: back === 0,
+        last: back === days - 1,
+        from: { kind: 'appointment', id: a.id },
+      });
+      /*
+       * One bar per entry per day, and it is the most recent start that wins.
+       *
+       * A rule can outrun its own span — daily, three days long, and every
+       * occurrence overlaps the two before it. Counting back from the day
+       * being drawn means the run found is the one that started most
+       * recently, so such an entry reads as a bar that renews each day rather
+       * than as three bars stacked on one row saying the same thing.
+       */
+      break;
+    }
+  }
+
+  for (const e of feed) {
+    if (e.date !== iso || e.at !== null) continue;
+    out.push({
+      id: `feed-${e.id}`,
+      title: e.title,
+      meta: e.where || 'From a connected calendar',
+      kind: CAMPUS_KIND,
+      on: iso,
+      day: 1,
+      days: 1,
+      first: true,
+      last: true,
+      from: null,
+    });
+  }
+
+  return out;
 }
 
 /**
@@ -455,7 +614,20 @@ export function railFor(
   from?: { kind: 'appointment' | 'item' | 'task'; id: string };
 })[] {
   const classes = blocksFor(cat, date);
-  const mine = appointmentsOn(appointments, date).map((a) => ({
+  /*
+   * Timed ones only. An all-day entry has no hour to be drawn at, and the
+   * rail is hours — it goes in the banner above the grid instead, which is
+   * what `bannersOn` is for.
+   *
+   * This is the rule the deadlines and the tasks below already follow, for
+   * the mirror-image reason. Their wording names no hour, so putting them on
+   * the grid would be inventing one. An all-day entry is not missing an hour;
+   * it has all of them, and drawing it at midnight would be asserting it
+   * finishes at one in the morning.
+   */
+  const mine = appointmentsOn(appointments, date)
+    .filter((a): a is Appointment & { at: number } => a.at !== null)
+    .map((a) => ({
     time: a.time,
     at: a.at,
     // Its own length, so a four-hour shift is drawn as four hours. Every
@@ -529,7 +701,7 @@ export function railFor(
       from: { kind: 'task' as const, id: t.id },
     }));
 
-  return [...classes, ...mine, ...standing, ...deadlines, ...yours].sort((a, b) => a.at - b.at);
+  return [...classes, ...mine, ...standing, ...deadlines, ...yours].sort(byTime);
 }
 
 /**

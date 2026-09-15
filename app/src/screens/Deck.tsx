@@ -286,7 +286,7 @@ function Build() {
         </>
       ) : source === 'unit' ? (
         <>
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
             No model in the loop and nothing invented — your own guide, rearranged. Question on one
             slide, answer on the next.
           </div>
@@ -333,7 +333,7 @@ function Build() {
                   }}
                 >
                   <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{option.label}</span>
-                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {option.blurb}
                   </span>
                 </button>
@@ -365,7 +365,7 @@ function Build() {
             onFill={(lines) => setMaterial((now) => appendTo(now, lines))}
             label="readings"
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Anything not in here comes back as a blank in square brackets. A number invented on a
             slide is believed by a whole room at once.
           </div>

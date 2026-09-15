@@ -82,6 +82,28 @@ export function mailbox(state: State, action: Action): State | null {
     case 'openMail':
       return { ...state, mailOpen: action.id };
 
+    /*
+     * A rule, written or changed. Matched on id so the form that edits one
+     * and the form that writes one are the same dispatch.
+     */
+    case 'putMailRule': {
+      const had = state.mailRules.some((r) => r.id === action.rule.id);
+      return {
+        ...state,
+        mailRules: had
+          ? state.mailRules.map((r) => (r.id === action.rule.id ? action.rule : r))
+          : [...state.mailRules, action.rule],
+      };
+    }
+
+    /*
+     * Deleting a rule needs no cleanup, which is the layering paying off: a
+     * rule's effects were never written into `mailMarks`, so they stop being
+     * true the moment it stops being in this list. See `lib/mailrules.ts`.
+     */
+    case 'dropMailRule':
+      return { ...state, mailRules: state.mailRules.filter((r) => r.id !== action.id) };
+
     case 'markMail':
       return { ...state, mailMarks: applied(state.mailMarks, action.ids, action.mark) };
 
