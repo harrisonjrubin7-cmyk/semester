@@ -467,7 +467,7 @@ export function Study() {
                     fontSize: 'var(--type-xs)',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
-                    opacity: 0.55,
+                    color: 'var(--app-dim)',
                     textAlign: 'right',
                     minWidth: 0,
                   }}
@@ -595,7 +595,7 @@ export function Study() {
                       <div
                         style={{
                           fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                          opacity: 0.55,
+                          color: 'var(--app-dim)',
                           marginTop: 'var(--sp-3)',
                           lineHeight: 'var(--leading-normal)',
                           textWrap: 'pretty',
@@ -838,7 +838,7 @@ export function Study() {
             <div
               style={{
                 fontSize: 'var(--type-xs)',
-                opacity: 0.55,
+                color: 'var(--app-dim)',
                 marginTop: 'var(--sp-5)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
@@ -856,7 +856,7 @@ export function Study() {
             <div
               style={{
                 fontSize: 'var(--type-xs)',
-                opacity: 0.55,
+                color: 'var(--app-dim)',
                 marginTop: 'var(--sp-5)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',

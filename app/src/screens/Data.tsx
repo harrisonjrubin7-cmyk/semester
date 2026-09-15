@@ -151,7 +151,7 @@ export function DataScreen() {
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>{formatBytes(store.bytes)}</span>
           </div>
           {store.span && (
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, lineHeight: 'var(--leading-normal)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)' }}>
               Spanning {new Date(store.span.from).toLocaleDateString()} to{' '}
               {new Date(store.span.to).toLocaleDateString()}.
             </div>

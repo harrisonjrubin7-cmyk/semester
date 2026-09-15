@@ -165,7 +165,7 @@ export function Meet() {
             <div
               style={{
                 fontSize: 'var(--type-xs)',
-                opacity: 0.55,
+                color: 'var(--app-dim)',
                 marginBottom: 'var(--sp-4)',
                 lineHeight: 'var(--leading-relaxed)',
                 textWrap: 'pretty',
@@ -255,7 +255,7 @@ function Row({
               <span
                 style={{
                   fontSize: 'var(--type-xs)',
-                  opacity: 0.55,
+                  color: 'var(--app-dim)',
                   textAlign: 'right',
                 }}
               >

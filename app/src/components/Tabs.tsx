@@ -56,6 +56,7 @@ import {
   follow,
   here,
   lastFollowed,
+  moveLanes,
   moveTab,
   muteTab,
   openTab,
@@ -63,7 +64,7 @@ import {
   record,
   useStrip,
 } from '../lib/browser.hook';
-import { MAX_TABS, NEW_TAB, lanes, pinnedCount, placeFor, sameplace } from '../lib/browser';
+import { MAX_TABS, NEW_TAB, laneOrder, lanes, pinnedCount, placeFor, sameplace } from '../lib/browser';
 import { useMovable, type Movable } from '../lib/arrange';
 import { screenName } from '../lib/nav';
 import type { Catalog } from '../data/catalog';
@@ -319,6 +320,43 @@ export function TabStrip({
     items: rows,
     onMove: (order, moved) => moveTab(order, moved),
   });
+  /*
+   * A second drag, over the strip's runs rather than its tabs.
+   *
+   * Two movables rather than one, because they answer different questions and
+   * a single one could not. Dragging a tab asks where that tab goes *and*
+   * whose work it is now — `rearrange` reads the drop position for both.
+   * Dragging a group asks only where the run goes, and must never change what
+   * is in it. One movable over a mixed list would have had to guess which
+   * question a drop was, at exactly the position where the two disagree.
+   *
+   * They never contend: a tab's handle is the tab, a group's is its head, and
+   * `lib/drag.ts` hands a gesture to whichever took the pointer down.
+   */
+  const bands = useMovable<string>({
+    items: laneOrder(strip),
+    onMove: (order) => moveLanes(order),
+  });
+  /*
+   * Whether the run now under the pointer was being carried a moment ago.
+   *
+   * `tookDrop` answers "did a drop happen", which is not the same question,
+   * and the difference is only visible here. `lib/drag.ts` arms its flag when
+   * a drop *target* is found — so a group picked up and released over nothing
+   * (past the end of the strip, over the page) reports no drop, the click
+   * lands, and the group folds. Folding is a visible state change somebody
+   * did not ask for; a tab released the same way merely re-opens the tab that
+   * was already under the finger, which is why nothing noticed before.
+   *
+   * Held here rather than fixed in `drag.ts`, where the same flag serves the
+   * calendar, Today's sections, the bottom bar and the shelves. "A gesture
+   * that became a drag is not a click" is probably right for all of them, but
+   * that is a change to a shared primitive and its own piece of work.
+   */
+  const carried = useRef(false);
+  useEffect(() => {
+    if (bands.held !== null) carried.current = true;
+  }, [bands.held]);
   /** The tab or group menu, and where it was summoned from. See `TabMenu`. */
   const [menu, setMenu] = useState<{ on: MenuOn; corner: Corner } | null>(null);
   const modern = useModernShell();
@@ -484,10 +522,29 @@ export function TabStrip({
             );
           }
           const tint = toneAt(tones, group.tone);
+          /*
+           * Folded while it is in your hand, and open again when you let go.
+           *
+           * A run four tabs wide is a poor thing to move: it covers half the
+           * strip it is being dropped into, so the gap you are aiming at is
+           * under the thing you are aiming with. Collapsed it is a chip, and
+           * the strip behind it stays readable — which is what every browser
+           * does with a dragged group and the reason it does it.
+           *
+           * Drawn, not set. `collapse` in the model is a real fold: it moves
+           * you out of the group first, because folding the run you are
+           * working in would hide the page in front of you. Nothing about
+           * picking a group up should navigate, and letting go must leave the
+           * group exactly as open as it was — so this is the rendering
+           * knowing, and the strip on the device never hears about it.
+           */
+          const carrying = bands.held === group.id;
+          const folded = group.collapsed || carrying;
           return (
             <Fragment key={group.id}>
             {pins > 0 && lane.seats[0].at === pins && <PinEdge />}
             <div
+              {...bands.zone(group.id)}
               /*
                * The run, drawn as one object.
                *
@@ -514,8 +571,22 @@ export function TabStrip({
               <GroupHead
                 group={group}
                 held={lane.seats.length}
+                folded={folded}
                 tint={tint}
+                hold={bands.grip(group.id)}
                 onToggle={() => {
+                  /*
+                   * A drag of the run ends in a click on its head, and
+                   * without this every move of a group would also fold it.
+                   * `tookDrop` is still read, and still cleared, so a drop
+                   * suppresses exactly one click — but the ref above is what
+                   * covers the drag that landed on nothing.
+                   */
+                  const dropped = bands.tookDrop();
+                  if (dropped || carried.current) {
+                    carried.current = false;
+                    return;
+                  }
                   const landed = foldGroup(group.id, !group.collapsed);
                   // Only when it moved you: see `foldGroup`. Opening a group
                   // you were never inside leaves you exactly where you were.
@@ -524,8 +595,9 @@ export function TabStrip({
                 onMenu={(e) => summon({ kind: 'group', id: group.id }, e)}
               />
               {/* Folded, the run is its head and nothing else — which is the
-                  room a strip at ten tabs gets back for it. */}
-              {!group.collapsed &&
+                  room a strip at ten tabs gets back for it, and the shape it
+                  takes while it is being carried. */}
+              {!folded &&
                 lane.seats.map((seat) => (
                   <Tab
                     key={seat.tab.id}
@@ -911,13 +983,32 @@ function Tab({
 function GroupHead({
   group,
   held,
+  folded,
   tint,
+  hold,
   onToggle,
   onMenu,
 }: {
   group: TabGroup;
   held: number;
+  /**
+   * Drawn folded — because it is, or because it is being carried.
+   *
+   * Two reasons and one appearance: a run in your hand looks exactly like a
+   * folded one, which is what makes the gesture legible without anything
+   * being explained. The difference is that this one is not written down.
+   */
+  folded: boolean;
   tint: CourseTint;
+  /**
+   * What makes the head the handle for the whole run: `grip` from the
+   * strip's second movable.
+   *
+   * The handle rather than the run itself, because the tabs inside answer
+   * their own drag — two hold gestures on one element cannot both win, and
+   * the same split is why a section of Today has a grip beside its heading.
+   */
+  hold: ReturnType<Movable<string>['grip']>;
   onToggle: () => void;
   onMenu: (e: ReactMouseEvent) => void;
 }) {
@@ -925,8 +1016,9 @@ function GroupHead({
   const count = held === 1 ? '1 tab' : `${held} tabs`;
   return (
     <button
+      {...hold}
       type="button"
-      className="bare tappable"
+      className={`bare tappable${hold.className}`}
       onClick={onToggle}
       onContextMenu={onMenu}
       // Not `aria-expanded` alone: what folds is the run of tabs beside this,
@@ -946,6 +1038,7 @@ function GroupHead({
         borderRadius: 'var(--r-sm)',
         fontSize: 'var(--type-sm)',
         color: tint.ink,
+        ...hold.style,
       }}
     >
       <span
@@ -965,7 +1058,7 @@ function GroupHead({
       )}
       {/* The count only while it is folded: open, the tabs are right there
           and a number beside them is one more thing to read past. */}
-      {group.collapsed && <span aria-hidden="true">{held}</span>}
+      {folded && <span aria-hidden="true">{held}</span>}
     </button>
   );
 }

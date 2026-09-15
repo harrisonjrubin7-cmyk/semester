@@ -317,7 +317,7 @@ export function SettingsLook() {
                         call one setting different things. */}
                     {MATCH_DEVICE_LABEL}
                   </span>
-                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {`Ink after dark, Parchment in daylight. Following your device now: ${
                       prefersDark ? 'dark' : 'light'
                     }.`}
@@ -358,7 +358,7 @@ export function SettingsLook() {
                       </span>
                       <span style={{ flex: 1, minWidth: 0 }}>
                         <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{g.label}</span>
-                        <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55, marginTop: 'var(--sp-1)' }}>
+                        <span style={{ display: 'block', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                           {g.blurb}
                         </span>
                       </span>

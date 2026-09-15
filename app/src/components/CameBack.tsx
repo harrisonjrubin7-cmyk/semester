@@ -163,7 +163,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         >
           Business days
         </button>
-        <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.55 }}>
+        <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
           {windowSummary(window)}
         </span>
       </div>
@@ -175,7 +175,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         <div
           style={{
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            opacity: 0.55,
+            color: 'var(--app-dim)',
             marginTop: 7,
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',

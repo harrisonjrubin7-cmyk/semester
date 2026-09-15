@@ -228,7 +228,7 @@ export function Threads({
             >
               <span style={ONE_LINE}>
                 {t.pinned && (
-                  <span aria-label="Pinned" title="Pinned" style={{ opacity: 0.55 }}>
+                  <span aria-label="Pinned" title="Pinned" style={{ color: 'var(--app-dim)' }}>
                     ▪{' '}
                   </span>
                 )}
@@ -245,7 +245,7 @@ export function Threads({
                 on something said in the middle, is a list you open five times.
               */}
               {found && (
-                <span style={{ ...UNDER, opacity: 0.55, fontStyle: 'italic' }}>{found}</span>
+                <span style={{ ...UNDER, color: 'var(--app-dim)', fontStyle: 'italic' }}>{found}</span>
               )}
             </button>
 
@@ -339,7 +339,7 @@ export function Threads({
               className="bare"
               onClick={() => setShowOlder((was) => !was)}
               aria-expanded={showOlder}
-              style={{ ...ACT, opacity: 0.55, padding: '0 var(--sp-5)' }}
+              style={{ ...ACT, color: 'var(--app-dim)', padding: '0 var(--sp-5)' }}
             >
               {showOlder ? '▾' : '▸'} OLDER ({archived.length})
             </button>

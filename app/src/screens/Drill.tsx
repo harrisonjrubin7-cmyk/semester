@@ -304,7 +304,7 @@ export function Drill() {
                 dispatch({ type: 'undoCard' });
                 say('Took back the last answer.');
               }}
-              style={{ width: 'auto', fontSize: 'var(--type-sm)', ...secondLine() }}
+              style={{ width: 'auto', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
             >
               Undo
             </button>
@@ -314,7 +314,10 @@ export function Drill() {
               fontFamily: 'var(--font-heading)',
               fontSize: 'var(--type-sm)',
               letterSpacing: '0.12em',
-              opacity: 0.55,
+              /* Main's, kept: the token rather than a hand-written opacity —
+                 `lib/dim.ts` says why one drifts below readable and the other
+                 cannot. The same swap is applied to the Undo beside it. */
+              color: 'var(--app-dim)',
             }}
           >
             {state.drillIdx + 1} / {pool.length}
@@ -341,7 +344,7 @@ export function Drill() {
           <div
             style={{
               fontSize: 'calc(11.5px * var(--text-scale, 1))',
-              opacity: 0.55,
+              color: 'var(--app-dim)',
               marginTop: 'var(--sp-3)',
               lineHeight: 'var(--leading-normal)',
               textWrap: 'pretty',
@@ -649,7 +652,7 @@ export function Quiz() {
             fontFamily: 'var(--font-heading)',
             fontSize: 'var(--type-sm)',
             letterSpacing: '0.12em',
-            opacity: 0.55,
+            color: 'var(--app-dim)',
           }}
         >
           {state.quizIdx + 1} / {state.quiz.length}

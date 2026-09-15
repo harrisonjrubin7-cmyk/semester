@@ -34,7 +34,7 @@ function StoredImage({ fileId, alt }: { fileId: string; alt: string }) {
 
   if (missing) {
     return (
-      <div style={{ fontSize: 'var(--type-sm)', opacity: 0.55, marginTop: 'var(--sp-6)' }}>
+      <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)' }}>
         The file behind this figure is no longer on the device.
       </div>
     );

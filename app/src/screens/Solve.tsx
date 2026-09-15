@@ -148,7 +148,7 @@ export function Solve() {
                 style={{
                   display: 'block',
                   fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                  opacity: 0.55,
+                  color: 'var(--app-dim)',
                   marginTop: 'var(--sp-1)',
                   lineHeight: 1.4,
                 }}

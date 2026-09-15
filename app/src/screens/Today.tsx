@@ -431,7 +431,7 @@ function ThisWeek() {
                       style={{
                         display: 'block',
                         fontSize: 'var(--type-xs)',
-                        opacity: 0.55,
+                        color: 'var(--app-dim)',
                         marginTop: 'var(--sp-1)',
                       }}
                     >
@@ -1329,7 +1329,7 @@ function TodayFeed() {
 
   if (order.length === 0) {
     return (
-      <div style={{ fontSize: 'var(--type-base)', opacity: 0.55, padding: '20px 0', lineHeight: 'var(--leading-relaxed)' }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', padding: '20px 0', lineHeight: 'var(--leading-relaxed)' }}>
         Every section of Today is switched off. Turn one back on under Me → Settings.
       </div>
     );
@@ -1523,7 +1523,7 @@ function HoursToday() {
               <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)' }}>
                 {t.title}
                 {t.time.trim() && (
-                  <span style={{ opacity: 0.55 }}> · {t.time.trim()}</span>
+                  <span style={{ color: 'var(--app-dim)' }}> · {t.time.trim()}</span>
                 )}
               </span>
             </button>
@@ -1632,7 +1632,7 @@ function FeedHome() {
                   <span
                     style={{
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.55,
+                      color: 'var(--app-dim)',
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
