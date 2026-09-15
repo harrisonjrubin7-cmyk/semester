@@ -95,6 +95,29 @@ describe('a screen taller than the window', () => {
     expect(SHEET).toMatch(/\.scrollarea\.is-filled \.pane-body::after \{[^}]*content: none/s);
   });
 
+  it('lets a screen that is the whole box reach the bottom edge', () => {
+    /*
+     * `.scrollarea` gives every screen 30px of bottom padding as a matter of
+     * course, and `.scrollarea.is-filled` cancels it — because a screen that
+     * *is* the box ends at the bottom edge, with a composer sitting on it.
+     *
+     * That cancel used to ride along with the assistant reservation in the
+     * same declaration. When the reservation moved out to `.pane-body::after`
+     * the declaration went with it: right for the 76px, and it took the 30
+     * with it, which nothing else cancels. Measured on the deployed build at
+     * 390x844, `.pane-body` ended at 814 in a window of 844 on all three
+     * filled screens, and zeroing this in the live page put it back on 844.
+     *
+     * Asserted as a pair, so the day `.scrollarea` stops padding its bottom
+     * this says the cancel is now unnecessary rather than quietly passing.
+     */
+    const base = SHEET.match(/\.scrollarea \{[^}]*padding-bottom: (\d+)px/s);
+    expect(base, 'the scroller no longer pads its bottom; this reset can go').toBeTruthy();
+    expect(Number(base![1])).toBeGreaterThan(0);
+    const filled = SHEET.slice(SHEET.indexOf('.scrollarea.is-filled {'));
+    expect(filled.slice(0, filled.indexOf('}'))).toContain('padding-bottom: 0');
+  });
+
   it('leaves the height that the percentage chain hangs off', () => {
     // `min-height` here instead would be the tempting fix and the wrong one:
     // a percentage height resolves against a definite parent, and this is

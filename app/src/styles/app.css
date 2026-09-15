@@ -1690,6 +1690,23 @@ a:hover {
  * step with them.
  */
 .scrollarea.is-filled {
+  /*
+   * Back after a spell away, and the reason it went is worth keeping.
+   *
+   * This line cancelled two things at once: the 76px reserved for the
+   * assistant's button, and the 30px `.scrollarea` gives every screen as a
+   * matter of course. When the reservation moved out to `.pane-body::after`
+   * the whole declaration went with it — correct for the 76, and it took the
+   * 30 as well, which nothing else cancels.
+   *
+   * Measured on the deployed build at 390x844: `.pane-body` ended at 814 in a
+   * window of 844 on all three screens that fill their box — ask, mail,
+   * classmates — and setting this to zero in the live page put it back on 844.
+   * On the chat that band is the fault the comment above names, returned: a
+   * composer meant to sit on the bottom edge, with a finger's width of empty
+   * ground under it.
+   */
+  padding-bottom: 0;
   overflow: hidden;
 }
 
