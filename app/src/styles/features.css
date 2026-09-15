@@ -215,6 +215,11 @@
 .preserve-lines{white-space:pre-wrap;}
 .study-next-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;}
 .study-journal{margin:24px 0;}
+/* What the journal says back, above the prompt it says it about. The list is
+   short by construction — `lib/again.ts` will not speak below its floors — so
+   it reads as a note rather than as a report. */
+.study-again ul{margin:8px 0 0;padding-left:20px;}
+.study-again li{margin:4px 0;}
 .study-journal-entry{padding:16px 0;border-top:1px solid var(--app-accent-wash);}
 .study-journal textarea{width:100%;min-height:120px;}
 

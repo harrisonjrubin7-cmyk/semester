@@ -4,6 +4,53 @@ September 14, 2026 · Compared with the supplied complete product requirements a
 
 The existing app is preserved and expanded. **This build is a working student workspace with local planning tools and an institutional integration foundation. It is not yet a complete replacement for a university's LMS, email, registration, billing or campus-service systems.** The user confirmed that school-approved access is not yet available.
 
+## September 15, 2026 — the mistake journal only ever wrote
+
+`components/StudyJournal.tsx` has recorded mistakes since it shipped: the
+topic, what kind of thing went wrong, what was tried, what was learned, and a
+date to come back to it. Every entry went in and nothing ever came out. The
+panel listed them newest first, which is a filing cabinet rather than a
+journal — the reason to write a mistake down is that the next one rhymes with
+it, and noticing that across fourteen entries written over two months is
+exactly the job a student at 1am cannot do.
+
+The blueprint asks for it in one line — "detect repeated misconception
+patterns in a private mistake journal" — and the detecting was the missing
+half.
+
+`app/src/lib/again.ts` reads three things back, each arithmetic over what was
+typed and each with a floor it will not speak below:
+
+- **A mistake that came back** — a topic written down again after an earlier
+  entry on it was marked reviewed. The strongest thing the journal can show,
+  and it is shown first.
+- **A kind that dominates** — "4 of your 6 entries here are units or sign."
+- **Revisit dates that have gone by** with nothing done.
+
+**The trap in the middle of this is the default value**, and most of the module
+is written around it. "What needs attention" is a picker of eight kinds that
+opens on *Concept*. A student who never touches it logs eleven Concept entries,
+and an app reading that distribution would tell them they keep making
+conceptual errors — a finding about a dropdown, not about their learning, and
+indistinguishable from the real thing in the stored data. So no kind is
+reported unless the journal shows kinds being *chosen*: at least two distinct
+ones. One kind everywhere is the default, whatever that kind happens to be.
+
+Below the floors it says what it is reading rather than going quiet — "3
+entries so far, too few to call anything a pattern" — because a panel that is
+silent at four entries and speaks at five looks broken at four, and naming the
+count is the only way to tell "no pattern" from "not looking".
+
+Verified with the full gate set and driven in Chromium at phone width against a
+seeded term: the summary reads "· 3 worth a look" while the panel is shut, and
+open it names the repeat, the dominant kind and the two missed dates in that
+order. Fifteen mutations were reverted under the new tests and watched go red;
+one survived and was a weak test rather than weak code — every small case was
+being caught by the occurrence count, so nothing exercised the entry floor at
+the four-entry boundary where it is the only thing deciding. A test was added
+there. One test was also simply wrong and the code was right: it asserted that
+five of nine was not a majority.
+
 ## September 15, 2026 — the scheduler had never been told the exam exists
 
 `lib/review.ts` schedules cards on a plain SM-2 variant, and SM-2 does not
