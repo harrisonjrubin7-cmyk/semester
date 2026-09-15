@@ -1,3 +1,138 @@
+# One app — the thirteenth pass: the helper that was written and not shared
+
+Against `main` at `376c62f`. **<!--screens-->sixty<!--/--> destinations**,
+unchanged, and generated rather than typed since the twelfth pass.
+
+Two commits since the twelfth, so a screen census would be a null. The
+question this pass asks instead comes straight out of K2: that row found *one*
+invariant held by hand. **Are there others?**
+
+## The census: sequences that must happen in order
+
+Every run of consecutive `dispatch` calls in `app/src`, grouped by shape. A run
+of two or more is a sequence somebody has to get right; if the same shape
+appears in more than one place, nothing is holding it together.
+
+**31 distinct sequences. 7 written at two or more sites.**
+
+| times | sequence | where |
+|---|---|---|
+| 3 | `addPlot → setMathTab` | `Calculator`, `Equations` ×2 |
+| 3 | `setCalDay → setCalView → go` | `Clashes`, `Calendar`, `me/You` |
+| 2 | `openGuide → openGuide` | `CourseHub` ×2 |
+| 2 | `openCourse → go` | `DropBy`, `Import` |
+| 2 | `setCoursesTab → go` | `InsightCards`, `settings/Grading` |
+| 2 | `writeMaths → setMathTab` | `Equations` ×2 |
+| 2 | `setDueTab → setCoursesTab → go` | `Today`, `report/Day` |
+
+Then K2's test, applied to each: **is there a site that does the `go` without
+the setters?**
+
+| destination | paired | unpaired |
+|---|---|---|
+| `courses` | 3 | **0** |
+| `equations` | 1 | **0** |
+| `calendar` | 3 | **1** — `screens/Today.tsx:523` |
+
+One hit, and it is the interesting one.
+
+## L1 — the helper exists, is correct, is documented, and is private
+
+`components/Clashes.tsx` already extracted this, and already wrote down why:
+
+> **Opening a day takes three dispatches, not one.**
+>
+> `setCalDay` alone changes which day the calendar has selected and leaves you
+> looking at the screen you were already on — which is a tappable row that
+> appears to do nothing. The view has to be put into `day` and the calendar
+> has to be gone to as well.
+
+That is a correct, well-argued helper. It is also `function useOpenDay()` with
+no `export`, so:
+
+- `screens/Calendar.tsx:2894` writes the three dispatches out by hand,
+- `screens/me/You.tsx:678` writes them out by hand again,
+- and `screens/Today.tsx:523` writes only the third.
+
+**This is a different fault from K2, and a worse one.** K2 was an invariant
+nobody had named: thirteen copies and no helper, so every author was
+re-deriving from scratch. Here the work was done. Somebody hit the bug, found
+the rule, wrote the fix and wrote the paragraph explaining it — and left it
+module-private, so the next two authors could not use it and the third did not
+know there was a rule to follow.
+
+Extraction without publication is worse than no extraction, because it reads
+as solved. The comment is in the repository, findable by grep, saying the
+thing — and the app still has the bug it describes.
+
+## The site that forgot: a button that says the opposite of what it does
+
+`screens/Today.tsx:523` is the aside under the seven-day window. Its own
+comment is exactly right about what it is for:
+
+> *What a seven-day window cannot show, said out loud. The list this replaced
+> was cut off at five rows with nothing to mark the cut, so a midterm the
+> following Tuesday was simply absent. A window has the same failure unless it
+> names what falls outside it.*
+
+It names what falls outside — `beyond` counts `upcomingItems` with
+`date > last`, where `last` is the window's seventh day — and then:
+
+```tsx
+onClick={() => dispatch({ type: 'go', screen: 'calendar' })}
+```
+
+`calDay` and `calView` are `Ephemeral`, so it opens the calendar wherever that
+session last left it.
+
+### Driven
+
+Chromium at 420px, shipped sample data:
+
+| step | observed |
+|---|---|
+| open the calendar, click **Day** | `Day \| All`, heading *Day* |
+| back to Today, **This week** | the aside renders |
+| it reads | **“34 deadlines fall after Sep 21 — the calendar has the rest →”** |
+| click it | `Day \| All`, heading *Day* — **today, Sep 15** |
+
+A button that promises thirty-four deadlines *after* the 21st delivers a
+single-day view of a day *before* the 21st. Not the wrong screen, which
+somebody would have reported — the right screen showing the precise period the
+sentence just said was not enough. Zero `pageerror`s.
+
+**Resolution: merge.** `useOpenDay`'s body and its paragraph move to
+`lib/opencal.ts` and are exported; the three sites use it; Today's aside passes
+the first deadline beyond the window, so "the rest" lands on the first of the
+rest. Then a guard, so the triple cannot be written by hand a fourth time.
+
+A bare `go → calendar` stays legal and unguarded — the tab bar, the `k`
+shortcut and the directory all mean *open the calendar* and promise no
+particular day. What the guard catches is the triple being re-derived, which is
+the thing that has actually gone wrong three times.
+
+## What this pass leaves, with reasons
+
+- **`addPlot → setMathTab` and `writeMaths → setMathTab`** (3 and 2 sites).
+  Real sequences, but both live inside the Equations screen and its own
+  calculator, which is one surface with one author. Nothing else in the app can
+  reach them, so the pair is legible where it is written.
+- **`setDueTab → setCoursesTab → go`** and **`setCoursesTab → go`**. Two tabs
+  set before one navigation, and the shorter is a prefix of the longer — which
+  looks like the same fault. It is not: both `courses` sites set the tab, the
+  census found no site going without it, and the two-tab version is doing a
+  strictly different job (a filter *and* a tab). Worth watching; not worth
+  merging on two instances with no fault between them.
+- **`openGuide → openGuide`** in `CourseHub`. Two adjacent dispatches of the
+  same action with different arguments, which the census cannot tell from a
+  sequence. Read: it is two independent buttons, not a pair.
+
+## To do
+
+| row | what | resolution |
+|---|---|---|
+| L1 | a documented three-dispatch helper left module-private, re-derived twice and forgotten once | **merge** into `lib/opencal.ts`, then guard |
+
 # One app — the twelfth pass: the instrument, and one invariant held by hand
 
 Against `main` at `e4bf976`. **Two findings, and one of them is about this
