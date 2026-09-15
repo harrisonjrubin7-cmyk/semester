@@ -6,10 +6,17 @@
  * or a penalty already running. The **policy** is behind it, because it is
  * typed once at the start of term and then only corrected.
  *
- * The policy has to be entered by hand for now. The importer reads a syllabus
- * for dates and weights and does not yet ask about attendance, so the app has
- * no way to know a rule exists — and a rule it invented would be worse than
- * none, since the whole value here is a number a student can rely on.
+ * The importer fills the policy in where the syllabus states one — it reads
+ * dates, weights and now this — and the fields below stay editable because a
+ * read rule is a proposal, not a fact. `lib/generate.ts` quotes the sentence
+ * it took the rule from into `note` for exactly that reason, and refuses to
+ * guess: a syllabus that says nothing about attendance produces nothing here
+ * rather than a common-looking default, because a student told they have
+ * three absences who actually has none will use them.
+ *
+ * So the hand-entry path is still the whole path for a course whose syllabus
+ * is silent, or whose rule the importer read wrong. It is not a fallback that
+ * withered — it is where the number a student relies on is finally agreed.
  */
 
 import { useState } from 'react';
