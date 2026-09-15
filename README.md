@@ -623,6 +623,17 @@ model in it or needs a key:
   written before this still work: an item that is a bare string is read as a
   line at the left margin, which is what it always was.
 
+  A **PDF is written here**, not by the print dialog. File → Download as PDF
+  makes the same file on every machine — the print route depends on the
+  browser, a phone often has no print-to-PDF at all, and neither can be
+  attached to an email without you standing there. It is built the way the
+  `.docx` is, without a library: a PDF does not wrap text for you, so the app
+  measures every string against the real metrics of the fonts a reader already
+  has and decides where each line ends. Equations print as the LaTeX you
+  typed, and a picture prints as its caption — its bytes live in the drive and
+  the writer is a pure function of the document. Margin notes never print, the
+  same as everywhere else.
+
   A **note in the margin** goes against a block — press ✎ on its card, write
   it, and it sits out beside that block on the page. Tick it when you have
   dealt with it and it stays, struck through, because the reason to tick
