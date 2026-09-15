@@ -11,6 +11,7 @@ import { ActionButton, FilePick, SectionLabel, TickBox } from '../components/ui'
 import { Trouble } from '../components/Trouble';
 import { troubleOf, useTrouble } from '../lib/trouble';
 import { intakeFiles, intakeText, type Intake } from '../lib/intake';
+import { keepSources } from '../lib/topage';
 import { generateCourse, type GenerationResult } from '../lib/generate';
 import { NO_POLICY, hasPolicy } from '../lib/attend';
 import { packSummary, provenance, readPack } from '../lib/handoff';
@@ -339,10 +340,26 @@ export function Import() {
       }
     };
 
+    /*
+     * The syllabus itself, kept in the drive against the course it built.
+     *
+     * The app read the PDF, took the dates out of it and let the bytes go —
+     * and then printed "p. 12" under every deadline, which is a footnote to a
+     * document nobody can open. `lib/topage.ts` is the way back; this is the
+     * half of it that has to happen while the file is still in memory.
+     *
+     * Not awaited. A student who has just approved twelve deadlines should
+     * not wait on a twelve-megabyte write they did not ask for, and a browser
+     * that refuses storage must not fail the import over it — the page
+     * numbers simply stay as inert as they were.
+     */
+    const keep = (courseId: string) => void keepSources(files, courseId).catch(() => {});
+
     if (existing) {
       const merged = keepIds(existing, reviewed);
       dispatch({ type: 'replaceCourse', module: merged });
       fileAttendance(merged.course.id);
+      keep(merged.course.id);
       dispatch({ type: 'openCourse', id: merged.course.id });
       return;
     }
@@ -354,6 +371,7 @@ export function Import() {
     };
     dispatch({ type: 'addCourse', module: filed });
     fileAttendance(filed.course.id);
+    keep(filed.course.id);
     // The screen changes underneath, which is no confirmation at all if you
     // are not looking at it.
     say(

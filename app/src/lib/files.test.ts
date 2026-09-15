@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { search, settled, TRASH_DAYS, type FileMeta, type Settled } from './files';
+import { atPage, isPdf, search, settled, TRASH_DAYS, type FileMeta, type Settled } from './files';
 
 const meta = (over: Partial<FileMeta> = {}): FileMeta => ({
   id: 'f1',
@@ -84,5 +84,71 @@ describe('searching', () => {
 describe('the bin', () => {
   it('holds things for a month before anything sweeps them', () => {
     expect(TRASH_DAYS).toBe(30);
+  });
+});
+
+/**
+ * Opening a stored document at a page.
+ *
+ * `#page=N` is a PDF open parameter and the app cannot find out whether the
+ * viewer honoured it — Chrome's and Firefox's do, others do not, and there is
+ * no callback either way. So the only thing worth guarding is that the
+ * fragment is never *wrong*: never on a file that has no pages, never a page
+ * no document has, and never at the cost of the address itself, which is a
+ * blob handle that has to survive being revoked.
+ */
+describe('the address a page is asked for at', () => {
+  const blob = 'blob:http://localhost/9f3c-4d';
+
+  it('asks for the page on a PDF', () => {
+    expect(atPage(blob, 'application/pdf', 'syllabus.pdf', 12)).toBe(`${blob}#page=12`);
+  });
+
+  it('asks on a PDF the browser could not type, by its name', () => {
+    expect(atPage(blob, 'application/octet-stream', 'syllabus.pdf', 3)).toBe(`${blob}#page=3`);
+  });
+
+  it('says nothing about pages for a file that has none', () => {
+    // A fragment on a Word file is noise at best; at worst the handler takes
+    // it as part of a name.
+    expect(atPage(blob, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'notes.docx', 4)).toBe(blob);
+    expect(atPage(blob, 'text/plain', 'syllabus.pdf', 4)).toBe(blob);
+  });
+
+  it('leaves the address alone when no page was asked for', () => {
+    expect(atPage(blob, 'application/pdf', 'syllabus.pdf')).toBe(blob);
+  });
+
+  it('refuses a page number no document has', () => {
+    // Zero and below are not pages. A fraction is a bug upstream, and
+    // `#page=2.5` is a request every viewer answers differently.
+    for (const page of [0, -1, 2.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(atPage(blob, 'application/pdf', 'syllabus.pdf', page), String(page)).toBe(blob);
+    }
+  });
+
+  it('leaves the handle itself untouched, because it has to be revoked', () => {
+    // `openFile` revokes everything before the '#'. If this function rewrote
+    // the address rather than appending to it, the blob would leak for the
+    // life of the tab.
+    const out = atPage(blob, 'application/pdf', 'syllabus.pdf', 7);
+    expect(out.split('#')[0]).toBe(blob);
+  });
+});
+
+describe('what the app treats as a PDF', () => {
+  it('believes a declared type over a name', () => {
+    // A note somebody called `syllabus.pdf` is still a note. The type is the
+    // browser's answer and the name is the student's.
+    expect(isPdf('application/pdf', 'no-extension')).toBe(true);
+    expect(isPdf('text/plain', 'syllabus.pdf')).toBe(false);
+  });
+
+  it('falls back to the name only where the browser had nothing to say', () => {
+    // Which is how everything unpacked from a zip arrives.
+    expect(isPdf('application/octet-stream', 'syllabus.pdf')).toBe(true);
+    expect(isPdf('', 'SYLLABUS.PDF')).toBe(true);
+    expect(isPdf('application/octet-stream', 'syllabus.docx')).toBe(false);
+    expect(isPdf('', 'pdf-notes.txt')).toBe(false);
   });
 });

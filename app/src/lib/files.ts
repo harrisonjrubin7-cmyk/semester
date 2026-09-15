@@ -369,16 +369,68 @@ export function formatBytes(n: number): string {
 }
 
 /**
- * Open a stored file in a new tab. The object URL is revoked on the next tick —
- * long enough for the browser to have taken the handle, short enough not to
- * leak the blob for the life of the session.
+ * The types a browser hands over when it has no idea what a file is.
+ *
+ * `addFile` writes `application/octet-stream` for anything arriving with an
+ * empty `type`, which is what a file unpacked from a zip has, so the vague
+ * answer is the stored one rather than the blank.
  */
-export async function openFile(id: string): Promise<boolean> {
+const VAGUE = new Set(['', 'application/octet-stream', 'binary/octet-stream']);
+
+/**
+ * Whether a record is a PDF.
+ *
+ * The declared type decides it wherever the browser had one, and the name
+ * decides it only where the browser did not. Neither alone works: a PDF
+ * unpacked from a zip is stored as `application/octet-stream`, so the type
+ * alone loses it — and a note somebody named `syllabus.pdf` is still a note,
+ * so the name alone claims it. Asking the name only when the type has nothing
+ * to say gets both right.
+ */
+export function isPdf(type: string, name: string): boolean {
+  if (type === 'application/pdf') return true;
+  return VAGUE.has(type) && /\.pdf$/i.test(name);
+}
+
+/**
+ * The address to open a stored file at, given a page somebody wants.
+ *
+ * `#page=N` is a PDF open parameter, and the honest description of it is a
+ * **request rather than an instruction**. Chrome's viewer and Firefox's pdf.js
+ * both honour it; other viewers, and any handler that downloads the file
+ * instead of displaying it, ignore it. There is no way to ask which, and no
+ * callback saying whether it worked.
+ *
+ * So the cost of being wrong decides the design: a viewer that ignores the
+ * fragment opens the document at page one, which is exactly what pressing the
+ * file in the drive already does. Nothing is worse than it was, and where it
+ * is honoured the student lands on the sentence. What the interface must not
+ * do is *promise* the page — see `components/OnThePage.tsx` for the wording.
+ *
+ * Nothing is appended for a file that is not a PDF, or for a page that is not
+ * a whole number above zero: a fragment on a `.docx` is noise, and `#page=0`
+ * is a number no viewer has.
+ */
+export function atPage(url: string, type: string, name: string, page?: number): string {
+  if (!isPdf(type, name)) return url;
+  if (typeof page !== 'number' || !Number.isInteger(page) || page < 1) return url;
+  return `${url}#page=${page}`;
+}
+
+/**
+ * Open a stored file in a new tab, at a page where one is asked for and the
+ * file is a PDF. The object URL is revoked on the next tick — long enough for
+ * the browser to have taken the handle, short enough not to leak the blob for
+ * the life of the session.
+ */
+export async function openFile(id: string, page?: number): Promise<boolean> {
   const record = await getFile(id);
   if (!record) return false;
-  const url = URL.createObjectURL(record.blob);
+  const url = atPage(URL.createObjectURL(record.blob), record.type, record.name, page);
   window.open(url, '_blank', 'noopener');
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  // The fragment is part of the string, never part of the handle: revoking
+  // takes the object URL itself, which is everything before the '#'.
+  setTimeout(() => URL.revokeObjectURL(url.split('#')[0]), 60_000);
   void touchFile(id);
   return true;
 }

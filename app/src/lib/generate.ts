@@ -365,8 +365,13 @@ function validate(
         );
         quote = '';
       } else {
-        // Confirmed either way; the page only exists if the API cited it.
-        checked = { confirmed: true, ...(cited.page ? { page: cited.page } : {}) };
+        // Confirmed either way; the page and the document it is in only
+        // exist if the API cited it.
+        checked = {
+          confirmed: true,
+          ...(cited.page ? { page: cited.page } : {}),
+          ...(cited.doc ? { doc: cited.doc } : {}),
+        };
       }
     }
 

@@ -202,6 +202,27 @@ describe('quotes, which the app presents as the syllabus’s own words', () => {
     expect(out.module.items[0].checked).toBeUndefined();
     expect(out.notes.join(' ')).not.toMatch(/quote removed/i);
   });
+
+  it('records which document the page is in, so it can be opened again', async () => {
+    /*
+     * Without this the page is a string. `lib/topage.ts` matches the name
+     * against the syllabus kept in the drive, and two PDFs going up together
+     * is ordinary enough — a syllabus and a separately posted schedule — that
+     * "p. 4" alone names a page in each of them.
+     */
+    const out = await withQuote('A sentence only the API can vouch for.', [
+      { text: 'A sentence only the API can vouch for.', page: 4, title: 'Econ1020_Fall.pdf' },
+    ]);
+    expect(out.module.items[0].checked).toMatchObject({ page: 4, doc: 'Econ1020_Fall.pdf' });
+  });
+
+  it('names no document for a quote the API did not cite', async () => {
+    // Found in the extracted text, which is the stronger check and carries
+    // neither a page nor a filename. Claiming one would be the app inventing
+    // the evidence for its own citation.
+    const out = await withQuote('Problem Set 1 is due Friday September 4th');
+    expect(out.module.items[0].checked).toEqual({ confirmed: true });
+  });
 });
 
 describe('ids', () => {

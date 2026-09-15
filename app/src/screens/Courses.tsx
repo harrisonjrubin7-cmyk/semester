@@ -22,6 +22,7 @@ import { CameBack } from '../components/CameBack';
 import { BreakItUp } from '../components/BreakItUp';
 import { AskForTime } from '../components/AskForTime';
 import { ForThis } from '../components/ForThis';
+import { OnThePage } from '../components/OnThePage';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { longLabel } from '../lib/date';
@@ -793,18 +794,21 @@ export function ItemDetail() {
       <div
         style={{
           fontSize: 'var(--type-xs)',
-          opacity: 0.45,
           marginTop: 'var(--sp-4)',
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.08em',
         }}
       >
-        {item.source}
-        {/* The page, where the API cited it. This is what turns "the app says
-            the syllabus says this" into something you can check in ten
-            seconds — see `lib/cite.ts`. Absent on a course imported before
-            citations, and on one built from pasted text. */}
-        {item.checked?.page ? ` · p. ${item.checked.page}` : ''}
+        {/* The fade is on the filename rather than on the line, because
+            `opacity` on a parent is a ceiling its children cannot raise and
+            the page below is something you press. See `.to-page`. */}
+        <span style={{ opacity: 0.45 }}>{item.source}</span>
+        {/* The page, where the API cited it — and the document it is a page
+            of, where that is still in the drive. This is what turns "the app
+            says the syllabus says this" into something you can check in ten
+            seconds, which it could not be while the app printed the page and
+            threw the PDF away. See `lib/topage.ts`. */}
+        <OnThePage item={item} courseSource={catalog.byId[item.c]?.source ?? ''} />
       </div>
 
       {/*

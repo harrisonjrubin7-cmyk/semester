@@ -51,6 +51,17 @@ export interface Checked {
   confirmed: boolean;
   /** The page it is on, where the citation carried one. */
   page?: number;
+  /**
+   * Which document that page is in — the file's own name.
+   *
+   * A page number on its own is only an answer when there is one document.
+   * Two PDFs go up together often enough — a syllabus and the course
+   * schedule posted separately — and "p. 4" then names a page in each of
+   * them. The API returns the title it was given for the document it cited,
+   * so the app does not have to guess, and anything that cannot name the
+   * document does not offer to open one. See `lib/topage.ts`.
+   */
+  doc?: string;
   /** The document's own words, which may differ in punctuation from the quote. */
   source?: string;
 }
@@ -75,7 +86,12 @@ export function check(quote: string, citations: Citation[]): Checked {
     const hay = flatten(c.text);
     if (hay.length < MIN_LENGTH) continue;
     if (hay.includes(needle) || needle.includes(hay)) {
-      return { confirmed: true, ...(c.page ? { page: c.page } : {}), source: c.text.trim() };
+      return {
+        confirmed: true,
+        ...(c.page ? { page: c.page } : {}),
+        ...(c.title ? { doc: c.title } : {}),
+        source: c.text.trim(),
+      };
     }
   }
   return { confirmed: false };
