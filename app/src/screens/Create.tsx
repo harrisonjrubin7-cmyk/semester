@@ -39,15 +39,33 @@ import type { Screen } from '../lib/types';
  * course and assignment without anybody filing it afterwards.
  */
 
-/** The nine, and where each one goes. `kind` means this screen owns it. */
-const MAKE: { title: string; sub: string; kind?: CreativeProject['kind']; go?: Screen; act?: 'write' | 'sheet' | 'deck' }[] = [
+/**
+ * The nine, and where each one goes. `kind` means this screen owns it.
+ *
+ * Exported for `create-routes.test.ts`, which holds every tile naming a
+ * registry screen to the screen the registry gives that name. The Maths tile
+ * went to Draw It for as long as it existed: two screens draw a curve, and
+ * the one whose registry name is *Maths* is Equations. `screens/Draw.tsx`
+ * says the same from its side — the graphing calculator "went to `equations`,
+ * which is where the registry always said it was".
+ *
+ * The subtitle is not the evidence, and an earlier draft of this comment
+ * cited it as though it were. Read that way it argues the other case: the
+ * *tables* in "Functions, graphs and tables" are Draw It's `matrix` kind,
+ * `lib/diagram.ts`'s "A table or payoff matrix", and Equations has no table
+ * of values at all — deliberately, for the reason `screens/Draw.tsx` records.
+ * The title is the evidence. *Maths* is a name the registry has already
+ * spent, and All Apps had the route right the whole time, so the same name
+ * opened two different screens depending on which you reached it from.
+ */
+export const MAKE: { title: string; sub: string; kind?: CreativeProject['kind']; go?: Screen; act?: 'write' | 'sheet' | 'deck' }[] = [
   { title: 'Document', sub: 'Papers, notes and research', act: 'write' },
   { title: 'Presentation', sub: 'Slides and speaker notes', act: 'deck' },
   { title: 'Spreadsheet', sub: 'Data, formulas and charts', act: 'sheet' },
   { title: 'Form', sub: 'Questions and practice quizzes', kind: 'form' },
   { title: 'Design', sub: 'Posters, graphics and diagrams', kind: 'design' },
   { title: 'Video', sub: 'Trim, arrange and caption clips', kind: 'video' },
-  { title: 'Maths', sub: 'Functions, graphs and tables', go: 'draw' },
+  { title: 'Maths', sub: 'Functions, graphs and tables', go: 'equations' },
   { title: 'Study guide', sub: 'One course, eleven ways', go: 'study' },
   { title: 'Notes', sub: 'Catch and connect ideas', go: 'mine' },
 ];
