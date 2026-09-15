@@ -118,7 +118,7 @@ export function Dropped({ n }: { n: number }) {
       style={{
         textTransform: 'none',
         letterSpacing: 0,
-        opacity: 0.5,
+        color: 'var(--app-dim)',
         textAlign: 'center',
         lineHeight: 'var(--leading-relaxed)',
       }}
@@ -223,7 +223,7 @@ const QUIET = {
   flex: 'none',
   fontSize: 'var(--type-xs)',
   letterSpacing: '0.1em',
-  opacity: 0.5,
+  color: 'var(--app-dim)',
 } as const;
 
 /**
@@ -251,6 +251,13 @@ export function Waiting({ who, doing = [] }: { who: string; doing?: string[] }) 
         fontSize: 'var(--type-sm)',
       }}
     >
+      {/*
+          These three keep `opacity`, and are meant to. `dim.ts` says text is
+          dimmed with `color` because opacity multiplies and "Increase
+          contrast" cannot reach it — but there is no text here. Each dot is a
+          4px disc of `--app-fg`, and `aiPulse` animates the very property a
+          colour would have replaced, so `color` has nothing to act on.
+      */}
       <span aria-hidden style={{ display: 'inline-flex', gap: 3 }}>
         {[0, 1, 2].map((i) => (
           <span

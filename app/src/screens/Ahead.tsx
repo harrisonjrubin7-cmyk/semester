@@ -215,7 +215,7 @@ export function Ahead() {
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
                 {p.item.title}
-                <span style={{ opacity: 0.5 }}> · {code(p.item.c)}</span>
+                <span style={{ color: 'var(--app-dim)' }}> · {code(p.item.c)}</span>
               </span>
               <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                 {p.minutes >= 60 ? `${Math.round((p.minutes / 60) * 10) / 10}h` : `${p.minutes}m`}
@@ -237,7 +237,7 @@ export function Ahead() {
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35, color: 'var(--app-dim)' }}>
                 {s.item.title}
-                <span style={{ opacity: 0.6 }}> · due {s.item.dueShort}, and no day has room</span>
+                <span style={{ color: 'var(--app-dim)' }}> · due {s.item.dueShort}, and no day has room</span>
               </span>
             </div>
           ))}
@@ -281,7 +281,7 @@ export function Ahead() {
               </span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
                 {i.title}
-                <span style={{ opacity: 0.5 }}> · {code(i.c)}</span>
+                <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
               </span>
             </button>
           ))}

@@ -905,7 +905,7 @@ export function Study() {
           paddingTop: 'var(--sp-6)',
           borderTop: '1px solid var(--app-line)',
           fontSize: 'var(--type-xs)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',

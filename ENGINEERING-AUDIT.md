@@ -870,9 +870,13 @@ could not reach them at all.
 
 ```
 103 sites, 54 files
-dim          271 → 169
+dim          271 → 169     measured on the base this was written against
 the ledger  2,093 → 1,991
 ```
+
+`main` has since spent more of the same axis itself, so on the merged tree the
+figures are `dim` **226 → 125** and the ledger **2,048 → 1,947**. Two of the
+103 are main's own now, arrived at independently.
 
 **And then one of them broke, which the contrast sweep did not catch.**
 
@@ -914,9 +918,9 @@ either pass before it, which is what a move from 0.8 to 0.64 is.
 
 The runtime half is untouched — still 4,710 `style={{ … }}` sites, a number
 these changes did not move in either direction, and the React Compiler question
-above is the decision that should come before any of it. The ledger is at 1,991
+above is the decision that should come before any of it. The ledger is at 1,947
 across 159 files: `type 649 · leading 211 · space 491 · shorthand 471 · dim
-169`. What is left of `dim` is mostly not text at all: the icons, chips and
+125`. What is left of `dim` is mostly not text at all: the icons, chips and
 whole-row states with no `fontSize` in sight, where `opacity` is the right tool
 and the ledger is counting something that is not debt. The text that remains is
 the thin tail at 0.25–0.45 and the handful at 0.9 and above.
@@ -1004,7 +1008,7 @@ Ordered by measured value per unit of risk, not by size.
 | 9 | ✅ **P4 step one** — a test asserting every `Screen` is registered or allowlisted | small | done on `main` as `nav.registry.test.ts`; the hole it was meant to close turned out not to exist |
 | 10 | ✅ **P4, places 3–5** — one table per list, `Record` over the union | large | a screen is declared once instead of three times; the `default` that had already lied about five screens is a build error now. Place 6 left, with its reason, in §4 |
 | 11 | ✅ **P2 proper** — split `now` out of the store context | large | 117 of 195 store consumers no longer re-render on a tick |
-| 12 | ◐ **P7** — the `dim` axis | medium | 570 sites in three passes, `dim` 739 → 169 and the ledger 2,561 → 1,991. On Fog across ten screens `scripts/paint.mjs` goes **24 → 3** runs of text below WCAG AA against the `main` this sits on, with no new failure in the diff of the two lists. The other four axes, and all 4,710 inline style objects, are still open — see §7 |
+| 12 | ◐ **P7** — the `dim` axis | medium | 570 sites in three passes; with `main`'s own work alongside it the axis is `dim` 739 → 125 and the ledger 2,561 → 1,947. On Fog across ten screens `scripts/paint.mjs` goes **24 → 3** runs of text below WCAG AA against the `main` this sits on, with no new failure in the diff of the two lists. The other four axes, and all 4,710 inline style objects, are still open — see §7 |
 | 14 | ✅ **§7a** — give focus back when the assistant closes | small | a dialog that takes focus returns it, both ways in |
 | 15 | ✅ **§3's aside** — read the timezone at the call site, not at module load | tiny | calendar events written in the zone you are in |
 | 13 | ✅ **P1e** — move the assistant's context assembly off the store | medium | −7,543 lines and −12% of the gzipped critical path; `lib/sheet.ts`, `lib/maths.ts` and `lib/chart.ts` go with it |

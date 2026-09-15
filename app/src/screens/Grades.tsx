@@ -417,7 +417,7 @@ function PaperTag({ paper }: { paper: Sitting }) {
         'Remove?'
       ) : (
         <>
-          {paper.pct}%<span style={{ opacity: 0.5 }}> · {when}</span>
+          {paper.pct}%<span style={{ color: 'var(--app-dim)' }}> · {when}</span>
         </>
       )}
     </button>

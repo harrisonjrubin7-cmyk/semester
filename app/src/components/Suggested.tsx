@@ -175,7 +175,7 @@ export function Suggested() {
                   type="button"
                   className="bare tappable"
                   onClick={() => dispatch({ type: 'dismissProgramme', id: p.id })}
-                  style={{ ...chip(false), opacity: 0.6 }}
+                  style={{ ...chip(false), color: 'var(--app-dim)' }}
                 >
                   Not for me
                 </button>

@@ -24,7 +24,7 @@
  */
 
 import { useState } from 'react';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
@@ -144,9 +144,17 @@ export function Tonight() {
           </SectionLabel>
           {/* Shown rather than hidden. What did not fit is the half of the
               answer somebody has to make a decision about. */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', opacity: 0.62 }}>
+          <div
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', opacity: DIMMED_ROW }}
+          >
             {over.map((b) => (
-              <Row key={b.id} b={b} n={0} onOpen={() => dispatch({ type: 'openItem', id: b.id })} />
+              <Row
+                key={b.id}
+                b={b}
+                n={0}
+                dimmed
+                onOpen={() => dispatch({ type: 'openItem', id: b.id })}
+              />
             ))}
           </div>
         </>
@@ -174,10 +182,16 @@ function Row({
   b,
   n,
   onOpen,
+  dimmed = false,
 }: {
   b: ReturnType<typeof bestBuys>[number];
   n: number;
   onOpen: () => void;
+  /* Whether the group around this row is already dimmed. Passed rather than
+     assumed: the three quiet lines below ask `secondLine` for their colour,
+     and inside a dimmed group it returns none — the group has said "behind
+     you" once already and the two would multiply. */
+  dimmed?: boolean;
 }) {
   const { catalog } = useStore();
   const code = catalog.byId[b.courseId]?.code ?? '';
@@ -202,7 +216,7 @@ function Row({
           style={{
             fontFamily: 'var(--font-heading)',
             fontSize: 'var(--type-lg)',
-            ...secondLine(),
+            ...secondLine(dimmed),
             minWidth: 14,
           }}
         >
@@ -224,7 +238,7 @@ function Row({
           style={{
             display: 'block',
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
-            color: 'var(--app-dim)',
+            ...secondLine(dimmed),
             marginTop: 3,
           }}
         >
@@ -237,7 +251,7 @@ function Row({
         <span
           style={{
             fontSize: 'var(--type-sm)',
-            color: 'var(--app-dim)',
+            ...secondLine(dimmed),
             fontVariantNumeric: 'tabular-nums',
             whiteSpace: 'nowrap',
           }}

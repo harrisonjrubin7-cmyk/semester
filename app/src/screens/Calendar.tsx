@@ -72,6 +72,7 @@ import type {
 } from '../lib/types';
 import { Folding } from '../components/Fold';
 import { goMine } from '../lib/openmine';
+import { goCal } from '../lib/opencal';
 
 /**
  * The calendar has two independent axes.
@@ -1944,7 +1945,7 @@ function SemesterView() {
       className="bare"
       aria-expanded={showsAll(key)}
       onClick={() => setOpened((was) => ({ ...was, [key]: !was[key] }))}
-      style={{ ...WEEK_ROW, opacity: 0.5 }}
+      style={{ ...WEEK_ROW, color: 'var(--app-dim)' }}
     >
       <span>{showsAll(key) ? `Fewer${whose}` : `+${n} more${whose}`}</span>
     </button>
@@ -2504,7 +2505,7 @@ function SemesterView() {
                 )}
 
                 {on.classes && w.classes !== usualWeek && (
-                  <div style={{ opacity: 0.6 }}>
+                  <div style={{ color: 'var(--app-dim)' }}>
                     {w.classes === 0
                       ? 'No classes this week'
                       : `${w.classes} class ${w.classes === 1 ? 'meeting' : 'meetings'} — ${
@@ -2552,7 +2553,7 @@ const STAMP: CSSProperties = {
   fontSize: 'calc(10px * var(--text-scale, 1))',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
-  opacity: 0.5,
+  color: 'var(--app-dim)',
 };
 
 const STACK: CSSProperties = {
@@ -2891,9 +2892,7 @@ export function EventDetail() {
           type="button"
           className="btn btn-secondary"
           onClick={() => {
-            dispatch({ type: 'setCalDay', date: dateToIso(event.date) });
-            dispatch({ type: 'setCalView', view: 'day' });
-            dispatch({ type: 'go', screen: 'calendar' });
+            goCal(dispatch, dateToIso(event.date));
           }}
           style={{ height: 46, letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >

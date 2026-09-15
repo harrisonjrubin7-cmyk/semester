@@ -658,7 +658,7 @@ export function Connect() {
                 <div
                   style={{
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                    opacity: 0.6,
+                    color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-relaxed)',
                     marginTop: 'var(--sp-5)',
                     paddingTop: 'var(--sp-5)',
@@ -897,7 +897,7 @@ export function Connect() {
         is what a laptop was being sent somewhere else for.
       */}
       <SectionLabel>On a desktop</SectionLabel>
-      <div className="kicker" style={{ marginTop: 'var(--sp-3)', textTransform: 'none', letterSpacing: 0, opacity: 0.6 }}>
+      <div className="kicker" style={{ marginTop: 'var(--sp-3)', textTransform: 'none', letterSpacing: 0, color: 'var(--app-dim)' }}>
         Open this same address on a laptop. It is one app rather than a phone
         version and a desktop one: the navigation moves to a rail down the side,
         the reading column keeps its width, and it is the same sign-in and the

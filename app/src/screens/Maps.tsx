@@ -617,7 +617,7 @@ export function Maps() {
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 'var(--type-sm)',
-              opacity: 0.5,
+              color: 'var(--app-dim)',
             }}
           >
             Loading the map…

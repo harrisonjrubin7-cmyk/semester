@@ -17,6 +17,7 @@ import { datedItems } from '../lib/select';
 import { asItems } from '../lib/apply';
 import { adviceFor, clashes, whenLine, worstAhead, type Clash } from '../lib/clash';
 import { Folding } from './Fold';
+import { goCal } from '../lib/opencal';
 
 function useClashes(): Clash[] {
   const { state, catalog, courseCode } = useStore();
@@ -44,20 +45,15 @@ function useClashes(): Clash[] {
 }
 
 /**
- * Opening a day takes three dispatches, not one.
+ * Opening a day, bound to this screen's dispatch.
  *
- * `setCalDay` alone changes which day the calendar has selected and leaves you
- * looking at the screen you were already on — which is a tappable row that
- * appears to do nothing. The view has to be put into `day` and the calendar
- * has to be gone to as well.
+ * The rule — three dispatches, not one — and the reason for it now live in
+ * `lib/opencal.ts`. They were written here, privately, which is why two other
+ * screens re-derived them and a third forgot; see that file's note.
  */
 function useOpenDay(): (date: string) => void {
   const { dispatch } = useStore();
-  return (date: string) => {
-    dispatch({ type: 'setCalDay', date });
-    dispatch({ type: 'setCalView', view: 'day' });
-    dispatch({ type: 'go', screen: 'calendar' });
-  };
+  return (date: string) => goCal(dispatch, date);
 }
 
 function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {

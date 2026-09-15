@@ -1,0 +1,100 @@
+# The contrast sweep, on a schedule.
+#
+# Not part of `ci.yml`, and the reasons are worth stating because "why is this
+# not a required check" is the first question anyone will have:
+#
+#   It needs a browser and a running dev server, and takes about half an hour.
+#   Gating every pull request on that would cost more than it catches — the
+#   failures it finds are palette and stylesheet mistakes, which arrive far
+#   more slowly than pull requests do.
+#
+#   It measures what Chromium paints, so it needs the app running rather than
+#   compiled. `ci.yml` never starts the app.
+#
+# What it is for: `lib/contrast.test.ts` runs in CI over every accent-and-
+# ground pairing, but it compares tokens to tokens, and the failures that
+# matter most are not visible there. The search placeholder that shipped at
+# 0.00:1 — text and surface the same colour — passed every check this repo
+# had, because the two rules that produced it are each correct alone and only
+# meet when a browser composites them. See app/scripts/contrast-sweep.mjs.
+#
+# Nightly rather than hourly: a run costs half an hour of runner time and the
+# thing it watches for changes on the scale of a stylesheet edit.
+
+name: Contrast
+
+on:
+  schedule:
+    # 07:00 UTC, which is the quiet end of the day for this repo.
+    - cron: '0 7 * * *'
+  # So it can be run against a branch before merging something palette-shaped,
+  # rather than finding out the next morning.
+  workflow_dispatch:
+
+# One at a time. A second run would fight the first for port 5173.
+concurrency:
+  group: contrast
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    # A full run is ~33 minutes; this leaves room for a slow runner without
+    # letting a hung browser burn six hours.
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install
+        working-directory: app
+        run: npm ci
+
+      # Playwright is installed here and not in `app/package.json`, which is
+      # deliberate: see `.claude/skills/run`. Every contributor would otherwise
+      # pay a browser download to run the unit tests. A scratch directory keeps
+      # it out of the project's tree exactly as the script's own instructions
+      # describe.
+      - name: Install playwright and a browser
+        run: |
+          mkdir -p /tmp/sweep && cd /tmp/sweep
+          echo '{"name":"sweep","private":true,"type":"module"}' > package.json
+          npm install --no-save playwright
+          npx --yes playwright install --with-deps chromium
+
+      # `npm run dev` rather than a built preview: the sweep was written and
+      # verified against the dev server, and a difference between the two would
+      # show up here as a finding nobody could reproduce locally.
+      - name: Start the app
+        working-directory: app
+        run: |
+          npm run dev > /tmp/vite.log 2>&1 &
+          timeout 120 bash -c 'until curl -sf http://localhost:5173 >/dev/null; do sleep 1; done'
+          echo "dev server up"
+
+      # The script exits non-zero on a finding *or* on a pass whose setup it
+      # could not confirm, so this step failing means one of those two and the
+      # log says which.
+      - name: Sweep
+        working-directory: app
+        env:
+          SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
+        run: npm run sweep:contrast 2>&1 | tee /tmp/contrast.txt
+
+      # Kept whether the step passed or failed: a green run's coverage numbers
+      # are how you notice the sweep quietly measuring less than it used to.
+      - name: Keep the output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contrast-sweep
+          path: |
+            /tmp/contrast.txt
+            /tmp/vite.log
+          retention-days: 30

@@ -223,7 +223,7 @@ function PeopleTab({ rows }: { rows?: Person[] }) {
                           }}
                         >
                           <span style={{ flex: 1, minWidth: 0 }}>
-                            <span style={{ opacity: 0.6 }}>
+                            <span style={{ color: 'var(--app-dim)' }}>
                               {new Date(v.at).toDateString().slice(4).replace(/\s\d{4}$/, '')}
                             </span>{' '}
                             — {v.what}

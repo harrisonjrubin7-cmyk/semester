@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Blueprint } from './Blueprint';
 import { useStore } from '../state/store';
 import type { Insight } from '../insights';
+import { openEvidence } from '../insights/open';
 
 /**
  * Insights, drawn.
@@ -139,7 +140,10 @@ function One({ insight }: { insight: Insight }) {
               type="button"
               className="bare tappable"
               disabled={!e.screen}
-              onClick={() => e.screen && dispatch({ type: 'go', screen: e.screen })}
+              // The record, not just its screen. `e.id` was being dropped
+              // here, thirty lines from the handler above that is careful to
+              // send `action.tab` for the same reason. See `insights/open.ts`.
+              onClick={() => openEvidence(e).forEach(dispatch)}
               style={{
                 display: 'block',
                 width: '100%',

@@ -101,7 +101,7 @@ export function WeekDue({
                     textDecoration: state.done[i.id] ? 'line-through' : 'none',
                   }}
                 >
-                  <span style={{ opacity: 0.6 }}>{courseCode(i.c)} · </span>
+                  <span style={{ color: 'var(--app-dim)' }}>{courseCode(i.c)} · </span>
                   {i.title}
                   {/* The clock where the wording holds one, otherwise the
                       syllabus's own words. "Before class" is what it says and

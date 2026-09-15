@@ -54,7 +54,7 @@ export function NotYetOpened() {
               border: '1px solid var(--app-line)',
             }}
           >
-            <span style={{ flex: 'none', opacity: 0.5, paddingTop: 1 }}>
+            <span style={{ flex: 'none', color: 'var(--app-dim)', paddingTop: 1 }}>
               <TabGlyph screen={d.screen} size={16} />
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>

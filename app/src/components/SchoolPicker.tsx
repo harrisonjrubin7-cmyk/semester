@@ -311,7 +311,7 @@ function Row({
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',
-            opacity: 0.6,
+            color: 'var(--app-dim)',
             marginBottom: 7,
           }}
         >

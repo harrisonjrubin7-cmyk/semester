@@ -24,6 +24,7 @@ import {
   type Door,
 } from '../../lib/you';
 import type { DatedItem, Screen } from '../../lib/types';
+import { goCal } from '../../lib/opencal';
 
 /**
  * Progress, on the tab somebody actually lands on.
@@ -675,9 +676,7 @@ function WeekStrip({ days }: { days: Day[] }) {
   const most = Math.max(1, ...days.map((d) => d.due));
 
   const open = (day: Day) => {
-    dispatch({ type: 'setCalDay', date: dateToIso(day.date) });
-    dispatch({ type: 'setCalView', view: 'day' });
-    dispatch({ type: 'go', screen: 'calendar' });
+    goCal(dispatch, dateToIso(day.date));
   };
 
   return (

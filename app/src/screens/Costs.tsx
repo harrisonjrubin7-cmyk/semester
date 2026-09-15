@@ -185,7 +185,7 @@ function OutOfPocket() {
                   >
                     <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
                       {x.what}
-                      <span style={{ opacity: 0.5 }}>
+                      <span style={{ color: 'var(--app-dim)' }}>
                         {' · '}
                         {kindOf(x.kind).label}
                         {x.rented ? ' · rented' : ''}

@@ -154,7 +154,7 @@ export function Guide() {
         <ChevronRight
           size={14}
           style={{
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             flex: 'none',
             transform: state.waysOpen ? 'rotate(90deg)' : 'none',
           }}
@@ -432,7 +432,7 @@ export function Guide() {
                     size={14}
                     style={{
                       flex: 'none',
-                      opacity: 0.5,
+                      color: 'var(--app-dim)',
                       transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
                       transition: 'transform 140ms ease',
                     }}
@@ -1095,7 +1095,7 @@ function Cases() {
                 <div
                   style={{
                     fontSize: 'var(--type-sm)',
-                    opacity: 0.6,
+                    color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-normal)',
                     marginTop: 'var(--sp-5)',
                     paddingTop: 9,

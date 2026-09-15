@@ -905,7 +905,7 @@ export function AddMaterial() {
           }}
         >
           <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
-          <span style={{ opacity: 0.5, flex: 'none' }}>{formatBytes(f.size)}</span>
+          <span style={{ color: 'var(--app-dim)', flex: 'none' }}>{formatBytes(f.size)}</span>
         </div>
       ))}
       <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>

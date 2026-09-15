@@ -164,7 +164,7 @@ export function TabChooser() {
               },
             })}
           >
-            <div style={{ flex: 'none', width: 26, opacity: 0.5, display: 'flex' }}>
+            <div style={{ flex: 'none', width: 26, color: 'var(--app-dim)', display: 'flex' }}>
               <TabGlyph screen={id} size={16} />
             </div>
             {/* The name is the handle a keyboard lands on: a row that can be

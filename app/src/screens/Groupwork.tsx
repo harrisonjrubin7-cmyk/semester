@@ -363,7 +363,7 @@ export function Groupwork() {
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
                 {share.member.handle}
                 {share.member.userId === account.id ? (
-                  <span style={{ opacity: 0.5 }}> · you</span>
+                  <span style={{ color: 'var(--app-dim)' }}> · you</span>
                 ) : null}
               </span>
               <span style={{ flex: 'none', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
