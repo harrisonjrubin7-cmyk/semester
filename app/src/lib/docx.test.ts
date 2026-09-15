@@ -148,6 +148,35 @@ describe('escaping', () => {
   it('drops control characters, which are legal in a string and not in XML', () => {
     expect(xml('a\x07b')).toBe('ab');
   });
+
+  /*
+   * And half of a character, which is the same problem one level down.
+   *
+   * A JS string is UTF-16, so an emoji is two code units. Any cap counted in
+   * characters can cut between them, and what is left ends in a lone
+   * surrogate — legal in a JS string, not a character at all in XML, and
+   * rejected outright by a parser. Checked against one at the time: a
+   * `<t>` holding U+D83C alone is not well-formed.
+   *
+   * `tabName` in `lib/xlsx.ts` is where it was reachable; this is the
+   * backstop for every other way a half could arrive.
+   */
+  const C = String.fromCharCode;
+
+  it('keeps a real emoji whole', () => {
+    expect(xml('Done ' + C(0xd83c, 0xdf89))).toBe('Done ' + C(0xd83c, 0xdf89));
+  });
+
+  it('drops a surrogate with no partner, either half', () => {
+    expect(xml('Done ' + C(0xd83c))).toBe('Done ');
+    expect(xml(C(0xdf89) + ' done')).toBe(' done');
+    // And a pair still reads as a pair with a loose half beside it.
+    expect(xml(C(0xd83c, 0xdf89) + C(0xd83c))).toBe(C(0xd83c, 0xdf89));
+  });
+
+  it('drops the two code points XML excludes by name', () => {
+    expect(xml('a' + C(0xfffe) + 'b' + C(0xffff))).toBe('ab');
+  });
 });
 
 describe('what each block becomes', () => {

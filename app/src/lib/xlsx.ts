@@ -223,9 +223,28 @@ export interface Book {
  * "ECON 1020: problem set 4" is an ordinary thing to want, so it is fixed here
  * rather than being a rule people have to know.
  */
+/**
+ * The first `units` code units, never stopping inside a character.
+ *
+ * `slice` counts UTF-16 units, and an emoji or a mathematical italic is two
+ * of them — so a cap landing between the halves leaves a lone surrogate,
+ * which is not a character in XML and makes the workbook unopenable. Stepping
+ * by code point and stopping before the limit keeps the cut whole, and can
+ * only ever return fewer units than `slice` would, so nothing that Excel
+ * accepted before is newly too long.
+ */
+function cut(text: string, units: number): string {
+  let out = '';
+  for (const ch of text) {
+    if (out.length + ch.length > units) break;
+    out += ch;
+  }
+  return out;
+}
+
 export function tabName(title: string, fallback = 'Sheet1'): string {
   const clean = title.replace(/[[\]:*?/\\]/g, ' ').replace(/\s+/g, ' ').trim();
-  return clean ? clean.slice(0, 31) : fallback;
+  return clean ? cut(clean, 31) : fallback;
 }
 
 /**
@@ -244,7 +263,7 @@ export function tabNames(titles: readonly string[]): string[] {
     const wanted = tabName(title, `Sheet${i + 1}`);
     let name = wanted;
     let n = 2;
-    while (used.has(name.toLowerCase())) name = `${wanted.slice(0, 28)} ${n++}`;
+    while (used.has(name.toLowerCase())) name = `${cut(wanted, 28)} ${n++}`;
     used.add(name.toLowerCase());
     return name;
   });
