@@ -576,14 +576,14 @@ measurement is the record of what was wrong, not because this branch fixed it.
 Sixty destinations, two grounds, phone width, on `f0a2368`:
 
 ```
-runs measured 3120   skipped, off screen or moved between the shots 2652
-below AA: 180 runs of text (120 distinct), 134 runs of punctuation
+runs measured 3146   skipped, off screen or moved between the shots 2820
+below AA: 168 runs of text (113 distinct), 132 runs of punctuation
 ```
 
-**Two of the hundred and eighty are on Ink.** Everything else is Fog, and the
-reason is one line in `lib/dim.ts`: dark ink on a light page fades faster than
-light ink on a dark one. Three clusters account for seventy-eight of the
-hundred and twenty distinct runs, and each is one number:
+**Not one of the hundred and sixty-eight is on Ink.** Every one is on Fog, and
+the reason is one line in `lib/dim.ts`: dark ink on a light page fades faster
+than light ink on a dark one. Three clusters account for seventy-seven of the
+hundred and thirteen distinct runs, and each is one number:
 
 | painted | ratio | what wrote it |
 |---|---|---|
@@ -650,11 +650,18 @@ is worth more than the exception.
 
 ## What the branch leaves behind
 
-Measured on the merged tree, same sixty screens and two grounds:
+Measured on the merged tree — `3c0c0f0` plus this branch — same sixty screens,
+same two grounds, same instrument:
 
 ```
-PLACEHOLDER
+runs measured 3152   skipped, off screen or moved between the shots 2852
+below AA: 85 runs of text (67 distinct), 132 runs of punctuation
 ```
+
+A hundred and sixty-eight to eighty-five, and still nothing on Ink. Most of
+that is `main`'s migration rather than this branch, which is the honest
+accounting: what this branch adds is the number, the instrument that produces
+it, one of the six, and a test that stops the last one coming back.
 
 ## What was not fixed, deliberately
 
