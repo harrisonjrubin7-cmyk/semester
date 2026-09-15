@@ -270,6 +270,22 @@ describe('the per-file ledger', () => {
     });
   });
 
+  it('counts an alpha hidden behind a condition, which is where two sweeps lost them', () => {
+    // `opacity: 0\.` reads the value from the colon, so a number picked by eye
+    // is invisible the moment a condition stands in front of it. Sixty-three
+    // sites sat off the ledger this way — and both sweeps of this axis missed
+    // the same ones, because they were grepping the way this counted.
+    expect(
+      countsByFile(tree(`export const x = <i style={{ opacity: on ? 1 : 0.55 }} />;`)),
+    ).toEqual({ 'Probe.tsx': { dim: 1 } });
+
+    // One site, one entry, however many rungs the condition names: the ledger
+    // is about the declaration, not the arithmetic inside it.
+    expect(
+      countsByFile(tree(`export const x = <i style={{ opacity: whole ? 0.6 : 0.75 }} />;`)),
+    ).toEqual({ 'Probe.tsx': { dim: 1 } });
+  });
+
   it('does not count the token, which is the way out of the ledger', () => {
     expect(
       countsByFile(tree(`export const x = <i style={{ color: 'var(--app-dim)' }} />;`)),
@@ -281,6 +297,21 @@ describe('the per-file ledger', () => {
 
   it('does not count a fully opaque element as dimmed', () => {
     expect(countsByFile(tree(`export const x = <i style={{ opacity: 1 }} />;`))).toEqual({});
+    // The token behind a condition is still the token, and still free.
+    expect(
+      countsByFile(tree(`export const x = <i style={{ opacity: on ? 1 : DIMMED_ROW }} />;`)),
+    ).toEqual({});
+  });
+
+  it('stops at the declaration it is reading, not the next one', () => {
+    // The value is read to its delimiter, so a decimal in the property after
+    // it is not this property's. Were it otherwise the ledger would grow on
+    // edits that never touched an opacity.
+    expect(
+      countsByFile(
+        tree(`export const x = <i style={{ opacity: 1, transform: 'scale(0.98)' }} />;`),
+      ),
+    ).toEqual({});
   });
 
   it('totals the same numbers it files per screen', () => {
