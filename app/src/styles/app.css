@@ -627,9 +627,7 @@ a:hover {
 }
 
 .rail-mark {
-  font-family: var(--font-display);
-  font-size: 20px;
-  letter-spacing: 0.06em;
+  font-size: 16px;
   padding: 0 20px 18px;
 }
 
@@ -739,7 +737,7 @@ a:hover {
     padding: 30px 0 24px;
   }
   .rail-mark {
-    font-size: 22px;
+    font-size: 18px;
     padding: 0 24px 22px;
   }
   .rail .rail-item {
@@ -1760,6 +1758,58 @@ a:hover {
     -webkit-text-fill-color: currentColor;
     background: none;
   }
+}
+
+
+/* ── The logo ───────────────────────────────────────────────────────────────
+   The lockup: the mark, then the word. `components/Brand.tsx` draws it and
+   `components/mark.data.ts` holds the shape; this sizes the two against each
+   other and nothing else.
+
+   One `font-size` on the lockup drives both, because the glyph is sized in
+   `em` below. That is the whole reason this is a class rather than five sets
+   of inline numbers: the logo appears at 17px in the workspace bar and at 64
+   on the search home, and a mark whose height was set separately from its word
+   is a mark that goes out of proportion at the first breakpoint nobody
+   re-measured.
+   ------------------------------------------------------------------------- */
+
+.brandlock {
+  display: inline-flex;
+  align-items: center;
+  /* Optical. The reference lockup sets the word about two thirds of a slab's
+     width away from the mark, which at this glyph's proportions is .38em. */
+  gap: 0.38em;
+  line-height: var(--leading-tight);
+}
+
+.brandlock > svg {
+  /* Taller than the capitals beside it and shorter than the line, which is
+     where a mark sits against type. An SVG with a fixed viewBox takes this
+     exactly — there is no dependence on which face loaded. */
+  height: 1.16em;
+  width: auto;
+  flex: none;
+}
+
+/* The word. `.chrome-text` milled it out of metal already; this is the same
+   treatment in the condensed face, which is what the logo is set in.
+
+   It has to come after `.chrome-text` in this sheet: both are one class deep,
+   so source order is what lets the tracking below win over that rule's -0.012em
+   rather than the other way round. */
+.brandword {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  text-transform: uppercase;
+  /* Condensed capitals at a logo's size close up against each other, and the
+     tracking is most of what makes this read as a wordmark rather than as a
+     shouted word. */
+  letter-spacing: 0.17em;
+  /* Tracking is applied after the last letter too, so without this the lockup
+     carries a trailing space it did not ask for — visible the moment it is
+     centred, which is three of the five places it is drawn. */
+  margin-right: -0.17em;
 }
 
 
@@ -3441,24 +3491,28 @@ section[data-drop] > .grip + * {
 }
 
 .splash-mark {
-  width: 76px;
-  height: 76px;
   color: var(--app-accent);
 }
 
-/* The tick draws itself in, behind the rest — the one piece of movement, and
-   it is the mark completing rather than anything sliding about. */
-.splash-tick {
-  stroke-dasharray: 250;
-  stroke-dashoffset: 250;
-  animation: splash-tick 620ms cubic-bezier(0.65, 0, 0.35, 1) 180ms both;
+/* The slabs rise in, left to right — the one piece of movement, and it is the
+   mark assembling rather than anything sliding about. Three paths, in the
+   order `Brand.tsx` draws them, which is the order they are read in. */
+.splash-mark path {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: splash-slab 560ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.splash-mark path:nth-child(2) {
+  animation-delay: 90ms;
+}
+
+.splash-mark path:nth-child(3) {
+  animation-delay: 180ms;
 }
 
 .splash-name {
-  font-family: var(--font-display);
   font-size: calc(var(--type-xl) * 1.35);
-  letter-spacing: 0.08em;
-  line-height: var(--leading-tight);
 }
 
 .splash-said {
@@ -3492,9 +3546,14 @@ section[data-drop] > .grip + * {
   }
 }
 
-@keyframes splash-tick {
+@keyframes splash-slab {
+  from {
+    opacity: 0;
+    transform: translateY(12%) scaleY(0.84);
+  }
   to {
-    stroke-dashoffset: 0;
+    opacity: 1;
+    transform: none;
   }
 }
 
@@ -5656,6 +5715,9 @@ section[data-drop] > .grip + * {
   flex: none;
 }
 
+/* The tile, which is the installed icon at bar size: the mark on a filled
+   square. Filled with the accent rather than the icon file's black, so it is
+   the app's own material on all thirteen grounds — see `Brand.tsx`. */
 .desktop-mark {
   width: 34px;
   height: 34px;
@@ -5664,14 +5726,12 @@ section[data-drop] > .grip + * {
   border-radius: var(--r-lg);
   background: var(--app-accent);
   color: var(--app-void);
-  font-family: var(--font-display);
-  font-size: var(--type-xl);
-  line-height: 1;
 }
 
+/* Set smaller than the 19px it was: tracked capitals read a size larger than
+   the same number in a title-case serif, and the bar has one row to spend. */
 .desktop-word {
-  font-size: calc(19px * var(--text-scale, 1));
-  letter-spacing: 0.01em;
+  font-size: calc(15px * var(--text-scale, 1));
 }
 
 /* Below the desktop tier the wordmark goes and the mark carries the name. A
@@ -6222,11 +6282,11 @@ section[data-drop] > .grip + * {
   text-align: center;
 }
 
+/* Smaller numbers than the title-case serif this replaced, for the reason
+   `.desktop-word` is: a tracked capital line occupies about a third more width
+   per point, and the lockup carries the mark in front of it as well. */
 .deskhome-mark {
-  font-family: var(--font-display);
-  font-size: clamp(44px, 10vw, 92px);
-  line-height: 1;
-  letter-spacing: -0.01em;
+  font-size: clamp(28px, 5.2vw, 58px);
   color: var(--app-fg);
 }
 
