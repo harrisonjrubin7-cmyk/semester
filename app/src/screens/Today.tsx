@@ -56,6 +56,7 @@ import { HourGrid } from '../components/HourGrid';
 import { KindKey } from '../components/KindKey';
 import { CourseTag } from '../components/CourseTag';
 import { Folding } from '../components/Fold';
+import { goMine } from '../lib/openmine';
 
 /** The next-class card, shared by both nav modes. */
 function NextClassCard() {
@@ -138,7 +139,10 @@ function YourTasks() {
           <button
             type="button"
             className="bare"
-            onClick={() => dispatch({ type: 'go', screen: 'mine' })}
+            // `tasks`, not whatever Mine last showed: the label beside this button
+            // is a count of undone tasks, so landing on Events would be a button
+            // that counts one list and opens another. See `lib/openmine.ts`.
+            onClick={() => goMine(dispatch, 'tasks')}
             style={{
               width: 'auto',
               fontFamily: 'var(--font-heading)',
@@ -452,8 +456,7 @@ function ThisWeek() {
                 type="button"
                 className="bare tappable"
                 onClick={() => {
-                  dispatch({ type: 'setMineTab', tab: 'tasks' });
-                  dispatch({ type: 'go', screen: 'mine' });
+                  goMine(dispatch, 'tasks');
                 }}
                 style={{
                   display: 'flex',
@@ -1507,8 +1510,7 @@ function HoursToday() {
               type="button"
               className="bare tappable"
               onClick={() => {
-                dispatch({ type: 'setMineTab', tab: 'tasks' });
-                dispatch({ type: 'go', screen: 'mine' });
+                goMine(dispatch, 'tasks');
               }}
               style={{
                 display: 'flex',
@@ -1532,8 +1534,7 @@ function HoursToday() {
       )}
       <ActionButton
         onClick={() => {
-        dispatch({ type: 'setMineTab', tab: 'appointments' });
-        dispatch({ type: 'go', screen: 'mine' });
+        goMine(dispatch, 'appointments');
         }}
         style={{ marginTop: 18, fontSize: 'var(--type-xs)' }}
       >

@@ -1,5 +1,6 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { sources } from '../styles/rules';
 import { DESTINATIONS } from './nav';
 import { DEFAULT_TABS } from './tabbar';
 import { modesFor } from './modes';
@@ -89,6 +90,26 @@ export const STATED: Stated[] = [
     keys: ['modes'],
     nouns: { modes: 'ways through the same material' },
   },
+  /*
+   * The audit opens every pass with a count of the app, and for six passes
+   * nobody re-derived it. `134 components` was true once and was copied
+   * forward while the tree went to 151; `79 screens` was never the count of
+   * anything — not the files, not the `Screen` union, not the destinations.
+   *
+   * The mechanism to stop that was already in this file, written for the
+   * README and for exactly this failure. The audit — the document arguing
+   * that every job should have one home — was the one file stating counts
+   * that had not been given one.
+   */
+  {
+    path: 'SIMPLIFY-AUDIT.md',
+    keys: ['screens', 'screenfiles', 'components'],
+    nouns: {
+      screens: 'destinations',
+      screenfiles: 'screen files',
+      components: 'components',
+    },
+  },
 ];
 
 /** The counts one of those files states, in the order `counts` returned them. */
@@ -146,6 +167,22 @@ const MODULE: CourseModule = {
   frameLabel: 'Frames',
 };
 
+/**
+ * How many component files live under a directory, tests excluded.
+ *
+ * On `sources` rather than a walk of its own. `G2` found six directory
+ * walkers, five of them private copies of one another, and the whole point of
+ * that row was that the next file wanting a walk asks for the shared one.
+ * Reading each file's text to count it is more work than counting names, and
+ * still cheaper than a fifteenth walker nobody maintains.
+ *
+ * `sources` throws on an empty result, which is the behaviour this wants: a
+ * count of zero screens is a broken path, not a small app.
+ */
+function files(dir: string): number {
+  return sources(dir, { ext: ['.tsx'], tests: false }).length;
+}
+
 /** How many `.mp3` files are directly in a directory. */
 function recordings(dir: string): number {
   return readdirSync(dir).filter((f) => f.endsWith('.mp3')).length;
@@ -175,6 +212,8 @@ export function counts(root: string): Count[] {
 
   return [
     said('screens', DESTINATIONS.length, 'lib/nav.ts'),
+    said('screenfiles', files(join(root, 'src', 'screens')), 'src/screens'),
+    said('components', files(join(root, 'src', 'components')), 'src/components'),
     said('tabs', DEFAULT_TABS.length, 'lib/tabbar.ts'),
     said('modes', modesFor(buildCatalog([MODULE]), 'econ', {
       guide: GUIDE,

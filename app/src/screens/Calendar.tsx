@@ -71,6 +71,7 @@ import type {
   PersonalTask,
 } from '../lib/types';
 import { Folding } from '../components/Fold';
+import { goMine } from '../lib/openmine';
 
 /**
  * The calendar has two independent axes.
@@ -331,8 +332,7 @@ function DayView() {
             // Straight to the row that edits it. A bar is a thing you own or
             // a thing a feed says; only the first has somewhere to go.
             if (!run.appointmentId) return;
-            dispatch({ type: 'setMineTab', tab: 'appointments' });
-            dispatch({ type: 'go', screen: 'mine' });
+            goMine(dispatch, 'appointments');
           }}
         />
       )}
@@ -898,8 +898,7 @@ function WeekView() {
             onClick: () => {
               // Onto the right tab, not just the right screen — landing on
               // Mine's task list is a second thing to work out.
-              dispatch({ type: 'setMineTab', tab: 'appointments' });
-              dispatch({ type: 'go', screen: 'mine' });
+              goMine(dispatch, 'appointments');
             },
           }}
         />
@@ -912,8 +911,7 @@ function WeekView() {
               style={{ marginTop: 'var(--sp-7)' }}
               onOpen={(run) => {
                 if (!run.appointmentId) return;
-                dispatch({ type: 'setMineTab', tab: 'appointments' });
-                dispatch({ type: 'go', screen: 'mine' });
+                goMine(dispatch, 'appointments');
               }}
             />
           )}
@@ -1613,8 +1611,7 @@ function MonthView() {
           {...drag.handlers({ kind: 'task', id: t.id, title: t.title })}
           onClick={() => {
             if (drag.tookDrop()) return;
-            dispatch({ type: 'setMineTab', tab: 'tasks' });
-            dispatch({ type: 'go', screen: 'mine' });
+            goMine(dispatch, 'tasks');
           }}
           style={{
             display: 'flex',
@@ -1691,8 +1688,7 @@ function MonthView() {
               type="button"
               className="bare tappable"
               onClick={() => {
-                dispatch({ type: 'setMineTab', tab: 'appointments' });
-                dispatch({ type: 'go', screen: 'mine' });
+                goMine(dispatch, 'appointments');
               }}
               style={{
                 display: 'flex',
@@ -2453,8 +2449,7 @@ function SemesterView() {
                           // A task has no detail screen of its own, so this
                           // opens the list it lives on rather than pretending
                           // to and doing nothing.
-                          dispatch({ type: 'setMineTab', tab: 'tasks' });
-                          dispatch({ type: 'go', screen: 'mine' });
+                          goMine(dispatch, 'tasks');
                         }}
                         style={{
                           ...WEEK_ROW,
@@ -2484,8 +2479,7 @@ function SemesterView() {
                         type="button"
                         className="bare"
                         onClick={() => {
-                          dispatch({ type: 'setMineTab', tab: 'appointments' });
-                          dispatch({ type: 'go', screen: 'mine' });
+                          goMine(dispatch, 'appointments');
                         }}
                         style={WEEK_ROW}
                       >

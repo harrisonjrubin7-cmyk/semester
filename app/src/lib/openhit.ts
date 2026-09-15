@@ -11,6 +11,7 @@
 import type { Hit } from './find';
 import type { Screen } from './types';
 import type { Action } from '../state/shape';
+import { openMine } from './openmine';
 
 /**
  * What opening a result does, as data rather than as a side effect.
@@ -52,17 +53,11 @@ export function actionsFor(hit: Hit): Action[] {
       // There is no screen for one task. The tab that holds them is as close
       // as the app gets, and landing there with the list open beats landing
       // nowhere.
-      return [
-        { type: 'setMineTab', tab: 'tasks' },
-        { type: 'go', screen: 'mine' },
-      ];
+      return openMine('tasks');
     case 'appointment':
       // Same as a task, and for the same reason: there is no screen for one
       // appointment, and the tab that holds them is as close as the app gets.
-      return [
-        { type: 'setMineTab', tab: 'appointments' },
-        { type: 'go', screen: 'mine' },
-      ];
+      return openMine('appointments');
     // The three things the student made in the app. Each has a real screen of
     // its own, so unlike a task these open the thing rather than the list.
     case 'document':

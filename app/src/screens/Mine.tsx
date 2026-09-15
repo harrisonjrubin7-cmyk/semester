@@ -32,6 +32,7 @@ import { Dictate } from '../components/Dictate';
 import { RecordButton } from '../components/RecordButton';
 import { PrintButton } from '../components/PrintButton';
 import { Folding } from '../components/Fold';
+import { goMine } from '../lib/openmine';
 
 /**
  * Everything you added yourself.
@@ -1484,8 +1485,7 @@ export function NoteEditor() {
           onClick: () => {
             // The notes tab specifically — landing on Tasks after asking for a
             // note is the second half of the same wrong turn.
-            dispatch({ type: 'setMineTab', tab: 'notes' });
-            dispatch({ type: 'go', screen: 'mine' });
+            goMine(dispatch, 'notes');
           },
         }}
       />

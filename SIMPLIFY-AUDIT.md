@@ -3,9 +3,13 @@
 Against `main` at `e4bf976`. **Two findings, and one of them is about this
 file.**
 
-**60 destinations** in `lib/nav.ts`, unchanged for twelve passes. 102 screen
-files, 151 components — and those two numbers are the finding, because this
-file has been printing 79 and 134.
+**<!--screens-->sixty<!--/--> destinations** in `lib/nav.ts`, unchanged for
+twelve passes. <!--screenfiles-->one hundred and two<!--/--> screen files,
+<!--components-->one hundred and fifty-one<!--/--> components — and those two
+numbers are the finding, because this file has been printing 79 and 134.
+
+Those three are written by `npm run counts` from the registries and the tree.
+They are the first numbers in this file that are not typed by hand.
 
 ## K1 — the headline census was prose, and it drifted
 
@@ -57,13 +61,33 @@ number nobody counted was the one at the top of the page.
 
 The repository's answer to a counted claim is a census test: roughly thirty of
 them, each asserting an empty offender list, because a claim a human maintains
-by hand is a claim that rots. `SIMPLIFY-AUDIT.md`'s headline is the largest
-counted claim in the repo and it is the only one with no guard, which is
-exactly why it is the one that drifted furthest.
+by hand is a claim that rots.
 
-**Resolution: cut.** Not the numbers — the hand-maintenance. The headline is
-computed by a test that pins it, so the next pass cannot print a figure the
-tree disagrees with.
+### The mechanism already existed
+
+This is the part worth sitting with. `lib/counts.ts` was written for precisely
+this failure, and says so at the top: *"every one of those is a fact about a
+registry sitting somewhere else in this repo, and every one of them had
+drifted at least once."* Its answer is that the number is **generated** —
+`npm run counts` writes it into the prose between markers — and the test's job
+shrinks to proving the script was run. It has been guarding `README.md` and
+`app/README.md` for months.
+
+`SIMPLIFY-AUDIT.md` was never added to `STATED`. Not overruled, not
+considered and rejected — omitted. The file arguing that every job should have
+exactly one home was the one file stating counts that had not been given one,
+and it drifted in exactly the way the module two directories away exists to
+prevent.
+
+So the twelfth pass finds no new mechanism. It finds a mechanism already built,
+already reasoned about, already passing — and one caller missing.
+
+**Resolution: merge**, onto the generator that already exists. Three counts in
+the headline (`screens`, `screenfiles`, `components`), two of them new to
+`counts()` and built on `sources()` rather than a fifteenth private walker.
+Both historical faults were then planted back and the guard was watched
+catching each: `134` components fails with a diff naming the line, and so does
+`79` screen files.
 
 ### What this says about the eleven passes
 
@@ -176,8 +200,12 @@ shown catching the thing.**
 
 | row | what | resolution |
 |---|---|---|
-| K1 | the headline census, unchecked and drifted | **cut** the hand-maintenance: compute and pin it |
-| K2 | 13 hand-written copies of the Mine pairing, 1 missing | **merge** into one helper, then guard it |
+| K1 | the headline census, unchecked and drifted | **merged** onto `lib/counts.ts`, which already did this for both READMEs |
+| K2 | 13 hand-written copies of the Mine pairing, 1 missing | **merged** into `lib/openmine.ts`, guarded by `openmine.test.ts` |
+
+Both done in this pass. The screen count is unchanged at sixty, because
+neither row was a screen: one was the audit's own instrument and the other a
+two-line invariant. Twelve passes in, that is what is left to find.
 
 # One app — the eleventh pass: one fact, derived how many ways?
 
