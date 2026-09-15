@@ -750,7 +750,25 @@ Accessibility is already tested: `src/a11y/` holds `labels`, `landmarks`,
   ~~No plain-text export.~~ — Markdown out is `toMarkdown`.
 - ~~No templates (essay/MLA/APA, lab report, reading response, etc.).~~ —
   **closed.** Seven, in `lib/doctemplates.ts`.
-- No "Open in Docs" from a study guide.
+- ~~No "Open in Docs" from a study guide.~~ — **wrong as written, and
+  correcting it found what was really missing.** `fromGuide` in
+  `lib/doctemplates.ts` has always made the guide into a document you can
+  edit, and the Guide screen's Documents fold has always offered it. But it
+  copied the three parts of a guide that are already question-and-answer —
+  the cards, the self-test and the terms — and silently left behind the three
+  that are not: the framings, the worked examples and the case files. Those
+  are the long-form end, the part `lib/study.ts` exists to keep growing as
+  readings arrive, and they are most of what the field guide and the cram
+  sheet are made of. So the copy of a fourteen-unit guide was a copy of its
+  flashcards. All six are there now, in the order the field guide reads them,
+  and the framings take the name the course gives them — ECON's are "the
+  traps that cost the most points" and PSCI's are "the five questions that
+  keep coming back", which is what the screen has always printed and what a
+  document headed *Frames* would not have matched. A case is a heading and
+  four labelled lines rather than a six-column table, because the point of
+  this document is that it gets printed. What cannot come is the diagrams:
+  they are drawn rather than written, and the closing note says how many
+  stayed behind rather than dropping them in silence.
 
 **Sheets**
 - ~~**Single grid per file — no cross-sheet `Sheet2!A1` references.**~~ —
@@ -914,20 +932,12 @@ Everything above that is not struck through, collected — so the next person
 reading this has one short list rather than a long one to re-check. Verified
 by grepping for each, not by re-reading the sentence.
 
-<<<<<<< HEAD
-**Documents** — "Open in Docs" from a study guide · a WYSIWYG surface (the
-marks are typed).
+**Documents** — a WYSIWYG surface (the marks are typed).
 (Code blocks, checkbox lists, images, horizontal rules, indent/outdent,
 alignment, `.docx` import, margin notes and a generated PDF were on this list
 and are done. Line spacing and margins were on it
-=======
-**Documents** — a generated
-PDF, as against the browser's print-to-PDF, which is there ·
-"Open in Docs" from a study guide · a WYSIWYG surface (the marks are typed).
-(Code blocks, checkbox lists, images, horizontal rules, indent/outdent,
-alignment, `.docx` import and margin notes were on this list and are done. Line spacing and margins were on it
->>>>>>> origin/main
-and had already been built when it was written.)
+and had already been built when it was written, and so was the route into
+Write from a study guide — what was actually missing there was half the guide.)
 
 **Sheets** — nothing. Every entry this section listed is either built or was
 already built when it was listed.

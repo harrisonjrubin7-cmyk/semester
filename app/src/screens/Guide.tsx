@@ -851,10 +851,13 @@ function Decks() {
  * writes a real .pptx in the browser, so every course can have one now.
  */
 function Documents() {
-  const { state, dispatch, say } = useStore();
-  const { guide } = useLive(state.guideId);
+  const { state, dispatch, say, catalog } = useStore();
+  const { guide, figures, extras } = useLive(state.guideId);
   const stem = `/handouts/${state.guideId}`;
   const prebuilt = hasPrebuiltDocs(state.guideId);
+  // The one part of the guide a document cannot hold, counted so the copy can
+  // say how much of it stayed behind rather than leaving it out in silence.
+  const diagrams = Object.keys(figures).length + extras.length;
 
   const files = prebuilt
     ? [
@@ -870,8 +873,8 @@ function Documents() {
   return (
     <Folding name="Documents">
       <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 14, textWrap: 'pretty' }}>
-        The same {guide.units.length} units as a document — every card, the terms and the
-        self-test, in reading order.
+        The same {guide.units.length} units as a document — every card, the framings, the
+        worked examples, the case files, the terms and the self-test, in reading order.
       </div>
 
       {/*
@@ -888,7 +891,10 @@ function Documents() {
           // reading a line telling them it had happened somewhere else.
           dispatch({
             type: 'makeDocument',
-            doc: fromGuide(guide, state.guideId),
+            doc: fromGuide(guide, state.guideId, {
+              frameLabel: catalog.frameLabels[state.guideId],
+              diagrams,
+            }),
             open: true,
           });
           say('Opened as a document you can edit. The guide itself is unchanged.');
