@@ -45,11 +45,18 @@ import type { Screen } from '../lib/types';
  * Exported for `create-routes.test.ts`, which holds every tile naming a
  * registry screen to the screen the registry gives that name. The Maths tile
  * went to Draw It for as long as it existed: two screens draw a curve, and
- * the one whose registry name is *Maths* is Equations. Its own subtitle here
- * said so — "Functions, graphs and tables" is what Equations has and what
- * Draw It, which makes flowcharts and timelines from a description, does not.
- * All Apps had the route right the whole time, so the same name opened two
- * different screens depending on which of them you reached it from.
+ * the one whose registry name is *Maths* is Equations. `screens/Draw.tsx`
+ * says the same from its side — the graphing calculator "went to `equations`,
+ * which is where the registry always said it was".
+ *
+ * The subtitle is not the evidence, and an earlier draft of this comment
+ * cited it as though it were. Read that way it argues the other case: the
+ * *tables* in "Functions, graphs and tables" are Draw It's `matrix` kind,
+ * `lib/diagram.ts`'s "A table or payoff matrix", and Equations has no table
+ * of values at all — deliberately, for the reason `screens/Draw.tsx` records.
+ * The title is the evidence. *Maths* is a name the registry has already
+ * spent, and All Apps had the route right the whole time, so the same name
+ * opened two different screens depending on which you reached it from.
  */
 export const MAKE: { title: string; sub: string; kind?: CreativeProject['kind']; go?: Screen; act?: 'write' | 'sheet' | 'deck' }[] = [
   { title: 'Document', sub: 'Papers, notes and research', act: 'write' },

@@ -125,7 +125,7 @@ export function isFavourite(
  * The four above all ask about `q` as one unbroken run of characters, and
  * that is the right question for a name: "powerpoint" is a word, and the
  * tiers rank it against a label. It is the wrong question for a phrase.
- * "study guide" scored 0 on every one of the forty-nine screens and this bar
+ * "study guide" scored 0 on every one of the sixty screens and this bar
  * answered *No app matches that* — for the thing the app is best at. Study's
  * label says `study` and its keywords say `guide`, but never adjacently, so
  * no whole-run test could reach it however it was ranked.
@@ -141,9 +141,31 @@ export function isFavourite(
  *
  * Deliberately last, and deliberately including the label in its haystack.
  * A one-word query cannot reach this tier — a word starting anywhere in a
- * label is already caught by `includes` at 60 — so nothing that scored
- * before scores differently now; the tier is reachable only by the phrases
- * that used to score nothing at all.
+ * label is already caught by `includes` at 60 — and the test below asserts
+ * exactly that, across every row, rather than arguing it. The join below
+ * cannot move a one-word score either, since one word cannot straddle a
+ * seam; the sweep in the next paragraph measured that at zero.
+ *
+ * Phrases do move, and the first draft of this comment claimed they did not.
+ * They move in one direction only: a run that existed solely at a field seam
+ * scored 40 from the join below and lands here instead. `guide study` is the
+ * example and this file's own test pins it at 20.
+ *
+ * Swept over 5,843 queries — every one-, two- and three-word run of every
+ * field of all sixty rows, plus the 120 runs that span a seam — against all
+ * sixty offered rows, comparing this scorer to the one on `main`:
+ *
+ *     gained a score      2,774        lost a score            0
+ *     dropped 40 → 20        60        one-word score moved    0
+ *
+ * Seven queries get a different screen first, and all seven are seam runs
+ * losing a place they never earned: `test study` led with Exam runway on a
+ * phrase that existed only where two fields met, and now leads with Practice
+ * paper, which holds both words. Nothing that scored stops scoring.
+ *
+ * The seam count is worth stating as 60 rather than "some": it is one per
+ * screen, which is what you would expect of a defect that came from the
+ * joining rather than from any row's text.
  */
 const atWordStart = (hay: string, word: string): boolean =>
   new RegExp(`(^|[^a-z])${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(hay);
