@@ -175,6 +175,36 @@ describe('a query of more than one word', () => {
     expect(screens('the a my')).toEqual([]);
   });
 
+  it('does not answer a phrase that exists only where two fields were joined', () => {
+    /*
+     * Found in #432, which reached this function from the other side, and
+     * carried here with its fix. The three matched fields were joined with a
+     * space, so the last word of one and the first of the next spelled out a
+     * phrase nobody wrote — and that run scored the *whole-query* tier, above
+     * every screen holding both words properly. 60 of them across the
+     * registry, one per screen: `agenda semester`, `average courses`,
+     * `analyze study`. This branch added a 61st by giving Study the keyword
+     * `read aloud`, whose last word sits against the shelf name: `aloud
+     * study`.
+     *
+     * The seams are newlines now. Every field pair on every row, asserted
+     * rather than argued, because "it cannot happen" is what the four tiers
+     * said about phrases.
+     */
+    for (const d of DESTINATIONS) {
+      const fields = [d.blurb, d.keywords, d.group].map((f) => f.toLowerCase().trim());
+      for (let i = 0; i < fields.length - 1; i += 1) {
+        const left = fields[i].split(/[^a-z]+/).filter(Boolean).at(-1);
+        const right = fields[i + 1].split(/[^a-z]+/).filter(Boolean)[0];
+        if (!left || !right) continue;
+        expect(
+          scoreApp(d, `${left} ${right}`, ALL),
+          `${d.screen} scored the seam "${left} ${right}" as a whole query`,
+        ).not.toBe(40);
+      }
+    }
+  });
+
   it('weighs a word that lands on a name above one that lands in a blurb', () => {
     // "practice exam" has to reach Practice paper before the other screens on
     // the Study shelf whose keywords merely mention practice.

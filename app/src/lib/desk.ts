@@ -132,7 +132,24 @@ function tier(d: Destination, q: string, caps: Capabilities): number {
   if (label === q || short === q) return 100;
   if (label.startsWith(q) || short.startsWith(q)) return 80;
   if (label.includes(q) || short.includes(q)) return 60;
-  const words = `${said.blurb} ${d.keywords} ${d.group}`.toLowerCase();
+  /*
+   * Joined on a newline rather than a space, because these are three separate
+   * pieces of text and a phrase straddling two of them is a phrase nobody
+   * wrote. Study's keywords end in `aloud` and its shelf is `Study`, so a
+   * space here spelled out `aloud study` — a run that exists only at the
+   * seam, scoring the whole-query tier and outranking any screen that holds
+   * both words properly. Measured across the registry before the fix: 60 of
+   * them, one per screen, `agenda semester` and `average courses` and
+   * `analyze study` among them.
+   *
+   * A newline is still `[^a-z]`, so a word at the start of any field is as
+   * findable as it ever was, and a one-word query cannot straddle a seam at
+   * all. Found and fixed first in #432, which reached this function from the
+   * other side; carried here because the every-word tier below would
+   * otherwise be shadowed by phantom whole-query hits, and because the
+   * `read aloud` keyword this branch adds creates one of its own.
+   */
+  const words = [said.blurb, d.keywords, d.group].join('\n').toLowerCase();
   // Word-start rather than bare `includes`: "map" inside "compare" is not a
   // hit anybody meant, and a search that answers with a screen whose only
   // connection is a substring in the middle of a word reads as broken.
@@ -190,8 +207,12 @@ export const SCATTERED = 39;
  *
  * Measured over 10,115 queries — every word in the registry, every adjacent
  * pair and triple of them, and 4,000 seeded pairs drawn from two screens at
- * once — no query lost a row or had one move. 1,976 gained rows, 1,253 of
- * which had been answered with nothing at all.
+ * once — 1,968 gained rows, 1,253 of which had been answered with nothing at
+ * all, and nine had an existing row move. Eight of the nine are the seam fix
+ * below taking away a match that was never real: `test study` led with Exam
+ * runway on a phrase that existed only where two fields met, and now leads
+ * with Practice paper, which holds both words. The ninth is `create`, which
+ * keeps Create first and gains Study second.
  *
  * ## Every word, not any of them
  *
