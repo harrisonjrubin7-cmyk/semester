@@ -56,6 +56,17 @@ const here = dirname(fileURLToPath(import.meta.url));
 const AUDIT = readFileSync(join(here, 'contrast-audit.js'), 'utf8');
 const STATES = readFileSync(join(here, 'contrast-states.js'), 'utf8');
 const BASE = process.env.SWEEP_URL || 'http://localhost:5173/';
+/*
+ * The browser to drive.
+ *
+ * This container keeps a Chromium at a fixed path and playwright's own
+ * download is skipped, so the default points there — but that path is a fact
+ * about this machine, not about the sweep. Anywhere else (a CI runner, a
+ * laptop) playwright has installed its own and knows where it is, so when the
+ * default is absent and nothing was named, `launch` is left to find it. The
+ * earlier version always passed the path and failed on any machine that was
+ * not this one.
+ */
 const CHROME = process.env.SWEEP_CHROMIUM || '/opt/pw-browsers/chromium';
 // Narrow the run while working on the sweep itself; unset means everything.
 const ONLY_NAVS = process.env.SWEEP_NAVS?.split(',').map(s => s.trim()).filter(Boolean);
@@ -239,7 +250,11 @@ const forceStates = async (page, cdp) => {
   return out;
 };
 
-const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
+const { existsSync } = await import('node:fs');
+const browser = await chromium.launch({
+  ...(existsSync(CHROME) ? { executablePath: CHROME } : {}),
+  args: ['--no-sandbox'],
+});
 const findings = [], coverage = [], unverified = [];
 const t0 = Date.now();
 
