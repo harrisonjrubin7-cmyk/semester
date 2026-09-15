@@ -360,6 +360,15 @@ at all; one handed the root to the test and only one test gave it back.
 `unmount` in an after hook — deliberately not counting a `beforeEach`, which is
 exactly the shape five of the seven had.
 
+An eighth file says what kind of check this is. Pointed at a newer `main`, the
+guard immediately flagged `screens/call/leaving.test.tsx`, which leaks nothing:
+unmounting is the thing both its tests test. The guard reads source, so it is a
+heuristic and wrong in both directions — a file can satisfy it and still leak by
+unmounting one root and not another, and this one was flagged while leaking
+nothing. The answer was to add the hook anyway rather than to loosen the check:
+unmounting twice is a no-op, and it is the third test somebody adds to that file
+that would have leaked.
+
 Eighteen shuffled runs at one, two, three, four and six workers, clean. That is
 what the step was worth waiting for: a shuffled CI that goes red one push in
 ten is not a guard, it is a tax.
