@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { TabFind } from './TabFind';
@@ -7,6 +7,7 @@ import { StoreProvider } from '../state/store';
 import { forgetStrip, muteTab, openTab, record, strip } from '../lib/browser.hook';
 import { forgetSound, playHere } from '../lib/sound.hook';
 import { justGo } from '../lib/browser';
+import { loadSeed } from '../data/seed';
 
 /**
  * What the tab list says about sound.
@@ -68,6 +69,26 @@ const idOf = (title: string) => {
   if (!tab) throw new Error(`no tab named ${title}`);
   return tab.id;
 };
+
+/*
+ * The sample semester, fetched before anything renders.
+ *
+ * `StoreProvider` pulls the four shipped courses in with a dynamic import and
+ * does not await it — right in an app, where the screen fills in when they
+ * land. In a test it is a promise still in flight when the file ends, and
+ * Vitest tears the environment down underneath it: every assertion passes and
+ * the run still exits non-zero on `EnvironmentTeardownError`, attributed to
+ * whichever file happened to be running when it landed rather than to this
+ * one. Intermittently, which is the worst version of it.
+ *
+ * `loadSeed` caches its promise, so awaiting it once here means the store's
+ * own call is already resolved by the time it makes it, and there is nothing
+ * outstanding to tear down. The same call `screens/deadends.test.tsx` makes,
+ * for the same reason; `src/seedawait.test.ts` is why neither can be dropped.
+ */
+beforeAll(async () => {
+  await loadSeed();
+});
 
 beforeEach(() => {
   localStorage.clear();

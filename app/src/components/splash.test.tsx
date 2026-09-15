@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { StoreProvider } from '../state/store';
 import { STORAGE_KEY } from '../state/shape';
 import { Splash } from './Splash';
 import { forgetSplash } from '../lib/splash';
+import { loadSeed } from '../data/seed';
 
 /**
  * The opening screen, and the one thing it must never do: stay.
@@ -41,6 +42,26 @@ function mount() {
 }
 
 const curtain = () => host.querySelector('.splash');
+
+/*
+ * The sample semester, fetched before anything renders.
+ *
+ * `StoreProvider` pulls the four shipped courses in with a dynamic import and
+ * does not await it — right in an app, where the screen fills in when they
+ * land. In a test it is a promise still in flight when the file ends, and
+ * Vitest tears the environment down underneath it: every assertion passes and
+ * the run still exits non-zero on `EnvironmentTeardownError`, attributed to
+ * whichever file happened to be running when it landed rather than to this
+ * one. Intermittently, which is the worst version of it.
+ *
+ * `loadSeed` caches its promise, so awaiting it once here means the store's
+ * own call is already resolved by the time it makes it, and there is nothing
+ * outstanding to tear down. The same call `screens/deadends.test.tsx` makes,
+ * for the same reason; `src/seedawait.test.ts` is why neither can be dropped.
+ */
+beforeAll(async () => {
+  await loadSeed();
+});
 
 beforeEach(() => {
   vi.useFakeTimers();
