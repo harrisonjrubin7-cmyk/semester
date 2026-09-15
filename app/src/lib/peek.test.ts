@@ -78,6 +78,27 @@ describe('what a tab says about itself', () => {
   });
 });
 
+describe('the line that is not about the tab', () => {
+  it('offers the keys once there is somewhere to move to', () => {
+    expect(peekAt(tab(), null, { talking: false }, 3).moves).toBe(true);
+  });
+
+  it('says nothing on a strip of one, where the keys would be a lie', () => {
+    expect(peekAt(tab(), null, { talking: false }, 1).moves).toBeUndefined();
+    expect(peekAt(tab(), null).moves).toBeUndefined();
+  });
+
+  it('stays out of what is read aloud', () => {
+    /*
+     * The keys are on the tab as `aria-keyshortcuts`, which is the attribute
+     * for them. In the description they would be read out on every tab you
+     * moved to — and moving along the strip is exactly what somebody using
+     * these keys is doing, so the hint would arrive once per press.
+     */
+    expect(peekSaid(peekAt(tab(), null, { talking: false }, 4))).toBe('Calendar');
+  });
+});
+
 describe('the same card, said aloud', () => {
   it('is one sentence of the facts that are there', () => {
     const said = peekSaid(

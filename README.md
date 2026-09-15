@@ -387,7 +387,9 @@ and its lesson are two results, one opening the cards and one the audio.
 **Resting on a tab** says what it is: the full name — which the strip cuts at
 190 pixels, and which a pinned tab does not show at all — what kind of place
 it is, the work it belongs to, whether it is the one playing, and what it last
-searched for. No thumbnail, and that is the architecture rather than a
+searched for — and, under a rule at the bottom, that **Alt** and the arrows
+move it, which is how anybody finds out. No thumbnail, and that is the
+architecture rather than a
 shortcut: a tab here is a saved place rather than a running page, so there is
 no rendered screen anywhere to take a picture of, and rendering one to
 photograph would mean going there. The keyboard gets the same card on focus,
