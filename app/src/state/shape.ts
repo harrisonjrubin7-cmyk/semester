@@ -993,6 +993,22 @@ export interface Ephemeral {
   quizScore: number;
   quizSeed: number;
   /**
+   * Rungs of the hint ladder taken on the question showing now.
+   *
+   * Reset by `nextQuestion`, because it is about this question. See
+   * `lib/ladder.ts`.
+   */
+  quizRungs: number;
+  /**
+   * Questions in this run that were answered after taking a hint.
+   *
+   * Counted so the score can say what it cost. A quiz that reports seven out
+   * of ten without saying three of them were hinted is reporting a number that
+   * is not about the student — the same thing the mastery percentage was
+   * doing before `lib/knowing.ts`.
+   */
+  quizHelped: number;
+  /**
    * Courses deleted on this device and not yet deleted from the account.
    *
    * Ephemeral on purpose. A push tells the account exactly what this device
@@ -1460,6 +1476,8 @@ export function initialEphemeral(): Ephemeral {
     quizPicked: null,
     quizScore: 0,
     quizSeed: 1,
+    quizRungs: 0,
+    quizHelped: 0,
     removedCourses: [],
   };
 }
@@ -2057,6 +2075,8 @@ export type Action =
   | { type: 'forgetCards'; keys: string[] }
   | { type: 'redrill' }
   | { type: 'startQuiz'; quiz: QuizQuestion[] }
+  /** One more rung of the hint ladder on the question showing. */
+  | { type: 'takeHint' }
   | { type: 'pickAnswer'; index: number }
   | { type: 'nextQuestion' }
   | { type: 'setCalView'; view: 'day' | 'week' | 'month' | 'semester' }

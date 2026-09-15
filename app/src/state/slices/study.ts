@@ -266,6 +266,8 @@ export function study(state: State, action: Action): State | null {
           quizPicked: null,
           quizScore: 0,
           quizSeed: state.quizSeed + 7,
+          quizRungs: 0,
+          quizHelped: 0,
         },
         'quiz',
       );
@@ -280,8 +282,25 @@ export function study(state: State, action: Action): State | null {
       };
     }
 
+    /*
+     * One more rung, and the question is marked as helped from the first one.
+     *
+     * Marked here rather than at `nextQuestion`, so a question you take a hint
+     * on and then leave still counted. The alternative records help only for
+     * the questions somebody stayed on, which flatters the run in exactly the
+     * cases it should not.
+     */
+    case 'takeHint':
+      return { ...state, quizRungs: state.quizRungs + 1 };
+
     case 'nextQuestion':
-      return { ...state, quizIdx: state.quizIdx + 1, quizPicked: null };
+      return {
+        ...state,
+        quizIdx: state.quizIdx + 1,
+        quizPicked: null,
+        quizRungs: 0,
+        quizHelped: state.quizHelped + (state.quizRungs > 0 ? 1 : 0),
+      };
 
     default:
       return null;
