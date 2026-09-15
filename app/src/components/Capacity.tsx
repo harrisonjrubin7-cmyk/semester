@@ -189,7 +189,7 @@ function Kept() {
               className="bare"
               aria-label={`Remove ${r.label || 'this block'}`}
               onClick={() => dispatch({ type: 'dropRest', id: r.id })}
-              style={{ width: 30, flex: 'none', opacity: 0.5, fontSize: 'var(--type-lg)' }}
+              style={{ width: 30, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
             >
               ×
             </button>

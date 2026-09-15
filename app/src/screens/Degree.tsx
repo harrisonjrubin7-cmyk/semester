@@ -187,7 +187,7 @@ function WhatIsLeft() {
                     <div
                       style={{
                         fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                        opacity: 0.5,
+                        color: 'var(--app-dim)',
                         marginTop: 'var(--sp-2)',
                         textWrap: 'pretty',
                       }}
@@ -780,7 +780,7 @@ function TakenRow({ course: c }: { course: Taken }) {
         className="bare"
         onClick={() => dispatch({ type: 'dropTaken', id: c.id })}
         aria-label={`Remove ${c.code}`}
-        style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
+        style={{ width: 'auto', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
       >
         Remove
       </button>
@@ -937,7 +937,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
         className="bare"
         onClick={() => dispatch({ type: 'dropRequirement', id: r.id })}
         aria-label={`Remove ${r.name}`}
-        style={{ width: 'auto', fontSize: 'var(--type-xs)', opacity: 0.5 }}
+        style={{ width: 'auto', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}
       >
         Remove
       </button>

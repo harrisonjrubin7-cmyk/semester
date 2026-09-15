@@ -109,7 +109,7 @@ export function StartToday() {
         <div
           style={{
             fontSize: 'var(--type-xs)',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-4)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
@@ -174,7 +174,7 @@ export function StartList() {
         <div
           style={{
             fontSize: 'var(--type-xs)',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             marginBottom: 9,
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
@@ -249,7 +249,7 @@ export function StartList() {
       <p
         style={{
           fontSize: 'var(--type-xs)',
-          opacity: 0.5,
+          color: 'var(--app-dim)',
           marginTop: 'var(--sp-5)',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',

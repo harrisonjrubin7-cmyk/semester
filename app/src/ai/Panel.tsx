@@ -729,7 +729,7 @@ const ICON = {
   placeItems: 'center',
   borderRadius: 'var(--r-sm)',
   fontSize: 'var(--type-md)',
-  opacity: 0.6,
+  color: 'var(--app-dim)',
 } as const;
 
 const QUIET = {

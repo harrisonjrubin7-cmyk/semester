@@ -202,7 +202,7 @@ export function FromText() {
                     style={{
                       display: 'block',
                       fontSize: 'var(--type-sm)',
-                      opacity: 0.6,
+                      color: 'var(--app-dim)',
                       marginTop: 'var(--sp-3)',
                       paddingLeft: 9,
                       borderLeft: '2px solid var(--app-line)',

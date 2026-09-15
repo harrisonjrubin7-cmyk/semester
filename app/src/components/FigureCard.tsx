@@ -81,7 +81,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                 <span style={{ opacity: 0.75 }}>{r.l}</span>
                 <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-md)' }}>
                   {r.v.toLocaleString()}
-                  <span style={{ opacity: 0.5, fontSize: 'var(--type-xs)' }}> {figure.unit}</span>
+                  <span style={{ color: 'var(--app-dim)', fontSize: 'var(--type-xs)' }}> {figure.unit}</span>
                 </span>
               </div>
               <div style={{ height: 8, background: 'var(--app-track)', marginTop: 3 }}>
@@ -146,7 +146,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
       <div
         style={{
           fontSize: 'var(--type-sm)',
-          opacity: 0.6,
+          color: 'var(--app-dim)',
           lineHeight: 'var(--leading-normal)',
           marginTop: 'var(--sp-6)',
           paddingTop: 'var(--sp-5)',

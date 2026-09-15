@@ -145,7 +145,7 @@ export function Guide() {
             fontSize: 'calc(10px * var(--text-scale, 1))',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             fontFamily: 'var(--font-heading)',
           }}
         >
@@ -154,7 +154,7 @@ export function Guide() {
         <ChevronRight
           size={14}
           style={{
-            opacity: 0.5,
+            color: 'var(--app-dim)',
             flex: 'none',
             transform: state.waysOpen ? 'rotate(90deg)' : 'none',
           }}
@@ -277,7 +277,7 @@ export function Guide() {
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                   width: 54,
                   textAlign: 'right',
                   flex: 'none',
@@ -347,7 +347,7 @@ export function Guide() {
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  opacity: 0.5,
+                  color: 'var(--app-dim)',
                   flex: 'none',
                 }}
               >
@@ -401,7 +401,7 @@ export function Guide() {
           >
             Sit it as a timed paper
           </button>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             The paper is the same questions with a clock, marks and a key at the end instead of
             after each one — closer to the real thing, and worse for learning a card you have
             just met.
@@ -432,7 +432,7 @@ export function Guide() {
                     size={14}
                     style={{
                       flex: 'none',
-                      opacity: 0.5,
+                      color: 'var(--app-dim)',
                       transform: open ? 'rotate(90deg)' : 'rotate(0deg)',
                       transition: 'transform 140ms ease',
                     }}
@@ -1095,7 +1095,7 @@ function Cases() {
                 <div
                   style={{
                     fontSize: 'var(--type-sm)',
-                    opacity: 0.6,
+                    color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-normal)',
                     marginTop: 'var(--sp-5)',
                     paddingTop: 9,

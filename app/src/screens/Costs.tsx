@@ -167,7 +167,7 @@ function OutOfPocket() {
                 </div>
                 {/* The comparison worth having in August. */}
                 {before ? (
-                  <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-2)' }}>
+                  <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
                     {readTerm(before.term).label}: {money(before.cents)}
                   </div>
                 ) : null}
@@ -185,7 +185,7 @@ function OutOfPocket() {
                   >
                     <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
                       {x.what}
-                      <span style={{ opacity: 0.5 }}>
+                      <span style={{ color: 'var(--app-dim)' }}>
                         {' · '}
                         {kindOf(x.kind).label}
                         {x.rented ? ' · rented' : ''}

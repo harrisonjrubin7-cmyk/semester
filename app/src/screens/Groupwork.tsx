@@ -363,7 +363,7 @@ export function Groupwork() {
               <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
                 {share.member.handle}
                 {share.member.userId === account.id ? (
-                  <span style={{ opacity: 0.5 }}> · you</span>
+                  <span style={{ color: 'var(--app-dim)' }}> · you</span>
                 ) : null}
               </span>
               <span style={{ flex: 'none', fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
@@ -488,7 +488,7 @@ export function Groupwork() {
                       {p.owner === account.id ? 'Yours' : owner ? owner.handle : 'Take it'}
                     </button>
                   ) : (
-                    <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5 }}>
+                    <span style={{ flex: 'none', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
                       {owner?.handle ?? ''}
                     </span>
                   )}

@@ -905,7 +905,7 @@ export function AddMaterial() {
           }}
         >
           <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.name}</span>
-          <span style={{ opacity: 0.5, flex: 'none' }}>{formatBytes(f.size)}</span>
+          <span style={{ color: 'var(--app-dim)', flex: 'none' }}>{formatBytes(f.size)}</span>
         </div>
       ))}
       <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
@@ -1026,7 +1026,7 @@ export function AddMaterial() {
                 type="button"
                 className="bare"
                 onClick={() => undoImport(u)}
-                style={{ fontSize: 'var(--type-xs)', opacity: 0.5, letterSpacing: '0.1em', flex: 'none' }}
+                style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none' }}
               >
                 REMOVE
               </button>

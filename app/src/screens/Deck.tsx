@@ -401,7 +401,7 @@ function Build() {
             value={String(minutes)}
             onChange={(next) => setMinutes(Number(next))}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 5 }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>
             About {slidesFor(minutes, kindById(kindId))} content slides — a slide and a half a
             minute, which is the rate people actually present at.
           </div>

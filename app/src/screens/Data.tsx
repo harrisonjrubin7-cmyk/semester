@@ -364,7 +364,7 @@ function Collection({
               <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {r.text}
               </span>
-              <span style={{ opacity: 0.5, flex: 'none', fontVariantNumeric: 'tabular-nums' }}>
+              <span style={{ color: 'var(--app-dim)', flex: 'none', fontVariantNumeric: 'tabular-nums' }}>
                 {formatBytes(r.bytes)}
               </span>
             </div>

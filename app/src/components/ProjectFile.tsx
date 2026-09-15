@@ -240,7 +240,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         {busy ? 'Building it…' : out ? 'Build it again' : 'Build the project file'}
       </ActionButton>
       {!dueDate ? (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-4)' }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
           Needs a due date — the schedule is the half of this that saves you.
         </div>
       ) : null}
@@ -290,7 +290,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
             </button>
           </div>
           <PrintButton label="Print it" style={{ marginTop: 'var(--sp-4)' }} />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             Kept as a note it is editable in the app and comes out in an export. Saved as .md it
             opens in Word, Google Docs, Notion or anything else.
           </div>

@@ -64,7 +64,7 @@ export function SettingsCourses() {
               {byRole.length > 0 && (
                 // Named rather than counted, for the same reason as the
                 // school's list below it.
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                   Hidden: {byRole.map((h) => DESTINATIONS.find((d) => d.screen === h)?.label ?? h).join(', ')}.
                   Nothing is deleted — switch back and every one of them returns with everything
                   in it.
@@ -129,7 +129,7 @@ export function SettingsCourses() {
                   `components/SchoolPicker.tsx` — find it, add it, or skip. */}
               <SchoolPicker />
               {hidden.length > 0 && (
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.5, marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
                   {/* Named rather than counted. "3 screens are hidden" invites the
                       question this answers. */}
                   Hidden: {hidden.map((h) => DESTINATIONS.find((d) => d.screen === h)?.label ?? h).join(', ')}.
