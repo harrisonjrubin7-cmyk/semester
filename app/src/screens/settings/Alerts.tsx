@@ -5,6 +5,7 @@ import { lights } from '../../lib/settings';
 import { SectionLabel, Toggle } from '../../components/ui';
 import { MyRules } from '../../components/MyRules';
 import { PushSwitch } from '../../components/PushSwitch';
+import { MuteCourses } from '../../components/MuteCourses';
 import { Reminders } from '../Me';
 import { NOTIF_DEFS } from '../../data/misc';
 import { clock } from '../../lib/date';
@@ -172,7 +173,7 @@ export function SettingsAlerts() {
           <Group
             header="Tell me when"
             footer="These are checked while the app is open. Reminders that arrive with it closed need the switch below."
-            lit={lights('notifications alerts tell me when reminders notify due', lit)}
+            lit={lights('notifications alerts tell me when reminders notify due mute silence course quiet one', lit)}
           >
             <CustomRow>
               <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Tell me when</SectionLabel>
@@ -187,6 +188,8 @@ export function SettingsAlerts() {
               ))}
 
               <MyRules />
+
+              <MuteCourses />
 
               <PushSwitch />
             </CustomRow>

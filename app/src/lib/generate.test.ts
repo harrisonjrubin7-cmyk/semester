@@ -375,6 +375,61 @@ describe('the course record', () => {
  * in prose — "40% exams, 60% papers" — is the ordinary case that produces the
  * worst of them.
  */
+describe('the attendance rule', () => {
+  /*
+   * The importer read dates and weights and never this, so the one rule that
+   * can cost a letter grade without a single mark being missed had to be
+   * typed by hand — `components/Attendance.tsx` said so in a comment. What
+   * these hold is the refusal, as everywhere else in this file: a policy the
+   * syllabus did not state must not arrive as a number a student relies on.
+   */
+  const policy = async (attendance: unknown) => (await run(course({ attendance }))).attendance;
+
+  it('reads a rule the syllabus states', async () => {
+    expect(
+      await policy({ allowed: 3, penaltyPer: 2, worth: 0, note: 'More than three absences costs 2% each.' }),
+    ).toEqual({ allowed: 3, penaltyPer: 2, worth: 0, note: 'More than three absences costs 2% each.' });
+  });
+
+  it('says nothing when the syllabus said nothing', async () => {
+    // Every zero and an empty note, not a guess at a common policy: a student
+    // told they have three absences who has none will use them.
+    expect(await policy(undefined)).toEqual({ allowed: 0, penaltyPer: 0, worth: 0, note: '' });
+  });
+
+  it('refuses a reply of the wrong shape rather than throwing', async () => {
+    // The same failure `grading` had: a model that answers in prose. It comes
+    // back as "nothing stated" instead of reaching a screen.
+    expect(await policy('three absences allowed')).toEqual({ allowed: 0, penaltyPer: 0, worth: 0, note: '' });
+    expect(await policy({ allowed: 'lots', penaltyPer: null })).toMatchObject({ allowed: 0, penaltyPer: 0 });
+  });
+
+  it('caps a number that cannot be true', async () => {
+    const out = await policy({ allowed: 900, penaltyPer: 4000, worth: 250, note: '' });
+    expect(out.allowed).toBe(60);
+    expect(out.penaltyPer).toBe(100);
+    expect(out.worth).toBe(100);
+  });
+
+  it('tells the student it found one, so it can be checked', async () => {
+    const out = await run(course({ attendance: { allowed: 2, penaltyPer: 0, worth: 0, note: 'Two absences.' } }));
+    expect(out.notes.some((n) => /attendance rule/i.test(n))).toBe(true);
+  });
+
+  it('says nothing in the preview when there was no rule', async () => {
+    // A line on every import that never had one is noise on the screen where
+    // the student is checking what did come back.
+    const out = await run(course());
+    expect(out.notes.some((n) => /attendance/i.test(n))).toBe(false);
+  });
+
+  it('asks for it in the prompt, and tells the model not to invent one', async () => {
+    await run(course());
+    expect(sent.system).toContain('"attendance"');
+    expect(sent.system).toMatch(/never a guess at a\s+common policy/);
+  });
+});
+
 describe('a reply of the wrong shape', () => {
   it('keeps no weightings it cannot read, rather than saving a sentence', async () => {
     /*

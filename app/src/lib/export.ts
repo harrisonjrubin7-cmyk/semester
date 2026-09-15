@@ -737,6 +737,12 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valu
    * `lib/mailrules.ts` keeping them out of `mailMarks`.
    */
   { key: 'mailRules', label: 'mail rules', array: true },
+  /*
+   * Which courses you silenced. Small, and silent to lose: a restore that
+   * dropped it would turn every muted course's reminders back on, and the
+   * student would find out from a buzz about the class they were auditing.
+   */
+  { key: 'mutedCourses', label: 'silenced courses', array: true },
   { key: 'folders', label: 'folders', array: true },
   { key: 'sources', label: 'sources', array: true },
   { key: 'sittings', label: 'practice papers', array: true },
@@ -975,6 +981,7 @@ export function backupOf(state: State) {
     plots: state.plots,
     mailDrafts: state.mailDrafts,
     mailRules: state.mailRules,
+    mutedCourses: state.mutedCourses,
     folders: state.folders,
     sources: state.sources,
     sittings: state.sittings,

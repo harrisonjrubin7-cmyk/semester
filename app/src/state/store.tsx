@@ -950,6 +950,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           items,
           done: state.done,
           classes: classesToNudge(railFor(catalog, at, state.appointments)),
+          muted: state.mutedCourses,
           registrar: state.registrar,
           /*
            * The four lists `nextPayment` reads, named rather than passed as
@@ -1006,7 +1007,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // it reads through `nextPayment` — charges, aid, payments and plans — are
     // the same failure one screen over: a bill paid in full kept being
     // nudged about until an unrelated part of this list happened to change.
-  }, [catalog, state.notifs, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, state.quiet, state.term, state.charges, state.aid, state.payments, state.plans, courseCode]);
+  }, [catalog, state.notifs, state.mutedCourses, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, state.quiet, state.term, state.charges, state.aid, state.payments, state.plans, courseCode]);
 
   // The number on the installed icon: things due today and not ticked. In the
   // provider rather than on Today, because the count has to be right whatever
