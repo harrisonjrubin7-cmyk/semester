@@ -63,6 +63,22 @@ export function fontFor(name: string, bold: boolean, italic: boolean, mono: bool
  * square bullets a nested list uses. Each becomes something a reader can
  * still read rather than a `?` — `[x]` says what a ticked box says, and a
  * middle dot is a bullet by another name.
+ *
+ * ## The ones a course guide actually contains
+ *
+ * The list started at the characters this app's own *chrome* writes, and the
+ * fallback for anything else was a space. Printing a study guide is what
+ * showed what that costs. `ε = [(Q₂−Q₁) ÷ ((Q₁+Q₂)/2)]` — ECON's one elasticity
+ * formula — printed as `= [(Q −Q ) ÷ ((Q +Q )/2)]`, and `%ΔQ` as `% Q`. Not
+ * mangled, which somebody would notice: *silently* short a variable, in the
+ * formula the exam is on. The arrow is the same story at 72 uses across the
+ * four guides — `play → ritual → sport` is a sentence, `play  ritual  sport`
+ * is not.
+ *
+ * So the ten below are spelled out rather than dropped. A reader has Symbol
+ * built in and Symbol has real Greek and a real arrow, which would read
+ * better than `delta` — but it is a second encoding and a font switch inside
+ * a run, and `deltaQ` is legible today where a missing `Δ` is wrong today.
  */
 const HIGH: Record<string, number> = {};
 const WINANSI_HIGH =
@@ -80,7 +96,21 @@ const INSTEAD: Record<string, string> = {
   '▪': '·',
   '≤': '<=',
   '≥': '>=',
+  '≠': '!=',
+  '≈': '~',
   '−': '-',
+  '→': '->',
+  '√': 'sqrt',
+  /* Spelled without a trailing space: `wrap` breaks a line at a space, and
+     `delta` at the foot of one line with `Q` at the head of the next is a
+     worse reading of `ΔQ` than `deltaQ` is. */
+  'Δ': 'delta',
+  'Σ': 'sum',
+  'ε': 'epsilon',
+  'π': 'pi',
+  // A subscript becomes what somebody typing the same formula would type.
+  '₁': '1',
+  '₂': '2',
   ' ': ' ',
 };
 
