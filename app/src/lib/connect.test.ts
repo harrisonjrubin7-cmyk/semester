@@ -421,6 +421,42 @@ describe('addEvent and addTask', () => {
     expect(body.start.timeZone).toBeTruthy();
   });
 
+  /*
+   * The zone is read per call, not once when the module loaded.
+   *
+   * It was a module-level `const`, and the app it belongs to is an installed
+   * PWA that stays open for days — so the reader most likely to be adding
+   * calendar events is the one who has just changed timezone, and every event
+   * after that carried the zone the app started in.
+   *
+   * Two writes with a different zone under each, which only differ if the
+   * value is fetched at the moment it is used. `Intl.DateTimeFormat` is
+   * stubbed rather than `process.env.TZ` set, deliberately: this file shares a
+   * worker with 350 others, and a process-wide clock change is exactly the
+   * leak that `lib/realdate.test.ts` caused and this very bug was found by.
+   * `afterEach` already unstubs.
+   */
+  it('reads the zone at the moment it writes, not when the module loaded', async () => {
+    const inZone = (timeZone: string) =>
+      vi.stubGlobal('Intl', {
+        ...Intl,
+        DateTimeFormat: () => ({ resolvedOptions: () => ({ timeZone }) }),
+      });
+    const written = () => JSON.parse(String(calls.at(-1)?.init?.body)).start.timeZone;
+    const event = { title: 'Study', date: '2026-09-20', at: 600, minutes: 60, note: '' };
+
+    connected('google');
+    answering({});
+    inZone('America/Chicago');
+    await addEvent('google', event);
+    expect(written()).toBe('America/Chicago');
+
+    // The same module, still loaded, after the device has moved.
+    inZone('Pacific/Kiritimati');
+    await addEvent('google', event);
+    expect(written()).toBe('Pacific/Kiritimati');
+  });
+
   it('rolls an event past midnight rather than writing an impossible hour', async () => {
     // 23:30 plus an hour is 00:30 the next day, not 24:30 on the same one.
     connected('google');

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { dueByDay, weekLabel, weekLine, type Span } from '../lib/weekpage';
@@ -33,7 +33,8 @@ export function WeekDue({
   /** Three days on a phone, seven where there is room. See `lib/weekpage.ts`. */
   span?: Span;
 }) {
-  const { state, now, catalog, courseCode } = useStore();
+  const { state, catalog, courseCode } = useStore();
+  const now = useNow();
   const row = useRowStyle(8);
 
   /*

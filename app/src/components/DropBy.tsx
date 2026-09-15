@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { draftFor } from '../lib/mail';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from '../components/ui';
@@ -25,7 +25,8 @@ import { Folding } from './Fold';
  * case than silence.
  */
 export function DropBy({ courseId, limit }: { courseId?: string; limit?: number }) {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
 
   const drilled = useMemo(
     () =>

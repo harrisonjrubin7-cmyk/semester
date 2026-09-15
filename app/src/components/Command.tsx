@@ -57,7 +57,7 @@
 
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { useModal } from '../a11y/modal';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { useAI } from '../ai/store';
 import { countHits, findEverything, spelled } from '../lib/find';
 import { actionsFor, flatten, hitKey, landingOf } from '../lib/openhit';
@@ -92,7 +92,8 @@ const SIZES = {
 const SHORTCUTS = 7;
 
 export function Command({ onClose }: { onClose: () => void }) {
-  const { state, dispatch, now, catalog, school } = useStore();
+  const { state, dispatch, catalog, school } = useStore();
+  const now = useNow();
   const ai = useAI();
   /* The shell owns search when it is the navigation: two search fields on
      screen at once was the audit's fix #10. */

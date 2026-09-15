@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { secondLine } from '../lib/dim';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -64,7 +64,8 @@ export function People() {
 }
 
 function PeopleTab({ rows }: { rows?: Person[] }) {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   // The filtered list when the box has something in it, all of them when it
   // does not. `state.people` stays the source for the empty state, so
   // filtering to nothing says so rather than announcing there is nobody.
@@ -387,7 +388,8 @@ function Correct({ person: p }: { person: Person }) {
 }
 
 function LettersTab() {
-  const { state, dispatch, now } = useStore();
+  const { state, dispatch } = useStore();
+  const now = useNow();
   const [personId, setPersonId] = useState('');
   const [forWhat, setForWhat] = useState('');
   const [due, setDue] = useState('');

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { secondLine } from '../../lib/dim';
-import { useStore } from '../../state/store';
+import { useNow, useStore } from '../../state/store';
 import { useRowStyle } from '../../components/shell/useShell';
 import { Blueprint } from '../../components/Blueprint';
 import { SectionLabel, Segmented } from '../../components/ui';
@@ -38,7 +38,8 @@ import { Folding } from '../../components/Fold';
  * which is a switch, not a second place to find.
  */
 export function AgainstCalendar() {
-  const { state, dispatch, now, catalog } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
   // Spread rather than wrapped, so a button row stays one tap target.
   const rowStyle = useRowStyle(10);
 

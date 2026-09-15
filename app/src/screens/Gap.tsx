@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { EmptyState } from '../components/ui';
 import { allCards } from '../data/catalog';
 import { liveGuide } from '../lib/live';
@@ -53,7 +53,8 @@ export function Gap() {
 }
 
 function Run({ win }: { win: GapWindow }) {
-  const { state, dispatch, catalog, now } = useStore();
+  const { state, dispatch, catalog } = useStore();
+  const now = useNow();
 
   const [idx, setIdx] = useState(0);
   const [shown, setShown] = useState(false);
