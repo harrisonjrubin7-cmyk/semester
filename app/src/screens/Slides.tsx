@@ -4,18 +4,10 @@ import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
 import { FigureCard } from '../components/FigureCard';
 import { ChevronLeft, ChevronRight } from '../components/Icons';
-import type { Figure } from '../lib/types';
+import { deckOf } from '../lib/slides';
 import { cardKey } from '../lib/review';
 import { knowingOf, says } from '../lib/knowing';
 
-type Slide =
-  | { kind: 'title'; title: string; sub: string }
-  | { kind: 'q'; text: string; n: number; of: number }
-  | { kind: 'a'; q: string; text: string }
-  | { kind: 'figure'; figure: Figure }
-  /** Prose from a reading that never became a question. */
-  | { kind: 'note'; title: string; text: string; from: string }
-  | { kind: 'end'; title: string; sub: string };
 
 /**
  * The deck.
@@ -57,45 +49,13 @@ export function SlideDeck() {
     [unit, state.reviews, state.guideId, now],
   );
 
-  const slides = useMemo<Slide[]>(() => {
+  const slides = useMemo(() => {
     if (!unit) return [];
-    const out: Slide[] = [
-      {
-        kind: 'title',
-        title: unit.name.replace(/^\d+(\/\d+)?\s*·\s*/, ''),
-        sub: `${guide.code} · ${unit.cards.length} things to know`,
-      },
-    ];
-    unit.cards.forEach((c, i) => {
-      out.push({ kind: 'q', text: c.q, n: i + 1, of: unit.cards.length });
-      out.push({ kind: 'a', q: c.q, text: c.a });
-    });
-    /*
-     * Every figure the unit has, not just the one it leads with.
-     *
-     * This took `figures[unitIndex]` — the single figure a header shows — so a
-     * reading that brought three tables contributed one slide and dropped two
-     * with nothing said. A deck is the one place with room for all of them.
-     */
-    for (const figure of unitFigures) out.push({ kind: 'figure', figure });
-
-    // Prose a reading never split into questions. It is in Read and on the
-    // cram sheet; leaving it out of the deck made the deck the one format that
-    // did not have the whole unit in it.
-    for (const up of added) {
-      if (up.body) {
-        out.push({
-          kind: 'note',
-          title: up.title || 'Added since',
-          text: up.body,
-          from: up.source || 'Added by you',
-        });
-      }
-    }
-
-    out.push({
-      kind: 'end',
-      title: 'End of the unit',
+    return deckOf({
+      unit,
+      code: guide.code,
+      figures: unitFigures,
+      added,
       /*
        * The same sentence the guide card on Study says, for the same reason,
        * on the one surface that still showed the old one.
@@ -112,11 +72,10 @@ export function SlideDeck() {
        * after the first answer, and a percentage cannot say which part of
        * itself was measured. `lib/knowing.ts` reads the answers only.
        */
-      sub: started
+      standing: started
         ? `${unit.cards.length} cards · ${says(standing.state).toLowerCase()}`
         : `${unit.cards.length} cards · not started`,
     });
-    return out;
   }, [unit, guide.code, unitFigures, added, started, standing]);
 
   const [at, setAt] = useState(0);
@@ -129,9 +88,9 @@ export function SlideDeck() {
 
   // Moving to another unit starts its deck at the first slide. Adjusting state
   // during render rather than in an effect keeps it to one pass.
-  const [deckOf, setDeckOf] = useState(unitIndex);
-  if (deckOf !== unitIndex) {
-    setDeckOf(unitIndex);
+  const [showing, setShowing] = useState(unitIndex);
+  if (showing !== unitIndex) {
+    setShowing(unitIndex);
     setAt(0);
   }
 
@@ -148,7 +107,21 @@ export function SlideDeck() {
     return <div style={{ padding: 'var(--page-pad)', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>Nothing to show here.</div>;
   }
 
-  const slide = slides[at];
+  /*
+   * Clamped, because the reset above has not happened yet on this pass.
+   *
+   * `setAt(0)` during render schedules another render and does not stop this
+   * one: the function runs to the end with the *old* `at`, and if the unit
+   * being moved to has a shorter deck that index is past it. `slides[at]` is
+   * then `undefined`, `slide.kind` throws, and the screen boundary catches a
+   * crash of the whole deck.
+   *
+   * Measured on `origin/main` before this change, so it is not the new slide
+   * kinds: ECON's first unit is fifteen slides and its second is eleven, and
+   * pressing "Next unit" from the last slide of the first took the screen
+   * down every time. Two clicks in the app's own chrome.
+   */
+  const slide = slides[Math.min(at, last)];
 
   /*
    * No `<Page>` here, deliberately.
@@ -244,6 +217,140 @@ export function SlideDeck() {
               }}
             >
               {slide.text}
+            </div>
+          </>
+        )}
+
+        {/*
+          Two sides, side by side.
+
+          The card said `X vs. Y` and the answer was two halves of a contrast,
+          drawn as one paragraph the reader had to split themselves.
+          `lib/slides.ts` has the rule and, more to the point, what it refuses:
+          an answer that argues for one side is not a comparison and stays an
+          answer slide.
+
+          Stacked rather than columned under about 380px, which is most of the
+          phones this is read on — two columns of forty characters is neither
+          column readable.
+        */}
+        {slide.kind === 'compare' && (
+          <>
+            <div
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'var(--type-lg)',
+                lineHeight: 'var(--leading-tight)',
+                color: 'var(--app-dim)',
+                textWrap: 'pretty',
+              }}
+            >
+              {slide.q}
+            </div>
+            <div className="slide-two">
+              {[
+                { name: slide.left, says: slide.leftSays },
+                { name: slide.right, says: slide.rightSays },
+              ].map((side) => (
+                <div key={side.name} className="slide-side">
+                  <div
+                    className="kicker"
+                    style={{ color: 'var(--app-accent)', marginBottom: 'var(--sp-3)' }}
+                  >
+                    {side.name}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 'var(--type-lg)',
+                      lineHeight: 'var(--leading-relaxed)',
+                      textWrap: 'pretty',
+                    }}
+                  >
+                    {side.says}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {slide.also && (
+              <div
+                style={{
+                  fontSize: 'var(--type-sm)',
+                  color: 'var(--app-dim)',
+                  marginTop: 'var(--sp-5)',
+                  lineHeight: 'var(--leading-relaxed)',
+                  textWrap: 'pretty',
+                }}
+              >
+                {slide.also}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* An answer that enumerates, as the list it already was. */}
+        {slide.kind === 'bullet' && (
+          <>
+            <div
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'var(--type-lg)',
+                lineHeight: 'var(--leading-tight)',
+                color: 'var(--app-dim)',
+                textWrap: 'pretty',
+              }}
+            >
+              {slide.q}
+            </div>
+            <ul
+              style={{
+                margin: 'var(--sp-6) 0 0',
+                paddingLeft: '1.1em',
+                fontSize: 'var(--type-md)',
+                lineHeight: 'var(--leading-relaxed)',
+                textWrap: 'pretty',
+              }}
+            >
+              {slide.items.map((item) => (
+                <li key={item} style={{ marginBottom: 'var(--sp-3)' }}>
+                  {item.replace(/^\d+\.\s*/, '')}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        {/*
+          A passage, with where it came from.
+
+          A `note` is prose a reading brought and this is a sentence out of
+          one, and the difference is worth a layout: a passage set as a
+          quotation is read, and the same words in a paragraph of body text
+          are skimmed. `lib/slides.ts` draws the line at length rather than at
+          punctuation, because a student pasting the sentence a seminar turns
+          on does not put quotation marks round it first.
+        */}
+        {slide.kind === 'quote' && (
+          <>
+            <div
+              style={{
+                fontFamily: 'var(--font-heading)',
+                fontSize: 'var(--type-xl)',
+                lineHeight: 'var(--leading-tight)',
+                textWrap: 'pretty',
+              }}
+            >
+              “{slide.text}”
+            </div>
+            <div
+              style={{
+                fontSize: 'var(--type-sm)',
+                color: 'var(--app-dim)',
+                marginTop: 'var(--sp-6)',
+                lineHeight: 'var(--leading-relaxed)',
+              }}
+            >
+              {slide.from}
+              {slide.title && slide.title !== slide.from ? ` · ${slide.title}` : ''}
             </div>
           </>
         )}

@@ -4489,6 +4489,43 @@ section[data-drop] > .grip + * {
  * whole page: `lib/docx.ts` and `lib/pdfout.ts` each bound a picture for the
  * same reason, in their own units.
  */
+/*
+ * The two sides of a comparison slide.
+ *
+ * Columns where there is room and stacked where there is not, at 380px — which
+ * is most of the phones a deck is read on, and where two columns of about
+ * forty characters each leaves neither of them readable. The rule is on the
+ * container and not on a media query over the viewport, because the slide sits
+ * inside a workspace pane on a wide screen and the pane is what decides.
+ */
+.slide-two {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--sp-5);
+  margin-top: var(--sp-6);
+  container-type: inline-size;
+}
+
+@container (min-width: 380px) {
+  .slide-two {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* The rule between them, which is the whole of the comparison as a picture. */
+.slide-side + .slide-side {
+  padding-left: var(--sp-5);
+  border-left: 1px solid var(--app-line);
+}
+
+@container (max-width: 379px) {
+  .slide-side + .slide-side {
+    padding: var(--sp-5) 0 0;
+    border-left: 0;
+    border-top: 1px solid var(--app-line);
+  }
+}
+
 .docpaper-picture {
   display: block;
   max-width: 100%;

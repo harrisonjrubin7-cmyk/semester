@@ -248,11 +248,13 @@ from a hand-drawn one.
 
 **Sequencing: Phase 1** — Watch and Slides both reuse this rendering layer.
 
-### 3.2 · Slides — Partial (engine)
+### 3.2 · Slides — Live
 
-**Current state.** `app/src/screens/Slides.tsx` cuts a unit into a deck of six
-slide kinds — `title`, `q`, `a`, `figure`, `note`, `end` — question always before
-answer, arrow keys or tap halves. It works for every course, hand-built or
+**Current state.** `app/src/lib/slides.ts` cuts a unit into a deck of nine slide
+kinds — `title`, `q`, `a`, **`compare`**, **`bullet`**, `figure`, **`quote`**,
+`note`, `end` — question always before answer, arrow keys or tap halves. The
+cut moved out of the screen so the plan's own condition below could be run
+against it. It works for every course, hand-built or
 generated, because it is derived from units and cards and nothing else. A
 diagram-anchored layout already exists: that is the `figure` kind.
 
@@ -263,31 +265,57 @@ That one is not the study mode, and the two should not be merged: one is your ow
 material rearranged with no model and no wait, and that is the property worth
 keeping.
 
-**What's missing.** Three layouts, not a library from nothing: **bullet** (a
-unit's key points, for material whose shape is a list rather than a question),
-**comparison** (two columns, for the "X versus Y" unit every course has), and
-**quote-and-source** (a passage with its citation, which the app already holds
-verbatim for every deadline and reading). Today all three are forced into `q`/`a`
-or into `note`.
+**What was missing.** Three layouts, all now built, and the yields are worth
+recording because two of the three are not what the plan expected:
 
-**Technical approach.** Add the three kinds to the `Slide` union in
-`Slides.tsx` and render each in the existing component. Selection stays
-mechanical first — a unit whose cards are one-line facts becomes bullets, a unit
-whose glossary holds a contrasted pair becomes a comparison — with Claude
-choosing only where the mechanical rule is ambiguous, from the verified course
-model. A deck that needs no model call is a deck with no wait and no key, and
-that is worth protecting for the commonest case.
+| Layout | Fires on | Measured against the four shipped courses |
+| --- | --- | --- |
+| **comparison** | a card whose question asks `X vs. Y` and whose answer names both sides | **20 of 279 cards**, and five `vs.` cards refused |
+| **bullet** | an answer that is a numbered list of three or more | **1 of 279.** This material is written as prose |
+| **quote-and-source** | a reading added to a unit, short enough to be a passage, with a source | **none shipped** — readings are added, not shipped |
+
+**The refusals are the work.** §3.2's own condition is that no unit maps to a
+layout "a reviewer calls forced", so each rule declines rather than reaches.
+`comparison` refuses an answer that argues for one side rather than contrasting
+two (*Total vs. marginal analysis — why does marginal win?*), halves named by
+something other than the two sides (*Shutdown vs. exit rule?*), two labels
+sharing every distinguishing word (*Type I vs. Type II error?*), a `vs.` buried
+in a clause rather than asked about, and three sides, where two columns would
+drop one (*Owned vs. earned vs. paid media?*). Each is a shipped card, and each
+is asserted by name in `lib/slides.test.ts`. `bullet` refuses semicolons, which
+were the obvious second rule and would have turned
+`%ΔQ = −20/90 = −22.2%; %ΔP = 2/5 = 40%; ε = −0.56` into three unrelated facts.
+
+**No model call, and that is not a shortcut.** §3.2 proposed the mechanical rule
+first "with Claude choosing only where the mechanical rule is ambiguous". There
+is nowhere for that to happen: a card either has one `vs.` in its question with
+two sides its answer names, or it does not. The property §3.2 asks to protect —
+a deck with no wait and no key — is kept by there being nothing to call.
+
+**A crash found by driving it, and not by this change.** Moving to the next
+unit from the last slide of a longer one took the whole screen down — two
+clicks in the app's own chrome. The reset that starts a new deck at slide one
+is a `setAt(0)` during render, which schedules another render and does not stop
+the current one, so the pass continued with an index past the end of the
+shorter deck. Reproduced on `origin/main` before any of this was in the tree
+(ECON's first unit is fifteen slides, its second eleven), fixed, and asserted
+by a component test that performs exactly those two clicks.
 
 **Dependencies.** Figures (§3.1) for the diagram-anchored layout to improve
 beyond the existing `figure` kind. Nothing blocking for the other three.
 
-**Estimated effort.** Low-medium.
+**Estimated effort.** Was low-medium.
 
-**Done when.** Every unit across the four shipped courses and one generated test
-course maps to a layout no reviewer calls "forced", and a test asserts the
-question-before-answer invariant survives the new kinds.
+**Done when — and it is.** ~~Every unit across the four shipped courses and one
+generated test course maps to a layout no reviewer calls "forced", and a test
+asserts the question-before-answer invariant survives the new kinds.~~
+`lib/slides.test.ts` walks every unit of all four shipped courses and asserts
+both: every card gets exactly one answer slide, and every answer slide — `a`,
+`compare` or `bullet` — is immediately preceded by its own question. A
+generated course is the same walk with no figures and no readings, which is
+what `lib/generate.ts:463` says one is.
 
-**Sequencing: Phase 1.**
+**Sequencing: Phase 1, done.**
 
 ### 3.3 · Watch — Partial (content)
 
@@ -906,14 +934,24 @@ disproportionate effect on what a pilot student sees.
 
 | # | Item | Effort | Blocks | Why it is in Phase 1 |
 | --- | --- | --- | --- | --- |
-| 1 | **Figures** — join `lib/diagram.ts` to the Figures mode; STEM kinds (§3.1) | Medium | 4 items | The only fan-out in the plan |
-| 2 | **Listen · scripting** — scripts and transcripts for a generated course (§3.5) | Low-med | Watch | Unblocks Watch; a script is useful with no audio |
-| 3 | **GPA Projection** — close the `hours` and `points` exclusions (§4.2) | Low | — | Smallest job here; removes "why is my course missing" |
-| 4 | **Exam Runway** — model-read scope as a confirmable fourth source (§4.3) | Low | — | Smaller than believed; visible in the weeks a pilot runs |
-| 5 | **Where Courses Meet** — semantic matching as a fifth grade (§4.1) | Medium | — | The most distinctive claim in the product |
-| 6 | **Quote Verification** — local semantic match + adversarial pass (§4.4) | Medium | — | Technical work must precede any release decision |
+| 1 | ~~**Figures** — join `lib/diagram.ts` to the Figures mode; STEM kinds (§3.1)~~ **Done** | Medium | 4 items | The only fan-out in the plan |
+| 2 | ~~**Listen · scripting** — scripts and transcripts for a generated course (§3.5)~~ **Done** | Low-med | Watch | Unblocks Watch; a script is useful with no audio |
+| 3 | ~~**GPA Projection** — close the `hours` and `points` exclusions (§4.2)~~ **Done** | Low | — | Smallest job here; removes "why is my course missing" |
+| 4 | ~~**Exam Runway** — model-read scope as a confirmable fourth source (§4.3)~~ **Done** | Low | — | Smaller than believed; visible in the weeks a pilot runs |
+| 5 | ~~**Where Courses Meet** — semantic matching as a fifth grade (§4.1)~~ **Done** | Medium | — | The most distinctive claim in the product |
+| 6 | ~~**Quote Verification** — local semantic match + adversarial pass (§4.4)~~ **Done** | Medium | — | Technical work must precede any release decision |
 | 7 | ~~**Document Editor** — tables, figure block, export QA with a control (§5.1)~~ **Done** | Medium | — | Exports are what leaves the app and gets marked |
-| 8 | **Slides** — bullet, comparison, quote-and-source layouts (§3.2) | Low-med | — | Cheap once Figures lands |
+| 8 | ~~**Slides** — bullet, comparison, quote-and-source layouts (§3.2)~~ **Done** | Low-med | — | Cheap once Figures lands |
+
+**Phase 1 is done.** All eight items above have landed, each as its own pull
+request with its own measurement. Two of them changed shape on contact with the
+tree and the item says which: §5.1's first missing item was a round-trip bug
+reported against merged cells and column widths that do not exist anywhere in
+the app, and §3.2's bullet layout fires on one card in two hundred and
+seventy-nine because this material is written as prose. Both are recorded where
+they happened rather than quietly dropped, which is the same discipline
+[Appendix A](#appendix-a--what-measurement-corrected) applies to the draft this
+plan grew out of.
 
 **Phase 1 exit criteria.** All eight **Done when** conditions met; `cd app` and
 all five gates green (`npx tsc -b`, `npm run lint`, `npm test`,
