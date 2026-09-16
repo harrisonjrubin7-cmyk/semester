@@ -5,9 +5,11 @@ import {
   distinctive,
   elsewhere,
   forms,
+  meetPrompt,
   meetings,
   normalise,
   pairings,
+  readSame,
   saysIt,
   singular,
   whyLine,
@@ -374,5 +376,183 @@ describe('elsewhere', () => {
     const line = alsoLine([{ code: 'BUS 1600', kind: 'defines', why: 'a-word-in-common' }]);
     expect(line).toBe('BUS 1600 has a term close to it');
     expect(line).not.toContain('defines this too');
+  });
+});
+
+describe('the fifth grade: entries that share no word', () => {
+  const psci = side(
+    'psci',
+    'PSCI 2100',
+    guide('PSCI 2100', [
+      { t: 'Selection effect', d: 'Who ends up in the sample is not who you meant to study.' },
+      { t: 'Random sampling', d: 'Every member of the population has an equal chance.' },
+    ]),
+  );
+  const bus = side(
+    'bus',
+    'BUS 1600',
+    guide('BUS 1600', [
+      { t: 'Sampling bias', d: 'The respondents you reached are not the market you sell to.' },
+      { t: 'Sampling plan', d: 'How many, from where, and when.' },
+    ]),
+  );
+  const sides = [psci, bus];
+  const already = meetings(sides);
+
+  const reply = {
+    pairs: [
+      {
+        a: { course: 'PSCI 2100', term: 'Selection effect' },
+        b: { course: 'BUS 1600', term: 'Sampling bias' },
+        because: 'Both are the gap between who you measured and who you meant to.',
+      },
+    ],
+  };
+
+  it('is the case the four grades miss, which is why it exists', () => {
+    // The precondition. Nothing above shares a distinctive word, so the string
+    // pass finds no row for the pair this grade is for.
+    expect(already.some((m) => m.key.includes('selection'))).toBe(false);
+  });
+
+  it('puts the two entries on one row, with each course’s own definition', () => {
+    const [row] = readSame(reply, sides, already);
+    expect(row.why).toBe('means-the-same');
+    expect(row.sides.map((s) => s.code).sort()).toEqual(['BUS 1600', 'PSCI 2100']);
+    /*
+     * The safety property, asserted. The definitions shown are looked up in
+     * the guides by the term the reply named — the reply's own prose reaches
+     * the screen only as the reason. A model cannot put words in a course's
+     * mouth here, whatever it returns.
+     */
+    expect(row.sides.find((s) => s.code === 'PSCI 2100')?.term?.d).toBe(
+      'Who ends up in the sample is not who you meant to study.',
+    );
+    expect(row.sides.find((s) => s.code === 'BUS 1600')?.term?.d).toBe(
+      'The respondents you reached are not the market you sell to.',
+    );
+  });
+
+  it('refuses a term that is in no glossary', () => {
+    const made_up = {
+      pairs: [
+        {
+          a: { course: 'PSCI 2100', term: 'Survivorship illusion' },
+          b: { course: 'BUS 1600', term: 'Sampling bias' },
+          because: 'Sounds right.',
+        },
+      ],
+    };
+    expect(readSame(made_up, sides, already)).toEqual([]);
+  });
+
+  it('refuses a term attributed to the wrong course', () => {
+    // A real term, a real course, and the two do not go together. Checked
+    // because a misattribution reads exactly like a finding.
+    const swapped = {
+      pairs: [
+        {
+          a: { course: 'BUS 1600', term: 'Selection effect' },
+          b: { course: 'PSCI 2100', term: 'Sampling bias' },
+          because: 'Same idea.',
+        },
+      ],
+    };
+    expect(readSame(swapped, sides, already)).toEqual([]);
+  });
+
+  it('refuses a course it was not given', () => {
+    const elsewhere_ = {
+      pairs: [
+        {
+          a: { course: 'CHEM 1601', term: 'Selection effect' },
+          b: { course: 'BUS 1600', term: 'Sampling bias' },
+          because: 'Same idea.',
+        },
+      ],
+    };
+    expect(readSame(elsewhere_, sides, already)).toEqual([]);
+  });
+
+  it('refuses a pair with no reason, since the reason is the evidence', () => {
+    const mute = { pairs: [{ ...reply.pairs[0], because: '  ' }] };
+    expect(readSame(mute, sides, already)).toEqual([]);
+  });
+
+  it('refuses two entries of one course, because a course does not meet itself', () => {
+    const itself = {
+      pairs: [
+        {
+          a: { course: 'PSCI 2100', term: 'Selection effect' },
+          b: { course: 'PSCI 2100', term: 'Random sampling' },
+          because: 'Both about samples.',
+        },
+      ],
+    };
+    expect(readSame(itself, sides, already)).toEqual([]);
+  });
+
+  it('drops a pair the string grades already found, so the stronger row wins', () => {
+    /*
+     * The fourth grade puts PSCI's `Random sampling` and BUS's `Sampling bias`
+     * on one row, on the distinctive word "sampling". A row both grades can
+     * claim belongs to the one that can name the word that did it.
+     *
+     * The pair is read off the row rather than assumed: the first version of
+     * this test guessed `Sampling plan` and was simply wrong about which
+     * entries `meetings` had joined, which is why the assertion below names
+     * the row it is really about.
+     */
+    const dup = {
+      pairs: [
+        {
+          a: { course: 'PSCI 2100', term: 'Random sampling' },
+          b: { course: 'BUS 1600', term: 'Sampling bias' },
+          because: 'Both about drawing a sample.',
+        },
+      ],
+    };
+    const row = already.find((m) => m.why === 'a-word-in-common')!;
+    expect(row.sides.map((s) => s.term?.t).sort()).toEqual(['Random sampling', 'Sampling bias']);
+    expect(readSame(dup, sides, already)).toEqual([]);
+  });
+
+  it('offers the same pair once, however often it is returned', () => {
+    const twice = { pairs: [reply.pairs[0], reply.pairs[0]] };
+    expect(readSame(twice, sides, already)).toHaveLength(1);
+  });
+
+  it('says nothing for a reply that says nothing', () => {
+    expect(readSame({ pairs: [] }, sides, already)).toEqual([]);
+    expect(readSame({}, sides, already)).toEqual([]);
+    expect(readSame('no', sides, already)).toEqual([]);
+  });
+
+  it('reads as a suggestion and never as a match', () => {
+    const [row] = readSame(reply, sides, already);
+    const said = whyLine(row);
+    expect(said).toContain('may be the same idea');
+    expect(said).toContain('read as a suggestion, not a match');
+    expect(said).toContain('Read both — they may not mean the same thing.');
+    // The one sentence this screen will not write, in any grade.
+    expect(said).not.toContain('These are the same');
+  });
+
+  it('leaves the four string grades byte-identical', () => {
+    /*
+     * The plan's own condition for this item. `meetings()` is untouched, so
+     * this is structural rather than hopeful — but it is asserted, because
+     * "structural" is what somebody says before a refactor proves otherwise.
+     */
+    expect(meetings(sides)).toEqual(already);
+    expect(already.every((m) => m.why !== 'means-the-same')).toBe(true);
+  });
+
+  it('tells the model to copy the terms and to answer with nothing', () => {
+    const p = meetPrompt(sides);
+    expect(p).toContain('Selection effect — Who ends up in the sample');
+    expect(p).toContain('character for character');
+    expect(p).toContain('{"pairs": []}');
+    expect(p).toContain('Do not pair two entries from the same course');
   });
 });
