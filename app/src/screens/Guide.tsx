@@ -28,6 +28,7 @@ import { buildQuiz } from '../lib/quiz';
 import { asset } from '../lib/asset';
 import { Folding } from '../components/Fold';
 import { hasTranscript, load, readingTime, speaker, type Transcript } from '../lib/transcript';
+import { scriptFor } from '../lib/script';
 
 /** The note under a heading saying part of what follows arrived later. */
 const SINCE = {
@@ -1420,13 +1421,34 @@ function Cram() {
  * remembers — which is the answer to "four thousand words on a phone" that
  * does not involve building a second disclosure for one screen.
  */
-function Script({ courseId, episodeId }: { courseId: string; episodeId: string }) {
+function Script({
+  courseId,
+  episodeId,
+  derived,
+}: {
+  courseId: string;
+  episodeId: string;
+  /**
+   * A script built here rather than fetched — see `lib/script.ts`.
+   *
+   * Passed in instead of looked up because it is already in hand: the caller
+   * derived the episode and its words in one pass, and re-deriving them here
+   * would be the same work twice and two chances to disagree about it.
+   */
+  derived?: Transcript;
+}) {
   const [script, setScript] = useState<Transcript | null>(null);
   const wanted = hasTranscript(courseId, episodeId);
 
   useEffect(() => {
     if (!wanted) {
       setScript(null);
+      return;
+    }
+    // Nothing to fetch: a derived script is text already, so it is shown on
+    // the first paint rather than after a round trip that would not happen.
+    if (derived) {
+      setScript(derived.episode === episodeId ? derived : null);
       return;
     }
     let live = true;
@@ -1439,7 +1461,7 @@ function Script({ courseId, episodeId }: { courseId: string; episodeId: string }
     return () => {
       live = false;
     };
-  }, [courseId, episodeId, wanted]);
+  }, [courseId, episodeId, wanted, derived]);
 
   if (!wanted) return null;
 
@@ -1554,10 +1576,30 @@ function Listen() {
    */
   const { time, duration, going } = usePlayback();
 
+  /**
+   * The script a course writes for itself, where nobody has recorded one.
+   *
+   * Four courses ship editions. Every other course — including every course
+   * generated from somebody's own syllabus — reached the branch below and was
+   * told "Not recorded yet", which was true and was the whole of what Listen
+   * had to offer it. `lib/script.ts` turns the guide into the running order
+   * and the words, so there is something to read while there is nothing to
+   * play, and so the thing that gets synthesised later already exists.
+   *
+   * Derived rather than stored, and recomputed with the guide: a card added
+   * in week nine is in the script the moment it is in the guide, which is the
+   * one thing the recorded editions cannot do — hence the line below about
+   * cards added since a recording was made.
+   */
+  const derived = useMemo(
+    () => (pod.editions.length > 0 ? null : scriptFor(state.guideId, guide)),
+    [pod.editions.length, state.guideId, guide],
+  );
+
   const episode = useMemo(() => {
-    if (pod.editions.length === 0) return null;
+    if (pod.editions.length === 0) return derived?.episode ?? null;
     return pod.editions.find((e) => e.id === state.episodeId) ?? pod.editions[0];
-  }, [pod.editions, state.episodeId]);
+  }, [pod.editions, state.episodeId, derived]);
 
   if (!episode) {
     return (
@@ -1734,7 +1776,7 @@ function Listen() {
         </button>
       ))}
 
-      <Script courseId={state.guideId} episodeId={episode.id} />
+      <Script courseId={state.guideId} episodeId={episode.id} derived={derived?.transcript} />
     </Folding>
   );
 }

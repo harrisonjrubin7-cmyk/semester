@@ -103,8 +103,10 @@ function speakable(text) {
     .replace(/÷/g, ' divided by ')
     .replace(/±/g, ' plus or minus ')
     .replace(/√/g, ' the square root of ')
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]{2,}/g, (run) => ` to the ${[...run].map((c) => '⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(c)).join('')}`)
     .replace(/²/g, ' squared')
-    .replace(/\br²/g, 'r squared')
+    .replace(/³/g, ' cubed')
+    .replace(/[⁰¹⁴⁵⁶⁷⁸⁹]/g, (c) => ` to the ${'⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(c)}`)
     .replace(/\$([\d,.]+)/g, '$1 dollars')
     .replace(/\s{2,}/g, ' ')
     .trim();

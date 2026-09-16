@@ -94,6 +94,29 @@ describe('modesFor', () => {
     expect(modeInfo(empty, 'watch')?.ready).toBe(false);
   });
 
+  it('says a script is a script, and not an episode', () => {
+    /*
+     * `lib/script.ts` gives every course with cards something to open Listen
+     * on — the running order and the words, written from its own guide. It is
+     * worth having and it is not audio.
+     *
+     * Counting it as "1 episode" would be this file's own complaint committed
+     * again: a mode with a script behind it reading identically to one with
+     * three recorded editions behind it, and the only way to find out being to
+     * tap. So the count says which it is, and the shipped four are unaffected.
+     */
+    const listen = modeInfo(modesFor(cat, 'econ', source()), 'listen');
+    expect(listen?.ready).toBe(true);
+    expect(listen?.count).toBe('Script, not recorded');
+    expect(listen?.count).not.toMatch(/episode/);
+  });
+
+  it('offers no script for a guide with no cards to write one from', () => {
+    const listen = modeInfo(modesFor(cat, 'econ', source({ guide: guide(0) })), 'listen');
+    expect(listen?.ready).toBe(false);
+    expect(listen?.missing).toBeTruthy();
+  });
+
   it('counts figures from the guide and from what you added', () => {
     const modes = modesFor(cat, 'econ', source({ figures: { 0: {} }, extras: [{}, {}] }));
     expect(modeInfo(modes, 'figures')?.count).toBe('3 figures');
