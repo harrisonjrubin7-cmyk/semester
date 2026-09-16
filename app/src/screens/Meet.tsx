@@ -21,14 +21,28 @@
  * worth seeing and is not worth the same as two definitions.
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { FirstRun } from './FirstRun';
 import { Blueprint } from '../components/Blueprint';
 import { EmptyState, SectionLabel } from '../components/ui';
 import { liveGuide } from '../lib/live';
-import { meetings, pairings, whyLine, type Meeting, type Sided, type Why } from '../lib/meet';
+import {
+  meetPrompt,
+  meetings,
+  pairings,
+  readSame,
+  whyLine,
+  type Meeting,
+  type Sided,
+  type Why,
+} from '../lib/meet';
+import { ask } from '../lib/claude';
+import { configured } from '../lib/assistant';
+import { ActionButton } from '../components/ui';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 
 /**
  * The headings, strongest first, each with the sentence that says how much to
@@ -55,6 +69,11 @@ const TIERS: { why: Why; label: string; note: string }[] = [
     label: 'One word in common',
     note: 'Two different terms sharing one distinctive word. The weakest thing on this screen, and the likeliest to be a coincidence.',
   },
+  {
+    why: 'means-the-same',
+    label: 'Read as the same idea',
+    note: 'Two entries that share no word at all, put on one row by a reading of both glossaries rather than by a match. Weaker than everything above it, because nothing here can name the word that did it — each course’s own definition is shown, and the judgement is yours.',
+  },
 ];
 
 export function Meet() {
@@ -67,16 +86,68 @@ export function Meet() {
    * read the shipped module would say two courses do not meet on a word that
    * is in both of them today. Same merge every study screen uses.
    */
-  const found = useMemo(() => {
-    const sides: Sided[] = catalog.courses.map((c) => ({
-      courseId: c.id,
-      code: c.code,
-      guide: state.updates.length
-        ? liveGuide(catalog, c.id, state.updates)
-        : (catalog.guides[c.id] ?? { units: [], terms: [] as never[] } as never),
-    }));
-    return meetings(sides.filter((s) => s.guide));
-  }, [catalog, state.updates]);
+  const sides = useMemo<Sided[]>(
+    () =>
+      catalog.courses
+        .map((c) => ({
+          courseId: c.id,
+          code: c.code,
+          guide: state.updates.length
+            ? liveGuide(catalog, c.id, state.updates)
+            : (catalog.guides[c.id] ?? { units: [], terms: [] as never[] } as never),
+        }))
+        .filter((s) => s.guide),
+    [catalog, state.updates],
+  );
+
+  const matched = useMemo(() => meetings(sides), [sides]);
+
+  /**
+   * The fifth grade, read rather than matched.
+   *
+   * Held in the screen and not in the store, for the reason the runway's scope
+   * proposal is: this is a reading offered on the screen somebody asked for it
+   * on. It is thrown away on navigation, which is right — a suggestion that
+   * survived a reload would start to look like a finding, and the four grades
+   * above it are the ones that have earned that.
+   */
+  const [read, setRead] = useState<Meeting[] | null>(null);
+  const [reading, setReading] = useState(false);
+  const trouble = useTrouble();
+
+  /** The four, then the fifth under them. `meetings` never produces the fifth. */
+  const found = useMemo(() => [...matched, ...(read ?? [])], [matched, read]);
+
+  const readAcross = async () => {
+    if (reading || sides.length < 2) return;
+    setReading(true);
+    trouble.clear();
+    let sofar = '';
+    try {
+      await ask({
+        maxTokens: 2000,
+        system: meetPrompt(sides),
+        messages: [{ role: 'user', content: 'Find the pairs, or answer with none.' }],
+        onText: (chunk) => {
+          sofar += chunk;
+        },
+      });
+      let parsed: unknown = null;
+      try {
+        const m = /\{[\s\S]*\}/.exec(sofar);
+        parsed = m ? JSON.parse(m[0]) : null;
+      } catch {
+        parsed = null;
+      }
+      // `matched`, so a pair one of the four grades already holds is dropped
+      // rather than shown twice in two strengths.
+      setRead(readSame(parsed, sides, matched));
+    } catch (e) {
+      trouble.failed(e, () => void readAcross());
+    } finally {
+      setReading(false);
+    }
+  };
 
   const pairs = useMemo(() => pairings(found), [found]);
 
@@ -181,6 +252,51 @@ export function Meet() {
           </div>
         );
       })}
+
+      {/*
+        The offer, under the four grades and above nothing.
+
+        Placed after the matched rows rather than beside them because the
+        order on this screen is the order of how much a row is worth, and a
+        reading is worth less than every match above it. Offered once — a
+        second press would re-read the same glossaries for the same answer.
+      */}
+      {configured() && sides.length >= 2 && read === null ? (
+        <div style={{ marginTop: 'var(--sp-7)' }}>
+          <ActionButton onClick={() => void readAcross()} disabled={reading}>
+            {reading ? 'Reading both glossaries…' : 'Look for the same idea in different words'}
+          </ActionButton>
+          <div
+            style={{
+              fontSize: 'var(--type-xs)',
+              color: 'var(--app-dim)',
+              marginTop: 'var(--sp-3)',
+              lineHeight: 'var(--leading-normal)',
+              textWrap: 'pretty',
+            }}
+          >
+            Everything above is string matching, which finds a shared word and nothing else. This
+            reads your glossaries for pairs that share no word — a suggestion, shown with each
+            course’s own definition.
+          </div>
+          <Trouble said={trouble.said} onRetry={trouble.again} />
+        </div>
+      ) : null}
+
+      {read !== null && read.length === 0 ? (
+        <div
+          style={{
+            fontSize: 'var(--type-xs)',
+            color: 'var(--app-dim)',
+            marginTop: 'var(--sp-7)',
+            lineHeight: 'var(--leading-relaxed)',
+            textWrap: 'pretty',
+          }}
+        >
+          Nothing found beyond the matches above — which is the ordinary answer between courses in
+          different departments, and a better one than a stretched analogy.
+        </div>
+      ) : null}
     </Page>
   );
 }

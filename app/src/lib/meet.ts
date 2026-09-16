@@ -79,7 +79,16 @@ export type Why =
   | 'both-define'
   | 'one-inside-the-other'
   | 'defined-and-used'
-  | 'a-word-in-common';
+  | 'a-word-in-common'
+  /**
+   * Two glossary entries that share no word and mean the same thing.
+   *
+   * The fifth grade, and the only one `meetings()` never produces — see
+   * {@link readSame}. It sits below the four because the four can say which
+   * word put a row on the screen and this one cannot: its evidence is a
+   * sentence somebody has to read, not a match anybody can check at a glance.
+   */
+  | 'means-the-same';
 
 export interface Meeting {
   /** Stable across renders: the normalised phrase. */
@@ -355,6 +364,7 @@ const RANK: Record<Why, number> = {
   'one-inside-the-other': 1,
   'defined-and-used': 2,
   'a-word-in-common': 3,
+  'means-the-same': 4,
 };
 
 /**
@@ -544,6 +554,19 @@ const list = (codes: string[]): string =>
  * thing" is the one sentence this function will not write.
  */
 export function whyLine(m: Meeting): string {
+  /*
+   * The fifth grade writes its own line, because the other four are written
+   * from what the sides are and this one is written from what was read. The
+   * last sentence is the same one the strong grades end on: two entries on a
+   * row is an invitation to compare them, never a claim that they agree.
+   */
+  if (m.why === 'means-the-same') {
+    const codes = m.sides.map((s) => s.code);
+    return `${list(codes)} name what may be the same idea in different words — read as a suggestion, not a match. ${
+      m.word ?? ''
+    } Read both — they may not mean the same thing.`.replace(/\s+/g, ' ').trim();
+  }
+
   const defines = m.sides.filter((s) => s.kind === 'defines').map((s) => s.code);
   const uses = m.sides.filter((s) => s.kind === 'uses').map((s) => s.code);
 
@@ -627,4 +650,184 @@ export function alsoLine(others: Also[]): string {
   if (near.length) parts.push(`${list(near)} ${near.length === 1 ? 'has' : 'have'} a term close to it`);
   if (uses.length) parts.push(`${list(uses)} use${uses.length === 1 ? 's' : ''} the word`);
   return parts.join(' · ');
+}
+
+/**
+ * The meeting two courses have in words that share nothing.
+ *
+ * Everything above this line is string work, and its own header says so: it
+ * finds real overlaps and also finds coincidences, so the screen shows both
+ * definitions and lets the reader decide. What it cannot find is the opposite
+ * failure — PSCI's *selection effect* and BUS's *sampling bias* are the same
+ * problem in two vocabularies, share no distinctive word, and are invisible to
+ * every one of the four grades.
+ *
+ * ## Why this is a reading and not an embedding
+ *
+ * COMPLETION-PLAN.md §4.1 proposed embedding each glossary entry and comparing
+ * across courses above a threshold. There is no embeddings endpoint on the API
+ * this app talks to, and the two ways to get one are both wrong here: a
+ * third-party embedding service means a student's coursework leaving the
+ * device, which is the trade `lib/quotes.ts` and `lib/speak.ts` both refuse by
+ * construction; a local model is megabytes of weights in a progressive web app
+ * that is meant to work on a phone with no signal.
+ *
+ * Asking is better anyway, for this job. A similarity score cannot say why it
+ * fired, and this screen's entire design is that a row explains itself — the
+ * four grades name the word that did it. A reading can name the reason in a
+ * sentence, which is the same currency the rest of the screen already trades
+ * in.
+ *
+ * ## What is checked, which is more than a threshold could be
+ *
+ * The model chooses **which two glossary entries to put on a row, and nothing
+ * else.** Both terms must exist, verbatim, in the glossaries they were
+ * attributed to — a term it invented, misattributed or paraphrased produces no
+ * row. The definitions the screen then shows are the courses' own, looked up
+ * here by the term it named, never text that came back in the reply. So the
+ * worst a bad reading can do is put two real entries side by side that turn
+ * out to be unrelated, which is the failure the four grades already have and
+ * the screen already handles: it shows both definitions and says read them.
+ *
+ * It never asserts. `whyLine` has one sentence it will not write and this does
+ * not write it either.
+ */
+export function meetPrompt(sides: Sided[]): string {
+  const glossaries = sides
+    .map((s) => {
+      const terms = s.guide.terms.map((t) => `  ${t.t} — ${t.d}`).join('\n');
+      return `${s.code}\n${terms}`;
+    })
+    .join('\n\n');
+
+  return `Here are the glossaries of a student's courses this term.
+
+${glossaries}
+
+Find pairs of entries **from different courses** that mean the same thing in \
+different words — the same idea, the same method, the same failure mode, named \
+differently because the two fields name it differently.
+
+Answer with JSON and nothing else:
+
+  {"pairs": [{"a": {"course": "PSCI 2100", "term": "selection effect"}, \
+"b": {"course": "BUS 1600", "term": "sampling bias"}, \
+"because": "one sentence on why these are the same idea"}]}
+
+Rules:
+· Every "term" must be copied **exactly** as it appears in the glossary above. \
+A term that does not match one, character for character, is discarded.
+· Do not pair entries that already share a word — the app finds those itself, \
+and a duplicate row is worse than no row.
+· Do not pair two entries from the same course.
+· Answer {"pairs": []} when there is nothing. That is the common case across \
+unrelated departments, and it is the right answer: joining a chemistry course \
+to a marketing course on a stretched analogy wastes the one screen a student \
+came to for real overlaps.`;
+}
+
+/** One side of a proposed pair, before it has been checked against a glossary. */
+interface Said {
+  course?: unknown;
+  term?: unknown;
+}
+
+function look(sides: Sided[], said: Said): { side: Sided; term: Term } | null {
+  const code = typeof said.course === 'string' ? said.course.trim() : '';
+  const wanted = typeof said.term === 'string' ? said.term.trim() : '';
+  if (!code || !wanted) return null;
+  const side = sides.find((s) => s.code === code);
+  if (!side) return null;
+  /*
+   * Found by normalising both, not by an exact string compare.
+   *
+   * The prompt asks for the term character for character and mostly gets it;
+   * what it also gets is a capital letter changed or a stray plural, which is
+   * the model naming the same real entry rather than inventing one.
+   * `normalise` is the same reader the four grades use, so what counts as the
+   * same term here is what counts as the same term there.
+   */
+  const term = side.guide.terms.find((t) => normalise(t.t) === normalise(wanted));
+  return term ? { side, term } : null;
+}
+
+/**
+ * The pairs a reply proposes, checked against the glossaries it was given.
+ *
+ * `already` is the output of {@link meetings}, and a pair it has found is
+ * dropped: the four grades explain themselves and this one does not, so a row
+ * both can claim belongs to the stronger.
+ */
+export function readSame(raw: unknown, sides: Sided[], already: Meeting[]): Meeting[] {
+  const pairs = (raw as { pairs?: unknown })?.pairs;
+  if (!Array.isArray(pairs)) return [];
+
+  /*
+   * The pairs the string grades already hold.
+   *
+   * Not `already.map((m) => m.key)`, which was the first version and matched
+   * nothing: `meetings` keys a row by the *concept* and hangs every course on
+   * it, so one row can carry four sides, while a proposal is always exactly
+   * two terms. Comparing a pair key against a concept key is comparing two
+   * different things, and the dedupe silently never fired — found by the test
+   * for it, which is the only reason it was not shipped.
+   *
+   * So the pairs are expanded out of the rows: every two sides of an existing
+   * meeting are a pair that grade has already claimed.
+   */
+  const taken = new Set<string>();
+  for (const m of already) {
+    for (let i = 0; i < m.sides.length; i += 1) {
+      for (let j = i + 1; j < m.sides.length; j += 1) {
+        const one = m.sides[i];
+        const two = m.sides[j];
+        if (!one.term || !two.term) continue;
+        taken.add([normalise(one.term.t), normalise(two.term.t)].sort().join(' ~ '));
+      }
+    }
+  }
+
+  const out: Meeting[] = [];
+  const seen = new Set<string>();
+
+  for (const one of pairs) {
+    if (!one || typeof one !== 'object') continue;
+    const p = one as { a?: Said; b?: Said; because?: unknown };
+    const a = look(sides, p.a ?? {});
+    const b = look(sides, p.b ?? {});
+    if (!a || !b) continue;
+    // A course does not meet itself: two entries of one glossary saying the
+    // same thing is that course's business, and `meetings` refuses it too.
+    if (a.side.courseId === b.side.courseId) continue;
+
+    const because = typeof p.because === 'string' ? p.because.trim().slice(0, 240) : '';
+    if (!because) continue;
+
+    // Keyed off both terms so the row is stable across renders, and so a
+    // reply offering the same pair twice contributes one row.
+    const key = [normalise(a.term.t), normalise(b.term.t)].sort().join(' ~ ');
+    if (seen.has(key) || taken.has(key)) continue;
+    seen.add(key);
+
+    const sighted = ({ side, term }: { side: Sided; term: Term }): Sighted => ({
+      courseId: side.courseId,
+      code: side.code,
+      kind: 'defines',
+      // The course's own entry, looked up by the term the reply named. The
+      // reply's own words never reach the screen except as `because`.
+      term,
+      unit: null,
+      where: 'Glossary',
+    });
+
+    out.push({
+      key,
+      label: `${capitalise(a.term.t)} · ${capitalise(b.term.t)}`,
+      why: 'means-the-same',
+      word: because,
+      sides: [sighted(a), sighted(b)],
+    });
+  }
+
+  return out;
 }
