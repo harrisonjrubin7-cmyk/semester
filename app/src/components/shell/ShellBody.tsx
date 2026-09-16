@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
+import { useLayoutEffect, type ReactNode } from 'react';
 import type { Screen } from '../../lib/types';
 import { FullBleed } from './Rows';
 import { fills, isCanvas, isExempt } from './exempt';
 import { FoldAll, FoldScope } from '../Fold';
+import { mark, now } from '../../lib/timing';
 
 /**
  * The body of whichever screen is open, in the right layout for it.
@@ -42,6 +43,34 @@ import { FoldAll, FoldScope } from '../Fold';
  */
 export function ShellBody({ screen, children }: { screen: Screen; children: ReactNode }) {
   const cls = isCanvas(screen) ? 'pane-body is-canvas' : 'pane-body';
+  /*
+   * How long the screen took to draw, for the Data screen's readings.
+   *
+   * Here for the same reason everything else in this file is here: it is the
+   * one wrapper every screen goes through, so a screen cannot be missed and
+   * cannot be measured twice. Started in the render body and stopped in a
+   * layout effect, which is React's own boundary — the effect runs after the
+   * children have rendered and before the browser paints, so what it measures
+   * is this app's work rather than the compositor's.
+   *
+   * One name for all sixty screens, with the screen recorded as what the
+   * slowest draw ran over. A name per screen would overflow `MOST` and drop
+   * whichever screens were visited last, which is the exact leak
+   * `lib/timing.ts` caps against — and the reading says which screen was
+   * slowest either way, which is the question being asked.
+   *
+   * It is one `performance.now()` per screen render and a map write, held in
+   * memory and going nowhere — `lib/timing.ts` has the argument for why that
+   * last part is the whole design.
+   */
+  const began = now();
+  useLayoutEffect(() => {
+    const ended = now();
+    if (began !== null && ended !== null) mark('Drawing a screen', ended - began, screen);
+    // Once per render of this screen, which is what the reading counts. `began`
+    // is a fresh number each render, so listing it is what makes that true.
+  }, [began, screen]);
+
   return (
     <FoldScope value={screen}>
       <div className={cls}>

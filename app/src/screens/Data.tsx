@@ -12,6 +12,7 @@ import { weigh } from '../lib/keep';
 import { allVersions } from '../lib/docversions';
 import { DRAFTS_KEY } from '../lib/draft';
 import { STORAGE_KEY } from '../state/shape';
+import { firstPaint, readings, saidMs } from '../lib/timing';
 
 /**
  * What data exists, and whether the app is healthy.
@@ -34,8 +35,26 @@ import { STORAGE_KEY } from '../state/shape';
  * They link to each other instead, and `privacy` gives up the label "Your
  * data" — which described this screen and not that one.
  */
+/** One measured line: what it was, and how slow it has ever been. */
+const READING = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: 'var(--sp-5)',
+  marginTop: 'var(--sp-2)',
+  fontSize: 'var(--type-sm)',
+} as const;
+
 export function DataScreen() {
   const { state, dispatch } = useStore();
+  /*
+   * Read once, when the screen opens.
+   *
+   * Not live: the readings change as this very screen draws, and a list that
+   * rewrote itself while being read would be measuring its own measuring. A
+   * snapshot is what somebody can read out loud, which is what it is for.
+   */
+  const [timings] = useState(() => readings());
+  const [paint] = useState(() => firstPaint());
   const [room, setRoom] = useState<Space | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   /*
@@ -197,6 +216,47 @@ export function DataScreen() {
             <span style={{ fontVariantNumeric: 'tabular-nums' }}>
               {history === null ? 'Not available' : history ? formatBytes(history) : 'None'}
             </span>
+          </div>
+
+          {/*
+            What the app measured about itself, which is the point of §7.1.
+            The screen you open when something looks wrong should let you say
+            what is slow rather than that it feels slow — and these figures are
+            in memory, gone on reload, and in nothing that syncs. See
+            `lib/timing.ts` for why that is the design and not a shortcoming.
+          */}
+          <SectionLabel>How fast</SectionLabel>
+          {paint !== null && (
+            <div style={READING}>
+              <span>First drawn</span>
+              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{saidMs(paint)}</span>
+            </div>
+          )}
+          {timings.length === 0 ? (
+            <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
+              Nothing measured yet. Move around the app and come back — the readings start empty on
+              every reload, because none of this is written down anywhere.
+            </div>
+          ) : (
+            timings.map((r) => (
+              <div key={r.name} style={READING}>
+                <span>
+                  {r.name}
+                  {r.over ? <span style={{ color: 'var(--app-dim)' }}> · {r.over}</span> : null}
+                </span>
+                <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {saidMs(r.worst)}
+                  <span style={{ color: 'var(--app-dim)' }}> worst of {r.count}</span>
+                </span>
+              </div>
+            ))
+          )}
+          <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+            The slowest each of them has been since this tab opened, and what that slowest run was
+            over. Kept in memory only — nothing here is stored, synced or sent anywhere, and a
+            reload empties it. Read it out to somebody if the app feels slow; there is no figure
+            here saying whether it is, because that one does not exist until enough semesters have
+            been through it.
           </div>
 
           <SectionLabel>Room</SectionLabel>
