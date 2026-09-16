@@ -822,7 +822,23 @@ export function fromSheet(sheet: Sheet, header = true, ctx: Ctx = clock()): Tab 
         : undefined;
       const worn = <T extends Cell>(cell: T): Formatted => (look ? { ...cell, look } : cell);
 
-      if (raw === '' && value === '') return worn({ kind: 'blank' });
+      /*
+       * A cell nobody typed in is blank in the file, whatever is drawn there.
+       *
+       * Until formulas could spill, `raw === ''` and a value to show were the
+       * same case and this read `raw === '' && value === ''`. They are not the
+       * same case any more: the cells under a `FILTER` show its answer and
+       * hold nothing, and writing what they show would export them as typed-in
+       * text sitting exactly where Excel is about to put the same formula's
+       * spill. Excel would refuse it — `#SPILL!`, in the one cell that had the
+       * working in it — and the file would arrive broken in the way hardest to
+       * diagnose, because on screen here it was right.
+       *
+       * The formula is exported at its anchor and Excel recalculates it. That
+       * is the whole of what an export of a spill has to do, and it is why
+       * this is a blank rather than a value.
+       */
+      if (raw === '') return worn({ kind: 'blank' });
       if (isFormula(raw)) {
         return worn({ kind: 'formula', source: raw.trimStart().slice(1), value });
       }

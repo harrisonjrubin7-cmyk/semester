@@ -436,7 +436,7 @@ export const MAX_COLS = 26;
  * would hand in, and `VLOOKUP` finding nothing is exactly the moment this file
  * must refuse to be helpful.
  */
-export const ERRORS = ['#DIV/0!', '#REF!', '#NAME?', '#VALUE!', '#CYCLE!', '#N/A', '#DEEP!'] as const;
+export const ERRORS = ['#DIV/0!', '#REF!', '#NAME?', '#VALUE!', '#CYCLE!', '#N/A', '#DEEP!', '#SPILL!'] as const;
 export type Err = (typeof ERRORS)[number];
 
 export type Value = number | string | boolean | Err;
@@ -784,7 +784,19 @@ export function evaluate(
   // the cell, because the alternative is the screen.
   if (seen.size >= DEEPEST) return '#DEEP!';
   const raw = cells[key_];
-  if (raw === undefined || raw === '') return '';
+  if (raw === undefined || raw === '') {
+    /*
+     * Empty, unless a formula somewhere else overflows into it — see
+     * {@link spillOf}. Nothing is written here and nothing ever will be: the
+     * value is derived from the formula that produced it, every time.
+     */
+    return spillOf(cells, ctx).at.get(key_) ?? '';
+  }
+  if (isFormula(raw)) {
+    // A block that will not fit says so here, in the cell somebody typed the
+    // formula into, rather than half-landing somewhere they are not looking.
+    if (spillOf(cells, ctx).blocked.has(key_)) return '#SPILL!';
+  }
   if (!isFormula(raw)) {
     const n = asNumber(raw);
     if (n !== null) return n;
@@ -962,6 +974,17 @@ function lex(text: string): Token[] | null {
  */
 class Parser {
   private at = 0;
+
+  /**
+   * The block an array function returned, and where in the formula it ended.
+   *
+   * Set at the one place `apply` is called, so a nested `SUM(FILTER(...))`
+   * records it too — which is why the token index is kept. {@link blockIn}
+   * accepts the block only when it ran to the end of the formula, because
+   * `=FILTER(A1:A3,B1:B3)+1` is a sum of one cell and a spill of three is not
+   * what it asked for.
+   */
+  block: { group: Group; endsAt: number } | null = null;
 
   private readonly tokens: Token[];
   private readonly cells: Cells;
@@ -1203,7 +1226,17 @@ class Parser {
       }
       const groups = this.arguments();
       if (isError(groups)) return groups;
-      return apply(t.value, groups, this.ctx);
+      const answer = apply(t.value, groups, this.ctx);
+      if (typeof answer === 'object') {
+        this.block = { group: answer, endsAt: this.at };
+        /*
+         * The anchor shows the top-left, which is what a cell can hold and
+         * what Excel puts there. The rest of the block is not written into
+         * cells at all — see {@link spillOf}.
+         */
+        return answer.values[0] ?? '';
+      }
+      return answer;
     }
     if (t.kind === 'op' && t.value === '(') {
       this.at += 1;
@@ -1223,6 +1256,44 @@ class Parser {
    * in the common case and is the difference between a weighted gradebook
    * working and not.
    */
+  /**
+   * A range, or the range answered cell by cell against one value.
+   *
+   * `FILTER(A1:B9, B1:B9>60)` is how every spreadsheet writes it and how every
+   * student has been taught to, and until `FILTER` existed there was nothing
+   * it could have meant: a bare range outside a function is `#VALUE!` here,
+   * deliberately, because it has no single value. Inside an argument it now
+   * has a shape, so a comparison against it has one too — the same test put to
+   * every cell, keeping the block's rows and columns.
+   *
+   * Deliberately only a comparison, and only against a single value. Range
+   * plus range, range times two, and the rest of array arithmetic are a larger
+   * change to the expression evaluator than this is, and half of it shipped
+   * quietly would be worse than none: a student would find `>` working and
+   * conclude `*` does too. `=B1:B9*2` is still `#VALUE!`, which is a thing
+   * somebody can see.
+   */
+  private tested(group: Group): Group | Err {
+    const op = this.peek();
+    if (!op || op.kind !== 'op' || !['=', '<>', '<', '<=', '>', '>='].includes(op.value)) return group;
+    this.at += 1;
+    /*
+     * A range on the right is refused before it reaches here: a bare range in
+     * an expression has been `#VALUE!` since this engine was written, which is
+     * the rule that keeps `=A1:A3` from quietly meaning `=A1`. A check for it
+     * was written at this line, and a mutation found it by surviving — nothing
+     * that reaches `against` can be a block, because the one place a block is
+     * made collapses it to its top-left on the way out.
+     */
+    const against = this.expression();
+    if (isError(against)) return against;
+    return {
+      values: group.values.map((v) => (isError(v) ? v : compare(op.value, v, against))),
+      rows: group.rows,
+      cols: group.cols,
+    };
+  }
+
   private arguments(): Group[] | Err {
     const out: Group[] = [];
     if (this.eat(')')) return out;
@@ -1248,11 +1319,13 @@ class Parser {
           const block = expand(found.from, found.to);
           if (block.length === 0) return '#REF!';
           const shape = span(found.from, found.to);
-          out.push({
+          const named = this.tested({
             values: block.map((address) => evaluate(where.cells, address, this.seen, where.ctx)),
             rows: shape.rows,
             cols: shape.cols,
           });
+          if (isError(named)) return named;
+          out.push(named);
           if (this.eat(',')) continue;
           return this.eat(')') ? out : '#VALUE!';
         }
@@ -1278,11 +1351,13 @@ class Parser {
         const range = expand(t.value, end.value);
         if (range.length === 0) return '#REF!';
         const shape = span(t.value, end.value);
-        out.push({
+        const asked = this.tested({
           values: range.map((address) => evaluate(where.cells, address, this.seen, where.ctx)),
           rows: shape.rows,
           cols: shape.cols,
         });
+        if (isError(asked)) return asked;
+        out.push(asked);
       } else {
         out.push({ values: [this.expression()], rows: 1, cols: 1 });
       }
@@ -1649,7 +1724,7 @@ export function formatted(value: Value, format: string): Value {
  * `MEDIAN`; a budget wants `IF` and `ROUND`. Anything not here is `#NAME?`
  * rather than an approximation of it.
  */
-function apply(name: string, groups: Group[], ctx: Ctx): Value {
+function apply(name: string, groups: Group[], ctx: Ctx): Value | Group {
   const args = groups.flatMap((g) => g.values);
   const first = args[0];
   const text = (i: number): string => show(args[i] ?? '');
@@ -1874,10 +1949,15 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
      * `SPLIT(text, delimiter)` — the nth piece, or all of them joined by a
      * space when no piece is named.
      *
-     * A grid has no way to spill one value across several cells, so the
-     * alternative to a third argument would be quietly returning only the
-     * first piece. Naming the piece is honest about what a single cell can
-     * hold.
+     * This was written when a grid had no way to spill one value across
+     * several cells, so the alternative to a third argument would have been
+     * quietly returning only the first piece; naming the piece was honest
+     * about what a single cell could hold. `TEXTSPLIT` below is the one that
+     * lays the pieces across, now that a formula can answer with a block.
+     *
+     * This one stays, and not only because a formula somebody already typed
+     * has to keep working: one piece in one cell is what you want *inside*
+     * something bigger, where a block would be a spill nobody asked for.
      */
     case 'SPLIT': {
       const parts = text(0).split(show(groups[1]?.values[0] ?? ' '));
@@ -2934,9 +3014,394 @@ function apply(name: string, groups: Group[], ctx: Ctx): Value {
       if ((xs[0] ?? 0) <= 0 || periods < 1) return '#VALUE!';
       return ((1 + (xs[0] ?? 0)) ** (1 / periods) - 1) * periods;
     }
+    /*
+     * ── The array functions ──────────────────────────────────────────────
+     *
+     * Every one of these answers with a block rather than with a value, which
+     * is the thing this file could not do until now — `SPLIT` above still
+     * carries the comment saying so. The block leaves through the one place
+     * `apply` is called: the cell the formula is in keeps the top-left, and
+     * the rest is handed to {@link spillOf}. Nothing here writes a cell.
+     *
+     * The shapes are Excel's, because a student who learns `FILTER` here is
+     * learning it for the machine in the library too.
+     */
+
+    /**
+     * `FILTER(range, include, [if_empty])` — the rows where the test held.
+     *
+     * `include` is a column beside the range, one value per row, and its
+     * length has to match: a nine-row range against an eight-row test is a
+     * question with no answer, and guessing which row to drop is how a
+     * gradebook comes out shifted by one.
+     *
+     * Nothing kept is `#N/A` unless a third argument says what to show
+     * instead — the same bargain `VLOOKUP` makes. An empty answer is a fact,
+     * and a blank cell where a fact belongs reads as a formula that has not
+     * finished running.
+     */
+    case 'FILTER': {
+      const from = groups[0];
+      const test = groups[1];
+      if (!from || !test || from.rows < 1 || from.cols < 1) return '#VALUE!';
+      const byRow = test.cols === 1 && test.rows === from.rows;
+      const byCol = test.rows === 1 && test.cols === from.cols;
+      if (!byRow && !byCol) return '#VALUE!';
+      const bad = [...from.values, ...test.values].find(isError);
+      if (bad) return bad;
+      const rows = rowsOf(from);
+      const kept = byRow
+        ? rows.filter((_, r) => truthy(test.values[r]))
+        : rows.map((row) => row.filter((_, c) => truthy(test.values[c])));
+      const empty = byRow ? kept.length === 0 : (kept[0]?.length ?? 0) === 0;
+      if (empty) return groups[2] ? (groups[2].values[0] ?? '#N/A') : '#N/A';
+      return blockOf(kept);
+    }
+
+    /**
+     * `SORT(range, [column], [order])` — the same rows, in order.
+     *
+     * By the first column unless another is named, ascending unless `-1` says
+     * otherwise. Numbers before text before blanks, which is the order every
+     * spreadsheet uses and the one a marks column wants: a missing mark
+     * belongs at the end rather than at the top pretending to be a zero.
+     */
+    case 'SORT': {
+      const from = groups[0];
+      if (!from || from.rows < 1 || from.cols < 1) return '#VALUE!';
+      const bad = from.values.find(isError);
+      if (bad) return bad;
+      const column = groups[1] ? number(groups[1].values[0] ?? 1) : 1;
+      if (isError(column)) return column;
+      const by = Math.trunc(column);
+      if (by < 1 || by > from.cols) return '#VALUE!';
+      const asked = groups[2] ? number(groups[2].values[0] ?? 1) : 1;
+      if (isError(asked)) return asked;
+      if (asked !== 1 && asked !== -1) return '#VALUE!';
+      // `sort` is stable in every engine this runs on, so rows that tie stay
+      // in the order they were typed — which is what somebody re-sorting a
+      // gradebook expects, and what makes the answer the same twice running.
+      const sorted = [...rowsOf(from)].sort((a, b) => rank(a[by - 1], b[by - 1]) * asked);
+      return blockOf(sorted);
+    }
+
+    /**
+     * `UNIQUE(range, [by_column])` — each distinct row once.
+     *
+     * Compared as the cell shows them, so `1` and `1.0` are one value. Case is
+     * kept on purpose: two students can be `Lee` and `lee` in a roll somebody
+     * typed, and folding them is a de-duplication that loses a person.
+     */
+    case 'UNIQUE': {
+      const from = groups[0];
+      if (!from || from.rows < 1 || from.cols < 1) return '#VALUE!';
+      const bad = from.values.find(isError);
+      if (bad) return bad;
+      const across = groups[1] ? truthy(groups[1].values[0]) : false;
+      const rows = across ? turned(rowsOf(from)) : rowsOf(from);
+      const already = new Set<string>();
+      const kept = rows.filter((row) => {
+        // Length-prefixed, so a row holding the separator cannot be mistaken
+        // for two — the same reason `scripts/audiocache.ts` writes lengths.
+        const mark = row.map((v) => { const t = show(v); return `${t.length}:${t}`; }).join('');
+        if (already.has(mark)) return false;
+        already.add(mark);
+        return true;
+      });
+      return blockOf(across ? turned(kept) : kept);
+    }
+
+    /**
+     * `SEQUENCE(rows, [columns], [start], [step])` — a block of numbers.
+     *
+     * The one array function with no range behind it, and the reason it is
+     * here: it is how a student makes the 1..12 a month column needs without
+     * typing twelve cells, and it is the cheapest way to see what a spill does
+     * before trusting one over real marks.
+     */
+    case 'SEQUENCE': {
+      const down = number(groups[0]?.values[0] ?? 1);
+      if (isError(down)) return down;
+      const wide = groups[1] ? number(groups[1].values[0] ?? 1) : 1;
+      if (isError(wide)) return wide;
+      const rows = Math.trunc(down);
+      const cols = Math.trunc(wide);
+      if (rows < 1 || cols < 1) return '#VALUE!';
+      // Bigger than the grid can hold is a spill that can never land, and
+      // building the block first would be megabytes spent to say so.
+      if (rows > MAX_ROWS || cols > MAX_COLS) return '#SPILL!';
+      const start = groups[2] ? number(groups[2].values[0] ?? 1) : 1;
+      if (isError(start)) return start;
+      const step = groups[3] ? number(groups[3].values[0] ?? 1) : 1;
+      if (isError(step)) return step;
+      const out: Value[][] = [];
+      for (let r = 0; r < rows; r += 1) {
+        const row: Value[] = [];
+        for (let c = 0; c < cols; c += 1) row.push(start + (r * cols + c) * step);
+        out.push(row);
+      }
+      return blockOf(out);
+    }
+
+    /**
+     * `TEXTSPLIT(text, [delimiter])` — the pieces, across.
+     *
+     * What `SPLIT` has been apologising for since it was written. That one
+     * still exists and still takes a piece number, because a formula somebody
+     * already typed has to keep working, and because one piece in one cell is
+     * genuinely what you want inside a bigger sum.
+     */
+    case 'TEXTSPLIT': {
+      const by = groups[1] ? show(groups[1].values[0] ?? ',') : ',';
+      if (by === '') return '#VALUE!';
+      const pieces = text(0).split(by);
+      if (pieces.length > MAX_COLS) return '#SPILL!';
+      return blockOf([pieces]);
+    }
+
     default:
       return '#NAME?';
   }
+}
+
+/** A block's values as rows, which is the shape every array function thinks in. */
+function rowsOf(group: Group): Value[][] {
+  const out: Value[][] = [];
+  for (let r = 0; r < group.rows; r += 1) {
+    out.push(group.values.slice(r * group.cols, (r + 1) * group.cols));
+  }
+  return out;
+}
+
+/** Rows back into the flat, row-major {@link Group} the engine passes around. */
+function blockOf(rows: Value[][]): Group {
+  return { values: rows.flat(), rows: rows.length, cols: rows[0]?.length ?? 0 };
+}
+
+/** A block on its side, for the by-column half of `UNIQUE`. */
+function turned(rows: Value[][]): Value[][] {
+  const cols = rows[0]?.length ?? 0;
+  const out: Value[][] = [];
+  for (let c = 0; c < cols; c += 1) out.push(rows.map((row) => row[c]));
+  return out;
+}
+
+/**
+ * Which of two cells sorts first.
+ *
+ * Numbers, then text, then blanks — the spreadsheet order, and the blank last
+ * is the part that matters: a missing mark sorted as a zero puts the students
+ * who have not sat the exam at the top of the failing list.
+ */
+function rank(a: Value | undefined, b: Value | undefined): number {
+  const weigh = (v: Value | undefined): number => {
+    if (v === undefined || v === '') return 2;
+    if (typeof v === 'number') return 0;
+    return 1;
+  };
+  const wa = weigh(a);
+  const wb = weigh(b);
+  if (wa !== wb) return wa - wb;
+  if (wa === 2) return 0;
+  if (wa === 0) return (a as number) - (b as number);
+  return show(a as Value).localeCompare(show(b as Value));
+}
+
+// ── Spilling ─────────────────────────────────────────────────────────────
+
+/**
+ * The block a formula overflows into, worked out rather than written down.
+ *
+ * `SPLIT` above says it plainly: *"a grid has no way to spill one value across
+ * several cells"*. That was the whole reason this file had no `FILTER`, no
+ * `SORT` and no `UNIQUE` — every one of them answers with a range, and a range
+ * needs somewhere to go.
+ *
+ * It goes nowhere. The cells under a spill stay **empty**, exactly as they
+ * were, and what is drawn in them is derived from the formula on every read —
+ * the arrangement `lib/pivot.ts` uses for the same reason it uses it: a
+ * summary written into cells is a summary that goes stale the moment its
+ * source changes, silently, and a spreadsheet is the format where a silent
+ * stale number travels furthest.
+ *
+ * So a spilled cell holds nothing, which means deleting the formula takes the
+ * whole block with it, a `SUM` over the area reads what is on screen, and
+ * nothing here can ever overwrite something a person typed.
+ *
+ * ## A blocked spill says so in the formula's own cell
+ *
+ * If anything is in the way — a typed value, another spill that got there
+ * first, or the edge of the grid — the formula's cell reads `#SPILL!` and not
+ * one of the other cells changes. Never a partial write: half a filtered list
+ * is worse than no list, because it looks like an answer.
+ *
+ * Which spill gets there first is decided by address, reading down then
+ * across, so two formulas fighting over the same cells resolve the same way
+ * on every machine and on every reload rather than by whichever the object
+ * happened to enumerate first.
+ *
+ * ## Rounds, because a spill may read a spill
+ *
+ * `=SUM(D1:F1)` over a spilled row has to see the spill, and the spill has to
+ * be computed before it can be seen. So the map is built in rounds: each one
+ * computes every block against the previous round's map, and it stops as soon
+ * as nothing moves. {@link ROUNDS} is the cap, and past it the outermost
+ * formula reads blanks rather than the grid hanging — a chain of four array
+ * formulas each reading the last is not a thing a gradebook does, and an
+ * unbounded loop over a sheet somebody is typing into is.
+ */
+export interface Spill {
+  /** What is drawn in a cell nobody typed in, by address. Anchors excluded. */
+  at: Map<string, Value>;
+  /** The formula each spilled cell came from, so the screen can outline it. */
+  from: Map<string, string>;
+  /** Formulas whose block will not fit. Their own cell reads `#SPILL!`. */
+  blocked: Set<string>;
+}
+
+/** How many times the map is rebuilt before it is taken as settled. */
+const ROUNDS = 4;
+
+const NOTHING: Spill = { at: new Map(), from: new Map(), blocked: new Set() };
+
+/** Formulas that might answer with a block, found without parsing every cell. */
+const ARRAY_HEAD = /^\s*=\s*(?:FILTER|SORT|UNIQUE|SEQUENCE|TEXTSPLIT)\s*\(/i;
+
+/**
+ * The block one cell's formula comes to, or nothing where it is not a block.
+ *
+ * The parser records a block wherever an array function returned one, so this
+ * checks that it ran to the end of the formula. `=FILTER(A1:A3,B1:B3)+1` asked
+ * for a sum of one cell; spilling three because a block was seen on the way
+ * past would be answering a question nobody put.
+ */
+export function blockIn(cells: Cells, address: string, ctx: Ctx): Group | null {
+  const raw = cells[key(address)];
+  if (raw === undefined || !ARRAY_HEAD.test(raw)) return null;
+  const tokens = lex(raw.trimStart().slice(1));
+  if (!tokens || tokens.length === 0) return null;
+  const parser = new Parser(tokens, cells, new Set([step(address, ctx.here)]), ctx);
+  parser.expression();
+  if (!parser.done()) return null;
+  const found = parser.block;
+  return found && found.endsAt === tokens.length ? found.group : null;
+}
+
+/**
+ * Where a block lands, given the cell its formula is in.
+ *
+ * The anchor is first and is left out of what is returned: it holds the
+ * formula and shows the top-left value already. `null` where the block runs
+ * off the grid, which is a spill that can never land.
+ */
+export function landing(anchor: string, block: Group): { address: string; value: Value }[] | null {
+  const at = parseRef(anchor);
+  if (!at) return null;
+  if (at.row + block.rows > MAX_ROWS || at.col + block.cols > MAX_COLS) return null;
+  const out: { address: string; value: Value }[] = [];
+  for (let r = 0; r < block.rows; r += 1) {
+    for (let c = 0; c < block.cols; c += 1) {
+      if (r === 0 && c === 0) continue;
+      out.push({ address: ref(at.row + r, at.col + c), value: block.values[r * block.cols + c] ?? '' });
+    }
+  }
+  return out;
+}
+
+/**
+ * One round: every array formula placed against what the last round knew.
+ *
+ * Sorted by address so the answer does not depend on the order a plain object
+ * happens to enumerate its keys in — which is insertion order, which is the
+ * order somebody typed, which would make the same sheet read two ways
+ * depending on how it was built.
+ */
+function round(cells: Cells, ctx: Ctx): Spill {
+  const next: Spill = { at: new Map(), from: new Map(), blocked: new Set() };
+  const anchors = Object.keys(cells)
+    .filter((address) => ARRAY_HEAD.test(cells[address] ?? ''))
+    .sort((a, b) => {
+      const x = parseRef(a);
+      const y = parseRef(b);
+      if (!x || !y) return a.localeCompare(b);
+      return x.row - y.row || x.col - y.col;
+    });
+
+  for (const anchor of anchors) {
+    const block = blockIn(cells, anchor, ctx);
+    if (!block || (block.rows <= 1 && block.cols <= 1)) continue;
+    const where = landing(anchor, block);
+    if (!where) {
+      next.blocked.add(key(anchor));
+      continue;
+    }
+    // Anything already there stops the whole block. A typed value, a formula,
+    // or a cell an earlier spill has taken — all three are somebody else's.
+    const clear = where.every(
+      ({ address }) => (cells[address] ?? '') === '' && !next.at.has(address),
+    );
+    if (!clear) {
+      next.blocked.add(key(anchor));
+      continue;
+    }
+    for (const { address, value } of where) {
+      next.at.set(address, value);
+      next.from.set(address, key(anchor));
+    }
+  }
+  return next;
+}
+
+function settled(a: Spill, b: Spill): boolean {
+  if (a.at.size !== b.at.size || a.blocked.size !== b.blocked.size) return false;
+  for (const [address, value] of a.at) if (b.at.get(address) !== value) return false;
+  for (const anchor of a.blocked) if (!b.blocked.has(anchor)) return false;
+  return true;
+}
+
+/*
+ * Held against the cells object rather than recomputed per read.
+ *
+ * `evaluate` runs once per cell per render and every one of those would
+ * otherwise walk the whole sheet looking for array formulas. The map is a
+ * function of the cells and the context, and both are replaced rather than
+ * edited — a write rebuilds `cells` with a spread — so holding it against the
+ * object it was computed from is exact, not an approximation of freshness.
+ */
+const MEMO = new WeakMap<Cells, { ctx: Ctx; spill: Spill }>();
+
+/**
+ * What is in progress, so the rounds above can see the previous one.
+ *
+ * Computing a spill evaluates formulas, and evaluating a formula asks for the
+ * spill. Without this the two call each other until the stack goes. With it, a
+ * formula read during a round sees the round before it — which is exactly what
+ * the rounds are for.
+ */
+let building: Spill | null = null;
+
+/** Every spilled cell of this sheet, computed once per read of it. */
+export function spillOf(cells: Cells, ctx: Ctx): Spill {
+  if (building) return building;
+  const had = MEMO.get(cells);
+  if (had && had.ctx === ctx) return had.spill;
+
+  let spill = NOTHING;
+  try {
+    for (let n = 0; n < ROUNDS; n += 1) {
+      building = spill;
+      const next = round(cells, ctx);
+      if (settled(next, spill)) {
+        spill = next;
+        break;
+      }
+      spill = next;
+    }
+  } finally {
+    building = null;
+  }
+  MEMO.set(cells, { ctx, spill });
+  return spill;
 }
 
 /**

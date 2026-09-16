@@ -947,11 +947,12 @@ and named in the picker.
 
 **Sequencing: Phase 1, done.**
 
-### 5.2 · Spreadsheet — Partial
+### 5.2 · Spreadsheet — Live
 
 **Current state.** Substantially more built than the draft records.
 
-* **159 functions** in `app/src/lib/sheet.ts`, catalogued for a reader in
+* **164 functions** in `app/src/lib/sheet.ts` — 159 when this was written, plus
+  the five array functions below — catalogued for a reader in
   `app/src/lib/functions.ts`, with `functions.test.ts` reading the `case` labels
   out of the engine so the catalogue cannot drift from it.
 * **Lookups are done**: `VLOOKUP`, `HLOOKUP`, `XLOOKUP`, `INDEX`, `MATCH`,
@@ -967,14 +968,50 @@ and named in the picker.
   cells (`lib/joined.ts`), filters, fill handle, paste special, and a real
   `.xlsx` in and out.
 
-**What's missing.** One thing, and it is the one the draft listed last:
-**array-style formulas**. There is no spill mechanism — `sheet.ts:1877` says so
-directly, "a grid has no way to spill one value across several cells" — and
-therefore no `FILTER`, `SORT`, `UNIQUE`, `SEQUENCE`, `TEXTSPLIT`, `LET` or
-`LAMBDA`. Every one of those returns a range, and a range needs somewhere to go.
+**What was missing, and is now built.** One thing, and it was the one the draft
+listed last: **array-style formulas**. There was no spill mechanism — the
+comment on `SPLIT` said so directly, *"a grid has no way to spill one value
+across several cells"* — and therefore no `FILTER`, `SORT`, `UNIQUE`,
+`SEQUENCE` or `TEXTSPLIT`. Every one of those returns a range, and a range
+needed somewhere to go.
 
-**Technical approach.** This is a change to the grid's model, not an addition to
-the function library, and it should be sequenced as one:
+**The four steps below were right and were followed in that order.** The spill
+region is `spillOf` in `lib/sheet.ts`, derived on read exactly as `lib/pivot.ts`
+is derived on read, and the cells under a block stay empty — which is what makes
+deleting the formula take the whole block with it and makes a `SUM` over the
+area read what is on screen. A blocked spill is `#SPILL!` in the formula's own
+cell, an eighth member of `ERRORS`, and never a partial write.
+
+**One thing the four steps did not anticipate**, and `FILTER` is unusable
+without it: `FILTER(A2:C40, C2:C40>60)` is how every spreadsheet writes it and
+how every student has been taught to write it, and a range compared to a value
+had no meaning in this engine at all — a bare range in an expression is
+`#VALUE!`, deliberately, so `=A1:A3` cannot quietly mean `=A1`. So a range
+argument may now be put to a **comparison** against one value, cell by cell,
+keeping its shape. Deliberately only that: range plus range and range times two
+are a larger change to the expression evaluator, and half of array arithmetic
+shipped quietly would be worse than none — a student would find `>` working and
+conclude `*` does. `=B1:B9*2` is still `#VALUE!`, which is a thing somebody can
+see.
+
+**Three things in the app turned out to be wrong the moment a cell could show a
+value it did not hold**, each a shortcut that had been exactly right until then:
+
+* **The `.xlsx` export wrote what a cell showed.** A spilled cell shows a value
+  and holds nothing, so the export put typed-in text in exactly the cells Excel
+  was about to spill the same formula into — and Excel answers that with
+  `#SPILL!`. The file would have arrived broken, having looked right on the way
+  out. A cell empty in `cells` now exports blank, whatever is drawn in it.
+* **The chart skipped empty cells before evaluating them.** A spilled column
+  charted as one bar and a row of gaps.
+* **Focusing a spilled cell blanked it.** A focused cell shows what was typed
+  into it, which is right for a formula and was the whole of the bug here: the
+  name you clicked on vanished. A cell showing somebody else's block keeps its
+  value and selects it, so the first keystroke replaces it rather than appending
+  to it — and typing over a spill is allowed, because that is how the block gets
+  blocked and how deleting what you typed brings it back.
+
+**The four steps, as they were planned:**
 
 1. Give a cell's evaluated value a range shape — a result that is a 2-D block
    rather than a scalar.
@@ -987,6 +1024,11 @@ the function library, and it should be sequenced as one:
 4. Then the functions, cheaply, because each is a few lines once the shape
    exists.
 
+`LET` and `LAMBDA` are **not** built and are not in this item's "done when":
+neither returns a range, so neither needed the spill model, and both are a
+change to the parser's idea of a name rather than to the grid's idea of a
+value.
+
 **Dependencies.** None blocking. This item can proceed in parallel with
 everything else in this document, which is why it is the natural Phase 2
 workstream for a second person.
@@ -994,12 +1036,18 @@ workstream for a second person.
 **Estimated effort.** Medium-high — unchanged from the draft, but for a different
 reason: the work is the spill model, not the function count.
 
-**Done when.** `=FILTER(...)`, `=SORT(...)` and `=UNIQUE(...)` spill correctly; a
-blocked spill shows an error in the formula's cell and writes nothing; a spilled
-range charts and exports to `.xlsx` as a formula Excel recalculates; and
-`functions.test.ts` still reconciles the catalogue against the engine.
+**Done when.** `=FILTER(...)`, `=SORT(...)` and `=UNIQUE(...)` spill correctly
+(**done**); a blocked spill shows an error in the formula's cell and writes
+nothing (**done**); a spilled range charts and exports to `.xlsx` as a formula
+Excel recalculates (**done** — the formula goes at its anchor and the cells
+under it go as blanks, which is the half that had to be fixed; the export does
+not write a spill-range annotation, and Excel recalculates a dynamic-array
+function without one); and `functions.test.ts` still reconciles the catalogue
+against the engine (**done** — it failed the moment the five functions landed,
+which is the whole reason it exists, and the catalogue grew an eighth shelf,
+**Blocks**, rather than filing them under Lookup).
 
-**Sequencing: Phase 2.**
+**Sequencing: Phase 2, done.**
 
 ---
 
@@ -1090,7 +1138,7 @@ Verification is not part of the pilot ([§8](#8-what-this-plan-does-not-cover)).
 | 9 | ~~**Watch** — on-device narration over Figures assets (§3.3)~~ **Done** | Medium | Figures, Listen scripting |
 | 10 | ~~**Cases** — worked-problem / case-study union, grounding check (§3.4)~~ **Engine done** | Medium | Verified course model, `lib/cite.ts` |
 | 11 | ~~**Listen · batch** — content-hash pre-generation and caching (§3.5)~~ **Done** | Medium | Listen scripting |
-| 12 | **Spreadsheet** — the spill model, then the array functions (§5.2) | Medium-high | Nothing |
+| 12 | ~~**Spreadsheet** — the spill model, then the array functions (§5.2)~~ **Done** | Medium-high | Nothing |
 
 **Phase 2 exit criteria.** Every one of the eleven study modes is Live by the
 definition in [§1](#live-partial-planned) — works for a generated course with no
@@ -1139,13 +1187,13 @@ decision, and not as a side effect of wanting a dashboard.
 ### 7.1 Performance
 
 Measured today, against the four shipped courses: 44 units, 44 narrated lessons,
-8 podcast editions, 60 destinations, 159 spreadsheet functions.
+8 podcast editions, 60 destinations, 164 spreadsheet functions.
 
 | Watch for | Today | What would trigger work |
 | --- | --- | --- |
 | Catalogue build on load | 4 courses | A student with 6–7 courses and their own added readings, where `buildCatalog` runs over an order of magnitude more material |
 | Figure and diagram render | 17 hand-drawn SVGs | Generated diagrams (§3.1), which are parsed and sanitised per render rather than precompiled |
-| Spreadsheet recalculation | Recomputed from cells on every read, by design | A gradebook with a spilled range (§5.2) feeding a pivot feeding a chart |
+| Spreadsheet recalculation | Recomputed from cells on every read, by design. A spill is derived on read too, once per cells object rather than once per cell — see the memo on `spillOf` | A gradebook with a spilled range (§5.2) feeding a pivot feeding a chart |
 | Audio caching | Cached as played, never up front | A course whose audio is generated in-app (§3.5) rather than fetched from `public/` |
 | Storage | IndexedDB, with `lib/quota.ts` warning before the disk fills | Generated audio, which is the first thing the app would store at megabyte scale |
 
@@ -1252,7 +1300,7 @@ it was checked on 15 September 2026, and where to look.
 | Exam Runway "does not exist in the app today — the one feature in the entire product with no working version yet" | 922 lines and a screen, shipping, including a three-source coverage engine that refuses to infer scope | `lib/runway.ts` (313), `lib/covers.ts` (206), `screens/Runway.tsx` (403) |
 | Exam Runway needs "a new Quiz/Cram engagement log (does not exist yet and must be built as part of this item)" | The engagement record exists and Runway already reads it — cards never answered, units never opened, papers sat | `lib/review.ts`, `lib/sitting.ts`, `lib/runway.ts` |
 | GPA Projection is "a simple estimate rather than a modeled distribution"; build "a small weighted-scenario model (best / expected / worst)" | The low / middle / high band across courses exists, composed from four files, with letter cliffs handled and no rounding before the scale reads a percentage | `lib/termgpa.ts` (401), `lib/worth.ts`, `lib/cutoffs.ts`, `lib/grades.ts` |
-| Spreadsheet is missing "pivot tables and deeper formula coverage (lookups, array-style formulas)" | Pivot tables ship, and write back as live `SUMIFS`; lookups ship (`VLOOKUP`, `HLOOKUP`, `XLOOKUP`, `INDEX`, `MATCH`). Array formulas are genuinely absent, and need a spill model first | `lib/pivot.ts` (424), `lib/sheet.ts` (159 functions), `lib/functions.ts` |
+| Spreadsheet is missing "pivot tables and deeper formula coverage (lookups, array-style formulas)" | Pivot tables ship, and write back as live `SUMIFS`; lookups ship (`VLOOKUP`, `HLOOKUP`, `XLOOKUP`, `INDEX`, `MATCH`). Array formulas were genuinely absent and did need a spill model first — both are built now (§5.2) | `lib/pivot.ts` (424), `lib/sheet.ts` (164 functions), `lib/functions.ts` |
 | Document Editor should "wire in direct equation embedding from the existing math engine rather than a static image of an equation" | Already wired: a `.docx` equation is a real OMML equation object, editable in Word | `lib/docx.ts:610`, `lib/maths.ts` |
 | Watch "produces visual, video-style walkthroughs for a limited set of concepts"; missing "full-course coverage" | 44 narrated lessons over 44 units — complete coverage of every shipped course. The gap is a generated course, which gets none | `public/audio/lessons/`, `pipeline/lessons.py` |
 | Listen is missing "complete chapter-mark indexing across all content" | All eight editions carry a `chapters` block, rendered exact by the synthesiser. The gap is a generated course, and the absent batch pipeline | `src/data/courses/*/index.ts`, `audio/synth.py`, `pipeline/chapters.py` |

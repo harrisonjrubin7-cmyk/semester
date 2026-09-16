@@ -157,8 +157,16 @@ export const MAX_SERIES = 8;
  * type with its unit attached.
  */
 export function numberAt(cells: Cells, address: string, ctx: Ctx): number | null {
-  const raw = cells[address];
-  if (raw === undefined || raw === '') return null;
+  /*
+   * Asked of `evaluate` rather than of the cell map.
+   *
+   * This used to answer `null` for anything the map had nothing under, which
+   * was the same question and a cheaper way to put it — right up until a
+   * formula could spill. The cells under a `FILTER` hold nothing and show its
+   * answer, so the shortcut charted a spilled column as one bar and a row of
+   * gaps. `evaluate` answers `''` for a cell that is genuinely empty, which
+   * falls through the same way it always did.
+   */
   const value = evaluate(cells, address, new Set(), ctx);
   if (typeof value === 'number') return Number.isFinite(value) ? value : null;
   if (typeof value === 'boolean') return value ? 1 : 0;
@@ -170,8 +178,8 @@ export function numberAt(cells: Cells, address: string, ctx: Ctx): number | null
 
 /** One cell as the words in it — a heading, a category name. */
 function textAt(cells: Cells, address: string, ctx: Ctx): string {
-  const raw = cells[address];
-  if (raw === undefined) return '';
+  // Through `evaluate` for the reason above: a spilled cell is empty in the
+  // map, so a category name that came out of one had no name at all.
   const value = evaluate(cells, address, new Set(), ctx);
   if (isError(value)) return String(value);
   if (typeof value === 'number') return String(value);

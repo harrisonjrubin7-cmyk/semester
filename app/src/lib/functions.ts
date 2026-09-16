@@ -31,8 +31,8 @@
  * type is the question.
  */
 
-/** The seven shelves. Excel's own grouping, near enough to be familiar. */
-export type FnGroup = 'maths' | 'stats' | 'logic' | 'lookup' | 'text' | 'date' | 'money';
+/** The eight shelves. Excel's own grouping, near enough to be familiar. */
+export type FnGroup = 'maths' | 'stats' | 'logic' | 'lookup' | 'array' | 'text' | 'date' | 'money';
 
 export interface FnGroupInfo {
   id: FnGroup;
@@ -46,6 +46,11 @@ export const FN_GROUPS: FnGroupInfo[] = [
   { id: 'stats', label: 'Statistics', blurb: 'Averages, spread, percentiles and the fitted line.' },
   { id: 'logic', label: 'Logic', blurb: 'Tests, branches, and asking what a cell holds.' },
   { id: 'lookup', label: 'Lookup', blurb: 'Finding a row in a table and reading across it.' },
+  {
+    id: 'array',
+    label: 'Blocks',
+    blurb: 'One formula that answers with a whole table. Type it in one cell and it fills the cells below and beside it — those stay empty, so deleting the formula takes the answer with it.',
+  },
   { id: 'text', label: 'Text', blurb: 'Cutting up, joining and tidying what a column holds.' },
   { id: 'date', label: 'Dates', blurb: 'Days between, working days, and the parts of a date.' },
   { id: 'money', label: 'Money', blurb: 'Loans, savings, discounting and depreciation.' },
@@ -185,6 +190,13 @@ export const FUNCTIONS: FnDoc[] = [
   { name: 'INDEX', args: 'range, row, [column]', group: 'lookup', says: 'The cell at a position. With MATCH it is XLOOKUP the long way.', example: '=INDEX($G$2:$G$9,MATCH(A2,$F$2:$F$9))' },
   { name: 'ROWS', args: 'range', group: 'lookup', says: 'How many rows a range covers.', example: '=ROWS(A2:A40)' },
   { name: 'COLUMNS', args: 'range', group: 'lookup', says: 'How many columns it covers.', example: '=COLUMNS(A2:D2)' },
+
+  // ── Blocks ──────────────────────────────────────────────────────────────
+  { name: 'FILTER', args: 'range, test, [if none]', group: 'array', says: 'The rows where the test held — everyone over 60, every unpaid row.', example: '=FILTER(A2:C40,C2:C40>60)' },
+  { name: 'SORT', args: 'range, [column], [-1 for down]', group: 'array', says: 'The same rows in order, without touching the ones you typed.', example: '=SORT(A2:C40,3,-1)' },
+  { name: 'UNIQUE', args: 'range, [TRUE for across]', group: 'array', says: 'Each distinct row once — the list of modules, of names, of categories.', example: '=UNIQUE(B2:B40)' },
+  { name: 'SEQUENCE', args: 'rows, [columns], [start], [step]', group: 'array', says: 'A block of counting numbers, so a week or a month column is one formula.', example: '=SEQUENCE(12)' },
+  { name: 'TEXTSPLIT', args: 'text, [delimiter]', group: 'array', says: 'One cell cut into several across — a pasted comma list into columns.', example: '=TEXTSPLIT(A2,",")' },
 
   // ── Text ────────────────────────────────────────────────────────────────
   { name: 'CONCAT', args: 'pieces', group: 'text', says: 'Joins them end to end. `&` does the same.', example: '=CONCAT(A2," ",B2)' },
