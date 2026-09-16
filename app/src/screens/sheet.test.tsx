@@ -652,3 +652,69 @@ describe('copy, cut and paste from the keyboard', () => {
     expect(cell('C1')).toBe('5');
   });
 });
+
+/**
+ * A formula that fills cells beside the one it is in.
+ *
+ * `lib/spill.test.ts` holds the model — what a block comes to, where it lands,
+ * what blocks it. What only this file can ask is whether the grid *draws* it,
+ * and whether a cell somebody clicks on keeps what it is showing. That second
+ * one is not a detail: a spilled cell is empty, a focused cell shows what was
+ * typed into it, and the two together made the name you clicked on vanish.
+ */
+describe('a spilled block on the screen', () => {
+  function passes() {
+    type('Cell A1', 'Ann');
+    type('Cell B1', '71');
+    type('Cell A2', 'Ben');
+    type('Cell B2', '44');
+    type('Cell A3', 'Cy');
+    type('Cell B3', '88');
+    type('Cell D1', '=FILTER(A1:B3,B1:B3>60)');
+    away();
+  }
+
+  it('draws the rest of the block in cells nobody typed in', () => {
+    passes();
+    expect(cell('D1')).toBe('Ann');
+    expect(cell('E1')).toBe('71');
+    expect(cell('D2')).toBe('Cy');
+    expect(cell('E2')).toBe('88');
+    // Ben did not pass, so the block is two rows and the third is blank.
+    expect(cell('D3')).toBe('');
+  });
+
+  it('keeps showing the value when the cursor is put in one', () => {
+    passes();
+    at('D2');
+    expect(cell('D2')).toBe('Cy');
+  });
+
+  it('shows the formula, not the answer, when the cursor is in the cell that holds it', () => {
+    // The control on the test above. A cell that always showed its answer
+    // would pass that one and take the formula bar with it.
+    passes();
+    at('D1');
+    expect(cell('D1')).toBe('=FILTER(A1:B3,B1:B3>60)');
+  });
+
+  it('blocks the whole block when something is typed into its way', () => {
+    passes();
+    type('Cell D2', 'mine');
+    away();
+    expect(cell('D1')).toBe('#SPILL!');
+    expect(cell('D2')).toBe('mine');
+    // Nothing of the block landed. Half a filtered list reads as an answer.
+    expect(cell('E1')).toBe('');
+    expect(cell('E2')).toBe('');
+  });
+
+  it('brings the block back when what was in the way is taken out', () => {
+    passes();
+    type('Cell D2', 'mine');
+    type('Cell D2', '');
+    away();
+    expect(cell('D1')).toBe('Ann');
+    expect(cell('D2')).toBe('Cy');
+  });
+});

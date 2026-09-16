@@ -4490,7 +4490,7 @@ const Box = forwardRef<
     value: string;
     onChange: (e: { target: { value: string } }) => void;
     onMouseDown: (e: React.MouseEvent) => void;
-    onFocus: () => void;
+    onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
     onBlur: () => void;
     onKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
     'aria-label': string;
@@ -4588,6 +4588,22 @@ function Cell({
   const raw = sheet.cells[address] ?? '';
   const own = styleOf(sheet, address);
   const value = styledDisplay(sheet.cells, address, own, over);
+  /*
+   * Showing somebody else's answer: a cell a formula spilled into.
+   *
+   * Empty in `cells`, and drawing a value all the same — the one combination
+   * that could not happen before `lib/sheet.ts` could spill. It matters here
+   * because a focused cell shows what was typed into it, which is right for a
+   * formula and was the whole of the bug when a spilled cell was clicked: the
+   * name you clicked on vanished, and the grid looked like it had lost it.
+   *
+   * So a borrowed cell keeps showing its value, and focusing one selects that
+   * text — which is what makes the first keystroke replace it rather than
+   * append to it. Typing over a spill is allowed and is how Excel behaves: the
+   * block is blocked, its own cell says `#SPILL!`, and deleting what you typed
+   * brings it back, because nothing was ever written under it.
+   */
+  const borrowed = raw === '' && value !== '';
   // Once, not twice: this is `rows × cols` components and the second call was
   // the same walk of the same formula tree for a second answer about it.
   const answer = evaluate(sheet.cells, address, new Set(), over);
@@ -4653,7 +4669,7 @@ function Cell({
           .join(' ')}
         list={listId}
         ref={hold}
-        value={editing ? raw : value}
+        value={editing && !borrowed ? raw : value}
         onChange={(e) => onWrite(e.target.value)}
         onMouseDown={(e) => {
           // Shift-click extends the selection rather than moving it, which is
@@ -4664,7 +4680,10 @@ function Cell({
             onExtend();
           }
         }}
-        onFocus={onFocus}
+        onFocus={(e) => {
+          if (borrowed) e.currentTarget.select();
+          onFocus();
+        }}
         onBlur={onBlur}
         onKeyDown={onKeyDown}
         aria-label={
