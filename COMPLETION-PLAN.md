@@ -439,7 +439,7 @@ them.
 | Where Courses Meet | `lib/meet.ts`, `screens/Meet.tsx` | 186 + screen | **Partial — matching depth** |
 | GPA Projection | `lib/termgpa.ts` (+ `worth`, `cutoffs`, `grades`, `credits`) | 401 | **Partial — three named exclusions** |
 | Exam Runway | `lib/runway.ts`, `lib/covers.ts`, `screens/Runway.tsx` | 313 + 206 + 403 | **Partial — one input is manual** |
-| Quote Verification | `lib/quotes.ts`, `screens/Proof.tsx` | 337 + 263 | **Partial — matching depth, and untested adversarially** |
+| Quote Verification | `lib/quotes.ts`, `screens/Proof.tsx` | 669 + 263 | **Live** — four verdicts, adversarially tested ([§4.4](#44--quote-verification--live)) |
 
 ### 4.1 · Where Courses Meet — Partial
 
@@ -601,14 +601,16 @@ unchanged.
 **Sequencing: Phase 1** *(moved from Phase 2 — the dependency it was waiting on
 already exists).*
 
-### 4.4 · Quote Verification — Partial
+### 4.4 · Quote Verification — Live
 
 **Current state.** `app/src/lib/quotes.ts` checks the quotations in a student's
 own draft against the material the app holds — the readings added to a course,
 the guides, the glossaries, the case files, or a file dropped in for the purpose
-— and returns one of three verdicts: **found** (with the source's own sentence
+— and returns one of four verdicts: **found** (with the source's own sentence
 beside yours), **close** (the words are there but not as typed, shown as the
-document writes it so the fix is a paste rather than a hunt), and **not in
+document writes it so the fix is a paste rather than a hunt), **near** (there is
+a passage here that is mostly these words in this order, printed with an
+instruction to compare rather than a claim that it matched), and **not in
 anything here**.
 
 The third verdict is the one that had to be got right, and it is. It is not
@@ -624,43 +626,57 @@ of imports, which is the point. It also already handles the cases that make
 literal matching fail on real writing — curly quotes, moved commas, scare quotes
 that are not quotations, apostrophes, and ellipses, where each side of the gap is
 looked for separately and in order, because that is what the ellipsis claims.
-`lib/quotes.test.ts` holds 26 tests.
+`lib/quotes.test.ts` holds 37 tests and `lib/quotes.adversarial.test.ts` holds
+20 more.
 
-**What's missing.**
+**What was missing, and what closing it turned out to require.**
 
-1. **Matching breadth.** Comparison is literal and loose-literal. A quotation a
-   student typed from a different edition, or with a word the source hyphenates
-   differently, reads as "not in anything here".
-2. **Adversarial testing.** This is the real gap and it is not a coverage number.
-   Of the 26 tests, several guard the false-positive direction — *will not call a
-   changed word a match*, *will not accept the pieces in the wrong order* — but
-   there is no test pass designed by someone trying to make it say **found** for
-   a quotation that is not in the source. A wrongly-confirmed quotation carries
-   academic-integrity weight in the direction the flat "not found" wording was
-   carefully built to avoid.
+1. **Matching breadth.** Comparison was literal and loose-literal, so a
+   quotation typed from a different edition read as "not in anything here" —
+   true of the app, and useless to a student holding the page. `nearest` now
+   places a window around the rarest distinctive word the quote and the source
+   share and aligns the two in order, which finds the passage.
+2. **Adversarial testing.** This was the real gap.
+   `lib/quotes.adversarial.test.ts` is a pass written by someone trying to make
+   the checker say **found** for a quotation that is not in the source: numbers
+   changed inside an otherwise verbatim passage, sentences assembled from
+   fragments that each appear separately, a different work by the same author,
+   and near-miss paraphrases. It ends in three controls, because a file of
+   adversarial cases that all come back "missing" is what a matcher switched
+   off looks like.
 
-**Technical approach.** Strengthen matching toward a lightweight **local**
-semantic comparison — still fully on-device, still no student writing
-transmitted, which is not a nice-to-have but the feature's entire safety
-argument and must be preserved by construction (no network import in the file, and
-a test asserting it). Then run a dedicated adversarial pass whose brief is to
-produce false positives: near-miss paraphrases, quotations from a different work
-by the same author, sentences assembled from fragments that all appear in the
-source separately, and numbers changed inside an otherwise verbatim passage.
+**What the approach turned out to be.** Not a looser `found`. Widening the
+verdict that asserts is the one change this file must never make — a
+confirmation meaning "near enough" confirms nothing, in a screen a person may
+act on when deciding whether their own citation is honest. So the breadth went
+into a fourth verdict that never reads as a pass, is counted on its own line in
+the summary, and is worded as an instruction to compare. Four rules came out of
+the adversarial pass and are enforced in `nearest`: numbers are never forgiven,
+the passage is one window rather than a collection, ordinary words cannot carry
+a match, and quotations under eight words get no near verdict at all. Two of
+them survived being reverted under the first version of the tests and have
+cases of their own now.
+
+It is still **entirely on-device**, and that is now asserted rather than
+described: three tests read `lib/quotes.ts` and check that it imports `./cite`
+and `./types` and nothing else, that no name reaching the network appears in it,
+and that it holds no key and no address.
 
 **Dependencies.** None technically. Release is gated separately on Vanderbilt
 review, per [VANDERBILT-AUDIT.md](VANDERBILT-AUDIT.md) — this item can be
 technically complete well before it is appropriate to show outside single-user
 use.
 
-**Estimated effort.** Medium (technical). Release timing is an institutional
+**Estimated effort.** Was medium. Release timing remains an institutional
 decision, not an engineering one.
 
-**Done when.** The adversarial pass exists as a test file, was written by someone
-trying to break it, and passes; a test asserts `lib/quotes.ts` imports nothing
-that reaches the network; and the "not in anything here" wording is unchanged.
+**Done when — and it is.** The adversarial pass exists as a test file, was
+written to break the checker, and passes; a test asserts `lib/quotes.ts` imports
+nothing that reaches the network; and the "not in anything here" wording is
+unchanged, which has a test of its own asserting the sentence character for
+character.
 
-**Sequencing: Phase 1 for the technical work; public release gated separately
+**Sequencing: Phase 1, done. Public release still gated separately
 ([§8](#8-what-this-plan-does-not-cover)).**
 
 ---
