@@ -19,9 +19,12 @@
  *
  * ## What it cannot carry
  *
- * An equation. The app holds LaTeX and draws it with KaTeX, and turning that
- * into placed glyphs is a typesetting engine — it comes out as the LaTeX as
- * typed, which is at least what was written. A picture does not come either:
+ * An equation, as an equation. The app holds LaTeX, and turning that into
+ * placed glyphs is a typesetting engine: no fraction bar is drawn, no limit
+ * sits over a sum. What comes out is `lib/maths.ts`'s Unicode rendering of the
+ * same notation — `(a+b)/(c²)`, not `\\frac{a+b}{c^2}`. That is a reading of
+ * the formula rather than a picture of it, and it is what the `.docx` beside
+ * it has always had in its own way. A picture does not come at all:
  * its bytes are in IndexedDB and this is a pure function of the document, the
  * same split `parts()` keeps in `lib/docx.ts`. Its caption still prints, so a
  * figure is visibly not here rather than silently missing. Notes in the
@@ -30,6 +33,7 @@
 
 import { layoutOf, type Layout } from './doclayout';
 import { listed, type Block, type Doc } from './document';
+import { parse, plain } from './maths';
 import {
   PER_INCH,
   fontFor,
@@ -143,6 +147,17 @@ class Pen {
     const top = this.y;
     this.y -= height;
     return top;
+  }
+
+  /**
+   * Whether something of this height would fit without turning the page.
+   *
+   * The same question `spend` asks itself, asked out loud. A table's rows need
+   * the answer *before* the turn happens, so that a repeated header can be
+   * drawn at the top of the new page ahead of the row that caused it.
+   */
+  fits(height: number): boolean {
+    return this.y - height >= this.frame.margin || this.page.drawings.length === 0;
   }
 
   gap(points: number) {
@@ -343,12 +358,12 @@ function table(pen: Pen, base: { font: string; size: number }, block: Extract<Bl
     };
   });
 
-  for (const [r, { wrapped, height }] of measured.entries()) {
-    const top = pen.spend(height, block.header && r === 0 ? (measured[1]?.height ?? 0) : 0);
+  /** One measured row, drawn at the top the pen just gave out. */
+  const place = (row: (typeof measured)[number], top: number) => {
     for (let c = 0; c < width; c += 1) {
       const x = pen.frame.margin + cell * c;
-      pen.draw({ at: 'box', x, y: top - height, width: cell, height });
-      wrapped[c].forEach((line, i) => {
+      pen.draw({ at: 'box', x, y: top - row.height, width: cell, height: row.height });
+      row.wrapped[c].forEach((line, i) => {
         pen.draw({
           at: 'text',
           x: x + pad,
@@ -358,6 +373,39 @@ function table(pen: Pen, base: { font: string; size: number }, block: Extract<Bl
         });
       });
     }
+  };
+
+  const head = block.header ? measured[0] : null;
+  for (const [r, row] of measured.entries()) {
+    /*
+     * The header row again at the top of every page the table runs on to.
+     *
+     * `lib/docx.ts` sets `w:tblHeader` and Word repeats the row for free, so
+     * the same table exported both ways had its `Term | Definition` strip on
+     * every page in Word and on page one only in the PDF. Three pages of
+     * unlabelled cells is not a rendering difference; it is the table not
+     * being readable.
+     *
+     * The turn is taken here rather than left to `spend`, because the header
+     * has to be drawn on the new page *before* the row that caused the turn
+     * — and by the time `spend` has turned, the pen is past the place the
+     * header would go.
+     */
+    if (head && r > 0 && !pen.fits(row.height)) {
+      pen.turn();
+      place(head, pen.spend(head.height));
+    }
+    place(row, pen.spend(row.height, block.header && r === 0 ? (measured[1]?.height ?? 0) : 0));
+  }
+
+  // The caption, which the `.docx` has written in Word's own Caption style
+  // since tables existed here and this side wrote nowhere at all.
+  if (block.caption.trim()) {
+    pen.gap(pen.layout.size * 0.2);
+    paragraph(pen, base, piecesOf(block.caption, { ...base, size: pen.layout.size * 0.9 }), {
+      align: 'center',
+      italic: true,
+    });
   }
   pen.gap(pen.layout.size * 0.4);
 }
@@ -435,11 +483,26 @@ function block(pen: Pen, base: { font: string; size: number }, b: Block) {
     case 'table':
       table(pen, base, b);
       return;
+    /*
+     * An equation, as notation rather than as the source somebody typed.
+     *
+     * This drew `b.latex`. A `.docx` of the same document gets
+     * `omml(parse(...))` and therefore a real Word equation object, so one
+     * export read `(a+b)/(c²)` and the other read `\\frac{a+b}{c^2}` — the
+     * second being a thing a reader has to already know LaTeX to read, in the
+     * file that goes to the submission portal.
+     *
+     * `lib/maths.ts` has rendered the notation in Unicode for everywhere that
+     * is neither a screen nor Word since it was written. It was never wired to
+     * this one. Found by `lib/exportqa.ts` comparing the two exports of one
+     * document, which is what that file is for.
+     */
     case 'equation': {
+      const said = b.latex.trim() ? plain(parse(b.latex)) : '';
       paragraph(
         pen,
         base,
-        [{ text: b.latex, font: 'courier', size: layout.size * 0.9, link: '', strike: false }],
+        [{ text: said, font: 'courier', size: layout.size * 0.9, link: '', strike: false }],
         { align: 'center' },
       );
       if (b.caption.trim()) {

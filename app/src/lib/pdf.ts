@@ -114,6 +114,105 @@ const INSTEAD: Record<string, string> = {
   ' ': ' ',
 };
 
+/**
+ * Greek, spelled out, because WinAnsi has exactly one Greek letter and it is
+ * `µ`.
+ *
+ * Bare names with no space either side, for the reason the `Δ` above gives:
+ * `wrap` breaks a line at a space, so `alpha` at the foot of one line with
+ * `+ beta` at the head of the next reads worse than `alpha + beta` does.
+ *
+ * Added under whatever is already in the table rather than over it. Four of
+ * these letters are in it already, spelled the way printing a study guide
+ * showed they had to be — `Δ` is `delta` and not `Delta`, because the thing it
+ * was measured on was `%ΔQ`.
+ */
+const GREEK =
+  'αalpha βbeta γgamma δdelta εepsilon ζzeta ηeta θtheta ιiota κkappa λlambda μmu ' +
+  'νnu ξxi οomicron πpi ρrho σsigma τtau υupsilon φphi χchi ψpsi ωomega ' +
+  'ΑAlpha ΒBeta ΓGamma ΔDelta ΕEpsilon ΖZeta ΗEta ΘTheta ΙIota ΚKappa ΛLambda ΜMu ' +
+  'ΝNu ΞXi ΟOmicron ΠPi ΡRho ΣSigma ΤTau ΥUpsilon ΦPhi ΧChi ΨPsi ΩOmega';
+
+/**
+ * A raised or lowered character, as the character somebody would type.
+ *
+ * `x²` has a byte and `x₂` has not, which is the whole of the problem: they
+ * are the same notation and only one of them survives. `lib/maths.ts` writes
+ * both, and a limit like `∑ᵢ₌₁ⁿ` is made *entirely* of characters from these
+ * two blocks — every one of which came out as a space, so the sum kept its
+ * shape and lost its limits.
+ *
+ * The level is lost, and that is the trade this whole table makes: `x2` is not
+ * `x²`, and it is a great deal closer to it than `x` is.
+ */
+const RAISED =
+  '⁰0 ¹1 ²2 ³3 ⁴4 ⁵5 ⁶6 ⁷7 ⁸8 ⁹9 ⁺+ ⁻- ⁼= ⁽( ⁾) ⁿn ⁱi ' +
+  '₀0 ₁1 ₂2 ₃3 ₄4 ₅5 ₆6 ₇7 ₈8 ₉9 ₊+ ₋- ₌= ₍( ₎) ' +
+  'ₐa ₑe ₒo ₓx ₕh ₖk ₗl ₘm ₙn ₚp ₛs ₜt ᵢi ⱼj ᵃa ᵇb ᶜc ᵈd ᵏk ᵐm ᵖp ᵗt';
+
+/**
+ * The operators a formula is built out of, in the words the formula means.
+ *
+ * `∫` and `∑` are not decoration. An integral sign dropped to a space leaves
+ * `₀¹ x² dx`, which reads as an expression with a piece missing rather than
+ * as an integral — the same argument the arrow won above, at the same cost.
+ */
+const OPERATORS: Record<string, string> = {
+  '∫': 'integral',
+  '∬': 'integral2',
+  '∮': 'contourintegral',
+  '∑': 'sum',
+  '∏': 'product',
+  '∂': 'd',
+  '∇': 'grad',
+  '∞': 'infinity',
+  '∈': ' in ',
+  '∉': ' not in ',
+  '⊂': ' subset ',
+  '⊆': ' subset= ',
+  '∪': ' union ',
+  '∩': ' intersect ',
+  '∅': 'empty',
+  '∀': 'for all ',
+  '∃': 'exists ',
+  '⇒': '=>',
+  '⇔': '<=>',
+  '↔': '<->',
+  '←': '<-',
+  '≡': '==',
+  '∝': ' prop ',
+  '⋅': '*',
+  '∘': 'o',
+  'ℝ': 'R',
+  'ℕ': 'N',
+  'ℤ': 'Z',
+  'ℚ': 'Q',
+  /* The combining macron `lib/maths.ts` writes for an overline. It has no byte
+     and no spelling: dropping it leaves `x`, where a space would leave `x ` and
+     a line that could break between a variable and nothing at all. */
+  '\u0304': '',
+};
+
+/**
+ * Neither over an entry already here, nor over a character with a real byte.
+ *
+ * The first is because the four Greek letters already in the table were
+ * spelled the way printing a study guide showed they had to be. The second is
+ * the rule that matters: `winAnsi` reads this table *before* it looks for a
+ * byte, so `²→'2'` in here would spend a superscript that Windows-1252 has
+ * had all along. Which is exactly what it did — `E = mc²` came out of the
+ * fixture as `E = mc2`, and `lib/exportqa.ts` reported the equation missing
+ * from a PDF it had just been taught to write.
+ */
+function spell(ch: string, said: string) {
+  if (!(ch in INSTEAD) && !(ch in HIGH) && ch.charCodeAt(0) >= 0x80) INSTEAD[ch] = said;
+}
+
+for (const pair of `${GREEK} ${RAISED}`.split(' ')) {
+  if (pair) spell(pair[0], pair.slice(1));
+}
+for (const [ch, said] of Object.entries(OPERATORS)) spell(ch, said);
+
 /** The text as WinAnsi, every character of the result a code below 256. */
 export function winAnsi(text: string): string {
   let out = '';
@@ -132,6 +231,32 @@ export function winAnsi(text: string): string {
     else out += ' ';
   }
   return out;
+}
+
+/**
+ * The other direction: the characters a reader will see in the finished file.
+ *
+ * `winAnsi` returns bytes-as-characters, so an em dash comes back as
+ * `String.fromCharCode(0x97)` — which is the em dash in Windows-1252 and is a
+ * control character in Unicode. Anything comparing that against the text the
+ * document holds reads every high character as lost, including the ones that
+ * came through perfectly.
+ *
+ * Only the 0x80–0x9F band needs undoing: Windows-1252 agrees with Unicode
+ * everywhere else, which is why `HIGH` is built the way it is.
+ */
+export function fromWinAnsi(text: string): string {
+  let out = '';
+  for (const ch of text) {
+    const code = ch.charCodeAt(0);
+    out += code >= 0x80 && code <= 0x9f ? (WINANSI_HIGH[code - 0x80] ?? ch) : ch;
+  }
+  return out;
+}
+
+/** What a reader sees where this text lands in a PDF: the round trip, both ways. */
+export function asPdf(text: string): string {
+  return fromWinAnsi(winAnsi(text));
 }
 
 /** One PDF string literal, with the three characters that could end one escaped. */
