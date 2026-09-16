@@ -35,6 +35,8 @@ import { cardKey, type Reviews } from './review';
 import { nearAny } from './near';
 import { queryWords, worthSplitting } from './search';
 import { allowed, type Capabilities } from './school';
+import { DOING } from './doing';
+import { SETTINGS } from './settings';
 import { DEFAULT_ROLE, forRole, type Role } from './role';
 
 /**
@@ -115,7 +117,24 @@ export type Hit =
   | { kind: 'deck'; id: string; title: string; sub: string; tag: string; score: number }
   | { kind: 'task'; id: string; title: string; sub: string; tag: string; score: number }
   | { kind: 'appointment'; id: string; title: string; sub: string; tag: string; score: number }
-  | { kind: 'screen'; screen: Screen; title: string; sub: string; tag: string; score: number };
+  | { kind: 'screen'; screen: Screen; title: string; sub: string; tag: string; score: number }
+  /**
+   * Something the app does that is not somewhere you go — a way through a
+   * course, or a named panel on a screen. See `lib/doing.ts`.
+   *
+   * Its own kind rather than a screen hit with a different tag, for the reason
+   * the lesson kind above is its own: Listen is not a place, and filing it
+   * under "Places in the app" would be the result saying something untrue
+   * about what it is. It lands on the screen it lives in, and says so.
+   */
+  | {
+      kind: 'doing';
+      screen: Screen;
+      title: string;
+      sub: string;
+      tag: string;
+      score: number;
+    };
 
 export interface HitGroup {
   label: string;
@@ -649,6 +668,54 @@ export function findEverything(
       if (s) screens.push({ kind: 'screen', screen: d.screen, title: label, sub: blurb, tag: 'Go to', score: s });
     }
 
+    /*
+     * The settings pages, which are real screens and were in none of this.
+     *
+     * `lib/settings.ts` has carried a label, a line saying what each page
+     * holds and a list of other words for it since it was written, and
+     * `findSetting` searches all three — inside the Settings screen. So the
+     * app had two search indexes and this one read neither the other's. The
+     * cost, measured: "colour" nothing, "font" nothing, "typeface" nothing,
+     * "change the layout" nothing, "dark mode" nothing, and "theme" three
+     * screens about maps, people and your profile. Every one of those words
+     * is already a keyword on a settings page.
+     *
+     * Not folded in with `DESTINATIONS` above: these are not on the shelves
+     * and not in the directory, which is a deliberate arrangement rather than
+     * an omission — the directory is where you go to *do* something. They
+     * carry their own tag so a result is clear about being a setting.
+     */
+    const settings: Hit[] = [];
+    for (const row of SETTINGS.flatMap((sec) => sec.rows)) {
+      if (!allowed(row.screen, caps) || !forRole(row.screen, role)) continue;
+      const s = score(
+        q,
+        row.label,
+        `${row.holds} ${row.keywords}`,
+        spell ? `${row.label} ${row.keywords}` : '',
+      );
+      if (s) {
+        settings.push({
+          kind: 'screen',
+          screen: row.screen,
+          title: row.label,
+          sub: row.holds,
+          tag: 'Setting',
+          score: s,
+        });
+      }
+    }
+
+    /* The ways through a course and the named panels. See `lib/doing.ts`. */
+    const doings: Hit[] = [];
+    for (const d of DOING) {
+      if (!allowed(d.screen, caps) || !forRole(d.screen, role)) continue;
+      const s = score(q, d.label, `${d.blurb} ${d.keywords}`, spell ? `${d.label} ${d.keywords}` : '');
+      if (s) {
+        doings.push({ kind: 'doing', screen: d.screen, title: d.label, sub: d.blurb, tag: d.within, score: s });
+      }
+    }
+
     const groups: HitGroup[] = [
       { label: 'Deadlines', hits: items },
       { label: 'Study units', hits: units },
@@ -660,7 +727,9 @@ export function findEverything(
       { label: 'Documents', hits: docHits },
       { label: 'Sheets', hits: sheetHits },
       { label: 'Decks', hits: deckHits },
+      { label: 'Ways to study', hits: doings },
       { label: 'Places in the app', hits: screens },
+      { label: 'Settings', hits: settings },
     ];
 
     return groups

@@ -70,6 +70,16 @@ export function actionsFor(hit: Hit): Action[] {
       return [{ type: 'editDeck', id: hit.id }];
     case 'screen':
       return [{ type: 'go', screen: hit.screen }];
+    /*
+     * The screen it lives in, and only that.
+     *
+     * A mode is a way through *a course*, and a search box that was handed
+     * "podcast" does not know which one. Study lists every course with the
+     * modes that have something behind them, so it answers that better than a
+     * guess would — see the note at the foot of `lib/doing.ts`.
+     */
+    case 'doing':
+      return [{ type: 'go', screen: hit.screen }];
   }
 }
 
@@ -111,6 +121,7 @@ export function landingOf(hit: Hit): Screen {
     case 'deck':
       return 'deck';
     case 'screen':
+    case 'doing':
       return hit.screen;
   }
 }

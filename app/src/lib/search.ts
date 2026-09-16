@@ -54,6 +54,7 @@ export const FILLER = new Set([
   'a', 'an', 'the', 'my', 'me', 'i', 'is', 'are', 'was', 'to', 'of', 'in', 'on',
   'for', 'at', 'and', 'or', 'do', 'does', 'did', 'can', 'how', 'where', 'what',
   'when', 'it', 'this', 'that',
+  'change', 'set', 'turn', 'switch', 'make', 'open', 'show',
 ]);
 
 /**
