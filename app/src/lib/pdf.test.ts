@@ -528,3 +528,158 @@ describe('reading a PDF string back', () => {
     expect(asPdf('日本語')).toBe('   ');
   });
 });
+
+describe('a picture in the file', () => {
+  /*
+   * The last of the five differences `lib/exportqa.ts` found between a `.docx`
+   * and a `.pdf` of one document: Word had the figure and the PDF had the
+   * words `[Alt text]` where it should have been.
+   */
+  const crc = (buf: number[]) => {
+    let c = ~0;
+    for (const b of buf) {
+      c ^= b;
+      for (let k = 0; k < 8; k += 1) c = (c >>> 1) ^ (0xedb88320 & -(c & 1));
+    }
+    return ~c >>> 0;
+  };
+  const chunk = (tag: string, body: number[]) => {
+    const name = [...tag].map((c) => c.charCodeAt(0));
+    const n = body.length;
+    const sum = crc([...name, ...body]);
+    return [
+      (n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255,
+      ...name, ...body,
+      (sum >>> 24) & 255, (sum >>> 16) & 255, (sum >>> 8) & 255, sum & 255,
+    ];
+  };
+  const IDAT = [0x78, 0x9c, 0x01, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x01];
+  const picture = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+    ...chunk('IHDR', [0, 0, 0, 200, 0, 0, 0, 100, 8, 2, 0, 0, 0]),
+    ...chunk('IDAT', IDAT),
+    ...chunk('IEND', []),
+  ]);
+  const held = (id: string) => (id === 'pic' ? { bytes: picture } : undefined);
+  const withPicture = doc([
+    { kind: 'image', fileId: 'pic', name: 'chart.png', alt: 'A chart', caption: 'Figure 1' },
+  ]);
+
+  it('draws the picture rather than the words for it', () => {
+    const { pages } = laid(withPicture, held);
+    const drawn = pages[0].drawings.filter((d) => d.at === 'picture');
+    expect(drawn).toHaveLength(1);
+    expect(drawn[0].at === 'picture' && drawn[0].id).toBe('pic');
+    const words = pages[0].drawings
+      .filter((d) => d.at === 'text')
+      .flatMap((d) => (d.at === 'text' ? d.pieces.map((p) => p.text) : []))
+      .join(' ');
+    expect(words).not.toContain('[A chart]');
+    expect(words, 'the caption still prints under it').toContain('Figure 1');
+  });
+
+  it('keeps the aspect ratio and stays inside the column', () => {
+    const { pages, frame } = laid(withPicture, held);
+    const drawn = pages[0].drawings.find((d) => d.at === 'picture');
+    if (drawn?.at !== 'picture') throw new Error('no picture drawn');
+    expect(drawn.width).toBeLessThanOrEqual(frame.column);
+    expect(drawn.height / drawn.width).toBeCloseTo(100 / 200, 5);
+    expect(drawn.x).toBeGreaterThanOrEqual(frame.margin);
+  });
+
+  it('writes the bytes into the file, uncompressed and unconverted', () => {
+    const out = pdfBytes(withPicture, held);
+    const text = new TextDecoder('latin1').decode(out);
+    expect(text).toContain('/Subtype /Image');
+    expect(text).toContain('/Width 200');
+    expect(text).toContain('/Height 100');
+    expect(text).toContain('/ColorSpace /DeviceRGB');
+    expect(text).toContain('/Predictor 15');
+    expect(text).toContain('/XObject << /Im1');
+    expect(text).toMatch(/\/Im1 Do Q/);
+    // The stream is the IDAT, byte for byte, sitting in a file whose every
+    // other object is Latin-1 text.
+    const from = text.indexOf('stream\n', text.indexOf('/Subtype /Image')) + 'stream\n'.length;
+    expect([...out.subarray(from, from + IDAT.length)]).toEqual(IDAT);
+  });
+
+  it('keeps the cross-reference table right either side of the bytes', () => {
+    // A PDF is found by byte offset. A stream written even one byte adrift
+    // makes every object after it unreachable, and a reader rejects the file
+    // rather than showing it slightly out of place.
+    const out = pdfBytes(withPicture, held);
+    const text = new TextDecoder('latin1').decode(out);
+    const start = text.lastIndexOf('startxref');
+    const xref = Number(text.slice(start + 9).trim().split('\n')[0]);
+    expect(text.slice(xref, xref + 4)).toBe('xref');
+    const rows = text.slice(xref).split('\n').slice(2);
+    for (const row of rows.slice(0, 6)) {
+      const offset = Number(row.slice(0, 10));
+      if (!row.trim() || Number.isNaN(offset) || offset === 0) continue;
+      expect(text.slice(offset), `object at ${offset}`).toMatch(/^\d+ 0 obj/);
+    }
+  });
+
+  it('writes a picture too big to go through a string', () => {
+    /*
+     * The reason an image object is kept out of the string path, measured
+     * rather than assumed. The encoder and its inverse agree on every value a
+     * byte can hold, so a small picture comes out identical either way — a
+     * mutation taking the byte path away passed the whole suite until this
+     * existed. What does not survive is the size: turning bytes into a string
+     * spreads the array as arguments, and that throws `RangeError` somewhere
+     * between 60,000 and 130,000 of them. A photograph is larger than that
+     * before it is worth putting in a document.
+     */
+    const big = new Uint8Array(200_000).fill(0x42);
+    const heavy = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      ...chunk('IHDR', [0, 0, 0, 200, 0, 0, 0, 100, 8, 2, 0, 0, 0]),
+      ...chunk('IDAT', [...big]),
+      ...chunk('IEND', []),
+    ]);
+    const out = pdfBytes(withPicture, () => ({ bytes: heavy }));
+    const text = new TextDecoder('latin1').decode(out);
+    expect(text).toContain(`/Length ${big.length}`);
+    const from = text.indexOf('stream\n', text.indexOf('/Subtype /Image')) + 'stream\n'.length;
+    expect(out.subarray(from, from + big.length)).toEqual(big);
+  });
+
+  it('encodes one picture once however many times it is placed', () => {
+    const twice = doc([
+      { kind: 'image', fileId: 'pic', name: 'a.png', alt: 'A', caption: '' },
+      { kind: 'image', fileId: 'pic', name: 'a.png', alt: 'A', caption: '' },
+    ]);
+    const text = new TextDecoder('latin1').decode(pdfBytes(twice, held));
+    expect(text.split('/Subtype /Image').length - 1).toBe(1);
+    expect(text.split('/Im1 Do').length - 1).toBe(2);
+  });
+
+  it('prints the alt text when nobody handed in the bytes', () => {
+    // Laying out is a pure function of the document, so a caller that did not
+    // fetch gets what this always drew rather than a gap.
+    const { pages } = laid(withPicture);
+    expect(pages[0].drawings.some((d) => d.at === 'picture')).toBe(false);
+    const words = pages[0].drawings
+      .filter((d) => d.at === 'text')
+      .flatMap((d) => (d.at === 'text' ? d.pieces.map((p) => p.text) : []))
+      .join(' ');
+    expect(words).toContain('[A chart]');
+  });
+
+  it('prints the alt text when the format is one it will not encode', () => {
+    const alpha = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      ...chunk('IHDR', [0, 0, 0, 8, 0, 0, 0, 8, 8, 6, 0, 0, 0]),
+      ...chunk('IDAT', IDAT),
+      ...chunk('IEND', []),
+    ]);
+    const { pages } = laid(withPicture, () => ({ bytes: alpha }));
+    expect(pages[0].drawings.some((d) => d.at === 'picture')).toBe(false);
+    const words = pages[0].drawings
+      .filter((d) => d.at === 'text')
+      .flatMap((d) => (d.at === 'text' ? d.pieces.map((p) => p.text) : []))
+      .join(' ');
+    expect(words).toContain('[A chart]');
+  });
+});

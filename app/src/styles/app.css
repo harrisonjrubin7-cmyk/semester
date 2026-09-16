@@ -4480,6 +4480,22 @@ section[data-drop] > .grip + * {
   text-align: center;
 }
 
+/*
+ * A picture on the page, kept inside the column.
+ *
+ * `auto` margins rather than a text-align on the figure, because the caption
+ * under it is a paragraph and should stay where the rest of the prose is.
+ * The cap on the height is what stops one photograph from a phone being the
+ * whole page: `lib/docx.ts` and `lib/pdfout.ts` each bound a picture for the
+ * same reason, in their own units.
+ */
+.docpaper-picture {
+  display: block;
+  max-width: 100%;
+  max-height: 22em;
+  margin: 0 auto;
+}
+
 .docpaper-cap {
   margin-top: 0.3em;
   font-size: calc(var(--doc-size) * 0.85);

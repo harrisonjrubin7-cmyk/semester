@@ -44,7 +44,7 @@
  * survive into the PDF. The comparison is right to say so, every time.
  */
 
-import { blankDoc, runs, type Block, type Doc } from './document';
+import { blankDoc, figureTable, runs, type Block, type Doc } from './document';
 import { parts, type Picture } from './docx';
 import { parse, plain } from './maths';
 import { asPdf } from './pdf';
@@ -119,6 +119,20 @@ export function wanted(block: Block): Wanted {
       return { text: block.items.map((i) => words(i.text)), things: [] };
     case 'image':
       return { text: [words(block.caption)], things: block.fileId ? ['picture'] : [] };
+    /*
+     * A figure's title and caption, plus what it is made of — the table for
+     * the two data arms, a picture for the third. Written from the block the
+     * same way everything else here is, so neither exporter gets to define
+     * what a figure in a document means.
+     */
+    case 'figure': {
+      const figure = block.figure;
+      const made = figureTable(figure);
+      return {
+        text: [figure.title, figure.caption, ...(made?.rows.flat() ?? [])].map(words),
+        things: made ? ['table'] : figure.type === 'image' && figure.fileId ? ['picture'] : [],
+      };
+    }
     case 'toc':
       return { text: [words(block.title)], things: [] };
     default:
@@ -214,8 +228,11 @@ export function inDocx(doc: Doc, found?: (id: string) => Picture | undefined): {
  * announces itself as an equation, and a check that looked for one would be
  * asking the format for something it does not have.
  */
-export function inPdf(doc: Doc): { text: string; pages: Page[]; count: (thing: Thing) => number } {
-  const { pages } = laid(doc);
+export function inPdf(
+  doc: Doc,
+  pictures?: (id: string) => { bytes: Uint8Array } | undefined,
+): { text: string; pages: Page[]; count: (thing: Thing) => number } {
+  const { pages } = laid(doc, pictures);
   const text = pages.map(pageText).join(' ');
   const drawings = pages.flatMap((p) => p.drawings);
   return {
@@ -223,15 +240,7 @@ export function inPdf(doc: Doc): { text: string; pages: Page[]; count: (thing: T
     pages,
     count: (thing) => {
       if (thing === 'table') return drawings.filter((d) => d.at === 'box').length ? 1 : 0;
-      /*
-       * Always none, and that is a statement about the PDF writer rather than
-       * about this file. `lib/docx.ts` embeds the real picture; `lib/pdfout.ts`
-       * draws `[Alt text]` in italics where one should be, so a document with a
-       * picture in it genuinely does export as two different documents. It is
-       * the one finding of this comparison still open — the `Drawing` union has
-       * no picture to count, which is exactly why.
-       */
-      if (thing === 'picture') return 0;
+      if (thing === 'picture') return drawings.filter((d) => d.at === 'picture').length;
       /*
        * Through `asPdf`, and this is the one obligation that goes through it.
        * The question here is whether the notation reached the file at all, and
@@ -260,7 +269,7 @@ export function compare(doc: Doc, found?: (id: string) => Picture | undefined): 
   const out: Missing[] = [];
   const sides: [Side, { text: string; count: (thing: Thing) => number }][] = [
     ['docx', inDocx(doc, found)],
-    ['pdf', inPdf(doc)],
+    ['pdf', inPdf(doc, found)],
   ];
 
   for (const [side, carried] of sides) {

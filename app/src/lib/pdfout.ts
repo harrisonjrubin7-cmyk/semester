@@ -24,15 +24,20 @@
  * sits over a sum. What comes out is `lib/maths.ts`'s Unicode rendering of the
  * same notation — `(a+b)/(c²)`, not `\\frac{a+b}{c^2}`. That is a reading of
  * the formula rather than a picture of it, and it is what the `.docx` beside
- * it has always had in its own way. A picture does not come at all:
- * its bytes are in IndexedDB and this is a pure function of the document, the
- * same split `parts()` keeps in `lib/docx.ts`. Its caption still prints, so a
- * figure is visibly not here rather than silently missing. Notes in the
- * margin never print, which is the rule `Paper` already keeps.
+ * it has always had in its own way.
+ *
+ * A picture does come, and did not until `lib/exportqa.ts` pointed out that
+ * the `.docx` of the same document had one. Its bytes are in IndexedDB and
+ * this is a pure function of the document, so they are handed in — the same
+ * split `parts()` keeps in `lib/docx.ts` — and `lib/pdfimage.ts` turns them
+ * into a stream without decoding anything. Where they are not handed in, or
+ * where that file refuses the format, the alt text prints as before: visibly
+ * not here rather than silently missing. Notes in the margin never print,
+ * which is the rule `Paper` already keeps.
  */
 
 import { layoutOf, type Layout } from './doclayout';
-import { listed, type Block, type Doc } from './document';
+import { figureTable, listed, type Block, type Doc } from './document';
 import { parse, plain } from './maths';
 import {
   PER_INCH,
@@ -46,13 +51,38 @@ import {
   type Piece,
   type Placed,
 } from './pdf';
+import { encode, type Encoded } from './pdfimage';
 import { PS_NAME, type StandardFont } from './pdfwidths.data';
 
 /** One thing drawn on a page, in PDF coordinates — y counts up from the foot. */
 export type Drawing =
   | { at: 'text'; x: number; y: number; pieces: Piece[]; extra: number }
   | { at: 'rule'; x: number; y: number; width: number; weight: number }
-  | { at: 'box'; x: number; y: number; width: number; height: number };
+  | { at: 'box'; x: number; y: number; width: number; height: number }
+  /** A picture, by the file id the document names it with. */
+  | { at: 'picture'; x: number; y: number; width: number; height: number; id: string };
+
+/**
+ * A picture's bytes, looked up by the id the block carries.
+ *
+ * The same shape `lib/docx.ts` takes, and for the same reason: a picture lives
+ * in IndexedDB, and laying a document out is a pure function of the document.
+ * Whoever is exporting fetches the bytes first and hands them in — or does
+ * not, and the picture prints as its alt text, exactly as it always did.
+ */
+export type Pictures = (fileId: string) => { bytes: Uint8Array } | undefined;
+
+/**
+ * How wide a picture may be drawn, as a share of the text column.
+ *
+ * The whole column, and no wider: `lib/docx.ts` makes the same choice in
+ * inches for the same reason — a picture that overruns the margin is drawn
+ * exactly as told, off the edge of the paper.
+ */
+const PICTURE_WIDTH = 1;
+
+/** And no taller than this much of the page, so one never needs two. */
+const PICTURE_HEIGHT = 0.8;
 
 export interface Link {
   x: number;
@@ -410,7 +440,7 @@ function table(pen: Pen, base: { font: string; size: number }, block: Extract<Bl
   pen.gap(pen.layout.size * 0.4);
 }
 
-function block(pen: Pen, base: { font: string; size: number }, b: Block) {
+function block(pen: Pen, base: { font: string; size: number }, b: Block, pictures?: Pictures) {
   const { layout } = pen;
   switch (b.kind) {
     case 'heading': {
@@ -514,7 +544,52 @@ function block(pen: Pen, base: { font: string; size: number }, b: Block) {
       pen.gap(layout.size * 0.4);
       return;
     }
+    /*
+     * A picture, drawn where one was added.
+     *
+     * This printed `[Alt text]` in italics and nothing else, while
+     * `lib/docx.ts` embedded the real thing — the fifth and last of the
+     * differences `lib/exportqa.ts` found between the two exports of one
+     * document, and the reason a figure was in the Word file and not in the
+     * PDF that went to the portal.
+     *
+     * The italic line is still here and is still the right answer twice over:
+     * when the caller handed in no bytes (laying out is a pure function of the
+     * document, so somebody has to fetch them), and when `lib/pdfimage.ts`
+     * refuses the format — a PNG with an alpha channel, most often. Visibly
+     * not here beats silently wrong.
+     */
     case 'image': {
+      const held = b.fileId ? pictures?.(b.fileId) : undefined;
+      const picture = held ? encode(held.bytes) : null;
+      if (picture) {
+        const wide = Math.min(
+          pen.frame.column * PICTURE_WIDTH,
+          (picture.width * PER_INCH) / 96,
+        );
+        const room = (pen.frame.height - pen.frame.margin * 2) * PICTURE_HEIGHT;
+        const scale = Math.min(wide / picture.width, room / picture.height);
+        const width = picture.width * scale;
+        const height = picture.height * scale;
+        pen.gap(layout.size * 0.3);
+        const top = pen.spend(height);
+        pen.draw({
+          at: 'picture',
+          x: pen.frame.margin + (pen.frame.column - width) / 2,
+          y: top - height,
+          width,
+          height,
+          id: b.fileId,
+        });
+        if (b.caption.trim()) {
+          paragraph(pen, base, piecesOf(b.caption, { ...base, size: layout.size * 0.9 }), {
+            align: 'center',
+            italic: true,
+          });
+        }
+        pen.gap(layout.size * 0.3);
+        return;
+      }
       const said = `[${b.alt.trim() || 'Picture'}]${b.caption.trim() ? ` ${b.caption}` : ''}`;
       paragraph(pen, base, piecesOf(said, { ...base, size: layout.size * 0.9 }), {
         align: 'center',
@@ -547,7 +622,46 @@ function block(pen: Pen, base: { font: string; size: number }, b: Block) {
     case 'break':
       if (pen.drawn()) pen.turn();
       return;
+    /*
+     * One of the app's own figures.
+     *
+     * Through `figureTable` and then through the same `table` above, which is
+     * how a figure long enough to cross a page gets the repeated header row
+     * without this writing it a second time — and, more to the point, how
+     * this and `lib/docx.ts` are stopped from drifting apart on a figure the
+     * way they had on an equation. Both call the one reduction.
+     */
+    case 'figure': {
+      const figure = b.figure;
+      const small = { ...base, size: layout.size * 0.9 };
+      if (figure.title.trim()) {
+        paragraph(pen, base, piecesOf(figure.title, small), { align: 'center', italic: true });
+      }
+      if (figure.type === 'image') {
+        block(pen, base, { kind: 'image', fileId: figure.fileId, name: figure.title, alt: figure.title, caption: '' }, pictures);
+      } else {
+        const made = figureTable(figure);
+        if (made) table(pen, base, { kind: 'table', rows: made.rows, header: true, caption: '' });
+      }
+      if (figure.caption.trim()) {
+        paragraph(pen, base, piecesOf(figure.caption, small), { align: 'center', italic: true });
+      }
+      pen.gap(layout.size * 0.3);
+      return;
+    }
   }
+  /*
+   * Every kind, asserted rather than assumed.
+   *
+   * This function returns nothing, so a kind with no case above falls out of
+   * the switch and draws *nothing at all* — in a file whose whole job is to
+   * be what the document says. `lib/docx.ts` and `lib/find.ts` both fail the
+   * typecheck on a new kind because both return a value; this one could not,
+   * and the `figure` block was added to all three at once only because the
+   * other two complained.
+   */
+  const missed: never = b;
+  void missed;
 }
 
 /**
@@ -556,7 +670,7 @@ function block(pen: Pen, base: { font: string; size: number }, b: Block) {
  * Exported so the tests can ask where things landed rather than re-parsing a
  * PDF with a parser they would then be trusting instead of the writer.
  */
-export function laid(doc: Doc): { pages: Page[]; frame: Frame; layout: Layout } {
+export function laid(doc: Doc, pictures?: Pictures): { pages: Page[]; frame: Frame; layout: Layout } {
   const layout = layoutOf(doc);
   const pen = new Pen(layout);
   const base = { font: layout.font, size: layout.size };
@@ -579,7 +693,7 @@ export function laid(doc: Doc): { pages: Page[]; frame: Frame; layout: Layout } 
   }
   if (layout.titlePage && doc.title.trim() && pen.drawn()) pen.turn();
 
-  for (const b of doc.blocks) block(pen, base, b);
+  for (const b of doc.blocks) block(pen, base, b, pictures);
 
   const pages = pen.finish();
   runningHead(pages, pen.frame, layout);
@@ -625,9 +739,24 @@ function round(n: number): string {
 }
 
 /** One page's drawing operators. */
-function stream(page: Page, fonts: Map<StandardFont, string>): string {
+function stream(page: Page, fonts: Map<StandardFont, string>, images: Map<string, string>): string {
   const out: string[] = [];
   for (const drawing of page.drawings) {
+    if (drawing.at === 'picture') {
+      const name = images.get(drawing.id);
+      if (!name) continue;
+      /*
+       * A PDF image is always drawn into the unit square, so the matrix is the
+       * size: `w 0 0 h x y cm` scales it and moves its bottom-left corner
+       * there. `q`/`Q` are there because that matrix would otherwise stay in
+       * force for everything drawn after it on this page.
+       */
+      out.push(
+        `q ${round(drawing.width)} 0 0 ${round(drawing.height)} ` +
+          `${round(drawing.x)} ${round(drawing.y)} cm /${name} Do Q`,
+      );
+      continue;
+    }
     if (drawing.at === 'rule') {
       out.push(
         `${round(drawing.weight)} w ${round(drawing.x)} ${round(drawing.y)} m ` +
@@ -677,8 +806,25 @@ function stream(page: Page, fonts: Map<StandardFont, string>): string {
  * accents took, and a reader rejects the file rather than showing it slightly
  * out of place.
  */
-export function pdfBytes(doc: Doc): Uint8Array {
-  const { pages, frame } = laid(doc);
+export function pdfBytes(doc: Doc, pictures?: Pictures): Uint8Array {
+  const { pages, frame } = laid(doc, pictures);
+
+  /*
+   * Every picture on the pages, encoded once each.
+   *
+   * Once, not once per use: the same figure placed twice is one stream with
+   * two references to it, which is what a PDF's resource dictionary is for and
+   * the difference between a file and twice a file.
+   */
+  const drawn = new Map<string, Encoded>();
+  for (const page of pages) {
+    for (const drawing of page.drawings) {
+      if (drawing.at !== 'picture' || drawn.has(drawing.id)) continue;
+      const held = pictures?.(drawing.id);
+      const encoded = held ? encode(held.bytes) : null;
+      if (encoded) drawn.set(drawing.id, encoded);
+    }
+  }
 
   const used = new Map<StandardFont, string>();
   for (const page of pages) {
@@ -691,8 +837,26 @@ export function pdfBytes(doc: Doc): Uint8Array {
   }
   if (used.size === 0) used.set('timesRoman', 'F1');
 
-  const objects: string[] = [];
-  const add = (body: string) => {
+  /*
+   * An object is markup, or markup wrapped round bytes.
+   *
+   * Every other object in this file is a string, written out as Latin-1, and
+   * the first version of this said an image stream had to be kept apart
+   * because that encoder would mangle it. It would not: `bytes` is
+   * `charCodeAt & 0xff` and `String.fromCharCode` is its inverse for every
+   * value a byte can hold, so the two routes agree exactly — which a mutation
+   * reverting this proved by passing every test in the suite.
+   *
+   * The real reason is size. Turning bytes into a string means spreading the
+   * array as arguments, and measured here that throws
+   * `RangeError: Maximum call stack size exceeded` somewhere between 60,000
+   * and 130,000 of them. A picture is bigger than that before it is worth
+   * putting in a document, so the string route is not a slower way to write a
+   * PDF with a photograph in it; it is no way to write one.
+   */
+  type Object_ = string | { head: string; data: Uint8Array; tail: string };
+  const objects: Object_[] = [];
+  const add = (body: Object_) => {
     objects.push(body);
     return objects.length;
   };
@@ -710,9 +874,27 @@ export function pdfBytes(doc: Doc): Uint8Array {
     );
   }
 
+  const imageNames = new Map<string, string>();
+  const imageIds = new Map<string, number>();
+  for (const [id, picture] of drawn) {
+    const name = `Im${imageNames.size + 1}`;
+    imageNames.set(id, name);
+    imageIds.set(
+      id,
+      add({
+        head:
+          `<< /Type /XObject /Subtype /Image /Width ${picture.width} /Height ${picture.height} ` +
+          `/ColorSpace ${picture.space} /BitsPerComponent 8 ${picture.filter} ` +
+          `/Length ${picture.data.length} >>\nstream\n`,
+        data: picture.data,
+        tail: '\nendstream',
+      }),
+    );
+  }
+
   const pageIds: number[] = [];
   for (const page of pages) {
-    const body = stream(page, used);
+    const body = stream(page, used, imageNames);
     const contents = add(`<< /Length ${body.length} >>\nstream\n${body}\nendstream`);
     const annots = page.links.length
       ? ` /Annots [ ${page.links
@@ -729,7 +911,13 @@ export function pdfBytes(doc: Doc): Uint8Array {
         `<< /Type /Page /Parent ${TREE} 0 R /MediaBox [0 0 ${round(frame.width)} ${round(frame.height)}] ` +
           `/Resources << /Font << ${[...used]
             .map(([font, name]) => `/${name} ${fontIds.get(font)} 0 R`)
-            .join(' ')} >> >> /Contents ${contents} 0 R${annots} >>`,
+            .join(' ')} >>${
+            imageNames.size
+              ? ` /XObject << ${[...imageNames]
+                  .map(([id, name]) => `/${name} ${imageIds.get(id)} 0 R`)
+                  .join(' ')} >>`
+              : ''
+          } >> /Contents ${contents} 0 R${annots} >>`,
       ),
     );
   }
@@ -752,7 +940,14 @@ export function pdfBytes(doc: Doc): Uint8Array {
   const offsets: number[] = [];
   objects.forEach((body, i) => {
     offsets.push(at);
-    push(`${i + 1} 0 obj\n${body}\nendobj\n`);
+    if (typeof body === 'string') {
+      push(`${i + 1} 0 obj\n${body}\nendobj\n`);
+      return;
+    }
+    push(`${i + 1} 0 obj\n${body.head}`);
+    parts.push(body.data);
+    at += body.data.length;
+    push(`${body.tail}\nendobj\n`);
   });
 
   const xref = at;
@@ -773,6 +968,6 @@ export function pdfBytes(doc: Doc): Uint8Array {
   return file;
 }
 
-export function pdfFile(doc: Doc): Blob {
-  return new Blob([pdfBytes(doc) as unknown as BlobPart], { type: 'application/pdf' });
+export function pdfFile(doc: Doc, pictures?: Pictures): Blob {
+  return new Blob([pdfBytes(doc, pictures) as unknown as BlobPart], { type: 'application/pdf' });
 }
