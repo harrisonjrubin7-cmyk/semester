@@ -83,6 +83,7 @@ export function CheckIt({
     setSecond('');
     trouble.clear();
     ask({
+      about: 'checking work',
       system: AI_SYSTEM,
       messages: [{ role: 'user', content: text }],
       maxTokens: 1200,

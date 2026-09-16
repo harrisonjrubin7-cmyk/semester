@@ -121,6 +121,7 @@ export function Analyse() {
 
     try {
       await ask({
+        about: 'analysis',
         signal: abort.current.signal,
         maxTokens: 1600,
         think: true,

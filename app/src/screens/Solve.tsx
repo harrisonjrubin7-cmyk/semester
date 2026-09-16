@@ -69,6 +69,7 @@ export function Solve() {
       if (shots.length === 0) return;
       abort.current = new AbortController();
       const text = await ask({
+        about: 'solving',
         signal: abort.current.signal,
         images: shots.map((sh) => sh.shot),
         think: true,
@@ -95,6 +96,7 @@ export function Solve() {
     let sofar = '';
     try {
       await ask({
+        about: 'solving',
         signal: abort.current.signal,
         maxTokens: 3000,
         think: true,

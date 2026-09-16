@@ -134,6 +134,7 @@ function Build() {
     let sofar = '';
     try {
       await ask({
+        about: 'slides',
         signal: abort.current.signal,
         maxTokens: 4000,
         think: true,

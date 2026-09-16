@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
 import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
@@ -16,8 +17,18 @@ import {
   saveSettings,
   settings,
 } from '../../lib/assistant';
-import { money, monthStart, read as readSpend, since, total, RATES_READ } from '../../lib/spend';
-import { ActionButton } from '../../components/ui';
+import {
+  UNNAMED,
+  byAsker,
+  byCourse,
+  money,
+  monthStart,
+  read as readSpend,
+  since,
+  total,
+  RATES_READ,
+} from '../../lib/spend';
+import { ActionButton, SectionLabel } from '../../components/ui';
 
 /**
  * Where the answers come from, what they cost, and what leaves the device.
@@ -71,6 +82,20 @@ export function SettingsAssistant() {
   };
   const spend = readSpend();
   const month = total(since(spend, monthStart(new Date())));
+  const courses = byCourse(spend);
+  const askers = byAsker(spend);
+  const { courseCode } = useStore();
+  /*
+   * One row of the breakdown. Written here rather than in a component because
+   * it is two spans and a gap, and `scripts/styles.mjs` counts what is worth
+   * counting — a wrapper would cost more lines than it saves.
+   */
+  const spendRow = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: 'var(--sp-3)',
+    padding: 'var(--sp-1) 0',
+  } as const;
 
   const chip = (on: boolean) => ({
     padding: '5px 11px',
@@ -304,6 +329,49 @@ export function SettingsAssistant() {
                       : ''}{' '}
                     All time: {money(total(spend).dollars)}.
                   </span>
+                </div>
+              </CustomRow>
+              {/*
+                * Where the money went, in the two ways the question gets asked.
+                *
+                * Until the recording moved inside `ask`, this whole section
+                * covered the Ask tab and nothing else — one of twenty-five
+                * places that spend. Somebody who had built three courses read
+                * a figure of a few pence and had no way to know it was the
+                * chat's figure rather than the app's.
+                *
+                * By course first, because "what did this course cost to
+                * build" is §7.2's question and the build is the large line.
+                * Then by what asked, because the two are different answers:
+                * one says which course was expensive, the other says which
+                * part of the work was.
+                */}
+              {courses.length > 0 && (
+                <CustomRow>
+                  <div style={{ fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}>
+                    <SectionLabel>By course</SectionLabel>
+                    {courses.map((row) => (
+                      <div key={row.courseId} style={spendRow}>
+                        <span>{courseCode(row.courseId) || row.courseId}</span>
+                        <span style={{ color: 'var(--app-dim)' }}>
+                          {money(row.spent.dollars)} · {row.spent.asks}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CustomRow>
+              )}
+              <CustomRow>
+                <div style={{ fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-relaxed)' }}>
+                  <SectionLabel>By what asked</SectionLabel>
+                  {askers.map((row) => (
+                    <div key={row.from} style={spendRow}>
+                      <span>{row.from === UNNAMED ? 'not said' : row.from}</span>
+                      <span style={{ color: 'var(--app-dim)' }}>
+                        {money(row.spent.dollars)} · {row.spent.asks}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </CustomRow>
             </Group>

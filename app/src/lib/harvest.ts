@@ -206,6 +206,7 @@ export async function harvest(
   const base: Omit<Where, 'page'> = { source: item.name, sourceHash: item.hash, as: kind, at };
 
   const reply = await ask({
+    about: 'reading material',
     signal,
     think: true,
     maxTokens: 6000,

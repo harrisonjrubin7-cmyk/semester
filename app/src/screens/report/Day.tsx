@@ -84,6 +84,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
     let sofar = '';
     try {
       await ask({
+        about: 'day report',
         signal: abort.current.signal,
         maxTokens: 500,
         system: `${when === 'morning' ? MORNING_SYSTEM : EVENING_SYSTEM}\n· ${nameNote(state.myName)}`,

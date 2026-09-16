@@ -221,6 +221,7 @@ export async function classify(
   signal?: AbortSignal,
 ): Promise<Verdict> {
   const reply = await ask({
+    about: 'what this is',
     signal,
     maxTokens: 700,
     system:

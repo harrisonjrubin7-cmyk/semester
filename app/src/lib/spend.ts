@@ -26,6 +26,8 @@
  * This is a small, separate, append-only thing and it lives on its own.
  */
 
+import type { CourseId } from './types';
+
 /** What one reply reported. Every field comes from the API. */
 export interface Usage {
   /** Tokens charged at the full input rate. */
@@ -88,10 +90,37 @@ export function priced(model: string): boolean {
 export interface Spent {
   at: number;
   model: string;
-  /** Which screen asked. Enough to see where the money goes, and no more. */
+  /**
+   * What asked — a screen for a screen's own question, a job for the rest.
+   *
+   * This said "which screen asked", and for as long as one place recorded
+   * anything that was the same sentence. It is not: building a course from a
+   * syllabus, checking a quote against its source and reading a syllabus for
+   * dates all spend, and none of them is a screen.
+   */
   from: string;
+  /**
+   * The course this was spent on, where it was spent on one.
+   *
+   * §7.2 of the completion plan asks for "what did this course cost to build",
+   * and this is the field that makes that a question with an answer. Absent
+   * where the spending belongs to no course — a general question in the Ask
+   * tab, a week's report across all of them.
+   */
+  courseId?: CourseId | null;
   use: Usage;
 }
+
+/**
+ * What a call that did not say what it was for is filed under.
+ *
+ * Not dropped, and not guessed at. A reply recorded under this is money that
+ * was spent and counted with nowhere to put it, which is a thing somebody can
+ * see on the meter and fix in one line — where the alternative, the one this
+ * replaced, was the call recording nothing at all and the meter reading as
+ * though the money had never been spent.
+ */
+export const UNNAMED = 'unnamed';
 
 const KEY = 'semester.spend.v1';
 
@@ -156,6 +185,69 @@ export function total(rows: Spent[]): Totals {
     if (!priced(r.model)) unpriced += 1;
   }
   return { asks: rows.length, tokens, dollars, unpriced };
+}
+
+/**
+ * File the unattributed rows since a moment against a course.
+ *
+ * Because the one call that most needs a course is the one that cannot name
+ * it: `generateCourse` sends a syllabus and learns the course's id from the
+ * code in the reply, which arrives after the money has been spent. Recording
+ * it as belonging to nothing would leave "what did this course cost to build"
+ * unanswerable for the build itself — the largest single line on the bill.
+ *
+ * So the build notes the moment it started and claims its own rows once it
+ * knows what they were for. Only rows that carry no course already: a claim
+ * that overwrote one would file somebody else's quote check under whichever
+ * course happened to be generating at the time.
+ */
+export function claimFrom(at: number, courseId: CourseId): void {
+  // A moment that is not one claims nothing. `validate` in `lib/generate.ts`
+  // defaults to zero when nothing timed the build — tests call it directly —
+  // and claiming from the epoch would sweep the whole ledger into one course.
+  if (at <= 0) return;
+  try {
+    const rows = read().map((r) => (r.at >= at && !r.courseId ? { ...r, courseId } : r));
+    localStorage.setItem(KEY, JSON.stringify(rows));
+  } catch {
+    /* A ledger that cannot be written is not worth failing a build over. */
+  }
+}
+
+/**
+ * What each course cost, for the courses anything was spent on.
+ *
+ * Sorted by spending rather than by name, because the question this answers is
+ * "where did the money go" and the answer is the top row. A reply that belongs
+ * to no course is left out rather than filed under a blank: the total is on
+ * the screen beside this, and a row labelled nothing would read as a course
+ * whose name failed to load.
+ */
+export function byCourse(rows: Spent[]): { courseId: CourseId; spent: Totals }[] {
+  const out = new Map<CourseId, Spent[]>();
+  for (const row of rows) {
+    if (!row.courseId) continue;
+    out.set(row.courseId, [...(out.get(row.courseId) ?? []), row]);
+  }
+  return [...out.entries()]
+    .map(([courseId, its]) => ({ courseId, spent: total(its) }))
+    .sort((a, b) => b.spent.dollars - a.spent.dollars || a.courseId.localeCompare(b.courseId));
+}
+
+/**
+ * What each kind of asking cost, whether or not it belongs to a course.
+ *
+ * The other half of the same question. A course's build cost says which course
+ * was expensive; this says which *part* was — and the two are different
+ * answers, because checking every generated quote against its source runs once
+ * per quote and building the guide runs once.
+ */
+export function byAsker(rows: Spent[]): { from: string; spent: Totals }[] {
+  const out = new Map<string, Spent[]>();
+  for (const row of rows) out.set(row.from, [...(out.get(row.from) ?? []), row]);
+  return [...out.entries()]
+    .map(([from, its]) => ({ from, spent: total(its) }))
+    .sort((a, b) => b.spent.dollars - a.spent.dollars || a.from.localeCompare(b.from));
 }
 
 /** Everything since a moment — this month, this week, this conversation. */

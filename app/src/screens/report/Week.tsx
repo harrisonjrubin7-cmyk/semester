@@ -117,6 +117,7 @@ export function WeekReport() {
     let sofar = '';
     try {
       await ask({
+        about: 'week report',
         signal: abort.current.signal,
         maxTokens: 700,
         system: SYSTEM,
