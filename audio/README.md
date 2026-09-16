@@ -69,6 +69,39 @@ the script. **Chapter marks come out of the render**, measured from the actual
 audio positions rather than estimated, so every seek lands on the first word of
 its section. Paste them into `app/src/data/podcast.ts`.
 
+## Rendering only what changed
+
+Both commands above speak everything they are pointed at. Measured with these
+voices, that is **26.4 minutes** for the four courses and **2 minutes 14
+seconds** to re-render econ because one card in it was corrected — of which
+12.6 seconds was the unit that changed.
+
+```bash
+cd app
+npm run audio -- --dry-run     # what is stale, and what skipping it saves
+npm run audio                  # render exactly that
+npm run audio -- econ          # one course
+npm run audio -- --adopt       # take the files already on disk as current
+```
+
+The job keys every asset — a unit's lesson, an episode — by a hash of the
+material it is spoken from *and* the source of the renderer that speaks it, and
+keeps the answers in `audio/manifest.json`, which is committed. An edited unit
+re-renders; the ten beside it do not; a changed gap constant in `synth.py`
+re-renders everything it could reach, because it changed what every one of them
+would sound like.
+
+`--adopt` is how the manifest was first filled: the forty-eight files already
+here are correct, and a cache whose first act is to re-render work that was
+already right is worse than no cache. An adopted row records what is on disk
+and **no render time**, because nobody timed it — the cost column only ever
+holds figures this job measured itself.
+
+`app/src/lib/audiobatch.test.ts` holds the decisions and checks them against
+the real courses. It does not check that the audio is *current*: that would
+mean a synthesiser on the CI runner. Run `--dry-run` before you trust what is
+in `public/`.
+
 ## Writing a script
 
 ```json

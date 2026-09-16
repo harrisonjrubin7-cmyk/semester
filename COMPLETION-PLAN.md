@@ -171,9 +171,9 @@ CORE 2500 — 44 units between them).
 | Cram | Units | Every unit | Every unit | **Live** |
 | Slides | Units and cards | Every unit, 6 slide kinds | Every unit, 6 slide kinds | **Partial — engine** |
 | Figures | Figure assets | 4 shapes, 17 named diagrams | None | **Partial — both** |
-| Cases | Worked examples and pairings | 32 examples, 8 pairings | None | **Partial — both** |
+| Cases | Worked examples and pairings | 32 examples, 7 pairings | None | **Partial — both** |
 | Watch | Narrated lesson per unit | 44 lessons over 44 units | None | **Partial — content** |
-| Listen | Podcast editions | 8 editions, all chaptered | None | **Partial — content** |
+| Listen | Podcast editions | 8 editions, all chaptered | None | **Live — engine** (content per course) |
 
 Read the last two rows carefully, because they are the ones the draft got
 backwards. Watch is not "a limited set of concepts": it is 13 lessons for BUS's
@@ -469,7 +469,7 @@ three courses that have none.
 
 **Sequencing: Phase 2, engine done.**
 
-### 3.5 · Listen — Partial (content)
+### 3.5 · Listen — Live (engine)
 
 **Current state.** Eight podcast editions ship across four courses — bus 1, core
 2, econ 2, psci 3 — and **every one carries a `chapters` block**. The chapter
@@ -483,10 +483,12 @@ text alternative an audio-only mode needs to be usable at all.
 course gets no audio. The draft's "complete chapter-mark indexing across all
 content" is already true of all content that exists.
 
-The second half of the draft's ask is real and unaddressed: there is no
-cost-aware pre-generation. Today's eight editions were rendered once, by hand, by
-a person running a script. Nothing decides *when* audio for a new course gets
-built, or caches it so it is built once per topic rather than per listen.
+The second half of the draft's ask was real and is now answered: there was no
+cost-aware pre-generation. The eight editions and forty-four lessons were
+rendered once, by hand, by a person running a script, and nothing recorded what
+had been made from what — so a corrected card meant re-speaking the course it
+was in. `npm run audio` is the other arrangement; the figures and what the
+job refuses to claim are under Phase 2 below.
 
 **Technical approach.** Two pieces, and they split cleanly across phases.
 
@@ -496,12 +498,49 @@ script per topic and therefore a transcript per topic. A script with no audio is
 already useful: it is readable, searchable and accessible, and it is what the
 audio is rendered from later.
 
-*Phase 2 — the batch pipeline.* A pre-generation and caching job: audio built
-once per topic, keyed by the topic's content hash so an edited unit re-renders
-and an untouched one does not, with chapter-mark metadata written as part of the
-same job rather than as a second pass. Cost is the reason this is a job and not a
-button — see [§7](#7-phase-3--depth-and-scale) for the figures that decide its
-budget.
+*Phase 2 — the batch pipeline.* **Done** — `app/scripts/audio.ts`, deciding with
+`app/scripts/audiocache.ts`, `npm run audio`. A pre-generation and caching job:
+audio built once per topic, keyed by the topic's content hash so an edited unit
+re-renders and an untouched one does not.
+
+**The figures, measured on one machine with the shipped Piper voices.** 53.1 ms
+of wall clock per spoken word, 0.174× realtime. The four courses from nothing:
+**26.4 minutes** — bus 6.8, core 5.6, econ 5.8, psci 8.1. One card in econ
+corrected, the way the repository did it before this: **2 minutes 14 seconds**,
+because `lessons.py econ` speaks all eleven units to fix one. The same
+correction through the job: **12.6 seconds**. That ratio is the whole of the
+item.
+
+**Two things the plan asked for turned out already to be true**, and the third
+was not what it looked like:
+
+* *"chapter-mark metadata written as part of the same job rather than as a
+  second pass"* — `audio/synth.py` has always written `*.chapters.json` from the
+  real audio positions in the render that produced them. `pipeline/chapters.py`
+  is the recovery path for a recording that arrived without marks, not a second
+  pass over one this repository made. Nothing needed changing.
+* *"built once per topic"* — `pipeline/lessons.py --unit N` already rendered one
+  unit. What was missing was never the granularity; it was any record of what
+  had been rendered from what, so the only safe answer was always "all of it".
+* The key had to cover **the renderer as well as the material**. Hashing the
+  words alone is the version that looks right: change a gap constant or teach
+  `speakable` a new symbol and every hash still matches while every file on disk
+  is something the renderer would no longer produce. So the key is taken over
+  the material and the renderers' own source together, per kind — a lesson rule
+  cannot stale the four episodes, which would cost eighty minutes to no purpose.
+
+**Four editions are outside it and the job says so.** `core-full`,
+`econ-guide`, `psci-condensed` and `psci-full` are the older single-narrator
+recordings; they have no script in this repository, nothing can rebuild them,
+and nothing can say what they were made from. They get no manifest row, because
+a row is a claim to know. Every run names them.
+
+**What it does not do.** There is no `--check` in CI and the suite does not fail
+when audio is stale — that would mean a synthesiser and two voice models on the
+runner. `app/src/lib/audiobatch.test.ts` holds the shape instead: every asset
+the repository wants has a row and a file, and the units are numbered the way
+the renderer numbers them, which is the part a machine with no voices can still
+be sure of.
 
 **Dependencies.** The custom audio engine (`audio/synth.py`, Live) and
 `pipeline/make-script.mjs` (Live).
@@ -509,11 +548,20 @@ budget.
 **Estimated effort.** Low-medium for scripting; medium for the batch pipeline.
 
 **Done when.** Every topic of a generated course has a script and a transcript
-(Phase 1); audio for a topic is rendered at most once per content hash, with
-chapter marks, and the job's cost per course is measured and recorded (Phase 2).
+(Phase 1, done); audio for a topic is rendered at most once per content hash,
+with chapter marks, and the job's cost per course is measured and recorded
+(Phase 2, done — `audio/manifest.json`).
+
+One honest qualification on "measured": the forty-eight rows committed there are
+**adopted**, not timed. They record audio a person rendered before the job
+existed, they carry `ms: 0`, and the cost report counts none of them — because
+the alternative, filling the column in from the rate above, would put an
+estimate in the one column whose point is that it is not one. The figures in
+this section were measured; the manifest will hold its own the first time
+somebody renders through it.
 
 **Sequencing: Phase 1 for scripting and coverage; cost-optimised batch pipeline
-in Phase 2.**
+in Phase 2. Both done.**
 
 ---
 
@@ -1041,7 +1089,7 @@ Verification is not part of the pilot ([§8](#8-what-this-plan-does-not-cover)).
 | --- | --- | --- | --- |
 | 9 | ~~**Watch** — on-device narration over Figures assets (§3.3)~~ **Done** | Medium | Figures, Listen scripting |
 | 10 | ~~**Cases** — worked-problem / case-study union, grounding check (§3.4)~~ **Engine done** | Medium | Verified course model, `lib/cite.ts` |
-| 11 | **Listen · batch** — content-hash pre-generation and caching (§3.5) | Medium | Listen scripting |
+| 11 | ~~**Listen · batch** — content-hash pre-generation and caching (§3.5)~~ **Done** | Medium | Listen scripting |
 | 12 | **Spreadsheet** — the spill model, then the array functions (§5.2) | Medium-high | Nothing |
 
 **Phase 2 exit criteria.** Every one of the eleven study modes is Live by the
