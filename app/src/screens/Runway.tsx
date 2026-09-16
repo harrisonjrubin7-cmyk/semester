@@ -11,7 +11,19 @@ import { PrintButton } from '../components/PrintButton';
 import { datedItems } from '../lib/select';
 import { cardKey } from '../lib/review';
 import { forCourse } from '../lib/sitting';
-import { coverage, coverageLine, worthSaying } from '../lib/covers';
+import {
+  coverage,
+  coverageLine,
+  readProposal,
+  scopePrompt,
+  worthSaying,
+  type Proposal,
+} from '../lib/covers';
+import { ask } from '../lib/claude';
+import { configured } from '../lib/assistant';
+import { ActionButton } from '../components/ui';
+import { Trouble } from '../components/Trouble';
+import { useTrouble } from '../lib/trouble';
 import { CAMPUS_LINKS } from '../data/campus';
 import { longLabel } from '../lib/date';
 import {
@@ -49,6 +61,18 @@ export function Runway() {
   const items = useMemo(() => datedItems(catalog, now), [catalog, now]);
   const exams = useMemo(() => examsAhead(items, state.done), [items, state.done]);
   const [pick, setPick] = useState(0);
+  /**
+   * A reading of the deadline's own words, offered and not applied.
+   *
+   * Held here, in the screen, rather than in the store — which is the point
+   * rather than a convenience. A proposal that survived a reload would be a
+   * proposal that starts to look like a setting; this one exists between the
+   * tap that asked for it and the tap that accepts it, and accepting writes
+   * the student's box. Nothing else in the app ever sees it.
+   */
+  const [proposed, setProposed] = useState<Proposal | null>(null);
+  const [reading, setReading] = useState(false);
+  const scopeTrouble = useTrouble();
   const exam = exams[Math.min(pick, Math.max(0, exams.length - 1))];
 
   const { guide } = useLive(exam?.c ?? state.guideId);
@@ -72,6 +96,51 @@ export function Runway() {
         : null,
     [exam, guide, state.examCovers],
   );
+
+  /** The deadline's own words, which is all the reading below ever sees. */
+  const said = exam ? [exam.title, exam.detail ?? '', exam.quote ?? ''].filter(Boolean).join(' · ') : '';
+
+  /**
+   * Ask what the line says, when nothing here could read it.
+   *
+   * Offered only where `coverage` fell through to the whole course: the two
+   * parsers in `lib/covers.ts` are narrow on purpose, and where one of them
+   * did fire it has already answered better than a model can, from words a
+   * person can check at a glance. This is for the sentence that says the scope
+   * in prose — "everything up to and including the Fisher paper" — which
+   * matches no span and is exactly what a reader is for.
+   */
+  const readScope = async () => {
+    if (reading || !exam || !said) return;
+    setReading(true);
+    setProposed(null);
+    scopeTrouble.clear();
+    let sofar = '';
+    try {
+      await ask({
+        maxTokens: 400,
+        system: scopePrompt(guide.units),
+        messages: [{ role: 'user', content: said }],
+        onText: (chunk) => {
+          sofar += chunk;
+        },
+      });
+      let parsed: unknown = null;
+      try {
+        // The JSON out of the prose, because a model asked for JSON alone
+        // returns it wrapped often enough to be worth surviving.
+        const m = /\{[\s\S]*\}/.exec(sofar);
+        parsed = m ? JSON.parse(m[0]) : null;
+      } catch {
+        parsed = null;
+      }
+      setProposed(readProposal(parsed, guide.units, said));
+    } catch (e) {
+      scopeTrouble.failed(e, () => void readScope());
+    } finally {
+      setReading(false);
+    }
+  };
 
   // What has been done to each unit, as counts rather than as a percentage.
   const units: UnitState[] = useMemo(() => {
@@ -314,6 +383,87 @@ export function Runway() {
             aria-label={`What ${exam.title} covers`}
             style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'var(--type-base)' }}
           />
+
+          {/*
+            The reader, offered only where nothing could be read.
+
+            `covers.source` is 'whole' exactly when both parsers declined and
+            the box is empty, which is the one case a sentence in prose is
+            going unread. Where the syllabus stated a span, or where the
+            student has typed one, there is nothing here to improve on and a
+            button offering to re-read it would invite somebody to replace a
+            fact with a guess.
+          */}
+          {covers.source === 'whole' && said && configured() ? (
+            <div style={{ marginTop: 'var(--sp-5)' }}>
+              {!proposed ? (
+                <ActionButton onClick={() => void readScope()} disabled={reading}>
+                  {reading ? 'Reading the line…' : 'Read what the syllabus says'}
+                </ActionButton>
+              ) : null}
+
+              <Trouble said={scopeTrouble.said} onRetry={scopeTrouble.again} />
+
+              {proposed ? (
+                <Blueprint plain style={{ padding: 'var(--sp-6)', marginTop: 'var(--sp-4)' }}>
+                  <div className="kicker">Read from the deadline, not decided</div>
+                  <div
+                    style={{
+                      fontSize: 'var(--type-md)',
+                      lineHeight: 'var(--leading-tight)',
+                      marginTop: 'var(--sp-3)',
+                    }}
+                  >
+                    {proposed.units.length} of {guide.units.length} units — {proposed.text}.
+                  </div>
+                  {/*
+                    The sentence it read, shown. `readProposal` has already
+                    checked that these words are in the deadline, so this is
+                    the evidence rather than a summary of it — and it is what
+                    makes confirming a decision rather than a leap of faith.
+                  */}
+                  <div
+                    style={{
+                      fontSize: 'var(--type-sm)',
+                      color: 'var(--app-dim)',
+                      lineHeight: 'var(--leading-relaxed)',
+                      marginTop: 'var(--sp-4)',
+                      paddingLeft: 'var(--sp-5)',
+                      borderLeft: '1px solid var(--app-line)',
+                      textWrap: 'pretty',
+                    }}
+                  >
+                    “{proposed.because}”
+                  </div>
+                  <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+                    <ActionButton
+                      tone="primary"
+                      onClick={() => {
+                        /*
+                         * Confirming writes the box, and nothing else.
+                         *
+                         * From here it is `yours` — the source that already
+                         * means "you said so" — so the count changes because a
+                         * person said it does, through the same path as
+                         * anything they typed themselves, and is editable and
+                         * clearable in the same place. No fourth source, and
+                         * the app still never infers what an exam covers.
+                         */
+                        dispatch({ type: 'setExamCovers', id: exam.id, text: proposed.text });
+                        setProposed(null);
+                      }}
+                      style={{ flex: 1 }}
+                    >
+                      Use {proposed.text}
+                    </ActionButton>
+                    <ActionButton onClick={() => setProposed(null)} style={{ flex: 1 }}>
+                      No
+                    </ActionButton>
+                  </div>
+                </Blueprint>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
       {r.units.length === 0 ? (

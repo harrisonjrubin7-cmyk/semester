@@ -204,3 +204,119 @@ export function coverageLine(c: Coverage, total: number): string {
 export function worthSaying(total: number): boolean {
   return total > 1;
 }
+
+/**
+ * The fourth source, and the weakest: a reading of the line, offered.
+ *
+ * `readSpan` above is deliberately narrow — it wants the word and the numbers
+ * together, and refuses a bare range, because a parser that fires on "worth 25
+ * to 30%" narrows an exam to two units and is believed. The cost of that
+ * narrowness is the case it cannot take: a syllabus that describes the scope
+ * in a sentence rather than a span. *"Everything up to and including the
+ * Fisher paper"* says exactly what is on the paper and matches nothing here,
+ * so the runway falls through to the whole course.
+ *
+ * A model can read that sentence. What it must not do is decide with it.
+ *
+ * ## It proposes; the student disposes
+ *
+ * Nothing below is a source. {@link coverage} takes the same three it always
+ * did, and a proposal changes no count on any screen until a person presses
+ * the button that writes it into the box they could have typed it into
+ * themselves — at which point it is `yours`, which is the source that already
+ * means "you said so". That is the whole design, and it is why the refusal
+ * this file opens with survives intact: the app still never infers what an
+ * exam covers. It offers a reading, says where the reading came from, and
+ * waits.
+ *
+ * ## The quote is checked, not trusted
+ *
+ * The reply carries the sentence it read the span out of, and
+ * {@link readProposal} verifies that sentence is *in* the words it was given
+ * before the proposal is shown. A model that paraphrases, or that supplies a
+ * plausible line the syllabus never contained, produces no proposal rather
+ * than an unverifiable one — the same rule `lib/cite.ts` applies to every
+ * quote this app generates, for the same reason: a fabricated sentence about
+ * what is on the exam is worse than no sentence.
+ */
+export function scopePrompt(units: { name: string }[]): string {
+  const numbered = units
+    .map((u) => u.name)
+    .slice(0, 40)
+    .join('\n  ');
+  return `A university syllabus says something about what one exam covers. Read it and say which \
+of the course's units are on the paper.
+
+The units, in order:
+  ${numbered}
+
+Answer with JSON and nothing else:
+
+  {"from": 1, "to": 8, "because": "the sentence you read it out of, word for word"}
+
+Rules:
+· "because" must be a sentence copied **exactly** from the text you were given. Not a paraphrase, \
+not a summary, not a sentence you composed. It is checked against the source, and a proposal whose \
+quote is not found is discarded.
+· "from" and "to" are unit numbers as the list above numbers them.
+· If the text does not actually say what the exam covers, answer {"from": null}. That is the \
+common case and it is the right answer — a guess here sends somebody to revise the wrong material \
+in the week before an exam.
+· Do not infer a split from how many exams there are, or from where the exam falls in the term.`;
+}
+
+export interface Proposal {
+  span: Span;
+  /** Indices into the guide's units, as {@link unitsIn} reads them. */
+  units: number[];
+  /** The sentence it was read out of, verified to be in the source. */
+  because: string;
+  /** What pressing "use this" would put in the box — the student's own words. */
+  text: string;
+}
+
+/**
+ * A proposal out of a reply, or null.
+ *
+ * Null is the ordinary outcome twice over: most deadlines say nothing about
+ * scope, and a reply that answers anyway has to survive three checks — the
+ * numbers must be numbers, the span must select at least one unit the guide
+ * actually has, and the quote must be findable in the words that were read.
+ */
+export function readProposal(
+  raw: unknown,
+  units: { name: string }[],
+  source: string,
+): Proposal | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as { from?: unknown; to?: unknown; because?: unknown };
+
+  const from = typeof r.from === 'number' && Number.isInteger(r.from) ? r.from : null;
+  if (from === null || from < 1 || from > 99) return null;
+  const to = typeof r.to === 'number' && Number.isInteger(r.to) ? r.to : from;
+  if (to < 1 || to > 99) return null;
+
+  const span: Span = from <= to ? { from, to } : { from: to, to: from };
+  const picked = unitsIn(units, span);
+  // A span that selects nothing is a span about a course this is not — the
+  // same reason `coverage` falls back to the whole course rather than to an
+  // empty one.
+  if (picked.length === 0) return null;
+
+  // A proposal that covers everything is not worth confirming: it is what the
+  // screen already does, and offering it as a finding dresses the default up
+  // as a discovery.
+  if (picked.length === units.length) return null;
+
+  const because = typeof r.because === 'string' ? r.because.trim() : '';
+  if (!because || !flatten(source).includes(flatten(because))) return null;
+
+  return {
+    span,
+    units: picked,
+    because,
+    // Written the way the box's own placeholder asks for it, so what lands
+    // there is something the student could have typed and can edit after.
+    text: span.from === span.to ? `unit ${span.from}` : `units ${span.from} to ${span.to}`,
+  };
+}
