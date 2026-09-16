@@ -66,6 +66,14 @@ export function modesFor(cat: Catalog, courseId: CourseId, src: Source): ModeInf
    */
   const cases = (src.examples ?? cat.examples[courseId] ?? []).length + (guide.cases?.length ?? 0);
   const episodes = (cat.podcast[courseId]?.editions ?? []).length;
+  /*
+   * Whether a script can be written, asked the way `lib/script.ts` answers it
+   * rather than guessed at from `units > 0`. A unit with no cards contributes
+   * no lines, so a guide of empty units would report a script and open on an
+   * empty one — which is the shape of failure every `missing` in this file is
+   * here to prevent.
+   */
+  const script = guide.units.some((u) => u.cards.length > 0);
 
   return [
     {
@@ -153,9 +161,25 @@ export function modesFor(cat: Catalog, courseId: CourseId, src: Source): ModeInf
       id: 'listen',
       label: 'Listen',
       blurb: 'The podcast editions, with chapter marks that seek.',
-      count: plural(episodes, 'episode'),
-      ready: episodes > 0,
-      missing: 'No recordings for this course.',
+      /*
+       * A script is not an episode, and the card must not let them read as
+       * one.
+       *
+       * `lib/script.ts` gives every course with cards something to open
+       * Listen on — the running order and the words, written from its own
+       * guide. That is worth having and it is not audio, so counting it as
+       * "1 episode" would be this file's original complaint committed again:
+       * a mode with a script behind it looking identical to one with three
+       * recorded editions behind it, and the only way to find out being to
+       * tap.
+       *
+       * So the count says which it is. Recorded editions are counted; a
+       * course with none says it has a script and that nobody has recorded
+       * it, which is both the offer and the caveat in four words.
+       */
+      count: episodes > 0 ? plural(episodes, 'episode') : 'Script, not recorded',
+      ready: episodes > 0 || script,
+      missing: 'No recordings for this course, and no cards to write a script from.',
     },
   ];
 }

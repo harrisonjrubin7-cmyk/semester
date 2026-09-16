@@ -32,6 +32,8 @@
  * invents a second structure for the same episode.
  */
 
+import { isScriptEpisode } from './script';
+
 /** One line, as spoken: which voice said it, and what it said. */
 export interface Said {
   /** The voice in the script — `host`, `expert`. Named, not numbered. */
@@ -69,6 +71,16 @@ const LOADERS: Record<string, () => Promise<{ default: Transcript }>> = {
 
 /** Whether an episode has a transcript at all, without fetching it. */
 export function hasTranscript(courseId: string, episodeId: string): boolean {
+  /*
+   * A derived script is its own transcript, and needs no course in `LOADERS`.
+   *
+   * `lib/script.ts` builds the running order and the words in one pass, so an
+   * episode whose id ends `-script` is text by construction — there is no
+   * module to fetch and nothing that could be missing. Checked first, because
+   * the course it belongs to is exactly the course that has no entry above.
+   */
+  if (isScriptEpisode(episodeId)) return true;
+
   // The podcast editions are the ones spoken from a script. A "Full read" is
   // the study guide read aloud, and its text alternative is the guide itself —
   // already in the app, in Read and in Field guide. Saying otherwise here
