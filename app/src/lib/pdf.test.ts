@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { blankDoc, type Block, type Doc } from './document';
 import { adjusted, fromStyle } from './doclayout';
-import { fontFor, literal, widthOf, winAnsi, wrap, type Piece } from './pdf';
+import {
+  asPdf,
+  fontFor,
+  fromWinAnsi,
+  literal,
+  type Piece,
+  widthOf,
+  winAnsi,
+  wrap,
+} from './pdf';
 import { laid, pdfBytes } from './pdfout';
 import { WIDTHS } from './pdfwidths.data';
 
@@ -272,6 +281,7 @@ describe('laying the document onto pages', () => {
       ...Array.from({ length: 10 }, (_, i) => [`Q${i + 1}`, 'An answer with a few words in it']),
     ];
     let seen = 0;
+    const ran = new Set<number>();
     for (let filler = 1; filler < 40; filler += 1) {
       const blocks: Block[] = Array.from({ length: filler }, (_, i) => ({
         kind: 'text' as const,
@@ -284,11 +294,24 @@ describe('laying the document onto pages', () => {
           .flatMap((d) => (d.at === 'text' ? d.pieces.map((x) => x.text) : []));
         if (!words.includes('Question')) continue;
         seen += 1;
+        ran.add(filler);
         expect(words.some((w) => /^Q\d+$/.test(w)), `filler ${filler}, page ${i + 1}`).toBe(true);
       }
     }
-    // The guard against the assertion above never running at all.
-    expect(seen).toBe(39);
+    /*
+     * The guard against the assertion above never running at all. Every one of
+     * the thirty-nine arrangements must put the header on a page somewhere,
+     * which is the claim, and it is asserted on the arrangements rather than
+     * on the pages now.
+     *
+     * The page count is no longer the same number. It was, while the header
+     * appeared exactly once per document; a header that repeats at the top of
+     * every page its table runs on to appears twelve more times across these
+     * thirty-nine runs, and every one of those pages is a page that has rows
+     * on it. That is the change, stated rather than absorbed.
+     */
+    expect(ran.size).toBe(39);
+    expect(seen).toBe(51);
   });
 
   it('numbers every page when the layout asks for numbers', () => {
@@ -440,5 +463,68 @@ describe('the file itself', () => {
 
   it('is not empty for a document with nothing in it', () => {
     expect(pdfBytes(doc([])).length).toBeGreaterThan(200);
+  });
+});
+
+describe('the characters a formula is made of', () => {
+  /*
+   * `lib/maths.ts` renders notation in Unicode for everywhere that is neither
+   * a screen nor Word, and the PDF is that everywhere. Until the table below
+   * grew, `∫₀¹ x² dx` was written into a PDF as ` ¹ x² dx` and
+   * `α + β ≤ γ` as `+  <= ` — not mangled, which somebody would notice, but
+   * silently shortened, in the one place a formula is the whole content.
+   *
+   * The same argument the arrow and `%ΔQ` won when a study guide was printed;
+   * this is that list finishing the job for the maths.
+   */
+  it('spells out Greek, which the encoding has one letter of', () => {
+    expect(winAnsi('α + β ≤ γ')).toBe('alpha + beta <= gamma');
+    expect(winAnsi('Ω')).toBe('Omega');
+  });
+
+  it('spells out the operators, which are the formula and not decoration', () => {
+    expect(winAnsi('∫')).toBe('integral');
+    expect(winAnsi('∑')).toBe('sum');
+    expect(winAnsi('∞')).toBe('infinity');
+    expect(winAnsi('x ∈ ℝ')).toBe('x  in  R');
+  });
+
+  it('brings a raised or lowered character down to the one somebody types', () => {
+    expect(winAnsi('x₁ + x₂')).toBe('x1 + x2');
+    expect(winAnsi('∑ᵢ₌₁ⁿ')).toBe('sumi=1n');
+  });
+
+  it('never spells out a character the encoding has a byte for', () => {
+    // The rule that matters, because `INSTEAD` is read before the byte table
+    // is: a superscript two has been in Windows-1252 all along, and spelling
+    // it turned `E = mc²` into `E = mc2` in a PDF that had just been taught
+    // to write equations. `lib/exportqa.ts` is what caught it.
+    expect(winAnsi('E = mc²')).toBe('E = mc²');
+    expect(winAnsi('x³ ± µ ÷ ×')).toBe('x³ ± µ ÷ ×');
+  });
+
+  it('keeps the four spellings that were chosen against a real document', () => {
+    // `Δ` is `delta` and not `Delta` because the thing it was measured on was
+    // `%ΔQ`. Adding the rest of the alphabet must not quietly recase these.
+    expect(winAnsi('%ΔQ')).toBe('%deltaQ');
+    expect(winAnsi('Σ')).toBe('sum');
+    expect(winAnsi('ε')).toBe('epsilon');
+    expect(winAnsi('π')).toBe('pi');
+  });
+
+  it('drops an overline rather than leaving a space where it was', () => {
+    // A combining macron has no byte and no spelling. A space would let a
+    // line break between a variable and nothing at all.
+    expect(winAnsi('x̄')).toBe('x');
+  });
+});
+
+describe('reading a PDF string back', () => {
+  it('turns the encoding’s own bytes back into the characters they mean', () => {
+    expect(fromWinAnsi(winAnsi('one — two “three”'))).toBe('one — two “three”');
+  });
+
+  it('leaves a character the encoding could not carry as the space it became', () => {
+    expect(asPdf('日本語')).toBe('   ');
   });
 });

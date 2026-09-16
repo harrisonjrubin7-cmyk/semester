@@ -702,46 +702,73 @@ lines of OOXML written directly) and to real `.pdf` (`lib/pdf.ts`, written
 without a library, placing every line by hand because nothing in a PDF wraps
 text).
 
-Equations are already embedded properly, which the draft lists as work to do.
-`lib/maths.ts` renders one notation three ways — MathML for the screen, **OMML
-for Word**, Unicode for everywhere else — and `lib/docx.ts:610` calls
-`omml(parse(block.latex))`, so an equation in an exported `.docx` is a real Word
-equation object you can click and edit, not a picture somebody has to retype.
+Equations are already embedded properly in the `.docx`, which the draft lists as
+work to do. `lib/maths.ts` renders one notation three ways — MathML for the
+screen, **OMML for Word**, Unicode for everywhere else — and `lib/docx.ts:610`
+calls `omml(parse(block.latex))`, so an equation in an exported `.docx` is a
+real Word equation object you can click and edit, not a picture somebody has to
+retype.
 
-**What's missing.**
+The third of those three renderings was never wired to anything. The PDF wrote
+the LaTeX as typed until the comparison below went looking, which is the shape
+of this whole item: not a missing engine, a missing wire, found by nothing
+having compared the two files a student can hand in.
 
-1. **Table edge cases** — merged cells and column widths do not survive every
-   round trip through `.docx`.
+**What's missing — and the first item of this list did not survive the tree.**
+
+1. ~~**Table edge cases** — merged cells and column widths do not survive every
+   round trip through `.docx`.~~ **Measured: neither exists.** A table is
+   `{ rows: string[][]; header: boolean; caption: string }`
+   (`app/src/lib/document.ts:173`). There is no span, no merge and no width in
+   the model, in the editor or in either exporter, and both divide the columns
+   evenly (`lib/docx.ts:408`, `lib/pdfout.ts:316`). This was a round-trip bug
+   reported against a feature that has never been built. The *real* table gaps
+   are in item 3, where the comparison below found them.
 2. **Embedded figures** — an `image` block holds a file you added. There is no
    way to place one of the app's *own* figures, charts or plots into a document,
    which is the thing a student actually wants when writing up a problem set.
-3. **Export fidelity under wider structures** — a nested list inside a table
-   cell, a long table crossing a page boundary, a figure with a caption near a
-   page break. Each is checkable and none is currently checked.
+   **Still open.**
+3. **Export fidelity under wider structures.** The real gap, and much wider than
+   "edge cases": the two exporters had never been asked whether they agreed, and
+   they did not. **Closed**, by `app/src/lib/exportqa.ts` and what it found.
 
-**Technical approach.** Close the table cases against a fixture document that
-contains every one of them. Add a figure block that references an app figure by
-id and renders through the same path §3.1 builds, with `lib/svgout.ts` resolving
-theme tokens so the exported file is not a black rectangle. Then add the export
-QA step the draft describes and this repository's own practice already demands:
-render every export to PDF, diff it against the in-app view, and treat a
-difference as a failure rather than as a rendering quirk.
+**What the comparison found.** `lib/exportqa.ts` takes what each block obliges
+an export to carry — written from the block, not from either exporter — and
+checks both files for it. On a fixture document holding one of everything:
 
-One caution learned in this repository and worth writing into that QA step: a
-clean reading is a claim about the probe too. A visual diff that reports every
-export perfect is also what a broken differ looks like, so the step ships with a
-control — a document known to export wrong — and the control must fail.
+| One document, two exports | `.docx` | `.pdf` before | `.pdf` after |
+| --- | --- | --- | --- |
+| An equation | a real Word equation object | `\frac{a+b}{c^2}`, as typed | `(a+b)/(c²)` |
+| A table's caption | Word's own Caption style | nothing at all | printed under the table |
+| A 60-row table over three pages | header repeats (`w:tblHeader`) | header on page 1 only | header on every page |
+| Greek and operators in a formula | carried | dropped to spaces | spelled out |
+| A picture | embedded | `[Alt text]` in italics | **still open** |
+
+**The probe is a claim about itself.** Three of the first four findings were
+faults in the comparison rather than in the exporters, and the control surfaced
+each: it obliged both files to print the `*` around an italic word; it read the
+*layout* rather than the bytes the file will hold, so it could not see an
+encoding loss at all; and it then read the encoding's own em-dash byte back as
+Unicode and called every high character lost. `control()` is a document that
+must fail — a paragraph in a script WinAnsi has no bytes for, which is a
+difference that is correct and permanent, so it cannot quietly stop failing the
+day somebody fixes a defect.
 
 **Dependencies.** The math engine (Live, already wired). Figures (§3.1) for the
 figure block.
 
-**Estimated effort.** Medium.
+**Estimated effort.** Medium. About half of it spent.
 
-**Done when.** The fixture document round-trips through `.docx` and `.pdf` with
-no visual diff against the in-app view; the control document fails the same
-check; and an app figure can be placed in a document and exported legibly.
+**Done when.** ~~The fixture document round-trips through `.docx` and `.pdf`
+with no visual diff against the in-app view; the control document fails the same
+check~~ — **done**, as a content comparison rather than a pixel diff, for the
+reason `lib/exportqa.ts` gives: a real visual diff needs Word, a PDF renderer
+and a browser in one room, and this has to run in the suite. Still open: **an
+app figure can be placed in a document and exported legibly**, which wants the
+figure block and a real picture in the PDF — one piece of work rather than two.
 
-**Sequencing: Phase 1.**
+**Sequencing: Phase 1. The comparison and the export defects are done; the
+figure block and the picture in the PDF are what is left of this item.**
 
 ### 5.2 · Spreadsheet — Partial
 
@@ -849,7 +876,7 @@ disproportionate effect on what a pilot student sees.
 | 4 | **Exam Runway** — model-read scope as a confirmable fourth source (§4.3) | Low | — | Smaller than believed; visible in the weeks a pilot runs |
 | 5 | **Where Courses Meet** — semantic matching as a fifth grade (§4.1) | Medium | — | The most distinctive claim in the product |
 | 6 | **Quote Verification** — local semantic match + adversarial pass (§4.4) | Medium | — | Technical work must precede any release decision |
-| 7 | **Document Editor** — tables, figure block, export QA with a control (§5.1) | Medium | — | Exports are what leaves the app and gets marked |
+| 7 | **Document Editor** — ~~tables~~, figure block, ~~export QA with a control~~ (§5.1) | Medium | — | Exports are what leaves the app and gets marked. The comparison and the four export defects it found are done; the figure block and a real picture in the PDF are what is left |
 | 8 | **Slides** — bullet, comparison, quote-and-source layouts (§3.2) | Low-med | — | Cheap once Figures lands |
 
 **Phase 1 exit criteria.** All eight **Done when** conditions met; `cd app` and
