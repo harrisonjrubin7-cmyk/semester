@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyReviews, extraFigures, forCourse, mergeFigures, mergeGuide } from './live';
+import { readDrawn } from './figure';
 import { cardKey } from './review';
 import type { Reviews } from './review';
 import type { CourseUpdate, Figure, FigureMap, Guide, StudyCard } from './types';
@@ -731,5 +732,56 @@ describe('material a rebuild has already folded in', () => {
     const out = mergeGuide(guide(), [update({ unit: null, cards: [card('unfiled')] })]);
     expect(out.units).toHaveLength(3);
     expect(out.addedUnits).toHaveLength(1);
+  });
+});
+
+
+describe('a drawing kept from the Draw screen', () => {
+  /*
+   * The join, end to end, without React.
+   *
+   * `lib/figure.test.ts` proves what may become a drawn figure and
+   * `components/drawnfigure.test.tsx` proves what the card does with one. The
+   * step between them is this file's: a drawing is kept as a `CourseUpdate`,
+   * exactly as a reading or a photograph of the board is, so that it is placed
+   * by the one placement pass rather than by a second mechanism of its own.
+   *
+   * Written against `readDrawn`'s real output rather than a hand-built object,
+   * because the shape those two agree on is the thing that would break.
+   */
+  const drawing = readDrawn({
+    title: 'A titration curve for a weak acid',
+    caption: 'A graph with axes.',
+    language: 'svg',
+    code: '<svg viewBox="0 0 600 420"><circle r="5" /></svg>',
+  })!;
+
+  it('reaches the shared rail, where a figure about the course belongs', () => {
+    // No unit, because a drawing is about the course rather than about one
+    // week of it — and `place` sends a figure with no unit to the extras.
+    const out = extraFigures([], [update({ unit: null, figures: [drawing], source: 'Drawn here' })]);
+    expect(out).toHaveLength(1);
+    expect(out[0]).toMatchObject({ type: 'drawn', title: 'A titration curve for a weak acid' });
+  });
+
+  it('carries its code through the merge untouched', () => {
+    // The code is the drawing. A placement pass that trimmed or re-wrapped it
+    // would produce a figure that renders as nothing, and the caption is the
+    // only field anything here is entitled to change.
+    const out = extraFigures([], [update({ unit: null, figures: [drawing] })]);
+    expect(out[0]).toMatchObject({ code: '<svg viewBox="0 0 600 420"><circle r="5" /></svg>' });
+  });
+
+  it('says where it came from, the way every other added figure does', () => {
+    const out = extraFigures([], [update({ unit: null, figures: [drawing], source: 'Drawn here' })]);
+    expect(out[0].caption).toBe('A graph with axes. — Drawn here');
+  });
+
+  it('takes a unit when it was filed against one', () => {
+    // Not what the Draw screen does, and the placement has no opinion about
+    // which arm of `Figure` it is holding — so a drawing filed against a unit
+    // leads that unit, like any other figure.
+    const out = mergeFigures({}, [update({ unit: 2, figures: [drawing] })]);
+    expect(out[2]).toMatchObject({ type: 'drawn' });
   });
 });

@@ -26,7 +26,19 @@
  * own renderer about what a document contains.
  */
 
-export type Language = 'mermaid' | 'svg';
+import type { DrawingLanguage } from './types';
+
+/**
+ * The language a drawing is written in.
+ *
+ * Declared in `lib/types.ts` and re-exported here under the name this file's
+ * callers already use. It used to be its own union, which was fine while a
+ * drawing was a thing you looked at once and saved to a file — the moment a
+ * drawing could be *kept as a figure*, the figure's language and this one had
+ * to be the same two strings, and two unions spelled the same way are two
+ * unions.
+ */
+export type Language = DrawingLanguage;
 
 export interface Kind {
   id: string;

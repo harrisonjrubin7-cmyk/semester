@@ -1,8 +1,16 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import type { Figure } from '../lib/types';
 import { getFile } from '../lib/files';
 import { Blueprint } from './Blueprint';
 import { Diagram } from './Diagram';
+
+/**
+ * Lazy for the reason `components/Drawing.tsx` is lazy on the Draw screen:
+ * it pulls Mermaid, which is the largest thing in the app, and a course whose
+ * figures are all tables should not pay for it. Most guides have no drawn
+ * figure at all, and the ones that do load it when the card renders.
+ */
+const Drawing = lazy(() => import('./Drawing').then((m) => ({ default: m.Drawing })));
 
 /**
  * A picture you attached. The bytes live in IndexedDB, so the object URL is
@@ -142,6 +150,47 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
       {figure.type === 'diagram' && <Diagram kind={figure.kind} />}
 
       {figure.type === 'image' && <StoredImage fileId={figure.fileId} alt={figure.title} />}
+
+      {figure.type === 'drawn' && (
+        <div style={{ marginTop: 'var(--sp-6)' }}>
+          <Suspense
+            fallback={
+              <div
+                style={{
+                  fontSize: 'var(--type-sm)',
+                  color: 'var(--app-dim)',
+                  paddingBlock: 'var(--sp-7)',
+                }}
+              >
+                Drawing…
+              </div>
+            }
+          >
+            <Drawing code={figure.code} language={figure.language} />
+          </Suspense>
+          {/*
+            Said on the card rather than inferred from how it looks.
+
+            The seventeen drawn diagrams are the app's own, checked by a person
+            and the same every time they are shown. This one was written to a
+            description, by a model, and kept by whoever was reading it — which
+            is a weaker claim, and one worth making in the place where somebody
+            is deciding how much to trust the picture. `lib/where.ts` makes the
+            same argument about a deadline: six kinds of fact in one typeface is
+            the failure, and a per-row line is the answer to it.
+          */}
+          <div
+            style={{
+              fontSize: 'var(--type-xs)',
+              color: 'var(--app-dim)',
+              marginTop: 'var(--sp-4)',
+              lineHeight: 'var(--leading-normal)',
+            }}
+          >
+            Drawn from a description you gave, not from the guide. Check it against your notes.
+          </div>
+        </div>
+      )}
 
       <div
         style={{
