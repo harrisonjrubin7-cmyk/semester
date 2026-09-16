@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { says } from './casework';
 import { TEMPLATES, fromGuide, fromTemplate, templateById } from './doctemplates';
 import BUS from '../data/courses/bus';
 import CORE from '../data/courses/core';
@@ -276,7 +277,7 @@ describe('a study guide opened as a document', () => {
       for (const file of guide.cases ?? []) expect(text, where).toContain(JSON.stringify(file.verdict).slice(1, -1));
       for (const ex of module.examples ?? []) {
         expect(JSON.stringify(fromGuide({ ...guide, examples: module.examples }, null).blocks), where).toContain(
-          JSON.stringify(ex.d).slice(1, -1),
+          JSON.stringify(says(ex)).slice(1, -1),
         );
       }
     }

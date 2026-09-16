@@ -24,6 +24,7 @@
 
 import { blankDoc, type Block, type Doc } from './document';
 import type { CaseFile, CourseId, Example, Frame, Term, Unit } from './types';
+import { says } from './casework';
 
 export interface Template {
   id: string;
@@ -350,7 +351,7 @@ export function fromGuide(
       kind: 'table',
       rows: [
         ['Concept', 'Example', 'What it shows'],
-        ...guide.examples.map((ex) => [ex.tag, ex.t, ex.d]),
+        ...guide.examples.map((ex) => [ex.tag, ex.t, says(ex)]),
       ],
       header: true,
       caption: '',

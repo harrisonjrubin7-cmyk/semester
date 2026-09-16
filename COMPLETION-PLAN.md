@@ -402,48 +402,72 @@ on material somebody wrote by hand will fail on material a model wrote.
 
 **Sequencing: Phase 2, done.**
 
-### 3.4 · Cases — Partial (engine and content)
+### 3.4 · Cases — Live (engine)
 
 **Current state.** Two kinds of thing show in the Cases tab, and
 `app/src/lib/modes.ts` counts both: the catalogue's worked examples, and the
 guide's claim-and-test pairings. Measured: **8 worked examples per course, 32 in
-all**, and **8 pairings, all of them in PSCI 1104**. A generated course has
-neither.
+all**, and **7 pairings, all of them in PSCI 1104** — this section said eight,
+and seven is what is there.
 
 The worked examples are also thinner than the name suggests. `Example` is
 `{ tag, t, d }` (`app/src/lib/types.ts`) — a tag, a title, a description. It is a
 worked example in the sense of a short illustrated case, not in the sense of a
 problem carried through its steps with the arithmetic shown.
 
-**What's missing.**
+**What was missing.**
 
-1. Depth: no step structure, so a quantitative course cannot show a worked
-   solution the way a problem set does.
-2. Breadth: claim-and-test pairings exist for one course of four; the shape is
-   general and only PSCI has them.
-3. Generated courses get none.
+1. ~~Depth: no step structure~~ — **closed.** `Example` is a union in
+   `lib/types.ts`: the existing short applied scenario, a **worked problem**
+   (statement, ordered steps, result) and a **case study** (situation,
+   question, analysis, what it turned on). `kind` is optional and absent reads
+   as `applied`, so all thirty-two shipped examples stay valid and nothing is
+   migrated — the choice `Figure` made about `figures?` for the same reason.
+2. Breadth: claim-and-test pairings exist for one course of four. **Still
+   open**, and it is content rather than engine: the shape is general, nothing
+   stops a course having them, and nobody has written them.
+3. ~~Generated courses get none~~ — **closed for the engine.**
+   `lib/casework.ts` asks for cases from one unit's material, in the shape that
+   unit calls for, and keeps only what the material supports.
 
-**Technical approach.** Widen `Example` into a discriminated union rather than
-adding optional fields to the existing shape — a **worked problem** (a statement,
-ordered steps, a result), a **case study** (situation, question, analysis,
-what it turned on), and the existing short applied scenario, with the course type
-selecting the few-shot template. Then pass every generated case through the
-grounding check the rest of the product relies on: `app/src/lib/cite.ts` already
-checks a generated quote against its source document, and that is the same
-question asked of a case — does this trace back to the material, or did the model
-supply it. A case that introduces a fact the course does not support is refused
-rather than shown with a caveat.
+**The one thing in the approach that did not survive the tree.** §3.4 proposed
+"the course type selecting the few-shot template". *There is no course type.*
+`Course` has a code, a name, a professor and a grading table, and nothing that
+says whether a course is quantitative. Inventing one would be a field somebody
+has to maintain and nobody has a reason to fill in — so `shapeFor` reads the
+material instead: a unit whose cards carry arithmetic wants a worked problem, a
+unit with people and dates in it wants a case study, and a unit of definitions
+wants the applied scenario the shipped courses chose thirty-two times.
+
+**Grounding, and the exact strength of the claim.** Every case must carry
+`from` — a sentence copied word for word out of the unit it was written from —
+and `readCases` checks it against that unit's own material, not the whole
+course. A case whose quote is not found is dropped **whole**, not trimmed. It is
+`lib/covers.ts`'s arrangement for exam scope and it works for the same reason: a
+model that has to quote the source to be believed cannot support an invented
+claim with an invented citation, because the citation is the thing being
+checked. That is weaker than "every fact in this case is in the course" and it
+is the strongest claim that can actually be checked; `lib/casework.ts` says so
+in its own header so nobody reads the refusal as more than it is.
 
 **Dependencies.** The verified course model (Live) and `lib/cite.ts` (Live).
 Benefits from Figures (§3.1) for diagram-supported cases.
 
-**Estimated effort.** Medium.
+**Estimated effort.** Was medium.
 
-**Done when.** A generated course produces cases in the shape its course type
-calls for; every generated case has passed the grounding check; and a test feeds
-in a case containing an unsupported fact and asserts it is refused.
+**Done when — and it is.** ~~A generated course produces cases in the shape its
+course type calls for~~ — in the shape its *material* calls for, for the reason
+above; ~~every generated case has passed the grounding check~~; ~~and a test
+feeds in a case containing an unsupported fact and asserts it is refused~~.
+`casework.test.ts` has that test three ways: a citation that is nowhere in the
+unit, a paraphrase of one that is, and a citation from a different unit of the
+same course. It also walks all forty-four shipped units to check that every one
+has a shape and material to write from.
 
-**Sequencing: Phase 2.**
+**Still open, as content rather than engine:** claim-and-test pairings for the
+three courses that have none.
+
+**Sequencing: Phase 2, engine done.**
 
 ### 3.5 · Listen — Partial (content)
 
@@ -1016,7 +1040,7 @@ Verification is not part of the pilot ([§8](#8-what-this-plan-does-not-cover)).
 | # | Item | Effort | Depends on |
 | --- | --- | --- | --- |
 | 9 | ~~**Watch** — on-device narration over Figures assets (§3.3)~~ **Done** | Medium | Figures, Listen scripting |
-| 10 | **Cases** — worked-problem / case-study union, grounding check (§3.4) | Medium | Verified course model, `lib/cite.ts` |
+| 10 | ~~**Cases** — worked-problem / case-study union, grounding check (§3.4)~~ **Engine done** | Medium | Verified course model, `lib/cite.ts` |
 | 11 | **Listen · batch** — content-hash pre-generation and caching (§3.5) | Medium | Listen scripting |
 | 12 | **Spreadsheet** — the spill model, then the array functions (§5.2) | Medium-high | Nothing |
 

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { says } from '../lib/casework';
 import type { Change, ChangeSet, Verdict } from '../lib/changeset';
 import { SectionLabel } from './ui';
 import { Folding } from './Fold';
@@ -125,7 +126,7 @@ function detail(change: Change): string {
   if (p.what === 'frame') return p.frame.d;
   if (p.what === 'selftest') return p.card.a;
   if (p.what === 'case') return `${p.file.claim} → ${p.file.verdict}`;
-  if (p.what === 'example') return p.example.d;
+  if (p.what === 'example') return says(p.example);
   if (p.what === 'figure') return p.figure.caption;
   return '';
 }

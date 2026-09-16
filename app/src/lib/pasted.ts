@@ -27,6 +27,7 @@
 import { hashOf } from './intake';
 import type { Piece, Where } from './harvest';
 import type { CaseFile, Example, Figure, Frame, StudyCard, Term } from './types';
+import { says } from './casework';
 
 export interface Pasted {
   cards: StudyCard[];
@@ -74,7 +75,7 @@ export function piecesFrom(p: Pasted, where: Where): Piece[] {
     out.push({ what: 'case', file, where, hash: at('case', `${file.title}|${file.verdict}`) });
   }
   for (const example of p.examples) {
-    out.push({ what: 'example', example, where, hash: at('example', `${example.t}|${example.d}`) });
+    out.push({ what: 'example', example, where, hash: at('example', `${example.t}|${says(example)}`) });
   }
 
   /*

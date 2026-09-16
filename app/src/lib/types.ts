@@ -279,10 +279,45 @@ export type Figure =
 /** Figures are keyed by the index of the unit they illustrate. */
 export type FigureMap = Partial<Record<number, Figure>>;
 
-export interface Example {
-  tag: string;
-  t: string;
-  d: string;
+/**
+ * A concept pointed at something you can see.
+ *
+ * Three shapes, and the first is the one the four shipped courses are made of:
+ * thirty-two short applied scenarios, a tag and a title and a paragraph.
+ * `lib/casework.ts` has the argument for the other two and for why the
+ * discriminator is optional — the short version is that `kind` absent means
+ * `applied`, so every example written before the union existed is still a
+ * valid one and nothing has to be migrated.
+ */
+export type Example =
+  /** The existing shape: a tag, a title, and a paragraph applying the idea. */
+  | { kind?: 'applied'; tag: string; t: string; d: string }
+  /**
+   * A problem carried through its steps, with the arithmetic shown.
+   *
+   * What "worked example" means in a quantitative course and what the shape
+   * above cannot hold: a statement, the steps in order, and the result. A
+   * problem set is read this way and a paragraph about a problem is not.
+   */
+  | { kind: 'worked'; tag: string; t: string; statement: string; steps: string[]; result: string }
+  /**
+   * A situation, the question it poses, and what the answer turned on.
+   *
+   * The shape a case-method course grades on. `CaseFile` below is the
+   * neighbouring idea — a claim somebody made and the study that tested it —
+   * and is not the same thing: that is about a debate in the literature, this
+   * is about a decision somebody had to make.
+   */
+  | { kind: 'study'; tag: string; t: string; situation: string; question: string; analysis: string; turned: string };
+
+/** The shapes an example can take, for a picker and for a prompt. */
+export const EXAMPLE_KINDS = ['applied', 'worked', 'study'] as const;
+
+export type ExampleKind = (typeof EXAMPLE_KINDS)[number];
+
+/** Which shape an example is, reading an absent discriminator as the old one. */
+export function exampleKind(e: Example): ExampleKind {
+  return e.kind ?? 'applied';
 }
 
 export type EventKind = 'Athletics' | 'Clubs' | 'University';
