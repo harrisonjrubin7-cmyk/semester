@@ -56,8 +56,82 @@ export function say(text: string, rate = 1): void {
   }
 }
 
+/**
+ * The utterance being spoken, held so it is not collected mid-sentence.
+ *
+ * A known and long-standing browser bug: an utterance with no reference to it
+ * can be garbage-collected while `speechSynthesis` is still reading it, and
+ * what a listener gets is a sentence that stops halfway. `say` above does not
+ * need this — it fires and forgets a line short enough to survive — and a
+ * lesson does, because the next beat is waiting on `onend` and a collected
+ * utterance never fires one.
+ */
+let speaking: SpeechSynthesisUtterance | null = null;
+
+/**
+ * Below this, nothing was said.
+ *
+ * `canSpeak` asks whether the object is there, and the object being there is
+ * not the same as a voice being there. Measured in headless Chromium:
+ * `'speechSynthesis' in window` is true, `getVoices()` is empty, and every
+ * utterance completes instantly — so a lesson advancing on `onend` raced
+ * through six beats in under a second and a half, in silence.
+ *
+ * Counting voices is the obvious check and is not reliable: the list loads
+ * asynchronously and is empty on the first call in browsers that do have one.
+ * The time an utterance took is reliable, because it does not matter *why*
+ * nothing was said. Every line here is a sentence, and no voice says a
+ * sentence in a quarter of a second.
+ */
+const SPOKE_MS = 250;
+
+/**
+ * Say something, and call back when it has been said — or was not.
+ *
+ * This is what a spoken lesson advances on. There is no duration to schedule
+ * against — `speechSynthesis` does not offer one before it speaks, and the
+ * rate depends on a voice that differs per device — so the next beat begins
+ * when this one ends, which is also how a person would read it out.
+ *
+ * The callback's argument is whether it was really spoken. A caller that
+ * advanced on every completion would flick through a whole lesson on a
+ * browser with no voice installed, which is worse than not offering to read
+ * it: the reader watches the slides go past and hears nothing.
+ *
+ * Returns the way to stop. `onend` does not fire on a cancel, so stopping is
+ * the caller's to notice: the returned function detaches the callbacks first,
+ * which makes a cancel silent rather than a completion.
+ *
+ * `onerror` also calls back, as not spoken. A browser that refuses one line
+ * should not leave a lesson waiting for an event that will not come.
+ */
+export function speakThen(text: string, rate: number, done: (spoke: boolean) => void): () => void {
+  if (!canSpeak() || !text.trim()) {
+    return () => {};
+  }
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const began = Date.now();
+    u.rate = rate;
+    u.onend = () => done(Date.now() - began >= SPOKE_MS);
+    u.onerror = () => done(false);
+    speaking = u;
+    window.speechSynthesis.speak(u);
+    return () => {
+      u.onend = null;
+      u.onerror = null;
+      if (speaking === u) speaking = null;
+      hush();
+    };
+  } catch {
+    return () => {};
+  }
+}
+
 /** Stop. Called on leaving, so a card is not still being read on Today. */
 export function hush(): void {
+  speaking = null;
   if (!canSpeak()) return;
   try {
     window.speechSynthesis.cancel();

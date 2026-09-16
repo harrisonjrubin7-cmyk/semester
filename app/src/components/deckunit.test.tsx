@@ -85,3 +85,41 @@ describe('the deck, moved between units', () => {
     expect(said(), 'the screen must still be a deck').not.toMatch(/went wrong|stopped/i);
   });
 });
+
+describe('the recorded player, stepping between units', () => {
+  /*
+   * It walked `Object.keys(lessons)` — the units that have an mp3 — which was
+   * right while a unit without one was a dead end. Every unit has a lesson of
+   * some kind now, and the old rule left a reader on the last *recorded* unit
+   * with `Next unit` greyed out and units after it they could not reach.
+   *
+   * Measured in the browser on ECON with a reading added as a unit of its
+   * own: "unit 11 of 12", the button disabled, nothing beyond it reachable.
+   */
+  it('can reach a unit that has no recording', async () => {
+    const { LessonPlayer } = await import('../screens/Lesson');
+    await act(async () => {
+      root.render(
+        <StoreProvider>
+          <LessonPlayer />
+        </StoreProvider>,
+      );
+    });
+    await loadSeed().catch(() => []);
+    await settle(() => /unit \d+ of \d+/i.test(said()));
+
+    const head = /unit (\d+) of (\d+)/i.exec(said());
+    const total = Number(head?.[2] ?? 0);
+    expect(total, 'the seeded course needs units for this to mean anything').toBeGreaterThan(1);
+
+    // Walk to the last unit. Every step must be reachable; the old rule
+    // stopped one short of the end whenever the last unit had no recording.
+    for (let i = Number(head?.[1] ?? 1); i < total; i += 1) {
+      const next = [...host.querySelectorAll('button')].find((b) => /next unit/i.test(b.textContent ?? ''));
+      expect(next?.disabled, `stuck at unit ${i} of ${total}`).toBe(false);
+      act(() => next?.click());
+      await settle(() => new RegExp(`unit ${i + 1} of ${total}`, 'i').test(said()));
+    }
+    expect(said()).toMatch(new RegExp(`unit ${total} of ${total}`, 'i'));
+  });
+});

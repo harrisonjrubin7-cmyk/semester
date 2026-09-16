@@ -317,7 +317,7 @@ what `lib/generate.ts:463` says one is.
 
 **Sequencing: Phase 1, done.**
 
-### 3.3 · Watch — Partial (content)
+### 3.3 · Watch — Live
 
 **Current state.** Complete for every unit of every shipped course: 44 narrated
 lessons over 44 units (`app/public/audio/lessons/` — bus 13, core 6, econ 11,
@@ -326,11 +326,19 @@ psci 14), each a voice with the slide changing under it. They are produced by
 that the deck and handout generators read, so a lesson cannot disagree with the
 app about what the course says. `audio/synth.py` renders the audio.
 
-**What's missing.** One thing: a course the app generated has no lessons, because
-the pipeline is Python in this repository and does not run in a browser. The
-draft's "full-course coverage and a repeatable production pipeline rather than
-concept-by-concept manual assembly" describes work that `pipeline/lessons.py`
-already is; the gap is that it is on the wrong side of the app boundary.
+**What was missing.** One thing: a course the app generated had no lessons,
+because the pipeline is Python in this repository and does not run in a
+browser. The draft's "full-course coverage and a repeatable production pipeline
+rather than concept-by-concept manual assembly" describes work that
+`pipeline/lessons.py` already is; the gap was that it is on the wrong side of
+the app boundary — the same shape `lib/script.ts` closed for Listen.
+
+**Closed by `app/src/lib/watch.ts`.** A unit with no recording gets a lesson
+made of its own cards, read by `lib/speak.ts`. Every word is the guide's: a
+unit's name, a card's question, a card's answer, a figure's title and caption.
+No summarising, no bridging line, no model call — so no key, no wait, and
+nothing invented. `speakable` is `lib/script.ts`'s, because a formula read out
+loud should sound the same in both places.
 
 **Technical approach.** Compose Watch in-app from assets the other modes already
 produce, avoiding a video renderer entirely:
@@ -346,20 +354,53 @@ produce, avoiding a video renderer entirely:
 * **Playback** — a timed visual sequence in the existing player, which is what
   the shipped lessons already are.
 
-A generated course's Watch will be honestly labelled as synthesised on-device
-rather than presented as equivalent to the recorded lessons. A mode that looks
+A generated course's Watch is honestly labelled as synthesised on-device rather
+than presented as equivalent to the recorded lessons. A mode that looks
 identical whether it has forty-four produced lessons behind it or a robot voice
-is the exact failure `lib/modes.ts` was written to end.
+is the exact failure `lib/modes.ts` was written to end — so the Watch card now
+has **three** states rather than two, and `modesFor` asks the browser whether it
+will speak rather than taking a caller's word for it. Four places build that
+argument and a fifth will; a field every one of them has to remember is how a
+mode comes to promise narration a device cannot give.
+
+**Beats, not seconds.** A recorded lesson has a timeline: every cue carries the
+second it lands on, the player draws a scrub bar against it, and seeking works
+because the synthesiser knew where it put every line. `speechSynthesis` offers
+no duration before it speaks and no way to seek, so a spoken lesson advances one
+utterance at a time and states no length at all. An estimated total printed
+where the recorded lessons print an exact one is the failure
+[`lib/where.ts`](app/src/lib/where.ts) is about.
+
+**Two things found by driving it, both fixed.**
+
+1. **A silent race.** Headless Chromium has `speechSynthesis` and *no voices*:
+   every utterance completes instantly, so a lesson advancing on completion went
+   through six beats in under a second and a half while saying nothing. Counting
+   voices is the obvious check and is unreliable — the list loads
+   asynchronously and is empty on the first call in browsers that do have one.
+   How long the utterance took is reliable and does not care why, so an
+   utterance that returns in under 250ms is reported as not spoken, the lesson
+   stops, and the screen says what it says to a browser with no speech at all.
+2. **A stranded reader.** The player stepped between units by walking
+   `Object.keys(lessons)` — the units with an mp3 — which was right while a
+   unit without one was a dead end. Measured on ECON with a reading added as a
+   unit of its own: *unit 11 of 12*, `Next unit` greyed out, and a unit beyond
+   it holding three cards the device would have read happily.
 
 **Dependencies.** Figures (§3.1) and Listen (§3.5) both at Phase 1 completion.
 
-**Estimated effort.** Medium.
+**Estimated effort.** Was medium.
 
-**Done when.** A course generated from an uploaded syllabus offers Watch for
-every unit, the mode card states which kind of narration it has, and no shipped
-course's lessons change.
+**Done when — and it is.** ~~A course generated from an uploaded syllabus offers
+Watch for every unit, the mode card states which kind of narration it has, and
+no shipped course's lessons change.~~ `lib/watch.test.ts` derives a lesson for
+all forty-four units of the four shipped courses — they have recordings and do
+not need one, which is exactly why they are the fixture: a derivation that fails
+on material somebody wrote by hand will fail on material a model wrote.
+`small.test.ts` asserts the three states of the mode card, and nothing in
+`public/audio/` is touched.
 
-**Sequencing: Phase 2** — depends on Figures and Listen.
+**Sequencing: Phase 2, done.**
 
 ### 3.4 · Cases — Partial (engine and content)
 
@@ -974,7 +1015,7 @@ Verification is not part of the pilot ([§8](#8-what-this-plan-does-not-cover)).
 
 | # | Item | Effort | Depends on |
 | --- | --- | --- | --- |
-| 9 | **Watch** — on-device narration over Figures assets (§3.3) | Medium | Figures, Listen scripting |
+| 9 | ~~**Watch** — on-device narration over Figures assets (§3.3)~~ **Done** | Medium | Figures, Listen scripting |
 | 10 | **Cases** — worked-problem / case-study union, grounding check (§3.4) | Medium | Verified course model, `lib/cite.ts` |
 | 11 | **Listen · batch** — content-hash pre-generation and caching (§3.5) | Medium | Listen scripting |
 | 12 | **Spreadsheet** — the spill model, then the array functions (§5.2) | Medium-high | Nothing |
