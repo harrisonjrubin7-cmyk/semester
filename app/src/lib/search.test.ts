@@ -80,4 +80,37 @@ describe('the two searches, on the same query', () => {
     expect(findApps('grades parsnip', ALL)).toEqual([]);
     expect(palette('grades parsnip')).toEqual([]);
   });
+
+  /*
+   * The verbs people put in front of what they actually want.
+   *
+   * "layout" found the Layout and navigation page and "change the layout"
+   * found nothing at all, because the every-word tier required "change" to
+   * appear in a page whose words are about navigation. That is the same fault
+   * the filler list was written for — "delete my account" failing on "my" —
+   * one part of speech along.
+   *
+   * These stay matchable on their own, which is the answer to the warning at
+   * the top of FILLER about a stop list swallowing words that carry meaning.
+   * Only the loose tier ignores them: "make" by itself is still ranked
+   * directly against every name in the app, and still finds Make a deck.
+   */
+  it('reads past the verb to the thing being asked for', () => {
+    for (const q of [
+      'change the layout',
+      'turn on notifications',
+      'set my grade cutoffs',
+      'switch to dark mode',
+      'make a deck',
+    ]) {
+      expect(palette(q).length, `the palette found nothing for "${q}"`).toBeGreaterThan(0);
+    }
+  });
+
+  it('still ranks those verbs directly when one is the whole query', () => {
+    // The check on the rule above: a filler word is ignored by the every-word
+    // tier and by nothing else.
+    expect(palette('make')).toContain('deck');
+    expect(palette('set')).toContain('settings');
+  });
 });

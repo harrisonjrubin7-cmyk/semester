@@ -1467,6 +1467,76 @@ keeping in view as a design question. It is not an acceptance blocker.
 
 ---
 
+## 9b. Phase 0 — global search
+
+The build-out plan's other Phase 0 item says the global search returns nothing
+for `"cram sheet"`, `"podcast"` and `"teach back"`. It does, and the reason is
+larger than three missing words.
+
+`lib/find.ts` is thorough about what it covers — deadlines, courses, units,
+notes, tasks, appointments, documents, sheets, decks, and the app's own
+screens — and its header is explicit that a search covering a tenth of the app
+"teaches people not to search". What it does not cover is everything the app
+does that is **not a screen**, and there were two whole registries of that:
+
+| Registry | Holds | Searched by |
+| --- | --- | --- |
+| `lib/nav.ts` `DESTINATIONS` | 60 screens | the global search |
+| `lib/modes.ts` | the 11 ways through a course | nothing |
+| `lib/settings.ts` | 11 settings pages, each with label, contents and synonyms | only the Settings screen's own box |
+
+Measured against the four shipped courses before the fix:
+
+| Typed | Answered | The app has |
+| --- | --- | --- |
+| `podcast` | nothing | 10 podcast editions, in a mode called Listen |
+| `cram sheet` | nothing | Cram |
+| `listen` | nothing | Listen |
+| `worked examples` | nothing | Cases |
+| `field guide` | nothing | Field guide |
+| `narrated lesson` | nothing | 44 of them, in Watch |
+| `colour`, `font`, `typeface`, `dark mode` | nothing | Colour and type, which carries all four as keywords |
+| `change the layout` | nothing | Layout and navigation, which `layout` alone finds |
+| `teach back` | **the Costs screen** | the teach-back journal on Study |
+| `audio` | **the degree audit and the registrar** | Listen |
+
+The last two rows are the ones that matter. A search that answers "teach back"
+with a screen about money has not failed to find something — it has said
+something false in a confident voice about an app that has exactly that
+feature. `find.ts`'s near-miss tier is doing what it was built for ("audio" is
+one edit from "audit"); the reason it gets to answer at all is that nothing
+true was in the index to outrank it. **A missing index is worse than a missing
+keyword**, and that is the finding.
+
+**Done.** `lib/doing.ts` is the registry of what the app does that is not
+somewhere you go — the eleven modes and the named panels on a screen — and
+`find.ts` now reads it and the settings pages alongside the destinations.
+Results say what they are (*Ways to study · In Study · **Listen** · The podcast
+editions, with chapter marks that seek*) and land on the screen they live in.
+
+`doing.test.ts` is the guard, in the shape `findable.test.ts` uses for screens:
+it reads the `StudyMode` union out of `types.ts` and fails on a mode that is
+not in the registry, and reads `modes.ts` for the labels so a mode renamed in
+one file and not the other cannot leave search offering a name no screen uses.
+Ten mutations, ten red.
+
+A third fault turned up in the measuring and is fixed in the same place it
+lives: `layout` found the settings page and `change the layout` found nothing,
+because the loose tier required "change" to appear in it. `FILLER` in
+`lib/search.ts` — the list that already exists so "delete my account" does not
+fail on "my" — now also carries the verbs people put in front of what they
+want. They are still matched directly when one is the whole query, so `make`
+still finds Make a deck; only the every-word tier ignores them.
+
+One entry was written and removed: a focus timer. `screens/Clocks.tsx` says in
+its own header that it is a *kitchen* timer and that nothing on it touches your
+pace or your grades; the timer that belongs to work attaches to one deadline
+and stands nowhere. An entry claiming otherwise would have been the same fault
+as the Costs screen answering "teach back", with the registry as the source
+instead of a near miss.
+
+---
+
 ## Appendix A — What measurement corrected
 
 Each row is a claim in the draft this plan grew out of, what the tree said when
