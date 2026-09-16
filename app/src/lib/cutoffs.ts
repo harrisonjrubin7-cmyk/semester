@@ -219,16 +219,58 @@ export function readOverrides(raw: unknown): Record<string, GradeSystem> {
  */
 export function fromTyped(
   typed: { label: string; min: string }[],
-  gpaMax?: number,
+  base?: GradeSystem,
 ): GradeSystem | null {
+  const was = base?.scale ?? [];
+  /*
+   * The bands the editor did not show, kept.
+   *
+   * `targetsOf` gives it the top five, because what a student plans around is
+   * the next reachable grade and a table down to F pushes the useful rows off
+   * a phone. That is right for the *table* and was wrong for the save: the
+   * result replaced the whole scale, so correcting an A− cutoff on a
+   * twelve-band published table left a five-band one, and a mark in the
+   * seventies then landed on no letter at all.
+   */
+  const shown = new Set(targetsOf(base ?? { kind: 'letter', scale: was }).map((t) => t.label));
+
   const scale: Band[] = [];
   for (const t of typed) {
-    const label = t.label.trim();
+    const label = t.label.trim().slice(0, 12);
     if (!label) continue;
     const min = Number(t.min.trim());
     if (!t.min.trim() || !Number.isFinite(min) || min < 0 || min > 100) continue;
-    scale.push({ label: label.slice(0, 12), min });
+    /*
+     * The points this letter was already worth, carried.
+     *
+     * This is the whole defect. A band is a label, a cutoff and what it is
+     * worth, and this function built one from the first two — so a scale
+     * typed here priced nothing, `landingAt` read every letter as null, and
+     * `lib/termgpa.ts` excluded the course with "the scale states no grade
+     * points". Correcting your cutoffs from your syllabus — the one thing
+     * `components/Cutoffs.tsx` exists to let you do — took the course out of
+     * your own term GPA.
+     *
+     * Carried rather than assumed, which is the distinction that matters: the
+     * points come from the scale that was already in force and already on the
+     * screen, not from a 4.0 table this app has no business imposing on a
+     * school that grades out of 4.3. A letter with no points behind it stays
+     * with no points, and `missingLine` goes on naming it.
+     */
+    const had = was.find((b) => b.label === label);
+    scale.push({ label, min, ...(had?.gpa === undefined ? {} : { gpa: had.gpa }) });
   }
   if (scale.length === 0) return null;
-  return { kind: 'letter', scale, ...(gpaMax === undefined ? {} : { gpaMax }) };
+
+  // A band the editor showed and the typist blanked is gone on purpose — "a
+  // blank is not a zero", as the editor says. One it never showed is none of
+  // its business and survives untouched.
+  const kept = was.filter((b) => !shown.has(b.label) && !scale.some((s) => s.label === b.label));
+
+  const all = [...scale, ...kept].sort((a, b) => (b.min ?? 0) - (a.min ?? 0));
+  return {
+    kind: 'letter',
+    scale: all,
+    ...(base?.gpaMax === undefined ? {} : { gpaMax: base.gpaMax }),
+  };
 }

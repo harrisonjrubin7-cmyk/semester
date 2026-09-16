@@ -42,6 +42,7 @@ import {
 } from '../lib/degree';
 import { Folding } from '../components/Fold';
 import {
+  fixFor,
   missingLine,
   moveLine,
   moves,
@@ -243,7 +244,7 @@ function WhatIsLeft() {
  * under Courses → Grades, so nothing here is a second place to maintain.
  */
 function ThisTerm() {
-  const { state, catalog, school } = useStore();
+  const { state, dispatch, catalog, school } = useStore();
 
   const input: TermInput = {
     courses: catalog.courses,
@@ -362,19 +363,77 @@ function ThisTerm() {
       ) : null}
 
       {left.length > 0 ? (
-        <div
-          style={{
-            marginTop: 'var(--sp-5)',
-            fontSize: 'var(--type-xs)',
-            color: 'var(--app-dim)',
-            lineHeight: 'var(--leading-relaxed)',
-            textWrap: 'pretty',
-          }}
-        >
+        <div style={{ marginTop: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
           {/* Named one at a time with the fix, rather than "3 courses were
               excluded" — a GPA quietly computed over some of your courses is
-              worse than no GPA. */}
-          {left.map((c) => missingLine(c)).join(' ')}
+              worse than no GPA.
+
+              One row each rather than one paragraph, because the fix is now a
+              tap. The sentence has always said where to go; saying it is not
+              the same as going there, and a student reading "Edit the course
+              to add them" on this screen had to work out for themselves that
+              credit hours live under Edit the course and grade points under
+              Grades. `fixFor` decides which, and `ungraded` gets no button
+              because the only fix for it is sitting the assessment. */}
+          {left.map((c) => {
+            const where = fixFor(c);
+            return (
+              <div
+                key={c.courseId}
+                style={{
+                  fontSize: 'var(--type-xs)',
+                  color: 'var(--app-dim)',
+                  lineHeight: 'var(--leading-relaxed)',
+                  textWrap: 'pretty',
+                }}
+              >
+                {missingLine(c)}
+                {where && (
+                  <button
+                    type="button"
+                    className="bare tappable"
+                    onClick={() => {
+                      /*
+                       * The course first, then the screen.
+                       *
+                       * `EditCourse` reads `state.courseId`, which `go` does
+                       * not set — `go`'s own `courseId` sets `guideId`, which
+                       * is the study selection and a different thing.
+                       *
+                       * Grade points are not a screen: Grades is the third tab
+                       * of Courses (`lib/nav.ts` says so, having folded the
+                       * destination into it), so the tab is set as well or the
+                       * tap lands on the course list with nothing to do.
+                       */
+                      dispatch({ type: 'openCourse', id: c.courseId });
+                      if (where === 'edit') {
+                        dispatch({ type: 'go', screen: 'edit' });
+                      } else {
+                        dispatch({ type: 'setCoursesTab', tab: 'grades' });
+                        dispatch({ type: 'go', screen: 'courses' });
+                      }
+                    }}
+                    style={{
+                      width: 'auto',
+                      display: 'block',
+                      marginTop: 'var(--sp-3)',
+                      paddingBlock: 6,
+                      paddingInline: 10,
+                      borderRadius: 'var(--r-sm)',
+                      border: '1px solid var(--app-line)',
+                      fontSize: 'var(--type-xs)',
+                      fontFamily: 'var(--font-heading)',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: 'var(--app-fg)',
+                    }}
+                  >
+                    {where === 'edit' ? `Add hours for ${c.code}` : `Price the scale for ${c.code}`}
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : null}
     </Folding>
