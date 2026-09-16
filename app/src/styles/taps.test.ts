@@ -175,6 +175,35 @@ describe('tap targets', () => {
   });
 
   /*
+   * The one control the hundred-and-four audit could not have caught, and the
+   * half-fix that followed it.
+   *
+   * PIN, RENAME and DELETE under each saved conversation are drawn at desktop
+   * widths only, which is why an audit taken at 390px never saw them. Measured
+   * at 1280×900 they were 19×17, 47×17 and 45×17; the fix that followed gave
+   * all three a 24px floor on height and none on width, which leaves PIN at
+   * 19 wide — and 2.5.8 asks for 24 *by* 24. `scripts/targets-sweep.mjs`, which
+   * measures by hit test rather than by bounding box, found it as the single
+   * remaining control under the AA minimum in the app on either tier.
+   *
+   * Neither axis can be an overlay here: the conversation's own button is
+   * flush above these and they sit eight pixels from each other, so a `tap`
+   * class of any axis would take a tap meant for its neighbour. A floor on
+   * both axes is the fix, and this holds both — a test that checked only the
+   * one that was missing would pass again the day somebody removes the other.
+   */
+  it('gives all three conversation actions a floor on both axes', () => {
+    const threads = readFileSync('src/ai/Threads.tsx', 'utf8');
+    const act = threads.slice(threads.indexOf('const ACT = {'));
+    const rule = act.slice(0, act.indexOf('} as const;'));
+    expect(rule, 'the height floor went').toMatch(/minHeight: 24/);
+    expect(rule, 'PIN is 19px wide without it').toMatch(/minWidth: 24/);
+    // Floors, not sizes: the text-size setting has to be able to grow these.
+    expect(rule, 'a fixed size would stop the text-size setting').not.toMatch(/[^n]\bheight: 24/);
+    expect(rule, 'a fixed size would stop the text-size setting').not.toMatch(/[^n]\bwidth: 24/);
+  });
+
+  /*
    * The chips are the deliberate exception, and it is worth a test because it
    * looks like an omission. `ChipRow` and `Segmented` are 25–29px tall, which
    * clears the 24×24 WCAG 2.2 AA asks for, and screens stack them: Calendar
