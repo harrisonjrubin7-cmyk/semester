@@ -1161,9 +1161,11 @@ with rather than conclusions drawn from measurements:
 | # | Item | Effort | Depends on |
 | --- | --- | --- | --- |
 | 13 | ~~**Per-generation cost** — every call that spends is counted, and a course's build cost is answerable (§7.2)~~ **Done** | Medium | Nothing |
-| 14 | **Measured render and build time on the diagnostics screen** (§7.1) — "the honest first move is not optimisation, it is instrumentation a student can see" | Low-medium | Nothing |
+| 14 | ~~**Measured render and build time on the diagnostics screen** (§7.1) — "the honest first move is not optimisation, it is instrumentation a student can see"~~ **Done** | Low-medium | Nothing |
 
-Everything else in §7 waits for students.
+Everything else in §7 waits for students — by the argument at the top of that
+section, which is about what this app refuses to collect rather than about
+effort.
 
 ---
 
@@ -1211,6 +1213,38 @@ The honest first move is not optimisation — it is instrumentation a student ca
 see: a measured render and build time on the existing diagnostics screen, so the
 first person with seven courses can say what is slow rather than that it feels
 slow.
+
+**Done** — `lib/timing.ts`, shown under **How fast** on the Data screen. It is
+the instrument and not a conclusion: nothing in it decides anything is too
+slow, because the figure that would decide it does not exist until somebody's
+own semester produces one.
+
+*It is not telemetry, and that is the design rather than a caveat.* The
+readings live in memory, are gone on reload, and are in nothing that is stored
+or synced. Each name keeps how many times, the last, the slowest and the total
+— a summary and not a trail, which is the same refusal `lib/usage.ts` makes
+about screen opens. `lib/timing.test.ts` reads the file and fails on a line
+that writes one of these figures anywhere, because the preamble above is
+explicit that this trade should be made in the open if it is ever made, "and
+not as a side effect of wanting a dashboard".
+
+**And the first thing it measured contradicts the row above it.** Driven in
+Chromium over the four shipped courses:
+
+| Reading | Measured |
+| --- | --- |
+| First drawn (the browser's own `first-contentful-paint`) | 620–684 ms |
+| Drawing a screen | **259 ms**, worst over the guide |
+| Catalogue build | **0.20 ms**, over 4 courses |
+
+The catalogue build is the first row of the table above — the thing this
+section expects to slow down first — and it is *three orders of magnitude*
+cheaper than drawing a screen. Multiplying it by the order of magnitude more
+material a seven-course student brings still leaves it under a fifth of one
+screen draw. That does not retire the row: a linear extrapolation from four
+courses is a guess, which is the kind of claim this instrument exists to
+replace. It does say where the first person to look should look, and it is not
+where this plan said.
 
 ### 7.2 Cost
 

@@ -20,6 +20,7 @@ import {
 } from 'react';
 import type { CourseModule, Screen } from '../lib/types';
 import { buildCatalog, type Catalog } from '../data/catalog';
+import { over, timed } from '../lib/timing';
 import type { Named } from '../lib/forwork';
 import { arrange } from '../lib/yours';
 import { setSessionToken } from '../lib/token';
@@ -916,7 +917,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // Courses screen, the study picker, the filter chips, the week's colours —
     // is derived from `catalog.modules`, so ordering at the source reaches all
     // of them at once instead of being reapplied, and forgotten, in each.
-    return buildCatalog(arrange(showing, state.yours, state.courseOrder));
+    /*
+     * Timed, because §7.1 names this as the first thing that will slow down:
+     * a student with seven courses and their own added readings runs it over
+     * an order of magnitude more material than the four shipped ones. The
+     * measurement is in memory and goes no further — see `lib/timing.ts`.
+     */
+    return timed('Catalogue build', over(showing.length, 'course'), () =>
+      buildCatalog(arrange(showing, state.yours, state.courseOrder)),
+    );
   }, [allModules, state.term, terms, state.archivedTerms, state.yours, state.courseOrder]);
 
   /**
