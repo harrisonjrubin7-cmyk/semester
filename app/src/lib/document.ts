@@ -35,7 +35,7 @@
  */
 
 import type { Layout } from './doclayout';
-import type { CourseId } from './types';
+import type { CourseId, Figure } from './types';
 
 /**
  * One line of a list, and how far in it sits.
@@ -216,6 +216,45 @@ type Kinded =
    */
   | { kind: 'image'; fileId: string; name: string; alt: string; caption: string }
   /**
+   * One of the app's own figures, placed in a document you are writing.
+   *
+   * `image` above is a file you added — a slide, a photo of the board.
+   * This is the other thing a student wants when writing up a problem set:
+   * the bar chart or the worked sequence out of the course's own study guide,
+   * in the essay, rather than retyped from a screenshot of it.
+   *
+   * ## It carries the figure, rather than pointing at one
+   *
+   * A reference — course, unit, index — would be smaller and would be wrong.
+   * Exporting is a pure function of the document (`lib/pdfout.ts` and
+   * `parts()` in `lib/docx.ts` both depend on that), a guide is edited, and a
+   * document written in September that points into a unit renumbered in
+   * October points somewhere else. What was placed is what is printed.
+   *
+   * ## Three of the five arms, and the two that are not offered
+   *
+   * `Figure` has five arms and this block takes three: `bars`, `steps` and
+   * `image`. Those are the three both exports can carry — a bar chart is its
+   * labels and values, a sequence is a numbered list, and a picture is a
+   * picture now that `lib/pdfimage.ts` exists.
+   *
+   * `diagram` and `drawn` are pictures drawn as SVG at the moment of display,
+   * and neither exporter can rasterise one: they would go into a `.docx` and
+   * a `.pdf` as a title, a caption, and nothing where the figure is. That is
+   * the `[Alt text]` defect `lib/exportqa.ts` was written to find, and
+   * shipping it deliberately in a new block would be worse than not shipping
+   * the block. `lib/imagesize.ts` makes the same call one layer down, in the
+   * same words: not offer them rather than offer them and fail on export.
+   *
+   * The picker says which two are missing and why, because a figure that is
+   * simply absent from a list reads as a bug.
+   *
+   * No caption of its own: a `Figure` already has a `title` and a `caption`,
+   * and a block that added a third field for the same sentence would put two
+   * captions under one picture the first time somebody filled both in.
+   */
+  | { kind: 'figure'; figure: DocFigure }
+  /**
    * The table of contents, built from the headings rather than typed.
    *
    * Word's is a field that has to be updated and Docs' is a live block; both
@@ -248,6 +287,61 @@ type Kinded =
    */
   | { kind: 'rule' }
   | { kind: 'break' };
+
+/**
+ * The figure arms a document can hold, which is not all of them.
+ *
+ * Narrowed at the type rather than checked at the call sites: a `figure` block
+ * holding a `drawn` diagram cannot be constructed, so no exporter needs a
+ * branch for one and none can forget to have it.
+ */
+export type DocFigure = Extract<Figure, { type: 'bars' | 'steps' | 'image' }>;
+
+/** Which arms those are, for a picker that has to offer them. */
+export const DOC_FIGURES: DocFigure['type'][] = ['bars', 'steps', 'image'];
+
+/**
+ * A figure reduced to the table both exporters can write.
+ *
+ * One function rather than a branch in each of them, because the two exports
+ * disagreeing about a document is the thing `lib/exportqa.ts` exists to catch
+ * and there is no reason to build a fresh opportunity for it. Word gets this
+ * as a real table and the PDF gets it through the same `table` that draws
+ * every other one — which is how a figure long enough to cross a page gets
+ * the repeated header row without either of them writing that twice.
+ *
+ * A bar chart is its labels and its values: the bars are a way of reading
+ * those two columns, not a third thing the figure knows. A sequence is its
+ * steps in order. Neither loses anything a reader needed.
+ *
+ * `null` for a picture, which is not a table and does not want to be one.
+ */
+export function figureTable(figure: DocFigure): { rows: string[][] } | null {
+  if (figure.type === 'image') return null;
+  if (figure.type === 'bars') {
+    const unit = figure.unit.trim();
+    return {
+      rows: [
+        ['', unit || 'Value'],
+        ...figure.rows.map((row) => [row.l, `${row.v}${unit ? ` ${unit}` : ''}`]),
+      ],
+    };
+  }
+  return {
+    rows: [
+      ['Step', 'What happens'],
+      ...figure.steps.map((step) => [step.n.trim() ? `${step.n}. ${step.t}` : step.t, step.d]),
+    ],
+  };
+}
+
+/** Every word in a figure, for search and for whether it is content at all. */
+export function figureSays(figure: DocFigure): string {
+  const parts = [figure.title, figure.caption];
+  if (figure.type === 'bars') parts.push(figure.unit, ...figure.rows.map((r) => `${r.l} ${r.v}`));
+  if (figure.type === 'steps') parts.push(...figure.steps.map((s) => `${s.n} ${s.t} ${s.d}`));
+  return parts.join(' ').replace(/\s+/g, ' ').trim();
+}
 
 export type Block = Kinded & { notes?: Note[] };
 
@@ -310,6 +404,7 @@ export const BLOCK_LABEL: Record<BlockKind, string> = {
   equation: 'Equation',
   code: 'Code',
   image: 'Picture',
+  figure: 'Figure',
   toc: 'Contents',
   rule: 'Divider',
   break: 'Page break',
@@ -342,6 +437,12 @@ export function blankBlock(kind: BlockKind): Block {
       return { kind: 'checks', items: [{ text: '', done: false }] };
     case 'image':
       return { kind: 'image', fileId: '', name: '', alt: '', caption: '' };
+    /*
+     * Empty means an empty bar chart, not an empty union: every renderer can
+     * draw this, and the picker replaces it with a figure from a guide.
+     */
+    case 'figure':
+      return { kind: 'figure', figure: { type: 'bars', title: '', caption: '', unit: '', max: 0, rows: [] } };
     case 'toc':
       return { kind: 'toc', title: 'Contents' };
     case 'rule':
@@ -580,6 +681,7 @@ export function summary(blocks: Block[]): string {
     'quote',
     'table',
     'image',
+    'figure',
     'equation',
     'code',
     'toc',
@@ -619,6 +721,9 @@ export function hasContent(doc: Partial<Doc> & Pick<Doc, 'blocks'>): boolean {
      * to decide whether there is anything worth exporting.
      */
     if (b.kind === 'toc') return false;
+    // A figure is content once it has anything in it to draw, whatever it is
+    // titled: an untitled bar chart with rows is still a bar chart.
+    if (b.kind === 'figure') return figureSays(b.figure).length > 0;
     return b.text.trim() !== '';
   });
 }
@@ -738,6 +843,31 @@ export function toMarkdown(doc: Doc): string {
           `![${alt.replace(/[[\]]/g, '')}](${block.name.trim() || block.fileId})` +
             (block.caption.trim() ? `\n\n*${block.caption.trim()}*` : ''),
         );
+        break;
+      }
+      /*
+       * A figure, as the table both exports write it as.
+       *
+       * Markdown has no figure, and the honest choice between the two
+       * available is the one the exports already make: a bar chart is its
+       * labels and its values. It does not come back as a figure on import —
+       * `fromMarkdown` reads a table as a table, correctly, because by then
+       * that is all the file says it is.
+       */
+      case 'figure': {
+        const made = figureTable(block.figure);
+        if (block.figure.title.trim()) parts.push(`*${block.figure.title.trim()}*`);
+        if (made) {
+          const [head, ...body] = made.rows;
+          parts.push(
+            [
+              `| ${head.join(' | ')} |`,
+              `| ${head.map(() => '---').join(' | ')} |`,
+              ...body.map((row) => `| ${row.join(' | ')} |`),
+            ].join('\n'),
+          );
+        }
+        if (block.figure.caption.trim()) parts.push(`*${block.figure.caption.trim()}*`);
         break;
       }
       case 'quote': {

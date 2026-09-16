@@ -391,6 +391,11 @@ export function glance(doc: Pick<Doc, 'blocks'>, lines = 6): string[] {
         out.push(said ? `Picture — ${said}` : 'Picture');
         break;
       }
+      case 'figure': {
+        const said = block.figure.title.trim() || block.figure.caption.trim();
+        out.push(said ? `Figure — ${said}` : 'Figure');
+        break;
+      }
       // Neither has anything to show at thumbnail size, and a line drawn
       // across a four-line preview would read as the end of it.
       case 'rule':

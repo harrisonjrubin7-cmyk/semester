@@ -1,17 +1,20 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Equation } from '../../components/Equation';
 import {
+  figureTable,
   nested,
   runs,
   type Align,
   type Block,
   type Branch,
   type Doc,
+  type DocFigure,
   type Note,
   type Run,
 } from '../../lib/document';
 import { fontStack, layoutOf, lineHeight, pageSize } from '../../lib/doclayout';
 import { outline } from '../../lib/doctools';
+import { getFile } from '../../lib/files';
 
 /**
  * The document as the page it will be.
@@ -211,11 +214,124 @@ function Drawn({ block, headings }: { block: Block; headings: ReturnType<typeof 
      * screen reader announces it as a separator, which is the whole of what
      * the line is saying.
      */
+    /*
+     * A picture, which this drew as nothing at all.
+     *
+     * The page this component draws is "the way it will print", and a `.docx`
+     * and a `.pdf` of the same document both carry the picture — so a student
+     * checking the page before exporting saw a gap where a figure was going to
+     * be, and had no way to know which of the three was telling the truth.
+     *
+     * Found the same way `lib/exportqa.ts` found the other four: by asking
+     * every renderer what it does with every kind. The in-app view is the
+     * third rendering and nothing had been comparing it either. The `never`
+     * below is so the next kind cannot go missing the same way — this
+     * function returns an element, and a kind with no case falls out of the
+     * switch as `undefined`, which React draws as nothing and TypeScript is
+     * content with.
+     */
+    case 'image':
+      return (
+        <figure className="docpaper-figure">
+          <Held fileId={block.fileId} alt={block.alt || block.name || 'Picture'} />
+          {block.caption.trim() && <figcaption className="docpaper-cap">{block.caption}</figcaption>}
+        </figure>
+      );
+    case 'figure':
+      return (
+        <figure className="docpaper-figure">
+          {block.figure.title.trim() && (
+            <figcaption className="docpaper-cap">{block.figure.title}</figcaption>
+          )}
+          {block.figure.type === 'image' ? (
+            <Held fileId={block.figure.fileId} alt={block.figure.title || 'Figure'} />
+          ) : (
+            <FigureTable figure={block.figure} />
+          )}
+          {block.figure.caption.trim() && (
+            <figcaption className="docpaper-cap">{block.figure.caption}</figcaption>
+          )}
+        </figure>
+      );
     case 'rule':
       return <hr className="docpaper-rule" />;
     case 'break':
       return <div className="docpaper-break" aria-hidden="true" />;
   }
+  const missed: never = block;
+  return missed;
+}
+
+/**
+ * A figure's numbers, as the table both exports write.
+ *
+ * Through `figureTable`, so this page and the two files cannot disagree about
+ * what a bar chart says — which is the whole argument of `lib/exportqa.ts`,
+ * applied to the rendering it cannot see.
+ */
+function FigureTable({ figure }: { figure: DocFigure }) {
+  const made = figureTable(figure);
+  if (!made) return null;
+  return (
+    <table className="docpaper-table">
+      <tbody>
+        {made.rows.map((row, r) => (
+          <tr key={r}>
+            {row.map((cell, c) =>
+              r === 0 ? (
+                <th key={c} scope="col">
+                  {cell}
+                </th>
+              ) : (
+                <td key={c}>{cell}</td>
+              ),
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+/**
+ * A picture out of the drive, drawn on the page.
+ *
+ * The object URL is revoked when the block changes or the page closes, the
+ * same care `PictureEditor` takes and for the same reason: a document with
+ * eight figures in it, re-rendered as somebody types, is eight blobs a render.
+ */
+function Held({ fileId, alt }: { fileId: string; alt: string }) {
+  const [url, setUrl] = useState('');
+  useEffect(() => {
+    let made = '';
+    let dropped = false;
+    /*
+     * Caught, not just awaited. A drive that refuses — private browsing, a
+     * quota, a jsdom with no IndexedDB in it — rejects here, and a rejection
+     * inside an effect is unhandled: it reaches the window, not the caller.
+     * There is nothing for a reader to do about it, and the answer is already
+     * written: no picture, and the caption under it, which is what both
+     * exports print for a file that is gone.
+     */
+    const reading = fileId ? getFile(fileId).catch(() => undefined) : Promise.resolve(undefined);
+    void reading.then((file) => {
+      if (dropped) return;
+      if (!file) {
+        setUrl('');
+        return;
+      }
+      made = URL.createObjectURL(file.blob);
+      setUrl(made);
+    });
+    return () => {
+      dropped = true;
+      if (made) URL.revokeObjectURL(made);
+    };
+  }, [fileId]);
+  // Nothing rather than a broken-image icon: a file taken out of the drive is
+  // a caption with no picture, which is what both exports do with it too.
+  if (!url) return null;
+  return <img className="docpaper-picture" src={url} alt={alt} />;
 }
 
 /**

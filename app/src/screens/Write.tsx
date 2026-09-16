@@ -6,6 +6,7 @@ import { CoursePicker } from '../components/CoursePicker';
 import { DeadlinePicker } from '../components/DeadlinePicker';
 import { forLine } from '../lib/forwork';
 import { Equation } from '../components/Equation';
+import { FigureCard } from '../components/FigureCard';
 import { ActionButton, FilePick, SectionLabel, Toggle } from '../components/ui';
 import { Bench, Tool, ToolPick, ToolRule } from '../components/Bench';
 import { Gallery, type Starter } from '../components/Gallery';
@@ -28,18 +29,21 @@ import { pictureLike, sizeOf } from '../lib/imagesize';
 import {
   BLOCK_LABEL,
   DEEPEST,
+  DOC_FIGURES,
   blankBlock,
   docFileName,
+  figureSays,
   fromMarkdown,
   hasContent,
   listed,
   summary,
   toMarkdown,
   words,
+  type Align,
   type Block,
   type BlockKind,
-  type Align,
   type Doc,
+  type DocFigure,
   type Line,
   type Note,
 } from '../lib/document';
@@ -203,7 +207,7 @@ function Paper({ doc }: { doc: Pick<Doc, 'blocks'> }) {
  */
 const INSERT_GROUPS: BlockKind[][] = [
   ['heading', 'text', 'bullets', 'checks'],
-  ['quote', 'table', 'image', 'equation', 'code', 'toc', 'rule', 'break'],
+  ['quote', 'table', 'image', 'figure', 'equation', 'code', 'toc', 'rule', 'break'],
 ];
 
 /** Every kind the screen can insert, flattened out of the groups above. */
@@ -224,6 +228,7 @@ const INSERT_LABEL: Record<BlockKind, string> = {
   quote: 'Insert a quotation',
   table: 'Insert a table',
   image: 'Insert a picture',
+  figure: "Insert one of the app's figures",
   equation: 'Insert an equation',
   code: 'Insert a code block',
   toc: 'Insert a contents page',
@@ -577,13 +582,16 @@ function Editor({ doc }: { doc: Doc }) {
   /**
    * The PDF, written by this app rather than by the print dialog.
    *
-   * Synchronous, unlike the Word file: there is no zip to build and nothing
-   * to fetch, because a picture's bytes do not go in — see `lib/pdfout.ts`.
+   * Asynchronous now, and for the one reason the Word file is: a picture's
+   * bytes are in IndexedDB and laying a document out is a pure function of the
+   * document, so whoever exports fetches them first. Both exports go through
+   * the same `pictureOf`, which is the point — they were handing in two
+   * different documents while only one of them did.
    */
-  const savePdf = () => {
+  const savePdf = async () => {
     download({
       name: docFileName(doc.title, 'pdf'),
-      body: pdfFile(doc),
+      body: pdfFile(doc, await pictureOf(doc)),
       mime: 'application/pdf',
     });
     say('PDF saved.');
@@ -633,7 +641,7 @@ function Editor({ doc }: { doc: Doc }) {
             id: 'file.pdf',
             label: 'Download as PDF (.pdf)',
             hint: 'Made here, so it is the same file on every machine.',
-            run: empty ? undefined : savePdf,
+            run: empty ? undefined : () => void savePdf(),
           },
           {
             id: 'file.md',
@@ -1951,6 +1959,9 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
     case 'image':
       return <PictureEditor block={block} onChange={onChange} />;
 
+    case 'figure':
+      return <FigureEditor block={block} onChange={onChange} />;
+
     case 'equation':
       return <EquationEditor block={block} onChange={onChange} />;
 
@@ -2154,6 +2165,117 @@ function PictureEditor({
       <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
         The alt text is what a screen reader reads out in Word, and it is not the caption — a
         caption says what to make of the picture, alt text says what is in it.
+      </div>
+    </>
+  );
+}
+
+/**
+ * One of the app's own figures, chosen out of the courses on this device.
+ *
+ * The other half of "a picture in a document": `PictureEditor` above is a file
+ * somebody added, and this is the bar chart or the worked sequence that is
+ * already in a course guide — the thing a student writing up a problem set
+ * wants, and used to get by screenshotting the app and cropping it.
+ *
+ * ## Why three of the five, said out loud
+ *
+ * `lib/document.ts` narrows a document figure to `bars`, `steps` and `image`,
+ * and the sentence under the list here says so. A course's seventeen drawn
+ * diagrams and anything from the Draw screen are SVG at the moment of display,
+ * neither exporter can rasterise one, and a figure that arrives in the `.docx`
+ * as a caption over an empty space is the defect `lib/exportqa.ts` was written
+ * to find. Leaving them out of the list without a word reads as a bug, which
+ * is the one thing worse than leaving them out.
+ */
+function FigureEditor({
+  block,
+  onChange,
+}: {
+  block: Extract<Block, { kind: 'figure' }>;
+  onChange: (next: Block) => void;
+}) {
+  const { catalog, courseCode } = useStore();
+
+  /*
+   * Every figure on this device that a document can hold, with the course it
+   * came from. Both places a course keeps them: the map keyed by unit, and the
+   * extras that belong to no single unit.
+   */
+  const offered = useMemo(() => {
+    const out: { key: string; code: string; figure: DocFigure }[] = [];
+    for (const course of catalog.courses) {
+      const code = courseCode(course.id);
+      const found = [
+        ...Object.values(catalog.figures[course.id] ?? {}),
+        ...(catalog.extraFigures[course.id] ?? []),
+      ];
+      for (const figure of found) {
+        if (!figure) continue;
+        if (!DOC_FIGURES.includes(figure.type as DocFigure['type'])) continue;
+        out.push({ key: `${course.id}:${out.length}`, code, figure: figure as DocFigure });
+      }
+    }
+    return out;
+  }, [catalog, courseCode]);
+
+  const chosen = offered.find((o) => o.figure === block.figure);
+  const empty = figureSays(block.figure) === '';
+
+  return (
+    <>
+      <select
+        className="input"
+        value={chosen?.key ?? ''}
+        onChange={(e) => {
+          const picked = offered.find((o) => o.key === e.target.value);
+          if (picked) onChange({ ...block, figure: picked.figure });
+        }}
+        aria-label="Which figure to place"
+        style={{ width: '100%', height: 40 }}
+      >
+        <option value="">Choose a figure…</option>
+        {offered.map((o) => (
+          <option key={o.key} value={o.key}>
+            {o.code} · {o.figure.title || 'Untitled figure'}
+          </option>
+        ))}
+      </select>
+
+      {offered.length === 0 && (
+        <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
+          None of the courses on this device has a figure a document can hold yet. A course built
+          from a syllabus gets figures when somebody adds them.
+        </div>
+      )}
+
+      {!empty && (
+        <div style={{ marginTop: 'var(--sp-5)' }}>
+          <FigureCard figure={block.figure} />
+        </div>
+      )}
+
+      <input
+        className="input"
+        value={block.figure.title}
+        onChange={(e) => onChange({ ...block, figure: { ...block.figure, title: e.target.value } })}
+        placeholder="Title — printed above it"
+        aria-label="The figure’s title"
+        style={{ width: '100%', height: 38, marginTop: 'var(--sp-5)' }}
+      />
+      <input
+        className="input"
+        value={block.figure.caption}
+        onChange={(e) => onChange({ ...block, figure: { ...block.figure, caption: e.target.value } })}
+        placeholder="Caption — printed under it. Optional."
+        aria-label="The figure’s caption"
+        style={{ width: '100%', height: 38, marginTop: 'var(--sp-4)' }}
+      />
+      <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
+        A copy, not a link: editing the guide later will not change what this document says. Bar
+        charts, worked sequences and pictures only — the drawn diagrams are SVG, neither Word nor
+        the PDF can redraw one, and a figure that exported as a caption over nothing would be
+        worse than not offering it.
       </div>
     </>
   );

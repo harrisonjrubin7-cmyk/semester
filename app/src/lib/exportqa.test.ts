@@ -96,3 +96,58 @@ describe('the comparison, which is a claim about itself as well', () => {
     expect(found[0].why).toBe('not in the exported text');
   });
 });
+
+describe('the fifth difference, which was the last one open', () => {
+  /*
+   * A picture was embedded in the `.docx` and drawn as `[Alt text]` in the
+   * PDF. The comparison reported it from the day it was written and could not
+   * be made clean, because the `Drawing` union had no picture in it to count.
+   */
+  const png = (() => {
+    const crc = (buf: number[]) => {
+      let c = ~0;
+      for (const b of buf) {
+        c ^= b;
+        for (let k = 0; k < 8; k += 1) c = (c >>> 1) ^ (0xedb88320 & -(c & 1));
+      }
+      return ~c >>> 0;
+    };
+    const chunk = (tag: string, body: number[]) => {
+      const name = [...tag].map((c) => c.charCodeAt(0));
+      const n = body.length;
+      const sum = crc([...name, ...body]);
+      return [
+        (n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255,
+        ...name, ...body,
+        (sum >>> 24) & 255, (sum >>> 16) & 255, (sum >>> 8) & 255, sum & 255,
+      ];
+    };
+    return new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      ...chunk('IHDR', [0, 0, 0, 60, 0, 0, 0, 40, 8, 2, 0, 0, 0]),
+      ...chunk('IDAT', [0x78, 0x9c, 0x01, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x01]),
+      ...chunk('IEND', []),
+    ]);
+  })();
+
+  const withPicture = doc([
+    { kind: 'text', text: 'A paragraph, then the figure.' },
+    { kind: 'image', fileId: 'pic', name: 'chart.png', alt: 'A chart', caption: 'Figure 1' },
+  ]);
+  const held = (id: string) => (id === 'pic' ? { bytes: png, size: { width: 60, height: 40, kind: 'png' as const } } : undefined);
+
+  it('says the same thing in both, now that both carry the picture', () => {
+    expect(compare(withPicture, held)).toEqual([]);
+    expect(inDocx(withPicture, held).count('picture')).toBe(1);
+    expect(inPdf(withPicture, held).count('picture')).toBe(1);
+  });
+
+  it('still reports the difference when only one of them can carry it', () => {
+    // The comparison has not stopped being able to see this: hand the bytes
+    // to neither and both sides say so, which is what it said about the PDF
+    // alone for as long as only the PDF could not.
+    const found = compare(withPicture);
+    expect(found.map((f) => f.side).sort()).toEqual(['docx', 'pdf']);
+    expect(found.every((f) => f.wanted === 'picture')).toBe(true);
+  });
+});

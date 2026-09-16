@@ -41,7 +41,16 @@
  */
 
 import { outline } from './doctools';
-import { listed, runs, type Align, type Block, type Doc, type Line, type Note } from './document';
+import {
+  figureTable,
+  listed,
+  runs,
+  type Align,
+  type Block,
+  type Doc,
+  type Line,
+  type Note,
+} from './document';
 import { layoutOf, lineHeight, pageSize, type Layout } from './doclayout';
 import { omml, parse } from './maths';
 import { HEAD, REL, xml } from './ooxml';
@@ -671,6 +680,32 @@ function blockXml(
           ? drawing(at, pictures.id(block.fileId, pic), pic, block.alt, block.name)
           : '';
       return block.caption.trim() ? `${body}${para(block.caption, 'Caption', '', links)}` : body;
+    }
+    /*
+     * One of the app's own figures.
+     *
+     * Through `figureTable` and then through the same `table` every other
+     * table goes through, so this side and the PDF cannot drift apart on a
+     * figure the way they had on an equation. A picture figure is the picture
+     * block's own path for the same reason.
+     */
+    case 'figure': {
+      const figure = block.figure;
+      const title = figure.title.trim() ? para(figure.title, 'Caption', '', links) : '';
+      const caption = figure.caption.trim() ? para(figure.caption, 'Caption', '', links) : '';
+      if (figure.type === 'image') {
+        const pic = figure.fileId && found ? found(figure.fileId) : undefined;
+        const body =
+          pic && pictures
+            ? drawing(at, pictures.id(figure.fileId, pic), pic, figure.title, figure.title)
+            : '';
+        return `${title}${body}${caption}`;
+      }
+      const made = figureTable(figure);
+      const body = made
+        ? table({ kind: 'table', rows: made.rows, header: true, caption: '' }, links)
+        : '';
+      return `${title}${body}${caption}`;
     }
     /*
      * A divider, as an empty paragraph with a line under it.

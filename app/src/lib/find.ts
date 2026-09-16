@@ -61,7 +61,7 @@ import type {
   StudyMode,
 } from './types';
 import { liveGuide } from './live';
-import type { Block, Doc } from './document';
+import { figureSays, type Block, type Doc } from './document';
 import type { Sheet } from './sheet';
 import type { StoredDeck } from './decks';
 
@@ -249,6 +249,10 @@ function bodyOfBlock(b: Block): string {
     // nothing else somebody wrote.
     case 'image':
       return `${b.alt} ${b.caption} ${b.name}`;
+    // Every label, value and step in a figure. "Which essay had the elasticity
+    // chart in it" is the same question search already answers about a table.
+    case 'figure':
+      return figureSays(b.figure);
     case 'toc':
       return b.title;
     case 'rule':

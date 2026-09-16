@@ -693,11 +693,11 @@ The other two are complete enough to use daily and not yet complete enough to
 hand to another student without caveats — though both caveats are narrower than
 the draft records.
 
-### 5.1 · Document Editor — Partial
+### 5.1 · Document Editor — Live
 
-**Current state.** Twelve block kinds (`app/src/lib/document.ts`): heading, text,
-bullets, quote, table, equation, code, checks, image, table of contents, rule and
-page break, each with notes. It exports to real `.docx` (`lib/docx.ts`, 1,019
+**Current state.** Thirteen block kinds (`app/src/lib/document.ts`): heading,
+text, bullets, quote, table, equation, code, checks, image, **figure**, table of
+contents, rule and page break, each with notes. It exports to real `.docx` (`lib/docx.ts`, 1,019
 lines of OOXML written directly) and to real `.pdf` (`lib/pdf.ts`, written
 without a library, placing every line by hand because nothing in a PDF wraps
 text).
@@ -727,7 +727,13 @@ having compared the two files a student can hand in.
 2. **Embedded figures** — an `image` block holds a file you added. There is no
    way to place one of the app's *own* figures, charts or plots into a document,
    which is the thing a student actually wants when writing up a problem set.
-   **Still open.**
+   **Closed.** A `figure` block carries one of the app's own figures — a copy
+   rather than a reference, because exporting is a pure function of the
+   document and a guide edited in October would otherwise change what a
+   September essay says. `figureTable` reduces it once and the `.docx`, the
+   PDF, the markdown and the page the editor draws all read that one
+   reduction, so a new kind could not open a sixth way for the renderings to
+   disagree.
 3. **Export fidelity under wider structures.** The real gap, and much wider than
    "edge cases": the two exporters had never been asked whether they agreed, and
    they did not. **Closed**, by `app/src/lib/exportqa.ts` and what it found.
@@ -742,7 +748,7 @@ checks both files for it. On a fixture document holding one of everything:
 | A table's caption | Word's own Caption style | nothing at all | printed under the table |
 | A 60-row table over three pages | header repeats (`w:tblHeader`) | header on page 1 only | header on every page |
 | Greek and operators in a formula | carried | dropped to spaces | spelled out |
-| A picture | embedded | `[Alt text]` in italics | **still open** |
+| A picture | embedded | `[Alt text]` in italics | the picture (`lib/pdfimage.ts`) |
 
 **The probe is a claim about itself.** Three of the first four findings were
 faults in the comparison rather than in the exporters, and the control surfaced
@@ -757,18 +763,48 @@ day somebody fixes a defect.
 **Dependencies.** The math engine (Live, already wired). Figures (§3.1) for the
 figure block.
 
-**Estimated effort.** Medium. About half of it spent.
+**Three of the five figure arms, and why.** A document figure is narrowed at
+the type to `bars`, `steps` and `image` (`DocFigure`). The other two — the
+seventeen hand-drawn diagrams and anything from the Draw screen — are SVG at
+the moment of display, neither exporter can rasterise one, and a figure that
+arrived in the `.docx` as a caption over an empty space is precisely the defect
+the comparison was written to find. `lib/imagesize.ts:151` makes the same call
+one layer down in the same words: not offer them rather than offer them and
+fail on export. The picker says which two are missing and why, because a
+figure simply absent from a list reads as a bug.
 
-**Done when.** ~~The fixture document round-trips through `.docx` and `.pdf`
-with no visual diff against the in-app view; the control document fails the same
-check~~ — **done**, as a content comparison rather than a pixel diff, for the
-reason `lib/exportqa.ts` gives: a real visual diff needs Word, a PDF renderer
-and a browser in one room, and this has to run in the suite. Still open: **an
-app figure can be placed in a document and exported legibly**, which wants the
-figure block and a real picture in the PDF — one piece of work rather than two.
+**A sixth difference, in the rendering nothing was comparing.** The comparison
+reads two files; the page the editor draws is a React tree and it cannot see
+that one. Asking every renderer what it does with every kind — the question
+that found the other five — found that `screens/write/Paper.tsx` had **no case
+for a picture at all**, so a document with a figure in it drew a blank space on
+the page headed "the way it will print" while both exports carried it. Closed,
+with a `never` at the foot of that switch and of `lib/pdfout.ts`'s, since both
+return nothing and a missing case in either draws nothing rather than failing
+the typecheck.
 
-**Sequencing: Phase 1. The comparison and the export defects are done; the
-figure block and the picture in the PDF are what is left of this item.**
+**What the PDF will not carry, stated rather than discovered.**
+`lib/pdfimage.ts` hands a picture's bytes to the file without decoding them —
+a baseline JPEG under `DCTDecode`, a PNG's concatenated `IDAT` under
+`FlateDecode` with PNG's own row filters as `Predictor 15`. It refuses a PNG
+with an alpha channel (a PDF has no image with alpha in it; transparency is a
+second image, and splitting one interleaved stream means inflating it), a
+palette with `tRNS`, an interlaced or non-8-bit PNG, a progressive JPEG and a
+GIF. A refusal prints the alt text exactly as before: visibly not there rather
+than silently wrong.
+
+**Estimated effort.** Was medium. Spent.
+
+**Done when — and it is.** ~~The fixture document round-trips through `.docx`
+and `.pdf` with no visual diff against the in-app view; the control document
+fails the same check~~ — done, as a content comparison rather than a pixel
+diff, for the reason `lib/exportqa.ts` gives: a real visual diff needs Word, a
+PDF renderer and a browser in one room, and this has to run in the suite.
+~~An app figure can be placed in a document and exported legibly~~ — done, for
+the three arms both exports can carry, with the other two refused at the type
+and named in the picker.
+
+**Sequencing: Phase 1, done.**
 
 ### 5.2 · Spreadsheet — Partial
 
@@ -876,7 +912,7 @@ disproportionate effect on what a pilot student sees.
 | 4 | **Exam Runway** — model-read scope as a confirmable fourth source (§4.3) | Low | — | Smaller than believed; visible in the weeks a pilot runs |
 | 5 | **Where Courses Meet** — semantic matching as a fifth grade (§4.1) | Medium | — | The most distinctive claim in the product |
 | 6 | **Quote Verification** — local semantic match + adversarial pass (§4.4) | Medium | — | Technical work must precede any release decision |
-| 7 | **Document Editor** — ~~tables~~, figure block, ~~export QA with a control~~ (§5.1) | Medium | — | Exports are what leaves the app and gets marked. The comparison and the four export defects it found are done; the figure block and a real picture in the PDF are what is left |
+| 7 | ~~**Document Editor** — tables, figure block, export QA with a control (§5.1)~~ **Done** | Medium | — | Exports are what leaves the app and gets marked |
 | 8 | **Slides** — bullet, comparison, quote-and-source layouts (§3.2) | Low-med | — | Cheap once Figures lands |
 
 **Phase 1 exit criteria.** All eight **Done when** conditions met; `cd app` and
