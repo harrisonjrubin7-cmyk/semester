@@ -1,6 +1,7 @@
 import { flatten } from './cite';
 import type { Piece } from './harvest';
 import type { CourseUpdate, Example, Figure, GradeRow, Guide, Item, StudyCard, Term } from './types';
+import { says } from './casework';
 
 /**
  * What is actually new, and what the course already has.
@@ -437,13 +438,13 @@ function judge(
     case 'example': {
       const same = (ctx.held.examples ?? []).find((e) => flatten(e.t) === flatten(piece.example.t));
       if (!same) return { piece, verdict: 'new', because: 'Not among the worked examples.' };
-      if (overlap(same.d, piece.example.d) >= SAME) {
+      if (overlap(says(same), says(piece.example)) >= SAME) {
         return { piece, verdict: 'duplicate', against: same.t, because: 'Already worked the same way.' };
       }
       return {
         piece,
         verdict: 'fuller',
-        against: `${same.t} — ${same.d}`,
+        against: `${same.t} — ${says(same)}`,
         because: 'A different working of the same example.',
       };
     }

@@ -2,6 +2,7 @@ import { allCards, weakestUnit } from '../data/catalog';
 import { useEffect, useMemo, useState } from 'react';
 import { useKeepAwake } from '../lib/awake';
 import { useNow, useStore } from '../state/store';
+import { exampleKind, type Example } from '../lib/types';
 import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
 import { liveGuide, useLive } from '../lib/live';
@@ -1228,22 +1229,72 @@ function Cases() {
             >
               {e.t}
             </div>
-            <div
-              style={{
-                fontSize: 'var(--type-md)',
-                lineHeight: 'var(--leading-relaxed)',
-                color: 'var(--app-dim)',
-                marginTop: 'var(--sp-2)',
-                textWrap: 'pretty',
-              }}
-            >
-              {e.d}
-            </div>
+            <Worked example={e} />
           </Blueprint>
         ))}
       </div>
     </Folding>
   );
+}
+
+/**
+ * An example's body, in the shape it is.
+ *
+ * `lib/casework.ts` widened `Example` from a paragraph into three shapes, and
+ * this is where the other two stop being one. A worked problem drawn as prose
+ * is a paragraph with numbers in it — the steps being separate, numbered and
+ * in order is the whole of what makes it a worked example, and running them
+ * together loses exactly the thing that was added.
+ */
+function Worked({ example }: { example: Example }) {
+  const body = {
+    fontSize: 'var(--type-md)',
+    lineHeight: 'var(--leading-relaxed)',
+    color: 'var(--app-dim)',
+    marginTop: 'var(--sp-2)',
+    textWrap: 'pretty',
+  } as const;
+  const kind = exampleKind(example);
+
+  if (kind === 'worked') {
+    const e = example as Extract<Example, { kind: 'worked' }>;
+    return (
+      <>
+        <div style={body}>{e.statement}</div>
+        <ol style={{ margin: 'var(--sp-4) 0 0', paddingLeft: '1.3em', ...body }}>
+          {e.steps.map((step) => (
+            <li key={step} style={{ marginBottom: 'var(--sp-2)' }}>
+              {step}
+            </li>
+          ))}
+        </ol>
+        <div style={{ ...body, color: 'var(--app-ink)' }}>{e.result}</div>
+      </>
+    );
+  }
+
+  if (kind === 'study') {
+    const e = example as Extract<Example, { kind: 'study' }>;
+    return (
+      <>
+        {(
+          [
+            ['Situation', e.situation],
+            ['The question', e.question],
+            ['Analysis', e.analysis],
+            ['What it turned on', e.turned],
+          ] as const
+        ).map(([label, said]) => (
+          <div key={label} style={{ marginTop: 'var(--sp-4)' }}>
+            <div className="kicker">{label}</div>
+            <div style={body}>{said}</div>
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  return <div style={body}>{(example as Extract<Example, { kind?: 'applied' }>).d}</div>;
 }
 
 function Cram() {
