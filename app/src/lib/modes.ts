@@ -16,6 +16,7 @@
 import type { Catalog } from '../data/catalog';
 import { allCards } from '../data/catalog';
 import { distinctAnswers } from './quiz';
+import { canSpeak } from './speak';
 import type { CourseId, Guide, StudyMode, Example } from './types';
 
 export interface ModeInfo {
@@ -44,9 +45,57 @@ interface Source {
   lessons: Record<number, unknown>;
   figures: Record<number, unknown>;
   extras: unknown[];
+  /**
+   * Whether this device will read a lesson out loud.
+   *
+   * Overridable for a test, and answered from the browser when nobody says —
+   * `lib/speak.ts` explains when it can be no: a browser without
+   * `speechSynthesis`, or one that has it and refuses.
+   *
+   * Asked here rather than required of the caller, and that is the whole
+   * point. There are four places that build one of these, and a fifth will
+   * arrive; a field every one of them has to remember is how a mode comes to
+   * promise narration on a device that cannot give it, which is the failure
+   * at the top of this file. A default of `true` would do the same thing
+   * more quietly.
+   */
+  canSpeak?: boolean;
 }
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+/** The Watch card, which has three states rather than two. */
+function watch(lessons: number, units: number, canSpeak: boolean): ModeInfo {
+  if (lessons > 0) {
+    return {
+      id: 'watch',
+      label: 'Watch',
+      blurb: 'A narrated lesson per unit, the slide changing as the voice moves.',
+      count: plural(lessons, 'lesson'),
+      ready: true,
+    };
+  }
+  if (units > 0 && canSpeak) {
+    return {
+      id: 'watch',
+      label: 'Watch',
+      blurb: 'This unit read aloud by your device, one question at a time — not a recording.',
+      count: `${plural(units, 'unit')}, read here`,
+      ready: true,
+    };
+  }
+  return {
+    id: 'watch',
+    label: 'Watch',
+    blurb: 'A narrated lesson per unit, the slide changing as the voice moves.',
+    count: plural(0, 'lesson'),
+    ready: false,
+    missing:
+      units > 0
+        ? 'Nothing is recorded for this course, and this browser will not read aloud.'
+        : 'No lessons rendered for this course.',
+  };
+}
 
 export function modesFor(cat: Catalog, courseId: CourseId, src: Source): ModeInfo[] {
   const { guide, lessons, figures, extras } = src;
@@ -100,14 +149,22 @@ export function modesFor(cat: Catalog, courseId: CourseId, src: Source): ModeInf
       ready: units > 0,
       missing: 'Nothing to read until this course has units.',
     },
-    {
-      id: 'watch',
-      label: 'Watch',
-      blurb: 'A narrated lesson per unit, the slide changing as the voice moves.',
-      count: plural(lessonCount, 'lesson'),
-      ready: lessonCount > 0,
-      missing: 'No lessons rendered for this course.',
-    },
+    /*
+     * Watch, and which of the two kinds of narration this course has.
+     *
+     * A recorded lesson is a voice somebody rendered with `audio/synth.py`
+     * over a cue list, and a spoken one is this device reading the unit's own
+     * cards. They are not the same thing and the card says which — §3.3 of
+     * the completion plan: a mode that looks identical whether it has
+     * forty-four produced lessons behind it or a robot voice is the exact
+     * failure this file was written to end.
+     *
+     * The third state is the one that used to be the only one for a generated
+     * course: units exist, and the browser will not speak. Then there is
+     * genuinely nothing to play, and it says so in those words rather than
+     * naming a Python script the reader does not have.
+     */
+    watch(lessonCount, units, src.canSpeak ?? canSpeak()),
     {
       id: 'slides',
       label: 'Slides',

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
+import { secondLine } from '../lib/dim';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -9,6 +10,8 @@ import { ChevronLeft, ChevronRight } from '../components/Icons';
 import { FigureCard } from '../components/FigureCard';
 import { ask, mine, playHere, seekTo, setRate, usePlayback } from '../lib/sound.hook';
 import { clock } from '../lib/sound';
+import { canSpeak, hush, speakThen } from '../lib/speak';
+import { spokenLesson } from '../lib/watch';
 import type { Figure, LessonCue, StudyCard } from '../lib/types';
 import {
   atFirstBeat,
@@ -57,6 +60,40 @@ function describeBeats(beats: Beat[]): string {
  * The two type sizes a played-back beat uses, as objects rather than repeated
  * inline — a card and a note are the same slide with different words in it.
  */
+/**
+ * The slide both players draw on.
+ *
+ * One frame rather than two sets of the same numbers: a recorded lesson and a
+ * spoken one are the same screen with different sources of narration, and two
+ * copies of `padding: 20; minHeight: 260` is how they stop being.
+ */
+const SLIDE = {
+  marginTop: 'var(--sp-7)',
+  padding: 'var(--sp-7)',
+  minHeight: 260,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  background: 'var(--app-hero)',
+} as const;
+
+/** The two arrows either side of the play control, in both players. */
+const ARROW = { width: 52, height: 44 } as const;
+
+const READ = {
+  flex: 1,
+  height: 44,
+  fontSize: 'var(--type-sm)',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+} as const;
+
+const TITLE = {
+  fontSize: 'var(--type-lg)',
+  lineHeight: 'var(--leading-tight)',
+  marginTop: 'var(--sp-1)',
+} as const;
+
 const BEAT_TITLE = {
   fontFamily: 'var(--font-heading)',
   fontSize: 'calc(22px * var(--text-scale, 1))',
@@ -76,7 +113,7 @@ const BEAT_BODY = {
 export function LessonPlayer() {
   // A row's padding and hairline, from the layout rather than hard-coded.
   const chapterRow = useRowStyle(10);
-  const { state, dispatch } = useStore();
+  const { state } = useStore();
   const { guide, lessons, figures, onUnit, figuresOn } = useLive(state.guideId);
   const unit = state.lessonUnit;
   const lesson = lessons[unit];
@@ -164,26 +201,14 @@ export function LessonPlayer() {
     setExtra(0);
   }
 
-  const withLesson = Object.keys(lessons).map(Number).sort((a, b) => a - b);
-  const here = withLesson.indexOf(unit);
-  const prevUnit = here > 0 ? withLesson[here - 1] : null;
-  const nextUnit = here >= 0 && here < withLesson.length - 1 ? withLesson[here + 1] : null;
 
+  /*
+   * Nothing recorded for this unit, which for a generated course is every
+   * unit. It used to end here, on the name of a Python script somebody
+   * without a checkout cannot run. `lib/watch.ts` reads the unit out instead.
+   */
   if (!lesson) {
-    return (
-      <Page>
-        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
-          <div className="kicker">No lesson yet</div>
-          <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 1.1 }}>
-            {guide.units[unit]?.name ?? 'This unit'} has not been recorded
-          </div>
-          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
-            Lessons are rendered by the pipeline, one per unit:{' '}
-            <code style={{ fontSize: 'var(--type-sm)' }}>python3 pipeline/lessons.py {state.guideId}</code>
-          </div>
-        </Blueprint>
-      </Page>
-    );
+    return <SpokenLesson unit={unit} />;
   }
 
   const cue = cues[index];
@@ -426,25 +451,243 @@ export function LessonPlayer() {
         </button>
       ))}
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 18 }}>
+      <UnitStep unit={unit} units={guide.units.length} />
+    </Page>
+  );
+}
+
+/**
+ * The unit either side, in both players.
+ *
+ * Every unit, not only the recorded ones — see the note where `nextUnit` is
+ * worked out above. Extracted so the spoken player is not a room with one
+ * door: a reader who has heard this unit read out should be able to go on to
+ * the next one without going back to the guide first.
+ */
+function UnitStep({ unit, units }: { unit: number; units: number }) {
+  /*
+   * Every unit, not only the recorded ones.
+   *
+   * This walked `Object.keys(lessons)` — the units with an mp3 — which was
+   * right while a unit without one was a dead end: there was nowhere to send
+   * somebody. Now every unit has a lesson of some kind, and the old rule
+   * stranded a reader on the last recorded unit with the button greyed out
+   * and a unit after it holding three cards this device would read happily.
+   *
+   * Measured in the browser, on ECON with a reading added as a unit of its
+   * own: "unit 11 of 12", `Next unit` disabled, and nothing beyond it
+   * reachable from the tab at all.
+   */
+  const { dispatch } = useStore();
+  const go = (to: number) => dispatch({ type: 'openLesson', unit: to });
+  return (
+    <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-7)' }}>
+      <button
+        type="button"
+        className="btn btn-secondary"
+        disabled={unit === 0}
+        onClick={() => go(unit - 1)}
+        style={UNIT_BUTTON}
+      >
+        Previous unit
+      </button>
+      <button
+        type="button"
+        className="btn btn-secondary"
+        disabled={unit >= units - 1}
+        onClick={() => go(unit + 1)}
+        style={UNIT_BUTTON}
+      >
+        Next unit
+      </button>
+    </div>
+  );
+}
+
+const UNIT_BUTTON = {
+  flex: 1,
+  height: 42,
+  fontSize: 'var(--type-sm)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+} as const;
+
+/**
+ * The lesson this unit would have, read by the device.
+ *
+ * Everything above this plays an mp3 somebody rendered, against a cue list
+ * with a second on every cue. This has neither — `lib/watch.ts` has the
+ * argument, and the short version is that `speechSynthesis` offers no
+ * duration before it speaks and no way to seek, so a spoken lesson has beats
+ * rather than a timeline.
+ *
+ * What that costs is the scrub bar and the speed control, and both are
+ * absences rather than approximations: an estimated total printed where the
+ * recorded lessons print an exact one is the failure `lib/where.ts` is about.
+ * What it keeps is the shape — a slide with real type on it, one beat at a
+ * time, arrows either way — so the two players are recognisably the same
+ * screen without either claiming to be the other.
+ */
+export function SpokenLesson({ unit }: { unit: number }) {
+  const { state } = useStore();
+  const { guide, figuresOn } = useLive(state.guideId);
+  const held = guide.units[unit];
+  const figures = figuresOn(unit);
+  const spoken = useMemo(() => spokenLesson(unit, held, figures), [unit, held, figures]);
+
+  const [at, setAt] = useState(0);
+  const [reading, setReading] = useState(false);
+  /*
+   * Set when an utterance came back having said nothing.
+   *
+   * Headless Chromium has `speechSynthesis` and no voices, and so does a
+   * locked-down browser and a fresh profile on some desktops. `canSpeak`
+   * cannot tell — the object is there — so this is found by trying once, and
+   * from then on the screen says the same thing it says to a browser with no
+   * speech at all.
+   */
+  const [mute, setMute] = useState(false);
+  const beats = spoken?.beats ?? [];
+  const last = beats.length - 1;
+
+  // A new unit starts at its first beat, and stops the voice on the old one.
+  const [showing, setShowing] = useState(unit);
+  if (showing !== unit) {
+    setShowing(unit);
+    setAt(0);
+    setReading(false);
+  }
+
+  /*
+   * One utterance per beat, and the next beat when it ends.
+   *
+   * In an effect keyed on the beat rather than in the click handler, because
+   * "keep reading" has to survive an advance that the *voice* caused as well
+   * as one the reader did — and because leaving the screen mid-sentence has
+   * to stop it, which is what the cleanup is.
+   */
+  useEffect(() => {
+    if (!reading) return undefined;
+    const beat = beats[Math.min(at, last)];
+    if (!beat) return undefined;
+    const stop = speakThen(beat.said, 1, (spoke) => {
+      if (!spoke) {
+        setMute(true);
+        setReading(false);
+        return;
+      }
+      setAt((n) => {
+        if (n >= last) {
+          setReading(false);
+          return n;
+        }
+        return n + 1;
+      });
+    });
+    return stop;
+    // `beats` is rebuilt only when the unit changes, and `at` is what moves.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reading, at, unit]);
+
+  useEffect(() => () => hush(), []);
+
+  if (!spoken) {
+    return (
+      <Page>
+        <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
+          <div className="kicker">Nothing to read yet</div>
+          <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-tight)' }}>
+            {held?.name ?? 'This unit'} has no cards
+          </div>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
+            A lesson here is the unit&rsquo;s own questions and answers, read out. Add material to
+            this unit and it will have one.
+          </div>
+        </Blueprint>
+      </Page>
+    );
+  }
+
+  const beat = beats[Math.min(at, last)];
+  const dumb = mute || !canSpeak();
+
+  return (
+    <Page>
+      <div className="kicker">
+        Unit {unit + 1} of {guide.units.length} · beat {at + 1} of {beats.length}
+      </div>
+      <div style={TITLE}>{spoken.title}</div>
+
+      <Blueprint style={SLIDE}>
+        <div className="kicker" style={secondLine()}>
+          {beat.kind === 'title'
+            ? 'This unit'
+            : beat.kind === 'q'
+              ? 'Question'
+              : beat.kind === 'a'
+                ? 'Answer'
+                : beat.kind === 'figure'
+                  ? 'Figure'
+                  : 'End'}
+        </div>
+        {beat.kind === 'figure' && beat.figure ? (
+          <FigureCard figure={beat.figure} />
+        ) : (
+          <div style={BEAT_TITLE}>{beat.text}</div>
+        )}
+      </Blueprint>
+
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
         <button
           type="button"
           className="btn btn-secondary"
-          disabled={prevUnit === null}
-          onClick={() => prevUnit !== null && dispatch({ type: 'openLesson', unit: prevUnit })}
-          style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', textTransform: 'uppercase', letterSpacing: '0.1em' }}
+          aria-label="Previous beat"
+          disabled={at === 0}
+          onClick={() => setAt((n) => Math.max(0, n - 1))}
+          style={ARROW}
         >
-          Previous unit
+          <ChevronLeft />
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          disabled={dumb}
+          onClick={() => setReading((on) => !on)}
+          style={READ}
+        >
+          {reading ? 'Stop' : 'Read it to me'}
         </button>
         <button
           type="button"
           className="btn btn-secondary"
-          disabled={nextUnit === null}
-          onClick={() => nextUnit !== null && dispatch({ type: 'openLesson', unit: nextUnit })}
-          style={{ flex: 1, height: 42, fontSize: 'var(--type-sm)', textTransform: 'uppercase', letterSpacing: '0.1em' }}
+          aria-label="Next beat"
+          disabled={at >= last}
+          onClick={() => setAt((n) => Math.min(last, n + 1))}
+          style={ARROW}
         >
-          Next unit
+          <ChevronRight />
         </button>
+      </div>
+
+      <UnitStep unit={unit} units={guide.units.length} />
+
+      {/*
+        The label §3.3 asks for, on the screen as well as on the mode card.
+        A reader who has heard one of the forty-four recorded lessons should
+        be able to tell in one sentence that this is not one of them.
+      */}
+      <div
+        style={{
+          ...secondLine(),
+          fontSize: 'var(--type-sm)',
+          marginTop: 'var(--sp-5)',
+          lineHeight: 'var(--leading-relaxed)',
+          textWrap: 'pretty',
+        }}
+      >
+        {dumb
+          ? 'Nothing is recorded for this unit, and this browser will not read aloud — so this is the unit in slides, which you can step through.'
+          : 'Nothing is recorded for this unit. This is your device reading the unit’s own cards, one at a time — not a recording, so there is no scrub bar and no stated length.'}
       </div>
     </Page>
   );

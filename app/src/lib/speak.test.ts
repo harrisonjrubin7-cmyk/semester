@@ -117,3 +117,116 @@ describe('the preference', () => {
     expect(readAloud()).toBe(false);
   });
 });
+
+describe('reading a lesson, one beat at a time', () => {
+  /**
+   * A voice that finishes after a stated delay, and can be told to finish
+   * instantly — which is the case that matters, because that is what a
+   * browser with no voice installed does.
+   */
+  function voice(after: number) {
+    const spoke: string[] = [];
+    let pending: (() => void) | null = null;
+    let failing: (() => void) | null = null;
+    Object.defineProperty(window, 'speechSynthesis', {
+      configurable: true,
+      value: {
+        speak: (u: SpeechSynthesisUtterance & { onend?: () => void; onerror?: () => void }) => {
+          spoke.push(u.text);
+          pending = () => u.onend?.();
+          failing = () => u.onerror?.();
+        },
+        cancel: () => {},
+      },
+    });
+    vi.stubGlobal(
+      'SpeechSynthesisUtterance',
+      class {
+        text: string;
+        rate = 1;
+        onend: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        constructor(text: string) {
+          this.text = text;
+        }
+      },
+    );
+    return {
+      spoke,
+      finish: () => {
+        vi.advanceTimersByTime(after);
+        pending?.();
+      },
+      fail: () => {
+        vi.advanceTimersByTime(after);
+        failing?.();
+      },
+    };
+  }
+
+  afterEach(() => vi.useRealTimers());
+
+  it('reports a sentence that took time to say as said', async () => {
+    vi.useFakeTimers();
+    const { speakThen } = await import('./speak');
+    const heard: boolean[] = [];
+    const v = voice(1200);
+    speakThen('A whole sentence, read out.', 1, (spoke) => heard.push(spoke));
+    v.finish();
+    expect(heard).toEqual([true]);
+  });
+
+  it('reports a sentence that came back instantly as not said', async () => {
+    /*
+     * The failure this exists for, measured in headless Chromium:
+     * `'speechSynthesis' in window` is true, `getVoices()` is empty, and every
+     * utterance completes at once. A lesson advancing on completion raced
+     * through six beats in under a second and a half, in silence.
+     *
+     * Counting voices is the obvious check and is not reliable — the list
+     * loads asynchronously and is empty on the first call in browsers that do
+     * have one. How long it took is reliable, and does not care why.
+     */
+    vi.useFakeTimers();
+    const { speakThen } = await import('./speak');
+    const heard: boolean[] = [];
+    const v = voice(0);
+    speakThen('A whole sentence, read out.', 1, (spoke) => heard.push(spoke));
+    v.finish();
+    expect(heard).toEqual([false]);
+  });
+
+  it('reports a sentence the browser refused as not said, however long it took', async () => {
+    // A voice that errors after a plausible delay is still a voice that said
+    // nothing. Reading on from there would be the same silent race as the
+    // instant case, arrived at more slowly.
+    vi.useFakeTimers();
+    const { speakThen } = await import('./speak');
+    const heard: boolean[] = [];
+    const v = voice(1200);
+    speakThen('A whole sentence, read out.', 1, (spoke) => heard.push(spoke));
+    v.fail();
+    expect(heard).toEqual([false]);
+  });
+
+  it('says nothing back at all once it has been stopped', async () => {
+    // `onend` does not fire on a cancel, so a stop that left the callbacks
+    // attached would be indistinguishable from the sentence finishing.
+    vi.useFakeTimers();
+    const { speakThen } = await import('./speak');
+    const heard: boolean[] = [];
+    const v = voice(1200);
+    const stop = speakThen('A whole sentence, read out.', 1, (spoke) => heard.push(spoke));
+    stop();
+    v.finish();
+    expect(heard).toEqual([]);
+  });
+
+  it('does not try where there is no speech at all', async () => {
+    const { speakThen } = await import('./speak');
+    const heard: boolean[] = [];
+    const stop = speakThen('Anything.', 1, (spoke) => heard.push(spoke));
+    stop();
+    expect(heard).toEqual([]);
+  });
+});

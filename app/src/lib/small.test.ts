@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 import { modeInfo, modesFor } from './modes';
 import { flatten, hitKey, landingOf, openHit } from './openhit';
 import { arrivedByShare, forgetShare, SHARE_CACHE, SHARE_KEY, takeShared } from './shared';
@@ -158,6 +159,56 @@ describe('modesFor', () => {
 
   it('answers with nothing for a mode that does not exist', () => {
     expect(modeInfo(modesFor(cat, 'econ', source()), 'nonsense' as never)).toBeUndefined();
+  });
+});
+
+// ── the Watch card, which has three states rather than two ───────────────
+
+describe('what the Watch card says it has', () => {
+  const cat = buildCatalog([module_()]);
+  const watch = (over: Partial<Parameters<typeof modesFor>[2]> = {}) =>
+    modesFor(cat, 'econ', source({ guide: guide(4), canSpeak: true, ...over })).find((m) => m.id === 'watch')!;
+
+  /*
+   * `canSpeak` is passed on purpose in every case below. It defaults to what
+   * the browser says, and in this environment that is no — so a test leaving
+   * it out would be asserting about jsdom rather than about a course.
+   */
+  it('counts recordings where there are recordings', () => {
+    expect(watch({ lessons: { 0: {}, 1: {} } }).count).toBe('2 lessons');
+    expect(watch({ lessons: { 0: {} } }).ready).toBe(true);
+  });
+
+  it('offers the device\u2019s own voice where there are none, and says so', () => {
+    /*
+     * §3.3 of the completion plan: a mode that looks identical whether it has
+     * forty-four produced lessons behind it or a robot voice is the exact
+     * failure this file's subject was written to end. So the two states do
+     * not share a sentence, and the count says which one this is.
+     */
+    const got = watch();
+    expect(got.ready).toBe(true);
+    expect(got.count).toBe('4 units, read here');
+    expect(got.blurb).toContain('not a recording');
+    expect(got.blurb).not.toBe(watch({ lessons: { 0: {} } }).blurb);
+  });
+
+  it('is empty when the browser will not speak and nothing is recorded', () => {
+    const got = watch({ canSpeak: false });
+    expect(got.ready).toBe(false);
+    expect(got.missing).toContain('will not read aloud');
+  });
+
+  it('is empty when there are no units at all, whatever the browser can do', () => {
+    const got = watch({ guide: guide(0) });
+    expect(got.ready).toBe(false);
+    expect(got.missing).toBe('No lessons rendered for this course.');
+  });
+
+  it('no longer sends a reader to a Python script they cannot run', () => {
+    // The state this replaced named `python3 pipeline/lessons.py`, which is
+    // an answer for somebody with a checkout and for nobody else.
+    expect(readFileSync('src/screens/Lesson.tsx', 'utf8')).not.toContain('pipeline/lessons.py');
   });
 });
 
