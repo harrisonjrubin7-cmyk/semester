@@ -125,6 +125,7 @@ export function Meet() {
     let sofar = '';
     try {
       await ask({
+        about: 'meeting notes',
         maxTokens: 2000,
         system: meetPrompt(sides),
         messages: [{ role: 'user', content: 'Find the pairs, or answer with none.' }],

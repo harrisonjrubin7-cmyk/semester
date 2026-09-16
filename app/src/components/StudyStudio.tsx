@@ -41,7 +41,9 @@ export function StudyStudio({courseId,onClose}:{courseId:string;onClose:()=>void
   let prompt:string;try{prompt=studyPrompt(requested,controls,refs,`${policy?.stance??'unstated'}: ${policy?.note??'No policy recorded; student confirmed permitted study use.'}`);}catch(e){setNotice((e as Error).message);return;}
   setBusy(one?one.id:'all');setNotice('');abort.current=new AbortController();
   try{
-   const text=await ask({system:STUDY_SYSTEM,messages:[{role:'user',content:prompt+(one?`\nRegenerate only the section titled ${JSON.stringify(one.title)}. Return exactly one section.`:'')}],maxTokens:12000,signal:abort.current.signal});
+   const text=await ask({
+    about: 'study studio',system:STUDY_SYSTEM,messages:[{role:'user',content:prompt+(one?`\nRegenerate only the section titled ${JSON.stringify(one.title)}. Return exactly one section.`:'')}],maxTokens:12000,
+    courseId: courseId,signal:abort.current.signal});
    const parsed=parseStudySections(text,refs,requested);
    if(one&&parsed.length!==1)throw new Error('The response contained more than the selected section. Your existing sections are unchanged.');
    if(one)commit(sections.map(s=>s.id===one.id?{...parsed[0],id:s.id}:s),refs);else {

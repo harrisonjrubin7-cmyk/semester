@@ -1151,9 +1151,19 @@ are working, that is the split.
 
 ### Phase 3 — hardening
 
-Not gap-closing. See [§7](#7-phase-3--depth-and-scale) — and note that it cannot
-start until Phase 1 has been in real hands for long enough to produce the
-measurements it is sequenced against.
+Not gap-closing. See [§7](#7-phase-3--depth-and-scale) — and note that most of
+it cannot start until Phase 1 has been in real hands for long enough to produce
+the measurements it is sequenced against.
+
+Two pieces need no pilot, because they are the instruments the rest is measured
+with rather than conclusions drawn from measurements:
+
+| # | Item | Effort | Depends on |
+| --- | --- | --- | --- |
+| 13 | ~~**Per-generation cost** — every call that spends is counted, and a course's build cost is answerable (§7.2)~~ **Done** | Medium | Nothing |
+| 14 | **Measured render and build time on the diagnostics screen** (§7.1) — "the honest first move is not optimisation, it is instrumentation a student can see" | Low-medium | Nothing |
+
+Everything else in §7 waits for students.
 
 ---
 
@@ -1206,12 +1216,46 @@ slow.
 
 Cost has two halves and only one of them is the API.
 
-**Per generation.** `app/src/lib/claude.ts` already returns
-`input_tokens`, `output_tokens`, `cache_creation_input_tokens` and
-`cache_read_input_tokens` for every reply. Nothing yet aggregates them into
-"what did this course cost to build". That aggregation is the prerequisite for
-every other cost decision in this section, it is small, and it should be done in
-Phase 2 alongside the batch pipeline rather than waiting for Phase 3.
+**Per generation. Done**, and it was worse than this paragraph said.
+`app/src/lib/claude.ts` has always returned `input_tokens`, `output_tokens`,
+`cache_creation_input_tokens` and `cache_read_input_tokens` for every reply,
+through an `onUsage` hook the caller had to remember — and **one of
+twenty-five callers remembered it**. So the trouble was not that nothing
+aggregated the counts. It was that nothing *recorded* them: building a course
+from a syllabus, checking a generated quote against its source, reading a
+syllabus for dates, drafting an email, planning an assignment, solving a
+problem and eighteen more spent the student's money and wrote down nothing.
+The meter in Settings → The assistant was the Ask tab's figure, presented as
+the app's.
+
+Seeded with a plausible term's work, the old meter read **2.0¢ of 76.4¢**.
+
+Four pieces, and the first is the one that matters:
+
+* **Recording moved inside `ask`**, so a call site cannot forget. What a caller
+  supplies now is what the call is *for* — `about`, and `courseId` where it
+  knows one. A call that says neither is still counted, under `unnamed`, which
+  is a row somebody can see and fix; money that was never counted is not.
+* **`lib/spendnames.test.ts` reads the source** and fails on an `ask` call that
+  does not say what it is for, the way `functions.test.ts` reads the engine's
+  `case` labels. Adding a call site and describing it are two different
+  afternoons.
+* **`claimFrom` closes the one gap that could not be closed at the call site.**
+  `generateCourse` cannot name its course: the id comes from the code in the
+  reply it is paying for. So the build notes when it started and claims its own
+  rows once it knows what they were for — never a row that already names a
+  course, because two builds can overlap.
+* **The meter shows both answers**: by course, which is this section's
+  question, and by what asked, which is the other one — *which course was
+  expensive* and *which part of the work was* are different questions, and the
+  build is the large line in every course.
+
+One thing found on the way, and it is a note about probes rather than about
+cost: the first version of the source check cleared `lib/classify.ts`, the one
+silent call site whose *prompt* lists a field called `about`. The probe was
+reading the words the model is sent rather than the code that sends them. It
+empties every string literal before looking now, and the line that fooled it is
+a test.
 
 **Per asset.** Audio is the expensive one, which is why §3.5's batch job is keyed
 by content hash: a topic renders once, an edited unit re-renders, an untouched one

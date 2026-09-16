@@ -108,6 +108,8 @@ export function Essay() {
     let sofar = '';
     try {
       await ask({
+        about: 'essay',
+        courseId: courseId,
         signal: abort.current.signal,
         maxTokens: 4000,
         think: true,

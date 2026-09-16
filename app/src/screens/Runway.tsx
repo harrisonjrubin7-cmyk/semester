@@ -118,6 +118,7 @@ export function Runway() {
     let sofar = '';
     try {
       await ask({
+        about: 'exam runway',
         maxTokens: 400,
         system: scopePrompt(guide.units),
         messages: [{ role: 'user', content: said }],

@@ -305,6 +305,8 @@ export function Work() {
                 setOutput('');
                 let sofar = '';
                 await ask({
+                  about: 'coursework',
+                  courseId: courseId,
                   signal,
                   maxTokens: 2400,
                   system:

@@ -196,6 +196,7 @@ export function Exam() {
     let sofar = '';
     try {
       await ask({
+        about: 'exam paper',
         signal: abort.current.signal,
         maxTokens: 6000,
         think: true,

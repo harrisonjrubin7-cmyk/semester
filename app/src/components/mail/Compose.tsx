@@ -124,6 +124,8 @@ export function Compose({
     let sofar = '';
     try {
       await ask({
+        about: 'email draft',
+        courseId: courseId,
         signal: abort.current.signal,
         maxTokens: 1200,
         system: SYSTEM,

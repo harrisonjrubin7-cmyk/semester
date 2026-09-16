@@ -79,6 +79,8 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
     let sofar = '';
     try {
       await ask({
+        about: 'project file',
+        courseId: courseId,
         signal: abort.current.signal,
         maxTokens: 4000,
         think: true,

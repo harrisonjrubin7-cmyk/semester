@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useNow, useStore } from '../state/store';
 import { ask, type ToolCall, type Turn } from '../lib/claude';
-import { provider, settings } from '../lib/assistant';
+import { provider } from '../lib/assistant';
 import type { Usage } from '../lib/spend';
 import { build as buildContext } from '../lib/context';
 import { readMode, type Mode } from '../lib/mode';
 import type { Thread } from '../lib/threads';
 import { systemPrompt } from './prompt';
 import { answerLocally, type Local } from '../lib/localask';
-import { monthStart, read as readSpend, record, since, total } from '../lib/spend';
+import { monthStart, read as readSpend, since, total } from '../lib/spend';
 import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Lists, type Proposal } from '../lib/tools';
 import { isLookup, LOOKUPS, MOST_ROUNDS, runLookups } from '../lib/lookup';
 import { currentLook } from '../state/shape';
@@ -361,6 +361,7 @@ export function useConversation(): Conversation {
           ranOut = false;
 
           const said = await ask({
+            about: state.screen,
             system: systemFor(read.mode, drawn.text),
             messages: sending,
             /*
@@ -493,10 +494,23 @@ export function useConversation(): Conversation {
          * is a meter that reads low exactly when somebody is watching it
          * because they are worried about the bill.
          */
-        if (spent) {
-          record({ at: Date.now(), model: settings().model, from: state.screen, use: spent });
-          setSpend(readSpend());
-        }
+        /*
+         * Re-read rather than recorded.
+         *
+         * `ask` writes every reply to the ledger itself now — see
+         * `AskOptions.about` — so a second write here would count this
+         * conversation twice. The accumulation above is still what the meter
+         * beside the composer shows for *this turn*, which is a different
+         * question from what the month cost, and the re-read is what moves
+         * the month's figure without waiting for a reload.
+         *
+         * The old note here was that a meter forgetting the rounds before a
+         * Stop reads low exactly when somebody is watching it because they
+         * are worried about the bill. That is now true by construction: each
+         * round is written as it finishes, so a Stop cannot lose the rounds
+         * already paid for.
+         */
+        if (spent) setSpend(readSpend());
         setStreaming('');
         setLooking([]);
         setBusy(false);

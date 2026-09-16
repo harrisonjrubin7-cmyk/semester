@@ -67,6 +67,8 @@ export function FromText() {
     let sofar = '';
     try {
       await ask({
+        about: 'reading an announcement',
+        courseId: courseId,
         signal: abort.current.signal,
         maxTokens: 2000,
         system: SYSTEM,

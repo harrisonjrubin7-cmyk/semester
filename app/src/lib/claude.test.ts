@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ask, explainAskError, readCitation, readMaterial, withAttachments, asSent, strictly, wire, CUT_OFF } from './claude';
 import { configured, proxyProblem, route, routeLabel, saveSettings, settings } from './assistant';
 import type { Turn } from './claude';
+import { UNNAMED, forget, read as readSpend } from './spend';
 
 const user = [{ role: 'user' as const, content: 'What is due first?' }];
 
@@ -1259,5 +1260,71 @@ describe('which route a question takes', () => {
         /has not been deployed/,
       );
     });
+  });
+});
+
+/**
+ * Every reply is written to the ledger by `ask` itself.
+ *
+ * It was the caller's job before, through `onUsage`, and one of twenty-five
+ * callers did it. So the meter in Settings covered the Ask tab and nothing
+ * else: building a course, checking a quote, reading a syllabus for dates all
+ * spent and recorded nothing. The point of moving it here is that a caller
+ * cannot forget — so what is worth asserting is that a call which passes no
+ * hook at all still lands on the bill.
+ */
+describe('what a reply is recorded as', () => {
+  const paid = [
+    { type: 'message_start', message: { usage: { input_tokens: 900, cache_read_input_tokens: 100 } } },
+    said('Done.'),
+    { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 40 } },
+  ];
+
+  beforeEach(() => forget());
+
+  it('records a call that passes no usage hook at all', async () => {
+    catchRequest(paid);
+    await ask({ about: 'course', system: 's', messages: [{ role: 'user', content: 'q' }] });
+    const [row] = readSpend();
+    expect([row.from, row.use.input, row.use.output, row.use.cacheRead]).toEqual(['course', 900, 40, 100]);
+  });
+
+  it('files it against the course it was told about', async () => {
+    catchRequest(paid);
+    await ask({ about: 'reading material', courseId: 'econ', system: 's', messages: [{ role: 'user', content: 'q' }] });
+    expect(readSpend()[0].courseId).toBe('econ');
+  });
+
+  it('records a call that said nothing under a name somebody can see', async () => {
+    // Not dropped. Money spent with nowhere to file it is a row on the meter
+    // reading “not said”, which somebody can fix; money never counted is not.
+    catchRequest(paid);
+    await ask({ system: 's', messages: [{ role: 'user', content: 'q' }] });
+    expect(readSpend()[0].from).toBe(UNNAMED);
+  });
+
+  it('writes nothing where the reply reported no usage', async () => {
+    // The control, and the promise `lib/spend.ts` is built on: a meter reading
+    // zero where it simply did not measure is worse than a missing number. A
+    // proxy that strips the block must leave the ledger untouched.
+    catchRequest([said('Done.'), { type: 'message_stop' }]);
+    await ask({ about: 'course', system: 's', messages: [{ role: 'user', content: 'q' }] });
+    expect(readSpend()).toEqual([]);
+  });
+
+  it('still tells a caller that asked to be told', async () => {
+    catchRequest(paid);
+    let seen = 0;
+    await ask({
+      about: 'course',
+      system: 's',
+      messages: [{ role: 'user', content: 'q' }],
+      onUsage: (u) => {
+        seen = u.input;
+      },
+    });
+    expect(seen).toBe(900);
+    // And once, not twice: the hook is for a live meter, not a second write.
+    expect(readSpend()).toHaveLength(1);
   });
 });

@@ -23,8 +23,8 @@
  * function, and why the app says all of this on the screen where a key is typed.
  */
 
-import type { Usage } from './spend';
-import type { CaseFile, Example, Figure, Frame, StudyCard } from './types';
+import { UNNAMED, record, type Usage } from './spend';
+import type { CaseFile, CourseId, Example, Figure, Frame, StudyCard } from './types';
 import { figureShapes, readFigures } from './figure';
 import { fetchWithin, timedOut, tookTooLong } from './net';
 import { readStudyParts, studyShapes } from './study';
@@ -359,6 +359,27 @@ interface AskOptions {
    * from "nothing was measured", so silence is the signal for the second.
    */
   onUsage?: (use: Usage) => void;
+  /**
+   * What this call is for, and which course it is for.
+   *
+   * Every reply that reports usage is written to the ledger in `lib/spend.ts`
+   * from inside `ask` — not by the caller — and these two fields are the whole
+   * of what the caller has to supply.
+   *
+   * It was the caller's job until now, through {@link AskOptions.onUsage}, and
+   * **one of twenty-five call sites did it**. The other twenty-four spent the
+   * student's money and recorded nothing, so the meter in Settings said "about
+   * 12¢ this month" to somebody who had built three courses — a number that is
+   * wrong being worse than no number, which is the argument `lib/spend.ts` is
+   * built on and was the one place it was not being kept.
+   *
+   * A call that names neither is still counted, under {@link UNNAMED}: money
+   * with nowhere to file it is a row on a screen somebody can fix, and money
+   * that was never counted is not. `lib/spendnames.test.ts` reads this file's
+   * callers and fails on a new one that does not say.
+   */
+  about?: string;
+  courseId?: CourseId | null;
   /**
    * Constrain the shape of the reply.
    *
@@ -1068,7 +1089,24 @@ export async function ask(options: AskOptions): Promise<string> {
     stopped = stopped || 'cut';
   }
 
-  if (counted) options.onUsage?.(counted);
+  if (counted) {
+    /*
+     * Recorded here, once, rather than by whoever called.
+     *
+     * The alternative is a hook every caller has to remember, which is what
+     * this was, and the twenty-fourth caller to forget it is not a thing to
+     * find out from a bank statement. `record` swallows its own failures —
+     * a full store must never lose the answer the student just got.
+     */
+    record({
+      at: Date.now(),
+      model: s.model,
+      from: options.about || UNNAMED,
+      ...(options.courseId ? { courseId: options.courseId } : {}),
+      use: counted,
+    });
+    options.onUsage?.(counted);
+  }
   if (stopped) options.onStop?.(stopped);
   return text;
 }

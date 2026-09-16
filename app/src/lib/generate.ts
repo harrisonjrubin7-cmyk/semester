@@ -23,6 +23,7 @@ import { realMonthDay } from './date';
 
 import { ask, type Citation, type Doc } from './claude';
 import { courseId } from './edit';
+import { claimFrom } from './spend';
 import { hasPolicy, readPolicy, type AttendPolicy } from './attend';
 import type { Course, CourseModule, GradeRow, Item, RecurringBlock } from './types';
 import { check, flatten, tally, worthCiting, type Checked } from './cite';
@@ -145,6 +146,16 @@ export async function generateCourse(
   input: GenerationInput,
   signal?: AbortSignal,
 ): Promise<GenerationResult> {
+  /*
+   * When this build started, so its spending can be filed against the course
+   * it is about to produce.
+   *
+   * `ask` writes every reply to the ledger as it happens, and this one cannot
+   * say which course it is for: the id comes from the code in the reply, which
+   * has not arrived yet. `claimFrom` below picks the rows up once it has.
+   */
+  const began = Date.now();
+
   // A PDF goes whole where the app kept it, so the model reads the page
   // rather than a flattening of it, and so the API can cite what it used.
   const docs: Doc[] = input.documents
@@ -169,6 +180,7 @@ export async function generateCourse(
   ].filter(Boolean);
 
   const reply = await ask({
+    about: 'course',
     signal,
     // As in `readMaterial`: a reply cut off mid-JSON parses as nothing, so the
     // budget rises with a ceiling the student raised rather than leaving them
@@ -201,7 +213,7 @@ export async function generateCourse(
     ],
   });
 
-  return validate(reply, input, citations);
+  return validate(reply, input, citations, began);
 }
 
 /** Pull the JSON out of a reply that may have wrapped it in prose or a fence. */
@@ -226,6 +238,8 @@ function validate(
   reply: string,
   input: GenerationInput,
   citations: Citation[] = [],
+  /** When the build that produced this reply started — see `claimFrom`. */
+  began = 0,
 ): GenerationResult {
   const notes: string[] = [];
   let raw: {
@@ -250,6 +264,10 @@ function validate(
   // "a short lowercase slug, e.g. econ" and it obliges, so every PSCI syllabus
   // came back wanting to be `psci`. See `courseId` for what that cost.
   const id = courseId(raw.course.code, input.taken ?? []);
+  // Now that there is a course, the money spent making it has somewhere to go.
+  // A `began` of zero — `validate` called directly, with no build behind it —
+  // claims nothing; `claimFrom` is where that refusal lives and is tested.
+  claimFrom(began, id);
   const source = input.documents[0]?.name ?? 'uploaded document';
 
   /*

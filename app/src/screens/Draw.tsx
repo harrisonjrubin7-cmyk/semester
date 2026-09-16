@@ -99,6 +99,7 @@ export function Draw() {
               : '')
           : '';
       await ask({
+        about: 'diagram',
         signal: abort.current.signal,
         maxTokens: 3000,
         think: true,

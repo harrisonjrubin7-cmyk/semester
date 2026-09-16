@@ -182,6 +182,7 @@ export async function breakDown(
   // a breakdown of an assignment has to get right is when things are due.
   const today = dateToIso(new Date());
   const reply = await ask({
+    about: 'assignment plan',
     signal,
     maxTokens: 2600,
     system: `${SYSTEM}\n\nToday is ${today}.\n\nThe course:\n${context}`,
@@ -207,6 +208,7 @@ export function critique(
   signal?: AbortSignal,
 ): Promise<string> {
   return ask({
+    about: 'assignment draft',
     signal,
     onText,
     maxTokens: 2000,

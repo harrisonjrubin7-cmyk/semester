@@ -85,6 +85,8 @@ export function Rework({
     try {
       const whole = scope < 0 || !guide.units[scope];
       const reply = await ask({
+        about: 'rewriting',
+        courseId: courseId,
         signal: abort.current.signal,
         maxTokens: 8000,
         think: true,
