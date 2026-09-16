@@ -1,4 +1,5 @@
 import { gather, type Unpacked } from './bundle';
+import { hashOf } from './fnv';
 import { extractText } from './extract';
 
 /**
@@ -55,7 +56,7 @@ export interface Intake {
    * The same bytes always give the same string.
    *
    * This is what makes re-importing a file produce nothing the second time.
-   * See `hashOf` for why it is not a cryptographic hash.
+   * See `lib/fnv.ts` for why it is not a cryptographic hash.
    */
   hash: string;
   /** Bytes, for the storage warning before a large import. */
@@ -69,31 +70,13 @@ export interface IntakeResult {
 }
 
 /**
- * A content hash, and deliberately not a cryptographic one.
+ * The content hash, which now lives in `lib/fnv.ts`.
  *
- * FNV-1a, 64 bits, as hex. Nothing here is a security boundary: the question
- * is only "have I already read exactly this?", asked about a file the student
- * chose themselves, and a collision costs a skipped import rather than
- * anything worse.
- *
- * The alternative, `crypto.subtle.digest`, is asynchronous, absent over plain
- * http, and absent in some test environments — three ways for the
- * de-duplication guarantee to quietly stop holding, which is the one thing it
- * must not do.
+ * Re-exported rather than moved out from under its callers: it is the same
+ * function, and `lib/fnv.ts` says why a build-time job needed it somewhere
+ * with no imports in it.
  */
-export function hashOf(text: string): string {
-  // Two 32-bit lanes rather than BigInt: the same arithmetic, and it runs on
-  // a megabyte of syllabus without allocating per character.
-  let h1 = 0x811c9dc5;
-  let h2 = 0x01000193;
-  for (let i = 0; i < text.length; i += 1) {
-    const c = text.charCodeAt(i);
-    h1 = Math.imul(h1 ^ c, 0x01000193);
-    h2 = Math.imul(h2 ^ (c + i), 0x85ebca6b);
-  }
-  const hex = (n: number) => (n >>> 0).toString(16).padStart(8, '0');
-  return hex(h1) + hex(h2);
-}
+export { hashOf };
 
 /** Handled by the camera path, which can actually see them. */
 const IMAGE = /\.(png|jpe?g|webp|gif|heic|heif)$/i;
