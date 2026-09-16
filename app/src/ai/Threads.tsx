@@ -454,10 +454,25 @@ const ACT = {
    * pointer. And `min-height` rather than vertical padding because padding
    * here would be an `--sp-*`, and those scale with density: at Tight (0.74)
    * the four pixels this needs are three, and a floor that moves is not one.
+   *
+   * ## And the width, which the same measurement named and the same fix left
+   *
+   * 2.5.8 asks for 24 *by* 24, and the note above recorded PIN at 19 wide
+   * while giving it only the height. Re-measured by hit test at 1280×900 it
+   * was 20×25 — the one control in the whole app still under the AA minimum
+   * on either tier, with the other two of its own row clearing it on width
+   * alone. The spacing exception does not rescue it either: that wants 24px
+   * of clear space around an undersized target and these sit eight apart.
+   *
+   * Centred rather than left-aligned inside the floor, because PIN is three
+   * characters in 24px and the five it gains would otherwise all land on one
+   * side of the word.
    */
   minHeight: 24,
+  minWidth: 24,
   display: 'inline-flex',
   alignItems: 'center',
+  justifyContent: 'center',
 } as const;
 
 const SIDE = {

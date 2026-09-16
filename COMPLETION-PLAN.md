@@ -1368,6 +1368,105 @@ inference.
 
 ---
 
+## 9. Phase 0 of the build-out plan — accessibility minimums
+
+The build-out plan carries this as work to *"complete before any pilot tester
+touches the app"*, with a number attached: **"a sampled pass on the desktop
+Directory screen found 93 of 166 interactive elements below the 44-pixel
+minimum touch target, and 7 text elements below 12 pixels"**, and asks to fix
+the Directory first and then *"run the same measurement method across the rest
+of the app rather than assuming the problem is isolated"*.
+
+The measurement method is now `app/scripts/targets-sweep.mjs` — `npm run
+sweep:targets` — which walks all 57 id-free screens on a phone and a desktop in
+real Chromium. Written down rather than sampled once, because a figure nobody
+can retake goes stale without anybody noticing it has.
+
+### Two criteria, and only one of them is AA
+
+| | Size | Standard | Level |
+| --- | --- | --- | --- |
+| 2.5.5 Target Size | 44×44 | WCAG 2.1 | **AAA** |
+| 2.5.8 Target Size (Minimum) | 24×24 | WCAG 2.2 | **AA** |
+
+The plan names "a 44-pixel minimum touch target" beside a "WCAG 2.1 AA
+acceptance target". Those are two different criteria. 44 is the comfortable aim
+and 24 is the bar an AA acceptance target actually sets, so the sweep counts and
+reports both apart — a run that gave only the 44 figure would read as an app
+failing AA when that question had not been asked.
+
+### Measured
+
+| | Phone 420×900 | Desktop 1280×900 |
+| --- | --- | --- |
+| under 44px — 2.5.5, an aim | 818 / 1,474 | 1,427 / 2,066 |
+| under 24px — 2.5.8, the failure | **0** | **0** |
+
+Three more read as under 24 on each tier and are counted in neither column:
+Leaflet's map container and its two zoom buttons, under the panel
+`components/LiveMap.tsx` paints over them at z-index 1200 to say *"the map
+itself needs a connection"*. A sweep run somewhere tiles are reachable would
+not see them at all. The sweep names the cover — `BLOCKED under role=status` —
+because naming it is what tells a deliberate overlay from a fault.
+
+One control in the app was genuinely under the AA minimum, on desktop, and it
+is fixed here: **PIN** under each saved conversation, 20×25. Its own comment
+recorded the same control measured at 19×17 and gave it a 24px floor on height
+only; 2.5.8 asks for 24 *by* 24, and the spacing exception does not rescue it
+because these three sit eight pixels apart. `styles/taps.test.ts` now holds
+both axes.
+
+The sampled figure itself cannot be reproduced, and it is worth saying why
+rather than quietly replacing it. It was taken at `#/directory`, which is not a
+route this app has: the address does not resolve, the screen does not change,
+and the pass measured whichever screen was already on. The screens it might
+have meant read 21 of 28 (Courses), 26 of 50 (Me), 16 of 22 (People) and 21 of
+36 (the springboard) under 44px on a desktop today — none of them has 166
+controls on it, so 93-of-166 is not a stale reading of any of them.
+
+### What the sampled figure was measuring
+
+The 93-of-166 figure, and the 162 this sweep's own first version reported, were
+both `getBoundingClientRect` — the box the label is painted in. This app grows
+the *target* without growing the *drawing*: `.tap`, `.tap-x` and `.tap-y` put a
+transparent overlay over a small control reaching out to 44px, because a dense
+design cannot make every nine-pixel caps label 44px tall and stay the same
+screen. `styles/taps.test.ts` says the consequence in a line — *"an overlay is
+invisible to a checker, which reads the element and is right to"*.
+
+So the sweep measures by hit test: from inside the control it walks outward
+asking `elementFromPoint` who would receive the tap. That reads the overlay,
+and it reads occlusion, which a rect cannot. Four separate readings were wrong
+before the figures above held still, and the probe found each of them by
+disagreeing with a control of known size rather than by looking wrong:
+
+| The probe said | It was measuring |
+| --- | --- |
+| 162 under AA on each tier | the drawing, not the target |
+| 603 of 2,066 desktop controls unreachable | the fold — `elementFromPoint` is null outside the viewport |
+| the links screen's EDIT buttons at 0×0 | the phone's fixed tab bar, which a two-line scroll clears |
+| three checkboxes at 13×13 and 18×18 | the box, when the label beside it toggles it too |
+
+Five controls of known size are now injected and measured by the same code
+before each tier is walked — a real 44×44, a real 10×10, a 20px control wearing
+`tap-y`, a bare 18px checkbox and the same checkbox inside a 120px label. If
+any of the five comes back wrong the run prints why and exits rather than
+reporting a figure taken with a broken instrument. Two of them exist only
+because the rule they pin is the one that turned three failures into none, and
+so the one most worth doubting.
+
+### The 12-pixel figure is not a WCAG failure and has an answer already
+
+1,418 of 3,663 desktop text elements are under 12px, mostly 10–11.5px caps
+labels. There is no WCAG minimum font size; the criterion that covers this is
+1.4.4 Resize Text, and the app satisfies it twice over — `a11y/type.test.ts`
+holds the root to a *percentage* of the browser's own font size, so raising the
+default from 16 to 24 makes the whole app 1.5× larger, and the app's own four
+text sizes compose with that rather than replacing it. The figure is worth
+keeping in view as a design question. It is not an acceptance blocker.
+
+---
+
 ## Appendix A — What measurement corrected
 
 Each row is a claim in the draft this plan grew out of, what the tree said when
@@ -1408,14 +1507,20 @@ first thing [CLAUDE.md](CLAUDE.md) asks is whether the work already landed.
 git fetch origin main
 git log --oneline -30 origin/main
 
-# The gates. All five, from app/ — the repository root has no package.json
+# The gates, from app/ — the repository root has no package.json
 # with these scripts, so npm test there silently does nothing.
 cd app
 npx tsc -b            # types
 npm run lint          # oxlint, plus the style and label audits
 npm test              # the suite, in file order
 npm run test:shuffle  # the suite, in an order nobody chose
+npm run test:zones    # the suite, in two timezones that disagree about the date
 npm run build         # production build
+
+# Tap targets, both tiers, all 57 id-free screens. Needs `npm run dev` on
+# :5173 and a Playwright installed somewhere scratch — the script says where
+# and why it is not a dependency. It checks its own instrument first.
+SWEEP_PLAYWRIGHT=/tmp/drive/node_modules/playwright npm run sweep:targets
 
 # Study modes, and the count this document states.
 sed -n '/^  return \[/,$p' src/lib/modes.ts | grep -c "^      id:"

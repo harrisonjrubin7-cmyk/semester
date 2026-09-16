@@ -18,6 +18,7 @@
     "test:shuffle": "vitest run --sequence.shuffle",
     "lint:labels": "node scripts/labels.mjs",
     "sweep:contrast": "node scripts/contrast-sweep.mjs",
+    "sweep:targets": "node scripts/targets-sweep.mjs",
     "transcripts": "node scripts/transcripts.mjs",
     "audio": "node scripts/audio.ts",
     "check:university": "tsc -p tsconfig.university.json",
