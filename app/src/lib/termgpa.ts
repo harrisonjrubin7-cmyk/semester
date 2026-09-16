@@ -209,6 +209,31 @@ export function termGpa(
 }
 
 /** Why a course is not in the number, in the words of the fix for it. */
+/**
+ * Where the fix for an exclusion actually is.
+ *
+ * {@link missingLine} has always *said* what to do — "Edit the course to add
+ * them", "Add that to the scale and the course counts" — and a sentence
+ * naming a screen is not the same as a way to reach it. A student reading it
+ * on the degree screen had to work out that the credit hours live under Edit
+ * the course and the grade points under Grades, then find both.
+ *
+ * Returned as a screen rather than rendered as a link so the arithmetic file
+ * stays free of navigation: `screens/Degree.tsx` decides what a tap does,
+ * this decides where there is one to offer. Null for `ungraded`, which is the
+ * exclusion with no fix but sitting an assessment.
+ */
+export function fixFor(c: CourseTerm): 'edit' | 'grades' | null {
+  switch (c.missing) {
+    case 'hours':
+      return 'edit';
+    case 'points':
+      return 'grades';
+    default:
+      return null;
+  }
+}
+
 export function missingLine(c: CourseTerm): string {
   switch (c.missing) {
     case 'ungraded':

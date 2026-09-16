@@ -38,7 +38,10 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
   };
   const [rows, setRows] = useState(seed);
 
-  const typed = fromTyped(rows, system.gpaMax);
+  // The system in force, not just its ceiling: `fromTyped` reads the points
+  // each letter is already worth out of it, and keeps the bands this table
+  // does not show. See its own note on why both matter.
+  const typed = fromTyped(rows, system);
 
   return (
     <div style={{ marginTop: 'var(--sp-5)' }}>

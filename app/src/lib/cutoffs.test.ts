@@ -11,6 +11,7 @@ import {
   targetsOf,
   type GradeSystem,
 } from './cutoffs';
+import { landingAt } from './termgpa';
 import { NO_SCHOOL, type School } from './school';
 import { TARGETS } from './grades';
 
@@ -160,5 +161,91 @@ describe('cutoffs somebody typed', () => {
   it('comes back null when nothing usable was typed, so the fallback holds', () => {
     expect(fromTyped([])).toBeNull();
     expect(fromTyped([{ label: '', min: '90' }])).toBeNull();
+  });
+
+  /*
+   * What correcting your cutoffs does to the rest of the app.
+   *
+   * `components/Cutoffs.tsx` exists so a student can put their syllabus's own
+   * cutoffs in place of the assumed ones. What came back priced nothing —
+   * a band was a label and a number, and what the letter is *worth* was
+   * dropped on the floor — so `landingAt` read every letter as null points
+   * and `lib/termgpa.ts` took the course out of the term GPA entirely, with
+   * "the scale states no grade points". Using the correction cost you the
+   * projection.
+   *
+   * Reproduced before it was fixed: a scale typed here put A− at null where
+   * the common scale puts it at 3.7.
+   */
+  it('keeps what each letter is worth, so a corrected scale still counts', () => {
+    const got = fromTyped(
+      [
+        { label: 'A', min: '94' },
+        { label: 'A−', min: '90' },
+        { label: 'B+', min: '87' },
+      ],
+      COMMON_LETTER,
+    )!;
+    expect(landingAt(91, got)).toEqual({ pct: 91, letter: 'A−', points: 3.7 });
+    expect(got.gpaMax).toBe(4);
+  });
+
+  it('carries the points the school states, not a 4.0 table', () => {
+    // The distinction the fix turns on. Points are read out of the scale that
+    // was in force and already on screen — a school grading to 4.3 keeps its
+    // own numbers rather than being quietly re-priced to somebody else's.
+    const theirs: GradeSystem = {
+      kind: 'letter',
+      gpaMax: 4.3,
+      scale: [
+        { label: 'A+', min: 95, gpa: 4.3 },
+        { label: 'A', min: 90, gpa: 4 },
+        { label: 'F', min: 0, gpa: 0 },
+      ],
+    };
+    const got = fromTyped([{ label: 'A+', min: '97' }, { label: 'A', min: '92' }], theirs)!;
+    expect(got.gpaMax).toBe(4.3);
+    expect(landingAt(98, got).points).toBe(4.3);
+  });
+
+  it('leaves a letter the scale never priced unpriced, rather than inventing one', () => {
+    const odd: GradeSystem = { kind: 'letter', scale: [{ label: 'S', min: 70 }] };
+    const got = fromTyped([{ label: 'S', min: '75' }], odd)!;
+    expect(landingAt(80, got).points).toBeNull();
+  });
+
+  it('keeps the bands the table does not show', () => {
+    /*
+     * `targetsOf` hands the editor the top five, because the useful question
+     * is what the next reachable grade costs. The save used to replace the
+     * whole scale with those five, so correcting an A− on a twelve-band table
+     * left a five-band one and a mark in the seventies landed on no letter at
+     * all — which the term arithmetic reads as zero.
+     */
+    const got = fromTyped([{ label: 'A', min: '94' }], COMMON_LETTER)!;
+    expect(got.scale?.map((b) => b.label)).toContain('D−');
+    expect(got.scale?.map((b) => b.label)).toContain('F');
+    expect(landingAt(94, got)).toMatchObject({ letter: 'A', points: 4 });
+    expect(landingAt(64, got)).toMatchObject({ letter: 'D', points: 1 });
+  });
+
+  it('still drops a band the typist blanked, because a blank is not a zero', () => {
+    // The editor says so in as many words, and keeping the untouched bands
+    // must not resurrect a shown one that was deliberately cleared.
+    const got = fromTyped(
+      [
+        { label: 'A', min: '94' },
+        { label: 'A−', min: '' },
+      ],
+      COMMON_LETTER,
+    )!;
+    expect(got.scale?.map((b) => b.label)).not.toContain('A−');
+    expect(got.scale?.map((b) => b.label)).toContain('F');
+  });
+
+  it('sorts what it returns, so the bands read down the scale', () => {
+    const got = fromTyped([{ label: 'B', min: '84' }, { label: 'A', min: '94' }], COMMON_LETTER)!;
+    const mins = (got.scale ?? []).map((b) => b.min ?? 0);
+    expect(mins).toEqual([...mins].sort((a, b) => b - a));
   });
 });

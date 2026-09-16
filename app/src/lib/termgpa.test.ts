@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { COMMON_LETTER, type GradeSystem } from './cutoffs';
 import { standing } from './grades';
-import { landingAt, moveLine, moves, termGpa, termLine, missingLine, type Sitting } from './termgpa';
+import {
+  fixFor,
+  landingAt,
+  missingLine,
+  moveLine,
+  moves,
+  termGpa,
+  termLine,
+  type Sitting,
+} from './termgpa';
 import type { Course, CourseId } from './types';
 
 /** A course with one 50% category graded and one still to come. */
@@ -325,5 +334,39 @@ describe('moves', () => {
 
   it('is empty when there is no term GPA to move', () => {
     expect(moves(termGpa([]), systems)).toEqual([]);
+  });
+});
+
+
+describe('where the fix for an exclusion is', () => {
+  /*
+   * `missingLine` has always said what to do. Saying it is not the same as
+   * offering it: a student reading "Edit the course to add them" on the degree
+   * screen had to work out that credit hours live under Edit the course and
+   * grade points under Grades, and then find both.
+   *
+   * The screen renders the tap; this decides whether there is one. Asserted
+   * here rather than in the screen because it is a fact about the exclusion,
+   * and because the one that must stay null is the interesting one.
+   */
+  const term = (missing: 'ungraded' | 'hours' | 'points' | '') =>
+    ({ courseId: 'econ', code: 'ECON 1020', hours: 3, missing } as Parameters<typeof fixFor>[0]);
+
+  it('sends credit hours to the course editor', () => {
+    expect(fixFor(term('hours'))).toBe('edit');
+  });
+
+  it('sends grade points to Grades', () => {
+    expect(fixFor(term('points'))).toBe('grades');
+  });
+
+  it('offers nothing for a course with nothing graded, because there is nothing to press', () => {
+    // The one exclusion a tap cannot close. A button here would promise a fix
+    // for "you have not sat anything yet", which is not a fix, it is a term.
+    expect(fixFor(term('ungraded'))).toBeNull();
+  });
+
+  it('offers nothing for a course that is counted', () => {
+    expect(fixFor(term(''))).toBeNull();
   });
 });
