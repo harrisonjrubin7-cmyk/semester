@@ -23,6 +23,8 @@ import type {
  * ## States, and the one that matters
  *
  * `ready` → prepared, nothing sent. `processing` → claimed, being sent now.
+ * `refused` → the adapter said no and wrote nothing; terminal, and unlike
+ * `uncertain` there is nothing to reconcile.
  * `completed` / `pending` → the school answered. `uncertain` → it did not, and
  * the only way out is `reconcile`. Nothing transitions out of `uncertain` on a
  * timer or a retry.
@@ -48,7 +50,7 @@ export interface SavedReview {
   review: Review;
   input: ActionInput;
   identity: UniversityIdentity;
-  state: 'ready' | 'processing' | 'completed' | 'pending' | 'uncertain';
+  state: 'ready' | 'processing' | 'completed' | 'pending' | 'refused' | 'uncertain';
   receipt?: Receipt;
 }
 
@@ -188,7 +190,7 @@ export class ActionJournal {
     );
   }
 
-  finish(row: SavedReview, state: 'completed' | 'pending' | 'uncertain', receipt?: Receipt): void {
+  finish(row: SavedReview, state: 'completed' | 'pending' | 'refused' | 'uncertain', receipt?: Receipt): void {
     this.db
       .prepare('UPDATE reviews SET state=?,body=? WHERE id=?')
       .run(state, this.seal({ ...row, state, receipt }), row.review.id);
@@ -211,7 +213,9 @@ export class ActionJournal {
    */
   purge(now = Date.now()): void {
     this.db
-      .prepare("DELETE FROM reviews WHERE (state='ready' AND expires<?) OR (state='completed' AND expires<?)")
+      .prepare(
+        "DELETE FROM reviews WHERE (state='ready' AND expires<?) OR (state IN ('completed','refused') AND expires<?)",
+      )
       .run(now - KEEP.ready, now - KEEP.completed);
     this.db.prepare('DELETE FROM audit WHERE at<?').run(new Date(now - KEEP.audit).toISOString());
   }

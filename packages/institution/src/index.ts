@@ -101,6 +101,49 @@ export const UNIVERSITY_ROLES = ['student', 'faculty', 'advisor', 'admin', 'paye
 
 export type UniversityRole = (typeof UNIVERSITY_ROLES)[number];
 
+/**
+ * The adapter will not do this, and here is the sentence for the person.
+ *
+ * A gateway cannot afford to repeat whatever an adapter threw. An exception
+ * out of a school's system can carry a connection string, a row of somebody
+ * else's data, or a stack trace naming a file path, so anything the gateway
+ * did not mean to say is flattened into one sentence about the service being
+ * unavailable. That is the right default and it stays the default.
+ *
+ * But it swallowed the opposite case as well, which is most of them. A rubric
+ * line that does not parse, a mark outside its range, an appeal against a mark
+ * the student has not been shown — every one of those is a deliberate refusal
+ * with a sentence written *for* the person, and every one of them arrived as
+ * "The university service is unavailable. Please try again later." The 503 is
+ * the worse half: it means try again, so the honest response to it is to retry
+ * something that can never succeed.
+ *
+ * Throwing this is an adapter saying two things at once: this message is meant
+ * to be read, and **nothing was written**. The second is what lets the gateway
+ * answer 400 rather than leaving the outcome unknown, so do not throw it from
+ * halfway through a change.
+ */
+export class Refusal extends Error {
+  /**
+   * The brand, and why it is not just `instanceof`.
+   *
+   * This package is imported by the browser bundle and by the server, and a
+   * build that ends up with two copies of this module has two `Refusal`
+   * classes that are not each other. A property survives that; a prototype
+   * chain does not.
+   */
+  readonly refusal = true;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'Refusal';
+  }
+}
+
+/** Whether a thrown value is a refusal meant for the person who asked. */
+export const isRefusal = (e: unknown): e is Refusal =>
+  e instanceof Error && (e as { refusal?: unknown }).refusal === true;
+
 export type FieldKind = 'text' | 'textarea' | 'date' | 'datetime-local' | 'email' | 'number' | 'select';
 
 export interface ActionField {

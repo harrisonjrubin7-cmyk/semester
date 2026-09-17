@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import {
   UNIVERSITY_AREAS,
   type UniversityIdentity,
+  Refusal,
   type UniversityRecord,
 } from '../../../packages/institution/src/index.ts';
 import type { InstitutionAdapter } from './adapter.ts';
@@ -80,11 +81,20 @@ function fixture() {
     }),
     list: async () => ({ records: [record], nextCursor: null, fetchedAt: '2026-09-13T10:00:00Z' }),
     get: async (_context, id) => (id === 'paper' ? { ...record, version } : null),
-    review: async () => ({ title: reviewTitle, details: [{ label: 'Action', value: 'Submit coursework' }] }),
+    review: async () => {
+      // What every adapter in this repository does when it will not do a
+      // thing: it throws, with the sentence the person needs.
+      if (mode === 'refuse') throw new Refusal('That deadline has already passed.');
+      // And the thing a refusal is distinguished *from*: machinery breaking,
+      // whose message is nobody's business.
+      if (mode === 'crash') throw new Error('pg: password authentication failed for user "sis"');
+      return { title: reviewTitle, details: [{ label: 'Action', value: 'Submit coursework' }] };
+    },
     execute: async () => {
       calls++;
       // The message a vendor failure carries must never reach the student.
       if (mode === 'timeout') throw new Error('Vendor secret must not be exposed');
+      if (mode === 'refuse-late') throw new Refusal('You are already enrolled in this course.');
       return {
         id: 'receipt-1',
         status: mode === 'pending' ? 'pending' : 'completed',
@@ -166,6 +176,111 @@ describe('university gateway boundaries', () => {
     expect(trustedIdentity({ id: 'u', app_metadata: { semester: { institutionId: 's', roles: ['invented', 'advisor'] } } })).toEqual(
       { userId: 'u', institutionId: 's', roles: ['advisor'] },
     );
+  });
+
+  it('hands back an adapter’s refusal, rather than reporting itself broken', async () => {
+    /*
+     * Every refusal in `sandbox.ts` — sixty-odd of them — is an Error thrown
+     * out of `review` or `execute` with the sentence the person needs in it.
+     * Each is tested against the adapter directly, and each of those tests
+     * passes. None of them says anything about whether the sentence survives
+     * the wire, and it does not: a plain Error is not an HttpError, so it
+     * falls to the outer handler, which flattens anything it did not mean to
+     * say into one sentence about the service being unavailable.
+     *
+     * A marker who mistyped a rubric line is told the university is down.
+     */
+    const f = fixture();
+    f.mode('refuse');
+    const refused = await f.request('/actions/prepare', f.input);
+    expect(refused.status, 'a refusal is the caller’s fault, not a 5xx').toBe(400);
+    expect((await refused.json()).error).toBe('That deadline has already passed.');
+  });
+
+  it('does not tell somebody to retry a thing that will never work', async () => {
+    /*
+     * The status code is the worse half. 503 means *try again later*, so a
+     * client that honours it — and this app's own screen tells the person to
+     * — will retry a request that cannot ever succeed, against a gateway that
+     * has just been told why.
+     */
+    const f = fixture();
+    f.mode('refuse');
+    expect((await f.request('/actions/prepare', f.input)).status).not.toBe(503);
+  });
+
+  it('refuses at the commit re-check without claiming the outcome is unknown', async () => {
+    /*
+     * The same throw, at the other end. Commit re-runs `review` before it
+     * claims the action — the check that the person is confirming what they
+     * read — and a refusal there happens before anything is written and
+     * before the journal is claimed. Reporting it as "the result could not be
+     * confirmed" would send somebody to their registrar to reconcile an
+     * action that provably did not happen.
+     */
+    const f = fixture();
+    const review = await f.prepare();
+    f.mode('refuse');
+    const refused = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(refused.status).toBe(400);
+    expect((await refused.json()).error).toBe('That deadline has already passed.');
+    expect(f.calls(), 'nothing was executed').toBe(0);
+    // And the review is still usable, because nothing consumed it.
+    f.mode('ok');
+    const done = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(done.status).toBe(200);
+  });
+
+  it('still hides an ordinary exception out of the same method', async () => {
+    /*
+     * The control, and the reason a refusal is a type rather than "anything
+     * thrown out of review". Machinery breaking inside the same call is not a
+     * sentence for a student — this one carries a database user and a
+     * password failure — and it stays flattened.
+     */
+    const f = fixture();
+    f.mode('crash');
+    const broke = await f.request('/actions/prepare', f.input);
+    expect(broke.status).toBe(503);
+    expect((await broke.json()).error).toBe('The university service is unavailable. Please try again later.');
+  });
+
+  it('delivers a refusal thrown at the write, and marks it refused rather than unknown', async () => {
+    /*
+     * Twelve of the sandbox's refusals are in `execute` rather than `review`,
+     * because a client does not have to prepare anything first — the check
+     * has to be at the write as well as at the menu. Those are exactly the
+     * ones the old handler turned into "the result could not be confirmed",
+     * which sends somebody to their registrar over an action that provably
+     * did not happen.
+     */
+    const f = fixture();
+    const review = await f.prepare();
+    f.mode('refuse-late');
+    const refused = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(refused.status).toBe(400);
+    expect((await refused.json()).error).toBe('You are already enrolled in this course.');
+    expect(f.journal.get(review.id, actor)?.state, 'left hanging as unknown').toBe('refused');
+
+    // And it is spent: sending it again says so, rather than sending the
+    // person to reconcile something that was answered.
+    f.mode('ok');
+    const again = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(again.status).toBe(409);
+    expect((await again.json()).error).toMatch(/refused/i);
+    expect((await f.request('/actions/reconcile', { reviewId: review.id })).status).toBe(409);
+  });
+
+  it('still hides what an adapter’s machinery says when it breaks mid-action', async () => {
+    // The distinction this all rests on: a refusal is a sentence for the
+    // person, and a crash is not. `execute` failing is still unknowable and
+    // still flattened — that behaviour is the point of the one beside it.
+    const f = fixture();
+    const review = await f.prepare();
+    f.mode('timeout');
+    const broke = await f.request('/actions/commit', { reviewId: review.id, confirmed: true });
+    expect(broke.status).toBe(502);
+    expect(JSON.stringify(await broke.json())).not.toContain('Vendor secret');
   });
 
   it('requires a verified identity and rejects arbitrary web origins', async () => {

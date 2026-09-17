@@ -71,6 +71,14 @@ export interface InstitutionAdapter {
    *
    * The gateway calls this twice: once at prepare, and again at commit, and
    * refuses the commit if the answer has changed.
+   *
+   * **Refuse by throwing `Refusal`, not `Error`.** The gateway repeats a
+   * `Refusal`'s message to the person as a 400, because that is an adapter
+   * saying "this sentence is meant to be read and nothing was written". It
+   * flattens anything else into one sentence about the service being
+   * unavailable, because an ordinary exception out of a school's system can
+   * carry a connection string or a row of somebody else's data. Throw the
+   * wrong one and a marker who mistyped a line is told the university is down.
    */
   review(
     context: AdapterContext,
@@ -106,6 +114,14 @@ export interface InstitutionAdapter {
    *
    * Return `pending` when the school has accepted the request but not
    * completed it. `completed` means the institution says it is done.
+   */
+  /**
+   * A `Refusal` here means the same as in `review` and the second half of it
+   * is load-bearing: **nothing was written**. That assertion is what lets the
+   * gateway answer 400 and mark the action refused rather than leaving the
+   * outcome unknown, so never throw one from halfway through a change. An
+   * ordinary exception keeps the old behaviour — the journal goes to
+   * `uncertain` and only `/actions/reconcile` can resolve it.
    */
   execute(context: AdapterContext, input: ActionInput, idempotencyKey: string): Promise<Receipt>;
 }

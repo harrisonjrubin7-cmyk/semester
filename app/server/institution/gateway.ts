@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   UNIVERSITY_AREAS,
+  isRefusal,
   isUniversityArea,
   parseAction,
   validateActionFields,
@@ -288,6 +289,11 @@ export function createGateway(config: Config) {
       // Already done: hand back the same receipt rather than doing anything.
       if (row.state === 'completed') return Response.json(row.receipt, { headers });
 
+      // Terminal, and there is nothing to look up: it was answered by a
+      // refusal, not left hanging. Said before the two generic 409s below,
+      // both of which would tell the person to reconcile it.
+      if (row.state === 'refused') fail(409, 'This action was refused. Prepare a new review.');
+
       if (path === '/actions/reconcile') {
         if (row.state === 'ready') fail(409, 'This action has not been submitted.');
         if (row.state === 'processing') fail(409, 'This action is still processing. Recheck its receipt shortly.');
@@ -343,7 +349,21 @@ export function createGateway(config: Config) {
         config.journal.finish(row, receipt.status === 'pending' ? 'pending' : 'completed', receipt);
         config.journal.audit(who, row.input.area, 'action.receipt', row.review.id);
         return Response.json(receipt, { headers });
-      } catch {
+      } catch (e) {
+        /*
+         * A refusal at this point is the adapter saying it looked, said no,
+         * and wrote nothing — which is the whole meaning of the type. Twelve
+         * of the sandbox's refusals live here rather than in `review`, on
+         * purpose: a client does not have to prepare anything first, so the
+         * check has to be at the write as well as at the menu. Reporting
+         * those as an unknown outcome would send somebody to their registrar
+         * to reconcile an action that provably did not happen.
+         */
+        if (isRefusal(e)) {
+          config.journal.finish(row, 'refused');
+          config.journal.audit(who, row.input.area, 'action.refused', row.review.id);
+          return fail(400, e.message);
+        }
         /*
          * The one place this gateway refuses to guess.
          *
@@ -360,10 +380,21 @@ export function createGateway(config: Config) {
       }
     } catch (e) {
       /*
-       * An `HttpError` is something this gateway meant to say. Anything else
-       * is a bug or an upstream failure, and its message could carry a
-       * connection string or a stack — so it becomes one flat sentence.
+       * Three kinds of thrown thing, and the middle one used to be lost.
+       *
+       * An `HttpError` is something this gateway meant to say. A `Refusal` is
+       * something the *adapter* meant to say — a rubric line that will not
+       * parse, a mark outside its range, a deadline that has passed — and it
+       * is the caller's to fix, so it is a 400 carrying that sentence. Every
+       * refusal in this repository used to land in the third case instead,
+       * and a marker who mistyped a line was told the university was down,
+       * with a 503 inviting them to try it again.
+       *
+       * Anything else is a bug or an upstream failure, and its message could
+       * carry a connection string or a stack — so it becomes one flat
+       * sentence, which is still the default and still the right one.
        */
+      if (isRefusal(e)) return Response.json({ error: e.message }, { status: 400, headers });
       return Response.json(
         { error: e instanceof HttpError ? e.message : 'The university service is unavailable. Please try again later.' },
         { status: e instanceof HttpError ? e.status : 503, headers },
