@@ -2022,6 +2022,74 @@ does the work.
 
 ---
 
+## 8k. Phase 3 · Family access — and the asymmetry that is the whole of it
+
+Phase 3's third domain, and the one where its gate matters most: family access
+is the only domain that discloses a student's record to somebody who is not the
+student. The institutional agreement, the security review and the FERPA legal
+review are exactly the right gates for it, and none of them is satisfied by a
+sandbox demonstration.
+
+**Almost all the thinking was already done, in the contract.**
+`packages/institution` carries `FamilyGrant`, `FamilyRequest` and
+`allowsFamilyRequest`, and names precisely what was missing: *"A real grant
+lives in verified server storage, and every resource operation is checked
+against it… A permission object that arrived from a browser is a request, never
+an authority."* This adds the storage and the lifecycle around it — a student
+gives, the person named accepts, the student revokes — and calls the contract's
+predicate for every question.
+
+**The asymmetry is the feature and it is the contract's.**
+`allowsFamilyRequest` makes `payment` not a level of reading: *"Paying requires
+`finances` and `payment` exactly. Reading requires `selected` or `view` — which
+`payment` is not, so **payment-only access discloses nothing**."*
+
+So a parent who can pay the tuition bill **cannot read it** — not the balance,
+not the history, not the aid. That is unusual and it is right: the common real
+arrangement is a parent who pays and a student whose record stays theirs. The
+billing adapter keeps it exactly — a granted payer may `execute` a payment and
+still gets `null` from `get` and nothing from `list` — and the tests assert it
+from both directions.
+
+**Four things a grant is not.** Not an account: the recipient is whoever the
+institution verified. Not permanent: every grant has an expiry and no grant can
+be made without one. Not silent: the student sees every grant they have made.
+And not a category: a category with no items named grants nothing, which is
+refused when the grant is *made* rather than discovered when it fails to work.
+
+**Mutated, ten of ten caught** — including a payer being allowed to read, a
+grant being live before it is accepted, revocation not stopping it, an expired
+grant still being acceptable, and `familyMay` trusting the caller instead of
+storage. One mutation first reported a full pass because the check it removed
+appears in both `review` and `execute` and only the first was replaced; a
+mutation that half-applies is a mutation that proved nothing, which is the same
+lesson this document keeps writing down.
+
+**Three corrections the gates found.**
+
+`'family'` is not a role. The contract's six are student, faculty, advisor,
+admin, **payer** and staff, and a parent paying a bill is the one it already
+named. The test had written `family`, which typechecked as a string and would
+have run as a role nothing recognises.
+
+The billing refusal split in two, and both halves now have a test: a stranger
+is told *"that is not your account"*, and the account's own holder without the
+student role is told which role it needs. One message covering both cases was
+one of them being wrong.
+
+And `sandbox.test.ts`'s rule that every adapter lists something, all of it
+marked, went red because family lists nothing until a grant exists. The rule is
+right, so the test now *makes* a grant rather than exempting the area — an
+exemption would have weakened the rule for every adapter to accommodate one.
+
+**Phase 3 is complete as a demonstration**: registration
+([§8i](#8i-phase-3--registration--against-the-sandbox-labelled)), money
+([§8j](#8j-phase-3--money--read-access-and-never-a-processor)) and family
+access. Four adapters, no screens — `University.tsx` renders all thirty-seven
+areas generically, so the whole of Phase 3 was adapters.
+
+---
+
 ## 8d. What the source document has left, and what it is waiting on
 
 For the record, measured rather than assumed, since §1 to §8 of this plan were

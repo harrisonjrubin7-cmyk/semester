@@ -3,6 +3,7 @@ import { Refusal } from '../../../packages/institution/src/index.ts';
 import type {
   ActionInput,
   ConnectionStatus,
+  FamilyGrant,
   Receipt,
   RecordPage,
   UniversityArea,
@@ -11,6 +12,7 @@ import type {
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
 import { registrationAdapter } from './registration.ts';
 import { aidAdapter, billingAdapter } from './money.ts';
+import { familyAdapter } from './family.ts';
 
 /**
  * One course, run end to end, at an institution that does not exist.
@@ -678,6 +680,17 @@ export class SandboxStore {
         student TEXT NOT NULL,
         body TEXT NOT NULL
       );
+      -- Family access. The institution contract says it in as many words:
+      -- a real grant lives in verified server storage, every resource
+      -- operation is checked against it, and a permission object that
+      -- arrived from a browser is a request and never an authority. This
+      -- table is that storage, for the demonstration.
+      CREATE TABLE IF NOT EXISTS grants(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        recipient TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
     `);
 
     // The class the course already has, before any tester arrives.
@@ -734,6 +747,35 @@ export class SandboxStore {
 
   saveSection(section: Section): void {
     this.db.prepare('INSERT OR REPLACE INTO sections VALUES(?,?)').run(section.id, JSON.stringify(section));
+  }
+
+  /* ── Family access ──────────────────────────────────────────────────── */
+
+  /** Every grant this student has made. */
+  grantsBy(student: string): FamilyGrant[] {
+    const rows = this.db.prepare('SELECT body FROM grants WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as FamilyGrant);
+  }
+
+  /** Every grant made to this person. */
+  grantsTo(recipient: string): FamilyGrant[] {
+    const rows = this.db.prepare('SELECT body FROM grants WHERE recipient=? ORDER BY id').all(recipient) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as FamilyGrant);
+  }
+
+  grant(id: string): FamilyGrant | null {
+    const got = this.db.prepare('SELECT body FROM grants WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as FamilyGrant) : null;
+  }
+
+  saveGrant(row: FamilyGrant): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO grants VALUES(?,?,?,?)')
+      .run(row.id, row.studentId, row.recipientId, JSON.stringify(row));
   }
 
   /* ── Money ──────────────────────────────────────────────────────────── */
@@ -2154,7 +2196,7 @@ function appealRecord(store: SandboxStore, work: Work): UniversityRecord {
 const archivedOrUnseen = (work: Work, seen: boolean) => work.stage === 'archived' || !seen;
 
 /**
- * The eight, over one store.
+ * The nine, over one store.
  *
  * Built by a function rather than exported as a constant so the store is an
  * argument: the tests open one on a temporary file, and `start.ts` opens one
@@ -2662,5 +2704,6 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     registrationAdapter(store),
     billingAdapter(store),
     aidAdapter(store),
+    familyAdapter(store),
   ];
 }

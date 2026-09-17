@@ -1883,10 +1883,32 @@ describe('it is unmistakably a sandbox', () => {
       act('assignments', r1.id, r1.version, 'submit', { work: 'x' }),
       'k-1',
     );
+    /*
+     * Family is the one area whose records do not exist until somebody makes
+     * one — a grant is a thing a student gives, and seeding one on their
+     * behalf would be a permission nobody granted. So the test makes one
+     * rather than exempting the area: the rule below stays at full strength
+     * for every adapter, which is what it is for.
+     */
+    await area('family').execute(
+      s,
+      act('family', 'new', '0', 'invite', {
+        recipient: 'payer-1',
+        category: 'finances',
+        access: 'payment',
+        items: 'student-1::tuition-fall',
+        days: '30',
+      }),
+      'k-family',
+    );
+
     for (const a of four) {
       const status = await a.status(f);
       expect(status.provider, `${a.area} provider`).toContain(SANDBOX_MARK);
-      const { records } = await a.list(f, { search: '', cursor: null });
+      // Family grants are between two people, so the faculty member sees
+      // none of them — that area is read as the student who made one.
+      const asWhom = a.area === 'family' ? s : f;
+      const { records } = await a.list(asWhom, { search: '', cursor: null });
       expect(records.length, `${a.area} listed nothing`).toBeGreaterThan(0);
       for (const r of records) {
         expect(r.title, `${a.area}: "${r.title}"`).toContain(SANDBOX_MARK);

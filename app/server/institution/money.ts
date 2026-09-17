@@ -1,6 +1,7 @@
 import { Refusal } from '../../../packages/institution/src/index.ts';
 import type { ActionInput, Receipt, UniversityRecord } from '../../../packages/institution/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
+import { familyMay } from './family.ts';
 import {
   SANDBOX_INSTITUTION,
   SANDBOX_MARK,
@@ -223,13 +224,32 @@ const commitAward = (
   return receipt;
 };
 
-/** The charge this id names, if it is this person's. */
-function mineCharge(store: SandboxStore, context: AdapterContext, id: string): Charge {
-  if (!isStudent(context)) throw new Refusal('Only the student on the account can pay it.');
+/**
+ * The charge this id names, if this person may pay it.
+ *
+ * Two people can: the student whose account it is, and somebody the student
+ * gave `finances` + `payment` access to — checked through `familyMay`, which
+ * is `allowsFamilyRequest` over the grants in storage and never over anything
+ * a caller sent.
+ *
+ * The asymmetry is the contract's and it is kept exactly. A family payer may
+ * *pay* this charge and may not read it: `get` and `list` below still answer
+ * only to the student, so a parent who can settle the tuition bill cannot see
+ * the balance, the history or the aid. That is unusual and it is the arrangement
+ * most families actually have.
+ */
+function payableBy(store: SandboxStore, context: AdapterContext, id: string, now: number): Charge {
   const row = store.charge(id);
   if (!row) throw new Refusal('No such charge on this account.');
+  const me = context.identity.userId;
+  if (row.student === me) {
+    if (!isStudent(context)) throw new Refusal('Only the student on the account can pay it.');
+    return row;
+  }
   // The check that matters: a well-formed id for somebody else's bill.
-  if (row.student !== context.identity.userId) throw new Refusal('That is not your account.');
+  if (!familyMay(store, me, row.student, 'finances', row.id, 'pay', now)) {
+    throw new Refusal('That is not your account.');
+  }
   return row;
 }
 
@@ -241,7 +261,7 @@ function mineAward(store: SandboxStore, context: AdapterContext, id: string): Aw
   return row;
 }
 
-export function billingAdapter(store: SandboxStore): InstitutionAdapter {
+export function billingAdapter(store: SandboxStore, clock: () => Date = () => new Date()): InstitutionAdapter {
   const adapter: InstitutionAdapter = {
     area: 'billing',
     institutionId: SANDBOX_INSTITUTION,
@@ -258,7 +278,7 @@ export function billingAdapter(store: SandboxStore): InstitutionAdapter {
       return chargeRecord(store, row);
     },
     review: async (context, input) => {
-      const row = mineCharge(store, context, input.recordId);
+      const row = payableBy(store, context, input.recordId, clock().getTime());
       if (input.actionId !== 'pay') throw new Refusal('That is not something you can do to a charge.');
       const left = owing(row);
       if (left === 0) throw new Refusal(`${row.what} is already paid.`);
@@ -284,7 +304,7 @@ export function billingAdapter(store: SandboxStore): InstitutionAdapter {
     execute: async (context: AdapterContext, input: ActionInput, key: string) => {
       const done = already(store, key);
       if (done) return done;
-      const row = mineCharge(store, context, input.recordId);
+      const row = payableBy(store, context, input.recordId, clock().getTime());
       if (input.actionId !== 'pay') throw new Refusal('That is not something you can do to a charge.');
       const left = owing(row);
       if (left === 0) throw new Refusal(`${row.what} is already paid.`);
@@ -298,7 +318,9 @@ export function billingAdapter(store: SandboxStore): InstitutionAdapter {
         row,
         key,
         context.identity.userId,
-        `Paid ${money(amount)} towards ${row.what}`,
+        row.student === context.identity.userId
+          ? `Paid ${money(amount)} towards ${row.what}`
+          : `Paid ${money(amount)} towards ${row.what} by ${context.identity.userId}, with family access`,
         new Date().toISOString(),
         (c) => {
           c.paid += amount;

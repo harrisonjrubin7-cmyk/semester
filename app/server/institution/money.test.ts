@@ -206,9 +206,21 @@ describe('paying', () => {
     expect(await billing.get(student(2), id(1, 'tuition-fall'))).toBeNull();
   });
 
-  it('refuses somebody who is not a student', async () => {
+  it('refuses somebody with no claim on the account at all', async () => {
+    // Not "only the student", which is the message for the account's *owner*
+    // holding the wrong role. A stranger is told the truer and less
+    // informative thing: it is not theirs.
     await expect(
       billing.execute(who('bursar-1', 'staff'), act('billing', id(1, 'tuition-fall'), '0', 'pay', { amount: '1' }), 'k'),
+    ).rejects.toThrow(/not your account/i);
+  });
+
+  it('refuses the account’s own holder when they are not a student', async () => {
+    // The other half, so the two messages are both reachable and neither is
+    // dead prose. `student-1` owns this charge; without the student role they
+    // are told which role it needs.
+    await expect(
+      billing.execute(who('student-1', 'staff'), act('billing', id(1, 'tuition-fall'), '0', 'pay', { amount: '1' }), 'k'),
     ).rejects.toThrow(/only the student on the account/i);
   });
 
