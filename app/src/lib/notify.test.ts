@@ -1,14 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { classesToNudge, dueReminders, inQuiet } from './notify';
+import type { Start } from './start';
 import type { DatedItem } from './types';
 import type { NotifKey } from '../data/misc';
 
 const ALL: Record<NotifKey, boolean> = {
-  class: true, today: true, two: true, free: true, sun: true, exam: true, term: true, attend: true,
+  class: true, today: true, two: true, start: true, free: true, sun: true, exam: true, term: true, attend: true,
   bill: true,
 };
 const NONE: Record<NotifKey, boolean> = {
-  class: false, today: false, two: false, free: false, sun: false, exam: false, term: false, attend: false,
+  class: false, today: false, two: false, start: false, free: false, sun: false, exam: false, term: false, attend: false,
   bill: false,
 };
 
@@ -456,5 +457,131 @@ describe('classesToNudge', () => {
     const rail = [block({ title: 'PSCI 1104 — canceled', at: 9 * 60 + 10, canceled: true })];
     const out = dueReminders(THU, ALL, { items: [], classes: classesToNudge(rail) });
     expect(out.some((r) => r.rule === 'class')).toBe(false);
+  });
+});
+
+/**
+ * The rule that counts down to the work rather than to the deadline.
+ *
+ * `lib/start.ts` has worked out the day something has to *begin* since it was
+ * written, and it reached exactly one surface: a card on the home screen, seen
+ * by somebody who had already opened the app — which is not the person who
+ * needed telling. These cover the wiring, and the one property that decides
+ * whether the rule is a reminder or a nag.
+ */
+describe('the start rule', () => {
+  const begin = (over: Partial<Start> = {}): Start => ({
+    id: 'econ-paper',
+    title: 'Opera Philadelphia case',
+    courseId: 'econ',
+    kind: 'case',
+    daysAway: 18,
+    minutes: 600,
+    runway: 12,
+    startOn: '2026-09-03',
+    today: true,
+    late: false,
+    first: 'Read the case once without notes and write down what it is actually asking.',
+    says: 'Today, on your own hours.',
+    ...over,
+  });
+
+  const src = (starts: Start[], over: Record<string, unknown> = {}) => ({
+    items: [],
+    classes: [],
+    starts,
+    ...over,
+  });
+
+  it('says what to begin, and the first action rather than the weighting', () => {
+    const out = dueReminders(THU, ALL, src([begin()]));
+    const r = out.find((x) => x.rule === 'start');
+    expect(r?.title).toBe('Begin today: Opera Philadelphia case');
+    // "30% of the grade" is the paralysing half. This is the other one.
+    expect(r?.body).toContain('write down what it is actually asking');
+  });
+
+  it('fires once per start date and not once per morning, which is the whole difference', () => {
+    /*
+     * The guard this rule most needs, and the one a faithful revert fails.
+     *
+     * A start date that has gone by stays in `beginNow` every morning
+     * afterwards — that is what `late` means. So an id keyed on today would
+     * buzz about the same unstarted paper every day until the student
+     * switched the whole feature off, which is the failure `lib/notify.ts`
+     * was written to stop. Keyed on the start date, the id is the same on
+     * both mornings and `fire` shows it once.
+     */
+    const overdue = begin({ today: false, late: true, startOn: '2026-08-30' });
+    const first = dueReminders(THU, ALL, src([overdue]));
+    const nextMorning = dueReminders(new Date(2026, 8, 4, 9, 0), ALL, src([overdue]));
+    const idOf = (rs: typeof first) => rs.find((r) => r.rule === 'start')?.id;
+
+    expect(idOf(first)).toBeTruthy();
+    expect(idOf(nextMorning)).toBe(idOf(first));
+    // And it names the start date, which is what makes that true.
+    expect(idOf(first)).toContain('2026-08-30');
+  });
+
+  it('still speaks up for a start date already gone, which is who it is for', () => {
+    // Somebody who installed this in week six with three papers already past
+    // their start date is the case that matters most; silence because the
+    // moment had passed would be silence exactly there.
+    const out = dueReminders(THU, ALL, src([begin({ today: false, late: true })]));
+    expect(out.find((r) => r.rule === 'start')?.title).toContain('Overdue to start');
+  });
+
+  it('refuses to tell anybody to begin something that will not fit', () => {
+    // `startFor` returns null when the work is more hours than the windows
+    // hold between now and the deadline. "Begin today" would be the app
+    // declining to say the one true thing it knows about that piece of work.
+    const out = dueReminders(
+      THU,
+      ALL,
+      src([
+        begin({
+          runway: null,
+          startOn: '',
+          late: true,
+          today: false,
+          says: 'More hours than your windows hold between now and then.',
+        }),
+      ]),
+    );
+    const r = out.find((x) => x.rule === 'start');
+    expect(r?.title).toContain('Will not fit');
+    expect(r?.body).toContain('More hours than your windows hold');
+    expect(r?.body).not.toContain('Read the case');
+  });
+
+  it('waits for the morning, like every other rule that is not time-critical', () => {
+    expect(
+      dueReminders(new Date(2026, 8, 3, 7, 0), ALL, src([begin()])).some((r) => r.rule === 'start'),
+    ).toBe(false);
+  });
+
+  it('is silent for a muted course', () => {
+    // The promise at the top of `dueReminders` is that a rule added later is
+    // muted by default rather than by somebody remembering. This is that rule,
+    // arriving to find the promise kept.
+    const out = dueReminders(THU, ALL, src([begin()], { muted: ['econ'] }));
+    expect(out.some((r) => r.rule === 'start')).toBe(false);
+  });
+
+  it('is silent inside quiet hours, with no exception made for it', () => {
+    const out = dueReminders(new Date(2026, 8, 3, 23, 0), ALL, src([begin()], {
+      quiet: { from: 22 * 60, to: 8 * 60 },
+    }));
+    expect(out.some((r) => r.rule === 'start')).toBe(false);
+  });
+
+  it('says nothing when the switch is off', () => {
+    expect(dueReminders(THU, NONE, src([begin()])).some((r) => r.rule === 'start')).toBe(false);
+  });
+
+  it('says nothing when no caller worked any out', () => {
+    expect(dueReminders(THU, ALL, { items: [], classes: [] }).some((r) => r.rule === 'start')).toBe(
+      false,
+    );
   });
 });

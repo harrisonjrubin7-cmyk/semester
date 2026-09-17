@@ -35,6 +35,7 @@ const ALL_ON: Record<NotifKey, boolean> = {
   today: true,
   free: true,
   two: true,
+  start: true,
   term: true, attend: true,
   bill: true,
   exam: true,
@@ -106,4 +107,48 @@ describe('a reminder keeps its destination all the way to the phone', () => {
     expect(tapped).toContain("addEventListener('message'");
     expect(tapped).toContain('landingFrom');
   });
+});
+
+/**
+ * The three callers that build what the rules are allowed to see.
+ *
+ * `dueReminders` takes a `Source`, and three places build one: the in-page
+ * tick in `state/store.tsx`, and the two that fill the push queue. The file's
+ * own header states the hazard — "a rule enforced in one of three callers is
+ * a rule that leaks, and the thing it leaks is a notification somebody
+ * explicitly switched off" — and two of the three were leaking it.
+ *
+ * `muted` and `quiet` were passed by the tick and by neither queue filler, so
+ * both switches worked on an open tab and not on the phone: a course muted in
+ * Settings still buzzed, and quiet hours held for the surface that cannot wake
+ * you and not for the one that can.
+ *
+ * Source-read rather than unit-tested, and deliberately, for the reason
+ * `pushchain` above is: the failure is a field missing from one of three call
+ * sites, and each site is correct on its own. No unit test of `dueReminders`
+ * can see it, because `dueReminders` was never the thing that was wrong.
+ */
+describe('every caller shows the rules the same thing', () => {
+  const CALLERS = [
+    'app/src/state/store.tsx',
+    'app/src/components/PushSwitch.tsx',
+    'app/src/components/PushTop.tsx',
+  ];
+
+  for (const path of CALLERS) {
+    it(`${path} honours muted courses and quiet hours`, () => {
+      const src = read(path);
+      expect(src).toContain('muted: state.mutedCourses');
+      expect(src).toContain('quiet: state.quiet');
+    });
+
+    it(`${path} works out what has to begin`, () => {
+      const src = read(path);
+      // Through `planFrom`, never `plan` — the calibration has one home, and
+      // a caller reaching past it is a caller whose start dates can disagree
+      // with the card on the home screen about the same paper.
+      expect(src).toContain('starts: beginNow(');
+      expect(src).toContain('planFrom({');
+    });
+  }
 });

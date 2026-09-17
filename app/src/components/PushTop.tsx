@@ -24,6 +24,7 @@ import { atRiskToday } from '../lib/atrisk';
 import { classesToNudge } from '../lib/notify';
 import { saveQueue } from '../lib/cloud';
 import { datedItems, railFor } from '../lib/select';
+import { beginNow, planFrom } from '../lib/start';
 
 export function PushTop() {
   const { state, catalog, account, courseCode } = useStore();
@@ -44,11 +45,25 @@ export function PushTop() {
           items: datedItems(catalog, d).filter((i) => !state.done[i.id]),
           classes: classesToNudge(railFor(catalog, d, state.appointments, state.commitments)),
           registrar: state.registrar,
+          // Muted courses and quiet hours, which this refill dropped on the
+          // floor exactly as `PushSwitch` did. See the note there.
+          muted: state.mutedCourses,
+          quiet: state.quiet,
           atRisk: atRiskToday(
             railFor(catalog, d, state.appointments, state.commitments),
             state.attendance,
             state.attendPolicy,
             courseCode,
+          ),
+          // The day to begin, not the day it is due. See `lib/start.ts`.
+          starts: beginNow(
+            planFrom({
+              items: datedItems(catalog, d),
+              done: state.done,
+              spent: state.spent,
+              windows: state.windows,
+              now: d,
+            }),
           ),
         }));
         await saveQueue(queue);
@@ -59,7 +74,7 @@ export function PushTop() {
         // twelve hours after a failure.
       }
     })();
-  }, [account, catalog, now, state.notifs, state.done, state.appointments, state.commitments, state.registrar, state.attendance, state.attendPolicy, courseCode]);
+  }, [account, catalog, now, state.notifs, state.done, state.appointments, state.commitments, state.registrar, state.attendance, state.attendPolicy, state.mutedCourses, state.quiet, state.spent, state.windows, courseCode]);
 
   return null;
 }

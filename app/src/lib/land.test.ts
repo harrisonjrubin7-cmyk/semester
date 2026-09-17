@@ -19,6 +19,7 @@ const off = (): Record<NotifKey, boolean> => ({
   today: false,
   free: false,
   two: false,
+  start: false,
   term: false, attend: false,
   bill: false,
   exam: false,
@@ -55,6 +56,24 @@ describe('a reminder about one deadline', () => {
     );
     expect(r).toBeTruthy();
     expect(landingFor(r.id)).toEqual({ screen: 'item', item: 'econ-mid' });
+  });
+
+  it('opens the piece of work a start nudge is about, where the first action is', () => {
+    // The two above open a deadline because naming one beats naming the list
+    // it sits in. `start` has a stronger reason: its whole point is the first
+    // action, and the first action happens inside the document. Landing on a
+    // list would have put one more tap between somebody and the thing they
+    // were being asked to open.
+    expect(landingFor('start:2026-09-12:econ-paper')).toEqual({
+      screen: 'item',
+      item: 'econ-paper',
+    });
+  });
+
+  it('sends a start nudge that has no runway somewhere real rather than nowhere', () => {
+    // `startOn` is empty when the work will not fit in the hours that exist,
+    // so the id carries `over` in its place. The item is still the answer.
+    expect(landingFor('start:over:econ-paper')).toEqual({ screen: 'item', item: 'econ-paper' });
   });
 
   it('keeps an id that has colons of its own', () => {

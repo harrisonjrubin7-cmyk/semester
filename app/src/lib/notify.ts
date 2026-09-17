@@ -21,6 +21,7 @@ import { money } from './bill';
 import type { NotifKey } from '../data/misc';
 import { daysTo, type TermDate } from './registrar';
 import { isExam } from './runway';
+import type { Start } from './start';
 import type { DatedItem } from './types';
 
 const SEEN_KEY = 'semester.notified';
@@ -109,6 +110,17 @@ interface Source {
    * second one.
    */
   atRisk?: AtRisk[];
+  /**
+   * Work that has to *begin* — today, or on a day already gone. From
+   * `beginNow` in `lib/start.ts`, and worked out by the caller for the same
+   * reason as `atRisk` and `bill` above: the runway arithmetic has one
+   * implementation and this file is not going to become a second one.
+   *
+   * Every other rule in this file counts down to a deadline. This is the only
+   * one that counts down to the work, which is the thing a deadline never says
+   * and the thing somebody actually needs telling.
+   */
+  starts?: Start[];
   /**
    * The next unpaid instalment on the term's bill, worked out by the caller
    * with `lib/bill.ts`.
@@ -243,15 +255,21 @@ export function dueReminders(
    * A muted course is silent before any rule looks at it.
    *
    * At the top rather than inside each rule, so a rule added next year is
-   * muted by default rather than by somebody remembering. `items` and
-   * `classes` are the only two things here that belong to a course; the bill,
+   * muted by default rather than by somebody remembering. `items`, `classes`
+   * and `starts` are the three things here that belong to a course; the bill,
    * the registrar and the weekly summary do not, and are untouched.
+   *
+   * `starts` is the rule added next year, and it arrived to find the promise
+   * above already kept.
    */
   const muted = src.muted ?? [];
   const items = muted.length ? src.items.filter((i) => !muted.includes(i.c)) : src.items;
   const classes = muted.length
     ? src.classes.filter((c) => !c.c || !muted.includes(c.c))
     : src.classes;
+  const starts = muted.length
+    ? (src.starts ?? []).filter((s) => !muted.includes(s.courseId))
+    : (src.starts ?? []);
 
   const done = src.done ?? {};
   const left = (i: DatedItem): boolean => !done[i.id];
@@ -325,6 +343,56 @@ export function dueReminders(
         rule: 'two',
         title: `Two days: ${i.title}`,
         body: `${i.dueShort} · ${i.weight || i.kind}`,
+      });
+    }
+  }
+
+  /*
+   * The morning something has to *begin*.
+   *
+   * Every other rule above counts down to a deadline, and almost no missed
+   * piece of work was a forgotten deadline: the paper due on the 30th is
+   * perfectly well known about on the 12th, and nothing anywhere said that a
+   * ten-hour paper and four hours of evenings a week means the 12th *is* the
+   * day. `lib/start.ts` has worked that out since it was written, and
+   * `StartToday` has drawn it on the home screen — where it is seen by
+   * somebody who has already opened the app, which is not the person who
+   * needed telling.
+   *
+   * **Once per item, not once per morning.** The id is keyed on the start date
+   * rather than on today, which is the whole difference between a reminder and
+   * a nag: a start date that has gone by stays in `beginNow` every single
+   * morning afterwards, so keying this on `today` would buzz four times a day
+   * about four papers, forever, until the student switched the whole thing off.
+   * Keyed on `startOn`, each piece of work says its piece once — and says it
+   * again only if the estimate moves the date, which is a genuinely different
+   * fact.
+   *
+   * A late one still fires, on the first morning the app sees it. Somebody who
+   * installed this in week six with three papers already past their start date
+   * is exactly who this rule is for, and staying silent because the moment had
+   * passed would be silence in the one case that matters most.
+   *
+   * The body carries the opener rather than the weighting, because "30% of the
+   * grade" is the paralysing half and "read the case and write down what it is
+   * actually asking" is the half that gets somebody into the document. The
+   * openers are generic by kind and `lib/start.ts` says so.
+   */
+  if (on.start && minutes >= 8 * 60) {
+    for (const s of starts) {
+      // No runway at all: more hours than the windows hold. Not a thing to
+      // begin, and telling somebody to begin it would be the app refusing to
+      // say the one true thing it knows about that piece of work.
+      const fits = s.runway !== null;
+      out.push({
+        id: `start:${s.startOn || 'over'}:${s.id}`,
+        rule: 'start',
+        title: !fits
+          ? `Will not fit: ${s.title}`
+          : s.today
+            ? `Begin today: ${s.title}`
+            : `Overdue to start: ${s.title}`,
+        body: fits ? `${s.says} ${s.first}` : s.says,
       });
     }
   }

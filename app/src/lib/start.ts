@@ -38,7 +38,7 @@ import { dateToIso } from './date';
 import type { DatedItem } from './types';
 import { estimate, type Spent } from './pace';
 import { hoursOn, WAKING_HOURS, type Window } from './windows';
-import { corrected, type Calibration } from './worth';
+import { calibrate, corrected, type Calibration } from './worth';
 
 /**
  * The share of a day's working hours any one piece of work may claim.
@@ -256,6 +256,42 @@ export function plan(input: StartInput): Plan {
 
 function daysSince(from: Date, to: Date): number {
   return Math.round((to.getTime() - from.getTime()) / 86_400_000);
+}
+
+/**
+ * How wrong this student's own guesses have been, from their pace reports.
+ *
+ * `calibrate` wants `{ guess, minutes, at }` and a store holds `Spent`, where
+ * the guess is optional because it is only asked at the moment a work session
+ * begins. Bridging the two is four lines nobody would write differently, and
+ * two screens had each written them out.
+ */
+export function biasOf(spent: Spent[]): Calibration | null {
+  return calibrate(
+    spent
+      .filter((s) => typeof s.guess === 'number')
+      // `at` so the window is the recent ten rather than the whole term.
+      .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes, at: s.at })),
+  );
+}
+
+/**
+ * The plan, from the pieces a store actually holds.
+ *
+ * `plan` takes the calibration as an argument, which is right — it keeps the
+ * arithmetic testable against a bias somebody chose. What it meant in practice
+ * was that every caller worked one out on the way in, and there are five of
+ * them now: the two screens that draw start dates, the reminder tick, and the
+ * two that fill the push queue.
+ *
+ * Five copies of a calibration is five chances for one of them to be the
+ * uncalibrated one, and the symptom would not look like a bug. It would look
+ * like the phone saying Tuesday and the home screen saying Sunday about the
+ * same paper, which is the kind of disagreement that costs a feature its
+ * credibility without ever failing a test. So it happens once, here.
+ */
+export function planFrom(input: Omit<StartInput, 'bias'>): Plan {
+  return plan({ ...input, bias: biasOf(input.spent) });
 }
 
 /** What has to begin today or is already overdue to begin. */
