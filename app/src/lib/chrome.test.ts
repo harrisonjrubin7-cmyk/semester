@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FULLSCREEN, chromeFor, firstScreen, homeShape, navigationsDrawn, usesBar } from './chrome';
-import { NAVS, SHELLS, navOf } from './look';
+import { DEFAULT_NAV, NAVS, SHELLS, navOf } from './look';
 import { DESTINATIONS } from './nav';
 import { DEFAULT_PERSISTED } from '../state/shape';
 import type { NavMode, Screen } from './types';
@@ -228,15 +228,22 @@ describe('reading a navigation back', () => {
      * the tab bar, because it is the same shape: chrome at the top, a tab
      * strip, a search field that owns the window.
      *
-     * `navOf` already did that — its fallback is the workspace, not the bar —
-     * so no migration step was written. That is worth a test rather than a
-     * comment: the fallback is the only thing standing between a retired
-     * navigation and an app that opens somewhere the person did not choose,
-     * and it would be an easy line to "simplify" to `'tabs'` one day.
+     * `navOf` did that by its fallback being the workspace, so no migration
+     * step was written — and this test warned that it "would be an easy line
+     * to simplify to `'tabs'` one day". Moving the default to the tab bar was
+     * that day, and it arrived as a default rather than as a simplification,
+     * which is worse: nobody was editing this line at all.
+     *
+     * So the two questions are separated now. `RETIRED` in `lib/look.ts`
+     * answers "what was this closest to" and the default answers "this cannot
+     * be read at all". The first two lines below are the halves that used to
+     * be one line, and they no longer give the same answer.
      */
-    expect(navOf('browser')).toBe('workspace');
-    expect(navOf('a navigation that never existed')).toBe('workspace');
-    expect(navOf(undefined)).toBe('workspace');
+    expect(navOf('browser'), 'a retired navigation lands on its own shape').toBe('workspace');
+    expect(navOf('a navigation that never existed'), 'an unreadable one lands on the default').toBe(
+      DEFAULT_NAV,
+    );
+    expect(navOf(undefined)).toBe(DEFAULT_NAV);
   });
 
   /*
@@ -250,9 +257,16 @@ describe('reading a navigation back', () => {
    * caught the original bug.
    */
   it('falls back to the default rather than to nothing', () => {
-    expect(navOf('soft')).toBe('workspace');
-    expect(navOf(undefined)).toBe('workspace');
-    expect(navOf('')).toBe('workspace');
+    /*
+     * Against `DEFAULT_NAV` rather than the default's name. This block has
+     * now been rewritten three times by a default moving under it — to the
+     * guides, back to the workspace, and on to the tab bar — every time
+     * because it wrote the name down. It is the same fault `navOf` itself
+     * had, one file over, and the same fix.
+     */
+    expect(navOf('soft')).toBe(DEFAULT_NAV);
+    expect(navOf(undefined)).toBe(DEFAULT_NAV);
+    expect(navOf('')).toBe(DEFAULT_NAV);
     // A name every branch matches, and a home screen the app knows how to
     // draw. The line under this one is what "rather than to nothing" means
     // now that the default draws no chrome of its own.

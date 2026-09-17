@@ -1136,8 +1136,39 @@ a:hover {
 }
 .mcell-dots {
   display: flex;
+  align-items: center;
   gap: var(--sp-1);
   height: 4px;
+}
+.mcell-dot {
+  flex: none;
+  width: 4px;
+  height: 4px;
+}
+/*
+ * How many things are on the day, beside the dots that say what kind.
+ *
+ * At most three dots are drawn (`DOTS` in `lib/monthgrid.ts`) and past one
+ * thing this says the total, so a nine-deadline Thursday stops looking like a
+ * four-deadline one. It is the last 2px of the row's height budget: the strip
+ * is 4px tall to keep the numeral and the dots on one line, and a numeral
+ * taller than that would push the cell past its aspect ratio and make the
+ * whole month a row taller.
+ *
+ * `--type-xs` scales with the reader's text setting like everything else, so
+ * `line-height: 1` and the fixed strip height are what keep it from growing
+ * the grid at the largest sizes — the numeral overflows its 4px line and is
+ * centred on it rather than being laid out by it.
+ */
+.mcell-count {
+  flex: none;
+  margin-left: 1px;
+  font-size: var(--type-xs);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  /* Dim, not faint: this is text and it is held to the 4.5:1 body-text bar
+     the rest of the app's secondary ink is. See `lib/contrast.test.ts`. */
+  color: var(--app-dim);
 }
 .mcell-names {
   display: none;

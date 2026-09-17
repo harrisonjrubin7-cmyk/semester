@@ -115,6 +115,49 @@ export const TRIES = 5;
  */
 const COVERED = 0.5;
 
+/**
+ * What the two absolute kinds cost, given how much of one is hidden.
+ *
+ * A form field and a `data-danger` control count at any overlap at all — that
+ * rule is `costOf`'s and it stands. What this changes is what "counts" is
+ * worth. It used to be `Math.max(COVERED, share)`, and for every overlap
+ * under half that is the constant `COVERED`: a field clipped at 1% and a
+ * field clipped at 49% scored the same 0.5.
+ *
+ * Which is the yes/no answer `costOf` was rewritten to stop giving, put back
+ * for the one kind of control that always triggers it. On a screen that is a
+ * column of full-width fields there is one under the button at every offset,
+ * so all five candidate positions score exactly `COVERED`, nothing is
+ * strictly cheaper than anything, and the tie-break — keep the lowest — keeps
+ * the button exactly where it started. The avoidance does not fail on those
+ * screens so much as it cannot run: the screens most made of form controls
+ * are the screens where it is guaranteed to do nothing.
+ *
+ * Measured at 402px in the tab bar, a quarter of the way down each: on
+ * `#/registrar`, `#/update` and `#/family` the five positions cost
+ * 0.5 · 0.5 · 0.5 · 0.5 · 0.5 and the button sat on a text input covering
+ * 23.7%, 9.6% and 8.7% of it. Those were three of the five positions in the
+ * whole sixty-screen sweep where the button rested on something the app's own
+ * rule calls unusable.
+ *
+ * So map the share into the band above the floor instead of clamping it to
+ * the bottom of it. Every property the floor was there for survives — any
+ * overlap at all scores at or above `COVERED`, so the position still counts
+ * as occupied, and a field always outranks a merely-clipped card, which
+ * scores its raw share and cannot reach `COVERED` without really being
+ * covered. What is gained is that two occupied positions can now be told
+ * apart. Same three screens after: the button lifts 29, 116 and 58px, onto
+ * 3.8%, 0.8% and 3.2%.
+ *
+ * It cannot make a clear screen worse. A position under nothing returns
+ * before the ranking is consulted, and a position under a card is scored
+ * exactly as before; this only ever chooses between positions the button was
+ * already going to be standing on something in.
+ */
+function graded(share: number): number {
+  return COVERED + share * (1 - COVERED);
+}
+
 
 /**
  * How much it costs to sit on this element — 0 for anything that does not
@@ -193,7 +236,7 @@ export function costOf(el: Element | null, self: Element | null, at: DOMRect | n
         area;
 
   const tag = node.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return Math.max(COVERED, share);
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return graded(share);
 
   /*
    * And a destructive control, at any overlap at all.
@@ -212,7 +255,7 @@ export function costOf(el: Element | null, self: Element | null, at: DOMRect | n
    * than matched on the label, for the reason `lib/onframe.test.ts` gives
    * about labels: they drift, and a rule that reads them drifts with them.
    */
-  if (node.hasAttribute('data-danger')) return Math.max(COVERED, share);
+  if (node.hasAttribute('data-danger')) return graded(share);
 
   return share;
 }

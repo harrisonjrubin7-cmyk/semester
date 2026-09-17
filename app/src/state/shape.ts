@@ -1226,7 +1226,36 @@ export const DEFAULT_PERSISTED: Persisted = {
    * row away on Layout and navigation, or on the last row of Customize
    * Semester. A stored choice made after step 6 has run is never overwritten.
    */
-  nav: 'workspace',
+  /*
+   * ## And now the tab bar, for a device that has never saved anything
+   *
+   * The reversal above is about which of the six a *stored* copy opens on,
+   * and it stands: step 6 is the last of those three and nothing here
+   * rewrites a preference anybody has made. This line is the other question —
+   * what a phone with nothing in it starts as — and the answer had been
+   * following the migrations rather than being decided on its own terms.
+   *
+   * The workspace is a browser: a strip of app tabs over a search field, and
+   * `firstScreen` lands you in the field rather than on a screen. That is a
+   * good shape for somebody who already knows the sixty screens by name and
+   * the wrong first thing to hand somebody who knows none of them, because
+   * the field answers only what you can already spell. The tab bar is five
+   * things under a thumb, one of which is the directory to the other
+   * fifty-five, and `firstScreen` lands on Today — what is due, what is next,
+   * what is on today, which is the daily loop this app is for.
+   *
+   * Deliberately *not* a migration step. `lib/migrate.ts` says at length why
+   * rewriting a persisted preference is the thing that cannot be undone, and
+   * this needs none: every stored copy already carries a literal `nav`, so
+   * changing this line is invisible to everybody who has ever opened the app
+   * and is the whole of the change for everybody who has not.
+   *
+   * `look.ts` marks this one in `NAVS` so the chooser says which it is. Six
+   * rows with no mark on any of them is a menu rather than a default, and a
+   * student opening Layout and navigation to find out what the app thinks
+   * they should use was told six times that nothing here hides anything.
+   */
+  nav: 'tabs',
   done: {},
   saved: { e1: true, e16: true },
   notifs: { ...DEFAULT_NOTIFS },

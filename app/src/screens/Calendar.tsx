@@ -22,7 +22,7 @@ import { weekLabel, type Span } from '../lib/weekpage';
 import { WIDE, useMedia } from '../lib/media';
 import { PrintButton } from '../components/PrintButton';
 import { CAMPUS_KIND, kindOf } from '../lib/kinds';
-import { dayLabel, monthLabel, moveBy } from '../lib/monthgrid';
+import { DOTS, dayCount, dayLabel, monthLabel, moveBy } from '../lib/monthgrid';
 import {
   DOW,
   DOW_INITIALS,
@@ -1406,7 +1406,11 @@ function MonthView() {
           }
           const isToday = sameDay(now, new Date(shownYear, shownMonth, d));
           const isSelected = selectedDay === d;
-          const dots = (marks[d] ?? []).slice(0, 4);
+          const onDay = marks[d] ?? [];
+          const dots = onDay.slice(0, DOTS);
+          // The numeral beside them. See `lib/monthgrid.ts` on why it starts
+          // at two and why the dots stop at three to make room for it.
+          const count = dayCount(onDay);
           return (
             <button
               key={i}
@@ -1477,13 +1481,20 @@ function MonthView() {
               >
                 {d}
               </span>
+              {/*
+                The dots and, past one thing, how many things.
+
+                `aria-hidden` on the whole strip because `dayLabel` above
+                already says all of it in a sentence — the numeral is the
+                sighted half of what the screen reader has always been told,
+                and announcing it again would read the count twice.
+              */}
               <span aria-hidden="true" className="mcell-dots">
                 {dots.map((m, k) => (
                   <span
                     key={k}
+                    className="mcell-dot"
                     style={{
-                      width: 4,
-                      height: 4,
                       background:
                         m.kind === 'mine'
                           ? 'transparent'
@@ -1493,6 +1504,7 @@ function MonthView() {
                     }}
                   />
                 ))}
+                {count !== null && <span className="mcell-count">{count}</span>}
               </span>
               {/*
                 What is actually on the day, for a cell wide enough to say it.

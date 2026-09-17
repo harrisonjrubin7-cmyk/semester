@@ -808,6 +808,16 @@ export const NAVS = [
     blurb: 'A fixed bar of seven you choose. Every thing has one home you can learn.',
     /** What the first screen is called in this navigation. See `homeTitle`. */
     home: 'Today',
+    /**
+     * And the one the app starts as. See `DEFAULT` in `state/shape.ts`.
+     *
+     * Marked on the row rather than compared against the default state in the
+     * picker, so that the two cannot disagree: a chooser that works out which
+     * is the default by importing the whole initial state is a chooser that
+     * quietly says the wrong thing the day that state is reshaped. `deft` is
+     * the property; exactly one row carries it, which `look.test.ts` holds.
+     */
+    deft: true,
   },
   {
     id: 'feed',
@@ -878,13 +888,25 @@ export function homeTitle(nav: string | undefined): string {
  * is not an app.
  *
  * The fallback is whatever the app currently defaults to, and it has moved
- * three times for the same reason every time. It was the tab bar, then the
- * workspace, then the guides, and it is the workspace again. Answering a
- * corrupt key with a navigation the app no longer defaults to would strand
- * exactly the person this function exists for: the one whose stored value
- * cannot be read, who now gets an app that does not match the one on their
- * other device. `chrome.test.ts` holds this to `DEFAULT_PERSISTED.nav` rather
- * than to the literal, so the two cannot drift apart again.
+ * four times for the same reason every time. It was the tab bar, then the
+ * workspace, then the guides, the workspace again, and it is the tab bar
+ * again. Answering a corrupt key with a navigation the app no longer defaults
+ * to would strand exactly the person this function exists for: the one whose
+ * stored value cannot be read, who now gets an app that does not match the
+ * one on their other device.
+ *
+ * ## And it is read off the list rather than written out
+ *
+ * It was the literal `'workspace'`, with a comment above it promising that
+ * `chrome.test.ts` held it to `DEFAULT_PERSISTED.nav` so the two could not
+ * drift. The test did hold it — and a literal that a test keeps honest is
+ * still a second place that has to be edited, so moving the default moved the
+ * app and left this answering with the old one until the suite said so.
+ *
+ * `deft` on `NAVS` is the one place. `look.test.ts` holds that mark to
+ * `DEFAULT_PERSISTED.nav`, which is the check that was wanted, one level up:
+ * there is now nothing to keep in step, because there is only one of it.
+ * `DEFAULT_NAV` is that row, resolved once.
  *
  * ## Whatever it falls back to has to draw a way on
  *
@@ -896,8 +918,37 @@ export function homeTitle(nav: string | undefined): string {
  * Either is safe. What must never happen is falling back to a name no branch
  * matches, which is what this function prevents.
  */
+export const DEFAULT_NAV: NavMode = (NAVS.find((n) => n.deft)?.id ?? NAVS[0].id) as NavMode;
+
+/**
+ * Navigations that used to exist, and the survivor each one becomes.
+ *
+ * A retired navigation and an unreadable one are different questions, and
+ * they were the same line for as long as the answer happened to suit both.
+ * `browser` was a seventh navigation — a second browser-shaped shell beside
+ * `workspace`, removed by E4 in `SIMPLIFY-AUDIT.md` — and somebody still
+ * carrying `nav: 'browser'` should land on the workspace, not because it is
+ * the default but because it is *the same shape*: chrome at the top, a tab
+ * strip, a search field that owns the window. That was free while the
+ * workspace was also the fallback, and `chrome.test.ts` said so at the time:
+ * "it would be an easy line to simplify to `'tabs'` one day."
+ *
+ * Moving the default to the tab bar is that day. So the two answers are
+ * separated: a name this table knows becomes what it was closest to, and
+ * everything else — a corrupt key, an empty string, a name from a build that
+ * has not shipped — becomes the default, which is the case `navOf` was
+ * written for.
+ *
+ * Kept forever, on `lib/migrate.ts`'s argument about a phone in a drawer.
+ */
+const RETIRED: Record<string, NavMode> = {
+  browser: 'workspace',
+};
+
 export function navOf(id: string | undefined): NavMode {
-  return (NAVS.find((n) => n.id === id)?.id as NavMode | undefined) ?? 'workspace';
+  const known = NAVS.find((n) => n.id === id)?.id as NavMode | undefined;
+  if (known) return known;
+  return (id !== undefined && RETIRED[id]) || DEFAULT_NAV;
 }
 
 /**

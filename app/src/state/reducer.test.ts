@@ -134,7 +134,19 @@ describe('going places', () => {
    * Back retracing is what makes it one.
    */
   it('keeps a way back at a root in the workspace', () => {
-    const deep = reducer(reducer(blank(), { type: 'go', screen: 'essay' }), {
+    /*
+     * Named, for the reason the tab-mode test above gives — and this is the
+     * test that reason was about.
+     *
+     * It took the navigation from `blank()` and passed because the default
+     * happened to be the workspace. The default is the tab bar now, so this
+     * was a workspace test quietly checking tab mode, and it failed saying
+     * the workspace does not keep its history. It does; it was never asked.
+     * Every other test in this block names its navigation, which is what
+     * kept them honest through the same move.
+     */
+    const desk = { ...blank(), nav: 'workspace' as const };
+    const deep = reducer(reducer(desk, { type: 'go', screen: 'essay' }), {
       type: 'go',
       screen: 'study',
     });

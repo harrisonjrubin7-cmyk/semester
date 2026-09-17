@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayLabel, marksLine, monthLabel, moveBy as real } from './monthgrid';
+import { DOTS, dayCount, dayLabel, marksLine, monthLabel, moveBy as real } from './monthgrid';
 
 const mark = (kind: string) => ({ kind });
 
@@ -132,5 +132,68 @@ describe('monthLabel', () => {
   it('names the month being shown', () => {
     expect(monthLabel(2026, 8)).toBe('September 2026');
     expect(monthLabel(2027, 0)).toBe('January 2027');
+  });
+});
+
+/**
+ * The numeral beside the dots, which is the sighted half of `dayLabel`.
+ *
+ * The cell drew at most four dots and said nothing about the rest, so a day
+ * with four things and a day with nine were the same picture. `dayLabel` has
+ * always read the whole of it out — the screen reader had the better version
+ * of this cell — and these pin the version everybody else gets.
+ */
+describe('how many things are on a day', () => {
+  const mark = (kind: string) => ({ kind });
+
+  it('says nothing about an empty day', () => {
+    expect(dayCount([])).toBeNull();
+  });
+
+  /*
+   * And nothing about a day with one thing on it, which is the judgement in
+   * here rather than the arithmetic. The dots *are* the count while there are
+   * few enough of them to take in at a glance; a "1" beside a single dot is a
+   * numeral telling you what you can already see.
+   */
+  it('says nothing about a day with one thing on it', () => {
+    expect(dayCount([mark('due')])).toBeNull();
+  });
+
+  it('counts from two', () => {
+    expect(dayCount([mark('due'), mark('class')])).toBe(2);
+  });
+
+  /*
+   * The case the whole thing is for: past the dots the cell can draw, the
+   * count is the only thing that distinguishes one busy day from another.
+   * Nine and four drew identically before this existed.
+   */
+  it('counts past the dots the cell can draw', () => {
+    const nine = Array.from({ length: 9 }, () => mark('due'));
+    expect(nine.length).toBeGreaterThan(DOTS);
+    expect(dayCount(nine)).toBe(9);
+    expect(dayCount(nine.slice(0, 4))).toBe(4);
+    expect(dayCount(nine)).not.toBe(dayCount(nine.slice(0, 4)));
+  });
+
+  /*
+   * It counts things, not kinds. `marksLine` is the one that groups them, and
+   * the two answer different questions about the same day — the sentence says
+   * what is on it, the numeral says how much.
+   */
+  it('counts things rather than kinds', () => {
+    const day = [mark('due'), mark('due'), mark('due')];
+    expect(marksLine(day)).toBe('3 deadlines');
+    expect(dayCount(day)).toBe(3);
+  });
+
+  /*
+   * And the dot budget leaves room for it. Three rather than four, because at
+   * 402px a cell is about 57px and four 4px dots plus a two-digit numeral do
+   * not fit on the one 4px line the strip is.
+   */
+  it('leaves room for the numeral beside the dots', () => {
+    expect(DOTS).toBe(3);
   });
 });

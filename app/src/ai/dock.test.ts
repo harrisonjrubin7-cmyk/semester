@@ -207,9 +207,65 @@ describe('the assistant button, and what it sits on', () => {
     it('floors a form field and a destructive control, without flattening them', () => {
       const textarea = costOf(control('TEXTAREA', rect(0, 700, 340, 700)), null, at);
       const remove = costOf(control('BUTTON', rect(310, 700, 30, 30), { danger: true }), null, at);
-      expect(textarea, 'a 1% clip of a big textarea still counts').toBe(0.5);
+      expect(textarea, 'a 1% clip of a big textarea still counts').toBeGreaterThan(0.5);
       expect(remove, 'a buried Delete counts for what it is').toBeGreaterThan(0.5);
       expect(textarea).toBeLessThan(remove);
+    });
+
+    /*
+     * And two *fields* rank against each other, which is the half of "without
+     * flattening them" the floor did not deliver.
+     *
+     * `Math.max(COVERED, share)` is the constant `COVERED` for every overlap
+     * under half, so a field clipped at 1% and a field clipped at 49% both
+     * scored exactly 0.5 — the yes/no answer this whole ranking exists to
+     * replace, kept alive for the one kind of control that always trips it.
+     *
+     * The consequence is not theoretical and it is not small. On a screen
+     * that is a column of full-width fields there is one under the button at
+     * every offset, so all five candidate positions score 0.5, nothing is
+     * strictly cheaper than anything, and the tie-break keeps the button
+     * exactly where it started. Measured at 402px in the tab bar, a quarter
+     * of the way down: `#/registrar`, `#/update` and `#/family` each scored
+     * 0.5 · 0.5 · 0.5 · 0.5 · 0.5 and left the button on a text input covering
+     * 23.7%, 9.6% and 8.7% of it. Graded, the same three screens lift 29, 116
+     * and 58px onto 3.8%, 0.8% and 3.2%.
+     */
+    it('tells two form fields apart by how much of each is hidden', () => {
+      /*
+       * Both under half, which is the case the floor collapsed and the only
+       * case that can tell the two rules apart. A first version of this test
+       * used a 13% clip and an 87% burial, and passed against a faithful
+       * revert: `Math.max` leaves anything over half alone, so the pair it
+       * flattens is the pair where *neither* is over half. That is also the
+       * pair a column of full-width fields actually produces.
+       */
+      const wide = costOf(control('INPUT', rect(0, 700, 400, 52)), null, at); // 13%
+      const narrow = costOf(control('INPUT', rect(200, 700, 152, 52)), null, at); // 34%
+      expect(wide, 'a clipped field still counts as occupied').toBeGreaterThanOrEqual(0.5);
+      expect(narrow, 'and so does a more clipped one').toBeGreaterThanOrEqual(0.5);
+      expect(wide, 'but the less covered one is the cheaper place to stand').toBeLessThan(narrow);
+    });
+
+    /*
+     * And a field never loses to a card it is merely sharing a corner with,
+     * which is what the floor was for and what the grading has to preserve.
+     *
+     * A plain control scores its raw share and so cannot reach `COVERED`
+     * without really being half covered; a field starts at `COVERED`. The two
+     * bands meet rather than overlap, which is the property that lets the
+     * grading be a straight remap instead of a special case.
+     *
+     * This one is the control, and it is meant to pass against a revert as
+     * well as against the fix — it pins what must *not* change. A suite where
+     * every new test goes red on the revert is a suite that has only measured
+     * the thing it was hoping to find; see CLAUDE.md on including one.
+     */
+    it('still puts any field above a card that is not really covered', () => {
+      const field = costOf(control('INPUT', rect(0, 700, 4000, 52)), null, at);
+      const card = costOf(control('BUTTON', rect(300, 700, 110, 52)), null, at);
+      expect(card, 'the card is under half covered').toBeLessThan(0.5);
+      expect(field, 'the field is barely clipped and still outranks it').toBeGreaterThan(card);
     });
 
     it('is worst-case when there is no box to measure, or no position to measure from', () => {
