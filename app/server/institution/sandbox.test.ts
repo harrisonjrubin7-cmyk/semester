@@ -357,6 +357,13 @@ describe('the rubric', () => {
     expect(said).toContain('Method');
     expect(said).toContain('The steps are shown');
     expect(said).toMatch(/Marked out of[^}]*20/);
+    /*
+     * And what the piece is worth, beside what it is marked out of, for the
+     * same reason. "Out of 20" is not a weighting: a student deciding where
+     * the evening goes needs to know that this one carries a fifth of the
+     * course and the paper carries better than a third.
+     */
+    expect(said, 'what it is worth').toMatch(/Worth[^}]*20% of the course/);
   });
 
   it('adds the criteria up rather than taking a total on trust', async () => {
@@ -607,6 +614,7 @@ describe('publishing work', () => {
     due: soon(),
     brief: 'Eight hundred words.',
     rubric: RUBRIC,
+    weight: '10',
     ...over,
   });
 
@@ -956,6 +964,199 @@ describe('the deadline', () => {
     // thing it cannot be.
     expect(again).toEqual(first);
     expect(again.message).toMatch(/Late by 1 hour/);
+  });
+});
+
+describe('where you stand', () => {
+  /*
+   * The completion plan's chain ends at Record, and for eight commits the
+   * Record was per piece of work: a trail, a mark, an archive. Nothing
+   * anywhere answered the question a student actually asks — *how am I doing
+   * in this course* — and the course record answered a different question
+   * instead, the marker's one, to everybody who could read it.
+   */
+
+  /** Submit, mark and optionally release one piece, and hand back the pair. */
+  const carry = async (
+    assignment: string,
+    marks: Record<string, string>,
+    to: 'submitted' | 'graded' | 'released',
+  ) => {
+    const s = student();
+    const f = faculty();
+    if (!store.enrolled('student-1')) await enrol(s);
+    const id = `student-1:${assignment}`;
+    const r = await seen('assignments', s, id);
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), `w-sub-${assignment}`);
+    if (to === 'submitted') return { s, f };
+    const g = await seen('grades', f, id);
+    await area('grades').execute(f, act('grades', g.id, g.version, 'grade', { ...marks, comments: 'As marked.' }), `w-mark-${assignment}`);
+    if (to === 'graded') return { s, f };
+    const g2 = await seen('grades', f, id);
+    await area('grades').execute(f, act('grades', g2.id, g2.version, 'release'), `w-rel-${assignment}`);
+    return { s, f };
+  };
+
+  const PS1 = { method: '7', accuracy: '6', clarity: '4' }; // 17 of 20
+
+  it('does not read the class’s marking queue to a student', async () => {
+    /*
+     * The first version put the marker's view on the course record for
+     * everybody. With a class of four, "3 of 4 in hand · 1 outstanding" tells
+     * an enrolled student precisely how many of their classmates have not
+     * submitted, and how many are sitting unmarked. That is the course's
+     * business and the marker's; it is not theirs, and on a class this size it
+     * is one step from a name.
+     */
+    const s = student();
+    await enrol(s);
+    const mine = JSON.stringify((await seen('courses', s, 'sandbox-101')).details);
+    expect(mine, 'a student is reading the class’s queue').not.toMatch(/in hand|to mark|outstanding|overdue/i);
+    expect(mine, 'and the size of it').not.toMatch(/of 4\b/);
+
+    // Faculty still get it. The view is wrong for one reader, not wrong.
+    const theirs = JSON.stringify((await seen('courses', faculty(), 'sandbox-101')).details);
+    expect(theirs).toMatch(/in hand/i);
+    expect(theirs).toMatch(/to mark/i);
+  });
+
+  it('tells a student where their own work is, piece by piece', async () => {
+    await carry('a1', PS1, 'submitted');
+    const said = JSON.stringify((await seen('courses', student(), 'sandbox-101')).details);
+    expect(said, 'the piece they have handed in').toMatch(/Problem set 1[^}]*[Ss]ubmitted/);
+    expect(said, 'and the piece they have not').toMatch(/Short paper[^}]*not yet submitted/);
+  });
+
+  it('says what each piece is worth, not only what it is marked out of', async () => {
+    /*
+     * Twenty marks and forty marks is not a weighting. Two rubrics of
+     * different lengths produce those numbers by accident, and a student
+     * reading them has no way to tell whether the second piece is worth twice
+     * the first or whether somebody wrote twice as many criteria.
+     */
+    const said = JSON.stringify((await seen('courses', student(), 'sandbox-101')).details);
+    expect(said, 'Problem set 1’s share of the course').toMatch(/Problem set 1[^}]*20% of the course/);
+    expect(said, 'Short paper’s share of the course').toMatch(/Short paper[^}]*35% of the course/);
+  });
+
+  it('is a syllabus, and not a standing, to somebody not in the class', async () => {
+    /*
+     * Before enrolling, what is published and what it is worth is exactly the
+     * thing worth reading — it is how you decide. A place in the course is
+     * not: "nothing has been marked yet" says you are in a class you have not
+     * joined.
+     */
+    const said = JSON.stringify((await seen('courses', student(), 'sandbox-101')).details);
+    expect(said, 'the work is the syllabus').toMatch(/Problem set 1[^}]*20% of the course/);
+    expect(said, 'a standing for somebody with no place in the course').not.toMatch(/has been marked/i);
+    expect(said).not.toMatch(/Not submitted|not yet submitted/i);
+  });
+
+  it('counts a released mark towards a standing', async () => {
+    await carry('a1', PS1, 'released');
+    const said = JSON.stringify((await seen('courses', student(), 'sandbox-101')).details);
+    expect(said, 'against the piece that earned them').toMatch(/Problem set 1[^}]*17 of 20/);
+    expect(said, 'the marks earned, over the marks that carried them').toMatch(/17 of 20 marks/);
+    expect(said, 'stated as a share of the whole course').toMatch(/20% of this course has been marked/);
+  });
+
+  it('does not count a mark the student has not been shown', async () => {
+    /*
+     * A marked-but-unreleased piece is a mark the student cannot read. Putting
+     * it in their standing would release it through the back door: they would
+     * not see the number, but they could subtract their way to it.
+     */
+    await carry('a1', PS1, 'graded');
+    const said = JSON.stringify((await seen('courses', student(), 'sandbox-101')).details);
+    expect(said, 'an unreleased mark reached the standing').not.toMatch(/17/);
+    expect(said, 'nothing of this course has been marked, as far as the student can see').toMatch(
+      /nothing[^}]*marked|0% of this course has been marked/i,
+    );
+
+    // And it appears the moment it is released, so this is about release
+    // rather than about the standing never working.
+    const g = await seen('grades', faculty(), 'student-1:a1');
+    await area('grades').execute(faculty(), act('grades', g.id, g.version, 'release'), 'w-late-rel');
+    expect(JSON.stringify((await seen('courses', student(), 'sandbox-101')).details)).toMatch(/17 of 20/);
+  });
+
+  it('never states a standing as a grade for the course', async () => {
+    /*
+     * 17 of 20 on a fifth of the course is not 85%, and an institutional
+     * record that says it is has made a forecast wearing the clothes of a
+     * fact. The app projects elsewhere, with a band and a name for it; a
+     * record states what happened.
+     */
+    await carry('a1', PS1, 'released');
+    const course = await seen('courses', student(), 'sandbox-101');
+    const said = JSON.stringify(course.details);
+    expect(said, 'the unmarked remainder has to be said out loud').toMatch(/80%[^}]*not been marked/i);
+    expect(said, 'a projected course grade').not.toMatch(/85%|on track|projected|estimated/i);
+  });
+
+  it('refuses work published without a share of the course', async () => {
+    const soon = new Date(Date.now() + 14 * 24 * 3_600_000).toISOString();
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    const fields = (weight: string) => ({
+      title: 'Essay two',
+      due: soon,
+      brief: 'Eight hundred words.',
+      rubric: 'Argument | 10 | A claim.\nEvidence | 5 | Sources.',
+      weight,
+    });
+    const send = (weight: string, key: string) =>
+      area('courses').execute(f, act('courses', course.id, course.version, 'publish', fields(weight)), key);
+
+    // Refused at the write as well as at the review: a client does not have
+    // to prepare anything first.
+    await expect(send('', 'w-p1')).rejects.toThrow(/worth/i);
+    await expect(send('none', 'w-p2')).rejects.toThrow(/"none"/);
+    await expect(send('0', 'w-p3')).rejects.toThrow(/above zero/);
+    await expect(send('-5', 'w-p4')).rejects.toThrow(/above zero/);
+    expect(store.assignment('essay-two'), 'one of those published it').toBeUndefined();
+  });
+
+  it('refuses work that would take the course past all of itself', async () => {
+    // 20 and 35 are already published, so 45 is left and 50 is not there.
+    const soon = new Date(Date.now() + 14 * 24 * 3_600_000).toISOString();
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    const fields = (weight: string) => ({
+      title: 'Essay two',
+      due: soon,
+      brief: 'Eight hundred words.',
+      rubric: 'Argument | 10 | A claim.\nEvidence | 5 | Sources.',
+      weight,
+    });
+    await expect(
+      area('courses').execute(f, act('courses', course.id, course.version, 'publish', fields('50')), 'w-over'),
+    ).rejects.toThrow(/45% of this course is unpublished/);
+    expect(store.assignment('essay-two')).toBeUndefined();
+
+    // And the whole of what is left is fine.
+    await area('courses').execute(f, act('courses', course.id, course.version, 'publish', fields('45')), 'w-fits');
+    expect(store.assignment('essay-two')?.weight).toBe(45);
+  });
+
+  it('reads the share back before publishing it', async () => {
+    const soon = new Date(Date.now() + 14 * 24 * 3_600_000).toISOString();
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    const said = await area('courses').review(
+      f,
+      act('courses', course.id, course.version, 'publish', {
+        title: 'Essay two',
+        due: soon,
+        brief: 'Eight hundred words.',
+        rubric: 'Argument | 10 | A claim.\nEvidence | 5 | Sources.',
+        weight: '10',
+      }),
+    );
+    // 20 and 35 are out already, so 10 more leaves 35 unpublished — the number
+    // that stops the next piece being published at fifty.
+    expect(JSON.stringify(said.details)).toMatch(/10% of the course/);
+    expect(JSON.stringify(said.details)).toMatch(/[Ss]till unpublished[^}]*35% of the course/);
   });
 });
 
