@@ -87,6 +87,22 @@ function journalKey(): Buffer {
   return Buffer.from(secret, 'hex');
 }
 
+/**
+ * Where the sandbox keeps its coursework, with its directory made first.
+ *
+ * `openJournal` below makes its own, and by default the two share one — so
+ * for as long as nobody moved either, the journal's `mkdirSync` happened to
+ * cover this as well. That is a dependency on the default value of another
+ * variable and on the order these two run in, which is not a thing to leave
+ * standing: point `SEMESTER_SANDBOX_PATH` somewhere of its own and the store
+ * would have thrown on a directory that does not exist.
+ */
+function sandboxPath(): string {
+  const file = resolve(process.env.SEMESTER_SANDBOX_PATH || 'work/university/private/sandbox.sqlite');
+  mkdirSync(dirname(file), { recursive: true, mode: 0o700 });
+  return file;
+}
+
 function openJournal(): ActionJournal {
   const file = resolve(process.env.SEMESTER_JOURNAL_PATH || 'work/university/private/actions.sqlite');
   // 0o700: the directory holding prepared actions is not world-readable.
@@ -141,9 +157,7 @@ const authenticate = authUrl && authKey ? supabaseIdentity(authUrl, authKey) : a
  * coursework, but a person typed it.
  */
 const sandboxOn = process.env.SEMESTER_SANDBOX_INSTITUTION === '1';
-const sandboxStore = sandboxOn
-  ? new SandboxStore(resolve(process.env.SEMESTER_SANDBOX_PATH || 'work/university/private/sandbox.sqlite'))
-  : null;
+const sandboxStore = sandboxOn ? new SandboxStore(sandboxPath()) : null;
 const installed = sandboxStore ? [...adapters, ...sandboxAdapters(sandboxStore)] : adapters;
 
 const handler = createGateway({
@@ -196,7 +210,8 @@ server.listen(port, '127.0.0.1', () => {
     `Semester university gateway listening on http://127.0.0.1:${port}. ` +
       `${adapters.length} approved adapters registered.` +
       (sandboxOn
-        ? ` SANDBOX INSTITUTION IS ON: ${sandboxAdapters.length ? '4' : '0'} demonstration adapters are installed and nothing they report is real.`
+        ? ` SANDBOX INSTITUTION IS ON: ${installed.length - adapters.length} demonstration adapters are ` +
+          `installed and nothing they report is real.`
         : ''),
   );
 });
