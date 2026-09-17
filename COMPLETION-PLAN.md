@@ -1768,6 +1768,68 @@ where both ends insert. That is its own piece of work and this is not it.
 
 ---
 
+## 8g. Captions — written by the person speaking
+
+The fourth word of the build-out plan's Meetings row, after the door in
+[§8e](#8e-meetings--the-door).
+
+**The shape is forced by the medium, and it is worth stating first.** A browser
+can transcribe the microphone it is holding and cannot usefully transcribe an
+incoming `MediaStream`. In a mesh with no server, that means **a caption can
+only be made at the mouth it came out of**: each person's device turns their own
+speech into text and sends the text. There is no arrangement in which this app
+makes a caption of somebody else's voice, and the screen says so rather than
+letting it be assumed from a switch labelled "captions".
+
+**Most of it already existed.** `lib/mic.ts` has had `dictate` and
+`dictationSupported` since note dictation was built — the browser's own
+recogniser, with Firefox's absence already handled in those words. So this is
+thirty lines of call wiring and a pure model, not a speech feature.
+
+**The sentence beside the switch is the point of the feature.** Turning captions
+on starts *this* browser's recogniser on *this* microphone, and where a browser
+sends that audio to be recognised is the browser's business — on Chrome, it is
+Google's servers. This app uploads none of it and cannot stop that. Saying so
+next to the switch, rather than in a settings page nobody opens, is the whole
+difference between a feature and a surprise. It is also why the switch is
+per-device and not something a host can turn on for a room: nobody else's
+microphone is anybody's to start.
+
+**Muting stops it**, and that is not a nicety. A caption of what somebody said
+while muted would be the worst possible bug here, because the one thing a mute
+button promises is that the call does not learn what you just said.
+
+**The model is `reacted`'s**, deliberately: one line per person, latest
+replacing theirs, expiring on every call rather than on a timer. A speaker
+leaning on it cannot bury the screen, and a call left in a background tab does
+not come back holding an afternoon of lines. An empty line *removes* theirs
+rather than drawing a blank — that is what a recogniser sends when it hears
+nothing, and an empty box under somebody's name reads as a fault.
+
+**Mutated, six of six caught**: captions never expiring, an empty line drawn as
+a blank, the 220-character cap removed so a caption becomes a transcript, two
+lines kept per person, the reading order reversed, and `readable` sorting the
+caller's array in place.
+
+**Looked at.** Driven in a browser: the switch, the full sentence, and the
+absence case are all on screen, and checking it raises nothing. What could not
+be driven here is two people captioning each other, for the reason
+[§8e](#8e-meetings--the-door) records — the agent proxy will not tunnel `wss://`,
+so no two browsers in this container can meet.
+
+**Done when.** A caption appears under the speaker's name and goes when they
+stop; a browser without recognition says so and still shows everybody else's;
+muting stops yours; and nothing is uploaded by this app. Asserted in
+`mesh.test.ts`, except the wiring, which is driven.
+
+**What is left of Meetings after this.** Recording. And it is the one item in
+the whole document that should not be built without a decision made away from
+the keyboard: recording a call is a thing you do *to* the other people in it,
+and a study app that can record a seminar has a consent question before it has
+an engineering one.
+
+---
+
 ## 8d. What the source document has left, and what it is waiting on
 
 For the record, measured rather than assumed, since §1 to §8 of this plan were
@@ -1803,8 +1865,11 @@ plan had not tracked: **Forms**, done in [§8c](#8c-forms--publishing-to-real-re
 **Design & video**, whose templates are done in
 [§8f](#8f-design--somewhere-to-start) and whose real-time collaboration is not.
 
-So of the three, what is left is three named things rather than three domains:
-**captions**, **recording**, and **two people editing one canvas**. Each is its
+So of the three, what is left is two named things rather than three domains:
+**recording** — see the note at the end of
+[§8g](#8g-captions--written-by-the-person-speaking), which is a consent question
+before it is an engineering one — and **two people editing one canvas**.
+Captions are done in [§8g](#8g-captions--written-by-the-person-speaking). Each is its
 own piece of work and each is named here rather than left inside a row that
 reads as untouched.
 

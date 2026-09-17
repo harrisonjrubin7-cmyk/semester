@@ -73,6 +73,8 @@ export type Signal =
   | { t: 'deny'; from: string; to: string }
   | { t: 'evict'; from: string; to: string }
   | { t: 'react'; from: string; at: number; mark: string }
+  /* A caption of what its sender is saying. See `captioned`. */
+  | { t: 'caption'; from: string; at: number; text: string; done: boolean }
   | { t: 'offer'; from: string; to: string; sdp: string }
   | { t: 'answer'; from: string; to: string; sdp: string }
   | { t: 'ice'; from: string; to: string; candidate: unknown };
@@ -433,6 +435,66 @@ export function reacted(marks: Mark[], signal: Signal, now: number): Mark[] {
   if (signal.t !== 'react') return live.length === marks.length ? marks : live;
   if (!(MARKS as readonly string[]).includes(signal.mark)) return live;
   return [...live.filter((m) => m.from !== signal.from), { from: signal.from, mark: signal.mark, at: signal.at }];
+}
+
+/* ── Captions ──────────────────────────────────────────────────────────────
+ *
+ * A caption is written by the person speaking, on their own device, and sent
+ * as text. That is not a shortcut: a browser can transcribe the microphone it
+ * is holding and cannot usefully transcribe an incoming `MediaStream`, so in a
+ * mesh the only place a line can be made is the mouth it came out of. One
+ * consequence is worth saying twice, because it is a privacy fact rather than
+ * an implementation detail: **the audio a recogniser hears goes wherever that
+ * browser sends it**, which on Chrome is Google. Nothing here uploads it, and
+ * nothing here can stop the browser doing so, which is why the switch says it.
+ *
+ * What travels between peers is the finished line and nothing else.
+ */
+
+/** How long a caption stays up once nothing has replaced it. */
+export const CAPTION_HOLD = 6_000;
+
+/** The longest line kept. A caption is a caption, not a transcript. */
+export const CAPTION_CHARS = 220;
+
+/** What one person is currently saying. */
+export interface Caption {
+  from: string;
+  text: string;
+  at: number;
+  /** Whether the recogniser has settled on it, or is still hearing. */
+  done: boolean;
+}
+
+/**
+ * The captions showing, after one signal and at this moment.
+ *
+ * One per person, latest replacing theirs — modelled on `reacted` for the same
+ * reason and with the same shape: a speaker leaning on it cannot bury the
+ * screen in their own lines, and expiry happens on every call rather than on a
+ * timer, so a call left in a background tab does not accumulate an afternoon.
+ *
+ * An empty line removes theirs rather than showing a blank. That is what a
+ * recogniser sends when it hears nothing, and a caption bar holding an empty
+ * box under somebody's name reads as a fault.
+ */
+export function captioned(now_showing: Caption[], signal: Signal, now: number): Caption[] {
+  const live = now_showing.filter((c) => now - c.at < CAPTION_HOLD);
+  if (signal.t !== 'caption') return live.length === now_showing.length ? now_showing : live;
+  const text = signal.text.trim().slice(0, CAPTION_CHARS);
+  const without = live.filter((c) => c.from !== signal.from);
+  return text ? [...without, { from: signal.from, text, at: signal.at, done: signal.done }] : without;
+}
+
+/**
+ * The captions, in the order they are read.
+ *
+ * Oldest first, so a line does not jump the moment somebody else starts
+ * talking — a caption bar that reorders itself is one nobody can finish
+ * reading. Ties by id, so every device shows the same order.
+ */
+export function readable(captions: Caption[]): Caption[] {
+  return [...captions].sort((a, b) => a.at - b.at || (a.from < b.from ? -1 : 1));
 }
 
 /**
