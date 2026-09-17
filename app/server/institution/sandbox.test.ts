@@ -45,6 +45,19 @@ const act = (
 const student = () => who('student-1', 'student');
 const faculty = () => who('prof-1', 'faculty');
 
+/**
+ * Get on the roster, because submitting without doing so is now refused.
+ *
+ * Its own helper rather than a line in `beforeEach`: the order matters and is
+ * part of what these tests are about. A student who has not enrolled is a
+ * stranger to this course, and one test below is exactly that person.
+ */
+async function enrol(context: AdapterContext, key = `enrol-${context.identity.userId}`) {
+  const course = await area('courses').get(context, 'sandbox-101');
+  if (!course) throw new Error('the sandbox course is not visible');
+  await area('courses').execute(context, act('courses', course.id, course.version, 'enrol'), key);
+}
+
 /** The record as this person currently sees it, with its live version. */
 async function seen(a: UniversityArea, context: AdapterContext, id: string) {
   const record = await area(a).get(context, id);
@@ -127,6 +140,7 @@ describe('the one complete vertical', () => {
 
 describe('what it refuses', () => {
   const submit = async (s = student()) => {
+    await enrol(s);
     const r = await seen('assignments', s, `${s.identity.userId}:a1`);
     return area('assignments').execute(
       s,
@@ -137,6 +151,7 @@ describe('what it refuses', () => {
 
   it('will not let a student read or submit somebody else’s work', async () => {
     const other = who('student-2', 'student');
+    await enrol(other);
     await submit();
     expect(await area('assignments').get(other, 'student-1:a1')).toBeNull();
     await expect(
@@ -154,9 +169,12 @@ describe('what it refuses', () => {
     // work. Refused at the ownership check either way, but the record must
     // not even resolve — the split is the bug, and the check is the net.
     const odd = who('tenant:9', 'student');
+    await enrol(odd);
     const mine = await seen('assignments', odd, 'tenant:9:a1');
     expect(mine.id).toBe('tenant:9:a1');
-    expect(store.byId('tenant:9:a1')?.student).toBe('tenant:9');
+    // `tenant:a1` would be this person's row only under a first-colon split;
+    // under a last-colon one it names a student called `tenant`, who is not
+    // on the roster and has no row.
     expect(await area('assignments').get(odd, 'tenant:a1')).toBeNull();
   });
 
@@ -191,9 +209,7 @@ describe('what it refuses', () => {
   it('keeps the order: no marking before submission, no release before marking', async () => {
     const s = student();
     const f = faculty();
-    // The student's own read is what brings their row into being — faculty
-    // see a roster of people, not of people who might one day enrol.
-    await seen('assignments', s, 'student-1:a1');
+    await enrol(s);
     const fresh = await seen('grades', f, 'student-1:a1');
     await expect(
       area('grades').execute(f, act('grades', fresh.id, fresh.version, 'grade', { mark: '5', comments: 'x' }), 'k-early'),
@@ -229,7 +245,7 @@ describe('what it refuses', () => {
   it('shows a mark to nobody until it is released', async () => {
     const s = student();
     const f = faculty();
-    await seen('assignments', s, 'student-1:a1');
+    await enrol(s);
     const r0 = await seen('assignments', s, 'student-1:a1');
     await area('assignments').execute(
       s,
@@ -262,9 +278,74 @@ describe('what it refuses', () => {
   });
 });
 
+describe('the class, as a class', () => {
+  it('shows faculty a student who has never opened the app', async () => {
+    const f = faculty();
+    // The whole point of a roster: somebody who owes work and has not been
+    // near a computer is the one person a marker most needs in the list.
+    const { records } = await area('assignments').list(f, { search: '', cursor: null });
+    const ids = records.map((r) => r.id);
+    expect(ids, 'a roster member with no activity is missing').toContain('quiet-1:a1');
+  });
+
+  it('says what the class owes, on the course record', async () => {
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(
+      s,
+      act('assignments', r.id, r.version, 'submit', { work: 'Mine.' }),
+      'k-one',
+    );
+    const course = await seen('courses', f, 'sandbox-101');
+    const said = JSON.stringify(course.details);
+    expect(said, 'the course should say how many are enrolled').toMatch(/enrolled/i);
+    expect(said, 'and how much work is outstanding').toMatch(/outstanding|not submitted|to mark/i);
+  });
+
+  it('is not joined twice, however the second attempt is keyed', async () => {
+    const s = student();
+    await enrol(s);
+    const course = await seen('courses', s, 'sandbox-101');
+    // A different idempotency key, so this is a second *attempt* rather than a
+    // retry of the first — the retry path is tested under the receipt.
+    await expect(
+      area('courses').execute(s, act('courses', course.id, course.version, 'enrol'), 'enrol-again'),
+    ).rejects.toThrow(/already enrolled/i);
+    expect(store.roster().filter((r) => r.student === 'student-1')).toHaveLength(1);
+  });
+
+  it('writes nothing when it is only being read', async () => {
+    // The first version of the store made a row the first time anybody looked,
+    // which turned every faculty list into a write and made the stored rows a
+    // record of who had *browsed*. Reads are reads.
+    const f = faculty();
+    await area('assignments').list(f, { search: '', cursor: null });
+    await area('grades').list(f, { search: '', cursor: null });
+    await area('records').list(f, { search: '', cursor: null });
+    await seen('assignments', student(), 'student-1:a1');
+    expect(store.roster().length, 'the seeded class').toBe(3);
+    expect(store.byId('quiet-1:a1'), 'a read materialised a row').toBeNull();
+    expect(store.byId('student-1:a1'), 'a read materialised a row').toBeNull();
+  });
+
+  it('will not take work from somebody who is not on the roster', async () => {
+    const stranger = who('gatecrasher-1', 'student');
+    await expect(
+      area('assignments').execute(
+        stranger,
+        act('assignments', 'gatecrasher-1:a1', '1', 'submit', { work: 'Let me in.' }),
+        'k-crash',
+      ),
+    ).rejects.toThrow(/roster|not enrolled/i);
+  });
+});
+
 describe('the receipt', () => {
   it('is issued once, however many times the same action arrives', async () => {
     const s = student();
+    await enrol(s);
     const r = await seen('assignments', s, 'student-1:a1');
     const input = act('assignments', r.id, r.version, 'submit', { work: 'First.' });
     const first = await area('assignments').execute(s, input, 'same-key');
@@ -273,7 +354,9 @@ describe('the receipt', () => {
     // be the bug; a second receipt claiming a second submission would be too.
     const again = await area('assignments').execute(s, input, 'same-key');
     expect(again).toEqual(first);
-    expect(store.byId('student-1:a1')?.history.length).toBe(1);
+    // Submissions, not entries: enrolling writes to the same trail, so a bare
+    // length would have counted it and passed for the wrong reason.
+    expect(store.byId('student-1:a1')?.history.filter((h) => h.what === 'Submitted').length).toBe(1);
   });
 
   it('is issued once for enrolment too, which takes a different path', async () => {
@@ -290,6 +373,7 @@ describe('the receipt', () => {
 
   it('can be found afterwards by the key, which is what reconcile is for', async () => {
     const s = student();
+    await enrol(s);
     const r = await seen('assignments', s, 'student-1:a1');
     const input = act('assignments', r.id, r.version, 'submit', { work: 'First.' });
     await area('assignments').execute(s, input, 'lost-key');
@@ -302,6 +386,7 @@ describe('the receipt', () => {
 
   it('survives the process, because a demonstration that forgets proves nothing', async () => {
     const s = student();
+    await enrol(s);
     const r = await seen('assignments', s, 'student-1:a1');
     await area('assignments').execute(
       s,
@@ -330,6 +415,7 @@ describe('the receipt', () => {
 describe('a review changes nothing', () => {
   it('is safe to read and walk away from', async () => {
     const s = student();
+    await enrol(s);
     const r = await seen('assignments', s, 'student-1:a1');
     const input = act('assignments', r.id, r.version, 'submit', { work: 'Two words here.' });
     const said = await area('assignments').review(s, input);
@@ -353,9 +439,11 @@ describe('it is unmistakably a sandbox', () => {
   it('says so on every record and every connection', async () => {
     const s = student();
     const f = faculty();
+    await enrol(s);
+    const r1 = await seen('assignments', s, 'student-1:a1');
     await area('assignments').execute(
       s,
-      act('assignments', 'student-1:a1', '1', 'submit', { work: 'x' }),
+      act('assignments', r1.id, r1.version, 'submit', { work: 'x' }),
       'k-1',
     );
     for (const a of four) {
