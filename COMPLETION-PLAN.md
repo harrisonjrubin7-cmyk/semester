@@ -1912,6 +1912,64 @@ on the piece of work itself, and only the first was tested — the second is the
 one a student reads the evening before they start, which is the whole argument
 for having it.
 
+### And then it was driven through the wire, which had also never happened
+
+Two commits ago the finding was that `start.ts` had never been run. This one
+is the same shape one layer in: **the loop had never been refused through the
+gateway.** Every refusal above is tested — sixty of them — and every one of
+those tests calls the adapter directly. Between the adapter and a person sit
+authentication, the origin check, the two-phase action, the journal and an
+error handler, and the error handler ate all sixty.
+
+A plain `Error` is not the gateway's own `HttpError`, so every refusal fell to
+the outer catch, which exists for a good reason — an exception out of a
+school's system can carry a connection string, a stack, or a row of somebody
+else's data — and flattens anything it did not mean to say into:
+
+> The university service is unavailable. Please try again later.
+
+with a **503**. So a marker who mistyped one rubric line was told the
+university was down, and the status code invited them to try it again. The
+two-phase action's whole argument for accepting a pasted marking scheme is
+that *"a line that does not parse is refused at prepare, with the line quoted,
+so the person fixing it can see which one"* — and the quote could not reach
+them.
+
+`Refusal` is the fix and it is a type rather than a rule about `review`,
+because the distinction is real and worth keeping. Throwing one asserts two
+things: **this sentence is meant to be read**, and **nothing was written**. The
+gateway answers it with a 400 carrying the message; an ordinary exception out
+of the same method is still flattened, and a test proves that with a message
+containing a database password. The second assertion is what lets a refusal
+thrown from `execute` — twelve of the forty are there, because a client does
+not have to prepare anything first — be marked `refused` in the journal rather
+than `uncertain`, instead of sending somebody to their registrar to reconcile
+an action that provably did not happen.
+
+**Two more came out of the same probe, and neither could have been found any
+other way.**
+
+The first is the test that should have caught it. One test did drive a refusal
+through the gateway, and it asserted `expect(late.status).toBeGreaterThanOrEqual(400)`.
+A 503 satisfies that. A test that cannot tell a refusal from an outage is why
+nobody noticed for nine commits; it asserts the exact status and the exact
+sentence now.
+
+The second is worse. `canWrite` on the `courses` area was `isStudent`, written
+when enrolling was the only thing anybody did to a course. Publishing landed
+there later, and so did faculty posting in a thread — and the gateway checks
+`canWrite` *before* it asks the adapter anything. **Faculty could not publish
+through the gateway at all**: 403, "This connection does not permit that
+action", on the stage the plan's chain begins with. Sixty adapter tests passed
+throughout, because not one of them goes through the wire.
+
+Eleven mutations, eleven red. One of them is structural rather than behavioural
+and it is the one carrying the weight: a runtime test can only pin the refusals
+it happens to drive, so a test reads `sandbox.ts` and fails on any `throw new
+Error` left in it. That is the guard that covers the fortieth refusal and the
+forty-first, which is the same argument `src/rootunmount.test.ts` makes about
+React roots.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes

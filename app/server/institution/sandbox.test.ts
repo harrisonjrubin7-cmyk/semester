@@ -1275,6 +1275,31 @@ describe('it is unmistakably a sandbox', () => {
     }
   });
 
+  it('refuses with a Refusal, everywhere, so the sentence reaches the person', () => {
+    /*
+     * Structural, and deliberately so. Forty refusals live in `sandbox.ts`,
+     * and a runtime test can only pin the ones it drives through the gateway
+     * — two of them, below. The rest read identically whether they throw
+     * `Error` or `Refusal`, because a test calling the adapter directly sees
+     * the message either way. That is exactly how all forty came to be
+     * invisible over the wire while sixty tests passed.
+     *
+     * So this reads the file. It cannot be fooled by which paths a test
+     * happens to exercise, and the next refusal somebody writes is covered
+     * the moment it is written rather than the moment somebody thinks to
+     * drive it through a gateway.
+     */
+    const source = readFileSync('server/institution/sandbox.ts', 'utf8');
+    const plain = source
+      .split('\n')
+      .map((line, i) => ({ line: line.trim(), at: i + 1 }))
+      .filter((l) => l.line.includes('throw new Error('))
+      .map((l) => `${l.at}: ${l.line}`);
+    expect(plain, 'a refusal the gateway will flatten into a 503').toEqual([]);
+    // And the count, so deleting them all is not how this goes green.
+    expect(source.split('throw new Refusal(').length - 1).toBeGreaterThanOrEqual(40);
+  });
+
   it('is not in the registry of approved adapters, and is opt-in at the server', () => {
     const registry = readFileSync('server/institution/adapters.ts', 'utf8');
     expect(registry, 'the approved registry must stay empty').toMatch(
@@ -1416,6 +1441,74 @@ describe('the vertical, through the gateway', () => {
     }
   });
 
+  it('hands the person the sentence the adapter refused them with', async () => {
+    /*
+     * Sixty refusals in this file, every one of them a sentence written to be
+     * read, and none of them had ever been read through the wire. A plain
+     * Error is not an HttpError, so the gateway's outer handler flattened all
+     * of them into "The university service is unavailable. Please try again
+     * later." — a 503, which invites a retry of something that can never work.
+     *
+     * The two-phase action's whole argument for accepting a pasted rubric is
+     * that "a line that does not parse is refused at prepare, with the line
+     * quoted, so the person fixing it can see which one". The quote could not
+     * reach them.
+     */
+    const asFaculty = wire(['faculty']);
+    try {
+      const refused = await asFaculty.call(
+        '/actions/prepare',
+        act('courses', 'sandbox-101', '1', 'publish', {
+          title: 'Essay two',
+          due: new Date(Date.now() + 14 * 24 * 3_600_000).toISOString().slice(0, 16),
+          brief: 'Eight hundred words.',
+          rubric: 'Argument | 10 | Fine\nEvidence, 5, oops',
+          weight: '10',
+        }),
+      );
+      expect(refused.status, 'a mistyped line is not an outage').toBe(400);
+      expect((await refused.json()).error).toContain('"Evidence, 5, oops"');
+      expect(store.assignment('essay-two')).toBeUndefined();
+    } finally {
+      asFaculty.journal.close();
+    }
+  });
+
+  it('lets faculty publish through the gateway, which it did not', async () => {
+    /*
+     * Found by writing the refusal test above. `canWrite` on `courses` was
+     * `isStudent`, from back when enrolling was the only thing done to a
+     * course, and the gateway checks it before it asks the adapter anything —
+     * so publishing, the stage the completion plan's chain *starts* at,
+     * answered 403 from a browser while every adapter test passed.
+     */
+    const asFaculty = wire(['faculty']);
+    const asStudent = wire(['student']);
+    try {
+      const published = await through(
+        asFaculty.call,
+        act('courses', 'sandbox-101', '1', 'publish', {
+          title: 'Essay two',
+          due: new Date(Date.now() + 14 * 24 * 3_600_000).toISOString().slice(0, 16),
+          brief: 'Eight hundred words.',
+          rubric: 'Argument | 10 | A claim.\nEvidence | 5 | Sources.',
+          weight: '10',
+        }),
+      );
+      expect(published.receipt.message).toMatch(/Published Essay two/);
+
+      // And it reaches the class, over the wire, with its share of the course.
+      await through(asStudent.call, act('courses', 'sandbox-101', '1', 'enrol'));
+      const mine = (await (await asStudent.call('/records?area=assignments')).json()).records.find(
+        (r: { id: string }) => r.id === 'student-1:essay-two',
+      );
+      expect(JSON.stringify(mine.details)).toMatch(/10% of the course/);
+    } finally {
+      asFaculty.journal.close();
+      asStudent.journal.close();
+    }
+  });
+
   it('refuses a confirmation whose review has moved under it', async () => {
     const asStudent = wire(['student']);
     const other = wire(['student']);
@@ -1435,7 +1528,14 @@ describe('the vertical, through the gateway', () => {
       await through(other.call, input);
 
       const late = await asStudent.call('/actions/commit', { reviewId: review.id, confirmed: true });
-      expect(late.status).toBeGreaterThanOrEqual(400);
+      /*
+       * Specifically, not merely "not a success". `>= 400` was what this said
+       * for nine commits, and a 503 satisfies it — which is exactly what every
+       * refusal in this file was arriving as. A test that cannot tell a
+       * refusal from an outage is the reason nobody noticed.
+       */
+      expect(late.status, await late.clone().text()).toBe(409);
+      expect((await late.clone().json()).error).toMatch(/changed/i);
       // And nothing was submitted twice.
       expect(store.byId('student-1:a1')?.history.filter((h) => h.what === 'Submitted').length).toBe(1);
     } finally {

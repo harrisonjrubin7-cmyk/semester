@@ -1,4 +1,5 @@
 import { DatabaseSync } from 'node:sqlite';
+import { Refusal } from '../../../packages/institution/src/index.ts';
 import type {
   ActionInput,
   ConnectionStatus,
@@ -649,10 +650,10 @@ function allow(
    * which is true and useless.
    */
   if (needs === 'faculty' && !isFaculty(context)) {
-    throw new Error('Only the course faculty can do that.');
+    throw new Refusal('Only the course faculty can do that.');
   }
   if (needs === 'student' && !isStudent(context)) {
-    throw new Error('Only an enrolled student can do that.');
+    throw new Refusal('Only an enrolled student can do that.');
   }
   if (needs === 'student' && store && !store.enrolled(context.identity.userId)) {
     /*
@@ -660,13 +661,13 @@ function allow(
      * anybody holding the student role could submit to this course. A test
      * with a user called `gatecrasher-1` walked straight in.
      */
-    throw new Error('You are not on this course’s roster. Enrol first.');
+    throw new Refusal('You are not on this course’s roster. Enrol first.');
   }
-  if (!work) throw new Error('No such record in the sandbox course.');
+  if (!work) throw new Refusal('No such record in the sandbox course.');
   if (needs === 'student') {
     // The check that matters: a well-formed id for somebody else's work is
     // the oldest bug in this shape of API, and the id is client-supplied.
-    if (work.student !== context.identity.userId) throw new Error('That is not your work.');
+    if (work.student !== context.identity.userId) throw new Refusal('That is not your work.');
   }
   return work;
 }
@@ -696,30 +697,30 @@ function already(store: SandboxStore, key: string): Receipt | null {
  */
 function openable(work: Work, actionId: string): void {
   if (work.stage === 'archived') {
-    throw new Error('This record is archived. The time to appeal it has passed.');
+    throw new Refusal('This record is archived. The time to appeal it has passed.');
   }
   if (actionId === 'appeal') {
     if (work.stage !== 'released') {
-      throw new Error('There is no released mark to appeal yet.');
+      throw new Refusal('There is no released mark to appeal yet.');
     }
-    if (work.appeal) throw new Error('This mark is already under appeal, or has already been answered.');
+    if (work.appeal) throw new Refusal('This mark is already under appeal, or has already been answered.');
     return;
   }
   if (work.appeal?.state !== 'open') {
-    throw new Error('This mark is not under appeal, or the appeal has already been answered.');
+    throw new Refusal('This mark is not under appeal, or the appeal has already been answered.');
   }
 }
 
 /** Refuse an action prepared against a record that has since moved. */
 function fresh(work: Work, input: ActionInput): void {
   if (input.version !== String(work.version)) {
-    throw new Error('This record has changed since you opened it. Open it again to see the current state.');
+    throw new Refusal('This record has changed since you opened it. Open it again to see the current state.');
   }
 }
 
 function expect(work: Work, stage: Stage, what: string): void {
-  if (work.stage === 'archived') throw new Error('This record is archived and cannot be changed.');
-  if (work.stage !== stage) throw new Error(`Cannot ${what} — this is ${SAID[work.stage].toLowerCase()}.`);
+  if (work.stage === 'archived') throw new Refusal('This record is archived and cannot be changed.');
+  if (work.stage !== stage) throw new Refusal(`Cannot ${what} — this is ${SAID[work.stage].toLowerCase()}.`);
 }
 
 /**
@@ -734,10 +735,10 @@ function readMarks(criteria: readonly Criterion[], fields: Record<string, string
   const marks: Record<string, number> = {};
   for (const c of criteria) {
     const raw = fields[c.id];
-    if (raw === undefined || raw.trim() === '') throw new Error(`${c.name} has not been marked.`);
+    if (raw === undefined || raw.trim() === '') throw new Refusal(`${c.name} has not been marked.`);
     const n = Number(raw);
     if (!Number.isFinite(n) || n < 0 || n > c.outOf) {
-      throw new Error(`${c.name} must be between 0 and ${c.outOf}.`);
+      throw new Refusal(`${c.name} must be between 0 and ${c.outOf}.`);
     }
     marks[c.id] = n;
   }
@@ -763,25 +764,25 @@ function readRubric(text: string): Criterion[] {
     .split('\n')
     .map((l) => l.trim())
     .filter(Boolean);
-  if (!lines.length) throw new Error('A rubric needs at least one criterion.');
+  if (!lines.length) throw new Refusal('A rubric needs at least one criterion.');
   const criteria: Criterion[] = [];
   for (const line of lines) {
     const parts = line.split('|').map((x) => x.trim());
     if (parts.length !== 3 || !parts[0] || !parts[2]) {
-      throw new Error(`Write each criterion as "Name | marks | what it means". This one is not: "${line}"`);
+      throw new Refusal(`Write each criterion as "Name | marks | what it means". This one is not: "${line}"`);
     }
     const outOf = Number(parts[1]);
     if (!Number.isInteger(outOf) || outOf <= 0) {
-      throw new Error(`"${parts[0]}" needs a whole number of marks above zero, not "${parts[1]}".`);
+      throw new Refusal(`"${parts[0]}" needs a whole number of marks above zero, not "${parts[1]}".`);
     }
     const id = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     // The id becomes a field id on the marking form, and the gateway's own
     // validator will not accept one that does not match its pattern — so it
     // is checked here, where the message can say which name caused it.
     if (!/^[a-z][a-z0-9-]{0,63}$/.test(id)) {
-      throw new Error(`"${parts[0]}" needs a name with some letters in it.`);
+      throw new Refusal(`"${parts[0]}" needs a name with some letters in it.`);
     }
-    if (criteria.some((c) => c.id === id)) throw new Error(`Two criteria are both called "${parts[0]}".`);
+    if (criteria.some((c) => c.id === id)) throw new Refusal(`Two criteria are both called "${parts[0]}".`);
     criteria.push({ id, name: parts[0], outOf, means: parts[2] });
   }
   return criteria;
@@ -800,13 +801,13 @@ function readRubric(text: string): Criterion[] {
  */
 function readWeight(store: SandboxStore, raw: string): number {
   const said = raw.trim();
-  if (!said) throw new Error('Say what this is worth, as a percentage of the course.');
+  if (!said) throw new Refusal('Say what this is worth, as a percentage of the course.');
   const weight = Number(said);
-  if (!Number.isFinite(weight)) throw new Error(`"${said}" is not a percentage this can read.`);
-  if (weight <= 0) throw new Error('A piece of work needs a share of the course above zero.');
+  if (!Number.isFinite(weight)) throw new Refusal(`"${said}" is not a percentage this can read.`);
+  if (weight <= 0) throw new Refusal('A piece of work needs a share of the course above zero.');
   const left = 100 - store.published().reduce((n, a) => n + a.weight, 0);
   if (weight > left + DUST) {
-    throw new Error(`Only ${pct(left)} of this course is unpublished, and this asks for ${pct(weight)}.`);
+    throw new Refusal(`Only ${pct(left)} of this course is unpublished, and this asks for ${pct(weight)}.`);
   }
   return weight;
 }
@@ -816,16 +817,16 @@ function readAssignment(store: SandboxStore, input: ActionInput): Assignment {
   const title = (input.fields.title ?? '').trim();
   const brief = (input.fields.brief ?? '').trim();
   const due = (input.fields.due ?? '').trim();
-  if (!title) throw new Error('An assignment needs a title.');
-  if (!brief) throw new Error('Say what the work is, however briefly.');
+  if (!title) throw new Refusal('An assignment needs a title.');
+  if (!brief) throw new Refusal('Say what the work is, however briefly.');
   const when = Date.parse(due);
-  if (!Number.isFinite(when)) throw new Error(`"${due}" is not a date this can read.`);
-  if (when < Date.now()) throw new Error('That deadline has already passed.');
+  if (!Number.isFinite(when)) throw new Refusal(`"${due}" is not a date this can read.`);
+  if (when < Date.now()) throw new Refusal('That deadline has already passed.');
   const criteria = readRubric(input.fields.rubric ?? '');
   const weight = readWeight(store, input.fields.weight ?? '');
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
-  if (!/^[a-z][a-z0-9-]{0,63}$/.test(id)) throw new Error('The title needs some letters in it.');
-  if (store.assignment(id)) throw new Error(`Something called "${title}" is already published.`);
+  if (!/^[a-z][a-z0-9-]{0,63}$/.test(id)) throw new Refusal('The title needs some letters in it.');
+  if (store.assignment(id)) throw new Refusal(`Something called "${title}" is already published.`);
   return { id, title, due: new Date(when).toISOString(), brief, weight, criteria };
 }
 
@@ -833,7 +834,7 @@ function readAssignment(store: SandboxStore, input: ActionInput): Assignment {
 function speaker(context: AdapterContext, store: SandboxStore) {
   const faculty = isFaculty(context);
   if (!faculty && !store.enrolled(context.identity.userId)) {
-    throw new Error('Only the class can read or post here.');
+    throw new Refusal('Only the class can read or post here.');
   }
   const row = store.roster().find((r) => r.student === context.identity.userId);
   return { faculty, name: faculty ? COURSE.faculty : (row?.name ?? context.identity.userId) };
@@ -842,7 +843,7 @@ function speaker(context: AdapterContext, store: SandboxStore) {
 function chosen(input: ActionInput): Audience {
   const said = input.fields.audience ?? '';
   const audience = AUDIENCE[said];
-  if (!audience) throw new Error('Choose who sees this: the class, or staff only.');
+  if (!audience) throw new Refusal('Choose who sees this: the class, or staff only.');
   return audience;
 }
 
@@ -855,7 +856,7 @@ function reviewPost(
   const { faculty } = speaker(context, store);
   const audience = chosen(input);
   const body = (input.fields.body ?? '').trim();
-  if (!body) throw new Error('There is nothing to post.');
+  if (!body) throw new Refusal('There is nothing to post.');
   return {
     title: `${faculty ? 'Answer' : 'Ask'} in ${thread.title}`,
     details: [
@@ -888,7 +889,7 @@ function post(
   const { faculty, name } = speaker(context, store);
   const audience = chosen(input);
   const body = (input.fields.body ?? '').trim();
-  if (!body) throw new Error('There is nothing to post.');
+  if (!body) throw new Refusal('There is nothing to post.');
   const at = new Date().toISOString();
   store.say({
     id: key,
@@ -1420,7 +1421,21 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
   const courses: InstitutionAdapter = {
     area: 'courses',
     institutionId: SANDBOX_INSTITUTION,
-    status: async (context) => connection('courses', context, isStudent(context)),
+    /*
+     * Written by both, and it said students only.
+     *
+     * `canWrite` was `isStudent` from the commit that added enrolling, when
+     * enrolling was the only thing anybody did to a course. Publishing landed
+     * here later, and so did posting in a thread — both of which faculty do —
+     * and the gateway checks this before it asks the adapter anything. So
+     * every faculty write to this area answered 403 "This connection does not
+     * permit that action", and the thing that *starts* the whole loop could
+     * not be reached from a browser at all.
+     *
+     * Sixty adapter tests did not notice, because every one of them calls the
+     * adapter directly. It took driving publish through the gateway.
+     */
+    status: async (context) => connection('courses', context, isStudent(context) || isFaculty(context)),
     list: async (context, query) => {
       /*
        * The threads only once somebody is in the class. Not a nicety: a
@@ -1442,7 +1457,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       const thread = threadsOf(store).find((t) => threadId(t.id) === input.recordId);
       if (thread) return reviewPost(context, store, input, thread);
       if (input.actionId === 'publish') {
-        if (!isFaculty(context)) throw new Error('Only the course faculty can publish work.');
+        if (!isFaculty(context)) throw new Refusal('Only the course faculty can publish work.');
         const a = readAssignment(store, input);
         /*
          * The rubric read back, in full, before anything is published. This
@@ -1467,7 +1482,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
           ],
         };
       }
-      if (!isStudent(context)) throw new Error('Only a student can enrol.');
+      if (!isStudent(context)) throw new Refusal('Only a student can enrol.');
       return {
         title: `Enrol in ${COURSE.code}`,
         details: [
@@ -1483,7 +1498,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       const thread = threadsOf(store).find((t) => threadId(t.id) === input.recordId);
       if (thread) return post(context, store, input, thread, key);
       if (input.actionId === 'publish') {
-        if (!isFaculty(context)) throw new Error('Only the course faculty can publish work.');
+        if (!isFaculty(context)) throw new Refusal('Only the course faculty can publish work.');
         const a = readAssignment(store, input);
         const at = now();
         store.publish(a, at);
@@ -1496,10 +1511,10 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
           recordedAt: at,
         };
       }
-      if (!isStudent(context)) throw new Error('Only a student can enrol.');
+      if (!isStudent(context)) throw new Refusal('Only a student can enrol.');
       const at = now();
       if (store.enrolled(context.identity.userId)) {
-        throw new Error('You are already enrolled in this sandbox course.');
+        throw new Refusal('You are already enrolled in this sandbox course.');
       }
       const rows = store.published().map((a) => store.one(context.identity.userId, a.id));
       /*
@@ -1692,7 +1707,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       // Archiving closes the appeal window, so archiving over an open appeal
       // would answer it by ignoring it.
       if (work.appeal?.state === 'open') {
-        throw new Error('This mark is under appeal. Answer the appeal before archiving the record.');
+        throw new Refusal('This mark is under appeal. Answer the appeal before archiving the record.');
       }
       const at = now();
       return store.commit(work, key, 'faculty', 'Archived', at, (w) => {
@@ -1795,7 +1810,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       const at = now();
       const a = assignmentOf(store, work.assignment);
       const reason = (input.fields.reason ?? '').trim();
-      if (!reason) throw new Error('Say what is wrong with the mark.');
+      if (!reason) throw new Refusal('Say what is wrong with the mark.');
 
       if (raising) {
         return store.commit(work, key, context.identity.userId, 'Appealed', at, (w) => {
