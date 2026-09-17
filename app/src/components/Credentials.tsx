@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import {
   PROVIDER_LABEL,
-  PROVIDERS_SAID,
+  namesSaid,
+  providersOn,
   sendReset,
   signIn,
   signInWith,
@@ -49,6 +50,45 @@ export function Credentials({
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
+
+  /*
+   * Which provider buttons there are, which is a question about the project
+   * and not about this app.
+   *
+   * `undefined` while the answer is outstanding, `null` when it could not be
+   * had, and otherwise the list. The three are not interchangeable and the
+   * rendering below turns on all three — see `providersOn`.
+   */
+  const [on, setOn] = useState<Provider[] | null | undefined>(undefined);
+
+  useEffect(() => {
+    // The form unmounts the moment a first run moves on, and the answer can
+    // land after that. Setting state on a gone component is the warning this
+    // flag exists to not print.
+    let alive = true;
+    void providersOn().then((got) => {
+      if (alive) setOn(got);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  /*
+   * What to draw, from those three cases.
+   *
+   * Answered — draw what is on, and nothing when nothing is. Unanswered
+   * (`null`: offline, blocked, a project that did not reply) — draw all three,
+   * which is what this form did before it could ask, because a check that did
+   * not happen is not a finding about the project and refusing the only way in
+   * on the strength of a failed fetch is worse than a button that errors.
+   * Still asking (`undefined`) — draw none *yet*, so that a button on this
+   * screen always means a door that opens. The form above it is complete and
+   * works on its own in the meantime.
+   */
+  const shown: Provider[] =
+    on === undefined ? [] : (on ?? (Object.keys(PROVIDER_LABEL) as Provider[]));
+  const noneOn = Array.isArray(on) && on.length === 0;
 
   /*
    * What may be sent, and the one rule that is not the same in both modes.
@@ -177,26 +217,28 @@ export function Credentials({
         </button>
       </form>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
-        {(Object.keys(PROVIDER_LABEL) as Provider[]).map((p) => (
-          <button
-            key={p}
-            type="button"
-            className="btn btn-secondary"
-            disabled={busy}
-            onClick={() => void run(() => signInWith(p))}
-            style={{
-              flex: 1,
-              height: 42,
-              fontSize: 'var(--type-xs)',
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-            }}
-          >
-            {PROVIDER_LABEL[p]}
-          </button>
-        ))}
-      </div>
+      {shown.length > 0 && (
+        <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+          {shown.map((p) => (
+            <button
+              key={p}
+              type="button"
+              className="btn btn-secondary"
+              disabled={busy}
+              onClick={() => void run(() => signInWith(p))}
+              style={{
+                flex: 1,
+                height: 42,
+                fontSize: 'var(--type-xs)',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase',
+              }}
+            >
+              {PROVIDER_LABEL[p]}
+            </button>
+          ))}
+        </div>
+      )}
       <div
         style={{
           fontSize: 'var(--type-xs)',
@@ -206,12 +248,31 @@ export function Credentials({
           textWrap: 'pretty',
         }}
       >
-        Any {PROVIDERS_SAID} account works — there is no check on which university the address
-        belongs to. Email and a password is kept as a third way in because some universities block
-        third-party sign-in outright, and being locked out of the only option is not a good enough
-        reason to be locked out of the app. Each provider works once it is switched on for the
-        project; until then it answers with a provider error, which is the truth rather than a
-        button that looks broken.
+        {shown.length > 0 && (
+          <>
+            {/* Named from what was drawn, not from the record of what the app
+                knows how to draw — a project with one provider on used to get
+                one button under a line offering three. */}
+            Any {namesSaid(shown.map((p) => PROVIDER_LABEL[p]))} account works — there is no check
+            on which university the address belongs to.{' '}
+          </>
+        )}
+        {noneOn && (
+          <>
+            {/* The honest version of three dead buttons. This project has no
+                provider switched on, so there is no sign-in to offer and the
+                screen says which way in there is instead of finding out after
+                a press. Whoever runs the deployment turns them on in the
+                Supabase dashboard — SETUP.md has the steps — and the buttons
+                appear here on their own. */}
+            An email address and a password is the way in on this copy of Semester: no sign-in
+            provider is switched on for it, so there is no{' '}
+            {namesSaid(Object.values(PROVIDER_LABEL))} button to press.{' '}
+          </>
+        )}
+        Email and a password is kept as a way in because some universities block third-party
+        sign-in outright, and being locked out of the only option is not a good enough reason to be
+        locked out of the app.
       </div>
 
       {/* Two text links side by side, 14px apart — so `tap-y` on both. An

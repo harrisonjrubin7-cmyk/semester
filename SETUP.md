@@ -265,12 +265,27 @@ off, the account is live and the run moves itself on. Either way the screen is
 skippable and the app works signed out — an account only decides whether the
 semester follows somebody to a second device.
 
-### Google and Apple sign-in (optional)
+### Google, Microsoft and Apple sign-in (optional)
 
 Authentication → Providers, switch on what you want, and paste each provider's
-client id and secret. Until then those two buttons return a provider error,
-which is the truth rather than a broken button. Email and password work
-immediately.
+client id and secret. Email and password work immediately and are never
+switched off, because some universities block third-party sign-in outright and
+being locked out of the only option is not a good enough reason to be locked
+out of the app.
+
+**Microsoft is `azure`, and it is the one that is usually set up wrong.** The
+registration must accept *accounts in any organizational directory and personal
+Microsoft accounts* — with the default single-tenant setting, a student at any
+other university, and anyone with an outlook.com address, is locked out with an
+error from Microsoft rather than from here.
+
+The app asks the project which of the three are on — GoTrue answers it at
+`/auth/v1/settings` — and draws a button only for those. So a project with
+nothing switched on offers the password form and says so, rather than three
+buttons that spend a round trip and come back with "Unsupported provider", and
+switching one on in the dashboard makes its button appear with nothing to
+deploy. Nothing here checks which university an address belongs to; any Google,
+Microsoft or Apple account is valid.
 
 ## 3 · The shared Claude key (optional)
 
