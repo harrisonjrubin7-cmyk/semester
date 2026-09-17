@@ -1537,6 +1537,103 @@ instead of a near miss.
 
 ---
 
+## 10. Phase 1 — one complete course workflow
+
+The build-out plan calls this *"by a wide margin, the single most urgent build
+in this document"* and *"the single largest build in the entire completion
+plan"*, and is specific about the shape: build **exactly one complete vertical
+first, end to end**, before any breadth —
+
+> Account → Institution → Course → Syllabus → Calendar → Study → Assignment →
+> Submission → Receipt → Faculty Grade → Student Feedback → Record
+
+— against *"a clearly labeled sandbox institution and sandbox course … so
+nothing here is ever a placeholder success state presented as real."*
+
+### Two corrections to the dependencies before anything was built
+
+**The account foundation exists.** The plan names as a prerequisite "a verified
+account, login, and multi-device-sync foundation — not yet formally scoped
+elsewhere in this package". `lib/cloud.ts` is that foundation and has been:
+email sign-up and sign-in, three OAuth providers, password reset, a Postgres
+copy reconciled **field by field** on the device (`lib/merge.ts`, written
+because whole-copy last-write-wins silently ate a note), device registration,
+and an account-deletion path. Offline-first throughout — the app is fully
+usable signed out. Nothing in Phase 1 was blocked on it.
+
+**Most of the vertical exists too, and it is the *institutional* half that is
+missing.** Account, Institution, Course, Syllabus, Calendar and Study are all
+shipping. So is a great deal of the machinery nobody would guess was there:
+`packages/institution` is a 399-line gateway contract with paginated records,
+form fields, a two-phase review and a receipt; `server/institution/` is a real
+gateway with an origin policy, tenant-scoped adapter lookup, per-user rate
+limits, record-version checks, and an encrypted SQLite journal whose whole
+purpose is the case where *"execute was called, the connection died, and nobody
+knows whether the course was dropped"*.
+
+What did not exist was **anything on the other end of the wire**.
+`server/institution/adapters.ts` is empty on purpose — an entry there means a
+school has approved an adapter for its students' real records — so every route
+answered 503, and the loop could not be built, demonstrated or tested.
+
+### Done — the sandbox institution
+
+`server/institution/sandbox.ts`: one course, two published assignments, and the
+whole loop across the four areas the contract already names.
+
+| Stage | Area | Who |
+| --- | --- | --- |
+| Enrol | `courses` | student |
+| Submit → receipt | `assignments` | student |
+| Mark | `grades` | faculty |
+| Release feedback | `grades` | faculty |
+| Archive the record | `records` | faculty |
+
+It is a sandbox in the three ways that can be checked rather than only in name:
+it is never installed unless `SEMESTER_SANDBOX_INSTITUTION=1` is set on the
+server (the approved registry stays empty, and a test fails if the sandbox is
+imported into it); it answers only to an identity whose server-side
+`app_metadata` says `institutionId: "sandbox"`, which no client can write; and
+the institution name, every connection's provider and every record title begin
+with `SANDBOX`, which a test reads back. The other thirty-three service areas
+keep answering "not configured" — a demonstration that lit the whole University
+screen up would be the placeholder the plan forbids.
+
+**A sandbox that accepts everything proves nothing**, so the refusals outnumber
+the acceptances: a student may act only on their own work, faculty on the
+roster; an action carrying a stale version is refused; nothing is marked before
+it is submitted, released before it is marked, or archived before it is
+released, and nothing at all happens to an archived record; a mark outside the
+assignment's range is refused; and a repeat of the same idempotency key returns
+the *first* receipt and changes nothing.
+
+Eighteen mutations reverted and watched go red. Three of them survived the
+first pass and each was a real gap rather than a bad mutation — a redundant
+idempotency check that meant enrolment's own guard was untested, a label test
+that asserted a variable was *mentioned* rather than *used*, and a claim in a
+comment about splitting an id on its last colon that no test exercised.
+
+**One order-of-operations bug was found by writing the test rather than by
+reading the code.** The idempotency answer has to come *before* the version
+check, because the case it exists for — execute ran, it worked, the connection
+died, the gateway retried — is exactly the case where the version has moved.
+Checked the other way round, a student whose submission is sitting safely in
+the store is told "this record has changed", and submits again.
+
+The vertical is also driven **through the gateway** rather than only against
+the adapters: HTTP in, status codes and JSON out, over a real journal on a real
+file, including the two-phase prepare/confirm and a test that a confirmation
+whose review has moved under it is refused and does not submit twice.
+
+### What this does not do
+
+It does not connect to Vanderbilt or to anything else, and nothing here changes
+what the app tells a student about that. Rubrics, discussion and a real class
+roster — the rest of the plan's "what's missing" list — are breadth, and the
+plan is explicit that the one vertical comes first.
+
+---
+
 ## Appendix A — What measurement corrected
 
 Each row is a claim in the draft this plan grew out of, what the tree said when

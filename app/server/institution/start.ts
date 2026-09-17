@@ -5,6 +5,7 @@ import { ActionJournal } from './journal.ts';
 import { MAX_BODY, createGateway } from './gateway.ts';
 import { supabaseIdentity } from './auth.ts';
 import { adapters } from './adapters.ts';
+import { SANDBOX_NAME, SandboxStore, sandboxAdapters } from './sandbox.ts';
 
 /**
  * The process. Everything the gateway needs before it can answer anything.
@@ -35,6 +36,24 @@ import { adapters } from './adapters.ts';
  * every route that needs one answers 503 and the app's screens draw the
  * not-connected state. That is the shipped configuration; an institution
  * adapter is added once it is approved and tested, not before.
+ *
+ * ## Except the sandbox, which is asked for by name
+ *
+ * `SEMESTER_SANDBOX_INSTITUTION=1` installs the four adapters in
+ * `sandbox.ts` — a demonstration course that runs the whole enrol → submit →
+ * receipt → mark → release → archive loop against nobody. The completion
+ * plan's Phase 1 asks for it in those words, to build and demonstrate the
+ * vertical *"wherever real institutional credentials aren't yet available,
+ * so nothing here is ever a placeholder success state presented as real"*.
+ *
+ * It is a separate switch from `adapters.ts` rather than an entry in it
+ * because the two mean opposite things. That array says "a school has
+ * approved this for its students' real records"; this variable says "none
+ * of what follows is real". Collapsing them would make the honest empty
+ * registry unreadable — the thing every screen relies on to say "prepare
+ * only" — and would put a demonstration one import away from a deployment.
+ * The startup line names whichever is running, so a server that is
+ * pretending says so in its first line of output.
  */
 
 // The journal and its database file are readable by this user and nobody else.
@@ -114,11 +133,27 @@ const authKey = process.env.SEMESTER_AUTH_PUBLIC_KEY || '';
  */
 const authenticate = authUrl && authKey ? supabaseIdentity(authUrl, authKey) : async () => null;
 
+/*
+ * The sandbox, when it is asked for.
+ *
+ * Its store sits beside the journal, under the same 0o700 directory and the
+ * same umask, because it holds submitted coursework — demonstration
+ * coursework, but a person typed it.
+ */
+const sandboxOn = process.env.SEMESTER_SANDBOX_INSTITUTION === '1';
+const sandboxStore = sandboxOn
+  ? new SandboxStore(resolve(process.env.SEMESTER_SANDBOX_PATH || 'work/university/private/sandbox.sqlite'))
+  : null;
+const installed = sandboxStore ? [...adapters, ...sandboxAdapters(sandboxStore)] : adapters;
+
 const handler = createGateway({
   origin: appOrigin(),
-  institutionName: process.env.SEMESTER_INSTITUTION_NAME || 'Your university',
+  // The name is not the operator's to choose while the sandbox is running:
+  // a demonstration labelled "Vanderbilt University" is the exact failure
+  // the plan's "never a placeholder success state presented as real" names.
+  institutionName: sandboxOn ? SANDBOX_NAME : process.env.SEMESTER_INSTITUTION_NAME || 'Your university',
   authenticate,
-  adapters,
+  adapters: installed,
   journal,
 });
 
@@ -158,7 +193,11 @@ server.headersTimeout = 10_000;
 const port = Number(process.env.SEMESTER_GATEWAY_PORT || 8787);
 server.listen(port, '127.0.0.1', () => {
   console.log(
-    `Semester university gateway listening on http://127.0.0.1:${port}. ${adapters.length} approved adapters registered.`,
+    `Semester university gateway listening on http://127.0.0.1:${port}. ` +
+      `${adapters.length} approved adapters registered.` +
+      (sandboxOn
+        ? ` SANDBOX INSTITUTION IS ON: ${sandboxAdapters.length ? '4' : '0'} demonstration adapters are installed and nothing they report is real.`
+        : ''),
   );
 });
 
@@ -171,6 +210,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
     server.close(() => {
       clearInterval(sweep);
       journal.close();
+      sandboxStore?.close();
       process.exit(0);
     });
   });
