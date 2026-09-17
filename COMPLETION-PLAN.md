@@ -512,6 +512,15 @@ without. `pipeline/make-script.mjs` drafts a script from a guide, and
 `audio/README.md` records that the scripts are also the transcripts, which is the
 text alternative an audio-only mode needs to be usable at all.
 
+> **Measured 17 September: the Phase 1 half below is closed.** `lib/script.ts`
+> is the script generation, in the app, over any course's own guide —
+> `scriptFor(courseId, guide)`, whose header names this exact gap: "the
+> capability existed on the wrong side of the app boundary". A generated course
+> with cards opens Listen on a script, and `lib/modes.ts` says which it is
+> rather than counting it as an episode: *"Script, not recorded"*. What a
+> generated course still has no *audio* — rendered MP3 — and that is the
+> boundary this section is really about, unchanged.
+
 **What's missing.** Again one thing, and again it is the boundary: a generated
 course gets no audio. The draft's "complete chapter-mark indexing across all
 content" is already true of all content that exists.
@@ -2288,9 +2297,14 @@ incompleteness were stale** and two were real:
 | Appendix A — no adversarial pass on quotes | closed; twenty cases |
 | §4.3 — a fourth, model-read scope source | closed; `readScope` and `readProposal` |
 | §4.1 — a fifth, semantic grade of evidence | closed; `readSame` |
+| §5.1 — embedded figures, export fidelity | closed, and recorded as closed |
 
-**Six of seven, and the seventh was the only one built on 17 September.** By
-measurement, §3 to §5 has nothing left in its "what's missing" lists.
+| §3.5 — script generation is not in the app | closed; `lib/script.ts:scriptFor` |
+
+**Seven of eight, and the eighth was built on 17 September.** By measurement,
+§3 to §5 has nothing left in its "what's missing" lists that is not a statement
+about rendered audio for a generated course, which §3.5 names as a boundary
+rather than a gap.
 
 ### The two rows that took two passes, and why
 
@@ -2311,6 +2325,13 @@ never infers what an exam covers."
 matching words rather than meanings. That sentence is still there and is still
 true *of the four string grades*, which is what it describes. Line 558 of the
 same file says "The fifth grade writes its own line", and `readSame` is it.
+
+**A third probe was wrong while this was being written**, which is why the
+paragraph below is stated as strongly as it is. A script that listed every
+"What's missing" in this file and looked at the sixteen lines *after* each one
+for a resolution marker reported §4.1, §4.2 and §4.3 as open — because the
+notes resolving them had been written immediately *above* the heading, not
+below it. The probe searched in one direction and the answer was in the other.
 
 So the thing to carry forward is not the ratio, though the ratio is striking.
 It is that **the probe is part of the claim**. This document's own instruction —
