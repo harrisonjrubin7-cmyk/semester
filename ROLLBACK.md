@@ -56,6 +56,35 @@ read. `rollback.test.ts` cannot check this one — it is a property of a change,
 not of a file — so it is stated here and in the migration directory's own
 README rather than pretended at.
 
+### The second path, which the tripwire cannot see
+
+`rollback.test.ts` asserts that no **workflow in this repository** applies a
+migration, and that is exactly as far as it reaches. There is a second way
+migrations could start being applied automatically, and it is not a file:
+**Supabase Branching**, configured in the Supabase dashboard rather than here.
+`supabase/config.toml` exists precisely so that integration can find the
+project, and its own header says so.
+
+As of this writing that integration is **not** doing anything, and not because
+somebody turned it off. Its comment on every pull request reads:
+
+> no changes detected in `https:/harrisonjrubin7-cmyk.github.io/semester/supabase`
+
+That is a *URL* where a repository-relative directory path belongs, so it is
+looking somewhere that cannot exist. It said this on a pull request that added
+a migration and a check suite to `supabase/`, which is how the setting was
+noticed at all.
+
+Two things follow, and both are for a person rather than a test:
+
+- **The setting is worth fixing**, because a branching integration that
+  silently matches nothing is indistinguishable from one that is working until
+  the day you need it.
+- **Fixing it changes this document.** If Branching begins applying migrations
+  on merge, the table above is wrong and the rule in the block quote becomes
+  load-bearing in a way nothing here will warn you about. Check it by hand when
+  that setting changes; no test in this repository can.
+
 ## Rolling the page back
 
 1. **Find the commit to go back to.** The deploy history is the Pages workflow's

@@ -206,7 +206,6 @@ export async function signIn(email: string, password: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
-
 /** Google or Apple, when they are switched on in the Supabase dashboard. */
 /**
  * The providers a student might actually have.
