@@ -1767,6 +1767,41 @@ thing it cannot be. The note is stored with the receipt now.
 
 Eight more mutations, eight red.
 
+### Publishing, which was the one stage of the chain with nothing behind it
+
+The plan's chain begins *"faculty creates a course, a student enrolls, **an
+assignment is published**"*, and for four commits publishing was a `const` in a
+source file. Everything downstream of it was a real action with a review, a
+receipt and a refusal; the thing that starts the loop was a deployment.
+
+Faculty publish work now — a title, a deadline and a marking scheme — and it
+reaches the whole roster with a thread to ask about it. The refusals are the
+part worth reading: not into the past, not on top of something already
+published, not by anybody who is not faculty, and not with a rubric that
+cannot be read.
+
+**The marking scheme is pasted, one criterion a line, as `Name | marks | what
+it means`.** The alternative inside this contract was a fixed number of
+criterion slots — `ActionField` has no repeating group — and three slots is
+not a rubric, it is a form. Parsing free text is the risk, and the two-phase
+action is exactly what makes it safe: `review` reads the whole thing back,
+every criterion and the total, and nothing is published until somebody has
+looked at that and confirmed. A line that does not parse is refused **at
+prepare**, with the line quoted, so the person fixing it can see which one.
+
+One thing that had to be got right and is not obvious: a criterion's name
+becomes a *field id* on the marking form, and the gateway's own validator
+refuses an id that does not match its pattern. "Method & rigour" becomes
+`method-rigour` rather than a form nobody can submit.
+
+Twelve more mutations, twelve red.
+
+*Also caught here: `npx tsc -b` does not typecheck `server/`.* A call site left
+with the wrong arity passed the app's typecheck and failed at runtime in the
+tests. `npm run check:university` is the gate that covers this directory, and
+it belongs in the list at the top of this document rather than in somebody's
+memory.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes
@@ -1827,6 +1862,7 @@ npm run lint          # oxlint, plus the style and label audits
 npm test              # the suite, in file order
 npm run test:shuffle  # the suite, in an order nobody chose
 npm run test:zones    # the suite, in two timezones that disagree about the date
+npm run check:university  # server/institution — `tsc -b` above does NOT cover it
 npm run build         # production build
 
 # Tap targets, both tiers, all 57 id-free screens. Needs `npm run dev` on
