@@ -2086,7 +2086,157 @@ exemption would have weakened the rule for every adapter to accommodate one.
 ([§8i](#8i-phase-3--registration--against-the-sandbox-labelled)), money
 ([§8j](#8j-phase-3--money--read-access-and-never-a-processor)) and family
 access. Four adapters, no screens — `University.tsx` renders all thirty-seven
-areas generically, so the whole of Phase 3 was adapters.
+areas generically, so the whole of Phase 3 was adapters. **Phase 4's first
+three** — career, advising and the alumni network — followed the same way in
+[§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled),
+taking the sandbox to twelve. Neither phase's real gates are satisfied by any
+of it and neither section claims they are.
+
+---
+
+## 8l. Phase 4 · Career, advising and the alumni network — against the sandbox, labelled
+
+**What the source document asks for.** Phase 4 is "official institutional
+transactions", and it opens with Career: live listings, employer accounts,
+applications, advising appointments, an alumni network. It is gated, in that
+document's own words, on everything in Phase 3 *sustained* through a live
+pilot **plus** a university choosing to extend trust into official
+transactions one function at a time.
+
+**None of that is satisfied and none of it is claimed here.** No employer named
+in `EMPLOYERS` exists, no application is delivered to anybody, nothing is in an
+adviser's diary, and the alumni are invented. What was built is the *shape*,
+against the sandbox institution, marked `SANDBOX` on every record and in every
+receipt — for the same reason Phase 3 was: the shape is the part that can be
+argued with before anybody is asked to trust it.
+
+Three adapters, taking the sandbox from nine to twelve:
+`career.ts` and `advising.ts` (which carries advising and alumni both).
+
+### Finding the finite thing, which is how each of the three was designed
+
+Registration taught this repository where to look: the hard part of any
+institutional area is the sentence *two people can want the last one*, and an
+area without that sentence in it is a list that does not need a transaction at
+all. Each of the three was built by finding it first.
+
+| Area | The finite thing | Why not the obvious one |
+| --- | --- | --- |
+| Career | The **offer** | Not the application — a posting takes a thousand of those and nothing is lost. Two openings and three offers is a promise the employer cannot keep. |
+| Advising | The **half-hour** | One person has it. This is registration's seat, and it is built the same way. |
+| Alumni | The mentor's **willingness** | A number of students they will take, counted from the accepted mentorships rather than stored beside them. |
+
+Each is checked twice — at `review` and again at `execute` — because the review
+reserves nothing. And each check is now tested at **both** call sites, which it
+was not at first: see below.
+
+### Three disclosures, each an absence rather than a lock
+
+Family access settled the rule ([§8k](#8k-phase-3--family-access--and-the-asymmetry-that-is-the-whole-of-it)):
+a permission the server does not hold shows up as *missing data*, not as a
+greyed-out row. Three of those are here, and each is tested by reading the
+record as somebody who should not see the field and searching the whole
+serialised record for it:
+
+1. **An employer sees the applicants to their own postings and no others.** A
+   career site where a competitor can read your pipeline is not a career site.
+2. **A student never sees who else applied** — not the names, and *not the
+   count*. A line reading "2 applications" is a disclosure with the names taken
+   off, and it is the one people leave in.
+3. **An alumnus's contact address is not on the record until they have said
+   yes.** Not redacted, not behind a flag — absent. That one sentence is the
+   whole of the alumni network.
+
+Each absence carries a **control** that reads the same record as somebody
+entitled to the field and asserts it *is* there, because a search for an
+absence passes just as well against a record that came back empty.
+
+### Why an employer is a table and not a role
+
+The contract's six roles are the six a *draft* can be written as, and there is
+no employer among them — which turned out to be the right answer rather than a
+gap. An employer is not a kind of person at a university; it is a relationship
+the career office has approved and can suspend. So it lives in a row the server
+owns, with a state the office sets, and the only thing granting the right to
+act for one is being named in its `owner` column. A pending employer cannot
+post. A suspended one cannot be applied to either. Both are real career-office
+controls, and the sandbox carries one of each so both are walkable by a person
+rather than only reachable by a test.
+
+### Two rules that are this demonstration's own
+
+**Withdrawing an application is final for that posting.** The employer has
+already read it. A career site whose "undo" quietly un-reads something a person
+acted on is teaching a student the wrong thing about what an application is, so
+re-applying is refused and the refusal says why.
+
+**Accepting an offer declines the student's other outstanding offers**, inside
+the accept's own commit — the way a drop promotes the waiting list inside its
+own. A student holding three offers is holding two openings somebody else could
+have had, which is the reason one-offer policies exist.
+
+**And cancelling an advising appointment inside twenty-four hours is refused**,
+with the reason on the screen rather than only the rule: a place given back
+that late cannot be offered to anybody else in time, so it is not given back,
+it is wasted.
+
+### What the mutations found
+
+Thirty-three guards were removed or inverted one at a time and the suite
+required to go red. Twenty-nine were caught on the first pass. The four that
+were not are the findings worth recording, because each was a real gap rather
+than a formality:
+
+**Three escapes, all the same fault, and it was in the tests.** Removing the
+`review`-phase call to the finite-resource check — the offer limit, the
+advising place, the mentor's capacity — left the suite **green** every time,
+because `execute` caught it a moment later. The commit-time check is the one
+that keeps the promise, so nothing was broken. But it meant the review-time
+check was untested, and that is worse than it sounds: the entire point of a
+two-phase action is that the review tells the truth. A review that says *go
+ahead* before a commit that says *no* has turned a refusal into a loss. Three
+tests were added that call `review` alone, and all three mutations are now
+caught.
+
+**One mutation never applied at all.** Its anchor was a paraphrase of the
+refusal rather than the refusal, so it matched nothing — and a mutation that
+matches nothing reports a clean pass. This is the third time in this repository
+that a mutation has lied, and the only reason it was noticed is that the script
+asserts its own anchor count before every run. **A mutation harness that does
+not check that it mutated something is a harness that reports whatever you
+hoped.**
+
+### And two faults the tests found in the code
+
+**A refusal doing two jobs with one message.** An unknown action on a listing
+fell through to the branch that reads an applicant name, so somebody who typed
+a wrong action was told they had left a field out. Guarded before the read, in
+both `review` and `execute`.
+
+**A type predicate that asserted something false.** `vetted` was written as
+`e is Employer`, which narrowed the *refusing* branch to `null` — making the
+refusal that names the employer ("QuickCash Partners is not currently
+approved") unreachable as far as the types were concerned, though at run time
+the name was always there. A predicate that lies about the failure path is
+worse than no predicate, because the failure path is the one nobody reads. It
+is a plain boolean now, and a test asserts the message names the employer.
+
+### Measured
+
+| | |
+| --- | --- |
+| Adapters installed in the sandbox | 9 → **12** |
+| New tests | **116** across `career.test.ts` and `advising.test.ts` |
+| Mutations applied | **33**, all caught |
+| Refusals with their own message | 26 |
+| Gates | `tsc -b`, `check:university`, `lint`, `test`, `test:shuffle`, `test:zones`, `build`, `smoke:gateway` |
+
+### What this does not do
+
+It does not connect to a university. Career, advising and alumni remain, in the
+source document's own framing, gated on a successful pilot and a real
+institutional partnership. This is a labelled demonstration of the shape those
+transactions would have, and the label is on every record it produces.
 
 ---
 

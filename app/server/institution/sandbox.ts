@@ -13,6 +13,8 @@ import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
 import { registrationAdapter } from './registration.ts';
 import { aidAdapter, billingAdapter } from './money.ts';
 import { familyAdapter } from './family.ts';
+import { careerAdapter } from './career.ts';
+import { advisingAdapter, alumniAdapter } from './advising.ts';
 
 /**
  * One course, run end to end, at an institution that does not exist.
@@ -611,6 +613,316 @@ export const OPENING_AWARDS: Opening<Award>[] = [
   { id: 'work-study', what: 'Work-study award', kind: 'Work-study', cents: 200_000, state: 'offered', answerBy: '2026-10-01' },
 ];
 
+/**
+ * ─── Phase 4: leaving the campus, and the three areas that are about that ───
+ *
+ * The build-out plan's Phase 4 is "official institutional transactions", and
+ * it opens with Career. Everything here is the same demonstration as Phase 3
+ * and carries the same warning: **no employer named here exists**, no
+ * application reaches anybody, and no appointment is in any adviser's diary.
+ * Phase 4 in that document is gated on Phase 3 being *sustained* in a live
+ * pilot and on a university choosing to extend trust one function at a time.
+ * Neither has happened. What follows is the shape, built so the shape can be
+ * argued with.
+ *
+ * ## Where the finite thing is, in each of them
+ *
+ * Registration taught this repository that the hard part of institutional
+ * software is the sentence "two people can want the last one". Each area here
+ * was built by first finding that sentence in it, because an area without one
+ * is a list and does not need a transaction at all.
+ *
+ *   **Career**: not the application — a listing can take a thousand of those.
+ *   The finite thing is the *offer*. A posting with two openings cannot make
+ *   three offers, and the check for that is made twice, at review and again at
+ *   the write, exactly as the seat check is.
+ *
+ *   **Advising**: the half-hour itself. One person can have it.
+ *
+ *   **Alumni**: the mentor's attention, which is why a mentor carries a number
+ *   of students they are willing to take and why the count is derived from the
+ *   accepted connections rather than stored beside them.
+ *
+ * ## And where the disclosure is
+ *
+ * Family access established the rule the rest of this repository now follows:
+ * a permission is a thing the server holds, and the absence of a permission
+ * shows up as an absence of *data*, not as a greyed-out row. Three of those
+ * live here, and each is tested by reading the record as somebody who should
+ * not see the field and asserting the field is not in it at all:
+ *
+ *   An employer sees the applicants to their own postings and to no others.
+ *   A student never sees who else applied — not the names, not the number.
+ *   An alumnus's contact address does not exist on the record until they have
+ *   said yes.
+ */
+
+/**
+ * An employer, as the career office holds it.
+ *
+ * `state` is the whole reason this table exists rather than employers being
+ * implied by whoever posts. A career office vets the people who advertise to
+ * its students — it is one of the few things such an office unambiguously
+ * does — and a demonstration where anybody with an account can post a job to
+ * a student body would be demonstrating the absence of the control rather
+ * than the control.
+ *
+ * `owner` is a user id and is the only thing that grants the right to act for
+ * this employer. It is checked on the server against this row. Nothing that
+ * arrives in a request can name an employer the caller does not own.
+ */
+export interface Employer {
+  id: string;
+  owner: string;
+  name: string;
+  state: 'pending' | 'approved' | 'suspended';
+  /** Why, in a sentence somebody can act on. Empty when approved. */
+  why: string;
+}
+
+export interface Listing {
+  id: string;
+  employer: string;
+  title: string;
+  kind: 'Job' | 'Internship' | 'On-campus';
+  where: string;
+  pay: string;
+  /** How many people can be hired. The finite thing; see the header. */
+  openings: number;
+  /** The last day an application is accepted. An ISO day. */
+  closes: string;
+  at: string;
+}
+
+export interface Application {
+  id: string;
+  listing: string;
+  student: string;
+  /**
+   * `withdrawn` is terminal for this listing and deliberately so. See
+   * `career.ts` — an employer has already read it, and a demonstration whose
+   * "undo" silently un-reads something is teaching the wrong lesson.
+   */
+  state: 'submitted' | 'shortlisted' | 'offered' | 'accepted' | 'declined' | 'passed' | 'withdrawn';
+  note: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * Half an hour with an adviser.
+ *
+ * `seats` is here rather than assumed to be one because a group advising
+ * session is a real thing and a demonstration that hard-coded one would have
+ * hidden the general case behind a special one. It is the registration seat
+ * count again, and it is derived the same way: by counting bookings.
+ */
+export interface Slot {
+  id: string;
+  adviser: string;
+  /** What this adviser advises on, which is what a student searches by. */
+  about: string;
+  /** An ISO timestamp. The past is a refusal; see `advising`. */
+  when: string;
+  minutes: number;
+  seats: number;
+  where: string;
+}
+
+export interface Booking {
+  id: string;
+  slot: string;
+  student: string;
+  state: 'booked' | 'cancelled';
+  /** What the student wants to talk about, which the adviser can read. */
+  about: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * Somebody who graduated and said they would talk to a student.
+ *
+ * `email` is on this row and is **not** on the record a student reads until
+ * the mentorship is accepted. That is the entire security property of this
+ * area and it is asserted from the outside: the test reads the record as a
+ * student with a pending request and checks that no detail on it contains the
+ * address, rather than checking that some flag is false.
+ */
+export interface Mentor {
+  id: string;
+  name: string;
+  classOf: string;
+  field: string;
+  works: string;
+  email: string;
+  /** How many students this person will mentor at once. */
+  capacity: number;
+  /** Whether they are taking requests at all just now. */
+  open: boolean;
+}
+
+export interface Mentorship {
+  id: string;
+  mentor: string;
+  student: string;
+  state: 'asked' | 'accepted' | 'declined' | 'ended';
+  why: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * What the career office opens with.
+ *
+ * Chosen, as the sections were, so that every refusal can be walked by a
+ * person and not only reached by a test: one employer still pending, one
+ * suspended, one listing already closed, and one listing with a single
+ * opening so the second offer meets the limit.
+ */
+export const EMPLOYERS: Employer[] = [
+  { id: 'harbour-analytics', owner: 'employer-harbour', name: 'Harbour Analytics', state: 'approved', why: '' },
+  { id: 'city-schools', owner: 'employer-schools', name: 'City Schools Partnership', state: 'approved', why: '' },
+  {
+    id: 'quickcash-partners',
+    owner: 'employer-quickcash',
+    name: 'QuickCash Partners',
+    state: 'pending',
+    why: 'Awaiting review by the career office. Nothing can be posted until that is finished.',
+  },
+  {
+    id: 'oldfield-group',
+    owner: 'employer-oldfield',
+    name: 'Oldfield Group',
+    state: 'suspended',
+    why: 'Suspended after a complaint about an unpaid placement advertised as paid.',
+  },
+];
+
+export const LISTINGS: Listing[] = [
+  {
+    id: 'harbour-analyst-intern',
+    employer: 'harbour-analytics',
+    title: 'Economics research intern',
+    kind: 'Internship',
+    where: 'Nashville, hybrid',
+    pay: '$22/hour',
+    openings: 2,
+    closes: '2026-10-20',
+    at: '2026-09-01T09:00:00Z',
+  },
+  {
+    id: 'harbour-grad-analyst',
+    employer: 'harbour-analytics',
+    title: 'Graduate analyst',
+    kind: 'Job',
+    where: 'Nashville',
+    pay: '$71,000',
+    // One opening, so the second offer meets the limit rather than only the test.
+    openings: 1,
+    closes: '2026-11-15',
+    at: '2026-09-05T09:00:00Z',
+  },
+  {
+    id: 'schools-tutor',
+    employer: 'city-schools',
+    title: 'After-school tutor',
+    kind: 'On-campus',
+    where: 'Metro Nashville',
+    pay: '$18/hour',
+    openings: 6,
+    // Already shut, so the closed refusal is walkable.
+    closes: '2026-09-10',
+    at: '2026-08-20T09:00:00Z',
+  },
+];
+
+export const SLOTS: Slot[] = [
+  {
+    id: 'career-thu-1000',
+    adviser: 'M. Okonkwo',
+    about: 'Career — résumés, applications, offers',
+    when: '2026-09-24T15:00:00Z',
+    minutes: 30,
+    seats: 1,
+    where: 'Career centre, room 2',
+  },
+  {
+    id: 'career-thu-1030',
+    adviser: 'M. Okonkwo',
+    about: 'Career — résumés, applications, offers',
+    when: '2026-09-24T15:30:00Z',
+    minutes: 30,
+    seats: 1,
+    where: 'Career centre, room 2',
+  },
+  {
+    id: 'academic-fri-1400',
+    adviser: 'Dr Reyes',
+    about: 'Academic — majors, minors, course plans',
+    when: '2026-09-25T19:00:00Z',
+    minutes: 45,
+    seats: 1,
+    where: 'Buttrick 210',
+  },
+  {
+    id: 'grad-school-panel',
+    adviser: 'Dr Reyes',
+    about: 'Graduate school — a group session',
+    when: '2026-09-26T18:00:00Z',
+    minutes: 60,
+    seats: 8,
+    where: 'Buttrick 101',
+  },
+  {
+    id: 'career-past-slot',
+    adviser: 'M. Okonkwo',
+    about: 'Career — résumés, applications, offers',
+    // In the past against the sandbox's own clock, so the refusal is walkable.
+    when: '2026-09-02T15:00:00Z',
+    minutes: 30,
+    seats: 1,
+    where: 'Career centre, room 2',
+  },
+];
+
+export const MENTORS: Mentor[] = [
+  {
+    id: 'a-whitfield',
+    name: 'A. Whitfield',
+    classOf: '2014',
+    field: 'National security',
+    works: 'Policy analyst, a federal agency',
+    email: 'a.whitfield@example.invalid',
+    capacity: 2,
+    open: true,
+  },
+  {
+    id: 'j-park',
+    name: 'J. Park',
+    classOf: '2009',
+    field: 'Economics',
+    works: 'Central bank research',
+    email: 'j.park@example.invalid',
+    capacity: 3,
+    open: true,
+  },
+  {
+    id: 'r-santos',
+    name: 'R. Santos',
+    classOf: '2018',
+    field: 'Consulting',
+    works: 'Strategy, a firm in Chicago',
+    email: 'r.santos@example.invalid',
+    // Closed, so that refusal is walkable too.
+    capacity: 1,
+    open: false,
+  },
+];
+
 export class SandboxStore {
   private db: DatabaseSync;
 
@@ -691,6 +1003,50 @@ export class SandboxStore {
         recipient TEXT NOT NULL,
         body TEXT NOT NULL
       );
+      -- Career. The owner column is the one the authorization question is
+      -- asked of on every employer write: which employer, if any, is this
+      -- caller allowed to act for. A demonstration can scan four rows; the
+      -- shape of the question is what is being demonstrated.
+      CREATE TABLE IF NOT EXISTS employers(
+        id TEXT PRIMARY KEY,
+        owner TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS listings(
+        id TEXT PRIMARY KEY,
+        employer TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS applications(
+        id TEXT PRIMARY KEY,
+        listing TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- Advising. A slot is finite in exactly the way a seat is, so the
+      -- bookings are rows and the count is derived from them.
+      CREATE TABLE IF NOT EXISTS slots(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS bookings(
+        id TEXT PRIMARY KEY,
+        slot TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- Alumni. A mentor's address lives in this body and is kept off the
+      -- record a student reads until the mentorship is accepted.
+      CREATE TABLE IF NOT EXISTS mentors(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS mentorships(
+        id TEXT PRIMARY KEY,
+        mentor TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
     `);
 
     // The class the course already has, before any tester arrives.
@@ -704,6 +1060,17 @@ export class SandboxStore {
     // The sections registration opens with. See `SECTIONS`.
     const sec = this.db.prepare('INSERT OR IGNORE INTO sections VALUES(?,?)');
     for (const t of SECTIONS) sec.run(t.id, JSON.stringify(t));
+
+    // Phase 4's openings: the employers the career office has vetted or not,
+    // what they have posted, the diary, and who said they would talk.
+    const emp = this.db.prepare('INSERT OR IGNORE INTO employers VALUES(?,?,?)');
+    for (const e of EMPLOYERS) emp.run(e.id, e.owner, JSON.stringify(e));
+    const post = this.db.prepare('INSERT OR IGNORE INTO listings VALUES(?,?,?)');
+    for (const l of LISTINGS) post.run(l.id, l.employer, JSON.stringify(l));
+    const when = this.db.prepare('INSERT OR IGNORE INTO slots VALUES(?,?)');
+    for (const t of SLOTS) when.run(t.id, JSON.stringify(t));
+    const who = this.db.prepare('INSERT OR IGNORE INTO mentors VALUES(?,?)');
+    for (const m of MENTORS) who.run(m.id, JSON.stringify(m));
   }
 
   /**
@@ -748,6 +1115,157 @@ export class SandboxStore {
   saveSection(section: Section): void {
     this.db.prepare('INSERT OR REPLACE INTO sections VALUES(?,?)').run(section.id, JSON.stringify(section));
   }
+
+  /* ── Career, advising and alumni ────────────────────────────────────── */
+
+  employers(): Employer[] {
+    const rows = this.db.prepare('SELECT body FROM employers ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Employer);
+  }
+
+  employer(id: string): Employer | null {
+    const got = this.db.prepare('SELECT body FROM employers WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Employer) : null;
+  }
+
+  /**
+   * The employer this person may act for, or null.
+   *
+   * Asked of the server's own table and never of the request. It is the whole
+   * of the employer authorization story, which is why it is one function: a
+   * second place that decided the same thing is a second place that can come
+   * to decide it differently.
+   */
+  employerOf(owner: string): Employer | null {
+    const got = this.db.prepare('SELECT body FROM employers WHERE owner=?').get(owner) as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as Employer) : null;
+  }
+
+  saveEmployer(row: Employer): void {
+    this.db.prepare('INSERT OR REPLACE INTO employers VALUES(?,?,?)').run(row.id, row.owner, JSON.stringify(row));
+  }
+
+  listings(): Listing[] {
+    const rows = this.db.prepare('SELECT body FROM listings ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Listing);
+  }
+
+  listing(id: string): Listing | null {
+    const got = this.db.prepare('SELECT body FROM listings WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Listing) : null;
+  }
+
+  saveListing(row: Listing): void {
+    this.db.prepare('INSERT OR REPLACE INTO listings VALUES(?,?,?)').run(row.id, row.employer, JSON.stringify(row));
+  }
+
+  /** Every application to one listing, so the offer count can be derived. */
+  applications(listing?: string): Application[] {
+    const rows = (
+      listing
+        ? this.db.prepare('SELECT body FROM applications WHERE listing=? ORDER BY id').all(listing)
+        : this.db.prepare('SELECT body FROM applications ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Application);
+  }
+
+  applicationsOf(student: string): Application[] {
+    const rows = this.db.prepare('SELECT body FROM applications WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Application);
+  }
+
+  application(id: string): Application | null {
+    const got = this.db.prepare('SELECT body FROM applications WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Application) : null;
+  }
+
+  saveApplication(row: Application): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO applications VALUES(?,?,?,?)')
+      .run(row.id, row.listing, row.student, JSON.stringify(row));
+  }
+
+  slots(): Slot[] {
+    const rows = this.db.prepare('SELECT body FROM slots ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Slot);
+  }
+
+  slot(id: string): Slot | null {
+    const got = this.db.prepare('SELECT body FROM slots WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Slot) : null;
+  }
+
+  saveSlot(row: Slot): void {
+    this.db.prepare('INSERT OR REPLACE INTO slots VALUES(?,?)').run(row.id, JSON.stringify(row));
+  }
+
+  bookings(slot?: string): Booking[] {
+    const rows = (
+      slot
+        ? this.db.prepare('SELECT body FROM bookings WHERE slot=? ORDER BY id').all(slot)
+        : this.db.prepare('SELECT body FROM bookings ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Booking);
+  }
+
+  bookingsOf(student: string): Booking[] {
+    const rows = this.db.prepare('SELECT body FROM bookings WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Booking);
+  }
+
+  saveBooking(row: Booking): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO bookings VALUES(?,?,?,?)')
+      .run(row.id, row.slot, row.student, JSON.stringify(row));
+  }
+
+  mentors(): Mentor[] {
+    const rows = this.db.prepare('SELECT body FROM mentors ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Mentor);
+  }
+
+  mentor(id: string): Mentor | null {
+    const got = this.db.prepare('SELECT body FROM mentors WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Mentor) : null;
+  }
+
+  saveMentor(row: Mentor): void {
+    this.db.prepare('INSERT OR REPLACE INTO mentors VALUES(?,?)').run(row.id, JSON.stringify(row));
+  }
+
+  mentorships(mentor?: string): Mentorship[] {
+    const rows = (
+      mentor
+        ? this.db.prepare('SELECT body FROM mentorships WHERE mentor=? ORDER BY id').all(mentor)
+        : this.db.prepare('SELECT body FROM mentorships ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Mentorship);
+  }
+
+  mentorshipsOf(student: string): Mentorship[] {
+    const rows = this.db.prepare('SELECT body FROM mentorships WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Mentorship);
+  }
+
+  mentorship(id: string): Mentorship | null {
+    const got = this.db.prepare('SELECT body FROM mentorships WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Mentorship) : null;
+  }
+
+  saveMentorship(row: Mentorship): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO mentorships VALUES(?,?,?,?)')
+      .run(row.id, row.mentor, row.student, JSON.stringify(row));
+  }
+
 
   /* ── Family access ──────────────────────────────────────────────────── */
 
@@ -2705,5 +3223,8 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     billingAdapter(store),
     aidAdapter(store),
     familyAdapter(store),
+    careerAdapter(store),
+    advisingAdapter(store),
+    alumniAdapter(store),
   ];
 }
