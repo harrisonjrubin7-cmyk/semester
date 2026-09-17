@@ -631,6 +631,12 @@ shows **both definitions**, side by side, and lets the reader decide — and its
 own header makes the case that a pair which turns out to *disagree* is the single
 most valuable row on the screen.
 
+> **Measured 17 September: closed.** `lib/meet.ts:readSame` is the fifth grade
+> — a model proposes pairs, they are checked against the glossaries it was
+> given, and any pair the four string grades already hold is dropped, "so a row
+> both can claim belongs to the stronger". The header sentence below is still
+> true of the four string grades, which is what it is about.
+
 **What's missing.** It is string work on glossaries and cards. There is no model
 and no embedding, which its header says out loud. So it misses the case where two
 courses use different words for the same underlying idea — PSCI's *selection
@@ -755,6 +761,13 @@ failure it exists to prevent.
 `app/src/screens/Runway.tsx` shows it, with no readiness score, for the reason
 every other screen in this app refuses one: a percentage claiming to say whether
 you will pass would be believed, and the app cannot know.
+
+> **Measured 17 September: closed.** `screens/Runway.tsx` does exactly what the
+> approach below describes — `readScope` asks, `readProposal` checks the reply
+> against the guide's own unit numbers, the range is shown as a proposal with
+> the sentence it was read from, and confirming dispatches `setExamCovers` so
+> it arrives as `yours`. There is no fourth `Source`, which is the design
+> rather than an omission.
 
 **What's missing.** One input. Exam scope comes from the syllabus's own wording
 or from the student typing it in; a syllabus that describes scope in a sentence
@@ -2273,14 +2286,39 @@ incompleteness were stale** and two were real:
 | Phase 2 exit — "no mode card reports an empty state" | true, and now a test rather than a sentence |
 | §4.2 — the GPA exclusions are not offered as fixes | closed; `missingLine` and `fixFor` |
 | Appendix A — no adversarial pass on quotes | closed; twenty cases |
-| §4.3 — a fourth, model-read scope source | **real, and open** |
-| §4.1 — a fifth, semantic grade of evidence | **real, and open** |
+| §4.3 — a fourth, model-read scope source | closed; `readScope` and `readProposal` |
+| §4.1 — a fifth, semantic grade of evidence | closed; `readSame` |
 
-That ratio is the thing to carry forward rather than any one row. This document
-is a snapshot, the tree moves faster than it, and its own instruction — *find
-out which of them is lying before editing either* — applies to its prose and
-not only to its numbers. **Check a "what's missing" against the code before
-building it.** Four of these would have been built twice.
+**Six of seven, and the seventh was the only one built on 17 September.** By
+measurement, §3 to §5 has nothing left in its "what's missing" lists.
+
+### The two rows that took two passes, and why
+
+The first version of this audit had the last two as *real and open*, and both
+were wrong by exactly the fault the rest of this document keeps recording — a
+probe answering a narrower question than the one being asked.
+
+**§4.3.** The check was whether `covers.ts` had a fourth value in its `Source`
+union. It does not, and it should not: this section's own technical approach
+says a proposal the student accepts becomes `yours`, *"a source `covers.ts`
+already has"*. The absence being tested for is what the design asks for. The
+feature is in `screens/Runway.tsx` — `readScope` asks, `readProposal` validates
+against the guide's own unit numbers, and confirming dispatches
+`setExamCovers`, under a comment that ends "No fourth source, and the app still
+never infers what an exam covers."
+
+**§4.1.** The check was a grep of `meet.ts`'s header for the sentence about
+matching words rather than meanings. That sentence is still there and is still
+true *of the four string grades*, which is what it describes. Line 558 of the
+same file says "The fifth grade writes its own line", and `readSame` is it.
+
+So the thing to carry forward is not the ratio, though the ratio is striking.
+It is that **the probe is part of the claim**. This document's own instruction —
+*find out which of them is lying before editing either* — is not only about a
+command disagreeing with a number. A search that looks for the wrong symbol
+returns a clean, confident, wrong answer, and nothing about it feels like a
+guess. Read the section's own technical approach before deciding what absence
+would prove it unbuilt.
 
 The pattern in the corrected rows is one pattern. Eight of them describe an
 engine that exists and a place it has not been connected to, or a capability that
