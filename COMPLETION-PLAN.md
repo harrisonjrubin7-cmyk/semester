@@ -2708,9 +2708,16 @@ the Directory first and then *"run the same measurement method across the rest
 of the app rather than assuming the problem is isolated"*.
 
 The measurement method is now `app/scripts/targets-sweep.mjs` — `npm run
-sweep:targets` — which walks all 57 id-free screens on a phone and a desktop in
+sweep:targets` — which walks all 60 destinations on a phone and a desktop in
 real Chromium. Written down rather than sampled once, because a figure nobody
 can retake goes stale without anybody noticing it has.
+
+(57 until `scripts/destinations.mjs` took over the list. Three destinations —
+`deck`, `write` and `sheet` — were excluded by a hand-kept set on the belief
+that they need an id in the address. Opened, they draw "Make a deck", "Write a
+document" and "Sheet or table" with no id at all. The walk also proves it
+arrived on each screen from the rendered heading now, rather than from the hash
+it had just written, and names any it did not reach.)
 
 ### Two criteria, and only one of them is AA
 

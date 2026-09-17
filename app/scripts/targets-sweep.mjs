@@ -102,11 +102,8 @@
  *    what makes an overlay legible: `81×20 → 81×44` is a control doing what
  *    this app's tap classes are for, and `81×20 → 81×20` is one that lost it.
  */
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { arrived, destinations } from './destinations.mjs';
 
-const here = dirname(fileURLToPath(import.meta.url));
 const BASE = process.env.SWEEP_URL || 'http://localhost:5173/';
 const CHROME = process.env.SWEEP_CHROMIUM || '/opt/pw-browsers/chromium';
 /** Narrow the run while working on the sweep itself; unset means everything. */
@@ -163,20 +160,25 @@ try {
  * The screens to walk, read from the app's own registry so the list cannot
  * drift the way a hand-kept one does.
  *
- * Only the ones the directory lists and that need no id in the address:
- * `#/course/econ` is a real screen and a different sweep, and a run that
- * navigated to `#/course` would measure whatever was on screen before it —
- * which is mistake 3 in `contrast-sweep.mjs`'s own header, in another coat.
+ * The read moved to `scripts/destinations.mjs` when the contrast sweep needed
+ * the same list: two instruments, one idea of what this app contains, and
+ * `src/lib/sweepscreens.test.ts` holding both to it.
+ *
+ * Three destinations came back with that move, and the reason they were out is
+ * worth keeping. This file used to drop anything it believed needed an id in
+ * the address — `deck`, `sheet` and `write` among them — on the argument that
+ * `#/course` would measure whatever was on screen before it, which is mistake
+ * 3 in `contrast-sweep.mjs`'s header in another coat. The argument is right
+ * and the list was wrong: opened and looked at, `#/write` draws "Write a
+ * document", `#/deck` draws "Make a deck" and `#/sheet` draws "Sheet or
+ * table", each with no id and each its own screen. They were three of the
+ * sixty this never measured, on a guess nobody had taken. `course`, `item` and
+ * `guide` are not in the registry at all, so they were never in this walk to
+ * begin with.
  */
 function screens() {
-  const src = readFileSync(join(here, '..', 'src', 'lib', 'nav.ts'), 'utf8');
-  const named = new Set(
-    [...src.matchAll(/^\s*screen:\s*'([a-zA-Z][a-zA-Z0-9]*)',/gm)].map((m) => m[1]),
-  );
-  const withIds = new Set(['course', 'item', 'guide', 'deck', 'sheet', 'write', 'plot']);
-  const out = [...named].filter((s) => !withIds.has(s));
-  if (out.length < 20) throw new Error(`parsed only ${out.length} screens from nav.ts — its shape changed`);
-  return ONLY ? out.filter((s) => ONLY.includes(s)) : out;
+  const out = destinations();
+  return ONLY ? out.filter((d) => ONLY.includes(d.screen)) : out;
 }
 
 /*
@@ -574,12 +576,34 @@ async function sweep(browser, label, width, height) {
   let blocked = 0;
   let atRest = 0;
   const worst = [];
+  /*
+   * Screens the walk asked for and did not land on. Reported rather than
+   * dropped: a sweep with a hole in it is a different thing from a sweep that
+   * found nothing there, and only one of them is good news.
+   */
+  const missed = [];
 
-  for (const screen of screens()) {
+  for (const { screen, label: title } of screens()) {
     await page.evaluate((s) => {
       location.hash = `#/${s}`;
     }, screen);
     await page.waitForTimeout(650);
+    /*
+     * That it is really on that screen, read from the heading rather than from
+     * the hash this just wrote. A row filed under the wrong screen is worse
+     * than a row that is missing: it sends whoever reads it to fix a control
+     * on a screen that does not have one.
+     */
+    let seen = null;
+    try {
+      seen = await page.evaluate(() => ({ h1: document.querySelector('h1')?.textContent || '' }));
+    } catch {
+      seen = null;
+    }
+    if (!arrived(screen, title, seen)) {
+      missed.push({ screen, saw: (seen?.h1 ?? '').trim().slice(0, 30) });
+      continue;
+    }
     let found;
     try {
       found = await page.evaluate(MEASURE);
@@ -610,7 +634,9 @@ async function sweep(browser, label, width, height) {
   }
 
   const share = controls ? Math.round((smalls / controls) * 100) : 0;
-  console.log(`\n  ${smalls} of ${controls} controls under ${TARGET}px, the AAA target (${share}%)`);
+  console.log(`\n  ${worst.length} of ${screens().length} destinations opened` +
+    (missed.length ? `, ${missed.length} not reached: ${missed.map((m) => `${m.screen} (saw "${m.saw}")`).join(', ')}` : ''));
+  console.log(`  ${smalls} of ${controls} controls under ${TARGET}px, the AAA target (${share}%)`);
   console.log(`  ${aa} of ${controls} under ${AA}px, the AA minimum — plus ${inlineAa} inline, which 2.5.8 exempts`);
   console.log(`  ${blocked} answer nowhere inside their own box, scrolled to the middle`);
   console.log(`  ${atRest} are painted over where the screen opens — a different question, and not a failure`);
