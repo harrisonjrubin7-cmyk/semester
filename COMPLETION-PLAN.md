@@ -1830,6 +1830,73 @@ an engineering one.
 
 ---
 
+## 8h. Two people on one canvas
+
+The last unbuilt half of the build-out plan's Design row, and the last item in
+that document that is engineering rather than a decision.
+
+**The granularity is the layer, and this repository had already decided it.**
+`lib/merge.ts` settled the app's position on two devices changing one thing and
+said so plainly: fields merge, and *"what still does not merge is one record
+edited on both devices: the later edit of the same note is the one that
+survives. Anything cleverer is a distributed-systems project, and pretending
+otherwise in the UI would be worse than saying it plainly."* This follows that
+rather than inventing a second answer. Two people editing **different** layers
+never collide — which is nearly every minute of two people on a poster, since
+you move the headline and I move the photograph. Two people dragging the
+**same** layer end with the later edit, and the screen says so instead of
+implying a merge that is not happening.
+
+**Ties break by sender id**, so every device resolves a collision the same way.
+Which one wins matters less than that two devices never disagree: disagreement
+is how a canvas ends up different on two screens with nobody able to say why,
+and it is the failure the round-trip test asserts against.
+
+**Tombstones, because deleting is the edit that comes back.** A layer deleted
+here and dragged there, with the drag arriving second, resurrects it unless the
+delete is remembered. `seen` holds the moment of the last edit applied per
+layer and keeps holding it after a delete, so a stale update to a dead layer is
+older than what was applied and is dropped. That is the test worth reading in
+`coedit.test.ts`.
+
+**A joiner never lands on top of work.** `whole` — the state sent to somebody
+who has just arrived — is applied only to a canvas with nothing on it. One
+person opening a shared canvas and everybody else losing an afternoon is this
+feature's worst possible failure, and it is a two-line rule with its own test.
+
+**Remote edits never enter undo.** One line, and the distinction that matters:
+undo is *your* history. A stack that also held a collaborator's moves would let
+you undo their work, which is not what the button says and not a thing anybody
+wants to discover.
+
+**Mutated, seven of seven caught**: the tombstone forgotten after a delete, a
+joiner's state overwriting local work, stale edits applied anyway, a tie broken
+by nothing, `changes` comparing layers by reference (which would flood the
+channel on every keystroke), `changes` forgetting removals, and `same()`
+dropping one field from its comparison.
+
+**And the screenshot found the failure path, which is the part that mattered
+here.** Switching sharing on in this container ticks the box, unticks it, and —
+in the first draft — said nothing anybody could see, because the explanation
+went to a notice rendered a hundred lines of JSX further down the page. That
+reads exactly like a broken switch. A failure has to appear where the thing
+that failed is, and it does now.
+
+**What could not be checked, stated rather than implied.** Two devices on one
+canvas, for the same reason as the call's door in
+[§8e](#8e-meetings--the-door): the agent proxy will not tunnel `wss://`, so no
+Realtime channel opens in this container and no two browsers can meet. The
+arithmetic is proved by 35 tests and seven mutations, including a full
+round trip that asserts two devices end holding the same canvas. **The wire is
+not proved, and this is where that is written down.**
+
+**Done when.** A switch shares the canvas; edits to different layers land on
+both screens; the same layer resolves the same way on both; a delete stays
+deleted; a joiner takes the state only when empty; somebody else's edit is not
+on your undo stack; and a failure to connect says so at the switch.
+
+---
+
 ## 8d. What the source document has left, and what it is waiting on
 
 For the record, measured rather than assumed, since §1 to §8 of this plan were
@@ -1865,11 +1932,13 @@ plan had not tracked: **Forms**, done in [§8c](#8c-forms--publishing-to-real-re
 **Design & video**, whose templates are done in
 [§8f](#8f-design--somewhere-to-start) and whose real-time collaboration is not.
 
-So of the three, what is left is two named things rather than three domains:
-**recording** — see the note at the end of
-[§8g](#8g-captions--written-by-the-person-speaking), which is a consent question
-before it is an engineering one — and **two people editing one canvas**.
-Captions are done in [§8g](#8g-captions--written-by-the-person-speaking). Each is its
+So of the three, one thing is left, and it is not engineering: **call
+recording**. See the note at the end of
+[§8g](#8g-captions--written-by-the-person-speaking) — recording a call is
+something done *to* the other people in it, and a study app that can record a
+seminar has a consent question before it has an engineering one. Captions are
+done in [§8g](#8g-captions--written-by-the-person-speaking) and two people on
+one canvas in [§8h](#8h-two-people-on-one-canvas). Each is its
 own piece of work and each is named here rather than left inside a row that
 reads as untouched.
 

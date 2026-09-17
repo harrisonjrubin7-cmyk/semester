@@ -2,9 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { ActionButton, FilePick, SectionLabel } from '../ui';
 import { secondLine } from '../../lib/dim';
 import { addFile, getFile } from '../../lib/files';
+import { cloudConfigured } from '../../lib/cloud';
 import { download } from '../../lib/deliver';
 import { designSvg, newLayer, type CreativeProject, type DesignData, type DesignLayer } from '../../lib/creations';
 import { TEMPLATES, apply as applyTemplate } from '../../lib/designtemplates';
+import { changes, describe as describeCanvas, foldAll, type Seen } from '../../lib/coedit';
+import { share, type Sharing } from '../../lib/cocanvas';
 
 /**
  * A canvas: text, shapes and pictures on a page, exported as an image.
@@ -57,6 +60,36 @@ export function DesignEditor({
   const d = project.design;
   const [selected, setSelected] = useState('');
   const [images, setImages] = useState<Record<string, string>>({});
+  /*
+   * Sharing this canvas.
+   *
+   * `me` is this tab, not this account — the same model `lib/mesh.ts` uses and
+   * for the same reason: somebody with the canvas open on a laptop and a phone
+   * really is two editors, and the id is what settles a collision between
+   * them. `seen` is what this device has applied per layer, including the
+   * tombstones; `wire` is the channel, in a ref because `change` is rebuilt on
+   * every render and must not restart the connection.
+   */
+  const [me] = useState(() => crypto.randomUUID());
+  const [sharing, setSharing] = useState(false);
+  /*
+   * Why sharing stopped, shown *at the switch*.
+   *
+   * The first draft sent this to `notice`, which renders a hundred lines of
+   * JSX further down the page. Switching sharing on with no connection made
+   * the box tick, untick itself, and say nothing anybody could see without
+   * scrolling — which reads exactly like a broken switch. A failure has to
+   * appear where the thing that failed is.
+   */
+  const [shareTrouble, setShareTrouble] = useState('');
+  /* `remote` rebuilt every render; the effect below is made once. */
+  const remoteRef = useRef<(next: DesignData) => void>(() => {});
+  const [alsoHere, setAlsoHere] = useState<string[]>([]);
+  const seen = useRef<Seen>({});
+  const wire = useRef<Sharing | null>(null);
+  /* The canvas as the effect last saw it, so a late arrival can be described. */
+  const latest = useRef(project.design);
+  latest.current = project.design;
   const [notice, setNotice] = useState('');
   const [past, setPast] = useState<DesignData[]>([]);
   const [future, setFuture] = useState<DesignData[]>([]);
@@ -88,14 +121,90 @@ export function DesignEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileKey]);
 
+  /*
+   * Joining and leaving.
+   *
+   * On arrival this device asks for the canvas — `ask` — and anybody already
+   * here answers with `describe`. A device that has layers of its own ignores
+   * the answer, which is the rule in `lib/coedit.ts` that stops a joiner
+   * flattening somebody's afternoon.
+   */
+  useEffect(() => {
+    if (!sharing) return;
+    let live = true;
+    let joined: Sharing | null = null;
+
+    /*
+     * No name is sent.
+     *
+     * The call asks for one in its green room; a canvas has no such moment,
+     * and the app has no global display name to reach for. Inventing one — an
+     * email prefix, "Student" — would be putting a name on somebody that they
+     * never chose. So presence carries nothing and the screen says how many
+     * other people are here rather than who, which is the true statement.
+     */
+    void share(project.id, me, '', {
+      onEdits: (edits) => {
+        if (!live) return;
+        const out = foldAll(latest.current, seen.current, edits);
+        seen.current = out.seen;
+        if (out.changed) remoteRef.current(out.canvas);
+      },
+      onAsked: () => joined?.send([describeCanvas(latest.current, me, Date.now())]),
+      onHere: (names) => live && setAlsoHere(names),
+      onTrouble: (said) => {
+        if (!live) return;
+        setShareTrouble(said);
+        setSharing(false);
+      },
+    })
+      .then((s) => {
+        if (!live) {
+          s.leave();
+          return;
+        }
+        joined = s;
+        wire.current = s;
+        s.ask();
+      })
+      .catch((e: unknown) => {
+        if (!live) return;
+        setShareTrouble(e instanceof Error ? e.message : 'The shared canvas could not be reached.');
+        setSharing(false);
+      });
+
+    return () => {
+      live = false;
+      wire.current = null;
+      joined?.leave();
+      setAlsoHere([]);
+    };
+    // `project.id` cannot change without this component being rebuilt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharing]);
+
   /** A change worth undoing. Drags record once, on the way in. */
   const change = (next: DesignData, record = true) => {
     if (record) {
       setPast((p) => [...p.slice(-(UNDO - 1)), d]);
       setFuture([]);
     }
+    // What changed here, to whoever else is on this canvas. Worked out by
+    // comparing rather than by the editor knowing — see `lib/coedit.ts`.
+    if (wire.current) wire.current.send(changes(d, next, me, Date.now()));
     onChange({ design: next });
   };
+
+  /**
+   * Somebody else's change, applied without touching undo.
+   *
+   * This is the distinction that matters, and it is one line: a remote edit
+   * never goes on `past`. Undo is *your* history — a stack that also held your
+   * collaborator's moves would let you undo their work, which is not what the
+   * button says and not a thing anybody wants to discover.
+   */
+  const remote = (next: DesignData) => onChange({ design: next });
+  remoteRef.current = remote;
 
   const patch = (p: Partial<DesignLayer>) =>
     change({ ...d, layers: d.layers.map((l) => (l.id === selected ? { ...l, ...p } : l)) });
@@ -170,6 +279,68 @@ export function DesignEditor({
 
   return (
     <>
+      {/*
+        * Sharing this canvas.
+        *
+        * A switch rather than a link to copy, because the id a collaborator
+        * needs is the project's own and it is already in the export and the
+        * backup — there is nothing new to hand out, and a "copy link" button
+        * would imply this canvas has an address on the web, which it does not.
+        * What somebody else needs is this app, this project imported, and the
+        * switch turned on.
+        */}
+      {cloudConfigured && (
+        <div style={{ marginBottom: 'var(--sp-5)' }}>
+          <label
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--sp-4)',
+              fontSize: 'var(--type-base)',
+              lineHeight: 'var(--leading-normal)',
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={sharing}
+              onChange={(e) => {
+                setShareTrouble('');
+                setSharing(e.target.checked);
+              }}
+            />
+            <span>Edit this with other people</span>
+          </label>
+          <div
+            style={{
+              fontSize: 'var(--type-xs)',
+              ...secondLine(),
+              marginTop: 'var(--sp-3)',
+              lineHeight: 'var(--leading-normal)',
+              textWrap: 'pretty',
+            }}
+          >
+            {sharing
+              ? alsoHere.length === 0
+                ? 'On. Nobody else has this canvas open yet. Anybody with this project’s id and the app can join it, the way anybody with a call’s code can walk into the call.'
+                : `${alsoHere.length === 1 ? 'One other person is' : `${alsoHere.length} other people are`} editing this canvas. Two people moving different layers never collide; two moving the same one end with the later change, and the earlier is lost.`
+              : 'Off. This canvas is on this device only.'}
+          </div>
+          {shareTrouble && (
+            <p
+              role="status"
+              style={{
+                fontSize: 'var(--type-sm)',
+                lineHeight: 'var(--leading-normal)',
+                marginTop: 'var(--sp-3)',
+                textWrap: 'pretty',
+              }}
+            >
+              {shareTrouble}
+            </p>
+          )}
+        </div>
+      )}
+
       {/*
         * Somewhere to start.
         *
