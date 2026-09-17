@@ -77,6 +77,11 @@ const SKIP_STATES = process.env.SWEEP_NO_STATES === '1';
 // drawn at all (the rail exists at 1280 and the tab bar at 420), so the two
 // are different pages and neither stands in for the other.
 const ONLY_WIDTHS = process.env.SWEEP_WIDTHS?.split(',').map(s => s.trim()).filter(Boolean);
+// Narrow the walk to named screens — the same variable `targets-sweep.mjs`
+// takes, so one habit works on both. What it is for: re-measuring the screen
+// you just changed against all thirteen grounds in a minute instead of half
+// an hour.
+const ONLY_SCREENS = process.env.SWEEP_SCREENS?.split(',').map(s => s.trim()).filter(Boolean);
 
 let chromium;
 try {
@@ -194,6 +199,7 @@ const unknownChrome = CHROME_SCREENS.filter(
 if (unknownChrome.length) throw new Error(`neither a destination nor proved: ${unknownChrome.join(', ')}`);
 
 const SCREENS = (SCOPE === 'all' ? DESTINATIONS.map((d) => d.screen) : CHROME_SCREENS)
+  .filter((screen) => !ONLY_SCREENS || ONLY_SCREENS.includes(screen))
   .map((screen) => [screen, `#/${screen}`]);
 
 /** Chrome only one navigation has; absent elsewhere, so each is guarded. */
@@ -301,7 +307,7 @@ const forceStates = async (page, cdp) => {
         return r;
       }, [AUDIT, `#${m.measureId}`]);
       if (res && !res.missingRoot) out.push({ state: m.state, measured: res.measured, rows: res.rows,
-        skipped: res.skipped, gradient: res.gradient });
+        skipped: res.skipped, gradient: res.gradient, invisible: res.invisible ?? 0 });
     } catch { /* the element went away mid-pass; nothing measured, nothing claimed */ }
     finally {
       try { await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] }); } catch { /* page gone */ }
@@ -324,7 +330,18 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
   for (const [vp, tag] of widths) {
     const ctx = await browser.newContext({ viewport: vp });
     const page = await ctx.newPage();
-    const errs = []; page.on('pageerror', e => errs.push(String(e)));
+    /*
+     * Where the page was when it threw.
+     *
+     * A run of this printed two `useStore must be used inside StoreProvider`
+     * errors across 780 passes and said only `pageerrors tabs phone`, which
+     * is 60 screens and 13 grounds to search by hand — so they were never
+     * attributed, and a replay did not bring them back. An error with no
+     * address is close to no error at all. `at` is updated as the walk moves,
+     * so the next one names itself.
+     */
+    let at = 'startup';
+    const errs = []; page.on('pageerror', e => errs.push(`${at}: ${String(e).split('\n')[0]}`));
     const cdp = await ctx.newCDPSession(page);
     await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
     await page.goto(BASE, { waitUntil: 'domcontentloaded' });
@@ -370,6 +387,7 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
                     ...(EXTRAS[nav] || []).map(([name, go]) => [name, go, null])];
 
     for (const g of GROUNDS.filter(x => !ONLY_GROUNDS || ONLY_GROUNDS.includes(x.id))) {
+      at = `${nav}/${g.id}/${tag}/setLook`;
       await page.evaluate(()=>{ location.hash='#/setLook'; }); await page.waitForTimeout(1500);
       const gBtn = page.getByRole('button', { name: groundPattern(g) });
       /*
@@ -386,6 +404,7 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
       if (!groundOk || !navOk) unverified.push({ nav, ground: g.id, width: tag, groundOk, navOk, gotBg, want: g.bg, how, clicked });
 
       for (const [state, go, screen] of states) {
+        at = `${nav}/${g.id}/${tag}/${state}`;
         let reached = true;
         try { await go(page); } catch { reached = false; }
         await page.waitForTimeout(1200);
@@ -423,7 +442,7 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
         catch (e) { console.log('AUDIT FAILED', nav, g.id, state, String(e).slice(0,110)); }
         coverage.push({ nav, ground: g.id, width: tag, state, reached, screen, onScreen,
                         verified: groundOk && navOk && onScreen,
-                        measured: res ? res.measured : 0,
+                        measured: res ? res.measured : 0, invisible: res ? res.invisible ?? 0 : 0,
                         skipped: res ? res.skipped : 0, gradient: res ? res.gradient : 0 });
         for (const r of (res ? res.rows : [])) findings.push({ nav, ground: g.id, width: tag, state, ...r });
 
@@ -432,7 +451,7 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
           for (const h of hits) {
             coverage.push({ nav, ground: g.id, width: tag, state: `${state}:${h.state}`, reached: true,
                             screen, onScreen, verified: groundOk && navOk && onScreen, measured: h.measured,
-                            skipped: h.skipped, gradient: h.gradient });
+                            invisible: h.invisible ?? 0, skipped: h.skipped, gradient: h.gradient });
             for (const r of h.rows) findings.push({ nav, ground: g.id, width: tag, state: `${state}:${h.state}`, ...r });
           }
         }
@@ -477,8 +496,10 @@ const total = coverage.reduce((n,c)=>n+c.measured, 0);
  */
 const skipped = coverage.reduce((n,c)=>n+(c.skipped||0), 0);
 const gradient = coverage.reduce((n,c)=>n+(c.gradient||0), 0);
+const invisible = coverage.reduce((n,c)=>n+(c.invisible||0), 0);
 console.log(`\nPASSES: ${coverage.length}   ELEMENTS MEASURED: ${total}   GROUNDS: ${GROUNDS.length}`);
-console.log(`NOT MEASURED: ${gradient} on a gradient (see scripts/paint.mjs), ${skipped} with no text or no colour`);
+console.log(`NOT MEASURED: ${gradient} on a gradient (see scripts/paint.mjs), ${skipped} with no text or no colour, ` +
+  `${invisible} painted in no ink at all`);
 
 /*
  * And which of the sixty were opened at all, which is the number this file

@@ -57,7 +57,7 @@
 
   const out = [];
   const seen = new Set();
-  let measured = 0, skipped = 0, gradient = 0;
+  let measured = 0, skipped = 0, gradient = 0, invisible = 0;
   /*
    * `document.body`, and it has to be.
    *
@@ -74,7 +74,7 @@
    * elements are asked about.
    */
   const rootEl = window.__sweepRoot ? document.querySelector(window.__sweepRoot) : document.body;
-  if (!rootEl) return { rows: [], measured: 0, skipped: 0, gradient: 0, missingRoot: true };
+  if (!rootEl) return { rows: [], measured: 0, skipped: 0, gradient: 0, invisible: 0, missingRoot: true };
   const within = [rootEl, ...rootEl.querySelectorAll('*')];
   for (const el of within) {
     const cs = getComputedStyle(el);
@@ -94,6 +94,30 @@
 
     const ground = groundOf(el);
     if (!ground) { gradient += 1; continue; }
+
+    /*
+     * Text with no ink in it.
+     *
+     * `color: transparent` paints nothing, so there is no pair here and
+     * nothing that can fail — the ratio against any ground is 1.00:1, which
+     * is the worst number this file can print, for a run nobody can see.
+     *
+     * `screens/Ahead.tsx` has one on purpose: a `·` holding the width of the
+     * column that carries a day's due-count dot, so the rows do not shift
+     * sideways as days gain and lose one. The first sweep that ever opened
+     * that screen reported it on all thirteen grounds at both widths — 26 of
+     * that run's 88 findings, every one of them the same invisible spacer,
+     * and every one of them an instruction to go and fix something that is
+     * working.
+     *
+     * The `background-clip: text` case above is the same idea a step earlier:
+     * a glyph whose colour is its background rather than its `color`. Counted
+     * rather than dropped, for the reason the other counts here exist — a
+     * pass that looked away should say so.
+     */
+    const ink = ownText ? parse(cs.color) : null;
+    if (ownText && !ph && ink && ink.a === 0) { invisible += 1; continue; }
+
     measured += 1;
     const size = parseFloat(cs.fontSize);
     const bold = (+cs.fontWeight || 400) >= 700;
@@ -102,6 +126,9 @@
 
     const check = (colourStr, kind, sample) => {
       const c = parse(colourStr); if (!c) return;
+      // The same rule as above, for the placeholder path, which reaches here
+      // without passing the element-level test.
+      if (c.a === 0) { invisible += 1; return; }
       const painted = c.a < 1 ? over(c, ground) : c;
       const r = ratio(painted, ground);
       if (r >= need) return;
@@ -115,5 +142,5 @@
     if (ownText) check(cs.color, 'text', el.textContent);
     if (ph) check(getComputedStyle(el, '::placeholder').color, 'placeholder', ph);
   }
-  return { rows: out, measured, skipped, gradient };
+  return { rows: out, measured, skipped, gradient, invisible };
 })()
