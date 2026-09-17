@@ -1660,11 +1660,46 @@ rows a record of who had *browsed* rather than of who was enrolled. Seven more
 mutations, seven red — two of which survived a first pass and were a
 no-op mutation of mine and a rule (enrolling twice) that nothing tested.
 
+### And the rubric, which is the difference between a grade and feedback
+
+The plan lists rubrics second in what is missing, right after submission, and
+the first version of the loop marked work out of twenty with a paragraph
+attached. That is a grade. A student who loses six marks learns nothing from
+the number about *which* six — and the student-side half of this app is built
+on the opposite premise: `lib/assignment.ts` pulls a rubric out of an
+instruction sheet precisely so that "effort goes where the marks are rather
+than where the writing is easiest".
+
+Each published assignment now carries its criteria, and each criterion carries
+what it is worth **and what it means**:
+
+| Problem set 1 | | |
+| --- | --- | --- |
+| Method | 8 | The steps are shown and each follows from the last. |
+| Accuracy | 8 | The answers are right, with units. |
+| Clarity | 4 | A reader can follow it without asking you anything. |
+
+Four things follow, and each is tested.
+
+- **The student reads it before starting**, not with the mark. A rubric that
+  arrives attached to the grade arrived too late to be used.
+- **The marker gets a field per criterion and no field for the total.** The
+  total is the sum, so a mark cannot disagree with its own parts.
+- **An empty box is refused, not scored zero.** A marker who left one blank has
+  not decided it is worth nothing — they have not finished — and writing the
+  zero for them is the kind of helpfulness that ends up on a transcript. It is
+  refused at *prepare*, so they are told before they confirm rather than after.
+- **The released feedback says which criterion lost the marks**, and what that
+  criterion was asking for. `Accuracy · 3 of 8 — the answers are right, with
+  units` is a thing to do differently next time; `14/20` is not.
+
+Seven more mutations, seven red.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes
-what the app tells a student about that. Rubrics and discussion — the rest of
-the plan's "what's missing" list — are still ahead.
+what the app tells a student about that. Discussion is the last item on the
+plan's list and is still ahead.
 
 ---
 

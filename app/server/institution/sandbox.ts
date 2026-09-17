@@ -99,22 +99,57 @@ const COURSE = {
     'submit → receipt → grade → feedback → archive loop. No credit, no registrar, no real marks.',
 };
 
+/**
+ * What each piece of work is marked on, and why it is here rather than in a
+ * free-text comment.
+ *
+ * The first version of this took a mark out of twenty and a paragraph. That is
+ * a grade, and a grade is not feedback: a student who loses six marks learns
+ * nothing from the number about which six, and `lib/assignment.ts` — the
+ * student-side half of this app — is built on the opposite premise, that "the
+ * rubric, with weights, so effort goes where the marks are rather than where
+ * the writing is easiest" is the thing worth having. The completion plan lists
+ * rubrics second in what is missing, right after submission.
+ *
+ * So a criterion carries what it is worth *and what it means*, the marks are
+ * per criterion and the total is their sum rather than a number somebody
+ * types, and the student can read all of it before they start. A rubric
+ * published only with the grade is a rubric that arrived too late to be used.
+ */
+export interface Criterion {
+  id: string;
+  name: string;
+  outOf: number;
+  means: string;
+}
+
 const PUBLISHED = [
   {
     id: 'a1',
     title: 'Problem set 1',
     due: '2026-10-02T23:59:00Z',
     brief: 'Four short answers on the reading. Submitted as text.',
-    outOf: 20,
+    criteria: [
+      { id: 'method', name: 'Method', outOf: 8, means: 'The steps are shown and each follows from the last.' },
+      { id: 'accuracy', name: 'Accuracy', outOf: 8, means: 'The answers are right, with units.' },
+      { id: 'clarity', name: 'Clarity', outOf: 4, means: 'A reader can follow it without asking you anything.' },
+    ] as Criterion[],
   },
   {
     id: 'a2',
     title: 'Short paper',
     due: '2026-10-23T23:59:00Z',
     brief: 'Twelve hundred words on one of the three prompts.',
-    outOf: 40,
+    criteria: [
+      { id: 'argument', name: 'Argument', outOf: 16, means: 'A claim somebody could disagree with, defended.' },
+      { id: 'evidence', name: 'Evidence', outOf: 14, means: 'Sources used to support the claim, not summarised.' },
+      { id: 'writing', name: 'Writing', outOf: 10, means: 'One idea per paragraph, and no padding.' },
+    ] as Criterion[],
   },
 ] as const;
+
+/** What a piece of work is out of: the rubric's own total, never a second number. */
+const outOf = (criteria: readonly Criterion[]) => criteria.reduce((n, c) => n + c.outOf, 0);
 
 /**
  * The class, as the course's own list rather than as a side effect.
@@ -162,7 +197,10 @@ interface Work {
   enrolledAt: string | null;
   submittedAt: string | null;
   body: string;
+  /** The total, kept as the sum of `marks` rather than as its own number. */
   mark: string;
+  /** Criterion id → the mark it was given. */
+  marks: Record<string, number>;
   comments: string;
   gradedAt: string | null;
   releasedAt: string | null;
@@ -255,6 +293,7 @@ export class SandboxStore {
       submittedAt: null,
       body: '',
       mark: '',
+      marks: {},
       comments: '',
       gradedAt: null,
       releasedAt: null,
@@ -480,6 +519,28 @@ function expect(work: Work, stage: Stage, what: string): void {
   if (work.stage !== stage) throw new Error(`Cannot ${what} — this is ${SAID[work.stage].toLowerCase()}.`);
 }
 
+/**
+ * Every criterion's mark, or a refusal naming the one that is wrong.
+ *
+ * A missing criterion is an error rather than a zero. A marker who left a box
+ * empty has not decided it is worth nothing — they have not finished — and
+ * writing a zero on their behalf is the kind of helpfulness that ends up on a
+ * transcript.
+ */
+function readMarks(criteria: readonly Criterion[], fields: Record<string, string>): Record<string, number> {
+  const marks: Record<string, number> = {};
+  for (const c of criteria) {
+    const raw = fields[c.id];
+    if (raw === undefined || raw.trim() === '') throw new Error(`${c.name} has not been marked.`);
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n < 0 || n > c.outOf) {
+      throw new Error(`${c.name} must be between 0 and ${c.outOf}.`);
+    }
+    marks[c.id] = n;
+  }
+  return marks;
+}
+
 /** The trail, as the details a record carries. This is the Record stage. */
 function trail(work: Work): { label: string; value: string }[] {
   return work.history.map((h) => ({
@@ -544,6 +605,17 @@ function assignmentRecord(work: Work): UniversityRecord {
     details: [
       { label: 'Course', value: `${COURSE.code} (${SANDBOX_MARK})` },
       { label: 'Due', value: a?.due.slice(0, 16).replace('T', ' ') ?? '' },
+      { label: 'Marked out of', value: String(outOf(a?.criteria ?? [])) },
+      /*
+       * Before the work is done, not with the mark. A rubric that arrives
+       * attached to the grade arrived too late to be used, which is the
+       * argument `lib/assignment.ts` makes for pulling one out of an
+       * instruction sheet in the first place.
+       */
+      ...(a?.criteria ?? []).map((c) => ({
+        label: `${c.name} · ${c.outOf} marks`,
+        value: c.means,
+      })),
       { label: 'Submitted', value: work.submittedAt ?? 'Not yet' },
       ...trail(work),
     ],
@@ -565,23 +637,35 @@ function assignmentRecord(work: Work): UniversityRecord {
 
 function gradeRecord(work: Work): UniversityRecord {
   const a = assignmentOf(work.assignment);
+  const criteria = a?.criteria ?? [];
+  const total = outOf(criteria);
   const seen = work.stage === 'released' || work.stage === 'archived';
   return {
     id: work.id,
     area: 'grades',
     title: `${SANDBOX_MARK} · ${a?.title ?? work.assignment} — marking`,
     summary: seen
-      ? `${work.mark} out of ${a?.outOf ?? '—'}`
+      ? `${work.mark} out of ${total}`
       : 'Not released. A mark is not a mark until the student can see it.',
     status: SAID[work.stage],
     version: String(work.version),
     updatedAt: new Date().toISOString(),
     details: [
       { label: 'Student', value: work.student },
-      { label: 'Out of', value: String(a?.outOf ?? '') },
+      { label: 'Out of', value: String(total) },
       ...(seen
         ? [
-            { label: 'Mark', value: work.mark },
+            { label: 'Mark', value: `${work.mark} out of ${total}` },
+            /*
+             * Per criterion, and this is the whole point of the change. A
+             * student who has lost six marks can see which six and read what
+             * that criterion was asking for, which is a thing to do
+             * differently next time rather than a number to be upset about.
+             */
+            ...criteria.map((c) => ({
+              label: `${c.name} · ${work.marks[c.id] ?? 0} of ${c.outOf}`,
+              value: c.means,
+            })),
             { label: 'Feedback', value: work.comments },
           ]
         : []),
@@ -592,10 +676,18 @@ function gradeRecord(work: Work): UniversityRecord {
         ? [
             {
               id: 'grade',
-              label: 'Record a mark',
+              label: 'Mark against the rubric',
               fields: [
-                { id: 'mark', label: 'Mark', kind: 'number', required: true },
-                { id: 'comments', label: 'Feedback for the student', kind: 'textarea', required: true },
+                // One field per criterion, named by it. There is no field for
+                // the total: it is the sum, so a marker cannot hand back a
+                // number that disagrees with its own parts.
+                ...criteria.map((c) => ({
+                  id: c.id,
+                  label: `${c.name} (out of ${c.outOf}) — ${c.means}`,
+                  kind: 'number' as const,
+                  required: true,
+                })),
+                { id: 'comments', label: 'Feedback for the student', kind: 'textarea' as const, required: true },
               ],
             },
           ]
@@ -757,11 +849,18 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       }
       expect(work, 'submitted', 'mark this');
       const a = assignmentOf(work.assignment);
+      const criteria = a?.criteria ?? [];
+      // Validated here as well as at execute, because the gateway runs this
+      // at prepare: a marker should be told a box is empty before they
+      // confirm, not after.
+      const marks = readMarks(criteria, input.fields);
+      const sum = Object.values(marks).reduce((n, m) => n + m, 0);
       return {
         title: `Mark ${a?.title ?? work.assignment}`,
         details: [
           { label: 'Student', value: work.student },
-          { label: 'Mark', value: `${input.fields.mark ?? ''} out of ${a?.outOf ?? ''}` },
+          ...criteria.map((c) => ({ label: c.name, value: `${marks[c.id]} of ${c.outOf}` })),
+          { label: 'Total', value: `${sum} out of ${outOf(criteria)}` },
           { label: 'After this', value: 'It is marked but not released — the student sees nothing yet.' },
         ],
       };
@@ -781,17 +880,15 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       }
       expect(work, 'submitted', 'mark this');
       const a = assignmentOf(work.assignment);
-      const mark = Number(input.fields.mark);
-      // The gateway's validator knows this is a number; only the adapter
-      // knows what it is out of, which is exactly the split the contract
+      // The gateway's validator knows these are numbers; only the adapter
+      // knows what each is out of, which is exactly the split the contract
       // draws between a well-formed request and a permitted one.
-      if (!Number.isFinite(mark) || mark < 0 || mark > (a?.outOf ?? 0)) {
-        throw new Error(`A mark must be between 0 and ${a?.outOf ?? 0}.`);
-      }
+      const marks = readMarks(a?.criteria ?? [], input.fields);
       return store.commit(work, key, 'faculty', 'Marked', at, (w) => {
         w.stage = 'graded';
         w.gradedAt = at;
-        w.mark = String(mark);
+        w.marks = marks;
+        w.mark = String(Object.values(marks).reduce((n, m) => n + m, 0));
         w.comments = input.fields.comments ?? '';
       });
     },

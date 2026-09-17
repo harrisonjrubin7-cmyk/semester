@@ -108,7 +108,7 @@ describe('the one complete vertical', () => {
     const toMark = await seen('grades', f, 'student-1:a1');
     await area('grades').execute(
       f,
-      act('grades', toMark.id, toMark.version, 'grade', { mark: '17', comments: 'Clear on Q2.' }),
+      act('grades', toMark.id, toMark.version, 'grade', { method: '7', accuracy: '7', clarity: '3', comments: 'Clear on Q2.' }),
       'k-grade',
     );
     const hidden = await seen('grades', s, 'student-1:a1');
@@ -119,7 +119,7 @@ describe('the one complete vertical', () => {
     const toRelease = await seen('grades', f, 'student-1:a1');
     await area('grades').execute(f, act('grades', toRelease.id, toRelease.version, 'release'), 'k-release');
     const shown = await seen('grades', s, 'student-1:a1');
-    expect(shown.summary).toContain('17');
+    expect(shown.summary).toContain('17 out of 20');
     expect(JSON.stringify(shown.details)).toContain('Clear on Q2');
 
     // Archived, and closed.
@@ -184,7 +184,7 @@ describe('what it refuses', () => {
     await submit(s);
     const r = await seen('grades', s, 'student-1:a1');
     await expect(
-      area('grades').execute(s, act('grades', r.id, r.version, 'grade', { mark: '20', comments: 'A+' }), 'k-self'),
+      area('grades').execute(s, act('grades', r.id, r.version, 'grade', { method: '8', accuracy: '8', clarity: '4', comments: 'A+' }), 'k-self'),
     ).rejects.toThrow(/only the course faculty/i);
     // Faculty have no work of their own, so there is nothing of theirs to submit.
     await expect(
@@ -212,7 +212,7 @@ describe('what it refuses', () => {
     await enrol(s);
     const fresh = await seen('grades', f, 'student-1:a1');
     await expect(
-      area('grades').execute(f, act('grades', fresh.id, fresh.version, 'grade', { mark: '5', comments: 'x' }), 'k-early'),
+      area('grades').execute(f, act('grades', fresh.id, fresh.version, 'grade', { method: '2', accuracy: '2', clarity: '1', comments: 'x' }), 'k-early'),
     ).rejects.toThrow(/cannot mark this/i);
     await submit();
     const marked = await seen('grades', f, 'student-1:a1');
@@ -230,7 +230,7 @@ describe('what it refuses', () => {
     ).rejects.toThrow(/cannot archive this/i);
 
     const g1 = await seen('grades', f, 'student-1:a1');
-    await area('grades').execute(f, act('grades', g1.id, g1.version, 'grade', { mark: '9', comments: 'ok' }), 'k-g');
+    await area('grades').execute(f, act('grades', g1.id, g1.version, 'grade', { method: '4', accuracy: '4', clarity: '1', comments: 'ok' }), 'k-g');
     const g2 = await seen('grades', f, 'student-1:a1');
     await area('grades').execute(f, act('grades', g2.id, g2.version, 'release'), 'k-r');
     const g3 = await seen('records', f, 'student-1:a1');
@@ -255,7 +255,7 @@ describe('what it refuses', () => {
     const g = await seen('grades', f, 'student-1:a1');
     await area('grades').execute(
       f,
-      act('grades', g.id, g.version, 'grade', { mark: '11', comments: 'Secret until released.' }),
+      act('grades', g.id, g.version, 'grade', { method: '5', accuracy: '4', clarity: '2', comments: 'Secret until released.' }),
       'k-mark',
     );
     // Not even to the marker: `released` is a property of the record, not of
@@ -268,13 +268,13 @@ describe('what it refuses', () => {
     }
   });
 
-  it('refuses a mark the assignment cannot carry', async () => {
+  it('refuses a criterion mark the rubric cannot carry', async () => {
     const f = faculty();
     await submit();
     const r = await seen('grades', f, 'student-1:a1');
     await expect(
-      area('grades').execute(f, act('grades', r.id, r.version, 'grade', { mark: '400', comments: 'x' }), 'k-big'),
-    ).rejects.toThrow(/between 0 and 20/);
+      area('grades').execute(f, act('grades', r.id, r.version, 'grade', { method: '400', accuracy: '1', clarity: '1', comments: 'x' }), 'k-big'),
+    ).rejects.toThrow(/Method must be between 0 and 8/);
   });
 });
 
@@ -339,6 +339,99 @@ describe('the class, as a class', () => {
         'k-crash',
       ),
     ).rejects.toThrow(/roster|not enrolled/i);
+  });
+});
+
+describe('the rubric', () => {
+  const mark = async (f: AdapterContext, fields: Record<string, string>, key = 'k-mark') => {
+    const g = await seen('grades', f, 'student-1:a1');
+    return area('grades').execute(f, act('grades', g.id, g.version, 'grade', fields), key);
+  };
+
+  it('is readable before the work is done, not with the grade', async () => {
+    const s = student();
+    await enrol(s);
+    const paper = await seen('assignments', s, 'student-1:a1');
+    const said = JSON.stringify(paper.details);
+    // A rubric that arrives attached to the mark arrived too late to be used.
+    expect(said).toContain('Method');
+    expect(said).toContain('The steps are shown');
+    expect(said).toMatch(/Marked out of[^}]*20/);
+  });
+
+  it('adds the criteria up rather than taking a total on trust', async () => {
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'k-s');
+    await mark(f, { method: '6', accuracy: '5', clarity: '4', comments: 'Good method.' });
+    const g = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(f, act('grades', g.id, g.version, 'release'), 'k-rel');
+    const out = await seen('grades', s, 'student-1:a1');
+    expect(out.summary).toContain('15 out of 20');
+  });
+
+  it('tells the student which criterion lost the marks', async () => {
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'k-s');
+    await mark(f, { method: '8', accuracy: '3', clarity: '4', comments: 'Check your arithmetic.' });
+    const g = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(f, act('grades', g.id, g.version, 'release'), 'k-rel');
+    const out = await seen('grades', s, 'student-1:a1');
+    const said = out.details.map((d) => `${d.label} :: ${d.value}`);
+    // The number alone says a student lost five marks. This says where, and
+    // what that criterion was asking for — which is a thing to do differently.
+    expect(said.join(' | ')).toContain('Accuracy · 3 of 8');
+    expect(said.join(' | ')).toContain('with units');
+    expect(said.join(' | ')).toContain('Method · 8 of 8');
+  });
+
+  it('will not accept a rubric with a box left empty', async () => {
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'k-s');
+    // Not scored as zero: a marker who left a box empty has not decided it is
+    // worth nothing, they have not finished, and writing the zero for them is
+    // the kind of helpfulness that ends up on a transcript.
+    await expect(mark(f, { method: '8', clarity: '4', comments: 'x' })).rejects.toThrow(
+      /Accuracy has not been marked/,
+    );
+    await expect(mark(f, { method: '8', accuracy: '', clarity: '4', comments: 'x' })).rejects.toThrow(
+      /Accuracy has not been marked/,
+    );
+  });
+
+  it('says a box is empty at prepare, before anybody confirms', async () => {
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'k-s');
+    const g = await seen('grades', f, 'student-1:a1');
+    await expect(
+      area('grades').review(f, act('grades', g.id, g.version, 'grade', { method: '8', comments: 'x' })),
+    ).rejects.toThrow(/Accuracy has not been marked/);
+  });
+
+  it('offers a field per criterion and no field for the total', async () => {
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'k-s');
+    const g = await seen('grades', f, 'student-1:a1');
+    const fields = g.actions.find((a) => a.id === 'grade')?.fields ?? [];
+    expect(fields.map((x) => x.id)).toEqual(['method', 'accuracy', 'clarity', 'comments']);
+    // No total field: it is the sum, so a marker cannot hand back a number
+    // that disagrees with its own parts.
+    expect(fields.map((x) => x.id)).not.toContain('mark');
+    expect(fields.every((x) => x.required)).toBe(true);
   });
 });
 
@@ -572,7 +665,7 @@ describe('the vertical, through the gateway', () => {
       const mine = forMarking.records.find((r: { id: string }) => r.id === 'student-1:a1');
       await through(
         asFaculty.call,
-        act('grades', mine.id, mine.version, 'grade', { mark: '18', comments: 'Strong on Q3.' }),
+        act('grades', mine.id, mine.version, 'grade', { method: '7', accuracy: '8', clarity: '3', comments: 'Strong on Q3.' }),
       );
 
       const toRelease = await (await asFaculty.call('/records?area=grades')).json();
@@ -581,7 +674,7 @@ describe('the vertical, through the gateway', () => {
 
       const studentSees = await (await asStudent.call('/records?area=grades')).json();
       const released = studentSees.records.find((r: { id: string }) => r.id === 'student-1:a1');
-      expect(released.summary).toContain('18');
+      expect(released.summary).toContain('18 out of 20');
       expect(JSON.stringify(released.details)).toContain('Strong on Q3');
 
       const archivable = await (await asFaculty.call('/records?area=records')).json();
