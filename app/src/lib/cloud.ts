@@ -27,6 +27,7 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
+import { explainSignUp } from './invite';
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 const URL = env.VITE_SUPABASE_URL ?? '';
@@ -183,7 +184,11 @@ export async function signUp(email: string, password: string): Promise<SignedUp>
     password,
     options: { emailRedirectTo: appUrl() },
   });
-  if (error) throw new Error(error.message);
+  // The invite gate is a database trigger, so its refusal arrives here as an
+  // unreadable server error. `explainSignUp` turns that one shape into a
+  // sentence and passes everything else through untouched — it explains the
+  // refusal and is not the refusal. See `lib/invite.ts`.
+  if (error) throw new Error(explainSignUp(error.message, email));
   // With email confirmation on, there is no session until the link is clicked.
   return data.session
     ? { said: 'Account made. Your semester will sync from now on.', signedIn: true }
@@ -200,6 +205,7 @@ export async function signIn(email: string, password: string): Promise<void> {
   const { error } = await (await cloud()).auth.signInWithPassword({ email, password });
   if (error) throw new Error(error.message);
 }
+
 
 /** Google or Apple, when they are switched on in the Supabase dashboard. */
 /**
