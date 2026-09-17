@@ -19,16 +19,21 @@ checking is concrete and it is the reason this file exists: four of the six
 below are sized in the document as sprint items, and building any of them would
 have been a week spent rebuilding something a student can already use today.
 
-**Checked against `a27bb0e` on 17 September 2026.** Every verdict names what was
+**Checked against `675fee1` on 17 September 2026.** Every verdict names what was
 measured and where, and every file and line quoted below was opened rather than
 inferred.
 
-Each verdict was reached by reading the code, and then put to an adversarial
-pass told to assume that reading was wrong and go hunting for what it missed.
-**No verdict has been overturned.** Two have had their evidence corrected, in
-opposite directions, and both corrections are on the record below:
+Each verdict was reached by reading the code, and then put to a completed
+adversarial pass told to assume that reading was wrong and go hunting for what
+it missed. **All nine survived it.** Three have had their evidence corrected,
+and the corrections do not all point the same way, which is the most useful
+thing in the file:
 
 - Item 2 was filed Landed on two consumers of the grade solver. It has four.
+- Item 1's reasoning was replaced by a better one. "Unlimited" is not merely
+  premature, it is **false**: the shared key is metered at sixty generations a
+  month and two shipped screens already say so. The other two thirds of the
+  claim are true and unsaid.
 - A fourth row of the comparison table, saying the document's "60 screens"
   undercounted, **was wrong and the document was right.** It came from a probe
   that turned out to be counting apostrophes in prose. See
@@ -384,14 +389,21 @@ and this file was wrong**, and the way it was wrong is the one `CLAUDE.md`
 warns about hardest, so it stays on the record rather than being quietly
 deleted.
 
-Sixty is correct, and it is the repository's own number: `app/scripts/destinations.mjs`
-is the single read that `sweep:targets` and `sweep:contrast` now share, and it
-returns **60**. The `Screen` union in `lib/types.ts` has 82 members, of which 22
-are not destinations at all — the eight settings sub-pages (`setLook`, `setNav`,
-`setAlerts`, …), the detail views you reach from a destination rather than
-navigate to (`course`, `item`, `guide`, `lesson`, `quiz`, `drill`), and chrome
-(`search`, `directory`, `onboarding`). Sixty destinations, 82 routable screens,
-and the document meant the first.
+Sixty is correct, and it is the repository's own number, from two instruments
+that agree. `app/scripts/destinations.mjs` is the single read that
+`sweep:targets` and `sweep:contrast` now share, and it returns **60**; so does
+counting the registry in `lib/nav.ts` directly. The `Screen` union in
+`lib/types.ts` has 82 members, and the 22 in the gap are not a mystery either —
+`lib/nav.registry.test.ts:65` already names them, as
+`NOT_DESTINATIONS = [...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS]`: chrome,
+the first-run screens, the detail views you reach *from* a destination rather
+than navigate to (`course`, `item`, `guide`, `lesson`), and the settings
+sub-pages. Sixty destinations, 82 routable screens, and the document meant the
+first.
+
+That the repository had already written down the distinction, in a test whose
+whole job is to keep the two lists honest, is the part that stings. The probe
+below did not need to be invented at all.
 
 The 74 was not either number. It came from a regular expression run over
 `lib/types.ts` that matched every `'…'` in the file **including the apostrophes
