@@ -1897,6 +1897,71 @@ on your undo stack; and a failure to connect says so at the switch.
 
 ---
 
+## 8i. Phase 3 · Registration — against the sandbox, labelled
+
+Phases 3 and 4 are gated in the source document on things that are not
+engineering: a formal data-sharing agreement, a security and compliance review
+by Vanderbilt IT, and a legal review of student-data implications including
+FERPA — *"treated as a question for Vanderbilt's own counsel, never an
+engineering decision Harrison can make unilaterally."* None of that is
+satisfied by anything in this section and none of it is claimed.
+
+What **is** built is the demonstration, against the sandbox institution, at the
+explicit request of this project's owner. The Comprehensive Master Brief's own
+standing commitment is the test this has to pass: *"No official institutional
+transaction (registration, billing, financial aid, family access) touches real
+data — these remain Prepare-only until Phase 3/4 and full institutional
+review."* A sandbox demonstration touches no real data, every record it makes
+carries `SANDBOX`, and every receipt says that no seat here is a seat at any
+real institution.
+
+**Why registration first, and why it is the right thing to demonstrate.** The
+brief calls it *"the transactional standard's first full application"*, and it
+is the first part of a university that is genuinely a *transaction*. Reading a
+bill is a query. Submitting coursework is a write nobody competes for. **A seat
+is finite**: two people can want the last one and only one can have it, and
+everything hard about institutional software lives in that sentence. The
+two-phase prepare/commit the gateway has enforced since Phase 1 exists for
+exactly this, and now it is carrying something that can actually be lost.
+
+**Five refusals, each one a real registrar's.** A hold on the account, named
+rather than generic. A prerequisite not met, checked against what this student
+has actually passed here. Add/drop closed, from a date on the section. A clash
+with something already held. And no seat — which is not a refusal at all but a
+redirection to the waiting list, and the difference is the point of it.
+
+**The seat is taken at commit, never at prepare.** `sandbox.ts`'s header
+already argued this and it matters most here: a review that reserved a seat
+would mean somebody who read the confirmation and walked away had taken a seat
+from somebody who would have used it. So `review` reports the count as it
+currently is, `execute` checks it again, and the window between them is where a
+waiting list comes from. Two people reading the last seat both get a
+confirmation to read; the second commit is refused.
+
+**The seat count is derived, never stored.** A `taken` column and a table of
+enrolments are two answers to one question, and they come apart the first time
+a write half-fails.
+
+**Mutated, nine of nine caught**: the seat not rechecked at commit (which puts
+two people in one seat), the idempotency check removed (which enrols a retry
+twice), the hold unchecked, the prerequisite unchecked, add/drop never closing,
+a clash allowed, the queue never moving on a drop, a waiting place counted as a
+seat, and a hold blocking somebody from *leaving* a queue — which is a bug and
+not a policy, since a hold blocks taking something rather than giving it back.
+
+**It needed no screen.** `screens/University.tsx` lists all thirty-seven areas,
+draws whichever the gateway reports as connected, and renders records and their
+actions generically. A Phase 3 domain is an adapter. That is the Phase 1
+architecture paying for itself, and it is worth noticing that the payoff
+arrived without a line of UI.
+
+**One check earned its keep immediately.** `smoke:gateway` asserts the number in
+the gateway's startup line, and it went red the moment a sixth adapter was
+installed — which is exactly the fault it was written for, since that line is
+what somebody reads to know what a booted gateway is carrying.
+
+---
+
 ## 8d. What the source document has left, and what it is waiting on
 
 For the record, measured rather than assumed, since §1 to §8 of this plan were

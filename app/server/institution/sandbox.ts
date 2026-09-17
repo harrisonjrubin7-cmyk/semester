@@ -9,6 +9,7 @@ import type {
   UniversityRecord,
 } from '../../../packages/institution/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
+import { registrationAdapter } from './registration.ts';
 
 /**
  * One course, run end to end, at an institution that does not exist.
@@ -424,6 +425,111 @@ interface Work {
  * that *"submissions or grades can be trusted to persist correctly"*. It is
  * the same `node:sqlite` the journal beside it uses.
  */
+/* ── Registration ─────────────────────────────────────────────────────────
+ *
+ * The build-out plan puts this first in Phase 3 and calls it "the
+ * transactional standard's first full application": live seats, prerequisite
+ * and hold checks, real enrolment submission, waitlists, add/drop.
+ *
+ * It is here, against the sandbox, as a **labelled demonstration**. Every
+ * record it produces carries `SANDBOX_MARK`, every receipt says nothing here
+ * reaches a real institution, and no seat taken in it is a seat anywhere. What
+ * is real is the shape: a finite number of seats is what makes enrolling a
+ * transaction rather than a preference, because two people can want the last
+ * one and only one can have it.
+ *
+ * ## Why the seat count is derived and not stored
+ *
+ * A `taken` column and a table of enrolments are two answers to one question,
+ * and they come apart the first time a write half-fails. The count is
+ * `enrolments(section).length`, every time. It is a scan of a handful of rows
+ * in a demonstration and it cannot disagree with itself.
+ */
+
+export interface Section {
+  id: string;
+  code: string;
+  title: string;
+  teacher: string;
+  when: string;
+  credits: number;
+  seats: number;
+  /** Course codes that must already be passed. Empty means none. */
+  needs: string[];
+  /** After this, add/drop is closed. An ISO day. */
+  until: string;
+}
+
+export interface Enrolment {
+  id: string;
+  student: string;
+  section: string;
+  /** `enrolled` holds a seat; `waiting` does not; `dropped` is history. */
+  state: 'enrolled' | 'waiting' | 'dropped';
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * What the demonstration registry opens with.
+ *
+ * Four sections chosen to make each refusal reachable by a tester rather than
+ * only by a test: one with a prerequisite, one with a single seat so the
+ * second person meets the waitlist, one already closed for add/drop, and one
+ * ordinary. A demonstration where the interesting paths cannot be walked is a
+ * screenshot.
+ */
+export const SECTIONS: Section[] = [
+  {
+    id: 'econ-1020-001',
+    code: 'ECON 1020',
+    title: 'Principles of Macroeconomics',
+    teacher: 'Dr Alvarez',
+    when: 'Tue/Thu 09:30',
+    credits: 3,
+    seats: 30,
+    needs: [],
+    until: '2026-09-30',
+  },
+  {
+    id: 'econ-3010-001',
+    code: 'ECON 3010',
+    title: 'Intermediate Macroeconomics',
+    teacher: 'Dr Alvarez',
+    when: 'Mon/Wed 13:00',
+    credits: 3,
+    // The prerequisite. A tester who has not passed ECON 1020 is refused.
+    seats: 20,
+    needs: ['ECON 1020'],
+    until: '2026-09-30',
+  },
+  {
+    id: 'psci-2200-001',
+    code: 'PSCI 2200',
+    title: 'Security Studies Seminar',
+    teacher: 'Dr Okafor',
+    when: 'Wed 15:00',
+    credits: 3,
+    // One seat, so the second person to ask meets the waitlist.
+    seats: 1,
+    needs: [],
+    until: '2026-09-30',
+  },
+  {
+    id: 'bus-1600-001',
+    code: 'BUS 1600',
+    title: 'Financial Accounting',
+    teacher: 'Dr Lindqvist',
+    when: 'Tue/Thu 11:00',
+    credits: 3,
+    seats: 24,
+    needs: [],
+    // Already shut, so the add/drop refusal is reachable without waiting.
+    until: '2026-09-05',
+  },
+];
+
 export class SandboxStore {
   private db: DatabaseSync;
 
@@ -461,6 +567,22 @@ export class SandboxStore {
         key TEXT PRIMARY KEY,
         body TEXT NOT NULL
       );
+      /*
+       * Registration — the demonstration of the transactional standard the
+       * build-out plan puts first in Phase 3. A section is a thing with a
+       * finite number of seats, which is what makes enrolling a transaction
+       * rather than a preference: two people can want the last one.
+       */
+      CREATE TABLE IF NOT EXISTS sections(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS enrolments(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        section TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
     `);
 
     // The class the course already has, before any tester arrives.
@@ -470,6 +592,76 @@ export class SandboxStore {
     // And the work it opens with. Faculty publish more; see `publish`.
     const first = this.db.prepare('INSERT OR IGNORE INTO assignments VALUES(?,?,?)');
     for (const a of SEEDED) first.run(a.id, '2026-08-25T09:00:00Z', JSON.stringify(a));
+
+    // The sections registration opens with. See `SECTIONS`.
+    const sec = this.db.prepare('INSERT OR IGNORE INTO sections VALUES(?,?)');
+    for (const t of SECTIONS) sec.run(t.id, JSON.stringify(t));
+  }
+
+  /**
+   * A named setting, as a string, or null.
+   *
+   * The `settings` table already held the late policy and the syllabus under
+   * fixed ids. Registration needs a handful more — a hold on an account, a
+   * recorded pass — and they are keyed rather than columned because a
+   * demonstration that needs a migration to put a hold on somebody is a
+   * demonstration nobody will put a hold on.
+   */
+  setting(id: string): string | null {
+    const got = this.db.prepare('SELECT body FROM settings WHERE id=?').get(id) as
+      | { body: string }
+      | undefined;
+    return got ? got.body : null;
+  }
+
+  /** Set one, or clear it with an empty string. */
+  setSetting(id: string, body: string): void {
+    if (!body) {
+      this.db.prepare('DELETE FROM settings WHERE id=?').run(id);
+      return;
+    }
+    this.db
+      .prepare('INSERT INTO settings VALUES(?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body')
+      .run(id, body);
+  }
+
+  /* ── Registration ───────────────────────────────────────────────────── */
+
+  sections(): Section[] {
+    const rows = this.db.prepare('SELECT body FROM sections ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Section);
+  }
+
+  section(id: string): Section | null {
+    const got = this.db.prepare('SELECT body FROM sections WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Section) : null;
+  }
+
+  saveSection(section: Section): void {
+    this.db.prepare('INSERT OR REPLACE INTO sections VALUES(?,?)').run(section.id, JSON.stringify(section));
+  }
+
+  /** Every enrolment, so a seat count can be derived rather than stored. */
+  enrolments(section?: string): Enrolment[] {
+    const rows = (
+      section
+        ? this.db.prepare('SELECT body FROM enrolments WHERE section=? ORDER BY id').all(section)
+        : this.db.prepare('SELECT body FROM enrolments ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Enrolment);
+  }
+
+  enrolmentsOf(student: string): Enrolment[] {
+    const rows = this.db.prepare('SELECT body FROM enrolments WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Enrolment);
+  }
+
+  saveEnrolment(row: Enrolment): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO enrolments VALUES(?,?,?,?)')
+      .run(row.id, row.student, row.section, JSON.stringify(row));
   }
 
   /** Everything published in this course, oldest first. */
@@ -712,7 +904,7 @@ export class SandboxStore {
 const assignmentOf = (store: SandboxStore, id: string) => store.assignment(id);
 
 const isFaculty = (context: AdapterContext) => context.identity.roles.includes('faculty');
-const isStudent = (context: AdapterContext) => context.identity.roles.includes('student');
+export const isStudent = (context: AdapterContext) => context.identity.roles.includes('student');
 
 /**
  * The row a record id names, if this person is allowed to see it at all.
@@ -744,7 +936,7 @@ function rowFor(store: SandboxStore, context: AdapterContext, id: string): Work 
  * student can submit and cannot mark, and the screen should say which before
  * somebody goes looking for a button that is not theirs.
  */
-function connection(area: UniversityArea, context: AdapterContext, write: boolean): ConnectionStatus {
+export function connection(area: UniversityArea, context: AdapterContext, write: boolean): ConnectionStatus {
   return {
     area,
     state: 'connected',
@@ -759,14 +951,14 @@ function connection(area: UniversityArea, context: AdapterContext, write: boolea
   };
 }
 
-const page = (records: UniversityRecord[]): RecordPage => ({
+export const page = (records: UniversityRecord[]): RecordPage => ({
   records,
   nextCursor: null,
   fetchedAt: new Date().toISOString(),
 });
 
 /** Free-text search over what a person can read on the record itself. */
-const matching = (records: UniversityRecord[], search: string) => {
+export const matching = (records: UniversityRecord[], search: string) => {
   const q = search.trim().toLowerCase();
   if (!q) return records;
   return records.filter((r) => `${r.title} ${r.summary} ${r.status}`.toLowerCase().includes(q));
@@ -829,7 +1021,7 @@ function allow(
  * safely in the store. They would submit again, or be told their work was
  * lost. The first test written for this failed exactly that way.
  */
-function already(store: SandboxStore, key: string): Receipt | null {
+export function already(store: SandboxStore, key: string): Receipt | null {
   return store.receipt(key);
 }
 
@@ -1815,7 +2007,7 @@ function appealRecord(store: SandboxStore, work: Work): UniversityRecord {
 const archivedOrUnseen = (work: Work, seen: boolean) => work.stage === 'archived' || !seen;
 
 /**
- * The five, over one store.
+ * The six, over one store.
  *
  * Built by a function rather than exported as a constant so the store is an
  * argument: the tests open one on a temporary file, and `start.ts` opens one
@@ -2314,5 +2506,5 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     reconcile: async (_context, _input, key) => store.receipt(key),
   };
 
-  return [courses, assignments, grades, records, appeals];
+  return [courses, assignments, grades, records, appeals, registrationAdapter(store)];
 }
