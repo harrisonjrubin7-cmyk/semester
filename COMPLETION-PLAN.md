@@ -845,7 +845,7 @@ text).
 
 Equations are already embedded properly in the `.docx`, which the draft lists as
 work to do. `lib/maths.ts` renders one notation three ways — MathML for the
-screen, **OMML for Word**, Unicode for everywhere else — and `lib/docx.ts:610`
+screen, **OMML for Word**, Unicode for everywhere else — and `lib/docx.ts:619`
 calls `omml(parse(block.latex))`, so an equation in an exported `.docx` is a
 real Word equation object you can click and edit, not a picture somebody has to
 retype.
@@ -2121,14 +2121,14 @@ it was checked on 15 September 2026, and where to look.
 
 | The draft said | Measurement says | Read it in |
 | --- | --- | --- |
-| Exam Runway "does not exist in the app today — the one feature in the entire product with no working version yet" | 922 lines and a screen, shipping, including a three-source coverage engine that refuses to infer scope | `lib/runway.ts` (313), `lib/covers.ts` (206), `screens/Runway.tsx` (403) |
+| Exam Runway "does not exist in the app today — the one feature in the entire product with no working version yet" | 1,189 lines and a screen, shipping, including a three-source coverage engine that refuses to infer scope | `lib/runway.ts` (313), `lib/covers.ts` (322), `screens/Runway.tsx` (554) |
 | Exam Runway needs "a new Quiz/Cram engagement log (does not exist yet and must be built as part of this item)" | The engagement record exists and Runway already reads it — cards never answered, units never opened, papers sat | `lib/review.ts`, `lib/sitting.ts`, `lib/runway.ts` |
-| GPA Projection is "a simple estimate rather than a modeled distribution"; build "a small weighted-scenario model (best / expected / worst)" | The low / middle / high band across courses exists, composed from four files, with letter cliffs handled and no rounding before the scale reads a percentage | `lib/termgpa.ts` (401), `lib/worth.ts`, `lib/cutoffs.ts`, `lib/grades.ts` |
+| GPA Projection is "a simple estimate rather than a modeled distribution"; build "a small weighted-scenario model (best / expected / worst)" | The low / middle / high band across courses exists, composed from four files, with letter cliffs handled and no rounding before the scale reads a percentage | `lib/termgpa.ts` (426), `lib/worth.ts`, `lib/cutoffs.ts`, `lib/grades.ts` |
 | Spreadsheet is missing "pivot tables and deeper formula coverage (lookups, array-style formulas)" | Pivot tables ship, and write back as live `SUMIFS`; lookups ship (`VLOOKUP`, `HLOOKUP`, `XLOOKUP`, `INDEX`, `MATCH`). Array formulas were genuinely absent and did need a spill model first — both are built now (§5.2) | `lib/pivot.ts` (424), `lib/sheet.ts` (164 functions), `lib/functions.ts` |
 | Document Editor should "wire in direct equation embedding from the existing math engine rather than a static image of an equation" | Already wired: a `.docx` equation is a real OMML equation object, editable in Word | `lib/docx.ts:610`, `lib/maths.ts` |
 | Watch "produces visual, video-style walkthroughs for a limited set of concepts"; missing "full-course coverage" | 44 narrated lessons over 44 units — complete coverage of every shipped course. The gap is a generated course, which gets none | `public/audio/lessons/`, `pipeline/lessons.py` |
 | Listen is missing "complete chapter-mark indexing across all content" | All eight editions carry a `chapters` block, rendered exact by the synthesiser. The gap is a generated course, and the absent batch pipeline | `src/data/courses/*/index.ts`, `audio/synth.py`, `pipeline/chapters.py` |
-| Figures needs "a repeatable pipeline for turning arbitrary course concepts into a correct diagram" built from scratch | That pipeline exists — Claude writes a Mermaid or SVG specification, `cleanSvg` sanitises it, the app renders it — but is wired to the Draw screen and not to the Figures mode | `lib/diagram.ts` (331), `screens/Draw.tsx`, `screens/Create.tsx` |
+| Figures needs "a repeatable pipeline for turning arbitrary course concepts into a correct diagram" built from scratch | That pipeline exists — Claude writes a Mermaid or SVG specification, `cleanSvg` sanitises it, the app renders it — but is wired to the Draw screen and not to the Figures mode | `lib/diagram.ts` (343), `screens/Draw.tsx`, `screens/Create.tsx` |
 
 Two claims in the draft survived unchanged and are repeated above on their own
 merits: Where Courses Meet matches words rather than meanings (`lib/meet.ts`
@@ -2175,7 +2175,13 @@ SWEEP_PLAYWRIGHT=/tmp/drive/node_modules/playwright npm run sweep:targets
 npm run smoke:gateway
 
 # Study modes, and the count this document states.
-sed -n '/^  return \[/,$p' src/lib/modes.ts | grep -c "^      id:"
+#
+# `npm run counts` and nothing else. The hand-rolled grep that used to be here
+# counted the ids inside `modes.ts`'s `return [` and answered ten, because
+# Watch is built by a function above that block — so anybody who ran it would
+# have "corrected" a correct eleven down to ten. A probe that convicts the
+# innocent is worse than a stale number, and `counts.mjs` is the thing the
+# generated markers in this document are written by.
 npm run counts        # rewrites the generated counts in the files that state them
 
 # Content coverage, per course.
@@ -2187,16 +2193,39 @@ for c in bus core econ psci; do
 done
 
 # Engine coverage.
-grep -oE "case '[A-Z0-9.]+'" src/lib/sheet.ts | sort -u | wc -l   # 159 functions
-sed -n '/DIAGRAM_KINDS = \[/,/\] as const/p' src/lib/types.ts | grep -c "^  '"
+grep -oE "case '[A-Z0-9.]+'" src/lib/sheet.ts | sort -u | wc -l   # 164 functions
+sed -n '/DIAGRAM_KINDS = \[/,/\] as const/p' src/lib/types.ts | grep -c "^  '"   # 17 kinds
 grep -c '^  {' src/lib/nav.ts                                      # 60 destinations
 wc -l src/lib/runway.ts src/lib/covers.ts src/screens/Runway.tsx
 wc -l src/lib/pivot.ts src/lib/termgpa.ts src/lib/diagram.ts src/lib/quotes.ts
 
 # The two facts that decide four of the five study-mode plans.
-sed -n '460,466p' src/lib/generate.ts     # figures, examples and audio
+#
+# By what they say rather than by where they sit. The first of these was a line
+# range, `sed -n '460,466p'`, and the lines moved — it printed a card count and
+# a note about dated obligations, which is not what its comment claimed and is
+# not evidence for anything this document argues.
+grep -n 'Figures, examples and audio' src/lib/generate.ts
 grep -n 'import' src/lib/quotes.ts        # two imports, neither of them the network
 ```
 
 A number in this document that these commands contradict is this document being
 stale. Correct it here, and say in the commit message which measurement moved.
+
+**Unless the command is the stale one**, which is what a pass through this
+appendix on 17 September found. Four of these had rotted, and the two that
+matter are the two that would have produced a *wrong correction* rather than
+no answer:
+
+| | |
+| --- | --- |
+| The study-mode grep answered **ten** against a true eleven | it counted the ids inside `modes.ts`'s `return [`, and Watch is built by a function above it. Anybody running it would have edited a correct figure down. Replaced with `npm run counts`, which is what writes the generated markers in the first place. |
+| `sed -n '460,466p' src/lib/generate.ts` printed a card count | the lines moved; the comment still said "figures, examples and audio". A line range is a reference that rots silently. It greps for the sentence now. |
+| `# 159 functions` beside a command answering 164 | the body text said 164 in two places, so only the comment was wrong — which is the version of this that survives longest, because the number on screen looks like a disagreement with the document rather than with the comment. |
+| `lib/docx.ts:610` | the OMML call is at 619. |
+
+Four line counts in Appendix A had also drifted, all upward, and one sum with
+them: Exam Runway is 1,189 lines rather than 922. So: **prefer a command that
+names what it is looking for over one that says where it used to be**, and when
+a command and this document disagree, find out which of them is lying before
+editing either.
