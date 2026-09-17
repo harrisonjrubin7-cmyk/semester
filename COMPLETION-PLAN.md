@@ -1962,6 +1962,66 @@ what somebody reads to know what a booted gateway is carrying.
 
 ---
 
+## 8j. Phase 3 · Money — read access, and never a processor
+
+Phase 3's second domain, against the sandbox, labelled. The source documents
+constrain its shape in one sentence and this obeys it exactly: a real account
+balance *"built as read access to Vanderbilt's own systems first, **not a
+competing processor**"*.
+
+**What that sentence rules out, concretely.** Semester never holds money, never
+takes a card number, and has no payment credential of any kind. The one write a
+student makes — paying — is prepared by Semester and **committed by the
+institution's own adapter**, which is what issues the receipt. That is the
+architectural claim rather than a detail: the same two-phase prepare/commit
+that puts a student in a seat, with the institution on the far side of it. In
+this demonstration the sandbox *is* the institution; against a real school the
+same adapter hands off to that school's processor and returns its receipt, and
+nothing about the app changes.
+
+The sentence is on the record itself, not only in a file header: every charge
+carries a **"Who moves the money"** line saying the institution does and that
+Semester holds no card. A student reading their bill should not have to take a
+developer's word for it from somewhere they will never look.
+
+**A ledger, not a balance.** What is owed is charges minus what is paid against
+them, computed every time — the same argument registration makes about seats,
+and worth making twice because money is where somebody notices. Cents
+throughout, because money in a float is a bug waiting for a decimal.
+
+**Aid's amount is the institution's and nobody else's.** A student accepts or
+declines; they send no number, and `execute` reads the row rather than the
+field. That is the obvious attack on a screen like this, and it is refused by
+there being nowhere to put a number rather than by validating one away — a test
+sends `cents: 99999999` anyway and asserts the award is unchanged.
+
+**The lie this screen could most easily tell** is that accepted aid is money
+paid. It is not, and `balance` keeps them as separate numbers: aid accepted is
+reported beside what is owed and never subtracted from it. A mutation that
+subtracts it is caught.
+
+**Mutated, twelve of twelve caught**: over-payment allowed at the write
+boundary, idempotency removed (a retry pays twice), a stranger paying somebody
+else's bill, a stranger answering somebody else's award, a non-student paying,
+the award amount taken from the request, accepted aid counted as money paid,
+the answer-by date never passing, a disbursed award becoming declinable, and
+the dollar parser accepting anything. Two of those mutations initially reported
+"45 passed" because an apostrophe in the label broke the script that applied
+them — they had never been applied, and a pass that means nothing is the same
+trap this document keeps recording. Re-run with the labels fixed, all twelve
+bite.
+
+**And a correct test whose example rotted.** `sandbox.test.ts` asserted that
+the sandbox does not light up the whole University screen, using `billing` as
+its example of an unimplemented area — which was fine until this section
+implemented billing. The rule is still exactly right; the example was the
+problem. It now *derives* the area to probe from the areas no adapter covers,
+asserts there are more than twenty of them, and checks three. A rule whose
+example can be built out from under it is a rule that fails on the day somebody
+does the work.
+
+---
+
 ## 8d. What the source document has left, and what it is waiting on
 
 For the record, measured rather than assumed, since §1 to §8 of this plan were

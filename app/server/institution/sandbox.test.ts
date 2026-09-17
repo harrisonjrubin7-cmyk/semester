@@ -6,6 +6,7 @@ import { SANDBOX_INSTITUTION, SANDBOX_MARK, SANDBOX_NAME, SandboxStore, sandboxA
 import { createGateway } from './gateway.ts';
 import { ActionJournal } from './journal.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
+import { UNIVERSITY_AREAS } from '../../../packages/institution/src/index.ts';
 import type { ActionInput, UniversityArea, UniversityRole } from '../../../packages/institution/src/index.ts';
 
 /**
@@ -2163,16 +2164,31 @@ describe('the vertical, through the gateway', () => {
   });
 
   it('answers 503 for the areas the sandbox does not implement', async () => {
+    /*
+     * The sandbox is a handful of services, not thirty-seven, and the rest must
+     * keep saying they are not configured — a demonstration that lit up the
+     * whole University screen would be the placeholder the plan forbids.
+     *
+     * The area to probe is *derived* rather than named. The first version of
+     * this test named `billing`, which was a fine example until Phase 3's
+     * demonstration implemented billing and the test went red for a reason
+     * that had nothing to do with what it was guarding. A rule whose example
+     * can be built out from under it is a rule that fails on the day somebody
+     * does the work.
+     */
+    const done = new Set(four.map((a) => a.area));
+    const untouched = UNIVERSITY_AREAS.map(([id]) => id).filter((id) => !done.has(id));
+    expect(untouched.length, 'the sandbox now implements every area').toBeGreaterThan(20);
+
     const asStudent = wire(['student']);
     try {
-      expect((await asStudent.call('/records?area=billing')).status).toBe(503);
-      const status = await (await asStudent.call('/status')).json();
-      const billing = status.connections.find((c: { area: string }) => c.area === 'billing');
-      // The sandbox is four services, not thirty-seven. The other thirty-three
-      // must keep saying they are not configured — a demonstration that lit up
-      // the whole University screen would be the placeholder the plan forbids.
-      expect(billing.state).toBe('not-configured');
-      expect(billing.canWrite).toBe(false);
+      for (const area of untouched.slice(0, 3)) {
+        expect((await asStudent.call(`/records?area=${area}`)).status, area).toBe(503);
+        const status = await (await asStudent.call('/status')).json();
+        const said = status.connections.find((c: { area: string }) => c.area === area);
+        expect(said.state, area).toBe('not-configured');
+        expect(said.canWrite, area).toBe(false);
+      }
     } finally {
       asStudent.journal.close();
     }

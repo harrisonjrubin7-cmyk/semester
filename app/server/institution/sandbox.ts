@@ -10,6 +10,7 @@ import type {
 } from '../../../packages/institution/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
 import { registrationAdapter } from './registration.ts';
+import { aidAdapter, billingAdapter } from './money.ts';
 
 /**
  * One course, run end to end, at an institution that does not exist.
@@ -530,6 +531,84 @@ export const SECTIONS: Section[] = [
   },
 ];
 
+/* ── Money ────────────────────────────────────────────────────────────────
+ *
+ * Phase 3's second domain, and the source documents constrain its shape in one
+ * sentence worth obeying exactly: a real account balance *"built as read access
+ * to Vanderbilt's own systems first, **not a competing processor**"*.
+ *
+ * So the demonstration is a ledger the institution owns and Semester reads.
+ * The one write a student makes against it — paying — is committed **by the
+ * institution's own adapter**, and the receipt comes back from there. That is
+ * not a technicality: it is the whole architectural claim. Semester never
+ * holds money, never takes a card, and has no payment credential of any kind.
+ * What it has is the same two-phase prepare/commit it uses for a seat, with
+ * the institution on the far side of it.
+ *
+ * ## A ledger, not a balance
+ *
+ * What is owed is `charges` minus what is paid against them, computed every
+ * time. A balance column and the rows that add up to it are two answers to one
+ * question, and the first half-failed write is where they stop agreeing — the
+ * same argument the seat count makes in registration, and it is worth making
+ * twice because money is where somebody notices.
+ *
+ * ## Aid is offered by the institution and answered by the student
+ *
+ * An award's amount is the institution's to set and nobody else's. The student
+ * can accept it or decline it and can do neither to somebody else's, and the
+ * amount is never read from a request — which is the obvious attack and is
+ * refused in `execute` rather than trusted from the field.
+ */
+
+export interface Charge {
+  id: string;
+  student: string;
+  what: string;
+  /** Cents, because money in a float is a bug waiting for a decimal. */
+  cents: number;
+  paid: number;
+  due: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export interface Award {
+  id: string;
+  student: string;
+  what: string;
+  kind: 'Grant' | 'Scholarship' | 'Loan' | 'Work-study';
+  cents: number;
+  state: 'offered' | 'accepted' | 'declined' | 'disbursed';
+  /** The last day the student can answer it. An ISO day. */
+  answerBy: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/** Money as a person reads it. Cents in, dollars out, always two places. */
+export const money = (cents: number): string =>
+  `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+type Opening<T> = Omit<T, 'student' | 'at' | 'version' | 'history'>;
+
+/** The bill a demonstration account opens with. */
+export const OPENING_CHARGES: Opening<Charge>[] = [
+  { id: 'tuition-fall', what: 'Tuition — Fall 2026', cents: 2_950_000, paid: 0, due: '2026-10-15' },
+  { id: 'activity-fee', what: 'Student activity fee', cents: 68_500, paid: 0, due: '2026-10-15' },
+  { id: 'housing-fall', what: 'Housing — Fall 2026', cents: 640_000, paid: 0, due: '2026-10-15' },
+];
+
+/** And the aid against it, in the four kinds a real award letter has. */
+export const OPENING_AWARDS: Opening<Award>[] = [
+  { id: 'need-grant', what: 'Need-based grant', kind: 'Grant', cents: 1_800_000, state: 'offered', answerBy: '2026-10-01' },
+  { id: 'merit', what: 'Merit scholarship', kind: 'Scholarship', cents: 500_000, state: 'disbursed', answerBy: '2026-09-01' },
+  { id: 'subsidised-loan', what: 'Federal subsidised loan', kind: 'Loan', cents: 350_000, state: 'offered', answerBy: '2026-10-01' },
+  { id: 'work-study', what: 'Work-study award', kind: 'Work-study', cents: 200_000, state: 'offered', answerBy: '2026-10-01' },
+];
+
 export class SandboxStore {
   private db: DatabaseSync;
 
@@ -581,6 +660,22 @@ export class SandboxStore {
         id TEXT PRIMARY KEY,
         student TEXT NOT NULL,
         section TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      /*
+       * Money. A ledger rather than a balance column, for the reason the seat
+       * count is derived rather than stored: a balance and the rows that add
+       * up to it are two answers to one question, and the first half-failed
+       * write is where they stop agreeing.
+       */
+      CREATE TABLE IF NOT EXISTS charges(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS awards(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
         body TEXT NOT NULL
       );
     `);
@@ -639,6 +734,58 @@ export class SandboxStore {
 
   saveSection(section: Section): void {
     this.db.prepare('INSERT OR REPLACE INTO sections VALUES(?,?)').run(section.id, JSON.stringify(section));
+  }
+
+  /* ── Money ──────────────────────────────────────────────────────────── */
+
+  charges(student: string): Charge[] {
+    const rows = this.db.prepare('SELECT body FROM charges WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Charge);
+  }
+
+  charge(id: string): Charge | null {
+    const got = this.db.prepare('SELECT body FROM charges WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Charge) : null;
+  }
+
+  saveCharge(row: Charge): void {
+    this.db.prepare('INSERT OR REPLACE INTO charges VALUES(?,?,?)').run(row.id, row.student, JSON.stringify(row));
+  }
+
+  awards(student: string): Award[] {
+    const rows = this.db.prepare('SELECT body FROM awards WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Award);
+  }
+
+  award(id: string): Award | null {
+    const got = this.db.prepare('SELECT body FROM awards WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Award) : null;
+  }
+
+  saveAward(row: Award): void {
+    this.db.prepare('INSERT OR REPLACE INTO awards VALUES(?,?,?)').run(row.id, row.student, JSON.stringify(row));
+  }
+
+  /**
+   * The bill and the aid this student has, made the first time they look.
+   *
+   * A demonstration where the money screens are empty until somebody runs a
+   * seeding script is a demonstration nobody sees. Made on read, keyed to the
+   * student, and idempotent — `INSERT OR IGNORE` semantics via a check, so
+   * looking twice does not double a bill.
+   */
+  openAccount(student: string, at: string): void {
+    if (this.charges(student).length || this.awards(student).length) return;
+    for (const c of OPENING_CHARGES) {
+      this.saveCharge({ ...c, id: `${student}::${c.id}`, student, paid: 0, at, version: 0, history: [] });
+    }
+    for (const a of OPENING_AWARDS) {
+      this.saveAward({ ...a, id: `${student}::${a.id}`, student, at, version: 0, history: [] });
+    }
   }
 
   /** Every enrolment, so a seat count can be derived rather than stored. */
@@ -2007,7 +2154,7 @@ function appealRecord(store: SandboxStore, work: Work): UniversityRecord {
 const archivedOrUnseen = (work: Work, seen: boolean) => work.stage === 'archived' || !seen;
 
 /**
- * The six, over one store.
+ * The eight, over one store.
  *
  * Built by a function rather than exported as a constant so the store is an
  * argument: the tests open one on a temporary file, and `start.ts` opens one
@@ -2506,5 +2653,14 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     reconcile: async (_context, _input, key) => store.receipt(key),
   };
 
-  return [courses, assignments, grades, records, appeals, registrationAdapter(store)];
+  return [
+    courses,
+    assignments,
+    grades,
+    records,
+    appeals,
+    registrationAdapter(store),
+    billingAdapter(store),
+    aidAdapter(store),
+  ];
 }
