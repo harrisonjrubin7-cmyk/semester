@@ -30,7 +30,7 @@ survive**, and they failed in the same direction: they described as outstanding
 work that had already landed.
 
 The draft said Exam Runway "does not exist in the app today — this is the one
-feature in the entire product with no working version yet". It is 922 lines
+feature in the entire product with no working version yet". It is 1,189 lines
 across `app/src/lib/runway.ts`, `app/src/lib/covers.ts` and
 `app/src/screens/Runway.tsx`. It said pivot tables were missing;
 `app/src/lib/pivot.ts` is 424 lines and writes its aggregates back into cells as
@@ -512,6 +512,15 @@ without. `pipeline/make-script.mjs` drafts a script from a guide, and
 `audio/README.md` records that the scripts are also the transcripts, which is the
 text alternative an audio-only mode needs to be usable at all.
 
+> **Measured 17 September: the Phase 1 half below is closed.** `lib/script.ts`
+> is the script generation, in the app, over any course's own guide —
+> `scriptFor(courseId, guide)`, whose header names this exact gap: "the
+> capability existed on the wrong side of the app boundary". A generated course
+> with cards opens Listen on a script, and `lib/modes.ts` says which it is
+> rather than counting it as an episode: *"Script, not recorded"*. What a
+> generated course still has no *audio* — rendered MP3 — and that is the
+> boundary this section is really about, unchanged.
+
 **What's missing.** Again one thing, and again it is the boundary: a generated
 course gets no audio. The draft's "complete chapter-mark indexing across all
 content" is already true of all content that exists.
@@ -631,6 +640,12 @@ shows **both definitions**, side by side, and lets the reader decide — and its
 own header makes the case that a pair which turns out to *disagree* is the single
 most valuable row on the screen.
 
+> **Measured 17 September: closed.** `lib/meet.ts:readSame` is the fifth grade
+> — a model proposes pairs, they are checked against the glossaries it was
+> given, and any pair the four string grades already hold is dropped, "so a row
+> both can claim belongs to the stronger". The header sentence below is still
+> true of the four string grades, which is what it is about.
+
 **What's missing.** It is string work on glossaries and cards. There is no model
 and no embedding, which its header says out loud. So it misses the case where two
 courses use different words for the same underlying idea — PSCI's *selection
@@ -683,6 +698,15 @@ rounds a percentage before the scale reads it, because 89.94 is a B+ and roundin
 it to an A− moves a whole grade point on a tenth of a percent, in exactly the
 case where somebody is looking.
 
+> **Measured 17 September: closed, and this section had not been updated.**
+> `termgpa.ts` exports `missingLine` and `fixFor`; `screens/Degree.tsx` lists
+> every excluded course by code, says which field is missing in that course's
+> own terms, and offers the tap that fixes it — Edit for `hours`, Grades for
+> `points`, and nothing for `ungraded`, which has no fix but sitting an
+> assessment. `EditCourse.tsx` has had a Credits field throughout. What is
+> below is the argument for that design and is worth keeping; the "missing" is
+> not missing.
+
 **What's missing.** Not the model — the **exclusions**. `Missing` is
 `'' | 'ungraded' | 'hours' | 'points'`: a course with nothing graded yet, a
 course whose credit hours could not be read off the syllabus line, and a scale
@@ -717,7 +741,7 @@ the inputs and compares.
 
 ### 4.3 · Exam Runway — Partial *(the draft said Planned; it is not)*
 
-**Current state.** 922 lines, three files, one screen, shipping.
+**Current state.** 1,189 lines, three files, one screen, shipping.
 
 `app/src/lib/runway.ts` measures the weeks before an exam **backwards from the
 exam**, in bands rather than as a smooth percentage, because at three weeks the
@@ -746,6 +770,13 @@ failure it exists to prevent.
 `app/src/screens/Runway.tsx` shows it, with no readiness score, for the reason
 every other screen in this app refuses one: a percentage claiming to say whether
 you will pass would be believed, and the app cannot know.
+
+> **Measured 17 September: closed.** `screens/Runway.tsx` does exactly what the
+> approach below describes — `readScope` asks, `readProposal` checks the reply
+> against the guide's own unit numbers, the range is shown as a proposal with
+> the sentence it was read from, and confirming dispatches `setExamCovers` so
+> it arrives as `yours`. There is no fourth `Source`, which is the design
+> rather than an omission.
 
 **What's missing.** One input. Exam scope comes from the syllabus's own wording
 or from the student typing it in; a syllabus that describes scope in a sentence
@@ -2242,10 +2273,73 @@ it was checked on 15 September 2026, and where to look.
 | Listen is missing "complete chapter-mark indexing across all content" | All eight editions carry a `chapters` block, rendered exact by the synthesiser. The gap is a generated course, and the absent batch pipeline | `src/data/courses/*/index.ts`, `audio/synth.py`, `pipeline/chapters.py` |
 | Figures needs "a repeatable pipeline for turning arbitrary course concepts into a correct diagram" built from scratch | That pipeline exists — Claude writes a Mermaid or SVG specification, `cleanSvg` sanitises it, the app renders it. ~~Wired to the Draw screen and not to the Figures mode~~ — **wired to both, as of the `drawn` arm**; the remaining gap was the hand-drawn kinds' subject coverage, closed 17 September | `lib/diagram.ts` (343), `lib/figure.ts:readDrawn`, `components/FigureCard.tsx`, `lib/live.ts` |
 
-Two claims in the draft survived unchanged and are repeated above on their own
-merits: Where Courses Meet matches words rather than meanings (`lib/meet.ts`
-says so in its own header), and Quote Verification has had no adversarial
-false-positive pass.
+Two claims in the draft survived the 15 September pass and were repeated above
+on their own merits. **One of them has since been closed, and re-measuring on
+17 September is what found it.**
+
+| | |
+| --- | --- |
+| Where Courses Meet matches words rather than meanings | still true — `lib/meet.ts` says so in its own header, and §4.1's fifth grade of evidence is unbuilt |
+| ~~Quote Verification has had no adversarial false-positive pass~~ | **`lib/quotes.adversarial.test.ts`**, twenty cases in four families — numbers changed inside a verbatim passage, fragments assembled from pieces that each appear separately, a different work by the same author, and near-miss paraphrases. Written, in its own words, "by someone trying to break it, because the two directions are not the same test". |
+
+### What a second pass over this document found
+
+Re-reading §3 to §5 against the tree on 17 September, **five claims of
+incompleteness were stale** and two were real:
+
+| | |
+| --- | --- |
+| §3.1 — the figure systems "do not meet" | closed; the `drawn` arm joins them |
+| §3.1 — "a generated course gets no figures at all" | closed, and was never quite the gap it reads as |
+| §3.1 — no STEM diagram kinds | **real**, and closed on 17 September |
+| Phase 2 exit — "no mode card reports an empty state" | true, and now a test rather than a sentence |
+| §4.2 — the GPA exclusions are not offered as fixes | closed; `missingLine` and `fixFor` |
+| Appendix A — no adversarial pass on quotes | closed; twenty cases |
+| §4.3 — a fourth, model-read scope source | closed; `readScope` and `readProposal` |
+| §4.1 — a fifth, semantic grade of evidence | closed; `readSame` |
+| §5.1 — embedded figures, export fidelity | closed, and recorded as closed |
+
+| §3.5 — script generation is not in the app | closed; `lib/script.ts:scriptFor` |
+
+**Seven of eight, and the eighth was built on 17 September.** By measurement,
+§3 to §5 has nothing left in its "what's missing" lists that is not a statement
+about rendered audio for a generated course, which §3.5 names as a boundary
+rather than a gap.
+
+### The two rows that took two passes, and why
+
+The first version of this audit had the last two as *real and open*, and both
+were wrong by exactly the fault the rest of this document keeps recording — a
+probe answering a narrower question than the one being asked.
+
+**§4.3.** The check was whether `covers.ts` had a fourth value in its `Source`
+union. It does not, and it should not: this section's own technical approach
+says a proposal the student accepts becomes `yours`, *"a source `covers.ts`
+already has"*. The absence being tested for is what the design asks for. The
+feature is in `screens/Runway.tsx` — `readScope` asks, `readProposal` validates
+against the guide's own unit numbers, and confirming dispatches
+`setExamCovers`, under a comment that ends "No fourth source, and the app still
+never infers what an exam covers."
+
+**§4.1.** The check was a grep of `meet.ts`'s header for the sentence about
+matching words rather than meanings. That sentence is still there and is still
+true *of the four string grades*, which is what it describes. Line 558 of the
+same file says "The fifth grade writes its own line", and `readSame` is it.
+
+**A third probe was wrong while this was being written**, which is why the
+paragraph below is stated as strongly as it is. A script that listed every
+"What's missing" in this file and looked at the sixteen lines *after* each one
+for a resolution marker reported §4.1, §4.2 and §4.3 as open — because the
+notes resolving them had been written immediately *above* the heading, not
+below it. The probe searched in one direction and the answer was in the other.
+
+So the thing to carry forward is not the ratio, though the ratio is striking.
+It is that **the probe is part of the claim**. This document's own instruction —
+*find out which of them is lying before editing either* — is not only about a
+command disagreeing with a number. A search that looks for the wrong symbol
+returns a clean, confident, wrong answer, and nothing about it feels like a
+guess. Read the section's own technical approach before deciding what absence
+would prove it unbuilt.
 
 The pattern in the corrected rows is one pattern. Eight of them describe an
 engine that exists and a place it has not been connected to, or a capability that
