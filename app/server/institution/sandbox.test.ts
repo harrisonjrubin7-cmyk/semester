@@ -967,6 +967,273 @@ describe('the deadline', () => {
   });
 });
 
+describe('what late work costs', () => {
+  /*
+   * The deadline commit recorded lateness and said, deliberately, that it does
+   * not refuse late work: *"a sandbox that hard-refused would be modelling one
+   * policy as though it were the only one … it records the truth and leaves
+   * the policy to the course."* That was right, and it left a thread hanging —
+   * there was nowhere for a course to state a policy, so the sentence both
+   * sides read was "The course decides what that costs" and neither of them
+   * could find out what it decided.
+   */
+  const DUE = Date.parse('2026-10-02T23:59:00Z');
+  const PS1 = { method: '7', accuracy: '6', clarity: '4', comments: 'Solid.' }; // 17 of 20
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** Faculty state the policy, through the action rather than around it. */
+  const setPolicy = async (fields: Record<string, string>, key = 'p-set') => {
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    return area('courses').execute(f, act('courses', course.id, course.version, 'policy', fields), key);
+  };
+
+  /** Submit A1 this many days after its deadline, then mark and release it. */
+  const lateBy = async (days: number, marks = PS1) => {
+    const s = student();
+    const f = faculty();
+    vi.setSystemTime(DUE + days * 24 * 3_600_000);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'p-sub');
+    const g = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(f, act('grades', g.id, g.version, 'grade', marks), 'p-mark');
+    const g2 = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(f, act('grades', g2.id, g2.version, 'release'), 'p-rel');
+    return { s, f };
+  };
+
+  it('says the course has not decided, until it has', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    const r = await seen('assignments', student(), 'student-1:a1');
+    vi.setSystemTime(DUE + 24 * 3_600_000);
+    const said = await area('assignments').review(
+      student(),
+      act('assignments', r.id, r.version, 'submit', { work: 'x' }),
+    );
+    expect(JSON.stringify(said.details)).toMatch(/has not said what late work costs/i);
+
+    // And with no policy, a late mark is the rubric mark. Nothing is invented —
+    // there is no deduction, and no second number pretending to be a rule.
+    await lateBy(1);
+    const detail = (await seen('grades', student(), 'student-1:a1')).details;
+    expect(detail.find((d) => d.label === 'Mark')?.value).toBe('17 out of 20');
+    expect(detail.find((d) => d.label === 'Late penalty'), 'a penalty under no policy').toBeUndefined();
+    expect(detail.find((d) => d.label === 'Recorded'), 'a recorded mark that differs from the mark').toBeUndefined();
+  });
+
+  it('is on the course and on the piece, while there is still time to act on it', async () => {
+    /*
+     * The same argument the rubric is here for. A policy a student meets in
+     * the warning attached to submitting three days late arrived too late to
+     * change anything they did; on the course and on the piece, it is a thing
+     * to plan around.
+     */
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 10 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '10', cap: '30' });
+    expect(JSON.stringify((await seen('courses', student(), 'sandbox-101')).details)).toMatch(
+      /Late work[^}]*10% of the mark per day/,
+    );
+    expect(JSON.stringify((await seen('assignments', student(), 'student-1:a1')).details)).toMatch(
+      /Late work[^}]*up to 30%/,
+    );
+  });
+
+  it('is read by the student before they confirm a late submission', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '10', cap: '30' });
+    const r = await seen('assignments', student(), 'student-1:a1');
+    vi.setSystemTime(DUE + 3 * 24 * 3_600_000);
+    const said = await area('assignments').review(
+      student(),
+      act('assignments', r.id, r.version, 'submit', { work: 'x' }),
+    );
+    // Not "the course decides what that costs" — what it decided.
+    expect(JSON.stringify(said.details)).toMatch(/10% (of the mark )?per day/i);
+    expect(JSON.stringify(said.details)).toMatch(/30%/);
+  });
+
+  it('shows the four numbers separately, and records the deducted one', async () => {
+    /*
+     * A single number cannot answer "what did I lose it on". The rubric mark
+     * is a judgement about the work; the deduction is a consequence of when it
+     * arrived. Folding them together makes the first unreadable.
+     */
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '10', cap: '30' });
+    await lateBy(3);
+    const detail = (await seen('grades', student(), 'student-1:a1')).details;
+    const line = (label: string) => detail.find((d) => d.label === label)?.value;
+    expect(line('Mark'), 'what the work earned').toBe('17 out of 20');
+    expect(line('Deadline'), 'how late it was').toBe('Late by 3 days');
+    expect(line('Late penalty'), 'what that cost, and under which rule').toMatch(/30% of 20 — 6 marks, for 3 days/);
+    expect(line('Late penalty'), 'the rule quoted beside the number').toMatch(/10% of the mark per day/);
+    expect(line('Recorded'), 'and what goes on the record').toBe('11 out of 20');
+  });
+
+  it('never takes the penalty out of a criterion', async () => {
+    /*
+     * The rule this rests on. A criterion mark is a judgement about the work —
+     * "Accuracy 6 of 8" means the answers had errors — and lateness is not a
+     * statement about accuracy. Scaling the criteria would make the rubric lie
+     * about the work in order to carry a fact about the clock.
+     */
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '10', cap: '30' });
+    await lateBy(3);
+    expect(store.byId('student-1:a1')?.marks).toEqual({ method: 7, accuracy: 6, clarity: 4 });
+    const said = JSON.stringify((await seen('grades', student(), 'student-1:a1')).details);
+    expect(said).toMatch(/Accuracy · 6 of 8/);
+  });
+
+  it('counts part of a day as a day, which is what it says it does', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '10', cap: '30' });
+    // Four hours late. Rounding the other way would make this free, which is
+    // not what "per day, or part of a day" says.
+    vi.setSystemTime(DUE + 4 * 3_600_000);
+    const s = student();
+    const f = faculty();
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'h-sub');
+    const g = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(f, act('grades', g.id, g.version, 'grade', PS1), 'h-mark');
+    const g2 = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(f, act('grades', g2.id, g2.version, 'release'), 'h-rel');
+    const detail = (await seen('grades', s, 'student-1:a1')).details;
+    expect(detail.find((d) => d.label === 'Late penalty')?.value).toMatch(/10%[^}]*for 1 day/);
+    expect(detail.find((d) => d.label === 'Recorded')?.value).toBe('15 out of 20');
+  });
+
+  it('caps the deduction where the course said it caps', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '10', cap: '30' });
+    await lateBy(9); // 90% by the daily rate, 30% by the cap.
+    const said = JSON.stringify((await seen('grades', student(), 'student-1:a1')).details);
+    expect(said).toMatch(/11 out of 20/);
+  });
+
+  it('leaves on-time work exactly as it was marked', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 5 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '10', cap: '30' });
+    await lateBy(-2);
+    const said = JSON.stringify((await seen('grades', student(), 'student-1:a1')).details);
+    expect(said).toMatch(/17 out of 20/);
+    expect(said, 'a deduction on work that was early').not.toMatch(/penalt/i);
+  });
+
+  it('does not take a recorded mark below zero', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '60', cap: '100' });
+    await lateBy(2, { method: '1', accuracy: '1', clarity: '1', comments: 'Thin.' }); // 3 of 20, less 20
+    const detail = (await seen('grades', student(), 'student-1:a1')).details;
+    const record = detail.find((d) => d.label === 'Recorded')?.value ?? '';
+    // Not "-9 out of 20". A transcript cannot carry a negative mark, and the
+    // date fields elsewhere in these details are why this reads the one line
+    // rather than grepping the lot for a minus sign.
+    expect(record).toBe('0 out of 20');
+  });
+
+  it('counts the recorded mark towards the standing, not the one before the penalty', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '10', cap: '30' });
+    await lateBy(3);
+    const said = JSON.stringify((await seen('courses', student(), 'sandbox-101')).details);
+    expect(said).toMatch(/11 of 20 marks/);
+  });
+
+  it('is the number an appeal is about, on the appeal', async () => {
+    /*
+     * Two screens a student reads together, and until this they gave two
+     * answers to "what is my mark" — the grades record said 11 and the appeal
+     * said 17. An appeal is the one occasion where that question has to have
+     * one answer.
+     */
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '10', cap: '30' });
+    await lateBy(3);
+    const mark = (await seen('appeals', student(), 'student-1:a1')).details.find((d) => d.label === 'Mark');
+    expect(mark?.value).toMatch(/^11 out of 20/);
+    expect(mark?.value, 'and where the difference came from').toMatch(/17 marked, less the late penalty/);
+  });
+
+  it('cannot be changed once a mark has been released under it', async () => {
+    /*
+     * A recorded mark is evidence, and the policy is half of what produced it.
+     * Changing the rate afterwards would silently restate every mark already
+     * released — nobody would be told, and the number on the record would stop
+     * matching the number the student was shown.
+     */
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '10', cap: '30' });
+    await lateBy(3);
+    await expect(setPolicy({ perDay: '50', cap: '50' }, 'p-again')).rejects.toThrow(/already been released/i);
+    expect(store.policy()?.perDay).toBe(10);
+  });
+
+  it('is faculty’s to set, and refuses a rate it cannot read', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    const s = student();
+    await enrol(s);
+    const course = await seen('courses', s, 'sandbox-101');
+    // Not offered to them, and refused at the write, which is where it counts.
+    expect(course.actions.map((a) => a.id)).not.toContain('policy');
+    await expect(
+      area('courses').execute(s, act('courses', course.id, course.version, 'policy', { perDay: '5', cap: '20' }), 'p-no'),
+    ).rejects.toThrow(/Only the course faculty/);
+
+    await expect(setPolicy({ perDay: 'some', cap: '30' }, 'p-a')).rejects.toThrow(/"some"/);
+    await expect(setPolicy({ perDay: '-1', cap: '30' }, 'p-b')).rejects.toThrow(/between 0 and 100/);
+    await expect(setPolicy({ perDay: '101', cap: '30' }, 'p-c')).rejects.toThrow(/between 0 and 100/);
+    await expect(setPolicy({ perDay: '10', cap: '200' }, 'p-d')).rejects.toThrow(/between 0 and 100/);
+    await expect(setPolicy({ perDay: '10', cap: '' }, 'p-e')).rejects.toThrow(/most/i);
+    expect(store.policy()).toBeNull();
+  });
+
+  it('can say that late work is not penalised, which is also a policy', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    await setPolicy({ perDay: '0', cap: '0' });
+    const r = await seen('assignments', student(), 'student-1:a1');
+    vi.setSystemTime(DUE + 3 * 24 * 3_600_000);
+    const said = await area('assignments').review(
+      student(),
+      act('assignments', r.id, r.version, 'submit', { work: 'x' }),
+    );
+    // A stated nothing is different from an unstated anything.
+    expect(JSON.stringify(said.details)).toMatch(/does not penalise late work/i);
+    expect(JSON.stringify(said.details)).not.toMatch(/has not said what late work costs/i);
+  });
+});
+
 describe('where you stand', () => {
   /*
    * The completion plan's chain ends at Record, and for eight commits the

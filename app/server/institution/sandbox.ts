@@ -185,6 +185,84 @@ const SEEDED: Assignment[] = [
   },
 ];
 
+/**
+ * What this course does about late work, once it has said.
+ *
+ * The deadline commit recorded lateness and refused to act on it, on the
+ * argument that *"a sandbox that hard-refused would be modelling one policy as
+ * though it were the only one"* — plenty of courses take late work with a
+ * penalty, some up to a cut-off, some not at all. That argument was about the
+ * absence of a policy, and it left both sides reading the sentence "The course
+ * decides what that costs" with no way to find out what it decided.
+ *
+ * So the course states one, and the two numbers are what nearly every real
+ * policy is made of: a rate per day, and the most it can take. `perDay: 0` is
+ * a policy too — a course saying late work is not penalised is saying
+ * something, and it is not the same as a course that has not said anything.
+ */
+export interface LatePolicy {
+  /** Percentage of the mark deducted for each day, or part of a day, late. */
+  perDay: number;
+  /** The most the penalty can reach, as a percentage. */
+  cap: number;
+  setAt: string;
+  setBy: string;
+}
+
+/** How a policy reads to the person it applies to. */
+const policySaid = (p: LatePolicy | null) =>
+  !p
+    ? 'This course has not said what late work costs.'
+    : p.perDay === 0 || p.cap === 0
+      ? 'This course does not penalise late work.'
+      : `${pct(p.perDay)} of the mark per day late, or part of a day, up to ${pct(p.cap)}.`;
+
+/**
+ * What a late submission costs under a policy, worked out from the same two
+ * timestamps everything else reads.
+ *
+ * Part of a day counts as a day, which is the ordinary rule and is said out
+ * loud in `policySaid` rather than discovered by a student who was four hours
+ * late. Nothing is stored: a kept `penalty` and a kept `submittedAt` are two
+ * facts that can disagree, and only one of them is evidence.
+ */
+function penalty(
+  work: Work,
+  due: string,
+  outOfTotal: number,
+  p: LatePolicy | null,
+): { days: number; percent: number; marks: number } | null {
+  if (!p || !work.submittedAt) return null;
+  const by = Date.parse(work.submittedAt) - Date.parse(due);
+  if (!Number.isFinite(by)) return null;
+  // Part of a day is a day, which is the ordinary rule and is said out loud in
+  // `policySaid` rather than discovered by somebody who was four hours late.
+  const days = Math.ceil(by / (24 * 3_600_000));
+  const percent = Math.min(days * p.perDay, p.cap);
+  // The one gate, and it covers work that was early: a negative span gives a
+  // non-positive percentage. An earlier version tested `by <= 0` as well, and
+  // that second check could not be made to fail — so it was not a guard, it
+  // was a comment that looked like one.
+  if (percent <= 0) return null;
+  return { days, percent, marks: Number(((outOfTotal * percent) / 100).toFixed(2)) };
+}
+
+/**
+ * The mark that goes on the record, and the reason it is computed rather than
+ * stored.
+ *
+ * Never below zero — a negative mark is not a thing a transcript can carry —
+ * and never taken out of a criterion. "Accuracy 6 of 8" is a judgement about
+ * the answers; lateness is not a statement about accuracy, and scaling the
+ * criteria would make the rubric lie about the work in order to carry a fact
+ * about the clock.
+ */
+function recorded(work: Work, due: string, outOfTotal: number, p: LatePolicy | null): number {
+  const earned = Number(work.mark || 0);
+  const cost = penalty(work, due, outOfTotal, p);
+  return Math.max(0, Number((earned - (cost?.marks ?? 0)).toFixed(2)));
+}
+
 /** What a piece of work is out of: the rubric's own total, never a second number. */
 const outOf = (criteria: readonly Criterion[]) => criteria.reduce((n, c) => n + c.outOf, 0);
 
@@ -340,6 +418,10 @@ export class SandboxStore {
         at TEXT NOT NULL,
         body TEXT NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS settings(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
       CREATE TABLE IF NOT EXISTS receipts(
         key TEXT PRIMARY KEY,
         body TEXT NOT NULL
@@ -368,6 +450,20 @@ export class SandboxStore {
       | { body: string }
       | undefined;
     return got ? (JSON.parse(got.body) as Assignment) : undefined;
+  }
+
+  /** What this course does about late work, or nothing if it has not said. */
+  policy(): LatePolicy | null {
+    const got = this.db.prepare("SELECT body FROM settings WHERE id='late'").get() as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as LatePolicy) : null;
+  }
+
+  setPolicy(p: LatePolicy): void {
+    this.db
+      .prepare("INSERT INTO settings VALUES('late',?) ON CONFLICT(id) DO UPDATE SET body=excluded.body")
+      .run(JSON.stringify(p));
   }
 
   publish(a: Assignment, at: string): void {
@@ -812,6 +908,42 @@ function readWeight(store: SandboxStore, raw: string): number {
   return weight;
 }
 
+/**
+ * A late-work policy out of the fields, or a refusal naming the number.
+ *
+ * The interesting refusal is the last one. A recorded mark is evidence, and
+ * the policy is half of what produced it — the mark is computed from the
+ * rubric and the rate rather than stored, precisely so the two can never
+ * disagree. Change the rate afterwards and every mark already released
+ * silently restates itself: nobody is told, and the number on the record stops
+ * matching the number the student was shown. So the course may decide its
+ * policy right up until the first mark goes out under it, and not after.
+ */
+function readPolicy(store: SandboxStore, context: AdapterContext, input: ActionInput): LatePolicy {
+  if (!isFaculty(context)) throw new Refusal('Only the course faculty can set what late work costs.');
+  const already = store.everyWork().some((w) => w.stage === 'released' || w.stage === 'archived');
+  if (already) {
+    throw new Refusal(
+      'A mark has already been released under this course’s current policy, and changing it now would ' +
+        'restate that mark without telling anybody.',
+    );
+  }
+  const read = (id: string, what: string) => {
+    const raw = (input.fields[id] ?? '').trim();
+    if (!raw) throw new Refusal(`Say ${what}.`);
+    const n = Number(raw);
+    if (!Number.isFinite(n)) throw new Refusal(`"${raw}" is not a percentage this can read.`);
+    if (n < 0 || n > 100) throw new Refusal(`${what[0].toUpperCase()}${what.slice(1)} must be between 0 and 100.`);
+    return n;
+  };
+  return {
+    perDay: read('perDay', 'how much a day late costs'),
+    cap: read('cap', 'the most a late penalty can reach'),
+    setAt: new Date().toISOString(),
+    setBy: context.identity.userId,
+  };
+}
+
 /** A new assignment out of the fields, or a refusal saying which one is wrong. */
 function readAssignment(store: SandboxStore, input: ActionInput): Assignment {
   const title = (input.fields.title ?? '').trim();
@@ -1017,7 +1149,7 @@ function studentFace(
         // Before enrolling this is the syllabus: what the work is and what it
         // is worth. There is no "your" anything until there is a roster row.
         (on && work ? ` · ${SAID[work.stage]}` : '') +
-        (seen && work ? ` · ${work.mark} of ${outOf(a.criteria)}` : ''),
+        (seen && work ? ` · ${recorded(work, a.due, outOf(a.criteria), store.policy())} of ${outOf(a.criteria)}` : ''),
     };
   });
   if (!on) return pieces;
@@ -1027,7 +1159,12 @@ function studentFace(
     return work?.stage === 'released' || work?.stage === 'archived';
   });
   const share = marked.reduce((n, a) => n + a.weight, 0);
-  const earned = marked.reduce((n, a) => n + Number(mine.find((w) => w.assignment === a.id)?.mark ?? 0), 0);
+  // The recorded mark, not the one before the penalty. A standing built from
+  // the rubric mark would disagree with every record it is a summary of.
+  const earned = marked.reduce((n, a) => {
+    const work = mine.find((w) => w.assignment === a.id);
+    return n + (work ? recorded(work, a.due, outOf(a.criteria), store.policy()) : 0);
+  }, 0);
   const possible = marked.reduce((n, a) => n + outOf(a.criteria), 0);
   return [
     ...pieces,
@@ -1075,11 +1212,22 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
       { label: 'Institution', value: SANDBOX_NAME },
       { label: 'Taught by', value: COURSE.faculty },
       { label: 'Enrolled', value: `${roll.length} on the roster` },
+      // Where somebody reads it while they still have time to act on it,
+      // rather than in the warning attached to submitting three days late.
+      { label: 'Late work', value: policySaid(store.policy()) },
       ...(isFaculty(context) ? classFace(store, roll.length) : studentFace(context, store, on)),
       { label: 'Your role here', value: context.identity.roles.join(', ') || 'none' },
     ],
     actions: isFaculty(context)
       ? [
+          {
+            id: 'policy',
+            label: 'Set what late work costs',
+            fields: [
+              { id: 'perDay', label: 'Deducted per day late, as a percentage', kind: 'number', required: true },
+              { id: 'cap', label: 'The most a late penalty can reach, as a percentage', kind: 'number', required: true },
+            ],
+          },
           {
             id: 'publish',
             label: 'Publish a piece of work',
@@ -1210,6 +1358,7 @@ function assignmentRecord(store: SandboxStore, work: Work): UniversityRecord {
       // a piece worth a fifth of the course is not the same call as a piece
       // worth a fortieth even when both are out of twenty.
       { label: 'Worth', value: a ? `${pct(a.weight)} of the course` : '' },
+      { label: 'Late work', value: policySaid(store.policy()) },
       /*
        * Before the work is done, not with the mark. A rubric that arrives
        * attached to the grade arrived too late to be used, which is the
@@ -1244,12 +1393,14 @@ function gradeRecord(store: SandboxStore, work: Work): UniversityRecord {
   const criteria = a?.criteria ?? [];
   const total = outOf(criteria);
   const seen = work.stage === 'released' || work.stage === 'archived';
+  const cost = penalty(work, a?.due ?? '', total, store.policy());
+  const onRecord = recorded(work, a?.due ?? '', total, store.policy());
   return {
     id: work.id,
     area: 'grades',
     title: `${SANDBOX_MARK} · ${a?.title ?? work.assignment} — marking`,
     summary: seen
-      ? `${work.mark} out of ${total}`
+      ? `${work.mark} out of ${total}${cost ? ` · ${onRecord} out of ${total} recorded, after ${pct(cost.percent)} for lateness` : ''}`
       : 'Not released. A mark is not a mark until the student can see it.',
     status: SAID[work.stage],
     version: String(work.version),
@@ -1263,7 +1414,25 @@ function gradeRecord(store: SandboxStore, work: Work): UniversityRecord {
       { label: 'Deadline', value: lateness(work.submittedAt, a?.due ?? '').said },
       ...(seen
         ? [
+            /*
+             * Four numbers, kept apart. What the work earned, how late it
+             * was, what that cost under the course's stated rule, and what
+             * goes on the record. One number cannot answer "what did I lose
+             * it on", and folding the penalty into the rubric mark makes the
+             * rubric unreadable as a judgement about the work.
+             */
             { label: 'Mark', value: `${work.mark} out of ${total}` },
+            ...(cost
+              ? [
+                  {
+                    label: 'Late penalty',
+                    value:
+                      `${pct(cost.percent)} of ${total} — ${cost.marks} marks, for ${cost.days} ` +
+                      `${cost.days === 1 ? 'day' : 'days'}. ${policySaid(store.policy())}`,
+                  },
+                  { label: 'Recorded', value: `${onRecord} out of ${total}` },
+                ]
+              : []),
             /*
              * Per criterion, and this is the whole point of the change. A
              * student who has lost six marks can see which six and read what
@@ -1352,7 +1521,25 @@ function appealRecord(store: SandboxStore, work: Work): UniversityRecord {
     updatedAt: new Date().toISOString(),
     details: [
       { label: 'Student', value: work.student },
-      ...(seen ? [{ label: 'Mark', value: `${work.mark} out of ${outOf(a?.criteria ?? [])}` }] : []),
+      /*
+       * The recorded mark, which is the one being disputed. Showing the
+       * pre-penalty number here would put two answers to "what is my mark" on
+       * the two screens a student reads together, on the one occasion where
+       * that question has to have one answer.
+       */
+      ...(seen
+        ? [
+            {
+              label: 'Mark',
+              value:
+                `${recorded(work, a?.due ?? '', outOf(a?.criteria ?? []), store.policy())} out of ` +
+                `${outOf(a?.criteria ?? [])}` +
+                (penalty(work, a?.due ?? '', outOf(a?.criteria ?? []), store.policy())
+                  ? ` (${work.mark} marked, less the late penalty)`
+                  : ''),
+            },
+          ]
+        : []),
       ...(work.appeal
         ? [
             { label: 'Raised', value: work.appeal.at.slice(0, 16).replace('T', ' ') },
@@ -1456,6 +1643,22 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     review: async (context, input) => {
       const thread = threadsOf(store).find((t) => threadId(t.id) === input.recordId);
       if (thread) return reviewPost(context, store, input, thread);
+      if (input.actionId === 'policy') {
+        const p = readPolicy(store, context, input);
+        return {
+          title: 'Set what late work costs',
+          details: [
+            { label: 'The rule', value: policySaid(p) },
+            { label: 'A piece three days late, out of 20', value: `loses ${((20 * Math.min(3 * p.perDay, p.cap)) / 100).toFixed(2)} marks` },
+            {
+              label: 'After this',
+              value:
+                'Everybody sees it before they submit, and it cannot be changed once a mark has gone ' +
+                'out under it.',
+            },
+          ],
+        };
+      }
       if (input.actionId === 'publish') {
         if (!isFaculty(context)) throw new Refusal('Only the course faculty can publish work.');
         const a = readAssignment(store, input);
@@ -1497,6 +1700,16 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       if (done) return done;
       const thread = threadsOf(store).find((t) => threadId(t.id) === input.recordId);
       if (thread) return post(context, store, input, thread, key);
+      if (input.actionId === 'policy') {
+        const p = readPolicy(store, context, input);
+        store.setPolicy(p);
+        return {
+          id: key,
+          status: 'completed',
+          message: `${SANDBOX_MARK} · ${policySaid(p)}`,
+          recordedAt: p.setAt,
+        };
+      }
       if (input.actionId === 'publish') {
         if (!isFaculty(context)) throw new Refusal('Only the course faculty can publish work.');
         const a = readAssignment(store, input);
@@ -1559,7 +1772,14 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
           { label: 'Course', value: `${COURSE.code} (${SANDBOX_MARK})` },
           { label: 'Due', value: a?.due.slice(0, 16).replace('T', ' ') ?? '' },
           ...(over
-            ? [{ label: 'This is late', value: 'It will be recorded as late. The course decides what that costs.' }]
+            ? [
+                {
+                  label: 'This is late',
+                  // Not "the course decides what that costs" any more, which
+                  // was true and useless. What it decided, before they confirm.
+                  value: `It will be recorded as late. ${policySaid(store.policy())}`,
+                },
+              ]
             : []),
           { label: 'Length', value: `${body.trim().split(/\s+/).filter(Boolean).length} words` },
           { label: 'After this', value: 'It can be marked, and you cannot submit it again.' },
