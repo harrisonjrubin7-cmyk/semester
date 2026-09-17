@@ -2240,6 +2240,118 @@ transactions would have, and the label is on every record it produces.
 
 ---
 
+## 8m. Phase 4 · Athletics — where the hard part is time, not contention
+
+**What the source document asks for.** Team rosters, travel logistics,
+eligibility forms, coaching and staff workflows. Gated exactly as
+[§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled)
+is, and just as unsatisfied: **no team named here exists**, nobody is cleared
+to play anything, and no coach is going anywhere.
+
+One adapter, taking the sandbox from twelve to thirteen.
+
+### A roster spot looks like a seat and is not one
+
+This is the first area in this repository whose hard part is **time** rather
+than contention, and finding that out changed the design.
+
+Teams do not generally turn people away for want of a number. What they turn
+people away for is **eligibility**, and eligibility is not a finite resource at
+all — it is a condition that *expires*. So:
+
+> **A clearance is a date, never a flag.** Nothing anywhere asks whether
+> somebody *was* cleared. Every check asks whether their clearance is good on
+> the day being asked about, against the clock the adapter was given.
+
+A demonstration that stored `eligible: true` and set it once would have been
+demonstrating the bug rather than the rule — and it is precisely the bug that
+lets an athlete with a lapsed physical get on a bus. The tests for this move
+the clock rather than editing a row, which is the only version of that test
+that proves the date is doing the work.
+
+The genuinely finite thing is the **seat on the coach**. So the two rules
+compose, and the order they compose in is itself a decision:
+
+> **Eligibility is checked before the seat.** Telling somebody the bus is full
+> when the true answer is that their return-to-play assessment is outstanding
+> sends them to the travel office, which cannot help them, and they come back
+> no better off.
+
+That ordering has its own mutation: the eligibility block is moved below the
+seat check and the suite is required to go red.
+
+### The disclosure here is a medical one
+
+Why somebody is not cleared is a medical fact. `Eligibility.why` is readable by
+the athlete and by **nobody else — including their coach**. A coach sees *that*
+a player is not cleared, because that is what picking a team needs, and does
+not see why, because that is between the athlete and whoever assessed them.
+
+Four readings are asserted separately: the athlete's own (the reason is there —
+the control), the coach's (it is not), a team-mate's (it is not), and a
+stranger's (there is no squad list at all).
+
+**And a clearance file is opened late** — the first time somebody is put on a
+roster, not the first time they log in, the same reason a bill is opened late.
+Opening one for everybody with an account would be recording a medical question
+about people who have no business with one.
+
+### What the mutations found, which was more than last time
+
+Twenty-four guards, removed or inverted one at a time. **Sixteen** were caught
+on the first pass. The eight that were not break into four kinds, and three of
+them are findings rather than formalities.
+
+**A real design gap: boarding twice was not refused.** Removing the idempotency
+check entirely left the suite green — which meant the retried-key test was not
+testing anything. The reason is worth writing down: with boarding twice
+permitted, a retry simply wrote the same row to the same state, the manifest
+count did not move, and the two receipts were identical, so *no assertion could
+distinguish a retry that was caught from one that was not*. The fix was a
+refusal, not a test: your name is already on that manifest. Now a retry without
+`already` would be refused, which is exactly what a dropped connection produces.
+
+**Two guards whose second call site was untested.** Stepping off a manifest
+checks both that you are on it and that the manifest has not gone to the
+driver, in `review` and again in `execute` — and only the review's check was
+load-bearing in the suite. A commit that trusts its own review is a commit
+acting on a world that has moved, which is the whole reason there are two
+phases. Same finding as [§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled)'s
+three escapes, arriving from the opposite direction: there the review was
+untested, here the commit was.
+
+**A disclosure nothing was checking.** The mutation replaced the reader's own
+id with the squad's first entry on the line that carries the medical reason —
+and every test in that block was blind to it, because in each one the reader
+either *was* the first entry or was cleared and saw no reason at all. Somebody
+reading a team-mate's medical reason in place of their own is the worst version
+of this bug and it had no test. It has one now: two uncleared athletes with
+different reasons, and the second one reads the roster.
+
+**And two mutations that were simply wrong.** One flipped a condition that
+discloses nothing extra either way (the rows it maps are the reader's own
+clearances whichever way the condition falls), and two used stale line numbers
+after the file had grown. Both were caught by the harness asserting its own
+anchors — the same protection that caught the lying mutation in §8l. **The
+harness checking that it mutated something is the only reason any of this
+section is trustworthy.**
+
+### Measured
+
+| | |
+| --- | --- |
+| Adapters in the sandbox | 12 → **13** |
+| New tests | **56** in `athletics.test.ts` |
+| Mutations applied | **24**, all caught |
+| Suite | **487 files, 10,035 passed, 10 skipped** |
+
+### What this does not do
+
+It does not connect to a university, clear anybody to compete, or put anybody
+on a bus. The label is on every record it produces.
+
+---
+
 ## 8d. What the source document has left, and what it is waiting on
 
 For the record, measured rather than assumed, since §1 to §8 of this plan were

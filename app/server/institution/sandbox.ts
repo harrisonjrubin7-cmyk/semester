@@ -15,6 +15,7 @@ import { aidAdapter, billingAdapter } from './money.ts';
 import { familyAdapter } from './family.ts';
 import { careerAdapter } from './career.ts';
 import { advisingAdapter, alumniAdapter } from './advising.ts';
+import { athleticsAdapter } from './athletics.ts';
 
 /**
  * One course, run end to end, at an institution that does not exist.
@@ -923,6 +924,174 @@ export const MENTORS: Mentor[] = [
   },
 ];
 
+/**
+ * ─── Athletics ──────────────────────────────────────────────────────────────
+ *
+ * Phase 4 again, same warning: **no team here exists**, nobody is cleared to
+ * play anything, and no bus is going anywhere. Marked on every record.
+ *
+ * ## Where the finite thing is, and why it is not the roster spot
+ *
+ * A roster spot looks like the seat and is not. Teams do not usually turn
+ * people away for want of a number; what they turn people away for is
+ * *eligibility*, and eligibility is not a seat at all — it is a condition that
+ * expires. Which makes athletics the first area in this repository whose hard
+ * part is **time** rather than contention, and it wanted a different shape:
+ *
+ *   A clearance has a date it runs out on. It is not a flag somebody sets.
+ *   Nothing derives eligibility from "was cleared once"; every check asks
+ *   whether the clearance is good *today*, against the clock the adapter was
+ *   given. A demonstration that stored `eligible: true` would have been
+ *   demonstrating the bug.
+ *
+ * The genuinely finite thing here is the **seat on the coach** — travel has a
+ * capacity, and a player who is not eligible cannot take one whatever the
+ * capacity is. So the two rules compose, and the order they compose in is
+ * itself a decision: eligibility is checked *before* the seat, because telling
+ * somebody the bus is full when the real answer is that their physical lapsed
+ * sends them to the wrong office.
+ *
+ * ## And the disclosure
+ *
+ * A clearance is a medical fact. `Eligibility.why` — the reason somebody is
+ * not cleared — is readable by the athlete themselves and by nobody else,
+ * *including their team-mates on the same roster record*. A coach sees that a
+ * player is not cleared and does not see why, because "cleared or not" is what
+ * a coach needs to pick a team and the reason is between the athlete and the
+ * people who took it.
+ */
+
+export interface Team {
+  id: string;
+  name: string;
+  sport: string;
+  coach: string;
+  /** The user id the coaching workflows are authorized against. */
+  coachId: string;
+  season: string;
+}
+
+export interface Athlete {
+  id: string;
+  team: string;
+  student: string;
+  name: string;
+  position: string;
+  /** `rostered` is on the team; `released` is history. */
+  state: 'rostered' | 'released';
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * A clearance to play, which is a date and not a flag.
+ *
+ * `until` is the whole of it. Nothing anywhere asks whether somebody *was*
+ * cleared; every check asks whether the clearance is good on the day being
+ * asked about. `why` is the reason it is not, and is a medical fact — see the
+ * header, and `athletics.test.ts`, which asserts a coach's reading of the
+ * roster contains the word "not cleared" and does not contain the reason.
+ */
+export interface Eligibility {
+  id: string;
+  student: string;
+  /** What had to be done: a physical, a form, an academic check. */
+  what: string;
+  /** The last day this clearance is good for. An ISO day. */
+  until: string;
+  /** Why it is outstanding, if it is. A medical fact; see the header. */
+  why: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/** A fixture somebody has to be driven to. */
+export interface Trip {
+  id: string;
+  team: string;
+  what: string;
+  where: string;
+  /** An ISO timestamp — when the coach leaves, not when the game starts. */
+  leaves: string;
+  returns: string;
+  /** How many can be carried. The finite thing; see the header. */
+  seats: number;
+  /** After this, the manifest is with the driver and cannot be changed here. */
+  until: string;
+}
+
+export interface Seat {
+  id: string;
+  trip: string;
+  student: string;
+  state: 'on' | 'off';
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export const TEAMS: Team[] = [
+  { id: 'rowing', name: 'Rowing', sport: 'Rowing', coach: 'Coach I. Brandt', coachId: 'coach-brandt', season: 'Autumn 2026' },
+  { id: 'track', name: 'Track & field', sport: 'Athletics', coach: 'Coach P. Nwosu', coachId: 'coach-nwosu', season: 'Autumn 2026' },
+];
+
+/**
+ * The clearances the demonstration opens with.
+ *
+ * One good, one already lapsed and one that lapses inside the demonstration's
+ * own window — the third is the important one, because a clearance that is
+ * either always good or always stale never exercises the thing that makes
+ * this area different from a list. `Opening<T>` is the same helper the billing
+ * openings use, above.
+ */
+export const OPENING_CLEARANCES: Opening<Eligibility>[] = [
+  { id: 'physical', what: 'Pre-season physical', until: '2027-06-30', why: '' },
+  {
+    id: 'concussion-protocol',
+    what: 'Return-to-play clearance',
+    until: '2026-09-05',
+    why: 'Return-to-play assessment outstanding after a head knock on 28 August.',
+  },
+  { id: 'academic-standing', what: 'Academic standing check', until: '2026-09-30', why: '' },
+];
+
+export const TRIPS: Trip[] = [
+  {
+    id: 'head-of-the-cumberland',
+    team: 'rowing',
+    what: 'Head of the Cumberland',
+    where: 'Chattanooga',
+    leaves: '2026-10-03T10:00:00Z',
+    returns: '2026-10-03T23:00:00Z',
+    // Two seats, so the second person meets the limit rather than only a test.
+    seats: 2,
+    until: '2026-09-30',
+  },
+  {
+    id: 'conference-relays',
+    team: 'track',
+    what: 'Conference relays',
+    where: 'Lexington',
+    leaves: '2026-10-10T07:00:00Z',
+    returns: '2026-10-11T20:00:00Z',
+    seats: 20,
+    until: '2026-10-06',
+  },
+  {
+    id: 'closed-fixture',
+    team: 'rowing',
+    what: 'Autumn regatta',
+    where: 'Oak Ridge',
+    leaves: '2026-09-19T09:00:00Z',
+    returns: '2026-09-19T19:00:00Z',
+    seats: 10,
+    // The manifest is already with the driver, so that refusal is walkable.
+    until: '2026-09-15',
+  },
+];
+
 export class SandboxStore {
   private db: DatabaseSync;
 
@@ -1047,6 +1216,38 @@ export class SandboxStore {
         student TEXT NOT NULL,
         body TEXT NOT NULL
       );
+      -- Athletics. The coach column on teams is what a coaching write is
+      -- authorized against, the same way employers.owner is.
+      CREATE TABLE IF NOT EXISTS teams(
+        id TEXT PRIMARY KEY,
+        coach TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS athletes(
+        id TEXT PRIMARY KEY,
+        team TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- A clearance is a date and not a flag, so nothing here stores whether
+      -- somebody is eligible; the date is stored and the question is asked
+      -- against a clock. See the athletics adapter.
+      CREATE TABLE IF NOT EXISTS clearances(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS trips(
+        id TEXT PRIMARY KEY,
+        team TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS seats(
+        id TEXT PRIMARY KEY,
+        trip TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
     `);
 
     // The class the course already has, before any tester arrives.
@@ -1071,6 +1272,15 @@ export class SandboxStore {
     for (const t of SLOTS) when.run(t.id, JSON.stringify(t));
     const who = this.db.prepare('INSERT OR IGNORE INTO mentors VALUES(?,?)');
     for (const m of MENTORS) who.run(m.id, JSON.stringify(m));
+
+    // The teams and the fixtures. A student's clearance file is opened the
+    // first time they are put on a roster, not here, for the same reason
+    // their bill is: opening one for everybody who ever logs in would be
+    // recording a medical fact about somebody who has no business with it.
+    const team = this.db.prepare('INSERT OR IGNORE INTO teams VALUES(?,?,?)');
+    for (const t of TEAMS) team.run(t.id, t.coachId, JSON.stringify(t));
+    const trip = this.db.prepare('INSERT OR IGNORE INTO trips VALUES(?,?,?)');
+    for (const t of TRIPS) trip.run(t.id, t.team, JSON.stringify(t));
   }
 
   /**
@@ -1115,6 +1325,113 @@ export class SandboxStore {
   saveSection(section: Section): void {
     this.db.prepare('INSERT OR REPLACE INTO sections VALUES(?,?)').run(section.id, JSON.stringify(section));
   }
+
+  /* ── Athletics ──────────────────────────────────────────────────────── */
+
+  teams(): Team[] {
+    const rows = this.db.prepare('SELECT body FROM teams ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Team);
+  }
+
+  team(id: string): Team | null {
+    const got = this.db.prepare('SELECT body FROM teams WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Team) : null;
+  }
+
+  /** The team this person coaches, or null. Asked of the table, never a claim. */
+  coaches(userId: string): Team | null {
+    const got = this.db.prepare('SELECT body FROM teams WHERE coach=?').get(userId) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Team) : null;
+  }
+
+  saveTeam(row: Team): void {
+    this.db.prepare('INSERT OR REPLACE INTO teams VALUES(?,?,?)').run(row.id, row.coachId, JSON.stringify(row));
+  }
+
+  athletes(team?: string): Athlete[] {
+    const rows = (
+      team
+        ? this.db.prepare('SELECT body FROM athletes WHERE team=? ORDER BY id').all(team)
+        : this.db.prepare('SELECT body FROM athletes ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Athlete);
+  }
+
+  athletesOf(student: string): Athlete[] {
+    const rows = this.db.prepare('SELECT body FROM athletes WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Athlete);
+  }
+
+  saveAthlete(row: Athlete): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO athletes VALUES(?,?,?,?)')
+      .run(row.id, row.team, row.student, JSON.stringify(row));
+  }
+
+  /**
+   * Every clearance this person holds, good or lapsed.
+   *
+   * Deliberately not filtered by date here. Whether a clearance is *good* is a
+   * question about a moment, and the moment belongs to whoever is asking — an
+   * adapter with a clock, not a store that would have to guess one.
+   */
+  clearances(student: string): Eligibility[] {
+    const rows = this.db.prepare('SELECT body FROM clearances WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Eligibility);
+  }
+
+  clearance(id: string): Eligibility | null {
+    const got = this.db.prepare('SELECT body FROM clearances WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Eligibility) : null;
+  }
+
+  saveClearance(row: Eligibility): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO clearances VALUES(?,?,?)')
+      .run(row.id, row.student, JSON.stringify(row));
+  }
+
+  /** Open a student's clearance file, the way `openAccount` opens their bill. */
+  openClearances(student: string, at: string): void {
+    const put = this.db.prepare('INSERT OR IGNORE INTO clearances VALUES(?,?,?)');
+    for (const c of OPENING_CLEARANCES) {
+      const row: Eligibility = { ...c, id: `${student}::${c.id}`, student, at, version: 0, history: [] };
+      put.run(row.id, student, JSON.stringify(row));
+    }
+  }
+
+  trips(team?: string): Trip[] {
+    const rows = (
+      team
+        ? this.db.prepare('SELECT body FROM trips WHERE team=? ORDER BY id').all(team)
+        : this.db.prepare('SELECT body FROM trips ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Trip);
+  }
+
+  trip(id: string): Trip | null {
+    const got = this.db.prepare('SELECT body FROM trips WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Trip) : null;
+  }
+
+  saveTrip(row: Trip): void {
+    this.db.prepare('INSERT OR REPLACE INTO trips VALUES(?,?,?)').run(row.id, row.team, JSON.stringify(row));
+  }
+
+  /** Every place on one coach, so the manifest can be counted rather than stored. */
+  seats(trip: string): Seat[] {
+    const rows = this.db.prepare('SELECT body FROM seats WHERE trip=? ORDER BY id').all(trip) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Seat);
+  }
+
+  saveSeat(row: Seat): void {
+    this.db.prepare('INSERT OR REPLACE INTO seats VALUES(?,?,?,?)').run(row.id, row.trip, row.student, JSON.stringify(row));
+  }
+
 
   /* ── Career, advising and alumni ────────────────────────────────────── */
 
@@ -3226,5 +3543,6 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     careerAdapter(store),
     advisingAdapter(store),
     alumniAdapter(store),
+    athleticsAdapter(store),
   ];
 }

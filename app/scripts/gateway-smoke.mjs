@@ -90,14 +90,14 @@ try {
   /*
    * The count in the startup line, which is the thing that was wrong.
    *
-   * Twelve since the Phase 4 demonstration added career, advising and the
-   * alumni network to Phase 3's four. The number is
+   * Thirteen since the Phase 4 demonstration added career, advising, the
+   * alumni network and athletics to Phase 3's four. The number is
    * asserted rather than merely printed because the line is what somebody
    * reads to know what a booted gateway is carrying, and a line that said five
    * while six were installed is exactly the fault this check was written for.
    */
   const count = /SANDBOX INSTITUTION IS ON: (\d+) demonstration adapters/.exec(said);
-  check(count?.[1] === '12', `the startup line counts the adapters it installed (said ${count?.[1] ?? 'nothing'})`);
+  check(count?.[1] === '13', `the startup line counts the adapters it installed (said ${count?.[1] ?? 'nothing'})`);
   check(/0 approved adapters registered/.test(said), 'and still reports no approved adapters');
   check(/nothing they report is real/.test(said), 'and says the sandbox is not real');
 
