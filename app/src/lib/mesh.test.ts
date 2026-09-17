@@ -10,18 +10,23 @@ import {
   callsFirst,
   drop,
   expired,
+  CAPTION_CHARS,
+  CAPTION_HOLD,
   admitted,
+  captioned,
   gated,
   greets,
   heard,
   heldBack,
   hostOf,
   hosting,
+  readable,
   waiting,
   reacted,
   polite,
   reconcile,
   seen,
+  type Caption,
   type Line,
   type Mark,
   type Roster,
@@ -437,5 +442,91 @@ describe('the door, as connections', () => {
     // and this is the one that notices.
     const r = roster('bea', 'cal');
     expect(gated(r, ['bea'], ['me', 'bea', 'cal'])).toEqual(reconcile(r, ['bea']));
+  });
+});
+
+/* ── Captions ────────────────────────────────────────────────────────────── */
+
+const said = (from: string, text: string, at = NOW, done = true): Signal => ({
+  t: 'caption',
+  from,
+  at,
+  text,
+  done,
+});
+
+describe('the captions showing', () => {
+  it('holds one line per person', () => {
+    let c = captioned([], said('bea', 'the elasticity is'), NOW);
+    c = captioned(c, said('bea', 'the elasticity is about one', NOW + 500), NOW + 500);
+    expect(c).toEqual([{ from: 'bea', text: 'the elasticity is about one', at: NOW + 500, done: true }]);
+  });
+
+  it('keeps two people apart', () => {
+    let c = captioned([], said('bea', 'first'), NOW);
+    c = captioned(c, said('cal', 'second', NOW + 100), NOW + 100);
+    expect(c.map((x) => x.from).sort()).toEqual(['bea', 'cal']);
+  });
+
+  it('drops a line rather than showing an empty box under a name', () => {
+    // What a recogniser sends when it hears nothing. A caption bar with a
+    // blank under somebody's name reads as a fault.
+    const c = captioned(captioned([], said('bea', 'something'), NOW), said('bea', '   ', NOW + 100), NOW + 100);
+    expect(c).toEqual([]);
+  });
+
+  it('lets a line go once nothing has replaced it', () => {
+    const c = captioned([], said('bea', 'a while ago'), NOW);
+    expect(captioned(c, said('cal', 'now', NOW + CAPTION_HOLD + 1), NOW + CAPTION_HOLD + 1).map((x) => x.from)).toEqual([
+      'cal',
+    ]);
+  });
+
+  it('expires on any signal, not only on a caption', () => {
+    // Expiry on every call rather than on a timer, so a call left in a
+    // background tab does not come back holding an afternoon of lines.
+    const c = captioned([], said('bea', 'stale'), NOW);
+    expect(captioned(c, { t: 'gone', from: 'cal' }, NOW + CAPTION_HOLD + 1)).toEqual([]);
+  });
+
+  it('returns the same array when nothing changed, so React does not re-render', () => {
+    const c = captioned([], said('bea', 'held'), NOW);
+    expect(captioned(c, { t: 'gone', from: 'cal' }, NOW + 10)).toBe(c);
+  });
+
+  it('is a caption and not a transcript', () => {
+    const long = 'x'.repeat(CAPTION_CHARS + 80);
+    expect(captioned([], said('bea', long), NOW)[0].text.length).toBe(CAPTION_CHARS);
+  });
+
+  it('carries whether the recogniser has settled', () => {
+    expect(captioned([], said('bea', 'still hearing', NOW, false), NOW)[0].done).toBe(false);
+  });
+});
+
+describe('the order captions are read in', () => {
+  it('is oldest first, so a line does not jump while it is being read', () => {
+    const list: Caption[] = [
+      { from: 'cal', text: 'second', at: NOW + 100, done: true },
+      { from: 'bea', text: 'first', at: NOW, done: true },
+    ];
+    expect(readable(list).map((c) => c.from)).toEqual(['bea', 'cal']);
+  });
+
+  it('breaks a tie by id, so every device shows the same order', () => {
+    const list: Caption[] = [
+      { from: 'zed', text: 'a', at: NOW, done: true },
+      { from: 'ada', text: 'b', at: NOW, done: true },
+    ];
+    expect(readable(list).map((c) => c.from)).toEqual(['ada', 'zed']);
+  });
+
+  it('does not reorder the caller’s array', () => {
+    const list: Caption[] = [
+      { from: 'cal', text: 'second', at: NOW + 100, done: true },
+      { from: 'bea', text: 'first', at: NOW, done: true },
+    ];
+    readable(list);
+    expect(list.map((c) => c.from)).toEqual(['cal', 'bea']);
   });
 });

@@ -17,6 +17,7 @@ import {
   SpotlightIcon,
 } from '../../components/Icons';
 import { secondLine } from '../../lib/dim';
+import { dictate, dictationSupported } from '../../lib/mic';
 import {
   SILENT,
   elapsed,
@@ -35,14 +36,17 @@ import {
   expired,
   heard,
   admitted,
+  captioned,
   heldBack,
   hostOf,
   hosting,
+  readable,
   waiting,
   reacted,
   seen,
   type Flags,
   type Line,
+  type Caption,
   type Mark,
   type Roster,
 } from '../../lib/mesh';
@@ -78,6 +82,27 @@ export function Stage({
   const [streams, setStreams] = useState<Record<string, MediaStream>>({});
   const [lines, setLines] = useState<Line[]>([]);
   const [marks, setMarks] = useState<Mark[]>([]);
+  /*
+   * Captions.
+   *
+   * `on` is this device's own switch and only ever starts this device's
+   * recogniser: a caption is written by the person speaking, because a browser
+   * can transcribe the microphone it holds and cannot usefully transcribe an
+   * incoming stream. So turning them on shows everybody else's lines too —
+   * whoever has also turned them on — and there is no way to make somebody
+   * else's speech into text from here. The switch says that.
+   */
+  const [captionsOn, setCaptionsOn] = useState(false);
+  /*
+   * Asked once, not on every render.
+   *
+   * `dictationSupported` answers by constructing a recogniser and throwing it
+   * away, so calling it from the render body built one per frame — harmless
+   * and wasteful, and the sort of thing that is obvious in the function's own
+   * source and invisible at the call site.
+   */
+  const [canCaption] = useState(dictationSupported);
+  const [captions, setCaptions] = useState<Caption[]>([]);
   /*
    * The door.
    *
@@ -166,6 +191,7 @@ export function Stage({
           if (signal.t === 'admit' && signal.to === me) setOutside(false);
           setLines((was) => heard(was, signal, latest.current.roster));
           setMarks((was) => reacted(was, signal, Date.now()));
+          setCaptions((was) => captioned(was, signal, Date.now()));
           if (signal.t === 'ask' && signal.what === 'mute') setAsked(Date.now());
         },
         onStream: (id, stream) => {
@@ -214,6 +240,9 @@ export function Stage({
         const gone = expired(was, at);
         return gone.length ? drop(was, gone) : was;
       });
+      // A caption goes when nothing replaces it, and in a quiet call nothing
+      // does — so the clock has to be what lets it go, not the next signal.
+      setCaptions((was) => captioned(was, { t: 'gone', from: '' }, at));
     }, 1000);
     return () => clearInterval(id);
   }, []);
@@ -339,6 +368,38 @@ export function Stage({
     );
   }, [session, roster, holding, outside, allowed, removed, me]);
 
+  /*
+   * My own speech, as text, sent to everybody.
+   *
+   * `dictate` is `lib/mic.ts`'s — the same recogniser the note dictation uses,
+   * which is why this is thirty lines rather than three hundred. It hands back
+   * the transcript so far on every result, so what goes out is a line that
+   * grows and then settles, and `captioned` replaces rather than appends.
+   *
+   * Muting stops it. A caption of what you said while muted would be the
+   * worst possible bug in this feature: the one thing a mute button promises
+   * is that the call does not learn what you just said.
+   */
+  useEffect(() => {
+    if (!captionsOn || !session || flags.muted) return;
+    let last = '';
+    const stop = dictate(
+      (text, final) => {
+        const line = text.trim();
+        // The recogniser fires on every interim result; only send when the
+        // words actually changed, or a still room is a signal every 100ms.
+        if (line === last && !final) return;
+        last = line;
+        const signal = { t: 'caption' as const, from: me, at: Date.now(), text: line, done: final };
+        session.send(signal);
+        // Broadcast does not echo to the sender, so my own line is applied here.
+        setCaptions((was) => captioned(was, signal, Date.now()));
+      },
+      (message) => setTrouble(message),
+    );
+    return stop;
+  }, [captionsOn, session, flags.muted, me]);
+
   /* The host lets somebody know they are at a door rather than in an empty
      call. A courtesy: nothing about the door depends on it arriving. */
   useEffect(() => {
@@ -440,6 +501,36 @@ export function Stage({
           }}
         >
           Waiting to be let in. {roster[host]?.flags.name || 'Whoever started this call'} has been asked.
+        </div>
+      ) : null}
+
+      {/*
+        * The captions, under the video and above the controls, oldest first so
+        * a line does not jump while somebody is reading it.
+        */}
+      {captionsOn && captions.length > 0 ? (
+        <div
+          aria-live="polite"
+          style={{
+            paddingInline: 'var(--sp-6)',
+            paddingBlock: 'var(--sp-3)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--sp-2)',
+          }}
+        >
+          {readable(captions).map((c) => (
+            <div key={c.from} style={{ fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+              <span style={{ ...secondLine() }}>
+                {c.from === me ? 'You' : roster[c.from]?.flags.name || 'Somebody'}:{' '}
+              </span>
+              {/* An unsettled line is still being heard and may change under
+                  the reader, so it is drawn quieter rather than as a claim —
+                  with `secondLine`, the audited dim, rather than a hand-rolled
+                  opacity that `lint:styles` would be right to object to. */}
+              <span style={c.done ? undefined : secondLine()}>{c.text}</span>
+            </div>
+          ))}
         </div>
       ) : null}
 
@@ -718,6 +809,68 @@ export function Stage({
                 </>
               )}
             </>
+          )}
+
+          {/*
+            * Captions, and the sentence that has to be next to the switch.
+            *
+            * Turning this on starts *this* browser's recogniser on *this*
+            * microphone, and where a browser sends that audio to be recognised
+            * is the browser's business — on Chrome it is Google's servers.
+            * This app uploads nothing and cannot stop that, so the only honest
+            * thing to do is say it where the switch is rather than in a
+            * settings page nobody opens. The same sentence is why the switch
+            * is per-device and not something the host can turn on for a room.
+            */}
+          <SectionLabel>Captions</SectionLabel>
+          {canCaption ? (
+            <>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-4)',
+                  paddingBlock: 'var(--sp-5)',
+                  fontSize: 'var(--type-md)',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={captionsOn}
+                  onChange={(e) => setCaptionsOn(e.target.checked)}
+                />
+                <span>Show captions</span>
+              </label>
+              <div
+                style={{
+                  fontSize: 'var(--type-xs)',
+                  ...secondLine(),
+                  marginBottom: 'var(--sp-5)',
+                  lineHeight: 'var(--leading-normal)',
+                  textWrap: 'pretty',
+                }}
+              >
+                This turns your own words into text on your device and sends the text to the call —
+                and it is your browser that does the listening, which on Chrome means the audio goes
+                to Google to be recognised. Semester uploads none of it and cannot stop that. You
+                will see captions from anybody else who has switched this on, and only from them.
+                Muting stops yours.
+              </div>
+            </>
+          ) : (
+            <div
+              style={{
+                fontSize: 'var(--type-xs)',
+                ...secondLine(),
+                paddingBlock: 'var(--sp-5)',
+                lineHeight: 'var(--leading-normal)',
+                textWrap: 'pretty',
+              }}
+            >
+              This browser has no speech recognition, so it cannot make captions. Chrome and Safari
+              do; Firefox does not. You will still see captions from anybody in the call whose
+              browser can.
+            </div>
           )}
 
           <SectionLabel>In this call</SectionLabel>
