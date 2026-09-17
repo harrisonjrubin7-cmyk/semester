@@ -214,22 +214,117 @@ describe('sendReset', () => {
   });
 });
 
-describe('PROVIDERS_SAID', () => {
+describe('namesSaid', () => {
   /*
    * The paragraph under the buttons named Google and Microsoft by hand, and
    * Apple was added to the record without it — so the app drew three buttons
-   * under a line describing two. It is generated from the record now, and this
-   * is what stops the two drifting apart again.
+   * under a line describing two. Generating it from the record fixed that and
+   * left the narrower version standing: the record is every provider the app
+   * knows, and the buttons are every provider the *project* has on. It takes
+   * the names now, and the form passes the ones it drew.
    */
-  it('names every provider the app draws a button for', async () => {
-    const mod = await load();
-    for (const label of Object.values(mod.PROVIDER_LABEL)) {
-      expect(mod.PROVIDERS_SAID).toContain(label);
-    }
+  it('reads as a sentence rather than as a list', async () => {
+    const { namesSaid } = await load();
+    expect(namesSaid(['Google', 'Microsoft', 'Apple'])).toBe('Google, Microsoft or Apple');
+    expect(namesSaid(['Google', 'Microsoft'])).toBe('Google or Microsoft');
   });
 
-  it('reads as a sentence rather than as a list', async () => {
-    expect((await load()).PROVIDERS_SAID).toBe('Google, Microsoft or Apple');
+  it('is still a sentence with one name, and with none', async () => {
+    // One switched-on provider is the case this was rewritten for: "Any
+    // Google or  account works" was what joining a one-item list by hand gave.
+    const { namesSaid } = await load();
+    expect(namesSaid(['Google'])).toBe('Google');
+    expect(namesSaid([])).toBe('');
+  });
+});
+
+describe('providersOn', () => {
+  /*
+   * Every provider is a dashboard switch, and nothing in the app could see it
+   * — so the form drew all three whatever the project had on, and on a project
+   * with none of them on all three were doors that could not open.
+   *
+   * The distinction these tests exist for is `null` against `[]`. They are the
+   * same shape of "no buttons" to a careless caller and they are opposite
+   * facts: one is the project saying it has none, the other is the app failing
+   * to ask. Reading the second as the first hides the only working sign-in
+   * from somebody whose network dropped for a moment.
+   */
+  const answers = (external: unknown, ok = true) =>
+    vi.fn(async () => ({ ok, json: async () => ({ external }) }) as unknown as Response);
+
+  it('returns only the providers the project has switched on', async () => {
+    const mod = await load();
+    vi.stubGlobal('fetch', answers({ email: true, google: true, azure: false, apple: false }));
+    expect(await mod.providersOn()).toEqual(['google']);
+  });
+
+  it('ignores providers this app does not offer a button for', async () => {
+    // The record carries a dozen of them, and a `true` beside github is not a
+    // button anybody asked for.
+    const mod = await load();
+    vi.stubGlobal('fetch', answers({ github: true, discord: true, google: true }));
+    expect(await mod.providersOn()).toEqual(['google']);
+  });
+
+  it('says none, as a fact, when the project has none on', async () => {
+    const mod = await load();
+    vi.stubGlobal('fetch', answers({ email: true, google: false, azure: false, apple: false }));
+    expect(await mod.providersOn()).toEqual([]);
+  });
+
+  it('says it could not ask, rather than saying none, when the fetch fails', async () => {
+    const mod = await load();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new TypeError('Failed to fetch');
+      }),
+    );
+    expect(await mod.providersOn()).toBeNull();
+  });
+
+  it('says it could not ask when the project answers with an error', async () => {
+    const mod = await load();
+    vi.stubGlobal('fetch', answers({ google: true }, false));
+    expect(await mod.providersOn()).toBeNull();
+  });
+
+  it('says it could not ask when the answer is not the shape it expects', async () => {
+    const mod = await load();
+    vi.stubGlobal('fetch', answers(undefined));
+    expect(await mod.providersOn()).toBeNull();
+  });
+
+  it('asks the project once, however many callers race for it', async () => {
+    // The form mounts on the first run and again on the account screen.
+    const mod = await load();
+    const fetching = answers({ google: true });
+    vi.stubGlobal('fetch', fetching);
+    await Promise.all([mod.providersOn(), mod.providersOn(), mod.providersOn()]);
+    expect(fetching).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks the settings endpoint of the configured project, with the key', async () => {
+    const mod = await load();
+    const fetching = answers({ google: true });
+    vi.stubGlobal('fetch', fetching);
+    await mod.providersOn();
+    const [url, init] = fetching.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://project.supabase.co/auth/v1/settings');
+    expect((init.headers as Record<string, string>).apikey).toBe('a-publishable-key');
+  });
+
+  it('answers none without a request when no project is configured', async () => {
+    // A device-only build has no project to ask and no account screen to ask
+    // for. A request here would be to nowhere.
+    vi.resetModules();
+    vi.stubEnv('VITE_SUPABASE_URL', '');
+    vi.stubEnv('VITE_SUPABASE_KEY', '');
+    const fetching = vi.fn();
+    vi.stubGlobal('fetch', fetching);
+    expect(await (await import('./cloud')).providersOn()).toEqual([]);
+    expect(fetching).not.toHaveBeenCalled();
   });
 });
 

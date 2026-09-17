@@ -47,9 +47,24 @@ const signIn = vi.fn<(email: string, password: string) => Promise<void>>(async (
 const sendReset = vi.fn<(email: string) => Promise<string>>(async () => 'A reset link is on its way.');
 const signInWith = vi.fn<(provider: string) => Promise<void>>(async () => {});
 
+/**
+ * What the project says it has switched on, and when it says it.
+ *
+ * A promise rather than a value, because *when* the answer lands is half of
+ * what the form does with it: until it has one it draws no provider buttons at
+ * all, and a test that resolved before the first render could not tell that
+ * apart from a project with none on. `answer` settles it by hand.
+ */
+let answer: (got: string[] | null) => void;
+let asking: Promise<string[] | null>;
+const providersOn = vi.fn<() => Promise<string[] | null>>(() => asking);
+
 vi.mock('../lib/cloud', () => ({
   PROVIDER_LABEL: { google: 'Google', azure: 'Microsoft', apple: 'Apple' },
-  PROVIDERS_SAID: 'Google, Microsoft or Apple',
+  // The real one — it is four lines and what it joins is the point.
+  namesSaid: (names: string[]) =>
+    names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`,
+  providersOn: () => providersOn(),
   signUp: (email: string, password: string) => signUp(email, password),
   signIn: (email: string, password: string) => signIn(email, password),
   sendReset: (email: string) => sendReset(email),
@@ -89,6 +104,21 @@ const submit = () => host.querySelector('button[type=submit]') as HTMLButtonElem
 const link = (said: string) =>
   [...host.querySelectorAll('button')].find((b) => (b.textContent ?? '').trim() === said);
 
+/** The provider buttons, by their labels. Not the form's own two links. */
+const providerButtons = () =>
+  [...host.querySelectorAll('button[type=button]')]
+    .map((b) => (b.textContent ?? '').trim())
+    .filter((t) => ['Google', 'Microsoft', 'Apple'].includes(t));
+
+/** Render, then let the project's answer land. */
+async function showAnswered(node: ReactNode, got: string[] | null) {
+  show(node);
+  answer(got);
+  await act(async () => {
+    await asking;
+  });
+}
+
 async function send() {
   await act(async () => {
     host
@@ -110,7 +140,12 @@ beforeEach(() => {
   signUp.mockClear();
   signIn.mockClear();
   sendReset.mockClear();
+  signInWith.mockClear();
+  providersOn.mockClear();
   signUp.mockImplementation(async () => ({ said: 'Account made.', signedIn: true }));
+  asking = new Promise((resolve) => {
+    answer = resolve;
+  });
   host = document.createElement('div');
   document.body.append(host);
   root = createRoot(host);
@@ -293,6 +328,111 @@ describe('the reset link', () => {
     await act(async () => link('Send a reset link')?.click());
     expect(sendReset).toHaveBeenCalledWith('you@vanderbilt.edu');
     expect(host.querySelector('[role=status]')?.textContent).toContain('on its way');
+  });
+});
+
+describe('the provider buttons', () => {
+  /*
+   * Every provider is a switch in the Supabase dashboard, and until now
+   * nothing in the app could see it — so this form drew Google, Microsoft and
+   * Apple whatever the project had on. On a project with none of them on, and
+   * that is every project until somebody pastes a client id, all three were
+   * doors that could not open: a press spent a round trip and came back with
+   * "Unsupported provider: provider is not enabled", a sentence addressed to
+   * whoever runs the deployment and shown to a student, after the press.
+   *
+   * That is the shape `c301c98` took off the import screen a few hours ago —
+   * the gate belongs in the button's place, so the answer arrives before the
+   * press rather than as an error card after it. This is the same fix on the
+   * last screen that still had it.
+   */
+  it('draws only the ones the project has switched on', async () => {
+    await showAnswered(<Credentials />, ['google']);
+    expect(providerButtons()).toEqual(['Google']);
+  });
+
+  it('draws all of them when the project has all of them on', async () => {
+    // The control. A form that had simply stopped drawing provider buttons
+    // would pass the test above, and this is what refuses that.
+    await showAnswered(<Credentials />, ['google', 'azure', 'apple']);
+    expect(providerButtons()).toEqual(['Google', 'Microsoft', 'Apple']);
+  });
+
+  it('names in the sentence exactly the ones it drew', async () => {
+    // The fault this form has now had twice: the paragraph offering three
+    // providers under one button. It used to be generated from the record of
+    // what the app knows, which is not the same list as what the project has.
+    await showAnswered(<Credentials />, ['google', 'azure']);
+    expect(host.textContent).toContain('Any Google or Microsoft account works');
+    expect(host.textContent).not.toContain('Apple');
+  });
+
+  it('still signs in with the one that was pressed', async () => {
+    await showAnswered(<Credentials />, ['azure']);
+    await act(async () => link('Microsoft')?.click());
+    expect(signInWith).toHaveBeenCalledWith('azure');
+  });
+
+  describe('when the project has none switched on', () => {
+    it('draws no provider buttons at all', async () => {
+      await showAnswered(<Credentials />, []);
+      expect(providerButtons()).toEqual([]);
+    });
+
+    it('says which way in there is, rather than leaving three dead buttons', async () => {
+      await showAnswered(<Credentials />, []);
+      expect(host.textContent).toContain('no sign-in provider is switched on');
+      // And the way in that does work is still right there.
+      expect(submit()).toBeTruthy();
+    });
+
+    it('names the buttons it is not drawing from the record, not by hand', async () => {
+      // The first draft of this sentence said "no Google or Microsoft button
+      // to press" — two names written out, in the one change whose whole
+      // subject is a paragraph naming a different set from the buttons.
+      await showAnswered(<Credentials />, []);
+      expect(host.textContent).toContain('no Google, Microsoft or Apple button to press');
+    });
+  });
+
+  describe('when it could not ask', () => {
+    /*
+     * `null` and `[]` are the same shape of "no buttons" and opposite facts.
+     * One is the project saying it has none on; the other is this device
+     * failing to reach it. Reading the second as the first hides a working
+     * sign-in from somebody whose network dropped for a moment, which is a
+     * worse outcome than a button that errors — so an unanswered check falls
+     * back to what this form did before it could ask.
+     */
+    it('offers all of them rather than none', async () => {
+      await showAnswered(<Credentials />, null);
+      expect(providerButtons()).toEqual(['Google', 'Microsoft', 'Apple']);
+    });
+
+    it('does not tell somebody the project has no providers', async () => {
+      await showAnswered(<Credentials />, null);
+      expect(host.textContent).not.toContain('no sign-in provider is switched on');
+    });
+  });
+
+  describe('while it is still asking', () => {
+    /*
+     * A button on this screen means a door that opens, and that is only true
+     * if none are drawn before the answer is in. The form above is complete
+     * and works on its own for the few hundred milliseconds this takes.
+     */
+    it('draws no provider buttons yet, and does not guess at the sentence', () => {
+      show(<Credentials />);
+      expect(providerButtons()).toEqual([]);
+      expect(host.textContent).not.toContain('no sign-in provider is switched on');
+    });
+
+    it('still lets somebody sign in with an address and a password', async () => {
+      registered = true;
+      show(<Credentials />);
+      await enter();
+      expect(signIn).toHaveBeenCalledWith('you@vanderbilt.edu', 'a-real-password');
+    });
   });
 });
 

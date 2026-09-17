@@ -232,17 +232,82 @@ export const PROVIDER_LABEL: Record<Provider, string> = {
 };
 
 /**
- * The providers, named in a sentence — "Google, Microsoft or Apple".
+ * Names, read out as a sentence — "Google, Microsoft or Apple".
  *
- * The paragraph under the buttons named two of them by hand, and the third was
- * added to the record without it, so the app drew an Apple button under a line
- * saying "Any Google or Microsoft account works". Generated from the record
- * that draws the buttons, so the words and the buttons cannot disagree again.
+ * The paragraph under the buttons named two providers by hand, and the third
+ * was added to the record without it, so the app drew an Apple button under a
+ * line saying "Any Google or Microsoft account works". It was then generated
+ * from the record, which fixed that and left a narrower version of the same
+ * fault standing: the record is every provider the app *knows*, and the
+ * buttons are now every provider the project has *on*. A project with only
+ * Google switched on drew one button under a line offering three.
+ *
+ * So it takes the names rather than reading the record, and the form passes
+ * exactly the ones it drew. The sentence cannot name a door that is not there.
  */
-export const PROVIDERS_SAID = ((names: string[]) =>
-  names.length < 2 ? (names[0] ?? '') : `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`)(
-  Object.values(PROVIDER_LABEL),
-);
+export function namesSaid(names: string[]): string {
+  if (names.length < 2) return names[0] ?? '';
+  return `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}`;
+}
+
+/**
+ * Which of the three the project actually has switched on.
+ *
+ * Every provider is a dashboard setting, not a line of code, and nothing here
+ * could see it — so the form drew Google, Microsoft and Apple whatever the
+ * project was configured with, and on a project with none of them on, all
+ * three were doors that could not open. Pressing one spent a round trip and
+ * came back with "Unsupported provider: provider is not enabled": a sentence
+ * addressed to whoever runs the deployment, shown to a student, after the
+ * press. That is the shape `components/NeedsKey.tsx` exists to abolish and
+ * that `c301c98` took off the import screen — the answer belongs before the
+ * press, not after it.
+ *
+ * GoTrue answers it. `/auth/v1/settings` is public, needs only the key the
+ * app already ships, and its `external` record is the dashboard's own switch
+ * list. Read for our three and nothing else: the record carries a dozen
+ * providers this app does not offer, and a `true` beside one of them is not a
+ * button anybody asked for.
+ *
+ * **`null` is not "none".** It means the question could not be asked — no
+ * network, a project that is down, a shape that did not parse — and the
+ * caller must not read it as a project with nothing switched on. A check that
+ * did not happen is not a fact about the project, and the cost of the two
+ * mistakes is not symmetric: drawing a button that errors wastes a press,
+ * while withholding the only working way in because a fetch failed locks
+ * somebody out of their own account. So the form falls back to offering all
+ * three, which is what it did before this existed.
+ *
+ * Cached as a promise rather than a value, for the same reason `cloud()` is:
+ * the form mounts on the first run and again on the account screen, and two
+ * mounts racing should share one request rather than each starting theirs.
+ */
+let switchedOn: Promise<Provider[] | null> | null = null;
+
+export function providersOn(): Promise<Provider[] | null> {
+  if (!cloudConfigured) return Promise.resolve([]);
+  switchedOn ??= (async () => {
+    try {
+      const res = await fetchWithin(`${URL.replace(/\/$/, '')}/auth/v1/settings`, {
+        headers: { apikey: KEY },
+      });
+      if (!res.ok) return null;
+      const external: unknown = ((await res.json()) as { external?: unknown }).external;
+      if (!external || typeof external !== 'object') return null;
+      const on = external as Record<string, unknown>;
+      return (Object.keys(PROVIDER_LABEL) as Provider[]).filter((p) => on[p] === true);
+    } catch {
+      // Offline, blocked, or not JSON. Unanswered, not answered "none".
+      return null;
+    }
+  })();
+  return switchedOn;
+}
+
+/** Ask again — for tests, and for a project reconfigured under a live tab. */
+export function forgetProvidersOn(): void {
+  switchedOn = null;
+}
 
 export async function signInWith(provider: Provider): Promise<void> {
   const { error } = await (await cloud()).auth.signInWithOAuth({
