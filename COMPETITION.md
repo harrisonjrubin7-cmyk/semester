@@ -9,8 +9,12 @@ It is filed here for the reason `ACTION-PLAN.md` gives for its own existence:
 code before it was filed.** That habit has now been run twice against two
 different outside documents, and it has now returned the same answer twice.
 The action plan found seven of seventeen items different from the claim. This
-one found **six of the nine proposals already built** — four of them whole, two
-of them in a form the document did not know to look for.
+one found **six of the nine proposals already built.** Four are Landed outright
+— the grade calculator (2), LMS sync (5), lecture capture (6) and the calendar
+work (7) — and two more, the AI gate (1) and voice capture (4), are built in the
+part that matters with the remainder named. One of the four, LMS sync, ships in
+a form the document did not know to look for and therefore scores as "None" in
+its table.
 
 That is not a criticism of the research. The competitor work is first-hand and
 the market reading is sound; what it could not do is read this codebase, and
@@ -436,10 +440,10 @@ item 1.
 
 ## What this pass actually found
 
-One buildable gap in nine proposals, and it is built. Four landed whole, two
-landed in a form the document did not know to look for, one is not code, one is
-a decision rather than a feature, and one — the Study screen's hierarchy —
-stays open and stays a design pass.
+One buildable gap in nine proposals, and it is built. Four are Landed outright,
+two more are built in the part that matters, one is not code, one is a decision
+rather than a feature, and one — the Study screen's hierarchy — stays open and
+stays a design pass.
 
 The habit is worth more than the item, and it is the same conclusion
 `ACTION-PLAN.md` reached from a different document:
