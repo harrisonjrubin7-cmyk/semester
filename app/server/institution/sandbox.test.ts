@@ -508,9 +508,11 @@ describe('discussion', () => {
     await expect(say(stranger, 'a1', 'Let me in.', 'The class')).rejects.toThrow(
       /the class can read or post|not visible/i,
     );
-    // And the threads are not even listed for them.
+    // And the threads are not even listed for them. The course and its
+    // syllabus are — somebody deciding whether to take a course reads those
+    // before they enrol, and neither of them is anybody's question.
     const { records } = await area('courses').list(stranger, { search: '', cursor: null });
-    expect(records.map((r) => r.id)).toEqual(['sandbox-101']);
+    expect(records.map((r) => r.id)).toEqual(['sandbox-101', 'syllabus']);
   });
 
   it('refuses an outsider who posts without reading first', async () => {
@@ -575,9 +577,11 @@ describe('discussion', () => {
     const s = student();
     await enrol(s);
     const { records } = await area('courses').list(s, { search: '', cursor: null });
-    // The course, and one thread per published assignment plus a general one.
+    // The course and its syllabus, then one thread per published assignment
+    // plus a general one. Nothing keyed to a person.
     expect(records.map((r) => r.id)).toEqual([
       'sandbox-101',
+      'syllabus',
       'thread:general',
       'thread:a1',
       'thread:a2',
@@ -964,6 +968,154 @@ describe('the deadline', () => {
     // thing it cannot be.
     expect(again).toEqual(first);
     expect(again.message).toMatch(/Late by 1 hour/);
+  });
+});
+
+describe('the syllabus', () => {
+  /*
+   * The completion plan's chain reads Course → **Syllabus** → Calendar, and
+   * the syllabus was one sentence on a constant, used as the course record's
+   * summary. That is a description, not a syllabus: it does not say when the
+   * course meets, when anybody can be asked a question, what counts as
+   * working together and what counts as copying, or how the marks add up.
+   *
+   * Those are the questions a student actually has before a course starts,
+   * and the last of them is the one people get wrong and lose a degree over.
+   */
+  const FULL = {
+    about: 'How a course is run from publication to an archived record.',
+    meets: 'Tuesdays and Thursdays, 14:00–15:15, Sandbox Hall 101.',
+    officeHours: 'Wednesdays 10:00–12:00, or by appointment.',
+    collaboration:
+      'Talk about the problems with anybody. Write your answers alone. Name anyone you worked with.',
+    contact: 'Ask in the course thread first — the answer is usually useful to everybody.',
+  };
+
+  const publishSyllabus = async (over: Record<string, string> = {}, key = 's-pub') => {
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    return area('courses').execute(
+      f,
+      act('courses', course.id, course.version, 'syllabus', { ...FULL, ...over }),
+      key,
+    );
+  };
+
+  it('is a record of its own, and says so before anybody has written one', async () => {
+    const said = await seen('courses', student(), 'syllabus');
+    expect(said.title).toContain(SANDBOX_MARK);
+    expect(said.status, 'an empty syllabus pretending to be a syllabus').toMatch(/not yet published/i);
+    expect(JSON.stringify(said.details)).not.toMatch(/Tuesdays/);
+  });
+
+  it('answers the questions a student has before the course starts', async () => {
+    await publishSyllabus();
+    const said = JSON.stringify((await seen('courses', student(), 'syllabus')).details);
+    expect(said, 'when it meets').toMatch(/Tuesdays and Thursdays, 14:00/);
+    expect(said, 'when somebody can be asked').toMatch(/Wednesdays 10:00/);
+    expect(said, 'what counts as working together').toMatch(/Write your answers alone/);
+    expect(said, 'where to ask').toMatch(/course thread first/);
+  });
+
+  it('derives how the marks add up, rather than restating it', async () => {
+    /*
+     * The one section nobody types. A syllabus that says "Problem set 20%,
+     * paper 35%" is a second copy of the weights, and the two drift the first
+     * time faculty publish anything — at which point the contract with the
+     * class says one thing and the course does another.
+     */
+    await publishSyllabus();
+    const said = JSON.stringify((await seen('courses', student(), 'syllabus')).details);
+    expect(said).toMatch(/Problem set 1[^}]*20%/);
+    expect(said).toMatch(/Short paper[^}]*35%/);
+    expect(said, 'and what has not been published yet').toMatch(/45%[^}]*not been published/i);
+
+    // Publish something, and the syllabus says so without being edited.
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    await area('courses').execute(
+      f,
+      act('courses', course.id, course.version, 'publish', {
+        title: 'Essay two',
+        due: new Date(Date.now() + 14 * 24 * 3_600_000).toISOString(),
+        brief: 'Eight hundred words.',
+        rubric: 'Argument | 10 | A claim.',
+        weight: '45',
+      }),
+      's-more',
+    );
+    const after = JSON.stringify((await seen('courses', student(), 'syllabus')).details);
+    expect(after).toMatch(/Essay two[^}]*45%/);
+    expect(after, 'the whole course is published now').not.toMatch(/not been published/i);
+  });
+
+  it('carries the late policy rather than a second copy of it', async () => {
+    await publishSyllabus();
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    await area('courses').execute(
+      f,
+      act('courses', course.id, course.version, 'policy', { perDay: '10', cap: '30' }),
+      's-pol',
+    );
+    expect(JSON.stringify((await seen('courses', student(), 'syllabus')).details)).toMatch(
+      /10% of the mark per day/,
+    );
+  });
+
+  it('says when it last changed, and what changed', async () => {
+    /*
+     * A syllabus is a contract with a class, and the complaint people have
+     * about one is never that it changed — it is that it changed and nobody
+     * said. So a revision carries a note, the class can read it, and the
+     * record says which revision it is on.
+     */
+    await publishSyllabus();
+    const first = await seen('courses', student(), 'syllabus');
+    expect(first.status).toMatch(/Revision 1/);
+
+    await publishSyllabus({ meets: 'Tuesdays only, 14:00–15:15, Sandbox Hall 101.' , note: 'Thursday section dropped.' }, 's-rev');
+    const second = await seen('courses', student(), 'syllabus');
+    expect(second.status).toMatch(/Revision 2/);
+    expect(JSON.stringify(second.details), 'what changed').toMatch(/Thursday section dropped/);
+    expect(JSON.stringify(second.details), 'and the one before it').toMatch(/Tuesdays only/);
+  });
+
+  it('refuses a revision that does not say what changed', async () => {
+    await publishSyllabus();
+    // The first one needs no note: there is nothing to have changed from.
+    await expect(publishSyllabus({ meets: 'Mondays.' }, 's-silent')).rejects.toThrow(/what changed/i);
+    expect(store.syllabus()?.meets, 'a silent revision landed').toBe(FULL.meets);
+  });
+
+  it('refuses a section left blank, and anybody who is not faculty', async () => {
+    const s = student();
+    await enrol(s);
+    const course = await seen('courses', s, 'sandbox-101');
+    expect(course.actions.map((a) => a.id)).not.toContain('syllabus');
+    await expect(
+      area('courses').execute(s, act('courses', course.id, course.version, 'syllabus', FULL), 's-no'),
+    ).rejects.toThrow(/Only the course faculty/);
+
+    await expect(publishSyllabus({ collaboration: '   ' }, 's-blank')).rejects.toThrow(/what counts as working together/i);
+    await expect(publishSyllabus({ meets: '' }, 's-blank2')).rejects.toThrow(/when the course meets/i);
+    expect(store.syllabus()).toBeNull();
+  });
+
+  it('is read back in full before it is published', async () => {
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    const said = await area('courses').review(f, act('courses', course.id, course.version, 'syllabus', FULL));
+    expect(said.title).toMatch(/syllabus/i);
+    expect(JSON.stringify(said.details)).toMatch(/Write your answers alone/);
+    expect(JSON.stringify(said.details), 'who it reaches').toMatch(/roster|class/i);
+    expect(store.syllabus(), 'reviewing published it').toBeNull();
+  });
+
+  it('is pointed at from the course, so it is findable from where people start', async () => {
+    await publishSyllabus();
+    const { records } = await area('courses').list(student(), { search: '', cursor: null });
+    expect(records.map((r) => r.id)).toContain('syllabus');
   });
 });
 

@@ -2031,6 +2031,43 @@ the penalty was not. Fixing the second one turned up a guard that could not be
 made to fail — an early-work check whose work was already done by the line
 below it — which was removed rather than left looking like a guard.
 
+### The syllabus, which was one sentence on a constant
+
+The plan's chain reads Course → **Syllabus** → Calendar, and the syllabus was a
+`const` string used as the course record's summary. That is a *description* of
+a course. It does not say when the course meets, when anybody can be asked a
+question, what counts as working together and what counts as copying, or how
+the marks add up — which are the questions a student has before a course
+starts, and the third of them is the one people get wrong and lose a degree
+over.
+
+It is a document of its own now, with its own record, published and revised by
+faculty. Three things about it are worth reading.
+
+**The assessment section is derived, not typed.** A syllabus that says "problem
+set 20%, paper 35%" is a second copy of the published weights, and the two
+drift the first time faculty publish anything — at which point the contract
+with the class says one thing and the course does another. It is read off what
+is actually published, every time, and it says what is still unpublished. The
+same goes for the late policy: the syllabus carries it, it does not restate it.
+
+**A revision must say what changed.** A syllabus is a contract with a class,
+and the complaint people have about one is never that it changed — courses
+change — it is that it changed and nobody said. The first one needs no note,
+because there is nothing to have changed from; every one after it is refused
+without one, and the note is on the record where the class reads it, beside
+`Revision 3, 2026-10-14`.
+
+**An unpublished syllabus says so.** "The course faculty have not published a
+syllabus" is an answer; a blank page laid out like a document is not, and it is
+the same placeholder the plan forbids everywhere else.
+
+It sits beside the course rather than behind the roster, because somebody
+deciding whether to take a course reads it before they enrol — unlike the
+discussion threads, which stay closed to anybody not in the class.
+
+Fifteen mutations, fifteen red.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes
