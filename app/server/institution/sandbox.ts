@@ -95,7 +95,12 @@ const COURSE = {
   code: 'SBX 101',
   title: 'Running a course end to end',
   faculty: 'Sandbox faculty',
-  syllabus:
+  /*
+   * What the course *is*, which is not the same thing as its syllabus and
+   * used to be doing both jobs. The syllabus is a document faculty publish
+   * and revise; this is the line under the title.
+   */
+  about:
     'A demonstration course with two published assignments, used to exercise the ' +
     'submit → receipt → grade → feedback → archive loop. No credit, no registrar, no real marks.',
 };
@@ -184,6 +189,36 @@ const SEEDED: Assignment[] = [
     ],
   },
 ];
+
+/**
+ * The syllabus, which the completion plan's chain names between Course and
+ * Calendar and which was one sentence on a constant.
+ *
+ * A description of a course is not a syllabus. The questions a student
+ * actually has before one starts are when it meets, when somebody can be
+ * asked something, what counts as working together and what counts as
+ * copying, and how the marks add up — and the third of those is the one
+ * people get wrong and lose a degree over.
+ *
+ * What is deliberately *not* a field here is the assessment breakdown. A
+ * syllabus that says "problem set 20%, paper 35%" is a second copy of the
+ * published weights, and the two drift the first time faculty publish
+ * anything, at which point the contract with the class says one thing and the
+ * course does another. It is derived, every time it is read.
+ */
+export interface Syllabus {
+  about: string;
+  meets: string;
+  officeHours: string;
+  collaboration: string;
+  contact: string;
+  /** Which revision this is, counting from one. */
+  revision: number;
+  /** What changed, on every revision after the first. */
+  note: string;
+  at: string;
+  by: string;
+}
 
 /**
  * What this course does about late work, once it has said.
@@ -464,6 +499,20 @@ export class SandboxStore {
     this.db
       .prepare("INSERT INTO settings VALUES('late',?) ON CONFLICT(id) DO UPDATE SET body=excluded.body")
       .run(JSON.stringify(p));
+  }
+
+  /** The published syllabus, or nothing if nobody has written one. */
+  syllabus(): Syllabus | null {
+    const got = this.db.prepare("SELECT body FROM settings WHERE id='syllabus'").get() as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as Syllabus) : null;
+  }
+
+  setSyllabus(v: Syllabus): void {
+    this.db
+      .prepare("INSERT INTO settings VALUES('syllabus',?) ON CONFLICT(id) DO UPDATE SET body=excluded.body")
+      .run(JSON.stringify(v));
   }
 
   publish(a: Assignment, at: string): void {
@@ -944,6 +993,84 @@ function readPolicy(store: SandboxStore, context: AdapterContext, input: ActionI
   };
 }
 
+/**
+ * A syllabus out of the fields, or a refusal naming the section left blank.
+ *
+ * The rule worth reading is the note. A syllabus is a contract with a class,
+ * and the complaint people have about one is never that it changed — courses
+ * change — it is that it changed and nobody said. So every revision after the
+ * first carries what changed, the class reads it on the record, and a silent
+ * edit is refused rather than accepted quietly.
+ */
+function readSyllabus(store: SandboxStore, context: AdapterContext, input: ActionInput): Syllabus {
+  if (!isFaculty(context)) throw new Refusal('Only the course faculty can publish the syllabus.');
+  const section = (id: string, what: string) => {
+    const said = (input.fields[id] ?? '').trim();
+    if (!said) throw new Refusal(`Say ${what}.`);
+    return said;
+  };
+  const before = store.syllabus();
+  const note = (input.fields.note ?? '').trim();
+  if (before && !note) {
+    throw new Refusal('Say what changed. A syllabus that is revised without saying so is the thing people complain about.');
+  }
+  return {
+    about: section('about', 'what the course is about'),
+    meets: section('meets', 'when the course meets'),
+    officeHours: section('officeHours', 'when somebody can be asked a question'),
+    collaboration: section('collaboration', 'what counts as working together and what counts as copying'),
+    contact: section('contact', 'where to ask'),
+    revision: (before?.revision ?? 0) + 1,
+    note,
+    at: new Date().toISOString(),
+    by: context.identity.userId,
+  };
+}
+
+/** How the marks add up, read off what is published rather than retyped. */
+function assessment(store: SandboxStore): { label: string; value: string }[] {
+  const out = store.published().map((a) => ({
+    label: a.title,
+    value: `${pct(a.weight)} of the course, marked out of ${outOf(a.criteria)}`,
+  }));
+  const left = 100 - store.published().reduce((n, a) => n + a.weight, 0);
+  return left > DUST
+    ? [...out, { label: 'Still to come', value: `${pct(left)} of the course has not been published yet.` }]
+    : out;
+}
+
+/** The syllabus as a record, published or not. */
+function syllabusRecord(store: SandboxStore): UniversityRecord {
+  const v = store.syllabus();
+  return {
+    id: 'syllabus',
+    area: 'courses',
+    title: `${SANDBOX_MARK} · ${COURSE.code} — syllabus`,
+    summary: v?.about ?? COURSE.about,
+    // Not an empty document dressed as a published one. A course with no
+    // syllabus should say so, because "there isn't one yet" is an answer and
+    // a blank page is not.
+    status: v
+      ? `Revision ${v.revision}, ${v.at.slice(0, 10)}`
+      : 'Not yet published — the course faculty have not written one',
+    version: String(v?.revision ?? 0),
+    updatedAt: new Date().toISOString(),
+    details: v
+      ? [
+          { label: 'About', value: v.about },
+          { label: 'Meets', value: v.meets },
+          { label: 'Office hours', value: v.officeHours },
+          { label: 'Working together', value: v.collaboration },
+          { label: 'Where to ask', value: v.contact },
+          { label: 'Late work', value: policySaid(store.policy()) },
+          ...assessment(store),
+          ...(v.note ? [{ label: `What changed in revision ${v.revision}`, value: v.note }] : []),
+        ]
+      : [{ label: 'Nothing here yet', value: 'The course faculty have not published a syllabus.' }],
+    actions: [],
+  };
+}
+
 /** A new assignment out of the fields, or a refusal saying which one is wrong. */
 function readAssignment(store: SandboxStore, input: ActionInput): Assignment {
   const title = (input.fields.title ?? '').trim();
@@ -1204,7 +1331,7 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
     id: COURSE.id,
     area: 'courses',
     title: `${SANDBOX_MARK} · ${COURSE.code} — ${COURSE.title}`,
-    summary: COURSE.syllabus,
+    summary: COURSE.about,
     status: on ? 'Enrolled' : 'Open for enrolment',
     version: on ? '2' : '1',
     updatedAt: new Date().toISOString(),
@@ -1220,6 +1347,28 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
     ],
     actions: isFaculty(context)
       ? [
+          {
+            id: 'syllabus',
+            label: 'Publish or revise the syllabus',
+            fields: [
+              { id: 'about', label: 'What the course is about', kind: 'textarea', required: true },
+              { id: 'meets', label: 'When and where it meets', kind: 'text', required: true },
+              { id: 'officeHours', label: 'Office hours', kind: 'text', required: true },
+              {
+                id: 'collaboration',
+                label: 'What counts as working together, and what counts as copying',
+                kind: 'textarea',
+                required: true,
+              },
+              { id: 'contact', label: 'Where to ask a question', kind: 'text', required: true },
+              {
+                id: 'note',
+                label: 'What changed (required when revising)',
+                kind: 'text',
+                required: false,
+              },
+            ],
+          },
           {
             id: 'policy',
             label: 'Set what late work costs',
@@ -1631,10 +1780,14 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
        */
       const open = isFaculty(context) || store.enrolled(context.identity.userId);
       const threads = open ? threadsOf(store).map((t) => threadRecord(context, store, t)) : [];
-      return page(matching([courseRecord(context, store), ...threads], query.search));
+      // The syllabus beside the course, not behind it: somebody deciding
+      // whether to take a course reads it before they enrol, so it is not
+      // gated on the roster the way the threads are.
+      return page(matching([courseRecord(context, store), syllabusRecord(store), ...threads], query.search));
     },
     get: async (context, id) => {
       if (id === COURSE.id) return courseRecord(context, store);
+      if (id === 'syllabus') return syllabusRecord(store);
       const thread = threadsOf(store).find((t) => threadId(t.id) === id);
       if (!thread) return null;
       if (!isFaculty(context) && !store.enrolled(context.identity.userId)) return null;
@@ -1643,6 +1796,24 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     review: async (context, input) => {
       const thread = threadsOf(store).find((t) => threadId(t.id) === input.recordId);
       if (thread) return reviewPost(context, store, input, thread);
+      if (input.actionId === 'syllabus') {
+        const v = readSyllabus(store, context, input);
+        return {
+          title: v.revision === 1 ? 'Publish the syllabus' : `Publish revision ${v.revision} of the syllabus`,
+          details: [
+            { label: 'About', value: v.about },
+            { label: 'Meets', value: v.meets },
+            { label: 'Office hours', value: v.officeHours },
+            { label: 'Working together', value: v.collaboration },
+            { label: 'Where to ask', value: v.contact },
+            ...(v.note ? [{ label: 'What changed', value: v.note }] : []),
+            {
+              label: 'After this',
+              value: `Everybody on the roster, and anybody looking at the course, reads this.`,
+            },
+          ],
+        };
+      }
       if (input.actionId === 'policy') {
         const p = readPolicy(store, context, input);
         return {
@@ -1700,6 +1871,18 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       if (done) return done;
       const thread = threadsOf(store).find((t) => threadId(t.id) === input.recordId);
       if (thread) return post(context, store, input, thread, key);
+      if (input.actionId === 'syllabus') {
+        const v = readSyllabus(store, context, input);
+        store.setSyllabus(v);
+        return {
+          id: key,
+          status: 'completed',
+          message:
+            `${SANDBOX_MARK} · Syllabus ${v.revision === 1 ? 'published' : `revised to revision ${v.revision}`}, ` +
+            `to ${store.roster().length} on the roster.`,
+          recordedAt: v.at,
+        };
+      }
       if (input.actionId === 'policy') {
         const p = readPolicy(store, context, input);
         store.setPolicy(p);
