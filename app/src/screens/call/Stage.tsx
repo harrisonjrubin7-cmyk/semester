@@ -34,7 +34,11 @@ import {
   drop,
   expired,
   heard,
+  admitted,
+  heldBack,
   hostOf,
+  hosting,
+  waiting,
   reacted,
   seen,
   type Flags,
@@ -74,6 +78,30 @@ export function Stage({
   const [streams, setStreams] = useState<Record<string, MediaStream>>({});
   const [lines, setLines] = useState<Line[]>([]);
   const [marks, setMarks] = useState<Mark[]>([]);
+  /*
+   * The door.
+   *
+   * `holding` is this device's own setting and only means anything while this
+   * device is the host — every tab computes `hosting` separately and they
+   * agree, so a host who leaves takes their door with them and the next host's
+   * setting applies. `allowed` is this device's copy of who has been let in,
+   * built only from what the host says. Both are state rather than derived
+   * because `admitted` folds signals into the second one over time.
+   */
+  const [holding, setHolding] = useState(false);
+  const [allowed, setAllowed] = useState<string[]>([]);
+  /** Set when the host says so, purely so the screen can explain the wait. */
+  const [outside, setOutside] = useState(false);
+  /*
+   * People taken out, which is not the same list as people not yet let in.
+   *
+   * Removal has to work in an open call too, and in an open call `allowed`
+   * means nothing — everybody in the roster gets a connection. Without this,
+   * removing somebody would reconnect them on the next roster change, or the
+   * host would have to be silently switched to holding the door, which is a
+   * setting they did not touch appearing to have changed by itself.
+   */
+  const [removed, setRemoved] = useState<string[]>([]);
   const [flags, setFlags] = useState<Flags>({
     ...RESTING,
     name,
@@ -103,6 +131,8 @@ export function Stage({
    */
   const latest = useRef({ flags, roster });
   latest.current = { flags, roster };
+  /* The same trick, for the same reason: `onSignal` is made once. */
+  const hostRef = useRef('');
 
   useEffect(() => {
     let live = true;
@@ -116,6 +146,24 @@ export function Stage({
         onSignal: (signal) => {
           if (!live) return;
           setRoster((was) => seen(was, signal, Date.now()));
+          /*
+           * Who this device will connect to. Folded here, next to the roster,
+           * because both are answers to the same signal and a second effect
+           * reading the roster afterwards would be a frame behind — long
+           * enough for `keep` to run once against a stale door.
+           *
+           * `hostRef` rather than `host`: this closure is made once, for the
+           * life of the call, for the reason the comment on `latest` gives.
+           */
+          setAllowed((was) => admitted(was, signal, hostRef.current));
+          if ((signal.t === 'evict' || signal.t === 'deny') && signal.from === hostRef.current) {
+            setRemoved((was) => (was.includes(signal.to) ? was : [...was, signal.to]));
+          }
+          if (signal.t === 'admit' && signal.from === hostRef.current) {
+            setRemoved((was) => was.filter((id) => id !== signal.to));
+          }
+          if (heldBack(signal, me, hostRef.current)) setOutside(true);
+          if (signal.t === 'admit' && signal.to === me) setOutside(false);
           setLines((was) => heard(was, signal, latest.current.roster));
           setMarks((was) => reacted(was, signal, Date.now()));
           if (signal.t === 'ask' && signal.what === 'mute') setAsked(Date.now());
@@ -169,11 +217,6 @@ export function Stage({
     }, 1000);
     return () => clearInterval(id);
   }, []);
-
-  /* One connection per person in the roster, and none to anybody else. */
-  useEffect(() => {
-    session?.keep(roster);
-  }, [session, roster]);
 
   /* Muting is a track being disabled, not a message. Both, in fact: the track
      so nothing is sent, the flag so everybody's tile shows it. */
@@ -263,6 +306,47 @@ export function Stage({
   }, [me, flags, since, roster, speaking]);
 
   const host = hostOf(roster, me, since);
+  hostRef.current = host;
+  const iHost = hosting(roster, me, since);
+  const atDoor = holding && iHost ? waiting(roster, [me, ...allowed]) : [];
+
+  /*
+   * One connection per person in the roster, and none to anybody else — or,
+   * with the door shut, none to anybody who has not been let in.
+   *
+   * This is the line that enforces the waiting room. Not the host's refusal,
+   * which is a message somebody's client can be written to ignore: a
+   * connection nobody opens carries no media, so declining to open one is the
+   * one kind of authority a mesh actually has. See the long note in
+   * `lib/mesh.ts`.
+   *
+   * `me` is in the allowed set always. A call whose host is not allowed into
+   * it is a call that empties itself.
+   */
+  useEffect(() => {
+    if (!session) return;
+    const held = holding || outside;
+    if (!held && removed.length === 0) {
+      // Exactly the call this was before there was a door, so an ordinary
+      // call provably takes the path it always took.
+      session.keep(roster);
+      return;
+    }
+    const inside = held ? [me, ...allowed] : [me, ...Object.keys(roster)];
+    session.keep(
+      roster,
+      inside.filter((id) => id === me || !removed.includes(id)),
+    );
+  }, [session, roster, holding, outside, allowed, removed, me]);
+
+  /* The host lets somebody know they are at a door rather than in an empty
+     call. A courtesy: nothing about the door depends on it arriving. */
+  useEffect(() => {
+    if (!session || !holding || !iHost) return;
+    for (const k of atDoor) session.send({ t: 'held', from: me, to: k.id });
+    // Only when the queue changes, not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, holding, iHost, atDoor.map((k) => k.id).join(',')]);
   const shown = ordered(peers, now, pinned);
   const big = spotlight(peers, now, pinned);
   const busy = load(peers.length);
@@ -332,6 +416,30 @@ export function Stage({
           }}
         >
           {trouble}
+        </div>
+      ) : null}
+
+      {/*
+        * Waiting at the door.
+        *
+        * Without this, being held looks exactly like being first into an empty
+        * call: your own tile, nobody else's, and no reason given. The sentence
+        * is the whole difference between waiting and thinking it is broken.
+        * It appears only when the host said so — see `heldBack` — because a
+        * call that really is empty must not claim somebody is deciding.
+        */}
+      {outside ? (
+        <div
+          role="status"
+          style={{
+            fontSize: 'var(--type-sm)',
+            paddingInline: 'var(--sp-6)',
+            paddingBlock: 'var(--sp-3)',
+            lineHeight: 'var(--leading-normal)',
+            textWrap: 'pretty',
+          }}
+        >
+          Waiting to be let in. {roster[host]?.flags.name || 'Whoever started this call'} has been asked.
         </div>
       ) : null}
 
@@ -521,6 +629,97 @@ export function Stage({
 
       {panel === 'people' && (
         <div style={{ paddingInline: 'var(--sp-6)' }}>
+          {/*
+            * The door. Only the host is offered it, and `iHost` is computed
+            * the same way in every tab, so the control appears in exactly one
+            * of them. Somebody who is not the host is not shown a switch that
+            * would do nothing — a disabled control here would imply the call
+            * has an owner who could grant it, and it does not.
+            */}
+          {iHost && (
+            <>
+              <SectionLabel>The door</SectionLabel>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-4)',
+                  paddingBlock: 'var(--sp-5)',
+                  fontSize: 'var(--type-md)',
+                }}
+              >
+                <input type="checkbox" checked={holding} onChange={(e) => setHolding(e.target.checked)} />
+                <span>Let people in one at a time</span>
+              </label>
+              <div
+                style={{
+                  fontSize: 'var(--type-xs)',
+                  ...secondLine(),
+                  marginBottom: 'var(--sp-5)',
+                  lineHeight: 'var(--leading-normal)',
+                  textWrap: 'pretty',
+                }}
+              >
+                {holding
+                  ? 'Nobody new gets audio or video until you let them in. They can still see who is here, because the room’s messages are open to anybody with the code.'
+                  : 'Anybody with the code walks in, which is what a code is for.'}
+              </div>
+
+              {atDoor.length > 0 && (
+                <>
+                  <SectionLabel>Waiting</SectionLabel>
+                  {atDoor.map((k) => (
+                    <div
+                      key={k.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--sp-4)',
+                        paddingBlock: 'var(--sp-5)',
+                        borderBottom: '1px solid var(--app-line)',
+                      }}
+                    >
+                      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)' }}>
+                        {k.name || 'Somebody'}
+                        {/* Refused stays on the list rather than vanishing.
+                            They are still in the call's roster — they can hear
+                            nothing and see nobody, but they have not gone — and
+                            a queue that dropped them would say they had. */}
+                        {removed.includes(k.id) ? ' · not let in' : ''}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() => {
+                          const signal = { t: 'admit' as const, from: me, to: k.id };
+                          session?.send(signal);
+                          // Broadcast does not echo to the sender, so this
+                          // device applies its own decision itself.
+                          setAllowed((was) => admitted(was, signal, me));
+                          setRemoved((was) => was.filter((id) => id !== k.id));
+                        }}
+                      >
+                        Let in
+                      </button>
+                      {!removed.includes(k.id) && (
+                        <button
+                          type="button"
+                          className="btn"
+                          onClick={() => {
+                            session?.send({ t: 'deny', from: me, to: k.id });
+                            setRemoved((was) => (was.includes(k.id) ? was : [...was, k.id]));
+                          }}
+                        >
+                          Not now
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </>
+              )}
+            </>
+          )}
+
           <SectionLabel>In this call</SectionLabel>
           {shown.map((p) => (
             <div
@@ -541,6 +740,28 @@ export function Stage({
               {p.hand > 0 ? <HandIcon size={15} /> : null}
               {p.muted ? <MicOffIcon size={15} /> : null}
               {!p.camera ? <CamOffIcon size={15} /> : null}
+              {/*
+                * Removing somebody is the one thing a host here can actually
+                * do to another person, and it works for the same reason the
+                * door does: every device closes its connection to them.
+                * Muting them is not offered, and `hostOf`'s own comment says
+                * why — nothing here can reach their microphone, and a button
+                * that claimed to would be a lie somebody relied on.
+                */}
+              {iHost && !p.self && (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => {
+                    const signal = { t: 'evict' as const, from: me, to: p.id };
+                    session?.send(signal);
+                    setAllowed((was) => admitted(was, signal, me));
+                    setRemoved((was) => (was.includes(p.id) ? was : [...was, p.id]));
+                  }}
+                >
+                  Remove
+                </button>
+              )}
             </div>
           ))}
           <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>

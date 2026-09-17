@@ -10,9 +10,14 @@ import {
   callsFirst,
   drop,
   expired,
+  admitted,
+  gated,
   greets,
   heard,
+  heldBack,
   hostOf,
+  hosting,
+  waiting,
   reacted,
   polite,
   reconcile,
@@ -315,5 +320,122 @@ describe('answering a hello', () => {
     expect(sent).toEqual(['ana→bea', 'bea→ana', 'ana→bea']);
     expect(known.ana).toEqual(['bea']);
     expect(known.bea).toEqual(['ana']);
+  });
+});
+
+/* ── The waiting room ────────────────────────────────────────────────────── */
+
+const roster = (...ids: string[]): Roster => ids.reduce((r, id) => seen(r, here(id), NOW), {} as Roster);
+
+describe('who holds the door', () => {
+  it('is the host the call already had, not a second rule', () => {
+    // `hostOf` predates this and is what "ask everyone to mute" already uses.
+    // Two rules for who is in charge are two rules that can disagree.
+    const r = seen({}, here('bea', NOW), NOW + 5_000);
+    expect(hosting(r, 'me', NOW)).toBe(true);
+    expect(hosting(r, 'me', NOW + 20_000)).toBe(false);
+    expect(hostOf(r, 'me', NOW + 20_000)).toBe('bea');
+  });
+});
+
+describe('who is at the door', () => {
+  it('is everybody in the roster who has not been let in', () => {
+    expect(waiting(roster('bea', 'cal'), ['me'])).toEqual([
+      { id: 'bea', name: 'bea', at: NOW },
+      { id: 'cal', name: 'cal', at: NOW },
+    ]);
+    expect(waiting(roster('bea', 'cal'), ['me', 'bea'])).toEqual([{ id: 'cal', name: 'cal', at: NOW }]);
+  });
+
+  it('is empty when everybody has been let in', () => {
+    expect(waiting(roster('bea'), ['me', 'bea'])).toEqual([]);
+  });
+
+  it('holds a client that never asked to be held', () => {
+    // The reason this is derived from the roster rather than collected from a
+    // `knock` signal. A first draft built the queue from what arrivals sent,
+    // which put the hinges in the hands of the person outside the door: a
+    // client that shouted `here` and skipped the knock walked straight in.
+    const rude = seen({}, here('rude'), NOW);
+    expect(waiting(rude, ['me']).map((k) => k.id)).toEqual(['rude']);
+    expect(gated(rude, [], ['me'])).toEqual({ start: [], stop: [] });
+  });
+
+  it('stays in arrival order, and does not reshuffle on a heartbeat', () => {
+    let r = seen({}, here('zed', NOW), NOW);
+    r = seen(r, here('ada', NOW + 1_000), NOW + 1_000);
+    r = seen(r, here('zed', NOW + 9_000), NOW + 9_000);
+    expect(waiting(r, ['me']).map((k) => k.id)).toEqual(['zed', 'ada']);
+  });
+
+  it('breaks a tie by id, so every tab shows the same queue', () => {
+    const r = seen(seen({}, here('zed', NOW), NOW), here('ada', NOW), NOW);
+    expect(waiting(r, ['me']).map((k) => k.id)).toEqual(['ada', 'zed']);
+  });
+});
+
+describe('who this device will connect to', () => {
+  it('takes the host at their word, and nobody else', () => {
+    // A second peer announcing itself host cannot let anybody in here.
+    expect(admitted(['me'], { t: 'admit', from: 'me', to: 'bea' }, 'me')).toEqual(['me', 'bea']);
+    expect(admitted(['me'], { t: 'admit', from: 'cal', to: 'bea' }, 'me')).toEqual(['me']);
+  });
+
+  it('does not add somebody twice', () => {
+    const once = admitted(['me'], { t: 'admit', from: 'me', to: 'bea' }, 'me');
+    expect(admitted(once, { t: 'admit', from: 'me', to: 'bea' }, 'me')).toEqual(['me', 'bea']);
+  });
+
+  for (const t of ['evict', 'deny'] as const) {
+    it(`takes somebody back out on ${t}`, () => {
+      expect(admitted(['me', 'bea'], { t, from: 'me', to: 'bea' }, 'me')).toEqual(['me']);
+      expect(admitted(['me', 'bea'], { t, from: 'cal', to: 'bea' }, 'me')).toEqual(['me', 'bea']);
+    });
+  }
+
+  it('is unmoved by everything else said in the call', () => {
+    const was = ['me'];
+    expect(admitted(was, { t: 'said', from: 'me', at: NOW, body: 'let bea in' }, 'me')).toBe(was);
+  });
+});
+
+describe('being told you are outside', () => {
+  it('is only believed from the host, and only about me', () => {
+    expect(heldBack({ t: 'held', from: 'bea', to: 'me' }, 'me', 'bea')).toBe(true);
+    expect(heldBack({ t: 'held', from: 'cal', to: 'me' }, 'me', 'bea')).toBe(false);
+    expect(heldBack({ t: 'held', from: 'bea', to: 'cal' }, 'me', 'bea')).toBe(false);
+  });
+
+  it('is a courtesy, so nothing about the door depends on it', () => {
+    // Somebody not let in is not let in because no device opens a connection,
+    // whether or not they were ever told why.
+    expect(gated(roster('bea'), [], ['me'])).toEqual({ start: [], stop: [] });
+  });
+});
+
+describe('the door, as connections', () => {
+  it('opens nothing to somebody who has not been let in', () => {
+    // This is what keeps them out. Not the refusal, which is a message a
+    // modified client can ignore — the fact that no device opens a connection,
+    // and a connection nobody opens carries no media.
+    expect(gated(roster('bea'), [], ['me'])).toEqual({ start: [], stop: [] });
+    expect(gated(roster('bea'), [], ['me', 'bea'])).toEqual({ start: ['bea'], stop: [] });
+  });
+
+  it('closes one to somebody thrown out of a call they were already in', () => {
+    // The case a "which links are missing" reading skips: being removed has to
+    // work, not only being refused at the door.
+    expect(gated(roster('bea'), ['bea'], ['me'])).toEqual({ start: [], stop: ['bea'] });
+  });
+
+  it('still closes one to somebody who simply left', () => {
+    expect(gated({}, ['bea'], ['me', 'bea'])).toEqual({ start: [], stop: ['bea'] });
+  });
+
+  it('agrees with the open-call reconciler when everybody is allowed', () => {
+    // The control. A gate that refused everybody would pass every test above,
+    // and this is the one that notices.
+    const r = roster('bea', 'cal');
+    expect(gated(r, ['bea'], ['me', 'bea', 'cal'])).toEqual(reconcile(r, ['bea']));
   });
 });

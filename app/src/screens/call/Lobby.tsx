@@ -193,8 +193,10 @@ export function Lobby({
         tooltip: it is a name, not a password.
       */}
       <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
-        Anybody holding the code can walk into the call. Send it to the people you want in it, and
-        start a new one if it gets out. {state.courses.length > 0 ? 'Nothing about your semester is shared by being in a call.' : ''}
+        Anybody holding the code can walk into the call, unless whoever has been in it longest
+        holds the door — there is a switch for that under People. Send the code to the people you
+        want in it, and start a new one if it gets out.{' '}
+        {state.courses.length > 0 ? 'Nothing about your semester is shared by being in a call.' : ''}
       </div>
     </Page>
   );

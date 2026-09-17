@@ -40,6 +40,7 @@ import {
   BEAT,
   RESTING,
   addressed,
+  gated,
   greets,
   polite,
   reconcile,
@@ -284,7 +285,15 @@ export interface Session {
    * quiet. Without this, a laptop whose lid closed leaves a peer connection
    * open at both ends for the rest of the call.
    */
-  keep: (them: Roster) => void;
+  /**
+   * Hold one connection per person, and none to anybody else.
+   *
+   * `allowed` is the waiting room. Left out, this is exactly what it always
+   * was — `reconcile` over the whole roster — which is why it is an optional
+   * argument rather than a rewrite: an open call takes the same path it took
+   * before there was a door, and that is provable rather than asserted.
+   */
+  keep: (them: Roster, allowed?: string[]) => void;
   /** Say goodbye, close every connection, stop every timer. */
   leave: () => void;
 }
@@ -526,8 +535,9 @@ export async function join(
       current = next;
       wire({ t: 'state', from: me, flags: next });
     },
-    keep(them: Roster) {
-      const { start, stop } = reconcile(them, [...links.keys()]);
+    keep(them: Roster, allowed?: string[]) {
+      const open = [...links.keys()];
+      const { start, stop } = allowed ? gated(them, open, allowed) : reconcile(them, open);
       for (const id of start) linkTo(id);
       for (const id of stop) {
         links.get(id)?.close();

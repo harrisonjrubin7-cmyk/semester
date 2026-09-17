@@ -59,6 +59,13 @@ export const ROOMY = 6;
  * asserting on a shape and hoping. Nothing about this is a secret — a code is
  * a name, and the fact that anybody holding one can walk in is said on the
  * screen rather than implied by its length.
+ *
+ * That is still what a code is. What changed is that it need no longer be the
+ * only thing between a call and a stranger: the person who has been in the
+ * call longest can hold the door, and then a code gets you as far as the
+ * doorstep. See the waiting room in `lib/mesh.ts`, which is careful about the
+ * difference between refusing somebody and compelling them — this file's own
+ * `hostOf` already refused to pretend a mesh can do the second.
  */
 export function newCode(random: () => number = Math.random): string {
   return SHAPE.map((n) =>
