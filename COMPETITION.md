@@ -19,17 +19,22 @@ checking is concrete and it is the reason this file exists: four of the six
 below are sized in the document as sprint items, and building any of them would
 have been a week spent rebuilding something a student can already use today.
 
-**Checked against `a648a1b` on 17 September 2026.** Every verdict names what was
+**Checked against `a27bb0e` on 17 September 2026.** Every verdict names what was
 measured and where, and every file and line quoted below was opened rather than
 inferred.
 
 Each verdict was reached by reading the code, and then put to an adversarial
 pass told to assume that reading was wrong and go hunting for what it missed.
-**Nothing that pass has returned has overturned a verdict.** What it has done is
-add evidence, and only ever in one direction: item 2 was filed Landed on two
-consumers of the grade solver and turned out to have four. That direction is
-the finding this file ends on, and it is the reason the file is worth keeping
-rather than reading once.
+**No verdict has been overturned.** Two have had their evidence corrected, in
+opposite directions, and both corrections are on the record below:
+
+- Item 2 was filed Landed on two consumers of the grade solver. It has four.
+- A fourth row of the comparison table, saying the document's "60 screens"
+  undercounted, **was wrong and the document was right.** It came from a probe
+  that turned out to be counting apostrophes in prose. See
+  *A fourth row that was not wrong* near the end, which is kept rather than
+  deleted because how this file got a number wrong is worth more than the
+  number.
 
 Legend: **Open** · **Landed** (already in the app; nothing to do) · **Partly**
 (some of it is in, the rest is named) · **Not a code item**.
@@ -330,7 +335,7 @@ door is somebody else's course arriving.
 
 ## What the table should say about Semester
 
-Four rows of the comparison table are wrong about this app, in the same
+Three rows of the comparison table are wrong about this app, in the same
 direction each time. Correcting them matters more than it looks, because the
 document's own strategic conclusions rest on them:
 
@@ -339,7 +344,38 @@ document's own strategic conclusions rest on them:
 | LMS sync | None | Canvas, Brightspace, Outlook, Google, iCloud — student-held feed link, no institutional agreement (`lib/feedlink.ts`) |
 | Grade calculator | Named as a gap to build | Shipping on four surfaces — the Grades table, a per-course sheet (`lib/gradesheet.ts`), a practice-exam comparison (`lib/sitting.ts`) and a term-GPA "which course moves it most" table (`lib/termgpa.ts`) |
 | Lecture capture | "A genuine feature gap today" | Shipping — `components/RecordButton.tsx`, live transcript into the material pipeline |
-| Screens | 60 | 74 in the `Screen` union (`lib/types.ts`); eleven of them shown to a new account, the rest unlocked by a fact about the semester (`lib/reveal.ts`) |
+
+### A fourth row that was not wrong, and how this file got it wrong anyway
+
+An earlier draft of this table carried a fourth row, saying the document's
+"60 screens" undercounted and the real figure was 74. **The document was right
+and this file was wrong**, and the way it was wrong is the one `CLAUDE.md`
+warns about hardest, so it stays on the record rather than being quietly
+deleted.
+
+Sixty is correct, and it is the repository's own number: `app/scripts/destinations.mjs`
+is the single read that `sweep:targets` and `sweep:contrast` now share, and it
+returns **60**. The `Screen` union in `lib/types.ts` has 82 members, of which 22
+are not destinations at all — the eight settings sub-pages (`setLook`, `setNav`,
+`setAlerts`, …), the detail views you reach from a destination rather than
+navigate to (`course`, `item`, `guide`, `lesson`, `quiz`, `drill`), and chrome
+(`search`, `directory`, `onboarding`). Sixty destinations, 82 routable screens,
+and the document meant the first.
+
+The 74 was not either number. It came from a regular expression run over
+`lib/types.ts` that matched every `'…'` in the file **including the apostrophes
+in its prose** — "the student's", "the app's" — so it was never counting screen
+names at all. `CLAUDE.md`: *a clean reading is a claim about the probe too*, and
+*when a measurement clears a suspect the cheap signal convicted, find out which
+one is lying before believing the measurement.* Here the measurement convicted a
+suspect that was innocent, and the probe was the liar. It was caught only
+because `scripts/destinations.mjs` landed on main mid-pass and disagreed.
+
+The lesson generalises past this row. Every *other* correction in this file
+points the same way — the app does more than the document credits — and a run of
+findings that all flatter the thing you are checking is exactly the shape a
+broken probe produces. That those findings each rest on an opened file and a
+quoted line, rather than on a count, is the only reason they survive this one.
 
 The three baseline claims the document rests its "bottom line up front" on all
 check out, and one is stronger than stated. The workload-aware planner is real:
@@ -368,9 +404,23 @@ description of itself, and the app had moved. It will have moved again by the
 time the next one is written.
 
 There is a second lesson specific to this document, and it is the more useful
-one for a competitive comparison. **Every correction above ran the same way:
-the app did more than the document credited, never less.** A comparison table
-that undercounts your own product is not a neutral error — it points engineering
-at work that is finished and points marketing away from claims that are already
-true. Of the four corrected rows, three are features the document identifies as
-the competitors' most-praised, and all three already ship here.
+one for a competitive comparison. **Every correction that survived ran the same
+way: the app did more than the document credited, never less.** A comparison
+table that undercounts your own product is not a neutral error — it points
+engineering at work that is finished and points marketing away from claims that
+are already true. All three corrected rows are features the document identifies
+as the competitors' most-praised, and all three already ship here.
+
+And a third, which this file earned the hard way and which qualifies the second.
+A fourth correction was drafted and did not survive: the screen count, where the
+document was right and this file was wrong because its probe was broken. That
+matters beyond the row, because it was the one correction pointing the other way
+and it was the one that was false — which is to say the run of
+findings-that-all-flatter-the-product was, for one draft, being produced partly
+by a bad instrument rather than entirely by the code.
+
+So the standard that holds is not "check the claim against the code". It is
+**check it against a file you opened and a line you can quote**. Every verdict
+above that survived does rest on one. The one that did not rested on a count,
+and a count is a probe, and a probe is a thing that can be wrong in exactly the
+direction you were already expecting.
