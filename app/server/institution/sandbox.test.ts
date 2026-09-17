@@ -694,6 +694,175 @@ describe('publishing work', () => {
   });
 });
 
+describe('an appeal', () => {
+  /** Carry one piece of work all the way to released feedback. */
+  const released = async (marks: Record<string, string> = { method: '5', accuracy: '4', clarity: '2' }) => {
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'a-sub');
+    const g = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(
+      f,
+      act('grades', g.id, g.version, 'grade', { ...marks, comments: 'As marked.' }),
+      'a-mark',
+    );
+    const g2 = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(f, act('grades', g2.id, g2.version, 'release'), 'a-rel');
+    return { s, f };
+  };
+
+  it('can be asked for once the mark has been seen, and not before', async () => {
+    const s = student();
+    await enrol(s);
+    // Nothing to dispute: a mark you cannot see is not a mark you can argue with.
+    const early = await area('appeals').get(s, 'student-1:a1');
+    expect(early?.actions.map((a) => a.id) ?? []).toEqual([]);
+
+    /*
+     * And refused if sent anyway. The check above is about the menu, and a
+     * client does not need the menu — the same hole a mutation found in the
+     * discussion board, where every test went through the record first and
+     * the write's own check was never reached.
+     */
+    const r = await seen('appeals', s, 'student-1:a1');
+    await expect(
+      area('appeals').execute(s, act('appeals', r.id, r.version, 'appeal', { reason: 'Early.' }), 'a-early'),
+    ).rejects.toThrow(/no released mark to appeal/i);
+
+    await released();
+    const now = await seen('appeals', s, 'student-1:a1');
+    expect(now.actions.map((a) => a.id)).toEqual(['appeal']);
+  });
+
+  it('leaves the original mark standing while it is open', async () => {
+    const { s, f } = await released();
+    const r = await seen('appeals', s, 'student-1:a1');
+    await area('appeals').execute(
+      s,
+      act('appeals', r.id, r.version, 'appeal', { reason: 'Q2 was marked against the wrong rubric line.' }),
+      'a-ask',
+    );
+    const asked = await seen('appeals', f, 'student-1:a1');
+    expect(asked.status).toMatch(/under appeal/i);
+    expect(JSON.stringify(asked.details)).toContain('wrong rubric line');
+    // 11 of 20 still, and the student can still read it.
+    expect((await seen('grades', s, 'student-1:a1')).summary).toContain('11 out of 20');
+  });
+
+  it('is upheld with a reason, and the mark does not move', async () => {
+    const { s, f } = await released();
+    const r = await seen('appeals', s, 'student-1:a1');
+    await area('appeals').execute(s, act('appeals', r.id, r.version, 'appeal', { reason: 'Please recheck.' }), 'a-ask');
+    const open = await seen('appeals', f, 'student-1:a1');
+    await area('appeals').execute(
+      f,
+      act('appeals', open.id, open.version, 'uphold', { reason: 'The rubric line was applied as written.' }),
+      'a-up',
+    );
+    const done = await seen('appeals', s, 'student-1:a1');
+    expect(done.status).toMatch(/upheld/i);
+    expect(JSON.stringify(done.details)).toContain('applied as written');
+    expect((await seen('grades', s, 'student-1:a1')).summary).toContain('11 out of 20');
+  });
+
+  it('is amended by re-marking, and the first mark is still in the record', async () => {
+    const { s, f } = await released();
+    const r = await seen('appeals', s, 'student-1:a1');
+    await area('appeals').execute(s, act('appeals', r.id, r.version, 'appeal', { reason: 'Q2.' }), 'a-ask');
+    const open = await seen('appeals', f, 'student-1:a1');
+    await area('appeals').execute(
+      f,
+      act('appeals', open.id, open.version, 'amend', {
+        method: '7',
+        accuracy: '6',
+        clarity: '3',
+        reason: 'Q2 was indeed marked against the wrong line.',
+      }),
+      'a-am',
+    );
+    expect((await seen('grades', s, 'student-1:a1')).summary).toContain('16 out of 20');
+    // The point of an academic record: the first mark is not erased by the second.
+    const record = await seen('records', f, 'student-1:a1');
+    const trail = record.details.map((d) => d.value).join(' | ');
+    expect(trail).toContain('Marked');
+    expect(trail).toContain('Appealed');
+    expect(trail).toContain('Mark amended');
+    expect(JSON.stringify(await seen('appeals', s, 'student-1:a1'))).toContain('11');
+  });
+
+  it('is the student’s to raise and faculty’s to answer, and neither may do the other’s part', async () => {
+    const { s, f } = await released();
+    const r = await seen('appeals', f, 'student-1:a1');
+    await expect(
+      area('appeals').execute(f, act('appeals', r.id, r.version, 'appeal', { reason: 'On their behalf.' }), 'a-x'),
+    ).rejects.toThrow(/Only an enrolled student|not your work/i);
+    await area('appeals').execute(
+      s,
+      act('appeals', r.id, r.version, 'appeal', { reason: 'Mine to raise.' }),
+      'a-mine',
+    );
+    const open = await seen('appeals', s, 'student-1:a1');
+    await expect(
+      area('appeals').execute(s, act('appeals', open.id, open.version, 'uphold', { reason: 'I agree with me.' }), 'a-y'),
+    ).rejects.toThrow(/Only the course faculty/i);
+  });
+
+  it('cannot be raised twice, or answered twice', async () => {
+    const { s, f } = await released();
+    const r = await seen('appeals', s, 'student-1:a1');
+    await area('appeals').execute(s, act('appeals', r.id, r.version, 'appeal', { reason: 'One.' }), 'a-1');
+    const open = await seen('appeals', s, 'student-1:a1');
+    await expect(
+      area('appeals').execute(s, act('appeals', open.id, open.version, 'appeal', { reason: 'Two.' }), 'a-2'),
+    ).rejects.toThrow(/already under appeal/i);
+    const mine = await seen('appeals', f, 'student-1:a1');
+    await area('appeals').execute(f, act('appeals', mine.id, mine.version, 'uphold', { reason: 'Stands.' }), 'a-3');
+    const closed = await seen('appeals', f, 'student-1:a1');
+    await expect(
+      area('appeals').execute(f, act('appeals', closed.id, closed.version, 'uphold', { reason: 'Again.' }), 'a-4'),
+    ).rejects.toThrow(/already been answered|not under appeal/i);
+  });
+
+  /*
+   * Archiving was a status change and nothing else. Closing the appeal window
+   * is what the stage is *for* — it is the moment a record stops being able to
+   * change, which is the only thing that makes it an archive rather than a
+   * label.
+   */
+  it('cannot be raised once the record is archived', async () => {
+    const { s, f } = await released();
+    const open = await seen('records', f, 'student-1:a1');
+    await area('records').execute(f, act('records', open.id, open.version, 'archive'), 'a-arch');
+    const shut = await seen('appeals', s, 'student-1:a1');
+    expect(shut.actions).toEqual([]);
+    await expect(
+      area('appeals').execute(s, act('appeals', shut.id, shut.version, 'appeal', { reason: 'Too late.' }), 'a-late'),
+    ).rejects.toThrow(/archived/i);
+  });
+
+  it('will not let a record be archived while an appeal is open', async () => {
+    const { s, f } = await released();
+    const r = await seen('appeals', s, 'student-1:a1');
+    await area('appeals').execute(s, act('appeals', r.id, r.version, 'appeal', { reason: 'Wait.' }), 'a-open');
+    const rec = await seen('records', f, 'student-1:a1');
+    // Archiving closes the window, so archiving over an open appeal would
+    // answer it by ignoring it.
+    await expect(
+      area('records').execute(f, act('records', rec.id, rec.version, 'archive'), 'a-shut'),
+    ).rejects.toThrow(/under appeal/i);
+  });
+
+  it('refuses an appeal with no reason in it', async () => {
+    const { s } = await released();
+    const r = await seen('appeals', s, 'student-1:a1');
+    await expect(
+      area('appeals').execute(s, act('appeals', r.id, r.version, 'appeal', { reason: '   ' }), 'a-blank'),
+    ).rejects.toThrow(/say what is wrong/i);
+  });
+});
+
 describe('the deadline', () => {
   /** A1 is due 2026-10-02T23:59Z. `vi.setSystemTime` moves both clocks. */
   const DUE = Date.parse('2026-10-02T23:59:00Z');
