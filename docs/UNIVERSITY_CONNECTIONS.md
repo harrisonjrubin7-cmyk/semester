@@ -12,6 +12,45 @@ Updated September 13, 2026. No university credentials or approved API access hav
 - `src/screens/University.tsx`: service launcher, local role-oriented preparation drafts, read-only school connection status, paginated record search, provider-supplied action forms, review/confirm and receipt lookup. School records and receipts remain in memory; they are not copied into browser draft storage or AI context.
 - `supabase/`: the original application's backend functions and schemas, restored from the supplied original repository. No migrations were applied and no functions were deployed.
 
+## The sandbox institution
+
+`server/institution/sandbox.ts` is a demonstration institution: one course, two
+published assignments, and the whole loop the completion plan's Phase 1 asks
+for — enrol, submit, receipt, mark, release feedback, archive the record —
+across the `courses`, `assignments`, `grades` and `records` areas. Nothing in
+it reaches anybody, and it exists because that loop could not otherwise be
+built, demonstrated or tested: the approved registry is empty by design, so
+every route answered 503.
+
+It is **not** an entry in `server/institution/adapters.ts`, and must not become
+one. That array means "a school has approved this adapter for its students'
+real records". The sandbox means the opposite, so it has its own switch:
+
+```sh
+SEMESTER_SANDBOX_INSTITUTION=1 npm run dev:university
+```
+
+The startup line then says the sandbox is on and that nothing it reports is
+real, and the gateway reports its institution name as
+`SANDBOX — a demonstration course, not a real institution` whatever
+`SEMESTER_INSTITUTION_NAME` is set to. Every record it returns is titled
+`SANDBOX · …`. The other thirty-three service areas keep answering
+"not configured", because a demonstration that lit the whole University screen
+up would be exactly the placeholder success state this package refuses.
+
+A tester reaches it the same way a real student would reach a real school: the
+verified membership in `app_metadata` decides which adapter answers, so a
+sandbox account needs
+
+```json
+{ "semester": { "institutionId": "sandbox", "roles": ["student"] } }
+```
+
+and a marker needs `"roles": ["faculty"]`. An account belonging to a real
+institution never reaches this code, whatever it sends. Its store is
+`work/university/private/sandbox.sqlite` by default, under the same `0o700`
+directory as the journal, because it holds coursework somebody typed.
+
 ## Connect an approved institution later
 
 1. Register the deployment with the school. Establish the data agreement, system owners, approved scopes, identity provider and account lifecycle. Use a sandbox before real student records.
