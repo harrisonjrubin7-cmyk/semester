@@ -11,6 +11,7 @@ import { Mail } from './Mail';
 import { Degree } from './Degree';
 import { Applying } from './Applying';
 import { People } from './People';
+import { Import } from './Import';
 
 /**
  * The screens somebody can arrive at cold, and whether there is a way on.
@@ -303,6 +304,69 @@ describe('a control that cannot do its job', () => {
     expect(named('Add')!.disabled).toBe(false);
     press(/^add$/i);
     expect(host.textContent).toContain('Dr. Stromme');
+  });
+
+  /*
+   * Import, cold, with no key — the first real action a new account takes.
+   *
+   * `screens/FirstRun.tsx` has one call to action and it is this screen, so a
+   * brand-new install with nothing set up arrives here before it arrives
+   * anywhere else. The button that builds a course was drawn live whatever
+   * the key situation was, with the gate as a grey paragraph underneath it:
+   * press it and the files are read, the wait is spent, and `lib/claude.ts`
+   * answers "No key yet. Sign in to use the shared one, or add your own under
+   * Settings" into an error card. That is the dead end with directions
+   * printed on it that `components/NeedsKey.tsx` was written to abolish, on
+   * the one screen where it costs a pilot its first minute.
+   *
+   * The other five screens that need a key already draw the gate *instead of*
+   * the button. These two say that Import does too — and the second is the
+   * control, because a test that only ever sees the gate would also pass
+   * against a screen with no button at all.
+   */
+  const paste = (text: string) => {
+    press(/paste the syllabus in as text/i);
+    const box = host.querySelector('#paste-syllabus') as HTMLTextAreaElement;
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(box, text);
+      box.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    press(/^take this text$/i);
+  };
+
+  const SYLLABUS = 'ECON 1020 Principles of Macroeconomics. Midterm on October 8 in class.';
+
+  it('never offers to build a course on Import while there is no key to build it with', () => {
+    show(<Import />);
+    // At rest the screen says what it needs, before an upload rather than
+    // after one.
+    expect(named('Set up the assistant')).toBeDefined();
+
+    paste(SYLLABUS);
+
+    // The words landed, so this is the screen with something to build from.
+    expect(host.textContent).toContain('words');
+    // And there is still no button promising to build it.
+    expect(
+      pressable().filter((label) => /^build the course/i.test(label)),
+      `a live build button with no key — saw ${JSON.stringify(pressable())}`,
+    ).toEqual([]);
+    // The way on is the gate, in the button's place, and drawn once.
+    expect(pressable().filter((label) => /^set up the assistant$/i.test(label))).toHaveLength(1);
+  });
+
+  it('offers it the moment there is a key, so the gate is not simply a missing button', () => {
+    localStorage.setItem(
+      'semester.claude.v1',
+      JSON.stringify({ apiKey: 'sk-ant-test', proxy: '', model: 'claude-opus-5', provider: 'anthropic', openaiKey: '', openaiModel: '' }),
+    );
+    show(<Import />);
+    paste(SYLLABUS);
+    expect(
+      pressable().some((label) => /^build the course/i.test(label)),
+      `no build button with a key set — saw ${JSON.stringify(pressable())}`,
+    ).toBe(true);
+    expect(pressable().some((label) => /^set up the assistant$/i.test(label))).toBe(false);
   });
 
   it('turns Applying\u2019s Add it off until one of the two it reads is filled', () => {
