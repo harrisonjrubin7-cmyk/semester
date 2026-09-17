@@ -171,8 +171,9 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
           {/*
             Said on the card rather than inferred from how it looks.
 
-            The seventeen drawn diagrams are the app's own, checked by a person
-            and the same every time they are shown. This one was written to a
+            The hand-drawn diagrams are the app's own, checked by a person and
+            the same every time they are shown. A count here would rot the next
+            time one is added; `DIAGRAM_KINDS` is the list. This one was written to a
             description, by a model, and kept by whoever was reading it — which
             is a weaker claim, and one worth making in the place where somebody
             is deciding how much to trust the picture. `lib/where.ts` makes the

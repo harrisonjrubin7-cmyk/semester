@@ -537,6 +537,197 @@ function ThreeV() {
   );
 }
 
+/* ── The quantitative four ─────────────────────────────────────────────── */
+
+/**
+ * A block on a surface with the four forces on it.
+ *
+ * The first diagram every mechanics course draws, and the one people get wrong
+ * by forgetting that the normal force is a *response*: it is here at the same
+ * length as the weight, because on a level surface it is. The accent is on the
+ * horizontal pair, which is the pair that decides whether anything moves.
+ */
+function FreeBody() {
+  return (
+    <Frame>
+      <defs>
+        <marker id="fb-ink" viewBox="0 0 8 8" refX={7} refY={4} markerWidth={6} markerHeight={6} orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill={ink} />
+        </marker>
+        <marker id="fb-accent" viewBox="0 0 8 8" refX={7} refY={4} markerWidth={6} markerHeight={6} orient="auto">
+          <path d="M0 0 L8 4 L0 8 z" fill={accent} />
+        </marker>
+      </defs>
+      <path d="M20 150 L300 150" stroke={line} strokeWidth={1} />
+      {[40, 70, 100, 130, 160, 190, 220, 250, 280].map((x) => (
+        <path key={x} d={`M${x} 150 L${x - 8} 160`} stroke={line} strokeWidth={1} />
+      ))}
+      <rect x={130} y={110} width={60} height={40} fill="none" stroke={ink} strokeWidth={1.8} />
+      {/* Weight down and normal up, equal here — which is the point of them. */}
+      <path d="M160 150 L160 188" stroke={ink} strokeWidth={1.6} markerEnd="url(#fb-ink)" />
+      <text x={168} y={186} fill={dim} fontSize={10}>W = mg</text>
+      <path d="M160 110 L160 72" stroke={ink} strokeWidth={1.6} markerEnd="url(#fb-ink)" />
+      <text x={168} y={78} fill={dim} fontSize={10}>N</text>
+      {/* The horizontal pair, which is the pair that decides the motion. */}
+      <path d="M190 130 L262 130" stroke={accent} strokeWidth={2} markerEnd="url(#fb-accent)" />
+      <text x={268} y={127} fill={accent} fontSize={10}>F</text>
+      <path d="M130 130 L78 130" stroke={accent} strokeWidth={1.6} markerEnd="url(#fb-accent)" opacity={0.8} />
+      <text x={72} y={127} fill={accent} fontSize={10} textAnchor="end" opacity={0.85}>f</text>
+      <text x={160} y={26} fill={dim} textAnchor="middle" fontSize={9.5}>
+        It moves when F exceeds f
+      </text>
+    </Frame>
+  );
+}
+
+/**
+ * pH against volume of titrant, for a weak acid against a strong base.
+ *
+ * Two points are worth more than the curve. The equivalence point is where the
+ * curve is steepest and the moles match; the half-equivalence point is where
+ * pH equals pKa. The second is the one exams ask about and the one a plain
+ * S-curve does not show, so it is drawn.
+ */
+function TitrationCurve() {
+  return (
+    <Frame>
+      <Axes x="Volume of base" y="pH" />
+      <path
+        d="M40 152 C 78 142, 96 126, 112 120 C 140 110, 152 106, 168 98 C 182 90, 186 64, 196 50 C 208 36, 240 30, 300 28"
+        stroke={ink}
+        strokeWidth={1.8}
+        fill="none"
+      />
+      {/* Equivalence: the steep middle, where the moles match. */}
+      <path d="M186 64 L186 168" stroke={accent} strokeWidth={1} strokeDasharray="3 3" />
+      <circle cx={186} cy={64} r={3.6} fill={accent} />
+      <text x={192} y={60} fill={accent} fontSize={10}>equivalence</text>
+      {/* Half-equivalence: pH = pKa, which is the thing to remember. */}
+      <path d="M112 120 L112 168" stroke={line} strokeWidth={1} strokeDasharray="3 3" />
+      <path d="M40 120 L112 120" stroke={line} strokeWidth={1} strokeDasharray="3 3" />
+      <circle cx={112} cy={120} r={3} fill={dim} />
+      {/* Left of its own point, so it cannot crowd the equivalence line. */}
+      <text x={106} y={112} fill={dim} fontSize={9.5} textAnchor="end">pH = pKa</text>
+    </Frame>
+  );
+}
+
+/**
+ * The two ways two resistors can sit in a circuit, side by side.
+ *
+ * Drawn together because neither is memorable alone: what a student needs is
+ * the contrast — one path or two — and the rule that follows from it. The
+ * accent is on the junctions, which is where the current divides and where the
+ * parallel case stops being the series case.
+ */
+function SeriesParallel() {
+  /* A resistor interrupts the wire. Drawing the wire through it is the
+     schematic equivalent of a short circuit, which is the one thing this
+     figure must not appear to show. */
+  const resistor = (x: number, y: number, name: string) => (
+    <g key={`${name}-${x}-${y}`}>
+      <rect x={x} y={y - 7} width={30} height={14} fill="none" stroke={ink} strokeWidth={1.6} />
+      <text x={x + 15} y={y - 12} fill={dim} textAnchor="middle" fontSize={9}>
+        {name}
+      </text>
+    </g>
+  );
+  /* A cell: long plate positive, short plate negative. */
+  const cell = (x: number, y: number) => (
+    <>
+      <path d={`M${x} ${y - 11} L${x} ${y + 11}`} stroke={ink} strokeWidth={1.4} />
+      <path d={`M${x + 7} ${y - 6} L${x + 7} ${y + 6}`} stroke={ink} strokeWidth={3} />
+    </>
+  );
+  return (
+    <Frame>
+      <text x={84} y={20} fill={dim} textAnchor="middle" fontSize={9.5} letterSpacing="0.1em">
+        SERIES
+      </text>
+      {/* Top run, broken twice for the two resistors. */}
+      <path
+        d="M34 44 L46 44 M76 44 L92 44 M122 44 L134 44 M134 44 L134 100 M134 100 L34 100 M34 100 L34 85 M34 59 L34 44"
+        stroke={line}
+        strokeWidth={1.4}
+        fill="none"
+      />
+      {cell(34, 72)}
+      {resistor(46, 44, 'R₁')}
+      {resistor(92, 44, 'R₂')}
+      <text x={84} y={120} fill={dim} textAnchor="middle" fontSize={9.5}>
+        R = R₁ + R₂
+      </text>
+
+      <text x={238} y={20} fill={dim} textAnchor="middle" fontSize={9.5} letterSpacing="0.1em">
+        PARALLEL
+      </text>
+      {/* Two rails, two branches, each branch broken for its resistor. */}
+      <path
+        d="M196 44 L196 100 M280 44 L280 100 M196 44 L222 44 M252 44 L280 44 M196 100 L222 100 M252 100 L280 100 M180 72 L196 72"
+        stroke={line}
+        strokeWidth={1.4}
+        fill="none"
+      />
+      {cell(173, 72)}
+      {resistor(222, 44, 'R₁')}
+      {resistor(222, 100, 'R₂')}
+      {/* Where the current divides, and where it rejoins. */}
+      {[[196, 44], [196, 100], [280, 44], [280, 100]].map(([cx, cy]) => (
+        <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={3.2} fill={accent} />
+      ))}
+      <text x={238} y={120} fill={accent} textAnchor="middle" fontSize={9.5}>
+        1/R = 1/R₁ + 1/R₂
+      </text>
+      <text x={160} y={152} fill={dim} textAnchor="middle" fontSize={9.5}>
+        One path or two — the junction is the difference
+      </text>
+    </Frame>
+  );
+}
+
+/**
+ * Pressure against temperature, with the three regions and the two points.
+ *
+ * The triple point is where all three phases sit together; the critical point
+ * is where liquid and gas stop being distinguishable, so the liquid–gas line
+ * **ends** rather than running off the edge. That ending is the detail a
+ * hand-drawn version usually loses, and it is the one worth picking out.
+ */
+function PhaseDiagram() {
+  return (
+    <Frame>
+      <Axes x="Temperature" y="Pressure" />
+      {/* Solid–liquid: near-vertical, leaning left the way water's does. */}
+      <path d="M128 130 L112 26" stroke={ink} strokeWidth={1.6} fill="none" />
+      {/* Solid–gas, down toward the corner. */}
+      <path d="M128 130 C 104 144, 72 156, 44 162" stroke={ink} strokeWidth={1.6} fill="none" />
+      {/* Liquid–gas, stopping at the critical point. */}
+      <path d="M128 130 C 168 114, 200 94, 222 74" stroke={ink} strokeWidth={1.6} fill="none" />
+      <text x={70} y={84} fill={dim} fontSize={10}>solid</text>
+      <text x={152} y={58} fill={dim} fontSize={10}>liquid</text>
+      <text x={196} y={150} fill={dim} fontSize={10}>gas</text>
+      <circle cx={128} cy={130} r={4} fill={accent} />
+      <text x={134} y={148} fill={accent} fontSize={10}>triple point</text>
+      <circle cx={222} cy={74} r={4} fill={accent} opacity={0.8} />
+      {/*
+        The point sits back from the edge so its label has somewhere to go.
+        Two earlier placements were wrong and both were only visible in a
+        screenshot: a sentence above it ran through the solid–liquid line and
+        through "liquid", and moving it below-left ran it through the
+        liquid–gas curve. To the right of a point that ends at x=222 is the
+        one empty region on this canvas.
+      */}
+      <text x={230} y={70} fill={accent} fontSize={10} opacity={0.85}>
+        critical point
+      </text>
+      <text x={230} y={83} fill={dim} fontSize={9}>
+        the line ends
+      </text>
+    </Frame>
+  );
+}
+
+
 const DIAGRAMS: Record<DiagramKind, () => React.JSX.Element> = {
   'supply-demand': SupplyDemand,
   'price-ceiling': PriceCeiling,
@@ -555,6 +746,10 @@ const DIAGRAMS: Record<DiagramKind, () => React.JSX.Element> = {
   'channel-levels': ChannelLevels,
   'product-life-cycle': ProductLifeCycle,
   'three-v': ThreeV,
+  'free-body': FreeBody,
+  'titration-curve': TitrationCurve,
+  'series-parallel': SeriesParallel,
+  'phase-diagram': PhaseDiagram,
 };
 
 export function Diagram({ kind }: { kind: DiagramKind }) {

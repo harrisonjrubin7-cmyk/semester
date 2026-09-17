@@ -26,7 +26,7 @@ import type { Figure } from '../lib/types';
  * So the payload goes in as a stored figure and the assertion is made about
  * the document.
  *
- * The second is about trust. The seventeen hand-drawn diagrams were checked by
+ * The second is about trust. The hand-drawn diagrams were checked by
  * a person; a drawn one was written to a description by a model and kept by
  * whoever was reading it. Those are different claims and the card has to say
  * which it is making — the per-row version of the argument `lib/where.ts`

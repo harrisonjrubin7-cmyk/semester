@@ -352,7 +352,7 @@ describe('what a model reading material may put in a guide', () => {
     // model a door that is not there.
     //
     // Matched on the shape rather than on the word: the prompt says "these
-    // seventeen drawn diagrams" about `kind`, which is the closed arm and the
+    // hand-drawn diagrams" about `kind`, which is the closed arm and the
     // opposite of what this is checking for.
     expect(figureShapes()).not.toContain('"type":"drawn"');
     expect(figureShapes()).toContain('exactly three shapes');
