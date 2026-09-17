@@ -1737,6 +1737,36 @@ written without it.
 
 Eleven more mutations, eleven red.
 
+### The deadline, which was displayed and enforced nowhere
+
+Both assignments carried a due date from the first commit, and nothing read it.
+Work submitted three days late was recorded exactly as work submitted three
+days early, which makes the due date decoration.
+
+It is worked out from the two timestamps the record already has rather than
+stored as a flag, so it cannot drift from them — a stored `late` and a
+`submittedAt` are two facts that can disagree, and only one of them is
+evidence. Both sides read the same sentence: the student is warned *before*
+confirming, the receipt they keep says `Late by 3 days` or `On time, with 2
+days to spare`, and the marker's record says the same. The course record now
+separates **overdue** from merely outstanding, which is a difference a course
+runs on: one is work still coming and the other is work that is not.
+
+**It does not refuse a late submission**, and that is the design rather than
+an omission. Plenty of courses take late work with a penalty, some up to a
+cut-off, some not at all. A sandbox that hard-refused would be modelling one
+policy as though it were the only one — the quiet assumption this whole
+package is written against. It records the truth and leaves the policy to the
+course.
+
+One bug, introduced and then caught by an existing test within the same hour:
+the lateness sentence was added to the receipt that was *handed back* after a
+plain one had already been stored, so a retry disagreed with the original about
+whether the work was late. A receipt is evidence; two versions of it is the one
+thing it cannot be. The note is stored with the receipt now.
+
+Eight more mutations, eight red.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes
