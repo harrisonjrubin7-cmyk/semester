@@ -1695,11 +1695,57 @@ Four things follow, and each is tested.
 
 Seven more mutations, seven red.
 
+### And discussion, which is the first part of this that is many-to-many
+
+The last item on the plan's list, and the first one where the interesting
+question is not *whose* something is. Everything before it concerned one
+student's work. A question is different: the useful ones are useful to the
+whole class, and some of them must never reach it.
+
+> "I do not understand what Q3 is asking" should be answered once, where
+> everybody can read it.
+>
+> "I am struggling and may need an extension" is addressed to the same person
+> and must not be.
+
+A board with one visibility either loses the first or publishes the second,
+and a student cannot be expected to keep a rule the system does not enforce.
+So every post carries who it is for, chosen at the time and never defaulted —
+a person about to say something they would not say to the class should have had
+to choose, not have had a default chosen for them. An unknown or missing
+audience is refused rather than guessed.
+
+Threads hang off the course and its published work, **not off anybody's work
+row**. That is not a filing decision: a thread attached to a submission would
+make the list of threads a list of who has submitted, and the existence of a
+question would say something about the person who asked it before a word of it
+was read.
+
+The refusal that matters is tested from the other student's side rather than
+the poster's — a test that checked an author can see their own private post
+would pass against a board with no privacy at all. It is also tested at the
+*write* as well as the read: a mutation removing the roster check inside the
+post survived the first pass, because every test went through the record
+first and the read refused them earlier. A client does not have to read
+anything first, which is exactly why the check is in both places.
+
+One real bug, found by the test rather than by reading: a retried post hit a
+database constraint instead of returning its first receipt, because posting
+never wrote a receipt down for `already` to find. The same dropped-connection
+case the loop's other actions were built around, in the one path that had been
+written without it.
+
+Eleven more mutations, eleven red.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes
-what the app tells a student about that. Discussion is the last item on the
-plan's list and is still ahead.
+what the app tells a student about that. With this, every item on the plan's
+"what's missing" list for the institutional side — submission, rubrics, faculty
+grading, feedback delivery, discussion and a real class roster — has a working
+version against the sandbox, and none of it has a version against a real
+school, which remains an institutional decision rather than an engineering
+one.
 
 ---
 

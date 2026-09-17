@@ -435,6 +435,159 @@ describe('the rubric', () => {
   });
 });
 
+describe('discussion', () => {
+  const say = async (
+    context: AdapterContext,
+    thread: string,
+    body: string,
+    audience: string,
+    key = `p-${Math.random().toString(36).slice(2)}`,
+  ) => {
+    const r = await seen('courses', context, `thread:${thread}`);
+    return area('courses').execute(
+      context,
+      act('courses', r.id, r.version, isFacultyCtx(context) ? 'answer' : 'ask', { body, audience }),
+      key,
+    );
+  };
+  const isFacultyCtx = (c: AdapterContext) => c.identity.roles.includes('faculty');
+  const bodies = async (context: AdapterContext, thread: string) =>
+    (await seen('courses', context, `thread:${thread}`)).details.map((d) => d.value).join(' | ');
+
+  it('answers a question once, where the class can read it', async () => {
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    await say(s, 'a1', 'What is Q3 asking for?', 'The class');
+    await say(f, 'a1', 'The second derivative, not the first.', 'The class');
+    const asStudent = await bodies(s, 'a1');
+    expect(asStudent).toContain('What is Q3 asking for?');
+    expect(asStudent).toContain('The second derivative');
+    expect(asStudent, 'a faculty answer should say so').toContain('(faculty)');
+    // And another student, who asked nothing, reads the same thread.
+    const other = who('student-2', 'student');
+    await enrol(other);
+    expect(await bodies(other, 'a1')).toContain('The second derivative');
+  });
+
+  /*
+   * The load-bearing one, and it is asserted from the other student's side
+   * rather than from the poster's. A test that checked the poster can see
+   * their own private post would pass on a board with no privacy at all.
+   */
+  it('keeps a post meant for staff away from the rest of the class', async () => {
+    const s = student();
+    const other = who('student-2', 'student');
+    const f = faculty();
+    await enrol(s);
+    await enrol(other);
+    await say(s, 'general', 'I am struggling and may need an extension.', 'Staff only');
+
+    const theirs = await bodies(other, 'general');
+    expect(theirs, 'a private post reached another student').not.toContain('extension');
+    expect(theirs, 'and so did the fact that one exists').not.toContain('to staff only');
+
+    // Visible to the faculty it was addressed to, and to its author.
+    expect(await bodies(f, 'general')).toContain('extension');
+    expect(await bodies(s, 'general')).toContain('extension');
+  });
+
+  it('will not let somebody outside the class read or post', async () => {
+    const stranger = who('gatecrasher-2', 'student');
+    const s = student();
+    await enrol(s);
+    await say(s, 'a1', 'A question the class can see.', 'The class');
+    expect(await area('courses').get(stranger, 'thread:a1')).toBeNull();
+    await expect(say(stranger, 'a1', 'Let me in.', 'The class')).rejects.toThrow(
+      /the class can read or post|not visible/i,
+    );
+    // And the threads are not even listed for them.
+    const { records } = await area('courses').list(stranger, { search: '', cursor: null });
+    expect(records.map((r) => r.id)).toEqual(['sandbox-101']);
+  });
+
+  it('refuses an outsider who posts without reading first', async () => {
+    /*
+     * The test above goes through the record, so the read's refusal fires and
+     * the one inside the post never runs — a mutation removing it survived.
+     * A client does not have to read anything first, which is the whole point
+     * of checking at the write as well, so this is the call a hostile one
+     * makes: straight to execute, with a guessed version.
+     */
+    const stranger = who('gatecrasher-3', 'student');
+    await expect(
+      area('courses').execute(
+        stranger,
+        act('courses', 'thread:a1', '0', 'ask', { body: 'Straight in.', audience: 'The class' }),
+        'p-direct',
+      ),
+    ).rejects.toThrow(/Only the class can read or post here/);
+    // And nothing of theirs is in the thread for the class to read.
+    const s = student();
+    await enrol(s);
+    expect(await bodies(s, 'a1')).not.toContain('Straight in');
+  });
+
+  it('makes the choice of audience explicit rather than defaulting it', async () => {
+    const s = student();
+    await enrol(s);
+    const r = await seen('courses', s, 'thread:a1');
+    const ask = r.actions.find((a) => a.id === 'ask');
+    const field = ask?.fields.find((x) => x.id === 'audience');
+    expect(field?.required, 'a person should have to choose').toBe(true);
+    expect(field?.options).toEqual(['The class', 'Staff only']);
+    // A missing or unknown audience is refused, not guessed at.
+    await expect(
+      area('courses').execute(s, act('courses', r.id, r.version, 'ask', { body: 'x' }), 'p-none'),
+    ).rejects.toThrow(/Choose who sees this/);
+    await expect(
+      area('courses').execute(
+        s,
+        act('courses', r.id, r.version, 'ask', { body: 'x', audience: 'Everyone on the internet' }),
+        'p-bad',
+      ),
+    ).rejects.toThrow(/Choose who sees this/);
+  });
+
+  it('says who will see it before it is posted, because a post cannot be taken back', async () => {
+    const s = student();
+    await enrol(s);
+    const r = await seen('courses', s, 'thread:general');
+    const said = await area('courses').review(
+      s,
+      act('courses', r.id, r.version, 'ask', { body: 'Private, please.', audience: 'Staff only' }),
+    );
+    const detail = JSON.stringify(said.details);
+    expect(detail).toContain('faculty only');
+    expect(detail).toContain('cannot be edited');
+    // And reviewing posted nothing.
+    expect(await bodies(s, 'general')).not.toContain('Private, please');
+  });
+
+  it('does not put a thread on anybody’s work, so the list is not a list of who submitted', async () => {
+    const s = student();
+    await enrol(s);
+    const { records } = await area('courses').list(s, { search: '', cursor: null });
+    // The course, and one thread per published assignment plus a general one.
+    expect(records.map((r) => r.id)).toEqual([
+      'sandbox-101',
+      'thread:general',
+      'thread:a1',
+      'thread:a2',
+    ]);
+    for (const r of records) expect(r.title).toContain(SANDBOX_MARK);
+  });
+
+  it('is append-only: the same post does not arrive twice', async () => {
+    const s = student();
+    await enrol(s);
+    await say(s, 'a1', 'Asked once.', 'The class', 'p-same');
+    await say(s, 'a1', 'Asked once.', 'The class', 'p-same');
+    const said = await bodies(s, 'a1');
+    expect(said.match(/Asked once/g)?.length).toBe(1);
+  });
+});
+
 describe('the receipt', () => {
   it('is issued once, however many times the same action arrives', async () => {
     const s = student();
