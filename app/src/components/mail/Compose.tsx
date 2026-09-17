@@ -3,11 +3,12 @@ import { useNow, useStore } from '../../state/store';
 import { ChevronLeft, CloseIcon, SendIcon, TrashIcon } from '../Icons';
 import { ChipRow, SectionLabel } from '../ui';
 import { CheckIt } from '../CheckIt';
+import { NeedsKey } from '../NeedsKey';
 import { Trouble } from '../Trouble';
 import { useTrouble } from '../../lib/trouble';
 import { secondLine } from '../../lib/dim';
 import { ask } from '../../lib/claude';
-import { configured, provider } from '../../lib/assistant';
+import { configured } from '../../lib/assistant';
 import { datedItems } from '../../lib/select';
 import {
   PURPOSES,
@@ -346,22 +347,29 @@ export function Compose({
                   style={{ width: '100%', minHeight: 80, resize: 'vertical', lineHeight: 'var(--leading-relaxed)' }}
                 />
 
-                <button
-                  type="button"
-                  className="btn btn-primary btn-block"
-                  onClick={() => void write()}
-                  disabled={busy || !configured()}
-                  style={{ height: 42, marginTop: 'var(--sp-5)' }}
-                >
-                  {busy ? 'Writing…' : body.trim() ? 'Write it again' : 'Draft it'}
-                </button>
-
-                {!configured() && (
-                  <div style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', ...secondLine() }}>
-                    Drafting it for you needs {provider()} — sign in to use the shared key, or add
-                    your own under <strong>Ask Claude &rarr; Settings</strong>. Everything else here
-                    works without one.
-                  </div>
+                {/*
+                  The gate stands *instead of* the button, the way `Exam`,
+                  `Deck`, `Import` and `changes/FromText` draw it. What was
+                  here was the other shape: a primary button turned off, and
+                  under it a line of `secondLine()` prose naming a third
+                  wording for one destination — "Ask Claude → Settings", where
+                  `Update` said "Connect → Claude" and the settings index calls
+                  it "The assistant". `components/NeedsKey.tsx` was written
+                  because that sentence with no button on it is a dead end
+                  with directions printed on it.
+                */}
+                {configured() ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-block"
+                    onClick={() => void write()}
+                    disabled={busy}
+                    style={{ height: 42, marginTop: 'var(--sp-5)' }}
+                  >
+                    {busy ? 'Writing…' : body.trim() ? 'Write it again' : 'Draft it'}
+                  </button>
+                ) : (
+                  <NeedsKey also="Writing the email yourself and handing it to your mail app needs no key at all." />
                 )}
 
                 <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />

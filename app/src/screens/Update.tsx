@@ -23,6 +23,7 @@ import { useRowStyle } from '../components/shell/useShell';
 import { useLive } from '../lib/live';
 import { revealKindly } from '../lib/prefers';
 import { Blueprint } from '../components/Blueprint';
+import { NeedsKey } from '../components/NeedsKey';
 import { Page } from '../components/Page';
 import { HowMuch } from '../components/HowMuch';
 import { ActionButton, ChipScroll, FilePick, SectionLabel } from '../components/ui';
@@ -833,10 +834,7 @@ export function AddMaterial() {
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
-              Turning a reading into cards needs {provider()}. Sign in to use the shared key, or add
-              your own under Connect → Claude. The text is still kept as the unit's notes.
-            </div>
+            <NeedsKey also="The text is still kept as the unit's notes." />
           )}
         </>
       )}
@@ -977,10 +975,7 @@ export function AddMaterial() {
           )}
         </>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
-          Reading a photograph needs {provider()}. Sign in to use the shared key, or add your own under
-          Connect → Claude. You can still attach the photo as a file below.
-        </div>
+        <NeedsKey also="You can still attach the photo as a file below." />
       )}
 
       {/* A lecture, kept — and written down while it happens, which is the
