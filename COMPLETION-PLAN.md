@@ -1614,6 +1614,91 @@ still works.
 
 ---
 
+## 8e. Meetings — the door
+
+The build-out plan's Meetings row is *"authentication, waiting rooms, relay
+infrastructure, captions, moderation, recording."* This section is the first
+three words of it and the moderation that follows from them; captions and
+recording are separate and are not here.
+
+**Measured first.** `lib/call.ts` is unusually clear about what it was:
+*"Nothing about this is a secret — a code is a name, and the fact that anybody
+holding one can walk in is said on the screen rather than implied by its
+length."* That is the right default for a study group and the wrong one for
+office hours, and there was no way to change it. Relay infrastructure already
+existed as `VITE_TURN_URL`/`_USER`/`_PASS` in `lib/rtc.ts`, and became settable
+on a deployed build in [§8b](#8b-deployment--the-settings-a-deployed-copy-could-not-be-given).
+
+**The argument this had to answer.** `hostOf` has been in `lib/mesh.ts` since
+the call was built, and its comment is a refusal: *"There is no host in a mesh
+— no server, nobody with a switch — so this is the only honest definition, and
+the only thing it unlocks is asking… It does not mute anybody, because nothing
+here can, and a button that claimed to would be a lie somebody relied on in a
+seminar."*
+
+That is correct and a waiting room does not contradict it, because the two asks
+are not the same shape. **Muting somebody is compulsion**: it needs their device
+to act against them, and nothing here can reach it. **Keeping somebody out is
+refusal**: it needs every other device to *not* act, and a connection nobody
+opens carries nothing. So one is a request with a polite name and the other is
+a fact about the mesh. The call gains a door and still no switch — there is no
+host mute here, and there should not be.
+
+**Who holds it.** The same `hostOf`, reused rather than reinvented. Two rules
+for who is in charge are two rules that can disagree, and a call where two
+people each think they are the host is worse than one with none.
+
+**What actually keeps somebody out** is `gated` — `reconcile` narrowed to the
+people this device has been told are inside — reached through `Session.keep`.
+Not the host's refusal, which is a message a client can be written to ignore.
+
+**The first design put the hinges outside the door.** Arrivals were to send a
+`knock` instead of a `here`, and the queue was built from those. A client that
+skipped knocking and simply shouted `here` walked straight in. The queue is
+derived instead — the roster, less the people let in — so every arrival is at
+the door by default whatever it sent, and a client written to bypass the queue
+has nothing to bypass. A test asserts exactly that case.
+
+**Removal needed its own set.** In an open call `allowed` means nothing —
+everybody in the roster gets a connection — so evicting somebody would have
+reconnected them on the next roster change. The alternative was to silently
+switch the host to holding the door, which is a setting they did not touch
+appearing to change by itself. `removed` is separate and always applies, and
+an ordinary call with nobody removed still takes `reconcile` unchanged.
+
+**Mutated.** Seven mutations of `lib/mesh.ts`, each caught: the gate ignoring
+the allowed set, the gate never closing an evicted link, `admit` obeyed from
+anybody rather than the host, `evict` not removing, the queue built from the
+allowed list rather than the roster, the queue sorted by id instead of arrival,
+and `held` believed from anybody. There is a control too — with everybody
+allowed, `gated` must equal `reconcile`, which is what notices a gate that
+refuses everyone.
+
+**What it does not do, and the screen says so.** Somebody held at the door is
+still on the signalling channel: it is a Supabase broadcast topic named after
+the code, and anybody with the code and the publishable key can subscribe. They
+get no audio, no video and no chat, and they can see who is here. Closing that
+needs the channel itself to refuse them, which needs the call to exist
+somewhere other than in the heads of the people in it — `rooms.sql` does that
+for a class room against a policy, and a call code belongs to no class. That is
+the next piece and this is not it.
+
+**What could not be checked here, stated rather than implied.** The two-peer
+run does not work in this container: the agent proxy will not tunnel `wss://`,
+so the Supabase realtime socket never opens and no two browsers can meet — with
+this change or without it, which a control run with the door left open
+confirmed. The host's controls were driven and screenshotted; the door itself
+is proven by the pure tests and the mutations above, not by two cameras.
+
+**Done when.** The host can hold the door; somebody arriving is listed and gets
+no media until let in; being let in connects them; being removed disconnects
+them; refusing leaves them listed as refused rather than vanishing; and a call
+with the door open behaves exactly as it did. All of it asserted in
+`mesh.test.ts`, except the last two lines of wiring in `Stage.tsx`, which are
+typechecked and driven but not unit-tested.
+
+---
+
 ## 8d. What the source document has left, and what it is waiting on
 
 For the record, measured rather than assumed, since §1 to §8 of this plan were
@@ -1644,8 +1729,8 @@ Live/Partial/Planned vocabulary has no word for.
 **Phase 1 and Phase 2 of the source document** are [§6](#6-the-whole-plan-as-one-schedule)'s
 two tables, all twelve items done, plus the three University Services rows this
 plan had not tracked: **Forms**, done in [§8c](#8c-forms--publishing-to-real-respondents);
-**Meetings** — authentication, waiting rooms, relay infrastructure, captions,
-moderation, recording; and **Design & video** — professional-grade editing,
+**Meetings** — the door is done in
+[§8e](#8e-meetings--the-door); captions and recording are not; and **Design & video** — professional-grade editing,
 real-time collaboration, rendering, templates and layers.
 
 **Phases 3 and 4** — Registration, Money, Family access, Career, Athletics,

@@ -65,6 +65,13 @@ export type Signal =
   | { t: 'state'; from: string; flags: Flags }
   | { t: 'said'; from: string; at: number; body: string }
   | { t: 'ask'; from: string; what: 'mute' }
+  /* The waiting room. See `waiting` and `admitted` below. `held` is the only
+     one of the four that changes nothing — it is how somebody at the door is
+     told they are at a door rather than in an empty call. */
+  | { t: 'held'; from: string; to: string }
+  | { t: 'admit'; from: string; to: string }
+  | { t: 'deny'; from: string; to: string }
+  | { t: 'evict'; from: string; to: string }
   | { t: 'react'; from: string; at: number; mark: string }
   | { t: 'offer'; from: string; to: string; sdp: string }
   | { t: 'answer'; from: string; to: string; sdp: string }
@@ -195,6 +202,147 @@ export function reconcile(roster: Roster, open: string[]): { start: string[]; st
   };
 }
 
+/* ── The waiting room ──────────────────────────────────────────────────────
+ *
+ * Until now a call code was a name: `lib/call.ts` says so in as many words,
+ * and "anybody holding one can walk in" was true and was printed on the
+ * screen. That is the right default for a study group and the wrong one for
+ * office hours, so a call can now be held shut, and somebody already inside
+ * decides who comes in.
+ *
+ * ## Refusing is enforceable where compelling is not
+ *
+ * `hostOf` below has been here since the call was built, and its comment is
+ * the reason this feature could not have been added carelessly: *"There is no
+ * host in a mesh — no server, nobody with a switch — so this is the only
+ * honest definition, and the only thing it unlocks is asking… It does not mute
+ * anybody, because nothing here can, and a button that claimed to would be a
+ * lie somebody relied on in a seminar."*
+ *
+ * That is right, and a waiting room does not contradict it, because the two
+ * asks are not the same shape. Muting somebody is compulsion: it needs their
+ * device to act against them, and nothing here can reach it. Keeping somebody
+ * out is refusal: it needs every other device to *not* act, and a connection
+ * nobody opens carries nothing. So the one is a request with a polite name and
+ * the other is a fact about the mesh — and this file gains a door but still no
+ * switch. There is no host mute here and there should not be.
+ *
+ * ## Who holds the door
+ *
+ * The same `hostOf` the ask already uses: whoever has been here longest, ties
+ * broken by id so every tab picks the same person. Reused rather than
+ * reinvented, because two rules for who is in charge are two rules that can
+ * disagree, and a call where two people each think they are the host is worse
+ * than a call with none.
+ *
+ * ## What actually keeps somebody out
+ *
+ * Not the host's refusal — a refusal is a message, and a message can be
+ * ignored by a client that was written to ignore it. What keeps somebody out
+ * is that **every other peer independently declines to open a connection to
+ * them**, and in a mesh a connection nobody opens carries no media. `admitted`
+ * is each peer's own copy of who is allowed, built from what the host says,
+ * and `reconcile` is given it so that an unadmitted id is not in `start` on
+ * any device in the room.
+ *
+ * ## What it does not do, stated because the screen has to say it
+ *
+ * Somebody held at the door is still on the signalling channel, because the channel is a Supabase broadcast
+ * topic named after the code and anybody with the code and the publishable key
+ * can subscribe. They can see names, and they can see SDP and candidates for
+ * connections between other people. They get no audio and no video and no
+ * chat. Closing that gap means the channel itself refusing them, which needs
+ * the call to exist somewhere other than in the heads of the people in it —
+ * `rooms.sql` does exactly that for a class room, against a policy, and a call
+ * code belongs to no class. That is the next piece, and this is not it.
+ */
+
+/** Somebody at the door: what the host is shown, in the order they arrived. */
+export interface Knocking {
+  id: string;
+  name: string;
+  at: number;
+}
+
+/**
+ * Who is at the door — the roster, less the people who have been let in.
+ *
+ * Derived rather than collected, and that is the whole reason it is safe. A
+ * first draft had arrivals send a `knock` instead of a `here` and built the
+ * queue from those, which put the door's hinges in the hands of the person
+ * outside it: a client that skipped knocking and simply shouted `here` walked
+ * straight in. Deriving it from the roster means every arrival is at the door
+ * by default, whatever it sent, and a client written to bypass the queue has
+ * nothing to bypass.
+ *
+ * `at` is `joinedAt`, so the queue is in arrival order and stays there — the
+ * same reason `ordered` leans on it in `lib/call.ts`, and the same reason a
+ * heartbeat must not refresh it.
+ */
+export function waiting(roster: Roster, allowed: string[]): Knocking[] {
+  const may = new Set(allowed);
+  return Object.values(roster)
+    .filter((k) => !may.has(k.id))
+    .sort((a, b) => a.joinedAt - b.joinedAt || (a.id < b.id ? -1 : 1))
+    .map((k) => ({ id: k.id, name: k.flags.name, at: k.joinedAt }));
+}
+
+/**
+ * Everybody this device will open a connection to.
+ *
+ * Built from what the host says rather than from what a peer claims about
+ * itself, which is the whole point: `admit` and `evict` are the only two
+ * signals that move somebody in or out of this set, and they are only obeyed
+ * from the peer this device currently believes is the host. A second peer
+ * announcing itself host cannot admit anybody here.
+ *
+ * The host is always in it. A call whose host is not allowed to be in it is a
+ * call that empties itself.
+ */
+export function admitted(allowed: string[], signal: Signal, host: string): string[] {
+  if (signal.from !== host) return allowed;
+  if (signal.t === 'admit') return allowed.includes(signal.to) ? allowed : [...allowed, signal.to];
+  if (signal.t === 'evict' || signal.t === 'deny') return allowed.filter((id) => id !== signal.to);
+  return allowed;
+}
+
+/**
+ * Whether this is the call telling me I am outside it.
+ *
+ * A courtesy and not a mechanism, and the difference is worth keeping
+ * straight: nothing depends on this arriving. Somebody who is not let in is
+ * not let in because no device opens a connection to them, whether or not
+ * they were ever told why. This only decides whether their screen says "Bea
+ * has been asked to let you in" or sits there looking like an empty call.
+ */
+export const heldBack = (signal: Signal, me: string, host: string): boolean =>
+  signal.t === 'held' && signal.to === me && signal.from === host;
+
+/**
+ * `reconcile`, with the door shut.
+ *
+ * The same set comparison, over the roster narrowed to who is allowed. It is
+ * a separate function rather than an argument with a default so that the
+ * open-call path is unchanged and provably so: `reconcile` still has its own
+ * tests and this one cannot alter them.
+ *
+ * `stop` is deliberately computed against the narrowed set too, so evicting
+ * somebody closes the connection to them rather than only refusing to open
+ * one — being thrown out of a call you are already in has to work, and it is
+ * the case a "which links are missing" reading would quietly skip.
+ */
+export function gated(
+  roster: Roster,
+  open: string[],
+  allowed: string[],
+): { start: string[]; stop: string[] } {
+  const may = new Set(allowed);
+  const inside: Roster = {};
+  for (const [id, known] of Object.entries(roster)) if (may.has(id)) inside[id] = known;
+  const { start } = reconcile(inside, open);
+  return { start, stop: open.filter((id) => !inside[id]).sort() };
+}
+
 /**
  * Whether a hello should be answered with one of our own.
  *
@@ -310,3 +458,13 @@ export function hostOf(roster: Roster, me: string, mine: number): string {
   }
   return best?.id ?? me;
 }
+
+/**
+ * Whether that is me.
+ *
+ * One line, beside the rule it reads, so that no screen works this out a
+ * second way and gets a second answer. Every tab decides independently and
+ * they have to agree.
+ */
+export const hosting = (roster: Roster, me: string, mine: number): boolean =>
+  hostOf(roster, me, mine) === me;
