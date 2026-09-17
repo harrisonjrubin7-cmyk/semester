@@ -1861,6 +1861,57 @@ process, and a suite that does either fails on somebody else's machine for
 reasons that are not about the code. Three mutations, three red, including the
 literal `4` coming back.
 
+### Where you stand, which the chain ends at and nothing answered
+
+The plan's chain runs *"… Faculty Grade → Student Feedback → **Record**"*, and
+for nine commits the Record was per piece of work — a trail, a mark, an
+archive. Nothing anywhere answered the question a student actually asks, which
+is not *what did I get on the problem set* but *where am I in this course*. The
+course record answered a different question instead, and answered it to
+everybody.
+
+**The marker's view was on the course record for every reader.** `3 of 4 in
+hand · 1 outstanding · 2 to mark` is exactly right for the person marking and
+wrong for everyone else: on a class of four it tells an enrolled student
+precisely how many of their classmates have not handed in, which is a fact
+about other people published to somebody with no business in it, and on a class
+this size it is one step from a name. The record has two faces now. Faculty get
+the queue, unchanged. A student gets their own work.
+
+**Twenty marks and forty marks is not a weighting.** Each piece now carries
+what it is *worth* as well as what it is marked out of, and those are two
+different facts: out-of-twenty is a count of how many criteria somebody wrote,
+and a student reading the two totals cannot tell whether the paper is worth
+twice the problem set or whether its rubric is simply longer. Faculty state the
+share when they publish, it is read back at prepare with what will still be
+unpublished afterwards, and a course cannot be published past a hundred percent
+of itself — a course whose weights add to a hundred and sixty cannot report a
+standing at all, because every fraction it prints is a fraction of a course
+that does not exist.
+
+Two rules give the standing its shape, and both are refusals:
+
+- **Only marks the student has been shown.** A standing that moved when the
+  marking was done rather than when it was released would let the mark out
+  through the back door — the number would not be displayed, but it could be
+  subtracted for. "Not released" has to mean not counted, or it means nothing.
+- **It is never stated as a grade for the course.** Seventeen out of twenty on
+  a fifth of a course is not an eighty-five. The record says `17 of 20 marks.
+  20% of this course has been marked.` and then, out loud, `80% of this course
+  has not been marked, and nothing here guesses at it.` The app does project a
+  term — with a band, and its name on it, in `lib/termgpa.ts` — and that is a
+  different kind of thing from a record, which states what happened and stops.
+
+Before enrolling, the same face is a syllabus rather than a standing: what is
+published, what it is worth and when it is due, which is how somebody decides.
+A place in a class you have not joined is not a thing to be told you have.
+
+Fifteen mutations, fifteen red. One survived the first pass and it was the
+weakest-looking of them: what a piece is worth was on the *course* record and
+on the piece of work itself, and only the first was tested — the second is the
+one a student reads the evening before they start, which is the whole argument
+for having it.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes

@@ -128,6 +128,22 @@ export interface Assignment {
   title: string;
   due: string;
   brief: string;
+  /**
+   * What this piece is worth, as a percentage of the whole course.
+   *
+   * Separate from what it is *marked* out of, because those are two different
+   * facts and the first version had only the second. Problem set 1 is out of
+   * twenty and the paper is out of forty, which looks like a weighting and is
+   * not one — it is a count of how many criteria somebody happened to write.
+   * A student reading those two numbers cannot tell whether the paper is worth
+   * twice the problem set or whether its rubric is simply longer.
+   *
+   * The weights of published work do not have to reach a hundred, and mostly
+   * will not: a course in October has not published its exam. What is left is
+   * a fact worth stating rather than a gap to hide, and stating it is what
+   * keeps a standing from being read as a grade.
+   */
+  weight: number;
   criteria: Criterion[];
 }
 
@@ -147,6 +163,7 @@ const SEEDED: Assignment[] = [
     title: 'Problem set 1',
     due: '2026-10-02T23:59:00Z',
     brief: 'Four short answers on the reading. Submitted as text.',
+    weight: 20,
     criteria: [
       { id: 'method', name: 'Method', outOf: 8, means: 'The steps are shown and each follows from the last.' },
       { id: 'accuracy', name: 'Accuracy', outOf: 8, means: 'The answers are right, with units.' },
@@ -158,6 +175,7 @@ const SEEDED: Assignment[] = [
     title: 'Short paper',
     due: '2026-10-23T23:59:00Z',
     brief: 'Twelve hundred words on one of the three prompts.',
+    weight: 35,
     criteria: [
       { id: 'argument', name: 'Argument', outOf: 16, means: 'A claim somebody could disagree with, defended.' },
       { id: 'evidence', name: 'Evidence', outOf: 14, means: 'Sources used to support the claim, not summarised.' },
@@ -168,6 +186,12 @@ const SEEDED: Assignment[] = [
 
 /** What a piece of work is out of: the rubric's own total, never a second number. */
 const outOf = (criteria: readonly Criterion[]) => criteria.reduce((n, c) => n + c.outOf, 0);
+
+/** A share of the course, written the way a person writes one. */
+const pct = (n: number) => `${Number(n.toFixed(2))}%`;
+
+/** Percentages are added, so a comparison of two of them needs a little slack. */
+const DUST = 1e-9;
 
 /**
  * The class, as the course's own list rather than as a side effect.
@@ -763,6 +787,30 @@ function readRubric(text: string): Criterion[] {
   return criteria;
 }
 
+/**
+ * What a new piece is worth, or a refusal naming how much of the course is
+ * actually left.
+ *
+ * The refusal is the interesting half. Nothing stops a course from publishing
+ * four pieces at forty percent each except somebody checking, and a course
+ * whose weights add to a hundred and sixty cannot report a standing at all —
+ * every fraction it prints is a fraction of a course that does not exist.
+ * Refusing at publish is the only place it can be caught while it is still one
+ * person's typing error rather than the whole class's arithmetic.
+ */
+function readWeight(store: SandboxStore, raw: string): number {
+  const said = raw.trim();
+  if (!said) throw new Error('Say what this is worth, as a percentage of the course.');
+  const weight = Number(said);
+  if (!Number.isFinite(weight)) throw new Error(`"${said}" is not a percentage this can read.`);
+  if (weight <= 0) throw new Error('A piece of work needs a share of the course above zero.');
+  const left = 100 - store.published().reduce((n, a) => n + a.weight, 0);
+  if (weight > left + DUST) {
+    throw new Error(`Only ${pct(left)} of this course is unpublished, and this asks for ${pct(weight)}.`);
+  }
+  return weight;
+}
+
 /** A new assignment out of the fields, or a refusal saying which one is wrong. */
 function readAssignment(store: SandboxStore, input: ActionInput): Assignment {
   const title = (input.fields.title ?? '').trim();
@@ -774,10 +822,11 @@ function readAssignment(store: SandboxStore, input: ActionInput): Assignment {
   if (!Number.isFinite(when)) throw new Error(`"${due}" is not a date this can read.`);
   if (when < Date.now()) throw new Error('That deadline has already passed.');
   const criteria = readRubric(input.fields.rubric ?? '');
+  const weight = readWeight(store, input.fields.weight ?? '');
   const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
   if (!/^[a-z][a-z0-9-]{0,63}$/.test(id)) throw new Error('The title needs some letters in it.');
   if (store.assignment(id)) throw new Error(`Something called "${title}" is already published.`);
-  return { id, title, due: new Date(when).toISOString(), brief, criteria };
+  return { id, title, due: new Date(when).toISOString(), brief, weight, criteria };
 }
 
 /** Who may speak in a thread, and as whom. */
@@ -906,6 +955,106 @@ function trail(work: Work): { label: string; value: string }[] {
   }));
 }
 
+/**
+ * The course as the person marking it needs to see it: the class's queue.
+ *
+ * This is what the course record used to say to *everybody*, which was the
+ * bug. It is exactly right for one reader and wrong for all the others.
+ */
+function classFace(store: SandboxStore, roll: number): { label: string; value: string }[] {
+  const work = store.everyWork();
+  return store.published().map((a) => {
+    const rows = work.filter((w) => w.assignment === a.id);
+    const missing = rows.filter((w) => w.stage === 'published');
+    const inHand = rows.length - missing.length;
+    const toMark = rows.filter((w) => w.stage === 'submitted').length;
+    // Outstanding and overdue are different facts and a course runs on the
+    // difference: one is work still coming, the other is work that is not.
+    const overdue = Date.parse(a.due) < Date.now() ? missing.length : 0;
+    return {
+      label: a.title,
+      value:
+        `worth ${pct(a.weight)} of the course · due ${a.due.slice(0, 10)} · ` +
+        `${inHand} of ${roll} in hand · ${missing.length} outstanding` +
+        `${overdue ? ` (${overdue} overdue)` : ''} · ${toMark} to mark`,
+    };
+  });
+}
+
+/**
+ * The course as the person taking it needs to see it: their own work, and
+ * where it has got them.
+ *
+ * Two things this deliberately does not say, and the second is a rule rather
+ * than a choice of emphasis.
+ *
+ *  - **How the rest of the class is doing.** The marker's queue was on this
+ *    record for everybody, and on a class of four "3 of 4 in hand · 1
+ *    outstanding" tells an enrolled student exactly how many of their
+ *    classmates have not handed in. That is a fact about other people,
+ *    published to someone with no business in it, and on a small class it is
+ *    one step away from a name.
+ *  - **A mark that has not been released.** A standing that moved when the
+ *    marking was done rather than when it was shown would release the mark
+ *    through the back door: the student would not be shown the number, but
+ *    they could subtract their way to it. "Not released" has to mean not
+ *    counted, or it means nothing.
+ */
+function studentFace(
+  context: AdapterContext,
+  store: SandboxStore,
+  on: boolean,
+): { label: string; value: string }[] {
+  const mine = store.mine(context.identity.userId);
+  const pieces = store.published().map((a) => {
+    const work = mine.find((w) => w.assignment === a.id);
+    const seen = work?.stage === 'released' || work?.stage === 'archived';
+    return {
+      label: a.title,
+      value:
+        `worth ${pct(a.weight)} of the course · due ${a.due.slice(0, 10)}` +
+        // Before enrolling this is the syllabus: what the work is and what it
+        // is worth. There is no "your" anything until there is a roster row.
+        (on && work ? ` · ${SAID[work.stage]}` : '') +
+        (seen && work ? ` · ${work.mark} of ${outOf(a.criteria)}` : ''),
+    };
+  });
+  if (!on) return pieces;
+
+  const marked = store.published().filter((a) => {
+    const work = mine.find((w) => w.assignment === a.id);
+    return work?.stage === 'released' || work?.stage === 'archived';
+  });
+  const share = marked.reduce((n, a) => n + a.weight, 0);
+  const earned = marked.reduce((n, a) => n + Number(mine.find((w) => w.assignment === a.id)?.mark ?? 0), 0);
+  const possible = marked.reduce((n, a) => n + outOf(a.criteria), 0);
+  return [
+    ...pieces,
+    {
+      label: 'Marked so far',
+      value: marked.length
+        ? `${earned} of ${possible} marks. ${pct(share)} of this course has been marked.`
+        : 'Nothing has been marked yet. 0% of this course has been marked.',
+    },
+    /*
+     * And the remainder, said out loud, because the alternative is a number
+     * that reads like a grade. Seventeen out of twenty on a fifth of a course
+     * is not an eighty-five — it is seventeen out of twenty, and the other
+     * four fifths have not happened. The app projects a term elsewhere, with a
+     * band and its name on it (`lib/termgpa.ts`); an institutional record
+     * states what happened and stops.
+     */
+    ...(marked.length
+      ? [
+          {
+            label: 'Not a course grade',
+            value: `${pct(100 - share)} of this course has not been marked, and nothing here guesses at it.`,
+          },
+        ]
+      : []),
+  ];
+}
+
 function courseRecord(context: AdapterContext, store: SandboxStore): UniversityRecord {
   /*
    * Being on the roster *is* being enrolled. The stamp on each work row is
@@ -913,20 +1062,6 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
    */
   const on = store.enrolled(context.identity.userId);
   const roll = store.roster();
-  const work = store.everyWork();
-  const owed = store.published().map((a) => {
-    const rows = work.filter((w) => w.assignment === a.id);
-    const missing = rows.filter((w) => w.stage === 'published');
-    return {
-      a,
-      inHand: rows.length - missing.length,
-      toMark: rows.filter((w) => w.stage === 'submitted').length,
-      // Outstanding and overdue are different facts and a course runs on the
-      // difference: one is work still coming, the other is work that is not.
-      overdue: Date.parse(a.due) < Date.now() ? missing.length : 0,
-      missing: missing.length,
-    };
-  });
   return {
     id: COURSE.id,
     area: 'courses',
@@ -939,12 +1074,7 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
       { label: 'Institution', value: SANDBOX_NAME },
       { label: 'Taught by', value: COURSE.faculty },
       { label: 'Enrolled', value: `${roll.length} on the roster` },
-      ...owed.map((o) => ({
-        label: o.a.title,
-        value:
-          `due ${o.a.due.slice(0, 10)} · ${o.inHand} of ${roll.length} in hand · ` +
-          `${o.missing} outstanding${o.overdue ? ` (${o.overdue} overdue)` : ''} · ${o.toMark} to mark`,
-      })),
+      ...(isFaculty(context) ? classFace(store, roll.length) : studentFace(context, store, on)),
       { label: 'Your role here', value: context.identity.roles.join(', ') || 'none' },
     ],
     actions: isFaculty(context)
@@ -956,6 +1086,12 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
               { id: 'title', label: 'Title', kind: 'text', required: true },
               { id: 'due', label: 'Due', kind: 'datetime-local', required: true },
               { id: 'brief', label: 'What the work is', kind: 'textarea', required: true },
+              {
+                id: 'weight',
+                label: 'What it is worth, as a percentage of the course',
+                kind: 'number',
+                required: true,
+              },
               {
                 id: 'rubric',
                 label: 'Marking scheme — one criterion a line, as "Name | marks | what it means"',
@@ -1068,6 +1204,11 @@ function assignmentRecord(store: SandboxStore, work: Work): UniversityRecord {
       { label: 'Due', value: a?.due.slice(0, 16).replace('T', ' ') ?? '' },
       { label: 'Deadline', value: when.said },
       { label: 'Marked out of', value: String(outOf(a?.criteria ?? [])) },
+      // Beside what it is marked out of, for the same reason the rubric is
+      // here rather than with the grade: effort goes where the marks are, and
+      // a piece worth a fifth of the course is not the same call as a piece
+      // worth a fortieth even when both are out of twenty.
+      { label: 'Worth', value: a ? `${pct(a.weight)} of the course` : '' },
       /*
        * Before the work is done, not with the mark. A rubric that arrives
        * attached to the grade arrived too late to be used, which is the
@@ -1314,6 +1455,11 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
             { label: 'Due', value: a.due.slice(0, 16).replace('T', ' ') },
             ...a.criteria.map((c) => ({ label: `${c.name} · ${c.outOf} marks`, value: c.means })),
             { label: 'Marked out of', value: String(outOf(a.criteria)) },
+            { label: 'Worth', value: `${pct(a.weight)} of the course` },
+            {
+              label: 'Still unpublished after this',
+              value: `${pct(100 - store.published().reduce((n, p) => n + p.weight, 0) - a.weight)} of the course`,
+            },
             {
               label: 'After this',
               value: `Everybody on the roster gets it, with a thread to ask about it.`,
@@ -1345,8 +1491,8 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
           id: key,
           status: 'completed',
           message:
-            `${SANDBOX_MARK} · Published ${a.title}, out of ${outOf(a.criteria)}, ` +
-            `to ${store.roster().length} on the roster.`,
+            `${SANDBOX_MARK} · Published ${a.title}, out of ${outOf(a.criteria)} and worth ` +
+            `${pct(a.weight)} of the course, to ${store.roster().length} on the roster.`,
           recordedAt: at,
         };
       }
