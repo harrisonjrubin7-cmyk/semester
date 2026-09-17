@@ -20,10 +20,16 @@ below are sized in the document as sprint items, and building any of them would
 have been a week spent rebuilding something a student can already use today.
 
 **Checked against `a648a1b` on 17 September 2026.** Every verdict names what was
-measured and where. Verdicts were reached twice — once by reading, once by an
-adversarial pass told to assume the first reading was wrong and to go looking
-for the code it missed. Two verdicts moved between the passes; both moved
-towards *more already built*, never less.
+measured and where, and every file and line quoted below was opened rather than
+inferred.
+
+Each verdict was reached by reading the code, and then put to an adversarial
+pass told to assume that reading was wrong and go hunting for what it missed.
+**Nothing that pass has returned has overturned a verdict.** What it has done is
+add evidence, and only ever in one direction: item 2 was filed Landed on two
+consumers of the grade solver and turned out to have four. That direction is
+the finding this file ends on, and it is the reason the file is worth keeping
+rather than reading once.
 
 Legend: **Open** · **Landed** (already in the app; nothing to do) · **Partly**
 (some of it is in, the rest is named) · **Not a code item**.
@@ -64,7 +70,7 @@ document's own closing section says not to copy: *advertising integration you
 don't have*. Make the decisions, then write the sentence, and it will be the
 strongest sentence in the onboarding.
 
-### 2 · Build a live "what grade do I need" calculator · **Landed — twice**
+### 2 · Build a live "what grade do I need" calculator · **Landed — on four surfaces**
 
 > UpAhead, Sylly, SyllySync and DormWay all ship some version of a live grade
 > projection, and it's consistently one of the most-praised features in their
@@ -88,13 +94,34 @@ thing to do about the same figure. `reaches` walks every letter band.
 that a syllabus whose weights add to 95 makes every figure a ratio of the wrong
 denominator.
 
-It ships on `screens/Grades.tsx:220`, recomputing as scores are typed, against
-the school's own cutoffs through `lib/cutoffs.ts` rather than against assumed
-bands. And it ships a **second** time: `lib/gradesheet.ts` builds a course its
-own editable grade calculator as a real sheet, from `Course.grading` as parsed
-off the syllabus — written against the same sentence, *what do I need on the
-final*, and against the same failure mode, a spreadsheet built by hand from
-weights re-typed off a PDF.
+It ships on `screens/Grades.tsx:220`, under the heading *"To finish with, you
+need"*, recomputing as scores are typed, against the school's own cutoffs
+through `lib/cutoffs.ts` rather than against assumed bands. `screens/Courses.tsx:84`
+is the mount, so it is a shipped table and not an unrouted screen.
+
+And the solver has three more consumers, which is the part that separates it
+from a competitor's projection:
+
+- `lib/gradesheet.ts` builds a course its own editable grade calculator as a
+  real sheet, from `Course.grading` as parsed off the syllabus — written
+  against the same sentence, *what do I need on the final*, and against the
+  same failure mode, a spreadsheet built by hand from weights re-typed off a
+  PDF.
+- `screens/Grades.tsx:282` runs `needFor(s, 90)` against the student's
+  **practice-exam** average, and `against()` in `lib/sitting.ts:180` writes the
+  comparison. Its docstring makes the distinction the whole feature turns on:
+  *"The grade projection is arithmetic on weights a syllabus states; a practice
+  score is evidence about you. Averaging the two would produce a number that is
+  neither, and it would be the number people quoted."*
+- `lib/termgpa.ts:339` runs both `needFor` and `reachFor` across every course
+  at once, to answer a question none of the ten competitors asks: *which single
+  course, raised one band, moves my term GPA the most — and what would the rest
+  of that course have to average to get there?* Each row carries the required
+  average, its reach verdict, the resulting GPA and the gain.
+
+This last pass found two of those consumers after a first reading had already
+called the item Landed on the strength of the other two — which is the check
+working in the direction it is supposed to.
 
 The competitors' version of this is the thing to compare against, and it is the
 weaker one: a projection with no verdict attached, and none of them carrying the
@@ -310,7 +337,7 @@ document's own strategic conclusions rest on them:
 | Row | The table says | The code says |
 | --- | --- | --- |
 | LMS sync | None | Canvas, Brightspace, Outlook, Google, iCloud — student-held feed link, no institutional agreement (`lib/feedlink.ts`) |
-| Grade calculator | Named as a gap to build | Shipping twice — `lib/grades.ts` on the Grades screen, and a per-course sheet in `lib/gradesheet.ts` |
+| Grade calculator | Named as a gap to build | Shipping on four surfaces — the Grades table, a per-course sheet (`lib/gradesheet.ts`), a practice-exam comparison (`lib/sitting.ts`) and a term-GPA "which course moves it most" table (`lib/termgpa.ts`) |
 | Lecture capture | "A genuine feature gap today" | Shipping — `components/RecordButton.tsx`, live transcript into the material pipeline |
 | Screens | 60 | 74 in the `Screen` union (`lib/types.ts`); eleven of them shown to a new account, the rest unlocked by a fact about the semester (`lib/reveal.ts`) |
 
