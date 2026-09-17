@@ -16,6 +16,7 @@ import { familyAdapter } from './family.ts';
 import { careerAdapter } from './career.ts';
 import { advisingAdapter, alumniAdapter } from './advising.ts';
 import { athleticsAdapter } from './athletics.ts';
+import { clubsAdapter } from './clubs.ts';
 
 /**
  * One course, run end to end, at an institution that does not exist.
@@ -1092,6 +1093,210 @@ export const TRIPS: Trip[] = [
   },
 ];
 
+/**
+ * ─── Clubs and student organizations ────────────────────────────────────────
+ *
+ * Phase 4 again, same warning on every record: **no club named here exists**,
+ * no money moves, and no election decides anything.
+ *
+ * This area has four finite things rather than one, and they are not the same
+ * *kind* of finite, which is what makes it the most interesting of Phase 4:
+ *
+ *   A **room** at a time — registration's seat, exactly.
+ *   A **budget**, which is money and therefore divisible: the finite thing is
+ *   not a count of grants but a sum, and a request for more than is left is
+ *   refused against the remainder rather than against a number of slots.
+ *   A **vote**, which is finite at one per member and is the only thing in this
+ *   repository that must be *both* counted and secret.
+ *   And an **event's capacity**, which is a seat again.
+ *
+ * ## The ballot, which is the hardest thing in Phase 4
+ *
+ * An election has to satisfy two requirements that pull against each other:
+ *
+ *   **Nobody votes twice.** Which needs a record of who has voted.
+ *   **Nobody can tell how anybody voted.** Which forbids a record joining a
+ *   person to a choice.
+ *
+ * Both at once is the whole problem, and a demonstration that stored
+ * `{ voter, choice }` would have solved neither honestly — it would have
+ * satisfied the first and pretended at the second by not showing the column.
+ *
+ * So the ballot is **two tables that are never joined**: a roll of who has
+ * voted, carrying no choice, and a pile of choices, carrying no voter. The
+ * count comes from the second and the double-vote refusal from the first, and
+ * there is no query that can put them back together because nothing in either
+ * row identifies a row in the other. `clubs.test.ts` asserts that by reading
+ * every ballot row and every roll row and checking no value in one appears in
+ * the other.
+ *
+ * That is the honest version of what a paper ballot box does: a marked
+ * electoral roll by the door and unordered papers inside.
+ *
+ * ## Dues, which are money the university does not hold
+ *
+ * The same constraint Money was built under — Semester is not a processor —
+ * applies with an extra turn: these are a *club's* funds, not the
+ * institution's. A dues record says what is owed and records that a treasurer
+ * marked it settled. Nothing here takes a payment from anybody.
+ */
+
+export interface Club {
+  id: string;
+  name: string;
+  what: string;
+  /** The user id the officer workflows are authorized against. */
+  officer: string;
+  officerName: string;
+  /** Cents a member owes for the year. Zero means the club charges nothing. */
+  duesCents: number;
+  /** What the student government granted this club for the year, in cents. */
+  budgetCents: number;
+}
+
+export interface Member {
+  id: string;
+  club: string;
+  student: string;
+  name: string;
+  state: 'member' | 'left';
+  /** Whether the treasurer has recorded their dues as settled. */
+  duesPaid: boolean;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * A room, at a time, which is registration's seat wearing a different hat.
+ *
+ * Named for what it is rather than "booking", because `Booking` is already an
+ * advising appointment and two types one letter apart in the same store is how
+ * somebody eventually saves one into the other's table.
+ */
+export interface RoomHold {
+  id: string;
+  room: string;
+  club: string;
+  /** An ISO timestamp. Two clubs cannot hold the same room at the same one. */
+  when: string;
+  what: string;
+  /** How many the room holds. */
+  holds: number;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export interface Room {
+  id: string;
+  name: string;
+  holds: number;
+}
+
+/**
+ * A claim against the club's budget.
+ *
+ * The finite thing is a **sum**, not a count, which is the only reason this is
+ * not a copy of the seat check: two requests of forty dollars each fit in a
+ * hundred and a third does not, and no number of slots expresses that.
+ */
+export interface Spend {
+  id: string;
+  club: string;
+  what: string;
+  cents: number;
+  state: 'asked' | 'approved' | 'refused' | 'paid';
+  by: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export interface Election {
+  id: string;
+  club: string;
+  post: string;
+  candidates: string[];
+  /** ISO timestamps. A vote outside them is refused. */
+  opens: string;
+  closes: string;
+}
+
+/**
+ * One name on the electoral roll. Carries **no choice**.
+ *
+ * Its id is the club election and the voter, so a second vote collides on the
+ * primary key as well as being refused — belt and braces on the one rule an
+ * election cannot bend.
+ */
+export interface Voted {
+  id: string;
+  election: string;
+  voter: string;
+  at: string;
+}
+
+/**
+ * One paper in the box. Carries **no voter**.
+ *
+ * Its id is random and is the only thing that distinguishes it from another
+ * paper for the same candidate. Deliberately not a hash of anything a person
+ * could reproduce: an id derived from the voter would be a join waiting for
+ * somebody who knew the recipe.
+ */
+export interface Ballot {
+  id: string;
+  election: string;
+  choice: string;
+}
+
+export const CLUBS: Club[] = [
+  {
+    id: 'model-un',
+    name: 'Model United Nations',
+    what: 'Conference delegations and weekly committee practice',
+    officer: 'officer-mun',
+    officerName: 'H. Osei, President',
+    duesCents: 4_500,
+    budgetCents: 250_000,
+  },
+  {
+    id: 'econ-society',
+    name: 'Economics Society',
+    what: 'Speakers, reading groups and the spring case competition',
+    officer: 'officer-econ',
+    officerName: 'D. Lindqvist, Treasurer',
+    duesCents: 0,
+    budgetCents: 90_000,
+  },
+];
+
+export const ROOMS: Room[] = [
+  { id: 'buttrick-101', name: 'Buttrick 101', holds: 120 },
+  { id: 'sarratt-216', name: 'Sarratt 216', holds: 30 },
+];
+
+export const ELECTIONS: Election[] = [
+  {
+    id: 'mun-president-2027',
+    club: 'model-un',
+    post: 'President, 2027',
+    candidates: ['A. Osei', 'B. Farouk', 'C. Nakamura'],
+    opens: '2026-09-18T00:00:00Z',
+    closes: '2026-09-30T23:59:59Z',
+  },
+  {
+    id: 'econ-treasurer-2027',
+    club: 'econ-society',
+    post: 'Treasurer, 2027',
+    candidates: ['R. Devi', 'S. Mbeki'],
+    // Not yet open, so that refusal is walkable rather than only testable.
+    opens: '2026-11-01T00:00:00Z',
+    closes: '2026-11-14T23:59:59Z',
+  },
+];
+
 export class SandboxStore {
   private db: DatabaseSync;
 
@@ -1248,6 +1453,61 @@ export class SandboxStore {
         student TEXT NOT NULL,
         body TEXT NOT NULL
       );
+      -- Clubs. The officer column authorizes an officer write, the way
+      -- employers.owner and teams.coach do.
+      CREATE TABLE IF NOT EXISTS clubs(
+        id TEXT PRIMARY KEY,
+        officer TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS members(
+        id TEXT PRIMARY KEY,
+        club TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS rooms(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS holds(
+        id TEXT PRIMARY KEY,
+        room TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS spends(
+        id TEXT PRIMARY KEY,
+        club TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS elections(
+        id TEXT PRIMARY KEY,
+        club TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      /*
+       * The ballot box, in two tables that are never joined.
+       *
+       * The roll says who voted and carries no choice. The ballots carry a
+       * choice and no voter. Nobody votes twice because of the first; nobody
+       * can tell how anybody voted because there is no column in either that
+       * names a row in the other. A single table of (voter, choice) would have
+       * satisfied the first rule and only pretended at the second.
+       *
+       * Two tables and not two columns, because a column somebody can select
+       * is a column somebody will select.
+       */
+      CREATE TABLE IF NOT EXISTS roll(
+        id TEXT PRIMARY KEY,
+        election TEXT NOT NULL,
+        voter TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS ballots(
+        id TEXT PRIMARY KEY,
+        election TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
     `);
 
     // The class the course already has, before any tester arrives.
@@ -1281,6 +1541,14 @@ export class SandboxStore {
     for (const t of TEAMS) team.run(t.id, t.coachId, JSON.stringify(t));
     const trip = this.db.prepare('INSERT OR IGNORE INTO trips VALUES(?,?,?)');
     for (const t of TRIPS) trip.run(t.id, t.team, JSON.stringify(t));
+
+    // The clubs, the rooms they ask for, and the elections they are running.
+    const club = this.db.prepare('INSERT OR IGNORE INTO clubs VALUES(?,?,?)');
+    for (const c of CLUBS) club.run(c.id, c.officer, JSON.stringify(c));
+    const room = this.db.prepare('INSERT OR IGNORE INTO rooms VALUES(?,?)');
+    for (const r of ROOMS) room.run(r.id, JSON.stringify(r));
+    const vote = this.db.prepare('INSERT OR IGNORE INTO elections VALUES(?,?,?)');
+    for (const e of ELECTIONS) vote.run(e.id, e.club, JSON.stringify(e));
   }
 
   /**
@@ -1325,6 +1593,164 @@ export class SandboxStore {
   saveSection(section: Section): void {
     this.db.prepare('INSERT OR REPLACE INTO sections VALUES(?,?)').run(section.id, JSON.stringify(section));
   }
+
+  /* ── Clubs ──────────────────────────────────────────────────────────── */
+
+  clubs(): Club[] {
+    const rows = this.db.prepare('SELECT body FROM clubs ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Club);
+  }
+
+  club(id: string): Club | null {
+    const got = this.db.prepare('SELECT body FROM clubs WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Club) : null;
+  }
+
+  /** The club this person is an officer of, or null. Asked of the table. */
+  officerOf(userId: string): Club | null {
+    const got = this.db.prepare('SELECT body FROM clubs WHERE officer=?').get(userId) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Club) : null;
+  }
+
+  saveClub(row: Club): void {
+    this.db.prepare('INSERT OR REPLACE INTO clubs VALUES(?,?,?)').run(row.id, row.officer, JSON.stringify(row));
+  }
+
+  members(club?: string): Member[] {
+    const rows = (
+      club
+        ? this.db.prepare('SELECT body FROM members WHERE club=? ORDER BY id').all(club)
+        : this.db.prepare('SELECT body FROM members ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Member);
+  }
+
+  saveMember(row: Member): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO members VALUES(?,?,?,?)')
+      .run(row.id, row.club, row.student, JSON.stringify(row));
+  }
+
+  rooms(): Room[] {
+    const rows = this.db.prepare('SELECT body FROM rooms ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Room);
+  }
+
+  room(id: string): Room | null {
+    const got = this.db.prepare('SELECT body FROM rooms WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Room) : null;
+  }
+
+  /** Every hold on a room, so a clash can be found rather than assumed. */
+  holds(room?: string): RoomHold[] {
+    const rows = (
+      room
+        ? this.db.prepare('SELECT body FROM holds WHERE room=? ORDER BY id').all(room)
+        : this.db.prepare('SELECT body FROM holds ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as RoomHold);
+  }
+
+  hold(id: string): RoomHold | null {
+    const got = this.db.prepare('SELECT body FROM holds WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as RoomHold) : null;
+  }
+
+  saveHold(row: RoomHold): void {
+    this.db.prepare('INSERT OR REPLACE INTO holds VALUES(?,?,?)').run(row.id, row.room, JSON.stringify(row));
+  }
+
+  /**
+   * Give a room back, by removing the row.
+   *
+   * The first version kept the row and blanked its club, and the room stayed
+   * unbookable: the clash check found a hold, saw a club that was not the one
+   * asking, and refused on behalf of nobody. A hold nobody holds is not a
+   * hold, and the honest way to say that in a table is for the row not to be
+   * in it.
+   */
+  dropHold(id: string): void {
+    this.db.prepare('DELETE FROM holds WHERE id=?').run(id);
+  }
+
+  spends(club: string): Spend[] {
+    const rows = this.db.prepare('SELECT body FROM spends WHERE club=? ORDER BY id').all(club) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Spend);
+  }
+
+  spend(id: string): Spend | null {
+    const got = this.db.prepare('SELECT body FROM spends WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Spend) : null;
+  }
+
+  saveSpend(row: Spend): void {
+    this.db.prepare('INSERT OR REPLACE INTO spends VALUES(?,?,?)').run(row.id, row.club, JSON.stringify(row));
+  }
+
+  elections(club?: string): Election[] {
+    const rows = (
+      club
+        ? this.db.prepare('SELECT body FROM elections WHERE club=? ORDER BY id').all(club)
+        : this.db.prepare('SELECT body FROM elections ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Election);
+  }
+
+  election(id: string): Election | null {
+    const got = this.db.prepare('SELECT body FROM elections WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Election) : null;
+  }
+
+  /*
+   * The two halves of the ballot box, and the reason they are two methods
+   * rather than one: there is no call anywhere that wants both, and a single
+   * method returning both would be the join this design exists to make
+   * impossible. See the header above `Voted`.
+   */
+
+  /** The electoral roll: who has voted. Carries no choice. */
+  roll(election: string): Voted[] {
+    const rows = this.db.prepare('SELECT body FROM roll WHERE election=? ORDER BY id').all(election) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Voted);
+  }
+
+  /** Whether this person has voted. The only question the roll is asked. */
+  hasVoted(election: string, voter: string): boolean {
+    const got = this.db.prepare('SELECT 1 AS yes FROM roll WHERE election=? AND voter=?').get(election, voter);
+    return got !== undefined;
+  }
+
+  /** The box: the papers. Carries no voter. */
+  ballots(election: string): Ballot[] {
+    const rows = this.db.prepare('SELECT body FROM ballots WHERE election=? ORDER BY id').all(election) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Ballot);
+  }
+
+  /**
+   * Mark the roll and drop the paper, in one transaction.
+   *
+   * One method because the two writes must not come apart: a marked roll with
+   * no paper loses somebody's vote, and a paper with no mark lets them vote
+   * again. It takes the two rows already built rather than building the
+   * ballot from the voter, so that nothing in this function ever holds a value
+   * that could relate one to the other.
+   */
+  castVote(mark: Voted, paper: Ballot): void {
+    this.db.exec('BEGIN');
+    try {
+      this.db.prepare('INSERT INTO roll VALUES(?,?,?,?)').run(mark.id, mark.election, mark.voter, JSON.stringify(mark));
+      this.db.prepare('INSERT INTO ballots VALUES(?,?,?)').run(paper.id, paper.election, JSON.stringify(paper));
+      this.db.exec('COMMIT');
+    } catch (e) {
+      this.db.exec('ROLLBACK');
+      throw e;
+    }
+  }
+
 
   /* ── Athletics ──────────────────────────────────────────────────────── */
 
@@ -3544,5 +3970,6 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     advisingAdapter(store),
     alumniAdapter(store),
     athleticsAdapter(store),
+    clubsAdapter(store),
   ];
 }

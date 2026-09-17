@@ -2352,6 +2352,122 @@ on a bus. The label is on every record it produces.
 
 ---
 
+## 8n. Phase 4 · Clubs — and the hardest thing in the whole phase, which is a ballot
+
+**What the source document asks for.** Membership management, events, budgets,
+dues, elections, room requests. Gated exactly as
+[§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled)
+and [§8m](#8m-phase-4--athletics--where-the-hard-part-is-time-not-contention)
+are, and just as unsatisfied: **no club named here exists**, no money moves,
+and no election decides anything.
+
+One adapter, thirteen to fourteen.
+
+### Four finite things, and they are not the same kind of finite
+
+Which is what makes this the most interesting area in Phase 4, because up to
+now every finite thing in this repository has been a **count**.
+
+| Thing | Kind | Why it needed its own shape |
+| --- | --- | --- |
+| A room at a time | A count of one | Registration's seat exactly. Two clubs cannot hold Buttrick 101 at eight on Tuesday. |
+| A budget | **A sum** | Two claims of forty fit inside a hundred and a third does not, and *no number of slots expresses that*. The check is against the remainder. |
+| A vote | One per member | The only thing in this repository that must be both **counted and secret**. |
+| An event's capacity | A count | The room's, so a seat again. |
+
+The budget remainder is derived from the approved claims rather than stored,
+for the reason the seat count is — and `approved` counts as committed rather
+than only `paid`, because a budget that counted only what had gone out would
+let a club promise the same thousand dollars to four people.
+
+### The ballot, which is the hardest thing in Phase 4
+
+An election has to satisfy two requirements that pull against each other:
+
+> **Nobody votes twice**, which needs a record of who has voted.
+> **Nobody can tell how anybody voted**, which forbids a record joining a
+> person to a choice.
+
+Both at once is the whole problem. A demonstration storing `{ voter, choice }`
+would have satisfied the first and *pretended* at the second by not showing a
+column — and **a column somebody can select is a column somebody will select.**
+
+So the ballot is **two tables that are never joined**: a roll of who has voted,
+carrying no choice, and a pile of papers, carrying no voter. The count comes
+from the papers; the double-vote refusal comes from the roll. Nothing in either
+row names a row in the other, so no query puts them back together.
+
+Three decisions hold that up:
+
+1. **A paper's id is `randomUUID()`**, deliberately not derived from the voter.
+   An id anybody could recompute is a join waiting for somebody who knows the
+   recipe.
+2. **Both writes go through one transaction.** A marked roll with no paper
+   loses somebody's vote; a paper with no mark lets them vote twice.
+3. **The receipt does not say what was voted for.** A receipt naming the choice
+   is a receipt somebody can be *made to show*, which is how a secret ballot
+   stops being one.
+
+And the count by candidate is published only once the poll has shut. Turnout is
+published throughout, because turnout is not a result — but a running total by
+candidate during an open poll tells late voters which way it is going, which is
+a thing real elections take trouble to avoid.
+
+**The test that matters reads the stored rows, not the adapter's output.** It
+takes every row on the roll and every paper in the box and asserts that no
+value appearing in one appears in the other. A test of what the adapter
+*returns* could not make that claim, because the claim is about what somebody
+holding the database could reconstruct — and an adapter that merely declined to
+return the join would pass a test of its output while storing it.
+
+All thirteen ballot mutations were caught on the first pass, including the two
+that matter most: putting the voter on the paper, and deriving the paper's id
+from the voter.
+
+### And a real bug the tests found
+
+**Giving a room back did not give it back.** The first version kept the row and
+blanked its club, and the room stayed unbookable: the clash check found a hold,
+saw a club that was not the one asking, and refused *on behalf of nobody at
+all*. A hold nobody holds is not a hold, and the honest way to say that in a
+table is for the row not to be in it. `dropHold` replaced the sentinel.
+
+### What the mutations found
+
+Thirty-two guards, removed or inverted one at a time. Twenty-seven caught on
+the first pass. The five that escaped were all the same class, and it is the
+same class as [§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled)'s:
+**the review's own copy of a refusal was untested**, because the helper driving
+both phases could not tell which one had refused, and `execute` caught
+everything.
+
+It is worth saying why that is not cosmetic, in this area especially: an
+officer told at the *commit* that the room was taken has already told somebody
+the meeting is happening. A review that says *go ahead* before a commit that
+says *no* is precisely the failure two phases exist to prevent. Five tests now
+call `review` alone.
+
+Across Phase 4 that finding has now appeared three times, in three different
+shapes — the review untested in §8l and here, the *commit* untested in §8m. It
+is the characteristic failure of testing a two-phase action through a helper
+that drives both, and is now written down as such.
+
+### Measured
+
+| | |
+| --- | --- |
+| Adapters in the sandbox | 13 → **14** |
+| New tests | **68** in `clubs.test.ts` |
+| Mutations applied | **32**, all caught |
+| Suite | **488 files, 10,103 passed, 10 skipped** |
+
+### What this does not do
+
+It does not connect to a university, hold anybody's money, book a real room, or
+run an election that decides anything. The label is on every record.
+
+---
+
 ## 8d. What the source document has left, and what it is waiting on
 
 For the record, measured rather than assumed, since §1 to §8 of this plan were
