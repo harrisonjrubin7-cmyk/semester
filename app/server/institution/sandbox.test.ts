@@ -588,6 +588,112 @@ describe('discussion', () => {
   });
 });
 
+describe('publishing work', () => {
+  const RUBRIC = 'Argument | 10 | A claim somebody could disagree with.\nEvidence | 5 | Sources used, not summarised.';
+  const soon = () => new Date(Date.now() + 14 * 24 * 3_600_000).toISOString();
+
+  const publish = async (fields: Record<string, string>, key = 'k-pub') => {
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    return area('courses').execute(f, act('courses', course.id, course.version, 'publish', fields), key);
+  };
+  const reviewing = async (fields: Record<string, string>) => {
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    return area('courses').review(f, act('courses', course.id, course.version, 'publish', fields));
+  };
+  const full = (over: Record<string, string> = {}) => ({
+    title: 'Essay two',
+    due: soon(),
+    brief: 'Eight hundred words.',
+    rubric: RUBRIC,
+    ...over,
+  });
+
+  it('reaches the whole roster, with a thread and a rubric', async () => {
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    const receipt = await publish(full());
+    expect(receipt.message).toMatch(/Published Essay two, out of 15/);
+
+    // The student has it, with the rubric readable before they start.
+    const mine = await seen('assignments', s, 'student-1:essay-two');
+    expect(mine.title).toContain('Essay two');
+    expect(JSON.stringify(mine.details)).toContain('A claim somebody could disagree with');
+    expect(JSON.stringify(mine.details)).toMatch(/Marked out of[^}]*15/);
+
+    // And somewhere to ask about it.
+    const { records } = await area('courses').list(s, { search: '', cursor: null });
+    expect(records.map((r) => r.id)).toContain('thread:essay-two');
+
+    // And the marker sees it owed by everyone on the roster, not just the tester.
+    const course = await seen('courses', f, 'sandbox-101');
+    // Four, not three: the seeded class plus the tester who just enrolled.
+    // New work is owed by everybody on the roster from the moment it lands.
+    expect(store.roster()).toHaveLength(4);
+    expect(course.details.find((d) => d.label === 'Essay two')?.value).toMatch(/0 of 4 in hand/);
+  });
+
+  it('reads the marking scheme back before anything is published', async () => {
+    // The answer to parsing free text: the person sees what was understood
+    // rather than what they typed, and nothing exists until they confirm.
+    const said = await reviewing(full());
+    const detail = JSON.stringify(said.details);
+    expect(detail).toContain('Argument · 10 marks');
+    expect(detail).toContain('Evidence · 5 marks');
+    expect(detail).toMatch(/Marked out of[^}]*15/);
+    expect(store.assignment('essay-two'), 'reviewing published it').toBeUndefined();
+  });
+
+  it('quotes the line it could not read', async () => {
+    await expect(reviewing(full({ rubric: 'Argument | 10 | Fine\nEvidence, 5, oops' }))).rejects.toThrow(
+      /"Evidence, 5, oops"/,
+    );
+    await expect(reviewing(full({ rubric: 'Argument | lots | Fine' }))).rejects.toThrow(
+      /"Argument" needs a whole number of marks above zero, not "lots"/,
+    );
+    await expect(reviewing(full({ rubric: 'Argument | 0 | Fine' }))).rejects.toThrow(/above zero/);
+    await expect(reviewing(full({ rubric: '' }))).rejects.toThrow(/at least one criterion/);
+  });
+
+  it('will not publish two criteria under one name', async () => {
+    await expect(
+      reviewing(full({ rubric: 'Argument | 5 | One\nargument | 5 | Two' })),
+    ).rejects.toThrow(/Two criteria are both called/);
+  });
+
+  it('will not publish into the past, or on top of something', async () => {
+    await expect(reviewing(full({ due: '2020-01-01T09:00:00Z' }))).rejects.toThrow(/already passed/);
+    await expect(reviewing(full({ due: 'next Tuesday' }))).rejects.toThrow(/not a date this can read/);
+    await publish(full());
+    await expect(reviewing(full())).rejects.toThrow(/already published/);
+  });
+
+  it('is faculty’s to do, and nobody else’s', async () => {
+    const s = student();
+    await enrol(s);
+    const course = await seen('courses', s, 'sandbox-101');
+    // Not offered to them...
+    expect(course.actions.map((a) => a.id)).not.toContain('publish');
+    // ...and refused if they send it anyway.
+    await expect(
+      area('courses').execute(s, act('courses', course.id, course.version, 'publish', full()), 'k-nope'),
+    ).rejects.toThrow(/Only the course faculty can publish/);
+    expect(store.assignment('essay-two')).toBeUndefined();
+  });
+
+  it('gives the criteria ids the marking form can actually use', async () => {
+    // These become field ids, and the gateway's own validator refuses one
+    // that does not match its pattern — so a name with punctuation in it must
+    // come out as something legal rather than as a form nobody can submit.
+    await publish(full({ title: 'Lab report', rubric: 'Method & rigour | 6 | Careful.\nWrite-up | 4 | Clear.' }));
+    const a = store.assignment('lab-report');
+    expect(a?.criteria.map((c) => c.id)).toEqual(['method-rigour', 'write-up']);
+    for (const c of a?.criteria ?? []) expect(c.id).toMatch(/^[a-z][a-z0-9-]{0,63}$/);
+  });
+});
+
 describe('the deadline', () => {
   /** A1 is due 2026-10-02T23:59Z. `vi.setSystemTime` moves both clocks. */
   const DUE = Date.parse('2026-10-02T23:59:00Z');

@@ -123,7 +123,25 @@ export interface Criterion {
   means: string;
 }
 
-const PUBLISHED = [
+export interface Assignment {
+  id: string;
+  title: string;
+  due: string;
+  brief: string;
+  criteria: Criterion[];
+}
+
+/**
+ * The two the course opens with.
+ *
+ * A seed rather than the list itself. The completion plan's chain starts
+ * "faculty creates a course, a student enrolls, **an assignment is
+ * published**" — and for four commits publishing was a constant in this file,
+ * which is to say it was the one stage of the vertical with nothing behind it.
+ * Faculty add to this list now; these two are just what is there on the first
+ * morning so the course is not empty.
+ */
+const SEEDED: Assignment[] = [
   {
     id: 'a1',
     title: 'Problem set 1',
@@ -133,7 +151,7 @@ const PUBLISHED = [
       { id: 'method', name: 'Method', outOf: 8, means: 'The steps are shown and each follows from the last.' },
       { id: 'accuracy', name: 'Accuracy', outOf: 8, means: 'The answers are right, with units.' },
       { id: 'clarity', name: 'Clarity', outOf: 4, means: 'A reader can follow it without asking you anything.' },
-    ] as Criterion[],
+    ],
   },
   {
     id: 'a2',
@@ -144,9 +162,9 @@ const PUBLISHED = [
       { id: 'argument', name: 'Argument', outOf: 16, means: 'A claim somebody could disagree with, defended.' },
       { id: 'evidence', name: 'Evidence', outOf: 14, means: 'Sources used to support the claim, not summarised.' },
       { id: 'writing', name: 'Writing', outOf: 10, means: 'One idea per paragraph, and no padding.' },
-    ] as Criterion[],
+    ],
   },
-] as const;
+];
 
 /** What a piece of work is out of: the rubric's own total, never a second number. */
 const outOf = (criteria: readonly Criterion[]) => criteria.reduce((n, c) => n + c.outOf, 0);
@@ -265,6 +283,11 @@ export class SandboxStore {
         assignment TEXT NOT NULL,
         body TEXT NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS assignments(
+        id TEXT PRIMARY KEY,
+        at TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
       CREATE TABLE IF NOT EXISTS roster(
         student TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -285,6 +308,29 @@ export class SandboxStore {
     // The class the course already has, before any tester arrives.
     const seed = this.db.prepare('INSERT OR IGNORE INTO roster VALUES(?,?,?)');
     for (const c of CLASSMATES) seed.run(c.id, c.name, '2026-08-25T09:00:00Z');
+
+    // And the work it opens with. Faculty publish more; see `publish`.
+    const first = this.db.prepare('INSERT OR IGNORE INTO assignments VALUES(?,?,?)');
+    for (const a of SEEDED) first.run(a.id, '2026-08-25T09:00:00Z', JSON.stringify(a));
+  }
+
+  /** Everything published in this course, oldest first. */
+  published(): Assignment[] {
+    const rows = this.db.prepare('SELECT body FROM assignments ORDER BY at, id').all() as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Assignment);
+  }
+
+  assignment(id: string): Assignment | undefined {
+    const got = this.db.prepare('SELECT body FROM assignments WHERE id=?').get(id) as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as Assignment) : undefined;
+  }
+
+  publish(a: Assignment, at: string): void {
+    this.db.prepare('INSERT INTO assignments VALUES(?,?,?)').run(a.id, at, JSON.stringify(a));
   }
 
   close(): void {
@@ -351,7 +397,7 @@ export class SandboxStore {
   }
 
   mine(student: string): Work[] {
-    return PUBLISHED.map((a) => this.row(student, a.id));
+    return this.published().map((a) => this.row(student, a.id));
   }
 
   /**
@@ -362,7 +408,8 @@ export class SandboxStore {
    * is the entire reason the roster exists.
    */
   everyWork(): Work[] {
-    return this.roster().flatMap((r) => PUBLISHED.map((a) => this.row(r.student, a.id)));
+    const work = this.published();
+    return this.roster().flatMap((r) => work.map((a) => this.row(r.student, a.id)));
   }
 
   one(student: string, assignment: string): Work {
@@ -475,7 +522,7 @@ export class SandboxStore {
 
 /* ── The four adapters ────────────────────────────────────────────────── */
 
-const assignmentOf = (id: string) => PUBLISHED.find((a) => a.id === id);
+const assignmentOf = (store: SandboxStore, id: string) => store.assignment(id);
 
 const isFaculty = (context: AdapterContext) => context.identity.roles.includes('faculty');
 const isStudent = (context: AdapterContext) => context.identity.roles.includes('student');
@@ -499,7 +546,7 @@ function rowFor(store: SandboxStore, context: AdapterContext, id: string): Work 
   if (cut <= 0) return null;
   const student = id.slice(0, cut);
   const assignment = id.slice(cut + 1);
-  if (!assignmentOf(assignment)) return null;
+  if (!assignmentOf(store, assignment)) return null;
   if (isStudent(context) && student === context.identity.userId) return store.one(student, assignment);
   return store.byId(id);
 }
@@ -633,6 +680,66 @@ function readMarks(criteria: readonly Criterion[], fields: Record<string, string
   return marks;
 }
 
+/**
+ * A marking scheme as somebody would paste it, into criteria.
+ *
+ * One line each, `Name | marks | what it means`. The alternative within this
+ * contract was a fixed number of criterion slots — `ActionField` has no
+ * repeating group — and three slots would have been a rubric with exactly
+ * three criteria, which is not a rubric, it is a form.
+ *
+ * Parsing free text is the risk, and the two-phase action is what makes it
+ * safe: `review` reads it back — every criterion, every mark, the total — and
+ * nothing is published until somebody has looked at that and confirmed. A
+ * line that does not parse is refused with the line quoted, at prepare, so
+ * the person fixing it can see which one.
+ */
+function readRubric(text: string): Criterion[] {
+  const lines = text
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (!lines.length) throw new Error('A rubric needs at least one criterion.');
+  const criteria: Criterion[] = [];
+  for (const line of lines) {
+    const parts = line.split('|').map((x) => x.trim());
+    if (parts.length !== 3 || !parts[0] || !parts[2]) {
+      throw new Error(`Write each criterion as "Name | marks | what it means". This one is not: "${line}"`);
+    }
+    const outOf = Number(parts[1]);
+    if (!Number.isInteger(outOf) || outOf <= 0) {
+      throw new Error(`"${parts[0]}" needs a whole number of marks above zero, not "${parts[1]}".`);
+    }
+    const id = parts[0].toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    // The id becomes a field id on the marking form, and the gateway's own
+    // validator will not accept one that does not match its pattern — so it
+    // is checked here, where the message can say which name caused it.
+    if (!/^[a-z][a-z0-9-]{0,63}$/.test(id)) {
+      throw new Error(`"${parts[0]}" needs a name with some letters in it.`);
+    }
+    if (criteria.some((c) => c.id === id)) throw new Error(`Two criteria are both called "${parts[0]}".`);
+    criteria.push({ id, name: parts[0], outOf, means: parts[2] });
+  }
+  return criteria;
+}
+
+/** A new assignment out of the fields, or a refusal saying which one is wrong. */
+function readAssignment(store: SandboxStore, input: ActionInput): Assignment {
+  const title = (input.fields.title ?? '').trim();
+  const brief = (input.fields.brief ?? '').trim();
+  const due = (input.fields.due ?? '').trim();
+  if (!title) throw new Error('An assignment needs a title.');
+  if (!brief) throw new Error('Say what the work is, however briefly.');
+  const when = Date.parse(due);
+  if (!Number.isFinite(when)) throw new Error(`"${due}" is not a date this can read.`);
+  if (when < Date.now()) throw new Error('That deadline has already passed.');
+  const criteria = readRubric(input.fields.rubric ?? '');
+  const id = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+  if (!/^[a-z][a-z0-9-]{0,63}$/.test(id)) throw new Error('The title needs some letters in it.');
+  if (store.assignment(id)) throw new Error(`Something called "${title}" is already published.`);
+  return { id, title, due: new Date(when).toISOString(), brief, criteria };
+}
+
 /** Who may speak in a thread, and as whom. */
 function speaker(context: AdapterContext, store: SandboxStore) {
   const faculty = isFaculty(context);
@@ -654,7 +761,7 @@ function reviewPost(
   context: AdapterContext,
   store: SandboxStore,
   input: ActionInput,
-  thread: (typeof THREADS)[number],
+  thread: Thread,
 ) {
   const { faculty } = speaker(context, store);
   const audience = chosen(input);
@@ -686,7 +793,7 @@ function post(
   context: AdapterContext,
   store: SandboxStore,
   input: ActionInput,
-  thread: (typeof THREADS)[number],
+  thread: Thread,
   key: string,
 ): Receipt {
   const { faculty, name } = speaker(context, store);
@@ -767,7 +874,7 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
   const on = store.enrolled(context.identity.userId);
   const roll = store.roster();
   const work = store.everyWork();
-  const owed = PUBLISHED.map((a) => {
+  const owed = store.published().map((a) => {
     const rows = work.filter((w) => w.assignment === a.id);
     const missing = rows.filter((w) => w.stage === 'published');
     return {
@@ -800,18 +907,39 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
       })),
       { label: 'Your role here', value: context.identity.roles.join(', ') || 'none' },
     ],
-    actions:
-      on || !isStudent(context)
+    actions: isFaculty(context)
+      ? [
+          {
+            id: 'publish',
+            label: 'Publish a piece of work',
+            fields: [
+              { id: 'title', label: 'Title', kind: 'text', required: true },
+              { id: 'due', label: 'Due', kind: 'datetime-local', required: true },
+              { id: 'brief', label: 'What the work is', kind: 'textarea', required: true },
+              {
+                id: 'rubric',
+                label: 'Marking scheme — one criterion a line, as "Name | marks | what it means"',
+                kind: 'textarea',
+                required: true,
+              },
+            ],
+          },
+        ]
+      : on
         ? []
         : [{ id: 'enrol', label: 'Enrol in this sandbox course', fields: [] }],
   };
 }
 
 /** The threads a course has: one per published assignment, and one general. */
-const THREADS = [
+const threadsOf = (store: SandboxStore) => [
   { id: 'general', title: 'About this course', about: 'Anything that is not about one piece of work.' },
-  ...PUBLISHED.map((a) => ({ id: a.id, title: a.title, about: a.brief })),
+  // A thread per published assignment, derived rather than listed — so work
+  // published by faculty arrives with somewhere to ask about it.
+  ...store.published().map((a) => ({ id: a.id, title: a.title, about: a.brief })),
 ];
+
+type Thread = ReturnType<typeof threadsOf>[number];
 
 const threadId = (id: string) => `thread:${id}`;
 
@@ -824,7 +952,7 @@ const threadId = (id: string) => `thread:${id}`;
  * that a question exists would say something about the person who asked it
  * before a word of it was read.
  */
-function threadRecord(context: AdapterContext, store: SandboxStore, thread: (typeof THREADS)[number]): UniversityRecord {
+function threadRecord(context: AdapterContext, store: SandboxStore, thread: Thread): UniversityRecord {
   const mine = context.identity.userId;
   const faculty = isFaculty(context);
   const posts = store.posts(threadId(thread.id), mine, faculty);
@@ -884,8 +1012,8 @@ function threadRecord(context: AdapterContext, store: SandboxStore, thread: (typ
 
 const AUDIENCE: Record<string, Audience> = { 'The class': 'class', 'Staff only': 'staff' };
 
-function assignmentRecord(work: Work): UniversityRecord {
-  const a = assignmentOf(work.assignment);
+function assignmentRecord(store: SandboxStore, work: Work): UniversityRecord {
+  const a = assignmentOf(store, work.assignment);
   const when = lateness(work.submittedAt, a?.due ?? '');
   return {
     id: work.id,
@@ -929,8 +1057,8 @@ function assignmentRecord(work: Work): UniversityRecord {
   };
 }
 
-function gradeRecord(work: Work): UniversityRecord {
-  const a = assignmentOf(work.assignment);
+function gradeRecord(store: SandboxStore, work: Work): UniversityRecord {
+  const a = assignmentOf(store, work.assignment);
   const criteria = a?.criteria ?? [];
   const total = outOf(criteria);
   const seen = work.stage === 'released' || work.stage === 'archived';
@@ -995,8 +1123,8 @@ function gradeRecord(work: Work): UniversityRecord {
   };
 }
 
-function archiveRecord(work: Work): UniversityRecord {
-  const a = assignmentOf(work.assignment);
+function archiveRecord(store: SandboxStore, work: Work): UniversityRecord {
+  const a = assignmentOf(store, work.assignment);
   return {
     id: work.id,
     area: 'records',
@@ -1040,19 +1168,40 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
        * a class is asking, and the emptiness of the list is the refusal.
        */
       const open = isFaculty(context) || store.enrolled(context.identity.userId);
-      const threads = open ? THREADS.map((t) => threadRecord(context, store, t)) : [];
+      const threads = open ? threadsOf(store).map((t) => threadRecord(context, store, t)) : [];
       return page(matching([courseRecord(context, store), ...threads], query.search));
     },
     get: async (context, id) => {
       if (id === COURSE.id) return courseRecord(context, store);
-      const thread = THREADS.find((t) => threadId(t.id) === id);
+      const thread = threadsOf(store).find((t) => threadId(t.id) === id);
       if (!thread) return null;
       if (!isFaculty(context) && !store.enrolled(context.identity.userId)) return null;
       return threadRecord(context, store, thread);
     },
     review: async (context, input) => {
-      const thread = THREADS.find((t) => threadId(t.id) === input.recordId);
+      const thread = threadsOf(store).find((t) => threadId(t.id) === input.recordId);
       if (thread) return reviewPost(context, store, input, thread);
+      if (input.actionId === 'publish') {
+        if (!isFaculty(context)) throw new Error('Only the course faculty can publish work.');
+        const a = readAssignment(store, input);
+        /*
+         * The rubric read back, in full, before anything is published. This
+         * is the answer to parsing free text: the two-phase action exists so
+         * that a person sees what was understood rather than what they typed.
+         */
+        return {
+          title: `Publish ${a.title}`,
+          details: [
+            { label: 'Due', value: a.due.slice(0, 16).replace('T', ' ') },
+            ...a.criteria.map((c) => ({ label: `${c.name} · ${c.outOf} marks`, value: c.means })),
+            { label: 'Marked out of', value: String(outOf(a.criteria)) },
+            {
+              label: 'After this',
+              value: `Everybody on the roster gets it, with a thread to ask about it.`,
+            },
+          ],
+        };
+      }
       if (!isStudent(context)) throw new Error('Only a student can enrol.');
       return {
         title: `Enrol in ${COURSE.code}`,
@@ -1066,14 +1215,28 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     execute: async (context, input, key) => {
       const done = already(store, key);
       if (done) return done;
-      const thread = THREADS.find((t) => threadId(t.id) === input.recordId);
+      const thread = threadsOf(store).find((t) => threadId(t.id) === input.recordId);
       if (thread) return post(context, store, input, thread, key);
+      if (input.actionId === 'publish') {
+        if (!isFaculty(context)) throw new Error('Only the course faculty can publish work.');
+        const a = readAssignment(store, input);
+        const at = now();
+        store.publish(a, at);
+        return {
+          id: key,
+          status: 'completed',
+          message:
+            `${SANDBOX_MARK} · Published ${a.title}, out of ${outOf(a.criteria)}, ` +
+            `to ${store.roster().length} on the roster.`,
+          recordedAt: at,
+        };
+      }
       if (!isStudent(context)) throw new Error('Only a student can enrol.');
       const at = now();
       if (store.enrolled(context.identity.userId)) {
         throw new Error('You are already enrolled in this sandbox course.');
       }
-      const rows = PUBLISHED.map((a) => store.one(context.identity.userId, a.id));
+      const rows = store.published().map((a) => store.one(context.identity.userId, a.id));
       /*
        * Self-enrolment, which a real course does not have, and which this one
        * keeps on purpose: a pilot tester needs a way onto the roster and there
@@ -1096,18 +1259,18 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     status: async (context) => connection('assignments', context, isStudent(context)),
     list: async (context, query) => {
       const rows = isFaculty(context) ? store.everyWork() : store.mine(context.identity.userId);
-      return page(matching(rows.map(assignmentRecord), query.search));
+      return page(matching(rows.map((w) => assignmentRecord(store, w)), query.search));
     },
     get: async (context, id) => {
       const work = rowFor(store, context, id);
       if (!work) return null;
       if (!isFaculty(context) && work.student !== context.identity.userId) return null;
-      return assignmentRecord(work);
+      return assignmentRecord(store, work);
     },
     review: async (context, input) => {
       const work = allow(context, rowFor(store, context, input.recordId), 'student', store);
       expect(work, 'published', 'submit');
-      const a = assignmentOf(work.assignment);
+      const a = assignmentOf(store, work.assignment);
       const body = input.fields.work ?? '';
       const over = Date.parse(a?.due ?? '') < Date.now();
       return {
@@ -1130,7 +1293,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       fresh(work, input);
       expect(work, 'published', 'submit');
       const at = now();
-      const a = assignmentOf(work.assignment);
+      const a = assignmentOf(store, work.assignment);
       /*
        * On the receipt, which is the thing the student keeps. A submission
        * whose lateness is only visible to the marker is a dispute waiting to
@@ -1160,13 +1323,13 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     status: async (context) => connection('grades', context, isFaculty(context)),
     list: async (context, query) => {
       const rows = isFaculty(context) ? store.everyWork() : store.mine(context.identity.userId);
-      return page(matching(rows.map(gradeRecord), query.search));
+      return page(matching(rows.map((w) => gradeRecord(store, w)), query.search));
     },
     get: async (context, id) => {
       const work = rowFor(store, context, id);
       if (!work) return null;
       if (!isFaculty(context) && work.student !== context.identity.userId) return null;
-      return gradeRecord(work);
+      return gradeRecord(store, work);
     },
     review: async (context, input) => {
       const work = allow(context, rowFor(store, context, input.recordId), 'faculty');
@@ -1182,7 +1345,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
         };
       }
       expect(work, 'submitted', 'mark this');
-      const a = assignmentOf(work.assignment);
+      const a = assignmentOf(store, work.assignment);
       const criteria = a?.criteria ?? [];
       // Validated here as well as at execute, because the gateway runs this
       // at prepare: a marker should be told a box is empty before they
@@ -1213,7 +1376,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
         });
       }
       expect(work, 'submitted', 'mark this');
-      const a = assignmentOf(work.assignment);
+      const a = assignmentOf(store, work.assignment);
       // The gateway's validator knows these are numbers; only the adapter
       // knows what each is out of, which is exactly the split the contract
       // draws between a well-formed request and a permitted one.
@@ -1235,13 +1398,13 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     status: async (context) => connection('records', context, isFaculty(context)),
     list: async (context, query) => {
       const rows = isFaculty(context) ? store.everyWork() : store.mine(context.identity.userId);
-      return page(matching(rows.map(archiveRecord), query.search));
+      return page(matching(rows.map((w) => archiveRecord(store, w)), query.search));
     },
     get: async (context, id) => {
       const work = rowFor(store, context, id);
       if (!work) return null;
       if (!isFaculty(context) && work.student !== context.identity.userId) return null;
-      return archiveRecord(work);
+      return archiveRecord(store, work);
     },
     review: async (context, input) => {
       const work = allow(context, rowFor(store, context, input.recordId), 'faculty');
