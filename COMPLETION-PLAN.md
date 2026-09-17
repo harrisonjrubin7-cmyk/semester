@@ -1625,12 +1625,46 @@ the adapters: HTTP in, status codes and JSON out, over a real journal on a real
 file, including the two-phase prepare/confirm and a test that a confirmation
 whose review has moved under it is refused and does not submit twice.
 
+### Then the roster, which the plan calls the difference itself
+
+The plan's "what's missing" list ends with *"a real class roster — the
+difference between organizing a course and actually running one"*, and the
+first version of the sandbox did not have one. Its roster was *whoever had
+happened to open the app*: a work row came into being the first time somebody
+looked at it, and faculty saw the set of rows that existed. Three things
+followed, and the middle one is a bug rather than a thin demonstration.
+
+| | |
+| --- | --- |
+| A marker's list of outstanding work left out everyone who had not opened the app | which under-reported exactly the students who owed work |
+| **Anybody at all holding the student role could submit to the course** | there was nothing to be enrolled *in*, so there was nothing to check against |
+| There was no way to see the class as a class | which is the difference the plan is naming |
+
+Written as three failing tests first, then fixed. The course has a roster now,
+seeded with three named sandbox classmates so a faculty view is a view of a
+class rather than of one tester; a marker's list is built from the roster, so a
+student who has never opened the app appears with nothing submitted; the course
+record says how many are enrolled, how many pieces are in hand, how many are
+outstanding and how many are waiting to be marked; and submission is refused to
+anybody not on the roster. A test called `gatecrasher-1` is what that last rule
+is measured against.
+
+Self-enrolment stays, and is the sandbox's one concession to not being an
+institution — a pilot tester needs a way onto the roster and there is no
+registrar here to put them on it. It is a concession rather than a pretence:
+the roster they join is the same list faculty mark from.
+
+One thing fell out of the fix. Reads no longer write: materialising a row the
+first time anybody looked made every faculty list a write, and made the stored
+rows a record of who had *browsed* rather than of who was enrolled. Seven more
+mutations, seven red — two of which survived a first pass and were a
+no-op mutation of mine and a rule (enrolling twice) that nothing tested.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes
-what the app tells a student about that. Rubrics, discussion and a real class
-roster — the rest of the plan's "what's missing" list — are breadth, and the
-plan is explicit that the one vertical comes first.
+what the app tells a student about that. Rubrics and discussion — the rest of
+the plan's "what's missing" list — are still ahead.
 
 ---
 

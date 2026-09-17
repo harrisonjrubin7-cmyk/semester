@@ -116,6 +116,32 @@ const PUBLISHED = [
   },
 ] as const;
 
+/**
+ * The class, as the course's own list rather than as a side effect.
+ *
+ * The first version of this file had no roster: faculty saw "every row that
+ * exists", and a row came into being the first time a student *looked*. Three
+ * things followed, and the middle one is a real bug rather than a thin
+ * demonstration.
+ *
+ *  - A marker's list of outstanding work left out everybody who had not
+ *    opened the app — which is to say, it under-reported exactly the students
+ *    who owed work, in the one direction that matters.
+ *  - Anybody at all with the student role could submit to the course. There
+ *    was nothing to be enrolled *in*, so there was nothing to check against.
+ *  - There was no way to see the class as a class, which is the difference
+ *    the completion plan draws between organising a course and running one.
+ *
+ * These three are the roster, seeded so that a faculty view is a view of a
+ * class rather than of one tester. Their names say what they are; nobody
+ * should ever wonder whether Quiet Student is a real person.
+ */
+const CLASSMATES = [
+  { id: 'quiet-1', name: 'SANDBOX Student A (has not opened the app)' },
+  { id: 'busy-1', name: 'SANDBOX Student B' },
+  { id: 'late-1', name: 'SANDBOX Student C' },
+] as const;
+
 type Stage = 'published' | 'submitted' | 'graded' | 'released' | 'archived';
 
 /** What a person reads instead of the stage's internal name. */
@@ -167,25 +193,51 @@ export class SandboxStore {
         assignment TEXT NOT NULL,
         body TEXT NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS roster(
+        student TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        joinedAt TEXT NOT NULL
+      );
       CREATE TABLE IF NOT EXISTS receipts(
         key TEXT PRIMARY KEY,
         body TEXT NOT NULL
       );
     `);
+
+    // The class the course already has, before any tester arrives.
+    const seed = this.db.prepare('INSERT OR IGNORE INTO roster VALUES(?,?,?)');
+    for (const c of CLASSMATES) seed.run(c.id, c.name, '2026-08-25T09:00:00Z');
   }
 
   close(): void {
     this.db.close();
   }
 
+  /** Everybody the course has, in the order they joined. */
+  roster(): { student: string; name: string; joinedAt: string }[] {
+    return this.db
+      .prepare('SELECT student, name, joinedAt FROM roster ORDER BY joinedAt, student')
+      .all() as { student: string; name: string; joinedAt: string }[];
+  }
+
+  enrolled(student: string): boolean {
+    return Boolean(this.db.prepare('SELECT 1 FROM roster WHERE student=?').get(student));
+  }
+
+  add(student: string, name: string, at: string): void {
+    this.db.prepare('INSERT OR IGNORE INTO roster VALUES(?,?,?)').run(student, name, at);
+  }
+
   /**
-   * This student's row for this assignment, made on first sight.
+   * This student's row for this assignment — stored, or the empty one it
+   * would be.
    *
-   * Enrolment is what makes the row exist, and a row that does not exist is
-   * indistinguishable from one at `published` — so the first read creates it
-   * rather than asking every caller to. What that means for authorization is
-   * unchanged: the row is keyed by the *verified* user id, so this cannot
-   * hand anybody somebody else's work.
+   * It does **not** write, and the earlier version did. A row that does not
+   * exist and a row at `published` are the same situation — nothing has
+   * happened — so materialising one on a read bought nothing and cost two
+   * things: every faculty list became a write, and the stored set of rows was
+   * a record of who had *looked* rather than of who was enrolled. The roster
+   * answers the second question now, and this answers only the first.
    */
   private row(student: string, assignment: string): Work {
     const id = `${student}:${assignment}`;
@@ -209,22 +261,29 @@ export class SandboxStore {
       archivedAt: null,
       history: [],
     };
-    this.db.prepare('INSERT INTO work VALUES(?,?,?,?)').run(id, student, assignment, JSON.stringify(fresh));
     return fresh;
   }
 
+  /** Written on commit, which is the only thing that creates a row. */
   private save(work: Work): void {
-    this.db.prepare('UPDATE work SET body=? WHERE id=?').run(JSON.stringify(work), work.id);
+    this.db
+      .prepare('INSERT INTO work VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body')
+      .run(work.id, work.student, work.assignment, JSON.stringify(work));
   }
 
   mine(student: string): Work[] {
     return PUBLISHED.map((a) => this.row(student, a.id));
   }
 
-  /** Every student's row, for faculty. Only rows that exist — nobody is invented. */
-  roster(): Work[] {
-    const rows = this.db.prepare('SELECT body FROM work ORDER BY id').all() as { body: string }[];
-    return rows.map((r) => JSON.parse(r.body) as Work);
+  /**
+   * Every enrolled student's row for every published assignment.
+   *
+   * From the roster rather than from the work table, so a student who has
+   * never opened the app is in a marker's list with nothing submitted — which
+   * is the entire reason the roster exists.
+   */
+  everyWork(): Work[] {
+    return this.roster().flatMap((r) => PUBLISHED.map((a) => this.row(r.student, a.id)));
   }
 
   one(student: string, assignment: string): Work {
@@ -354,7 +413,12 @@ const matching = (records: UniversityRecord[], search: string) => {
  * Its own function because the same four checks are the whole authorization
  * story and writing them four times is how one of them comes to differ.
  */
-function allow(context: AdapterContext, work: Work | null, needs: 'student' | 'faculty'): Work {
+function allow(
+  context: AdapterContext,
+  work: Work | null,
+  needs: 'student' | 'faculty',
+  store?: SandboxStore,
+): Work {
   /*
    * The role first, and the record's existence second.
    *
@@ -370,6 +434,14 @@ function allow(context: AdapterContext, work: Work | null, needs: 'student' | 'f
   }
   if (needs === 'student' && !isStudent(context)) {
     throw new Error('Only an enrolled student can do that.');
+  }
+  if (needs === 'student' && store && !store.enrolled(context.identity.userId)) {
+    /*
+     * Before the roster existed there was nothing to be enrolled *in*, so
+     * anybody holding the student role could submit to this course. A test
+     * with a user called `gatecrasher-1` walked straight in.
+     */
+    throw new Error('You are not on this course’s roster. Enrol first.');
   }
   if (!work) throw new Error('No such record in the sandbox course.');
   if (needs === 'student') {
@@ -416,8 +488,22 @@ function trail(work: Work): { label: string; value: string }[] {
   }));
 }
 
-function courseRecord(context: AdapterContext, work: Work[]): UniversityRecord {
-  const on = work.some((w) => w.enrolledAt);
+function courseRecord(context: AdapterContext, store: SandboxStore): UniversityRecord {
+  /*
+   * Being on the roster *is* being enrolled. The stamp on each work row is
+   * when it happened, for the trail; the list is the fact.
+   */
+  const on = store.enrolled(context.identity.userId);
+  const roll = store.roster();
+  const work = store.everyWork();
+  const owed = PUBLISHED.map((a) => {
+    const rows = work.filter((w) => w.assignment === a.id);
+    return {
+      a,
+      inHand: rows.filter((w) => w.stage !== 'published').length,
+      toMark: rows.filter((w) => w.stage === 'submitted').length,
+    };
+  });
   return {
     id: COURSE.id,
     area: 'courses',
@@ -429,7 +515,13 @@ function courseRecord(context: AdapterContext, work: Work[]): UniversityRecord {
     details: [
       { label: 'Institution', value: SANDBOX_NAME },
       { label: 'Taught by', value: COURSE.faculty },
-      { label: 'Published work', value: PUBLISHED.map((a) => `${a.title} (due ${a.due.slice(0, 10)})`).join(' · ') },
+      { label: 'Enrolled', value: `${roll.length} on the roster` },
+      ...owed.map((o) => ({
+        label: o.a.title,
+        value:
+          `due ${o.a.due.slice(0, 10)} · ${o.inHand} of ${roll.length} in hand · ` +
+          `${roll.length - o.inHand} outstanding · ${o.toMark} to mark`,
+      })),
       { label: 'Your role here', value: context.identity.roles.join(', ') || 'none' },
     ],
     actions:
@@ -552,9 +644,9 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     institutionId: SANDBOX_INSTITUTION,
     status: async (context) => connection('courses', context, isStudent(context)),
     list: async (context, query) =>
-      page(matching([courseRecord(context, store.mine(context.identity.userId))], query.search)),
+      page(matching([courseRecord(context, store)], query.search)),
     get: async (context, id) =>
-      id === COURSE.id ? courseRecord(context, store.mine(context.identity.userId)) : null,
+      id === COURSE.id ? courseRecord(context, store) : null,
     review: async (context) => {
       if (!isStudent(context)) throw new Error('Only a student can enrol.');
       return {
@@ -571,10 +663,19 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       if (done) return done;
       if (!isStudent(context)) throw new Error('Only a student can enrol.');
       const at = now();
-      const rows = PUBLISHED.map((a) => store.one(context.identity.userId, a.id)).filter((w) => !w.enrolledAt);
-      if (!rows.length) {
+      if (store.enrolled(context.identity.userId)) {
         throw new Error('You are already enrolled in this sandbox course.');
       }
+      const rows = PUBLISHED.map((a) => store.one(context.identity.userId, a.id));
+      /*
+       * Self-enrolment, which a real course does not have, and which this one
+       * keeps on purpose: a pilot tester needs a way onto the roster and there
+       * is no registrar here to put them on it. It is the sandbox's one
+       * concession to not being an institution, and it is a concession rather
+       * than a pretence — the roster it joins is the same list faculty mark
+       * from, and a person who has not joined it cannot submit.
+       */
+      store.add(context.identity.userId, `SANDBOX tester ${context.identity.userId}`, at);
       return store.commitAll(rows, key, context.identity.userId, 'Enrolled', at, (w) => {
         w.enrolledAt = at;
       });
@@ -587,7 +688,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     institutionId: SANDBOX_INSTITUTION,
     status: async (context) => connection('assignments', context, isStudent(context)),
     list: async (context, query) => {
-      const rows = isFaculty(context) ? store.roster() : store.mine(context.identity.userId);
+      const rows = isFaculty(context) ? store.everyWork() : store.mine(context.identity.userId);
       return page(matching(rows.map(assignmentRecord), query.search));
     },
     get: async (context, id) => {
@@ -597,7 +698,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       return assignmentRecord(work);
     },
     review: async (context, input) => {
-      const work = allow(context, rowFor(store, context, input.recordId), 'student');
+      const work = allow(context, rowFor(store, context, input.recordId), 'student', store);
       expect(work, 'published', 'submit');
       const a = assignmentOf(work.assignment);
       const body = input.fields.work ?? '';
@@ -614,7 +715,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     execute: async (context, input, key) => {
       const done = already(store, key);
       if (done) return done;
-      const work = allow(context, rowFor(store, context, input.recordId), 'student');
+      const work = allow(context, rowFor(store, context, input.recordId), 'student', store);
       fresh(work, input);
       expect(work, 'published', 'submit');
       const at = now();
@@ -632,7 +733,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     institutionId: SANDBOX_INSTITUTION,
     status: async (context) => connection('grades', context, isFaculty(context)),
     list: async (context, query) => {
-      const rows = isFaculty(context) ? store.roster() : store.mine(context.identity.userId);
+      const rows = isFaculty(context) ? store.everyWork() : store.mine(context.identity.userId);
       return page(matching(rows.map(gradeRecord), query.search));
     },
     get: async (context, id) => {
@@ -702,7 +803,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     institutionId: SANDBOX_INSTITUTION,
     status: async (context) => connection('records', context, isFaculty(context)),
     list: async (context, query) => {
-      const rows = isFaculty(context) ? store.roster() : store.mine(context.identity.userId);
+      const rows = isFaculty(context) ? store.everyWork() : store.mine(context.identity.userId);
       return page(matching(rows.map(archiveRecord), query.search));
     },
     get: async (context, id) => {
