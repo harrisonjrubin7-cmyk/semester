@@ -4,7 +4,7 @@ import { SettingsPage } from './Page';
 import { CustomRow, Group } from '../../components/shell/Rows';
 import { lights } from '../../lib/settings';
 import { secondLine } from '../../lib/dim';
-import { checkKey } from '../../lib/claude';
+import { checkKey, checkShared } from '../../lib/claude';
 import {
   MODELS,
   OPENAI_MODELS,
@@ -16,6 +16,7 @@ import {
   routeLabel,
   saveSettings,
   settings,
+  sharedEndpoint,
 } from '../../lib/assistant';
 import {
   UNNAMED,
@@ -80,6 +81,20 @@ export function SettingsAssistant() {
     }
     setChecking(false);
   };
+
+  /*
+   * The same button for the route where the failure is not yours to fix.
+   *
+   * Nothing is saved on the way out: there is no setting behind this one, only
+   * a deployment that either holds a key or does not, so the answer is the
+   * whole of what the press is for.
+   */
+  const verifyShared = async () => {
+    setChecking(true);
+    setResult(null);
+    setResult(await checkShared());
+    setChecking(false);
+  };
   const spend = readSpend();
   const month = total(since(spend, monthStart(new Date())));
   const courses = byCourse(spend);
@@ -120,7 +135,7 @@ export function SettingsAssistant() {
               config.provider === 'openai'
                 ? 'Two providers, so a lapsed account or an outage the night before a midterm does not stop the app working. Nothing above this setting knows which one answered.'
                 : route() === 'shared'
-                  ? 'Signed in, so this is already working — the shared key lives in a server function, metered per account, and never reaches this browser. Add your own key below only if you want past the monthly limit.'
+                  ? 'Signed in, so the shared key is the route: it lives in a server function, metered per account, and never reaches this browser. Whether that function holds a key is this deployment’s doing rather than yours — the button below asks it, without spending a generation. Add your own key only to go past the monthly limit.'
                   : 'There is no “sign in with Claude”: Anthropic publishes no consumer login for other apps, so a claude.ai Pro or Max subscription cannot be linked here by any app. What works is a key from console.anthropic.com → API keys, billed separately per use. A key typed here is stored on this device and sent only to Anthropic. Be clear-eyed about it: anything running in this browser can read a key in this browser. Signing in uses the shared key instead, and a proxy you run is better still — an address in the proxy box wins over a key when both are filled in, and anything in it that is not an address is ignored.'
             }
             lit={lights('provider claude openai chatgpt anthropic key api model', lit)}
@@ -282,30 +297,46 @@ export function SettingsAssistant() {
                 {saved ? 'Saved on this device' : 'Save on this device'}
               </ActionButton>
               {config.provider !== 'openai' && config.apiKey.trim() !== '' && (
-                <>
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-block"
-                    disabled={checking}
-                    onClick={() => void verify()}
-                    style={{ height: 42, marginTop: 'var(--sp-4)' }}
-                  >
-                    {checking ? 'Checking…' : 'Check this key works'}
-                  </button>
-                  {result && (
-                    <div
-                      style={{
-                        fontSize: 'var(--type-sm)',
-                        marginTop: 'var(--sp-4)',
-                        lineHeight: 'var(--leading-normal)',
-                        color: result.ok ? 'var(--app-fg)' : 'var(--app-accent)',
-                        textWrap: 'pretty',
-                      }}
-                    >
-                      {result.detail}
-                    </div>
-                  )}
-                </>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-block"
+                  disabled={checking}
+                  onClick={() => void verify()}
+                  style={{ height: 42, marginTop: 'var(--sp-4)' }}
+                >
+                  {checking ? 'Checking…' : 'Check this key works'}
+                </button>
+              )}
+              {/*
+                * Offered on the strength of the build having a shared key, not
+                * of being signed in. Somebody with no account is exactly who
+                * the answer is for: whether signing in is worth doing is the
+                * question, and until this the only way to find out was to make
+                * an account, upload a syllabus and wait.
+                */}
+              {config.provider !== 'openai' && sharedEndpoint() !== '' && (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-block"
+                  disabled={checking}
+                  onClick={() => void verifyShared()}
+                  style={{ height: 42, marginTop: 'var(--sp-4)' }}
+                >
+                  {checking ? 'Checking…' : 'Check the shared key works'}
+                </button>
+              )}
+              {result && (
+                <div
+                  style={{
+                    fontSize: 'var(--type-sm)',
+                    marginTop: 'var(--sp-4)',
+                    lineHeight: 'var(--leading-normal)',
+                    color: result.ok ? 'var(--app-fg)' : 'var(--app-accent)',
+                    textWrap: 'pretty',
+                  }}
+                >
+                  {result.detail}
+                </div>
               )}
               {configured() && (
                 <div className="kicker" style={{ marginTop: 'var(--sp-4)' }}>

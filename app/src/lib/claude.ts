@@ -1175,6 +1175,131 @@ export async function checkKey(apiKey: string): Promise<{ ok: boolean; detail: s
 }
 
 /**
+ * Whether the shared key is actually there, asked without signing anything up.
+ *
+ * The screen above this said "Signed in, so this is already working" and
+ * nothing had checked it. That sentence is true of the *account*, which the
+ * app can see, and a guess about the *deployment*, which it cannot: the
+ * function has to be deployed, and it has to have been given an
+ * `ANTHROPIC_API_KEY` secret. Both are the deployment owner's doing, neither
+ * is visible from a browser, and a student who is told it is already working
+ * finds out otherwise after picking a syllabus and waiting for it to be read.
+ * `checkKey` has spared the own-key route that afternoon since the two settings
+ * forms were merged; the shared route is the one where the failure is not even
+ * the student's to fix, and it had nothing.
+ *
+ * **Deliberately unauthenticated.** `supabase/functions/claude/index.ts` looks
+ * for its key *before* it looks at the caller's token, and meters the call
+ * after both. So a POST carrying no `Authorization` header reaches the one
+ * thing worth knowing and stops two steps short of the meter: it cannot spend
+ * a generation out of somebody's sixty, and it works signed out, which is what
+ * makes it answerable before a pilot rather than after one.
+ *
+ * **What a pass does not say.** Reaching the token check proves the function is
+ * live and holds a key. It cannot prove that key still has credit, because
+ * proving that means spending some. The sentence says so rather than implying
+ * the stronger thing.
+ */
+export async function checkShared(): Promise<{ ok: boolean; detail: string }> {
+  const url = sharedEndpoint();
+  if (!url) {
+    return {
+      ok: false,
+      detail:
+        'This build has no shared key to check — it was built without a Supabase project, so ' +
+        'signing in cannot answer questions here. Your own key below is the route.',
+    };
+  }
+
+  let res: Response;
+  try {
+    res = await fetchWithin(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+  } catch (e) {
+    if (timedOut(e)) return { ok: false, detail: tookTooLong('The shared-key function') };
+    return {
+      ok: false,
+      detail: `${e instanceof Error ? e.message : String(e)}\n\nCould not reach the shared-key function at ${url}.`,
+    };
+  }
+
+  const body = (await res.json().catch(() => ({}))) as {
+    error?: { message?: string };
+    message?: string;
+  };
+  const said = body.error?.message ?? '';
+
+  if (res.status === 401) {
+    /*
+     * Two quite different things answer 401 here, and reading them as one
+     * would make this probe worse than no probe.
+     *
+     * The function's own 401 is the pass: it ran, it had a key, and it turned
+     * the request away for having no token — which is exactly as far as an
+     * unauthenticated request is meant to get. Supabase's gateway also
+     * answers 401, before the function runs at all, when a deploy left JWT
+     * verification on. That one proves nothing about the key, and reported as
+     * a pass it would confirm a shared key that does not exist.
+     *
+     * The two are told apart by shape. Everything this function returns is
+     * `{ error: { message } }`; the gateway writes a bare `message` or `msg`
+     * beside a code. `.github/workflows/functions.yml` passes
+     * `--no-verify-jwt` on every deploy, so the gateway case means somebody
+     * deployed this function another way, and saying that is more useful than
+     * a shrug.
+     */
+    if (said) {
+      return {
+        ok: true,
+        detail:
+          'The shared key is live: the function answered, and it has a key. Signing in is ' +
+          'enough to build a course.\n\nThis did not spend one of the monthly generations, ' +
+          'which is also the limit of what it proves — it cannot tell you the key still has ' +
+          'credit behind it.',
+      };
+    }
+    return {
+      ok: false,
+      detail:
+        'Supabase turned the request away before the function ran, so whether there is a key ' +
+        'behind it is not knowable from here. That happens when the function was deployed with ' +
+        'JWT verification left on; deploying it with --no-verify-jwt, the way ' +
+        '.github/workflows/functions.yml does, lets it answer for itself.',
+    };
+  }
+
+  if (res.status === 501) {
+    return {
+      ok: false,
+      detail:
+        'The function is deployed and has no key in it, so signing in buys nothing — every ' +
+        'account gets this. Whoever runs this deployment sets one with `supabase secrets set ' +
+        'ANTHROPIC_API_KEY=…` (SETUP.md). Your own key below works meanwhile.',
+    };
+  }
+
+  if (res.status === 404) {
+    return {
+      ok: false,
+      detail:
+        `Nothing is deployed at ${url} — the \`claude\` function has not been pushed to this ` +
+        'project, so signing in cannot answer questions here for anybody. Your own key below ' +
+        'works meanwhile.',
+    };
+  }
+
+  return {
+    ok: false,
+    detail:
+      `${said || body.message || res.status} \n\nThat came back from ${url} rather than the ` +
+      'refusal an unauthenticated check expects, so the shared key cannot be confirmed from here.',
+  };
+}
+
+/**
  * Read a photograph of course material and turn it into cards.
  *
  * The case this exists for: the board at the end of a lecture, a page of a
