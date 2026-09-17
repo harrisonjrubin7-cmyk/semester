@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
@@ -134,6 +134,56 @@ describe('the rule that nothing applies a migration', () => {
     // and this test would pass just as well against an empty directory.
     const migrations = readdirSync(join(ROOT, 'supabase', 'migrations'));
     expect(migrations.filter((f) => f.endsWith('.sql')).length).toBeGreaterThan(5);
+  });
+});
+
+describe('the SQL suites are run by something other than a person remembering', () => {
+  /*
+   * In this file rather than one of its own because it is the same kind of
+   * claim as the three above: an assertion about `.github/workflows/` that
+   * fails *silently*. Nothing goes red when a check stops being run; the
+   * checks simply stop, and `check.sh`'s own header is the record of how long
+   * that can go unnoticed — two suites had been failing on their first block
+   * since the migration that broke them, and because a failed block aborts the
+   * transaction, thirty-eight checks across two files had never executed.
+   *
+   * The policies are the only test the database half of this app has, and the
+   * invite gate's own suite caught a real hole in it. So the step existing is
+   * worth pinning.
+   */
+  it('CI runs supabase/check.sh', () => {
+    /*
+     * The `run:` lines only, and that is not fussiness. The first version
+     * searched the whole file — which passed against a `ci.yml` with the step
+     * *deleted*, because the comment above it explaining why the step exists
+     * also names the script. A probe that a feature's own documentation can
+     * satisfy is a probe that would pass whatever the workflow did, and this
+     * is the third time in one day that one has counted a word in a comment.
+     */
+    const runs = [...workflow('ci.yml').matchAll(/^\s*run:\s*(.*)$/gm)].map((m) => m[1]);
+    expect(
+      runs.some((r) => r.includes('supabase/check.sh')),
+      'the database policy checks are no longer run by CI',
+    ).toBe(true);
+  });
+
+  it('and the probe for it reads the run lines, not the comments', () => {
+    // The control. `ci.yml` names the script in prose as well, so a scan of
+    // the whole file cannot tell the step from the paragraph about the step.
+    const raw = workflow('ci.yml');
+    const runs = [...raw.matchAll(/^\s*run:\s*(.*)$/gm)].map((m) => m[1]).join('\n');
+    expect(raw, 'the explanation naming the script has gone').toContain(
+      '`supabase/check.sh` applies every migration',
+    );
+    expect(runs, 'the run lines are picking up prose').not.toContain('applies every migration');
+  });
+
+  it('and the script is there to be run, and executable', () => {
+    const script = join(ROOT, 'supabase', 'check.sh');
+    expect(existsSync(script)).toBe(true);
+    // The control on the test above: naming a script CI cannot execute would
+    // pass a `toContain` and fail every run.
+    expect(statSync(script).mode & 0o111, 'check.sh is not executable').toBeGreaterThan(0);
   });
 });
 

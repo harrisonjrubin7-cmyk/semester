@@ -186,6 +186,31 @@ jobs:
       - name: Validate the course data
         run: node pipeline/validate.mjs
 
+      # The row-level security policies, which nothing here used to check.
+      #
+      # `supabase/check.sh` applies every migration to a throwaway Postgres and
+      # runs the `.check.sql` suites against it. Its own header records why
+      # that matters: before it existed the only way to run a suite was to
+      # paste it into a live project's SQL Editor by hand, so they were not
+      # run — and two had been failing on their first block since the migration
+      # that broke them. A failed block aborts the transaction, so everything
+      # after it was skipped: thirteen of twenty-two checks in one file and all
+      # twenty-five in another had never executed.
+      #
+      # Making them runnable fixed the past. It did not stop the same thing
+      # happening again, because nothing ran them automatically — and the suite
+      # that caught a real hole in the invite gate (a `security definer`
+      # function revoked from two role names instead of from PUBLIC, leaving
+      # the grant both roles inherit untouched) would not have caught it here.
+      #
+      # ubuntu-latest carries a Postgres server. The script finds it under
+      # /usr/lib/postgresql/*/bin and **exits 2 if it cannot**, which is the
+      # property that makes this step worth having: a check that quietly skips
+      # when its dependency is missing is the exact failure this repository
+      # keeps turning out to have had.
+      - name: Check the database policies
+        run: supabase/check.sh
+
   # ── Saying so when main is red ──────────────────────────────────────────
   #
   # A pull request that fails tells the person who opened it: the check sits

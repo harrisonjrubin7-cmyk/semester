@@ -88,7 +88,15 @@ for _ in $(seq 1 30); do
   sleep 0.5
 done
 
-psql() { command psql -X -q -h "$work" -p "$port" -U postgres "$@"; }
+# `$bindir/psql` and not a bare `psql`, which is the same discovery this script
+# already does for initdb, pg_ctl and pg_isready. A bare one was an unstated
+# dependency on the client happening to be on PATH — true on a developer's
+# machine, not true in a container that has the server under
+# /usr/lib/postgresql/16/bin and nothing on PATH, where this failed with
+# "command not found" and read as a broken script rather than a missing
+# directory. Using the binary it already located makes the script say the same
+# thing everywhere.
+psql() { "$bindir/psql" -X -q -h "$work" -p "$port" -U postgres "$@"; }
 
 echo "· the parts Supabase provides, for a plain Postgres"
 psql -v ON_ERROR_STOP=1 -f "$here/local.stub.sql" >/dev/null
