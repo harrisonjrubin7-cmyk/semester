@@ -51,6 +51,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { arrived, destinations, proofSelector, PROOF } from './destinations.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const AUDIT = readFileSync(join(here, 'contrast-audit.js'), 'utf8');
@@ -72,6 +73,10 @@ const CHROME = process.env.SWEEP_CHROMIUM || '/opt/pw-browsers/chromium';
 const ONLY_NAVS = process.env.SWEEP_NAVS?.split(',').map(s => s.trim()).filter(Boolean);
 const ONLY_GROUNDS = process.env.SWEEP_GROUNDS?.split(',').map(s => s.trim()).filter(Boolean);
 const SKIP_STATES = process.env.SWEEP_NO_STATES === '1';
+// Both, unless named. A width is not a repaint: it decides which chrome is
+// drawn at all (the rail exists at 1280 and the tab bar at 420), so the two
+// are different pages and neither stands in for the other.
+const ONLY_WIDTHS = process.env.SWEEP_WIDTHS?.split(',').map(s => s.trim()).filter(Boolean);
 
 let chromium;
 try {
@@ -134,8 +139,62 @@ const NAVS = [
   ['guides',      'Study guides', '#/home',   { h1: /Guides/i }],
 ];
 
-const SCREENS = [['search','#/search'], ['courses','#/courses'],
-                 ['study','#/study'], ['work','#/work'], ['draw','#/draw']];
+/*
+ * The screen axis, which until this pass was five names on one line.
+ *
+ * Sixty destinations in the registry and six screens opened, five of them
+ * destinations: every contrast figure taken here has been a figure about a
+ * twelfth of the app, printed under a FINDINGS heading with nothing beside it
+ * to say so. `targets-sweep.mjs` — the other half of this
+ * instrument, by `src/lib/ci.test.ts` — has walked the registry from the day
+ * it was written. This one now reads the same list from the same place
+ * (`destinations.mjs`), so the two cannot disagree about what the app is.
+ *
+ * Two scopes, because the two axes cost differently and measure different
+ * things:
+ *
+ *   chrome (default)  six screens × every navigation × every ground × both
+ *                     widths. The tab bar, the rail, the headers and the
+ *                     sheets are drawn the same on every screen, so the way
+ *                     to find a broken pairing in them is to repaint a few
+ *                     screens in all thirteen grounds under all six
+ *                     navigations.
+ *   all               every destination. A screen's *own* text is drawn once
+ *                     and is the same under each navigation, so this axis
+ *                     wants breadth rather than the full matrix — narrow the
+ *                     other axes with SWEEP_NAVS, SWEEP_GROUNDS and
+ *                     SWEEP_WIDTHS, and the run prints what it left out.
+ *
+ * "The body is the same under each navigation" is a claim about this app and
+ * it was measured, not assumed. `all` under `tabs` and again under `shelves`,
+ * on `ink` at phone width: the same three findings, on the same three
+ * elements, on the same two screens. The element totals differed — 2,327
+ * against 3,086, the shelves being a navigation with more chrome in it — and
+ * the findings did not. Chrome is the half the default scope is for.
+ */
+const SCOPE = process.env.SWEEP_SCOPE || 'chrome';
+const DESTINATIONS = destinations();
+
+/*
+ * The five the chrome scope opens beside home, and why these five: between
+ * them they carry a search field, a list of courses, the study shelf, a
+ * working surface and a canvas — the widest spread of chrome shapes for the
+ * fewest page loads.
+ *
+ * Checked rather than trusted, against the registry or against the proof
+ * table, so a renamed screen fails here instead of quietly measuring nothing.
+ * `search` is the one that is in neither the registry nor a nav's first
+ * screen and is still a real place: see `destinations.mjs` for what proves it,
+ * and why its header says Today.
+ */
+const CHROME_SCREENS = ['search', 'courses', 'study', 'work', 'draw'];
+const unknownChrome = CHROME_SCREENS.filter(
+  (s) => !DESTINATIONS.some((d) => d.screen === s) && !PROOF[s],
+);
+if (unknownChrome.length) throw new Error(`neither a destination nor proved: ${unknownChrome.join(', ')}`);
+
+const SCREENS = (SCOPE === 'all' ? DESTINATIONS.map((d) => d.screen) : CHROME_SCREENS)
+  .map((screen) => [screen, `#/${screen}`]);
 
 /** Chrome only one navigation has; absent elsewhere, so each is guarded. */
 const EXTRAS = {
@@ -260,7 +319,9 @@ const findings = [], coverage = [], unverified = [];
 const t0 = Date.now();
 
 for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS || ONLY_NAVS.includes(n[0]))) {
-  for (const [vp, tag] of [[{width:420,height:900},'phone'], [{width:1280,height:900},'desktop']]) {
+  const widths = [[{width:420,height:900},'phone'], [{width:1280,height:900},'desktop']]
+    .filter(([, tag]) => !ONLY_WIDTHS || ONLY_WIDTHS.includes(tag));
+  for (const [vp, tag] of widths) {
     const ctx = await browser.newContext({ viewport: vp });
     const page = await ctx.newPage();
     const errs = []; page.on('pageerror', e => errs.push(String(e)));
@@ -291,10 +352,22 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
       navOk = proof.h1.test(h1); how = `h1 ~ ${proof.h1} (saw "${h1.slice(0,30)}")`;
     }
 
-    const states = [['home', async (p) => { await p.evaluate(h=>{location.hash=h;}, firstScreen); }],
-                    ...SCREENS.map(([name, hash]) =>
-                      [name, async (p) => { await p.evaluate(h => { location.hash = h; }, hash); }]),
-                    ...(EXTRAS[nav] || [])];
+    /*
+     * Each state carries the screen it is meant to land on, where it has one.
+     * That is what `arrived()` holds the rendered page to below — a heading
+     * for fifty-nine of them, a mark for the one whose heading names another
+     * screen. The extras are chrome within a screen rather than screens, so
+     * they carry nothing and are not held to it.
+     *
+     * The first state is the navigation's own opening screen, which is not
+     * always home — the workspace opens on `#/search` — so it is named from
+     * the hash rather than called "home" and assumed.
+     */
+    const first = firstScreen.replace('#/', '');
+    const states = [[first, async (p) => { await p.evaluate(h=>{location.hash=h;}, firstScreen); }, first],
+                    ...SCREENS.filter(([name]) => name !== first).map(([name, hash]) =>
+                      [name, async (p) => { await p.evaluate(h => { location.hash = h; }, hash); }, name]),
+                    ...(EXTRAS[nav] || []).map(([name, go]) => [name, go, null])];
 
     for (const g of GROUNDS.filter(x => !ONLY_GROUNDS || ONLY_GROUNDS.includes(x.id))) {
       await page.evaluate(()=>{ location.hash='#/setLook'; }); await page.waitForTimeout(1500);
@@ -312,14 +385,44 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
       const groundOk = clicked > 0 && gotBg.toLowerCase() === g.bg.toLowerCase();
       if (!groundOk || !navOk) unverified.push({ nav, ground: g.id, width: tag, groundOk, navOk, gotBg, want: g.bg, how, clicked });
 
-      for (const [state, go] of states) {
+      for (const [state, go, screen] of states) {
         let reached = true;
         try { await go(page); } catch { reached = false; }
         await page.waitForTimeout(1200);
+        /*
+         * Where it actually is, read off the page.
+         *
+         * Setting `location.hash` is a request, not an arrival: a screen can
+         * refuse, redirect, or throw on the way in and leave the previous one
+         * standing — which is mistake 3 in the header, and the reason the home
+         * pass once audited whatever came before it. Reading the hash back
+         * cannot catch that, because the hash is what this just wrote.
+         *
+         * So what the page rendered is the proof, and a pass that cannot show
+         * it arrived is reported rather than counted. It still measures: the elements are
+         * real and the finding would be real, it is the *label* on the finding
+         * that would be a lie, and a finding filed under the wrong screen is
+         * worse than no finding.
+         */
+        const label = screen ? DESTINATIONS.find((d) => d.screen === screen)?.label ?? screen : null;
+        let seen = null;
+        if (screen) {
+          try {
+            seen = await page.evaluate((sel) => ({
+              h1: document.querySelector('h1')?.textContent || '',
+              css: sel ? Boolean(document.querySelector(sel)) : false,
+            }), proofSelector(screen));
+          } catch { seen = null; }
+        }
+        const onScreen = !screen || arrived(screen, label, seen);
+        if (!onScreen) unverified.push({ nav, ground: g.id, width: tag, groundOk, navOk, screen,
+                                         gotBg, want: g.bg, clicked,
+                                         how: `not on ${screen}: h1 "${(seen?.h1 ?? '').trim().slice(0,30)}"` });
         let res = null;
         try { res = await page.evaluate(AUDIT); }
         catch (e) { console.log('AUDIT FAILED', nav, g.id, state, String(e).slice(0,110)); }
-        coverage.push({ nav, ground: g.id, width: tag, state, reached, verified: groundOk && navOk,
+        coverage.push({ nav, ground: g.id, width: tag, state, reached, screen, onScreen,
+                        verified: groundOk && navOk && onScreen,
                         measured: res ? res.measured : 0,
                         skipped: res ? res.skipped : 0, gradient: res ? res.gradient : 0 });
         for (const r of (res ? res.rows : [])) findings.push({ nav, ground: g.id, width: tag, state, ...r });
@@ -328,7 +431,7 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
           const hits = await forceStates(page, cdp);
           for (const h of hits) {
             coverage.push({ nav, ground: g.id, width: tag, state: `${state}:${h.state}`, reached: true,
-                            verified: groundOk && navOk, measured: h.measured,
+                            screen, onScreen, verified: groundOk && navOk && onScreen, measured: h.measured,
                             skipped: h.skipped, gradient: h.gradient });
             for (const r of h.rows) findings.push({ nav, ground: g.id, width: tag, state: `${state}:${h.state}`, ...r });
           }
@@ -376,6 +479,26 @@ const skipped = coverage.reduce((n,c)=>n+(c.skipped||0), 0);
 const gradient = coverage.reduce((n,c)=>n+(c.gradient||0), 0);
 console.log(`\nPASSES: ${coverage.length}   ELEMENTS MEASURED: ${total}   GROUNDS: ${GROUNDS.length}`);
 console.log(`NOT MEASURED: ${gradient} on a gradient (see scripts/paint.mjs), ${skipped} with no text or no colour`);
+
+/*
+ * And which of the sixty were opened at all, which is the number this file
+ * spent its whole life not printing.
+ *
+ * A run in the default scope opens six and clears six. That is a fine thing
+ * to do and a terrible thing to report as FINDINGS: 0 with nothing beside it,
+ * because the sentence a reader takes away is about the app. Both scopes print
+ * this line, so the narrow run says out loud that it was narrow.
+ */
+const isDestination = (screen) => DESTINATIONS.some((d) => d.screen === screen);
+const opened = new Set(coverage
+  .filter(c => c.screen && c.onScreen && c.measured > 0 && isDestination(c.screen))
+  .map(c => c.screen));
+const shut = DESTINATIONS.filter(d => !opened.has(d.screen));
+console.log(`DESTINATIONS OPENED: ${opened.size} of ${DESTINATIONS.length}   (scope: ${SCOPE})`);
+if (shut.length) {
+  console.log(`  not opened by this run, so nothing here is a claim about them:`);
+  console.log('  ' + shut.map(d => d.screen).join(' '));
+}
 for (const g of GROUNDS) {
   const mine = coverage.filter(c => c.ground === g.id);
   const bad = mine.filter(c => !c.verified).length;
@@ -405,7 +528,7 @@ if (!kinds.some(k => k !== 'resting') && !SKIP_STATES) {
 
 if (unverified.length) {
   console.log(`\nSETUP NOT CONFIRMED (${unverified.length}) — these prove nothing:`);
-  for (const u of unverified.slice(0, 40)) console.log(`  ${u.nav}/${u.ground}/${u.width}  ground=${u.groundOk} (saw ${u.gotBg}, wanted ${u.want}, picker matched ${u.clicked})  nav=${u.navOk}`);
+  for (const u of unverified.slice(0, 40)) console.log(`  ${u.nav}/${u.ground}/${u.width}${u.screen ? '/' + u.screen : ''}  ground=${u.groundOk} (saw ${u.gotBg}, wanted ${u.want}, picker matched ${u.clicked})  nav=${u.navOk}  ${u.how}`);
 }
 console.log('\nFINDINGS: ' + rows.length);
 for (const r of rows) {
