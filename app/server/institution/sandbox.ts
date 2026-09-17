@@ -257,6 +257,22 @@ interface Work {
   gradedAt: string | null;
   releasedAt: string | null;
   archivedAt: string | null;
+  /**
+   * The open or answered appeal, if there has been one.
+   *
+   * `was` keeps the mark as it stood when the appeal was raised. Amending a
+   * mark must not erase the one it replaced: an academic record that only
+   * holds the latest number cannot answer "what changed, and why", which is
+   * the one question an appeal exists to leave an answer to.
+   */
+  appeal: {
+    at: string;
+    reason: string;
+    was: string;
+    state: 'open' | 'upheld' | 'amended';
+    answer: string;
+    answeredAt: string | null;
+  } | null;
   /** Every transition, in order — this is the Record the vertical ends at. */
   history: { at: string; who: string; what: string; receipt: string }[];
 }
@@ -384,6 +400,7 @@ export class SandboxStore {
       gradedAt: null,
       releasedAt: null,
       archivedAt: null,
+      appeal: null,
       history: [],
     };
     return fresh;
@@ -644,6 +661,29 @@ function allow(
  */
 function already(store: SandboxStore, key: string): Receipt | null {
   return store.receipt(key);
+}
+
+/**
+ * Whether an appeal action is possible on this record at all.
+ *
+ * One function for all three, because the states they need are the same
+ * question asked from two sides and writing it out three times is how one of
+ * them comes to differ.
+ */
+function openable(work: Work, actionId: string): void {
+  if (work.stage === 'archived') {
+    throw new Error('This record is archived. The time to appeal it has passed.');
+  }
+  if (actionId === 'appeal') {
+    if (work.stage !== 'released') {
+      throw new Error('There is no released mark to appeal yet.');
+    }
+    if (work.appeal) throw new Error('This mark is already under appeal, or has already been answered.');
+    return;
+  }
+  if (work.appeal?.state !== 'open') {
+    throw new Error('This mark is not under appeal, or the appeal has already been answered.');
+  }
 }
 
 /** Refuse an action prepared against a record that has since moved. */
@@ -1146,8 +1186,87 @@ function archiveRecord(store: SandboxStore, work: Work): UniversityRecord {
   };
 }
 
+/** What the appeal record says, and what may be done to it. */
+function appealRecord(store: SandboxStore, work: Work): UniversityRecord {
+  const a = assignmentOf(store, work.assignment);
+  const seen = work.stage === 'released' || work.stage === 'archived';
+  const open = work.appeal?.state === 'open';
+  const said = !work.appeal
+    ? seen
+      ? 'No appeal raised'
+      : 'Nothing to appeal yet — no mark has been released'
+    : open
+      ? 'Under appeal'
+      : work.appeal.state === 'upheld'
+        ? 'Appeal answered — the mark was upheld'
+        : 'Appeal answered — the mark was amended';
+  return {
+    id: work.id,
+    area: 'appeals',
+    title: `${SANDBOX_MARK} · ${a?.title ?? work.assignment} — appeal`,
+    summary: said,
+    status: said,
+    version: String(work.version),
+    updatedAt: new Date().toISOString(),
+    details: [
+      { label: 'Student', value: work.student },
+      ...(seen ? [{ label: 'Mark', value: `${work.mark} out of ${outOf(a?.criteria ?? [])}` }] : []),
+      ...(work.appeal
+        ? [
+            { label: 'Raised', value: work.appeal.at.slice(0, 16).replace('T', ' ') },
+            { label: 'Because', value: work.appeal.reason },
+            // The mark as it stood when the appeal was raised, kept whatever
+            // happens to the mark afterwards.
+            { label: 'Mark at the time', value: work.appeal.was },
+            ...(work.appeal.answeredAt
+              ? [
+                  { label: 'Answered', value: work.appeal.answeredAt.slice(0, 16).replace('T', ' ') },
+                  { label: 'The answer', value: work.appeal.answer },
+                ]
+              : []),
+          ]
+        : []),
+      ...trail(work),
+    ],
+    actions: archivedOrUnseen(work, seen)
+      ? []
+      : open
+        ? [
+            {
+              id: 'uphold',
+              label: 'Answer: the mark stands',
+              fields: [{ id: 'reason', label: 'Why it stands', kind: 'textarea', required: true }],
+            },
+            {
+              id: 'amend',
+              label: 'Answer: re-mark it',
+              fields: [
+                ...(a?.criteria ?? []).map((c) => ({
+                  id: c.id,
+                  label: `${c.name} (out of ${c.outOf}) — ${c.means}`,
+                  kind: 'number' as const,
+                  required: true,
+                })),
+                { id: 'reason', label: 'What changed, and why', kind: 'textarea' as const, required: true },
+              ],
+            },
+          ]
+        : work.appeal
+          ? []
+          : [
+              {
+                id: 'appeal',
+                label: 'Ask for this to be looked at again',
+                fields: [{ id: 'reason', label: 'What is wrong with the mark', kind: 'textarea', required: true }],
+              },
+            ],
+  };
+}
+
+const archivedOrUnseen = (work: Work, seen: boolean) => work.stage === 'archived' || !seen;
+
 /**
- * The four, over one store.
+ * The five, over one store.
  *
  * Built by a function rather than exported as a constant so the store is an
  * argument: the tests open one on a temporary file, and `start.ts` opens one
@@ -1424,6 +1543,11 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       const work = allow(context, rowFor(store, context, input.recordId), 'faculty');
       fresh(work, input);
       expect(work, 'released', 'archive this');
+      // Archiving closes the appeal window, so archiving over an open appeal
+      // would answer it by ignoring it.
+      if (work.appeal?.state === 'open') {
+        throw new Error('This mark is under appeal. Answer the appeal before archiving the record.');
+      }
       const at = now();
       return store.commit(work, key, 'faculty', 'Archived', at, (w) => {
         w.stage = 'archived';
@@ -1433,5 +1557,127 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     reconcile: async (_context, _input, key) => store.receipt(key),
   };
 
-  return [courses, assignments, grades, records];
+  /**
+   * Recourse, which the loop did not have.
+   *
+   * A released mark was final and an archived record was terminal, so the
+   * whole vertical assumed nobody would ever be marked wrongly. Every real
+   * course has a way to say so, and the contract already had the area for
+   * it — `appeals`, "Feedback & appeals" — with nothing behind it.
+   *
+   * Two rules give the thing its shape. An appeal can only be raised against
+   * a mark the student has actually seen, because a mark you cannot read is
+   * not one you can dispute. And it can only be raised before the record is
+   * archived — which is what finally gives archiving a consequence. Until
+   * now it changed a status and nothing else; closing the window is what
+   * makes it an archive rather than a label.
+   *
+   * Nothing is overwritten. An amended mark does not erase the one it
+   * replaces: the appeal keeps the mark as it stood when it was raised, and
+   * the trail keeps Marked, Appealed and Mark amended as three separate
+   * entries. An academic record that holds only the latest number cannot
+   * answer "what changed, and why", which is the one question an appeal
+   * exists to leave an answer to.
+   */
+  const appeals: InstitutionAdapter = {
+    area: 'appeals',
+    institutionId: SANDBOX_INSTITUTION,
+    status: async (context) => connection('appeals', context, true),
+    list: async (context, query) => {
+      const rows = isFaculty(context) ? store.everyWork() : store.mine(context.identity.userId);
+      return page(matching(rows.map((w) => appealRecord(store, w)), query.search));
+    },
+    get: async (context, id) => {
+      const work = rowFor(store, context, id);
+      if (!work) return null;
+      if (!isFaculty(context) && work.student !== context.identity.userId) return null;
+      return appealRecord(store, work);
+    },
+    review: async (context, input) => {
+      const raising = input.actionId === 'appeal';
+      const work = allow(
+        context,
+        rowFor(store, context, input.recordId),
+        raising ? 'student' : 'faculty',
+        raising ? store : undefined,
+      );
+      openable(work, input.actionId);
+      const a = assignmentOf(store, work.assignment);
+      if (raising) {
+        return {
+          title: 'Ask for this to be looked at again',
+          details: [
+            { label: 'The mark now', value: `${work.mark} out of ${outOf(a?.criteria ?? [])}` },
+            { label: 'Your reason', value: (input.fields.reason ?? '').trim() },
+            { label: 'After this', value: 'The mark stands while it is looked at. It can go up, down, or stay.' },
+          ],
+        };
+      }
+      if (input.actionId === 'uphold') {
+        return {
+          title: 'Answer: the mark stands',
+          details: [
+            { label: 'Student', value: work.student },
+            { label: 'They said', value: work.appeal?.reason ?? '' },
+            { label: 'After this', value: 'The mark is unchanged and the appeal is closed.' },
+          ],
+        };
+      }
+      const marks = readMarks(a?.criteria ?? [], input.fields);
+      const sum = Object.values(marks).reduce((n, m) => n + m, 0);
+      return {
+        title: 'Answer: re-mark it',
+        details: [
+          { label: 'Student', value: work.student },
+          { label: 'Was', value: work.mark },
+          { label: 'Becomes', value: `${sum} out of ${outOf(a?.criteria ?? [])}` },
+          { label: 'After this', value: 'Both marks stay in the record, with the reason for the change.' },
+        ],
+      };
+    },
+    execute: async (context, input, key) => {
+      const done = already(store, key);
+      if (done) return done;
+      const raising = input.actionId === 'appeal';
+      const work = allow(
+        context,
+        rowFor(store, context, input.recordId),
+        raising ? 'student' : 'faculty',
+        raising ? store : undefined,
+      );
+      openable(work, input.actionId);
+      const at = now();
+      const a = assignmentOf(store, work.assignment);
+      const reason = (input.fields.reason ?? '').trim();
+      if (!reason) throw new Error('Say what is wrong with the mark.');
+
+      if (raising) {
+        return store.commit(work, key, context.identity.userId, 'Appealed', at, (w) => {
+          w.appeal = { at, reason, was: w.mark, state: 'open', answer: '', answeredAt: null };
+        });
+      }
+      if (input.actionId === 'uphold') {
+        return store.commit(work, key, 'faculty', 'Appeal answered — mark upheld', at, (w) => {
+          if (w.appeal) {
+            w.appeal.state = 'upheld';
+            w.appeal.answer = reason;
+            w.appeal.answeredAt = at;
+          }
+        });
+      }
+      const marks = readMarks(a?.criteria ?? [], input.fields);
+      return store.commit(work, key, 'faculty', 'Mark amended on appeal', at, (w) => {
+        if (w.appeal) {
+          w.appeal.state = 'amended';
+          w.appeal.answer = reason;
+          w.appeal.answeredAt = at;
+        }
+        w.marks = marks;
+        w.mark = String(Object.values(marks).reduce((n, m) => n + m, 0));
+      });
+    },
+    reconcile: async (_context, _input, key) => store.receipt(key),
+  };
+
+  return [courses, assignments, grades, records, appeals];
 }

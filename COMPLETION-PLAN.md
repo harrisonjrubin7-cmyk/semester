@@ -1802,6 +1802,35 @@ tests. `npm run check:university` is the gate that covers this directory, and
 it belongs in the list at the top of this document rather than in somebody's
 memory.
 
+### Recourse, which the loop assumed nobody would need
+
+A released mark was final and an archived record was terminal, so the whole
+vertical was built on the assumption that nobody is ever marked wrongly. Every
+real course has a way to say otherwise, and the contract already had the area
+for it — `appeals`, *"Feedback & appeals"* — with nothing behind it.
+
+Two rules give it its shape:
+
+- **Only against a mark the student has seen.** A mark you cannot read is not
+  one you can dispute.
+- **Only before the record is archived** — which is what finally gives
+  archiving a consequence. Until now it changed a status and nothing else;
+  closing the appeal window is what makes it an archive rather than a label.
+  A record cannot be archived while an appeal is open, because archiving over
+  one would answer it by ignoring it.
+
+Faculty **uphold** with a reason, or **amend** by re-marking against the same
+rubric with a reason. **Nothing is overwritten.** The appeal keeps the mark as
+it stood when it was raised, and the trail keeps `Marked`, `Appealed` and
+`Mark amended on appeal` as three separate entries. An academic record holding
+only the latest number cannot answer *"what changed, and why"*, which is the
+one question an appeal exists to leave an answer to.
+
+Twelve more mutations, twelve red. One survived a first pass and it was the
+same shape of hole the discussion board produced: the test checked that the
+appeal action is not *offered* before a mark is released, and never tried
+sending it anyway. A client does not need the menu.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes
