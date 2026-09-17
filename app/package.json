@@ -19,6 +19,7 @@
     "lint:labels": "node scripts/labels.mjs",
     "sweep:contrast": "node scripts/contrast-sweep.mjs",
     "sweep:targets": "node scripts/targets-sweep.mjs",
+    "smoke:gateway": "node scripts/gateway-smoke.mjs",
     "transcripts": "node scripts/transcripts.mjs",
     "audio": "node scripts/audio.ts",
     "check:university": "tsc -p tsconfig.university.json",

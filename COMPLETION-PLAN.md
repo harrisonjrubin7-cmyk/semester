@@ -1831,6 +1831,36 @@ same shape of hole the discussion board produced: the test checked that the
 appeal action is not *offered* before a mark is released, and never tried
 sending it anyway. A client does not need the menu.
 
+### And then it was booted, which had never happened
+
+Every test above proves the adapters, and the gateway tests drive the whole
+vertical through `createGateway` in memory. Neither touches `start.ts` — the
+configuration it refuses to start without, the directories it makes, the
+umask, and the line it prints. **That file had never been run with the sandbox
+switched on.** The first time it was, it said
+
+> SANDBOX INSTITUTION IS ON: **4** demonstration adapters are installed
+
+with five installed. The `4` was a literal, inside an expression reading the
+*arity* of `sandboxAdapters` rather than the length of what it returns. No unit
+test could have caught it, because no unit imports that line.
+
+A second fault came out of the same boot and had not caused a failure yet: the
+sandbox's store directory was never created. By default it shares one with the
+journal, whose own `mkdirSync` happened to cover it — a dependency on another
+variable's default and on the order the two run in. Point `SEMESTER_SANDBOX_PATH`
+somewhere of its own and it throws on the way up. The smoke test points it at a
+directory nothing else makes, for exactly that reason.
+
+`npm run smoke:gateway` is the boot, written down so it can be taken again: it
+starts the server, checks the count in its own startup line, that it still
+reports no *approved* adapters, that `/status` without a token is refused and
+another origin is refused, and that both stores are `0600` inside a `0700`
+directory. Deliberately not part of `npm test` — it binds a port and spawns a
+process, and a suite that does either fails on somebody else's machine for
+reasons that are not about the code. Three mutations, three red, including the
+literal `4` coming back.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes
@@ -1898,6 +1928,10 @@ npm run build         # production build
 # :5173 and a Playwright installed somewhere scratch — the script says where
 # and why it is not a dependency. It checks its own instrument first.
 SWEEP_PLAYWRIGHT=/tmp/drive/node_modules/playwright npm run sweep:targets
+
+# The university gateway, booted with the sandbox on. Not in `npm test`: it
+# binds a port and spawns a process.
+npm run smoke:gateway
 
 # Study modes, and the count this document states.
 sed -n '/^  return \[/,$p' src/lib/modes.ts | grep -c "^      id:"
