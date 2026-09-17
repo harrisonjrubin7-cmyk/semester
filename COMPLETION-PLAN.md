@@ -1699,6 +1699,75 @@ typechecked and driven but not unit-tested.
 
 ---
 
+## 8f. Design — somewhere to start
+
+The build-out plan's Design & video row is *"professional-grade editing,
+real-time collaboration, rendering, templates and layers."* Layers, editing and
+rendering were built — four layer kinds, a canvas, `designSvg`, and a video
+export that plays each clip through a `MediaRecorder`. This is **templates**.
+Real-time collaboration is not here.
+
+**What the gap actually was.** Every design ever made in this app began the
+same way: a white rectangle nine hundred by twelve hundred and a decision about
+where to put the first word. That is the part of a design tool that is hard for
+somebody who is not a designer. Five arrangements now answer the five briefs
+this app already knows its user gets — a research poster, a title card, a study
+group flyer, a handout header and a one-page summary board. Not a general
+gallery: a template nobody has a use for is a menu item that makes the menu
+longer.
+
+**A template is never a mode.** `apply` returns ordinary layers with fresh ids,
+the same shape the editor already moves and recolours, so the second thing
+anybody does is drag something and nothing here has an opinion about that. It
+is offered only while the canvas is empty, which is why there is no confirm: a
+button that could throw away an afternoon's work needs either a warning or a
+reason it cannot happen, and this is the reason.
+
+**The test that matters is not that it looks right.** `readCreations` refuses a
+design whose numbers are out of range, so a template producing one would be a
+project this app could create and then refuse to reopen — the worst failure a
+starting point can have, and one that would not show until somebody came back
+to their work. Every template goes through the real reader rather than a
+restatement of its rules, because a restatement can drift from the rule and the
+rule cannot drift from itself. Four mutations confirm it bites: a font size of
+4, a colour that is not a colour, a canvas wider than 2,400, and every layer
+handed the same id.
+
+**Then the screenshots found two faults that every one of those checks passed.**
+
+`designSvg` draws a text layer as one `<text>` with a `<tspan>` per newline.
+There is no line box, so `w` is where a layer *starts* being wide and not where
+its words stop: the flyer's first draft read *"Bring the problem set. We work
+through it together and nobody expl"* and then the edge of the paper. Every
+number in it was inside every range the reader checks.
+
+And the title card put its headline at `x: 0`, flush against the left edge of
+the slide. Nothing objects to zero — it is inside the canvas.
+
+Both are guarded now, and both guards were written by mutating the templates
+back to the exact faults the screenshots showed and watching them go red. The
+width guard is an approximation — Arial's average advance is about half its
+point size — and it is deliberately generous, because what it is for is a line
+half again too long rather than one two pixels over.
+
+This is the third time in this document that a green gate and a wrong picture
+have coexisted, after the figure palette and the respondent page's padding.
+The rule is the same each time and it is worth stating once more here: **for
+anything that is drawn, the gates say it is well-formed and only a screenshot
+says it is right.**
+
+**Done when.** Five templates, each readable by the reader that has to reopen
+it, each with unique ids per application, each with no line wider than its box
+and no text against the edge, offered on an empty canvas and gone once
+something is on it. `designtemplates.test.ts` asserts all of it — 44 tests.
+
+**What this does not do.** Real-time collaboration, the other half of the row.
+Two people editing one canvas needs a merge story for layers, and
+`lib/merge.ts` merges a semester field by field rather than an ordered list
+where both ends insert. That is its own piece of work and this is not it.
+
+---
+
 ## 8d. What the source document has left, and what it is waiting on
 
 For the record, measured rather than assumed, since §1 to §8 of this plan were
@@ -1730,8 +1799,14 @@ Live/Partial/Planned vocabulary has no word for.
 two tables, all twelve items done, plus the three University Services rows this
 plan had not tracked: **Forms**, done in [§8c](#8c-forms--publishing-to-real-respondents);
 **Meetings** — the door is done in
-[§8e](#8e-meetings--the-door); captions and recording are not; and **Design & video** — professional-grade editing,
-real-time collaboration, rendering, templates and layers.
+[§8e](#8e-meetings--the-door), and captions and recording are not; and
+**Design & video**, whose templates are done in
+[§8f](#8f-design--somewhere-to-start) and whose real-time collaboration is not.
+
+So of the three, what is left is three named things rather than three domains:
+**captions**, **recording**, and **two people editing one canvas**. Each is its
+own piece of work and each is named here rather than left inside a row that
+reads as untouched.
 
 **Phases 3 and 4** — Registration, Money, Family access, Career, Athletics,
 Clubs, Housing & dining — are gated by the source document itself, not by this

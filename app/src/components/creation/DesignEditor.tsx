@@ -4,6 +4,7 @@ import { secondLine } from '../../lib/dim';
 import { addFile, getFile } from '../../lib/files';
 import { download } from '../../lib/deliver';
 import { designSvg, newLayer, type CreativeProject, type DesignData, type DesignLayer } from '../../lib/creations';
+import { TEMPLATES, apply as applyTemplate } from '../../lib/designtemplates';
 
 /**
  * A canvas: text, shapes and pictures on a page, exported as an image.
@@ -169,6 +170,46 @@ export function DesignEditor({
 
   return (
     <>
+      {/*
+        * Somewhere to start.
+        *
+        * Offered only while the canvas is empty, and that is the whole of the
+        * interaction design here: a template replaces everything, so a button
+        * that could throw away an afternoon's work needs either a confirm or a
+        * reason it cannot. This is the reason it cannot. Anybody who wants a
+        * different template after starting makes a new design, which is one
+        * tap and loses nothing.
+        */}
+      {d.layers.length === 0 && (
+        <div style={{ marginBottom: 'var(--sp-6)' }}>
+          <SectionLabel style={{ marginBlock: '0 var(--sp-4)' }}>Start from</SectionLabel>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
+            {TEMPLATES.map((t) => (
+              <ActionButton
+                key={t.id}
+                onClick={() => change(applyTemplate(t))}
+                title={t.about}
+                style={{ flex: '1 1 auto' }}
+              >
+                {t.name}
+              </ActionButton>
+            ))}
+          </div>
+          <div
+            style={{
+              fontSize: 'var(--type-xs)',
+              ...secondLine(),
+              marginTop: 'var(--sp-4)',
+              lineHeight: 'var(--leading-normal)',
+              textWrap: 'pretty',
+            }}
+          >
+            Every one of these is ordinary layers once it lands — move them, recolour them, delete the
+            ones you do not want. Or start with a blank canvas and the three buttons below.
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
         {(['text', 'rectangle', 'ellipse'] as const).map((k) => (
           <ActionButton key={k} onClick={() => add(k)} style={{ flex: '1 1 auto' }}>
