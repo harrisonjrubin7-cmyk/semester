@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ask, explainAskError, readCitation, readMaterial, withAttachments, asSent, strictly, wire, CUT_OFF } from './claude';
+import { ask, checkShared, explainAskError, readCitation, readMaterial, withAttachments, asSent, strictly, wire, CUT_OFF } from './claude';
 import { configured, proxyProblem, route, routeLabel, saveSettings, settings } from './assistant';
 import type { Turn } from './claude';
 import { UNNAMED, forget, read as readSpend } from './spend';
@@ -1326,5 +1326,93 @@ describe('what a reply is recorded as', () => {
     expect(seen).toBe(900);
     // And once, not twice: the hook is for a live meter, not a second write.
     expect(readSpend()).toHaveLength(1);
+  });
+});
+
+/**
+ * The shared key, asked about rather than assumed.
+ *
+ * `screens/settings/Assistant.tsx` told a signed-in student "this is already
+ * working" on the strength of having a session token, which is a fact about
+ * the account and a guess about the deployment. These cases are the four
+ * answers that guess can be wrong in, and the two it cannot tell apart unless
+ * it reads the body as well as the number.
+ */
+describe('checking the shared key', () => {
+  const reply = (status: number, body: unknown) =>
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      status,
+      ok: status < 400,
+      json: async () => body,
+    } as unknown as Response);
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  it('reads the function\'s own refusal as the key being there', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    reply(401, { error: { message: 'Sign in to use the shared key.' } });
+
+    const got = await checkShared();
+    expect(got.ok).toBe(true);
+    // The claim is bounded on the screen as well as here: reaching the token
+    // check says nothing about credit, and saying otherwise is the overclaim
+    // this replaced.
+    expect(got.detail).toMatch(/credit/i);
+  });
+
+  it('sends nothing that could be metered', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    const fetched = reply(401, { error: { message: 'Sign in to use the shared key.' } });
+
+    await checkShared();
+    const [url, init] = fetched.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe('https://project.supabase.co/functions/v1/claude');
+    // The whole reason the probe is free: the function checks its key before
+    // it checks the caller and meters after both, so a request with no token
+    // stops short of `count_call`. A token here would cost a generation every
+    // time somebody pressed the button.
+    expect((init.headers as Record<string, string>).Authorization).toBeUndefined();
+  });
+
+  it('does not read the gateway\'s refusal as the key being there', async () => {
+    // The control that matters. Supabase answers 401 before the function runs
+    // when a deploy left JWT verification on, and a probe that keyed on the
+    // number alone would confirm a shared key that does not exist.
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    reply(401, { code: 401, message: 'Missing authorization header' });
+
+    const got = await checkShared();
+    expect(got.ok).toBe(false);
+    expect(got.detail).toMatch(/verification/i);
+  });
+
+  it('names a deployed function with no key in it', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    reply(501, { error: { message: 'This deployment has no shared key.' } });
+
+    const got = await checkShared();
+    expect(got.ok).toBe(false);
+    expect(got.detail).toMatch(/ANTHROPIC_API_KEY/);
+  });
+
+  it('names a function that was never deployed', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    reply(404, { message: 'Function not found' });
+
+    const got = await checkShared();
+    expect(got.ok).toBe(false);
+    expect(got.detail).toMatch(/has not been pushed/);
+  });
+
+  it('says so when the build has no shared key at all, without asking anybody', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', '');
+    const fetched = reply(401, {});
+
+    const got = await checkShared();
+    expect(got.ok).toBe(false);
+    expect(fetched).not.toHaveBeenCalled();
   });
 });
