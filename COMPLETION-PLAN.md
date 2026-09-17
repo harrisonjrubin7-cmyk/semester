@@ -2068,6 +2068,40 @@ discussion threads, which stay closed to anybody not in the class.
 
 Fifteen mutations, fifteen red.
 
+### And the Record itself, which had no mark on it
+
+The chain's last stage, and for eleven commits it read
+
+> Archived. This is the closed record of one piece of work.
+
+above a course code, a student id, and a trail of timestamps. A trail is a
+record of the *transitions*. It is not a record of the work, and an academic
+record that cannot answer *what was it, what did I get, and why* is a filing
+stub. Every one of those facts already existed — on three other screens.
+
+It carries them now: what the piece was worth, when it was handed in, whether
+it was late and what that cost, the mark and the recorded mark, **which
+criterion lost the marks and what that criterion was asking for**, the
+feedback, and how an appeal came out if there was one. "17 out of 20" and
+nothing else is the grade this document already refused once; the archive is
+not the place for it to come back.
+
+Everything on it is composed live rather than copied in at archive time,
+because a stored copy is a second version of a fact that can disagree with the
+first — the argument the recorded mark and the lateness sentence are both built
+on. That only counts as a record if none of its inputs can move underneath it,
+and none can: a published assignment's weight and criteria have no edit action,
+and the late policy is frozen the moment a mark goes out under it. **The test
+archives one, runs the course on, and compares the two byte for byte.**
+
+Ten mutations, ten red. Three survived the first pass and all three were the
+same fault, which has now been caught three times in this file and is worth
+writing down: **a test that greps `JSON.stringify(details)` cannot tell a label
+from a value from a trail entry.** One "no unreleased mark" probe matched the
+`2026-09-17` in a timestamp; two appeal probes matched the phrase "Mark amended
+on appeal" sitting in the trail, and so passed against a record that said
+nothing about the appeal at all. Read the line by its label.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes

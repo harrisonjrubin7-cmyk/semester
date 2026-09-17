@@ -1623,8 +1623,35 @@ function gradeRecord(store: SandboxStore, work: Work): UniversityRecord {
   };
 }
 
+/**
+ * The closed record of one piece of work, and what it has to carry to be one.
+ *
+ * For eleven commits this said "Archived. This is the closed record of one
+ * piece of work" above a course code, a student id and a trail of timestamps.
+ * A trail is a record of the *transitions*; it is not a record of the work. An
+ * academic record that cannot answer "what was it, what did I get, and why" is
+ * a filing stub, and every one of those facts already existed — on three other
+ * screens.
+ *
+ * Everything here is composed live, from the rubric, the weight and the
+ * policy, rather than copied in at archive time. A stored copy is a second
+ * version of a fact that can disagree with the first, which is the argument
+ * the recorded mark and the lateness sentence are both built on. That only
+ * counts as a record if none of its inputs can move underneath it — and none
+ * can: a published assignment's weight and criteria have no edit action, and
+ * the late policy is frozen the moment a mark goes out under it. A test
+ * archives one, runs the course on, and compares the two byte for byte.
+ */
 function archiveRecord(store: SandboxStore, work: Work): UniversityRecord {
   const a = assignmentOf(store, work.assignment);
+  const criteria = a?.criteria ?? [];
+  const total = outOf(criteria);
+  // The same gate as everywhere else. This is a different function drawing
+  // from the same row, and nothing about being the archive makes it exempt.
+  const seen = work.stage === 'released' || work.stage === 'archived';
+  const cost = penalty(work, a?.due ?? '', total, store.policy());
+  const onRecord = recorded(work, a?.due ?? '', total, store.policy());
+  const appeal = work.appeal;
   return {
     id: work.id,
     area: 'records',
@@ -1639,6 +1666,47 @@ function archiveRecord(store: SandboxStore, work: Work): UniversityRecord {
     details: [
       { label: 'Course', value: `${COURSE.code} (${SANDBOX_MARK})` },
       { label: 'Student', value: work.student },
+      { label: 'Worth', value: a ? `${pct(a.weight)} of the course` : '' },
+      { label: 'Handed in', value: work.submittedAt?.slice(0, 16).replace('T', ' ') ?? 'Not submitted' },
+      { label: 'Deadline', value: lateness(work.submittedAt, a?.due ?? '').said },
+      ...(seen
+        ? [
+            { label: 'Mark', value: `${work.mark} out of ${total}` },
+            ...(cost
+              ? [
+                  {
+                    label: 'Late penalty',
+                    value:
+                      `${pct(cost.percent)} of ${total} — ${cost.marks} marks, for ${cost.days} ` +
+                      `${cost.days === 1 ? 'day' : 'days'}. ${policySaid(store.policy())}`,
+                  },
+                  { label: 'Recorded', value: `${onRecord} out of ${total}` },
+                ]
+              : []),
+            // Which criterion lost the marks, on the record itself. "17 out of
+            // 20" and nothing else is the grade this repository refused once
+            // already; the archive is not the place for it to come back.
+            ...criteria.map((c) => ({
+              label: `${c.name} · ${work.marks[c.id] ?? 0} of ${c.outOf}`,
+              value: c.means,
+            })),
+            { label: 'Feedback', value: work.comments },
+          ]
+        : []),
+      ...(appeal && seen
+        ? [
+            { label: 'Appealed', value: `${appeal.at.slice(0, 10)} — ${appeal.reason}` },
+            {
+              label:
+                appeal.state === 'amended'
+                  ? 'Mark amended on appeal'
+                  : appeal.state === 'upheld'
+                    ? 'Appeal answered — mark upheld'
+                    : 'Appeal open',
+              value: appeal.state === 'open' ? 'Not yet answered.' : `Was ${appeal.was}. ${appeal.answer}`,
+            },
+          ]
+        : []),
       ...trail(work),
     ],
     actions:

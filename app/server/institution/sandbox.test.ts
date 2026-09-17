@@ -971,6 +971,186 @@ describe('the deadline', () => {
   });
 });
 
+describe('the archived record', () => {
+  /*
+   * The last stage of the completion plan's chain, and the one thing it did
+   * not carry was the mark. "Archived. This is the closed record of one piece
+   * of work" sat above a course code, a student id and a trail of timestamps
+   * — a record of the *transitions*, which is not a record of the work.
+   *
+   * An academic record that cannot answer "what was it, what did I get, and
+   * why" is a filing stub. Every one of those facts already existed; they
+   * were on three other screens.
+   */
+  const DUE = Date.parse('2026-10-02T23:59:00Z');
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** Carry A1 all the way to archived, optionally late, and hand back the pair. */
+  const archived = async (opts: { lateDays?: number; policy?: boolean } = {}) => {
+    const s = student();
+    const f = faculty();
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 5 * 24 * 3_600_000);
+    await enrol(s);
+    if (opts.policy) {
+      const c = await seen('courses', f, 'sandbox-101');
+      await area('courses').execute(f, act('courses', c.id, c.version, 'policy', { perDay: '10', cap: '30' }), 'r-pol');
+    }
+    vi.setSystemTime(DUE + (opts.lateDays ?? -2) * 24 * 3_600_000);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'r-sub');
+    const g = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(
+      f,
+      act('grades', g.id, g.version, 'grade', { method: '7', accuracy: '6', clarity: '4', comments: 'Method is strong; check units.' }),
+      'r-mark',
+    );
+    const g2 = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(f, act('grades', g2.id, g2.version, 'release'), 'r-rel');
+    const rec = await seen('records', f, 'student-1:a1');
+    await area('records').execute(f, act('records', rec.id, rec.version, 'archive'), 'r-arch');
+    return { s, f };
+  };
+
+  const line = async (label: string) =>
+    (await seen('records', student(), 'student-1:a1')).details.find((d) => d.label === label)?.value;
+
+  it('states the mark, what it was out of, what it was worth and when it came in', async () => {
+    await archived();
+    expect(await line('Mark'), 'the closed record of one piece of work, with no mark on it').toBe('17 out of 20');
+    expect(await line('Worth')).toMatch(/20% of the course/);
+    expect(await line('Handed in'), 'a record with no date on it').toMatch(/^2026-09-30 /);
+    expect(await line('Deadline')).toMatch(/On time, with 2 days to spare/);
+  });
+
+  it('says which criterion lost the marks, without another screen', async () => {
+    /*
+     * The whole argument the rubric was added for. A record holding "17 out
+     * of 20" and nothing else is the grade this repository already refused
+     * once; there is no reason the archive should be the place it comes back.
+     */
+    await archived();
+    const detail = (await seen('records', student(), 'student-1:a1')).details;
+    const crit = detail.find((d) => d.label === 'Accuracy · 6 of 8');
+    expect(crit, 'the rubric breakdown, on the record itself').toBeDefined();
+    expect(crit?.value).toBe('The answers are right, with units.');
+    expect(detail.find((d) => d.label === 'Feedback')?.value).toMatch(/check units/);
+  });
+
+  it('carries what was handed in and when, and whether it was late', async () => {
+    await archived({ lateDays: 3, policy: true });
+    expect(await line('Deadline')).toBe('Late by 3 days');
+    expect(await line('Late penalty')).toMatch(/30% of 20 — 6 marks/);
+    expect(await line('Recorded'), 'the number that is actually the record').toBe('11 out of 20');
+  });
+
+  it('does not show a mark before one has been released', async () => {
+    /*
+     * The same rule as everywhere else, checked here too, because this is a
+     * different function drawing from the same row and nothing made it obey.
+     */
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'r-s2');
+    const g = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(
+      f,
+      act('grades', g.id, g.version, 'grade', { method: '7', accuracy: '6', clarity: '4', comments: 'Quiet.' }),
+      'r-m2',
+    );
+    const detail = (await seen('records', s, 'student-1:a1')).details;
+    // By label, not by grepping the blob: the trail carries today's date, and
+    // "2026-09-17" contains the very number this is trying to prove absent.
+    expect(detail.find((d) => d.label === 'Mark'), 'an unreleased mark on the record').toBeUndefined();
+    expect(detail.find((d) => d.label === 'Feedback')).toBeUndefined();
+    expect(JSON.stringify(detail)).not.toMatch(/Quiet/);
+  });
+
+  it('says how an appeal came out, when there was one', async () => {
+    const { s } = await archivedAfterAppeal();
+    const detail = (await seen('records', s, 'student-1:a1')).details;
+    /*
+     * By label, because the trail already carries "Mark amended on appeal" as
+     * a history entry — grepping the record as one string would pass against
+     * a record that says nothing about the appeal at all. Three probes in this
+     * file have now been caught doing exactly that.
+     */
+    expect(detail.find((d) => d.label === 'Appealed')?.value).toMatch(/Q3 was marked wrong/);
+    const outcome = detail.find((d) => d.label === 'Mark amended on appeal');
+    expect(outcome, 'the record does not say how the appeal came out').toBeDefined();
+    expect(outcome?.value, 'and what the mark was before it').toMatch(/Was 11\. Agreed on Q3/);
+    expect(detail.find((d) => d.label === 'Mark')?.value, 'the amended mark').toBe('17 out of 20');
+  });
+
+  /** Released, appealed, amended, then archived. */
+  async function archivedAfterAppeal() {
+    const s = student();
+    const f = faculty();
+    await enrol(s);
+    const r = await seen('assignments', s, 'student-1:a1');
+    await area('assignments').execute(s, act('assignments', r.id, r.version, 'submit', { work: 'x' }), 'q-sub');
+    const g = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(
+      f,
+      act('grades', g.id, g.version, 'grade', { method: '5', accuracy: '4', clarity: '2', comments: 'As marked.' }),
+      'q-mark',
+    );
+    const g2 = await seen('grades', f, 'student-1:a1');
+    await area('grades').execute(f, act('grades', g2.id, g2.version, 'release'), 'q-rel');
+    const ap = await seen('appeals', s, 'student-1:a1');
+    await area('appeals').execute(s, act('appeals', ap.id, ap.version, 'appeal', { reason: 'Q3 was marked wrong.' }), 'q-ap');
+    const ap2 = await seen('appeals', f, 'student-1:a1');
+    await area('appeals').execute(
+      f,
+      act('appeals', ap2.id, ap2.version, 'amend', { method: '7', accuracy: '6', clarity: '4', reason: 'Agreed on Q3.' }),
+      'q-am',
+    );
+    const rec = await seen('records', f, 'student-1:a1');
+    await area('records').execute(f, act('records', rec.id, rec.version, 'archive'), 'q-arch');
+    return { s, f };
+  }
+
+  it('does not move when the course moves on', async () => {
+    /*
+     * The property that makes it a record rather than a view. Every number on
+     * it is composed live — from the rubric, the weight and the policy —
+     * which is right, because a stored copy can disagree with what produced
+     * it. But composed-live only counts as a record if none of its inputs can
+     * be changed underneath it, so: archive one, run the course on, and
+     * compare byte for byte.
+     */
+    await archived();
+    const before = JSON.stringify((await seen('records', student(), 'student-1:a1')).details);
+
+    const f = faculty();
+    const course = await seen('courses', f, 'sandbox-101');
+    await area('courses').execute(
+      f,
+      act('courses', course.id, course.version, 'publish', {
+        title: 'Essay two',
+        due: new Date(Date.now() + 14 * 24 * 3_600_000).toISOString(),
+        brief: 'Eight hundred words.',
+        rubric: 'Argument | 10 | A claim.',
+        weight: '45',
+      }),
+      'r-pub',
+    );
+    const after = JSON.stringify((await seen('records', student(), 'student-1:a1')).details);
+    expect(after, 'an archived record changed because the course did').toBe(before);
+  });
+
+  it('is nobody else’s to read', async () => {
+    await archived();
+    const other = who('student-2', 'student');
+    expect(await area('records').get(other, 'student-1:a1')).toBeNull();
+  });
+});
+
 describe('the syllabus', () => {
   /*
    * The completion plan's chain reads Course → **Syllabus** → Calendar, and
