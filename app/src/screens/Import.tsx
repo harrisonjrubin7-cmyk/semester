@@ -69,6 +69,22 @@ const QUIET: CSSProperties = {
 };
 
 /**
+ * What this screen can still do for somebody with no key.
+ *
+ * `NeedsKey` writes the half that is true everywhere — sign in, or add your
+ * own, and everything else works without it. This is the half that is true
+ * *here*, and it is the reason the sentence changed: the old one said only
+ * why a key is wanted ("building a course asks it to read the documents you
+ * gave it"), which is a closed door described from the inside. Two of the
+ * four doors on this screen need no key at all, they are already drawn above
+ * the gate, and a student who has just been told the app needs something they
+ * do not have will not go looking for them.
+ */
+const NO_KEY_HERE =
+  'Reading a document is the part that needs it — adding a course by hand, or ' +
+  'opening one somebody shared with you, needs no key at all.';
+
+/**
  * Upload a syllabus, get a course.
  *
  * The prototype faked this screen — a progress bar and a canned list of dates.
@@ -603,14 +619,35 @@ export function Import() {
               the syllabus about to make one. */}
           <HowMuch />
 
-          <ActionButton
-            disabled={busy !== ''}
-            onClick={() => void build()}
-            tone="primary"
-            style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
-          >
-            {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${words.toLocaleString()} words`}
-          </ActionButton>
+          {/*
+            The gate stands *instead of* the button, which is the shape the
+            other five screens that need a key already use — see
+            `components/NeedsKey.tsx`, and `Essay`, `Deck`, `Exam` and
+            `changes/FromText` for the ternary.
+
+            This screen drew the button live and put the gate underneath it,
+            and that is the worst place in the app for it to be: Import is
+            what `screens/FirstRun.tsx` sends a brand-new account to, so the
+            first real action anybody takes here is a full-width primary
+            button reading "Build the course from 8,412 words" that cannot
+            succeed. It reads the files, spends the wait, and comes back with
+            "No key yet. Sign in to use the shared one, or add your own under
+            Settings" (`lib/claude.ts`) — directions, in an error card, after
+            the work. `NeedsKey` exists because that sentence with no button
+            on it is a dead end, and this was the one screen still drawing it.
+          */}
+          {configured() ? (
+            <ActionButton
+              disabled={busy !== ''}
+              onClick={() => void build()}
+              tone="primary"
+              style={{ fontSize: 'var(--type-lg)', marginTop: 14 }}
+            >
+              {busy && !busy.startsWith('Reading ') ? busy : `Build the course from ${words.toLocaleString()} words`}
+            </ActionButton>
+          ) : (
+            <NeedsKey also={NO_KEY_HERE} />
+          )}
 
           {busy && !busy.startsWith('Reading ') && (
             <button
@@ -625,9 +662,13 @@ export function Import() {
         </>
       )}
 
-      {!configured() && (
-        <NeedsKey also="Building a course asks it to read the documents you gave it." />
-      )}
+      {/*
+        And at rest, before a file is picked, so the answer arrives before the
+        upload rather than after it. Only then: with files staged the gate is
+        drawn above, in the button's place, and two of them on one screen is
+        the doubling this pass was about.
+      */}
+      {!configured() && files.length === 0 && <NeedsKey also={NO_KEY_HERE} />}
 
       {/* The files are still read and still in state, so the retry costs
           nothing already spent — which is the whole reason a dead end here
