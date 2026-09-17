@@ -195,12 +195,26 @@ out of week six's reading comes out looking like the guide's own figures because
 it *is* one of them. Its own header states the cost plainly: the app "can
 *recognise* the curve a reading is about but cannot draw a new one."
 
-Separately, `app/src/lib/diagram.ts` (331 lines) already does the thing the draft
+Separately, `app/src/lib/diagram.ts` (343 lines) already does the thing the draft
 proposed building: Claude writes a **Mermaid or SVG specification** for an
 arbitrary concept, and the app renders it after `cleanSvg` walks the parsed
 document and strips scripts, event handlers and `foreignObject`. It is wired to
-`app/src/screens/Draw.tsx` and `app/src/screens/Create.tsx`. It is not wired to
-the Figures mode.
+`app/src/screens/Draw.tsx` and `app/src/screens/Create.tsx`.
+
+> **Measured 17 September: the join described below as missing has landed, and
+> this section had not been updated.** `Figure` carries its fifth arm —
+> `{ type: 'drawn', language, code }`, storing the specification rather than
+> rendered markup so the sanitiser that runs is always today's;
+> `lib/figure.ts:readDrawn` validates one; `components/FigureCard.tsx` draws
+> one; and `lib/live.ts` merges figures read out of an added reading into the
+> map the Figures mode reads. A drawn figure from a week-six reading reaches
+> the Figures tab of a generated course. `lib/parity.test.ts` is the guard.
+>
+> What is still true of the two systems is narrower than "they do not meet":
+> the **seventeen hand-drawn kinds** are still economics, statistics and
+> marketing, and gap 2 below — no free-body diagram, no circuit, no titration
+> curve — is the genuine remaining one. A titration curve gets drawn now; it
+> gets drawn through the generated arm rather than as a `DIAGRAM_KINDS` shape.
 
 **What's missing.**
 
@@ -211,7 +225,15 @@ the Figures mode.
    free-body diagram, no circuit, no titration curve, no phase diagram — the
    quantitative and STEM coverage the draft named, and the one genuinely absent
    capability here.
-3. A generated course gets no figures at all (`generate.ts:463`).
+3. ~~A generated course gets no figures at all (`generate.ts:463`).~~
+   **Corrected 17 September.** A *freshly* generated course gets none, and that
+   is right rather than missing: at that moment it is a syllabus, and there is
+   nothing to draw a figure *of*. `generate.ts` says so in its own words —
+   "figures, examples and audio belong to a course built by hand. A generated
+   one gets them when someone adds them, not by pretending." They arrive with
+   the first reading, through `readMaterial` → `readFigures` → `adopt` →
+   `mergeFigures`, which is not pretending. Measured: a generated course with
+   one reading added leaves **0 of 11 mode cards empty**.
 
 **Technical approach.** Do not build a third system. Route the Figures mode
 through `lib/diagram.ts`, and keep every property that makes the closed union
@@ -1143,8 +1165,18 @@ Verification is not part of the pilot ([§8](#8-what-this-plan-does-not-cover)).
 **Phase 2 exit criteria.** Every one of the eleven study modes is Live by the
 definition in [§1](#live-partial-planned) — works for a generated course with no
 caveat a student has to be told; the cost of generating one course's audio is
-measured and recorded; the five gates green; and no mode card in
-`lib/modes.ts` reports an empty state for a course the app built itself.
+measured and recorded; the gates green; and no mode card in `lib/modes.ts`
+reports an empty state for a course the app built itself.
+
+**That last one is a test now, not a sentence** — `app/src/lib/parity.test.ts`.
+It was the one criterion here that nothing checked, and it is the kind that
+stops being true quietly: a twelfth mode, a stricter `ready`, a generated
+course losing its path into one of the assembly functions, and the prose keeps
+saying otherwise. Measured on the real path — a generated course with one
+reading added — it is **0 of 11 empty**. On a device with no speech synthesis
+it is one, Watch, and the test asserts that too, because that is a statement
+about the browser rather than about the course and the criterion should be
+exactly as strong as it is and no stronger.
 
 **Sequencing note.** Item 12 touches no file the other three touch. If two people
 are working, that is the split.
@@ -2197,7 +2229,7 @@ it was checked on 15 September 2026, and where to look.
 | Document Editor should "wire in direct equation embedding from the existing math engine rather than a static image of an equation" | Already wired: a `.docx` equation is a real OMML equation object, editable in Word | `lib/docx.ts:610`, `lib/maths.ts` |
 | Watch "produces visual, video-style walkthroughs for a limited set of concepts"; missing "full-course coverage" | 44 narrated lessons over 44 units — complete coverage of every shipped course. The gap is a generated course, which gets none | `public/audio/lessons/`, `pipeline/lessons.py` |
 | Listen is missing "complete chapter-mark indexing across all content" | All eight editions carry a `chapters` block, rendered exact by the synthesiser. The gap is a generated course, and the absent batch pipeline | `src/data/courses/*/index.ts`, `audio/synth.py`, `pipeline/chapters.py` |
-| Figures needs "a repeatable pipeline for turning arbitrary course concepts into a correct diagram" built from scratch | That pipeline exists — Claude writes a Mermaid or SVG specification, `cleanSvg` sanitises it, the app renders it — but is wired to the Draw screen and not to the Figures mode | `lib/diagram.ts` (343), `screens/Draw.tsx`, `screens/Create.tsx` |
+| Figures needs "a repeatable pipeline for turning arbitrary course concepts into a correct diagram" built from scratch | That pipeline exists — Claude writes a Mermaid or SVG specification, `cleanSvg` sanitises it, the app renders it. ~~Wired to the Draw screen and not to the Figures mode~~ — **wired to both, as of the `drawn` arm**; the remaining gap is the seventeen hand-drawn kinds, not the pipeline | `lib/diagram.ts` (343), `lib/figure.ts:readDrawn`, `components/FigureCard.tsx`, `lib/live.ts` |
 
 Two claims in the draft survived unchanged and are repeated above on their own
 merits: Where Courses Meet matches words rather than meanings (`lib/meet.ts`
