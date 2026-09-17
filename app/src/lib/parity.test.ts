@@ -38,7 +38,7 @@ const READING: CourseUpdate = {
   cards: [],
   terms: [],
   // A drawn figure, which is the arm that exists so a concept outside the
-  // seventeen hand-drawn kinds still gets a picture.
+  // hand-drawn kinds still gets a picture.
   figures: [
     {
       type: 'drawn',

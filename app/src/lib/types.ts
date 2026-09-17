@@ -222,6 +222,27 @@ export const DIAGRAM_KINDS = [
   'channel-levels',
   'product-life-cycle',
   'three-v',
+  /*
+   * And the shapes a quantitative course is taught from.
+   *
+   * The seventeen above are economics, statistics and marketing, which is what
+   * the four shipped courses needed and is not what "the figures you should be
+   * able to sketch from memory" means to somebody taking physics or chemistry.
+   * §3.1 of the completion plan names the gap and the rule for closing it: add
+   * a kind here "where a shape is stable and worth drawing by hand", and let
+   * the `drawn` arm carry everything else.
+   *
+   * Stable is the operative word. These four are drawn the same way in every
+   * introductory text — the block with four arrows, the S-curve with its
+   * equivalence point, the two circuit topologies side by side, the three
+   * regions meeting at a triple point. A shape that varies by course belongs
+   * in the generated arm, where it is labelled as written-to-a-description
+   * rather than checked by a person.
+   */
+  'free-body',
+  'titration-curve',
+  'series-parallel',
+  'phase-diagram',
 ] as const;
 
 /*

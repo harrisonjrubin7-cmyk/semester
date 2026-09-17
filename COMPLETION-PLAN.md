@@ -188,7 +188,7 @@ than estimated. What both are missing is a fifth course.
 
 The Figures study mode draws from a closed union of four shapes — `bars`,
 `steps`, `diagram`, `image` (`app/src/lib/types.ts`) — where `diagram` names one
-of seventeen hand-drawn SVGs in `app/src/components/Diagram.tsx`
+of twenty-one hand-drawn SVGs in `app/src/components/Diagram.tsx`
 (`DIAGRAM_KINDS`). `app/src/lib/figure.ts` turns what a model reports in a newly
 added reading into one of those four, with strict validation, so a figure read
 out of week six's reading comes out looking like the guide's own figures because
@@ -211,20 +211,31 @@ document and strips scripts, event handlers and `foreignObject`. It is wired to
 > the Figures tab of a generated course. `lib/parity.test.ts` is the guard.
 >
 > What is still true of the two systems is narrower than "they do not meet":
-> the **seventeen hand-drawn kinds** are still economics, statistics and
-> marketing, and gap 2 below — no free-body diagram, no circuit, no titration
-> curve — is the genuine remaining one. A titration curve gets drawn now; it
-> gets drawn through the generated arm rather than as a `DIAGRAM_KINDS` shape.
+> the hand-drawn kinds were all economics, statistics and marketing, and gap 2
+> below was the genuine remaining one. **Closed 17 September**: `free-body`,
+> `titration-curve`, `series-parallel` and `phase-diagram` are hand-drawn kinds
+> now, seventeen having become twenty-one.
 
 **What's missing.**
 
 1. The two systems are not joined. A student in the Figures tab gets the closed
-   seventeen; a student who finds Draw gets anything, in a different place, that
+   closed list; a student who finds Draw gets anything, in a different place, that
    does not become part of the guide.
-2. The seventeen are economics, statistics and marketing diagrams. There is no
+2. ~~The seventeen are economics, statistics and marketing diagrams. There is no
    free-body diagram, no circuit, no titration curve, no phase diagram — the
    quantitative and STEM coverage the draft named, and the one genuinely absent
-   capability here.
+   capability here.~~
+   **Closed 17 September.** Four kinds added on the rule this section states —
+   "where a shape is stable and worth drawing by hand". `free-body`,
+   `titration-curve`, `series-parallel`, `phase-diagram`: each is drawn the
+   same way in every introductory text, which is what stable means here, and
+   each has one thing the figure is actually about to put in the accent — the
+   horizontal pair that decides whether the block moves, the half-equivalence
+   point where pH equals pKa, the junctions where the current divides, and the
+   critical point where the liquid–gas line *ends* rather than running off the
+   edge. A shape that varies by course still belongs in the generated arm,
+   where the card says it was written to a description rather than checked by
+   a person.
 3. ~~A generated course gets no figures at all (`generate.ts:463`).~~
    **Corrected 17 September.** A *freshly* generated course gets none, and that
    is right rather than missing: at that moment it is a syllabus, and there is
@@ -928,7 +939,7 @@ figure block.
 
 **Three of the five figure arms, and why.** A document figure is narrowed at
 the type to `bars`, `steps` and `image` (`DocFigure`). The other two — the
-seventeen hand-drawn diagrams and anything from the Draw screen — are SVG at
+hand-drawn diagrams and anything from the Draw screen — are SVG at
 the moment of display, neither exporter can rasterise one, and a figure that
 arrived in the `.docx` as a caption over an empty space is precisely the defect
 the comparison was written to find. `lib/imagesize.ts:151` makes the same call
@@ -2229,7 +2240,7 @@ it was checked on 15 September 2026, and where to look.
 | Document Editor should "wire in direct equation embedding from the existing math engine rather than a static image of an equation" | Already wired: a `.docx` equation is a real OMML equation object, editable in Word | `lib/docx.ts:610`, `lib/maths.ts` |
 | Watch "produces visual, video-style walkthroughs for a limited set of concepts"; missing "full-course coverage" | 44 narrated lessons over 44 units — complete coverage of every shipped course. The gap is a generated course, which gets none | `public/audio/lessons/`, `pipeline/lessons.py` |
 | Listen is missing "complete chapter-mark indexing across all content" | All eight editions carry a `chapters` block, rendered exact by the synthesiser. The gap is a generated course, and the absent batch pipeline | `src/data/courses/*/index.ts`, `audio/synth.py`, `pipeline/chapters.py` |
-| Figures needs "a repeatable pipeline for turning arbitrary course concepts into a correct diagram" built from scratch | That pipeline exists — Claude writes a Mermaid or SVG specification, `cleanSvg` sanitises it, the app renders it. ~~Wired to the Draw screen and not to the Figures mode~~ — **wired to both, as of the `drawn` arm**; the remaining gap is the seventeen hand-drawn kinds, not the pipeline | `lib/diagram.ts` (343), `lib/figure.ts:readDrawn`, `components/FigureCard.tsx`, `lib/live.ts` |
+| Figures needs "a repeatable pipeline for turning arbitrary course concepts into a correct diagram" built from scratch | That pipeline exists — Claude writes a Mermaid or SVG specification, `cleanSvg` sanitises it, the app renders it. ~~Wired to the Draw screen and not to the Figures mode~~ — **wired to both, as of the `drawn` arm**; the remaining gap was the hand-drawn kinds' subject coverage, closed 17 September | `lib/diagram.ts` (343), `lib/figure.ts:readDrawn`, `components/FigureCard.tsx`, `lib/live.ts` |
 
 Two claims in the draft survived unchanged and are repeated above on their own
 merits: Where Courses Meet matches words rather than meanings (`lib/meet.ts`
@@ -2295,7 +2306,7 @@ done
 
 # Engine coverage.
 grep -oE "case '[A-Z0-9.]+'" src/lib/sheet.ts | sort -u | wc -l   # 164 functions
-sed -n '/DIAGRAM_KINDS = \[/,/\] as const/p' src/lib/types.ts | grep -c "^  '"   # 17 kinds
+sed -n '/DIAGRAM_KINDS = \[/,/\] as const/p' src/lib/types.ts | grep -c "^  '"   # 21 kinds
 grep -c '^  {' src/lib/nav.ts                                      # 60 destinations
 wc -l src/lib/runway.ts src/lib/covers.ts src/screens/Runway.tsx
 wc -l src/lib/pivot.ts src/lib/termgpa.ts src/lib/diagram.ts src/lib/quotes.ts
