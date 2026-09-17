@@ -177,6 +177,40 @@ const CLASSMATES = [
   { id: 'late-1', name: 'SANDBOX Student C' },
 ] as const;
 
+/**
+ * Who a post is for, and why this is the only field that matters here.
+ *
+ * "Discussion" is the last thing the completion plan lists as missing, and it
+ * is the first feature in this loop that is many-to-many. Everything before it
+ * concerned one student's work: the refusals were about *whose* it was. A
+ * question is different — the useful ones are useful to the whole class, and
+ * some of them must never reach it.
+ *
+ * "I do not understand what Q3 is asking" should be answered once where
+ * everybody can read it. "I am struggling and may need an extension" is
+ * addressed to the same person and must not be. A board with one visibility
+ * either loses the first or publishes the second, and a student cannot be
+ * expected to keep a rule the system does not enforce.
+ *
+ * So every post carries who it is for, it is chosen when the post is made, and
+ * a `staff` post is visible to its author and to faculty and to nobody else.
+ * That is the load-bearing refusal in this file and it is tested from the
+ * other student's side rather than from the poster's.
+ */
+type Audience = 'class' | 'staff';
+
+interface Post {
+  id: string;
+  thread: string;
+  at: string;
+  who: string;
+  /** What the class sees instead of a user id. */
+  name: string;
+  fromFaculty: boolean;
+  audience: Audience;
+  body: string;
+}
+
 type Stage = 'published' | 'submitted' | 'graded' | 'released' | 'archived';
 
 /** What a person reads instead of the stage's internal name. */
@@ -235,6 +269,12 @@ export class SandboxStore {
         student TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         joinedAt TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS posts(
+        id TEXT PRIMARY KEY,
+        thread TEXT NOT NULL,
+        at TEXT NOT NULL,
+        body TEXT NOT NULL
       );
       CREATE TABLE IF NOT EXISTS receipts(
         key TEXT PRIMARY KEY,
@@ -334,6 +374,39 @@ export class SandboxStore {
     return got ? (JSON.parse(got.body) as Work) : null;
   }
 
+  /**
+   * A thread's posts, filtered to what this person may read.
+   *
+   * The filter is here, in the store, rather than in the adapter that draws
+   * the record — so there is one place to get it wrong instead of three, and
+   * a caller cannot forget it by reaching for the rows directly.
+   */
+  posts(thread: string, reader: string, faculty: boolean): Post[] {
+    const rows = this.db
+      .prepare('SELECT body FROM posts WHERE thread=? ORDER BY at, id')
+      .all(thread) as { body: string }[];
+    return rows
+      .map((r) => JSON.parse(r.body) as Post)
+      .filter((p) => p.audience === 'class' || faculty || p.who === reader);
+  }
+
+  say(post: Post): void {
+    this.db.prepare('INSERT INTO posts VALUES(?,?,?,?)').run(post.id, post.thread, post.at, JSON.stringify(post));
+  }
+
+  /**
+   * Write a receipt down, so `already` can answer for this key next time.
+   *
+   * Its own method because two paths issue receipts — a transition on a work
+   * row, and a post — and the second was written without it. A retry after a
+   * dropped connection then re-ran the insert and died on the primary key,
+   * which is the same failure the idempotency guard exists to prevent, wearing
+   * a database error instead of a duplicate submission.
+   */
+  keep(receipt: Receipt): void {
+    this.db.prepare('INSERT OR IGNORE INTO receipts VALUES(?,?)').run(receipt.id, JSON.stringify(receipt));
+  }
+
   receipt(key: string): Receipt | null {
     const got = this.db.prepare('SELECT body FROM receipts WHERE key=?').get(key) as
       | { body: string }
@@ -376,7 +449,7 @@ export class SandboxStore {
       message: `${SANDBOX_MARK} · ${what}. Nothing here reaches a real institution.`,
       recordedAt: at,
     };
-    this.db.prepare('INSERT INTO receipts VALUES(?,?)').run(key, JSON.stringify(receipt));
+    this.keep(receipt);
     return receipt;
   }
 }
@@ -541,6 +614,89 @@ function readMarks(criteria: readonly Criterion[], fields: Record<string, string
   return marks;
 }
 
+/** Who may speak in a thread, and as whom. */
+function speaker(context: AdapterContext, store: SandboxStore) {
+  const faculty = isFaculty(context);
+  if (!faculty && !store.enrolled(context.identity.userId)) {
+    throw new Error('Only the class can read or post here.');
+  }
+  const row = store.roster().find((r) => r.student === context.identity.userId);
+  return { faculty, name: faculty ? COURSE.faculty : (row?.name ?? context.identity.userId) };
+}
+
+function chosen(input: ActionInput): Audience {
+  const said = input.fields.audience ?? '';
+  const audience = AUDIENCE[said];
+  if (!audience) throw new Error('Choose who sees this: the class, or staff only.');
+  return audience;
+}
+
+function reviewPost(
+  context: AdapterContext,
+  store: SandboxStore,
+  input: ActionInput,
+  thread: (typeof THREADS)[number],
+) {
+  const { faculty } = speaker(context, store);
+  const audience = chosen(input);
+  const body = (input.fields.body ?? '').trim();
+  if (!body) throw new Error('There is nothing to post.');
+  return {
+    title: `${faculty ? 'Answer' : 'Ask'} in ${thread.title}`,
+    details: [
+      { label: 'Thread', value: thread.title },
+      {
+        label: 'Who will see it',
+        value:
+          audience === 'class'
+            ? 'Everybody on the roster, and the faculty.'
+            : 'The faculty only. Nobody else in the class.',
+      },
+      /*
+       * Said at prepare, because this is the one action in the sandbox whose
+       * mistake cannot be undone by a later one: posts are append-only, and a
+       * question meant for staff that went to the class has been read by the
+       * time anybody notices.
+       */
+      { label: 'After this', value: 'A post cannot be edited or taken back.' },
+    ],
+  };
+}
+
+function post(
+  context: AdapterContext,
+  store: SandboxStore,
+  input: ActionInput,
+  thread: (typeof THREADS)[number],
+  key: string,
+): Receipt {
+  const { faculty, name } = speaker(context, store);
+  const audience = chosen(input);
+  const body = (input.fields.body ?? '').trim();
+  if (!body) throw new Error('There is nothing to post.');
+  const at = new Date().toISOString();
+  store.say({
+    id: key,
+    thread: threadId(thread.id),
+    at,
+    who: context.identity.userId,
+    name,
+    fromFaculty: faculty,
+    audience,
+    body,
+  });
+  const receipt: Receipt = {
+    id: key,
+    status: 'completed',
+    message:
+      `${SANDBOX_MARK} · Posted to ${thread.title}, visible to ` +
+      `${audience === 'class' ? 'the class' : 'the faculty only'}.`,
+    recordedAt: at,
+  };
+  store.keep(receipt);
+  return receipt;
+}
+
 /** The trail, as the details a record carries. This is the Record stage. */
 function trail(work: Work): { label: string; value: string }[] {
   return work.history.map((h) => ({
@@ -591,6 +747,83 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
         : [{ id: 'enrol', label: 'Enrol in this sandbox course', fields: [] }],
   };
 }
+
+/** The threads a course has: one per published assignment, and one general. */
+const THREADS = [
+  { id: 'general', title: 'About this course', about: 'Anything that is not about one piece of work.' },
+  ...PUBLISHED.map((a) => ({ id: a.id, title: a.title, about: a.brief })),
+];
+
+const threadId = (id: string) => `thread:${id}`;
+
+/**
+ * One discussion thread.
+ *
+ * Attached to the *course* and its published work rather than to anybody's
+ * work row, which is not a filing decision. A thread hanging off a submission
+ * would make the list of threads a list of who has submitted, and the fact
+ * that a question exists would say something about the person who asked it
+ * before a word of it was read.
+ */
+function threadRecord(context: AdapterContext, store: SandboxStore, thread: (typeof THREADS)[number]): UniversityRecord {
+  const mine = context.identity.userId;
+  const faculty = isFaculty(context);
+  const posts = store.posts(threadId(thread.id), mine, faculty);
+  const said = (p: Post) =>
+    `${p.name}${p.fromFaculty ? ' (faculty)' : ''}${p.audience === 'staff' ? ' · to staff only' : ''}: ${p.body}`;
+  return {
+    id: threadId(thread.id),
+    area: 'courses',
+    title: `${SANDBOX_MARK} · Discussion — ${thread.title}`,
+    summary: posts.length
+      ? `${posts.length} ${posts.length === 1 ? 'post' : 'posts'} you can see`
+      : 'Nothing asked yet.',
+    status: thread.about,
+    // Posts are append-only, so a thread's version is how many it holds.
+    version: String(posts.length),
+    updatedAt: posts.at(-1)?.at ?? new Date().toISOString(),
+    details: posts.map((p) => ({ label: p.at.slice(0, 16).replace('T', ' '), value: said(p) })),
+    actions: faculty
+      ? [
+          {
+            id: 'answer',
+            label: 'Answer',
+            fields: [
+              { id: 'body', label: 'Your answer', kind: 'textarea', required: true },
+              {
+                id: 'audience',
+                label: 'Who sees it',
+                kind: 'select',
+                required: true,
+                options: ['The class', 'Staff only'],
+              },
+            ],
+          },
+        ]
+      : [
+          {
+            id: 'ask',
+            label: 'Ask',
+            fields: [
+              { id: 'body', label: 'Your question', kind: 'textarea', required: true },
+              {
+                id: 'audience',
+                label: 'Who sees it',
+                kind: 'select',
+                required: true,
+                // Deliberately not defaulted and deliberately required: a
+                // person about to say something they would not say to the
+                // class should have had to choose, not have had a default
+                // chosen for them.
+                options: ['The class', 'Staff only'],
+              },
+            ],
+          },
+        ],
+  };
+}
+
+const AUDIENCE: Record<string, Audience> = { 'The class': 'class', 'Staff only': 'staff' };
 
 function assignmentRecord(work: Work): UniversityRecord {
   const a = assignmentOf(work.assignment);
@@ -735,11 +968,26 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     area: 'courses',
     institutionId: SANDBOX_INSTITUTION,
     status: async (context) => connection('courses', context, isStudent(context)),
-    list: async (context, query) =>
-      page(matching([courseRecord(context, store)], query.search)),
-    get: async (context, id) =>
-      id === COURSE.id ? courseRecord(context, store) : null,
-    review: async (context) => {
+    list: async (context, query) => {
+      /*
+       * The threads only once somebody is in the class. Not a nicety: a
+       * person who is not on the roster has no business reading the questions
+       * a class is asking, and the emptiness of the list is the refusal.
+       */
+      const open = isFaculty(context) || store.enrolled(context.identity.userId);
+      const threads = open ? THREADS.map((t) => threadRecord(context, store, t)) : [];
+      return page(matching([courseRecord(context, store), ...threads], query.search));
+    },
+    get: async (context, id) => {
+      if (id === COURSE.id) return courseRecord(context, store);
+      const thread = THREADS.find((t) => threadId(t.id) === id);
+      if (!thread) return null;
+      if (!isFaculty(context) && !store.enrolled(context.identity.userId)) return null;
+      return threadRecord(context, store, thread);
+    },
+    review: async (context, input) => {
+      const thread = THREADS.find((t) => threadId(t.id) === input.recordId);
+      if (thread) return reviewPost(context, store, input, thread);
       if (!isStudent(context)) throw new Error('Only a student can enrol.');
       return {
         title: `Enrol in ${COURSE.code}`,
@@ -750,9 +998,11 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
         ],
       };
     },
-    execute: async (context, _input, key) => {
+    execute: async (context, input, key) => {
       const done = already(store, key);
       if (done) return done;
+      const thread = THREADS.find((t) => threadId(t.id) === input.recordId);
+      if (thread) return post(context, store, input, thread, key);
       if (!isStudent(context)) throw new Error('Only a student can enrol.');
       const at = now();
       if (store.enrolled(context.identity.userId)) {
