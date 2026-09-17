@@ -97,15 +97,41 @@ describe('a course from a school', () => {
      * time with `toISOString`, so one item carried a UTC time beside a local
      * day, and fourteen hours of Pacific/Kiritimati moved the day.
      */
+    /*
+     * Put back by deleting when there was nothing to put back, and in a
+     * `finally` so a failed assertion above cannot skip it.
+     *
+     * This was `process.env.TZ = tz` on the way out, and `tz` is `undefined`
+     * on the path a plain `npm test` takes — which does not unset it. It sets
+     * the *string* "undefined", Node then answers
+     * `Intl.DateTimeFormat().resolvedOptions().timeZone` with `undefined` for
+     * the rest of the process, and under `isolate: false` that process is
+     * shared with every file this worker runs afterwards.
+     *
+     * `lib/realdate.test.ts` found and fixed exactly this, wrote the reason
+     * out in full, and named the casualty: "which is how `lib/connect.ts` came
+     * to write a calendar event with no timeZone on it, on about one run in
+     * six, in a file that has nothing to do with this one." That is the same
+     * failure, from a second copy of the same line, and it is what turned CI
+     * red here — `connect.test.ts` asserting `body.start.timeZone` is truthy
+     * and getting `undefined`.
+     *
+     * The `finally` is the other half. The loop asserts three times, and a
+     * throw on the first left Kiritimati set for the rest of the worker.
+     */
     const tz = process.env.TZ;
-    for (const zone of ['Pacific/Kiritimati', 'America/Chicago', 'UTC']) {
-      process.env.TZ = zone;
-      const [item] = schoolCourse(course, [syllabus], [paper()]).items;
-      expect(item.day, `the day moved in ${zone}`).toBe(2);
-      expect(item.month, `the month moved in ${zone}`).toBe(9);
-      expect(item.dueTime).toBe('23:59');
+    try {
+      for (const zone of ['Pacific/Kiritimati', 'America/Chicago', 'UTC']) {
+        process.env.TZ = zone;
+        const [item] = schoolCourse(course, [syllabus], [paper()]).items;
+        expect(item.day, `the day moved in ${zone}`).toBe(2);
+        expect(item.month, `the month moved in ${zone}`).toBe(9);
+        expect(item.dueTime).toBe('23:59');
+      }
+    } finally {
+      if (tz === undefined) delete process.env.TZ;
+      else process.env.TZ = tz;
     }
-    process.env.TZ = tz;
   });
 
   it('brings nothing from a date it cannot read', () => {
