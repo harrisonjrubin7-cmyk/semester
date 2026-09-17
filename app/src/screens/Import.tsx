@@ -726,7 +726,40 @@ export function Import() {
  */
 function ByHand() {
   const { state, dispatch, say, catalog } = useStore();
-  const [open, setOpen] = useState(false);
+  /*
+   * Open already, on the install where it is the only door that works.
+   *
+   * The drop box, the paste field and the shared-course file all end at
+   * `generateCourse`, and `generateCourse` needs a key. This one does not,
+   * and `NO_KEY_HERE` above now says so in the gate — "adding a course by
+   * hand, or opening one somebody shared with you, needs no key at all".
+   *
+   * Which is what makes the default matter rather than settle it. A sentence
+   * that names this door while the door itself is a 12.5px link at 0.65
+   * opacity, fourth in a stack of three that cannot open, is a promise the
+   * screen does not keep: the student has just been told the app needs
+   * something they do not have, and is then asked to go and find the
+   * exception in the small print. The state is the other half of that
+   * sentence — unkeyed, the form is the thing on screen rather than a link
+   * to it.
+   *
+   * Keyed, nothing moves. The syllabus is the better route and this stays
+   * the quiet aside it was.
+   */
+  const [open, setOpen] = useState(() => !configured());
+  /*
+   * Whether the field was *asked* for, which is the only time it may take
+   * the caret.
+   *
+   * `autoFocus` was right while opening this was a press: you pressed a link
+   * reading "add a course by hand" and the cursor was waiting in the box.
+   * Opened by default it is a different thing — the caret is taken from a
+   * screen headed "Upload it. Walk away." before the student has read it,
+   * and on a phone the keyboard comes up over the drop box. Seen in the
+   * browser, not in the suite: a focus ring around the field in the first
+   * screenshot of the change.
+   */
+  const [asked, setAsked] = useState(false);
   const [code, setCode] = useState('');
   const term = readTerm(state.term);
   /*
@@ -760,7 +793,10 @@ function ByHand() {
       <button
         type="button"
         className="bare tappable"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          setOpen(true);
+          setAsked(true);
+        }}
         style={{ ...QUIET, marginTop: 'var(--sp-2)' }}
       >
         …or add a course by hand, with no syllabus
@@ -776,7 +812,7 @@ function ByHand() {
         <input
           aria-label="Add a course by hand"
           className="input"
-          autoFocus
+          autoFocus={asked}
           placeholder="ECON 1020"
           value={code}
           onChange={(e) => setCode(e.target.value)}
