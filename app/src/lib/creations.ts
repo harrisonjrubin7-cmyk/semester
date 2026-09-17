@@ -71,6 +71,14 @@ export interface FormData {
   quiz: boolean;
   /** The spreadsheet the responses were last sent to, if any. */
   sheetId: string | null;
+  /**
+   * The id this form is published under, if it is.
+   *
+   * Null is the ordinary state and the one every screen must draw. When it is
+   * set, the id is both the row in `public.forms` and the whole of the
+   * credential in the link — see `lib/formshare.ts`.
+   */
+  published: string | null;
 }
 
 export interface DesignLayer {
@@ -189,8 +197,14 @@ export function readCreations(value: unknown): CreationLibrary {
       isoDay(f.opens) &&
       isoDay(f.closes) &&
       finite(f.limit, 1, 150) &&
-      (f.sheetId === null || textValue(f.sheetId, 100));
+      (f.sheetId === null || textValue(f.sheetId, 100)) &&
+      // `undefined` is every project saved before publishing existed. Read as
+      // null rather than refused: a field added to a stored shape has to have
+      // an answer for the copies already on people's devices, and "this form
+      // is not published" is the true one.
+      (f.published === null || f.published === undefined || textValue(f.published, 100));
     if (!formOk) throw new Error('Invalid form.');
+    f.published ??= null;
 
     const qids = new Set<string>();
     for (const q of f.questions) {
@@ -303,6 +317,7 @@ export function newCreation(kind: CreativeProject['kind'], courseId = '', itemId
       limit: 100,
       quiz: false,
       sheetId: null,
+      published: null,
     },
     design: { width: 900, height: 1200, background: '#ffffff', layers: [] },
     video: { clips: [] },
@@ -383,11 +398,11 @@ export function visibleQuestions(form: FormData, answers: Record<string, string>
  * marked, and a quiz with one marked question out of six does not report the
  * other five as wrong.
  */
-export function formResponse(
+export function checkedAnswers(
   form: FormData,
   answers: Record<string, string>,
   now = new Date(),
-): FormResponse {
+): Record<string, string> {
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const shut =
     !form.accepting ||
@@ -398,8 +413,6 @@ export function formResponse(
   if (!form.questions.length) throw new Error('Add a question first.');
 
   const clean: Record<string, string> = {};
-  let score = 0;
-  let possible = 0;
 
   for (const q of visibleQuestions(form, answers)) {
     const a = (answers[q.id] || '').trim();
@@ -421,22 +434,57 @@ export function formResponse(
       if (q.type === 'Time' && !/^([01]\d|2[0-3]):[0-5]\d$/.test(a)) throw new Error('Choose a valid time.');
     }
     clean[q.id] = a;
-
-    if (form.quiz && q.answer.trim()) {
-      possible += q.points;
-      // Checkboxes are a set, so order must not decide the mark.
-      const norm = (s: string) =>
-        q.type === 'Checkboxes'
-          ? s
-              .split('\n')
-              .map((x) => x.trim())
-              .sort()
-              .join('\n')
-          : s.trim().toLowerCase();
-      if (norm(a) === norm(q.answer)) score += q.points;
-    }
   }
 
+  return clean;
+}
+
+/**
+ * The mark, from answers that have already been checked.
+ *
+ * Separate from the checking above because the two halves run in different
+ * places once a form is published: a respondent's browser validates what they
+ * typed, and it must not be holding the answer key while it does. See
+ * `lib/formshare.ts` — the key stays with the author, and a response is
+ * marked when the author reads it.
+ *
+ * Marking is opt-in twice over — the form must be a quiz and the question
+ * must have an answer recorded — so `possible` counts only what was actually
+ * marked, and a quiz with one marked question out of six does not report the
+ * other five as wrong.
+ */
+export function markAnswers(
+  form: FormData,
+  clean: Record<string, string>,
+): { score: number; possible: number } {
+  let score = 0;
+  let possible = 0;
+
+  for (const q of visibleQuestions(form, clean)) {
+    if (!form.quiz || !q.answer.trim()) continue;
+    possible += q.points;
+    // Checkboxes are a set, so order must not decide the mark.
+    const norm = (s: string) =>
+      q.type === 'Checkboxes'
+        ? s
+            .split('\n')
+            .map((x) => x.trim())
+            .sort()
+            .join('\n')
+        : s.trim().toLowerCase();
+    if (norm(clean[q.id] || '') === norm(q.answer)) score += q.points;
+  }
+
+  return { score, possible };
+}
+
+export function formResponse(
+  form: FormData,
+  answers: Record<string, string>,
+  now = new Date(),
+): FormResponse {
+  const clean = checkedAnswers(form, answers, now);
+  const { score, possible } = markAnswers(form, clean);
   return { id: crypto.randomUUID(), at: now.toISOString(), answers: clean, score, possible };
 }
 

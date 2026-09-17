@@ -39,6 +39,41 @@ const FILES = tsx('src').map((f) => ({ file: f, src: code(readFileSync(f, 'utf8'
 const find = (end: string) => FILES.find(({ file }) => file.endsWith(end))!;
 
 /**
+ * The components `main.tsx` renders *instead of* the app.
+ *
+ * The rules below have always had one exception — `Onboarding`, because it is
+ * the whole page while it is up and `ScrollArea` is not mounted behind it.
+ * Publishing a form added a second: `screens/Respond.tsx` is what a stranger
+ * with a link gets, mounted in place of `<App />` with no store, no shell and
+ * no tab bar. It needs its own `<main>` and its own `<h1>` for exactly the
+ * reason every screen inside the shell must not have one.
+ *
+ * Two names in a list would have been the easy fix and the wrong one: the
+ * exception is not "these files", it is "a file that is the whole page", and
+ * a third one would have been added the same way without anybody rereading
+ * the rule. So it is derived. `main.tsx` calls `createRoot(...).render(...)`
+ * more than once; the call carrying `<App` is the app, and the components in
+ * any other call are roots in their own right.
+ *
+ * `Onboarding` stays named, because it is a root of a different kind — the
+ * app mounts it over itself rather than in place of itself, so `main.tsx`
+ * never mentions it.
+ */
+const ROOTS = (() => {
+  const main = code(readFileSync(tsx('src').find((f) => f.endsWith('main.tsx'))!, 'utf8'));
+  const names = new Set<string>(['Onboarding']);
+  for (const call of main.split('createRoot(').slice(1)) {
+    const tree = call.slice(0, call.indexOf('</StrictMode>'));
+    if (/<App[\s/>]/.test(tree)) continue;
+    for (const m of tree.matchAll(/<([A-Z]\w*)/g)) names.add(m[1]);
+  }
+  return names;
+})();
+
+/** Whether this file is one of those, by its default export's name. */
+const isRoot = (file: string) => ROOTS.has(file.replace(/\.tsx$/, '').split('/').pop()!);
+
+/**
  * The app draws exactly one navigation, whichever of the four is chosen —
  * `lib/chrome.ts` is the rule and `chrome.test.ts` proves it. Two of the four
  * were not landmarks, so "one navigation" was true on screen and false to a
@@ -84,12 +119,21 @@ describe('there is one main', () => {
     expect(find('ScrollArea.tsx').src).toContain('<main id="main"');
   });
 
+  it('exempts the pages that are a whole page, and only those', () => {
+    // The control on the exemption. `isRoot` returning true for everything
+    // would leave both rules below passing against any file at all, and the
+    // failure would be silent — so the set is named here once, where a fourth
+    // root has to be looked at rather than absorbed.
+    expect([...ROOTS].sort()).toEqual(['Onboarding', 'Respond', 'StrictMode']);
+    expect(isRoot('src/screens/Respond.tsx')).toBe(true);
+    expect(isRoot('src/screens/Degree.tsx')).toBe(false);
+  });
+
   it('is not opened again by a screen mounted inside it', () => {
     const nested = FILES.filter(({ file, src }) => {
       if (file.endsWith('ScrollArea.tsx')) return false;
-      // Onboarding is the exception, and a real one: it is the whole page
-      // while it is up, and `ScrollArea` is not mounted at all behind it.
-      if (file.endsWith('Onboarding.tsx')) return false;
+      // A page that is the whole page opens its own. See `ROOTS`.
+      if (isRoot(file)) return false;
       return /<main[\s>]/.test(src);
     });
     expect(nested.map(({ file }) => file), 'a <main> inside the app shell').toEqual([]);
@@ -111,8 +155,8 @@ describe('there is one h1', () => {
     const extra = FILES.filter(({ file, src }) => {
       if (file.endsWith('App.tsx')) return false;
       // Same exception, for the same reason.
-      if (file.endsWith('Onboarding.tsx')) return false;
-            return /<h1[\s>]/.test(src);
+      if (isRoot(file)) return false;
+      return /<h1[\s>]/.test(src);
     });
     expect(extra.map(({ file }) => file), 'a second h1 under the header’s').toEqual([]);
   });

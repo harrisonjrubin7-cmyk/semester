@@ -36,6 +36,7 @@ const form = (over: Partial<FormData> = {}): FormData => ({
   questions: [],
   responses: [],
   accepting: true,
+  published: null,
   opens: '',
   closes: '',
   limit: 100,

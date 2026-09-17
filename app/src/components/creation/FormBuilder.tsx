@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useStore } from '../../state/store';
 import { ActionButton, SectionLabel, Segmented } from '../ui';
 import { secondLine } from '../../lib/dim';
+import { Answering } from './Answering';
+import { Publishing } from './Publishing';
 import { download } from '../../lib/deliver';
 import { fromRows, toCsv } from '../../lib/sheet';
 import {
@@ -9,7 +11,6 @@ import {
   formResponse,
   newQuestion,
   responseRows,
-  visibleQuestions,
   type CreativeProject,
   type FormData,
   type Question,
@@ -127,8 +128,9 @@ export function FormBuilder({
         style={{ marginBlock: 'var(--sp-5)' }}
       />
       <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
-        This form lives on this device, and so do its answers. Sending a link, knowing who replied, and
-        anything that counts for a grade all need your school's own form service.
+        This form is built here and can be sent to people from Settings. What it still does not do is
+        know who replied — there is no sign-in on the answering side — so anything that counts for a
+        grade needs your school's own form service.
       </p>
       {notice && (
         <p role="status" style={{ ...body, ...panel, textWrap: 'pretty' }}>
@@ -300,73 +302,7 @@ export function FormBuilder({
           <SectionLabel style={{ marginBlock: '0 var(--sp-4)' }}>{project.title}</SectionLabel>
           {f.description && <p style={{ ...body, marginBottom: 'var(--sp-5)' }}>{f.description}</p>}
 
-          {visibleQuestions(f, answers).map((q) => (
-            <fieldset key={q.id} style={panel}>
-              <legend style={{ fontSize: 'var(--type-sm)', ...secondLine(), padding: '0 var(--sp-3)' }}>
-                {q.title}
-                {q.required ? ' *' : ''}
-              </legend>
-              {q.type === 'Paragraph' ? (
-                <textarea
-                  aria-label={q.title}
-                  required={q.required}
-                  rows={4}
-                  maxLength={5000}
-                  value={answers[q.id] || ''}
-                  onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                  style={{ width: '100%' }}
-                />
-              ) : q.type === 'Checkboxes' ? (
-                q.options.map((o, i) => (
-                  <label
-                    key={i}
-                    style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)', paddingBlock: 'var(--sp-2)', ...body }}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={(answers[q.id] || '').split('\n').includes(o)}
-                      onChange={(e) =>
-                        setAnswers((a) => ({
-                          ...a,
-                          [q.id]: e.target.checked
-                            ? [...(a[q.id] || '').split('\n').filter(Boolean), o].join('\n')
-                            : (a[q.id] || '')
-                                .split('\n')
-                                .filter((x) => x !== o)
-                                .join('\n'),
-                        }))
-                      }
-                    />
-                    <span>{o}</span>
-                  </label>
-                ))
-              ) : CHOICE_TYPES.includes(q.type) ? (
-                <select
-                  aria-label={q.title}
-                  required={q.required}
-                  value={answers[q.id] || ''}
-                  onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                  style={{ width: '100%' }}
-                >
-                  <option value="">Choose…</option>
-                  {(q.type === 'Rating' ? ['1', '2', '3', '4', '5'] : q.options).map((o, i) => (
-                    <option key={i}>{o}</option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  aria-label={q.title}
-                  type={q.type === 'Date' ? 'date' : q.type === 'Time' ? 'time' : q.type === 'Number' ? 'number' : 'text'}
-                  step="any"
-                  required={q.required}
-                  maxLength={5000}
-                  value={answers[q.id] || ''}
-                  onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
-                  style={{ width: '100%' }}
-                />
-              )}
-            </fieldset>
-          ))}
+          <Answering form={f} answers={answers} setAnswers={setAnswers} />
 
           <button type="submit" className="btn btn-primary btn-block" disabled={!f.questions.length}>
             Record this response
@@ -501,6 +437,8 @@ export function FormBuilder({
             as a verified anonymous survey, and it should not be relied on as one. The dates are this
             device's calendar days.
           </p>
+
+          <Publishing project={project} onChange={onChange} />
         </>
       )}
     </div>

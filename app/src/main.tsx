@@ -15,6 +15,7 @@ import { askToPersist } from './lib/device';
 import { StoreProvider } from './state/store';
 import { AIProvider } from './ai/store';
 import { redirected } from './lib/redirected';
+import { askedForm } from './lib/formshare';
 // Type-only, so it is erased at build and pulls nothing onto the critical path.
 import type { ProviderId } from './lib/connect';
 import { load as loadFromDb, prime as primeDb } from './state/persist';
@@ -38,6 +39,33 @@ function finishAnyRedirect(): Promise<{ id: ProviderId; error?: string } | null>
   if (!redirected(window.location.search)) return Promise.resolve(null);
   return import('./lib/connect').then((m) => m.completeAuth());
 }
+
+/*
+ * A form somebody else published, answered by somebody who does not have this
+ * app.
+ *
+ * Mounted *instead of* the app rather than inside it. A respondent has no
+ * semester: no courses, no store to read out of IndexedDB, no assistant, no
+ * tab bar, and above all no first-run prompt about importing a syllabus. They
+ * followed a link to answer two questions. See `screens/Respond.tsx`.
+ *
+ * It comes before everything below — before an OAuth redirect is redeemed,
+ * before the store is loaded, before the service worker is registered —
+ * because none of those belong to this page, and each would cost a stranger a
+ * download for a screen they see once. The id is validated in `askedForm`, so
+ * a `?form=` carrying anything but a uuid falls through to the ordinary app
+ * rather than mounting this against rubbish.
+ */
+const formLink = askedForm(window.location.search);
+if (formLink) {
+  void import('./screens/Respond').then(({ default: Respond }) => {
+    createRoot(document.getElementById('root')!).render(
+      <StrictMode>
+        <Respond id={formLink} />
+      </StrictMode>,
+    );
+  });
+} else {
 
 finishAnyRedirect()
   .then((result) => {
@@ -135,3 +163,4 @@ finishAnyRedirect()
       </StrictMode>,
     );
   });
+}
