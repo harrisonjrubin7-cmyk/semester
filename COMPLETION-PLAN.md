@@ -2672,6 +2672,30 @@ them is read access to, or a transaction against, a system this project cannot
 build unilaterally. They are not unfinished engineering, and building screens
 that look like them would be the exact failure `data/campus.ts` refuses.
 
+### One row where the brief and the code disagree, and the code is right
+
+Worth recording rather than leaving to whoever notices it next. The
+comprehensive master brief lists **Email — native sending** as unbuilt, in the
+column that means *not done yet*. It is not unbuilt. `lib/mail.ts` **refuses**
+it, on purpose, and [§8](#8-what-this-plan-does-not-cover) records that as a
+refusal rather than a gap: *"something that can post a message as you to your
+professor is a bigger promise than a study app should make."*
+
+The two documents are not describing different code; they are describing the
+same code with different vocabularies. A feature matrix has no cell for *we
+considered this and decided against it*, so anything not present reads as
+pending — which is the same missing word [§8b](#8b-deployment--the-settings-a-deployed-copy-could-not-be-given)
+ran into from the other direction, where a setting was built and unreachable and
+the Live/Partial/Planned vocabulary had no term for that either.
+
+The practical consequence is small but real: **a reader of the brief alone would
+schedule work to build this, and building it would undo a decision.** The same
+caution applies to the other three refusals in that list — textbook prices
+(`lib/cost.ts`), writing coursework (`lib/doctemplates.ts`), and inferring exam
+scope (`lib/covers.ts`). If the brief is ever revised, those four want a row of
+their own that says *refused, and why*, because a plan that reads a refusal as a
+backlog item is a plan to reverse it by accident.
+
 ---
 
 ## 9. Phase 0 of the build-out plan — accessibility minimums
