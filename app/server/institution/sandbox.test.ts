@@ -6,6 +6,7 @@ import { SANDBOX_INSTITUTION, SANDBOX_MARK, SANDBOX_NAME, SandboxStore, sandboxA
 import { createGateway } from './gateway.ts';
 import { ActionJournal } from './journal.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
+import { UNIVERSITY_AREAS } from '../../../packages/institution/src/index.ts';
 import type { ActionInput, UniversityArea, UniversityRole } from '../../../packages/institution/src/index.ts';
 
 /**
@@ -1882,10 +1883,32 @@ describe('it is unmistakably a sandbox', () => {
       act('assignments', r1.id, r1.version, 'submit', { work: 'x' }),
       'k-1',
     );
+    /*
+     * Family is the one area whose records do not exist until somebody makes
+     * one — a grant is a thing a student gives, and seeding one on their
+     * behalf would be a permission nobody granted. So the test makes one
+     * rather than exempting the area: the rule below stays at full strength
+     * for every adapter, which is what it is for.
+     */
+    await area('family').execute(
+      s,
+      act('family', 'new', '0', 'invite', {
+        recipient: 'payer-1',
+        category: 'finances',
+        access: 'payment',
+        items: 'student-1::tuition-fall',
+        days: '30',
+      }),
+      'k-family',
+    );
+
     for (const a of four) {
       const status = await a.status(f);
       expect(status.provider, `${a.area} provider`).toContain(SANDBOX_MARK);
-      const { records } = await a.list(f, { search: '', cursor: null });
+      // Family grants are between two people, so the faculty member sees
+      // none of them — that area is read as the student who made one.
+      const asWhom = a.area === 'family' ? s : f;
+      const { records } = await a.list(asWhom, { search: '', cursor: null });
       expect(records.length, `${a.area} listed nothing`).toBeGreaterThan(0);
       for (const r of records) {
         expect(r.title, `${a.area}: "${r.title}"`).toContain(SANDBOX_MARK);
@@ -2163,16 +2186,31 @@ describe('the vertical, through the gateway', () => {
   });
 
   it('answers 503 for the areas the sandbox does not implement', async () => {
+    /*
+     * The sandbox is a handful of services, not thirty-seven, and the rest must
+     * keep saying they are not configured — a demonstration that lit up the
+     * whole University screen would be the placeholder the plan forbids.
+     *
+     * The area to probe is *derived* rather than named. The first version of
+     * this test named `billing`, which was a fine example until Phase 3's
+     * demonstration implemented billing and the test went red for a reason
+     * that had nothing to do with what it was guarding. A rule whose example
+     * can be built out from under it is a rule that fails on the day somebody
+     * does the work.
+     */
+    const done = new Set(four.map((a) => a.area));
+    const untouched = UNIVERSITY_AREAS.map(([id]) => id).filter((id) => !done.has(id));
+    expect(untouched.length, 'the sandbox now implements every area').toBeGreaterThan(20);
+
     const asStudent = wire(['student']);
     try {
-      expect((await asStudent.call('/records?area=billing')).status).toBe(503);
-      const status = await (await asStudent.call('/status')).json();
-      const billing = status.connections.find((c: { area: string }) => c.area === 'billing');
-      // The sandbox is four services, not thirty-seven. The other thirty-three
-      // must keep saying they are not configured — a demonstration that lit up
-      // the whole University screen would be the placeholder the plan forbids.
-      expect(billing.state).toBe('not-configured');
-      expect(billing.canWrite).toBe(false);
+      for (const area of untouched.slice(0, 3)) {
+        expect((await asStudent.call(`/records?area=${area}`)).status, area).toBe(503);
+        const status = await (await asStudent.call('/status')).json();
+        const said = status.connections.find((c: { area: string }) => c.area === area);
+        expect(said.state, area).toBe('not-configured');
+        expect(said.canWrite, area).toBe(false);
+      }
     } finally {
       asStudent.journal.close();
     }

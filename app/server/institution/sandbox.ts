@@ -3,12 +3,16 @@ import { Refusal } from '../../../packages/institution/src/index.ts';
 import type {
   ActionInput,
   ConnectionStatus,
+  FamilyGrant,
   Receipt,
   RecordPage,
   UniversityArea,
   UniversityRecord,
 } from '../../../packages/institution/src/index.ts';
 import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
+import { registrationAdapter } from './registration.ts';
+import { aidAdapter, billingAdapter } from './money.ts';
+import { familyAdapter } from './family.ts';
 
 /**
  * One course, run end to end, at an institution that does not exist.
@@ -424,6 +428,189 @@ interface Work {
  * that *"submissions or grades can be trusted to persist correctly"*. It is
  * the same `node:sqlite` the journal beside it uses.
  */
+/* ── Registration ─────────────────────────────────────────────────────────
+ *
+ * The build-out plan puts this first in Phase 3 and calls it "the
+ * transactional standard's first full application": live seats, prerequisite
+ * and hold checks, real enrolment submission, waitlists, add/drop.
+ *
+ * It is here, against the sandbox, as a **labelled demonstration**. Every
+ * record it produces carries `SANDBOX_MARK`, every receipt says nothing here
+ * reaches a real institution, and no seat taken in it is a seat anywhere. What
+ * is real is the shape: a finite number of seats is what makes enrolling a
+ * transaction rather than a preference, because two people can want the last
+ * one and only one can have it.
+ *
+ * ## Why the seat count is derived and not stored
+ *
+ * A `taken` column and a table of enrolments are two answers to one question,
+ * and they come apart the first time a write half-fails. The count is
+ * `enrolments(section).length`, every time. It is a scan of a handful of rows
+ * in a demonstration and it cannot disagree with itself.
+ */
+
+export interface Section {
+  id: string;
+  code: string;
+  title: string;
+  teacher: string;
+  when: string;
+  credits: number;
+  seats: number;
+  /** Course codes that must already be passed. Empty means none. */
+  needs: string[];
+  /** After this, add/drop is closed. An ISO day. */
+  until: string;
+}
+
+export interface Enrolment {
+  id: string;
+  student: string;
+  section: string;
+  /** `enrolled` holds a seat; `waiting` does not; `dropped` is history. */
+  state: 'enrolled' | 'waiting' | 'dropped';
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * What the demonstration registry opens with.
+ *
+ * Four sections chosen to make each refusal reachable by a tester rather than
+ * only by a test: one with a prerequisite, one with a single seat so the
+ * second person meets the waitlist, one already closed for add/drop, and one
+ * ordinary. A demonstration where the interesting paths cannot be walked is a
+ * screenshot.
+ */
+export const SECTIONS: Section[] = [
+  {
+    id: 'econ-1020-001',
+    code: 'ECON 1020',
+    title: 'Principles of Macroeconomics',
+    teacher: 'Dr Alvarez',
+    when: 'Tue/Thu 09:30',
+    credits: 3,
+    seats: 30,
+    needs: [],
+    until: '2026-09-30',
+  },
+  {
+    id: 'econ-3010-001',
+    code: 'ECON 3010',
+    title: 'Intermediate Macroeconomics',
+    teacher: 'Dr Alvarez',
+    when: 'Mon/Wed 13:00',
+    credits: 3,
+    // The prerequisite. A tester who has not passed ECON 1020 is refused.
+    seats: 20,
+    needs: ['ECON 1020'],
+    until: '2026-09-30',
+  },
+  {
+    id: 'psci-2200-001',
+    code: 'PSCI 2200',
+    title: 'Security Studies Seminar',
+    teacher: 'Dr Okafor',
+    when: 'Wed 15:00',
+    credits: 3,
+    // One seat, so the second person to ask meets the waitlist.
+    seats: 1,
+    needs: [],
+    until: '2026-09-30',
+  },
+  {
+    id: 'bus-1600-001',
+    code: 'BUS 1600',
+    title: 'Financial Accounting',
+    teacher: 'Dr Lindqvist',
+    when: 'Tue/Thu 11:00',
+    credits: 3,
+    seats: 24,
+    needs: [],
+    // Already shut, so the add/drop refusal is reachable without waiting.
+    until: '2026-09-05',
+  },
+];
+
+/* ── Money ────────────────────────────────────────────────────────────────
+ *
+ * Phase 3's second domain, and the source documents constrain its shape in one
+ * sentence worth obeying exactly: a real account balance *"built as read access
+ * to Vanderbilt's own systems first, **not a competing processor**"*.
+ *
+ * So the demonstration is a ledger the institution owns and Semester reads.
+ * The one write a student makes against it — paying — is committed **by the
+ * institution's own adapter**, and the receipt comes back from there. That is
+ * not a technicality: it is the whole architectural claim. Semester never
+ * holds money, never takes a card, and has no payment credential of any kind.
+ * What it has is the same two-phase prepare/commit it uses for a seat, with
+ * the institution on the far side of it.
+ *
+ * ## A ledger, not a balance
+ *
+ * What is owed is `charges` minus what is paid against them, computed every
+ * time. A balance column and the rows that add up to it are two answers to one
+ * question, and the first half-failed write is where they stop agreeing — the
+ * same argument the seat count makes in registration, and it is worth making
+ * twice because money is where somebody notices.
+ *
+ * ## Aid is offered by the institution and answered by the student
+ *
+ * An award's amount is the institution's to set and nobody else's. The student
+ * can accept it or decline it and can do neither to somebody else's, and the
+ * amount is never read from a request — which is the obvious attack and is
+ * refused in `execute` rather than trusted from the field.
+ */
+
+export interface Charge {
+  id: string;
+  student: string;
+  what: string;
+  /** Cents, because money in a float is a bug waiting for a decimal. */
+  cents: number;
+  paid: number;
+  due: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export interface Award {
+  id: string;
+  student: string;
+  what: string;
+  kind: 'Grant' | 'Scholarship' | 'Loan' | 'Work-study';
+  cents: number;
+  state: 'offered' | 'accepted' | 'declined' | 'disbursed';
+  /** The last day the student can answer it. An ISO day. */
+  answerBy: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/** Money as a person reads it. Cents in, dollars out, always two places. */
+export const money = (cents: number): string =>
+  `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+type Opening<T> = Omit<T, 'student' | 'at' | 'version' | 'history'>;
+
+/** The bill a demonstration account opens with. */
+export const OPENING_CHARGES: Opening<Charge>[] = [
+  { id: 'tuition-fall', what: 'Tuition — Fall 2026', cents: 2_950_000, paid: 0, due: '2026-10-15' },
+  { id: 'activity-fee', what: 'Student activity fee', cents: 68_500, paid: 0, due: '2026-10-15' },
+  { id: 'housing-fall', what: 'Housing — Fall 2026', cents: 640_000, paid: 0, due: '2026-10-15' },
+];
+
+/** And the aid against it, in the four kinds a real award letter has. */
+export const OPENING_AWARDS: Opening<Award>[] = [
+  { id: 'need-grant', what: 'Need-based grant', kind: 'Grant', cents: 1_800_000, state: 'offered', answerBy: '2026-10-01' },
+  { id: 'merit', what: 'Merit scholarship', kind: 'Scholarship', cents: 500_000, state: 'disbursed', answerBy: '2026-09-01' },
+  { id: 'subsidised-loan', what: 'Federal subsidised loan', kind: 'Loan', cents: 350_000, state: 'offered', answerBy: '2026-10-01' },
+  { id: 'work-study', what: 'Work-study award', kind: 'Work-study', cents: 200_000, state: 'offered', answerBy: '2026-10-01' },
+];
+
 export class SandboxStore {
   private db: DatabaseSync;
 
@@ -461,6 +648,49 @@ export class SandboxStore {
         key TEXT PRIMARY KEY,
         body TEXT NOT NULL
       );
+      /*
+       * Registration — the demonstration of the transactional standard the
+       * build-out plan puts first in Phase 3. A section is a thing with a
+       * finite number of seats, which is what makes enrolling a transaction
+       * rather than a preference: two people can want the last one.
+       */
+      CREATE TABLE IF NOT EXISTS sections(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS enrolments(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        section TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      /*
+       * Money. A ledger rather than a balance column, for the reason the seat
+       * count is derived rather than stored: a balance and the rows that add
+       * up to it are two answers to one question, and the first half-failed
+       * write is where they stop agreeing.
+       */
+      CREATE TABLE IF NOT EXISTS charges(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS awards(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- Family access. The institution contract says it in as many words:
+      -- a real grant lives in verified server storage, every resource
+      -- operation is checked against it, and a permission object that
+      -- arrived from a browser is a request and never an authority. This
+      -- table is that storage, for the demonstration.
+      CREATE TABLE IF NOT EXISTS grants(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        recipient TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
     `);
 
     // The class the course already has, before any tester arrives.
@@ -470,6 +700,157 @@ export class SandboxStore {
     // And the work it opens with. Faculty publish more; see `publish`.
     const first = this.db.prepare('INSERT OR IGNORE INTO assignments VALUES(?,?,?)');
     for (const a of SEEDED) first.run(a.id, '2026-08-25T09:00:00Z', JSON.stringify(a));
+
+    // The sections registration opens with. See `SECTIONS`.
+    const sec = this.db.prepare('INSERT OR IGNORE INTO sections VALUES(?,?)');
+    for (const t of SECTIONS) sec.run(t.id, JSON.stringify(t));
+  }
+
+  /**
+   * A named setting, as a string, or null.
+   *
+   * The `settings` table already held the late policy and the syllabus under
+   * fixed ids. Registration needs a handful more — a hold on an account, a
+   * recorded pass — and they are keyed rather than columned because a
+   * demonstration that needs a migration to put a hold on somebody is a
+   * demonstration nobody will put a hold on.
+   */
+  setting(id: string): string | null {
+    const got = this.db.prepare('SELECT body FROM settings WHERE id=?').get(id) as
+      | { body: string }
+      | undefined;
+    return got ? got.body : null;
+  }
+
+  /** Set one, or clear it with an empty string. */
+  setSetting(id: string, body: string): void {
+    if (!body) {
+      this.db.prepare('DELETE FROM settings WHERE id=?').run(id);
+      return;
+    }
+    this.db
+      .prepare('INSERT INTO settings VALUES(?,?) ON CONFLICT(id) DO UPDATE SET body=excluded.body')
+      .run(id, body);
+  }
+
+  /* ── Registration ───────────────────────────────────────────────────── */
+
+  sections(): Section[] {
+    const rows = this.db.prepare('SELECT body FROM sections ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Section);
+  }
+
+  section(id: string): Section | null {
+    const got = this.db.prepare('SELECT body FROM sections WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Section) : null;
+  }
+
+  saveSection(section: Section): void {
+    this.db.prepare('INSERT OR REPLACE INTO sections VALUES(?,?)').run(section.id, JSON.stringify(section));
+  }
+
+  /* ── Family access ──────────────────────────────────────────────────── */
+
+  /** Every grant this student has made. */
+  grantsBy(student: string): FamilyGrant[] {
+    const rows = this.db.prepare('SELECT body FROM grants WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as FamilyGrant);
+  }
+
+  /** Every grant made to this person. */
+  grantsTo(recipient: string): FamilyGrant[] {
+    const rows = this.db.prepare('SELECT body FROM grants WHERE recipient=? ORDER BY id').all(recipient) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as FamilyGrant);
+  }
+
+  grant(id: string): FamilyGrant | null {
+    const got = this.db.prepare('SELECT body FROM grants WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as FamilyGrant) : null;
+  }
+
+  saveGrant(row: FamilyGrant): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO grants VALUES(?,?,?,?)')
+      .run(row.id, row.studentId, row.recipientId, JSON.stringify(row));
+  }
+
+  /* ── Money ──────────────────────────────────────────────────────────── */
+
+  charges(student: string): Charge[] {
+    const rows = this.db.prepare('SELECT body FROM charges WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Charge);
+  }
+
+  charge(id: string): Charge | null {
+    const got = this.db.prepare('SELECT body FROM charges WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Charge) : null;
+  }
+
+  saveCharge(row: Charge): void {
+    this.db.prepare('INSERT OR REPLACE INTO charges VALUES(?,?,?)').run(row.id, row.student, JSON.stringify(row));
+  }
+
+  awards(student: string): Award[] {
+    const rows = this.db.prepare('SELECT body FROM awards WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Award);
+  }
+
+  award(id: string): Award | null {
+    const got = this.db.prepare('SELECT body FROM awards WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Award) : null;
+  }
+
+  saveAward(row: Award): void {
+    this.db.prepare('INSERT OR REPLACE INTO awards VALUES(?,?,?)').run(row.id, row.student, JSON.stringify(row));
+  }
+
+  /**
+   * The bill and the aid this student has, made the first time they look.
+   *
+   * A demonstration where the money screens are empty until somebody runs a
+   * seeding script is a demonstration nobody sees. Made on read, keyed to the
+   * student, and idempotent — `INSERT OR IGNORE` semantics via a check, so
+   * looking twice does not double a bill.
+   */
+  openAccount(student: string, at: string): void {
+    if (this.charges(student).length || this.awards(student).length) return;
+    for (const c of OPENING_CHARGES) {
+      this.saveCharge({ ...c, id: `${student}::${c.id}`, student, paid: 0, at, version: 0, history: [] });
+    }
+    for (const a of OPENING_AWARDS) {
+      this.saveAward({ ...a, id: `${student}::${a.id}`, student, at, version: 0, history: [] });
+    }
+  }
+
+  /** Every enrolment, so a seat count can be derived rather than stored. */
+  enrolments(section?: string): Enrolment[] {
+    const rows = (
+      section
+        ? this.db.prepare('SELECT body FROM enrolments WHERE section=? ORDER BY id').all(section)
+        : this.db.prepare('SELECT body FROM enrolments ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Enrolment);
+  }
+
+  enrolmentsOf(student: string): Enrolment[] {
+    const rows = this.db.prepare('SELECT body FROM enrolments WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Enrolment);
+  }
+
+  saveEnrolment(row: Enrolment): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO enrolments VALUES(?,?,?,?)')
+      .run(row.id, row.student, row.section, JSON.stringify(row));
   }
 
   /** Everything published in this course, oldest first. */
@@ -712,7 +1093,7 @@ export class SandboxStore {
 const assignmentOf = (store: SandboxStore, id: string) => store.assignment(id);
 
 const isFaculty = (context: AdapterContext) => context.identity.roles.includes('faculty');
-const isStudent = (context: AdapterContext) => context.identity.roles.includes('student');
+export const isStudent = (context: AdapterContext) => context.identity.roles.includes('student');
 
 /**
  * The row a record id names, if this person is allowed to see it at all.
@@ -744,7 +1125,7 @@ function rowFor(store: SandboxStore, context: AdapterContext, id: string): Work 
  * student can submit and cannot mark, and the screen should say which before
  * somebody goes looking for a button that is not theirs.
  */
-function connection(area: UniversityArea, context: AdapterContext, write: boolean): ConnectionStatus {
+export function connection(area: UniversityArea, context: AdapterContext, write: boolean): ConnectionStatus {
   return {
     area,
     state: 'connected',
@@ -759,14 +1140,14 @@ function connection(area: UniversityArea, context: AdapterContext, write: boolea
   };
 }
 
-const page = (records: UniversityRecord[]): RecordPage => ({
+export const page = (records: UniversityRecord[]): RecordPage => ({
   records,
   nextCursor: null,
   fetchedAt: new Date().toISOString(),
 });
 
 /** Free-text search over what a person can read on the record itself. */
-const matching = (records: UniversityRecord[], search: string) => {
+export const matching = (records: UniversityRecord[], search: string) => {
   const q = search.trim().toLowerCase();
   if (!q) return records;
   return records.filter((r) => `${r.title} ${r.summary} ${r.status}`.toLowerCase().includes(q));
@@ -829,7 +1210,7 @@ function allow(
  * safely in the store. They would submit again, or be told their work was
  * lost. The first test written for this failed exactly that way.
  */
-function already(store: SandboxStore, key: string): Receipt | null {
+export function already(store: SandboxStore, key: string): Receipt | null {
   return store.receipt(key);
 }
 
@@ -1815,7 +2196,7 @@ function appealRecord(store: SandboxStore, work: Work): UniversityRecord {
 const archivedOrUnseen = (work: Work, seen: boolean) => work.stage === 'archived' || !seen;
 
 /**
- * The five, over one store.
+ * The nine, over one store.
  *
  * Built by a function rather than exported as a constant so the store is an
  * argument: the tests open one on a temporary file, and `start.ts` opens one
@@ -2314,5 +2695,15 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     reconcile: async (_context, _input, key) => store.receipt(key),
   };
 
-  return [courses, assignments, grades, records, appeals];
+  return [
+    courses,
+    assignments,
+    grades,
+    records,
+    appeals,
+    registrationAdapter(store),
+    billingAdapter(store),
+    aidAdapter(store),
+    familyAdapter(store),
+  ];
 }

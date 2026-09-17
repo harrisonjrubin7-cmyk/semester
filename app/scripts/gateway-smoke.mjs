@@ -87,9 +87,16 @@ try {
   const health = await fetch(`http://127.0.0.1:${PORT}/health`).then((r) => r.json()).catch(() => null);
   check(health?.version === 1, `/health names the contract version (got ${health?.version})`);
 
-  // The count in the startup line, which is the thing that was wrong.
+  /*
+   * The count in the startup line, which is the thing that was wrong.
+   *
+   * Nine since the Phase 3 demonstration — registration, billing, aid and family access. The number is
+   * asserted rather than merely printed because the line is what somebody
+   * reads to know what a booted gateway is carrying, and a line that said five
+   * while six were installed is exactly the fault this check was written for.
+   */
   const count = /SANDBOX INSTITUTION IS ON: (\d+) demonstration adapters/.exec(said);
-  check(count?.[1] === '5', `the startup line counts the adapters it installed (said ${count?.[1] ?? 'nothing'})`);
+  check(count?.[1] === '9', `the startup line counts the adapters it installed (said ${count?.[1] ?? 'nothing'})`);
   check(/0 approved adapters registered/.test(said), 'and still reports no approved adapters');
   check(/nothing they report is real/.test(said), 'and says the sandbox is not real');
 
