@@ -176,6 +176,20 @@ export interface UniversityRecord {
   version: string;
   updatedAt: string;
   details: { label: string; value: string }[];
+  /**
+   * What this record commits the student to, machine-readable.
+   *
+   * `details` is for reading and this is for a calendar, and they are separate
+   * because parsing the first back into the second would make a display string
+   * the source of a date. That is the fault this package keeps refusing
+   * elsewhere: one fact with two versions, where only one of them is evidence.
+   * A label is an adapter's to choose and to change; an ISO timestamp is not.
+   *
+   * An adapter that sets this must derive both from the same value, so a
+   * student reading "Due 2 October" and a calendar holding 2 October cannot
+   * come apart. Optional, because most records commit nobody to anything.
+   */
+  dates?: { at: string; what: string }[];
   actions: RecordAction[];
 }
 

@@ -2102,6 +2102,75 @@ from a value from a trail entry.** One "no unreleased mark" probe matched the
 on appeal" sitting in the trail, and so passed against a record that said
 nothing about the appeal at all. Read the line by its label.
 
+### Calendar, which is where the chain finally reaches the app
+
+The chain reads Course → Syllabus → **Calendar → Study**, and for the whole of
+Phase 1 the first two lived on the university gateway and the last two lived in
+the app with nothing between them. A student enrolled in the sandbox course had
+two published assignments whose deadlines Today could not see — the shape
+[Appendix A](#appendix-a--what-measurement-corrected) calls the dominant finding
+in this codebase: an engine that exists, and a place it has not been connected
+to.
+
+**This is a change of position, and it is written down as one.** A school's
+records used to be read, drawn, and never kept — `lib/university.ts` said so on
+the function that fetches them, and `screens/University.tsx` said so in its
+header. They are kept now. "Add my courses to this app" copies the course and
+every published deadline into the same library the student's own imported
+courses live in, on the same terms: editable, exportable, deletable, theirs.
+Both of those comments now say what is true instead, because a comment that
+contradicts the code is the same defect as two copies of a fact.
+
+What the old separation was actually for is kept:
+
+- **A copy happens because somebody asked.** Nothing syncs itself.
+- **Everything copied says where it came from** — the institution's name on the
+  course, on every deadline's detail line, and in `source`, which everywhere
+  else in this app names the file a deadline was lifted from. A SANDBOX date
+  arriving in Today beside four real courses has to be tellable apart.
+- **Nothing is labelled official without a receipt.** Unchanged.
+
+**A date is carried as a date.** `UniversityRecord` gained an optional `dates`,
+machine-readable, beside the `details` a person reads — because parsing "Due
+2026-10-02 23:59" back into a timestamp would make a display string the source
+of a calendar entry. One fact with two versions, where only one is evidence, is
+the thing this package refuses everywhere else. An adapter must write both from
+the same value; the sandbox does, and a test reads them together. A record with
+no `dates`, or with one a `Date` cannot parse, produces **no calendar entry** —
+not an Invalid Date sitting in Today as a deadline with no day.
+
+**A sync is not an import, and the reducer says so with its own action.**
+Importing is something a student does once to a document they hold. This is a
+sync against a system that is the source of truth for the work it set, so
+pressing it twice must mean *bring me up to date* rather than *give me another
+one*. Three rules fall out, and the middle one is the one worth arguing:
+
+| | |
+| --- | --- |
+| A deadline the school withdrew goes | nobody is being marked on it |
+| **A date the student moved survives a sync that did not move it** | `Item.movedFrom` exists because "what must not happen is the app quietly forgetting that it now disagrees with the document it is showing underneath". A sync that silently put the date back is that same fault wearing a network request. |
+| Unless the school moved it too, in which case the school wins | a move is a correction *to a date*; once that date is gone, keeping the correction leaves somebody holding a deadline their course does not have |
+
+Anything the student added themselves is left alone.
+
+**And `npm run test:zones` earned its place in the list.** The first version of
+this read the date with local getters and the time with `toISOString` — a
+single item carrying a UTC time beside a local day. Everything passed: types,
+lint, the suite, the shuffled suite. Pacific/Kiritimati is fourteen hours
+ahead, where `2026-10-02T23:59Z` is the third of October, and four tests went
+red. `Item` is month/day/year with no zone on it and these sync between a
+student's devices, so a deadline reading 2 October on a laptop and 3 October on
+a phone would be two records of one fact. The school said 2 October; the app
+stores 2 October, and a test now walks three zones rather than leaving that
+gate as the only thing that would notice.
+
+Sixteen mutations, sixteen red. Three survived the first pass: a date the
+parser cannot read had no test, the contract's own `dates` field had no test on
+the adapter that writes it, and one anchor was ambiguous because the same line
+appears on the course and on its guide. The reducer's exhaustiveness test —
+*"a switch statement is exhaustive by construction and eight chained functions
+are not"* — caught the new action before a line of it was written.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes

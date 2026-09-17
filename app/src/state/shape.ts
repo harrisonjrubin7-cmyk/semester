@@ -2323,6 +2323,17 @@ export type Action =
   | { type: 'addLink'; name: string; url: string }
   | { type: 'removeLink'; id: string }
   | { type: 'addCourse'; module: CourseModule }
+  /**
+   * A course the school returned, added or brought up to date.
+   *
+   * Its own action rather than `addCourse`, because the two mean different
+   * things: importing is something a student does once to a document they
+   * hold, and this is a sync against a system that is the source of truth for
+   * the work it set. Pressing it twice must update rather than produce a
+   * second copy, and it must not undo what the student has done underneath —
+   * `lib/fromschool.ts` holds the rules.
+   */
+  | { type: 'schoolCourse'; module: CourseModule }
   | { type: 'replaceCourse'; module: CourseModule }
   | { type: 'removeCourse'; id: CourseId }
   | {

@@ -9,6 +9,7 @@
  * the next one. See `state/reducer.ts`.
  */
 
+import { resync } from '../../lib/fromschool';
 import { newId } from '../../lib/idb';
 import { withNotes } from '../../lib/merge';
 import { readIncoming } from '../../lib/stored';
@@ -27,6 +28,36 @@ export function library(state: State, action: Action): State | null {
         // push would remove the course it had just sent.
         removedCourses: state.removedCourses.filter((id) => id !== action.module.course.id),
       };
+
+    /**
+     * A course the school returned, added or brought up to date.
+     *
+     * Its own case rather than `addCourse`, because the two mean different
+     * things. Importing is something a student does once, to a document they
+     * hold; this is a sync against a system that is the source of truth for
+     * the work it set, so pressing it twice has to mean "bring me up to date"
+     * rather than "give me another one".
+     *
+     * What it must not do is overwrite the student. `resync` in
+     * `lib/fromschool.ts` holds those rules — a withdrawn deadline goes, a
+     * date the student moved survives a sync that did not move it, and
+     * anything they added themselves is left alone.
+     */
+    case 'schoolCourse': {
+      const had = state.courses.find((c) => c.course.id === action.module.course.id);
+      const merged = had
+        ? { ...action.module, items: resync(had.items, action.module.items) }
+        : action.module;
+      return {
+        ...state,
+        courses: had
+          ? state.courses.map((c) => (c.course.id === merged.course.id ? merged : c))
+          : [...state.courses, merged],
+        // Same reason as `addCourse`: a re-sync after a deletion must cancel
+        // the deletion, or the next push removes what just arrived.
+        removedCourses: state.removedCourses.filter((id) => id !== merged.course.id),
+      };
+    }
 
     /**
      * The shipped semester becomes the account's own.

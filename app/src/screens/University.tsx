@@ -28,6 +28,7 @@ import {
   type UniversityRecord,
   type UniversityRole,
 } from '../lib/university';
+import { schoolCourse } from '../lib/fromschool';
 import type { Screen } from '../lib/types';
 
 /**
@@ -67,6 +68,22 @@ import type { Screen } from '../lib/types';
  * offers an export and says where they live. A failure to read or save them
  * is surfaced with a recovery download rather than swallowed — an unreadable
  * draft file is somebody's appeal.
+ *
+ * ## And the school's courses can now be brought in
+ *
+ * The other half of that separation used to be that a school's records were
+ * drawn and never kept. "Add my courses to this app" copies them — the course
+ * and every published deadline — into the same library the student's own
+ * imported courses live in, so Today, Calendar and Study can see them. That is
+ * the Calendar stage of the completion plan's chain, and it is a change of
+ * position rather than an oversight: it is written down here because the
+ * opposite used to be.
+ *
+ * It keeps what the separation was for. A copy happens because somebody asked
+ * for it; everything copied carries the institution's name, on the course and
+ * on each deadline, so it cannot be mistaken for the student's own; a sync
+ * updates rather than duplicating and will not undo a date they moved; and
+ * nothing anywhere is labelled official without a receipt.
  */
 
 /** The tabs, and what each is for. */
@@ -323,6 +340,52 @@ function Workspace({ storageKey }: { storageKey: string }) {
     }
   };
 
+  /**
+   * The school's courses, into this app's own calendar.
+   *
+   * The chain the completion plan draws runs Course → Syllabus → Calendar →
+   * Study, and until now the first two were on the gateway and the last two
+   * were here, with nothing between them: a student enrolled in a course could
+   * not see its deadlines in Today.
+   *
+   * This copies them in, which is a change of position and worth saying
+   * plainly. School records used to be read and drawn and never kept; they are
+   * kept now, in the same place the student's own imported courses live, on
+   * the same terms — deletable, exportable, and theirs. A sync brings them up
+   * to date rather than adding a second copy, and it does not overwrite a date
+   * the student has moved; `lib/fromschool.ts` holds those rules and says why.
+   *
+   * What does not change: nothing is labelled official unless a receipt says
+   * so, and every course and deadline this adds carries the institution's name
+   * so it can never be mistaken for one of the student's own.
+   */
+  const bringIn = async () => {
+    setBusy(true);
+    setNotice('');
+    try {
+      const [inCourses, work] = await Promise.all([
+        institutionRecords('courses', ''),
+        institutionRecords('assignments', ''),
+      ]);
+      const courses = inCourses.records.filter((r) => !r.id.startsWith('thread:') && r.id !== 'syllabus');
+      if (!courses.length) throw new Error('This school has no courses to add for you yet.');
+      for (const course of courses) {
+        dispatch({
+          type: 'schoolCourse',
+          module: schoolCourse(course, inCourses.records, work.records),
+        });
+      }
+      setNotice(
+        `${courses.length === 1 ? 'One course' : `${courses.length} courses`} added, with every ` +
+          'published deadline. They are yours now — edit or delete them like any other.',
+      );
+    } catch (e) {
+      setNotice((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   /*
    * Ask the gateway what became of a receipt that is still pending.
    *
@@ -489,6 +552,15 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 style={{ flex: '1 1 auto' }}
               >
                 {LOCAL[area]!.label}
+              </ActionButton>
+            )}
+            {area === 'courses' && (
+              <ActionButton
+                disabled={busy || !status}
+                onClick={() => void bringIn()}
+                style={{ flex: '1 1 auto' }}
+              >
+                Add my courses to this app
               </ActionButton>
             )}
             <ActionButton onClick={() => create(area)} style={{ flex: '1 1 auto' }}>

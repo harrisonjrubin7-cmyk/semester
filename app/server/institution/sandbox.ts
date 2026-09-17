@@ -1497,6 +1497,9 @@ function assignmentRecord(store: SandboxStore, work: Work): UniversityRecord {
     status: work.stage === 'published' && when.late ? `${SAID[work.stage]} · overdue` : SAID[work.stage],
     version: String(work.version),
     updatedAt: new Date().toISOString(),
+    // The same due date the `Due` detail is written from, in a form a
+    // calendar can read without parsing a sentence back.
+    ...(a ? { dates: [{ at: a.due, what: 'Due' }] } : {}),
     details: [
       { label: 'Course', value: `${COURSE.code} (${SANDBOX_MARK})` },
       { label: 'Due', value: a?.due.slice(0, 16).replace('T', ' ') ?? '' },

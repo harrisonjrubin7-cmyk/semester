@@ -1026,6 +1026,25 @@ describe('the archived record', () => {
     expect(await line('Deadline')).toMatch(/On time, with 2 days to spare/);
   });
 
+  it('carries a date a calendar can read, beside the one a person reads', async () => {
+    /*
+     * `UniversityRecord.dates` exists so that nothing has to parse "Due
+     * 2026-10-02 23:59" back into a timestamp — a display string as the source
+     * of a date is one fact with two versions, and only one of them is
+     * evidence. Both are written from the same value, and this is what says so.
+     */
+    await enrol(student());
+    const record = await seen('assignments', student(), 'student-1:a1');
+    // Verbatim as the assignment stores it — the contract asks for a timestamp
+    // a `Date` can read, not for one particular spelling of one.
+    expect(record.dates, 'nothing a calendar can read').toEqual([
+      { at: '2026-10-02T23:59:00Z', what: 'Due' },
+    ]);
+    expect(Number.isNaN(Date.parse(record.dates?.[0].at ?? ''))).toBe(false);
+    // And the same value the person reads, so the two cannot come apart.
+    expect(record.details.find((d) => d.label === 'Due')?.value).toBe('2026-10-02 23:59');
+  });
+
   it('says which criterion lost the marks, without another screen', async () => {
     /*
      * The whole argument the rubric was added for. A record holding "17 out

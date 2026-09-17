@@ -718,3 +718,86 @@ describe('editTask', () => {
     expect(reducer(s, { type: 'editTask', id: 'gone', patch: { title: 'x' } }).tasks).toEqual(s.tasks);
   });
 });
+
+describe('a course from a school', () => {
+  /** A minimal module in the shape `lib/fromschool.ts` produces. */
+  const school = (items: unknown[] = []) =>
+    ({
+      course: { id: 'school-sandbox-101', code: 'SBX 101', title: 'Sandbox', term: '2026FA' },
+      items,
+      schedule: [],
+      guide: { code: 'SBX 101', units: [] },
+    }) as never;
+
+  const deadline = (over: Record<string, unknown> = {}) => ({
+    id: 'school-sandbox-101:a1:0',
+    c: 'school-sandbox-101',
+    title: 'Problem set 1',
+    kind: 'Due',
+    month: 9,
+    day: 2,
+    year: 2026,
+    dueTime: '23:59',
+    weight: '20% of the course',
+    where: '',
+    detail: 'from SANDBOX',
+    quote: '',
+    ...over,
+  });
+
+  const other = (id: string) =>
+    ({
+      course: { id, code: id.toUpperCase(), title: id, term: '2026FA' },
+      items: [],
+      schedule: [],
+      guide: { code: id.toUpperCase(), units: [] },
+    }) as never;
+
+  it('lands in the library like any other course', () => {
+    const s = reducer(blank(), { type: 'schoolCourse', module: school([deadline()]) });
+    expect(s.courses.map((c) => c.course.id)).toEqual(['school-sandbox-101']);
+    expect(s.courses[0].items).toHaveLength(1);
+  });
+
+  it('updates rather than arriving twice', () => {
+    /*
+     * The difference between this and `addCourse`. Importing is something a
+     * student does once to a document they hold; this is a sync against a
+     * system that is the source of truth for the work it set, and pressing it
+     * twice has to mean "bring me up to date".
+     */
+    let s = reducer(blank(), { type: 'schoolCourse', module: school([deadline()]) });
+    s = reducer(s, {
+      type: 'schoolCourse',
+      module: school([deadline({ title: 'Problem set 1 (revised)' })]),
+    });
+    expect(s.courses, 'a second copy of the course').toHaveLength(1);
+    expect(s.courses[0].items, 'a second copy of the deadline').toHaveLength(1);
+    expect(s.courses[0].items[0].title).toBe('Problem set 1 (revised)');
+  });
+
+  it('does not put back a date the student moved', () => {
+    let s = reducer(blank(), { type: 'schoolCourse', module: school([deadline()]) });
+    s = {
+      ...s,
+      courses: [
+        { ...s.courses[0], items: [deadline({ day: 5, movedFrom: { month: 9, day: 2, year: 2026 } })] },
+      ],
+    } as typeof s;
+    s = reducer(s, { type: 'schoolCourse', module: school([deadline()]) });
+    expect(s.courses[0].items[0].day, 'a move undone by a sync, silently').toBe(5);
+  });
+
+  it('cancels a pending deletion, the same way an import does', () => {
+    let s = reducer(blank(), { type: 'schoolCourse', module: school() });
+    s = reducer(s, { type: 'removeCourse', id: 'school-sandbox-101' });
+    s = reducer(s, { type: 'schoolCourse', module: school() });
+    expect(s.removedCourses).toEqual([]);
+  });
+
+  it('leaves every other course alone', () => {
+    let s = reducer(blank(), { type: 'addCourse', module: other('econ') });
+    s = reducer(s, { type: 'schoolCourse', module: school([deadline()]) });
+    expect(s.courses.map((c) => c.course.id)).toEqual(['econ', 'school-sandbox-101']);
+  });
+});
