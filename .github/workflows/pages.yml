@@ -54,38 +54,141 @@ jobs:
         working-directory: app
         run: npm ci
 
-      # Says whether the account service made it into this build, without
-      # printing the values. "url: no" here is the whole diagnosis when the
-      # deployed app claims it has no account service.
+      # Every setting this app reads at build time, offered to the deploy.
+      #
+      # For most of its life this step carried three of them — the Supabase
+      # pair and the push key — and the other twelve had no way in at all. The
+      # app reads all fifteen, `app/.env.example` documents them, and two of
+      # those entries say in so many words that they are what a *deployed* copy
+      # uses: the ICS forwarder ("a deployment points it at anything serving
+      # the same one route") and the assistant proxy ("unlike it, it survives a
+      # build, so this is the field a deployed copy uses"). Neither could be
+      # set. The documentation described a configuration the deploy had no way
+      # to apply.
+      #
+      # It went unnoticed because nothing breaks. Every one of them degrades
+      # politely: no gateway and the University screen says no approved
+      # connection has been configured; no client IDs and Connect offers the
+      # file route instead of a sign-in; no TURN and the call screen says
+      # plainly that some networks will refuse. A deployed copy therefore looks
+      # like a working app with features switched off, which is exactly what it
+      # would look like if somebody had switched them off on purpose.
+      #
+      # A repository *variable* wins over a *secret* of the same name, matching
+      # the two that were already here. None of these is a secret in the strict
+      # sense — anything named VITE_… is compiled into the page and handed to
+      # everyone who loads the site — but Actions hides a secret's value in the
+      # log, and a TURN credential is worth that even though the page carries
+      # it anyway. The real secrets have no VITE_ prefix and are not here: the
+      # Anthropic key belongs to whatever proxy VITE_CLAUDE_PROXY names, and
+      # the private half of the VAPID pair belongs to the Edge Function.
       - name: Check the build inputs
         env:
-          URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
-          KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
-          VAPID: ${{ vars.VITE_VAPID_PUBLIC_KEY || secrets.VITE_VAPID_PUBLIC_KEY }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_KEY: ${{ vars.VITE_SUPABASE_KEY || secrets.VITE_SUPABASE_KEY }}
+          VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY || secrets.VITE_VAPID_PUBLIC_KEY }}
+          VITE_UNIVERSITY_GATEWAY_URL: ${{ vars.VITE_UNIVERSITY_GATEWAY_URL || secrets.VITE_UNIVERSITY_GATEWAY_URL }}
+          VITE_CLAUDE_PROXY: ${{ vars.VITE_CLAUDE_PROXY || secrets.VITE_CLAUDE_PROXY }}
+          VITE_ICS_PROXY: ${{ vars.VITE_ICS_PROXY || secrets.VITE_ICS_PROXY }}
+          VITE_OAUTH_PROXY: ${{ vars.VITE_OAUTH_PROXY || secrets.VITE_OAUTH_PROXY }}
+          VITE_MS_CLIENT_ID: ${{ vars.VITE_MS_CLIENT_ID || secrets.VITE_MS_CLIENT_ID }}
+          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID || secrets.VITE_GOOGLE_CLIENT_ID }}
+          VITE_ZOOM_CLIENT_ID: ${{ vars.VITE_ZOOM_CLIENT_ID || secrets.VITE_ZOOM_CLIENT_ID }}
+          VITE_APPLE_CLIENT_ID: ${{ vars.VITE_APPLE_CLIENT_ID || secrets.VITE_APPLE_CLIENT_ID }}
+          VITE_STUN_URLS: ${{ vars.VITE_STUN_URLS || secrets.VITE_STUN_URLS }}
+          VITE_TURN_URL: ${{ vars.VITE_TURN_URL || secrets.VITE_TURN_URL }}
+          VITE_TURN_USER: ${{ vars.VITE_TURN_USER || secrets.VITE_TURN_USER }}
+          VITE_TURN_PASS: ${{ vars.VITE_TURN_PASS || secrets.VITE_TURN_PASS }}
         run: |
           # Notices and warnings surface as run annotations, which are visible
           # without opening the log — and readable through the API, so a
           # misconfigured deploy can be diagnosed rather than guessed at.
-          if [ -n "$URL" ] && [ -n "$KEY" ]; then
-            echo "::notice title=Accounts::Supabase configured (url ${#URL} chars, key ${#KEY} chars) — this build has accounts."
+          # Lengths, never values: "url: 0 chars" is the whole diagnosis when
+          # the deployed app claims it has no account service, and it gives
+          # away nothing that the page does not already carry.
+          names="VITE_SUPABASE_URL VITE_SUPABASE_KEY VITE_VAPID_PUBLIC_KEY
+                 VITE_UNIVERSITY_GATEWAY_URL VITE_CLAUDE_PROXY VITE_ICS_PROXY
+                 VITE_OAUTH_PROXY VITE_MS_CLIENT_ID VITE_GOOGLE_CLIENT_ID
+                 VITE_ZOOM_CLIENT_ID VITE_APPLE_CLIENT_ID VITE_STUN_URLS
+                 VITE_TURN_URL VITE_TURN_USER VITE_TURN_PASS"
+
+          carried=""
+          for name in $names; do
+            value="${!name}"
+            [ -z "$value" ] && continue
+
+            # A value with a newline in it would corrupt $GITHUB_ENV and take
+            # the next variable with it. None of these is multi-line; a pasted
+            # PEM or a trailing blank line is the mistake, and it is worth
+            # naming rather than letting the file go strange.
+            case "$value" in
+              *$'\n'*)
+                echo "::error title=$name::This value contains a line break. Every setting here is one line; re-paste it without the newline."
+                exit 1
+                ;;
+            esac
+
+            # An empty variable must not overwrite the committed default, which
+            # is why the export is inside the non-empty branch.
+            echo "$name=$value" >> "$GITHUB_ENV"
+            carried="$carried $name(${#value})"
+          done
+
+          # A real secret pasted into a VITE_ field is the one mistake here
+          # with a consequence: the page would carry it to everyone who loads
+          # the site. VITE_CLAUDE_PROXY wants the address of a proxy holding
+          # the key, never the key.
+          case "$VITE_CLAUDE_PROXY" in
+            sk-ant-*)
+              echo "::error title=VITE_CLAUDE_PROXY::That is an Anthropic API key, not a proxy address. Anything named VITE_… is compiled into the page. Rotate this key at console.anthropic.com, then set this to the address of a proxy that holds it."
+              exit 1
+              ;;
+          esac
+
+          # The gateway's address is checked here rather than in a student's
+          # browser. `app/src/lib/university.ts` refuses a non-https address,
+          # and refuses userinfo, a query or a fragment, because a gateway URL
+          # carrying `?token=` puts a secret into every request line and every
+          # proxy log. Refused there it is a sentence on a screen after a
+          # deploy has already gone out; refused here it is a failed deploy.
+          gw="$VITE_UNIVERSITY_GATEWAY_URL"
+          if [ -n "$gw" ]; then
+            bad=""
+            case "$gw" in https://*) ;; *) bad="it must start with https://" ;; esac
+            rest="${gw#https://}"
+            case "${rest%%/*}" in *@*) bad="it carries a username or password" ;; esac
+            case "$gw" in *\?*) bad="it carries a query string" ;; esac
+            case "$gw" in *\#*) bad="it carries a fragment" ;; esac
+            if [ -n "$bad" ]; then
+              echo "::error title=VITE_UNIVERSITY_GATEWAY_URL::The app will refuse this address, so the deploy refuses it first: $bad. See app/src/lib/university.ts."
+              exit 1
+            fi
+            echo "::notice title=University::Gateway configured (${#gw} chars) — this build can reach a school."
+          else
+            echo "::notice title=University::No VITE_UNIVERSITY_GATEWAY_URL, so the University screen will say no approved connection has been configured."
+          fi
+
+          if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_KEY" ]; then
+            echo "::notice title=Accounts::Supabase configured (url ${#VITE_SUPABASE_URL} chars, key ${#VITE_SUPABASE_KEY} chars) — this build has accounts."
           else
             echo "::notice title=Accounts::No repository variables set, so the build falls back to the committed app/.env.production."
           fi
-          # An empty variable must not overwrite the committed default, so the
-          # export only happens when there is something to export.
-          [ -n "$URL" ] && echo "VITE_SUPABASE_URL=$URL" >> "$GITHUB_ENV"
-          [ -n "$KEY" ] && echo "VITE_SUPABASE_KEY=$KEY" >> "$GITHUB_ENV"
+
           # The push key is the *public* half of the VAPID pair and is meant to
           # be compiled into the page. The private half authorises sending and
           # belongs only in the Edge Function's secrets — if it is ever set as
           # a repository variable, rotate it.
-          if [ -n "$VAPID" ]; then
-            echo "::notice title=Reminders::Push key present (${#VAPID} chars) — this build can deliver reminders with the app shut."
+          if [ -n "$VITE_VAPID_PUBLIC_KEY" ]; then
+            echo "::notice title=Reminders::Push key present (${#VITE_VAPID_PUBLIC_KEY} chars) — this build can deliver reminders with the app shut."
           else
             echo "::notice title=Reminders::No VITE_VAPID_PUBLIC_KEY, so the push switch under Me will say the build carries no key."
           fi
-          [ -n "$VAPID" ] && echo "VITE_VAPID_PUBLIC_KEY=$VAPID" >> "$GITHUB_ENV"
-          true
+
+          # And the whole picture in one line, because the interesting question
+          # after a deploy is usually "which of these did this build get?".
+          offered=$(set -- $names; echo $#)
+          count=$(set -- $carried; echo $#)
+          echo "::notice title=Build inputs::$count of $offered carried into this build:${carried:- none}"
 
       - name: Build
         working-directory: app

@@ -215,7 +215,20 @@ export function Privacy() {
           const m = migrationReport();
           const text = dump(
             {
-              build: (import.meta.env.VITE_BUILD as string | undefined) ?? 'dev',
+              /*
+               * `VITE_BUILD_ID`, not `VITE_BUILD`, which this read for a long
+               * time and which nothing anywhere sets. The line looked right
+               * and the file it writes has a Build row at the top of it, so
+               * every diagnostics file a student has ever sent said "dev" —
+               * including the ones from the deployed site, where the row is
+               * the only thing saying which build the bug is in.
+               *
+               * The stamp that exists is the one `vite.config.ts` writes and
+               * `lib/warm.ts` sends to the service worker: the moment of the
+               * build, base 36. The fallback stays for a page served by
+               * something that does not stamp one.
+               */
+              build: (import.meta.env.VITE_BUILD_ID as string | undefined) ?? 'dev',
               screen: document.body.dataset.screen ?? '',
               language: navigator.language,
               agent: navigator.userAgent,

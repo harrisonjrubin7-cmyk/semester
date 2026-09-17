@@ -1442,6 +1442,86 @@ inference.
 
 ---
 
+## 8b. Deployment — the settings a deployed copy could not be given
+
+Every phase above measures the app as it runs from `app/`. This section is about
+the only copy a student ever opens, and it was found by asking a question none of
+the phases ask: of the settings this app reads, how many can the thing that
+builds the deployed site actually supply?
+
+**Three of fifteen.** The app reads fifteen `VITE_…` build inputs and
+`app/.env.example` documents every one. `.github/workflows/pages.yml` — the only
+thing that builds the deployed site — carried the Supabase pair and the push key.
+The other twelve had no way in at all: the university gateway that the whole of
+[§10](#10-phase-1--one-complete-course-workflow) was built against, the assistant
+proxy, the calendar forwarder, the OAuth proxy, four client IDs, and the four
+STUN/TURN settings.
+
+Two of those twelve are documented *as* deployment settings. `VITE_ICS_PROXY`:
+"a deployment points it at anything serving the same one route."
+`VITE_CLAUDE_PROXY`: "unlike it, it survives a build, so this is the field a
+deployed copy uses." Both described a configuration the deploy had no way to
+apply.
+
+**Why it lasted.** Nothing breaks. Every one of the twelve degrades politely and
+says so on the screen: the University screen reports that no approved connection
+is configured, Connect offers the `.ics` file route instead of a sign-in, the
+call screen says plainly that some networks will refuse. A deployed copy with
+all twelve missing is indistinguishable from one where somebody switched them
+off on purpose. The failure mode of good degradation is that it hides the
+difference between *off* and *unreachable*.
+
+**Measured, with a control.** A build given `VITE_BUILD`, `VITE_ICS_PROXY` and
+`VITE_UNIVERSITY_GATEWAY_URL` as sentinels put all three into the bundle (6, 5
+and 6 chunks). The same build with nothing set carried none of them. So the
+variables work and only the deploy was missing them — which is the claim, and
+without the second build it would have been an assumption.
+
+**What the probe nearly got wrong, again.** The obvious scan is for
+`import.meta.env.VITE_X`. It finds six of the fifteen. `cloud.ts`, `connect.ts`,
+`rtc.ts`, `feedlink.ts` and `assistant.ts` all alias `const env = import.meta.env`
+and then read `env.VITE_X`, so nine names — including `VITE_SUPABASE_KEY`, which
+the deploy *does* carry — are invisible to it. A probe reporting six of six
+present would have read as a clean bill of health.
+`app/src/lib/deploy.test.ts` therefore matches the bare name anywhere in the
+source, and its first test is a control on itself rather than on the workflow.
+
+**And what it found that nobody was looking for.** With comments still in scope,
+the scan reported a sixteenth name: `VITE_BUILD`, read by the diagnostics report
+in `screens/Privacy.tsx` and set by nothing anywhere. The Build row at the top of
+every diagnostics file a student has ever sent said `dev`, including the ones
+from the deployed site, where that row is the only thing identifying which build
+the bug is in. The stamp that exists is `VITE_BUILD_ID`, which `vite.config.ts`
+writes on every build and `lib/warm.ts` already uses. Fixed, and the test now
+asserts that a name appearing only in a comment is not counted — the comment
+explaining the dead variable was itself enough to make the first version of the
+scan demand the deploy carry it.
+
+**Done when.** `pages.yml` maps every settable input as
+`NAME: ${{ vars.NAME || secrets.NAME }}`, a repository variable winning over a
+secret of the same name; the run prints which of the fifteen this build got,
+by length and never by value; and `deploy.test.ts` fails when the app reads a
+setting the deploy cannot supply. Mutated against the pre-fix workflow, fifteen
+of its nineteen tests go red.
+
+**Two refusals, at deploy time rather than in a browser.** An Anthropic key
+pasted into `VITE_CLAUDE_PROXY` fails the run, because anything named `VITE_…`
+is handed to everyone who loads the site. And a gateway address the app would
+refuse — a plain `http://` one, or one carrying userinfo, a query or a fragment,
+the rules `lib/university.ts` applies — fails the run too. Refused there it is a
+sentence on a screen after the deploy has gone out; refused here it is a red run
+before it does. Five refusals, each tested, each with a control that must not
+fire: an `https` address with an `@` in its path, one with a port and a path,
+and a proxy address that is an address.
+
+**What this does not do.** It does not deploy the university gateway itself.
+`server/institution/` still runs from a command line behind a reverse proxy
+somebody sets up, and `docs/UNIVERSITY_CONNECTIONS.md` says how; what changed is
+that the deployed app can now be *pointed* at one. Nor does it set any of the
+fifteen: they are empty on this repository and the deploy says so on every run.
+
+---
+
 ## 9. Phase 0 of the build-out plan — accessibility minimums
 
 The build-out plan carries this as work to *"complete before any pilot tester

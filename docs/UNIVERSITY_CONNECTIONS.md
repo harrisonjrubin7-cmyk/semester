@@ -71,7 +71,7 @@ directory as the journal, because it holds coursework somebody typed.
    npm run dev:university
    ```
 
-   The default listener is `127.0.0.1:8787`. Use an HTTPS reverse proxy for deployment. Configure the frontend's public `VITE_UNIVERSITY_GATEWAY_URL` with that trusted gateway URL and rebuild. This URL is an address, never a secret. Do not enable a gateway belonging to a different operator: Semester's session token is sent to the configured gateway for verification.
+   The default listener is `127.0.0.1:8787`. Use an HTTPS reverse proxy for deployment. Configure the frontend's public `VITE_UNIVERSITY_GATEWAY_URL` with that trusted gateway URL and rebuild. This URL is an address, never a secret. For the copy deployed to GitHub Pages, "rebuild" means setting `VITE_UNIVERSITY_GATEWAY_URL` as a repository variable and running the Pages workflow — there is no `.env.local` on a deployed build, and for most of this repository's life the workflow had no way to carry this setting at all, so a deployed copy could only ever say that no approved connection was configured. The deploy checks the address against the same rules `app/src/lib/university.ts` applies and fails the run rather than letting a student meet the refusal. Do not enable a gateway belonging to a different operator: Semester's session token is sent to the configured gateway for verification.
 7. Test one service at a time with school-provided fixtures and test accounts. In Semester, open **University → School connections → Check school access**. Then use **Connected records** to load records. Official action buttons are rendered only for capabilities and actions returned by the school adapter.
 
 ## HTTP interface

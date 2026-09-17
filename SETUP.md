@@ -325,6 +325,41 @@ over the file, or just edits the file.
 The deploy prints a notice saying which of the two it used, so "accounts did not
 turn on" is answerable from the run rather than by guessing.
 
+### Everything else this build can be given
+
+`app/.env.local` configures a copy running on your machine. A deployed copy has
+no such file, so the same settings go in as **repository variables** — Settings
+→ Secrets and variables → Actions → Variables — under exactly the names
+`app/.env.example` uses. A secret of the same name works too and is hidden in
+the log; the variable wins if both are set.
+
+| Variable | What the deployed app gains |
+| --- | --- |
+| `VITE_SUPABASE_URL`, `VITE_SUPABASE_KEY` | Accounts and cross-device sync |
+| `VITE_VAPID_PUBLIC_KEY` | Reminders that arrive with the app shut |
+| `VITE_UNIVERSITY_GATEWAY_URL` | The University screen reaches a school's gateway |
+| `VITE_CLAUDE_PROXY` | The assistant answers without a student typing a key |
+| `VITE_ICS_PROXY` | Pasted calendar links from Brightspace and Outlook are fetchable |
+| `VITE_OAUTH_PROXY` | Zoom's token exchange, which sends no CORS headers |
+| `VITE_MS_CLIENT_ID`, `VITE_GOOGLE_CLIENT_ID`, `VITE_ZOOM_CLIENT_ID`, `VITE_APPLE_CLIENT_ID` | Connect offers a sign-in rather than only the file route |
+| `VITE_STUN_URLS`, `VITE_TURN_URL`, `VITE_TURN_USER`, `VITE_TURN_PASS` | Calls connect on networks that refuse a direct path |
+
+None of it is required: without any of it the deployed app runs and says, on
+each screen, what it cannot do. That is precisely why this list was three names
+long for most of this repository's life — twelve of these settings were
+documented, read by the app, and had no way into a deployed build, and nothing
+went red, because a deployed copy with them missing looks exactly like one with
+them deliberately switched off. `app/src/lib/deploy.test.ts` is the check that
+now fails when the app reads a setting the deploy cannot supply.
+
+Every value here is compiled into the page and handed to everyone who loads the
+site — that is what `VITE_` means. A real secret never goes in one. The deploy
+refuses an Anthropic key pasted into `VITE_CLAUDE_PROXY`, and refuses a
+university gateway address the app itself would refuse — a plain `http://` one,
+or one carrying a query string — because refused at deploy time it is a red run,
+and refused in the browser it is a sentence a student reads after the deploy has
+already gone out.
+
 Pages serves a project site from `/<repo>/`, which the build handles: the
 workflow passes `VITE_BASE` and nothing in the app reads a leading-slash path
 directly. If you deploy somewhere that serves from the root, drop `VITE_BASE`
