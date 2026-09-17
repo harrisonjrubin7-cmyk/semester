@@ -123,7 +123,22 @@ async function gateway<T>(path: string, body?: unknown): Promise<T> {
 /** What the school says this account may see, per area. */
 export const institutionStatus = () => gateway<InstitutionStatus>('/status');
 
-/** One page of a school's own records. Never copied into a local draft. */
+/**
+ * One page of a school's own records.
+ *
+ * These were read and drawn and never kept, and the line here used to say so.
+ * That changed with the Calendar stage of the completion plan's chain: a
+ * student can now bring their school's courses into this app, where the
+ * deadlines land beside the ones they imported themselves and Today, Calendar
+ * and Study can see them. `lib/fromschool.ts` does the turning and holds the
+ * rules — a sync updates rather than duplicating, and it does not undo a date
+ * the student moved.
+ *
+ * What did not change is the part that mattered: a record is copied because
+ * somebody asked for it, everything copied says which institution it came
+ * from, and nothing is labelled submitted, enrolled, paid or official unless a
+ * receipt from the school's own gateway says so.
+ */
 export const institutionRecords = (area: UniversityArea, search: string, cursor?: string | null) =>
   gateway<RecordPage>(`/records?${new URLSearchParams({ area, search, ...(cursor ? { cursor } : {}) })}`);
 
