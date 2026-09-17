@@ -2468,6 +2468,153 @@ run an election that decides anything. The label is on every record.
 
 ---
 
+## 8o. Phase 4 · Housing and dining — a signature, and an amount that is computed
+
+**What the source document asks for.** Applications, contracts, room
+assignments, meal-plan changes. Gated as the rest of Phase 4 is, and just as
+unsatisfied: **no building named here exists**, nobody is housed, and no meal
+plan feeds anybody.
+
+Two adapters, fourteen to sixteen — which completes Phase 4 as a demonstration.
+
+### The room is a seat; the contract is something this repository had not met
+
+A bed in a double is registration's seat again and needs no new argument. What
+is new is that somebody **signs** something, and a signature has two properties
+a transaction does not.
+
+**It binds.** After it, the money is owed whether or not the person turns up.
+That is what a housing contract is *for*, and it is what students are surprised
+by. So the review says the figure and the date it becomes unbreakable, in those
+words — and this is the one action in Phase 4 where the review is doing the
+thing it is actually best at. Everywhere else the review answers *can I have
+it*; here it answers **what am I agreeing to**.
+
+**It has a window in which it does not bind yet.** Every real housing contract
+has one, and that window is the only reason offering a signature in software is
+honest at all. Inside it, cancelling is free. Outside it, the adapter **refuses
+and names a human**:
+
+> The time to cancel ran out on 2026-09-27. That contract binds you for
+> $11,800.00, and only the housing office can release you from it — write to
+> them.
+
+A button that released somebody silently would be pretending the signature
+meant less than it does.
+
+**Three states and not one**, deliberately: *applied* costs nothing and binds
+nobody; *assigned* is the institution's answer and still binds nobody; *signed*
+binds. Collapsing them would have hidden the only moment that matters.
+
+### Dining, where the amount is computed and the interesting part is a refusal
+
+A meal plan is not a seat — the dining hall does not run out. What it has is a
+deadline and a price that depends on when you ask, which makes it the first
+thing in Phase 4 whose *amount* is worked out rather than stated.
+
+And it is worked out one way only. **A downgrade after the deadline is refused
+rather than prorated**, because the meals already bought are already bought.
+Offering a refund the dining contract does not give would be the software lying
+about somebody's money, which is worse than the software saying no. An
+*upgrade* after the deadline is allowed, because nothing has to be given back
+for that to be true.
+
+The property asserted is not a formula but an absence: `changeCosts` is
+exercised over **every ordered pair of plans** and required never to come out
+negative — with a control asserting that at least one pair costs something, so
+it is not a suite of zeroes passing a test about signs.
+
+### What the mutations found
+
+Thirty-two guards. Twenty-six caught on the first pass, and the six that were
+not produced two findings and one durable fix.
+
+**A guard that could not fire.** `bedIn` re-checked a free bed immediately
+after the line that had already *selected* a room by requiring one, copying the
+review/commit pattern the rest of Phase 4 uses — except there is no review
+phase here, because the office assigning a room is one operation. Removing it
+changed nothing, which is how it was found. It is gone: **a guard that cannot
+fire is worse than no guard, because it reads like protection that is not
+there.**
+
+**Three more review-phase escapes**, the same class Phase 4 has now produced in
+every single area. It lands hardest here: somebody told at the *commit* that
+their contract is binding has already pressed the button believing it was not.
+
+**And a durable fix to the harness.** Two mutations reported `BAD` because
+their line numbers had gone stale as the file grew — the second time that
+happened in this phase. The harness now addresses a duplicated call site by
+*which occurrence*, found by searching, so the anchor cannot rot. Combined with
+the anchor-count assertion, a mutation in this repository now fails loudly in
+both of the ways it can silently lie.
+
+### Measured
+
+| | |
+| --- | --- |
+| Adapters in the sandbox | 14 → **16** |
+| New tests | **61** in `housing.test.ts` |
+| Mutations applied | **32**, all caught |
+| Suite | **489 files, 10,164 passed, 10 skipped** |
+
+---
+
+## 8p. Phase 4, as a whole — what four areas taught that one could not
+
+Seven adapters across four sections
+([§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled),
+[§8m](#8m-phase-4--athletics--where-the-hard-part-is-time-not-contention),
+[§8n](#8n-phase-4--clubs--and-the-hardest-thing-in-the-whole-phase-which-is-a-ballot),
+[§8o](#8o-phase-4--housing-and-dining--a-signature-and-an-amount-that-is-computed)),
+nine to sixteen, **301 new tests and 121 mutations, all caught.**
+
+### The finite thing is never where you first look
+
+Registration taught this repository to ask *can two people want the last one*.
+Phase 4 taught that the answer is usually **not the obvious noun**:
+
+| Area | What looks finite | What is |
+| --- | --- | --- |
+| Career | The application | **The offer** |
+| Athletics | The roster spot | **Nothing** — eligibility is a *date*, and the finite thing is the seat on the coach |
+| Clubs | A membership | **A vote**, a **sum**, and a room |
+| Housing | The room | The room — but the hard part is **the signature**, which is not finite at all |
+
+Two of the four turned out to have a hard part that is not contention:
+athletics' is **time**, and housing's is **commitment**. Neither would have
+been found by copying registration.
+
+### And a finding about testing, which appeared in every area
+
+**Testing a two-phase action through a helper that drives both phases cannot
+tell you which phase refused.** In §8l three mutations escaped because the
+*review*'s copy of a check was untested; in §8m two escaped because the
+*commit*'s was; in §8n five review copies; in §8o three more. Twelve of the
+fourteen escapes across the whole phase were this one thing.
+
+It is not cosmetic, and each area supplied its own reason why:
+
+> An employer told at the commit that the opening is gone has told somebody
+> they have a job. An officer told at the commit that the room is taken has
+> told people the meeting is happening. A student told at the commit that their
+> contract is binding pressed the button believing it was not.
+
+A review that says *go ahead* before a commit that says *no* has turned a
+refusal into a loss. Every duplicated guard in Phase 4 is now asserted at
+**both** call sites, separately.
+
+### What none of this does
+
+It does not connect to a university. Phase 4 remains gated, in the source
+document's own words, on everything in Phase 3 sustained through a live pilot
+**plus** a university choosing to extend trust into official institutional
+transactions one function at a time. No employer, team, club or building named
+in the sandbox exists; no money moves; no election decides anything; nobody is
+housed, cleared to compete, or hired. Every record carries `SANDBOX` and every
+receipt says so.
+
+---
+
 ## 8d. What the source document has left, and what it is waiting on
 
 For the record, measured rather than assumed, since §1 to §8 of this plan were
@@ -2514,8 +2661,12 @@ own piece of work and each is named here rather than left inside a row that
 reads as untouched.
 
 **Phases 3 and 4** — Registration, Money, Family access, Career, Athletics,
-Clubs, Housing & dining — are gated by the source document itself, not by this
-one: *"explicitly gated on a successful Vanderbilt pilot and real institutional
+Clubs, Housing & dining — now exist as **labelled demonstrations against the
+sandbox institution**, sixteen adapters in all
+([§8i](#8i-phase-3--registration--against-the-sandbox-labelled) through
+[§8p](#8p-phase-4-as-a-whole--what-four-areas-taught-that-one-could-not)).
+That changes nothing about the gate, which is the point of building them that
+way: they are gated by the source document itself, not by this one: *"explicitly gated on a successful Vanderbilt pilot and real institutional
 partnership, not proposed as anything close to a near-term ask."* Every one of
 them is read access to, or a transaction against, a system this project cannot
 build unilaterally. They are not unfinished engineering, and building screens

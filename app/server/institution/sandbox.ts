@@ -17,6 +17,7 @@ import { careerAdapter } from './career.ts';
 import { advisingAdapter, alumniAdapter } from './advising.ts';
 import { athleticsAdapter } from './athletics.ts';
 import { clubsAdapter } from './clubs.ts';
+import { diningAdapter, housingAdapter } from './housing.ts';
 
 /**
  * One course, run end to end, at an institution that does not exist.
@@ -1297,6 +1298,145 @@ export const ELECTIONS: Election[] = [
   },
 ];
 
+/**
+ * ─── Housing and dining ─────────────────────────────────────────────────────
+ *
+ * The last of Phase 4, same warning: **no building named here exists**, nobody
+ * is housed, and no meal plan feeds anybody.
+ *
+ * ## Housing: a room is a seat, and a contract is something else entirely
+ *
+ * The room itself is registration's seat once more and needs no new argument.
+ * What is new here is the **contract**, which is the first thing in this
+ * repository that somebody *signs* — and a signature has two properties a
+ * transaction does not:
+ *
+ *   **It binds.** After it, the money is owed whether or not the person turns
+ *   up, which is exactly what a housing contract is for and exactly what
+ *   students are surprised by. So the review says the figure and the date it
+ *   becomes unbreakable, in those words, before anybody presses anything.
+ *
+ *   **It has a window in which it does not bind yet.** Every real housing
+ *   contract has one, and the window is the only reason signing is safe to
+ *   offer in software at all. `Contract.coolingOff` is that date. Cancelling
+ *   inside it is free; after it, the adapter refuses and sends the person to
+ *   a human, because releasing somebody from a binding contract is a decision
+ *   a person makes and not a button.
+ *
+ * ## Dining: the interesting part is the proration, and it is a refusal
+ *
+ * A meal plan change is not a seat — the dining hall does not run out. What it
+ * has instead is a **deadline and a price that depends on when you ask**,
+ * which is the first thing in Phase 4 where the *amount* is computed rather
+ * than stated. And it is computed one way only:
+ *
+ *   A downgrade after the change deadline is refused rather than prorated,
+ *   because the meals already bought are already bought. Offering a refund
+ *   that the dining contract does not give would be the software lying about
+ *   somebody's money, which is worse than the software saying no.
+ */
+
+export interface Building {
+  id: string;
+  name: string;
+  what: string;
+  /** Cents for the year. What a contract on a room here will bind somebody to. */
+  yearCents: number;
+}
+
+export interface RoomSpace {
+  id: string;
+  building: string;
+  number: string;
+  /** How many beds. Two people in a double is not two rooms. */
+  beds: number;
+  kind: 'Single' | 'Double' | 'Suite';
+}
+
+/**
+ * An application to live somewhere, which is not yet a contract.
+ *
+ * The distinction is the point of having both: applying costs nothing and
+ * binds nobody, an assignment is the institution's answer, and only signing
+ * binds. A demonstration that collapsed the three would have hidden the only
+ * moment that matters.
+ */
+export interface HousingApplication {
+  id: string;
+  student: string;
+  /** In order of preference. The office assigns from them and may not match. */
+  wants: string[];
+  state: 'applied' | 'assigned' | 'signed' | 'withdrawn' | 'ended';
+  /** Which room, once the office has answered. Empty until then. */
+  room: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * The signature, and the two dates that make it mean something.
+ *
+ * `signedAt` is when it bound. `coolingOff` is the last day it can be undone
+ * from here without a person being involved — see the header. A contract with
+ * no cooling-off period is one this demonstration would have no honest way to
+ * offer.
+ */
+export interface Contract {
+  id: string;
+  student: string;
+  room: string;
+  cents: number;
+  signedAt: string;
+  coolingOff: string;
+  state: 'signed' | 'cancelled';
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export interface Plan {
+  id: string;
+  name: string;
+  /** Meals a week. Zero is the commuter plan and is a real choice. */
+  meals: number;
+  termCents: number;
+}
+
+export interface PlanChoice {
+  id: string;
+  student: string;
+  plan: string;
+  /** After this day, a change is refused rather than prorated. See the header. */
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export const BUILDINGS: Building[] = [
+  { id: 'kissam', name: 'Kissam House', what: 'First-year, dining attached', yearCents: 1_180_000 },
+  { id: 'highland', name: 'Highland Quad', what: 'Upper-year apartments', yearCents: 1_420_000 },
+];
+
+export const SPACES: RoomSpace[] = [
+  { id: 'kissam-201', building: 'kissam', number: '201', beds: 1, kind: 'Single' },
+  // One double, so two people fit and a third meets the refusal.
+  { id: 'kissam-202', building: 'kissam', number: '202', beds: 2, kind: 'Double' },
+  { id: 'highland-3a', building: 'highland', number: '3A', beds: 1, kind: 'Single' },
+];
+
+export const PLANS: Plan[] = [
+  { id: 'commuter', name: 'Commuter', meals: 0, termCents: 0 },
+  { id: 'twelve', name: '12 meals a week', meals: 12, termCents: 231_000 },
+  { id: 'nineteen', name: '19 meals a week', meals: 19, termCents: 304_000 },
+  { id: 'unlimited', name: 'Unlimited', meals: 21, termCents: 348_000 },
+];
+
+/** The last day a meal plan can be changed. After it, see the header. */
+export const PLAN_CHANGE_BY = '2026-09-25';
+
+/** How long somebody has to get out of a housing contract, in days. */
+export const COOLING_OFF_DAYS = 7;
+
 export class SandboxStore {
   private db: DatabaseSync;
 
@@ -1508,6 +1648,39 @@ export class SandboxStore {
         election TEXT NOT NULL,
         body TEXT NOT NULL
       );
+      -- Housing. An application is not a contract and a contract is not an
+      -- application, so they are two tables: the first binds nobody and the
+      -- second is the only thing that does.
+      CREATE TABLE IF NOT EXISTS buildings(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS spaces(
+        id TEXT PRIMARY KEY,
+        building TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS housing(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS contracts(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- Dining. One choice per student, so the student is the natural key
+      -- and a second choice replaces the first rather than joining it.
+      CREATE TABLE IF NOT EXISTS plans(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS planchoices(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
     `);
 
     // The class the course already has, before any tester arrives.
@@ -1549,6 +1722,14 @@ export class SandboxStore {
     for (const r of ROOMS) room.run(r.id, JSON.stringify(r));
     const vote = this.db.prepare('INSERT OR IGNORE INTO elections VALUES(?,?,?)');
     for (const e of ELECTIONS) vote.run(e.id, e.club, JSON.stringify(e));
+
+    // The buildings, the rooms in them, and what the dining hall offers.
+    const hall = this.db.prepare('INSERT OR IGNORE INTO buildings VALUES(?,?)');
+    for (const b of BUILDINGS) hall.run(b.id, JSON.stringify(b));
+    const space = this.db.prepare('INSERT OR IGNORE INTO spaces VALUES(?,?,?)');
+    for (const r of SPACES) space.run(r.id, r.building, JSON.stringify(r));
+    const plan = this.db.prepare('INSERT OR IGNORE INTO plans VALUES(?,?)');
+    for (const p of PLANS) plan.run(p.id, JSON.stringify(p));
   }
 
   /**
@@ -1593,6 +1774,84 @@ export class SandboxStore {
   saveSection(section: Section): void {
     this.db.prepare('INSERT OR REPLACE INTO sections VALUES(?,?)').run(section.id, JSON.stringify(section));
   }
+
+  /* ── Housing and dining ─────────────────────────────────────────────── */
+
+  buildings(): Building[] {
+    const rows = this.db.prepare('SELECT body FROM buildings ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Building);
+  }
+
+  building(id: string): Building | null {
+    const got = this.db.prepare('SELECT body FROM buildings WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Building) : null;
+  }
+
+  spaces(building?: string): RoomSpace[] {
+    const rows = (
+      building
+        ? this.db.prepare('SELECT body FROM spaces WHERE building=? ORDER BY id').all(building)
+        : this.db.prepare('SELECT body FROM spaces ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as RoomSpace);
+  }
+
+  space(id: string): RoomSpace | null {
+    const got = this.db.prepare('SELECT body FROM spaces WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as RoomSpace) : null;
+  }
+
+  /** Every housing application, so a room's occupancy can be derived. */
+  housing(): HousingApplication[] {
+    const rows = this.db.prepare('SELECT body FROM housing ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as HousingApplication);
+  }
+
+  housingOf(student: string): HousingApplication | null {
+    const got = this.db.prepare('SELECT body FROM housing WHERE student=?').get(student) as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as HousingApplication) : null;
+  }
+
+  saveHousing(row: HousingApplication): void {
+    this.db.prepare('INSERT OR REPLACE INTO housing VALUES(?,?,?)').run(row.id, row.student, JSON.stringify(row));
+  }
+
+  contractOf(student: string): Contract | null {
+    const got = this.db.prepare('SELECT body FROM contracts WHERE student=?').get(student) as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as Contract) : null;
+  }
+
+  saveContract(row: Contract): void {
+    this.db.prepare('INSERT OR REPLACE INTO contracts VALUES(?,?,?)').run(row.id, row.student, JSON.stringify(row));
+  }
+
+  plans(): Plan[] {
+    const rows = this.db.prepare('SELECT body FROM plans ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Plan);
+  }
+
+  plan(id: string): Plan | null {
+    const got = this.db.prepare('SELECT body FROM plans WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Plan) : null;
+  }
+
+  planOf(student: string): PlanChoice | null {
+    const got = this.db.prepare('SELECT body FROM planchoices WHERE student=?').get(student) as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as PlanChoice) : null;
+  }
+
+  savePlanChoice(row: PlanChoice): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO planchoices VALUES(?,?,?)')
+      .run(row.id, row.student, JSON.stringify(row));
+  }
+
 
   /* ── Clubs ──────────────────────────────────────────────────────────── */
 
@@ -3971,5 +4230,7 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     alumniAdapter(store),
     athleticsAdapter(store),
     clubsAdapter(store),
+    housingAdapter(store),
+    diningAdapter(store),
   ];
 }
