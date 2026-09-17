@@ -13,6 +13,11 @@ import type { AdapterContext, InstitutionAdapter } from './adapter.ts';
 import { registrationAdapter } from './registration.ts';
 import { aidAdapter, billingAdapter } from './money.ts';
 import { familyAdapter } from './family.ts';
+import { careerAdapter } from './career.ts';
+import { advisingAdapter, alumniAdapter } from './advising.ts';
+import { athleticsAdapter } from './athletics.ts';
+import { clubsAdapter } from './clubs.ts';
+import { diningAdapter, housingAdapter } from './housing.ts';
 
 /**
  * One course, run end to end, at an institution that does not exist.
@@ -611,6 +616,827 @@ export const OPENING_AWARDS: Opening<Award>[] = [
   { id: 'work-study', what: 'Work-study award', kind: 'Work-study', cents: 200_000, state: 'offered', answerBy: '2026-10-01' },
 ];
 
+/**
+ * ─── Phase 4: leaving the campus, and the three areas that are about that ───
+ *
+ * The build-out plan's Phase 4 is "official institutional transactions", and
+ * it opens with Career. Everything here is the same demonstration as Phase 3
+ * and carries the same warning: **no employer named here exists**, no
+ * application reaches anybody, and no appointment is in any adviser's diary.
+ * Phase 4 in that document is gated on Phase 3 being *sustained* in a live
+ * pilot and on a university choosing to extend trust one function at a time.
+ * Neither has happened. What follows is the shape, built so the shape can be
+ * argued with.
+ *
+ * ## Where the finite thing is, in each of them
+ *
+ * Registration taught this repository that the hard part of institutional
+ * software is the sentence "two people can want the last one". Each area here
+ * was built by first finding that sentence in it, because an area without one
+ * is a list and does not need a transaction at all.
+ *
+ *   **Career**: not the application — a listing can take a thousand of those.
+ *   The finite thing is the *offer*. A posting with two openings cannot make
+ *   three offers, and the check for that is made twice, at review and again at
+ *   the write, exactly as the seat check is.
+ *
+ *   **Advising**: the half-hour itself. One person can have it.
+ *
+ *   **Alumni**: the mentor's attention, which is why a mentor carries a number
+ *   of students they are willing to take and why the count is derived from the
+ *   accepted connections rather than stored beside them.
+ *
+ * ## And where the disclosure is
+ *
+ * Family access established the rule the rest of this repository now follows:
+ * a permission is a thing the server holds, and the absence of a permission
+ * shows up as an absence of *data*, not as a greyed-out row. Three of those
+ * live here, and each is tested by reading the record as somebody who should
+ * not see the field and asserting the field is not in it at all:
+ *
+ *   An employer sees the applicants to their own postings and to no others.
+ *   A student never sees who else applied — not the names, not the number.
+ *   An alumnus's contact address does not exist on the record until they have
+ *   said yes.
+ */
+
+/**
+ * An employer, as the career office holds it.
+ *
+ * `state` is the whole reason this table exists rather than employers being
+ * implied by whoever posts. A career office vets the people who advertise to
+ * its students — it is one of the few things such an office unambiguously
+ * does — and a demonstration where anybody with an account can post a job to
+ * a student body would be demonstrating the absence of the control rather
+ * than the control.
+ *
+ * `owner` is a user id and is the only thing that grants the right to act for
+ * this employer. It is checked on the server against this row. Nothing that
+ * arrives in a request can name an employer the caller does not own.
+ */
+export interface Employer {
+  id: string;
+  owner: string;
+  name: string;
+  state: 'pending' | 'approved' | 'suspended';
+  /** Why, in a sentence somebody can act on. Empty when approved. */
+  why: string;
+}
+
+export interface Listing {
+  id: string;
+  employer: string;
+  title: string;
+  kind: 'Job' | 'Internship' | 'On-campus';
+  where: string;
+  pay: string;
+  /** How many people can be hired. The finite thing; see the header. */
+  openings: number;
+  /** The last day an application is accepted. An ISO day. */
+  closes: string;
+  at: string;
+}
+
+export interface Application {
+  id: string;
+  listing: string;
+  student: string;
+  /**
+   * `withdrawn` is terminal for this listing and deliberately so. See
+   * `career.ts` — an employer has already read it, and a demonstration whose
+   * "undo" silently un-reads something is teaching the wrong lesson.
+   */
+  state: 'submitted' | 'shortlisted' | 'offered' | 'accepted' | 'declined' | 'passed' | 'withdrawn';
+  note: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * Half an hour with an adviser.
+ *
+ * `seats` is here rather than assumed to be one because a group advising
+ * session is a real thing and a demonstration that hard-coded one would have
+ * hidden the general case behind a special one. It is the registration seat
+ * count again, and it is derived the same way: by counting bookings.
+ */
+export interface Slot {
+  id: string;
+  adviser: string;
+  /** What this adviser advises on, which is what a student searches by. */
+  about: string;
+  /** An ISO timestamp. The past is a refusal; see `advising`. */
+  when: string;
+  minutes: number;
+  seats: number;
+  where: string;
+}
+
+export interface Booking {
+  id: string;
+  slot: string;
+  student: string;
+  state: 'booked' | 'cancelled';
+  /** What the student wants to talk about, which the adviser can read. */
+  about: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * Somebody who graduated and said they would talk to a student.
+ *
+ * `email` is on this row and is **not** on the record a student reads until
+ * the mentorship is accepted. That is the entire security property of this
+ * area and it is asserted from the outside: the test reads the record as a
+ * student with a pending request and checks that no detail on it contains the
+ * address, rather than checking that some flag is false.
+ */
+export interface Mentor {
+  id: string;
+  name: string;
+  classOf: string;
+  field: string;
+  works: string;
+  email: string;
+  /** How many students this person will mentor at once. */
+  capacity: number;
+  /** Whether they are taking requests at all just now. */
+  open: boolean;
+}
+
+export interface Mentorship {
+  id: string;
+  mentor: string;
+  student: string;
+  state: 'asked' | 'accepted' | 'declined' | 'ended';
+  why: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * What the career office opens with.
+ *
+ * Chosen, as the sections were, so that every refusal can be walked by a
+ * person and not only reached by a test: one employer still pending, one
+ * suspended, one listing already closed, and one listing with a single
+ * opening so the second offer meets the limit.
+ */
+export const EMPLOYERS: Employer[] = [
+  { id: 'harbour-analytics', owner: 'employer-harbour', name: 'Harbour Analytics', state: 'approved', why: '' },
+  { id: 'city-schools', owner: 'employer-schools', name: 'City Schools Partnership', state: 'approved', why: '' },
+  {
+    id: 'quickcash-partners',
+    owner: 'employer-quickcash',
+    name: 'QuickCash Partners',
+    state: 'pending',
+    why: 'Awaiting review by the career office. Nothing can be posted until that is finished.',
+  },
+  {
+    id: 'oldfield-group',
+    owner: 'employer-oldfield',
+    name: 'Oldfield Group',
+    state: 'suspended',
+    why: 'Suspended after a complaint about an unpaid placement advertised as paid.',
+  },
+];
+
+export const LISTINGS: Listing[] = [
+  {
+    id: 'harbour-analyst-intern',
+    employer: 'harbour-analytics',
+    title: 'Economics research intern',
+    kind: 'Internship',
+    where: 'Nashville, hybrid',
+    pay: '$22/hour',
+    openings: 2,
+    closes: '2026-10-20',
+    at: '2026-09-01T09:00:00Z',
+  },
+  {
+    id: 'harbour-grad-analyst',
+    employer: 'harbour-analytics',
+    title: 'Graduate analyst',
+    kind: 'Job',
+    where: 'Nashville',
+    pay: '$71,000',
+    // One opening, so the second offer meets the limit rather than only the test.
+    openings: 1,
+    closes: '2026-11-15',
+    at: '2026-09-05T09:00:00Z',
+  },
+  {
+    id: 'schools-tutor',
+    employer: 'city-schools',
+    title: 'After-school tutor',
+    kind: 'On-campus',
+    where: 'Metro Nashville',
+    pay: '$18/hour',
+    openings: 6,
+    // Already shut, so the closed refusal is walkable.
+    closes: '2026-09-10',
+    at: '2026-08-20T09:00:00Z',
+  },
+];
+
+export const SLOTS: Slot[] = [
+  {
+    id: 'career-thu-1000',
+    adviser: 'M. Okonkwo',
+    about: 'Career — résumés, applications, offers',
+    when: '2026-09-24T15:00:00Z',
+    minutes: 30,
+    seats: 1,
+    where: 'Career centre, room 2',
+  },
+  {
+    id: 'career-thu-1030',
+    adviser: 'M. Okonkwo',
+    about: 'Career — résumés, applications, offers',
+    when: '2026-09-24T15:30:00Z',
+    minutes: 30,
+    seats: 1,
+    where: 'Career centre, room 2',
+  },
+  {
+    id: 'academic-fri-1400',
+    adviser: 'Dr Reyes',
+    about: 'Academic — majors, minors, course plans',
+    when: '2026-09-25T19:00:00Z',
+    minutes: 45,
+    seats: 1,
+    where: 'Buttrick 210',
+  },
+  {
+    id: 'grad-school-panel',
+    adviser: 'Dr Reyes',
+    about: 'Graduate school — a group session',
+    when: '2026-09-26T18:00:00Z',
+    minutes: 60,
+    seats: 8,
+    where: 'Buttrick 101',
+  },
+  {
+    id: 'career-past-slot',
+    adviser: 'M. Okonkwo',
+    about: 'Career — résumés, applications, offers',
+    // In the past against the sandbox's own clock, so the refusal is walkable.
+    when: '2026-09-02T15:00:00Z',
+    minutes: 30,
+    seats: 1,
+    where: 'Career centre, room 2',
+  },
+];
+
+export const MENTORS: Mentor[] = [
+  {
+    id: 'a-whitfield',
+    name: 'A. Whitfield',
+    classOf: '2014',
+    field: 'National security',
+    works: 'Policy analyst, a federal agency',
+    email: 'a.whitfield@example.invalid',
+    capacity: 2,
+    open: true,
+  },
+  {
+    id: 'j-park',
+    name: 'J. Park',
+    classOf: '2009',
+    field: 'Economics',
+    works: 'Central bank research',
+    email: 'j.park@example.invalid',
+    capacity: 3,
+    open: true,
+  },
+  {
+    id: 'r-santos',
+    name: 'R. Santos',
+    classOf: '2018',
+    field: 'Consulting',
+    works: 'Strategy, a firm in Chicago',
+    email: 'r.santos@example.invalid',
+    // Closed, so that refusal is walkable too.
+    capacity: 1,
+    open: false,
+  },
+];
+
+/**
+ * ─── Athletics ──────────────────────────────────────────────────────────────
+ *
+ * Phase 4 again, same warning: **no team here exists**, nobody is cleared to
+ * play anything, and no bus is going anywhere. Marked on every record.
+ *
+ * ## Where the finite thing is, and why it is not the roster spot
+ *
+ * A roster spot looks like the seat and is not. Teams do not usually turn
+ * people away for want of a number; what they turn people away for is
+ * *eligibility*, and eligibility is not a seat at all — it is a condition that
+ * expires. Which makes athletics the first area in this repository whose hard
+ * part is **time** rather than contention, and it wanted a different shape:
+ *
+ *   A clearance has a date it runs out on. It is not a flag somebody sets.
+ *   Nothing derives eligibility from "was cleared once"; every check asks
+ *   whether the clearance is good *today*, against the clock the adapter was
+ *   given. A demonstration that stored `eligible: true` would have been
+ *   demonstrating the bug.
+ *
+ * The genuinely finite thing here is the **seat on the coach** — travel has a
+ * capacity, and a player who is not eligible cannot take one whatever the
+ * capacity is. So the two rules compose, and the order they compose in is
+ * itself a decision: eligibility is checked *before* the seat, because telling
+ * somebody the bus is full when the real answer is that their physical lapsed
+ * sends them to the wrong office.
+ *
+ * ## And the disclosure
+ *
+ * A clearance is a medical fact. `Eligibility.why` — the reason somebody is
+ * not cleared — is readable by the athlete themselves and by nobody else,
+ * *including their team-mates on the same roster record*. A coach sees that a
+ * player is not cleared and does not see why, because "cleared or not" is what
+ * a coach needs to pick a team and the reason is between the athlete and the
+ * people who took it.
+ */
+
+export interface Team {
+  id: string;
+  name: string;
+  sport: string;
+  coach: string;
+  /** The user id the coaching workflows are authorized against. */
+  coachId: string;
+  season: string;
+}
+
+export interface Athlete {
+  id: string;
+  team: string;
+  student: string;
+  name: string;
+  position: string;
+  /** `rostered` is on the team; `released` is history. */
+  state: 'rostered' | 'released';
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * A clearance to play, which is a date and not a flag.
+ *
+ * `until` is the whole of it. Nothing anywhere asks whether somebody *was*
+ * cleared; every check asks whether the clearance is good on the day being
+ * asked about. `why` is the reason it is not, and is a medical fact — see the
+ * header, and `athletics.test.ts`, which asserts a coach's reading of the
+ * roster contains the word "not cleared" and does not contain the reason.
+ */
+export interface Eligibility {
+  id: string;
+  student: string;
+  /** What had to be done: a physical, a form, an academic check. */
+  what: string;
+  /** The last day this clearance is good for. An ISO day. */
+  until: string;
+  /** Why it is outstanding, if it is. A medical fact; see the header. */
+  why: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/** A fixture somebody has to be driven to. */
+export interface Trip {
+  id: string;
+  team: string;
+  what: string;
+  where: string;
+  /** An ISO timestamp — when the coach leaves, not when the game starts. */
+  leaves: string;
+  returns: string;
+  /** How many can be carried. The finite thing; see the header. */
+  seats: number;
+  /** After this, the manifest is with the driver and cannot be changed here. */
+  until: string;
+}
+
+export interface Seat {
+  id: string;
+  trip: string;
+  student: string;
+  state: 'on' | 'off';
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export const TEAMS: Team[] = [
+  { id: 'rowing', name: 'Rowing', sport: 'Rowing', coach: 'Coach I. Brandt', coachId: 'coach-brandt', season: 'Autumn 2026' },
+  { id: 'track', name: 'Track & field', sport: 'Athletics', coach: 'Coach P. Nwosu', coachId: 'coach-nwosu', season: 'Autumn 2026' },
+];
+
+/**
+ * The clearances the demonstration opens with.
+ *
+ * One good, one already lapsed and one that lapses inside the demonstration's
+ * own window — the third is the important one, because a clearance that is
+ * either always good or always stale never exercises the thing that makes
+ * this area different from a list. `Opening<T>` is the same helper the billing
+ * openings use, above.
+ */
+export const OPENING_CLEARANCES: Opening<Eligibility>[] = [
+  { id: 'physical', what: 'Pre-season physical', until: '2027-06-30', why: '' },
+  {
+    id: 'concussion-protocol',
+    what: 'Return-to-play clearance',
+    until: '2026-09-05',
+    why: 'Return-to-play assessment outstanding after a head knock on 28 August.',
+  },
+  { id: 'academic-standing', what: 'Academic standing check', until: '2026-09-30', why: '' },
+];
+
+export const TRIPS: Trip[] = [
+  {
+    id: 'head-of-the-cumberland',
+    team: 'rowing',
+    what: 'Head of the Cumberland',
+    where: 'Chattanooga',
+    leaves: '2026-10-03T10:00:00Z',
+    returns: '2026-10-03T23:00:00Z',
+    // Two seats, so the second person meets the limit rather than only a test.
+    seats: 2,
+    until: '2026-09-30',
+  },
+  {
+    id: 'conference-relays',
+    team: 'track',
+    what: 'Conference relays',
+    where: 'Lexington',
+    leaves: '2026-10-10T07:00:00Z',
+    returns: '2026-10-11T20:00:00Z',
+    seats: 20,
+    until: '2026-10-06',
+  },
+  {
+    id: 'closed-fixture',
+    team: 'rowing',
+    what: 'Autumn regatta',
+    where: 'Oak Ridge',
+    leaves: '2026-09-19T09:00:00Z',
+    returns: '2026-09-19T19:00:00Z',
+    seats: 10,
+    // The manifest is already with the driver, so that refusal is walkable.
+    until: '2026-09-15',
+  },
+];
+
+/**
+ * ─── Clubs and student organizations ────────────────────────────────────────
+ *
+ * Phase 4 again, same warning on every record: **no club named here exists**,
+ * no money moves, and no election decides anything.
+ *
+ * This area has four finite things rather than one, and they are not the same
+ * *kind* of finite, which is what makes it the most interesting of Phase 4:
+ *
+ *   A **room** at a time — registration's seat, exactly.
+ *   A **budget**, which is money and therefore divisible: the finite thing is
+ *   not a count of grants but a sum, and a request for more than is left is
+ *   refused against the remainder rather than against a number of slots.
+ *   A **vote**, which is finite at one per member and is the only thing in this
+ *   repository that must be *both* counted and secret.
+ *   And an **event's capacity**, which is a seat again.
+ *
+ * ## The ballot, which is the hardest thing in Phase 4
+ *
+ * An election has to satisfy two requirements that pull against each other:
+ *
+ *   **Nobody votes twice.** Which needs a record of who has voted.
+ *   **Nobody can tell how anybody voted.** Which forbids a record joining a
+ *   person to a choice.
+ *
+ * Both at once is the whole problem, and a demonstration that stored
+ * `{ voter, choice }` would have solved neither honestly — it would have
+ * satisfied the first and pretended at the second by not showing the column.
+ *
+ * So the ballot is **two tables that are never joined**: a roll of who has
+ * voted, carrying no choice, and a pile of choices, carrying no voter. The
+ * count comes from the second and the double-vote refusal from the first, and
+ * there is no query that can put them back together because nothing in either
+ * row identifies a row in the other. `clubs.test.ts` asserts that by reading
+ * every ballot row and every roll row and checking no value in one appears in
+ * the other.
+ *
+ * That is the honest version of what a paper ballot box does: a marked
+ * electoral roll by the door and unordered papers inside.
+ *
+ * ## Dues, which are money the university does not hold
+ *
+ * The same constraint Money was built under — Semester is not a processor —
+ * applies with an extra turn: these are a *club's* funds, not the
+ * institution's. A dues record says what is owed and records that a treasurer
+ * marked it settled. Nothing here takes a payment from anybody.
+ */
+
+export interface Club {
+  id: string;
+  name: string;
+  what: string;
+  /** The user id the officer workflows are authorized against. */
+  officer: string;
+  officerName: string;
+  /** Cents a member owes for the year. Zero means the club charges nothing. */
+  duesCents: number;
+  /** What the student government granted this club for the year, in cents. */
+  budgetCents: number;
+}
+
+export interface Member {
+  id: string;
+  club: string;
+  student: string;
+  name: string;
+  state: 'member' | 'left';
+  /** Whether the treasurer has recorded their dues as settled. */
+  duesPaid: boolean;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * A room, at a time, which is registration's seat wearing a different hat.
+ *
+ * Named for what it is rather than "booking", because `Booking` is already an
+ * advising appointment and two types one letter apart in the same store is how
+ * somebody eventually saves one into the other's table.
+ */
+export interface RoomHold {
+  id: string;
+  room: string;
+  club: string;
+  /** An ISO timestamp. Two clubs cannot hold the same room at the same one. */
+  when: string;
+  what: string;
+  /** How many the room holds. */
+  holds: number;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export interface Room {
+  id: string;
+  name: string;
+  holds: number;
+}
+
+/**
+ * A claim against the club's budget.
+ *
+ * The finite thing is a **sum**, not a count, which is the only reason this is
+ * not a copy of the seat check: two requests of forty dollars each fit in a
+ * hundred and a third does not, and no number of slots expresses that.
+ */
+export interface Spend {
+  id: string;
+  club: string;
+  what: string;
+  cents: number;
+  state: 'asked' | 'approved' | 'refused' | 'paid';
+  by: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export interface Election {
+  id: string;
+  club: string;
+  post: string;
+  candidates: string[];
+  /** ISO timestamps. A vote outside them is refused. */
+  opens: string;
+  closes: string;
+}
+
+/**
+ * One name on the electoral roll. Carries **no choice**.
+ *
+ * Its id is the club election and the voter, so a second vote collides on the
+ * primary key as well as being refused — belt and braces on the one rule an
+ * election cannot bend.
+ */
+export interface Voted {
+  id: string;
+  election: string;
+  voter: string;
+  at: string;
+}
+
+/**
+ * One paper in the box. Carries **no voter**.
+ *
+ * Its id is random and is the only thing that distinguishes it from another
+ * paper for the same candidate. Deliberately not a hash of anything a person
+ * could reproduce: an id derived from the voter would be a join waiting for
+ * somebody who knew the recipe.
+ */
+export interface Ballot {
+  id: string;
+  election: string;
+  choice: string;
+}
+
+export const CLUBS: Club[] = [
+  {
+    id: 'model-un',
+    name: 'Model United Nations',
+    what: 'Conference delegations and weekly committee practice',
+    officer: 'officer-mun',
+    officerName: 'H. Osei, President',
+    duesCents: 4_500,
+    budgetCents: 250_000,
+  },
+  {
+    id: 'econ-society',
+    name: 'Economics Society',
+    what: 'Speakers, reading groups and the spring case competition',
+    officer: 'officer-econ',
+    officerName: 'D. Lindqvist, Treasurer',
+    duesCents: 0,
+    budgetCents: 90_000,
+  },
+];
+
+export const ROOMS: Room[] = [
+  { id: 'buttrick-101', name: 'Buttrick 101', holds: 120 },
+  { id: 'sarratt-216', name: 'Sarratt 216', holds: 30 },
+];
+
+export const ELECTIONS: Election[] = [
+  {
+    id: 'mun-president-2027',
+    club: 'model-un',
+    post: 'President, 2027',
+    candidates: ['A. Osei', 'B. Farouk', 'C. Nakamura'],
+    opens: '2026-09-18T00:00:00Z',
+    closes: '2026-09-30T23:59:59Z',
+  },
+  {
+    id: 'econ-treasurer-2027',
+    club: 'econ-society',
+    post: 'Treasurer, 2027',
+    candidates: ['R. Devi', 'S. Mbeki'],
+    // Not yet open, so that refusal is walkable rather than only testable.
+    opens: '2026-11-01T00:00:00Z',
+    closes: '2026-11-14T23:59:59Z',
+  },
+];
+
+/**
+ * ─── Housing and dining ─────────────────────────────────────────────────────
+ *
+ * The last of Phase 4, same warning: **no building named here exists**, nobody
+ * is housed, and no meal plan feeds anybody.
+ *
+ * ## Housing: a room is a seat, and a contract is something else entirely
+ *
+ * The room itself is registration's seat once more and needs no new argument.
+ * What is new here is the **contract**, which is the first thing in this
+ * repository that somebody *signs* — and a signature has two properties a
+ * transaction does not:
+ *
+ *   **It binds.** After it, the money is owed whether or not the person turns
+ *   up, which is exactly what a housing contract is for and exactly what
+ *   students are surprised by. So the review says the figure and the date it
+ *   becomes unbreakable, in those words, before anybody presses anything.
+ *
+ *   **It has a window in which it does not bind yet.** Every real housing
+ *   contract has one, and the window is the only reason signing is safe to
+ *   offer in software at all. `Contract.coolingOff` is that date. Cancelling
+ *   inside it is free; after it, the adapter refuses and sends the person to
+ *   a human, because releasing somebody from a binding contract is a decision
+ *   a person makes and not a button.
+ *
+ * ## Dining: the interesting part is the proration, and it is a refusal
+ *
+ * A meal plan change is not a seat — the dining hall does not run out. What it
+ * has instead is a **deadline and a price that depends on when you ask**,
+ * which is the first thing in Phase 4 where the *amount* is computed rather
+ * than stated. And it is computed one way only:
+ *
+ *   A downgrade after the change deadline is refused rather than prorated,
+ *   because the meals already bought are already bought. Offering a refund
+ *   that the dining contract does not give would be the software lying about
+ *   somebody's money, which is worse than the software saying no.
+ */
+
+export interface Building {
+  id: string;
+  name: string;
+  what: string;
+  /** Cents for the year. What a contract on a room here will bind somebody to. */
+  yearCents: number;
+}
+
+export interface RoomSpace {
+  id: string;
+  building: string;
+  number: string;
+  /** How many beds. Two people in a double is not two rooms. */
+  beds: number;
+  kind: 'Single' | 'Double' | 'Suite';
+}
+
+/**
+ * An application to live somewhere, which is not yet a contract.
+ *
+ * The distinction is the point of having both: applying costs nothing and
+ * binds nobody, an assignment is the institution's answer, and only signing
+ * binds. A demonstration that collapsed the three would have hidden the only
+ * moment that matters.
+ */
+export interface HousingApplication {
+  id: string;
+  student: string;
+  /** In order of preference. The office assigns from them and may not match. */
+  wants: string[];
+  state: 'applied' | 'assigned' | 'signed' | 'withdrawn' | 'ended';
+  /** Which room, once the office has answered. Empty until then. */
+  room: string;
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+/**
+ * The signature, and the two dates that make it mean something.
+ *
+ * `signedAt` is when it bound. `coolingOff` is the last day it can be undone
+ * from here without a person being involved — see the header. A contract with
+ * no cooling-off period is one this demonstration would have no honest way to
+ * offer.
+ */
+export interface Contract {
+  id: string;
+  student: string;
+  room: string;
+  cents: number;
+  signedAt: string;
+  coolingOff: string;
+  state: 'signed' | 'cancelled';
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export interface Plan {
+  id: string;
+  name: string;
+  /** Meals a week. Zero is the commuter plan and is a real choice. */
+  meals: number;
+  termCents: number;
+}
+
+export interface PlanChoice {
+  id: string;
+  student: string;
+  plan: string;
+  /** After this day, a change is refused rather than prorated. See the header. */
+  at: string;
+  version: number;
+  history: { at: string; who: string; what: string; receipt: string }[];
+}
+
+export const BUILDINGS: Building[] = [
+  { id: 'kissam', name: 'Kissam House', what: 'First-year, dining attached', yearCents: 1_180_000 },
+  { id: 'highland', name: 'Highland Quad', what: 'Upper-year apartments', yearCents: 1_420_000 },
+];
+
+export const SPACES: RoomSpace[] = [
+  { id: 'kissam-201', building: 'kissam', number: '201', beds: 1, kind: 'Single' },
+  // One double, so two people fit and a third meets the refusal.
+  { id: 'kissam-202', building: 'kissam', number: '202', beds: 2, kind: 'Double' },
+  { id: 'highland-3a', building: 'highland', number: '3A', beds: 1, kind: 'Single' },
+];
+
+export const PLANS: Plan[] = [
+  { id: 'commuter', name: 'Commuter', meals: 0, termCents: 0 },
+  { id: 'twelve', name: '12 meals a week', meals: 12, termCents: 231_000 },
+  { id: 'nineteen', name: '19 meals a week', meals: 19, termCents: 304_000 },
+  { id: 'unlimited', name: 'Unlimited', meals: 21, termCents: 348_000 },
+];
+
+/** The last day a meal plan can be changed. After it, see the header. */
+export const PLAN_CHANGE_BY = '2026-09-25';
+
+/** How long somebody has to get out of a housing contract, in days. */
+export const COOLING_OFF_DAYS = 7;
+
 export class SandboxStore {
   private db: DatabaseSync;
 
@@ -691,6 +1517,170 @@ export class SandboxStore {
         recipient TEXT NOT NULL,
         body TEXT NOT NULL
       );
+      -- Career. The owner column is the one the authorization question is
+      -- asked of on every employer write: which employer, if any, is this
+      -- caller allowed to act for. A demonstration can scan four rows; the
+      -- shape of the question is what is being demonstrated.
+      CREATE TABLE IF NOT EXISTS employers(
+        id TEXT PRIMARY KEY,
+        owner TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS listings(
+        id TEXT PRIMARY KEY,
+        employer TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS applications(
+        id TEXT PRIMARY KEY,
+        listing TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- Advising. A slot is finite in exactly the way a seat is, so the
+      -- bookings are rows and the count is derived from them.
+      CREATE TABLE IF NOT EXISTS slots(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS bookings(
+        id TEXT PRIMARY KEY,
+        slot TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- Alumni. A mentor's address lives in this body and is kept off the
+      -- record a student reads until the mentorship is accepted.
+      CREATE TABLE IF NOT EXISTS mentors(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS mentorships(
+        id TEXT PRIMARY KEY,
+        mentor TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- Athletics. The coach column on teams is what a coaching write is
+      -- authorized against, the same way employers.owner is.
+      CREATE TABLE IF NOT EXISTS teams(
+        id TEXT PRIMARY KEY,
+        coach TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS athletes(
+        id TEXT PRIMARY KEY,
+        team TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- A clearance is a date and not a flag, so nothing here stores whether
+      -- somebody is eligible; the date is stored and the question is asked
+      -- against a clock. See the athletics adapter.
+      CREATE TABLE IF NOT EXISTS clearances(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS trips(
+        id TEXT PRIMARY KEY,
+        team TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS seats(
+        id TEXT PRIMARY KEY,
+        trip TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- Clubs. The officer column authorizes an officer write, the way
+      -- employers.owner and teams.coach do.
+      CREATE TABLE IF NOT EXISTS clubs(
+        id TEXT PRIMARY KEY,
+        officer TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS members(
+        id TEXT PRIMARY KEY,
+        club TEXT NOT NULL,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS rooms(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS holds(
+        id TEXT PRIMARY KEY,
+        room TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS spends(
+        id TEXT PRIMARY KEY,
+        club TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS elections(
+        id TEXT PRIMARY KEY,
+        club TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      /*
+       * The ballot box, in two tables that are never joined.
+       *
+       * The roll says who voted and carries no choice. The ballots carry a
+       * choice and no voter. Nobody votes twice because of the first; nobody
+       * can tell how anybody voted because there is no column in either that
+       * names a row in the other. A single table of (voter, choice) would have
+       * satisfied the first rule and only pretended at the second.
+       *
+       * Two tables and not two columns, because a column somebody can select
+       * is a column somebody will select.
+       */
+      CREATE TABLE IF NOT EXISTS roll(
+        id TEXT PRIMARY KEY,
+        election TEXT NOT NULL,
+        voter TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS ballots(
+        id TEXT PRIMARY KEY,
+        election TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- Housing. An application is not a contract and a contract is not an
+      -- application, so they are two tables: the first binds nobody and the
+      -- second is the only thing that does.
+      CREATE TABLE IF NOT EXISTS buildings(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS spaces(
+        id TEXT PRIMARY KEY,
+        building TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS housing(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS contracts(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
+      -- Dining. One choice per student, so the student is the natural key
+      -- and a second choice replaces the first rather than joining it.
+      CREATE TABLE IF NOT EXISTS plans(
+        id TEXT PRIMARY KEY,
+        body TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS planchoices(
+        id TEXT PRIMARY KEY,
+        student TEXT NOT NULL,
+        body TEXT NOT NULL
+      );
     `);
 
     // The class the course already has, before any tester arrives.
@@ -704,6 +1694,42 @@ export class SandboxStore {
     // The sections registration opens with. See `SECTIONS`.
     const sec = this.db.prepare('INSERT OR IGNORE INTO sections VALUES(?,?)');
     for (const t of SECTIONS) sec.run(t.id, JSON.stringify(t));
+
+    // Phase 4's openings: the employers the career office has vetted or not,
+    // what they have posted, the diary, and who said they would talk.
+    const emp = this.db.prepare('INSERT OR IGNORE INTO employers VALUES(?,?,?)');
+    for (const e of EMPLOYERS) emp.run(e.id, e.owner, JSON.stringify(e));
+    const post = this.db.prepare('INSERT OR IGNORE INTO listings VALUES(?,?,?)');
+    for (const l of LISTINGS) post.run(l.id, l.employer, JSON.stringify(l));
+    const when = this.db.prepare('INSERT OR IGNORE INTO slots VALUES(?,?)');
+    for (const t of SLOTS) when.run(t.id, JSON.stringify(t));
+    const who = this.db.prepare('INSERT OR IGNORE INTO mentors VALUES(?,?)');
+    for (const m of MENTORS) who.run(m.id, JSON.stringify(m));
+
+    // The teams and the fixtures. A student's clearance file is opened the
+    // first time they are put on a roster, not here, for the same reason
+    // their bill is: opening one for everybody who ever logs in would be
+    // recording a medical fact about somebody who has no business with it.
+    const team = this.db.prepare('INSERT OR IGNORE INTO teams VALUES(?,?,?)');
+    for (const t of TEAMS) team.run(t.id, t.coachId, JSON.stringify(t));
+    const trip = this.db.prepare('INSERT OR IGNORE INTO trips VALUES(?,?,?)');
+    for (const t of TRIPS) trip.run(t.id, t.team, JSON.stringify(t));
+
+    // The clubs, the rooms they ask for, and the elections they are running.
+    const club = this.db.prepare('INSERT OR IGNORE INTO clubs VALUES(?,?,?)');
+    for (const c of CLUBS) club.run(c.id, c.officer, JSON.stringify(c));
+    const room = this.db.prepare('INSERT OR IGNORE INTO rooms VALUES(?,?)');
+    for (const r of ROOMS) room.run(r.id, JSON.stringify(r));
+    const vote = this.db.prepare('INSERT OR IGNORE INTO elections VALUES(?,?,?)');
+    for (const e of ELECTIONS) vote.run(e.id, e.club, JSON.stringify(e));
+
+    // The buildings, the rooms in them, and what the dining hall offers.
+    const hall = this.db.prepare('INSERT OR IGNORE INTO buildings VALUES(?,?)');
+    for (const b of BUILDINGS) hall.run(b.id, JSON.stringify(b));
+    const space = this.db.prepare('INSERT OR IGNORE INTO spaces VALUES(?,?,?)');
+    for (const r of SPACES) space.run(r.id, r.building, JSON.stringify(r));
+    const plan = this.db.prepare('INSERT OR IGNORE INTO plans VALUES(?,?)');
+    for (const p of PLANS) plan.run(p.id, JSON.stringify(p));
   }
 
   /**
@@ -748,6 +1774,500 @@ export class SandboxStore {
   saveSection(section: Section): void {
     this.db.prepare('INSERT OR REPLACE INTO sections VALUES(?,?)').run(section.id, JSON.stringify(section));
   }
+
+  /* ── Housing and dining ─────────────────────────────────────────────── */
+
+  buildings(): Building[] {
+    const rows = this.db.prepare('SELECT body FROM buildings ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Building);
+  }
+
+  building(id: string): Building | null {
+    const got = this.db.prepare('SELECT body FROM buildings WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Building) : null;
+  }
+
+  spaces(building?: string): RoomSpace[] {
+    const rows = (
+      building
+        ? this.db.prepare('SELECT body FROM spaces WHERE building=? ORDER BY id').all(building)
+        : this.db.prepare('SELECT body FROM spaces ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as RoomSpace);
+  }
+
+  space(id: string): RoomSpace | null {
+    const got = this.db.prepare('SELECT body FROM spaces WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as RoomSpace) : null;
+  }
+
+  /** Every housing application, so a room's occupancy can be derived. */
+  housing(): HousingApplication[] {
+    const rows = this.db.prepare('SELECT body FROM housing ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as HousingApplication);
+  }
+
+  housingOf(student: string): HousingApplication | null {
+    const got = this.db.prepare('SELECT body FROM housing WHERE student=?').get(student) as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as HousingApplication) : null;
+  }
+
+  saveHousing(row: HousingApplication): void {
+    this.db.prepare('INSERT OR REPLACE INTO housing VALUES(?,?,?)').run(row.id, row.student, JSON.stringify(row));
+  }
+
+  contractOf(student: string): Contract | null {
+    const got = this.db.prepare('SELECT body FROM contracts WHERE student=?').get(student) as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as Contract) : null;
+  }
+
+  saveContract(row: Contract): void {
+    this.db.prepare('INSERT OR REPLACE INTO contracts VALUES(?,?,?)').run(row.id, row.student, JSON.stringify(row));
+  }
+
+  plans(): Plan[] {
+    const rows = this.db.prepare('SELECT body FROM plans ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Plan);
+  }
+
+  plan(id: string): Plan | null {
+    const got = this.db.prepare('SELECT body FROM plans WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Plan) : null;
+  }
+
+  planOf(student: string): PlanChoice | null {
+    const got = this.db.prepare('SELECT body FROM planchoices WHERE student=?').get(student) as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as PlanChoice) : null;
+  }
+
+  savePlanChoice(row: PlanChoice): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO planchoices VALUES(?,?,?)')
+      .run(row.id, row.student, JSON.stringify(row));
+  }
+
+
+  /* ── Clubs ──────────────────────────────────────────────────────────── */
+
+  clubs(): Club[] {
+    const rows = this.db.prepare('SELECT body FROM clubs ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Club);
+  }
+
+  club(id: string): Club | null {
+    const got = this.db.prepare('SELECT body FROM clubs WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Club) : null;
+  }
+
+  /** The club this person is an officer of, or null. Asked of the table. */
+  officerOf(userId: string): Club | null {
+    const got = this.db.prepare('SELECT body FROM clubs WHERE officer=?').get(userId) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Club) : null;
+  }
+
+  saveClub(row: Club): void {
+    this.db.prepare('INSERT OR REPLACE INTO clubs VALUES(?,?,?)').run(row.id, row.officer, JSON.stringify(row));
+  }
+
+  members(club?: string): Member[] {
+    const rows = (
+      club
+        ? this.db.prepare('SELECT body FROM members WHERE club=? ORDER BY id').all(club)
+        : this.db.prepare('SELECT body FROM members ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Member);
+  }
+
+  saveMember(row: Member): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO members VALUES(?,?,?,?)')
+      .run(row.id, row.club, row.student, JSON.stringify(row));
+  }
+
+  rooms(): Room[] {
+    const rows = this.db.prepare('SELECT body FROM rooms ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Room);
+  }
+
+  room(id: string): Room | null {
+    const got = this.db.prepare('SELECT body FROM rooms WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Room) : null;
+  }
+
+  /** Every hold on a room, so a clash can be found rather than assumed. */
+  holds(room?: string): RoomHold[] {
+    const rows = (
+      room
+        ? this.db.prepare('SELECT body FROM holds WHERE room=? ORDER BY id').all(room)
+        : this.db.prepare('SELECT body FROM holds ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as RoomHold);
+  }
+
+  hold(id: string): RoomHold | null {
+    const got = this.db.prepare('SELECT body FROM holds WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as RoomHold) : null;
+  }
+
+  saveHold(row: RoomHold): void {
+    this.db.prepare('INSERT OR REPLACE INTO holds VALUES(?,?,?)').run(row.id, row.room, JSON.stringify(row));
+  }
+
+  /**
+   * Give a room back, by removing the row.
+   *
+   * The first version kept the row and blanked its club, and the room stayed
+   * unbookable: the clash check found a hold, saw a club that was not the one
+   * asking, and refused on behalf of nobody. A hold nobody holds is not a
+   * hold, and the honest way to say that in a table is for the row not to be
+   * in it.
+   */
+  dropHold(id: string): void {
+    this.db.prepare('DELETE FROM holds WHERE id=?').run(id);
+  }
+
+  spends(club: string): Spend[] {
+    const rows = this.db.prepare('SELECT body FROM spends WHERE club=? ORDER BY id').all(club) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Spend);
+  }
+
+  spend(id: string): Spend | null {
+    const got = this.db.prepare('SELECT body FROM spends WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Spend) : null;
+  }
+
+  saveSpend(row: Spend): void {
+    this.db.prepare('INSERT OR REPLACE INTO spends VALUES(?,?,?)').run(row.id, row.club, JSON.stringify(row));
+  }
+
+  elections(club?: string): Election[] {
+    const rows = (
+      club
+        ? this.db.prepare('SELECT body FROM elections WHERE club=? ORDER BY id').all(club)
+        : this.db.prepare('SELECT body FROM elections ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Election);
+  }
+
+  election(id: string): Election | null {
+    const got = this.db.prepare('SELECT body FROM elections WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Election) : null;
+  }
+
+  /*
+   * The two halves of the ballot box, and the reason they are two methods
+   * rather than one: there is no call anywhere that wants both, and a single
+   * method returning both would be the join this design exists to make
+   * impossible. See the header above `Voted`.
+   */
+
+  /** The electoral roll: who has voted. Carries no choice. */
+  roll(election: string): Voted[] {
+    const rows = this.db.prepare('SELECT body FROM roll WHERE election=? ORDER BY id').all(election) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Voted);
+  }
+
+  /** Whether this person has voted. The only question the roll is asked. */
+  hasVoted(election: string, voter: string): boolean {
+    const got = this.db.prepare('SELECT 1 AS yes FROM roll WHERE election=? AND voter=?').get(election, voter);
+    return got !== undefined;
+  }
+
+  /** The box: the papers. Carries no voter. */
+  ballots(election: string): Ballot[] {
+    const rows = this.db.prepare('SELECT body FROM ballots WHERE election=? ORDER BY id').all(election) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Ballot);
+  }
+
+  /**
+   * Mark the roll and drop the paper, in one transaction.
+   *
+   * One method because the two writes must not come apart: a marked roll with
+   * no paper loses somebody's vote, and a paper with no mark lets them vote
+   * again. It takes the two rows already built rather than building the
+   * ballot from the voter, so that nothing in this function ever holds a value
+   * that could relate one to the other.
+   */
+  castVote(mark: Voted, paper: Ballot): void {
+    this.db.exec('BEGIN');
+    try {
+      this.db.prepare('INSERT INTO roll VALUES(?,?,?,?)').run(mark.id, mark.election, mark.voter, JSON.stringify(mark));
+      this.db.prepare('INSERT INTO ballots VALUES(?,?,?)').run(paper.id, paper.election, JSON.stringify(paper));
+      this.db.exec('COMMIT');
+    } catch (e) {
+      this.db.exec('ROLLBACK');
+      throw e;
+    }
+  }
+
+
+  /* ── Athletics ──────────────────────────────────────────────────────── */
+
+  teams(): Team[] {
+    const rows = this.db.prepare('SELECT body FROM teams ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Team);
+  }
+
+  team(id: string): Team | null {
+    const got = this.db.prepare('SELECT body FROM teams WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Team) : null;
+  }
+
+  /** The team this person coaches, or null. Asked of the table, never a claim. */
+  coaches(userId: string): Team | null {
+    const got = this.db.prepare('SELECT body FROM teams WHERE coach=?').get(userId) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Team) : null;
+  }
+
+  saveTeam(row: Team): void {
+    this.db.prepare('INSERT OR REPLACE INTO teams VALUES(?,?,?)').run(row.id, row.coachId, JSON.stringify(row));
+  }
+
+  athletes(team?: string): Athlete[] {
+    const rows = (
+      team
+        ? this.db.prepare('SELECT body FROM athletes WHERE team=? ORDER BY id').all(team)
+        : this.db.prepare('SELECT body FROM athletes ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Athlete);
+  }
+
+  athletesOf(student: string): Athlete[] {
+    const rows = this.db.prepare('SELECT body FROM athletes WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Athlete);
+  }
+
+  saveAthlete(row: Athlete): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO athletes VALUES(?,?,?,?)')
+      .run(row.id, row.team, row.student, JSON.stringify(row));
+  }
+
+  /**
+   * Every clearance this person holds, good or lapsed.
+   *
+   * Deliberately not filtered by date here. Whether a clearance is *good* is a
+   * question about a moment, and the moment belongs to whoever is asking — an
+   * adapter with a clock, not a store that would have to guess one.
+   */
+  clearances(student: string): Eligibility[] {
+    const rows = this.db.prepare('SELECT body FROM clearances WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Eligibility);
+  }
+
+  clearance(id: string): Eligibility | null {
+    const got = this.db.prepare('SELECT body FROM clearances WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Eligibility) : null;
+  }
+
+  saveClearance(row: Eligibility): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO clearances VALUES(?,?,?)')
+      .run(row.id, row.student, JSON.stringify(row));
+  }
+
+  /** Open a student's clearance file, the way `openAccount` opens their bill. */
+  openClearances(student: string, at: string): void {
+    const put = this.db.prepare('INSERT OR IGNORE INTO clearances VALUES(?,?,?)');
+    for (const c of OPENING_CLEARANCES) {
+      const row: Eligibility = { ...c, id: `${student}::${c.id}`, student, at, version: 0, history: [] };
+      put.run(row.id, student, JSON.stringify(row));
+    }
+  }
+
+  trips(team?: string): Trip[] {
+    const rows = (
+      team
+        ? this.db.prepare('SELECT body FROM trips WHERE team=? ORDER BY id').all(team)
+        : this.db.prepare('SELECT body FROM trips ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Trip);
+  }
+
+  trip(id: string): Trip | null {
+    const got = this.db.prepare('SELECT body FROM trips WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Trip) : null;
+  }
+
+  saveTrip(row: Trip): void {
+    this.db.prepare('INSERT OR REPLACE INTO trips VALUES(?,?,?)').run(row.id, row.team, JSON.stringify(row));
+  }
+
+  /** Every place on one coach, so the manifest can be counted rather than stored. */
+  seats(trip: string): Seat[] {
+    const rows = this.db.prepare('SELECT body FROM seats WHERE trip=? ORDER BY id').all(trip) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Seat);
+  }
+
+  saveSeat(row: Seat): void {
+    this.db.prepare('INSERT OR REPLACE INTO seats VALUES(?,?,?,?)').run(row.id, row.trip, row.student, JSON.stringify(row));
+  }
+
+
+  /* ── Career, advising and alumni ────────────────────────────────────── */
+
+  employers(): Employer[] {
+    const rows = this.db.prepare('SELECT body FROM employers ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Employer);
+  }
+
+  employer(id: string): Employer | null {
+    const got = this.db.prepare('SELECT body FROM employers WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Employer) : null;
+  }
+
+  /**
+   * The employer this person may act for, or null.
+   *
+   * Asked of the server's own table and never of the request. It is the whole
+   * of the employer authorization story, which is why it is one function: a
+   * second place that decided the same thing is a second place that can come
+   * to decide it differently.
+   */
+  employerOf(owner: string): Employer | null {
+    const got = this.db.prepare('SELECT body FROM employers WHERE owner=?').get(owner) as
+      | { body: string }
+      | undefined;
+    return got ? (JSON.parse(got.body) as Employer) : null;
+  }
+
+  saveEmployer(row: Employer): void {
+    this.db.prepare('INSERT OR REPLACE INTO employers VALUES(?,?,?)').run(row.id, row.owner, JSON.stringify(row));
+  }
+
+  listings(): Listing[] {
+    const rows = this.db.prepare('SELECT body FROM listings ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Listing);
+  }
+
+  listing(id: string): Listing | null {
+    const got = this.db.prepare('SELECT body FROM listings WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Listing) : null;
+  }
+
+  saveListing(row: Listing): void {
+    this.db.prepare('INSERT OR REPLACE INTO listings VALUES(?,?,?)').run(row.id, row.employer, JSON.stringify(row));
+  }
+
+  /** Every application to one listing, so the offer count can be derived. */
+  applications(listing?: string): Application[] {
+    const rows = (
+      listing
+        ? this.db.prepare('SELECT body FROM applications WHERE listing=? ORDER BY id').all(listing)
+        : this.db.prepare('SELECT body FROM applications ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Application);
+  }
+
+  applicationsOf(student: string): Application[] {
+    const rows = this.db.prepare('SELECT body FROM applications WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Application);
+  }
+
+  application(id: string): Application | null {
+    const got = this.db.prepare('SELECT body FROM applications WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Application) : null;
+  }
+
+  saveApplication(row: Application): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO applications VALUES(?,?,?,?)')
+      .run(row.id, row.listing, row.student, JSON.stringify(row));
+  }
+
+  slots(): Slot[] {
+    const rows = this.db.prepare('SELECT body FROM slots ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Slot);
+  }
+
+  slot(id: string): Slot | null {
+    const got = this.db.prepare('SELECT body FROM slots WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Slot) : null;
+  }
+
+  saveSlot(row: Slot): void {
+    this.db.prepare('INSERT OR REPLACE INTO slots VALUES(?,?)').run(row.id, JSON.stringify(row));
+  }
+
+  bookings(slot?: string): Booking[] {
+    const rows = (
+      slot
+        ? this.db.prepare('SELECT body FROM bookings WHERE slot=? ORDER BY id').all(slot)
+        : this.db.prepare('SELECT body FROM bookings ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Booking);
+  }
+
+  bookingsOf(student: string): Booking[] {
+    const rows = this.db.prepare('SELECT body FROM bookings WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Booking);
+  }
+
+  saveBooking(row: Booking): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO bookings VALUES(?,?,?,?)')
+      .run(row.id, row.slot, row.student, JSON.stringify(row));
+  }
+
+  mentors(): Mentor[] {
+    const rows = this.db.prepare('SELECT body FROM mentors ORDER BY id').all() as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Mentor);
+  }
+
+  mentor(id: string): Mentor | null {
+    const got = this.db.prepare('SELECT body FROM mentors WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Mentor) : null;
+  }
+
+  saveMentor(row: Mentor): void {
+    this.db.prepare('INSERT OR REPLACE INTO mentors VALUES(?,?)').run(row.id, JSON.stringify(row));
+  }
+
+  mentorships(mentor?: string): Mentorship[] {
+    const rows = (
+      mentor
+        ? this.db.prepare('SELECT body FROM mentorships WHERE mentor=? ORDER BY id').all(mentor)
+        : this.db.prepare('SELECT body FROM mentorships ORDER BY id').all()
+    ) as { body: string }[];
+    return rows.map((r) => JSON.parse(r.body) as Mentorship);
+  }
+
+  mentorshipsOf(student: string): Mentorship[] {
+    const rows = this.db.prepare('SELECT body FROM mentorships WHERE student=? ORDER BY id').all(student) as {
+      body: string;
+    }[];
+    return rows.map((r) => JSON.parse(r.body) as Mentorship);
+  }
+
+  mentorship(id: string): Mentorship | null {
+    const got = this.db.prepare('SELECT body FROM mentorships WHERE id=?').get(id) as { body: string } | undefined;
+    return got ? (JSON.parse(got.body) as Mentorship) : null;
+  }
+
+  saveMentorship(row: Mentorship): void {
+    this.db
+      .prepare('INSERT OR REPLACE INTO mentorships VALUES(?,?,?,?)')
+      .run(row.id, row.mentor, row.student, JSON.stringify(row));
+  }
+
 
   /* ── Family access ──────────────────────────────────────────────────── */
 
@@ -2705,5 +4225,12 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
     billingAdapter(store),
     aidAdapter(store),
     familyAdapter(store),
+    careerAdapter(store),
+    advisingAdapter(store),
+    alumniAdapter(store),
+    athleticsAdapter(store),
+    clubsAdapter(store),
+    housingAdapter(store),
+    diningAdapter(store),
   ];
 }

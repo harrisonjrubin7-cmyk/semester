@@ -2086,7 +2086,532 @@ exemption would have weakened the rule for every adapter to accommodate one.
 ([§8i](#8i-phase-3--registration--against-the-sandbox-labelled)), money
 ([§8j](#8j-phase-3--money--read-access-and-never-a-processor)) and family
 access. Four adapters, no screens — `University.tsx` renders all thirty-seven
-areas generically, so the whole of Phase 3 was adapters.
+areas generically, so the whole of Phase 3 was adapters. **Phase 4's first
+three** — career, advising and the alumni network — followed the same way in
+[§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled),
+taking the sandbox to twelve. Neither phase's real gates are satisfied by any
+of it and neither section claims they are.
+
+---
+
+## 8l. Phase 4 · Career, advising and the alumni network — against the sandbox, labelled
+
+**What the source document asks for.** Phase 4 is "official institutional
+transactions", and it opens with Career: live listings, employer accounts,
+applications, advising appointments, an alumni network. It is gated, in that
+document's own words, on everything in Phase 3 *sustained* through a live
+pilot **plus** a university choosing to extend trust into official
+transactions one function at a time.
+
+**None of that is satisfied and none of it is claimed here.** No employer named
+in `EMPLOYERS` exists, no application is delivered to anybody, nothing is in an
+adviser's diary, and the alumni are invented. What was built is the *shape*,
+against the sandbox institution, marked `SANDBOX` on every record and in every
+receipt — for the same reason Phase 3 was: the shape is the part that can be
+argued with before anybody is asked to trust it.
+
+Three adapters, taking the sandbox from nine to twelve:
+`career.ts` and `advising.ts` (which carries advising and alumni both).
+
+### Finding the finite thing, which is how each of the three was designed
+
+Registration taught this repository where to look: the hard part of any
+institutional area is the sentence *two people can want the last one*, and an
+area without that sentence in it is a list that does not need a transaction at
+all. Each of the three was built by finding it first.
+
+| Area | The finite thing | Why not the obvious one |
+| --- | --- | --- |
+| Career | The **offer** | Not the application — a posting takes a thousand of those and nothing is lost. Two openings and three offers is a promise the employer cannot keep. |
+| Advising | The **half-hour** | One person has it. This is registration's seat, and it is built the same way. |
+| Alumni | The mentor's **willingness** | A number of students they will take, counted from the accepted mentorships rather than stored beside them. |
+
+Each is checked twice — at `review` and again at `execute` — because the review
+reserves nothing. And each check is now tested at **both** call sites, which it
+was not at first: see below.
+
+### Three disclosures, each an absence rather than a lock
+
+Family access settled the rule ([§8k](#8k-phase-3--family-access--and-the-asymmetry-that-is-the-whole-of-it)):
+a permission the server does not hold shows up as *missing data*, not as a
+greyed-out row. Three of those are here, and each is tested by reading the
+record as somebody who should not see the field and searching the whole
+serialised record for it:
+
+1. **An employer sees the applicants to their own postings and no others.** A
+   career site where a competitor can read your pipeline is not a career site.
+2. **A student never sees who else applied** — not the names, and *not the
+   count*. A line reading "2 applications" is a disclosure with the names taken
+   off, and it is the one people leave in.
+3. **An alumnus's contact address is not on the record until they have said
+   yes.** Not redacted, not behind a flag — absent. That one sentence is the
+   whole of the alumni network.
+
+Each absence carries a **control** that reads the same record as somebody
+entitled to the field and asserts it *is* there, because a search for an
+absence passes just as well against a record that came back empty.
+
+### Why an employer is a table and not a role
+
+The contract's six roles are the six a *draft* can be written as, and there is
+no employer among them — which turned out to be the right answer rather than a
+gap. An employer is not a kind of person at a university; it is a relationship
+the career office has approved and can suspend. So it lives in a row the server
+owns, with a state the office sets, and the only thing granting the right to
+act for one is being named in its `owner` column. A pending employer cannot
+post. A suspended one cannot be applied to either. Both are real career-office
+controls, and the sandbox carries one of each so both are walkable by a person
+rather than only reachable by a test.
+
+### Two rules that are this demonstration's own
+
+**Withdrawing an application is final for that posting.** The employer has
+already read it. A career site whose "undo" quietly un-reads something a person
+acted on is teaching a student the wrong thing about what an application is, so
+re-applying is refused and the refusal says why.
+
+**Accepting an offer declines the student's other outstanding offers**, inside
+the accept's own commit — the way a drop promotes the waiting list inside its
+own. A student holding three offers is holding two openings somebody else could
+have had, which is the reason one-offer policies exist.
+
+**And cancelling an advising appointment inside twenty-four hours is refused**,
+with the reason on the screen rather than only the rule: a place given back
+that late cannot be offered to anybody else in time, so it is not given back,
+it is wasted.
+
+### What the mutations found
+
+Thirty-three guards were removed or inverted one at a time and the suite
+required to go red. Twenty-nine were caught on the first pass. The four that
+were not are the findings worth recording, because each was a real gap rather
+than a formality:
+
+**Three escapes, all the same fault, and it was in the tests.** Removing the
+`review`-phase call to the finite-resource check — the offer limit, the
+advising place, the mentor's capacity — left the suite **green** every time,
+because `execute` caught it a moment later. The commit-time check is the one
+that keeps the promise, so nothing was broken. But it meant the review-time
+check was untested, and that is worse than it sounds: the entire point of a
+two-phase action is that the review tells the truth. A review that says *go
+ahead* before a commit that says *no* has turned a refusal into a loss. Three
+tests were added that call `review` alone, and all three mutations are now
+caught.
+
+**One mutation never applied at all.** Its anchor was a paraphrase of the
+refusal rather than the refusal, so it matched nothing — and a mutation that
+matches nothing reports a clean pass. This is the third time in this repository
+that a mutation has lied, and the only reason it was noticed is that the script
+asserts its own anchor count before every run. **A mutation harness that does
+not check that it mutated something is a harness that reports whatever you
+hoped.**
+
+### And two faults the tests found in the code
+
+**A refusal doing two jobs with one message.** An unknown action on a listing
+fell through to the branch that reads an applicant name, so somebody who typed
+a wrong action was told they had left a field out. Guarded before the read, in
+both `review` and `execute`.
+
+**A type predicate that asserted something false.** `vetted` was written as
+`e is Employer`, which narrowed the *refusing* branch to `null` — making the
+refusal that names the employer ("QuickCash Partners is not currently
+approved") unreachable as far as the types were concerned, though at run time
+the name was always there. A predicate that lies about the failure path is
+worse than no predicate, because the failure path is the one nobody reads. It
+is a plain boolean now, and a test asserts the message names the employer.
+
+### Measured
+
+| | |
+| --- | --- |
+| Adapters installed in the sandbox | 9 → **12** |
+| New tests | **116** across `career.test.ts` and `advising.test.ts` |
+| Mutations applied | **33**, all caught |
+| Refusals with their own message | 26 |
+| Gates | `tsc -b`, `check:university`, `lint`, `test`, `test:shuffle`, `test:zones`, `build`, `smoke:gateway` |
+
+### What this does not do
+
+It does not connect to a university. Career, advising and alumni remain, in the
+source document's own framing, gated on a successful pilot and a real
+institutional partnership. This is a labelled demonstration of the shape those
+transactions would have, and the label is on every record it produces.
+
+---
+
+## 8m. Phase 4 · Athletics — where the hard part is time, not contention
+
+**What the source document asks for.** Team rosters, travel logistics,
+eligibility forms, coaching and staff workflows. Gated exactly as
+[§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled)
+is, and just as unsatisfied: **no team named here exists**, nobody is cleared
+to play anything, and no coach is going anywhere.
+
+One adapter, taking the sandbox from twelve to thirteen.
+
+### A roster spot looks like a seat and is not one
+
+This is the first area in this repository whose hard part is **time** rather
+than contention, and finding that out changed the design.
+
+Teams do not generally turn people away for want of a number. What they turn
+people away for is **eligibility**, and eligibility is not a finite resource at
+all — it is a condition that *expires*. So:
+
+> **A clearance is a date, never a flag.** Nothing anywhere asks whether
+> somebody *was* cleared. Every check asks whether their clearance is good on
+> the day being asked about, against the clock the adapter was given.
+
+A demonstration that stored `eligible: true` and set it once would have been
+demonstrating the bug rather than the rule — and it is precisely the bug that
+lets an athlete with a lapsed physical get on a bus. The tests for this move
+the clock rather than editing a row, which is the only version of that test
+that proves the date is doing the work.
+
+The genuinely finite thing is the **seat on the coach**. So the two rules
+compose, and the order they compose in is itself a decision:
+
+> **Eligibility is checked before the seat.** Telling somebody the bus is full
+> when the true answer is that their return-to-play assessment is outstanding
+> sends them to the travel office, which cannot help them, and they come back
+> no better off.
+
+That ordering has its own mutation: the eligibility block is moved below the
+seat check and the suite is required to go red.
+
+### The disclosure here is a medical one
+
+Why somebody is not cleared is a medical fact. `Eligibility.why` is readable by
+the athlete and by **nobody else — including their coach**. A coach sees *that*
+a player is not cleared, because that is what picking a team needs, and does
+not see why, because that is between the athlete and whoever assessed them.
+
+Four readings are asserted separately: the athlete's own (the reason is there —
+the control), the coach's (it is not), a team-mate's (it is not), and a
+stranger's (there is no squad list at all).
+
+**And a clearance file is opened late** — the first time somebody is put on a
+roster, not the first time they log in, the same reason a bill is opened late.
+Opening one for everybody with an account would be recording a medical question
+about people who have no business with one.
+
+### What the mutations found, which was more than last time
+
+Twenty-four guards, removed or inverted one at a time. **Sixteen** were caught
+on the first pass. The eight that were not break into four kinds, and three of
+them are findings rather than formalities.
+
+**A real design gap: boarding twice was not refused.** Removing the idempotency
+check entirely left the suite green — which meant the retried-key test was not
+testing anything. The reason is worth writing down: with boarding twice
+permitted, a retry simply wrote the same row to the same state, the manifest
+count did not move, and the two receipts were identical, so *no assertion could
+distinguish a retry that was caught from one that was not*. The fix was a
+refusal, not a test: your name is already on that manifest. Now a retry without
+`already` would be refused, which is exactly what a dropped connection produces.
+
+**Two guards whose second call site was untested.** Stepping off a manifest
+checks both that you are on it and that the manifest has not gone to the
+driver, in `review` and again in `execute` — and only the review's check was
+load-bearing in the suite. A commit that trusts its own review is a commit
+acting on a world that has moved, which is the whole reason there are two
+phases. Same finding as [§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled)'s
+three escapes, arriving from the opposite direction: there the review was
+untested, here the commit was.
+
+**A disclosure nothing was checking.** The mutation replaced the reader's own
+id with the squad's first entry on the line that carries the medical reason —
+and every test in that block was blind to it, because in each one the reader
+either *was* the first entry or was cleared and saw no reason at all. Somebody
+reading a team-mate's medical reason in place of their own is the worst version
+of this bug and it had no test. It has one now: two uncleared athletes with
+different reasons, and the second one reads the roster.
+
+**And two mutations that were simply wrong.** One flipped a condition that
+discloses nothing extra either way (the rows it maps are the reader's own
+clearances whichever way the condition falls), and two used stale line numbers
+after the file had grown. Both were caught by the harness asserting its own
+anchors — the same protection that caught the lying mutation in §8l. **The
+harness checking that it mutated something is the only reason any of this
+section is trustworthy.**
+
+### Measured
+
+| | |
+| --- | --- |
+| Adapters in the sandbox | 12 → **13** |
+| New tests | **56** in `athletics.test.ts` |
+| Mutations applied | **24**, all caught |
+| Suite | **487 files, 10,035 passed, 10 skipped** |
+
+### What this does not do
+
+It does not connect to a university, clear anybody to compete, or put anybody
+on a bus. The label is on every record it produces.
+
+---
+
+## 8n. Phase 4 · Clubs — and the hardest thing in the whole phase, which is a ballot
+
+**What the source document asks for.** Membership management, events, budgets,
+dues, elections, room requests. Gated exactly as
+[§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled)
+and [§8m](#8m-phase-4--athletics--where-the-hard-part-is-time-not-contention)
+are, and just as unsatisfied: **no club named here exists**, no money moves,
+and no election decides anything.
+
+One adapter, thirteen to fourteen.
+
+### Four finite things, and they are not the same kind of finite
+
+Which is what makes this the most interesting area in Phase 4, because up to
+now every finite thing in this repository has been a **count**.
+
+| Thing | Kind | Why it needed its own shape |
+| --- | --- | --- |
+| A room at a time | A count of one | Registration's seat exactly. Two clubs cannot hold Buttrick 101 at eight on Tuesday. |
+| A budget | **A sum** | Two claims of forty fit inside a hundred and a third does not, and *no number of slots expresses that*. The check is against the remainder. |
+| A vote | One per member | The only thing in this repository that must be both **counted and secret**. |
+| An event's capacity | A count | The room's, so a seat again. |
+
+The budget remainder is derived from the approved claims rather than stored,
+for the reason the seat count is — and `approved` counts as committed rather
+than only `paid`, because a budget that counted only what had gone out would
+let a club promise the same thousand dollars to four people.
+
+### The ballot, which is the hardest thing in Phase 4
+
+An election has to satisfy two requirements that pull against each other:
+
+> **Nobody votes twice**, which needs a record of who has voted.
+> **Nobody can tell how anybody voted**, which forbids a record joining a
+> person to a choice.
+
+Both at once is the whole problem. A demonstration storing `{ voter, choice }`
+would have satisfied the first and *pretended* at the second by not showing a
+column — and **a column somebody can select is a column somebody will select.**
+
+So the ballot is **two tables that are never joined**: a roll of who has voted,
+carrying no choice, and a pile of papers, carrying no voter. The count comes
+from the papers; the double-vote refusal comes from the roll. Nothing in either
+row names a row in the other, so no query puts them back together.
+
+Three decisions hold that up:
+
+1. **A paper's id is `randomUUID()`**, deliberately not derived from the voter.
+   An id anybody could recompute is a join waiting for somebody who knows the
+   recipe.
+2. **Both writes go through one transaction.** A marked roll with no paper
+   loses somebody's vote; a paper with no mark lets them vote twice.
+3. **The receipt does not say what was voted for.** A receipt naming the choice
+   is a receipt somebody can be *made to show*, which is how a secret ballot
+   stops being one.
+
+And the count by candidate is published only once the poll has shut. Turnout is
+published throughout, because turnout is not a result — but a running total by
+candidate during an open poll tells late voters which way it is going, which is
+a thing real elections take trouble to avoid.
+
+**The test that matters reads the stored rows, not the adapter's output.** It
+takes every row on the roll and every paper in the box and asserts that no
+value appearing in one appears in the other. A test of what the adapter
+*returns* could not make that claim, because the claim is about what somebody
+holding the database could reconstruct — and an adapter that merely declined to
+return the join would pass a test of its output while storing it.
+
+All thirteen ballot mutations were caught on the first pass, including the two
+that matter most: putting the voter on the paper, and deriving the paper's id
+from the voter.
+
+### And a real bug the tests found
+
+**Giving a room back did not give it back.** The first version kept the row and
+blanked its club, and the room stayed unbookable: the clash check found a hold,
+saw a club that was not the one asking, and refused *on behalf of nobody at
+all*. A hold nobody holds is not a hold, and the honest way to say that in a
+table is for the row not to be in it. `dropHold` replaced the sentinel.
+
+### What the mutations found
+
+Thirty-two guards, removed or inverted one at a time. Twenty-seven caught on
+the first pass. The five that escaped were all the same class, and it is the
+same class as [§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled)'s:
+**the review's own copy of a refusal was untested**, because the helper driving
+both phases could not tell which one had refused, and `execute` caught
+everything.
+
+It is worth saying why that is not cosmetic, in this area especially: an
+officer told at the *commit* that the room was taken has already told somebody
+the meeting is happening. A review that says *go ahead* before a commit that
+says *no* is precisely the failure two phases exist to prevent. Five tests now
+call `review` alone.
+
+Across Phase 4 that finding has now appeared three times, in three different
+shapes — the review untested in §8l and here, the *commit* untested in §8m. It
+is the characteristic failure of testing a two-phase action through a helper
+that drives both, and is now written down as such.
+
+### Measured
+
+| | |
+| --- | --- |
+| Adapters in the sandbox | 13 → **14** |
+| New tests | **68** in `clubs.test.ts` |
+| Mutations applied | **32**, all caught |
+| Suite | **488 files, 10,103 passed, 10 skipped** |
+
+### What this does not do
+
+It does not connect to a university, hold anybody's money, book a real room, or
+run an election that decides anything. The label is on every record.
+
+---
+
+## 8o. Phase 4 · Housing and dining — a signature, and an amount that is computed
+
+**What the source document asks for.** Applications, contracts, room
+assignments, meal-plan changes. Gated as the rest of Phase 4 is, and just as
+unsatisfied: **no building named here exists**, nobody is housed, and no meal
+plan feeds anybody.
+
+Two adapters, fourteen to sixteen — which completes Phase 4 as a demonstration.
+
+### The room is a seat; the contract is something this repository had not met
+
+A bed in a double is registration's seat again and needs no new argument. What
+is new is that somebody **signs** something, and a signature has two properties
+a transaction does not.
+
+**It binds.** After it, the money is owed whether or not the person turns up.
+That is what a housing contract is *for*, and it is what students are surprised
+by. So the review says the figure and the date it becomes unbreakable, in those
+words — and this is the one action in Phase 4 where the review is doing the
+thing it is actually best at. Everywhere else the review answers *can I have
+it*; here it answers **what am I agreeing to**.
+
+**It has a window in which it does not bind yet.** Every real housing contract
+has one, and that window is the only reason offering a signature in software is
+honest at all. Inside it, cancelling is free. Outside it, the adapter **refuses
+and names a human**:
+
+> The time to cancel ran out on 2026-09-27. That contract binds you for
+> $11,800.00, and only the housing office can release you from it — write to
+> them.
+
+A button that released somebody silently would be pretending the signature
+meant less than it does.
+
+**Three states and not one**, deliberately: *applied* costs nothing and binds
+nobody; *assigned* is the institution's answer and still binds nobody; *signed*
+binds. Collapsing them would have hidden the only moment that matters.
+
+### Dining, where the amount is computed and the interesting part is a refusal
+
+A meal plan is not a seat — the dining hall does not run out. What it has is a
+deadline and a price that depends on when you ask, which makes it the first
+thing in Phase 4 whose *amount* is worked out rather than stated.
+
+And it is worked out one way only. **A downgrade after the deadline is refused
+rather than prorated**, because the meals already bought are already bought.
+Offering a refund the dining contract does not give would be the software lying
+about somebody's money, which is worse than the software saying no. An
+*upgrade* after the deadline is allowed, because nothing has to be given back
+for that to be true.
+
+The property asserted is not a formula but an absence: `changeCosts` is
+exercised over **every ordered pair of plans** and required never to come out
+negative — with a control asserting that at least one pair costs something, so
+it is not a suite of zeroes passing a test about signs.
+
+### What the mutations found
+
+Thirty-two guards. Twenty-six caught on the first pass, and the six that were
+not produced two findings and one durable fix.
+
+**A guard that could not fire.** `bedIn` re-checked a free bed immediately
+after the line that had already *selected* a room by requiring one, copying the
+review/commit pattern the rest of Phase 4 uses — except there is no review
+phase here, because the office assigning a room is one operation. Removing it
+changed nothing, which is how it was found. It is gone: **a guard that cannot
+fire is worse than no guard, because it reads like protection that is not
+there.**
+
+**Three more review-phase escapes**, the same class Phase 4 has now produced in
+every single area. It lands hardest here: somebody told at the *commit* that
+their contract is binding has already pressed the button believing it was not.
+
+**And a durable fix to the harness.** Two mutations reported `BAD` because
+their line numbers had gone stale as the file grew — the second time that
+happened in this phase. The harness now addresses a duplicated call site by
+*which occurrence*, found by searching, so the anchor cannot rot. Combined with
+the anchor-count assertion, a mutation in this repository now fails loudly in
+both of the ways it can silently lie.
+
+### Measured
+
+| | |
+| --- | --- |
+| Adapters in the sandbox | 14 → **16** |
+| New tests | **61** in `housing.test.ts` |
+| Mutations applied | **32**, all caught |
+| Suite | **489 files, 10,164 passed, 10 skipped** |
+
+---
+
+## 8p. Phase 4, as a whole — what four areas taught that one could not
+
+Seven adapters across four sections
+([§8l](#8l-phase-4--career-advising-and-the-alumni-network--against-the-sandbox-labelled),
+[§8m](#8m-phase-4--athletics--where-the-hard-part-is-time-not-contention),
+[§8n](#8n-phase-4--clubs--and-the-hardest-thing-in-the-whole-phase-which-is-a-ballot),
+[§8o](#8o-phase-4--housing-and-dining--a-signature-and-an-amount-that-is-computed)),
+nine to sixteen, **301 new tests and 121 mutations, all caught.**
+
+### The finite thing is never where you first look
+
+Registration taught this repository to ask *can two people want the last one*.
+Phase 4 taught that the answer is usually **not the obvious noun**:
+
+| Area | What looks finite | What is |
+| --- | --- | --- |
+| Career | The application | **The offer** |
+| Athletics | The roster spot | **Nothing** — eligibility is a *date*, and the finite thing is the seat on the coach |
+| Clubs | A membership | **A vote**, a **sum**, and a room |
+| Housing | The room | The room — but the hard part is **the signature**, which is not finite at all |
+
+Two of the four turned out to have a hard part that is not contention:
+athletics' is **time**, and housing's is **commitment**. Neither would have
+been found by copying registration.
+
+### And a finding about testing, which appeared in every area
+
+**Testing a two-phase action through a helper that drives both phases cannot
+tell you which phase refused.** In §8l three mutations escaped because the
+*review*'s copy of a check was untested; in §8m two escaped because the
+*commit*'s was; in §8n five review copies; in §8o three more. Twelve of the
+fourteen escapes across the whole phase were this one thing.
+
+It is not cosmetic, and each area supplied its own reason why:
+
+> An employer told at the commit that the opening is gone has told somebody
+> they have a job. An officer told at the commit that the room is taken has
+> told people the meeting is happening. A student told at the commit that their
+> contract is binding pressed the button believing it was not.
+
+A review that says *go ahead* before a commit that says *no* has turned a
+refusal into a loss. Every duplicated guard in Phase 4 is now asserted at
+**both** call sites, separately.
+
+### What none of this does
+
+It does not connect to a university. Phase 4 remains gated, in the source
+document's own words, on everything in Phase 3 sustained through a live pilot
+**plus** a university choosing to extend trust into official institutional
+transactions one function at a time. No employer, team, club or building named
+in the sandbox exists; no money moves; no election decides anything; nobody is
+housed, cleared to compete, or hired. Every record carries `SANDBOX` and every
+receipt says so.
 
 ---
 
@@ -2136,12 +2661,40 @@ own piece of work and each is named here rather than left inside a row that
 reads as untouched.
 
 **Phases 3 and 4** — Registration, Money, Family access, Career, Athletics,
-Clubs, Housing & dining — are gated by the source document itself, not by this
-one: *"explicitly gated on a successful Vanderbilt pilot and real institutional
+Clubs, Housing & dining — now exist as **labelled demonstrations against the
+sandbox institution**, sixteen adapters in all
+([§8i](#8i-phase-3--registration--against-the-sandbox-labelled) through
+[§8p](#8p-phase-4-as-a-whole--what-four-areas-taught-that-one-could-not)).
+That changes nothing about the gate, which is the point of building them that
+way: they are gated by the source document itself, not by this one: *"explicitly gated on a successful Vanderbilt pilot and real institutional
 partnership, not proposed as anything close to a near-term ask."* Every one of
 them is read access to, or a transaction against, a system this project cannot
 build unilaterally. They are not unfinished engineering, and building screens
 that look like them would be the exact failure `data/campus.ts` refuses.
+
+### One row where the brief and the code disagree, and the code is right
+
+Worth recording rather than leaving to whoever notices it next. The
+comprehensive master brief lists **Email — native sending** as unbuilt, in the
+column that means *not done yet*. It is not unbuilt. `lib/mail.ts` **refuses**
+it, on purpose, and [§8](#8-what-this-plan-does-not-cover) records that as a
+refusal rather than a gap: *"something that can post a message as you to your
+professor is a bigger promise than a study app should make."*
+
+The two documents are not describing different code; they are describing the
+same code with different vocabularies. A feature matrix has no cell for *we
+considered this and decided against it*, so anything not present reads as
+pending — which is the same missing word [§8b](#8b-deployment--the-settings-a-deployed-copy-could-not-be-given)
+ran into from the other direction, where a setting was built and unreachable and
+the Live/Partial/Planned vocabulary had no term for that either.
+
+The practical consequence is small but real: **a reader of the brief alone would
+schedule work to build this, and building it would undo a decision.** The same
+caution applies to the other three refusals in that list — textbook prices
+(`lib/cost.ts`), writing coursework (`lib/doctemplates.ts`), and inferring exam
+scope (`lib/covers.ts`). If the brief is ever revised, those four want a row of
+their own that says *refused, and why*, because a plan that reads a refusal as a
+backlog item is a plan to reverse it by accident.
 
 ---
 
