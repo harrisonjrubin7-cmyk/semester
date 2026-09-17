@@ -20,6 +20,9 @@ order:
 | `…0600_push.sql` | the reminder queue and the devices it sends to |
 | `…0700_records.sql` | per-record sync with soft deletes |
 | `…0800_calendar.sql` | the published `.ics` feed |
+| `…0900_usage_atomic.sql` | metering the shared key without a lost update |
+| `…1000_group_columns_pinned.sql` | pinned parts, and the columns that carry them |
+| `…1100_forms.sql` | a published form, and answers from people with no account |
 
 Every one is idempotent — `create … if not exists`, `drop policy if exists`,
 `create or replace` — so running the set twice is a no-op. That is not
@@ -37,7 +40,8 @@ leaves the rest of the file running unprotected.
 ## `*.check.sql` — the tests
 
 `classmates.check.sql`, `groups.check.sql`, `rooms.check.sql`,
-`records.check.sql`, `calendar.check.sql`, `sync.check.sql`.
+`records.check.sql`, `calendar.check.sql`, `sync.check.sql`,
+`forms.check.sql`.
 
 Each one invents two to five users, proves the row-level policies refuse what
 they should refuse, and ends in `rollback;`. `rooms.check.sql` covers both halves of

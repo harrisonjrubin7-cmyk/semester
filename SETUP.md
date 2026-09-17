@@ -325,6 +325,27 @@ over the file, or just edits the file.
 The deploy prints a notice saying which of the two it used, so "accounts did not
 turn on" is answerable from the run rather than by guessing.
 
+### Forms other people can answer
+
+A form built under **Create** can be published: the questions go to a row in
+Supabase, the link is the whole of the credential, and anybody holding it
+answers with no account and no app. The answers come back to the author and to
+nobody else.
+
+It needs the table, which is not applied by this repository — apply
+`supabase/migrations/20260901001100_forms.sql` the same way as the rest (SQL
+Editor → New query → paste → Run). Without it, publishing reports the error
+Postgres gives and everything else about a form keeps working, because a form
+still lives on the device that built it.
+
+Two things it deliberately does not do. It does not know who answered: there is
+no sign-in on the answering side, so an anonymous form here is not a *verified*
+anonymous survey and must not be relied on as one. And it never publishes the
+answer key — that stays in the author's own row, where no view and no grant
+reaches it, and answers are marked on the author's device when they are
+collected. `supabase/forms.check.sql` is where both are asserted rather than
+described.
+
 ### Everything else this build can be given
 
 `app/.env.local` configures a copy running on your machine. A deployed copy has

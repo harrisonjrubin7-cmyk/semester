@@ -1522,6 +1522,142 @@ fifteen: they are empty on this repository and the deploy says so on every run.
 
 ---
 
+## 8c. Forms — publishing to real respondents
+
+The build-out plan this document grew out of carries a table of University
+Services domains that **§1 to §8 above never tracked**. Three of them are
+Phase 2 and none is gated on an institutional conversation; the first is
+described, in the source document's own words, as *"publishing to real
+respondents, branching logic, permissions, response analysis — an engineering
+lift, not an institutional-approval one."* This section is that lift.
+
+**Measured first.** Branching logic was already built: a question carries
+`condition: { questionId, equals }` and `visibleQuestions` applies it.
+Permissions were partly built — `accepting`, `opens`, `closes`, `limit`.
+Response analysis was built, as the per-option bars on the builder's Answers
+tab. What did not exist was the item the sentence leads with. `formResponse`
+had exactly one caller, `FormBuilder.tsx`, and the responses sat in a device
+library on the author's own machine. **A form nobody but its author could open
+is a questionnaire with one respondent.**
+
+**The decision the rest follows from.** A question carries `answer` and
+`points`. Uploading the questions unchanged would hand a respondent's browser
+the marking scheme for a quiz it is about to sit — and a score computed on the
+respondent's device is a score the respondent chose, which is not a scoring
+system. So the row is split by *who may see it*: `questions` holds what a
+respondent must be shown, `marking` stays in the author-only table and appears
+in no view and no grant, and a response carries answers and nothing else. The
+mark is computed on the author's device when they collect, which is the only
+place both halves exist at once.
+
+That is also why `creations.ts` now has `checkedAnswers` and `markAnswers`
+where it had one function: checking is what a respondent's browser does and
+marking is what the author's does, and they had been one pass only because
+until now they always ran on the same machine. Three cases assert the seam
+changed no mark.
+
+**The link is the whole of the credential**, as it already is for a published
+`.ics` feed, because a respondent has no account and cannot be asked for one.
+So the deliberate hole has to be exactly the shape it was meant to be and no
+larger, and that is a claim about row-level security rather than about
+TypeScript. `supabase/forms.check.sql` runs **26 checks against a real
+Postgres** — `supabase/check.sh`, which was already here and which nothing in
+this plan had used.
+
+**Mutated, because a policy that has never refused anything is not known to
+refuse.** Six mutations of the migration, each re-run through the harness:
+widening the form's select policy to `true`, widening the response read,
+exposing `marking` through the published view, exposing `owner`, and dropping
+the cap clause are **all five caught**. The sixth — granting `select` on
+`forms` to `anon` — **passes, and should**: row-level security is the gate, as
+`anon` has no `auth.uid()` and no policy matches, so the revoke is defence in
+depth and the checks being indifferent to it is the accurate reading. That is
+written into the check file, because a reader finding five caught and one not
+deserves the reason rather than a gap.
+
+On the app's side, five mutations of `lib/formshare.ts` — making `asked()` a
+spread of the source question, un-stripping the answer, un-zeroing the marks,
+claiming the respondent's form is a quiz, and accepting any string as a
+published id — are all five caught by `formshare.test.ts`.
+
+**A respondent is not shown the app.** `screens/Respond.tsx` is mounted from
+`main.tsx` *instead of* `<App />`: no store, no assistant, no tab bar, and no
+first-run prompt about importing a syllabus. Somebody followed a link to answer
+two questions. It is a **2.62 kB chunk**, so that is what a stranger downloads.
+
+**And then a screenshot found two things the gates could not.** The page
+rendered with every line against the left edge of the phone, because its
+padding asked for `var(--sp-8)` and the scale stops at `--sp-7`: one undefined
+token voids the whole shorthand, and it typechecks, it lints, and the suite has
+no opinion about a custom property that does not exist. The second was prose —
+the builder said *"Sending a link … needs your school's own form service"*,
+which this change makes false. Both are fixed, and the padding is longhand now
+so a future bad token costs one property rather than all four.
+
+Driven in a real browser end to end: the form loads, four question types
+answer, and what goes on the wire is `{ form_id, answers }` and nothing else —
+no score, which is the design, proved on the wire rather than in a comment.
+
+**Done when.** A form built under Create publishes to a link; somebody with no
+account answers it; the answers return to the author and to nobody else; the
+answer key never leaves the author; a closed form, an unopened window, a passed
+window and a form at its cap each refuse in the database; and withdrawing takes
+the answers with it. All of it asserted, in `forms.check.sql` and
+`formshare.test.ts`.
+
+**What this does not do.** It does not know who answered — there is no sign-in
+on the answering side — so an anonymous form here is not a *verified* anonymous
+survey and the screen says so. It does not apply its own migration: like every
+other table in `supabase/`, that is a person pasting SQL into a dashboard, and
+until they do, publishing reports the error and every other part of a form
+still works.
+
+---
+
+## 8d. What the source document has left, and what it is waiting on
+
+For the record, measured rather than assumed, since §1 to §8 of this plan were
+scoped to Study Modes, Cross-Course Intelligence and the Production Suite and
+the source document is wider than that.
+
+**Phase 0 — all six done.** Global search ([§9b](#9b-phase-0--global-search))
+and the accessibility minimums ([§9](#9-phase-0-of-the-build-out-plan--accessibility-minimums))
+are sections of this plan. The other four were never tracked here and measure
+as built: developer configuration is off the student screens — `Connect.tsx`
+says "Signing in to X is not switched on in this copy of Semester" and offers
+the `.ics` route, with the portal instructions in the file's comments where a
+student never sees them; backup coverage is `lib/workspace-backup.ts`, which
+names all six workspaces the main backup does not reach; Teach-back is
+`components/StudyJournal.tsx`, a real attempt-then-compare with a private
+mistake log and review scheduling, not a label; and the server-side AI gateway
+is route 4 in `lib/claude.ts` — "an Edge Function checks the account and meters
+it, so a new user can generate a course without first going and getting a key
+of their own."
+
+That last one connects to [§8b](#8b-deployment--the-settings-a-deployed-copy-could-not-be-given)
+and is worth stating plainly: the Phase 0 gateway existed, and until §8b landed
+the deployed copy had no way to be pointed at a proxy at all, because
+`VITE_CLAUDE_PROXY` was one of the twelve settings the Pages build could not
+carry. The item was built and unreachable, which is a third state the plan's
+Live/Partial/Planned vocabulary has no word for.
+
+**Phase 1 and Phase 2 of the source document** are [§6](#6-the-whole-plan-as-one-schedule)'s
+two tables, all twelve items done, plus the three University Services rows this
+plan had not tracked: **Forms**, done in [§8c](#8c-forms--publishing-to-real-respondents);
+**Meetings** — authentication, waiting rooms, relay infrastructure, captions,
+moderation, recording; and **Design & video** — professional-grade editing,
+real-time collaboration, rendering, templates and layers.
+
+**Phases 3 and 4** — Registration, Money, Family access, Career, Athletics,
+Clubs, Housing & dining — are gated by the source document itself, not by this
+one: *"explicitly gated on a successful Vanderbilt pilot and real institutional
+partnership, not proposed as anything close to a near-term ask."* Every one of
+them is read access to, or a transaction against, a system this project cannot
+build unilaterally. They are not unfinished engineering, and building screens
+that look like them would be the exact failure `data/campus.ts` refuses.
+
+---
+
 ## 9. Phase 0 of the build-out plan — accessibility minimums
 
 The build-out plan carries this as work to *"complete before any pilot tester
