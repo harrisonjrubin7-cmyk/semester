@@ -43,7 +43,7 @@ Legend: **Open** · **Landed** (already in the app; nothing to do) · **Partly**
 
 ## The nine proposals
 
-### 1 · Fix the free-and-unlimited story · **Partly — the code half is fixed; the sentence is not, and should not be written yet**
+### 1 · Fix the free-and-unlimited story · **Partly — the code half is fixed; two thirds of the sentence is true and unsaid, and the third is false**
 
 > Every competitor caps or paywalls the exact action Semester currently also
 > blocks — uploading your own syllabus without a key. The moment it's fixed,
@@ -57,23 +57,54 @@ of them need no key, the gate now stands *in the primary button's place* rather
 than under a button that cannot succeed, and `screens/deadends.test.tsx` pins
 both directions.
 
-**The sentence is the open half, and the honest answer today is not to write
-it.** It appears nowhere in the app — not in `screens/Onboarding.tsx`, not in
-`screens/FirstRun.tsx`, not on the import screen — and two facts about this
-repository say it would not yet be true:
+**The sentence is the open half. Two thirds of it can be written today; the
+other third is false, and it is the word the document leads with.**
 
-- The shared key is still a deployment decision, not a shipped one.
-  `lib/claude.ts` tells a student by name that there is no key yet, and
-  `SETUP.md` covers deploying the function that would change that. Until it is
-  deployed, "unlimited courses" means unlimited courses *typed in by hand*.
-- `lib/invite.ts` landed on main this morning — an allow-list in front of the
-  sign-up form. "No credit card" is true. "Free, for anyone" is, for now, not.
+The claim appears nowhere in the app — not in `screens/Onboarding.tsx`, not in
+`screens/FirstRun.tsx`, not on the import screen. Taken word by word against
+the code:
 
-So the claim is not blocked on copywriting. It is blocked on the two decisions
-above, and writing it first would put the app in the company of the thing this
-document's own closing section says not to copy: *advertising integration you
-don't have*. Make the decisions, then write the sentence, and it will be the
-strongest sentence in the onboarding.
+- **"Free" — true, and unsaid.** There is no payment machinery in this
+  repository. No Stripe, no checkout, no plan, tier or price, in `app/src` or
+  `supabase/`. (`components/Subscribe.tsx` is a calendar feed and every hit for
+  "stripe" is a coloured edge on a list row.) `lib/guidebook.ts` already tells
+  the reader the app has "no account requirement and no analytics", and stops
+  just short of the money.
+- **"No credit card" — true, and unsaid.** Same reason: there is nothing to
+  put a card into.
+- **"Unlimited courses" — false as written.** The shared key is metered.
+  `supabase/functions/claude/index.ts:35` sets `MONTHLY_CALLS` to **60 calls per
+  account per calendar month** by default, and two shipped strings already say
+  so to the student's face: `settings/Assistant.tsx:138` — *"metered per
+  account … Add your own key only to go past the monthly limit"* — and
+  `lib/claude.ts:198` — *"The shared key has run out for this month."*
+
+Courses added **by hand** are genuinely uncapped; no course-count limit exists
+anywhere. So the true version of the claim is narrower and still beats all ten
+competitors: *free, no credit card, no cap on courses — and sixty AI builds a
+month on the shared key, or bring your own and have no limit at all.* Not one of
+the ten offers that.
+
+Writing "unlimited" instead would make the app's first sentence contradict its
+own settings screen, and this app has already been burned by exactly that.
+`screens/Onboarding.tsx` carries the scar in its own docstring: the first two
+screens used to tell a new user *"We found 38 dated obligations across four
+courses"* before they had uploaded anything — *"The first thing the app said was
+false, which is a bad way to be trusted with a semester."* The onboarding was
+rewritten to count what is actually there. Putting an unmetered promise back
+into it would undo that on the same screen.
+
+Two deployment facts still gate even the narrow version, and both are decisions
+rather than code: whether the shared key is switched on for pilot testers at all
+(`SETUP.md`, and `lib/claude.ts` tells a student by name when it is not), and
+`lib/invite.ts`, the allow-list that landed in front of the sign-up form. "Free"
+is true; "free, for anyone, today" is not yet.
+
+The surfaces where the sentence belongs, when it is written: `steps()` in
+`screens/Onboarding.tsx`, which is the first thing every new account reads;
+`screens/FirstRun.tsx`, the empty-catalogue screen reached from at least eight
+others; and the `what` section of `lib/guidebook.ts`, which already says
+everything else about what the app asks of you.
 
 ### 2 · Build a live "what grade do I need" calculator · **Landed — on four surfaces**
 
@@ -384,8 +415,12 @@ not a nudge but a floor — `lib/rest.ts` removes those hours from the week's
 capacity *before* anything is planned, so a week that only fits by working at
 half past one does not fit, and the app says so on Monday rather than letting it
 fail on Thursday. Exam countdowns are `lib/runway.ts`. The money/housing/career
-breadth is real. And the free-and-uncapped model is real in the app, with the
-two deployment caveats under item 1.
+breadth is real. The free model is real — there is no payment code in the
+repository at all. "Uncapped" needs one qualification the document does not
+carry: courses added by hand are uncapped, and the shared AI key is metered at
+sixty generations a month (`supabase/functions/claude/index.ts:35`), which is
+still a better offer than any of the ten and is not the same sentence. See
+item 1.
 
 ## What this pass actually found
 
