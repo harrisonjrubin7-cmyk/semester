@@ -30,7 +30,7 @@ survive**, and they failed in the same direction: they described as outstanding
 work that had already landed.
 
 The draft said Exam Runway "does not exist in the app today — this is the one
-feature in the entire product with no working version yet". It is 922 lines
+feature in the entire product with no working version yet". It is 1,189 lines
 across `app/src/lib/runway.ts`, `app/src/lib/covers.ts` and
 `app/src/screens/Runway.tsx`. It said pivot tables were missing;
 `app/src/lib/pivot.ts` is 424 lines and writes its aggregates back into cells as
@@ -683,6 +683,15 @@ rounds a percentage before the scale reads it, because 89.94 is a B+ and roundin
 it to an A− moves a whole grade point on a tenth of a percent, in exactly the
 case where somebody is looking.
 
+> **Measured 17 September: closed, and this section had not been updated.**
+> `termgpa.ts` exports `missingLine` and `fixFor`; `screens/Degree.tsx` lists
+> every excluded course by code, says which field is missing in that course's
+> own terms, and offers the tap that fixes it — Edit for `hours`, Grades for
+> `points`, and nothing for `ungraded`, which has no fix but sitting an
+> assessment. `EditCourse.tsx` has had a Credits field throughout. What is
+> below is the argument for that design and is worth keeping; the "missing" is
+> not missing.
+
 **What's missing.** Not the model — the **exclusions**. `Missing` is
 `'' | 'ungraded' | 'hours' | 'points'`: a course with nothing graded yet, a
 course whose credit hours could not be read off the syllabus line, and a scale
@@ -717,7 +726,7 @@ the inputs and compares.
 
 ### 4.3 · Exam Runway — Partial *(the draft said Planned; it is not)*
 
-**Current state.** 922 lines, three files, one screen, shipping.
+**Current state.** 1,189 lines, three files, one screen, shipping.
 
 `app/src/lib/runway.ts` measures the weeks before an exam **backwards from the
 exam**, in bands rather than as a smooth percentage, because at three weeks the
@@ -2242,10 +2251,36 @@ it was checked on 15 September 2026, and where to look.
 | Listen is missing "complete chapter-mark indexing across all content" | All eight editions carry a `chapters` block, rendered exact by the synthesiser. The gap is a generated course, and the absent batch pipeline | `src/data/courses/*/index.ts`, `audio/synth.py`, `pipeline/chapters.py` |
 | Figures needs "a repeatable pipeline for turning arbitrary course concepts into a correct diagram" built from scratch | That pipeline exists — Claude writes a Mermaid or SVG specification, `cleanSvg` sanitises it, the app renders it. ~~Wired to the Draw screen and not to the Figures mode~~ — **wired to both, as of the `drawn` arm**; the remaining gap was the hand-drawn kinds' subject coverage, closed 17 September | `lib/diagram.ts` (343), `lib/figure.ts:readDrawn`, `components/FigureCard.tsx`, `lib/live.ts` |
 
-Two claims in the draft survived unchanged and are repeated above on their own
-merits: Where Courses Meet matches words rather than meanings (`lib/meet.ts`
-says so in its own header), and Quote Verification has had no adversarial
-false-positive pass.
+Two claims in the draft survived the 15 September pass and were repeated above
+on their own merits. **One of them has since been closed, and re-measuring on
+17 September is what found it.**
+
+| | |
+| --- | --- |
+| Where Courses Meet matches words rather than meanings | still true — `lib/meet.ts` says so in its own header, and §4.1's fifth grade of evidence is unbuilt |
+| ~~Quote Verification has had no adversarial false-positive pass~~ | **`lib/quotes.adversarial.test.ts`**, twenty cases in four families — numbers changed inside a verbatim passage, fragments assembled from pieces that each appear separately, a different work by the same author, and near-miss paraphrases. Written, in its own words, "by someone trying to break it, because the two directions are not the same test". |
+
+### What a second pass over this document found
+
+Re-reading §3 to §5 against the tree on 17 September, **five claims of
+incompleteness were stale** and two were real:
+
+| | |
+| --- | --- |
+| §3.1 — the figure systems "do not meet" | closed; the `drawn` arm joins them |
+| §3.1 — "a generated course gets no figures at all" | closed, and was never quite the gap it reads as |
+| §3.1 — no STEM diagram kinds | **real**, and closed on 17 September |
+| Phase 2 exit — "no mode card reports an empty state" | true, and now a test rather than a sentence |
+| §4.2 — the GPA exclusions are not offered as fixes | closed; `missingLine` and `fixFor` |
+| Appendix A — no adversarial pass on quotes | closed; twenty cases |
+| §4.3 — a fourth, model-read scope source | **real, and open** |
+| §4.1 — a fifth, semantic grade of evidence | **real, and open** |
+
+That ratio is the thing to carry forward rather than any one row. This document
+is a snapshot, the tree moves faster than it, and its own instruction — *find
+out which of them is lying before editing either* — applies to its prose and
+not only to its numbers. **Check a "what's missing" against the code before
+building it.** Four of these would have been built twice.
 
 The pattern in the corrected rows is one pattern. Eight of them describe an
 engine that exists and a place it has not been connected to, or a capability that
