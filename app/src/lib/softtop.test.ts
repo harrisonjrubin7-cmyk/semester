@@ -307,8 +307,16 @@ describe("tonight's hero", () => {
     frameLabel: '',
   } as unknown as State['courses'][number];
 
+  /*
+   * Asked of Today on the Hours tab, which is where this hero lives now.
+   *
+   * It was `softTop('tonight', …)` — `#/tonight` was a screen with a case of
+   * its own. The screen is Today's Hours tab, so the hero moved into the
+   * `home` case and is chosen by `homeTab`, the way the Courses case picks the
+   * grades hero. Same body, same assertions; only the question changed.
+   */
   const hero = (over: Partial<State> = {}) =>
-    softTop('tonight', input(over, [course])).hero;
+    softTop('home', input({ homeTab: 'hours', ...over }, [course])).hero;
 
   it('states no figure in hours, which it cannot know', () => {
     // The picker on the screen is local to it, so anything in hours up here is
@@ -328,7 +336,7 @@ describe("tonight's hero", () => {
 
   it('says thing rather than things when there is one', () => {
     const one = { ...course, items: [course.items[0]] } as typeof course;
-    expect(softTop('tonight', input({}, [one])).hero?.foot).toBe('thing outstanding');
+    expect(softTop('home', input({ homeTab: 'hours' }, [one])).hero?.foot).toBe('thing outstanding');
   });
 });
 

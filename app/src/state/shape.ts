@@ -22,6 +22,7 @@ import type {
   CourseUpdate,
   FeedEvent,
   FeedSource,
+  HomeTab,
   NavMode,
   Note,
   PersonalTask,
@@ -837,7 +838,7 @@ export interface Ephemeral {
    * single long scroll with everything on it.
    */
   mineTab: 'tasks' | 'appointments' | 'notes' | 'files';
-  homeTab: 'today' | 'hours' | 'week' | 'done';
+  homeTab: HomeTab;
   coursesTab: CoursesTab;
   /** Which half of the money screen is showing. See `lib/types.ts`. */
   costsTab: CostsTab;
@@ -2135,7 +2136,7 @@ export type Action =
   | { type: 'stepDay'; delta: number }
   | { type: 'setMineTab'; tab: 'tasks' | 'appointments' | 'notes' | 'files' }
   | { type: 'setCostsTab'; tab: CostsTab }
-  | { type: 'setHomeTab'; tab: 'today' | 'hours' | 'week' | 'done' }
+  | { type: 'setHomeTab'; tab: HomeTab }
   | { type: 'setCoursesTab'; tab: CoursesTab }
   | { type: 'setMeTab'; tab: 'you' | 'task' }
   | { type: 'setTone'; tone: Tone }

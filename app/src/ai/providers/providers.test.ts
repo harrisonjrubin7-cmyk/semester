@@ -434,7 +434,13 @@ describe('mastery in the context', () => {
     // "Explain the coldest unit as if I have not read it" is one of this
     // screen's own suggestions, and the coldest was whichever unit the author
     // wrote the lowest number beside.
-    expect(said('tonight')).toContain('nothing answered yet');
+    //
+    // Asked of Today on the Hours tab, which is where that suggestion lives
+    // now: `#/tonight` was a screen with a provider of its own, and the
+    // provider is unchanged — `semester.home` delegates to it when the tab is
+    // open, so what the model is told on that tab is what it was told on the
+    // screen. That delegation is the thing this line now also proves.
+    expect(said('home', { homeTab: 'hours' })).toContain('nothing answered yet');
   });
 
   it('does not average declared figures into one', () => {

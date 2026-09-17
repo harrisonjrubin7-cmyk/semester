@@ -330,6 +330,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ...(landed.opens?.report ? { report: landed.opens.report } : {}),
         ...(landed.opens?.changes ? { changes: landed.opens.changes } : {}),
         ...(landed.opens?.courses ? { coursesTab: landed.opens.courses } : {}),
+        ...(landed.opens?.home ? { homeTab: landed.opens.home } : {}),
       };
     }
     /*
@@ -1084,14 +1085,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const moved = () => {
       const asked = fromHash(window.location.hash);
-      if (!asked || same(asked, shown.current)) return;
-      shown.current = asked;
-      // Which part of a merged screen the link meant, before the navigation,
-      // so the screen paints on the right one rather than switching under
-      // somebody. Same rule as the cold-start branch above and as `Tapped`.
+      if (!asked) return;
+
+      /*
+       * Which part of a merged screen the link meant — *before* the identity
+       * check below, not after it.
+       *
+       * `same()` compares screen, id and mode, and two routes differing only
+       * in `opens` are equal to it. That was harmless while every retired
+       * screen merged into a *different* screen: `#/weekly` lands on `brief`,
+       * which is never where you already were, so the guard never fired and
+       * the grain was always applied.
+       *
+       * `#/ahead` and `#/tonight` merged into `home`, and Today is exactly the
+       * screen somebody is most likely to already be standing on. Then the
+       * guard reads "same place, nothing to do" and returns before the tab is
+       * ever set, so the link lands on Today's default tab — the promise
+       * technically kept and actually broken, from the one line written to
+       * prevent it. Measured: both addresses came up on the Today tab.
+       *
+       * Dispatching first is safe because `hashchange` only fires when the
+       * hash actually changed, and every one of these is idempotent.
+       */
       if (asked.opens?.report) dispatch({ type: 'setReport', grain: asked.opens.report });
       if (asked.opens?.changes) dispatch({ type: 'setChanges', source: asked.opens.changes });
       if (asked.opens?.courses) dispatch({ type: 'setCoursesTab', tab: asked.opens.courses });
+      if (asked.opens?.home) dispatch({ type: 'setHomeTab', tab: asked.opens.home });
+
+      if (same(asked, shown.current)) return;
+      shown.current = asked;
       dispatch({ type: 'landed', screen: asked.screen, id: asked.id, mode: asked.mode });
     };
     window.addEventListener('popstate', moved);

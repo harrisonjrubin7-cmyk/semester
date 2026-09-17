@@ -94,7 +94,7 @@ export const crowded: Source = {
           })),
           confidence: 'firm',
           sampleSize: window.length,
-          action: { label: 'The week ahead', screen: 'ahead' },
+          action: { label: 'The week ahead', screen: 'home', home: 'week' },
           rank: 4,
         },
       ];

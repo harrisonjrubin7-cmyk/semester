@@ -1,4 +1,4 @@
-import type { CoursesTab, Screen } from '../lib/types';
+import type { CoursesTab, HomeTab, Screen } from '../lib/types';
 
 /**
  * One thing the data supports saying, and the record it rests on.
@@ -56,8 +56,15 @@ export interface Insight {
    * The grain exists because the grade table stopped being a screen and became
    * the third tab of Courses: an action that named `courses` alone would land
    * a projection about a grade on whichever tab was last open.
+   *
+   * `home` is the same thing a second time, and the repetition is the point:
+   * "the next seven days in hours" stopped being `#/ahead` and became Today's
+   * This week tab, so a pressure finding that named `home` alone would land a
+   * warning about next week on whichever of Today's four tabs was last open.
+   * Two fields rather than one shared `tab`, because they are two different
+   * unions and a single field would take either and mean neither.
    */
-  action?: { label: string; screen: Screen; tab?: CoursesTab };
+  action?: { label: string; screen: Screen; tab?: CoursesTab; home?: HomeTab };
   /** Lower sorts first. Impact, never recency. */
   rank: number;
 }

@@ -115,6 +115,7 @@ function One({ insight }: { insight: Insight }) {
               // The grain first, so the screen paints on the part the finding
               // is about rather than switching under somebody.
               if (insight.action!.tab) dispatch({ type: 'setCoursesTab', tab: insight.action!.tab });
+              if (insight.action!.home) dispatch({ type: 'setHomeTab', tab: insight.action!.home });
               dispatch({ type: 'go', screen: insight.action!.screen });
             }}
             style={{

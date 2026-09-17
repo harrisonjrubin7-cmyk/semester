@@ -136,13 +136,11 @@ export const UNLOCKS: Record<string, (f: Facts) => boolean> = {
    * it says so in its own words instead: see `nothingLine` in `lib/worked.ts`.
    */
   behind: (f) => f.courses > 1,
-  tonight: (f) => f.courses > 0,
 
   // Longer horizons.
   degree: (f) => f.courses > 0,
   registrar: (f) => f.courses > 0,
   // Archiving one term means nothing until there are two.
-  ahead: (f) => f.terms > 1 || f.courses > 0,
 
   connect: (f) => f.courses > 0,
 

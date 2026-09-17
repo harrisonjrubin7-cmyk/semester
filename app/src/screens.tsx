@@ -94,7 +94,6 @@ const Activities = lazy(() => import('./screens/Activities').then((m) => ({ defa
 const Clocks = lazy(() => import('./screens/Clocks').then((m) => ({ default: m.Clocks })));
 const Proof = lazy(() => import('./screens/Proof').then((m) => ({ default: m.Proof })));
 const Applying = lazy(() => import('./screens/Applying').then((m) => ({ default: m.Applying })));
-const Tonight = lazy(() => import('./screens/Tonight').then((m) => ({ default: m.Tonight })));
 const Behind = lazy(() => import('./screens/Behind').then((m) => ({ default: m.Behind })));
 const Degree = lazy(() => import('./screens/Degree').then((m) => ({ default: m.Degree })));
 const Meet = lazy(() => import('./screens/Meet').then((m) => ({ default: m.Meet })));
@@ -106,7 +105,6 @@ const Write = lazy(() => import('./screens/Write').then((m) => ({ default: m.Wri
 const SheetScreen = lazy(() => import('./screens/Sheet').then((m) => ({ default: m.Sheet })));
 const Equations = lazy(() => import('./screens/Equations').then((m) => ({ default: m.Equations })));
 const Exam = lazy(() => import('./screens/Exam').then((m) => ({ default: m.Exam })));
-const Ahead = lazy(() => import('./screens/Ahead').then((m) => ({ default: m.Ahead })));
 const Changes = lazy(() => import('./screens/Changes').then((m) => ({ default: m.Changes })));
 const Costs = lazy(() => import('./screens/Costs').then((m) => ({ default: m.Costs })));
 const Gap = lazy(() => import('./screens/Gap').then((m) => ({ default: m.Gap })));
@@ -184,7 +182,6 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   clocks: Clocks,
   proof: Proof,
   applying: Applying,
-  tonight: Tonight,
   behind: Behind,
   degree: Degree,
   meet: Meet,
@@ -196,7 +193,6 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   sheet: SheetScreen,
   equations: Equations,
   exam: Exam,
-  ahead: Ahead,
   announce: Changes,
   costs: Costs,
   gap: Gap,

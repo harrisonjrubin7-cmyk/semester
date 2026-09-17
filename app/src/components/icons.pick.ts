@@ -15,7 +15,6 @@ import {
   AccountIcon,
   ActivitiesIcon,
   AppsIcon,
-  AheadIcon,
   AnalyseIcon,
   AnnounceIcon,
   ApplyingIcon,
@@ -70,7 +69,6 @@ import {
   SourcesIcon,
   StudyIcon,
   TodayIcon,
-  TonightIcon,
   UpdateIcon,
   UpkeepIcon,
   WorkIcon,
@@ -134,9 +132,7 @@ const OWN: Partial<Record<Screen, Glyph>> = {
    * yet, which is currently none of them.
    */
   brief: BriefIcon,
-  ahead: AheadIcon,
   behind: BehindIcon,
-  tonight: TonightIcon,
   degree: DegreeIcon,
   import: ImportIcon,
   edit: EditIcon,

@@ -24,8 +24,9 @@ import {
   type Day,
   type Door,
 } from '../../lib/you';
-import type { DatedItem, Screen } from '../../lib/types';
+import type { DatedItem, HomeTab, Screen } from '../../lib/types';
 import { goCal } from '../../lib/opencal';
+import { goHome } from '../../lib/openhome';
 
 /**
  * Progress, on the tab somebody actually lands on.
@@ -78,6 +79,15 @@ interface Stat {
    */
   say: string;
   to?: Screen;
+  /**
+   * Which of Today's tabs, where the cell names a horizon.
+   *
+   * The Ahead cell opened `#/ahead`, a screen of its own; that is Today's This
+   * week tab now. Same reason `Door` next door carries one — a cell labelled
+   * AHEAD that lands on Today's default tab has stopped answering its own
+   * number. See `lib/openhome.ts`.
+   */
+  tab?: HomeTab;
 }
 
 export function You() {
@@ -182,7 +192,7 @@ export function You() {
    * rearranges itself.
    */
   const stats: Stat[] = [
-    { n: where.ahead, l: 'Ahead', say: `${where.ahead} still ahead of you`, to: 'ahead' },
+    { n: where.ahead, l: 'Ahead', say: `${where.ahead} still ahead of you`, to: 'home', tab: 'week' },
     { n: where.done, l: 'Done', say: `${where.done} ticked off this term` },
     ...(where.credits > 0
       ? [{ n: where.credits, l: 'Credits', say: `${where.credits} credits this term` }]
@@ -193,6 +203,9 @@ export function You() {
   /** A door's one press. Most open a screen; the next-thing door opens a thing. */
   const press = (d: Door) => {
     if (d.item) dispatch({ type: 'openItem', id: d.item });
+    // A door naming a horizon lands on the tab that answers it, not on
+    // whichever of Today's four the session last showed. See `lib/openhome.ts`.
+    else if (d.tab) goHome(dispatch, d.tab);
     else dispatch({ type: 'go', screen: d.screen });
   };
 
@@ -358,7 +371,7 @@ export function You() {
                 // and this one is a button: what it announces is the whole of
                 // what somebody has to decide from.
                 aria-label={s.say}
-                onClick={() => dispatch({ type: 'go', screen: s.to as Screen })}
+                onClick={() => (s.tab ? goHome(dispatch, s.tab) : dispatch({ type: 'go', screen: s.to as Screen }))}
                 style={{ width: 'auto', textAlign: 'center' }}
               >
                 {cell}
@@ -397,7 +410,7 @@ export function You() {
             // 44×17 as two caps words, in a row with a heading beside it: the
             // room is above and below, which is what `tap-y` grows into.
             className="bare tappable tap-y"
-            onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
+            onClick={() => goHome(dispatch, 'week')}
             style={{
               flex: 'none',
               width: 'auto',

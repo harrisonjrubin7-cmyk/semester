@@ -34,7 +34,7 @@
 
 import { creditHoursOr0 } from './credits';
 import { split, type DoneMap } from './standing';
-import type { DatedItem, Screen } from './types';
+import type { DatedItem, HomeTab, Screen } from './types';
 
 /**
  * How far through the term the deadlines say we are, 0–1, or null.
@@ -265,6 +265,16 @@ export interface Door {
   screen: Screen;
   /** The deadline to open, where the door is one particular thing. */
   item?: string;
+  /**
+   * Which of Today's tabs, where the door names a horizon rather than a screen.
+   *
+   * The week door used to open `#/ahead`, a screen of its own. That screen is
+   * Today's This week tab now (`lib/route.ts`, `RETIRED`), and a door labelled
+   * "Plan the week" that lands on Today's default tab has stopped doing what
+   * it says. Optional, because most doors mean a whole screen and promise no
+   * particular part of it.
+   */
+  tab?: HomeTab;
 }
 
 /**
@@ -296,7 +306,7 @@ export function doors(input: {
   // Nothing late, nothing drilled, nothing dated — the week screen is still
   // worth an offer, because it is where the hours are. One door beats none.
   if (out.length === 0 && where.ahead > 0)
-    out.push({ id: 'week', label: 'Plan the week', screen: 'ahead' });
+    out.push({ id: 'week', label: 'Plan the week', screen: 'home', tab: 'week' });
   return out.slice(0, 3);
 }
 

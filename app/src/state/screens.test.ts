@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PERSISTED, initialEphemeral, pickPersisted, type State } from './shape';
 import { DESTINATIONS } from '../lib/nav';
+import { readTabs } from '../lib/tabbar';
 import { fromHash, toHash } from '../lib/route';
 
 /**
@@ -58,5 +59,31 @@ describe('what a restart can land on', () => {
     // runtime half: the registry and the route table agree about what exists.
     const named = new Set(DESTINATIONS.map((d) => d.screen));
     expect(named.size).toBe(DESTINATIONS.length);
+  });
+
+  /*
+   * The one saved thing that really does carry screen ids.
+   *
+   * The header above says there are exactly two ways to land on a screen
+   * across a restart, and it is right about both — but a deleted screen can
+   * also arrive as a *dead button*, which is the third shape of the same bug
+   * and the one a phone in a drawer actually produces. `tabs` is persisted,
+   * it is a list of screen names, and a student who put Tonight in their bar
+   * last term has it in storage today.
+   *
+   * `readTabs` drops what the registry does not have. Pinned here with the
+   * screens this merge retired, because "drops unknown screens" is a claim
+   * that is easy to keep true by accident and easy to break by adding a
+   * fallback that keeps them.
+   */
+  it('drops a retired screen out of a saved tab bar rather than drawing a dead button', () => {
+    const bar = readTabs(['home', 'ahead', 'courses', 'tonight', 'study']);
+    expect(bar).not.toContain('ahead');
+    expect(bar).not.toContain('tonight');
+    // And keeps what is still real, so this is not passing by emptying the bar.
+    expect(bar).toContain('home');
+    expect(bar).toContain('courses');
+    expect(bar).toContain('study');
+    for (const screen of bar) expect(DESTINATIONS.map((d) => d.screen)).toContain(screen);
   });
 });
