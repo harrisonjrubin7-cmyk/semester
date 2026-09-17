@@ -1970,6 +1970,67 @@ Error` left in it. That is the guard that covers the fortieth refusal and the
 forty-first, which is the same argument `src/rootunmount.test.ts` makes about
 React roots.
 
+### And what late work costs, which the course had no way to say
+
+The deadline commit recorded lateness and deliberately refused to act on it:
+*"a sandbox that hard-refused would be modelling one policy as though it were
+the only one … it records the truth and leaves the policy to the course."* That
+was right about the absence of a policy, and it left a thread hanging. There
+was nowhere for a course to state one, so both sides read the sentence **"The
+course decides what that costs"** and neither of them could find out what it
+decided.
+
+A course states it now, as the two numbers nearly every real policy is made of
+— a rate per day and the most it can reach — and `0` is a policy too: a course
+saying late work is not penalised is saying something, and it is not the same
+as a course that has not said anything. Both sentences are distinct and both
+are tested, because "unstated" and "stated as nothing" are different facts.
+
+**Four numbers, kept apart.** What the work earned, how late it was, what that
+cost under the stated rule, and what goes on the record:
+
+| | |
+| --- | --- |
+| Mark | 17 out of 20 |
+| Deadline | Late by 3 days |
+| Late penalty | 30% of 20 — 6 marks, for 3 days. 10% of the mark per day late, or part of a day, up to 30%. |
+| Recorded | 11 out of 20 |
+
+One number cannot answer *what did I lose it on*. The rule the whole thing
+rests on is that **the penalty never comes out of a criterion**: "Accuracy 6 of
+8" is a judgement about the answers, lateness is not a statement about
+accuracy, and scaling the criteria would make the rubric lie about the work in
+order to carry a fact about the clock. The recorded mark is computed from the
+rubric and the rate rather than stored, for the same reason the lateness
+sentence is — two stored facts can disagree, and only one of them is evidence.
+
+That is also what makes the last refusal necessary. **A policy cannot be
+changed once a mark has been released under it**, because the mark is computed
+from it: change the rate afterwards and every released mark silently restates
+itself, nobody is told, and the number on the record stops matching the number
+the student was shown.
+
+The policy is on the course and on each piece of work, not only in the warning
+attached to submitting three days late — the same argument the rubric is here
+for. A policy somebody meets at the moment they are already late arrived too
+late to change anything they did.
+
+One thing fell out of reading the diff adversarially rather than out of a
+test. The appeal record showed the mark as marked, and the grades record now
+showed the mark as recorded — two answers to *"what is my mark"* on the two
+screens a student reads together, on the one occasion where that question has
+to have one answer. The appeal carries the recorded mark now, with the
+difference named beside it.
+
+Twenty mutations, twenty red. Four survived the first pass and every one
+was the test rather than the code: a claim in a sentence ("or part of a day")
+that no test exercised, an assertion that read the whole record as one string
+and so could not tell a renamed label from a missing one, and a "nothing is
+invented" test that checked the rubric mark was still there rather than that
+the penalty was not. Fixing the second one turned up a guard that could not be
+made to fail — an early-work check whose work was already done by the line
+below it — which was removed rather than left looking like a guard.
+
 ### What this does not do
 
 It does not connect to Vanderbilt or to anything else, and nothing here changes
