@@ -230,11 +230,43 @@ describe('step 6: the workspace again', () => {
     expect(migrate({ schemaVersion: 4, nav: 'tabs' }).state.nav).toBe('workspace');
   });
 
-  it('is where a fresh install lands too, so the two cannot drift', () => {
-    // A default that disagreed with the last step is how somebody's phone and
-    // laptop end up in different navigations. Against the constant rather than
-    // the literal, so the next move has to change both.
-    expect(DEFAULT_PERSISTED.nav).toBe('workspace');
+  /*
+   * And a fresh install no longer lands here, which is a change of mind about
+   * this test rather than a change to step 6.
+   *
+   * What this asserted was that the last step and the fresh-install default
+   * were the same value, on the argument that a default disagreeing with the
+   * last step is how somebody's phone and laptop end up in different
+   * navigations. The default is the tab bar now and step 6 still writes the
+   * workspace, so they disagree on purpose, and the argument turns out to
+   * reach less far than it reads:
+   *
+   *   - `nav` syncs. `lib/merge.ts` resolves it as `theirs`, so a signed-in
+   *     second device takes the first one's navigation and never sees a
+   *     default at all. The case the old invariant protected is the case that
+   *     does not arise.
+   *   - Signed out, two devices share nothing by construction — each has its
+   *     own stored copy and its own independent choices — so there is no pair
+   *     to keep in step.
+   *   - And the only alternative is a step 7 rewriting `nav` on every stored
+   *     copy, which is exactly what `migrate.ts` says at length must not
+   *     happen again: step 6 could undo step 5 only because step 5 had
+   *     overwritten a value nobody chose, and that is not true twice.
+   *
+   * So the guarantee worth holding is not that the two agree. It is that
+   * moving the default moves nobody who has already opened the app — which is
+   * the property that makes it a default instead of a migration.
+   */
+  it('keeps writing the workspace, whatever a fresh install now starts as', () => {
+    expect(step6('guides').nav).toBe('workspace');
+    expect(DEFAULT_PERSISTED.nav).not.toBe('workspace');
+  });
+
+  it('and is the last step that writes a navigation at all', () => {
+    // A step 7 that moved `nav` would be a stored preference rewritten — the
+    // one thing `migrate.ts` says it got away with once and cannot again.
+    const later = STEPS.filter((step) => step.to > 6 && /\bnav\b/.test(String(step.run)));
+    expect(later.map((step) => step.to)).toEqual([]);
   });
 
   it('runs once, so choosing the guides sticks', () => {

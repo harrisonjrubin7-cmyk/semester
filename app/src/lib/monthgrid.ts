@@ -79,6 +79,40 @@ export function marksLine(marks: Mark[]): string {
   return parts.join(', ');
 }
 
+/**
+ * How many dots a phone-width cell draws before the numeral takes over.
+ *
+ * Three rather than the four it was, because the count now has to fit beside
+ * them: at 402px a cell is about 57px wide, three 4px dots and their gaps are
+ * 16px, and a two-digit numeral at `--type-xs` is about 13. Four dots and a
+ * numeral do not fit on one line and wrapped the cell taller than its row.
+ */
+export const DOTS = 3;
+
+/**
+ * The numeral beside the dots, or null when there should not be one.
+ *
+ * The complaint this answers is that a day full of work and a day with one
+ * reading drew the same unlabelled smear of colour. They did, and worse than
+ * that: the cell drew at most four dots and said nothing about the rest, so
+ * every day with four things or more was identical to every other. A week
+ * with a nine-deadline Thursday in it looked exactly like a week without one.
+ *
+ * `dayLabel` has always said the whole of it out loud — "2 deadlines, 1
+ * campus event" — so this is not new information, it is the same information
+ * on the channel the sighted reader is actually using. That asymmetry is
+ * worth naming: the screen reader has had the better version of this cell for
+ * as long as `dayLabel` has existed.
+ *
+ * Null at zero and at one. Zero has nothing to count, and a "1" next to a
+ * single dot is a numeral that tells you what you can already see — the dots
+ * are the count while there are few enough of them to take in at a glance,
+ * and the numeral is for when they stop being.
+ */
+export function dayCount(marks: Mark[]): number | null {
+  return marks.length > 1 ? marks.length : null;
+}
+
 export interface DayStanding {
   /** The day is today. */
   today?: boolean;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { FIRST_DB_SCHEMA, forwardFrom } from './index';
 import { SCHEMA, STEPS } from '../../lib/migrate';
-import { DEFAULT_PERSISTED, type Persisted } from '../shape';
+import { type Persisted } from '../shape';
 
 /**
  * The schema steps, on the database path.
@@ -23,21 +23,39 @@ import { DEFAULT_PERSISTED, type Persisted } from '../shape';
 const account = (extra: Partial<Persisted> = {}): Partial<Persisted> =>
   ({ nav: 'tabs', courses: [], notes: [], ...extra }) as Partial<Persisted>;
 
+/**
+ * Where the newest navigation-writing step leaves a copy.
+ *
+ * These tests care that the steps *ran* on the database path, not which
+ * navigation they land on — so the expected value is read out of `STEPS`
+ * rather than written down, which is what the notes below have always said
+ * they were doing.
+ *
+ * It used to be read off `DEFAULT_PERSISTED.nav` instead, which was the same
+ * value for as long as the last step and the fresh-install default agreed.
+ * They no longer do: the default is the tab bar and step 6 still writes the
+ * workspace, on purpose (`lib/migrate.test.ts` says why). The proxy was never
+ * the thing being checked, so this asks the steps directly.
+ */
+const afterSteps = (): unknown =>
+  STEPS.reduce<Record<string, unknown>>((copy, step) => step.run(copy), {}).nav;
+
 describe('moving a database account forward', () => {
   it('runs the steps it has not run', () => {
     const { state } = forwardFrom(account());
     /*
-     * Against the app's current default rather than a literal navigation.
+     * Against what the steps themselves produce rather than a literal
+     * navigation.
      *
-     * Both nav-moving steps so far — 4 to the workspace, 5 to the guides —
-     * rewrite this field unconditionally, so the account comes out wherever
-     * the newest of them puts it, which is by construction what a fresh
-     * install gets. Pinning the literal made this fail on step 5 for a reason
-     * that had nothing to do with what it checks, which is that the steps ran
-     * at all on the database path.
+     * Every nav-moving step so far — 4 to the workspace, 5 to the guides, 6
+     * back to the workspace — rewrites this field unconditionally, so the
+     * account comes out wherever the newest of them puts it. Pinning the
+     * literal made this fail on step 5 for a reason that had nothing to do
+     * with what it checks, which is that the steps ran at all on the database
+     * path. See `afterSteps`.
      */
     expect(state.nav).not.toBe('tabs');
-    expect(state.nav).toBe(DEFAULT_PERSISTED.nav);
+    expect(state.nav).toBe(afterSteps());
     expect(state.schemaVersion).toBe(SCHEMA);
   });
 
@@ -86,11 +104,11 @@ describe('moving a database account forward', () => {
     // it already ran on the way in. A `list` in a database account is one
     // somebody has since asked for.
     expect(state.directory, 'step 3 must not run a second time').toBe('list');
-    // The nav steps must run, because they never have. Against the default for
-    // the reason given above: which navigation they land on is the newest
-    // step's business, not this test's.
+    // The nav steps must run, because they never have. Against the steps'
+    // own output for the reason given above: which navigation they land on is
+    // the newest step's business, not this test's.
     expect(state.nav).not.toBe('tabs');
-    expect(state.nav).toBe(DEFAULT_PERSISTED.nav);
+    expect(state.nav).toBe(afterSteps());
   });
 
   it('keeps the floor pointing at a version the steps still have', () => {

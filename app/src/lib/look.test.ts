@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_PERSISTED } from '../state/shape';
+import { STEPS } from './migrate';
 import {
   ACCENTS,
+  NAVS,
   SHELLS,
   CORNERS,
   DENSITIES,
@@ -183,6 +186,55 @@ describe('the option lists', () => {
 
   it('makes every density a real reduction, never an increase', () => {
     for (const d of DENSITIES) expect(d.scale).toBeLessThanOrEqual(1);
+  });
+});
+
+/**
+ * Which navigation the app starts as, said once and said on the row.
+ *
+ * Six rows and no mark on any of them is a menu rather than a default:
+ * somebody opening Layout and navigation to find out what the app thinks they
+ * should use was told six times over that every screen is reachable whichever
+ * they pick — true, and not an answer to the question they arrived with.
+ *
+ * The mark lives on `NAVS` rather than being worked out in the picker from
+ * the initial state, so the chooser cannot say one thing while the app does
+ * another. That leaves exactly one way for the two to drift — the mark and
+ * `DEFAULT_PERSISTED.nav` disagreeing — and this is it.
+ */
+describe('the navigation the app starts as', () => {
+  it('is marked on exactly one row', () => {
+    expect(NAVS.filter((n) => n.deft)).toHaveLength(1);
+  });
+
+  it('is the row the state actually starts on', () => {
+    expect(NAVS.find((n) => n.deft)?.id).toBe(DEFAULT_PERSISTED.nav);
+  });
+
+  /*
+   * And it is the tab bar, which is the decision rather than the consistency
+   * check above it.
+   *
+   * The workspace was a browser — a strip of app tabs over a search field,
+   * landing in the field rather than on a screen — which is a good shape for
+   * somebody who already knows the sixty screens by name and the wrong first
+   * thing to hand somebody who knows none of them. Pinned so that changing
+   * where the app opens stays a decision somebody makes on purpose, the way
+   * `lib/migrate.ts` steps 4, 5 and 6 each were.
+   */
+  it('is the tab bar', () => {
+    expect(DEFAULT_PERSISTED.nav).toBe('tabs');
+  });
+
+  /*
+   * And nobody who has already opened the app is moved by it. Every stored
+   * copy carries a literal `nav`, so this line is reachable only from a
+   * device that has never saved anything — which is why it is a default and
+   * not a migration step. `migrate.test.ts` holds the other half: no step
+   * writes `nav` past 6.
+   */
+  it('is a default rather than something done to a stored copy', () => {
+    expect(STEPS.filter((step) => step.to > 6 && /nav/.test(String(step.run)))).toHaveLength(0);
   });
 });
 

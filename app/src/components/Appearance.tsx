@@ -461,14 +461,26 @@ export function NavPicker() {
       <div style={BLURB_STYLE}>
         {NAVS.length} ways of moving through the same screens. Only one is ever on screen at a
         time, and none of them hides anything — every screen is reachable in all {NAVS.length},
-        and search finds everything whichever you pick.
+        and search finds everything whichever you pick. The app starts on the one marked{' '}
+        <b>default</b>; the rest are here because a phone and a laptop are not the same shape.
       </div>
       <Row>
         {NAVS.map((n) => (
           <Choice
             key={n.id}
             on={state.nav === n.id}
-            label={n.label}
+            /*
+              Which one the app starts as, on the row rather than in the
+              paragraph above it.
+
+              Six rows and no mark on any of them is a menu, not a default:
+              somebody opening this page to find out what the app thinks they
+              should be using was told six times over that every screen is
+              reachable whichever they pick — true, and not an answer to the
+              question they came with. The mark is read off `NAVS` (`deft`) so
+              it cannot drift from `DEFAULT` in `state/shape.ts`.
+            */
+            label={n.deft ? `${n.label} · default` : n.label}
             blurb={n.blurb}
             preview={<NavPreview nav={n.id} />}
             onChoose={() => dispatch({ type: 'setNav', nav: n.id as NavMode })}
