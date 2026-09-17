@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -585,6 +585,102 @@ describe('discussion', () => {
     await say(s, 'a1', 'Asked once.', 'The class', 'p-same');
     const said = await bodies(s, 'a1');
     expect(said.match(/Asked once/g)?.length).toBe(1);
+  });
+});
+
+describe('the deadline', () => {
+  /** A1 is due 2026-10-02T23:59Z. `vi.setSystemTime` moves both clocks. */
+  const DUE = Date.parse('2026-10-02T23:59:00Z');
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const submitAt = async (when: number) => {
+    vi.setSystemTime(when);
+    const s = student();
+    const r = await seen('assignments', s, 'student-1:a1');
+    return area('assignments').execute(
+      s,
+      act('assignments', r.id, r.version, 'submit', { work: 'Done.' }),
+      'k-when',
+    );
+  };
+
+  it('says on the receipt that the work was on time', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3 * 24 * 3_600_000);
+    await enrol(student());
+    const receipt = await submitAt(DUE - 2 * 24 * 3_600_000);
+    expect(receipt.message).toMatch(/On time, with 2 days to spare/);
+  });
+
+  it('records a late submission rather than refusing it', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3_600_000);
+    await enrol(student());
+    // Not refused: plenty of courses take late work with a penalty, and a
+    // sandbox that hard-refused would model one policy as the only one.
+    const receipt = await submitAt(DUE + 3 * 24 * 3_600_000);
+    expect(receipt.status).toBe('completed');
+    expect(receipt.message).toMatch(/Late by 3 days/);
+    expect(store.byId('student-1:a1')?.stage).toBe('submitted');
+  });
+
+  it('tells the marker, so a course can apply its own policy', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3_600_000);
+    await enrol(student());
+    await submitAt(DUE + 26 * 3_600_000);
+    const g = await seen('grades', faculty(), 'student-1:a1');
+    expect(JSON.stringify(g.details)).toMatch(/Late by 26 hours/);
+  });
+
+  it('warns before the confirmation, not after it', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3_600_000);
+    const s = student();
+    await enrol(s);
+    vi.setSystemTime(DUE + 3_600_000);
+    const r = await seen('assignments', s, 'student-1:a1');
+    const said = await area('assignments').review(
+      s,
+      act('assignments', r.id, r.version, 'submit', { work: 'Late.' }),
+    );
+    expect(JSON.stringify(said.details)).toMatch(/recorded as late/);
+  });
+
+  it('counts overdue separately from merely outstanding', async () => {
+    vi.useFakeTimers();
+    // Before either deadline: three on the roster, nothing in, nothing late.
+    vi.setSystemTime(DUE - 24 * 3_600_000);
+    const before = await seen('courses', faculty(), 'sandbox-101');
+    expect(JSON.stringify(before.details)).not.toContain('overdue');
+
+    // After the first deadline and before the second: only the first is.
+    vi.setSystemTime(DUE + 24 * 3_600_000);
+    const after = await seen('courses', faculty(), 'sandbox-101');
+    const rows = after.details.filter((d) => d.label === 'Problem set 1' || d.label === 'Short paper');
+    expect(rows.find((d) => d.label === 'Problem set 1')?.value).toContain('3 overdue');
+    expect(rows.find((d) => d.label === 'Short paper')?.value).not.toContain('overdue');
+  });
+
+  it('says a receipt the same way however many times it is asked for', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(DUE - 3_600_000);
+    await enrol(student());
+    const first = await submitAt(DUE + 3_600_000);
+    const again = await area('assignments').execute(
+      student(),
+      act('assignments', 'student-1:a1', '3', 'submit', { work: 'Done.' }),
+      'k-when',
+    );
+    // The first version of this decorated the returned receipt after storing
+    // a plain one, so a retry disagreed with the original about whether the
+    // work was late. A receipt is evidence; two versions of it is the one
+    // thing it cannot be.
+    expect(again).toEqual(first);
+    expect(again.message).toMatch(/Late by 1 hour/);
   });
 });
 

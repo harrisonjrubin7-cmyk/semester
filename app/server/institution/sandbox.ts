@@ -415,8 +415,16 @@ export class SandboxStore {
   }
 
   /** Apply a transition to one row, and write its receipt under `key`. */
-  commit(work: Work, key: string, who: string, what: string, at: string, change: (w: Work) => void): Receipt {
-    return this.commitAll([work], key, who, what, at, change);
+  commit(
+    work: Work,
+    key: string,
+    who: string,
+    what: string,
+    at: string,
+    change: (w: Work) => void,
+    note = '',
+  ): Receipt {
+    return this.commitAll([work], key, who, what, at, change, note);
   }
 
   /**
@@ -436,6 +444,17 @@ export class SandboxStore {
     what: string,
     at: string,
     change: (w: Work) => void,
+    /**
+     * A sentence for the receipt, stored with it rather than added to the
+     * copy that is handed back.
+     *
+     * Its own parameter because the first version decorated the returned
+     * receipt after this method had already written the plain one — so the
+     * receipt a retry produced disagreed with the receipt the first attempt
+     * produced, about whether the work was late. A receipt is evidence; two
+     * versions of it is the one thing it cannot be.
+     */
+    note = '',
   ): Receipt {
     for (const work of rows) {
       change(work);
@@ -446,7 +465,7 @@ export class SandboxStore {
     const receipt: Receipt = {
       id: key,
       status: 'completed',
-      message: `${SANDBOX_MARK} · ${what}. Nothing here reaches a real institution.`,
+      message: `${SANDBOX_MARK} · ${what}.${note ? ` ${note}.` : ''} Nothing here reaches a real institution.`,
       recordedAt: at,
     };
     this.keep(receipt);
@@ -697,6 +716,41 @@ function post(
   return receipt;
 }
 
+/**
+ * Whether a piece of work met its deadline, worked out rather than stored.
+ *
+ * Derived from the two timestamps it already has, so it cannot disagree with
+ * them — a stored `late` flag and a `submittedAt` are two facts that can drift,
+ * and only one of them is evidence.
+ *
+ * **It does not refuse a late submission**, and that is the design rather than
+ * an omission. Plenty of courses take late work with a penalty, some take it
+ * up to a cut-off, some do not take it at all; a sandbox that hard-refused
+ * would be modelling one policy as though it were the only one, which is the
+ * kind of quiet assumption this whole package is written against. What it does
+ * is record the truth and say it out loud to both sides, and leave the policy
+ * to the course.
+ */
+function lateness(submittedAt: string | null, due: string): { late: boolean; said: string } {
+  if (!submittedAt) {
+    const over = Date.parse(due) < Date.now();
+    return { late: over, said: over ? 'Overdue — not submitted' : 'Not submitted yet' };
+  }
+  const by = Date.parse(submittedAt) - Date.parse(due);
+  if (by <= 0) return { late: false, said: `On time, with ${spanOf(-by)} to spare` };
+  return { late: true, said: `Late by ${spanOf(by)}` };
+}
+
+/** A gap in milliseconds, in the largest unit that does not read as absurd. */
+function spanOf(ms: number): string {
+  const mins = Math.max(1, Math.round(ms / 60_000));
+  if (mins < 60) return `${mins} ${mins === 1 ? 'minute' : 'minutes'}`;
+  const hours = Math.round(mins / 60);
+  if (hours < 48) return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+  const days = Math.round(hours / 24);
+  return `${days} ${days === 1 ? 'day' : 'days'}`;
+}
+
 /** The trail, as the details a record carries. This is the Record stage. */
 function trail(work: Work): { label: string; value: string }[] {
   return work.history.map((h) => ({
@@ -715,10 +769,15 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
   const work = store.everyWork();
   const owed = PUBLISHED.map((a) => {
     const rows = work.filter((w) => w.assignment === a.id);
+    const missing = rows.filter((w) => w.stage === 'published');
     return {
       a,
-      inHand: rows.filter((w) => w.stage !== 'published').length,
+      inHand: rows.length - missing.length,
       toMark: rows.filter((w) => w.stage === 'submitted').length,
+      // Outstanding and overdue are different facts and a course runs on the
+      // difference: one is work still coming, the other is work that is not.
+      overdue: Date.parse(a.due) < Date.now() ? missing.length : 0,
+      missing: missing.length,
     };
   });
   return {
@@ -737,7 +796,7 @@ function courseRecord(context: AdapterContext, store: SandboxStore): UniversityR
         label: o.a.title,
         value:
           `due ${o.a.due.slice(0, 10)} · ${o.inHand} of ${roll.length} in hand · ` +
-          `${roll.length - o.inHand} outstanding · ${o.toMark} to mark`,
+          `${o.missing} outstanding${o.overdue ? ` (${o.overdue} overdue)` : ''} · ${o.toMark} to mark`,
       })),
       { label: 'Your role here', value: context.identity.roles.join(', ') || 'none' },
     ],
@@ -827,17 +886,19 @@ const AUDIENCE: Record<string, Audience> = { 'The class': 'class', 'Staff only':
 
 function assignmentRecord(work: Work): UniversityRecord {
   const a = assignmentOf(work.assignment);
+  const when = lateness(work.submittedAt, a?.due ?? '');
   return {
     id: work.id,
     area: 'assignments',
     title: `${SANDBOX_MARK} · ${a?.title ?? work.assignment}`,
     summary: a?.brief ?? '',
-    status: SAID[work.stage],
+    status: work.stage === 'published' && when.late ? `${SAID[work.stage]} · overdue` : SAID[work.stage],
     version: String(work.version),
     updatedAt: new Date().toISOString(),
     details: [
       { label: 'Course', value: `${COURSE.code} (${SANDBOX_MARK})` },
       { label: 'Due', value: a?.due.slice(0, 16).replace('T', ' ') ?? '' },
+      { label: 'Deadline', value: when.said },
       { label: 'Marked out of', value: String(outOf(a?.criteria ?? [])) },
       /*
        * Before the work is done, not with the mark. A rubric that arrives
@@ -886,6 +947,10 @@ function gradeRecord(work: Work): UniversityRecord {
     details: [
       { label: 'Student', value: work.student },
       { label: 'Out of', value: String(total) },
+      // Said to the marker, because it is the second most consequential fact
+      // about a submission after what is in it, and no course's policy can be
+      // applied by somebody who cannot see it.
+      { label: 'Deadline', value: lateness(work.submittedAt, a?.due ?? '').said },
       ...(seen
         ? [
             { label: 'Mark', value: `${work.mark} out of ${total}` },
@@ -1044,11 +1109,15 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       expect(work, 'published', 'submit');
       const a = assignmentOf(work.assignment);
       const body = input.fields.work ?? '';
+      const over = Date.parse(a?.due ?? '') < Date.now();
       return {
         title: `Submit ${a?.title ?? work.assignment}`,
         details: [
           { label: 'Course', value: `${COURSE.code} (${SANDBOX_MARK})` },
           { label: 'Due', value: a?.due.slice(0, 16).replace('T', ' ') ?? '' },
+          ...(over
+            ? [{ label: 'This is late', value: 'It will be recorded as late. The course decides what that costs.' }]
+            : []),
           { label: 'Length', value: `${body.trim().split(/\s+/).filter(Boolean).length} words` },
           { label: 'After this', value: 'It can be marked, and you cannot submit it again.' },
         ],
@@ -1061,11 +1130,26 @@ export function sandboxAdapters(store: SandboxStore): InstitutionAdapter[] {
       fresh(work, input);
       expect(work, 'published', 'submit');
       const at = now();
-      return store.commit(work, key, context.identity.userId, 'Submitted', at, (w) => {
-        w.stage = 'submitted';
-        w.submittedAt = at;
-        w.body = input.fields.work ?? '';
-      });
+      const a = assignmentOf(work.assignment);
+      /*
+       * On the receipt, which is the thing the student keeps. A submission
+       * whose lateness is only visible to the marker is a dispute waiting to
+       * happen: both sides should be reading the same sentence.
+       */
+      const when = lateness(at, a?.due ?? '');
+      return store.commit(
+        work,
+        key,
+        context.identity.userId,
+        'Submitted',
+        at,
+        (w) => {
+          w.stage = 'submitted';
+          w.submittedAt = at;
+          w.body = input.fields.work ?? '';
+        },
+        when.said,
+      );
     },
     reconcile: async (_context, _input, key) => store.receipt(key),
   };
