@@ -17,6 +17,7 @@ import {
   TYPEFACES,
 } from './look';
 import type { Screen } from './types';
+import { costLine } from './allowance';
 
 /**
  * The guide to the app, assembled from the app.
@@ -219,6 +220,8 @@ export function build(): Guidebook {
       'It has grown out from there, and in one direction: the rest of the term the syllabus does not cover. There are tools that make something — a document, a spreadsheet, a deck, a diagram, a graph, a draft of an email to a professor. There is the money, the housing, the meal plan and the map. There is the part of a university that is not coursework at all — the services you have to prepare something for, the season you are training for, the job you are applying to, the people at home, the degree after this one. All of it is on this device and none of it is a second app: a deadline in your term and a practice you are travelling for are on the same calendar.',
       '',
       'It does not do several things on purpose. It does not fetch your grades from the university; there is no student API a student can use alone, so what it knows about your marks is what you have typed. It is not your university\u2019s systems and does not stand in for them: it can hold the questions for an advising appointment, the checklist before a form is filed and the draft of an appeal, and it cannot file, register, pay or submit anything on your behalf. A status you record here is what you believe is happening, not what a registrar has recorded. It does not write your coursework. It does not invent a citation, a date or a fact: where it quotes your syllabus it shows the sentence, and anything it could not find in the file is dropped rather than guessed. It has no account requirement and no analytics, and signed out nothing leaves this device.',
+      '',
+      `And it costs nothing. ${costLine()} That is the whole of the money in this app: what is on the Money screen is *your* tuition and *your* meal plan, which this app helps you keep track of and never takes a penny of.`,
       '',
       'What it needs from you is the syllabus, once per course, and your own marks as you get them. Everything else it can work out. The import is the only part that takes real effort, and it takes about five minutes a course — and nothing past that first import is required: every screen added since works, or sits quietly, whether or not you ever open it.',
     ].join('\n'),
