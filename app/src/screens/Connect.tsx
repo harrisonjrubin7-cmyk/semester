@@ -500,11 +500,15 @@ export function Connect() {
         </div>
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
           What a Brightspace account can and cannot give this app, plainly: the{' '}
-          <strong>calendar feed</strong> carries every due date and needs nothing but the link.{' '}
+          <strong>calendar feed</strong> needs nothing but the link, and it carries what your
+          instructors put on the Brightspace calendar — which is not always everything on the
+          syllabus, and never says whether you have submitted any of it.{' '}
           <strong>Grades, submissions and files</strong> live behind D2L’s Valence API, whose keys
-          are issued to the university rather than to a student — no app you install can read them
-          on your behalf, however it asks. So the app reads the dates, links you to each course’s
-          own page from the course screen, and takes uploaded files from you directly.
+          are issued to the university rather than to a student, so no app you install can read
+          them on your own say-so — it takes your school registering the app and granting the
+          scopes, which is a decision Vanderbilt has not been asked for. So the app reads the
+          dates, links you to each course’s own page from the course screen, and takes uploaded
+          files from you directly.
         </div>
       </Blueprint>
 

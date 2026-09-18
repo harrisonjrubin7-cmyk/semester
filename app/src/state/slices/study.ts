@@ -10,11 +10,50 @@
  */
 
 import { score } from '../../lib/review';
-import { moveOn } from '../../lib/sessions';
+import { finishes, moveOn, type Session } from '../../lib/sessions';
 import { handle, remember } from '../../lib/sure';
 import { unitKey } from '../../lib/pretest';
 import type { Action, State } from '../shape';
 import { push } from './navigate';
+
+/**
+ * One answer, counted against the sitting it was given in.
+ *
+ * Both halves of the plan's honesty live in these six lines: the count goes up
+ * by the card that was actually answered, and `doneAt` is written only when
+ * the count reaches what the sitting was sized for. Nothing here can be
+ * reached by opening a screen.
+ *
+ * `id` null — a drill started outside the plan — returns the list untouched
+ * and by identity, so an evening of free revision is not a write and not a
+ * re-render.
+ */
+function creditCard(sessions: Session[], id: string | null, at: number): Session[] {
+  if (!id) return sessions;
+  return sessions.map((s) => {
+    if (s.id !== id || s.doneAt) return s;
+    const answered = (s.answered ?? 0) + 1;
+    return finishes(s, answered) ? { ...s, answered, doneAt: at } : { ...s, answered };
+  });
+}
+
+/**
+ * The same answer taken back off it.
+ *
+ * `doneAt` comes off with the count rather than being left standing, because
+ * the answer that earned it has just been undone — see `undoCard`. Floors at
+ * zero: an undo can only reach one answer back, but a sitting whose count is
+ * already zero must not be driven below it by a stray one.
+ */
+function uncreditCard(sessions: Session[], id: string | null): Session[] {
+  if (!id) return sessions;
+  return sessions.map((s) => {
+    if (s.id !== id) return s;
+    const answered = Math.max(0, (s.answered ?? 0) - 1);
+    const { doneAt: _was, ...rest } = s;
+    return { ...rest, answered };
+  });
+}
 
 export function study(state: State, action: Action): State | null {
   switch (action.type) {
@@ -77,6 +116,24 @@ export function study(state: State, action: Action): State | null {
       return push(
         {
           ...state,
+          /*
+           * Which sitting this run is being done for, or none.
+           *
+           * Set from the action rather than matched by course and unit. A run
+           * on the same unit started from the ranking below the plan is real
+           * study and it is not this sitting; crediting it because the two
+           * happen to name one unit is the opened-counts-as-done bug with a
+           * longer fuse.
+           */
+          liveSession: action.session ?? null,
+          // Opened, not finished. The pair is the whole point: `startedAt` is
+          // what the row can be resumed from, and `doneAt` is still only
+          // written by work done — see `markCard` below.
+          sessions: action.session
+            ? state.sessions.map((s) =>
+                s.id === action.session && !s.startedAt ? { ...s, startedAt: Date.now() } : s,
+              )
+            : state.sessions,
           // Named course or the open guide. The drill reads its deck from
           // `guideId`, so a run started from a screen that ranks every course
           // has to say which one it meant.
@@ -111,6 +168,22 @@ export function study(state: State, action: Action): State | null {
         revealed: false,
         drillIdx: state.drillIdx + 1,
         drillGot: state.drillGot + (action.got ? 1 : 0),
+        /*
+         * The answer counted against the sitting it was given in.
+         *
+         * This is where a planned sitting earns its `doneAt`, and the only
+         * place one is written by a student studying. It used to be written
+         * by `Study.tsx` the instant the row was tapped, on the argument that
+         * a sitting you open is a sitting you did some of — which is true of
+         * the sitting and false of the record, because opening and backing
+         * out wrote the same stamp as twenty-five answered cards. So the
+         * count goes up per answer and the stamp waits for the last one.
+         *
+         * Wrong sitting, wrong card, no sitting: all three fall through
+         * `liveSession` being null or matching nothing, and leave the plan
+         * exactly as it was.
+         */
+        sessions: creditCard(state.sessions, state.liveSession, now),
         /*
          * What this answer replaced, kept so it can be put back.
          *
@@ -162,6 +235,17 @@ export function study(state: State, action: Action): State | null {
         revealed: false,
         drillIdx: Math.max(0, state.drillIdx - 1),
         drillGot: Math.max(0, state.drillGot - (last.got ? 1 : 0)),
+        /*
+         * And off the sitting's count, `doneAt` included.
+         *
+         * An undo that left the credit behind would let the last card of a
+         * sitting be answered, taken back, and still have finished it — which
+         * is a smaller version of exactly the thing being fixed here. The
+         * stamp is lifted rather than kept because the answer that wrote it
+         * no longer exists; the sitting goes back to being resumable, which
+         * is what it is.
+         */
+        sessions: uncreditCard(state.sessions, state.liveSession),
         lastAnswer: null,
       };
     }
@@ -220,15 +304,36 @@ export function study(state: State, action: Action): State | null {
       return {
         ...state,
         sessions: [...state.sessions.filter((s) => s.on < action.from), ...action.sessions],
+        // The sitting being worked through may not exist in the new plan, and
+        // a pointer into a sitting that is gone would credit the next answer
+        // to nothing — or, worse, to a new sitting that reused the id.
+        liveSession: null,
       };
 
-    case 'finishSession':
+    /*
+     * The open run ran out of cards, so the sitting behind it is finished.
+     *
+     * The other end of `markCard`'s rule. A sitting is sized for the cards its
+     * unit had when the plan was laid down, and a fortnight later the unit can
+     * have fewer — some were answered elsewhere, some were deleted with a
+     * reading. Without this the sitting would sit at "eleven of twelve"
+     * forever and the plan would report a missed evening on a night the
+     * student emptied the deck.
+     *
+     * Does nothing when no sitting is open, which is the case for every drill
+     * started outside the plan, and nothing when the sitting is already done,
+     * so the screen may dispatch it on every render of its last frame.
+     */
+    case 'sessionSpent': {
+      const id = state.liveSession;
+      if (!id) return state;
+      const live = state.sessions.find((s) => s.id === id);
+      if (!live || live.doneAt) return state;
       return {
         ...state,
-        sessions: state.sessions.map((s) =>
-          s.id === action.id ? { ...s, doneAt: action.at } : s,
-        ),
+        sessions: state.sessions.map((s) => (s.id === id ? { ...s, doneAt: action.at } : s)),
       };
+    }
 
     /*
      * Every missed sitting moved forward, in one press.
@@ -250,7 +355,9 @@ export function study(state: State, action: Action): State | null {
     }
 
     case 'clearPlan':
-      return state.sessions.length === 0 ? state : { ...state, sessions: [] };
+      return state.sessions.length === 0 && !state.liveSession
+        ? state
+        : { ...state, sessions: [], liveSession: null };
 
     case 'redrill':
       // `lastAnswer` with it: a new run must not be able to undo into the

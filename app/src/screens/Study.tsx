@@ -156,8 +156,16 @@ export function Study() {
    * without the catalogue; they came out of `catalog.courses` and are course
    * ids, so this is where that is said once rather than at four call sites.
    */
-  const startStretch = (s: { courseId: string; index: number }) =>
-    dispatch({ type: 'startDrill', unit: s.index, courseId: s.courseId as CourseId });
+  const startStretch = (s: { courseId: string; index: number }, session?: string) =>
+    dispatch({
+      type: 'startDrill',
+      unit: s.index,
+      courseId: s.courseId as CourseId,
+      // Named only when the run was opened from the committed plan, which is
+      // what decides whether the answers count towards a sitting. See
+      // `liveSession` in `state/shape.ts`.
+      ...(session === undefined ? {} : { session }),
+    });
   // Mixing needs more than one course with cards in it, and it contradicts a
   // course the student has just chosen — below either, the button offers a
   // shuffle of one deck, which is a shuffle of nothing.
@@ -812,13 +820,23 @@ export function Study() {
         dayMinutes={minutes}
         onPlan={(sessions, from) => dispatch({ type: 'planSessions', sessions, from })}
         onMove={() => dispatch({ type: 'moveMissed', today: todayKey(now), dayMinutes: minutes })}
-        onOpen={(session) => {
-          // Started counts as done. A sitting you open and abandon is a sitting
-          // you did some of, and a plan that only counts a finished deck is a
-          // plan that says you did nothing on the night you did twenty cards.
-          dispatch({ type: 'finishSession', id: session.id, at: Date.now() });
-          startStretch(session);
-        }}
+        /*
+          Opening a sitting opens the deck. It does not finish it.
+
+          This used to stamp `doneAt` here, one line above the drill, on the
+          argument that a sitting you open is a sitting you did some of. The
+          argument is about a student and the line is about a record, and the
+          record could not tell the two apart: tapping a row and pressing back
+          wrote the same "done" as answering every card in it, so the plan's
+          only real measurement was which rows had been tapped.
+
+          Now one dispatch does one thing — it starts the run and says which
+          sitting the run is for — and the answers do the rest. `markCard` in
+          `state/slices/study.ts` counts them and writes `doneAt` on the last
+          one. A sitting opened and abandoned stays exactly what it is: open,
+          resumable, and not done.
+        */
+        onOpen={(session) => startStretch(session, session.id)}
         onClear={() => dispatch({ type: 'clearPlan' })}
       />
 

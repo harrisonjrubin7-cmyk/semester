@@ -6,7 +6,9 @@
  *
  *  · **Brightspace** — D2L publishes a per-user calendar feed (Calendar →
  *    Subscribe). It is an .ics URL with a token in it, readable without any
- *    login, and it carries every due date the course shells hold. There is also
+ *    login, and it carries what instructors put on the Brightspace calendar —
+ *    which is most of the term's dates and is not the same thing as the
+ *    syllabus, and says nothing about what has been submitted. There is also
  *    a full Valence API, but it needs an app key issued by Vanderbilt IT, so
  *    the feed is the route that works today. The app never asks for a
  *    Brightspace password, and never should.

@@ -116,8 +116,18 @@ export function Directory() {
         <span className="deskdir-favtile">{createElement(glyphFor(d.screen), { size: 21 })}</span>
         <span className="deskdir-favsays">
           <span className="deskdir-favname">{said.label}</span>
+          {/*
+            What the screen does, not what shelf it is on.
+
+            This line was `d.group`, so a row of favourites read "Study",
+            "Study", "Courses" — three cards whose second lines were the least
+            distinguishing thing about them, under names that are already
+            grouped by the chips below. The sentence was there the whole time:
+            `saysFor` returns it and this card was passing it to `title`,
+            which is a tooltip, which is nothing at all on a phone.
+          */}
           <span className="deskdir-favgroup" style={secondLine()}>
-            {d.group}
+            {said.blurb}
           </span>
         </span>
         <span aria-hidden="true" className="deskdir-favgo">
@@ -244,9 +254,49 @@ export function Directory() {
         ))}
       </div>
 
+      {/*
+        How many of them you are looking at, while you are narrowing.
+
+        A filter with no count is a filter you have to scroll to the bottom of
+        to judge, and the bottom of this list is sixty rows away. Spoken as a
+        status region rather than drawn only, because the list below it
+        changes under a screen reader with nothing said about it.
+
+        Hidden when nothing is narrowed: "58 of 58 apps" over the whole
+        directory is a number that answers a question nobody asked.
+      */}
+      {(query || category) && (
+        <div className="deskdir-status" role="status">
+          <span style={secondLine()}>
+            {shown.length} of {apps.length} apps
+            {category && ` in ${category}`}
+          </span>
+          <button
+            type="button"
+            className="bare tappable tap-y standing-clear"
+            onClick={() => {
+              setQuery('');
+              setCategory('');
+            }}
+          >
+            Show them all
+          </button>
+        </div>
+      )}
+
       {shown.length === 0 ? (
+        /*
+          The dead end, with the way out drawn on it.
+
+          "Nothing here matches that" was the whole screen: true, and it left
+          somebody holding a filter they would have to notice, find and empty
+          themselves — two controls up, one of which is a chip they may not
+          remember pressing. The button above is on screen in this state, and
+          this says so rather than assuming it was seen.
+        */
         <p className="deskdir-none" style={secondLine()}>
-          Nothing here matches that.
+          Nothing here matches that. <strong>Show them all</strong> brings back
+          all {apps.length}.
         </p>
       ) : grid ? (
         <div className="deskdir-grid">

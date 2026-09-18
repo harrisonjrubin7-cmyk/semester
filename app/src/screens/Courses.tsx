@@ -389,7 +389,10 @@ function ComingUp() {
  *
  * D2L has an API — Valence — but its keys are issued to the institution, not to
  * a student, so an app a student installs cannot read their grades or their
- * submissions no matter how it asks. What it can do is stop making them hunt
+ * submissions on that student's own say-so. It is not that no app can: D2L
+ * documents registered applications and scopes, and a school that registered
+ * this one could grant them. Nobody has asked Vanderbilt, so today the honest
+ * answer is no. What it can do is stop making them hunt
  * for the tab: the deadlines here already carry "Brightspace" as their where,
  * and this makes that a place you can go.
  *

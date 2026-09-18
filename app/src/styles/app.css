@@ -6661,6 +6661,23 @@ section[data-drop] > .grip + * {
 
 .deskdir-favgroup {
   font-size: var(--type-sm);
+  /* One line, clipped. The line carries the registry's sentence now rather
+     than a one-word category, and sentences are not all one length — left to
+     wrap, a row of favourites draws at three different heights. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The filter's count and the way back out of it, on one line. Wraps rather
+   than squeezing: the count is the part that must stay readable. */
+.deskdir-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  margin-block: var(--sp-5);
 }
 
 .deskdir-favgo {

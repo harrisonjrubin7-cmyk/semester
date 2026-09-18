@@ -39,7 +39,8 @@
  */
 
 import { dateToIso, shiftIso } from './date';
-import type { Stretch } from './revise';
+import { A_SITTING } from './review';
+import { SECONDS_PER_CARD, type Stretch } from './revise';
 
 /** One sitting: a unit, a length, and the day it is meant to happen on. */
 export interface Session {
@@ -62,6 +63,29 @@ export interface Session {
   minutes: number;
   /** The day it is planned for, `YYYY-MM-DD`, local. */
   on: string;
+  /**
+   * How many cards the sitting was sized for — its planned questions.
+   *
+   * Carried rather than re-derived from `minutes`, for the reason
+   * `lib/revise.ts` carries `cardsToDo`: minutes are rounded, and a sitting
+   * that says "nine minutes" and then wants forty cards answered before it
+   * will call itself finished is lying about one of the two numbers.
+   *
+   * It is what `doneAt` is measured against. Absent on a sitting laid down
+   * before this field existed, and those are left alone — see `progressOf`.
+   */
+  cards?: number;
+  /**
+   * When it was opened, epoch ms. Absent until somebody starts it.
+   *
+   * Separate from `doneAt` because they are separate facts, and the app spent
+   * a release with only the second one: opening a sitting stamped it finished,
+   * so a row you tapped and backed out of counted as an evening's study. See
+   * `progressOf`.
+   */
+  startedAt?: number;
+  /** Cards actually answered in it. The real work, counted as it happens. */
+  answered?: number;
   /** When it was finished, epoch ms. Absent while it is still outstanding. */
   doneAt?: number;
   /**
@@ -82,6 +106,43 @@ export const DAY_MINUTES = 90;
 
 /** How far ahead a plan is laid down. A fortnight of evenings is a term's worth of intent. */
 export const HORIZON_DAYS = 14;
+
+/**
+ * The four things a sitting can be, which used to be two.
+ *
+ * `planned` and `done` were the whole vocabulary, and the screen moved a
+ * sitting from one to the other the moment its row was tapped — so the plan's
+ * only measurement was *did you open this*, which is not studying. The two in
+ * the middle are the ones that make the other two mean anything: `started` is
+ * a sitting opened and not worked, and `partly` is one with real answers in it
+ * and more to go.
+ *
+ * Read off the record rather than stored, so there is one definition of each
+ * and no state to fall out of step with the counts it is drawn from.
+ */
+export type Progress = 'planned' | 'started' | 'partly' | 'done';
+
+/** What a sitting is, from what has actually happened in it. */
+export function progressOf(s: Session): Progress {
+  if (s.doneAt) return 'done';
+  if ((s.answered ?? 0) > 0) return 'partly';
+  if (s.startedAt) return 'started';
+  return 'planned';
+}
+
+/**
+ * Whether answering one more card finishes the sitting.
+ *
+ * The rule is the planned questions and nothing else: a sitting sized for
+ * twelve cards is finished by the twelfth answer. A sitting with no `cards` on
+ * it — laid down before the field existed — can never be finished this way,
+ * and that is deliberate. Stamping those done from a count they were never
+ * sized against would be inventing a history, which is the thing this whole
+ * change is about not doing; they finish when their deck runs out instead.
+ */
+export function finishes(s: Session, answered: number): boolean {
+  return s.cards !== undefined && s.cards > 0 && answered >= s.cards;
+}
 
 /** Minutes already planned for a day, finished sittings included. */
 export function minutesOn(sessions: Session[], day: string): number {
@@ -180,6 +241,18 @@ export function layOut(
         name: stretch.name,
         code: stretch.code,
         minutes,
+        // Sized from the minutes this sitting actually got, not from the
+        // stretch's own count: `minutes` is trimmed to `LONGEST` above, and a
+        // sitting cut to forty-five minutes that still asks for the full
+        // ninety minutes of cards is a sitting nobody can finish. Never more
+        // than the stretch has, and never more than one run will hand over —
+        // `A_SITTING` caps a deck at twenty-five, so a target above it could
+        // only be reached by going again, and a sitting you cannot finish in
+        // the run it opens is the old bug with the sign flipped.
+        cards: Math.max(
+          1,
+          Math.min(stretch.cardsToDo, Math.round((minutes * 60) / SECONDS_PER_CARD), A_SITTING),
+        ),
         on,
       };
       planned.push(session);

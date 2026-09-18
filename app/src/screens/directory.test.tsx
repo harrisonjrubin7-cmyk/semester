@@ -92,6 +92,95 @@ describe('the one directory', () => {
   });
 });
 
+/**
+ * What the screen says while you are narrowing it, which was nothing.
+ *
+ * An outside review of the app filtered the directory and could not tell how
+ * much of it was left, then emptied the list to nothing and was told "Nothing
+ * here matches that" over a filter it would have to find and clear itself.
+ * Both are the same omission: the screen narrows well and does not report the
+ * narrowing.
+ *
+ * Mounted rather than grepped, and driven through the real input, because
+ * both are conditional on somebody having typed — a static check would pass
+ * on a screen that computed the count and never drew it.
+ */
+describe('narrowing the directory', () => {
+  const type = (into: string) => {
+    const box = host.querySelector('[aria-label="Filter these apps"]') as HTMLInputElement;
+    const set = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+    act(() => {
+      set.call(box, into);
+      box.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  };
+
+  it('says nothing about counts until something is narrowed', () => {
+    // "58 of 58 apps" over the whole directory answers a question nobody has
+    // asked yet, and it is the state the screen is in most of the time.
+    expect(text()).not.toMatch(/\d+ of \d+ apps/);
+  });
+
+  it('says how many are left, out of how many there are', () => {
+    type('calendar');
+    const said = text().match(/(\d+) of (\d+) apps/);
+    expect(said, 'the count is not on screen while filtering').toBeTruthy();
+    const [, left, all] = said!.map(Number);
+    expect(left).toBeGreaterThan(0);
+    expect(left).toBeLessThan(all);
+  });
+
+  it('counts what is actually drawn, not what was asked for', () => {
+    // Two numbers for one row is how this repository has produced most of its
+    // wrong ones. The count has to be the length of the list under it.
+    type('calendar');
+    const left = Number(text().match(/(\d+) of \d+ apps/)![1]);
+    // Every row and every card opens its screen through the same `deskdir`
+    // name button, in either view.
+    const rows = host.querySelectorAll('.deskdir-rowopen, .deskdir-cardsays').length;
+    expect(rows).toBe(left);
+  });
+
+  it('puts a way back on the screen, and on the dead end too', () => {
+    type('zzzzzzz');
+    expect(text()).toContain('Nothing here matches that');
+    const out = [...host.querySelectorAll('button')].find((b) => /show them all/i.test(b.textContent ?? ''));
+    expect(out, 'nothing on screen empties the filter').toBeTruthy();
+
+    act(() => out!.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+    expect(text()).not.toContain('Nothing here matches that');
+    // And the standing lists are back, which is what "all of them" means on
+    // this screen.
+    expect(text()).toContain('All applications');
+    expect(text()).not.toMatch(/\d+ of \d+ apps/);
+  });
+
+  it('announces the count rather than only drawing it', () => {
+    // The list below changes under a screen reader with nothing said about
+    // it otherwise.
+    type('calendar');
+    expect(host.querySelector('[role="status"]')?.textContent ?? '').toMatch(/\d+ of \d+ apps/);
+  });
+});
+
+describe('what a favourite card says about itself', () => {
+  it('carries the registry\u2019s own sentence, not the shelf it sits on', () => {
+    /*
+     * The line was `d.group`, so a row of favourites read "Study", "Study",
+     * "Courses" — the least distinguishing thing about three screens, under
+     * names the chips below already group. The sentence was in hand the whole
+     * time: `saysFor` returns it, and this card was passing it to `title`,
+     * which is a tooltip, which is nothing at all on a phone.
+     */
+    const cards = [...host.querySelectorAll('.deskdir-favcard')];
+    expect(cards.length, 'no favourites are drawn, so this proves nothing').toBeGreaterThan(0);
+    const blurbs = cards.map((c) => c.querySelector('.deskdir-favgroup')?.textContent?.trim() ?? '');
+    // A category is one or two words. Every one of these is a sentence about
+    // what the screen does.
+    for (const said of blurbs) expect(said.split(/\s+/).length).toBeGreaterThan(2);
+  });
+});
+
 describe('the tab it replaced', () => {
   it('leaves Progress with no Everything tab', () => {
     const me = readFileSync(join(process.cwd(), 'src', 'screens', 'Me.tsx'), 'utf8');

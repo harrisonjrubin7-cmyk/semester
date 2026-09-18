@@ -4,16 +4,20 @@ import {
   HORIZON_DAYS,
   LONGEST,
   daysOf,
+  finishes,
   layOut,
   minutesOn,
   missed,
   moveOn,
   onDay,
   onlyFrom,
+  progressOf,
   today,
   willMove,
   type Session,
 } from './sessions';
+import { A_SITTING } from './review';
+import { SECONDS_PER_CARD } from './revise';
 import { shiftIso } from './date';
 import type { Stretch } from './revise';
 
@@ -340,5 +344,96 @@ describe('the defaults', () => {
     expect(DAY_MINUTES).toBeGreaterThanOrEqual(60);
     expect(LONGEST).toBeLessThanOrEqual(DAY_MINUTES);
     expect(HORIZON_DAYS).toBe(14);
+  });
+});
+
+/**
+ * What a sitting is, which used to be two things and is now four.
+ *
+ * `planned` and `done` were the whole vocabulary and the screen moved a
+ * sitting between them the moment its row was tapped, so the plan measured
+ * whether you had opened a thing. The two in the middle are what make an
+ * opened-and-abandoned sitting distinguishable from an evening's work, and
+ * this is where that distinction is pinned.
+ */
+describe('what state a sitting is in', () => {
+  it('is planned until somebody opens it', () => {
+    expect(progressOf(sitting())).toBe('planned');
+  });
+
+  it('is started once it is open with nothing answered', () => {
+    expect(progressOf(sitting({ startedAt: 1 }))).toBe('started');
+  });
+
+  it('is partly done once there are answers in it', () => {
+    expect(progressOf(sitting({ startedAt: 1, answered: 3, cards: 12 }))).toBe('partly');
+  });
+
+  it('is done only when it is stamped', () => {
+    expect(progressOf(sitting({ startedAt: 1, answered: 12, cards: 12, doneAt: 2 }))).toBe('done');
+  });
+
+  it('reads a sitting from an older build, which has neither field, as planned', () => {
+    // And not as started: a `startedAt` invented for it would be a time
+    // nobody recorded, said in the app's own voice.
+    expect(progressOf(sitting())).toBe('planned');
+  });
+});
+
+describe('when the answers have finished a sitting', () => {
+  it('is on the card it was sized for, not before', () => {
+    const s = sitting({ cards: 3 });
+    expect(finishes(s, 2)).toBe(false);
+    expect(finishes(s, 3)).toBe(true);
+  });
+
+  it('is never, for a sitting that was never sized', () => {
+    // Laid down before `cards` existed. Finishing it against a number it
+    // never had would be inventing the history this all exists to avoid — it
+    // finishes when its deck runs dry instead.
+    expect(finishes(sitting(), 500)).toBe(false);
+  });
+});
+
+describe('sizing a sitting in cards', () => {
+  it('takes the count from the stretch it was laid from', () => {
+    const [made] = layOut([stretch({ cardsToDo: 8, minutes: 10 })], { from: MON });
+    expect(made.cards).toBe(8);
+  });
+
+  it('never asks for more cards than the minutes it was trimmed to', () => {
+    // `layOut` caps a sitting at `LONGEST`. A sitting cut to forty-five
+    // minutes that still wants ninety minutes of cards before it will call
+    // itself finished is a sitting nobody can finish, which is the old bug
+    // with the sign flipped.
+    const [made] = layOut([stretch({ minutes: 200, cardsToDo: 600 })], { from: MON, dayMinutes: 500 });
+    expect(made.minutes).toBe(LONGEST);
+    expect(made.cards).toBeLessThanOrEqual(Math.round((LONGEST * 60) / SECONDS_PER_CARD));
+  });
+
+  it('never asks for more cards than one run will hand over', () => {
+    // `A_SITTING` caps a deck at twenty-five, so a target above it could only
+    // be reached by pressing "go again" — and a sitting you cannot finish in
+    // the run it opens is a sitting that reports a missed evening after an
+    // evening's work.
+    const [made] = layOut([stretch({ minutes: LONGEST, cardsToDo: 600 })], { from: MON });
+    expect(made.cards).toBeLessThanOrEqual(A_SITTING);
+  });
+
+  it('never asks for none, which would finish a sitting on no cards at all', () => {
+    const [made] = layOut([stretch({ minutes: 1, cardsToDo: 0 })], { from: MON });
+    expect(made.cards).toBeGreaterThan(0);
+  });
+});
+
+describe('moving a sitting somebody is part way through', () => {
+  it('carries the work with it', () => {
+    // It is the same sitting on a different evening — `id` is stable across a
+    // move for this reason — so the five cards answered on Monday are still
+    // five cards answered.
+    const list = [sitting({ id: 'a', on: MON, cards: 12, answered: 5, startedAt: 1 })];
+    const out = moveOn(list, { today: TUE });
+    expect(out.sessions[0]).toMatchObject({ id: 'a', on: TUE, answered: 5, startedAt: 1 });
+    expect(progressOf(out.sessions[0])).toBe('partly');
   });
 });
