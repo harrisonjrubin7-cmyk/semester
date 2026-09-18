@@ -237,7 +237,23 @@ export function Study() {
   if(studio && selectedStudioCourse) return <><div className="studio-course-picker"><label>Course<select value={selectedStudioCourse} onChange={e=>setStudioCourse(e.target.value)}>{catalog.courses.map(c=><option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}</select></label></div><StudyStudio key={selectedStudioCourse} courseId={selectedStudioCourse} onClose={()=>setStudio(false)}/></>;
   return (
     <Page>
-      <div className="studio-entry"><div><strong>One course. Eleven study formats.</strong><p>Choose sources, create a guide, and save it with your course.</p></div><button className="portal-primary" onClick={()=>setStudio(true)}>Create study guide</button></div>
+      {/*
+        The standing offer, and it steps back on the one tab that has an
+        offer of its own.
+
+        This block sits above the tab strip, so it is on the screen whatever
+        tab you are on — which is right: building a guide is what this screen
+        is for and it should not hide. What it cannot also be is *the* action
+        on a tab that already has one. Revise draws a plan and one button that
+        starts it (`Start — PSCI 1104, 3 min`), and two filled buttons on one
+        phone screen is the defect `scripts/wallsweep.mjs` was written for,
+        two deep instead of five.
+
+        Guides and Tools have no competing action, so it stays filled there.
+        Only the emphasis moves; the button is in the same place, the same
+        size, saying the same thing.
+      */}
+      <div className="studio-entry"><div><strong>One course. Eleven study formats.</strong><p>Choose sources, create a guide, and save it with your course.</p></div><button className={`portal-primary${tab === 'revise' ? ' is-quiet' : ''}`} onClick={()=>setStudio(true)}>Create study guide</button></div>
       {/*
         Six buttons used to sit here, and removing them is the hierarchy pass
         the UI audit asked for rather than a deletion for its own sake.

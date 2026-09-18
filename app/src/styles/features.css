@@ -212,6 +212,10 @@
 }
 .study-source-list>label, .study-format-list>label{flex-shrink:0}
 .studio-entry>.portal-primary{background:var(--app-fg);color:var(--app-bg);border:0;border-radius:24px;padding:12px 20px;min-height:44px;font-size:14px}
+/* One step down, for the tab that has a filled action of its own. Same place,
+   same size, same words — `screens/Study.tsx` says why, and `wallsweep.mjs`
+   is what noticed there were two. */
+.studio-entry>.portal-primary.is-quiet{background:transparent;color:var(--app-fg);border:1px solid var(--app-line)}
 .preserve-lines{white-space:pre-wrap;}
 .study-journal{margin:24px 0;}
 /* What the journal says back, above the prompt it says it about. The list is

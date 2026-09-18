@@ -150,6 +150,56 @@ describe('the top of the study screen', () => {
     expect(filled().length, `${courses} cards drew ${filled().length} filled actions`).toBe(1);
   });
 
+  it('and the standing offer steps down on the tab that has one of its own', async () => {
+    /*
+     * The half a destination-level sweep could not see.
+     *
+     * `wallsweep.mjs` opened each of the fifty-eight destinations at whichever
+     * tab it arrives on and reported exactly one screen offering more than one
+     * filled action. True, and narrower than it sounded: Study has three tabs
+     * and the walk opened one. Revise draws a plan and a filled `Start —`
+     * button, under the studio entry — which sits above the tab strip and so
+     * is filled on every tab, including that one.
+     *
+     * `is-quiet` is what steps it down, and the assertion is on the class
+     * rather than on the paint because jsdom loads no stylesheet: the rule
+     * that makes it transparent is in `styles/features.css` and the sweep is
+     * what checks it renders. What this holds is the branch — that the app
+     * asks for the quiet treatment on exactly the tab that needs it.
+     *
+     * The tab is reached by pressing it rather than by seeding `studyTab` into
+     * storage, which was the first attempt and did not take: the store
+     * hydrates the persisted shape through its own path and the seeded value
+     * never reached `state.studyTab`, so the assertion failed against code
+     * that was correct. Pressing the control is what a student does and is the
+     * only version of this that cannot pass for the wrong reason.
+     */
+    await show(<Study />);
+    const revise = [...host.querySelectorAll('button')].find(
+      (b) => (b.textContent ?? '').trim() === 'Revise',
+    );
+    expect(revise, 'no Revise tab on this screen').toBeTruthy();
+    await act(async () => {
+      revise!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+    const entry = host.querySelector('.studio-entry > button');
+    expect(entry, 'the studio entry is gone from the Revise tab').toBeTruthy();
+    expect(entry!.className, 'the standing offer is still filled on Revise').toContain('is-quiet');
+  });
+
+  it('and stays filled on the tabs that do not', async () => {
+    /*
+     * The control. `is-quiet` on every tab would pass the test above and would
+     * mean the screen has no offer at all — the failure mode of every "one
+     * primary" fix, which is to solve the competition by removing both.
+     */
+    await show(<Study />);
+    const entry = host.querySelector('.studio-entry > button');
+    expect(entry, 'the studio entry is gone').toBeTruthy();
+    expect(entry!.className, 'the offer is quiet on Guides too').not.toContain('is-quiet');
+    expect(entry!.className).toContain('portal-primary');
+  });
+
   it('while each card still ranks its own recommendation above its own ways', async () => {
     /*
      * The control on the test above, and the reason it is not satisfied by

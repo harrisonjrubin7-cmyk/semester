@@ -534,7 +534,21 @@ export function DeckEdit({ deck }: { deck: StoredDeck }) {
       </div>
 
       <Folding name="Take it away">
-        <ActionButton tone="primary" disabled={busy} onClick={() => void save()}>
+        {/*
+          Not filled, because `Present it` is.
+
+          Locally this is the one action in its section and filling it reads
+          fine; on the screen it is the second filled button, and the first is
+          what the screen is for — a deck you are editing gets presented, and
+          exporting it to PowerPoint is the other way out rather than the way
+          out. That is the same shape as the four course cards on Study, which
+          each filled their own recommendation and left the screen saying "the
+          one thing to do" five times. `scripts/wallsweep.mjs` found both.
+
+          It keeps its width and its place inside the disclosure; only the
+          emphasis moves.
+        */}
+        <ActionButton disabled={busy} onClick={() => void save()}>
           {busy ? 'Building…' : 'PowerPoint file (.pptx), notes and all'}
         </ActionButton>
         <div style={{ ...secondLine(), fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}>
