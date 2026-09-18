@@ -6,7 +6,7 @@ import type { Block, DatedItem } from './types';
 import type { NotifKey } from '../data/misc';
 
 const ON: Record<NotifKey, boolean> = {
-  class: false, today: false, two: false, free: false, sun: false, exam: false, term: false,
+  class: false, today: false, two: false, start: false, free: false, sun: false, exam: false, term: false,
   attend: true,
   bill: true,
 };

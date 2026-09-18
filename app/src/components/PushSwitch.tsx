@@ -6,6 +6,7 @@ import { atRiskToday } from '../lib/atrisk';
 import { classesToNudge } from '../lib/notify';
 import { dropDevice, saveDevice, saveQueue, wipeQueue } from '../lib/cloud';
 import { railFor, datedItems } from '../lib/select';
+import { beginNow, planFrom } from '../lib/start';
 
 const VAPID = (import.meta.env.VITE_VAPID_PUBLIC_KEY as string | undefined) ?? '';
 
@@ -57,12 +58,34 @@ export function PushSwitch() {
       items: datedItems(catalog, d).filter((i) => !state.done[i.id]),
       classes: classesToNudge(railFor(catalog, d, state.appointments, state.commitments)),
       registrar: state.registrar,
+      /*
+       * A muted course is silent here too, and so are quiet hours.
+       *
+       * Both were passed by the in-page tick and by neither of the two callers
+       * that fill this queue, which meant the two switches worked on the tab
+       * and not on the phone — the surface a reminder was muted *for*. A rule
+       * enforced in one of three callers is a rule that leaks, in the words of
+       * `lib/notify.ts`, "and the thing it leaks is a notification somebody
+       * explicitly switched off".
+       */
+      muted: state.mutedCourses,
+      quiet: state.quiet,
       // Before the class, not after the absence. See `lib/atrisk.ts`.
       atRisk: atRiskToday(
         railFor(catalog, d, state.appointments, state.commitments),
         state.attendance,
         state.attendPolicy,
         courseCode,
+      ),
+      // The day to begin, not the day it is due. See `lib/start.ts`.
+      starts: beginNow(
+        planFrom({
+          items: datedItems(catalog, d),
+          done: state.done,
+          spent: state.spent,
+          windows: state.windows,
+          now: d,
+        }),
       ),
     }));
     await saveQueue(queue);

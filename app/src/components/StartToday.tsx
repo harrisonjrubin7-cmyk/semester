@@ -17,27 +17,21 @@ import { useNow, useStore } from '../state/store';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
-import { beginNow, plan, planLine } from '../lib/start';
-import { adjustedLine, calibrate } from '../lib/worth';
+import { beginNow, biasOf, planFrom, planLine } from '../lib/start';
+import { adjustedLine } from '../lib/worth';
 import { Folding } from './Fold';
 
 export function StartToday() {
   const { state, dispatch, catalog, tint } = useStore();
   const now = useNow();
-  const bias = calibrate(
-    state.spent
-      .filter((s) => typeof s.guess === 'number')
-      // `at` so the window is the recent ten rather than the whole term.
-      .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes, at: s.at })),
-  );
-  const p = plan({
+  const p = planFrom({
     items: datedItems(catalog, now),
     done: state.done,
     spent: state.spent,
     windows: state.windows,
     now,
-    bias,
   });
+  const bias = biasOf(state.spent);
   const list = beginNow(p);
   if (list.length === 0) return null;
 
@@ -137,21 +131,15 @@ export function StartToday() {
 export function StartList() {
   const { state, dispatch, catalog, tint } = useStore();
   const now = useNow();
-  const bias = calibrate(
-    state.spent
-      .filter((s) => typeof s.guess === 'number')
-      // `at` so the window is the recent ten rather than the whole term.
-      .map((s) => ({ guess: s.guess ?? 0, minutes: s.minutes, at: s.at })),
-  );
-  const p = plan({
+  const p = planFrom({
     items: datedItems(catalog, now),
     done: state.done,
     spent: state.spent,
     windows: state.windows,
     now,
-    bias,
     horizon: 21,
   });
+  const bias = biasOf(state.spent);
   if (p.starts.length === 0) return null;
 
   return (

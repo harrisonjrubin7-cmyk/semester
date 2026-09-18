@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { dateToIso, realDate, realMonthDay } from './date';
 import { parseIcs } from './ics';
@@ -198,5 +200,86 @@ describe('the year was in the field and thrown away', () => {
   it('refuses 31 April rather than returning it as 1 May', () => {
     expect(fromInputDate('2026-04-31')).toBeNull();
     expect(fromInputDate('2026-04-30')).toEqual({ month: 3, day: 30 });
+  });
+});
+
+/**
+ * Nobody may put the timezone back by assigning it.
+ *
+ * The comment above says why once, at length, and the fix it describes then
+ * had to be made a second time: `lib/fromschool.test.ts` carried its own
+ * `process.env.TZ = tz` and poisoned the worker the same way, and the casualty
+ * was the same one it names — `lib/connect.test.ts` asserting a calendar event
+ * has a timeZone on it and getting `undefined`. It turned CI red here, in a
+ * file that has nothing to do with either of them.
+ *
+ * Two copies of a rule is how the second came to be wrong, so the rule is
+ * checked rather than written down again. Source-read, because the failure is
+ * a line in a file this test does not import and cannot reach any other way —
+ * the instrument `lib/pushchain.test.ts` uses, for its reason.
+ *
+ * ## The rule, in the form that can actually be checked
+ *
+ * Not "never assign to TZ": setting a zone is the whole point, and
+ * `process.env.TZ = zone` inside a loop is correct. The rule is about *putting
+ * it back*. A file that saves the old value has to be able to unset it, and
+ * the only way to unset it is `delete` — assigning `undefined` sets the string
+ * "undefined", which is not a zone, and Node answers with `undefined` from
+ * then on.
+ *
+ * So: any file that reads `process.env.TZ` into a variable must also contain a
+ * `delete process.env.TZ`. That is one line of intent and it catches both
+ * copies of the bug.
+ *
+ * Comments are stripped before matching, and that is not a detail. A first
+ * version of this check did not strip them and reported eight offenders, five
+ * of which were prose *about* the bug — including sentences out of the comment
+ * above explaining the correct form. A probe that reads its own documentation
+ * as a violation is the probe `CLAUDE.md` warns about, caught here by having
+ * looked at what it printed rather than at whether it was red.
+ */
+describe('restoring the process timezone', () => {
+  it('is done by deleting, never by assigning a value that may be undefined', () => {
+    const root = join(process.cwd(), 'src');
+    const sources: string[] = [];
+
+    const walk = (at: string): void => {
+      for (const entry of readdirSync(at, { withFileTypes: true })) {
+        const full = join(at, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (/\.tsx?$/.test(entry.name)) sources.push(full);
+      }
+    };
+    walk(root);
+
+    const bare = (text: string) =>
+      text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+
+    // Files that hold the old zone so they can put it back.
+    const holders = sources.filter((f) =>
+      /=\s*process\.env\.TZ\b/.test(bare(readFileSync(f, 'utf8'))),
+    );
+
+    /*
+     * The control, and this check needs one more than most: a walk that found
+     * nothing, a regex that matches nothing and a suite with no TZ code in it
+     * all produce an empty offenders list and a green test. Naming the two
+     * files that are known to hold the zone means a broken probe fails here
+     * instead of passing quietly.
+     */
+    expect(sources.length).toBeGreaterThan(400);
+    expect(holders.map((f) => f.slice(root.length + 1)).sort()).toEqual([
+      'lib/fromschool.test.ts',
+      'lib/realdate.test.ts',
+    ]);
+
+    const offenders = holders
+      .filter((f) => !/delete\s+process\.env\.TZ\b/.test(bare(readFileSync(f, 'utf8'))))
+      .map((f) => f.slice(root.length + 1));
+
+    expect(
+      offenders,
+      'a file that saves process.env.TZ must put it back with `delete`, not an assignment',
+    ).toEqual([]);
   });
 });

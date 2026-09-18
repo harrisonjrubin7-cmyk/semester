@@ -15,6 +15,7 @@ export const NOTIF_DEFS = [
   { k: 'class', label: 'Class starting in 15 minutes' },
   { k: 'today', label: 'Anything due today, at 8am' },
   { k: 'two', label: 'Two-day warning on big assignments' },
+  { k: 'start', label: 'The morning something has to be started' },
   { k: 'free', label: '“Nothing due tonight” all-clear' },
   { k: 'sun', label: 'Sunday night: your weekly report' },
   { k: 'exam', label: 'Exam in one week' },
@@ -29,6 +30,15 @@ export const DEFAULT_NOTIFS: Record<NotifKey, boolean> = {
   class: true,
   today: true,
   two: true,
+  /*
+   * On by default, on the same argument as `attend` and `bill` below rather
+   * than on the argument that it is useful: it cannot fire for a student the
+   * app has never timed any work for, because `lib/start.ts` refuses to invent
+   * an estimate. So it is silent for a new account and stays silent until the
+   * app has learned enough to be right, and the first thing it ever says is a
+   * start date it can defend.
+   */
+  start: true,
   free: false,
   sun: true,
   exam: true,

@@ -83,8 +83,13 @@ export function landingFor(id: string): Landing {
   const second = id.indexOf(':', first + 1);
   const rest = second < 0 ? '' : id.slice(second + 1);
 
-  // The two that name a deadline. Opening it beats opening the list it is in.
-  if ((rule === 'two' || rule === 'exam') && rest) {
+  // The three that name a deadline. Opening it beats opening the list it is in.
+  //
+  // `start` belongs here for a reason the other two do not have: its whole
+  // point is the first action, and the first action happens inside the piece
+  // of work. A start nudge that landed on a list would have put one more tap
+  // between somebody and the document they were being asked to open.
+  if ((rule === 'two' || rule === 'exam' || rule === 'start') && rest) {
     return { screen: 'item' as Screen, item: rest };
   }
   const screen = BY_RULE[rule];

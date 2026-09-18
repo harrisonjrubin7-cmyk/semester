@@ -39,6 +39,7 @@ import { loadSeed } from '../data/seed';
 import { nextPayment } from '../lib/bill';
 import { classesToNudge, dueReminders, fire } from '../lib/notify';
 import { atRiskToday } from '../lib/atrisk';
+import { beginNow, planFrom } from '../lib/start';
 import { myReminders } from '../lib/myrules';
 import { datedItems, railFor } from '../lib/select';
 import { save, trouble } from '../lib/keep';
@@ -986,6 +987,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             state.attendPolicy,
             courseCode,
           ),
+          // What has to begin, worked out here for the same reason `atRisk`
+          // and `bill` are: `lib/notify.ts` decides when to say a thing and
+          // never what is true. `planFrom` is the one calibration, so the
+          // reminder and the card on Today cannot disagree about the date.
+          starts: beginNow(
+            planFrom({
+              items,
+              done: state.done,
+              spent: state.spent,
+              windows: state.windows,
+              now: at,
+            }),
+          ),
         }),
       );
       // The student's own rules, fired through the same `fire` — which keeps
@@ -1017,7 +1031,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // it reads through `nextPayment` — charges, aid, payments and plans — are
     // the same failure one screen over: a bill paid in full kept being
     // nudged about until an unrelated part of this list happened to change.
-  }, [catalog, state.notifs, state.mutedCourses, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, state.quiet, state.term, state.charges, state.aid, state.payments, state.plans, courseCode]);
+    //
+    // `state.spent` and `state.windows` join them for the start rule, and they
+    // are the same hazard again rather than a new one: both feed the runway,
+    // so an interval holding a stale copy would go on working backwards
+    // through last week's working hours, and the start date it named would be
+    // a day the student had already changed their mind about.
+  }, [catalog, state.notifs, state.mutedCourses, state.appointments, state.registrar, state.myRules, state.attendance, state.attendPolicy, state.done, state.quiet, state.term, state.charges, state.aid, state.payments, state.plans, state.spent, state.windows, courseCode]);
 
   // The number on the installed icon: things due today and not ticked. In the
   // provider rather than on Today, because the count has to be right whatever
