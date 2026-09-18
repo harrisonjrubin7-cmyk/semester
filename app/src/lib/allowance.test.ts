@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { MONTHLY_CALLS, costLine, costShort, spell } from './allowance';
+import { DEFAULT_MONTHLY_CALLS, MONTHLY_CALLS, costLine, costShort, readLimit, spell } from './allowance';
 
 /**
  * One figure, two languages, and a test that can see both.
@@ -42,7 +42,47 @@ describe('the shared key allowance', () => {
      * it is checking has to fail, not shrug.
      */
     expect(line, 'could not find MONTHLY_CALLS in the Edge Function — has it moved?').toBeTruthy();
-    expect(Number(line![1])).toBe(MONTHLY_CALLS);
+    // Against the *default*, which is what both sides fall back to when
+    // nothing is configured. `MONTHLY_CALLS` follows an override where a
+    // deployment sets one, and then only this repository's defaults can be
+    // compared.
+    expect(Number(line![1])).toBe(DEFAULT_MONTHLY_CALLS);
+  });
+
+  it('survives the empty string a deploy actually produces', () => {
+    /*
+     * The bug this replaces, and it was the shipped path rather than an edge
+     * case. `?? '60'` falls back on `undefined`, not on `''`, and `''` is what
+     * `.github/workflows/pages.yml` writes for
+     * `${{ vars.X || secrets.X }}` when neither is configured — the state every
+     * deployment is in until somebody sets one. `app/.env.example` ships the
+     * name empty too.
+     *
+     * `Number('')` is `0`, so a deployed copy would have told a new account it
+     * gets *zero* generations a month while the server allowed sixty: the app's
+     * first screen contradicting the server, which is the single failure this
+     * whole module was written to prevent. Caught by a review bot on the pull
+     * request, not by the first version of this file.
+     */
+    expect(readLimit('')).toBe(DEFAULT_MONTHLY_CALLS);
+    expect(readLimit('   ')).toBe(DEFAULT_MONTHLY_CALLS);
+    expect(readLimit(undefined)).toBe(DEFAULT_MONTHLY_CALLS);
+  });
+
+  it('refuses anything that is not a real allowance', () => {
+    // A cap of nought, a negative, a fraction of a call, or a word. None of
+    // them is a number of generations, and a default beats a nonsense.
+    for (const bad of ['0', '-5', '1.5', 'sixty', 'NaN', 'Infinity']) {
+      expect(readLimit(bad), bad).toBe(DEFAULT_MONTHLY_CALLS);
+    }
+  });
+
+  it('takes a real override, which is the point of having one', () => {
+    // The control for the two above: if `readLimit` simply returned the
+    // default always, every case so far would pass and the setting would be
+    // dead.
+    expect(readLimit('200')).toBe(200);
+    expect(readLimit(' 120 ')).toBe(120);
   });
 
   it('is the number the Edge Function says out loud when it refuses', () => {

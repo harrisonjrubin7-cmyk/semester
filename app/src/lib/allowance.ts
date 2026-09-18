@@ -41,13 +41,42 @@
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 
 /**
- * The shared key's monthly allowance, as this build understands it.
+ * The allowance a build ships with when nothing overrides it.
  *
  * Must equal `MONTHLY_CALL_LIMIT`'s default in
  * `supabase/functions/claude/index.ts`. `allowance.test.ts` is what makes
  * "must" mean something.
  */
-export const MONTHLY_CALLS = Number(env.VITE_MONTHLY_CALL_LIMIT ?? '60');
+export const DEFAULT_MONTHLY_CALLS = 60;
+
+/**
+ * Read the override, and refuse anything that is not a real allowance.
+ *
+ * `?? '60'` was the first version of this and it was wrong in the one way that
+ * mattered, which a review bot caught before it shipped: `??` falls back on
+ * `undefined`, not on an empty string, and an empty string is precisely what a
+ * deployment produces. `.github/workflows/pages.yml` writes
+ * `${{ vars.VITE_MONTHLY_CALL_LIMIT || secrets.VITE_MONTHLY_CALL_LIMIT }}`,
+ * which is `''` when neither is configured — the state every deployment is in
+ * until somebody sets one — and `app/.env.example` ships the name with nothing
+ * after the `=`.
+ *
+ * `Number('')` is `0`. So the sentence this module exists to make true would
+ * have read *"a signed-in account gets zero of those a month"* on every
+ * deployed copy, while the server went on allowing sixty. The app's first
+ * screen, contradicting the server, in the file whose whole header is about
+ * not doing that.
+ *
+ * Hence: anything that is not a positive finite integer is not an allowance,
+ * and the default stands. A deployment that means to change it sets a number.
+ */
+export function readLimit(raw: string | undefined): number {
+  const n = Number((raw ?? '').trim());
+  return Number.isInteger(n) && n > 0 ? n : DEFAULT_MONTHLY_CALLS;
+}
+
+/** The shared key's monthly allowance, as this build understands it. */
+export const MONTHLY_CALLS = readLimit(env.VITE_MONTHLY_CALL_LIMIT);
 
 /**
  * Spelt out, because a sentence about money reads better in words.
