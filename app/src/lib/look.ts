@@ -1418,6 +1418,40 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
     /** Text on the dark tile, which is light on a light ground and vice versa. */
     '--tile-ink': g.light ? '#f4f2ee' : g.fg,
 
+    /*
+     * The primary button's glow, which was one shadow for thirteen grounds.
+     *
+     * `app.css` defines `--glow` once in `:root` as three layers, and the
+     * third — `0 14px 34px rgba(0, 0, 0, 0.45)` — is what this is about. On a
+     * dark ground it is black on near-black and does nothing anyone can see.
+     * On a light one it is a grey wash reaching some forty-eight pixels below
+     * the button, over whatever text comes next.
+     *
+     * Measured with `scripts/paint.mjs`, which samples the screenshot rather
+     * than compositing the style tree and so is the only instrument that can
+     * see this at all: on Fog, `#/pathway`'s "Where you stand" sat at 3.72:1
+     * and `#/sources`' "Nothing yet" at 4.27:1, both needing 4.5. Both are
+     * `--app-accent-deep`, which `lib/contrast.test.ts` holds to 4.5:1 and
+     * which *passes* there — against `--app-bg`, the surface the token audit
+     * knows about. The surface underneath was not `--app-bg`; it was
+     * `--app-bg` with half this shadow on it, which no token names.
+     *
+     * That is `CLAUDE.md`'s standing warning about `lib/look.ts` arriving
+     * from a direction it does not list: not a fade measured against the
+     * panel that flatters it, but a fade measured against a surface that is
+     * not in the ramp at all.
+     *
+     * So the cast half is the ground's, like `--shadow-soft-out` below it and
+     * for the same reason. On a light ground it is the same warm near-black
+     * that shadow uses, at the alpha that reads as depth without printing on
+     * the paragraph below; the near layers are unchanged, because those are
+     * the edge and the contact shadow and neither reaches past the button.
+     * Dark grounds keep exactly what they had.
+     */
+    '--glow': g.light
+      ? '0 0 0 1px rgba(90, 84, 72, 0.16), 0 2px 6px rgba(90, 84, 72, 0.22), 0 14px 34px rgba(90, 84, 72, 0.10)'
+      : '0 0 0 1px rgba(212, 217, 226, 0.2), 0 2px 6px rgba(0, 0, 0, 0.5), 0 14px 34px rgba(0, 0, 0, 0.45)',
+
     '--shadow-soft-out': g.light
       ? '-2px -2px 6px rgba(255, 255, 255, 0.7), 4px 6px 14px rgba(90, 84, 72, 0.14)'
       : '-2px -2px 6px rgba(255, 255, 255, 0.045), 4px 6px 14px rgba(0, 0, 0, 0.5)',
