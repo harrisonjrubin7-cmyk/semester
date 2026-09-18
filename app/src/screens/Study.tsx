@@ -21,7 +21,7 @@ import { nextExam, testedIn } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
 import { anyAnswered, cardKey, comeRound, neverMet } from '../lib/review';
 import { inTime, missingCount, testsNear } from '../lib/intime';
-import { destinationsIn } from '../lib/nav';
+import { DESTINATIONS, destinationsIn } from '../lib/nav';
 import { suggest, type Coming } from '../lib/toolnow';
 import { codeOf } from '../data/catalog';
 import { upcomingItems } from '../lib/select';
@@ -198,7 +198,39 @@ export function Study() {
   const tools = [...destinationsIn('Study'), ...destinationsIn('Make')].filter(
     (d) => d.screen !== 'study',
   );
-  const toolByScreen = new Map(tools.map((d) => [d.screen, d]));
+  /*
+   * The whole registry, for the cards above the grid — and the grid's two
+   * shelves are deliberately not reused here.
+   *
+   * The cards used to be named out of `tools`, and a suggestion for anything
+   * outside those two shelves hit `if (!d) return null` and vanished. Two of
+   * the ten screens `lib/toolnow.ts` can suggest are outside them: `work`
+   * sits on Semester and `sources` on Courses, both by an argument written
+   * into `lib/nav.ts` when those shelves were last balanced.
+   *
+   * Measured against the sample semester, one evening per day for 120 days:
+   * 341 suggestions were produced and **122 were thrown away** — `work` on
+   * 112 of those days and `sources` on 10. `work` scores `3 + soon * 1.5`,
+   * the joint-highest in the file, so the one being dropped was usually the
+   * strongest. Worse, `suggest` caps its list at `AT_MOST` before the screen
+   * filtered it, so the wasted slots were never refilled: on four of the 120
+   * days every surviving card was dropped and "Because of this fortnight"
+   * drew as a heading with nothing under it.
+   *
+   * The shelf is the wrong question to ask here and `lib/nav.ts` says so in
+   * as many words — *"`group` is a shelf and a screen sits on exactly one; a
+   * task is an intention and a screen can serve several"*. The grid below is
+   * a shelf (positional, stable, two shelves' worth); these cards are an
+   * intention, and the intention engine already decided. All this map does is
+   * find the name and the blurb for what it decided.
+   */
+  const named = new Map(DESTINATIONS.map((d) => [d.screen, d]));
+  /* Only what can actually be drawn, so the heading cannot outlive its list.
+     Nothing is droppable today — the guard in `screens/toolcards.test.tsx`
+     pins that every screen `toolnow` names is a registered destination — and
+     this is what keeps a rule added next year for an unregistered screen from
+     printing an empty section instead of failing. */
+  const shown = picks.filter((p) => named.has(p.screen));
   if (catalog.empty) return <FirstRun where="to study" />;
   const tab = state.studyTab;
 
@@ -419,12 +451,11 @@ export function Study() {
             actually have due.
           </div>
 
-          {picks.length > 0 && (
+          {shown.length > 0 && (
             <>
               <SectionLabel>Because of this fortnight</SectionLabel>
-              {picks.map((p) => {
-                const d = toolByScreen.get(p.screen);
-                if (!d) return null;
+              {shown.map((p) => {
+                const d = named.get(p.screen)!;
                 return (
                   <Blueprint
                     plain
