@@ -2,7 +2,8 @@ import { datedItems } from '../../lib/select';
 import { daysTo, filled, sheet } from '../../lib/registrar';
 import type { Look, Provide } from '../shape';
 import { chipped, worked } from './core';
-import { weekly } from './upkeep';
+import { ahead, weekly } from './upkeep';
+import { tonight } from './study';
 
 /**
  * The Semester group — what is happening and when.
@@ -40,7 +41,26 @@ function due(look: Look, days: number, cap = 40) {
  * a leftover, so it is honoured: filtering to ECON and asking "how many are
  * there" has to answer about ECON.
  */
+/**
+ * Today, and the two screens that are now two of its tabs.
+ *
+ * `#/tonight` and `#/ahead` each had a provider of their own — `study.tonight`
+ * and `upkeep.ahead` — because each was a screen, and the registry in
+ * `providers/index.ts` is keyed by screen. Folding them into Today's tabs
+ * without this would have left the assistant describing the next eight days
+ * to somebody standing on the Hours tab asking how long tonight is: the
+ * screen said one thing and its context said another.
+ *
+ * Delegated rather than merged. The two providers are unchanged and still
+ * the single source of what each horizon knows; this only picks which one the
+ * tab is asking for. `providers/split.test.ts` is why that matters — a
+ * provider that quietly grew a second copy of another's summary is the fault
+ * that file exists to catch.
+ */
 export const home: Provide = (look) => {
+  if (look.state.homeTab === 'hours') return tonight(look);
+  if (look.state.homeTab === 'week') return ahead(look);
+
   const { catalog } = look;
   if (catalog.empty) return null;
   const rows = due(look, 8);

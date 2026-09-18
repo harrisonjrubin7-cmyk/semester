@@ -24,6 +24,7 @@ import {
   type DayInput,
 } from '../../lib/brief';
 import { showHours } from '../../lib/activities';
+import { goHome } from '../../lib/openhome';
 
 /**
  * The day, at both ends of it.
@@ -294,7 +295,7 @@ export function DayReport({ onGrain }: { onGrain: (grain: 'week') => void }) {
         <ItemRow
           title="The week ahead, in hours"
           meta="What is promised, what is due, and where the room is."
-          onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
+          onClick={() => goHome(dispatch, 'week')}
         />
       </Group>
 

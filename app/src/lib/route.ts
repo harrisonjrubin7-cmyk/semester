@@ -31,7 +31,7 @@
  * not, and the id means nothing without the device it was written on.
  */
 
-import type { ChangeSource, CoursesTab, ReportGrain, Screen, StudyMode } from './types';
+import type { ChangeSource, CoursesTab, HomeTab, ReportGrain, Screen, StudyMode } from './types';
 
 /** What a screen is currently about, if anything. */
 export interface Route {
@@ -48,7 +48,7 @@ export interface Route {
    * are there, not part of the address, and putting them in the hash would
    * mean every flip pushed a history entry.
    */
-  opens?: { report?: ReportGrain; changes?: ChangeSource; courses?: CoursesTab };
+  opens?: { report?: ReportGrain; changes?: ChangeSource; courses?: CoursesTab; home?: HomeTab };
 }
 
 /**
@@ -152,6 +152,26 @@ const RETIRED: Record<string, { screen: Screen; opens?: Route['opens'] }> = {
    * screen that is Everything.
    */
   everything: { screen: 'directory' as Screen },
+  /*
+   * Two horizons that were screens and are tabs on Today.
+   *
+   * Both were built twice over. "The next seven days in hours" was
+   * `screens/Ahead.tsx` *and* Today's This week tab; "how long you have
+   * tonight" was `screens/Tonight.tsx` *and* Today's Hours tab. Two
+   * implementations each, sharing nothing — `ThisWeek` and `HoursToday` are
+   * private to `screens/Today.tsx` — and both unlocked at one or two courses,
+   * so every real student was offered both copies of both questions.
+   *
+   * The tabs are the survivors because Today is in `DEFAULT_TABS`: the rule
+   * `.claude/skills/simplify` gives is that the survivor is the one a student
+   * already opens, and nobody has to find Today.
+   *
+   * Each carries its tab for the reason `#/weekly` does. A bookmark saying
+   * `#/tonight` meant tonight's hours; landing it on Today's default tab is
+   * the promise technically kept and actually broken.
+   */
+  ahead: { screen: 'home' as Screen, opens: { home: 'week' } },
+  tonight: { screen: 'home' as Screen, opens: { home: 'hours' } },
 };
 
 /** A screen id is already url-safe; an account's own ids may not be. */

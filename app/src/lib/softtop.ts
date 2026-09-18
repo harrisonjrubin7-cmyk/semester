@@ -280,6 +280,66 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
   switch (screen) {
     // ── Semester ──────────────────────────────────────────────────────────
     case 'home': {
+      /*
+       * Four tabs, and two of them were screens with a header of their own.
+       *
+       * The same shape the Courses case below uses and for the same reason it
+       * states: the tab is the screen now, so the top has to know which one it
+       * is drawing. `#/tonight` and `#/ahead` each had a case here, and
+       * folding the screens into Today's tabs without bringing their heroes
+       * would have left somebody on the Hours tab reading the time of their
+       * next class — true, and not what they came to that tab to find out.
+       *
+       * Both bodies are the ones those cases had, moved rather than rewritten.
+       */
+      if (state.homeTab === 'hours') {
+        /*
+         * The count, not the hours.
+         *
+         * This used to headline `state.dayBudget` as "4 hours to spend on 8
+         * things". That is the standing figure for an ordinary day, and the
+         * screen underneath asks how long you have *tonight* and plans against
+         * its own answer — so the two contradicted each other in the same
+         * viewport from the moment the screen opened, and tapping a different
+         * number moved one of them and not the other.
+         *
+         * The number of things outstanding is a fact this tile can actually
+         * know, and it is the one the screen below agrees with.
+         */
+        const left = soon.length + due.length;
+        return {
+          hero: {
+            label: 'Tonight',
+            figure: num(left),
+            foot: left === 1 ? 'thing outstanding' : 'things outstanding',
+          },
+          stats: term,
+        };
+      }
+
+      if (state.homeTab === 'week') {
+      const w = weekAhead({
+          catalog,
+          from: now,
+          done: state.done,
+          commitments: state.commitments,
+          appointments: state.appointments,
+        });
+        return {
+          hero: {
+            label: 'The week ahead',
+            meta: showHours(w.promised),
+            said: headline(w),
+            foot: pressure(w) || undefined,
+          },
+          stats: [
+            { label: 'Deadlines', value: num(w.due.length) },
+            { label: 'Promised', value: showHours(w.promised) },
+            { label: 'Overdue', value: num(overdue) },
+          ],
+        };
+      }
+
       const next = nextClass(catalog, now);
       return {
         hero: next
@@ -340,54 +400,6 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
         },
         stats: term,
       };
-
-    case 'tonight': {
-      /*
-       * The count, not the hours.
-       *
-       * This used to headline `state.dayBudget` as "4 hours to spend on 8
-       * things". That is the standing figure for an ordinary day, and the
-       * screen underneath asks how long you have *tonight* and plans against
-       * its own answer — so the two contradicted each other in the same
-       * viewport from the moment the screen opened, and tapping a different
-       * number moved one of them and not the other.
-       *
-       * The number of things outstanding is a fact this tile can actually
-       * know, and it is the one the screen below agrees with.
-       */
-      const left = soon.length + due.length;
-      return {
-        hero: {
-          label: 'Tonight',
-          figure: num(left),
-          foot: left === 1 ? 'thing outstanding' : 'things outstanding',
-        },
-        stats: term,
-      };
-    }
-
-    case 'ahead': {
-      const w = weekAhead({
-        catalog,
-        from: now,
-        done: state.done,
-        commitments: state.commitments,
-        appointments: state.appointments,
-      });
-      return {
-        hero: {
-          label: 'The week ahead',
-          meta: showHours(w.promised),
-          said: headline(w),
-          foot: pressure(w) || undefined,
-        },
-        stats: [
-          { label: 'Deadlines', value: num(w.due.length) },
-          { label: 'Promised', value: showHours(w.promised) },
-          { label: 'Overdue', value: num(overdue) },
-        ],
-      };
-    }
 
     // ── Courses ───────────────────────────────────────────────────────────
     case 'courses': {

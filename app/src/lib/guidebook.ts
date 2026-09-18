@@ -86,8 +86,15 @@ const AREA: Record<Group, string> = {
 export const TASKS: { task: string; why: string; steps: Screen[] }[] = [
   {
     task: 'I want to know what is due',
-    why: 'Start at Today, which is the whole term narrowed to the next few days.',
-    steps: ['home', 'ahead', 'calendar'],
+    /*
+     * Two steps, not three. This route ran Today → The week ahead → the
+     * calendar, and the middle one is a tab on the first now — a route that
+     * sends somebody from a screen to itself reads as a broken instruction.
+     * The same collapse happens to the "plan my week" route below, which had
+     * both retired screens in it and now names Today once.
+     */
+    why: 'Start at Today, which is the whole term narrowed to the next few days — tonight’s hours and the week ahead are tabs on it.',
+    steps: ['home', 'calendar'],
   },
   {
     /*
@@ -99,7 +106,7 @@ export const TASKS: { task: string; why: string; steps: Screen[] }[] = [
      */
     task: 'I want to study for an exam',
     why: 'Study first, to see what the course holds and how cold each unit is. The guide and the drill open from there. A practice paper is the last step, not the first.',
-    steps: ['study', 'tonight', 'exam'],
+    steps: ['study', 'home', 'exam'],
   },
   {
     task: 'I want to know where I stand',
@@ -109,7 +116,7 @@ export const TASKS: { task: string; why: string; steps: Screen[] }[] = [
   {
     task: 'I want to plan my week',
     why: 'Hours first, then the calendar — a week that does not fit is not a scheduling problem.',
-    steps: ['ahead', 'work', 'calendar', 'tonight'],
+    steps: ['home', 'work', 'calendar'],
   },
   {
     task: 'I want to fix bad import data',

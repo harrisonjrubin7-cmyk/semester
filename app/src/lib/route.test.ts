@@ -130,6 +130,9 @@ describe('links to screens that have since merged', () => {
      * was a screen is on a screen again.
      */
     expect(fromHash('#/everything')?.screen).toBe('directory');
+    // Two horizons that were screens and are tabs on Today.
+    expect(fromHash('#/ahead')?.screen).toBe('home');
+    expect(fromHash('#/tonight')?.screen).toBe('home');
   });
 
   it('says which part of the survivor the link meant', () => {
@@ -146,6 +149,13 @@ describe('links to screens that have since merged', () => {
     expect(fromHash('#/grades/econ')?.screen).toBe('courses');
     // Nothing to disambiguate any more: `directory` is the whole of what
     // Everything was, so the link names no part of it.
+    // `#/ahead` meant the next seven days and `#/tonight` meant tonight, and
+    // they are two different tabs of the four on Today. Landing either on the
+    // tab the session last showed is the same broken promise as `#/weekly`
+    // opening today's report.
+    expect(fromHash('#/ahead')?.opens).toEqual({ home: 'week' });
+    expect(fromHash('#/tonight')?.opens).toEqual({ home: 'hours' });
+    expect(fromHash('#/ahead')?.opens).not.toEqual(fromHash('#/tonight')?.opens);
     expect(fromHash('#/everything')?.opens).toBeUndefined();
     // Nothing to disambiguate: the chat was the whole of what Ask now is, and
     // the Data screen has no sections to open.
@@ -223,5 +233,42 @@ describe('a hash that is not one of ours', () => {
     ] as const) {
       expect(fromHash(toHash(route as never))).toMatchObject(route);
     }
+  });
+});
+
+/**
+ * The hazard a retired screen creates when it merges into a *live* one.
+ *
+ * `same()` compares screen, id and mode. It does not compare `opens`, and for
+ * five retirements that never mattered: `#/weekly` lands on `brief`, `#/chat`
+ * on `ask`, `#/grades` on `courses` — none of them a screen you are already
+ * standing on, so the "nothing changed, skip it" guard in `state/store.tsx`
+ * never fired and the grain was always applied.
+ *
+ * `#/ahead` and `#/tonight` merge into `home`, which is the screen somebody is
+ * most likely to already be on. To `same()` they are indistinguishable from
+ * `#/home`, so the guard returned before the tab was set and both links landed
+ * on Today's default tab — the exact broken promise `opens` exists to prevent,
+ * produced by the mechanism written to prevent it. Measured in a browser: both
+ * came up on the Today tab.
+ *
+ * The fix is ordering — the store applies `opens` before it asks whether the
+ * route changed — and this is the fact that made the ordering necessary. If
+ * `same()` ever learns about `opens`, this test should fail and say so.
+ */
+describe('a retired link whose survivor is a screen you may already be on', () => {
+  it('cannot be told apart from the survivor by route identity alone', () => {
+    const ahead = fromHash('#/ahead')!;
+    const home = fromHash('#/home')!;
+    expect(ahead.screen).toBe(home.screen);
+    expect(same(ahead, home), 'identity ignores `opens` — see state/store.tsx').toBe(true);
+  });
+
+  it('so the tab it meant is carried on the route rather than in its identity', () => {
+    // Two links, one screen, two different places. The difference lives only
+    // here, which is why the store has to read it rather than diff routes.
+    expect(fromHash('#/ahead')!.opens).toEqual({ home: 'week' });
+    expect(fromHash('#/tonight')!.opens).toEqual({ home: 'hours' });
+    expect(fromHash('#/home')!.opens).toBeUndefined();
   });
 });

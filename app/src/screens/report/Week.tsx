@@ -14,6 +14,7 @@ import { configured, provider } from '../../lib/assistant';
 import { download } from '../../lib/deliver';
 import { showHours, week } from '../../lib/ahead';
 import { ActionButton } from '../../components/ui';
+import { goHome } from '../../lib/openhome';
 import {
   SYSTEM,
   behind,
@@ -219,7 +220,7 @@ export function WeekReport() {
           <button
             type="button"
             className="btn btn-secondary btn-block"
-            onClick={() => dispatch({ type: 'go', screen: 'ahead' })}
+            onClick={() => goHome(dispatch, 'week')}
             style={{ height: 40, marginTop: 'var(--sp-5)' }}
           >
             Hour by hour

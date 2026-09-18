@@ -58,7 +58,6 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   solve: study.solve,
   exam: study.exam,
   runway: study.runway,
-  tonight: study.tonight,
   drill: study.drillLike,
   meet: study.meet,
 
@@ -76,7 +75,6 @@ export const PROVIDERS: Partial<Record<Screen, Provide>> = {
   import: upkeep.importer,
   edit: upkeep.edit,
   announce: upkeep.announce,
-  ahead: upkeep.ahead,
   behind: upkeep.behind,
   degree: upkeep.degree,
 

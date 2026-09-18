@@ -191,10 +191,39 @@ export const DESTINATIONS: Destination[] = [
   {
     screen: 'home',
     label: 'Today',
-    blurb: 'What is due, what is next, and what is on today.',
-    keywords: 'now due soon next class plan agenda',
+    /*
+     * Four tabs, and two of them used to be screens.
+     *
+     * "The next seven days in hours" was `#/ahead` and Today's This week tab
+     * at once; "how long you have tonight" was `#/tonight` and Today's Hours
+     * tab. Two implementations of each, sharing nothing, both unlocked at one
+     * or two courses — so every student was offered both copies and had to
+     * guess which was meant. The tabs are the survivors because Today is in
+     * `DEFAULT_TABS` and nobody has to find it.
+     *
+     * The blurb names all four now. A destination whose blurb describes one
+     * tab of four is the fault this file's own E2 row complains about on
+     * `work`, and it would have been introduced here by saying nothing.
+     */
+    blurb: 'What is due, what is next, tonight’s hours and the week ahead.',
+    /*
+     * Both retired screens' keywords, verbatim.
+     *
+     * This is the half of a merge that is easy to skip and impossible to
+     * notice afterwards: the screens are gone, the app still works, and
+     * "capacity", "workload", "points per hour" and "prioritise" quietly stop
+     * finding anything. `lib/route.ts`'s `RETIRED` keeps the *addresses*
+     * working; this is what keeps the *words* working.
+     */
+    keywords:
+      'now due soon next class plan agenda ' +
+      'week ahead next seven days forecast load hours busy workload plan planning free time capacity schedule how much time commitments heaviest day room ' +
+      'tonight evening plan priority prioritise prioritize what should i do first order effort allocation worth it points per hour six hours study plan triage decide choose',
+    // `study` comes from Tonight, which was the one of the three that was
+    // about what to study rather than about when. Losing it would drop Today
+    // out of "Study for something" on the directory.
     group: 'Semester',
-    taskTags: ['due', 'week'],
+    taskTags: ['due', 'week', 'study'],
     root: 'home',
   },
   {
@@ -539,16 +568,6 @@ export const DESTINATIONS: Destination[] = [
     root: 'study',
   },
   {
-    screen: 'ahead',
-    label: 'The week ahead',
-    short: 'Ahead',
-    blurb: 'The next seven days in hours — what is promised, what is due, where the room is.',
-    keywords: 'week ahead next seven days forecast load hours busy workload plan planning free time capacity schedule how much time commitments heaviest day room',
-    group: 'Semester',
-    taskTags: ['week'],
-    root: 'home',
-  },
-  {
     screen: 'behind',
     label: 'When you are behind',
     short: 'Behind',
@@ -643,15 +662,6 @@ export const DESTINATIONS: Destination[] = [
     group: 'Life',
     taskTags: ['campus', 'ahead'],
     root: 'me',
-  },
-  {
-    screen: 'tonight',
-    label: 'Tonight',
-    blurb: 'How long you have, and where those hours buy the most against your grade.',
-    keywords: 'tonight evening plan priority prioritise prioritize what should i do first order effort allocation worth it points per hour six hours study plan triage decide choose',
-    group: 'Semester',
-    taskTags: ['study', 'week'],
-    root: 'home',
   },
   {
     screen: 'pathway',

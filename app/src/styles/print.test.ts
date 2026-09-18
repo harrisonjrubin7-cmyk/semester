@@ -88,7 +88,6 @@ describe('the rows that print', () => {
      */
     'components/ForThis.tsx',
     'components/StartToday.tsx',
-    'screens/Ahead.tsx',
     'screens/Calendar.tsx',
     /*
      * A unit's name, on the printed guide.

@@ -727,7 +727,6 @@ export type Screen =
   | 'sheet'
   | 'equations'
   | 'exam'
-  | 'ahead'
   | 'announce'
   | 'costs'
   | 'groupwork'
@@ -742,7 +741,6 @@ export type Screen =
   | 'clocks'
   | 'proof'
   | 'applying'
-  | 'tonight'
   | 'behind'
   | 'degree'
   | 'people'
@@ -798,6 +796,17 @@ export type Screen =
 export type ReportGrain = 'day' | 'week' | 'term';
 export type ChangeSource = 'told' | 'feed';
 export type CoursesTab = 'courses' | 'due' | 'grades';
+/**
+ * Today's four tabs, named here rather than written inline in `state/shape.ts`.
+ *
+ * It was an inline union on the field, which was fine while nothing else had
+ * to say one — and then two screens merged into these tabs. `#/ahead` and
+ * `#/tonight` are addresses somebody bookmarked, so `RETIRED` in `lib/route.ts`
+ * has to be able to name *which tab* each of them meant, the way `#/weekly`
+ * names a report grain. A union in two places is the drift this file exists to
+ * prevent.
+ */
+export type HomeTab = 'today' | 'hours' | 'week' | 'done';
 /**
  * The two halves of what a term costs.
  *

@@ -145,7 +145,6 @@ const STUDENT_ONLY: Screen[] = [
   'degree',
   'runway',
   'behind',
-  'tonight',
   'groupwork',
   'meals',
   'housing',

@@ -116,8 +116,8 @@ describe('the places you keep going back to', () => {
   const caps = vanderbilt;
 
   it('lists the most recent first', () => {
-    expect(lately(['tonight', 'runway', 'essay'], [], caps).map((d) => d.screen)).toEqual([
-      'tonight',
+    expect(lately(['behind', 'runway', 'essay'], [], caps).map((d) => d.screen)).toEqual([
+      'behind',
       'runway',
       'essay',
     ]);
@@ -126,30 +126,35 @@ describe('the places you keep going back to', () => {
   it('leaves out whatever this layout already puts one tap away', () => {
     // The tab bar and the springboard's dock hold different screens, which is
     // why the bar is a parameter rather than a constant.
-    expect(lately(['tonight', 'runway'], ['tonight'], caps).map((d) => d.screen)).toEqual(['runway']);
+    expect(lately(['behind', 'runway'], ['behind'], caps).map((d) => d.screen)).toEqual(['runway']);
   });
 
   it('leaves out a screen this school has no equivalent of', () => {
     // Visited before somebody changed school. It must not come back in
     // through this door when the directory has already dropped it.
-    expect(lately(['meals', 'tonight'], [], nowhere).map((d) => d.screen)).toEqual(['tonight']);
-    expect(lately(['meals', 'tonight'], [], caps).map((d) => d.screen)).toContain('meals');
+    expect(lately(['meals', 'behind'], [], nowhere).map((d) => d.screen)).toEqual(['behind']);
+    expect(lately(['meals', 'behind'], [], caps).map((d) => d.screen)).toContain('meals');
   });
 
   it('drops anything that is not a place in the app', () => {
-    expect(lately(['tonight', 'nonsense'], [], caps).map((d) => d.screen)).toEqual(['tonight']);
+    expect(lately(['behind', 'nonsense'], [], caps).map((d) => d.screen)).toEqual(['behind']);
     // Including a screen that was a place until it merged into another: the
     // grade table is the grades grain of Courses now, and `recent` is saved
     // state that can still be carrying the old id.
-    expect(lately(['tonight', 'grades'], [], caps).map((d) => d.screen)).toEqual(['tonight']);
+    //
+    // `tonight` is the same case one merge later — it was a screen and is
+    // Today's Hours tab — and it is here because this list is exactly what a
+    // student who used it last week still has stored.
+    expect(lately(['behind', 'grades'], [], caps).map((d) => d.screen)).toEqual(['behind']);
+    expect(lately(['behind', 'tonight', 'ahead'], [], caps).map((d) => d.screen)).toEqual(['behind']);
   });
 
   it('never lists the same screen twice', () => {
-    expect(lately(['tonight', 'tonight', 'runway'], [], caps)).toHaveLength(2);
+    expect(lately(['behind', 'behind', 'runway'], [], caps)).toHaveLength(2);
   });
 
   it('stops at four, because a list of twelve is the directory again', () => {
-    const many = ['tonight', 'runway', 'essay', 'deck', 'exam', 'costs'];
+    const many = ['behind', 'runway', 'essay', 'deck', 'exam', 'costs'];
     expect(lately(many, [], caps)).toHaveLength(4);
   });
 });
@@ -239,12 +244,25 @@ describe('the shelves the directory is arranged on', () => {
     expect(semester).not.toContain('degree');
   });
 
-  it('puts the week ahead next to when you are behind', () => {
-    // Two screens answering the same question in opposite directions, split
-    // across two shelves until Standing folded. Order on a shelf is array
-    // order in the registry, so this is what a reader actually meets.
+  /*
+   * What this guarded, now that one of the two is a tab.
+   *
+   * It pinned `behind` immediately after `ahead` — two screens answering the
+   * same question in opposite directions, kept side by side so a reader meets
+   * them together. `ahead` is Today's This week tab now, so the pairing it
+   * described cannot be a pairing of two rows any more.
+   *
+   * The half that still means something is that `behind` is on the same shelf
+   * as the screen that now answers the forward direction, rather than being
+   * filed somewhere else while its opposite moved. Asserting the *shelf* says
+   * that; asserting an index against a row that no longer exists would have
+   * had to be deleted rather than rewritten.
+   */
+  it('keeps when you are behind on the shelf that answers the other direction', () => {
     const on = destinationsIn('Semester').map((d) => d.screen);
-    expect(on.indexOf('behind')).toBe(on.indexOf('ahead') + 1);
+    expect(on).toContain('behind');
+    expect(on).toContain('home');
+    expect(on, 'the week ahead is a tab on Today now, not a row here').not.toContain('ahead');
   });
 });
 

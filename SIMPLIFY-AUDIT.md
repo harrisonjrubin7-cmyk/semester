@@ -1,6 +1,109 @@
+# One app — the fifteenth pass: the question that was built twice and kept once
+
+Against `main` at `a648a1b`. **<!--screens-->fifty-eight<!--/--> destinations**,
+down from sixty.
+
+The first pass in this file to act on the `ahead` · `tonight` cluster, and it
+needed an instruction to do it. D6 in the seventh pass ruled that cluster
+**Keep** — *"Four questions, each file still arguing its own case"* — and §6
+records why an assistant re-reading `Courses.tsx` is not allowed to overturn a
+row of that class: it had been reversed four times, twice in each direction,
+each turn costing a migration. The owner named the survivor. This is that
+answer carried out.
+
+## N1 — two questions, each implemented twice, sharing nothing
+
+Not "two screens that look alike", which is what D6 weighed and reasonably
+kept. Two *questions* with two independent implementations each:
+
+| Question | As a tab | As a screen |
+| --- | --- | --- |
+| the next seven days in hours | `ThisWeek`, `screens/Today.tsx:303` | `screens/Ahead.tsx`, 345 lines |
+| tonight's hours against your grade | `HoursToday`, `screens/Today.tsx:1468` | `screens/Tonight.tsx`, 264 lines |
+| what has gone by, what still fits | `BehindOffer` card on Today | `screens/Behind.tsx`, 256 lines |
+
+`ThisWeek` and `HoursToday` are private functions inside Today's 1,725 lines
+and import nothing from the two screens. `lib/reveal.ts` unlocked `tonight` at
+`courses > 0` and `ahead` at `courses > 0`, so there is no student with a term
+in the app who was offered one copy rather than both.
+
+**Survivor: the tabs**, on the rule `.claude/skills/simplify` states — the
+survivor is the one a student already opens, and Today is in `DEFAULT_TABS`.
+
+`behind` is untouched. It is the one of the three whose Today presence is an
+*offer* pointing at it rather than a second implementation of it, so there is
+nothing to merge; it keeps its row and its shelf.
+
+## What the plan had wrong, and worth recording
+
+`ACTION-PLAN.md` files this as *"Six destinations still answer what's due:
+Today, Reports, The week ahead, When you are behind, Tonight, Progress."*
+Three of the six cannot merge and one of them had already merged:
+
+- **Reports (`brief`)** is the survivor of a three-way merge — Brief, Weekly
+  and Worked, now the Day/Week/Term grains of `screens/Reports.tsx`. It answers
+  *how did it go*, not *what is due*.
+- **Personal (`mine`)** is the student's own tasks. The skill forbids blurring
+  syllabus-derived data with data the student wrote, so this is not a candidate
+  at any count.
+- **Progress (`me`)** is the directory, pinned last in the bar. `lib/tabbar.ts`
+  argues at length why removing it is a trap rather than a tidy-up.
+
+Counting those three is what turned a two-screen merge into a six-screen one.
+
+## What the merge had to carry, and the two things that nearly did not
+
+**The words.** `lib/route.ts`'s `RETIRED` keeps the *addresses* working; the
+keywords keep the *words* working, and they are the half that is invisible
+afterwards. Both retired rows' keywords are on `home` verbatim, so "capacity",
+"workload", "points per hour", "prioritise" and "heaviest day" still find
+something. `taskTags` gained `study` from Tonight, or Today would have dropped
+out of "Study for something" on the directory.
+
+**The context and the header.** Each retired screen had a provider
+(`study.tonight`, `upkeep.ahead`) and a `softTop` case, both keyed by screen.
+Deleting the keys would have left the assistant describing the next eight days
+to somebody on the Hours tab, and that tab headed by the time of the next
+class. `semester.home` delegates to the two providers by tab — the providers
+themselves are unchanged — and both heroes moved into the `home` case, chosen
+by `homeTab` exactly as the Courses case picks the grades hero.
+
+### The bug the merge created, found in a browser and not by the suite
+
+`#/ahead` and `#/tonight` came up on Today's **Today** tab. The retirement was
+right, the `opens` field was right, and `state/store.tsx` returned before
+applying it.
+
+`same()` compares screen, id and mode — not `opens`. That was harmless for all
+five earlier retirements because each merged into a *different* screen:
+`#/weekly` lands on `brief`, which is never where you already are, so the
+"nothing changed" guard never fired. `home` is the screen somebody is most
+likely to already be standing on, so the guard fired every time and the tab was
+never set. The mechanism written to keep the promise was breaking it.
+
+Fixed by ordering — `opens` is dispatched before the identity check — and
+pinned in `route.test.ts` with the fact that made it necessary: `#/ahead` and
+`#/home` are `same()`. Measured after: both addresses land on Today with This
+week and Hours selected, and `#/weekly` still lands on Reports.
+
+Worth stating plainly because the suite was green while this was broken. Ten
+thousand tests passed on a build where both links went to the wrong tab; a
+screenshot is what caught it.
+
+## To do
+
+- `behind` is now the only one of the three horizons with a row of its own.
+  Whether Today should grow a fourth tab for it, or whether an offer pointing
+  at a screen is the right shape, is the same class of question as D6 and takes
+  the same kind of instruction.
+- The `work` row still describes what you reach by pressing a button on it —
+  E2 flagged it as *"not a matter of taste"* and it is still true.
+
+---
+
 # One app — the fourteenth pass: one day, three fields
 
-Against `main` at `a2cdfd7`. **<!--screens-->sixty<!--/--> destinations**,
+Against `main` at `a2cdfd7`. **<!--screens-->fifty-eight<!--/--> destinations**,
 unchanged.
 
 The thirteenth pass ended by recording L3 and deferring it: *"a pass of its

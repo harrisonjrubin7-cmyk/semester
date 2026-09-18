@@ -64,10 +64,8 @@ export const PAGES: Page[] = [
       'study',
       'exam',
       'solve',
-      'tonight',
       'proof',
       'analyse',
-      'ahead',
       { label: 'Make', screens: ['write', 'sheet', 'draw', 'equations', 'sources', 'essay', 'deck'] },
       {
         label: 'Campus',
