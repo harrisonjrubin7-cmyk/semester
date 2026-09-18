@@ -70,8 +70,24 @@ async function show(node: ReactNode) {
  * correctly, which is how a test starts being edited to fit the code.
  */
 function filled(): string[] {
+  /*
+   * Both spellings of filled, and the second was added because this file
+   * missed four buttons for a month.
+   *
+   * `portal-primary` is the class on the studio entry at the top. `ActionButton
+   * tone="primary"` renders `btn btn-primary`, and that is what every course
+   * card used to draw its recommendation with — so "offers one action on
+   * arrival, not seven" was asserted against a screen that offered five, and
+   * passed, because it could only see one of the two tiers. A term of four
+   * courses drew **Create study guide** and then **Start reading** four times,
+   * all filled, all identical below the first.
+   *
+   * A guard scoped to one class name is a guard about that class name. The
+   * question it is meant to ask is what the screen looks like it wants you to
+   * do, and there is more than one way to say that in this stylesheet.
+   */
   return [...host.querySelectorAll('button')]
-    .filter((b) => b.className.toString().includes('portal-primary'))
+    .filter((b) => /\b(portal-primary|btn-primary)\b/.test(b.className.toString()))
     .filter((b) => !b.closest('.study-journal'))
     .map((b) => (b.textContent ?? '').trim());
 }
@@ -108,6 +124,53 @@ describe('the top of the study screen', () => {
   it('offers one action on arrival, not seven', async () => {
     await show(<Study />);
     expect(filled()).toEqual(['Create study guide']);
+  });
+
+  it('and one per screen rather than one per card, with four courses on it', async () => {
+    /*
+     * The half the first version of this could not see, kept separate because
+     * it fails for its own reason and names it.
+     *
+     * Each course card ranks its own recommendation above its own
+     * alternatives, which is right — `lib/nextstep.ts` computes it and the
+     * card is where it belongs. What it cannot also be is *the* action, and
+     * with four courses the screen said so four times. `nextstep` gives a
+     * course with nothing started the same answer as the next one, so the four
+     * were not even four different offers: they were the words **Start
+     * reading** drawn four times in filled white down one phone screen, under
+     * a fifth filled button that says something else.
+     *
+     * They are `btn-secondary` now — still first in the card, still full width
+     * at 44px, still above the small uppercase alternatives. The ranking is
+     * intact; it stopped competing with the screen.
+     */
+    await show(<Study />);
+    const courses = [...host.querySelectorAll('.blueprint')].length;
+    expect(courses, 'no course cards rendered, so this asserts nothing').toBeGreaterThan(1);
+    expect(filled().length, `${courses} cards drew ${filled().length} filled actions`).toBe(1);
+  });
+
+  it('while each card still ranks its own recommendation above its own ways', async () => {
+    /*
+     * The control on the test above, and the reason it is not satisfied by
+     * deleting the button.
+     *
+     * "One filled action" is trivially true of a screen whose cards offer
+     * nothing. What the change actually did was move a rung down, so the rung
+     * has to still be there: a `btn-secondary` inside the card, above the
+     * plain `.btn` alternatives that sit under it.
+     */
+    await show(<Study />);
+    const card = [...host.querySelectorAll('.blueprint')].find((el) =>
+      [...el.querySelectorAll('button')].some((b) => /\bbtn-secondary\b/.test(b.className.toString())),
+    );
+    expect(card, 'no course card ranks anything any more').toBeTruthy();
+    const tiers = [...card!.querySelectorAll('button')].map((b) => b.className.toString());
+    expect(tiers.some((c) => /\bbtn-secondary\b/.test(c)), 'the recommendation is gone').toBe(true);
+    expect(
+      tiers.filter((c) => /\bbtn\b/.test(c) && !/btn-(primary|secondary|ghost|icon)/.test(c)).length,
+      'the alternatives under it are gone too',
+    ).toBeGreaterThan(1);
   });
 
   it('no longer draws the six-pill row under it', async () => {

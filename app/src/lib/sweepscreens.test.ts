@@ -40,7 +40,16 @@ describe('the sweeps walk the registry', () => {
     expect(destinations().length).toBeGreaterThan(40);
   });
 
-  for (const name of ['contrast-sweep.mjs', 'targets-sweep.mjs']) {
+  /*
+   * `wallsweep.mjs` joins the other two here rather than getting a file of its
+   * own, because the failure is identical and it is the failure this test was
+   * written for: a sweep that decides for itself which screens to open, and
+   * prints a clean answer about a fraction of the app without saying so. It
+   * asks whether any screen draws a row of equal-weight buttons with nothing
+   * ranked above it — an answer that means nothing unless "any screen" is all
+   * of them.
+   */
+  for (const name of ['contrast-sweep.mjs', 'targets-sweep.mjs', 'wallsweep.mjs']) {
     it(`${name} takes its screens from destinations.mjs`, () => {
       expect(script(name)).toContain("from './destinations.mjs'");
     });

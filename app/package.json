@@ -23,7 +23,8 @@
     "transcripts": "node scripts/transcripts.mjs",
     "audio": "node scripts/audio.ts",
     "check:university": "tsc -p tsconfig.university.json",
-    "dev:university": "node --env-file=server/institution/.env server/institution/start.ts"
+    "dev:university": "node --env-file=server/institution/.env server/institution/start.ts",
+    "sweep:walls": "node scripts/wallsweep.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.114.0",
