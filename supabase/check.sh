@@ -15,10 +15,11 @@
 # after it was skipped: thirteen of the twenty-two checks in records.check.sql
 # and all twenty-five in classmates.check.sql had never executed.
 #
-# Needs a Postgres server binary — `postgresql-16` or newer. It initialises its
-# own cluster in a temporary directory, starts it on a private socket, and
-# removes it on the way out; it never touches a configured PGHOST or a real
-# project.
+# Needs the Postgres server binaries for the major version the live project
+# runs, which is read from `config.toml` rather than written here. It
+# initialises its own cluster in a temporary directory, starts it on a private
+# socket, and removes it on the way out; it never touches a configured PGHOST
+# or a real project.
 #
 #     supabase/check.sh                 # every suite
 #     supabase/check.sh groups records  # only these
@@ -54,10 +55,68 @@ fi
 work=$(mktemp -d)
 port=${SEMESTER_CHECK_PORT:-54399}
 
-bindir=$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1 || true)
-[ -z "$bindir" ] && bindir=$(pg_config --bindir 2>/dev/null || true)
+# ── Which Postgres, and why it is not "whichever one is here" ─────────────
+#
+# This used to take the newest server installed: `ls /usr/lib/postgresql/*/bin
+# | sort -V | tail -1`. On a runner that ships 16 and a project running 17,
+# that silently checked the policies against a different major than the one
+# they will be enforced by — and said nothing, because the checks passed.
+#
+# `config.toml` already carries the number, for Branching, and its own comment
+# says why a mismatch there is not cosmetic: "a preview branch would be built
+# on a different major than production, and the first thing you would learn
+# from it is something untrue about production." That is exactly what this
+# script was doing. So it reads that file rather than repeating the number,
+# and the two cannot drift.
+want=$(sed -nE 's/^[[:space:]]*major_version[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' \
+  "$here/config.toml" | head -1)
+if [ -z "$want" ]; then
+  echo "No major_version in supabase/config.toml, so there is nothing to match." >&2
+  echo "That file is where the live project's Postgres major is recorded." >&2
+  exit 2
+fi
+
+# The version asked for, and nothing else. `pg_config` is consulted only if it
+# points at that same major — on a developer's machine it is usually the one
+# on PATH, which is the one this script must not silently accept when it is
+# the wrong one.
+bindir=""
+if [ -x "/usr/lib/postgresql/$want/bin/initdb" ]; then
+  bindir="/usr/lib/postgresql/$want/bin"
+elif d=$(pg_config --bindir 2>/dev/null) && [ -x "$d/initdb" ] &&
+     [ "$("$d/pg_config" --version 2>/dev/null | sed -nE 's/[^0-9]*([0-9]+).*/\1/p')" = "$want" ]; then
+  bindir="$d"
+fi
+
+# The escape hatch, which is loud on purpose.
+#
+# Refusing outright would mean a contributor whose machine has only 16 cannot
+# run these at all, and checks nobody can run are checks nobody runs — the
+# failure this whole directory is a record of. So another major is allowed,
+# explicitly, per invocation, and says on every run that what it proved is not
+# a fact about production. What is gone is the silence, not the option.
+if [ -z "$bindir" ] && [ -n "${SEMESTER_CHECK_PG_ANY:-}" ]; then
+  bindir=$(ls -d /usr/lib/postgresql/*/bin 2>/dev/null | sort -V | tail -1 || true)
+  [ -z "$bindir" ] && bindir=$(pg_config --bindir 2>/dev/null || true)
+  if [ -n "$bindir" ] && [ -x "$bindir/initdb" ]; then
+    got=$("$bindir/pg_config" --version 2>/dev/null | sed -nE 's/[^0-9]*([0-9]+).*/\1/p')
+    echo "! Postgres $got, and the live project runs $want." >&2
+    echo "! SEMESTER_CHECK_PG_ANY is set, so this is running anyway. A pass here is" >&2
+    echo "! not a statement about production." >&2
+  fi
+fi
+
 if [ -z "$bindir" ] || [ ! -x "$bindir/initdb" ]; then
-  echo "No Postgres server found. Install postgresql (the server, not just the client)." >&2
+  echo "No PostgreSQL $want server found, and that is the major the live project runs" >&2
+  echo "(supabase/config.toml). Checking the policies against another major would" >&2
+  echo "prove something about a database nobody is using." >&2
+  echo >&2
+  echo "  Debian/Ubuntu: apt-get install postgresql-$want  (from apt.postgresql.org)" >&2
+  echo "  macOS:         brew install postgresql@$want" >&2
+  echo >&2
+  echo "To run against whatever is installed anyway — and it will say so, loudly:" >&2
+  echo >&2
+  echo "  SEMESTER_CHECK_PG_ANY=1 supabase/check.sh" >&2
   exit 2
 fi
 
@@ -76,7 +135,7 @@ if [ "$(id -u)" = 0 ] && id postgres >/dev/null 2>&1; then
 fi
 run() { if [ -n "$as" ]; then su postgres -c "$*"; else eval "$*"; fi; }
 
-echo "· starting a throwaway Postgres in $work"
+echo "· starting a throwaway PostgreSQL $("$bindir/pg_config" --version | sed -nE 's/[^0-9]*([0-9]+).*/\1/p') in $work"
 run "'$bindir/initdb' -D '$work/data' -A trust -U postgres" >/dev/null
 # No TCP socket at all: everything here goes over the Unix socket in $work, so
 # a cluster somebody already has running cannot collide with this one.
