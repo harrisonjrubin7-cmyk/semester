@@ -184,10 +184,82 @@ Real, none of it urgent, and the last one has measurements attached.
 | # | Item | State |
 | --- | --- | --- |
 | 12 | Data-retention schedule | **Open** — Phase 1 in the Privacy Brief, absent from the Completion Plan and the Sprint Backlog |
-| 13 | Data-access audit log and a formal incident-response process | **Open** — currently a personal same-day-notification commitment |
+| 13 | Data-access audit log and a formal incident-response process | **Both landed — see below.** The commitment was one sentence about the last step; it is now [`SECURITY.md`](SECURITY.md), and the log it depends on exists |
 | 14 | A staging environment | **Open** — deployment is push-to-live on every commit |
 | 15 | Multi-vendor AI redundancy | **Partly** — `lib/assistant.ts` already routes to OpenAI as a second provider, and `ask()` is the one branch in the app that knows there are two. The open part is a *policy*: which vendor answers when, and who decides |
 | 16 | An app-wide accessibility sweep | **Taken, both instruments, every destination — the numbers are below.** Both tools need Playwright pointed at the container's Chromium (`.claude/skills/run`) |
+
+### 13 · The audit log, and the process it feeds
+
+Two halves that read as one item and are not. The process was a sentence — the
+owner would tell people the same day — which is a commitment about the step
+that comes *last*, with nothing in front of it about rotating a key, closing
+the way in, or working out what happened. [`SECURITY.md`](SECURITY.md) is the
+rest of it, in [`ROLLBACK.md`](ROLLBACK.md)'s shape: a named owner, three kinds
+of incident with a different first move each, every secret this project holds
+with its blast radius and how it is revoked, the one containment lever that
+needs no deploy (`select public.set_invite_only(true);`), and what the records
+can and cannot reconstruct.
+
+`app/src/lib/security.test.ts` is the tripwire, and the useful half of it is
+bidirectional: **every environment variable an Edge Function reads must appear
+in the document, and every variable the document names must be one something
+reads.** The first direction catches a function added later whose secret
+nobody knows how to rotate. The second catches the more dangerous drift — a
+row in that table for a key nothing uses sends somebody to rotate something
+harmless while the live one is still out. Both were checked by mutation: a
+fabricated `Deno.env.get` in `push` turns it red, and so does a fabricated
+entry in the table.
+
+**The log was the harder half, because the app had argued against it.**
+`functions/calendar/index.ts` said, in its own header: *"It will not write. Not
+a read receipt, not a hit counter — a feed polled by four devices every four
+hours is a write every twenty minutes for the life of the account, and it would
+buy nothing."* That is reversed, and only half of it was wrong. A hit counter
+does buy nothing. But the same review says three paragraphs earlier that
+whoever holds a published link reads the deadlines *"indefinitely, until it is
+replaced"* — and the Export screen has had the replace button all along with
+nothing that would ever make a student press it. A leaked link and a private
+one are identical from inside the app. The single place they differ is in what
+is asking: **a calendar subscription is fetched by a calendar, and a person is
+a browser.**
+
+So `public.access_log` records the two paths in this project that go around
+row-level security — the feed served by token, and the reminder sender run by
+the scheduler — and the policy on it makes the log readable by **the account it
+is about**, which is the difference between an audit log and an operator's
+private diary. One row per account per day per client family, never a
+user-agent string, never an address, never the token; the family is one of
+seven words and the table's own `check` constraint is what enforces that rather
+than a habit in a function. `read_feed` does the lookup and the note in one
+statement so that the Edge Function still never learns whose calendar it just
+served — the property its old `select` was written to have.
+
+**Measured, by `supabase/check.sh access` against a real Postgres with every
+migration applied: 29 checks.** Nine mutations of the migration were run
+against them and all nine go red — an added insert policy, a widened select
+policy, a dropped delete policy, a dropped client vocabulary, a prune that
+keeps everything, a `read_feed` that returns `user_id`, one that notes unknown
+tokens, and the execute grant loosened at either end.
+
+Two of those mutations are the reason the number is worth anything, because
+both passed first:
+
+- **The PUBLIC revoke was untested.** The check called `note_access` as
+  `authenticated` and expected a refusal, and got one — from row-level security
+  one layer further in, not from the missing grant. It passed against a
+  migration revoking from `anon, authenticated` by name, which is the exact
+  hole `invites.check.sql` caught once already. It asks `pg_proc` now.
+- **The unknown-token check counted rows.** A `read_feed` that noted every
+  unknown token against a real account produced no new row, because the note is
+  an upsert and the family was one already present. It asserts the total hits
+  as well, with a family nothing else uses.
+
+What the student sees is one sentence beside the link, and it says the day:
+*"Fetched 42 times in the last 30 days, mostly by Apple Calendar — and 2 of
+those were a web browser, most recently on 2026-09-14."* It stops short of
+saying the link leaked, because opening your own feed once is a reasonable
+thing to do and the QR code beside it makes that likelier.
 
 ### 16 · The contrast sweep, across all sixty
 

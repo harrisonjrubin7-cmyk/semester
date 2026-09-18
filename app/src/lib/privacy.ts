@@ -195,7 +195,12 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'How long anything is kept',
     body:
-      'Until you delete it. There is no retention schedule that quietly removes your work, and no archive kept after you delete your account. Nothing is used to train anything.',
+      'Until you delete it. There is no retention schedule that quietly removes your work, and no archive kept after you delete your account. Nothing is used to train anything. The one thing that does age out is not your work but a record about it: the log of who has read your rows, described below, keeps ninety days and drops what is older.',
+  },
+  {
+    heading: 'Who has read your rows, and how you can see it',
+    body:
+      'Two things in this app read your rows without signing in as you, and both are listed here because you can now see them happen. Your published calendar link is served to whoever presents it — that is how a calendar subscription works, and anyone holding the link can read your deadlines until you replace it. Your queued reminders are read by the sender, which runs on a schedule rather than being opened by a person. Every one of those reads is written down against your account, and you are the one who can read that log: it is on the Export screen beside the link, and it says what kind of thing fetched your calendar and on what day. A web browser in that list is worth looking at — a calendar subscription is fetched by a calendar app, so a browser is either you opening your own link or somebody else holding it. What is stored is the kind of client and nothing else: no address, no device, no browser fingerprint, and never the link itself. It is kept for ninety days, it is not in your export, and deleting your account deletes it.',
   },
   {
     heading: 'Deleting everything',

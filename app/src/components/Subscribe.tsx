@@ -38,16 +38,18 @@ import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { ALARMS, appointmentEvents, classEvents, deadlineEvents, toIcs } from '../lib/export';
 import { datedItems } from '../lib/select';
-import { feedBase, publishFeed, readFeed, replaceFeed } from '../lib/cloud';
+import { feedBase, publishFeed, readAccessLog, readFeed, replaceFeed } from '../lib/cloud';
 import { qrSvg } from '../lib/qr';
 import {
   REPLACED_LINE,
   SHARE_WARNING,
   feedItems,
+  feedReaders,
   feedUrl,
   freshness,
   newToken,
   webcalUrl,
+  type FeedFetch,
   type Published,
 } from '../lib/subscribe';
 import { Folding } from './Fold';
@@ -59,6 +61,7 @@ export function Subscribe() {
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
   const [replaced, setReplaced] = useState(false);
+  const [fetches, setFetches] = useState<FeedFetch[] | null>(null);
 
   // What goes up: everything dated, minus what has been ticked off. The rule
   // and the reasoning are in `lib/subscribe.ts`, next to the copy about it.
@@ -96,6 +99,19 @@ export function Subscribe() {
     let gone = false;
     void readFeed().then((row) => {
       if (!gone) setFeed(row);
+    });
+    /*
+     * And who has been reading it.
+     *
+     * Its own request rather than part of the one above, because the two
+     * answer to different things: the feed row is what *this* device
+     * published, and the access log is what the world did with it. A build
+     * whose project has not had `access_log` applied gets an empty list from
+     * `readAccessLog` rather than an error, so this section simply does not
+     * appear — which is the same way the rest of this screen degrades.
+     */
+    void readAccessLog().then((rows) => {
+      if (!gone) setFetches(rows);
     });
     return () => {
       gone = true;
@@ -149,6 +165,9 @@ export function Subscribe() {
   if (!account) return null;
 
   const url = feed ? feedUrl(feedBase(), feed.token) : '';
+  // Once, not once per style lookup: `feedReaders` builds the sentence and the
+  // verdict together and the two have to agree about the same reading.
+  const readers = fetches === null ? null : feedReaders(fetches);
 
   return (
     <Folding name="Subscribe">
@@ -188,6 +207,19 @@ export function Subscribe() {
             */}
             <div style={QR} aria-hidden="true" dangerouslySetInnerHTML={{ __html: qrSvg(webcalUrl(url)) }} />
             <p style={WARN}>{SHARE_WARNING}</p>
+            {/*
+              And the half of that warning a student could not supply
+              themselves.
+
+              "Replace it if you paste it somewhere you should not have" asks
+              somebody to remember a mistake. This says what has actually been
+              fetching the link — and a browser in that list is the only thing
+              visible from in here that tells a leaked link from a private
+              one. Shown only once the log has loaded, because an empty list
+              and a list not yet fetched read identically and one of them is a
+              claim.
+            */}
+            {readers && <p style={readers.suspect ? WARN : FRESH}>{readers.line}</p>}
             {replaced && <p style={WARN}>{REPLACED_LINE}</p>}
           </>
         ) : (
