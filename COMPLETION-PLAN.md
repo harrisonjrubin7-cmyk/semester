@@ -1822,11 +1822,11 @@ stop; a browser without recognition says so and still shows everybody else's;
 muting stops yours; and nothing is uploaded by this app. Asserted in
 `mesh.test.ts`, except the wiring, which is driven.
 
-**What is left of Meetings after this.** Recording. And it is the one item in
-the whole document that should not be built without a decision made away from
-the keyboard: recording a call is a thing you do *to* the other people in it,
-and a study app that can record a seminar has a consent question before it has
-an engineering one.
+**What was left of Meetings after this** was recording — the one item in the
+whole document that should not have been built without a decision made away
+from the keyboard, because recording a call is a thing you do *to* the other
+people in it. That decision has now been made, and it is
+[§8q](#8q-recording-a-call--three-rules-decided-before-any-of-it-was-written).
 
 ---
 
@@ -2612,6 +2612,98 @@ transactions one function at a time. No employer, team, club or building named
 in the sandbox exists; no money moves; no election decides anything; nobody is
 housed, cleared to compete, or hired. Every record carries `SANDBOX` and every
 receipt says so.
+
+---
+
+## 8q. Recording a call — three rules decided before any of it was written
+
+The last thing in this document, and the only one that waited on a decision
+rather than on engineering. Recording a call is something done *to* the other
+people in it, so the question was put as three choices and answered before a
+line was written:
+
+> **Everybody is told before it starts, and it cannot start until each of them
+> has said yes.** Not a banner they might notice — an answer from every person.
+>
+> **Anyone can refuse, and refusing ends it for everyone.** Not "their track is
+> dropped", which produces a file whose gap is itself a statement. Not "they
+> can leave", which is an ultimatum rather than a choice.
+>
+> **The file stays on the recorder's device.** Semester never receives it.
+
+### The fourth rule, which nobody decides and everybody meets
+
+**Somebody joining a recording in progress has consented to nothing.** So the
+permission is not a flag set once when the last person agreed — it is
+`mayRecord`, computed against the *live roster* every time:
+
+```ts
+export function mayRecord(state: Recording, roster: Roster, me: string): boolean {
+  if (state.asker !== me) return false;
+  return Object.keys(roster).every((id) => id === me || state.answers[id] === 'agreed');
+}
+```
+
+A newcomer makes it false and the recorder stops. No listener, no special case,
+no event to miss — and one effect covers every way a recording can end, because
+a refusal, an arrival, a departure and a stop press are all the same question
+asked again. A branch per reason is a branch that gets forgotten when a fifth
+reason turns up.
+
+Consent is also per-request: a new request clears every previous answer, because
+remembering that somebody agreed an hour ago turns a decision about one
+recording into standing permission to record them.
+
+### Three things the tests could not have found
+
+All three came from driving it in a browser, which is the whole of why
+[CLAUDE.md](CLAUDE.md) says to.
+
+**Pressing the button did nothing.** A broadcast does not echo to its sender —
+`addressed` returns false for your own — so the asker's own state machine never
+learned that *they* had asked, `mayRecord` stayed false for them forever, and
+the control was inert. Every test passed, because every test put the signal in
+from the outside the way a peer would. Captions already handle this and say so
+where they send one; recording did not until it was watched.
+
+**The waiting line lied.** It fell back to the word "everybody" when the list
+came back empty, so a call that could not connect sat telling one person it was
+waiting for everybody — which reads as a room full of people ignoring them.
+
+**And the button was styled as a bare default** beside two full-width siblings.
+
+### And one sentence this feature made false
+
+The More panel said *"the call itself is not recorded, here or anywhere"*. True
+when the only thing that button did was write a note; a lie the moment
+recording existed. It now says a call is only recorded if somebody asks and
+everybody agrees, and that the file stays on their device. It is pinned by a
+test, because the copy is the only place a person is told what the app does
+with a call.
+
+### Measured
+
+| | |
+| --- | --- |
+| New tests | **51** — 30 on the state machine, 13 on the recorder, 10 on the wiring |
+| Mutations | **33**, all caught |
+| Suite | **502 files, 10,408 passed, 10 skipped** |
+
+One guard is documented as *not* load-bearing: the `length > 0` on the waiting
+line. The harness says removing it changes no test, and with the button
+disabled until there is a session and `mayRecord` true the moment the list is
+empty, there is no reachable state it defends. It is kept only because the
+alternative renders a sentence with no subject, and it says so in the comment
+rather than reading as protection that is not there.
+
+### What could not be driven here
+
+Two browsers cannot meet in this container — the agent proxy will not tunnel
+`wss://` — so a second person agreeing, refusing, or walking in mid-recording
+was exercised through the screen's own signal pipe rather than by a real peer,
+and the canvas-and-audio compositing has never run against two live streams.
+What *was* driven: the panel, the copy, the request going out, the state moving
+to waiting, and the button changing to match.
 
 ---
 
