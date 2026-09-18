@@ -578,13 +578,15 @@ export async function saveQueue(
 }
 
 /**
- * Delete every row belonging to this account.
+ * Delete the rows belonging to this account.
  *
  * Not a flag, not an archive. `on delete cascade` in the schema means removing
- * the auth user takes everything with it — but a browser holding an anon key
- * cannot delete an auth user, and it should not be able to. So this deletes the
- * rows it owns, which row-level security already scopes to exactly this
- * account, and then signs out.
+ * the auth user would take everything with it — but a browser holding an anon
+ * key cannot delete an auth user, and it should not be able to. **So that
+ * cascade never fires**, and what a deleted account is actually emptied of is
+ * exactly `OWNED_TABLES` and nothing else. For a long time the privacy page
+ * said the opposite, in those words, while eleven tables in `classmates.ts`
+ * and `formshare.ts` were in no list at all.
  *
  * ## What it does not touch
  *
@@ -593,38 +595,154 @@ export async function saveQueue(
  * with Erase from this device as its own deliberate action. Saying so plainly
  * is the difference between a button people can press and one they will not.
  *
- * The tables are named rather than discovered, so a table added later and
- * forgotten here leaves rows behind. `privacy.test.ts` is what catches that:
- * the page claims every row goes, and the claim is checked against this list.
- */
-/**
- * Every table a deleted account has to be emptied from.
+ * The sign-in itself. The `auth.users` row, and so the address it was created
+ * with, is the one thing here no client can remove; `privacy.ts` says so and
+ * gives the address to write to.
  *
- * The last five exist in the database and nothing writes to them yet: the
- * per-record sync and the calendar feed both landed their SQL before their
- * client halves. They are listed anyway, because the order the two halves ship
- * in decides whether this is a bug, and listing them first makes the order not
- * matter. Deleting from an empty table costs nothing, and `deleteEverything`
- * already tolerates a table a fork does not have.
+ * `KEPT_TABLES` — the rows other people are relying on. Each carries its
+ * reason, and the page prints them.
+ *
+ * The tables are named rather than discovered, so a table added later and
+ * forgotten here leaves rows behind. `privacy.test.ts` is what catches that,
+ * and it now reads every module rather than this one: a table in either list
+ * is a decision, a table in neither is the bug.
+ */
+/** A table a deleted account is emptied from, and the column that owns a row. */
+export type OwnedTable = {
+  table: string;
+  /**
+   * The column holding the account id. Null when nothing is sent for this
+   * table because a cascade from another one in this list already takes it —
+   * `cascadesFrom` says which.
+   */
+  column: string | null;
+  cascadesFrom?: string;
+};
+
+/** A table a deleted account leaves rows in, and why. Said on the privacy page. */
+export type KeptTable = {
+  table: string;
+  /** Why, in a sentence a person reads on the privacy page rather than here. */
+  why: string;
+};
+
+/**
+ * Every table a deleted account has to be emptied from, with the column that
+ * decides a row is yours.
+ *
+ * ## Why the column is here rather than assumed
+ *
+ * This list was ten bare table names deleted `.eq('user_id', id)`, which is
+ * only correct while every table spells ownership that way. Four do not:
+ * `forms.owner`, `groups.created_by`, `group_tasks.created_by` and
+ * `reports.reporter`. A name added to a list of names would have produced a
+ * delete against a column that is not there, and PostgREST answers that with
+ * an error — so the button would have reported failure rather than deleting
+ * the wrong thing, but it would not have worked.
+ *
+ * ## Why there are two lists
+ *
+ * Because "every row belonging to you" is not achievable for all of them, and
+ * a list with no room to say so is a list that either lies or grows a silent
+ * omission. `KEPT_TABLES` is the second half: the tables a deleted account
+ * leaves behind, each with the reason, and `privacy.ts` prints those reasons.
+ * A table that is in neither list is the failure `privacy.test.ts` catches.
+ *
+ * The last of the private tables exist in the database ahead of their client
+ * halves: the per-record sync and the calendar feed both landed their SQL
+ * first. They are listed anyway, because the order the two halves ship in
+ * decides whether this is a bug, and listing them first makes the order not
+ * matter. Deleting from an empty table costs nothing.
  *
  * `calendar_feeds` is the one that would have hurt. A feed is a public URL
  * serving a student's timetable to anybody holding the token — leaving the row
  * behind would keep answering after the account it belonged to was gone.
+ *
+ * `messages` and `message_reactions` are your words in threads other people
+ * are still reading, and deleting them leaves gaps there. That is the chosen
+ * half of a real trade: the alternative is a deleted student's messages
+ * sitting under a `user_id` with no profile, rendering as an author who cannot
+ * be identified or asked. `privacy.ts` says the gaps happen.
  */
-export const OWNED_TABLES = [
-  'push_queue',
-  'push_devices',
-  'courses',
-  'state',
-  'notes',
-  'tasks',
-  'appointments',
-  'sittings',
-  'calendar_feeds',
+export const OWNED_TABLES: OwnedTable[] = [
+  // ── Private to one account ──────────────────────────────────────────────
+  { table: 'push_queue', column: 'user_id' },
+  { table: 'push_devices', column: 'user_id' },
+  { table: 'courses', column: 'user_id' },
+  { table: 'state', column: 'user_id' },
+  { table: 'notes', column: 'user_id' },
+  { table: 'tasks', column: 'user_id' },
+  { table: 'appointments', column: 'user_id' },
+  { table: 'sittings', column: 'user_id' },
+  { table: 'calendar_feeds', column: 'user_id' },
   // The record of who read the rows above, which is about the account and so
   // goes with it. `access.check.sql` proves the delete policy that makes this
   // line work, and proves a stranger cannot use it to clear somebody else's.
-  'access_log',
+  { table: 'access_log', column: 'user_id' },
+
+  // ── Classmates: yours, but other people can see them ────────────────────
+  //
+  // **The order of these is load-bearing, and it is not obvious.** PostgreSQL
+  // applies SELECT policies to the WHERE clause of a DELETE, so a row this
+  // account cannot *read* is a row it cannot delete by a filter either — and
+  // PostgREST always sends a filter. Three of the tables below are readable
+  // only while you are still enrolled: `messages` and `message_reactions`
+  // through `private.in_class`, `group_members` through
+  // `private.group_in_my_class`. Delete `enrollments` first and all three stop
+  // matching, PostgREST answers `row_count = 0` with no error at all, and this
+  // function reports a deleted account over a room still full of your
+  // messages. `deletion.check.sql` walks this list in this order for exactly
+  // that reason, and it is what caught it.
+  { table: 'messages', column: 'user_id' },
+  { table: 'message_reactions', column: 'user_id' },
+  // Leaving every group you are in. The groups themselves are in
+  // `KEPT_TABLES` — see there for why this is a leave and not a delete.
+  { table: 'group_members', column: 'user_id' },
+  // Only now. Everything above needs an enrolment to still be visible.
+  { table: 'enrollments', column: 'user_id' },
+  // The display name strangers in a lecture read. Its own row is readable
+  // whatever else has gone, so it is not in the ordered part above.
+  { table: 'profiles', column: 'user_id' },
+  // Only the blocks *you* made. A row where somebody blocked you is keyed on
+  // `blocked`, not `user_id`, and the policy on this table is
+  // `using (auth.uid() = user_id)` — so it is neither sent nor permitted, and
+  // it must not be: that row is another person's protection from you, and
+  // deleting an account is not a way to reappear in their room.
+  { table: 'blocks', column: 'user_id' },
+
+  // ── Shared forms ────────────────────────────────────────────────────────
+  { table: 'forms', column: 'owner' },
+  // Taken by the line above rather than by a request of its own:
+  // `form_responses.form_id` references `forms` with `on delete cascade`, and
+  // a referential action runs as the table's owner rather than under
+  // row-level security, so the answers go when the form does.
+  // `forms.check.sql` proves that, because a cascade nobody has watched fire
+  // is a cascade this file is only assuming.
+  { table: 'form_responses', column: null, cascadesFrom: 'forms' },
+];
+
+/**
+ * The tables a deleted account leaves rows in, and why.
+ *
+ * Every one of these is a row the account created that another person is
+ * relying on, or a record about another person. There is no version of
+ * "delete everything" that includes them and is not also "delete somebody
+ * else's data", so the honest thing is to leave them, say so, and say why —
+ * which is what `privacy.ts` does with these sentences.
+ */
+export const KEPT_TABLES: KeptTable[] = [
+  {
+    table: 'groups',
+    why: 'A group you started belongs to everyone in it. Deleting it would take its shared tasks away from the other members, so your membership goes and the group stays — with a starter who no longer has a profile.',
+  },
+  {
+    table: 'group_tasks',
+    why: 'Parts of a group project you added are what the rest of the group is working from, so they stay with the group.',
+  },
+  {
+    table: 'reports',
+    why: 'A report you filed is a record about somebody else. It has no delete policy at all, deliberately: deleting your account is not a way to withdraw one.',
+  },
 ];
 
 export async function deleteEverything(): Promise<string> {
@@ -634,8 +752,9 @@ export async function deleteEverything(): Promise<string> {
   if (!userId) throw new Error('Sign in first — there is no account to delete.');
 
   const failed: string[] = [];
-  for (const table of OWNED_TABLES) {
-    const { error } = await db.from(table).delete().eq('user_id', userId);
+  for (const { table, column } of OWNED_TABLES) {
+    if (column === null) continue;
+    const { error } = await db.from(table).delete().eq(column, userId);
     // A table this project does not have is not a failure — a build without
     // reminders has no queue to empty. Anything else is reported rather than
     // swallowed, because "deleted" is a promise.
@@ -645,7 +764,7 @@ export async function deleteEverything(): Promise<string> {
   if (failed.length > 0) {
     return `Signed out, and most of your account is gone — but ${failed.join(' and ')} could not be removed. Email ${'harrisonjrubin7@gmail.com'} and it will be done by hand.`;
   }
-  return 'Your account is empty and you are signed out. This device still has its own copy — Erase from this device removes that.';
+  return 'Your rows are gone and you are signed out. What a deleted account leaves behind, and why, is on the Privacy page. This device still has its own copy — Erase from this device removes that.';
 }
 
 /** Switching reminders off deletes what was waiting to be sent. */
