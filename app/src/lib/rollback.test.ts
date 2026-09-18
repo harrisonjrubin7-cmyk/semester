@@ -178,6 +178,107 @@ describe('the SQL suites are run by something other than a person remembering', 
     expect(runs, 'the run lines are picking up prose').not.toContain('applies every migration');
   });
 
+  /*
+   * Running, and running against the right database.
+   *
+   * The step above only asks that the checks run. They did run, and they were
+   * green, and they were about Postgres 16 while `config.toml` records the
+   * live project as 17 — `check.sh` took the newest server installed, and
+   * `ubuntu-latest` ships 16. That is worse than a skipped check: a skipped
+   * check is silent, and this one printed "every policy check passed" about a
+   * database nobody is using.
+   *
+   * Two halves, and both have to hold or the pin is decorative: the script has
+   * to refuse a major it was not asked for, and CI has to install the one it
+   * will ask for. Either alone goes green while being wrong — a script that
+   * refuses on a runner with no 17 fails every build, and an install step
+   * feeding a script that accepts anything is the bug this replaced.
+   */
+  const configToml = () => readFileSync(join(ROOT, 'supabase', 'config.toml'), 'utf8');
+  const major = () => /major_version\s*=\s*(\d+)/.exec(configToml())?.[1];
+
+  it('config.toml still records which major the live project runs', () => {
+    // Everything below reads this number. Without it there is nothing to pin
+    // to, and `check.sh` exits 2 rather than guessing.
+    expect(major(), 'no major_version in supabase/config.toml').toMatch(/^\d+$/);
+  });
+
+  it('check.sh reads that number rather than carrying its own', () => {
+    const script = readFileSync(join(ROOT, 'supabase', 'check.sh'), 'utf8');
+    expect(script, 'check.sh no longer reads config.toml').toMatch(
+      /major_version[\s\S]{0,200}config\.toml/,
+    );
+    // The default path asks for that major by name.
+    expect(script, 'check.sh no longer looks for the major it was asked for').toContain(
+      '/usr/lib/postgresql/$want/bin/initdb',
+    );
+  });
+
+  it('and only reaches for whichever is newest behind the explicit override', () => {
+    /*
+     * The real regression is not that "newest installed" appears in the file —
+     * it still does, and deliberately: `SEMESTER_CHECK_PG_ANY=1` is how
+     * somebody with only 16 can run these at all, and it says on every run
+     * that a pass is not a statement about production. What must not come back
+     * is that lookup being reachable *without* asking for it, because that is
+     * silent and this whole pin is about the silence.
+     *
+     * So: every newest-installed lookup in the script sits after the override
+     * is tested. Comments are stripped first, line for line, so that the
+     * paragraph explaining the old behaviour does not read as the behaviour.
+     */
+    const code = readFileSync(join(ROOT, 'supabase', 'check.sh'), 'utf8').replace(
+      /^\s*#.*$/gm,
+      '',
+    );
+    const gate = code.indexOf('SEMESTER_CHECK_PG_ANY');
+    expect(gate, 'the override is gone, so there is nothing gating the fallback').toBeGreaterThan(
+      -1,
+    );
+    const newest = [...code.matchAll(/ls -d \/usr\/lib\/postgresql\/\*\/bin/g)].map(
+      (m) => m.index ?? -1,
+    );
+    expect(newest.length, 'the fallback is gone entirely — harmless, but update this').toBe(1);
+    for (const at of newest) {
+      expect(at, 'check.sh takes the newest Postgres without being asked').toBeGreaterThan(gate);
+    }
+  });
+
+  it('CI installs that same major before running the checks', () => {
+    /*
+     * The `run:` lines, for the reason the step above reads them: `ci.yml`
+     * explains this pin in prose directly above the step, so a scan of the
+     * whole file would pass against the step being deleted.
+     */
+    const raw = workflow('ci.yml');
+    const runs = [...raw.matchAll(/^\s*run:\s*\|?\s*$|^\s*run:\s*(.*)$/gm)];
+    expect(runs.length, 'ci.yml has no run steps at all').toBeGreaterThan(0);
+    // The install is a block scalar, so match the workflow's steps rather than
+    // one line: the package name is built from config.toml in the step itself.
+    expect(raw, 'CI no longer installs a Postgres for the checks').toMatch(
+      /apt-get install -y "postgresql-\$want"/,
+    );
+    expect(raw, 'the install no longer fails when the binary is not there').toMatch(
+      /\/usr\/lib\/postgresql\/\$want\/bin\/initdb/,
+    );
+  });
+
+  it('and the install step derives the version instead of writing one down', () => {
+    /*
+     * The control on the test above. Hard-coding `postgresql-17` in the
+     * workflow would satisfy a looser probe and reintroduce exactly the drift
+     * this is about — two places holding the number, one of them silently
+     * stale the day the project is upgraded.
+     */
+    const raw = workflow('ci.yml');
+    expect(raw, 'ci.yml is naming a Postgres major by hand').not.toMatch(
+      /apt-get install -y postgresql-\d+/,
+    );
+    expect(raw, 'the install step no longer reads config.toml').toMatch(
+      /major_version[\s\S]{0,200}supabase\/config\.toml/,
+    );
+  });
+
   it('and the script is there to be run, and executable', () => {
     const script = join(ROOT, 'supabase', 'check.sh');
     expect(existsSync(script)).toBe(true);
