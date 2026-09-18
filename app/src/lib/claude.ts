@@ -1358,6 +1358,63 @@ export async function readShots(
 }
 
 /**
+ * Photographed pages, back as the text that is on them.
+ *
+ * The third sibling, and the one the import screen needed. `readShots` reads a
+ * *board* — it looks at course material and writes exam questions from it, and
+ * a syllabus put through it comes back as flashcards about the attendance
+ * policy. What `screens/Import.tsx` needs from a photograph is the opposite
+ * and much duller: the words, in order, so the same pipeline that reads an
+ * uploaded PDF can read a photographed one.
+ *
+ * So this transcribes and does nothing else. No summary, no cards, no tidying
+ * of a table into prose — the grade weighting is a table on most syllabi and
+ * flattening it is how a 25% becomes unreadable two steps later, in
+ * `lib/grades.ts`, which is parsing exactly that string.
+ *
+ * ## It says when it cannot read
+ *
+ * A photograph of a syllabus is taken in a lecture theatre by somebody
+ * holding a phone at an angle, and a page of it may be blurred, cropped or
+ * glared out. The refusal matters more here than in the other two: a
+ * transcription that quietly invents a plausible deadline is worse than no
+ * transcription, because every date in this app is shown with the sentence it
+ * came from and that sentence would be fiction. Anything unreadable is left
+ * out and named, in the text, where the review step will show it.
+ */
+export async function readPages(images: Shot[], signal?: AbortSignal): Promise<string> {
+  const reply = await ask({
+    signal,
+    images,
+    think: false,
+    maxTokens: 8000,
+    system:
+      'You are transcribing photographs of a document — most often a university syllabus, ' +
+      'sometimes a handout or a posted schedule. Return the text that is on the pages and ' +
+      'nothing else.\n\n' +
+      '- Transcribe faithfully and in reading order, page by page in the order given.\n' +
+      '- Keep tables as tables, one row per line, with the columns separated by " | ". A ' +
+      'grading table is the most important thing on a syllabus and its percentages are read ' +
+      'literally later, so keep "25%", "25–30%" and "80 pts" exactly as written.\n' +
+      '- Keep dates exactly as written. Do not normalise, expand or correct them.\n' +
+      '- Do not summarise, reorder, explain, or add headings that are not on the page.\n' +
+      '- Where something is unreadable — blurred, cropped, glared out — write ' +
+      '[unreadable] in its place rather than guessing. Never invent a date, a weight, a ' +
+      'title or a name to fill a gap.\n' +
+      '- If a photograph is not a document at all, say so on its own line and transcribe ' +
+      'nothing for it.',
+    messages: [
+      {
+        role: 'user',
+        content:
+          'Transcribe these pages. Plain text, in order, with the tables kept as tables.',
+      },
+    ],
+  });
+  return reply.trim();
+}
+
+/**
  * Turn a reading into cards and terms.
  *
  * The sibling of `readShots`, for prose rather than photographs. Adding a

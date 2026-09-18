@@ -90,6 +90,11 @@ jobs:
           VITE_UNIVERSITY_GATEWAY_URL: ${{ vars.VITE_UNIVERSITY_GATEWAY_URL || secrets.VITE_UNIVERSITY_GATEWAY_URL }}
           VITE_CLAUDE_PROXY: ${{ vars.VITE_CLAUDE_PROXY || secrets.VITE_CLAUDE_PROXY }}
           VITE_ICS_PROXY: ${{ vars.VITE_ICS_PROXY || secrets.VITE_ICS_PROXY }}
+          # The shared key's monthly allowance, as the app *says* it. The cap
+          # itself is MONTHLY_CALL_LIMIT on the Edge Function; this is the
+          # number onboarding quotes, and `lib/allowance.test.ts` fails if the
+          # two defaults drift. A deploy that raises one raises both.
+          VITE_MONTHLY_CALL_LIMIT: ${{ vars.VITE_MONTHLY_CALL_LIMIT || secrets.VITE_MONTHLY_CALL_LIMIT }}
           VITE_OAUTH_PROXY: ${{ vars.VITE_OAUTH_PROXY || secrets.VITE_OAUTH_PROXY }}
           VITE_MS_CLIENT_ID: ${{ vars.VITE_MS_CLIENT_ID || secrets.VITE_MS_CLIENT_ID }}
           VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID || secrets.VITE_GOOGLE_CLIENT_ID }}
