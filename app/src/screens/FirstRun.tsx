@@ -6,6 +6,7 @@ import { ChevronRight, Plus } from '../components/Icons';
 import { SEED_SUMMARY } from '../data/seed';
 import { ActionButton } from '../components/ui';
 import { configured, provider } from '../lib/assistant';
+import { costLine } from '../lib/allowance';
 
 /** The footnote under a route — why it is there, or what it costs. */
 const NOTE: CSSProperties = {
@@ -145,6 +146,18 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
           </div>
         </>
       )}
+
+      {/*
+        What the whole thing costs, on the screen where somebody is deciding
+        whether to start.
+
+        Here rather than only in onboarding because onboarding is skippable and
+        this screen is not: it is what at least eight screens show when the
+        catalogue is empty, so it is the page a student who skipped the
+        introduction actually reads. The full sentence, allowance included —
+        the short form is for the promise screen. See `lib/allowance.ts`.
+      */}
+      <div style={{ ...NOTE, marginTop: 'var(--sp-7)' }}>{costLine()}</div>
 
       {!state.sample && (
         <>

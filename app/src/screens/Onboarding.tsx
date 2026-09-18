@@ -8,6 +8,7 @@ import type { Catalog } from '../data/catalog';
 import { SchoolPicker } from '../components/SchoolPicker';
 import { Credentials } from '../components/Credentials';
 import { cloudConfigured } from '../lib/cloud';
+import { costShort } from '../lib/allowance';
 import { useSoft } from '../components/shell/useShell';
 import { Step } from '../components/soft/Soft';
 import { welcomeLead, welcomeLine } from '../lib/welcome';
@@ -37,6 +38,20 @@ function steps(cat: Catalog, tone: Tone, hasAccount: boolean) {
       b: empty
         ? 'Upload the PDFs your professors posted and get the semester back — every deadline, a study guide you can drill, and a calendar that knows when your classes are.'
         : 'Every deadline in your semester, pulled straight out of the PDFs your professors posted.',
+      /*
+       * What it costs, on the screen that makes the promise.
+       *
+       * Absent from this app entirely until now, which was odd: every direct
+       * competitor caps or paywalls the first real action, and this one does
+       * neither — there is no payment code in the repository at all. A student
+       * could use the whole term without ever finding that out.
+       *
+       * Short here on purpose. The full sentence, allowance and all, is on the
+       * empty-catalogue screen and in the guidebook, where somebody is
+       * deciding rather than being introduced. `lib/allowance.ts` holds both
+       * and holds the number once.
+       */
+      note: costShort(),
       cta: empty ? 'Show me' : 'Set it up',
     },
     {
@@ -162,6 +177,30 @@ export function Onboarding() {
       <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', maxWidth: '30ch' }}>
         {soft && state.onb === 0 ? welcomeLead(catalog) : step.b}
       </div>
+
+      {/*
+        What it costs, under the promise.
+
+        Its own line rather than a clause on the end of `step.b`, because it is
+        a different kind of statement: everything above is what the app will do
+        and this is what it will ask for, which is nothing. Only step one has
+        it — repeating it on all five would turn the one honest thing nobody
+        else can say into a slogan.
+      */}
+      {'note' in step && step.note ? (
+        <div
+          style={{
+            fontSize: 'var(--type-sm)',
+            lineHeight: 'var(--leading-relaxed)',
+            color: 'var(--app-dim)',
+            marginTop: 'var(--sp-5)',
+            maxWidth: '30ch',
+            textWrap: 'pretty',
+          }}
+        >
+          {step.note}
+        </div>
+      ) : null}
 
       {/*
         The soft shell says what is ahead, on the first screen only.

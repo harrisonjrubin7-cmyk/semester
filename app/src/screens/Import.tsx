@@ -11,6 +11,9 @@ import { ActionButton, FilePick, SectionLabel, TickBox } from '../components/ui'
 import { Trouble } from '../components/Trouble';
 import { troubleOf, useTrouble } from '../lib/trouble';
 import { intakeFiles, intakeText, type Intake } from '../lib/intake';
+import { Capture } from '../components/Capture';
+import type { ShotFile } from '../lib/shots';
+import { readPages } from '../lib/claude';
 import { keepSources } from '../lib/topage';
 import { generateCourse, type GenerationResult } from '../lib/generate';
 import { NO_POLICY, hasPolicy } from '../lib/attend';
@@ -44,8 +47,24 @@ import { DOCUMENTS } from '../lib/extract';
  *
  * The wildcards stay at the end for the mobile pickers that ignore extensions.
  */
-// The formats `lib/extract.ts` can read, plus the media types for them.
-// Import takes documents only; Update is the one that also takes a photo.
+/*
+ * The formats `lib/extract.ts` can read, plus the media types for them.
+ *
+ * Still documents only, and now for a narrower reason than before. This said
+ * "Import takes documents only; Update is the one that also takes a photo",
+ * which was a true division of labour and left a student with a paper syllabus
+ * nowhere to go: `lib/intake.ts` refuses an image with *"a photograph — read
+ * it with the camera, which can see it"*, and the camera was on a screen that
+ * adds material to a course you already have. Somebody photographing a
+ * syllabus has not got one yet. The directions could not be followed from
+ * where they were given.
+ *
+ * So the camera is on this screen now, as its own door below — and this list
+ * stays documents-only deliberately. An image in the *file* picker would go to
+ * `extractText`, which cannot see it, and be refused; the camera path reads it
+ * with `readPages` instead. Two doors, because they are two different things a
+ * browser does, exactly as `components/Capture.tsx` says of its own pair.
+ */
 const ACCEPT = `${DOCUMENTS}text/*,application/pdf,application/zip`;
 
 /**
@@ -138,6 +157,19 @@ export function Import() {
    */
   const [zone, setZone] = useState(false);
   const [overZone, setOverZone] = useState(false);
+  /*
+   * The camera door: photographs taken, and whether they are being read.
+   *
+   * Held next to `pasted` rather than inside `files`, because a shot is not an
+   * intake until it has been through `readPages` — the thing that turns a
+   * photograph into words. Once it has, it joins `files` as an ordinary
+   * `Intake` with `door: 'photo'` and everything downstream treats it exactly
+   * like a PDF, which is the point of doing it this way rather than giving the
+   * camera a pipeline of its own.
+   */
+  const [shots, setShots] = useState<ShotFile[]>([]);
+  const [reading, setReading] = useState(false);
+
   /** The paste box, which is the way in when there is no file to pick. */
   const [pasting, setPasting] = useState(false);
   const [pasted, setPasted] = useState('');
@@ -217,6 +249,45 @@ export function Import() {
     setPasted('');
     setPasting(false);
     say(`${read.words.toLocaleString()} words taken. Build the course when you are ready.`);
+  };
+
+  /**
+   * The syllabus as photographs, when the only copy is on paper.
+   *
+   * The case this door exists for: a professor hands out the syllabus in the
+   * first lecture and never posts it. Before this there were four ways in and
+   * all four wanted a file or the words already typed out — so the student
+   * with a sheet of paper in their hand had to type it, which nobody does.
+   *
+   * It ends where the file door ends, on purpose. `readPages` gives back the
+   * text that is on the pages and `intakeText` makes that an ordinary
+   * `Intake`, so the review step, the hashing, the word count and
+   * `generateCourse` cannot tell it came from a camera — and nothing
+   * downstream had to learn about photographs.
+   *
+   * The shots are dropped once they are read. Keeping them would put the
+   * thumbnails under a row that now says "1,400 words taken", which reads as
+   * though they were still waiting to be used.
+   */
+  const readShotsIn = async () => {
+    if (shots.length === 0 || reading) return;
+    setReading(true);
+    trouble.clear();
+    try {
+      const text = await readPages(shots.map((sh) => sh.shot));
+      const read = intakeText(text, 'photo');
+      if (!read) {
+        trouble.wrong('Nothing readable came off those photographs. Try again in better light.');
+        return;
+      }
+      setFiles((f) => [...f.filter((x) => x.name !== read.name), read]);
+      setShots([]);
+      say(`${read.words.toLocaleString()} words read off the photographs. Check them before building.`);
+    } catch (e) {
+      trouble.failed(e, () => void readShotsIn());
+    } finally {
+      setReading(false);
+    }
   };
 
   // The term a new course lands in. Defaults to the one the app is showing,
@@ -452,6 +523,49 @@ export function Import() {
       >
         {busy || (over ? 'Drop them here' : 'Choose files — PDF, Word, slides, text, or a zip')}
       </FilePick>
+
+      {/*
+        The camera, for the syllabus that only exists on paper.
+
+        Under the file picker rather than beside it, because uploading is what
+        most people are here to do and a screen that offers two equal primary
+        actions has chosen neither. `<Capture>` draws its own pair — the rear
+        camera and the photo library — and says why in its own header.
+
+        Behind the key gate like the file door, and for the same reason: a
+        photograph has to be read by a model before it is words. The two doors
+        that need no key at all are named inside `NeedsKey` below, and neither
+        of them is this one.
+      */}
+      {configured() && (
+        <div style={{ marginTop: 'var(--sp-6)' }}>
+          <Capture shots={shots} onChange={setShots} label="Photograph the syllabus" />
+          {shots.length > 0 && (
+            <ActionButton
+              onClick={() => void readShotsIn()}
+              disabled={reading || busy !== ''}
+              style={{ marginTop: 'var(--sp-4)' }}
+            >
+              {reading
+                ? 'Reading the pages…'
+                : `Read ${shots.length === 1 ? 'the page' : `the ${shots.length} pages`}`}
+            </ActionButton>
+          )}
+          <div
+            style={{
+              fontSize: 'var(--type-xs)',
+              color: 'var(--app-dim)',
+              marginTop: 'var(--sp-4)',
+              lineHeight: 'var(--leading-relaxed)',
+              textWrap: 'pretty',
+            }}
+          >
+            One photograph per page, in order. The words come back as they are written — the
+            grading table stays a table, the dates stay as typed, and anything too blurred to
+            read is marked rather than guessed at.
+          </div>
+        </div>
+      )}
 
       {/*
         The drop box. Opened by the press above, and drawn as the dashed
