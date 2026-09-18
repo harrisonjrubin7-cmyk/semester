@@ -243,14 +243,24 @@ replace has not been re-taken across them and reported here.
   `opacity` for `--app-dim` is the fix. `CLAUDE.md` has a standing warning for
   anyone touching `lib/look.ts`: measure a new ground against every surface it
   has, not against `--app-panel`, which is the one that flatters it.
-- **The list row — open, and smaller than stated.** `components/shell/Rows.tsx`
-  is the shared row and **21 files already use it**. On the giveaway
-  `ENGINEERING-AUDIT.md` names for a hand-rolled one —
-  `justifyContent: 'space-between'` written inline — the count today is **31
-  rows across 20 screens** (40 across 29 files including components), not 74
-  across 31. That is one proxy rather than the audit's own definition, so treat
-  it as the order of magnitude and not the number; either way the job is
-  smaller than it was when it was written down.
+- **The list row — was open; the migration half is done.** `Rows.tsx` is the
+  shared row and 21 files use it: `Group` 62 times, `CustomRow` 54, `ItemRow`
+  29, `NavRow` 15.
+
+  This entry hedged that `space-between` was "one proxy rather than the
+  audit's own definition", and it was right to: the audit's own definition is
+  `borderBottom: '1px solid var(--app-line)'`, and `ENGINEERING-AUDIT.md` had
+  attributed that count to the `space-between` grep. Measured on the real
+  pattern: **24 across 20 files**, down from 74 across 41.
+
+  What remains is short. **Not one** of the 68 hairline-setting style objects
+  retypes the shared row's padding-and-hairline pair, and most of the rest are
+  compact lists that differ on purpose — converting those would change their
+  layout, which is what `CustomRow` exists to avoid. Asked instead for
+  `ItemRow`'s own shape — meta stacked *under* the title — the tree had four;
+  two are converted (`screens/call/Lobby.tsx`, `components/ForThis.tsx`) and
+  two are the call room's dense chrome. `components/shell/rows.shape.test.ts`
+  keeps the retyping from starting again.
 - **Counts on calendar day-dots — open.** Not checked in this pass.
 - **Visual hierarchy in the Study button wall — open.** Not checked in this pass.
 - **"Default new users to the tab bar" — already answered, differently.** The
