@@ -38,12 +38,18 @@ before writing a migration**, not during an incident.
 | --- | --- | --- | --- |
 | The page | `pages.yml` on an earlier ref | 1–3 min | **Yes** |
 | Edge Functions | `functions.yml` on an earlier ref | 1–2 min | **Yes** |
-| The database schema | nothing here | — | **No** |
+| The database schema | nothing, in either direction | — | **No** |
 
-No workflow in this repository applies a migration. Schema changes are made by
-hand against the Supabase project, they are forward-only, and **rolling the app
-back does not roll the schema back.** One rule follows from that and it is the
-only rule in this document that has to be obeyed *before* an incident:
+No workflow in this repository applies a migration, and `rollback.test.ts` still
+holds that line. **As of 18 September that is no longer the same sentence as
+"nothing does."** Supabase Branching was pointed at the right directory that
+day, and its deploy workflow's fifth step is *Migrate* — so a merge now applies
+pending migrations to production on its own, while nothing here reverses one.
+The second path below is no longer hypothetical, and this row got worse rather
+than better: schema changes arrive automatically and leave by hand or not at
+all. **Rolling the app back does not roll the schema back.** One rule follows
+from that and it is the only rule in this document that has to be obeyed
+*before* an incident:
 
 > **Every migration must leave the database readable by the app version that
 > was live before it.** Add columns and tables; do not drop or rename one in
@@ -59,18 +65,17 @@ README rather than pretended at.
 ### The second path, which the tripwire cannot see
 
 `rollback.test.ts` asserts that no **workflow in this repository** applies a
-migration, and that is exactly as far as it reaches. There is a second way
-migrations could start being applied automatically, and it is not a file:
-**Supabase Branching**, configured in the Supabase dashboard rather than here.
-`supabase/config.toml` exists precisely so that integration can find the
-project, and its own header says so.
+migration, and that is exactly as far as it reaches. The second way migrations
+get applied is not a file: **Supabase Branching**, configured in the Supabase
+dashboard rather than here. `supabase/config.toml` exists precisely so that
+integration can find the project, and its own header says so.
 
 As of this writing that integration is **not** doing anything, and not because
 somebody turned it off. It says so on every pull request, including ones that
 add migrations to `supabase/` — which is how it was noticed at all. What it
 has said, twice, with the setting changed in between:
 
-> no changes detected in `https:/harrisonjrubin7-cmyk.github.io/semester/supabase`
+> `https:/harrisonjrubin7-cmyk.github.io/semester/supabase`
 
 > no changes detected in `supabase/supabase`
 
@@ -84,7 +89,12 @@ symptom right and the mechanism wrong, and the correction that followed from it
 So the value is the repository root: empty, or `.` if the field insists on
 something. Neither string above is it.
 
-Two things follow, and both are for a person rather than a test:
+This paragraph used to end by saying that fixing it would change this document.
+It did, and this is the change: the table above is why. Supabase's own
+documentation describes the deploy workflow that runs "when you merge any branch
+into your main project", with **Migrate — applies pending database migrations**
+as its fifth step. The tripwire is still true and is no longer sufficient, and
+no test in this repository can see the thing that replaced it.
 
 - **The setting is worth fixing**, because a branching integration that
   silently matches nothing is indistinguishable from one that is working until
@@ -96,6 +106,83 @@ Two things follow, and both are for a person rather than a test:
   on merge, the table above is wrong and the rule in the block quote becomes
   load-bearing in a way nothing here will warn you about. Check it by hand when
   that setting changes; no test in this repository can.
+
+### Where that stood on the evening of 18 September
+
+The setting was changed that afternoon, and the section above is the result:
+the first correction produced `supabase/supabase` and the diagnosis that
+followed it is the one to trust. Two later observations, neither of which
+settles it:
+
+- The bot's comment on a pull request at 17:43 read **"no changes detected in
+  `supabase` directory"** — a third string, and on the append model above the
+  one a correctly-set root would produce.
+- **A migration merged and did not arrive.** `20260901001300_access_log.sql`
+  landed on main at 17:34. Twenty-five minutes later production's history still
+  held eighteen rows, its newest still `20260911151826`, and `public.access_log`
+  did not exist.
+
+So the honest reading is that it was **not** applying migrations on merge, and
+that whether it is now is a question this repository cannot answer — the test is
+still the one above, the bot's next comment on a pull request that touches
+`supabase/`.
+
+The second observation matters on its own, whatever the setting turns out to
+be. A migration reached main and did not reach the database, nothing failed,
+and nothing said so. **That is the drift growing while being watched**, and it
+is the subject of the section below rather than of this one.
+
+## The schema cannot be rebuilt from its own history
+
+Measured 18 September, and the most serious thing in this document. It is
+independent of the setting above: it was true before Branching was touched and
+would be true if Branching were removed tomorrow.
+
+Production's `supabase_migrations.schema_migrations` has eighteen rows. **Eight
+of them carry no SQL at all** — the version and the name were recorded without
+the statements, so there is nothing to replay:
+
+| Rows | Which | Statements |
+| --- | --- | --- |
+| 8 | `schema`, `classmates`, `classmates_schools`, `rooms`, `groups`, `push`, `records`, `calendar` | **0 — name only** |
+| 10 | `push_devices_and_queue` … `groups` (20260911151826) | 1 each |
+
+Those eight are the entire core schema. `courses`, `state`, `usage` and the
+classmate tables exist as live objects in one database and in no record that
+could recreate them.
+
+This was not deduced, it was watched. A preview branch created that afternoon
+replayed the history and reached `MIGRATIONS_FAILED` at row eleven: the first
+eight ran as no-ops, `push_devices_and_queue` created the only two tables the
+branch ended up with, and `harden_security_definer_helpers` then failed on
+`alter function public.verified_student() set schema private` because
+`verified_student` had never been created — its migration was one of the
+name-only eight. Two tables and no functions, from a history claiming ten
+applied migrations. The branch was deleted immediately; it billed for minutes.
+
+Three consequences, in the order they matter:
+
+- **There is no disaster recovery.** If the project were lost, the recorded
+  migrations would produce two push tables and an error.
+- **Nothing can reproduce production to test against**, which is what a staging
+  environment was supposed to be for. A preview branch cannot reach production's
+  schema state, so it cannot rehearse a change to it.
+- **The repository and production describe different databases.** Ten of those
+  migrations exist only in production and as no file here; **five** files here —
+  `usage_atomic`, `group_columns_pinned`, `forms`, `invites` and `access_log` —
+  have never reached production, verified object by object rather than inferred
+  from the history. `supabase/check.sh` builds its schema from the files, so a
+  green check is a fact about a database nobody is running: the same shape as
+  the Postgres-major mismatch fixed in #502, one level up.
+
+**Until this is repaired, do not merge a pull request that touches
+`supabase/`.** If Branching is applying migrations, a merge sends those
+five — one of which puts a `before insert` trigger on `auth.users`, the table
+every sign-up passes through — to a schema no test has ever reproduced. If it
+is not, the merge widens the gap by one more file, silently, which is what
+`access_log` has just demonstrated. Neither is a good reason to merge one.
+
+[`MIGRATION-HISTORY.md`](MIGRATION-HISTORY.md) holds the repair.
 
 ## Rolling the page back
 

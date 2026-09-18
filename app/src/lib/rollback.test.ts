@@ -115,6 +115,76 @@ describe('the preconditions the procedure rests on', () => {
   });
 });
 
+describe('what the history findings say, which is not about a dashboard', () => {
+  /*
+   * Two of these were written the other way round and are gone, and the reason
+   * is worth keeping.
+   *
+   * They asserted that `ROLLBACK.md` says Branching applies migrations on merge
+   * and no longer says schema changes are made by hand. That was written from
+   * Supabase's documentation and from a bot comment, and the repository then
+   * produced evidence against it: `20260901001300_access_log.sql` merged to
+   * main at 17:34 on 18 September and production had eighteen rows, no
+   * `access_log`, and the same newest version twenty-five minutes later. A
+   * merged migration did not arrive.
+   *
+   * Whether the integration is on is a dashboard setting no test here can read,
+   * so no test here should pin a claim about it — that is how a document ends
+   * up with a tripwire guarding a sentence nobody checked. What is left is what
+   * was measured against the database directly, which is true whatever the
+   * setting turns out to be.
+   */
+  it('says the schema cannot be rebuilt from its own history', () => {
+    // The finding that removed disaster recovery. A document that drops it
+    // reads as though the record is sound.
+    expect(doc()).toMatch(/cannot be rebuilt from its own history/i);
+    expect(doc(), 'the repair is no longer pointed at').toContain('MIGRATION-HISTORY.md');
+  });
+
+  it('and the repair plan is there, with a status somebody has to maintain', () => {
+    const plan = join(ROOT, 'MIGRATION-HISTORY.md');
+    expect(existsSync(plan), 'MIGRATION-HISTORY.md is gone').toBe(true);
+    const text = readFileSync(plan, 'utf8');
+    // Its own claim is that nothing has been done yet. The day that stops being
+    // true, the table is what says so — an untouched status table on a finished
+    // repair is worse than none.
+    expect(text, 'the repair plan has no status table').toMatch(/\|\s*Step\s*\|/i);
+    /*
+     * `\s+` between every word, not a space. These documents are hard-wrapped
+     * at 80 columns, so where a sentence breaks is a property of its length
+     * and not of its meaning — this exact phrase wraps after "is". A probe
+     * that spells the gap as one space passes or fails on the line width,
+     * which is the kind of test that goes red for a reformat and green for a
+     * deletion.
+     */
+    expect(text, 'the plan no longer names the acceptance criterion').toMatch(
+      /empty\s+diff\s+is\s+the\s+acceptance\s+criterion/i,
+    );
+  });
+
+  it('and both documents still say what must not be merged meanwhile', () => {
+    // The one operational instruction either document carries. It is the thing
+    // a person reads at speed, so it is pinned in both places it appears.
+    for (const [name, text] of [
+      ['ROLLBACK.md', doc()],
+      ['MIGRATION-HISTORY.md', readFileSync(join(ROOT, 'MIGRATION-HISTORY.md'), 'utf8')],
+    ] as const) {
+      /*
+       * Either order. `ROLLBACK.md` says "do not merge a pull request that
+       * touches `supabase/`"; the plan says "no pull request touching
+       * `supabase/` should be merged". The first draft of this required the
+       * warning to precede the path and failed on the document that happened
+       * to say it the other way round — a probe asserting a sentence shape
+       * nobody promised.
+       */
+      const warns =
+        /(do not merge|should be merged)[\s\S]{0,160}`supabase\/`/i.test(text) ||
+        /`supabase\/`[\s\S]{0,160}(do not merge|should be merged)/i.test(text);
+      expect(warns, `${name} no longer warns against merging supabase/ changes`).toBe(true);
+    }
+  });
+});
+
 describe('the rule that nothing applies a migration', () => {
   it('holds, and this is the tripwire for the day it stops', () => {
     /*
