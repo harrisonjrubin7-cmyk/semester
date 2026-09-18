@@ -24,7 +24,29 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
-Nothing waiting.
+### You can record a call, once everybody says yes
+
+**Nobody is recorded without being asked.** Somebody asks, everybody else is
+shown the question, and it does not start until every one of them has agreed.
+
+- **Anyone can refuse, and refusing stops it for everyone.** Not just for them.
+- **Anyone can stop it once it has started**, including people who agreed.
+- **If somebody joins while it is running, it stops** — they have not been
+  asked. Whoever was recording can ask again with them in the room.
+- **The file is saved on the device of whoever recorded it.** Semester never
+  receives it, and there is nothing in the app that could send it.
+
+It is in the **More** panel rather than on the button bar, because pressing it
+puts a question to everybody else and that is not a one-tap thing.
+
+**Nothing to do.** If nobody asks, nothing changes.
+
+### A sentence that had become untrue
+
+The More panel used to say the call itself is *never* recorded, here or
+anywhere. That was true until the above existed. It now says what is actually
+the case: a call is only recorded if somebody asks and everybody agrees, and
+the file then stays on their device.
 
 ---
 

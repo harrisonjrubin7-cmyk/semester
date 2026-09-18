@@ -37,6 +37,12 @@ import {
   heard,
   admitted,
   captioned,
+  type Signal,
+  NOT_RECORDING,
+  asking,
+  awaiting,
+  mayRecord,
+  recording,
   heldBack,
   hostOf,
   hosting,
@@ -51,6 +57,7 @@ import {
   type Roster,
 } from '../../lib/mesh';
 import { canShare, join, meter, share, shut, type Session } from '../../lib/rtc';
+import { keep, mix, tape, type Taping } from '../../lib/taping';
 import { Bar, Control } from './Bar';
 import { Tile } from './Tile';
 import { copy, shareLink } from './link';
@@ -103,6 +110,34 @@ export function Stage({
    */
   const [canCaption] = useState(dictationSupported);
   const [captions, setCaptions] = useState<Caption[]>([]);
+
+  /*
+   * Recording, which is the one thing here done *to* the other people in the
+   * call rather than by them. The rules were decided before any of it was
+   * written and they live in `mesh.ts` as a state machine every peer computes
+   * for itself: everyone is asked before it starts, anybody refusing ends it
+   * for everyone, and the file never leaves the recorder's device.
+   *
+   * `taping` is the recorder itself, held in a ref rather than state because
+   * stopping it is an effect and a render must never be what starts or stops
+   * a recording.
+   */
+  const [tapeState, setTapeState] = useState(NOT_RECORDING);
+  const taping = useRef<Taping | null>(null);
+  const stopMix = useRef<(() => void) | null>(null);
+  /*
+   * The remote streams, in a ref as well as state.
+   *
+   * The effect below must not re-run every time somebody's video arrives —
+   * that would tear down and restart a running recording — but when it does
+   * run it needs the streams as they are *now*, not as they were when it last
+   * fired. The ref is the ordinary fix, and is the same one the signal handler
+   * above uses for the same reason.
+   */
+  const streamsRef = useRef<Record<string, MediaStream>>({});
+  useEffect(() => {
+    streamsRef.current = streams;
+  }, [streams]);
   /*
    * The door.
    *
@@ -192,6 +227,7 @@ export function Stage({
           setLines((was) => heard(was, signal, latest.current.roster));
           setMarks((was) => reacted(was, signal, Date.now()));
           setCaptions((was) => captioned(was, signal, Date.now()));
+          setTapeState((was) => recording(was, signal, Date.now()));
           if (signal.t === 'ask' && signal.what === 'mute') setAsked(Date.now());
         },
         onStream: (id, stream) => {
@@ -243,6 +279,10 @@ export function Stage({
       // A caption goes when nothing replaces it, and in a quiet call nothing
       // does — so the clock has to be what lets it go, not the next signal.
       setCaptions((was) => captioned(was, { t: 'gone', from: '' }, at));
+      // And a request nobody answered lapses on the clock, for the same
+      // reason: in a call where nobody says anything, no signal arrives to
+      // retire it and the banner would stand all afternoon.
+      setTapeState((was) => recording(was, { t: 'gone', from: '' }, at));
     }, 1000);
     return () => clearInterval(id);
   }, []);
@@ -309,6 +349,72 @@ export function Stage({
   }, [session, wantShare, present]);
 
   const me = session?.id ?? 'me';
+
+  /*
+   * Recording, driven entirely by `mayRecord` against the live roster.
+   *
+   * There is no "stop because somebody refused" branch and no "stop because
+   * somebody joined" branch, and that is the design rather than an omission:
+   * both are already false in `mayRecord`, so one effect covers every way a
+   * recording has to end — a refusal, a newcomer, the asker pressing stop, the
+   * call emptying. A branch per reason is a branch that can be forgotten when
+   * a fifth reason turns up.
+   */
+  /**
+   * Send a recording signal, and apply it here too.
+   *
+   * A broadcast does not echo to its sender — `addressed` returns false for
+   * your own — so a peer never sees its own message. Captions already say this
+   * where they send one. Without it the asker's own state machine never learns
+   * that *they* asked, `mayRecord` stays false for them forever, and pressing
+   * "Ask to record this call" does nothing at all. Which is exactly what it
+   * did until this was driven in a browser: every test passed, because every
+   * test put the signal in from the outside the way a peer would.
+   */
+  const announceTape = useCallback(
+    (signal: Signal) => {
+      session?.send(signal);
+      setTapeState((was) => recording(was, signal, Date.now()));
+    },
+    [session],
+  );
+
+  const canTape = session ? mayRecord(tapeState, roster, me) : false;
+  useEffect(() => {
+    if (canTape && !taping.current) {
+      const mixed = mix(local, Object.values(streamsRef.current));
+      const t = tape(mixed.stream);
+      taping.current = t;
+      stopMix.current = mixed.stop;
+      announceTape({ t: 'record-on', from: me, at: Date.now() });
+      return;
+    }
+    if (!canTape && taping.current) {
+      const t = taping.current;
+      taping.current = null;
+      const undo = stopMix.current;
+      stopMix.current = null;
+      void t.stop().then((out) => {
+        undo?.();
+        // The file goes to the person who made it and nowhere else.
+        if (out) keep(out);
+      });
+      announceTape({ t: 'record-off', from: me, at: Date.now() });
+    }
+  }, [canTape, local, me, announceTape]);
+
+  /* Stop and hand over the file if the call ends mid-recording. */
+  useEffect(
+    () => () => {
+      const t = taping.current;
+      taping.current = null;
+      const undo = stopMix.current;
+      stopMix.current = null;
+      if (t) void t.stop().then((out) => { undo?.(); if (out) keep(out); });
+    },
+    [],
+  );
+
   const peers: Peer[] = useMemo(() => {
     const mine: Peer = {
       id: me,
@@ -501,6 +607,102 @@ export function Stage({
           }}
         >
           Waiting to be let in. {roster[host]?.flags.name || 'Whoever started this call'} has been asked.
+        </div>
+      ) : null}
+
+      {/*
+        * Being asked to be recorded, which is the one banner in this call that
+        * is a question rather than a notice.
+        *
+        * Above the captions and unmissable on purpose. Both answers are
+        * buttons of the same weight — a "no" styled as the quiet option is a
+        * question with a suggested answer, and this is not a question that
+        * should have one.
+        */}
+      {asking(tapeState, me) ? (
+        <div
+          role="alertdialog"
+          aria-label="Recording request"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 'var(--sp-3)',
+            fontSize: 'var(--type-sm)',
+            lineHeight: 'var(--leading-normal)',
+            paddingInline: 'var(--sp-6)',
+            paddingBlock: 'var(--sp-4)',
+            background: 'var(--app-panel)',
+            textWrap: 'pretty',
+          }}
+        >
+          <span style={{ flex: '1 1 16rem' }}>
+            <strong>{roster[tapeState.asker]?.flags.name || 'Someone'}</strong> wants to record this
+            call. It cannot start until everybody agrees, and anyone can stop it at any time.
+          </span>
+          {/* Both the same weight: a "no" styled as the quiet option is a
+              question with a suggested answer, and this is not one that should
+              have one. */}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ height: 38 }}
+            onClick={() =>
+              announceTape({ t: 'record-yes', from: me, to: tapeState.asker, at: Date.now() })
+            }
+          >
+            Allow
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ height: 38 }}
+            onClick={() => announceTape({ t: 'record-no', from: me, at: Date.now() })}
+          >
+            Do not record me
+          </button>
+        </div>
+      ) : null}
+
+      {/*
+        * And the notice, once it is running: everybody sees it, and everybody
+        * keeps the button that ends it. A recording somebody can see but not
+        * stop is the thing the whole design refuses.
+        */}
+      {tapeState.running ? (
+        <div
+          role="status"
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 'var(--sp-3)',
+            fontSize: 'var(--type-sm)',
+            lineHeight: 'var(--leading-normal)',
+            paddingInline: 'var(--sp-6)',
+            paddingBlock: 'var(--sp-3)',
+            textWrap: 'pretty',
+          }}
+        >
+          <span style={{ flex: '1 1 16rem' }}>
+            Recording. The file is saved on{' '}
+            {tapeState.asker === me ? 'your device' : `${roster[tapeState.asker]?.flags.name || 'their'} device`} and
+            is not sent to Semester.
+          </span>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ height: 38 }}
+            onClick={() =>
+              announceTape(
+                tapeState.asker === me
+                  ? { t: 'record-off', from: me, at: Date.now() }
+                  : { t: 'record-no', from: me, at: Date.now() },
+              )
+            }
+          >
+            Stop recording
+          </button>
         </div>
       ) : null}
 
@@ -975,6 +1177,78 @@ export function Stage({
       {panel === 'more' && (
         <div style={{ paddingInline: 'var(--sp-6)' }}>
           <SectionLabel>The rest of it</SectionLabel>
+          {/*
+            * Recording, in the More panel beside the other call-wide things.
+            *
+            * Not a one-tap control, on purpose: pressing it puts a question to
+            * everybody else in the call, and a button that does that sitting
+            * between mute and hang up is one somebody presses by accident.
+            */}
+          <SectionLabel>Recording</SectionLabel>
+          <div
+            style={{
+              fontSize: 'var(--type-xs)',
+              ...secondLine(),
+              marginBottom: 'var(--sp-5)',
+              lineHeight: 'var(--leading-normal)',
+              textWrap: 'pretty',
+            }}
+          >
+            Everybody is asked first, and it does not start until every one of them agrees. Anybody
+            can refuse, and anybody can stop it once it has started — including you. The file is
+            saved to the device of whoever recorded it; Semester never receives it. If somebody
+            joins while it is running it stops, because they have not been asked.
+          </div>
+          {/*
+            * Only when there is somebody to wait for.
+            *
+            * The first version fell back to the word "everybody" when the list
+            * came back empty, which reads as a room full of people ignoring
+            * you. Driving it in a browser found it: a call that could not
+            * connect sat saying "Waiting for everybody." to one person.
+            *
+            * The `length > 0` is now belt and braces rather than load-bearing,
+            * and the mutation harness says so — removing it changes no test.
+            * With the button disabled until there is a session, and
+            * `mayRecord` true the moment the list is empty, there is no
+            * reachable state with a request outstanding and nobody to wait
+            * for. It is kept because the alternative is a sentence with no
+            * subject — "Waiting for." — if one ever appears, which is a worse
+            * failure than a branch that does not run.
+            */}
+          {tapeState.asker === me && !tapeState.running && awaiting(tapeState, roster, me).length > 0 ? (
+            <div style={{ paddingBlock: 'var(--sp-5)', fontSize: 'var(--type-md)' }}>
+              Waiting for{' '}
+              {awaiting(tapeState, roster, me)
+                .map((id) => roster[id]?.flags.name || 'somebody')
+                .join(', ')}
+              .
+            </div>
+          ) : null}
+          {/* Nothing to record until the call has actually connected. The
+              trouble line above already says why when it has not. */}
+          <button
+            type="button"
+            className="btn btn-secondary btn-block"
+            disabled={!session}
+            style={{ height: 42, marginTop: 'var(--sp-4)', marginBottom: 'var(--sp-6)' }}
+            onClick={() =>
+              announceTape(
+                tapeState.asker === me
+                  ? { t: 'record-off', from: me, at: Date.now() }
+                  : { t: 'record-ask', from: me, at: Date.now() },
+              )
+            }
+          >
+            {tapeState.asker === me
+              ? tapeState.running
+                ? 'Stop recording'
+                : 'Cancel the request'
+              : tapeState.running
+                ? 'Stop recording'
+                : 'Ask to record this call'}
+          </button>
+
 
           <label
             style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)', paddingBlock: 'var(--sp-5)' }}
@@ -1032,7 +1306,8 @@ export function Stage({
           </button>
           <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
             Who was in it, how long it ran, and everything said in the chat — written to Notes on
-            this device. The call itself is not recorded, here or anywhere.
+            this device. This is the note and not a recording: a call is only recorded if somebody
+            asks and everybody agrees, and the file then stays on their device.
           </div>
         </div>
       )}

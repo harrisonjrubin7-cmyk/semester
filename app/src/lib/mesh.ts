@@ -75,6 +75,15 @@ export type Signal =
   | { t: 'react'; from: string; at: number; mark: string }
   /* A caption of what its sender is saying. See `captioned`. */
   | { t: 'caption'; from: string; at: number; text: string; done: boolean }
+  /* Recording, which is the only thing in this file done *to* people rather
+     than by them. See `asking` and `mayRecord`. `no` is to the room and not to
+     the asker, because one refusal stops it for everybody and everybody has to
+     see that it did. */
+  | { t: 'record-ask'; from: string; at: number }
+  | { t: 'record-yes'; from: string; to: string; at: number }
+  | { t: 'record-no'; from: string; at: number }
+  | { t: 'record-on'; from: string; at: number }
+  | { t: 'record-off'; from: string; at: number }
   | { t: 'offer'; from: string; to: string; sdp: string }
   | { t: 'answer'; from: string; to: string; sdp: string }
   | { t: 'ice'; from: string; to: string; candidate: unknown };
@@ -496,6 +505,142 @@ export function captioned(now_showing: Caption[], signal: Signal, now: number): 
 export function readable(captions: Caption[]): Caption[] {
   return [...captions].sort((a, b) => a.at - b.at || (a.from < b.from ? -1 : 1));
 }
+
+/* ── Recording ──────────────────────────────────────────────────────────── */
+
+/**
+ * How long an unanswered request stands before it lapses.
+ *
+ * A request nobody answers has to expire, or a call carries a pending "may I
+ * record you" for the rest of the afternoon and the banner becomes wallpaper.
+ * Longer than a caption because it asks for a decision rather than reporting
+ * speech, and short enough that somebody who missed it is asked again rather
+ * than consenting by having looked away.
+ */
+export const RECORD_ASK_HOLD = 45_000;
+
+/** What one person has said about the request in front of them. */
+export type Consent = 'agreed' | 'refused';
+
+/**
+ * The state of recording in this call, as one peer sees it.
+ *
+ * `answers` is keyed by peer id and reset by every new request, which is the
+ * whole reason consent is per-request rather than a flag on the roster:
+ * remembering that somebody agreed an hour ago turns a decision about one
+ * recording into standing permission to record them.
+ */
+export interface Recording {
+  /** Who is asking, or has asked and is now recording. Empty when nobody is. */
+  asker: string;
+  /** When they asked, for `RECORD_ASK_HOLD`. */
+  at: number;
+  answers: Record<string, Consent>;
+  /** Whether the recorder is actually running, as announced by the asker. */
+  running: boolean;
+}
+
+export const NOT_RECORDING: Recording = { asker: '', at: 0, answers: {}, running: false };
+
+/**
+ * The recording state after one signal.
+ *
+ * Reads as five cases and is really two: a request opens a decision, and
+ * everything else either answers it, reports it, or ends it. A refusal ends it
+ * outright — there is no state in which somebody has refused and recording
+ * continues, because that state is the one this whole feature exists to make
+ * unreachable.
+ */
+export function recording(was: Recording, signal: Signal, now: number): Recording {
+  // A request that nobody answered in time is no longer a request.
+  const live = was.asker && !was.running && now - was.at > RECORD_ASK_HOLD ? NOT_RECORDING : was;
+
+  switch (signal.t) {
+    case 'record-ask':
+      /*
+       * A fresh request clears every previous answer. See `Recording.answers`:
+       * an answer carried over from a previous request is consent somebody did
+       * not give to this one.
+       */
+      return { asker: signal.from, at: signal.at, answers: {}, running: false };
+
+    case 'record-yes':
+      // Only about the request actually in front of the room. A late yes to a
+      // request that has gone is not a yes to whatever replaced it.
+      if (!live.asker || signal.to !== live.asker) return live;
+      return { ...live, answers: { ...live.answers, [signal.from]: 'agreed' } };
+
+    case 'record-no':
+      /*
+       * To the room, and it stops everything rather than recording a dissent.
+       * Note what it does not do: leave `running` true with a refusal noted.
+       * One refusal ends it, which is the rule that was chosen, and the state
+       * shape is what enforces it.
+       */
+      if (!live.asker) return live;
+      return { asker: '', at: 0, answers: { [signal.from]: 'refused' }, running: false };
+
+    case 'record-on':
+      if (signal.from !== live.asker) return live;
+      return { ...live, running: true };
+
+    case 'record-off':
+      if (signal.from !== live.asker) return live;
+      return NOT_RECORDING;
+
+    /*
+     * Somebody leaving does not stop a recording. They consented to what was
+     * captured while they were here, and stopping would let anybody end a
+     * recording by closing a tab. Their answer is dropped so that a rejoin is
+     * asked afresh — see `mayRecord`, which reads the live roster.
+     */
+    case 'gone': {
+      if (!live.answers[signal.from]) return live;
+      const rest = { ...live.answers };
+      delete rest[signal.from];
+      return { ...live, answers: rest };
+    }
+
+    default:
+      return live === was ? was : live;
+  }
+}
+
+/**
+ * Whether recording may run right now, against the room as it currently is.
+ *
+ * Computed from the live roster on every call rather than decided once when
+ * the last person agreed, and that is the whole design. **Somebody who joins
+ * a call that is being recorded has consented to nothing**, so their arrival
+ * makes this false and the recorder stops — no special case, no listener, no
+ * chance of missing the event. The asker can ask again with the new person in
+ * the room.
+ *
+ * Everyone *except the asker* must have agreed. An empty room is true: alone
+ * in a call there is nobody to ask, and a feature that refused to let somebody
+ * record themselves would be protecting nobody from anything.
+ */
+export function mayRecord(state: Recording, roster: Roster, me: string): boolean {
+  if (state.asker !== me) return false;
+  return Object.keys(roster).every((id) => id === me || state.answers[id] === 'agreed');
+}
+
+/** Who has not answered yet, for the asker's own screen. */
+export function awaiting(state: Recording, roster: Roster, me: string): string[] {
+  return Object.keys(roster)
+    .filter((id) => id !== me && !state.answers[id])
+    .sort();
+}
+
+/**
+ * Whether this person is being asked to decide, right now.
+ *
+ * False for the asker: a request is not put to the person making it, and a
+ * banner asking you to consent to your own recording is how somebody presses
+ * the wrong button.
+ */
+export const asking = (state: Recording, me: string): boolean =>
+  state.asker !== '' && state.asker !== me && !state.running && !state.answers[me];
 
 /**
  * Who counts as the host: whoever has been here longest.
