@@ -337,6 +337,77 @@ function chromeStops(g: (typeof GROUNDS)[number], panel: string): string[] {
 });
 
 /**
+ * A shadow is a surface, and on a light ground it is a surface over text.
+ *
+ * Every ratio above is a colour against a *token*. `--glow` is not a colour
+ * and names no surface, so nothing here could have caught what it did: its
+ * third layer is a 34px blur of half-black under the primary button, which on
+ * a dark ground is black on near-black and on a light one is a grey wash
+ * reaching about forty-eight pixels down, over whatever text comes next.
+ *
+ * `scripts/paint.mjs` found it, because it samples the screenshot rather than
+ * compositing the style tree. On Fog, `#/pathway`'s "Where you stand" measured
+ * 3.72:1 and `#/sources`' "Nothing yet" 4.27:1, both needing 4.5 — and both
+ * are `--app-accent-deep`, which this file holds to 4.5:1 and which passes,
+ * because it was measured against `--app-bg` and the text was not sitting on
+ * `--app-bg`.
+ *
+ * That is `CLAUDE.md`'s warning arriving from a direction it does not list.
+ * It says to measure a fade against every surface a ground has rather than
+ * the one that flatters it; this was a fade measured against a surface that
+ * is not in the ramp at all, because a shadow is not in the ramp.
+ *
+ * What is pinned here is the property that makes the fix a fix rather than a
+ * number somebody nudged: the cast half is the ground's, the way
+ * `--shadow-soft-out` beside it already was. A regression would be somebody
+ * writing one shadow for thirteen grounds again, and it would look reasonable
+ * in the diff.
+ */
+describe('the primary button\'s glow', () => {
+  /** The three layers, as `[inset-ring, contact, cast]`. */
+  const layers = (glow: string): string[] => glow.split(/,(?![^(]*\))/).map((l) => l.trim());
+
+  it('is a different shadow on a light ground and a dark one', () => {
+    const light = GROUNDS.filter((g) => g.light);
+    const dark = GROUNDS.filter((g) => !g.light);
+    expect(light.length, 'no light grounds to check').toBeGreaterThan(0);
+    expect(dark.length, 'no dark grounds to check').toBeGreaterThan(0);
+
+    const onLight = new Set(light.map((g) => tokensFor({ ground: g.id })['--glow']));
+    const onDark = new Set(dark.map((g) => tokensFor({ ground: g.id })['--glow']));
+    for (const l of onLight) expect(onDark.has(l), 'a light ground wears the dark glow').toBe(false);
+  });
+
+  /*
+   * And the layer that does it is the one that reaches.
+   *
+   * The ring and the contact shadow are the button's own edge — 1px and a 6px
+   * blur — and neither gets past it. The cast half is the only one that lands
+   * on the next paragraph, so it is the only one this can be about; pinning
+   * the whole string would fail on any restyle and teach the next person to
+   * update the number without reading why it is there.
+   */
+  it('casts a light ground\'s shadow at an alpha that does not print on the text below', () => {
+    for (const g of GROUNDS.filter((x) => x.light)) {
+      const cast = layers(tokensFor({ ground: g.id })['--glow']).at(-1)!;
+      const alpha = Number(/rgba\([^)]*,\s*([\d.]+)\)/.exec(cast)?.[1] ?? '1');
+      expect(alpha, `${g.id}: the cast half is ${cast}`).toBeLessThanOrEqual(0.16);
+    }
+  });
+
+  it('leaves every dark ground exactly as it was', () => {
+    // The measurement that prompted this found nothing on Ink, so nothing on a
+    // dark ground had any reason to move. Written out, because "I only changed
+    // the light branch" is the kind of claim a ternary makes easy to get wrong.
+    const was =
+      '0 0 0 1px rgba(212, 217, 226, 0.2), 0 2px 6px rgba(0, 0, 0, 0.5), 0 14px 34px rgba(0, 0, 0, 0.45)';
+    for (const g of GROUNDS.filter((x) => !x.light)) {
+      expect(tokensFor({ ground: g.id })['--glow'], g.id).toBe(was);
+    }
+  });
+});
+
+/**
  * The other half of the audit: what the stylesheet actually uses.
  *
  * Everything above checks the tokens `tokensFor` emits. That is most of the

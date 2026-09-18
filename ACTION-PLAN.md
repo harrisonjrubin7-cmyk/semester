@@ -280,12 +280,30 @@ phone tier moved from 799/1,454 to 810/1,480 by its return.
 
 ### 17 · The UI pass · mixed, and two of the five numbers have moved
 
-- **Contrast — open, and larger than stated.** The plan says 85 failing text
-  runs. `npm run lint` measures **185 hand-written dim values across 163 files**
-  and prints it every run, so the baseline is already tracked. Swapping ad hoc
-  `opacity` for `--app-dim` is the fix. `CLAUDE.md` has a standing warning for
-  anyone touching `lib/look.ts`: measure a new ground against every surface it
-  has, not against `--app-panel`, which is the one that flatters it.
+- **Contrast — closed, and it was two rather than 85.** Re-run on the
+  instrument the 85 came from (`scripts/paint.mjs`, sixty screens on Ink and
+  Fog, `APP-AUDIT.md` §"What the branch leaves behind"): **2 runs of text
+  below AA**, both on Fog, both now fixed. The same run is 0 today, exit 0.
+
+  This entry pointed at the 185 hand-written dim values `npm run lint`
+  counts, and that count is real but is not this number and does not produce
+  it. Neither of the two findings was a hand-written `opacity`: both were
+  `--app-accent-deep`, which `lib/contrast.test.ts` holds to 4.5:1 and which
+  *passed* — against `--app-bg`, which is not the surface the text was on.
+  The surface was `--app-bg` with half the primary button's drop shadow over
+  it, and a shadow is in no ramp, so no token audit could have seen it.
+
+  **The bigger find is why nobody had re-measured.** `paint.mjs` — the half
+  that samples the screenshot and so is the only instrument that can see text
+  on a gradient or under a shadow — imported `playwright` bare and could not
+  run in this container, in CI, or anywhere without a global install. Its
+  sibling `contrast-sweep.mjs` had solved exactly that and written down why;
+  the fix never reached it. Meanwhile that sibling reports ~2,000 elements a
+  pass it declines to measure *and points here for them*. Fixed.
+
+  `CLAUDE.md`'s standing warning for `lib/look.ts` still applies and wants one
+  more clause: measure a fade against every surface a ground has — and a
+  shadow is a surface.
 - **The list row — was open; the migration half is done.** `Rows.tsx` is the
   shared row and 21 files use it: `Group` 62 times, `CustomRow` 54, `ItemRow`
   29, `NavRow` 15.

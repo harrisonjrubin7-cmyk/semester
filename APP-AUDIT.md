@@ -681,6 +681,29 @@ describes and `secondLine` already exists for. Picking nine of a hundred to fix
 in an audit would be arbitrary; what an audit can do is leave behind the
 instrument that says which, and a number the next pass can compare against.
 
+> **Since re-measured: two, and now zero.** Same instrument, same two grounds,
+> fifty-eight screens (the count moved; two merged away). 3,436 runs measured,
+> **2 below AA** — `#/pathway`'s "Where you stand" at 3.72:1 and `#/sources`'
+> "Nothing yet" at 4.27:1, both on Fog, both fixed. The run is 0 today.
+>
+> The paragraph above turned out to be wrong about what was left, in a way
+> worth keeping rather than editing away. It says *"each remaining run is a
+> screen's own `opacity`"*, and neither of the last two was: both were
+> `--app-accent-deep`, a token `lib/contrast.test.ts` audits and passes. What
+> failed was the surface. They sat under the primary button's `--glow`, whose
+> third layer is a 34px blur of half-black — invisible on Ink, a grey wash on
+> a light page — and a shadow is in no ramp, so no token audit could see it.
+> `--glow` is the ground's now, like `--shadow-soft-out` beside it.
+>
+> **And the instrument had stopped running.** `scripts/paint.mjs` imported
+> `playwright` bare, so it worked only where somebody had installed it
+> globally — not in the container, not in CI. Its sibling
+> `contrast-sweep.mjs` had hit that and documented the fix at length; it never
+> reached here. So the number this section leaves behind, and which the next
+> pass was meant to compare against, could not be recomputed by the next pass.
+> That is the more useful finding of the two: a number is only a baseline
+> while the thing that produced it still runs.
+
 The clearest single example of what is left, because it shows the shape: the
 profile heading writes `opacity: named ? 1 : 0.55` on `.chrome-text`, with the
 comment "the prompt is not the name, and should not be set like one". The
