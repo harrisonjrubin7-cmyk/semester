@@ -1,0 +1,328 @@
+# The competitive review, checked against the code — September 2026
+
+The tracked record of *Semester — Competitive review and implementation plan*
+(prepared 17 September 2026), an independent product assessment that compares
+this app against seventeen products, walks eight of its screens, and proposes
+a backlog in four priority bands.
+
+It is the **second** outside document filed here, and it is not the one
+`COMPETITION.md` holds. That one was *Semester vs. the Competition*, ten
+competitors and nine proposals. This one is longer, pins the same source
+snapshot (`3287929`), and reaches different findings — so the two are filed
+apart rather than merged, and where they agree that is said.
+
+Filed for the reason `ACTION-PLAN.md` gives for its own existence: **every item
+that names something about this repository was checked against the code before
+it was filed.** That habit has now been run three times against three outside
+documents, and this is the first time it has come back with a **defect**.
+
+**Checked against `5e7f9eb` on 18 September 2026.** Every verdict names what
+was measured and where, and every file and line quoted below was opened rather
+than inferred.
+
+Legend: **Open** · **Landed** (built here) · **Already built** (was already in
+the app; nothing to do) · **Declined** (checked, and deliberately not done) ·
+**Not a code item**.
+
+---
+
+## The headline: the review found a real bug, and it was right
+
+Every previous outside document filed here has been a list of proposals, and
+the checking has mostly returned *already built*. This one contains a finding
+of a different kind, stated in four lines in the middle of step 4:
+
+> **Code finding:** `Study.tsx` dispatches `finishSession` as a planned session
+> is opened, before `startStretch`. The session model calls `doneAt` a finish
+> time. Opening and abandoning a session can therefore count as completion.
+
+That was true, it was still true at `5e7f9eb`, and it is fixed here.
+
+What makes it worth the length below is that it was **not an oversight**. The
+line had a comment arguing for it, and the screen that drew the result had a
+docstring arguing the opposite:
+
+```
+// Started counts as done. A sitting you open and abandon is a sitting
+// you did some of, and a plan that only counts a finished deck is a
+// plan that says you did nothing on the night you did twenty cards.
+dispatch({ type: 'finishSession', id: session.id, at: Date.now() });
+```
+
+…in `screens/Study.tsx`, one line above the drill. And in
+`components/Plan.tsx`, the component whose rows that line was firing from:
+
+> ## Why there is no tick box
+>
+> A sitting is finished by doing it. […] a checkbox beside it would be a
+> second, easier way to make the plan say you had studied, and a plan you can
+> satisfy without studying is a plan that measures nothing.
+
+**The row was the tick box.** The component documented the rule and the screen
+behind it broke the rule, and the two files had been that way long enough for
+both comments to read as settled. The argument in `Study.tsx` is about a
+student — someone who opens a sitting has usually done some of it — and the
+line it justified is about a *record*, which could not tell that student apart
+from one who tapped a row and pressed back. Both wrote the same `doneAt`.
+
+So the plan's only real measurement was **which rows had been tapped**, and
+every consequence of that is a sentence the app says to a student:
+
+- `missed()` in `lib/sessions.ts` filters on `!s.doneAt`, so a sitting opened
+  for two seconds on Monday was never missed on Tuesday. The missed banner —
+  which `Plan.tsx`'s own docstring calls "the whole feature" — could be
+  emptied by tapping.
+- `onDay()` filters the same way, so the row vanished from the evening it was
+  planned for, and the day read *All done*.
+
+An outside reviewer found this by reading the source. Nothing inside the
+repository could have: the tests passed, and they passed **vacuously** — every
+session in them was done the moment it was seen.
+
+### What replaces it
+
+Two facts instead of one, and completion earned by work:
+
+| Field on `Session` | What it is |
+|---|---|
+| `startedAt` | when the sitting was opened. New. |
+| `answered` | cards actually answered in it. New. |
+| `cards` | how many it was **sized for** — its planned questions. New. |
+| `doneAt` | unchanged in meaning, and now written only by answers. |
+
+`progressOf()` reads them back as one of four states — `planned`, `started`,
+`partly`, `done` — which is the vocabulary the review asked for, and the two in
+the middle are the ones that make the outer two mean anything.
+
+The mechanism is three changes and no new screen:
+
+1. **`startDrill` carries the sitting it was opened for.** `Study.tsx` now
+   makes one dispatch where it made two, and that dispatch starts the run and
+   says which sitting the run is for. A drill started anywhere else — the
+   ranking below the plan, a course guide, the gap filler — carries no sitting,
+   and `state.liveSession` is `null`. That is deliberate: a run on the same
+   unit from the ranking is real study and it is *not this sitting*, and
+   crediting it because the two happen to name one unit would be the same bug
+   with a longer fuse.
+2. **`markCard` counts the answer against the open sitting** and stamps
+   `doneAt` on the one that reaches `cards`. This is the only place a `doneAt`
+   is now written by a student studying.
+3. **A spent deck finishes it too.** A unit can hold fewer cards than the
+   sitting was sized for a fortnight ago — some answered in a gap run, some
+   deleted with the reading they came from. Without this the sitting would stop
+   one short and the plan would report a missed evening on the night the
+   student emptied the deck.
+
+`undoCard` takes the credit back, `doneAt` included. Without that, the last
+card of a sitting could be answered, taken back, and still have finished it —
+the same bug, one card wide.
+
+**The row says what it knows.** A sitting nobody has touched carries no note; a
+sitting opened and abandoned says *opened, nothing answered yet*; one part way
+through says *7 of 12 cards*. Said as a count, because the count is the
+evidence and "in progress" is a label that could be printed over anything.
+
+### What the old stamps do
+
+**They stand.** Every `doneAt` in a student's storage right now was written by
+opening a row, and none of them can be shown to be study — but none can be
+shown *not* to be either, and rewriting somebody's term to say they studied
+less than their app has been telling them all term is the one outcome worse
+than the bug. The rule changes from here. This is the review's own instruction
+(*"Historic doneAt values cannot retrospectively prove completion; do not
+fabricate missing history"*) and it is pinned in `state/storage.test.ts`.
+
+One consequence is worth naming: a sitting from before this change has no
+`cards`, so it **cannot** be finished by counting to a number it never had. It
+finishes when its deck runs dry, which is why that second rule is not optional.
+
+### How it was proved
+
+Per `CLAUDE.md`, a guard that has never failed is not known to be a guard.
+Every case was run against a faithful revert — `startDrill` stamping `doneAt`
+the way `Study.tsx` used to — and **ten of them go red there**, including the
+three that state the bug in the student's own terms: opening does not finish
+it, the count is the real work, and last night is still missed this morning.
+
+Driven in a browser at 420px as well, because the suite cannot see a row:
+
+- Plan rows draw all four states, and the missed banner still counts the one
+  sitting that was actually missed.
+- Tapping a row opens the drill and the sitting is **not** done; backing out
+  without answering leaves *opened, nothing answered yet*.
+- Four real answers against a sitting sized for four turn the day to *All
+  done*.
+- Two answers against a sitting sized for four read *2 of 4 cards* — and still
+  read *2 of 4 cards* after a reload.
+
+`pageerror` was empty on every run.
+
+---
+
+## The eight-step review of the app
+
+### 1 · Directory — "discovery is crowded" · **Partly landed — two of four were already built, two were open and are done**
+
+Taken item by item, because the four proposals in this step do not have one
+verdict between them:
+
+- **"Provide a result count"** — **Open, and landed.** There was none. While
+  filtering, the screen now says *10 of 58 apps* in a `role="status"` region,
+  because the list below it changes under a screen reader with nothing said
+  about it otherwise. Hidden when nothing is narrowed: *58 of 58 apps* over the
+  whole directory answers a question nobody has asked.
+- **"…and a clear recovery action"** — **Open, and landed.** The dead end said
+  *Nothing here matches that* and left you holding a filter you would have to
+  find and empty yourself — one of the two controls being a category chip you
+  may not remember pressing. There is now a **Show them all** button beside the
+  count, and the empty state names it.
+- **"Replace repetitive favorite-category text with the registry's existing
+  descriptions"** — **Open, and landed**, and the review is exactly right about
+  why it was worth doing. The second line of a favourite card was `d.group`, so
+  a row read *Semester · Courses · Study* — the least distinguishing thing
+  about three screens, under names the chips below already group. The sentence
+  was in hand the whole time: `saysFor()` returns it, and the card was passing
+  it to `title`, which is a tooltip, which is **nothing at all on a phone**.
+  One word changed; the cards now say what each screen does.
+- **"Use a proper page heading (H1)"** — **Already built, and the patch would
+  have regressed it.** The app shell prints the screen's name as the page's
+  `<h1>` for every screen (`App.tsx:351`). `screens/settings/Page.tsx` carries
+  the scar in its own docstring: that page *did* add a second `<h1>` of its
+  own, and the two was the bug. Adding one to the directory would have put it
+  back.
+- **"Put the local filter directly below the heading"** — **Declined**, with
+  the reasoning the file already holds. The three standing lists are hidden the
+  moment anything is typed, and `Directory.tsx` says why: somebody typing has
+  stopped asking *where was that* and started asking *where is the thing called
+  this*, and lists that ignore the filter above a list that obeys it read as a
+  bug. So the filter is never *below* content it competes with — the content
+  steps aside. The report's concern is real and it is already answered; moving
+  the box would trade an argued design for an untested one. Worth revisiting
+  with the five-student test the report proposes, which is the evidence neither
+  of us has.
+
+**58 destinations is right.** The report noticed the directory change from 60
+to 58 mid-review and pinned the refreshed figure. This repository has now got
+that number wrong twice in its own documents in the other direction — see *A
+fourth row that was not wrong* in `COMPETITION.md` — so the correction is
+recorded here rather than argued with.
+
+### 2 · Today — "weak first-use reassurance" · **Already built**
+
+The sample banner, the labelling, and the count-what-is-actually-there
+onboarding all landed earlier, and `screens/Onboarding.tsx` carries the reason
+in its own docstring: the first two screens used to say *"We found 38 dated
+obligations across four courses"* before anything had been uploaded. *"The
+first thing the app said was false, which is a bad way to be trusted with a
+semester."* The remaining half — leading a real account with one achievable
+next action — is a design question, not a defect, and is left open.
+
+### 3 · Study entry — "too many decisions before practice" · **Open, not done here**
+
+Fair, and a layout decision rather than a correctness one. `lib/revise.ts`
+already ranks and `planFor` already sizes an evening, so the *Continue / 10 ·
+25 · 45* default the report asks for is a rearrangement of things that exist.
+Left for a change that can be tested against the usage data the report
+recommends collecting, rather than bundled behind a defect fix.
+
+### 4 · Revision — "progress semantics need work" · **Landed.** See the headline above.
+
+### 5 · Calendar intake — "the claim that a feed carries every due date is too broad" · **Open, and landed**
+
+Correct, and it was in three files.
+
+`screens/Connect.tsx` told the student, in the app's own plain-speaking voice:
+
+> the **calendar feed** carries every due date and needs nothing but the link.
+
+It carries what instructors put on the Brightspace calendar. That is most of a
+term and it is not the syllabus, and the gap is **invisible from inside the
+app** — the student sees a full-looking calendar beside a promise that it is
+complete, and finds out which one was wrong in week nine. The sentence now says
+what a feed holds, that it is not always everything on the syllabus, and that
+it never says whether anything has been submitted.
+
+### 6 · Provider connections — "overstates the impossibility of richer access" · **Open, and landed**
+
+The sharper of the two corrections, and the one that is easiest to defend the
+wrong way. The same paragraph said:
+
+> no app you install can read them on your behalf, however it asks.
+
+Grades and submissions genuinely are out of reach today. The reason is not
+impossibility: D2L documents registered OAuth applications, scopes and
+user-context permissions, so a school that registered this one could grant
+them. **Nobody has asked Vanderbilt.** Saying it cannot be done closes a door
+the app would like to walk through during a pilot, and tells a student
+something about their own university's systems that is false.
+
+The copy now names the missing thing as a permission nobody has requested, and
+— this is the part that matters — **still says the answer today is no**. A
+correction that becomes an implied promise is a second false sentence.
+
+The claim lived in two more places and both are corrected: `lib/connect.ts`'s
+module docstring and `screens/Courses.tsx`'s `LmsLink`. Fixing one of three
+would have left the app disagreeing with itself, which is the failure mode
+`COMPETITION.md` records under *the five copies of one calibration*.
+
+All of it is pinned in `screens/lmsclaims.test.ts`, by the words rather than by
+their shape, because the failure is a sentence somebody rewrites while tidying
+the copy. The probe carries a **control** — `lib/guidebook.ts`, which describes
+what the app asks of a student and makes no Brightspace claim — for the reason
+`CLAUDE.md` gives: a probe with no control that convicts everything it looks at
+is indistinguishable from a broken probe. It was run against the old wording
+and goes red there.
+
+### 7 · Add a course — "late explanation of AI requirements" · **Already built**
+
+`ACTION-PLAN.md` item 1 carries this at length: `screens/Import.tsx` has four
+doors in, three need no key, and the gate stands in the primary button's place
+rather than under a button that cannot succeed. `screens/deadends.test.tsx`
+pins both directions.
+
+### 8 · Calendar use — "room to connect planning" · **Open, not done here**
+
+A compact phone agenda and *work to schedule* beside the calendar. This is the
+P1 scheduling item in smaller clothes and belongs with it.
+
+---
+
+## The backlog, band by band
+
+Each verdict is about whether the *claim* is true of this code, not about
+whether the proposal is good.
+
+| Band | Item | Verdict |
+|---|---|---|
+| P0 | Repeatable first setup | **Partly already built.** The manual route and the key-free doors landed; the school/term-first three-step shape is open. |
+| P1 | Make tools easy to find | **Partly landed.** Three of the patch's five items above; the filter move declined with reasons; user testing is not a code item. |
+| P1 | **Make progress mean actual progress** | **Landed.** The defect. |
+| P1 | One calendar integration, then one LMS | **Not a code item here.** Provider registration and an institutional agreement. The copy that misdescribed it is fixed above. |
+| P1 | Schedule work into real availability | **Open.** The largest genuinely-new item in the document, and correctly sequenced behind trustworthy calendar input. |
+| P1 | Carry exact source locations | **Open, and the claim is exact.** `components/StudyStudio.tsx` writes `original page not recorded` in three locators — prepared guide units, added course material, and pasted text. |
+| P2 | Mistakes into the next practice session | **Open, and the claim is exact.** `cardKey()` in `lib/review.ts` is FNV-1a over the *question text*, so rewording a card changes its identity. `data/catalog.ts:155` already documents this as the design; the report is right that it blocks a scheduler migration, and right to say stable ids come first. |
+| P2 | Offline, sync and reminders | **Open, and the claim is exact.** `HORIZON_DAYS = 7` in `lib/push.ts`: *"How far ahead to queue. A week is enough to survive a phone left in a bag."* The report's question — what happens after longer inactivity — is not answered anywhere. |
+| P2 | Shared coursework with a small group | **Open.** Needs two real accounts, which is the report's own acceptance criterion. |
+| P3 | Lecture capture, career discovery | **Open, and correctly deferred.** |
+
+---
+
+## What this document got wrong about itself
+
+Kept, for the reason `COMPETITION.md` keeps its fourth row: how a checking
+document reached a wrong number is worth more than the number.
+
+- **The first browser run "proved" that a sitting's progress did not
+  persist.** Storage read back the seed with no `startedAt`, across three
+  scripts, while the screen went on showing *opened, nothing answered yet*
+  through a reload. The screen was right. The probe was reading
+  `localStorage`, and `state/store.tsx` writes through a database path that had
+  taken the dependency over — so the reading was true of the wrong store.
+  `CLAUDE.md` names this exact shape: when a measurement clears (or convicts) a
+  suspect the cheap signal disagrees with, find out which one is lying before
+  believing the measurement. The reload test that settles it drives the real
+  app and reads the row.
+- **A `role="status"` probe came back empty in the live app** and non-empty in
+  the mounted-screen test. Both were right: the app draws an earlier live
+  region, and `querySelector` found that one. The count is in a status region;
+  the probe was pointed at the app rather than at the screen.

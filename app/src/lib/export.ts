@@ -872,6 +872,8 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   visited: 'which screens have been opened here',
 
   // Held back for a reason of its own, one each.
+  liveSession:
+    'which sitting a drill is part way through, which is about the run open on this device — the plan it points into, and everything answered in it, the file does carry',
   feedEvents: 'the events pulled from your calendars, fetched again from the subscriptions the file does carry',
   mailMarks: 'read and flagged marks on messages the file does not carry',
   mathGiven: 'the values the calculator is currently holding, not a saved thing',

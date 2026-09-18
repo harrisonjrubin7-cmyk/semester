@@ -104,6 +104,24 @@ export function Drill() {
   const finished = state.drillIdx >= pool.length;
   const card = pool[state.drillIdx] ?? pool[0];
 
+  /*
+   * A deck with nothing left in it finishes the sitting it was opened for.
+   *
+   * The other half of the rule in `markCard`, which finishes a sitting on its
+   * last planned card. A unit can have fewer cards than the sitting was sized
+   * for a fortnight ago — answered in a gap run, or deleted with the reading
+   * they came from — and without this the sitting would stop one short of
+   * done and be reported as a missed evening on the night it was emptied.
+   *
+   * Safe to fire more than once: the reducer returns the state it was given
+   * when there is no open sitting or it is already stamped, so this cannot
+   * loop. `pool.length` guards the empty-unit case, which is handled below by
+   * a screen saying so rather than by a sitting that was never studied.
+   */
+  useEffect(() => {
+    if (finished && pool.length > 0) dispatch({ type: 'sessionSpent', at: Date.now() });
+  }, [finished, pool.length, dispatch]);
+
   if (pool.length === 0) {
     return (
       <EmptyState

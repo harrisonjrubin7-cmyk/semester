@@ -88,6 +88,16 @@ export const STRATEGY: Record<string, Strategy> = {
    * tomorrow's ranking will find the same units.
    */
   sessions: 'theirs',
+  /*
+   * With the plan it points into, for the same reason and by the same rule.
+   *
+   * It is an id inside `sessions`, so it cannot be merged separately without
+   * being able to point at a sitting the other device's plan does not have —
+   * and an answer credited to nothing is the quiet half of the bug this field
+   * was added to fix. Taking the later device's whole plan takes its pointer
+   * with it, which is the only pairing that is always consistent.
+   */
+  liveSession: 'theirs',
   sources: 'union',
   // Made in the app and held nowhere else. A document written on the laptop
   // and a sheet made on the phone are two things, not a conflict.

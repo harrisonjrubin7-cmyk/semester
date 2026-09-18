@@ -112,7 +112,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     says:
       'your study history — cards drilled, practice papers sat, the answers you gave and the ' +
       'study plan you have laid out',
-    keys: ['reviews', 'sittings', 'answers', 'pretested', 'sessions'],
+    keys: ['reviews', 'sittings', 'answers', 'pretested', 'sessions', 'liveSession'],
   },
   {
     says: 'your grades, the work that came back, your degree plan and the applications you are tracking',

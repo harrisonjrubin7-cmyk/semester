@@ -369,6 +369,20 @@ export interface Persisted {
    */
   sessions: Session[];
   /**
+   * The sitting a drill run is currently working through, if it was opened
+   * from the plan.
+   *
+   * A pointer rather than a flag on the session, because what it answers is
+   * "where should this answer be credited", and only one run is in hand at a
+   * time. `null` for a drill started anywhere else — the ranking below the
+   * plan, a course guide, the gap filler — and that is the point: a run the
+   * plan did not send you into is real study, but it is not *this sitting*,
+   * and crediting it to one would put the old bug back in a quieter form.
+   *
+   * See `progressOf` in `lib/sessions.ts`.
+   */
+  liveSession: string | null;
+  /**
    * Sources you have collected, per course and per project.
    *
    * Four tools refuse to invent a citation and ask for yours; this is so that
@@ -1350,6 +1364,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   recent: [],
   sittings: [],
   sessions: [],
+  liveSession: null,
   sources: [],
   documents: [],
   sheets: [],
@@ -1691,6 +1706,9 @@ export function loadPersisted(): Persisted {
       lastOpened: saved.lastOpened ?? {},
       sittings: list(saved.sittings),
       sessions: list(saved.sessions),
+      // Kept across a reload so a sitting left half done goes on being
+      // credited when it is resumed, rather than starting its count again.
+      liveSession: typeof saved.liveSession === 'string' ? saved.liveSession : null,
       sources: list(saved.sources),
       documents: list(saved.documents),
       sheets: list(saved.sheets),
@@ -1814,6 +1832,7 @@ export function pickPersisted(state: State): Persisted {
     lastOpened: state.lastOpened,
     sittings: state.sittings,
     sessions: state.sessions,
+    liveSession: state.liveSession,
     sources: state.sources,
     documents: state.documents,
     sheets: state.sheets,
@@ -2071,7 +2090,14 @@ export type Action =
    * looked at — without this it had to open the guide first and the student
    * arrived at a screen they did not ask for on the way to the cards.
    */
-  | { type: 'startDrill'; unit: number | null; courseId?: CourseId }
+  /**
+   * Open a deck.
+   *
+   * `session` is the planned sitting this run is being done for, when the run
+   * was opened from the plan. It is what makes the answers count towards that
+   * sitting, and leaving it off is what makes them not.
+   */
+  | { type: 'startDrill'; unit: number | null; courseId?: CourseId; session?: string }
   | { type: 'flip' }
   | { type: 'markCard'; got: boolean; key: string; sure?: Sure; courseId?: string }
   /** Take back the answer just given, schedule and all. */
@@ -2087,8 +2113,16 @@ export type Action =
    * unmissable again.
    */
   | { type: 'planSessions'; sessions: Session[]; from: string }
-  /** One sitting finished, at this moment. */
-  | { type: 'finishSession'; id: string; at: number }
+  /**
+   * The open run has no cards left in it, so the sitting behind it is done.
+   *
+   * The second of the two ways a sitting finishes, and the one that catches a
+   * unit with fewer cards in it than the sitting was sized for: answering the
+   * planned questions is the first, and a deck that runs dry before then has
+   * no more work in it to do. Ignored when no sitting is open, which is what
+   * makes a run started from anywhere else finish nothing.
+   */
+  | { type: 'sessionSpent'; at: number }
   /** Every missed sitting moved forward at once. See `moveOn`. */
   | { type: 'moveMissed'; today: string; dayMinutes?: number }
   /** Throw the plan away. */

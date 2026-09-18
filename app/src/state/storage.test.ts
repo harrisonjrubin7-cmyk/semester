@@ -269,3 +269,47 @@ describe('a save that is wrong in one place', () => {
     expect(kept.drops.PSCI, 'and its neighbour is untouched').toBe(2);
   });
 });
+
+/**
+ * The plan, across a reload.
+ *
+ * Two facts have to survive it and they survive for opposite reasons. What a
+ * student did tonight has to still be there in the morning, or a sitting
+ * resumed would start its count again — and what an older build wrote has to
+ * be left exactly as it is, because those `doneAt` stamps were written by
+ * opening a row and cannot now be shown to be study. They also cannot be shown
+ * not to be. Re-judging them would tell somebody they had studied less than
+ * their app has been telling them all term, which is the one outcome worse
+ * than the bug that made them. See `progressOf` in `lib/sessions.ts`.
+ */
+describe('a half-finished sitting, across a reload', () => {
+  it('keeps the count and the sitting it belongs to', () => {
+    const raw = JSON.stringify({
+      sessions: [
+        { id: 'a', courseId: 'econ', index: 0, name: 'Monopoly', code: 'ECON 1020', minutes: 30, on: '2026-09-15', cards: 12, startedAt: 1_700_000, answered: 5 },
+      ],
+      liveSession: 'a',
+    });
+    const state = withStorage(raw, () => loadPersisted());
+    expect(state.liveSession).toBe('a');
+    expect(state.sessions[0]).toMatchObject({ answered: 5, startedAt: 1_700_000, cards: 12 });
+    expect(state.sessions[0].doneAt).toBeUndefined();
+  });
+
+  it('leaves an older build\u2019s finished sittings finished', () => {
+    const raw = JSON.stringify({
+      sessions: [
+        { id: 'a', courseId: 'econ', index: 0, name: 'Monopoly', code: 'ECON 1020', minutes: 30, on: '2026-09-14', doneAt: 1_600_000 },
+      ],
+    });
+    const state = withStorage(raw, () => loadPersisted());
+    expect(state.sessions[0].doneAt).toBe(1_600_000);
+  });
+
+  it('takes a pointer that is not a string as no pointer at all', () => {
+    // Storage is not a trusted input; the field is read for an id and a
+    // number here would be compared against every session's for ever.
+    const state = withStorage('{"liveSession":7}', () => loadPersisted());
+    expect(state.liveSession).toBeNull();
+  });
+});

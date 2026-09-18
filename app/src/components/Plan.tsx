@@ -6,6 +6,7 @@ import {
   minutesOn,
   missed,
   onDay,
+  progressOf,
   today as todayKey,
   willMove,
   type Session,
@@ -40,13 +41,36 @@ import { ChevronRight } from './Icons';
  *
  * ## Why there is no tick box
  *
- * A sitting is finished by doing it. The row opens the drill, and `Study.tsx`
- * marks the sitting done when the drill is started from it — a checkbox beside
- * it would be a second, easier way to make the plan say you had studied, and a
- * plan you can satisfy without studying is a plan that measures nothing. It is
- * the same argument `lib/knowing.ts` makes about the mastery percentage: the
- * app should report what happened.
+ * A sitting is finished by doing it. The row opens the drill and nothing here
+ * can mark it done — a checkbox beside it would be a second, easier way to
+ * make the plan say you had studied, and a plan you can satisfy without
+ * studying is a plan that measures nothing. It is the same argument
+ * `lib/knowing.ts` makes about the mastery percentage: the app should report
+ * what happened.
+ *
+ * That argument was written here while the screen was quietly failing it. The
+ * row *was* the tick box: `Study.tsx` stamped the sitting done the instant it
+ * was tapped, so opening one and pressing back recorded the same evening as
+ * answering every card in it. Now the answers do it — `markCard` counts them
+ * against the open sitting and finishes it on the last one — and the row says
+ * how far in you are, so a sitting left half done reads as half done rather
+ * than as either a full evening or nothing at all. See `progressOf` in
+ * `lib/sessions.ts`.
  */
+/**
+ * The half-finished half of a row's second line.
+ *
+ * Empty for a sitting nobody has touched, which is most of them — a plan where
+ * every row carries a progress note is a plan that is harder to read than the
+ * one it replaced.
+ */
+function progress(s: Session): string {
+  const state = progressOf(s);
+  if (state === 'partly') return ` · ${s.answered} of ${s.cards ?? '?'} cards`;
+  if (state === 'started') return ' · opened, nothing answered yet';
+  return '';
+}
+
 export function Plan({
   sessions,
   ranked,
@@ -224,6 +248,19 @@ export function Plan({
                         }}
                       >
                         {s.code}
+                        {/*
+                          How far into it you are, when you are into it.
+
+                          Said as a count of cards rather than as a word,
+                          because the count is the evidence and "in progress"
+                          is a label that could be printed over anything. A
+                          sitting only opened says so separately: it has a
+                          `startedAt` and nothing to show for it, and calling
+                          that 0 of 12 would suggest twelve answers are what
+                          the screen is waiting for when what it is really
+                          reporting is that nobody has answered one yet.
+                        */}
+                        {progress(s)}
                         {/*
                           A sitting moved more than once is the only number
                           that says the plan is not working, and it is worth
