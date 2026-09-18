@@ -66,20 +66,32 @@ migrations could start being applied automatically, and it is not a file:
 project, and its own header says so.
 
 As of this writing that integration is **not** doing anything, and not because
-somebody turned it off. Its comment on every pull request reads:
+somebody turned it off. It says so on every pull request, including ones that
+add migrations to `supabase/` — which is how it was noticed at all. What it
+has said, twice, with the setting changed in between:
 
 > no changes detected in `https:/harrisonjrubin7-cmyk.github.io/semester/supabase`
 
-That is a *URL* where a repository-relative directory path belongs, so it is
-looking somewhere that cannot exist. It said this on a pull request that added
-a migration and a check suite to `supabase/`, which is how the setting was
-noticed at all.
+> no changes detected in `supabase/supabase`
+
+**Both end in `/supabase`, and that is the whole diagnosis.** The integration
+appends `supabase` to whatever base path it is given, so the field wants the
+directory *containing* `supabase/` — which in this repository is the root. The
+first reading of this, that a URL had been pasted where a path belongs, got the
+symptom right and the mechanism wrong, and the correction that followed from it
+(entering `supabase`) is what produced the second message.
+
+So the value is the repository root: empty, or `.` if the field insists on
+something. Neither string above is it.
 
 Two things follow, and both are for a person rather than a test:
 
 - **The setting is worth fixing**, because a branching integration that
   silently matches nothing is indistinguishable from one that is working until
-  the day you need it.
+  the day you need it. The test of whether it *is* fixed is the bot's next
+  comment on a pull request touching `supabase/`: a preview branch rather than
+  a sentence saying it was ignored. This repository cannot check a dashboard,
+  so nothing here will tell you.
 - **Fixing it changes this document.** If Branching begins applying migrations
   on merge, the table above is wrong and the rule in the block quote becomes
   load-bearing in a way nothing here will warn you about. Check it by hand when
