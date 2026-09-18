@@ -164,10 +164,58 @@ const FILLED = () => {
     (b) =>
       b.offsetParent !== null &&
       /\b(btn-primary|portal-primary)\b/.test(String(b.className)) &&
+      /*
+       * And actually filled, which the class alone stopped guaranteeing — but
+       * asked of **both** background properties, which is the fifth thing this
+       * probe got wrong and the one that would have been mistaken for a win.
+       *
+       * Why ask at all: `.studio-entry > .portal-primary.is-quiet` keeps the
+       * primary class for its shape and size and paints nothing, because the
+       * button has to stay in the same place at the same size on every tab and
+       * only its emphasis moves. A probe reading the class would call that
+       * filled and report a screen this instrument had just been used to fix.
+       *
+       * Why both: `.device .btn-primary` is `background: var(--chrome)`, and
+       * `--chrome` is a `linear-gradient(…)`. A gradient is a
+       * *background-image*, so `backgroundColor` on every filled button in
+       * this app reads `rgba(0, 0, 0, 0)`. Asking only for the colour reported
+       * 122 of 125 states as offering no action at all — a number that looks
+       * like a clean sweep and says the app has almost no buttons. This is
+       * `paint.mjs`'s lesson one instrument over: the thing that makes a
+       * gradient invisible to a style query is exactly what makes it visible
+       * to a person.
+       */
+      (getComputedStyle(b).backgroundColor !== 'rgba(0, 0, 0, 0)' ||
+        getComputedStyle(b).backgroundImage !== 'none') &&
       !b.closest('form') &&
       !b.hasAttribute('aria-pressed'),
   );
   return { n: filled.length, labels: filled.map((b) => (b.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 30)) };
+};
+
+/**
+ * The tab strip on this screen, if it has one, as labels to click.
+ *
+ * Found rather than written down, for the reason `destinations.mjs` exists:
+ * `contrast-sweep.mjs` had six screens in a hand-written list and printed
+ * findings about a tenth of the app under a heading that said FINDINGS. A
+ * hand-written table of which screens have tabs would go stale the same way
+ * and be just as quiet about it.
+ *
+ * A strip is a parent whose visible children are *all* buttons and all carry
+ * `aria-pressed` — which is what `components/Segmented.tsx` renders and what a
+ * filter row does not, because a filter row has something else in it. Only the
+ * first such group is walked: a second one is usually a filter *within* a tab,
+ * and the product of the two is a combinatorial walk nobody asked for.
+ */
+const STRIP = () => {
+  for (const parent of document.querySelectorAll('*')) {
+    const kids = [...parent.children].filter((el) => el.offsetParent !== null);
+    if (kids.length < 2) continue;
+    if (!kids.every((el) => el.tagName === 'BUTTON' && el.hasAttribute('aria-pressed'))) continue;
+    return kids.map((el) => (el.textContent || '').trim().replace(/\s+/g, ' '));
+  }
+  return [];
 };
 
 /*
@@ -238,6 +286,7 @@ const dests = destinations();
 const rows = [];
 const filled = [];
 let opened = 0;
+let tabs = 0;
 const missed = [];
 for (const { screen, label } of dests) {
   at = screen;
@@ -260,9 +309,32 @@ for (const { screen, label } of dests) {
   else missed.push(screen);
   for (const r of await page.evaluate(WALLS)) rows.push({ screen, ...r });
   filled.push({ screen, ...(await page.evaluate(FILLED)) });
+
+  /*
+   * And every tab of it.
+   *
+   * A destination is not a state. The first version of this walked fifty-eight
+   * screens at whichever tab each opened on, and reported that exactly one
+   * screen offered more than one filled action — which was true, and narrower
+   * than it sounded. Study's Revise tab, which that walk never opened, offered
+   * two: the plan's own `Start —` and the standing studio entry above the tab
+   * strip. The measurement was right about what it measured and the word
+   * "destination" was doing work the sweep had not done.
+   */
+  const strip = await page.evaluate(STRIP);
+  for (const name of strip.slice(1)) {
+    at = `${screen}#${name}`;
+    const btn = page.getByRole('button', { name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }).first();
+    if (!(await btn.count())) continue;
+    await btn.click();
+    await page.waitForTimeout(600);
+    for (const r of await page.evaluate(WALLS)) rows.push({ screen: `${screen}#${name}`, ...r });
+    filled.push({ screen: `${screen}#${name}`, ...(await page.evaluate(FILLED)) });
+    tabs += 1;
+  }
 }
 
-console.log(`\nOPENED: ${opened} of ${dests.length}${missed.length ? `  (missed: ${missed.join(', ')})` : ''}`);
+console.log(`\nOPENED: ${opened} of ${dests.length}${missed.length ? `  (missed: ${missed.join(', ')})` : ''}, plus ${tabs} tabs within them`);
 console.log(`pageerrors: ${errs.length}${errs.length ? '\n  ' + errs.slice(0, 5).join('\n  ') : ''}`);
 
 const walls = rows.filter((r) => r.distinct === 1 && r.toggles === 0 && r.above === 0);
