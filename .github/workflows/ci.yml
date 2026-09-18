@@ -203,11 +203,49 @@ jobs:
       # function revoked from two role names instead of from PUBLIC, leaving
       # the grant both roles inherit untouched) would not have caught it here.
       #
-      # ubuntu-latest carries a Postgres server. The script finds it under
-      # /usr/lib/postgresql/*/bin and **exits 2 if it cannot**, which is the
-      # property that makes this step worth having: a check that quietly skips
-      # when its dependency is missing is the exact failure this repository
-      # keeps turning out to have had.
+      # The script finds the server under /usr/lib/postgresql/<major>/bin and
+      # **exits 2 if it cannot**, which is the property that makes this step
+      # worth having: a check that quietly skips when its dependency is missing
+      # is the exact failure this repository keeps turning out to have had. The
+      # major is the one in `config.toml`, installed by the step above — see
+      # its comment for why "whichever Postgres is here" was worse than none.
+      # The major the live project runs, which is not the one the runner ships.
+      #
+      # `ubuntu-latest` carries PostgreSQL 16. `supabase/config.toml` records
+      # the live project as 17. `check.sh` used to take the newest server
+      # installed, so this step's absence was not a skipped check — it was a
+      # check that ran, passed, and was about a database nobody is using. That
+      # is the shape this repository keeps finding: not silence, but a green
+      # tick for the wrong question.
+      #
+      # `check.sh` now reads the major from `config.toml` and refuses anything
+      # else, which is what makes this step safe to depend on: if the install
+      # below fails, is served a different version, or is quietly dropped, the
+      # policy step goes red and names the reason. It cannot fall back to 16.
+      #
+      # The explicit test after the install is so that a failure names *this*
+      # step. apt can succeed having installed nothing useful if the repository
+      # line is wrong for the runner's release, and a missing binary reported
+      # two steps later reads as a broken script rather than a missing package.
+      - name: Install the PostgreSQL the live project runs
+        run: |
+          want=$(sed -nE 's/^[[:space:]]*major_version[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' \
+            supabase/config.toml | head -1)
+          echo "::notice title=Postgres::config.toml asks for major $want."
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] \
+          https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install -y "postgresql-$want"
+          if [ ! -x "/usr/lib/postgresql/$want/bin/initdb" ]; then
+            echo "::error title=No PostgreSQL $want::apt reported success but /usr/lib/postgresql/$want/bin/initdb is not there."
+            exit 1
+          fi
+          "/usr/lib/postgresql/$want/bin/pg_config" --version
+
       - name: Check the database policies
         run: supabase/check.sh
 
