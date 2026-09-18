@@ -557,9 +557,89 @@ describe('deleteEverything', () => {
   it('empties every table the account owns, then signs out', async () => {
     const { deleteEverything, OWNED_TABLES } = await load();
     const said = await deleteEverything();
-    expect(harness.deleted().sort()).toEqual([...OWNED_TABLES].sort());
+    // Every entry but the ones a cascade covers, which are sent nothing on
+    // purpose — `privacy.test.ts` is what proves the cascade is really there.
+    const sent = OWNED_TABLES.filter((t) => t.column !== null).map((t) => t.table);
+    expect(harness.deleted().sort()).toEqual([...sent].sort());
     expect(harness.db.auth.signOut).toHaveBeenCalled();
-    expect(said).toMatch(/empty and you are signed out/i);
+    expect(said).toMatch(/your rows are gone and you are signed out/i);
+  });
+
+  it('sends nothing for a table a cascade already empties', async () => {
+    // `form_responses` has no column naming an account at all: it hangs off
+    // `forms` and goes when the form does. A delete keyed on `user_id` would
+    // have been an error, and an error the button reports as a failure.
+    const { deleteEverything, OWNED_TABLES } = await load();
+    await deleteEverything();
+    expect(OWNED_TABLES.some((t) => t.table === 'form_responses' && t.column === null)).toBe(true);
+    expect(harness.deleted()).not.toContain('form_responses');
+  });
+
+  it('names the column each table actually owns a row by', async () => {
+    /*
+     * The bug the old shape would have produced. Ownership is `user_id` in
+     * most of this schema and `owner` in `forms`, so a list of bare names
+     * deleted `.eq('user_id', id)` cannot empty a student's shared practice
+     * papers — PostgREST answers a missing column with an error, so the button
+     * would have reported failure rather than deleting the wrong rows, but the
+     * forms would still be there.
+     */
+    const { deleteEverything, OWNED_TABLES } = await load();
+    await deleteEverything();
+    const columnUsedFor = new Map(
+      harness.log
+        .filter((l) => l.op === 'eq')
+        .map((l) => [l.table, l.args[0] as string]),
+    );
+    for (const { table, column } of OWNED_TABLES) {
+      if (column === null) continue;
+      expect(columnUsedFor.get(table), table).toBe(column);
+    }
+    expect(columnUsedFor.get('forms')).toBe('owner');
+  });
+
+  it('empties the rooms before it leaves the classes', async () => {
+    /*
+     * The order in `OWNED_TABLES` is load-bearing and nothing about reading the
+     * list says so, which is why this is a test rather than a comment.
+     *
+     * PostgreSQL applies SELECT policies to the WHERE clause of a DELETE, and
+     * PostgREST only ever sends a filter. `messages` and `message_reactions`
+     * are readable through `private.in_class`, `group_members` through
+     * `private.group_in_my_class` — all three by way of `enrollments`. Delete
+     * the enrolment first and those three stop matching: `row_count` is 0,
+     * there is no error, and this function reports a deleted account over a
+     * room still holding every message the student sent.
+     *
+     * This fake database cannot see that — it answers whatever it is told to.
+     * `supabase/deletion.check.sql` walks the real policies in this order and
+     * proves both halves, including the wrong order failing. What this test
+     * protects is the order itself, against the next person who tidies the
+     * list into alphabetical.
+     */
+    const { deleteEverything } = await load();
+    await deleteEverything();
+    const order = harness.deleted();
+    const enrolments = order.indexOf('enrollments');
+    expect(enrolments).toBeGreaterThan(-1);
+    for (const needsIt of ['messages', 'message_reactions', 'group_members']) {
+      const at = order.indexOf(needsIt);
+      expect(at, needsIt).toBeGreaterThan(-1);
+      expect(at, `${needsIt} must go before enrollments`).toBeLessThan(enrolments);
+    }
+  });
+
+  it('leaves the rows other people are relying on, each with a reason', async () => {
+    // Groups you started, their tasks, and reports you filed. Deleting a group
+    // would take its shared tasks away from its other members, and a report is
+    // a record about somebody else — so these stay, and the reason is data
+    // rather than a comment because the privacy page prints it.
+    const { deleteEverything, KEPT_TABLES } = await load();
+    await deleteEverything();
+    for (const { table, why } of KEPT_TABLES) {
+      expect(harness.deleted(), table).not.toContain(table);
+      expect(why.length, table).toBeGreaterThan(80);
+    }
   });
 
   it('says plainly that this device keeps its own copy', async () => {
@@ -573,7 +653,7 @@ describe('deleteEverything', () => {
     // A deployment without reminders has no push queue to empty.
     const { deleteEverything } = await load();
     harness.errors.push_queue = "Could not find the table 'public.push_queue' in the schema cache";
-    expect(await deleteEverything()).toMatch(/empty and you are signed out/i);
+    expect(await deleteEverything()).toMatch(/your rows are gone and you are signed out/i);
   });
 
   it('names what it could not remove instead of claiming it did', async () => {

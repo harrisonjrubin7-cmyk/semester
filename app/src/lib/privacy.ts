@@ -23,6 +23,8 @@
  * is actually worried about.
  */
 
+import { KEPT_TABLES } from './cloud';
+
 export interface Claim {
   heading: string;
   /** One paragraph. No lists inside lists. */
@@ -151,6 +153,22 @@ export function whatSyncs(): string {
   return SYNC_GROUPS.map((g) => g.says).join('; ');
 }
 
+/** A support address, so somebody stuck has a person rather than a form. */
+export const SUPPORT = 'harrisonjrubin7@gmail.com';
+
+/**
+ * What a deleted account leaves behind, as one sentence.
+ *
+ * Read off `KEPT_TABLES` for the same reason `whatSyncs` is read off
+ * `SYNC_GROUPS`: the paragraph below is the one that was false for eleven
+ * tables, and a second hand-written copy of the reasons is how it got that
+ * way. A row added to that list appears here whether or not anybody
+ * remembers to come back to this file.
+ */
+export function whatDeletionLeaves(): string {
+  return KEPT_TABLES.map((t) => t.why).join(' ');
+}
+
 export const CLAIMS: Claim[] = [
   {
     heading: 'It works without an account',
@@ -205,7 +223,16 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'Deleting everything',
     body:
-      'Delete my account, in Settings, removes every row belonging to you: courses, deadlines, notes, grades, cards, reminders, the lot. It cascades in the database rather than marking things hidden. This device’s own copy is separate — signing out leaves it alone, and Erase from this device removes it.',
+      'Delete my account, in Settings, empties every table this app can reach on your behalf: your courses and their deadlines, your notes, grades and cards, your reminders and calendar feed, the record of what read them, your display name, which courses you said you were in, the messages and reactions you posted in class threads, the people you blocked, your group memberships, and any practice paper you shared along with the answers sent back to it. Deleting your messages leaves gaps in conversations other people are still reading, which is the deliberate half of a real choice: the alternative was leaving your words in their thread under a name nobody can look up. This device’s own copy is separate — signing out leaves it alone, and Erase from this device removes it.',
+  },
+  {
+    heading: 'What deleting leaves behind',
+    body:
+      'Two things survive that button, and it is better to know which than to be told “everything”. First, three kinds of row that are not only yours. '
+      + whatDeletionLeaves()
+      + ' Second, the account record itself: an app running in your browser may delete the rows it owns, and should not be able to delete the sign-in — so the address you signed up with outlives the button. Removing that takes an email to '
+      + SUPPORT
+      + ', done by hand and answered. Everything else named above really is deleted, row by row, rather than marked hidden.',
   },
   {
     heading: 'Which screens you open',
@@ -234,5 +261,3 @@ export const SYNCED_FIELDS = SYNC_GROUPS.flatMap((g) => g.keys);
 /** Fields that must never appear in what is uploaded. */
 export const NEVER_SYNCED = ['apiKey', 'anthropicKey', 'sessionToken', 'password'];
 
-/** A support address, so somebody stuck has a person rather than a form. */
-export const SUPPORT = 'harrisonjrubin7@gmail.com';

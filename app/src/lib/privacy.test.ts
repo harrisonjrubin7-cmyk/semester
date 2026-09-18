@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { CLAIMS, NEVER_SYNCED, SUPPORT, SYNCED_FIELDS, SYNC_GROUPS, whatSyncs, region } from './privacy';
+import {
+  CLAIMS,
+  NEVER_SYNCED,
+  SUPPORT,
+  SYNCED_FIELDS,
+  SYNC_GROUPS,
+  whatDeletionLeaves,
+  whatSyncs,
+  region,
+} from './privacy';
 import { USAGE_KEY } from './usage';
 import { DEFAULT_PERSISTED, initialEphemeral, pickPersisted, type State } from '../state/shape';
 
@@ -110,32 +119,223 @@ describe('where the account lives', () => {
 });
 
 describe('"delete my account" really means every row', () => {
-  it('names every table the app writes to', async () => {
-    // Written by hand rather than discovered, so a table added later and
-    // forgotten here would leave rows behind after somebody was told their
-    // account was empty. This is what catches that — and it caught the first
-    // version, whose four names were three guesses.
-    const { OWNED_TABLES } = await import('./cloud');
-    const src = await import('node:fs').then((fs) =>
-      fs.readFileSync(new URL('./cloud.ts', import.meta.url), 'utf8'),
-    );
-    const written = new Set(
-      [...src.matchAll(/\.from\('([a-z_]+)'\)/g)].map((m) => m[1]),
-    );
-    for (const table of written) {
-      expect(OWNED_TABLES, table).toContain(table);
+  /*
+   * Every module, not just `cloud.ts`.
+   *
+   * The first version of this guard read one file. `cloud.ts`'s own comment
+   * says "a table added later and forgotten here leaves rows behind —
+   * `privacy.test.ts` is what catches that", and it would have, for a table
+   * added to `cloud.ts`. Two other modules grew their own tables and were
+   * invisible to it: `classmates.ts` writes nine and `formshare.ts` two, none
+   * of them in `OWNED_TABLES`, so a student's display name, their enrolments,
+   * their group memberships and every message they had sent all survived
+   * "Delete my account". The guard was not wrong about what it checked. It
+   * checked one file out of three.
+   *
+   * What a table *is* comes off the migrations rather than a list here, for
+   * the same reason: a hand-kept list of tables is the thing that went stale.
+   */
+  const repo = new URL('../../../', import.meta.url);
+
+  /** Every `.from('x')` in the app's own source, with the file that wrote it. */
+  function tablesUsedByTheClient(): Map<string, string[]> {
+    const fs = require('node:fs') as typeof import('node:fs');
+    const path = require('node:path') as typeof import('node:path');
+    const root = path.join(repo.pathname, 'app/src');
+    const found = new Map<string, string[]>();
+    const walk = (dir: string) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) {
+          walk(full);
+          continue;
+        }
+        if (!/\.tsx?$/.test(e.name) || /\.test\.tsx?$/.test(e.name)) continue;
+        const src = fs.readFileSync(full, 'utf8');
+        for (const m of src.matchAll(/\.from\('([a-z_]+)'\)/g)) {
+          const where = path.relative(path.join(repo.pathname, 'app'), full);
+          found.set(m[1], [...(found.get(m[1]) ?? []), where]);
+        }
+      }
+    };
+    walk(root);
+    return found;
+  }
+
+  /** What the database actually has, read off the migrations. */
+  function schema(): { tables: Set<string>; views: Set<string> } {
+    const fs = require('node:fs') as typeof import('node:fs');
+    const path = require('node:path') as typeof import('node:path');
+    const dir = path.join(repo.pathname, 'supabase/migrations');
+    const tables = new Set<string>();
+    const views = new Set<string>();
+    for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.sql'))) {
+      const sql = fs.readFileSync(path.join(dir, f), 'utf8');
+      for (const m of sql.matchAll(/create table (?:if not exists )?public\.([a-z_]+)/g)) {
+        tables.add(m[1]);
+      }
+      for (const m of sql.matchAll(/create (?:or replace )?view public\.([a-z_]+)/g)) {
+        views.add(m[1]);
+      }
     }
+    return { tables, views };
+  }
+
+  /** The page's account of deletion, which is two paragraphs and reads as one. */
+  const deletionClaims = () =>
+    CLAIMS.filter((c) => /^(Deleting everything|What deleting leaves behind)$/.test(c.heading));
+
+  it('finds the tables it is supposed to be looking at', () => {
+    /*
+     * The control, and it is not decoration. A scan that reads no files, or a
+     * regex that matches nothing, reports every account perfectly deleted —
+     * which is exactly what the narrow version of this guard did for two
+     * whole modules. So: the scanner must find the writes we know are there,
+     * in the files we know write them, and the schema reader must find the
+     * tables we know exist. If either of these four goes quiet the assertions
+     * below mean nothing, and this is the test that says so.
+     */
+    const used = tablesUsedByTheClient();
+    expect([...used.keys()].length).toBeGreaterThan(15);
+    expect(used.get('courses')?.some((f) => f.endsWith('cloud.ts'))).toBe(true);
+    expect(used.get('messages')?.some((f) => f.endsWith('classmates.ts'))).toBe(true);
+    expect(used.get('forms')?.some((f) => f.endsWith('formshare.ts'))).toBe(true);
+
+    const { tables, views } = schema();
+    expect(tables.size).toBeGreaterThan(20);
+    expect(tables).toContain('courses');
+    expect(tables).toContain('groups');
+    // A view is not a table and cannot be deleted from. Reading them
+    // separately is what stops the guard demanding `published_forms` in
+    // `OWNED_TABLES`, where a delete would simply error.
+    expect(views).toContain('published_forms');
+    expect(tables).not.toContain('published_forms');
+  });
+
+  it('names every table any module writes to, not just cloud.ts', async () => {
+    const { OWNED_TABLES, KEPT_TABLES } = await import('./cloud');
+    // A table in either list is a decision somebody made. A table in neither
+    // is the bug this test exists for.
+    const accounted = new Set([
+      ...OWNED_TABLES.map((t) => t.table),
+      ...KEPT_TABLES.map((t) => t.table),
+    ]);
+    const { tables, views } = schema();
+    const missing: string[] = [];
+    for (const [table, files] of tablesUsedByTheClient()) {
+      // A view has no rows of its own; whatever it selects from is a table
+      // this loop sees in its own right.
+      if (views.has(table) && !tables.has(table)) continue;
+      expect(tables, `${table} (in ${files.join(', ')}) is in no migration`).toContain(table);
+      if (!accounted.has(table)) missing.push(`${table} (${[...new Set(files)].join(', ')})`);
+    }
+    expect(missing, 'tables the client writes that a deleted account keeps').toEqual([]);
   });
 
   it('claims no more than it deletes', async () => {
     const { OWNED_TABLES } = await import('./cloud');
-    expect(OWNED_TABLES.length).toBeGreaterThan(0);
+    const names = OWNED_TABLES.map((t) => t.table);
+    expect(names.length).toBeGreaterThan(0);
     // The page promises courses, notes, grades and reminders all go. Notes and
     // grades live inside the `state` row, so that row is the one that carries
     // the promise — its absence would make the claim false.
-    expect(OWNED_TABLES).toContain('state');
-    expect(OWNED_TABLES).toContain('courses');
-    expect(OWNED_TABLES).toContain('push_queue');
+    expect(names).toContain('state');
+    expect(names).toContain('courses');
+    expect(names).toContain('push_queue');
+    // And the page now names these by hand, because they are the ones a person
+    // is surprised to learn were being kept.
+    expect(names).toContain('profiles');
+    expect(names).toContain('messages');
+    expect(names).toContain('forms');
+  });
+
+  it('deletes each table by the column that actually owns a row', async () => {
+    /*
+     * Ownership is spelled four different ways in this schema, and a list of
+     * bare names deleted `.eq('user_id', id)` is only right while it is
+     * spelled one. `forms.owner`, `groups.created_by`, `group_tasks.created_by`
+     * and `reports.reporter` are the four, so a name appended to the old list
+     * would have sent a delete against a column that is not there.
+     *
+     * Read off the migrations rather than asserted against a copy of them.
+     */
+    const { OWNED_TABLES } = await import('./cloud');
+    const fs = require('node:fs') as typeof import('node:fs');
+    const path = require('node:path') as typeof import('node:path');
+    const dir = path.join(repo.pathname, 'supabase/migrations');
+    const sql = fs
+      .readdirSync(dir)
+      .filter((n) => n.endsWith('.sql'))
+      .map((n) => fs.readFileSync(path.join(dir, n), 'utf8'))
+      .join('\n');
+
+    for (const { table, column, cascadesFrom } of OWNED_TABLES) {
+      const body = sql.match(
+        new RegExp(`create table (?:if not exists )?public\\.${table} \\(([^;]*?)\\n\\)`, 's'),
+      )?.[1];
+      if (!body) continue; // Not in any migration; the test above is what says so.
+      if (column === null) {
+        // Nothing is sent for this one, so its parent has to be in the list
+        // and the cascade has to be in the schema.
+        expect(cascadesFrom, table).toBeTruthy();
+        expect(OWNED_TABLES.map((t) => t.table), `${table} cascades from`).toContain(cascadesFrom);
+        expect(body, `${table} cascade`).toMatch(
+          new RegExp(`references public\\.${cascadesFrom} on delete cascade`),
+        );
+        continue;
+      }
+      expect(body, `${table}.${column}`).toMatch(new RegExp(`^\\s*${column}\\s`, 'm'));
+    }
+  });
+
+  it('gives every kept table a reason, and prints it on the page', async () => {
+    /*
+     * The other half of the decision. These are rows another person is relying
+     * on, or a record about another person, so "delete everything" cannot
+     * include them — which makes the reason part of the product, not a code
+     * comment. An entry with no sentence, or a sentence the page does not
+     * print, is the broad-false-claim failure coming back in a smaller shape.
+     */
+    const { KEPT_TABLES } = await import('./cloud');
+    expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
+      'group_tasks',
+      'groups',
+      'reports',
+    ]);
+    const said = deletionClaims().map((c) => c.body).join(' ');
+    for (const { table, why } of KEPT_TABLES) {
+      expect(why.length, table).toBeGreaterThan(80);
+      expect(said, table).toContain(why);
+    }
+    expect(said).toContain(whatDeletionLeaves());
+  });
+
+  it('stops saying the two things about deletion that were not true', () => {
+    /*
+     * The defect, in the page's own words. It claimed deletion "cascades in
+     * the database" — that cascade hangs off removing the `auth.users` row,
+     * which is the one thing a browser holding a publishable key cannot do, so
+     * it has never once fired. And it claimed "every row belonging to you"
+     * while eleven tables were in no list at all.
+     *
+     * A narrower true claim beats a broad false one, so what replaces it has
+     * to name the account record it cannot reach, and offer the address that
+     * can.
+     */
+    // Two paragraphs rather than one, because the sentence that matters most
+    // here — that some rows stay — was the fifteenth line of twenty-seven when
+    // this was a single claim. Read as one thing, since a reader does.
+    const claims = deletionClaims();
+    expect(claims.length).toBe(2);
+    const said = claims.map((c) => c.body).join(' ');
+    expect(said).not.toMatch(/cascades in the database/i);
+    expect(said).not.toMatch(/every row belonging to you/i);
+    expect(said).toMatch(/account record/i);
+    expect(said).toContain(SUPPORT);
+    // The named tables a person would not have guessed were being kept.
+    for (const word of ['display name', 'messages', 'blocked', 'group', 'practice paper']) {
+      expect(said, word).toContain(word);
+    }
   });
 
   it('names the tables whose SQL shipped before their client half', async () => {
@@ -148,8 +348,9 @@ describe('"delete my account" really means every row', () => {
      * keeps answering after the account is gone.
      */
     const { OWNED_TABLES } = await import('./cloud');
+    const names = OWNED_TABLES.map((t) => t.table);
     for (const t of ['notes', 'tasks', 'appointments', 'sittings', 'calendar_feeds']) {
-      expect(OWNED_TABLES, t).toContain(t);
+      expect(names, t).toContain(t);
     }
   });
 });
