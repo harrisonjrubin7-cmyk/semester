@@ -180,7 +180,60 @@ Real, none of it urgent, and the last one has measurements attached.
 | 13 | Data-access audit log and a formal incident-response process | **Open** — currently a personal same-day-notification commitment |
 | 14 | A staging environment | **Open** — deployment is push-to-live on every commit |
 | 15 | Multi-vendor AI redundancy | **Partly** — `lib/assistant.ts` already routes to OpenAI as a second provider, and `ask()` is the one branch in the app that knows there are two. The open part is a *policy*: which vendor answers when, and who decides |
-| 16 | An app-wide accessibility sweep | **Open** — the 93-of-166 figure is from one sampled screen. `npm run sweep:targets` and `npm run sweep:contrast` are the tools; both need Playwright pointed at the container's Chromium (`.claude/skills/run`) |
+| 16 | An app-wide accessibility sweep | **Contrast: taken, and the number is below. Targets: still open.** Both tools need Playwright pointed at the container's Chromium (`.claude/skills/run`) |
+
+### 16 · The contrast sweep, across all sixty
+
+The plan said *"the 93-of-166 contrast finding is from one sampled screen — the
+true number across all 60 is unknown"*, and it was worse than that: the
+instrument could not have answered. `scripts/contrast-sweep.mjs` had six screens
+written out by hand, so every contrast figure in this repository was a figure
+about a tenth of the app, printed under a `FINDINGS:` heading with nothing
+beside it to say so. Its sibling `targets-sweep.mjs` had walked the registry
+from the day it was written; the two disagreed about what this app contains and
+neither said so. Both read one list now, and every run prints how many of the
+sixty it opened.
+
+**The number, taken 17 September 2026.** Every destination, all thirteen
+grounds, both widths, resting states, one navigation — 1,560 passes, **64,944
+elements measured**, 60 of 60 destinations opened and each one proved from what
+it rendered rather than from the address the sweep had just written.
+
+**88 findings, which are four elements on two screens**, and the two are not
+the same kind of thing:
+
+- **26 of them were the probe.** `screens/Ahead.tsx` holds a `·` at
+  `color: transparent` on purpose — a spacer keeping the width of the column
+  that carries a day's due-dot, so rows do not shift sideways as days gain and
+  lose one. Invisible text has no pair and cannot fail, and the audit was
+  scoring it 1.00:1 on every ground: the worst number it can print, for a run
+  nobody can see. It is counted apart now, beside the gradient and skipped
+  counts that were already there.
+- **62 of them were the map credit, and it is the mistake `CLAUDE.md` keeps
+  a standing warning about.** The credit's ink was `--app-faint`, which follows
+  the ground and turns *dark* on a light one, while its box was a fixed dark
+  `rgba(10, 11, 14, 0.72)` — 28% transparent, so on a light ground it
+  composited to a mid grey. Dark ink on mid grey: **1.45:1** on `industry`,
+  1.50 on `fog`, and 3.67:1 even on `ink`, which is the ground it was
+  presumably chosen against. app.css's own comment says why this one matters
+  more than most — *"the credit is the licence"*. Both ends of the pair are
+  pinned to the box now rather than to the ground, at 6.01:1 and 10.30:1.
+
+**Two things this run could not close, recorded rather than rounded off:**
+
+- One pass of the 1,560 (`industry`, phone) could not prove it arrived and
+  measured nothing. Which screen is not in that run's output, because naming
+  the screen in that line landed after the run had started. A re-run names it.
+- Two `useStore must be used inside StoreProvider` page errors appeared during
+  the 780-pass phone walk and did not reappear — not in the 780 desktop passes,
+  not in a 240-screen replay across four grounds, not with `src/` being written
+  under the dev server while it walked. They are unattributed, and guessing at
+  a cause would be worse than saying so. The sweep records the screen and the
+  ground with a page error now, so the next one names itself.
+
+**Still open:** the same breadth for `sweep:targets`. It walks all sixty
+destinations as of this change, but the 93-of-166 figure it was written to
+replace has not been re-taken across them and reported here.
 
 ### 17 · The UI pass · mixed, and two of the five numbers have moved
 

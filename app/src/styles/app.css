@@ -2470,21 +2470,49 @@ a:hover {
 .leaflet-tile-pane {
   filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.92) saturate(0.75);
 }
+/*
+ * The credit, and why it is the one place here painted in fixed ink.
+ *
+ * It used to be `--app-faint` on `rgba(10, 11, 14, 0.72)`, which is the
+ * mistake CLAUDE.md records against `lib/look.ts` twice, in a third place:
+ * a fade measured against the one surface that flatters it. The ink is a
+ * token and follows the ground — on a light ground it is a *dark* ink — but
+ * the box under it was fixed dark and 28% transparent, so it composited
+ * against whatever the tiles and `--app-panel` put behind it. Measured, at
+ * every one of the thirteen grounds and both widths:
+ *
+ *     ink         rgba(236,238,242,.42) on rgb(12,14,17)   3.67:1
+ *     industry    rgba(29,31,32,.52)    on rgb(76,77,80)   1.45:1
+ *     fog         rgba(20,23,28,.52)    on rgb(72,74,78)   1.50:1
+ *
+ * Dark ink on a mid grey, on all six light grounds, and short of 4.5:1 on
+ * the seven dark ones too. The comment below already says why that matters
+ * more here than almost anywhere: the credit is the licence.
+ *
+ * The surface under this text is not the app's ground — it is a box over map
+ * tiles, and the tiles are filtered the same way whatever ground is set. So
+ * the ground's fades are the wrong instrument for it, and both ends of the
+ * pair are pinned instead: an opaque box, so nothing shows through and
+ * changes the answer, and ink chosen against that box. 6.01:1 for the words
+ * and 10.30:1 for the link, which is quiet against a map and not a guess —
+ * `SWEEP_SCOPE=all SWEEP_SCREENS=maps npm run sweep:contrast` re-takes all
+ * twenty-six readings in about a minute.
+ */
 .leaflet-control-attribution {
-  background: rgba(10, 11, 14, 0.72) !important;
-  color: var(--app-faint) !important;
+  background: #0e1014 !important;
+  color: #8b919c !important;
   font-size: 10px;
 }
 .leaflet-control-attribution a {
-  color: var(--app-dim) !important;
+  color: #b9bfc9 !important;
   /*
    * Underlined, because colour alone is all that told it apart.
    *
-   * The link is `--app-dim` and the words either side are `--app-faint` —
-   * two fades of the same ink, measuring 1.96:1 against each other. WCAG
-   * 1.4.1 asks for 3:1 or a second signal, and lifting the colour far enough
-   * would make the credit louder than the map it credits. So: the second
-   * signal.
+   * The link and the words either side are two fades of the same ink,
+   * measuring 1.71:1 against each other — 1.96:1 before the pair above was
+   * pinned, and under 3:1 either way. WCAG 1.4.1 asks for 3:1 or a second
+   * signal, and lifting the colour far enough would make the credit louder
+   * than the map it credits. So: the second signal.
    *
    * `!important` for the same reason the colour above already needs it, not
    * as a shortcut. `leaflet.css` is imported by the map component and lands
