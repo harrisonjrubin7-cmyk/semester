@@ -107,6 +107,13 @@ So the open piece is the "what's due" merge, and `.claude/skills/simplify` is
 the pass written for it. It is a real refactor, not a tidy-up, and it is its own
 change.
 
+**And it landed on 17 September, in `80fbc5c`** — "The question that was built
+twice and kept once". `#/ahead` and `#/tonight` are two of Today's four tabs
+now, and the registry is **fifty-eight**, not sixty. Noted here because this
+file was checked at `88aa741` and the paragraphs above still count to sixty:
+the registry is the number, and anything quoting it goes stale the moment a
+merge lands. Every figure in item 16 below is a figure about fifty-eight.
+
 ### 5 · The assistant-button overlap · **Landed**
 
 Already fixed, and guarded. `--bottom-chrome` is measured rather than assumed
@@ -180,7 +187,7 @@ Real, none of it urgent, and the last one has measurements attached.
 | 13 | Data-access audit log and a formal incident-response process | **Open** — currently a personal same-day-notification commitment |
 | 14 | A staging environment | **Open** — deployment is push-to-live on every commit |
 | 15 | Multi-vendor AI redundancy | **Partly** — `lib/assistant.ts` already routes to OpenAI as a second provider, and `ask()` is the one branch in the app that knows there are two. The open part is a *policy*: which vendor answers when, and who decides |
-| 16 | An app-wide accessibility sweep | **Contrast: taken, and the number is below. Targets: still open.** Both tools need Playwright pointed at the container's Chromium (`.claude/skills/run`) |
+| 16 | An app-wide accessibility sweep | **Taken, both instruments, every destination — the numbers are below.** Both tools need Playwright pointed at the container's Chromium (`.claude/skills/run`) |
 
 ### 16 · The contrast sweep, across all sixty
 
@@ -231,9 +238,45 @@ the same kind of thing:
   a cause would be worse than saying so. The sweep records the screen and the
   ground with a page error now, so the next one names itself.
 
-**Still open:** the same breadth for `sweep:targets`. It walks all sixty
-destinations as of this change, but the 93-of-166 figure it was written to
-replace has not been re-taken across them and reported here.
+### The targets half, taken 18 September 2026
+
+`sweep:targets` walks every destination on a phone and a desktop, with five
+controls of known size measured by the same code before each tier so a broken
+probe fails the run instead of reporting a figure.
+
+| | Phone 420×900 | Desktop 1280×900 |
+| --- | --- | --- |
+| destinations opened | **58 / 58** | **58 / 58** |
+| under 44px — 2.5.5, an aim | 810 / 1,480 (55%) | 1,425 / 2,082 (68%) |
+| under 24px — 2.5.8, the bar that is a failure | 3 | 3 |
+| text under 12px | 1,161 / 3,067 | 1,471 / 3,739 |
+
+**The three under 24px are the same three on both tiers, and none of them is a
+control anybody can miss:** Leaflet's map container and its two zoom buttons,
+each reading `0x0 BLOCKED under role=status` because `components/LiveMap.tsx`
+paints a panel over them at z-index 1200 saying the map needs a connection.
+They read as failures because a covered control has no hit area at all, and 0
+is under 24. Counting them is the instrument being careful rather than wrong —
+it names the cover, and naming the cover is what tells a deliberate overlay
+from a fault. **Genuine failures of 2.5.8: none, on either tier.**
+
+`COMPLETION-PLAN.md` §9 said those three were "counted in neither column" and
+printed 0 in the table. The tool does count them, and always has —
+`targets-sweep.mjs` scores a blocked control by its hit size. The conclusion
+there was right and the sentence under it was not; both are corrected there.
+
+**The run found a defect in the instrument, which is the second time this
+month the arrival check has earned itself.** The first tier came back *"57 of
+58 destinations opened, 1 not reached: home (saw Semester)"*. `home` is the one
+screen whose component is a function of the *navigation* rather than of
+`state.screen` — `lib/chrome.ts`'s `homeShape` returns four shapes — and
+`targets-sweep.mjs` seeds `nav: 'springboard'` on purpose, which draws the
+springboard and its "Semester" heading. Held to the registry's label ("Today")
+the check called it unreached and skipped it: one destination silently out of
+the walk, dropped by the check written to stop screens being dropped silently.
+All four headings are measured and recorded now (Today · Everything · Semester
+· Guides), and the figures above are the re-run with `home` back in it — the
+phone tier moved from 799/1,454 to 810/1,480 by its return.
 
 ### 17 · The UI pass · mixed, and two of the five numbers have moved
 

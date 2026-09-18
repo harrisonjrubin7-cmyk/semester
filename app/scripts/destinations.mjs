@@ -83,6 +83,32 @@ export function destinations() {
  * quietly fell back, "the heading is non-empty" says fine.
  */
 export const PROOF = {
+  /*
+   * `home` is the one destination whose screen is a function of the
+   * *navigation* rather than of `state.screen` — App.tsx says exactly that,
+   * and `lib/chrome.ts`'s `homeShape` returns the four shapes it can take.
+   * Four shapes, four headings, measured under every navigation rather than
+   * reasoned about:
+   *
+   *     tabs · shelves · workspace   Today
+   *     feed                         Everything
+   *     springboard                  Semester
+   *     guides                       Guides
+   *
+   * `targets-sweep.mjs` seeds `nav: 'springboard'` deliberately, so it draws
+   * the third of those — and an arrival check holding the screen to the
+   * registry's label alone read "Semester", called it a screen it had not
+   * reached, and skipped it. One destination of the fifty-eight dropped
+   * silently out of that walk, by the check written to stop screens being
+   * dropped silently. Its own run is what caught it: `57 of 58 destinations
+   * opened, 1 not reached: home (saw "Semester")`, which is the line this
+   * table exists to make readable.
+   *
+   * A list rather than "any non-empty heading", for the reason under it: a
+   * screen that falls back to Today has to fail, and three of these four are
+   * the headings it would fall back *to*.
+   */
+  home: { h1: ['Today', 'Everything', 'Semester', 'Guides'] },
   equations: { h1: 'Equations' },
   import: { h1: 'New course' },
   yes: { h1: 'YES' },
@@ -102,7 +128,9 @@ export function proofSelector(screen) {
  * Did the page arrive at this screen?
  *
  * `seen` is what the page was asked for: `{ h1, css }`, the heading text and
- * whether `proofSelector`'s element is there. Read from what was rendered,
+ * whether `proofSelector`'s element is there. A screen may have more than one
+ * heading it legitimately draws — see `home` above — and then any of them is
+ * an arrival and nothing else is. Read from what was rendered,
  * never from `location.hash` — the hash is the value the sweep just wrote, and
  * a check that reads back its own write is mistake 2 in
  * `contrast-sweep.mjs`'s header: it agrees with itself on every pass,
@@ -111,6 +139,7 @@ export function proofSelector(screen) {
 export function arrived(screen, label, seen) {
   const want = PROOF[screen];
   if (want?.css) return Boolean(seen?.css);
-  const heading = want?.h1 ?? label;
-  return String(seen?.h1 ?? '').trim().toLowerCase() === String(heading).trim().toLowerCase();
+  const headings = want?.h1 === undefined ? [label] : [want.h1].flat();
+  const got = String(seen?.h1 ?? '').trim().toLowerCase();
+  return headings.some((h) => String(h).trim().toLowerCase() === got);
 }

@@ -102,13 +102,20 @@
      * nothing that can fail — the ratio against any ground is 1.00:1, which
      * is the worst number this file can print, for a run nobody can see.
      *
-     * `screens/Ahead.tsx` has one on purpose: a `·` holding the width of the
-     * column that carries a day's due-count dot, so the rows do not shift
-     * sideways as days gain and lose one. The first sweep that ever opened
-     * that screen reported it on all thirteen grounds at both widths — 26 of
-     * that run's 88 findings, every one of them the same invisible spacer,
-     * and every one of them an instruction to go and fix something that is
-     * working.
+     * The case it was written for: `screens/Ahead.tsx` held one on purpose — a
+     * `·` keeping the width of the column that carries a day's due-count dot,
+     * so rows did not shift sideways as days gained and lost one. The first
+     * sweep that ever opened that screen reported it on all thirteen grounds
+     * at both widths: 26 of that run's 88 findings, every one the same
+     * invisible spacer, every one an instruction to go and fix something that
+     * was working.
+     *
+     * That screen has since merged into Today's tabs and the spacer went with
+     * it, so the rule now guards a recurrence rather than a live case — which
+     * is worth saying plainly rather than leaving a citation that resolves to
+     * nothing. The rule is not about that one `·`: a width held by invisible
+     * text is an ordinary thing to write, and the next one would be scored
+     * 1.00:1 on every ground exactly as this one was.
      *
      * The `background-clip: text` case above is the same idea a step earlier:
      * a glyph whose colour is its background rather than its `color`. Counted
