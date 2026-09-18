@@ -822,6 +822,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // memory after. It is still never copied into storage — an account holds a
   // flag saying it wants the sample, not 330 KB of somebody else's semester.
   const [seed, setSeed] = useState<CourseModule[]>([]);
+  /**
+   * Whether the sample has finished arriving — landed, or failed.
+   *
+   * Not the same question as `seed.length > 0`, and the difference is the
+   * whole point: before the fetch settles, an empty `seed` means "not yet",
+   * and after it fails it means "never". Only one of those is worth waiting
+   * on, and the effect that settles the open-course pointer has to tell them
+   * apart or it stalls forever on a device with no connection.
+   */
+  const [sampleIn, setSampleIn] = useState(false);
   useEffect(() => {
     if (!state.sample || seed.length > 0) return;
     let live = true;
@@ -842,7 +852,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
        * account actually holds are unaffected, and the next time the toggle is
        * touched the fetch is tried again for real.
        */
-      .catch(() => {});
+      .catch(() => {})
+      // Either way the question has been answered, and the pointer below can
+      // stop waiting on it.
+      .finally(() => {
+        if (live) setSampleIn(true);
+      });
     return () => {
       live = false;
     };
@@ -937,14 +952,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * or a deletion can leave either pointer aimed at a course this catalogue
    * does not hold. The guide screen then renders an empty guide and the
    * course screen has nothing to read at all. One place fixes it.
+   *
+   * ## Not while the sample is still on its way
+   *
+   * This is also the effect a deep link lands in front of, and it used to
+   * answer before it could know. `#/course/bus` names a sample course; the
+   * sample is four dynamic imports that are deliberately not awaited; so on a
+   * cold open — a refresh, a bookmark, a link somebody sent, an installed copy
+   * reopening — there is one render where `allModules` is the account's own
+   * courses alone. The catalogue is not empty, `bus` is not in it *yet*, and
+   * this rewrote the pointer to whatever course was to hand. The sample landed
+   * a moment later carrying `bus`, and nothing was pointing at it any more.
+   *
+   * Measured against an account holding one hand-made course: `#/course/bus`
+   * opened cold drew that hand-made course instead — no error, no empty state,
+   * just somebody else's course under BUS 1600's own address, and the address
+   * rewritten to match. Two times out of two.
+   *
+   * `sampleIn` is the difference between "not in the catalogue" and "not in
+   * the catalogue yet", and waiting for it costs nothing: a pointer at a
+   * course that has not arrived is a pointer at the course that is arriving.
+   * `state/deeplink.test.tsx` holds both halves, the wait and the settling.
    */
+  const awaitingSample = state.sample && !sampleIn;
   useEffect(() => {
-    if (catalog.empty) return;
+    if (catalog.empty || awaitingSample) return;
     const first = catalog.courses[0].id;
     const guideId = catalog.byId[state.guideId] ? undefined : first;
     const courseId = catalog.byId[state.courseId] ? undefined : first;
     if (guideId || courseId) dispatch({ type: 'settleCourse', guideId, courseId });
-  }, [catalog, state.guideId, state.courseId]);
+  }, [catalog, state.guideId, state.courseId, awaitingSample]);
 
   // Reminders. These toggles existed from the first build and did nothing —
   // no permission was ever asked for and no notification was ever shown. They
