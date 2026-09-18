@@ -117,6 +117,7 @@
 
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { join, extname, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -434,12 +435,49 @@ function style(page, id, css) {
 
 let chromium;
 try {
-  ({ chromium } = await import('playwright'));
-} catch {
+  /*
+   * An explicit path first, the way `scripts/contrast-sweep.mjs` does it.
+   *
+   * That file is the other half of this measurement and it learned this the
+   * hard way, at length: playwright is deliberately not a dependency of this
+   * project, so a bare `import 'playwright'` resolves only where somebody has
+   * installed it globally — and `NODE_PATH` will not help, because the ESM
+   * resolver ignores it and the import then fails exactly as if playwright
+   * were absent.
+   *
+   * The fix was written once and never reached here, which meant this script
+   * could not run at all on the machine `.claude/skills/run` describes, or in
+   * CI, or in the container the sweeps are driven from. That matters more than
+   * a missing convenience: this is the half that can see text on a gradient,
+   * and `contrast-sweep.mjs` reports two thousand elements a pass that it
+   * declines to measure for exactly that reason and points here for them. A
+   * hole named in one script's output and unreachable in the other's is a hole
+   * nobody was ever going to look in.
+   *
+   * `require` rather than `import`: playwright is CommonJS, and ESM refuses a
+   * directory outright (ERR_UNSUPPORTED_DIR_IMPORT) instead of reading the
+   * entry point out of its package.json.
+   */
+  const from = process.env.PAINT_PLAYWRIGHT || process.env.SWEEP_PLAYWRIGHT;
+  if (from) {
+    const { createRequire } = await import('node:module');
+    ({ chromium } = createRequire(import.meta.url)(from));
+  } else {
+    ({ chromium } = await import('playwright'));
+  }
+} catch (e) {
   console.error(
-    'This needs Playwright, which is not a dependency of the app.\n' +
-      '  npx playwright install chromium\n' +
-      'then run it again.',
+    'playwright is not resolvable, and it is deliberately not a dependency of\n' +
+      'this project. Either install it globally:\n\n' +
+      '  npx playwright install chromium\n\n' +
+      'or install it in a scratch directory and name that copy, which is what\n' +
+      '`scripts/contrast-sweep.mjs` takes and what the container is set up for:\n\n' +
+      '  mkdir -p /tmp/drive && cd /tmp/drive\n' +
+      '  echo \'{"name":"drive","private":true,"type":"module"}\' > package.json\n' +
+      '  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install playwright\n' +
+      '  cd - && PAINT_PLAYWRIGHT=/tmp/drive/node_modules/playwright node scripts/paint.mjs\n\n' +
+      'NODE_PATH will not do it — the ESM resolver ignores it.\n\n' +
+      String(e).slice(0, 200),
   );
   process.exit(2);
 }
@@ -452,10 +490,21 @@ const PREFIX = await base();
 const server = await serve(PREFIX);
 const B = `http://127.0.0.1:${PORT}${PREFIX}`;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
+/*
+ * The browser, found the way the other half finds it.
+ *
+ * `channel: 'chromium'` asks for a system install, which is not what is here:
+ * this container keeps a Chromium at a fixed path and playwright's own
+ * download is skipped. `contrast-sweep.mjs` defaults to that path and falls
+ * back to letting `launch` decide, so the same command works here and on a
+ * laptop where playwright has fetched its own. Same default, same variable
+ * name pattern, so one habit works on both scripts.
+ */
+const CHROMIUM = process.env.CHROMIUM || process.env.SWEEP_CHROMIUM || '/opt/pw-browsers/chromium';
 const browser = await chromium.launch(
-  process.env.CHROMIUM
-    ? { executablePath: process.env.CHROMIUM, args: ['--no-sandbox'] }
-    : { channel: 'chromium' },
+  existsSync(CHROMIUM)
+    ? { executablePath: CHROMIUM, args: ['--no-sandbox'] }
+    : { args: ['--no-sandbox'] },
 );
 
 const findings = [];

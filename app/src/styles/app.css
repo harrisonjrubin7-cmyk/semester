@@ -212,6 +212,12 @@
 
   --font-display: 'Cinzel', 'Barlow Condensed', Georgia, serif;
 
+  /* The primary button's elevation. Overridden per ground by `lib/look.ts`,
+     like `--chrome-ink` above and for a sharper reason: the third layer here
+     is a 34px blur of half-black, which is invisible on a dark ground and a
+     grey wash over the next paragraph on a light one. Two runs of text were
+     measured under it below AA on Fog. Defined here so the sheet is complete
+     before any JavaScript runs; the value below is the dark-ground one. */
   --glow: 0 0 0 1px rgba(212, 217, 226, 0.2), 0 2px 6px rgba(0, 0, 0, 0.5),
     0 14px 34px rgba(0, 0, 0, 0.45);
 }
