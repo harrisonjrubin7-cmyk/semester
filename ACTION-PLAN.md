@@ -394,8 +394,37 @@ phone tier moved from 799/1,454 to 810/1,480 by its return.
   two are converted (`screens/call/Lobby.tsx`, `components/ForThis.tsx`) and
   two are the call room's dense chrome. `components/shell/rows.shape.test.ts`
   keeps the retyping from starting again.
-- **Counts on calendar day-dots — open.** Not checked in this pass.
-- **Visual hierarchy in the Study button wall — open.** Not checked in this pass.
+- **Counts on calendar day-dots — closed.** `lib/monthgrid.ts` gives a day with
+  more than one thing on it a number rather than an unlabelled cluster, which is
+  what `COMPETITION.md` §7 records. This line said "not checked in this pass"
+  for one pass longer than it was true.
+- **Visual hierarchy in the Study button wall — closed, and the second half was
+  the real one.** The row of six was deleted in PR #503, which found they were
+  aliases rather than a hierarchy problem. What `COMPETITION.md` §8 then left
+  open — *"the hierarchy is local rather than designed — each section decided
+  its own emphasis"* — turned out to be measurable and true, in one place.
+
+  **Measured across all fifty-eight destinations at phone width, from what
+  Chromium drew: zero walls, and one screen offering more than one filled
+  action.** That screen was Study, with five — the studio entry, plus a
+  `tone="primary"` recommendation in each of four course cards. Because
+  `lib/nextstep.ts` gives a course with nothing started the same answer as the
+  next one, the four were not four offers: they were the words **Start reading**
+  in filled white, four times, down one phone screen. Each card was locally
+  right and the screen had no answer at all, which is the sentence above stated
+  as a number.
+
+  The recommendation is `btn-secondary` now — still first in its card, still
+  full width at 44px, still above the small uppercase alternatives. One word,
+  and the screen went from five filled actions to one.
+
+  `scripts/wallsweep.mjs` is the instrument, and it got four things wrong before
+  it got this right: it flagged the app's own tab bar (which marks the current
+  tab with `aria-current`), it flagged a correctly-ranked row whose primary was
+  one element outside the parent it was looking at, and — the one that would
+  have done damage — it reported four new walls the moment the fix landed,
+  because it knew only the top rung and not the middle. A probe that reads
+  `btn-secondary` as unranked argues for putting five filled buttons back.
 - **"Default new users to the tab bar" — already answered, differently.** The
   app does not present six navigations as equal choices: it opens as `guides`,
   and `lib/types.ts` says why — it is the only one that treats a *course* as the

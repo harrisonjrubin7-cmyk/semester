@@ -87,6 +87,24 @@ jobs:
           SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
         run: npm run sweep:contrast 2>&1 | tee /tmp/contrast.txt
 
+      # A minute on the same browser and the same dev server, so it rides here
+      # rather than paying for its own runner, its own install and its own
+      # thirty seconds of Vite. `if: always()` because a contrast finding above
+      # says nothing about button hierarchy and skipping this on that failure
+      # would mean one red night hides the other measurement entirely.
+      #
+      # What it watches: a row of four or more buttons with nothing ranked
+      # above it, and a screen offering more than one filled action at once.
+      # The second is what `COMPETITION.md` §8 left open — "the hierarchy is
+      # local rather than designed" — and it is invisible from inside any one
+      # section, which is why no unit test was ever going to find it.
+      - name: Walls
+        if: always()
+        working-directory: app
+        env:
+          SWEEP_PLAYWRIGHT: /tmp/sweep/node_modules/playwright
+        run: npm run sweep:walls 2>&1 | tee /tmp/walls.txt
+
       # Kept whether the step passed or failed: a green run's coverage numbers
       # are how you notice the sweep quietly measuring less than it used to.
       - name: Keep the output
@@ -96,5 +114,6 @@ jobs:
           name: contrast-sweep
           path: |
             /tmp/contrast.txt
+            /tmp/walls.txt
             /tmp/vite.log
           retention-days: 30

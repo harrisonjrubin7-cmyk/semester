@@ -340,7 +340,7 @@ This closes an item `ACTION-PLAN.md` left explicitly unchecked — Tier 3 item 1
 lists "counts on calendar day-dots" as *"open — not checked in this pass"*. It
 is checked now, and it is closed.
 
-### 8 · Use the button-wall fix as the landing spot for new features · **Partly — the premise has moved; the design pass has not**
+### 8 · Use the button-wall fix as the landing spot for new features · **Closed — and the part this section held open was the real one**
 
 > The UI audit flagged the Study screen's six-plus equal-weight buttons as
 > needing hierarchy. New AI features should surface there — one primary action
@@ -351,11 +351,32 @@ The premise has partly moved. `screens/Study.tsx` is not flat: it draws a
 its `ActionButton`s already carry `tone="primary"` against plainer siblings. So
 "six-plus buttons of equal weight" is not what the screen renders today.
 
-What is still true is that the hierarchy is local rather than designed — each
-section decided its own emphasis — and that is a real screen-level design pass,
-not a nit. It stays open. The advice attached to it is worth keeping either
-way, and this change follows it: nothing built here added a button to that
-screen.
+What was still true when this was written is that the hierarchy was local
+rather than designed — each section decided its own emphasis — and that is a
+real screen-level design pass, not a nit.
+
+**It is done, and the sentence above turned out to be checkable.** Emphasis is
+local by construction: a section can only see itself. So the question was asked
+of the rendered page instead — how many filled actions does one screen offer at
+once? — across all fifty-eight destinations at phone width.
+
+**Fifty-seven screens offered one or none. Study offered five.** The studio
+entry, and then a `tone="primary"` recommendation in each of four course cards.
+Each card was right on its own terms: `lib/nextstep.ts` computes that
+recommendation and the card is where it belongs. But `nextstep` gives a course
+with nothing started the same answer as the next one, so a term of four courses
+drew the words **Start reading** in filled white four times under a fifth filled
+button saying something else. That is the audit's "six-plus buttons of equal
+weight", one tier up from the row PR #503 emptied — and this section's own
+paragraph naming the cause is what said where to look.
+
+The recommendation is `btn-secondary` now. Inside the card it is still first and
+still widest, with its reason under it and the alternatives below in small
+uppercase; across the screen there is one filled action. `scripts/wallsweep.mjs`
+is what measured it and what keeps it, nightly, beside the contrast sweep.
+
+The advice attached to this item is worth keeping either way, and both changes
+follow it: nothing built here added a button to that screen.
 
 ### 9 · Study Syllabuddy's ambassador mechanics · **Not a code item**
 

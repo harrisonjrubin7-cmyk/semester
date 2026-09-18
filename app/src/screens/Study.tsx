@@ -800,9 +800,32 @@ export function Study() {
 
                 {step && (
                   <>
+                    {/*
+                      Filled within a card is a claim about the screen, and
+                      four cards cannot all make it.
+
+                      This was `tone="primary"`, which is right about one card
+                      and wrong about the screen the moment there are two: a
+                      term of four courses drew four filled buttons under the
+                      filled offer at the top, and because `nextstep` gives a
+                      course with nothing started the same answer as the next
+                      one, all four said **Start reading**. Five filled
+                      actions, four of them the same words — which is the
+                      audit's "six identical buttons" back in the tier above
+                      the one PR #503 emptied. A filled button that appears
+                      five times is not an emphasis, it is a texture.
+
+                      Nothing is lost by going a step down. Inside the card
+                      this is still the first thing and still the widest: the
+                      recommendation, full width at 44px, its reason directly
+                      under it, and the alternatives below in small uppercase
+                      chips. The ranking `lib/nextstep.ts` computes is intact —
+                      it just no longer competes with the one offer the screen
+                      itself makes.
+                    */}
                     <ActionButton
                       onClick={() => dispatch({ type: 'openGuide', id: c.id, mode: step.id })}
-                      tone="primary" spacing="0.08em"
+                      spacing="0.08em"
                     >
                       {step.label}
                     </ActionButton>
