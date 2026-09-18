@@ -32,9 +32,30 @@
  *   * It will not log a token, a URL, or a calendar body. There is no line
  *     below that prints one, and adding one would put the equivalent of a
  *     password into the log Supabase keeps for a month.
- *   * It will not write. Not a read receipt, not a hit counter — a feed polled
- *     by four devices every four hours is a write every twenty minutes for the
- *     life of the account, and it would buy nothing.
+ *   * It will not write anything a person could be identified by. It does
+ *     write one thing, and the earlier version of this comment ruled it out:
+ *
+ *       > It will not write. Not a read receipt, not a hit counter — a feed
+ *       > polled by four devices every four hours is a write every twenty
+ *       > minutes for the life of the account, and it would buy nothing.
+ *
+ *     Half of that still holds. A hit counter buys nothing; nobody needs to
+ *     know their calendar was fetched four hundred times. What the same review
+ *     says three paragraphs earlier is that anyone holding this link reads the
+ *     deadlines "indefinitely, until it is replaced" — and the app has had the
+ *     replace button all along with nothing that would ever make a student
+ *     press it. A leaked link and a private one look identical from inside the
+ *     app. The one place they differ is out here, in what is asking:
+ *     **a calendar subscription is fetched by a calendar, and a person is a
+ *     browser.**
+ *
+ *     So one row per account per day per kind of client, through
+ *     `public.read_feed`, which does the lookup and the note in one statement.
+ *     Never the user agent itself, never an address, never the token: the
+ *     family is one of seven words and `access_log`'s check constraint is what
+ *     makes that a property of the database rather than a promise made here.
+ *     The cost is real and is a write on a read; at a scale where it matters
+ *     the bucket widens, in the migration, where it can be argued about.
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -44,6 +65,38 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 /** 24 random bytes as hex — the same shape `app/src/lib/subscribe.ts` generates. */
 const TOKEN = /^[0-9a-f]{48}$/;
+
+/**
+ * Which kind of client is asking, out of a fixed list, and never the string.
+ *
+ * A copy of `app/src/lib/clientfamily.ts`, which is the one with the tests —
+ * an Edge Function is deployed alone to Deno by the Supabase CLI and cannot
+ * import from the app, the same reason `lib/publichost.ts` duplicates
+ * `fetchcal`'s host rule. `clientfamily.test.ts` reads this block and the
+ * migration's check constraint and fails when the three stop agreeing.
+ *
+ * The ordering is the correctness argument and it is not obvious: Safari on a
+ * Mac says `Intel Mac OS X 10_15_7` and macOS Calendar says
+ * `Mac OS X/10.15.7`, so a rule that asks about the operating system files a
+ * person opening a leaked link as the student's own calendar. The agent
+ * tokens below name the *program* and appear in no browser's user agent.
+ */
+const FAMILY: [RegExp, string][] = [
+  [/CalendarAgent|dataaccessd|ICSAgent|CoreDAV|accountsd/i, 'apple'],
+  [/Google-Calendar|Googlebot|Google Calendar/i, 'google'],
+  [/Outlook|Microsoft|MSOffice|Office\//i, 'outlook'],
+  [/Gecko|WebKit|Chrome|Safari|Firefox|Edg\//i, 'browser'],
+];
+
+function familyOf(userAgent: string | null): string {
+  const ua = (userAgent ?? '').trim();
+  // Nothing sent is `unknown`; something sent and not recognised is `other`.
+  // Collapsing the two would hide the second, and the second is the one worth
+  // looking at.
+  if (!ua) return 'unknown';
+  for (const [pattern, family] of FAMILY) if (pattern.test(ua)) return family;
+  return 'other';
+}
 
 /** What every response carries, whatever happened. */
 const HEADERS: Record<string, string> = {
@@ -105,14 +158,21 @@ Deno.serve(async (req: Request) => {
   }
 
   const db = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
-  const { data, error } = await db
-    .from('calendar_feeds')
-    // Only these three columns, ever. Not `user_id`: nothing downstream needs
-    // to know whose calendar this is, and a select that does not fetch it
-    // cannot leak it through a mistake later.
-    .select('body, name, updated_at')
-    .eq('token', token)
-    .maybeSingle();
+  /*
+   * One statement, and still only three columns.
+   *
+   * `read_feed` looks the row up by token, notes the fetch against whoever
+   * owns it, and returns `body`, `name` and `updated_at` — not `user_id`. That
+   * is the same promise the `select` it replaced made, kept the same way: the
+   * account is known inside the database, where the access log is written, and
+   * never travels out here. A select that fetched the owner so this could
+   * write the log would have undone exactly what that promise was for.
+   */
+  const { data: rows, error } = await db.rpc('read_feed', {
+    feed_token: token,
+    family: familyOf(req.headers.get('user-agent')),
+  });
+  const data = Array.isArray(rows) ? rows[0] : rows;
 
   // A missing row and a database error get the same answer, because telling
   // an unauthenticated caller which one it was is telling them something.

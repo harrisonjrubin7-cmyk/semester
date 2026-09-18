@@ -198,6 +198,33 @@ Deno.serve(async (req) => {
   }
 
   /*
+   * And write down that this ran against these accounts.
+   *
+   * This function reads every account's queued reminders with the service key,
+   * which is one of the two paths in this project that go around row-level
+   * security — the other is the calendar feed. `access_log` exists so that the
+   * person whose rows were read is the one who can see it, and a log that
+   * recorded only the path somebody might have leaked would be making a claim
+   * about completeness it could not keep.
+   *
+   * One row per account per day, not per reminder: the sender runs every
+   * fifteen minutes and nobody needs a hundred entries saying the same thing.
+   * `device` rather than a client family, because there is no request here to
+   * read one from — the scheduler called this, not a browser.
+   *
+   * Deliberately not awaited into the result, and deliberately not fatal. A
+   * reminder that failed to send because its audit entry could not be written
+   * would be the feature breaking the thing it was added to watch.
+   */
+  for (const userId of queuedByUser.keys()) {
+    try {
+      await db.rpc('note_access', { who: userId, kind: 'push_send', family: 'device' });
+    } catch {
+      // Nothing. See above.
+    }
+  }
+
+  /*
    * A device is looked at once per reminder, so one run can have both a
    * success and a 410 for the same endpoint — a gateway rejecting one payload,
    * or rotating the subscription part-way through the batch. Proof that it is

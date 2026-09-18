@@ -136,3 +136,92 @@ export function feedItems<T extends { id: string }>(
 ): T[] {
   return items.filter((i) => !done[i.id]);
 }
+
+// ── Who has been fetching it ─────────────────────────────────────────────
+
+/** One day's worth of one kind of client, as `access_log` holds it. */
+export interface FeedFetch {
+  day: string;
+  what: string;
+  client: string;
+  hits: number;
+}
+
+/** The families that are a calendar app doing its job. */
+const CALENDARS = new Set(['apple', 'google', 'outlook']);
+
+/** How a family reads in a sentence. */
+const CALLED: Record<string, string> = {
+  apple: 'Apple Calendar',
+  google: 'Google Calendar',
+  outlook: 'Outlook',
+  browser: 'a web browser',
+  other: 'something this app did not recognise',
+  unknown: 'something that gave no name',
+};
+
+/**
+ * What the screen says about who has been reading the feed.
+ *
+ * `SHARE_WARNING` has always said to treat the link like a password and to
+ * replace it if it goes somewhere it should not. That is advice nobody can
+ * act on, because the one thing a student cannot know is whether it already
+ * has — a link in somebody else's calendar is invisible from in here, and
+ * `CALENDAR-REVIEW.md` is explicit that whoever holds it reads the deadlines
+ * "indefinitely, until it is replaced". This is the missing half of that
+ * sentence.
+ *
+ * ## What makes a line worth showing
+ *
+ * A count is not it. "Fetched 84 times" is what a working subscription looks
+ * like and a student who reads it twice will stop reading it. The signal is
+ * *what kind of thing asked*, because a calendar subscription is fetched by a
+ * calendar — so a browser in this list is either the student checking their
+ * own link, which they will remember doing, or somebody else holding it.
+ *
+ * `suspect` is that, and it is what the screen colours. The wording stops
+ * short of accusing the link of having leaked: the honest sentence names what
+ * happened, says what it usually means, and leaves the student to know whether
+ * it was them.
+ */
+export function feedReaders(
+  log: FeedFetch[],
+  days = 30,
+): { line: string; suspect: boolean } {
+  const rows = log.filter((r) => r.what === 'calendar_feed' && r.hits > 0);
+  if (rows.length === 0) {
+    return {
+      line: `Nothing has fetched this link in the last ${days} days. A calendar app usually checks within a few hours of subscribing.`,
+      suspect: false,
+    };
+  }
+
+  const total = rows.reduce((n, r) => n + r.hits, 0);
+  const odd = rows.filter((r) => !CALENDARS.has(r.client));
+  const apps = [...new Set(rows.filter((r) => CALENDARS.has(r.client)).map((r) => CALLED[r.client]))];
+
+  const fetched = `Fetched ${total} ${total === 1 ? 'time' : 'times'} in the last ${days} days`;
+  if (odd.length === 0) {
+    return { line: `${fetched}, by ${list(apps)}.`, suspect: false };
+  }
+
+  const oddTotal = odd.reduce((n, r) => n + r.hits, 0);
+  const who = list([...new Set(odd.map((r) => CALLED[r.client] ?? CALLED.other))]);
+  // The most recent day it happened, which is the part a student checks their
+  // own memory against.
+  const when = odd.map((r) => r.day).sort().pop();
+  return {
+    line:
+      `${fetched}${apps.length > 0 ? `, mostly by ${list(apps)}` : ''} — and ` +
+      `${oddTotal} of those ${oddTotal === 1 ? 'was' : 'were'} ${who}, most recently on ${when}. ` +
+      'A calendar app is what should be reading this. If that was not you opening the link yourself, replace it.',
+    suspect: true,
+  };
+}
+
+/** "a, b and c", because a comma before the last one reads as a list of two. */
+function list(names: string[]): string {
+  if (names.length === 0) return 'something that gave no name';
+  if (names.length === 1) return names[0];
+  return `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+}

@@ -621,6 +621,10 @@ export const OWNED_TABLES = [
   'appointments',
   'sittings',
   'calendar_feeds',
+  // The record of who read the rows above, which is about the account and so
+  // goes with it. `access.check.sql` proves the delete policy that makes this
+  // line work, and proves a stranger cannot use it to clear somebody else's.
+  'access_log',
 ];
 
 export async function deleteEverything(): Promise<string> {
@@ -740,6 +744,62 @@ export async function replaceFeed(token: string): Promise<void> {
       { onConflict: 'user_id' },
     );
   if (error) throw new Error(error.message);
+}
+
+// ── Who has read your rows ───────────────────────────────────────────────
+//
+// Two paths in this project read a student's rows with the service key, which
+// does not consult row-level security: the calendar feed, served to whoever
+// holds the token because Apple and Google arrive with no credentials, and the
+// reminder sender, run by the scheduler rather than by a person.
+//
+// `supabase/migrations/20260901001300_access_log.sql` writes both down, and
+// the policy on that table makes it readable by the account it is about. This
+// is that read. The point of the whole thing is the calendar: a published link
+// is a bearer credential living in somebody's phone for months, the app has
+// always had the button that retires it, and until now it had nothing that
+// would ever tell a student to press it.
+
+/** One day's worth of one kind of access, as the app shows it. */
+export interface Access {
+  /** `YYYY-MM-DD`, in UTC. The log is bucketed by day on purpose. */
+  day: string;
+  what: 'calendar_feed' | 'push_send';
+  /** One of `lib/clientfamily.ts`'s families. `browser` is the interesting one. */
+  client: string;
+  hits: number;
+  lastAt?: number;
+}
+
+/**
+ * The access log for this account, most recent first.
+ *
+ * Signed out this is empty rather than an error: there is no account, so there
+ * is nothing that could have been read this way — everything is on the device.
+ * A build whose project has not had the migration applied is the same answer
+ * for a different reason, and the `does not exist` tolerance is
+ * `deleteEverything`'s, for the same reason it has one.
+ */
+export async function readAccessLog(days = 30): Promise<Access[]> {
+  const db = await cloud();
+  const { data } = await db.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) return [];
+  const from = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
+  const { data: rows, error } = await db
+    .from('access_log')
+    .select('day, what, client, hits, last_at')
+    .eq('user_id', userId)
+    .gte('day', from)
+    .order('day', { ascending: false });
+  if (error || !Array.isArray(rows)) return [];
+  return rows.map((r) => ({
+    day: String(r.day),
+    what: r.what === 'push_send' ? 'push_send' : 'calendar_feed',
+    client: String(r.client ?? 'unknown'),
+    hits: typeof r.hits === 'number' ? r.hits : 0,
+    lastAt: r.last_at ? Date.parse(String(r.last_at)) : undefined,
+  }));
 }
 
 // ── Reading a calendar somebody pasted ───────────────────────────────────
