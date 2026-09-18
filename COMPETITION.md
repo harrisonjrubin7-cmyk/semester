@@ -23,7 +23,7 @@ checking is concrete and it is the reason this file exists: four of the six
 below are sized in the document as sprint items, and building any of them would
 have been a week spent rebuilding something a student can already use today.
 
-**Checked against `675fee1` on 17 September 2026.** Every verdict names what was
+**Checked against `3287929` on 18 September 2026.** Every verdict names what was
 measured and where, and every file and line quoted below was opened rather than
 inferred.
 
@@ -393,21 +393,35 @@ and this file was wrong**, and the way it was wrong is the one `CLAUDE.md`
 warns about hardest, so it stays on the record rather than being quietly
 deleted.
 
-Sixty is correct, and it is the repository's own number, from two instruments
-that agree. `app/scripts/destinations.mjs` is the single read that
-`sweep:targets` and `sweep:contrast` now share, and it returns **60**; so does
-counting the registry in `lib/nav.ts` directly. The `Screen` union in
-`lib/types.ts` has 82 members, and the 22 in the gap are not a mystery either —
-`lib/nav.registry.test.ts:65` already names them, as
-`NOT_DESTINATIONS = [...SHELL, ...FIRST_RUN, ...DETAIL, ...SETTINGS]`: chrome,
-the first-run screens, the detail views you reach *from* a destination rather
-than navigate to (`course`, `item`, `guide`, `lesson`), and the settings
-sub-pages. Sixty destinations, 82 routable screens, and the document meant the
-first.
+Sixty was correct when the report said it, and it is the repository's own
+number rather than anybody's estimate. `app/scripts/destinations.mjs` is the
+single read that `sweep:targets` and `sweep:contrast` share, and counting the
+registry in `lib/nav.ts` directly agrees with it. The `Screen` union in
+`lib/types.ts` holds those plus the routable screens that are not destinations,
+and the gap is not a mystery either — `lib/nav.registry.test.ts:65` already
+names them, as `NOT_DESTINATIONS = [...SHELL, ...FIRST_RUN, ...DETAIL,
+...SETTINGS]`: chrome, the first-run screens, the detail views you reach *from*
+a destination rather than navigate to (`course`, `item`, `guide`, `lesson`),
+and the settings sub-pages. The document meant destinations.
 
 That the repository had already written down the distinction, in a test whose
 whole job is to keep the two lists honest, is the part that stings. The probe
 below did not need to be invented at all.
+
+**And the number moved before this file could be merged.** It read 60
+destinations and 82 union members when this section was written. Between then
+and the merge, PR #497 — *"The question that was built twice and kept once"* —
+folded `#/ahead` and `#/tonight` into Today's tabs, and its own first line says
+what that does: *"Sixty destinations become fifty-eight."* As of the stamp at
+the top of this file the figures are **58 destinations and 80 routable
+screens**.
+
+Which is the thesis of this whole document arriving to prove itself on the
+document. Four hours from writing to merge, and the one number in it that is
+not a file-and-line citation had already aged — twice, counting the correction
+above. That is the case for the standard this file ends on, made better by an
+accident than by the argument: a citation you can open still says what it said,
+and a count is only ever true of a commit.
 
 The 74 was not either number. It came from a regular expression run over
 `lib/types.ts` that matched every `'…'` in the file **including the apostrophes
