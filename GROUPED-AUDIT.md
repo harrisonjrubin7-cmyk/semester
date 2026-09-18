@@ -29,6 +29,36 @@ those is somebody drawing a row by hand. They are not identical — some are
 `<button>`, some `<div>`, the padding varies between 9px and 13px, some carry
 a tick box, some a chevron, some a trailing tag.
 
+> **Since measured: 24 occurrences across 20 files** — 10 screens of 58 and 10
+> components. The row got built (`components/shell/Rows.tsx`) and adopted:
+> `Group` 62 uses, `CustomRow` 54, `ItemRow` 29, `NavRow` 15, across 21 files.
+>
+> The paragraph above is also the reason the rest is not simply more of the
+> same work. "The padding varies between 9px and 13px" reads as drift, and on
+> re-measurement it is mostly intent: `screens/Privacy.tsx` pads 5px and
+> `screens/Grades.tsx` 8px because those are compact figure lists rather than
+> 44px settings rows, and `CustomRow`'s header says at length why moving them
+> into the shared component would change the layout it exists to leave alone.
+>
+> Of the 68 style objects in the tree that set an `--app-line` hairline,
+> **none** retypes the shared row's own padding-and-hairline pair. The one
+> candidate — 11px padding and that hairline, in `screens/Data.tsx` — is the
+> total line *under* the storage list rather than a row in it, on a
+> `borderTop`.
+>
+> That is a narrower question than "is this a hand-rolled row", and asking
+> only it would have missed the rows that *are* `ItemRow` in different
+> numbers. Asked the other way — whose meta is stacked **under** the title,
+> which is `ItemRow`'s own shape and not the beside-the-title shape
+> `CustomRow` exists for — the tree had four. Two are converted here
+> (`screens/call/Lobby.tsx`, `components/ForThis.tsx`); the two in
+> `components/room/Talk.tsx` are the call room's own dense chrome and are left
+> with the rest of that file.
+>
+> So what is left of this row is a short list and a guard against the retyping
+> starting again one screen at a time:
+> `components/shell/rows.shape.test.ts`.
+
 So the free ride covers headers, cards and controls. Rows have to be built
 first and then adopted, and adopting them is a per-screen edit across 31
 screens. That is the real shape of the work.

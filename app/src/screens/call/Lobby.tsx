@@ -3,6 +3,7 @@ import { useNow, useStore } from '../../state/store';
 import { Page } from '../../components/Page';
 import { Blueprint } from '../../components/Blueprint';
 import { SectionLabel } from '../../components/ui';
+import { ItemRow } from '../../components/shell/Rows';
 import { CallIcon, ChevronRight, Plus, ScreenShareIcon } from '../../components/Icons';
 import { secondLine } from '../../lib/dim';
 import { codeOf, nameFor, newCode, normaliseCode } from '../../lib/call';
@@ -140,31 +141,29 @@ export function Lobby({
           on Today and in the week ahead, with a Join button on it.
         </div>
       ) : (
+        /*
+         * The shared row, rather than this one drawn again.
+         *
+         * It was the row `components/shell/Rows.tsx` already draws, retyped:
+         * an icon, a title with its meta stacked under it, a chevron, and a
+         * hairline. `ItemRow` is exactly that shape — see `Label`, which puts
+         * the sub-line under the title with the same dim and the same
+         * `--sp-1` above it — so the markup here was a second copy of a
+         * layout the app maintains in one place.
+         *
+         * What it gains is the grouped layout. A hand-drawn row keeps its own
+         * `borderBottom` in every shell, so this list was the one thing on
+         * the screen that stayed square when the app was set to Soft.
+         */
         booked.map((a) => (
-          <button
+          <ItemRow
             key={a.id}
-            type="button"
-            className="bare tappable"
+            leading={<CallIcon size={17} />}
+            title={a.title}
+            meta={`${longLabel(isoToDate(a.date))} · ${a.time} · ${codeOf(a)}`}
+            trailing={<ChevronRight size={16} />}
             onClick={() => onOpen({ code: codeOf(a), title: a.title })}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--sp-5)',
-              width: '100%',
-              textAlign: 'left',
-              paddingBlock: 'var(--sp-6)',
-              borderBottom: '1px solid var(--app-line)',
-            }}
-          >
-            <CallIcon size={17} />
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{a.title}</span>
-              <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-1)' }}>
-                {longLabel(isoToDate(a.date))} · {a.time} · {codeOf(a)}
-              </span>
-            </span>
-            <ChevronRight size={16} />
-          </button>
+          />
         ))
       )}
 

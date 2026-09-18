@@ -1023,9 +1023,20 @@ Recorded so the next pass does not re-derive it:
   the off-by-one it was written for.
 - **Accessibility.** `npm run lint` includes a labels check that passes: every
   form control has a name a screen reader can read.
-- **Shared components.** The `justifyContent: 'space-between'` hand-rolled-row
-  pattern the earlier `GROUPED-AUDIT` counted at 74 is down to **34 across 25
-  files**. That work landed.
+- **Shared components.** The hand-rolled-row pattern the earlier
+  `GROUPED-AUDIT` counted at 74 is down to **24 across 20 files** — 10 screens
+  of 58 and 10 components. That work landed.
+
+  **Two patterns, and this line used to swap them.** It read "the
+  `justifyContent: 'space-between'` hand-rolled-row pattern the earlier
+  `GROUPED-AUDIT` counted at 74", and `GROUPED-AUDIT` counted no such thing: it
+  counted `borderBottom: '1px solid var(--app-line)'` and named that string as
+  the giveaway. The two measure different things and give different answers —
+  `space-between` is 40 across 29 files today, the hairline 24 across 20 — so
+  attributing one's figure to the other's grep produced a number that belonged
+  to neither. `ACTION-PLAN.md` then inherited it. Re-measured against both
+  patterns, and `components/shell/rows.shape.test.ts` now holds the part of it
+  that can be held.
 
 ---
 

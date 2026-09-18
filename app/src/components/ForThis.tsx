@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useStore } from '../state/store';
 import { Panel } from './Produced';
 import { FilePick, SectionLabel } from './ui';
+import { ItemRow } from './shell/Rows';
 import { ChevronRight, Paperclip, Plus } from './Icons';
 import { attachable, attachedTo, WORK_LABEL, type Attached } from '../lib/forwork';
 import { addFile, listFiles, openFile, pinFile, type Settled } from '../lib/files';
@@ -244,30 +245,20 @@ export function ForThis({ item }: { item: DatedItem }) {
               one here, open it and change what it is for.
             </div>
           ) : (
+            /*
+             * The shared row, rather than this one drawn again. Same argument
+             * as `screens/call/Lobby.tsx`: an icon, a title with its kind
+             * stacked under it, and a hairline — which is `ItemRow`, and was
+             * a second copy of it.
+             */
             free.map((a) => (
-              <button
+              <ItemRow
                 key={`${a.kind}:${a.id}`}
-                type="button"
-                className="bare tappable"
+                leading={<Plus size={15} style={{ ...secondLine() }} />}
+                title={a.title}
+                meta={WORK_LABEL[a.kind]}
                 onClick={() => void attach(a)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  gap: 'var(--sp-4)',
-                  alignItems: 'center',
-                  padding: 'var(--sp-4) 0',
-                  textAlign: 'left',
-                  borderBottom: '1px solid var(--app-line)',
-                }}
-              >
-                <Plus size={15} style={{ flex: 'none', ...secondLine() }} />
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'var(--type-md)' }}>{a.title}</span>
-                  <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine() }}>
-                    {WORK_LABEL[a.kind]}
-                  </span>
-                </span>
-              </button>
+              />
             ))
           )}
         </Panel>
