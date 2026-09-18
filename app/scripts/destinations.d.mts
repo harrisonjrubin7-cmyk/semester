@@ -7,7 +7,7 @@
  * parse equals `DESTINATIONS`, and a string comparison cannot say that.
  */
 export declare function destinations(): { screen: string; label: string }[];
-export declare const PROOF: Record<string, { h1?: string; css?: string }>;
+export declare const PROOF: Record<string, { h1?: string | string[]; css?: string }>;
 export declare function proofSelector(screen: string): string | null;
 export declare function arrived(
   screen: string,

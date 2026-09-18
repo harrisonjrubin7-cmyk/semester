@@ -2708,8 +2708,8 @@ the Directory first and then *"run the same measurement method across the rest
 of the app rather than assuming the problem is isolated"*.
 
 The measurement method is now `app/scripts/targets-sweep.mjs` — `npm run
-sweep:targets` — which walks all 60 destinations on a phone and a desktop in
-real Chromium. Written down rather than sampled once, because a figure nobody
+sweep:targets` — which walks every destination in the registry on a phone and
+a desktop in real Chromium. Written down rather than sampled once, because a figure nobody
 can retake goes stale without anybody noticing it has.
 
 (57 until `scripts/destinations.mjs` took over the list. Three destinations —
@@ -2717,7 +2717,11 @@ can retake goes stale without anybody noticing it has.
 that they need an id in the address. Opened, they draw "Make a deck", "Write a
 document" and "Sheet or table" with no id at all. The walk also proves it
 arrived on each screen from the rendered heading now, rather than from the hash
-it had just written, and names any it did not reach.)
+it had just written, and names any it did not reach. That check cost a
+destination before it paid for one: `home` draws whichever of four shapes the
+navigation asks for — this sweep seeds `nav: 'springboard'`, so the heading is
+"Semester" — and holding it to the registry's "Today" skipped the screen for
+one run. All four are recorded in the proof table now.)
 
 ### Two criteria, and only one of them is AA
 
@@ -2734,17 +2738,31 @@ failing AA when that question had not been asked.
 
 ### Measured
 
+Re-taken 18 September 2026 over all 58 destinations — 60 until `80fbc5c` made
+`ahead` and `tonight` two of Today's tabs:
+
 | | Phone 420×900 | Desktop 1280×900 |
 | --- | --- | --- |
-| under 44px — 2.5.5, an aim | 818 / 1,474 | 1,427 / 2,066 |
-| under 24px — 2.5.8, the failure | **0** | **0** |
+| destinations opened | 58 / 58 | 58 / 58 |
+| under 44px — 2.5.5, an aim | 810 / 1,480 | 1,425 / 2,082 |
+| under 24px — 2.5.8, the failure | 3 | 3 |
+| of those, genuine | **0** | **0** |
 
-Three more read as under 24 on each tier and are counted in neither column:
-Leaflet's map container and its two zoom buttons, under the panel
-`components/LiveMap.tsx` paints over them at z-index 1200 to say *"the map
-itself needs a connection"*. A sweep run somewhere tiles are reachable would
-not see them at all. The sweep names the cover — `BLOCKED under role=status` —
-because naming it is what tells a deliberate overlay from a fault.
+The three are the same three on each tier: Leaflet's map container and its two
+zoom buttons, under the panel `components/LiveMap.tsx` paints over them at
+z-index 1200 to say *"the map itself needs a connection"*. A covered control
+has no hit area at all, so each reads `0x0` — and 0 is under 24. A sweep run
+somewhere tiles are reachable would not see them. The sweep names the cover —
+`BLOCKED under role=status` — because naming it is what tells a deliberate
+overlay from a fault.
+
+(This table read **0** and said the three were "counted in neither column".
+The conclusion was right and the sentence was not: `targets-sweep.mjs` scores
+a blocked control by its hit size and has always put these three in the AA
+column, where the list underneath names each one as blocked. A number in a
+document that the tool contradicts is the thing this file exists to stop, so
+the column stays as the tool prints it and the row under it carries the
+judgement.)
 
 One control in the app was genuinely under the AA minimum, on desktop, and it
 is fixed here: **PIN** under each saved conversation, 20×25. Its own comment

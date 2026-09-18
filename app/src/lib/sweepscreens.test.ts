@@ -75,6 +75,25 @@ describe('the sweeps walk the registry', () => {
     expect(arrived('courses', 'Courses', null)).toBe(false);
   });
 
+  /*
+   * `home` draws one of four headings depending on the navigation
+   * (`lib/chrome.ts`'s `homeShape`), and `targets-sweep.mjs` seeds
+   * `nav: 'springboard'`, which is the one that draws "Semester". Held to the
+   * registry's label alone, the arrival check called that screen unreached
+   * and skipped it — one destination silently out of the walk, by the check
+   * written to stop exactly that. The last case is the point of a list rather
+   * than a shrug: a screen that fell back to Today still has to fail.
+   */
+  it('accepts every heading home really draws, and no others', () => {
+    for (const h1 of ['Today', 'Everything', 'Semester', 'Guides']) {
+      expect(arrived('home', 'Today', { h1 }), `home draws ${h1} under one of its navigations`).toBe(
+        true,
+      );
+    }
+    expect(arrived('home', 'Today', { h1: 'Courses' })).toBe(false);
+    expect(arrived('courses', 'Courses', { h1: 'Semester' })).toBe(false);
+  });
+
   it('proves the one screen a heading cannot prove by its own mark', () => {
     expect(proofSelector('search')).toBe('.deskhome-mark');
     expect(proofSelector('courses')).toBe(null);
