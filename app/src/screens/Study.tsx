@@ -206,7 +206,63 @@ export function Study() {
   return (
     <Page>
       <div className="studio-entry"><div><strong>One course. Eleven study formats.</strong><p>Choose sources, create a guide, and save it with your course.</p></div><button className="portal-primary" onClick={()=>setStudio(true)}>Create study guide</button></div>
-      <div className="study-next-actions"><button onClick={()=>dispatch({type:'go',screen:'ask'})}>AI Tutor</button><button onClick={()=>dispatch({type:'go',screen:'exam'})}>Practice exam</button><button onClick={()=>dispatch({type:'go',screen:'runway'})}>Exam planner</button><button onClick={()=>dispatch({type:'newNote',courseId:selectedStudioCourse||null})}>New course note</button><button onClick={()=>dispatch({type:'go',screen:'groupwork'})}>Study groups</button><button onClick={()=>dispatch({type:'go',screen:'sources'})}>Citations & evidence</button></div>
+      {/*
+        Six buttons used to sit here, and removing them is the hierarchy pass
+        the UI audit asked for rather than a deletion for its own sake.
+
+        `AI Tutor · Practice exam · Exam planner · New course note · Study
+        groups · Citations & evidence` — a hand-written row, in one unbroken
+        line, wrapping 3-2-1 at 420px, every pill the same weight, directly
+        under the one filled action on the screen. That is what flattened the
+        top of Study: not that the six were badly ordered, but that they were
+        drawn at the same weight as each other immediately below the thing
+        that is not their equal.
+
+        ## They were aliases, and five of six answered to a different name
+
+        Every one had another home already, and the labels did not match the
+        homes:
+
+        | said here | screen | where it lives | called there |
+        | --- | --- | --- | --- |
+        | AI Tutor | `ask` | Tools tab | **Ask Claude** |
+        | Practice exam | `exam` | Tools tab | **Practice paper** |
+        | Exam planner | `runway` | Tools tab | **Exam runway** |
+        | Study groups | `groupwork` | nav, Campus | **Group work** |
+        | Citations & evidence | `sources` | nav, Courses | **Sources** |
+        | New course note | — | `Mine.tsx`, `ForThis.tsx` | — |
+
+        Three of them named a destination that the Tools tab, one tap away on
+        this same screen, was already drawing under a different word. "Ask
+        Claude" and "AI Tutor" are one screen with two names, eighty pixels
+        apart.
+
+        ## The Tools tab is this row, done properly
+
+        It is generated from `lib/nav.ts`, so a tool added next year appears
+        without anybody remembering to come back — which this row could not do
+        and did not do. It is a grid, so twelve fit where four fitted. And
+        `lib/toolnow.ts` puts two or three of them above the rest *with the
+        deadline that asked for them*, because "at eleven at night four days
+        before a midterm, 'Practice paper' and 'Draw it' are not equally
+        likely, and the app holds every fact needed to know which".
+
+        A fixed row of six cannot say that and never did. Keeping both meant
+        the screen answered "what can I do" twice, once well.
+
+        ## What went with it
+
+        Nothing that was only here. The three tools are in the grid below, the
+        two screens are in the directory and in search under their own names,
+        and `newNote` is offered by `Mine.tsx` and by `ForThis.tsx` — both of
+        which pass the course the student is actually looking at. This row
+        passed `selectedStudioCourse`, which falls back to
+        `catalog.courses[0]`, so "New course note" filed against whichever
+        course happened to be first whatever you had open.
+
+        `screens/studyhierarchy.test.tsx` holds the two halves together: the
+        row is gone, and every destination it named is still reachable.
+      */}
       <StudyJournal/>
       {exam && (
         <Blueprint

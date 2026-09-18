@@ -213,7 +213,6 @@
 .study-source-list>label, .study-format-list>label{flex-shrink:0}
 .studio-entry>.portal-primary{background:var(--app-fg);color:var(--app-bg);border:0;border-radius:24px;padding:12px 20px;min-height:44px;font-size:14px}
 .preserve-lines{white-space:pre-wrap;}
-.study-next-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;}
 .study-journal{margin:24px 0;}
 /* What the journal says back, above the prompt it says it about. The list is
    short by construction — `lib/again.ts` will not speak below its floors — so
@@ -235,8 +234,3 @@
    filled wherever it is written, on the app's own inverse pair. */
 .portal-primary{background:var(--app-fg);color:var(--app-bg)}
 
-/* The study screen's next-action row was a flex container with unstyled
-   buttons in it, so they inherited the page's light ink and sat on a
-   light surface — 1.01:1. They get the app's own raised-surface pair. */
-.study-next-actions button{background:var(--app-panel);color:var(--app-fg);
-  border:1px solid var(--app-line);border-radius:8px;min-height:40px;padding:9px 15px}
