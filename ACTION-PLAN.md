@@ -75,11 +75,24 @@ same words: `SETUP.md:268` *"Authentication → Providers, switch on what you wa
 … Until then those two buttons return a provider error."* Somebody has to go and
 do it in the dashboard. Nothing needs building.
 
-### 3 · The Vanderbilt IP question · **Open · not a code item**
+### 3 · The Vanderbilt IP question · **Prepared — [`IP.md`](IP.md) §1; the email is yours to send**
 
 Unresolved, and everything downstream assumes the answer is no. Cheap to check
 with Vanderbilt's tech transfer / entrepreneurship office, expensive to ignore.
 Before pitching anyone for money.
+
+**The policy was read and the position is written down.** Vanderbilt's
+Technology Policy gives students ownership of work product created in the
+classroom, and explicitly disclaims ideas made with commonly available
+resources. Three exceptions decide this rather than the default: significant
+use of University resources, university-administered **funding** — a prize or a
+stipend is enough, and the policy says the student "would forego ownership" —
+and university-supported research. §1 lists the five facts that settle which
+side of that line Semester falls on, and carries a ready-to-send email that
+*states* those facts and asks for confirmation, rather than asking an open
+question that starts a review nobody needed.
+
+Still open, and not a code item: sending it, and getting the answer in writing.
 
 ### 4 · The simplify / merge pass · **Partly — the empty shells are already deferred**
 
@@ -160,9 +173,20 @@ $7.80 vs $3.00 per user per year; conversion 10%/12% vs 9%/10%. The most likely
 thing a numerate investor catches. Both documents live in the project folder,
 not in this repository.
 
-### 10 · USPTO trademark search on "Semester" · **Open**
+### 10 · USPTO trademark search on "Semester" · **Answered ahead of the search — [`IP.md`](IP.md) §2**
 
 Cheap, fast, unchecked. `tmsearch.uspto.gov`.
+
+**The search is still unrun — the databases are blocked from the container this
+was written in, and a clearance search nobody ran is not one to report.** But
+the search was the second question. The first is whether the word is
+registrable at all, and it very likely is not: "Semester" for software that
+plans a semester is *merely descriptive* under **15 U.S.C. §1052(e)(1)** and
+can be refused with no prior mark in sight, generic at worst. That holds
+whatever a collision search turns up, which is why it is worth having before
+one. §2 has the four routes out, a recommendation, and the fifteen-minute
+search to run for the *infringement* question, which is the separate and more
+urgent one.
 
 ### 11 · The Exam Runway status · **Landed in this repository; open outside it**
 
@@ -183,9 +207,9 @@ Real, none of it urgent, and the last one has measurements attached.
 
 | # | Item | State |
 | --- | --- | --- |
-| 12 | Data-retention schedule | **Open** — Phase 1 in the Privacy Brief, absent from the Completion Plan and the Sprint Backlog |
+| 12 | Data-retention schedule | **Written — [`RETENTION.md`](RETENTION.md), and it was never absent, only scattered.** Three clocks run, a fourth (`sweep_tombstones`) was written and nothing calls it, and the privacy page already *promises* no schedule over a student's work — so the job was recording the decision, not inventing one. `lib/retention.test.ts` is the bidirectional tripwire |
 | 13 | Data-access audit log and a formal incident-response process | **Both landed — see below.** The commitment was one sentence about the last step; it is now [`SECURITY.md`](SECURITY.md), and the log it depends on exists |
-| 14 | A staging environment | **Open** — deployment is push-to-live on every commit |
+| 14 | A staging environment | **Gated, and the gap was worse than a missing URL.** `pages.yml` and `ci.yml` both fired on push to main independently, so a commit that failed CI deployed anyway. Pages now runs on `workflow_run` and deploys only a CI run that passed, pinned to `head_sha`. CI also opens every course address cold in a real browser against the production build (`smoke:cold`) — the class the deep-link bug was in |
 | 15 | Multi-vendor AI redundancy | **Partly** — `lib/assistant.ts` already routes to OpenAI as a second provider, and `ask()` is the one branch in the app that knows there are two. The open part is a *policy*: which vendor answers when, and who decides |
 | 16 | An app-wide accessibility sweep | **Taken, both instruments, every destination — the numbers are below.** Both tools need Playwright pointed at the container's Chromium (`.claude/skills/run`) |
 

@@ -10,10 +10,33 @@
 
 name: Deploy to Pages
 
+# Only what CI has passed reaches students.
+#
+# This used to be `on: push: branches: [main]`, which is the same trigger CI
+# has — two workflows watching one event, neither aware of the other. A commit
+# that failed `tsc`, failed the suite or failed the policy checks deployed
+# anyway, at the same moment CI was going red about it, and the site was live
+# with it before anybody read the email. That is the whole of "we push straight
+# to production": not the absence of a staging URL, but the absence of a gate.
+#
+# `workflow_run` is that gate. This waits for the CI run on `main` to finish
+# and deploys only if it succeeded, so main's green tick is what publishes
+# rather than the push. A red CI now means the last good deploy stays up.
+#
+# The cost is one indirection worth knowing about: a `workflow_run` job checks
+# out the *default branch head* by default, not the commit that triggered it,
+# so a deploy racing another merge would ship a different tree than the one CI
+# checked. `head_sha` below pins it to the commit that actually passed.
+#
+# `workflow_dispatch` is unchanged and still deploys whatever is on main — the
+# escape hatch for a deploy-only fix, and the reason the job's `if` names both.
 on:
-  push:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
     branches: ['main']
-  # So a deploy can be re-run without an empty commit.
+  # So a deploy can be re-run without an empty commit, and so a deploy can be
+  # forced past a red CI when somebody has decided to.
   workflow_dispatch:
 
 permissions:
@@ -30,12 +53,24 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # A completed CI run that failed still fires `workflow_run`, so the
+    # conclusion is checked rather than the event. A hand-started deploy
+    # carries no `workflow_run` at all, hence the first clause.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      # The commit CI passed, not whatever main has drifted to since. On a
+      # `workflow_dispatch` there is no triggering run and this is empty,
+      # which checks out the default branch — the intended behaviour for a
+      # hand-started deploy.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       # Pages has to be switched on by a person, once: Settings → Pages →
       # Build and deployment → Source: GitHub Actions. A workflow token is not

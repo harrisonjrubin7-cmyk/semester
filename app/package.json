@@ -24,7 +24,8 @@
     "audio": "node scripts/audio.ts",
     "check:university": "tsc -p tsconfig.university.json",
     "dev:university": "node --env-file=server/institution/.env server/institution/start.ts",
-    "sweep:walls": "node scripts/wallsweep.mjs"
+    "sweep:walls": "node scripts/wallsweep.mjs",
+    "smoke:cold": "node scripts/cold-smoke.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.114.0",
