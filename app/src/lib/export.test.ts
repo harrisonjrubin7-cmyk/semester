@@ -26,6 +26,26 @@ import { NO_TIME } from './duetime';
 import type { Appointment, Course, CourseModule, DatedItem, Note } from './types';
 import { buildCatalog } from '../data/catalog';
 
+/**
+ * Carried, but not through a section.
+ *
+ * `sample` is a flag rather than a collection — whether the term on screen is
+ * the demonstration one — and `readBackup` reads it by hand, because a
+ * section would report it to the person restoring as "1 sample courses".
+ *
+ * `schoolPack` is the same miscount from the other direction: one record
+ * holding a school and the date its file was written, which a section would
+ * count by its two keys and offer as "2 school data packs". It is carried —
+ * losing it on a restore takes the term calendar, the buildings and the meal
+ * plans with it — and `readBackup` names it in words instead.
+ *
+ * One list, at module scope, because two guards below need it and `sample`
+ * used to be spelled out in both. A second hand-written copy of an exception
+ * list is how the exception outlives the reason for it, which is the failure
+ * the guards it feeds were written against in the first place.
+ */
+const BY_HAND = ['sample', 'schoolPack'];
+
 const item = (over: Partial<DatedItem> = {}): DatedItem =>
   ({
     id: 'econ-p1',
@@ -595,7 +615,7 @@ describe('a backup that can be restored from', () => {
    */
   it('reads back every section it writes', () => {
     const written = Object.keys(backupOf(withFeed())).filter(
-      (k) => k !== 'format' && k !== 'exported' && k !== 'sample',
+      (k) => k !== 'format' && k !== 'exported' && !BY_HAND.includes(k),
     );
     const read = new Set(BACKUP_SECTIONS.map((s) => s.key));
     expect(written.filter((k) => !read.has(k))).toEqual([]);
@@ -645,15 +665,6 @@ describe('every field the store holds is a decision about the backup', () => {
     const body = source.split('export function pickPersisted')[1]?.split('\n}')[0] ?? '';
     return [...body.matchAll(/^\s{4}(\w+):/gm)].map((m) => m[1]);
   };
-
-  /**
-   * Carried, but not through a section.
-   *
-   * `sample` is a flag rather than a collection — whether the term on screen
-   * is the demonstration one — and `readBackup` reads it by hand, because a
-   * section would report it to the person restoring as "1 sample courses".
-   */
-  const BY_HAND = ['sample'];
 
   const named = new Set([
     ...BACKUP_SECTIONS.map((s) => s.key),

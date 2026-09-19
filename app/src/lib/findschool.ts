@@ -42,7 +42,15 @@ import type { Capabilities, School } from './school';
 
 // ── Searching ───────────────────────────────────────────────────────────
 
-function plain(s: string): string {
+/**
+ * A name reduced to what two spellings of it have in common.
+ *
+ * Exported because `lib/schoolpack.ts` builds a school id the same way, and a
+ * pack whose id was normalised by a second, slightly different rule would
+ * import cleanly and land beside the profile it was written to correct rather
+ * than on it.
+ */
+export function plain(s: string): string {
   return s
     .toLowerCase()
     .replace(/[^a-z0-9 ]+/g, ' ')

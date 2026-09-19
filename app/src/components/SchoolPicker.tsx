@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { EmptyState } from './ui';
+import { SchoolPackDoor } from './SchoolPackDoor';
 import { useStore } from '../state/store';
 import { everySchool } from '../data/schools';
 import {
@@ -28,7 +29,10 @@ import { schoolLine, type School } from '../lib/school';
  */
 export function SchoolPicker() {
   const { state, dispatch, school, account } = useStore();
-  const all = useMemo(() => everySchool(state.mySchools), [state.mySchools]);
+  const all = useMemo(
+    () => everySchool(state.mySchools, state.schoolPack?.school ?? null),
+    [state.mySchools, state.schoolPack],
+  );
 
   const [query, setQuery] = useState('');
   const [adding, setAdding] = useState(false);
@@ -259,6 +263,13 @@ export function SchoolPicker() {
 
       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         {state.schoolId === '' ? SKIP_LINE : schoolLine(school)}
+      </div>
+
+      {/* The third door, below the other two rather than beside them: almost
+          nobody has a file, and the two that everybody can use should not have
+          to share the top of the screen with one that needs a partnership. */}
+      <div style={{ marginTop: 'var(--sp-7)', paddingTop: 'var(--sp-5)', borderTop: '1px solid var(--app-line)' }}>
+        <SchoolPackDoor />
       </div>
     </div>
   );

@@ -267,7 +267,8 @@ writes.
 
 | Gate | What it blocks | Whose it is |
 | --- | --- | --- |
-| University approval | Live rosters, registration, grades, billing, official records | The institution's. Nothing in this batch touches it; `app/server/institution/` still has an empty production adapter registry |
+| University approval | Live rosters, registration, grades, billing, official records | The institution's. `app/server/institution/` still has an empty production adapter registry |
+| Nothing — since the school data pack landed | An institution's calendar, buildings, meal plans, grading scale and service addresses | **No longer a gate.** These are data rather than a connection, and a university sends them as one file a student loads on their own device. Adding a university is no longer a code change. See [SCHOOL_DATA_PACK.md](SCHOOL_DATA_PACK.md) |
 | A Supabase project (`VITE_SUPABASE_URL`, `VITE_SUPABASE_KEY`) | Accounts, multi-device sync, shared rooms, classmates | Configuration, not code. See `supabase/DEPLOY.md`. Signed out, the app is fully usable on one device |
 | An AI route | Generated study drafts, the tutor, `Solve` | Configuration. Everything in this batch works without it |
 

@@ -84,6 +84,7 @@ import type { PostMortem } from '../lib/postmortem';
 import { NOTHING_WANTED, readWanted, type Wanted } from '../lib/suggest';
 import { readLastSync, type MergeNote } from '../lib/merge';
 import { readSchool, type School } from '../lib/school';
+import { readSchoolPack } from '../lib/schoolpack';
 import {
   list,
   readControls,
@@ -145,6 +146,17 @@ export interface Persisted {
    * the answers fills them in. See `lib/findschool.ts`.
    */
   mySchools: School[];
+  /**
+   * A school's own data, loaded from a file it handed over.
+   *
+   * Separate from `mySchools` because it is a different kind of thing: those
+   * are profiles a student typed, this is a document an institution produced,
+   * and it carries the date it was written so a screen can say how old the
+   * dates in it are. One at a time — a second import replaces the first,
+   * which is what "here is this year's calendar" means. See
+   * `lib/schoolpack.ts`.
+   */
+  schoolPack: { school: School; importedAt: string } | null;
   /**
    * Whether the app keeps a count of which screens get opened.
    *
@@ -1322,6 +1334,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   grades: {},
   gradeSystems: {},
   mySchools: [],
+  schoolPack: null,
   countScreens: true,
   pretested: {},
   wanted: NOTHING_WANTED,
@@ -1619,6 +1632,7 @@ export function loadPersisted(): Persisted {
       mySchools: Array.isArray(saved.mySchools)
         ? saved.mySchools.map(readSchool).filter((s) => s.id && s.name)
         : [],
+      schoolPack: readSchoolPack(saved.schoolPack),
       countScreens: saved.countScreens !== false,
       pretested: readPretested(saved.pretested),
       wanted: readWanted(saved.wanted),
@@ -1790,6 +1804,7 @@ export function pickPersisted(state: State): Persisted {
     grades: state.grades,
     gradeSystems: state.gradeSystems,
     mySchools: state.mySchools,
+    schoolPack: state.schoolPack,
     countScreens: state.countScreens,
     pretested: state.pretested,
     wanted: state.wanted,
@@ -1950,6 +1965,8 @@ export type Action =
   // and then wants to be handed a list to pick from.
   | { type: 'addSchool'; school: School }
   | { type: 'forgetSchool'; id: string }
+  | { type: 'importSchoolPack'; school: School; importedAt: string }
+  | { type: 'forgetSchoolPack' }
   | { type: 'countScreens'; on: boolean }
   // Opens a guess-first run on one unit. `at` is passed in rather than read
   // from Date.now() inside the reducer, like every other timestamped action.

@@ -143,6 +143,16 @@ export const STRATEGY: Record<string, Strategy> = {
   // Schools added by hand. Two devices adding two different ones should end
   // with both, which is what `union` on id does.
   mySchools: 'union',
+  /*
+   * `theirs`, and it is the only answer that makes sense for this one.
+   *
+   * A school's data pack is one file and the store holds one slot for it —
+   * there is no id to union on, and two packs merged field by field would be
+   * a calendar half from August and half from October, which is not a
+   * calendar anybody published. Loading this term's pack on the laptop should
+   * mean both devices have this term's pack.
+   */
+  schoolPack: 'theirs',
 
   // Maps keyed by id, where each key is its own small decision.
   done: 'ticks',
@@ -592,6 +602,7 @@ const LABELS: Record<string, string> = {
   tabs: 'The tab bar',
   schoolId: 'Where you study',
   mySchools: 'Schools you added',
+  schoolPack: 'Your university’s data file',
 };
 
 export function labelFor(key: string): string {
