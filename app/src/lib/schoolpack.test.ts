@@ -1,4 +1,7 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { dateToIso } from './date';
 import { PACK_TEMPLATE, PACK_VERSION, isoDate, packId, readPack, writePack } from './schoolpack';
 import { readSchool } from './school';
 import { BUNDLED } from '../data/schools';
@@ -458,8 +461,33 @@ describe('a pack round-trips, which is what makes it an export and not a screens
     expect(written.capabilities.mealPlan).toBeDefined();
   });
 
-  it('writes a date when it is not given one', () => {
-    expect(isoDate(JSON.parse(writePack(BUNDLED.vanderbilt)).importedAt)).not.toBeNull();
+  it('writes a date when it is not given one, and it is the device’s own day', () => {
+    // `dateToIso` reads local getters. `toISOString().slice(0, 10)` is a UTC
+    // date, and the two disagree for a third of every day east of Greenwich:
+    // at UTC noon in Kiritimati (UTC+14) the first says the 20th and the
+    // second says the 19th. Every other date in this app is a local one.
+    expect(JSON.parse(writePack(BUNDLED.vanderbilt)).importedAt).toBe(dateToIso(new Date()));
+  });
+
+  it('does not stamp a UTC day on a local calendar', () => {
+    /*
+     * Structural, because the behavioural check above cannot convict here.
+     *
+     * The suite's own runs are UTC, where the local day and the UTC day are
+     * the same string and a `toISOString().slice(0, 10)` passes. CI's
+     * `test:zones` step does run this in Kiritimati — but only catches it
+     * when that run happens after 10:00 UTC, which makes it a guard that
+     * depends on the time of day somebody pushed. Reading the source instead
+     * convicts in every zone and at every hour.
+     */
+    const src = readFileSync(join(process.cwd(), 'src/lib/schoolpack.ts'), 'utf8');
+    const body = (src.split('export function writePack')[1] ?? '').split('\n}')[0];
+    // Comments stripped first. The first run of this failed against the
+    // comment above the fixed line, which names the call it forbids — a
+    // guard that reads prose is a guard that convicts an explanation.
+    const code = body.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+    expect(code).not.toMatch(/toISOString\(\)\s*\.slice/);
+    expect(code).toContain('dateToIso(new Date())');
   });
 
   it('is readable by `readSchool` too, so an imported profile persists like any other', () => {

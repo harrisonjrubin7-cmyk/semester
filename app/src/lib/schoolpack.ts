@@ -61,7 +61,7 @@
  * forced false on the way in, whatever the file says — see `readPack`.
  */
 
-import { realDate } from './date';
+import { dateToIso, realDate } from './date';
 import { plain } from './findschool';
 import { readGradeSystem } from './cutoffs';
 import { readCapabilities, readSchool, type Capabilities, type School, type SchoolData, type TermCalendar } from './school';
@@ -655,7 +655,12 @@ export function writePack(school: School, writtenOn: string = ''): string {
   };
   if (school.shortName) out.shortName = school.shortName;
   if (school.emailDomains?.length) out.emailDomains = school.emailDomains;
-  out.importedAt = isoDate(writtenOn) ?? new Date().toISOString().slice(0, 10);
+  // `dateToIso`, not `toISOString().slice(0, 10)`. The second is a UTC date,
+  // and every other date in this app is a local one — so a pack written in
+  // Kiritimati at UTC noon would be stamped the 19th on a day the device's
+  // own calendar calls the 20th. That is the bug CI's `test:zones` step was
+  // added for, in the same direction: a UTC instant read as a local day.
+  out.importedAt = isoDate(writtenOn) ?? dateToIso(new Date());
   out.capabilities = caps;
   if (Object.keys(school.data).length) out.data = school.data;
 
