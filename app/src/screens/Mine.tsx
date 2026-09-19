@@ -13,7 +13,7 @@ import { addFile, formatBytes, listFiles, openFile, type FileMeta } from '../lib
 import { Drive } from './mine/Drive';
 import { dateToIso, isoToDate, longLabel } from '../lib/date';
 import { codeOf } from '../lib/call';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import type { CourseId, Note, PersonalTask } from '../lib/types';
 import { EVENT_KINDS, kindOf, type EventKindId } from '../lib/kinds';
 import {
@@ -347,7 +347,10 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
           setEditing(true);
         }}
         aria-label={`Edit ${t.title}`}
-        style={{ flex: 1, minWidth: 0, textAlign: 'left', opacity: t.done ? 0.42 : 1, padding: 0 }}
+        // Ticked off dims the whole button. The line under the title sets
+        // `--app-dim` of its own, so at 0.42 the course tag, the date and the
+        // step count all rendered at 0.27. See `lib/dim.ts`.
+        style={{ flex: 1, minWidth: 0, textAlign: 'left', opacity: t.done ? DIMMED_ROW : 1, padding: 0 }}
       >
         <span
           style={{
@@ -359,7 +362,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         >
           {t.title}
         </span>
-        <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 3 }}>
+        <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine(t.done), marginTop: 3 }}>
           <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
             {t.courseId ? courseCode(t.courseId) : 'Personal'}
           </span>
@@ -1376,7 +1379,7 @@ function Notes({ rows }: { rows?: Note[] }) {
                   {n.body.slice(0, 60) || 'Empty'}
                 </span>
               </span>
-              <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+              <ChevronRight size={16} style={{ color: 'var(--app-dim)', flex: 'none' }} />
             </button>
             {/* Beside the row rather than inside it: the row is one big button
                 and a button inside a button is not a thing HTML has. Always
@@ -1632,7 +1635,7 @@ export function NoteEditor() {
         dispatch({ type: 'back' });
         }}
         tone="ghost" spacing="0.12em"
-        style={{ marginTop: 18, opacity: 0.7 }}
+        style={{ marginTop: 18, color: 'var(--app-dim)' }}
       >
         Delete note
       </ActionButton>

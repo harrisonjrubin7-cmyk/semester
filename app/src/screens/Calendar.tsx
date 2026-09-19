@@ -1,5 +1,5 @@
 import { useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
 import { Page } from '../components/Page';
@@ -414,19 +414,29 @@ function DayView() {
                     }}
                   />
                 </div>
-                <div style={{ flex: 1, padding: '11px 0 15px', minWidth: 0 }}>
+                <div
+                  style={{
+                    flex: 1,
+                    padding: '11px 0 15px',
+                    minWidth: 0,
+                    // Cancelled is a state of the whole block. On the title
+                    // alone it left the meta line under it at full `--app-dim`
+                    // beside a 0.45 heading, which reads as a rendering fault;
+                    // and where it did reach text it multiplied. `lib/dim.ts`.
+                    opacity: b.canceled ? DIMMED_ROW : 1,
+                  }}
+                >
                   <div
                     style={{
                       fontFamily: 'var(--font-heading)',
                       fontSize: 'calc(18px * var(--text-scale, 1))',
                       lineHeight: 1.15,
-                      opacity: b.canceled ? 0.45 : 1,
                       textDecoration: b.canceled ? 'line-through' : 'none',
                     }}
                   >
                     {b.title}
                   </div>
-                  <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
+                  <div style={{ fontSize: 'var(--type-sm)', ...secondLine(b.canceled) }}>
                     {b.mine && (
                       <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
                         Yours
@@ -620,7 +630,7 @@ function DayTask({ task: t, drag }: { task: PersonalTask; drag?: HTMLAttributes<
         gap: 'var(--sp-5)',
         alignItems: 'center',
         ...taskRow,
-        opacity: t.done ? 0.45 : 1,
+        opacity: t.done ? DIMMED_ROW : 1,
       }}
     >
       <button
@@ -1010,7 +1020,7 @@ function WeekView() {
                       {e.time} · {e.where}
                     </span>
                   </span>
-                  <ChevronRight size={14} style={{ opacity: 0.4, flex: 'none' }} />
+                  <ChevronRight size={14} style={{ color: 'var(--app-dim)', flex: 'none' }} />
                 </button>
               ))}
               {feedWeek.map((e) => (
@@ -1475,8 +1485,14 @@ function MonthView() {
                 style={{
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'var(--type-lg)',
-                  opacity: isToday || isSelected ? 1 : 0.8,
-                  color: isToday ? 'var(--app-accent)' : 'var(--app-fg)',
+                  // An ordinary day was `--app-fg` faded to 0.8, which is a
+                  // rung nothing audits. `--app-dim` is the quiet rung the
+                  // ramp is walked on, and the one "Increase contrast" lifts.
+                  color: isToday
+                    ? 'var(--app-accent)'
+                    : isSelected
+                      ? 'var(--app-fg)'
+                      : 'var(--app-dim)',
                 }}
               >
                 {d}
@@ -1587,7 +1603,7 @@ function MonthView() {
                 {label}
               </span>
             ))}
-            <span style={{ opacity: 0.8 }}>Colour = course</span>
+            <span style={{ color: 'var(--app-dim)' }}>Colour = course</span>
           </div>
         }
       />
@@ -1661,7 +1677,9 @@ function MonthView() {
             width: '100%',
             textAlign: 'left',
             ...monthTaskRow,
-            opacity: drag.held && 'id' in drag.held && drag.held.id === t.id ? 0.4 : 1,
+            // The row a finger is carrying: its own state, and the token
+            // that already means "not what you are here for" here.
+            opacity: drag.held && 'id' in drag.held && drag.held.id === t.id ? DIMMED_ROW : 1,
           }}
         >
           <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)' }}>
@@ -1756,7 +1774,7 @@ function MonthView() {
                   </span>
                 )}
               </span>
-              <ChevronRight size={14} style={{ opacity: 0.4, flex: 'none' }} />
+              <ChevronRight size={14} style={{ color: 'var(--app-dim)', flex: 'none' }} />
             </button>
           ))}
         </>
@@ -1835,7 +1853,7 @@ function MonthView() {
                   {e.time} · {e.where}
                 </span>
               </span>
-              <ChevronRight size={14} style={{ opacity: 0.4, flex: 'none' }} />
+              <ChevronRight size={14} style={{ color: 'var(--app-dim)', flex: 'none' }} />
             </button>
           ))}
           {selFeed.map((e) => (
@@ -1901,7 +1919,17 @@ function MonthView() {
 // ── Semester ──────────────────────────────────────────────────────────────
 
 /** What a week row lists under its bar — deadlines, then what is on. */
-const WEEK_LIST: CSSProperties = { fontSize: 'var(--type-sm)', opacity: 0.72, lineHeight: 1.35 };
+const WEEK_LIST: CSSProperties = {
+  fontSize: 'var(--type-sm)',
+  // Shared by every line in every week row, so the one hand-written 0.72 here
+  // was the widest single dim in the view. A colour rather than a fade, so it
+  // is on the rung `contrast.test.ts` walks and rises with "Increase
+  // contrast". It still composes with the row's own opacity while something
+  // is being dragged — 0.41 rather than the 0.29 that pairing used to give —
+  // and that one is the ghost doing what a ghost is for.
+  color: 'var(--app-dim)',
+  lineHeight: 1.35,
+};
 
 /**
  * One nameable thing in a week, as something a finger can hit.
@@ -2316,7 +2344,7 @@ function SemesterView() {
                   w.appts.length === 0 &&
                   w.classes === 0 ? (
                     <div
-                      style={{ flex: 1, background: 'var(--app-track)', opacity: 0.4, height: 2, alignSelf: 'center' }}
+                      style={{ flex: 1, background: 'var(--app-line-soft)', height: 2, alignSelf: 'center' }}
                     />
                   ) : (
                     <>
@@ -2414,7 +2442,7 @@ function SemesterView() {
                           if (drag.tookDrop()) return;
                           dispatch({ type: 'openItem', id: it.id });
                         }}
-                        style={{ ...WEEK_ROW, opacity: drag.held?.id === it.id ? 0.4 : 1 }}
+                        style={{ ...WEEK_ROW, opacity: drag.held?.id === it.id ? DIMMED_ROW : 1 }}
                       >
                         <span>
                           <span style={{ color: 'var(--app-dim)' }}>{catalog.byId[it.c]?.code.split(' ')[0]}</span>{' '}
@@ -2495,7 +2523,7 @@ function SemesterView() {
                         }}
                         style={{
                           ...WEEK_ROW,
-                          opacity: drag.held?.id === t.id ? 0.4 : 1,
+                          opacity: drag.held?.id === t.id ? DIMMED_ROW : 1,
                           textDecoration: t.done ? 'line-through' : 'none',
                         }}
                       >

@@ -110,7 +110,10 @@ function NextClassCard() {
           paddingTop: 11,
           borderTop: '1px solid var(--app-line)',
           fontSize: 'var(--type-base)',
-          opacity: 0.85,
+          // A colour, not a fade: `--app-dim` is the rung `contrast.test.ts`
+          // walks on every ground, and it is the one "Increase contrast" can
+          // reach. An `opacity` is neither. See `lib/dim.ts`.
+          color: 'var(--app-dim)',
           textWrap: 'pretty',
         }}
       >
@@ -367,7 +370,7 @@ function ThisWeek() {
                 {nextEvent.time} · {nextEvent.where}
               </div>
             </div>
-            <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+            <ChevronRight size={16} style={{ color: 'var(--app-dim)', flex: 'none' }} />
           </Blueprint>
         </>
       )}
@@ -387,7 +390,22 @@ function ThisWeek() {
       {days.map((d, i) => (
         <div
           key={d.date.toISOString()}
-          style={{ display: 'flex', gap: 'var(--sp-6)', alignItems: 'baseline', ...row }}
+          style={{
+            display: 'flex',
+            gap: 'var(--sp-6)',
+            alignItems: 'baseline',
+            ...row,
+            /*
+             * A day with nothing on it is one state of one row, so it is the
+             * row that dims — label and word together. It was two numbers
+             * instead, 0.35 on the label and 0.3 on the word, each picked by
+             * eye on the dark ground and held to no threshold; on Parchment
+             * the same pair fades faster. `--app-row-dim` carries the
+             * ground's own audited alpha and rises when the device asks for
+             * more contrast. See `lib/dim.ts`.
+             */
+            opacity: d.items.length + d.tasks.length === 0 ? DIMMED_ROW : 1,
+          }}
         >
           <span
             style={{
@@ -397,14 +415,17 @@ function ThisWeek() {
               fontSize: 'var(--type-xs)',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              opacity: d.items.length + d.tasks.length > 0 ? 0.8 : 0.35,
+              // Quiet beside a day that has something on it. Inside a dimmed
+              // row it takes no colour of its own, which is the
+              // multiplication `secondLine` exists to stop.
+              ...secondLine(d.items.length + d.tasks.length === 0),
             }}
           >
             {i === 0 ? 'Today' : d.label}
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
             {d.items.length + d.tasks.length === 0 ? (
-              <span style={{ fontSize: 'var(--type-sm)', opacity: 0.3 }}>Clear</span>
+              <span style={{ fontSize: 'var(--type-sm)' }}>Clear</span>
             ) : (
               d.items.map((item) => (
                 <button
@@ -419,6 +440,16 @@ function ThisWeek() {
                     textAlign: 'left',
                     width: '100%',
                     padding: 'var(--sp-2) 0',
+                    /*
+                     * Ticked off dims the row, which is what `DeadlineRow`
+                     * already does with the same token. It was on the title
+                     * alone at 0.45, so the coloured edge, the chevron and
+                     * the line under it all stayed at full strength — a row
+                     * half-dimmed reads as a rendering fault rather than as a
+                     * state, and the line under it was compounding besides:
+                     * `--app-dim` inside a 0.45 title is 0.29 on the ground.
+                     */
+                    opacity: state.done[item.id] ? DIMMED_ROW : 1,
                   }}
                 >
                   <span
@@ -435,7 +466,6 @@ function ThisWeek() {
                         display: 'block',
                         fontSize: 'var(--type-base)',
                         lineHeight: 'var(--leading-normal)',
-                        opacity: state.done[item.id] ? 0.45 : 1,
                         textDecoration: state.done[item.id] ? 'line-through' : 'none',
                       }}
                     >
@@ -445,7 +475,7 @@ function ThisWeek() {
                       style={{
                         display: 'block',
                         fontSize: 'var(--type-xs)',
-                        color: 'var(--app-dim)',
+                        ...secondLine(state.done[item.id]),
                         marginTop: 'var(--sp-1)',
                       }}
                     >
@@ -454,7 +484,7 @@ function ThisWeek() {
                         .join(' · ')}
                     </span>
                   </span>
-                  <ChevronRight size={14} style={{ opacity: 0.3, flex: 'none' }} />
+                  <ChevronRight size={14} style={{ color: 'var(--app-dim)', flex: 'none' }} />
                 </button>
               ))
             )}
@@ -1398,7 +1428,7 @@ function DoneToday() {
               paddingTop: 11,
               borderTop: '1px solid var(--app-line)',
               fontSize: 'var(--type-base)',
-              opacity: 0.8,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-relaxed)',
             }}
           >
@@ -1643,17 +1673,31 @@ function FeedHome() {
                 style={{
                   flex: 1,
                   minWidth: 0,
-                  opacity: f.done || f.canceled ? 0.42 : 1,
+                  // Done or cancelled is a state of the whole row. 0.42 was
+                  // one of five call sites that had each arrived at 0.40,
+                  // 0.42 or 0.45 by eye on the dark ground; the token is
+                  // audited on every ground and rises with "Increase
+                  // contrast". See `lib/dim.ts`.
+                  opacity: f.done || f.canceled ? DIMMED_ROW : 1,
                 }}
               >
                 <div style={{ display: 'flex', gap: 7, alignItems: 'center', marginBottom: 3 }}>
-                  <CourseTag id={f.c} style={f.isClass ? { opacity: 0.75 } : undefined}>
+                  {/*
+                    The chip said "class" a second time by fading to 0.75, and
+                    it was the only place in the app that did. The kind is
+                    already written out in words immediately beside it, and
+                    the filter above the feed separates Classes from Due, so
+                    the fade was a third channel carrying nothing — at the
+                    cost of the chip's audited ink-on-wash pair, and of 0.32
+                    on a row that is also done.
+                  */}
+                  <CourseTag id={f.c}>
                     {f.code}
                   </CourseTag>
                   <span
                     style={{
                       fontSize: 'var(--type-xs)',
-                      color: 'var(--app-dim)',
+                      ...secondLine(f.done || f.canceled),
                       fontFamily: 'var(--font-heading)',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
@@ -1671,7 +1715,7 @@ function FeedHome() {
                 >
                   {f.title}
                 </div>
-                <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{f.meta}</div>
+                <div style={{ fontSize: 'var(--type-sm)', ...secondLine(f.done || f.canceled), marginTop: 'var(--sp-1)' }}>{f.meta}</div>
               </div>
             </button>
           ))}
