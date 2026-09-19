@@ -92,7 +92,15 @@ describe('standing', () => {
   });
 
   it('says submitted without implying it was any good', () => {
-    expect(standing({ submitted_at: '2026-09-12T14:00:00Z' }, 100)).toContain('Submitted 2026-09-12');
+    // Built from local parts rather than written as a UTC instant, and the
+    // difference is a real one this test got wrong first: `standing` renders
+    // the submission's *local* date, which is the app's convention everywhere
+    // and is the date the student sees on their own phone. A hard-coded
+    // `2026-09-12T14:00:00Z` is only the 12th for zones behind UTC+10 — it is
+    // the 13th in Kiritimati, where `npm run test:zones` runs, so the
+    // expectation was about the runner's clock rather than about the code.
+    const at = new Date(2026, 8, 12, 14, 0);
+    expect(standing({ submitted_at: at.toISOString() }, 100)).toBe('Submitted 2026-09-12');
   });
 
   it("reports missing as Canvas's own flag", () => {
