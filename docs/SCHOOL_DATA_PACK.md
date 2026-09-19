@@ -92,6 +92,29 @@ field expecting it to appear on a screen, they find out.
 Every branch is optional. A branch that is absent means the app asks the
 student instead, which is a worse experience and an honest one.
 
+### What reaches a screen, and what does not — read this before exporting
+
+Two of the branches below are **stored and read back correctly, and rendered
+by nothing yet**. They are documented because the format carries them, not
+because we are asking for them, and a university should not spend an
+afternoon on either:
+
+| Branch | Reaches a screen? |
+| --- | --- |
+| `academicCalendar` | **Yes** — Term deadlines |
+| `mealPlanTiers` | **Yes** — Meal plan |
+| `housing` | **Yes** — the move-out date |
+| `gradeSystem` | **Yes** — grade cutoffs and the term GPA band |
+| `athleticsFeedUrl` | **Yes** — Connect |
+| `buildings` | **No.** The campus map searches OpenStreetMap live, biased to a box around campus, so it does not need a bundled list. Sending one is not wrong; it is just not read yet |
+| `gradingNotes` | **No.** Carried and stored, rendered nowhere at present |
+
+This list is a measurement, not a promise about the future — it was taken by
+grepping `app/src` for each field. If you are deciding where to spend an
+hour, spend it on `academicCalendar`: it is the branch with the most rows,
+the shortest shelf life, and the only one whose mistakes cost a student
+money.
+
 ### `academicCalendar`
 
 The expensive dates. A syllabus carries the assignments; the registrar carries
@@ -132,6 +155,8 @@ registration for next term opens.
 
 ### `buildings`
 
+**Not rendered yet** — see the table above before spending time here.
+
 ```jsonc
 "buildings": [{ "name": "Featheringill Hall", "abbr": "FGH", "lat": 36.1447, "lng": -86.8027 }]
 ```
@@ -165,6 +190,9 @@ rule rather than a Vanderbilt fact, and any university that counts move-out
 from a student's last exam uses it.
 
 ### `gradeSystem` and `gradingNotes`
+
+`gradeSystem` is read. **`gradingNotes` is not rendered yet** — see the table
+above.
 
 Most universities publish what an A− is worth towards a GPA and leave the
 percentage that earns one to the instructor. If that is true of yours, send
