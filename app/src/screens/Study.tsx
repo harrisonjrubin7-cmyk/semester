@@ -9,6 +9,7 @@ import { TermSwitch } from '../components/TermSwitch';
 import { FirstRun } from './FirstRun';
 import { extraFigures, forCourse, liveGuide, mergeFigures } from '../lib/live';
 import { modesFor } from '../lib/modes';
+import { secondLine } from '../lib/dim';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, SectionLabel, Segmented } from '../components/ui';
 import { Standing } from '../components/Standing';
@@ -343,7 +344,7 @@ export function Study() {
               paddingTop: 11,
               borderTop: '1px solid var(--app-line)',
               fontSize: 'var(--type-base)',
-              opacity: 0.85,
+              color: 'var(--app-dim)',
               textWrap: 'pretty',
             }}
           >
@@ -515,7 +516,7 @@ export function Study() {
                         {p.why}
                       </span>
                     </span>
-                    <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+                    <ChevronRight size={16} style={{ color: 'var(--app-dim)', flex: 'none' }} />
                   </Blueprint>
                 );
               })}
@@ -897,7 +898,7 @@ export function Study() {
                         letterSpacing: '0.1em',
                         textTransform: 'uppercase',
                         background: 'transparent',
-                        opacity: 0.7,
+                        color: 'var(--app-dim)',
                       }}
                     >
                       All {ways.length} ways
@@ -1121,7 +1122,7 @@ export function Study() {
                     · {s.why}
                   </span>
                 </span>
-                <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+                <ChevronRight size={16} style={{ color: 'var(--app-dim)', flex: 'none' }} />
               </button>
             ))}
           </div>
@@ -1240,7 +1241,7 @@ export function Study() {
                   ...rowTwelve,
                 }}
               >
-                <span style={{ width: 44, flex: 'none', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-md)', opacity: 0.45 }}>
+                <span style={{ width: 44, flex: 'none', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-md)', ...secondLine() }}>
                   {s.minutes}m
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
@@ -1249,7 +1250,7 @@ export function Study() {
                     {s.code} · {s.why}
                   </span>
                 </span>
-                <ChevronRight size={14} style={{ opacity: 0.35, flex: 'none' }} />
+                <ChevronRight size={14} style={{ color: 'var(--app-dim)', flex: 'none' }} />
               </button>
             ))}
         </>

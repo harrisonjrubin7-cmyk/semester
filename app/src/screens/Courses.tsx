@@ -4,6 +4,7 @@ import { useNow, useStore } from '../state/store';
 import { draftFor } from '../lib/mail';
 import type { CourseId, CoursesTab } from '../lib/types';
 import { nameFor, renamed } from '../lib/yours';
+import { secondLine } from '../lib/dim';
 import { HowLong } from '../components/HowLong';
 import { Timer } from '../components/Timer';
 import { ShareCourse } from '../components/ShareCourse';
@@ -507,7 +508,7 @@ function CourseInformation() {
           where somebody checks what a course actually is — dropping the real
           name here would make the rename a way to lose information. */}
       {renamed(course, state.yours) ? (
-        <div style={{ fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 'var(--sp-1)' }}>{course.name}</div>
+        <div style={{ fontSize: 'var(--type-sm)', ...secondLine(), marginTop: 'var(--sp-1)' }}>{course.name}</div>
       ) : null}
       <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 3 }}>
         {course.prof} · {course.email}
@@ -665,7 +666,7 @@ function CourseInformation() {
       <div
         style={{
           fontSize: 'var(--type-xs)',
-          opacity: 0.45,
+          color: 'var(--app-dim)',
           marginTop: 14,
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.08em',
@@ -788,7 +789,7 @@ export function ItemDetail() {
           padding: '2px 0 2px 14px',
           fontSize: 'var(--type-base)',
           lineHeight: 'var(--leading-relaxed)',
-          opacity: 0.75,
+          color: 'var(--app-dim)',
           fontStyle: 'italic',
         }}
       >
@@ -802,10 +803,13 @@ export function ItemDetail() {
           letterSpacing: '0.08em',
         }}
       >
-        {/* The fade is on the filename rather than on the line, because
-            `opacity` on a parent is a ceiling its children cannot raise and
-            the page below is something you press. See `.to-page`. */}
-        <span style={{ opacity: 0.45 }}>{item.source}</span>
+        {/* Quiet on the filename rather than on the line, because a dim
+            set on the parent would land on the page link below it too, and
+            that is something you press. It was an `opacity`, which had the
+            same argument against it one level down — a ceiling its children
+            cannot raise, and one no palette audit can see. See `.to-page`
+            and `lib/dim.ts`. */}
+        <span style={{ ...secondLine() }}>{item.source}</span>
         {/* The page, where the API cited it — and the document it is a page
             of, where that is still in the drive. This is what turns "the app
             says the syllabus says this" into something you can check in ten

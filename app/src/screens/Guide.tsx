@@ -22,7 +22,7 @@ import { FieldGuide } from './Field';
 import { ChevronRight, Plus } from '../components/Icons';
 import { ask, mine, playHere, seekTo, usePlayback } from '../lib/sound.hook';
 import { clock, through } from '../lib/sound';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { FigureCard } from '../components/FigureCard';
 import { PrintButton } from '../components/PrintButton';
 import { buildQuiz } from '../lib/quiz';
@@ -275,7 +275,7 @@ export function Guide() {
                 {saysKnowing(standings[weak.index]?.state ?? 'unseen')} — drill this one first
               </span>
             </span>
-            <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+            <ChevronRight size={16} style={{ color: 'var(--app-dim)', flex: 'none' }} />
           </Blueprint>
 
           <SectionLabel>Units</SectionLabel>
@@ -298,7 +298,7 @@ export function Guide() {
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'calc(20px * var(--text-scale, 1))',
-                  opacity: 0.4,
+                  color: 'var(--app-dim)',
                 }}
               >
                 {i + 1}
@@ -358,7 +358,7 @@ export function Guide() {
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
-                    opacity: 0.75,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   Guess first
@@ -397,7 +397,7 @@ export function Guide() {
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'calc(20px * var(--text-scale, 1))',
-                  opacity: 0.4,
+                  color: 'var(--app-dim)',
                 }}
               >
                 ★
@@ -510,7 +510,7 @@ export function Guide() {
                       fontSize: 'var(--type-xs)',
                       letterSpacing: '0.1em',
                       textTransform: 'uppercase',
-                      opacity: 0.45,
+                      ...secondLine(),
                       flex: 'none',
                     }}
                   >
@@ -663,7 +663,7 @@ export function Guide() {
       <div
         style={{
           fontSize: 'var(--type-xs)',
-          opacity: 0.45,
+          color: 'var(--app-dim)',
           marginTop: 22,
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.08em',
@@ -731,7 +731,13 @@ function Watch() {
                 gap: 'var(--sp-6)',
                 alignItems: 'center',
                 ...tallRow,
-                opacity: lesson ? 1 : 0.4,
+                /*
+                 * No recording yet is a state of the row. It was 0.4, and the
+                 * line under the name set `--app-dim` of its own inside it —
+                 * so "not recorded", the two words the dimming exists to
+                 * explain, rendered at 0.26 of the ground. See `lib/dim.ts`.
+                 */
+                opacity: lesson ? 1 : DIMMED_ROW,
                 textAlign: 'left',
               }}
             >
@@ -741,7 +747,7 @@ function Watch() {
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'calc(20px * var(--text-scale, 1))',
-                  opacity: 0.4,
+                  ...secondLine(!lesson),
                 }}
               >
                 {i + 1}
@@ -752,7 +758,7 @@ function Watch() {
                   style={{
                     display: 'block',
                     fontSize: 'var(--type-xs)',
-                    color: 'var(--app-dim)',
+                    ...secondLine(!lesson),
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
@@ -763,7 +769,7 @@ function Watch() {
                   {added > 0 && ` · ${added} added since`}
                 </span>
               </span>
-              <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+              <ChevronRight size={16} style={{ color: 'var(--app-dim)', flex: 'none' }} />
             </button>
           );
         })}
@@ -820,7 +826,7 @@ function Decks() {
             <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
               The whole course as a PowerPoint deck
             </span>
-            <ChevronRight size={15} style={{ opacity: 0.4, flex: 'none' }} />
+            <ChevronRight size={15} style={{ color: 'var(--app-dim)', flex: 'none' }} />
           </Blueprint>
         </a>
       ) : (
@@ -848,7 +854,7 @@ function Decks() {
           <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
             Build a deck from any unit — a real PowerPoint file, written here
           </span>
-          <ChevronRight size={15} style={{ opacity: 0.4, flex: 'none' }} />
+          <ChevronRight size={15} style={{ color: 'var(--app-dim)', flex: 'none' }} />
         </Blueprint>
       )}
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: 14 }}>
@@ -872,7 +878,7 @@ function Decks() {
                 flex: 'none',
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'calc(20px * var(--text-scale, 1))',
-                opacity: 0.4,
+                color: 'var(--app-dim)',
               }}
             >
               {i + 1}
@@ -893,7 +899,7 @@ function Decks() {
                 {u.cards.length * 2 + 2} slides
               </span>
             </span>
-            <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+            <ChevronRight size={16} style={{ color: 'var(--app-dim)', flex: 'none' }} />
           </button>
         ))}
       </div>
@@ -994,7 +1000,7 @@ function Documents() {
                     {f.note}
                   </span>
                 </span>
-                <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+                <ChevronRight size={16} style={{ color: 'var(--app-dim)', flex: 'none' }} />
               </Blueprint>
             </a>
           ))}
@@ -1770,7 +1776,7 @@ function Listen() {
               paddingTop: 'var(--sp-6)',
               borderTop: '1px solid var(--app-line)',
               fontSize: 'var(--type-sm)',
-              opacity: 0.7,
+              color: 'var(--app-dim)',
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
