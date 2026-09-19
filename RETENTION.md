@@ -1,0 +1,155 @@
+# How long this project keeps things
+
+The schedule exists. It was never written down in one place, which is a
+different problem from not having one, and it is the problem this file is for.
+
+Three clocks run today, a fourth was written and is not running, and everything
+else is kept until somebody deletes it. All four are in migrations, one is in an
+Edge Function, and the promise they are all held to is a paragraph on a screen.
+Nobody deciding whether this project is safe to pilot could have assembled that,
+and the first person who had to would have been assembling it under pressure.
+
+`app/src/lib/retention.test.ts` is the tripwire. It is bidirectional, in the
+shape [`SECURITY.md`](SECURITY.md) uses: every table in the schema must appear
+here, and every table named here must exist. A table added later with no
+retention answer is the failure this catches, and it is silent otherwise —
+nothing goes red, the document still reads well, and the answer is missing on
+the day somebody needs it.
+
+## The promise this cannot break
+
+`app/src/lib/privacy.ts` tells every student, on a screen in the app:
+
+> **How long anything is kept.** Until you delete it. There is no retention
+> schedule that quietly removes your work, and no archive kept after you delete
+> your account. Nothing is used to train anything. The one thing that does age
+> out is not your work but a record about it: the log of who has read your rows,
+> described below, keeps ninety days and drops what is older.
+
+That is a commitment, not a default, and it decides the shape of everything
+below. **A retention schedule here may age out records _about_ a student's work.
+It may not age out the work.** Adding a clock to `notes`, `tasks`, `courses`,
+`state` or anything else a student typed would make that paragraph false, and
+the paragraph is load-bearing — `VANDERBILT-AUDIT.md` and the competitive
+review both rest the product's honest-privacy claim on it.
+
+So "no retention schedule" is not a gap in this project. It is the decision.
+What was missing is the sentence saying so, and the list of the exceptions.
+
+## The clocks that run
+
+| What | Kept | Where it is enforced | How it runs |
+| --- | --- | --- | --- |
+| `access_log` | **90 days** | `supabase/migrations/20260901001300_access_log.sql` | On write, inside `note_access()`, scoped to the account being written to |
+| `push_queue` | **Until sent** | `supabase/functions/push/index.ts` | Deleted per account by id after a successful send |
+| `push_devices` | **Until the push service rejects it** | `supabase/functions/push/index.ts` | A 404 or 410 from the endpoint retires the row |
+
+The whole push queue is also deleted immediately when a student switches
+reminders off — that is in the privacy text above and is a user action rather
+than a clock, but it is the reason the queue never holds much.
+
+`access_log` prunes on write rather than on a schedule, and the migration says
+why: a `pg_cron` entry is a third thing to deploy and a fourth thing to notice
+has stopped. The cost is that a dormant account's log is not pruned until
+something touches it again, which is a property worth knowing and not a defect —
+the rows are per account per day per client family, never an address and never a
+user agent.
+
+## The clock that was written and does not run
+
+`public.sweep_tombstones(older_than interval default '90 days')`, in
+`supabase/migrations/20260901000700_records.sql`, deletes soft-deleted rows from
+`notes`, `tasks`, `appointments`, `sittings` and `courses`.
+
+**Nothing calls it.** It is revoked from `public`, `anon` and `authenticated`,
+so it is not reachable from the API, and the only caller anywhere in this
+repository is `supabase/records.check.sql`, which is the test suite. Its own
+header is explicit that this is deliberate:
+
+> Not scheduled here. Run it by hand, or attach it to `pg_cron` if you have it —
+> an automatic job that deletes rows is not something this file should switch on
+> without you having read this paragraph.
+
+So the live state is: **a row a student deletes leaves a tombstone that is kept
+indefinitely.** That is not a contradiction of the privacy page — a tombstone is
+`{ id, deleted_at }` with the content gone, and it exists so that a delete on one
+device is not resurrected by another device that was offline. But "indefinitely"
+is a decision nobody has actually taken, and this project *does* have `pg_cron`:
+`supabase/scheduler.sql` already deploys it and runs the push job on it.
+
+**This is the one open item in this document, and it is the owner's to decide.**
+Left as it is, it is defensible and should be said out loud rather than left to
+be discovered. Switched on, it is one statement, alongside the push job:
+
+```sql
+select cron.schedule(
+  'tombstones',
+  '17 4 * * 0',                          -- Sundays, off the push job's cadence
+  $$select public.sweep_tombstones('90 days')$$
+);
+```
+
+Do not add that to a migration without deciding it. The migration's paragraph is
+right that a file which silently starts deleting rows is the wrong way for this
+to arrive.
+
+## Everything else: until you delete it
+
+Every remaining table is kept for the life of the account and removed when the
+account is deleted. That path is `deleteEverything` in `app/src/lib/cloud.ts`,
+which sends one delete per table under row-level security, and it is checked two
+ways: `app/src/lib/privacy.test.ts` reads every module that writes a table and
+fails if one is missing from the list, and `supabase/deletion.check.sql` proves
+the policies actually permit each delete against a real Postgres.
+
+That pairing matters more than it looks. A delete the policies refuse returns
+`row_count = 0` rather than an error, so a forgotten delete policy is a row left
+behind and a client that believes it succeeded.
+
+| Table | Kept until | Notes |
+| --- | --- | --- |
+| `state` | account deletion | the sync payload |
+| `courses` | account deletion | soft-deleted rows leave a tombstone — see above |
+| `usage` | account deletion | which screens have been opened, and the day each last was |
+| `notes`, `tasks`, `appointments`, `sittings` | account deletion | soft-deleted rows leave a tombstone — see above |
+| `profiles`, `enrollments` | account deletion | |
+| `messages`, `message_reactions` | account deletion | |
+| `groups`, `group_members`, `group_tasks` | account deletion of the member | a group you started **stays** — other members rely on it. `KEPT_TABLES` in `deletion.check.sql` holds the three exceptions with the reason the privacy page prints |
+| `forms`, `form_responses` | account deletion | |
+| `calendar_feeds` | account deletion | the published feed token; the Export screen can retire and reissue it |
+| `reports` | account deletion of the reporter | |
+| `blocks` | **not** lifted by deletion | keyed on `blocked`, not `user_id`, so deleting your account cannot undo somebody else's protection. This is deliberate and `deletion.check.sql` pins it |
+| `push_devices`, `push_queue` | see the clocks above | |
+| `access_log` | 90 days, see above | readable by the account it is about, which is the difference between an audit log and an operator's private diary |
+| `invites`, `access_gate` | **no answer yet** — see below | |
+
+## What has no answer, stated rather than rounded off
+
+Two, and neither is urgent, and both should be answered before a pilot grows
+past people the owner knows by name.
+
+- **`invites` is an allow-list of email addresses with no expiry.** The table is
+  `(email, invited_at, note)` and nothing removes a row. Somebody invited to a
+  pilot in September is still an invited address indefinitely. It is revoked
+  from `anon` and `authenticated` and unreachable from the API, so the exposure
+  is small — but an address collected for a pilot that ended is a record kept
+  for no one's benefit, which is the same argument `access_log` was given a
+  ninety-day life on.
+- **An abandoned account is kept forever.** Nothing ages out an account nobody
+  opens again. That is the correct default for coursework — a student who comes
+  back in January should find their semester — but it is a default, not a
+  decision, and it is the one a data-protection reviewer will ask about.
+
+Neither is a bug. Both are questions this document exists to stop being
+invisible.
+
+## Changing any of this
+
+1. Decide it, and write the reason here — this file is the record.
+2. If it touches what a student sees, `app/src/lib/privacy.ts` says it in the
+   app, and that text is what people are actually told. It wins over this file;
+   this file explains it.
+3. Run `supabase/check.sh` — the policy suites run against a real Postgres with
+   every migration applied, and a retention change that breaks a delete policy
+   fails there rather than in production.
+4. `npm test` from `app/` runs the tripwire.

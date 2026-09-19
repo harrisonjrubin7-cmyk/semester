@@ -181,6 +181,53 @@ jobs:
         working-directory: app
         run: npm run build
 
+      # ── Opening the app's own addresses, cold ────────────────────────────
+      #
+      # Everything above this line runs in jsdom or in node. Nothing in CI had
+      # ever opened the built app in a browser, and one class of bug lives in
+      # exactly that gap: an address that works when you walk to it and draws
+      # the wrong thing when you arrive at it. `#/course/bus` shipped doing
+      # that — a bookmark, a shared link or an installed copy reopening drew a
+      # different course entirely and rewrote the address bar to match.
+      #
+      # `state/deeplink.test.tsx` holds that one bug in jsdom. This holds the
+      # class, against the bundle that actually ships: the production build,
+      # the base path every asset is rewritten against, and a hash present in
+      # the first navigation rather than assigned to a page already mounted.
+      # Reverting the fix in `state/store.tsx` takes all four courses red here
+      # and names what each drew instead; the no-own-course control stays
+      # green, because an empty catalogue never had the bug.
+      #
+      # It rides the build above rather than paying for its own runner and its
+      # own `npm ci`, the way the button sweep rides the contrast one.
+      #
+      # `vite preview` and not `npm run dev`, which is the opposite of the
+      # choice `contrast.yml` makes and for the opposite reason: that sweep
+      # measures paint and was verified against the dev server, while this one
+      # is about what a deploy does, so the dev server is the wrong subject.
+      - name: Install playwright and a browser
+        run: |
+          mkdir -p /tmp/smoke && cd /tmp/smoke
+          echo '{"name":"smoke","private":true,"type":"module"}' > package.json
+          npm install --no-save playwright
+          npx --yes playwright install --with-deps chromium
+
+      - name: Serve the built app
+        working-directory: app
+        run: |
+          npx vite preview --port 4173 > /tmp/preview.log 2>&1 &
+          timeout 120 bash -c 'until curl -sf http://localhost:4173 >/dev/null; do sleep 1; done'
+          echo "preview up"
+
+      # Exits 1 on a finding and 2 if it could not run at all — a server that
+      # never came up is not a clean sweep, and the script refuses to report
+      # one as though it were.
+      - name: Open every address cold
+        working-directory: app
+        env:
+          SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
+        run: npm run smoke:cold
+
       # Runs at the repo root and needs no dependencies of its own — it reads
       # the course modules as source.
       - name: Validate the course data
