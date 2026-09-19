@@ -979,3 +979,54 @@ export async function fetchIcsVia(url: string): Promise<string> {
   }
   throw new Error(said || `The calendar could not be read (${res.status}).`);
 }
+
+/**
+ * One Canvas API path, read through the account.
+ *
+ * The same arrangement as `fetchIcsVia` above and for the same reason — Canvas
+ * sends no CORS headers — with one difference that decides the shape of both
+ * this and `supabase/functions/canvas/index.ts`: the secret being carried is an
+ * access token rather than a feed URL, so it is the student's whole Canvas
+ * account rather than their timetable.
+ *
+ * Which is why the host, the path and the token all go in the body. A query
+ * string lands in every log between here and there, and `lib/canvas.ts` says
+ * what that would mean for this one.
+ */
+export async function fetchCanvasVia(key: { host: string; token: string }, path: string): Promise<string> {
+  const db = await cloud();
+  const { data } = await db.auth.getSession();
+  const session = data.session?.access_token;
+  if (!session) throw new Error('Signed out.');
+  let res: Response;
+  try {
+    res = await fetchWithin(
+      `${feedBase()}/canvas`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session}`,
+          apikey: KEY,
+        },
+        body: JSON.stringify({ host: key.host, path, token: key.token }),
+      },
+      MOVE_MS,
+    );
+  } catch (e) {
+    if (timedOut(e)) throw new Error(tookTooLong('Canvas'));
+    throw e;
+  }
+  const text = await res.text();
+  if (res.ok) return text;
+  // The function answers a refusal as JSON with its own sentence in it, and
+  // that sentence knows things a status code does not — whether the token was
+  // refused, the session was stale, or the host answered a sign-in page.
+  let said = '';
+  try {
+    said = String((JSON.parse(text) as { error?: unknown }).error ?? '');
+  } catch {
+    said = '';
+  }
+  throw new Error(said || `Canvas could not be read (${res.status}).`);
+}

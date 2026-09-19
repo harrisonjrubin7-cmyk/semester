@@ -57,6 +57,49 @@ Until it is deployed the app degrades rather than breaks — links from hosts
 that do allow the browser still work, the screen says what failed, and adding a
 downloaded `.ics` needs no network at all.
 
+## Not deployed yet: `canvas`
+
+    supabase functions deploy canvas
+
+`supabase/functions/canvas/index.ts`. It reads **one Canvas API path** on behalf
+of a signed-in device — the Connect screen's *Read my Canvas* button, which is
+the route that answers whether a piece of work has actually been handed in. A
+calendar feed never says.
+
+`fetchcal`'s sibling, and the same reason for existing with one difference that
+raises the stakes throughout. Canvas sends no CORS headers on any API response,
+on every instance — not a majority, all of them — so `app/src/lib/canvas.ts`
+does not try the browser at all. The dev server forwards it while developing
+(`/canvas` in `app/vite.config.ts`); this is the deployed route.
+
+**What is different from `fetchcal`: the secret it carries.** A feed URL reads
+one calendar. A Canvas access token *is the account* — it can read the
+student's messages and grades, and it can write. So on top of the JWT check,
+the public-host rule, the bounded read and the no-logging that `fetchcal`
+already has, this one adds the two refusals that matter for a credential that
+strong:
+
+- **`GET`, under `/api/v1/`, and nothing else.** No method but GET reaches
+  upstream and no path outside the API is fetched, so the worst a mistake can
+  do is read something the student can already read.
+- **Redirects are not followed.** Following one would carry the
+  `Authorization` header to wherever it pointed. A 3xx off a Canvas API path is
+  refused with a message saying what it usually means, which is a campus
+  sign-in page rather than the API.
+
+It also requires the answer to parse as JSON, because an instance behind campus
+SSO answers an unauthenticated request with an HTML login page and a cheerful
+200 — returning that as data is how somebody ends up with an empty course list
+and no idea why.
+
+It takes no secret of its own and needs no SQL. `verify_jwt` should be **off**,
+for the same reason as the others: the function checks the token itself, and
+the platform check would reject the CORS preflight.
+
+Until it is deployed the app says so and points at the calendar link, which
+needs no server at all and carries most of the same dates — just not whether
+you did them.
+
 `verify_jwt` is off on both, and on both it is the platform check that is off,
 not authentication:
 

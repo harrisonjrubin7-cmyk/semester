@@ -641,8 +641,15 @@ export interface CampusLink {
 /** An external calendar the app reads — Brightspace, Outlook, anything .ics. */
 export interface FeedSource {
   id: string;
-  /** 'brightspace' | 'microsoft' | 'ics' — decides the label and the icon. */
-  kind: 'brightspace' | 'microsoft' | 'ics';
+  /**
+   * Decides the label and the icon.
+   *
+   * `canvas` is the one that is not a calendar: it is an API pull carrying
+   * submission state as well as dates, and it is a separate kind so the
+   * connected list can say which rows know whether you handed the work in.
+   * See `lib/canvas.ts`.
+   */
+  kind: 'brightspace' | 'microsoft' | 'ics' | 'canvas';
   name: string;
   /** Subscribed URL, or '' for a file that was imported once. */
   url: string;

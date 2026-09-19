@@ -2,7 +2,7 @@ import react from '@vitejs/plugin-react'
 import { defineConfig, loadEnv } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { fileURLToPath } from 'node:url'
-import { publicCalendarUrl } from './src/lib/publichost.ts'
+import { privateHost, publicCalendarUrl } from './src/lib/publichost.ts'
 
 /**
  * The dev server doubles as the OAuth token proxy.
@@ -159,6 +159,106 @@ const icsProxy = () => ({
           res.end('The calendar could not be reached.')
         }
       })()
+    })
+  },
+})
+
+/**
+ * `/canvas` reads one Canvas API path on behalf of the page.
+ *
+ * Canvas sends no CORS headers on any API response, on every instance, so the
+ * browser is refused before the request leaves — the same wall as a calendar
+ * feed, with none of the exceptions. `src/lib/canvas.ts` therefore does not try
+ * the direct route at all, and this is the forwarder it reaches for while
+ * developing. `supabase/functions/canvas/index.ts` is the same route deployed.
+ *
+ * **The token is stronger than a feed URL, so the refusals are stricter.** A
+ * Brightspace feed token reads one calendar; a Canvas access token is the
+ * account, and can write. Four rules, and every one is a refusal:
+ *
+ *   1. **https, to a public host.** `privateHost` refuses loopback,
+ *      link-local, the private ranges and the local-network names. `vite
+ *      --host` is how this app is opened on a phone, and at that point this
+ *      route belongs to everyone on the wifi.
+ *   2. **GET, under `/api/v1/`, and nothing else.** This is the rule that
+ *      matters: the token can write, and this forwarder cannot be made to. No
+ *      method reaches upstream but GET, whatever the caller asked for.
+ *   3. **Bounded.** One megabyte and fifteen seconds.
+ *   4. **The token is never logged**, and never travels in a query string —
+ *      which is why this takes a POST body to issue a GET.
+ */
+const canvasProxy = () => ({
+  name: 'canvas-proxy',
+  configureServer(server: {
+    middlewares: {
+      use: (
+        path: string,
+        fn: (
+          req: { on: (e: string, f: (c?: unknown) => void) => void },
+          res: {
+            statusCode: number
+            setHeader: (k: string, v: string) => void
+            end: (body?: string) => void
+          },
+        ) => void,
+      ) => void
+    }
+  }) {
+    server.middlewares.use('/canvas', (req, res) => {
+      const chunks: Buffer[] = []
+      req.on('data', (c) => chunks.push(c as Buffer))
+      req.on('end', () => {
+        void (async () => {
+          res.setHeader('Content-Type', 'application/json')
+          const fail = (status: number, error: string) => {
+            res.statusCode = status
+            res.end(JSON.stringify({ error }))
+          }
+          let asked: { host?: unknown; path?: unknown; token?: unknown }
+          try {
+            asked = JSON.parse(Buffer.concat(chunks).toString('utf8')) as typeof asked
+          } catch {
+            return fail(400, 'That request was not readable.')
+          }
+          const host = String(asked.host ?? '')
+          const path = String(asked.path ?? '')
+          const token = String(asked.token ?? '')
+          if (!host || !token) return fail(400, 'A Canvas host and token are needed.')
+          if (privateHost(host)) return fail(400, 'That host is not on the public internet.')
+          // Rule 2. A path that does not start `/api/v1/` never reaches
+          // upstream, and neither does one carrying a `..` segment or its own
+          // scheme — both are ways to leave the API and this refuses them by
+          // shape rather than by trying to normalise them.
+          if (!/^\/api\/v1\/[A-Za-z0-9/_.~-]*(\?[^#]*)?$/.test(path) || path.includes('..')) {
+            return fail(400, 'Only the Canvas API is readable through this.')
+          }
+          try {
+            const upstream = await fetch(`https://${host}${path}`, {
+              method: 'GET',
+              // Not followed. Following a redirect would carry the
+              // Authorization header to wherever it pointed, and this token is
+              // the student's whole Canvas account. The deployed route in
+              // `supabase/functions/canvas/index.ts` refuses them the same way.
+              redirect: 'manual',
+              signal: AbortSignal.timeout(FEED_TIMEOUT_MS),
+              headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+            })
+            if (upstream.status >= 300 && upstream.status < 400) {
+              await upstream.body?.cancel()
+              return fail(502, 'Canvas redirected that request, which usually means a campus sign-in rather than the API.')
+            }
+            const body = await readCapped(upstream)
+            if (body === null) return fail(413, 'Canvas answered with more than this will read.')
+            res.statusCode = upstream.status
+            res.end(body)
+          } catch (e) {
+            // Deliberately not the thrown message: it can carry the URL, and
+            // the request carried a token.
+            void e
+            return fail(502, 'Canvas could not be reached.')
+          }
+        })()
+      })
     })
   },
 })
@@ -484,7 +584,7 @@ export default defineConfig(({ command, mode }) => {
     // workflow sets VITE_BASE; everywhere else this stays '/' and nothing about
     // development changes.
     base: process.env.VITE_BASE ?? '/',
-    plugins: [react(), icsProxy(), appleToken(), claudeProxy(anthropicKey)],
+    plugins: [react(), icsProxy(), canvasProxy(), appleToken(), claudeProxy(anthropicKey)],
     /*
      * The test suite, which had no configuration at all and was paying for it.
      *
