@@ -1,3 +1,139 @@
+# One app — the sixteenth pass: two rows closed, and one was already done
+
+Against `main` at `e8338fc`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged.
+
+**This pass merges nothing, and that is the finding.** The fifteenth pass ended
+with two open rows. Both close here: one because the owner named it, and one
+because it had been fixed eight passes earlier and the to-do outlived the
+defect it described.
+
+Recorded rather than skipped, because a pass that opens no merge is the result
+this file is least likely to write down and the one a seventeenth pass most
+needs — the clusters `.claude/skills/simplify` names as the places to look have
+now all been resolved, and re-auditing them is how a pass spends a day
+confirming fifteen earlier passes.
+
+## P1 — the `work` row's to-do outlived its defect
+
+The fifteenth pass carried this forward as still open:
+
+> The `work` row still describes what you reach by pressing a button on it —
+> E2 flagged it as *"not a matter of taste"* and it is still true.
+
+E2's rule is right and worth keeping: *"a destination whose registry blurb
+describes the thing you reach by pressing a button on it. Either the blurb is
+wrong or the default view is."* When E2 was written, `screens/Work.tsx` drew
+`AssignmentCenter` — eight filtered views of the term — and the breaking-down
+the registry describes was behind an "Assignment tools" button.
+
+But E2 was then **carried out**, in the seventh pass that recorded it, under
+*"E2 and E4, done"*: the list went to Courses and `Work()` went back to reading
+an assignment. The row was resolved and the to-do was not, and it was still
+being carried forward eight passes later.
+
+Measured against the file rather than against the note:
+
+| | |
+| --- | --- |
+| `lib/nav.ts:317` | *"Paste an assignment and get it broken down — rubric, plan, dates, what to ask."* |
+| `screens/Work.tsx:71` | `useState<Tab>('plan')` |
+| `screens/Work.tsx:28` | `TABS[0]` is `{ id: 'plan', label: 'Break it down' }` |
+
+The screen opens on the thing the registry names it for. There is nothing to
+fix, and there was nothing to fix when the fifteenth pass wrote the line.
+
+**Worth a row of its own because of what it costs.** A to-do that outlives its
+defect is not a harmless leftover — it is an instruction to the next pass to do
+work that is already done, which is the failure `CLAUDE.md` opens with, arriving
+by a different door. Two pull requests were built and opened here before their
+authors found the identical fix already on main; this is the same waste
+committed against a document instead of a branch. The check is cheap and it is
+the one the fifteenth pass did not run: re-read the file before carrying its
+row forward.
+
+## P2 — `behind` stays a screen, and now for a mechanism rather than a preference
+
+§6's class, so the survivor is the owner's to name, and they have: **keep it.**
+
+What this pass adds is the reason, which is in the code and had not been
+written down. `components/BehindOffer.tsx` returns `null` unless `b.deep`, and
+says why in its own docstring:
+
+> A permanent "I'm behind" button is a permanent accusation, and a screen you
+> have to go looking for in a bad week is a screen nobody finds.
+
+The merge on offer was a fifth tab on Today — `HomeTab` is
+`'today' | 'hours' | 'week' | 'done'` (`lib/types.ts:816`) after the fifteenth
+pass moved Ahead and Tonight in. **A tab is permanent.** It is on screen in the
+good weeks too, which is the one thing `BehindOffer` was written not to be. So
+the available merge does not just cost a migration, it deletes the mechanism
+the screen's entry is built on.
+
+`screens/Behind.tsx` is drawn deliberately unlike its neighbours for the same
+reason — no red, no encouragement, nothing hidden — so it is also not the shape
+a Today tab is.
+
+D6's **Keep** therefore stands, and is no longer only a judgement about whether
+two screens look alike. Recorded here so the seventeenth pass has the mechanism
+and does not reopen it from the registry, which is how this row got reversed
+four times.
+
+## P3 — a census this file has not taken, and does not act on
+
+How many places dispatch to each destination. From `app/`:
+
+```bash
+grep -rnE "type: 'go', screen: '[a-zA-Z]+'" src/ --include="*.ts" --include="*.tsx" \
+  | grep -vE "\.test\.(ts|tsx):" \
+  | sed -E "s/.*screen: '([a-zA-Z]+)'.*/\1/" | sort | uniq -c | sort -rn
+```
+
+The head of it, and the shape worth noticing:
+
+| Destination | Literal dispatch sites | Funnelled through |
+| --- | --- | --- |
+| `edit` | 7 — `DropBy`, `OfficeHours`, `lib/browser.ts`, `Courses`, `Degree`, `Essay`, `Import` | — |
+| `import` | 5 — `FirstRun`, `Gap`, `Runway`, `Yes`, `me/You` | — |
+| `courses` | 4 — `Degree`, `Today`, `report/Day`, `settings/Grading` | — |
+| `calendar` | 1 | `lib/opencal.ts` |
+| `mine` | 1 | `lib/openmine.ts` |
+
+Two destinations already have a single opener and the three busiest have none.
+
+**Ruled: record, do not act** — and the method is why, not the appetite. Three
+things this census cannot tell you, all of which have to be settled before a
+number from it means anything:
+
+- **It counts literal rows only.** The directory, search and the command
+  palette dispatch a *variable* screen, so they never appear. A low count is
+  evidence of no second *literal* door, not of one pathway.
+- **A call site is not a pathway.** Seven places offering "edit this course"
+  may be seven contextual actions on one object — which is what the skill means
+  by a control that belongs where you are — or seven front doors. Only reading
+  each one says which.
+- **A funnel is not a pathway count either.** `lib/opencal.ts` makes the
+  *code* have one entry; it says nothing about how many places a person can
+  press to get there.
+
+So the `Done means` line *"no destination is reachable by more than one pathway
+outside the directory and search"* is **not claimed by this pass**, and the
+census above is not evidence for it. Naming which of `edit`'s seven are
+contextual and which are front doors is the work, and it is a pass of its own.
+
+## To do
+
+- `edit`'s seven, `import`'s five and `courses`' four, resolved into contextual
+  actions and front doors. Only the front doors are pathways, and only then can
+  the `Done means` claim be made or refused honestly.
+- Nothing else is open. The six clusters the skill names — the six over "what
+  is due", the calendar's grains, the three assistant surfaces, the four over
+  "where do I stand", the five ways to find a screen and the five ways to
+  change course data — are each merged, subsumed, or **Keep** with a reason, in
+  the fifteen passes above.
+
+---
+
 # One app — the fifteenth pass: the question that was built twice and kept once
 
 Against `main` at `a648a1b`. **<!--screens-->fifty-eight<!--/--> destinations**,
