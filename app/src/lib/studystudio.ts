@@ -1,3 +1,58 @@
+import type { CourseUpdate, Note, Unit } from './types';
+
+/**
+ * Everything on this course the Study Studio is allowed to build from.
+ *
+ * Lifted out of `components/StudyStudio.tsx`, where it was four spread
+ * operators inside the render and therefore untestable — which mattered more
+ * than it looks, because this list is the whole answer to "can a recorded
+ * lecture become flashcards?".
+ *
+ * It can, and the chain is longer than it reads: `screens/Update.tsx` drops a
+ * live transcript into the material box, the box is adopted as a
+ * `CourseUpdate` with the transcript as its `body`, and that update turns up
+ * here as a source the studio can be pointed at. Every link is somewhere else,
+ * none of them mentions the others, and nothing failed if one were cut — the
+ * studio would simply stop offering the lecture, on a screen whose own words
+ * promise it. `studysources.test.ts` is the guard that says otherwise.
+ *
+ * ## Why `text.trim()` decides membership, and not the record existing
+ *
+ * A source with no text is one the studio cannot quote, and a citation that
+ * cannot be verified is refused downstream by `parseStudySections`. Offering
+ * an empty source is therefore offering a source that can only fail, after
+ * the request has been paid for. A photograph of the board is exactly this:
+ * `addUpdate` writes the record so the files have an owner, with `body: ''`.
+ */
+export function studySources(
+  courseId: string,
+  units: Unit[],
+  updates: CourseUpdate[],
+  notes: Note[],
+  uploads: StudySource[],
+): StudySource[] {
+  return [
+    ...units.map((unit, index) => ({
+      id: `unit-${index}`,
+      title: unit.name,
+      text: unit.cards.map((c) => `${c.q}\n${c.a}`).join('\n\n'),
+      locator: `Prepared course guide \u00b7 Unit ${index + 1}; original page not recorded`,
+    })),
+    ...updates
+      .filter((u) => u.courseId === courseId && u.body.trim())
+      .map((u) => ({
+        id: `material-${u.id}`,
+        title: u.title,
+        text: u.body,
+        locator: u.source || 'Added course material; page not recorded',
+      })),
+    ...notes
+      .filter((n) => n.courseId === courseId && n.body.trim())
+      .map((n) => ({ id: `note-${n.id}`, title: n.title, text: n.body, locator: 'Your personal note' })),
+    ...uploads,
+  ].filter((s) => s.text.trim());
+}
+
 export const STUDY_FORMATS = [
   ['comprehensive','Comprehensive Study Guide','Explain concepts, examples and relationships in depth.'],
   ['summary','Simple Summary','Explain the most important ideas in plain language.'],
