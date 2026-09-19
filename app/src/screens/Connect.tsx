@@ -4,10 +4,11 @@ import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
 import { configured, modelLabel, routeLabel } from '../lib/assistant';
 import { Blueprint } from '../components/Blueprint';
-import { ChipRow, FilePick, SectionLabel } from '../components/ui';
+import { ActionButton, ChipRow, FilePick, SectionLabel } from '../components/ui';
 import { parseIcs } from '../lib/ics';
 import { fetchCalendar, isCalendar, notCalendar, readLink } from '../lib/feedlink';
-import { cloudConfigured, fetchIcsVia } from '../lib/cloud';
+import { pull as pullCanvas, readKey as readCanvasKey } from '../lib/canvas';
+import { cloudConfigured, fetchCanvasVia, fetchIcsVia } from '../lib/cloud';
 import { aboutWhere, lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
 import {
   PROVIDERS,
@@ -82,6 +83,14 @@ export function Connect() {
     }
   });
   const [url, setUrl] = useState('');
+  // Canvas is two fields rather than one, and they are not the same kind of
+  // thing: the host is an address somebody can read off their own browser and
+  // correct, the token is a secret shown once. They are kept apart here for
+  // that reason — the host survives a failed attempt so it does not have to be
+  // typed twice, and `canvasNote` says which of the two Canvas refused.
+  const [canvasHost, setCanvasHost] = useState('');
+  const [canvasToken, setCanvasToken] = useState('');
+  const [canvasNote, setCanvasNote] = useState('');
   const [files, setFiles] = useState<{ id: ProviderId; list: RemoteFile[] } | null>(null);
   // Kept apart from `note`, which is read at the top of a long screen: a send
   // is started from a button near the bottom and its answer has to be next to
@@ -188,6 +197,63 @@ export function Connect() {
       if (addIcsText(text, name, target, kind) > 0) setUrl('');
     } catch (e) {
       setNote(describe(e));
+    } finally {
+      setBusy('');
+    }
+  };
+
+  /**
+   * Canvas, with the student's own token.
+   *
+   * The one thing this does that the calendar link above does not: it comes
+   * back knowing whether each piece of work has been handed in. That is the
+   * whole reason it exists, so it is what the sentence afterwards reports —
+   * "34 dated, 28 of them knowing where you stand" — rather than a count of
+   * rows, which is the number the .ics route already gives.
+   *
+   * The token is not kept anywhere. It is used for the pull and left in the
+   * field, which is a deliberate limit rather than an oversight: storing it
+   * would mean holding a credential that opens the student's whole Canvas
+   * account in the same place the app keeps their notes, and a re-paste every
+   * few weeks is cheaper than being the thing that leaked it. `lib/canvas.ts`
+   * has the argument in full.
+   */
+  const connectCanvas = async () => {
+    const read = readCanvasKey(canvasHost, canvasToken);
+    if (!read.ok) {
+      setCanvasNote(read.why);
+      return;
+    }
+    setBusy('canvas');
+    setCanvasNote('');
+    try {
+      const id = `canvas-${read.key.host}`;
+      const { events, courses, known } = await pullCanvas(read.key, catalog.courses, id, {
+        account: cloudConfigured && account ? fetchCanvasVia : undefined,
+      });
+      if (events.length === 0) {
+        setCanvasNote(
+          `Canvas answered for ${courses} ${courses === 1 ? 'course' : 'courses'}, and nothing in them has a due date on it. That is usually a term that has not been set up yet rather than an empty account.`,
+        );
+        return;
+      }
+      const status = `${events.length} dated, ${known} with submissions`;
+      const already = state.feeds.find((f) => f.id === id || (f.kind === 'canvas' && f.url === read.key.host));
+      if (already) {
+        dispatch({ type: 'syncFeed', id: already.id, events, status });
+      } else {
+        dispatch({
+          type: 'addFeed',
+          feed: { kind: 'canvas', name: `Canvas · ${read.key.host}`, url: read.key.host, synced: Date.now(), status, count: events.length },
+          events,
+        });
+      }
+      setCanvasToken('');
+      setCanvasNote(
+        `${events.length} dated ${events.length === 1 ? 'assignment' : 'assignments'} across ${courses} ${courses === 1 ? 'course' : 'courses'}, ${known} of them carrying where you stand.`,
+      );
+    } catch (e) {
+      setCanvasNote(describe(e));
     } finally {
       setBusy('');
     }
@@ -509,6 +575,84 @@ export function Connect() {
           scopes, which is a decision Vanderbilt has not been asked for. So the app reads the
           dates, links you to each course’s own page from the course screen, and takes uploaded
           files from you directly.
+        </div>
+      </Blueprint>
+
+      {/*
+        Canvas, on a token the student issues themselves.
+
+        Deliberately its own card under the same heading rather than a second
+        field on the one above, because it is not the same bargain and saying so
+        is the point. The calendar link costs nothing and tells you when things
+        are due. This costs forty seconds in Canvas's settings and tells you
+        whether you have done them — which is the half an .ics cannot carry, and
+        the half that decides what tonight looks like.
+
+        It is not offered as "connect your LMS", because that is the phrase every
+        competitor uses for a deal their university signed. Nobody has to sign
+        anything for this one, and the card says so in the words a student would
+        check it in.
+      */}
+      <Blueprint style={{ paddingBlock: 'var(--sp-5)', paddingInline: 'var(--sp-5)', marginTop: 'var(--sp-5)' }}>
+        <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
+          Canvas, including what you have handed in
+        </div>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)', textWrap: 'pretty' }}>
+          A Canvas calendar link gives the dates. A Canvas <strong>access token</strong> gives the
+          dates <em>and</em> whether each one is submitted, graded or missing — which the calendar
+          never says. In Canvas, open <strong>Account → Settings</strong>, scroll to Approved
+          Integrations and press <strong>+ New Access Token</strong>. Nobody at your university has
+          to approve anything.
+        </div>
+        <input
+          className="input"
+          type="text"
+          inputMode="url"
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+          aria-label="Canvas address"
+          placeholder="yourschool.instructure.com"
+          value={canvasHost}
+          onChange={(e) => setCanvasHost(e.target.value)}
+          style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-5)' }}
+        />
+        <input
+          className="input"
+          type="password"
+          spellCheck={false}
+          autoCapitalize="off"
+          autoCorrect="off"
+          autoComplete="off"
+          aria-label="Canvas access token"
+          placeholder="Access token"
+          value={canvasToken}
+          onChange={(e) => setCanvasToken(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && canvasHost.trim() && canvasToken.trim() && busy !== 'canvas') void connectCanvas();
+          }}
+          style={{ fontSize: 'var(--type-sm)', marginTop: 'var(--sp-4)' }}
+        />
+        <ActionButton
+          tone="primary"
+          disabled={!canvasHost.trim() || !canvasToken.trim() || busy === 'canvas'}
+          onClick={() => void connectCanvas()}
+          style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm)' }}
+        >
+          {busy === 'canvas' ? 'Reading Canvas…' : 'Read my Canvas'}
+        </ActionButton>
+        {canvasNote && (
+          <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>
+            {canvasNote}
+          </div>
+        )}
+        <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
+          <strong>The token is not saved.</strong> It is used for this one read and then forgotten,
+          so refreshing later means pasting it again. That is on purpose: a Canvas token is your
+          whole Canvas account rather than one calendar, and keeping it would mean this app holding
+          a key it has no way to protect better than Canvas does. It is only ever used for{' '}
+          <code style={{ fontSize: 'var(--type-xs)' }}>GET</code> requests, and you can revoke it on
+          the same Canvas screen that made it.
         </div>
       </Blueprint>
 
@@ -885,8 +1029,15 @@ export function Connect() {
               {/*
                 A subscribed link is worth fetching again; an imported file has
                 nowhere to fetch from, so it gets no button that would fail.
+
+                A Canvas row is the third case and it is the same rule. Its
+                `url` is a hostname rather than a calendar, and the token that
+                opened it was deliberately not kept — so `refresh` has nothing
+                to fetch with, and the button would be a press that always
+                fails. Re-reading Canvas means the card above, with the token
+                pasted again, which is what the row's own note says.
               */}
-              {f.url && !(f.url in PROVIDERS) && (
+              {f.url && f.kind !== 'canvas' && !(f.url in PROVIDERS) && (
                 <button
                   type="button"
                   className="bare"

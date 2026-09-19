@@ -8,7 +8,7 @@ import { configured, routeLabel } from '../lib/assistant';
 import { extractText } from '../lib/extract';
 import { useDraft } from '../lib/draft.hook';
 import { fromMarkdown } from '../lib/document';
-import { STUDY_FORMATS, STUDY_SYSTEM, parseStudySections, studyPrompt, studyMarkdown, type StudyFormat, type StudySection, type StudySource, type StudioControls } from '../lib/studystudio';
+import { STUDY_FORMATS, STUDY_SYSTEM, parseStudySections, studyPrompt, studyMarkdown, studySources, type StudyFormat, type StudySection, type StudySource, type StudioControls } from '../lib/studystudio';
 import { Drawing } from './Drawing';
 
 const INITIAL:StudioControls={length:'Standard',difficulty:'Course level',readingLevel:'Plain language',questions:10,questionTypes:['Multiple choice','Short answer'],minutes:25,examDate:'',topics:'',weaknesses:'',answers:'At the end'};
@@ -24,12 +24,10 @@ export function StudyStudio({courseId,onClose}:{courseId:string;onClose:()=>void
  useEffect(()=>{let alive=true;const refresh=()=>{void listFiles().then(fs=>{if(alive)setSavedFiles(fs.filter(f=>f.courseId===courseId));});};refresh();const unsubscribe=onFilesChanged(refresh);return()=>{alive=false;unsubscribe();};},[courseId]);
  const policy=course?.ai;const banned=policy?.stance==='banned';
  useEffect(()=>()=>{abort.current?.abort();if('speechSynthesis' in window)window.speechSynthesis.cancel();},[]);
- const sources:StudySource[]=[
-  ...guide.units.map((unit,index)=>({id:`unit-${index}`,title:unit.name,text:unit.cards.map(c=>`${c.q}\n${c.a}`).join('\n\n'),locator:`Prepared course guide · Unit ${index+1}; original page not recorded`})),
-  ...state.updates.filter(u=>u.courseId===courseId&&u.body.trim()).map(u=>({id:`material-${u.id}`,title:u.title,text:u.body,locator:u.source||'Added course material; page not recorded'})),
-  ...state.notes.filter(n=>n.courseId===courseId&&n.body.trim()).map(n=>({id:`note-${n.id}`,title:n.title,text:n.body,locator:'Your personal note'})),
-  ...uploads,
- ].filter(s=>s.text.trim());
+ // `lib/studystudio.ts`, so the list a lecture transcript has to appear in is
+ // somewhere a test can reach. See `studySources` for the chain it stands at
+ // the end of.
+ const sources:StudySource[]=studySources(courseId,guide.units,state.updates,state.notes,uploads);
  const chosen=sources.filter(s=>selected.includes(s.id));
  const canRegenerate=chosen.length===usedSources.length&&chosen.every(s=>usedSources.some(u=>u.id===s.id&&u.text===s.text));
  const change=<K extends keyof StudioControls>(key:K,value:StudioControls[K])=>setControls(c=>({...c,[key]:value}));

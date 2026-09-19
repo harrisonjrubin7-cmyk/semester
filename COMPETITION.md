@@ -257,7 +257,7 @@ puts both on a screen. A one-off task with no syllabus behind it already has a
 fast path in, through Import's by-hand door and through the calendar's own
 add-here.
 
-### 5 · Build genuine LMS read-sync, self-serve, per student · **Landed — in a form the comparison table scores as "None"**
+### 5 · Build genuine LMS read-sync, self-serve, per student · **Landed — and the one gap this entry named is now closed too**
 
 > A student pastes in their own Canvas access token and the app does a
 > read-only pull of assignments and due dates. A self-serve, per-student
@@ -291,6 +291,38 @@ and grades. That is a real difference and a much smaller project than the
 document scopes, because the plumbing, the proxy and the reconciliation against
 existing deadlines are all already here.
 
+**That paragraph was right, and the gap it named closed on 19 September.**
+`lib/canvas.ts` is the REST pull: the student's own access token, made under
+Account → Settings in about forty seconds, and
+`/api/v1/courses/:id/assignments?include[]=submission` — which answers with the
+assignment *and* their submission on it. Graded with the score, submitted with
+the date, missing by Canvas's own flag, and deliberately silent where there is
+no submission record at all, because an in-class presentation never gets one and
+is not late.
+
+Three things about it are worth keeping straight, because each is a place the
+predictable design is wrong:
+
+- **It maps to ordinary `FeedEvent`s and nothing else**, so `lib/reconcile.ts`
+  and the feed screens had nothing to learn. The submission state rides in the
+  existing `note` field for exactly that reason.
+- **There is no direct route, and that is not a deployment problem.** The entry
+  above notes that a feed is tried directly first because handing a feed token
+  to a proxy is worth avoiding. That reasoning does not transfer: Canvas sends
+  no `Access-Control-Allow-Origin` on any API response, on every instance, so
+  asking would spend a round trip to be refused. The dev forwarder and the
+  account's Edge Function are the two routes, and where neither exists the
+  failure says so and points back at the calendar link.
+- **The token is not stored, and the refusals around it are stricter than the
+  feed's.** A feed URL reads one calendar; an access token is the account and
+  can write. Both forwarders issue `GET` under `/api/v1/` and nothing else, and
+  refuse redirects rather than following them with an `Authorization` header
+  attached.
+
+So the mechanism gap against Coursicle is closed on the provider that matters
+most, and closed without an institutional agreement — which was the property
+this proposal correctly identified as the point.
+
 ### 6 · A lightweight lecture-capture-to-notes feature · **Landed**
 
 > Due Gooder and Sylly both offer record-the-lecture → transcript →
@@ -312,6 +344,16 @@ Where this app is ahead of the two competitors named is the honesty: the screen
 says it mishears technical vocabulary, does not know who is speaking, and that
 in Chrome the recognition happens on Google's servers rather than on the
 device. A transcript trusted more than it deserves is worse than none.
+
+**What this entry did not check, and nothing else did either, is whether the
+chain still holds.** It is four files long — `RecordButton` to `Update` to the
+adopted `CourseUpdate` to the Study Studio's source list — and no link names the
+next. Cutting any one of them fails nothing: the lecture quietly stops being
+offered as a source, on the screen whose own words promise it. `studySources` in
+`lib/studystudio.ts` and `lib/studysources.test.ts` (19 September) are the
+guard; four of its nine cases were checked against a faithful revert and each
+goes red alone. Landed is still the right verdict — it was landed and unheld,
+and it is now landed and held.
 
 ### 7 · Borrow Notion Calendar's layering idea · **Landed, both halves**
 

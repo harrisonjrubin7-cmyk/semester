@@ -110,10 +110,10 @@ jobs:
           fi
           # `--no-verify-jwt` on every one of these, and on every one of them it
           # is the platform check that is off rather than authentication:
-          # `claude` and `fetchcal` verify the caller's token themselves and
-          # have to answer a CORS preflight, which carries no Authorization
-          # header at all; `push` is called by the scheduler and authenticates
-          # with a shared secret. See supabase/DEPLOY.md.
+          # `claude`, `fetchcal` and `canvas` verify the caller's token
+          # themselves and have to answer a CORS preflight, which carries no
+          # Authorization header at all; `push` is called by the scheduler and
+          # authenticates with a shared secret. See supabase/DEPLOY.md.
           for fn in $LIST; do
             if [ ! -f "supabase/functions/$fn/index.ts" ]; then
               echo "::error title=No such function::supabase/functions/$fn/index.ts does not exist."
