@@ -177,8 +177,14 @@ jobs:
         working-directory: app
         run: npm run test:shuffle
 
+      # `VITE_BASE` here and on the two steps below, rather than once on the
+      # job: `vitest` reads the same `vite.config.ts`, so a job-wide value
+      # would move `import.meta.env.BASE_URL` under every test in the suite
+      # above — including the ones that pin what `lib/asset.ts` returns.
       - name: Build
         working-directory: app
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
         run: npm run build
 
       # ── Opening the app's own addresses, cold ────────────────────────────
@@ -212,12 +218,43 @@ jobs:
           npm install --no-save playwright
           npx --yes playwright install --with-deps chromium
 
-      - name: Serve the built app
+      # ── …at the base path the deploy actually uses ───────────────────────
+      #
+      # The `Build` step above builds at `/`, and nothing deployed is ever
+      # served from `/`. `pages.yml` passes `VITE_BASE` and the site lands at
+      # `https://<user>.github.io/<repo>/`, so the bundle CI opened cold was
+      # configured differently from the bundle a student loads — the one
+      # property of a deploy this job exists to check, and the one it was not
+      # checking.
+      #
+      # `vite.config.ts` reads `base` from `process.env.VITE_BASE`, and
+      # `vite preview` reads the same config, so the variable has to be set for
+      # both commands or the server and the bundle disagree about where they
+      # are. That is why it is on the job rather than on the build step.
+      #
+      # The repository's own name rather than a literal `/semester/`, for the
+      # reason `pages.yml` gives for taking it from `configure-pages`: a rename
+      # must not be able to silently break every asset path — including here,
+      # where a stale literal would quietly go back to testing a path nothing
+      # ships.
+      #
+      # This is a coverage change, not a fix for an observed bug: no
+      # subpath-only failure is open today. What it buys is that one could not
+      # hide — `asset.ts` exists because an absolute path "becomes a 404 with
+      # no error shown" once the app is not at the root, and until now no check
+      # in this repository had ever loaded the app anywhere but the root.
+      # Measured no weaker than the run it replaces: with the `state/store.tsx`
+      # fix reverted, the five boots below report the same eight findings at
+      # `/semester/` as at `/`, naming TEST 1010 for all four courses.
+      - name: Serve the built app the way Pages serves it
         working-directory: app
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+          SMOKE_PATH: /${{ github.event.repository.name }}/
         run: |
           npx vite preview --port 4173 > /tmp/preview.log 2>&1 &
-          timeout 120 bash -c 'until curl -sf http://localhost:4173 >/dev/null; do sleep 1; done'
-          echo "preview up"
+          timeout 120 bash -c "until curl -sf http://localhost:4173$SMOKE_PATH >/dev/null; do sleep 1; done"
+          echo "preview up at $SMOKE_PATH"
 
       # Exits 1 on a finding and 2 if it could not run at all — a server that
       # never came up is not a clean sweep, and the script refuses to report
@@ -226,6 +263,10 @@ jobs:
         working-directory: app
         env:
           SMOKE_PLAYWRIGHT: /tmp/smoke/node_modules/playwright
+          # The address the server above is actually answering on. Without this
+          # the script keeps its `http://localhost:4173/` default, which is now
+          # a redirect to the base rather than the app.
+          SMOKE_URL: http://localhost:4173/${{ github.event.repository.name }}/
         run: npm run smoke:cold
 
       # Runs at the repo root and needs no dependencies of its own — it reads
