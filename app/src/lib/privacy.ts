@@ -75,7 +75,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     keys: [
       'courses', 'updates', 'sources', 'linkUrls', 'extraLinks', 'term',
       'archivedTerms', 'sample', 'registrar', 'courseOrder', 'mySchools',
-      'schoolId', 'examCovers', 'drops', 'gradeSystems', 'scale',
+      'schoolId', 'schoolPack', 'examCovers', 'drops', 'gradeSystems', 'scale',
     ],
   },
   {

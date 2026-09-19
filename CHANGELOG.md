@@ -24,6 +24,41 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### Your university can send its own data as a file, and you load it
+
+Until now there were two ways to tell Semester where you study: find your
+school in the list, or answer eight short questions about it. Both are the
+right size for one person filling in their own university, and neither is any
+use for the thing a university actually has — a term calendar with thirty
+dated deadlines on it, a list of every building with its coordinates, the meal
+plans and what they cost.
+
+**Now there is a third way.** If your university sends you a Semester school
+pack, you load the file under *where do you study* and the screens that were
+switched off come on: Term deadlines fills in, the map gets its buildings,
+Meals gets the real plans, and the links go to your registrar rather than
+nowhere.
+
+- **You see what is in it before anything is kept.** Choosing the file shows
+  the school's name, when the file was written, and how many terms, deadlines,
+  buildings and meal plans it turned out to contain. Then it asks.
+- **Anything it could not use is listed by name.** Not "some rows failed" —
+  *"Featheringill Hall — this building was left out, lat must be a number
+  between −90 and 90"*. That list is meant to be sent straight back to whoever
+  sent you the file, and a first export from any university will have one.
+- **Removing it puts everything back.** The profile the app already had is
+  still there underneath.
+- **It is a snapshot, not a connection.** The dates were true when the file was
+  written, so the app shows you that date next to them. Nothing about this
+  signs you in to anything, and Semester still cannot read your registrar.
+
+There are two downloads on the same screen: a blank template, and your current
+school saved as a pack — which is the one to send a university that is filling
+one in, because correcting a file is a much smaller job than writing one.
+
+Nothing changes if nobody sends you a file. The list and the eight questions
+work exactly as they did.
+
 ### You can record a call, once everybody says yes
 
 **Nobody is recorded without being asked.** Somebody asks, everybody else is

@@ -1214,8 +1214,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
    * guarantee the rest of the app already keeps.
    */
   const school = useMemo(
-    () => resolveSchool(state.schoolId, null, state.mySchools),
-    [state.schoolId, state.mySchools],
+    () => resolveSchool(state.schoolId, null, state.mySchools, state.schoolPack?.school ?? null),
+    [state.schoolId, state.mySchools, state.schoolPack],
   );
 
   /**

@@ -26,6 +26,7 @@ import type { State } from '../state/shape';
 import { appointmentDays, appointmentLength, spanOf } from './select';
 import { rrule } from './repeat';
 import { readTerm, yearFor } from './term';
+import { readSchoolPack } from './schoolpack';
 
 // ── CSV ──────────────────────────────────────────────────────────────────
 
@@ -914,6 +915,22 @@ export function readBackup(text: string): Restore {
     if (count > 0) parts.push(`${count} ${section.label}`);
   }
   if (typeof obj.sample === 'boolean') data.sample = obj.sample;
+  /*
+   * By hand, for the reason `sample` is by hand.
+   *
+   * A university's data pack is one record holding a school and the date the
+   * file was written. As a section it would be counted by its keys and the
+   * restore would offer "2 school data packs", which is the miscount the
+   * by-hand list exists for. It is carried — losing it on a restore would
+   * take the term calendar, the buildings and the meal plans with it — and it
+   * is read by `readSchoolPack` rather than trusted, because a backup file is
+   * as editable as anything else on the device.
+   */
+  const pack = readSchoolPack(obj.schoolPack);
+  if (pack) {
+    data.schoolPack = pack;
+    parts.push('your university’s data file');
+  }
 
   if (Object.keys(data).length === 0) {
     throw new Error('That backup has nothing in it this version can read.');
@@ -1013,6 +1030,7 @@ export function backupOf(state: State) {
     balances: state.balances,
     residences: state.residences,
     mySchools: state.mySchools,
+    schoolPack: state.schoolPack,
     archivedTerms: state.archivedTerms,
     gradeSystems: state.gradeSystems,
     pretested: state.pretested,

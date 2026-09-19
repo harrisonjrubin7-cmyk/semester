@@ -220,11 +220,15 @@ export const degree: Provide = (look) => {
     attendance: state.attendance,
     attendPolicy: state.attendPolicy,
     gradeSystems: state.gradeSystems,
-    // The same resolution the store does. `Look` carries no school, and
-    // passing null here would quietly use the assumed American scale while
-    // the screen used the school's own — the two numbers would differ by a
-    // whole grade band on a school that publishes different cutoffs.
-    school: resolveSchool(state.schoolId, null, state.mySchools),
+    // The same resolution the store does — all four arguments, including the
+    // loaded data pack. `Look` carries no school, and passing null here would
+    // quietly use the assumed American scale while the screen used the
+    // school's own — the two numbers would differ by a whole grade band on a
+    // school that publishes different cutoffs. A pack can carry exactly that
+    // scale, so dropping it here is the same fault by a newer route: the
+    // comment claimed "the same resolution the store does" one argument
+    // before it stopped being true.
+    school: resolveSchool(state.schoolId, null, state.mySchools, state.schoolPack?.school ?? null),
   };
   const finished = gpa(state.taken, state.scale);
   const term = termGpa(

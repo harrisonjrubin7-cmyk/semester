@@ -39,6 +39,34 @@ export function settings(state: State, action: Action): State | null {
       return { ...state, mySchools: [...rest, action.school], schoolId: action.school.id };
     }
 
+    /**
+     * A school's own data pack, loaded from a file.
+     *
+     * Selecting the school it describes is part of loading it. Somebody who
+     * has just confirmed their university's calendar has said where they
+     * study more clearly than any picker could ask, and leaving the selection
+     * alone would mean an import that visibly did nothing.
+     */
+    case 'importSchoolPack':
+      return {
+        ...state,
+        schoolPack: { school: action.school, importedAt: action.importedAt },
+        schoolId: action.school.id,
+      };
+
+    /**
+     * Removing it falls back rather than blanking.
+     *
+     * The school stays selected. A pack corrects a profile that in the usual
+     * case already exists — bundled, or added by hand — so dropping the file
+     * should return to that profile, not to no school at all. Where it named
+     * a school nothing else has, `resolveSchool` finds nothing and every
+     * capability-gated screen hides itself, which is the same honest state as
+     * never having set one.
+     */
+    case 'forgetSchoolPack':
+      return state.schoolPack === null ? state : { ...state, schoolPack: null };
+
     case 'forgetSchool': {
       const mySchools = state.mySchools.filter((s) => s.id !== action.id);
       // Selecting a school that no longer exists would resolve to nothing and
