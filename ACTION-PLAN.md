@@ -13,13 +13,55 @@ found seven of one document's eight "what's missing" items already built, and
 describing it lag the merges. A plan item that has quietly landed is worse than
 no plan item, because somebody will spend a week on it.
 
-**Checked against `88aa741` on 17 September 2026.** Each verdict below says what
+**Checked against `88aa741` on 17 September 2026, and re-checked against
+`b7f7c27` on 19 September — see the section under the legend for what moved.** Each verdict below says what
 was measured and where. Items with no code in them are marked as such and carry
 no verdict — they are open because nobody has done them, not because anything
 was found.
 
 Legend: **Open** · **Landed** (already in the app; nothing to do) · **Partly**
 (some of it is in, the rest is named) · **Not a code item**.
+
+---
+
+## Re-checked 19 September 2026, against `b7f7c27`
+
+**Seventy-nine commits landed between `88aa741` and this re-check**, which is
+two days. That rate is the reason this section exists rather than a quiet edit
+to the verdicts above: a plan item that has quietly landed is worse than no plan
+item, and so is a plan that claims to have been checked more recently than it
+was.
+
+What moved, and nothing else did:
+
+| # | Was | Now |
+| --- | --- | --- |
+| 1 | Partly — the code half fixed here | **Landed as code.** The gate stands in the button's place on `screens/Import.tsx`, held by `screens/deadends.test.tsx:339`. The shared key for pilot accounts is still not a code item and still open |
+| 2 | Partly — built; providers a deployment step | **Unchanged, and worth restating**, because it is the item most often reported as missing. `lib/cloud.ts` reads GoTrue `/auth/v1/settings`, so a provider that is switched off no longer draws a button that fails after the press (`bbc788b`). Pasting client IDs into Supabase is the remaining step, and it is not one this repository can take |
+| 4 | Partly — the "what's due" merge open | **Closed.** `80fbc5c` merged it; `#/ahead` and `#/tonight` are Today's tabs. **The registry is 58.** The paragraphs above this section still count to sixty and are wrong to; the figures in items 16 and 17 are already figures about fifty-eight |
+| 8 | Open — single-campus depth vs. multi-LMS breadth | **Partly answered, in the direction that needed no decision.** `lib/canvas.ts` (19 September) reads Canvas with a token the student issues themselves — depth on the LMS that matters most, with no institutional agreement and therefore without spending the decision this item is about. The breadth question is still open |
+
+Filed against the market analysis rather than against this plan, and landed in
+the same window: the start-time nudges (`720e6ce`), the camera door for a
+syllabus on paper (`374d3e5`), the grade solver's four consumers (`8ea757b`),
+and the deep link that answered before the course had arrived (`e9c7d73` — a
+refresh or a bookmark on a course URL drew a different course entirely, twice
+out of two). `COMPETITION.md` carries the verdicts on the first three.
+
+**And the two non-code items moved while this was being written, which is the
+same lesson twice.** This section was drafted against `b7f7c27` saying the
+Vanderbilt IP question (#3) and the trademark search (#10) were exactly where
+it found them. Both were rewritten in `#517`, merged at 13:41 on the 19th, into
+[`IP.md`](IP.md) — a fuller treatment than the one this branch had written for
+the same two items, with the deciding facts as a checklist, a ready-to-send
+email, and the descriptiveness refusal under 15 U.S.C. §1052(e)(1). The
+duplicate write-ups were dropped on the rebase and the entries above now point
+at that file.
+
+Two sessions reached the same two items within nine hours, neither knowing
+about the other, and `CLAUDE.md` opens with exactly this. It cost a rebase here
+because the overlap was prose; it is worth noticing that the same convergence
+in code would have cost more.
 
 ---
 
@@ -149,6 +191,12 @@ Six items, five of which are not code at all — they are open because they are
 unstarted, not because anything was found. The sixth (#11) is a label, and
 this repository has already changed it.
 
+Two of the five have had desk research done on them since (#8 and #10, and #3
+in Tier 1). None of the three is closed by it: research is not the written
+confirmation, the clearance search or the pricing signal each one is asking
+for. What it does is make two of them cheaper to finish and one of them —
+#10 — a different question than it was filed as.
+
 ### 6 · Test willingness to pay directly · **Open**
 
 Every one of the ten direct competitors is free or under $10/mo and the research
@@ -161,10 +209,25 @@ Flagged in the project's own docs as the untested, load-bearing assumption.
 Recruit a handful this semester; measure installs-per-ambassador and 30-day
 retention, not signups.
 
-### 8 · Single-campus depth vs. multi-LMS breadth · **Open**
+### 8 · Single-campus depth vs. multi-LMS breadth · **Partly — depth arrived without the decision having to be made**
 
 Raised in the market research, answered nowhere. It decides where the next
 quarter of engineering time goes, so it blocks planning rather than building.
+
+**One side of it moved on 19 September without spending the decision.**
+`lib/canvas.ts` reads Canvas with an access token the student issues
+themselves, which is depth — assignments with their submission state, the thing
+a calendar feed cannot carry — on the LMS with the largest share of the market
+this app is aimed at, and it needed no institutional agreement to get. The
+whole reason this item blocks planning is that the breadth road costs
+partnership conversations per campus; the self-serve token route is the one
+piece of depth that costs none.
+
+So what is left open here is narrower than it was, and worth restating as the
+question it actually is: **not** "depth or breadth", but "is a second
+LMS's self-serve route worth building before there are students on the first
+one". That is a question about pilot evidence rather than about engineering
+strategy, and it should wait for the pilot rather than be decided now.
 
 ### 9 · Reconcile the financial model · **Open**
 
@@ -187,6 +250,12 @@ whatever a collision search turns up, which is why it is worth having before
 one. §2 has the four routes out, a recommendation, and the fifteen-minute
 search to run for the *infringement* question, which is the separate and more
 urgent one.
+
+One concrete hit from a desk check on 19 September, recorded here because it is
+the kind of thing the search will want to start from rather than rediscover:
+**`SEMESTERWARE`, Reg. 3195876 (2007), for educational software.** Adjacent
+rather than obviously fatal, and it does nothing to the descriptiveness point
+above — which is the point that section is making.
 
 ### 11 · The Exam Runway status · **Landed in this repository; open outside it**
 
