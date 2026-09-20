@@ -16,7 +16,12 @@ kilobytes instead of megabytes.
 Output goes to app/public/audio/lessons/<course>/unit-<n>.mp3, with a
 lessons.json beside it to paste into the course module.
 
-    --mp4   also render a real video file per unit, for offline use.
+    --mp4       also render a flat-colour video file per unit, for offline use.
+    --remotion  render the *movie-format* video instead: the same slides the
+                app draws, moving on these same cues. Renders from the cues
+                already on disk and never re-synthesises a voice, so it is
+                safe and free to re-run on a unit whose narration has not
+                changed. See video/README.md.
 """
 
 from __future__ import annotations
@@ -31,10 +36,22 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "audio"))
 
-# The synthesiser already knows how to speak, pause and time a script.
-from synth import GAP_TURN, load_voices, mmss, resample, say  # noqa: E402
 
-import numpy as np  # noqa: E402
+def _synth():
+    """The synthesiser, imported when something is actually going to be spoken.
+
+    It already knows how to speak, pause and time a script, and this script has
+    always leaned on it. At module scope, though, it makes Piper and numpy a
+    requirement for *loading the file* — so `--remotion`, which renders a video
+    from cues already on disk and synthesises nothing, died on
+    `ModuleNotFoundError: No module named 'numpy'` before it could read its own
+    arguments. The audio path pays for the audio stack; the video path does not.
+    """
+    import numpy as np
+
+    from synth import GAP_TURN, load_voices, mmss, resample, say
+
+    return GAP_TURN, load_voices, mmss, resample, say, np
 
 
 def read_guide(course: str) -> tuple[str, list[dict]]:
@@ -108,6 +125,8 @@ def lesson_script(code: str, unit: dict, index: int) -> list[dict]:
 
 
 def render(course: str, code: str, units: list[dict], only: int | None, mp4: bool, dry: bool):
+    GAP_TURN, load_voices, mmss, resample, say, np = _synth()
+
     out_dir = ROOT / "app/public/audio/lessons" / course
     voices = None if dry else load_voices({"tutor": "en-us-ryan-high"})
     rate = 22050 if dry else voices["tutor"].config.sample_rate
@@ -222,13 +241,54 @@ def write_module(course: str, lessons: dict) -> None:
     print(f"Import it in courses/{course}/index.ts as `lessons` if it is not already.")
 
 
+def remotion(course: str, only: int | None, dry: bool) -> int:
+    """Hand off to the Remotion composition in `video/`.
+
+    Kept as a hand-off rather than reimplemented here. The cue list is the
+    interface between the two halves — this script writes it, the composition
+    reads it — and the audio pipeline has no business knowing how a frame is
+    drawn. It does not re-synthesise anything, so a unit whose narration has
+    not changed re-renders its video for nothing but compute.
+    """
+    video = ROOT / "video"
+    if not (video / "node_modules").exists():
+        print(
+            f"{video}/node_modules is missing — run `npm install` in {video} first.\n"
+            "It is a separate package on purpose: Remotion brings a browser with it, "
+            "and the app's own install should not carry that.",
+            file=sys.stderr,
+        )
+        return 1
+
+    cmd = ["node", "render.mjs", course]
+    if only is not None:
+        cmd += ["--unit", str(only)]
+    if dry:
+        cmd.append("--dry-run")
+    return subprocess.run(cmd, cwd=video).returncode
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("course")
     ap.add_argument("--unit", type=int, help="Render one unit only.")
     ap.add_argument("--mp4", action="store_true", help="Also write an MP4 per unit.")
+    ap.add_argument(
+        "--remotion",
+        action="store_true",
+        help="Render the movie-format video from existing cues, instead of the narration.",
+    )
     ap.add_argument("--dry-run", action="store_true", help="Show what would be rendered.")
     args = ap.parse_args()
+
+    if args.remotion:
+        if args.mp4:
+            print("--mp4 and --remotion both write unit-<n>.mp4; pick one.", file=sys.stderr)
+            return 1
+        # Deliberately before `read_guide`: the video is rendered from the cues
+        # on disk, so it stays reproducible for a course whose guide has moved
+        # on since its narration was recorded.
+        return remotion(args.course, args.unit, args.dry_run)
 
     code, units = read_guide(args.course)
     print(f"{args.course}: {code}, {len(units)} units")

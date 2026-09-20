@@ -16,6 +16,7 @@ import type { Figure, LessonCue, StudyCard } from '../lib/types';
 import {
   atFirstBeat,
   atLastBeat,
+  cueIndexAt,
   showingExtra as isShowingExtra,
   type BeatPosition,
 } from '../lib/beats';
@@ -136,11 +137,7 @@ export function LessonPlayer() {
   const playing = ours && going;
 
   const cues: LessonCue[] = useMemo(() => lesson?.cues ?? [], [lesson]);
-  const index = useMemo(() => {
-    let i = 0;
-    for (let n = 0; n < cues.length; n += 1) if (cues[n].at <= time + 0.15) i = n;
-    return i;
-  }, [cues, time]);
+  const index = useMemo(() => cueIndexAt(cues, time), [cues, time]);
 
   const figure = figures[unit];
   /*

@@ -23,3 +23,13 @@ venv/
 
 # Scratch the Supabase CLI writes when it runs.
 supabase/.temp/
+
+# Rendered lesson video.
+#
+# The MP3s beside these are committed — they are the product, 46MB for four
+# courses, and every student streams the same file. The MP4s are not: they are
+# derived from those MP3s plus the cue list, re-rendered by
+# `pipeline/lessons.py <course> --remotion` whenever they are wanted, and a
+# single 1080p unit is larger than the entire audio library. See
+# video/README.md.
+app/public/audio/lessons/**/*.mp4

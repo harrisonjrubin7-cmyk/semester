@@ -79,7 +79,7 @@ Two things are better than they sound at first, given the economics above.
 
 | Format | What it is | How to build it | Cost driver |
 | --- | --- | --- | --- |
-| **Movie-format lesson** (upgrade of today's lesson) | The existing narrated-lesson audio, but the flat `0x0a0b0e` rectangle becomes real animated typography, diagrams and highlight boxes moving with the cues already recorded | **Remotion** (React + ffmpeg, runs in the existing Node toolchain, renders locally) driven by the same cue list `pipeline/lessons.py` already writes | $0 — compute only |
+| **Movie-format lesson** (upgrade of today's lesson) | The existing narrated-lesson audio, but the flat `0x0a0b0e` rectangle becomes real animated typography, diagrams and highlight boxes moving with the cues already recorded | **Remotion** (React + ffmpeg, runs in the existing Node toolchain, renders locally) driven by the same cue list `pipeline/lessons.py` already writes | Compute only — but see the licence note in §7 |
 | **Animated series** | A recurring host character, or two, appearing across every unit of a course — the visual equivalent of the two-voice podcast | Generate one **character reference sheet** (image model, ~$0.01–0.04/image) once per persona; feed it as the reference image to an **image-to-video** model with strong character consistency for short 5–10s reaction and gesture clips; composite those into the Remotion timeline instead of drawing a static avatar | ~$0.10–1.50 per short clip × a handful of clips per unit, reused across the whole course |
 | **YouTube-length explainer** | 8–15 min, hook in the first 15s, chapter marks | Remotion for the graphics track, same as movie-format, plus 2–4 short AI-video B-roll inserts for the cold open and section transitions. Marks come from the cue list, the way `synth.py` does it — not from `chapters.py` | Same as above; B-roll is optional polish, not the backbone |
 | **TikTok / Shorts** | 15–45s, vertical 9:16, one concept per short, hook-first, burned-in captions | New script granularity: **one short per flashcard**, not per unit. `pipeline/shorts.py <course>` walks `guide.ts` card-by-card rather than unit-by-unit; Remotion vertical composition; captions come free from the beat timings the TTS pass already records | $0 — the cheapest format to mass-produce, and the best fit for "many different versions", since every card in every course can have one |
@@ -204,8 +204,12 @@ once the format is right.
 
 ## 6. Rollout order
 
-1. **Remotion for the movie-format upgrade.** Biggest visible improvement, $0
-   marginal cost, reuses cue data already generated. Do this first.
+1. **Remotion for the movie-format upgrade.** ✅ **Built** — `video/`, driven by
+   `python3 pipeline/lessons.py <course> --remotion`. See
+   [`../video/README.md`](../video/README.md). Two things learned in the doing,
+   both recorded below: the licence is not unconditionally free, and the
+   composition shares `cueIndexAt` and `tokensFor` with the app rather than
+   restating either.
 2. **`shorts.py`.** Cheapest new format to stand up — no new render technology,
    just new chunking logic and a vertical composition — and the best match for
    "generate in several different ways", since it is naturally one short per
@@ -234,6 +238,15 @@ once the format is right.
   what a deaf or hard-of-hearing student reads has to match what is spoken, and
   a short's burned-in captions should come from the same cue data rather than a
   separate manual pass.
+- **Remotion is free up to three people, not unconditionally.** The rollout
+  above called this step `$0`, and for a solo project it is: Remotion's free
+  licence covers individuals and for-profit companies of up to three employees.
+  A company of four needs a paid Company License, and the tier aimed at
+  "companies launching automated video creation applications" carries a monthly
+  minimum — which is a fair description of `pipeline/lessons.py --remotion` once
+  it runs for every unit of every course. Nothing to do today; worth knowing
+  before it is load-bearing, and worth re-checking rather than trusting this
+  paragraph, since the terms move. <https://www.remotion.pro/license>
 - **No real person's name, voice or likeness** in any persona preset or
   character sheet. The archetypes in §4 are described by structure, not by who
   they resemble, and that is also the version that survives a platform-policy

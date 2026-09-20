@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { atFirstBeat, atLastBeat, showingExtra, type BeatPosition } from './beats';
+import {
+  atFirstBeat,
+  atLastBeat,
+  CUE_LEAD,
+  cueIndexAt,
+  showingExtra,
+  type BeatPosition,
+} from './beats';
 
 /**
  * The two arrows under a narrated lesson, and whether they have anywhere to go.
@@ -87,5 +94,71 @@ describe('both ends at once', () => {
     const middle = at({ index: 2, cues: 5 });
     expect(atFirstBeat(middle)).toBe(false);
     expect(atLastBeat(middle)).toBe(false);
+  });
+});
+
+/**
+ * Which slide is up at a given second.
+ *
+ * This rule lived inside the player, where only the player could reach it, and
+ * `video/` needs the same answer or the type on screen drifts away from the
+ * voice under it. The cases below are the ones that decide whether the two
+ * agree: the lead, the boundary the lead creates, and a unit with no cues.
+ */
+const CUES = [
+  { at: 0, kind: 'title' as const, text: 'Thinking at the margin' },
+  { at: 12.5, kind: 'q' as const, text: 'What is a sunk cost?' },
+  { at: 18, kind: 'a' as const, text: 'Spent and unrecoverable.' },
+  { at: 40, kind: 'close' as const, text: 'That is the unit' },
+];
+
+describe('the slide at a moment', () => {
+  it('opens on the title', () => {
+    expect(cueIndexAt(CUES, 0)).toBe(0);
+  });
+
+  it('stays there until the next cue', () => {
+    expect(cueIndexAt(CUES, 12)).toBe(0);
+  });
+
+  it('turns a lead before the voice, not after it', () => {
+    /*
+     * Literal seconds, deliberately.
+     *
+     * The first draft of this asserted `cueIndexAt(CUES, 12.5 - CUE_LEAD)`,
+     * which is the same expression the function evaluates and therefore true
+     * for any lead at all, zero included — it passed against a revert that
+     * set `CUE_LEAD = 0`, so it was not testing the lead. 12.45 is before the
+     * cue's own 12.5 and only reaches it if a lead is really added.
+     */
+    expect(cueIndexAt(CUES, 12.45)).toBe(1);
+    // ...and the lead is a lead, not a landslide: a second early is still the
+    // slide before.
+    expect(cueIndexAt(CUES, 11.5)).toBe(0);
+    expect(CUE_LEAD).toBeGreaterThan(0);
+  });
+
+  it('holds the last cue to the end of the narration', () => {
+    expect(cueIndexAt(CUES, 400)).toBe(3);
+  });
+
+  it('answers 0 for a unit that arrived with no cues', () => {
+    // `Previous` used to index `cues` directly and throw here; this is the
+    // same emptiness asked of the other half of the rule.
+    expect(cueIndexAt([], 9)).toBe(0);
+  });
+
+  it('is what the player draws, so the video draws it too', () => {
+    // Every second of a lesson, walked: the index never goes backwards and
+    // never skips a cue. A renderer that sampled per frame would show the
+    // same sequence of slides as a player that sampled on timeupdate.
+    let last = 0;
+    for (let s = 0; s <= 45; s += 0.5) {
+      const i = cueIndexAt(CUES, s);
+      expect(i).toBeGreaterThanOrEqual(last);
+      expect(i - last).toBeLessThanOrEqual(1);
+      last = i;
+    }
+    expect(last).toBe(3);
   });
 });
