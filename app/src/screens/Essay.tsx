@@ -214,7 +214,22 @@ export function Essay() {
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => {
-                    dispatch({ type: 'openGuide', id: course.id });
+                    /*
+                     * `openCourse`, not `openGuide`, because of where this
+                     * goes. `EditCourse.tsx:43` finds its course by
+                     * `state.courseId`, and `openGuide` sets `guideId` and
+                     * leaves `courseId` alone — so picking a course here and
+                     * pressing this landed on Edit holding whichever course
+                     * was last open, and the policy you then wrote was
+                     * recorded against that one. The id passed was right the
+                     * whole time; only the pointer was wrong, which is why it
+                     * read as correct at the call site.
+                     *
+                     * It also drops a history entry nobody visited: `push`
+                     * puts `guide` on the stack, so Back from Edit went to a
+                     * screen that was never drawn.
+                     */
+                    dispatch({ type: 'openCourse', id: course.id });
                     dispatch({ type: 'go', screen: 'edit' });
                   }}
                   style={{ height: 38, marginTop: 'var(--sp-5)', width: '100%' }}

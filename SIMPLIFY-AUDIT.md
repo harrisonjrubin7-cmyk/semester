@@ -1,3 +1,150 @@
+# One app — the seventeenth pass: six of seven carried the course, the seventh only looked like it
+
+Against `main` at `3075fbc`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. (Read at `9ebff1a`; `#521` landed underneath and is three
+documentation files, so nothing it changed is in scope here.)
+
+The sixteenth pass took a census it would not act on — how many places dispatch
+to each destination — and left one row: resolve `edit`'s seven sites,
+`import`'s five and `courses`' four into contextual actions and front doors,
+*"and only then can the `Done means` claim be made or refused honestly."* This
+is that, and it found a bug on the way through.
+
+## Q1 — the definition the census turns on, stated before the count
+
+A **front door** takes you to a screen as a destination, carrying nothing. Two
+of them for one screen is the duplicate pathway the skill is about.
+
+A **contextual action** acts on the thing you are already holding — "edit *this*
+course" — and carries it. It is not a second route to a screen any more than a
+context menu is a second file manager. The skill says a control belongs where
+you are; these are that rule being obeyed, and counting them as pathways is
+what made the sixteenth pass's raw numbers unreadable.
+
+The test is mechanical rather than aesthetic: **does the dispatch carry an id,
+or arrive on one already set?** If it does, it is an action on that thing. If
+it does not, it is a door.
+
+## Q2 — the count, resolved
+
+| Destination | Sites | Front doors | What the rest are |
+| --- | --- | --- | --- |
+| `edit` | 7 | **0** | five carry a course with `openCourse`; two are drawn *on* the open course and need no id |
+| `import` | 5 | **0** | five empty states offering the one thing that fills them |
+| `courses` | 4 | **0** | four carry a tab with `setCoursesTab` — deep links to a view, not to the screen |
+
+The two `edit` sites that carry nothing are `screens/Courses.tsx:568` and
+`components/OfficeHours.tsx:37`, and both are inside Courses' own detail, which
+derives its course from `catalog.byId[state.courseId]` (`Courses.tsx:495`) and
+passes it down (`Courses.tsx:597`). The pointer is already the right one, so
+setting it again would be ceremony.
+
+`import`'s five are `FirstRun`, and `EmptyState` actions on `Gap`, `Runway` and
+`me/You`, and a button on `Yes`. An empty state offering the remedy for being
+empty is the screen doing its job; a student who has no courses is not choosing
+between five routes, they are being handed the only one from wherever they
+happen to be standing.
+
+`lib/browser.ts:172` is the one place `edit` is reached without a course being
+named — `at.courseId ? [openCourse, go] : justGo(screen)` — and that is tab
+restoration rather than a door: a tab saved *from* Edit always carried one.
+
+### So the claim, and exactly how far it reaches
+
+**For these three destinations, no front door is duplicated: each has one.**
+That is the skill's `Done means` line, held for the three the census flagged as
+busiest.
+
+It is **not** claimed for all fifty-eight, and the sixteenth pass's reasons
+still stand: the grep reads literal `type: 'go', screen: '…'` rows, and the
+directory, search and command palette dispatch a variable, so they are
+invisible to it. What has changed is that the three destinations with the most
+literal call sites have each been read rather than counted, and none of them is
+a second front door.
+
+## Q3 — and the seventh site was wrong
+
+Six of `edit`'s seven carry the course correctly. The seventh meant to and did
+not, and the census is what found it, because the question *"does it carry the
+id"* is one a reader answers by looking at the destination rather than at the
+call.
+
+`screens/Essay.tsx` has its own course picker — `useState` at line 59, nothing
+to do with the store, because the question it asks is *which course is this
+essay for*. Under it sits that course's recorded AI policy and a button to go
+and set it. The button dispatched:
+
+```js
+dispatch({ type: 'openGuide', id: course.id });
+dispatch({ type: 'go', screen: 'edit' });
+```
+
+`openGuide` sets `guideId` (`state/slices/navigate.ts:176`). `EditCourse.tsx:43`
+finds its course by **`state.courseId`**. The two halves named different
+pointers and nothing connected them:
+
+    pick PSCI 1104 → "Record the policy" → Edit the course, editing ECON 1020
+
+**The id passed was correct the whole time**, which is why the call site reads
+as though it carries the course — `openGuide(course.id)` looks exactly like
+carrying it. Only the destination knows it reads a different field.
+
+Worse than a wrong screen, because of what the screen is for: what you type
+there is a course's AI policy, recorded against whichever course the store
+happened to be holding. A student reading the Honor Code section of one
+syllabus writes it onto another, and nothing says so.
+
+Fixed to `openCourse`, which is what the other five carry, and which also drops
+a history entry nobody visited — `push` put `guide` on the stack, so Back from
+Edit went to a screen that was never drawn.
+
+`screens/essaypolicy.test.tsx` holds it, in two cases. Reverted to `openGuide`
+the first goes red with `expected 'bbb', received 'aaa'`; the control — that
+merely visiting Essay and choosing a course moves nothing — stays green, and is
+there because a fix that pushed the picker's course on every render would pass
+the first case while quietly rewriting the open course for anybody who looked
+at the screen.
+
+### Two instrument faults, both found by the test failing wrongly
+
+Recorded because this file's own rule is that a probe is a claim too, and both
+of these would have read as findings.
+
+- **The probe was shadowed by the screen.** `host.querySelector('span')` found
+  Essay's first span — each use option draws two — and reported every pointer
+  as `null`. It reads `[data-probe]` now.
+- **The address bar leaked between cases.** Pressing the button writes `#/edit`,
+  jsdom keeps one `location` per file, and `store.tsx` reads
+  `fromHash(window.location.hash)` on mount — the mechanism `#513` is about. So
+  the control mounted a fresh store, read the *previous* case's address, and
+  came up on `edit` before pressing anything. It passed alone and failed after
+  its neighbour, which is precisely the class `npm run test:shuffle` exists to
+  catch. The hash is cleared in `beforeEach` now.
+
+A third near-miss is worth a line: the first draft could not find the course
+picker at all, because it is behind `u.coursework` — the *For a class* option
+in `lib/essay.ts` — and Essay opens on "What is this for". The failure read
+"no course picker on Essay", which is a sentence about the harness and not
+about the app.
+
+And a fourth caught by the repository rather than by this pass.
+`src/seedawait.test.ts` failed the new file for mounting the store without
+`await loadSeed()` in a `beforeAll`, which is the rule that stops an unawaited
+sample landing after teardown and failing against whichever file happens to be
+running. These cases seed `sample: false` and never read the courses, so the
+omission looked harmless from inside the file — which is the argument for the
+guard being structural rather than a habit, and it is the second time in two
+passes that a check written for somebody else's mistake caught this one.
+
+## To do
+
+- The remaining fifty-five destinations have not been read this way, only
+  counted. The three busiest were chosen because a duplicate door is likeliest
+  where there are most calls; that is a reasonable prior and not a proof.
+- Nothing else is open.
+
+---
+
 # One app — the sixteenth pass: two rows closed, and one was already done
 
 Against `main` at `e8338fc`. **<!--screens-->fifty-eight<!--/--> destinations**,
