@@ -24,6 +24,7 @@ import { over, timed } from '../lib/timing';
 import type { Named } from '../lib/forwork';
 import { arrange } from '../lib/yours';
 import { setSessionToken } from '../lib/token';
+import { claimPending } from '../lib/referral';
 import {
   accountOf,
   cloudConfigured,
@@ -652,7 +653,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // browser that still held one from last term. The credentials form marks
       // this too, because with email confirmation on there is no session at
       // the moment the account is made. See `state/shape.ts`.
-      if (s) dispatch({ type: 'registered' });
+      if (s) {
+        dispatch({ type: 'registered' });
+        /*
+         * A classmate's referral code waiting on this device, now that there
+         * is an account to attach it to. This is the hook because there is no
+         * single moment in this app where an account is made — a form, a
+         * confirmation link opened in another tab, and three OAuth round trips
+         * all end here and nowhere else.
+         *
+         * It costs a localStorage read and nothing more when there is no code
+         * waiting, which is every sign-in but the one after somebody followed
+         * a link. A failure leaves the code pending for the next one; nothing
+         * on screen is waiting for this. See `lib/referral.ts`.
+         */
+        void claimPending().catch(() => {});
+      }
     };
 
     let stop: (() => void) | null = null;

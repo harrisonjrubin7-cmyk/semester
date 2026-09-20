@@ -39,9 +39,16 @@ leaves the rest of the file running unprotected.
 
 ## `*.check.sql` — the tests
 
-`classmates.check.sql`, `groups.check.sql`, `rooms.check.sql`,
-`records.check.sql`, `calendar.check.sql`, `sync.check.sql`,
-`forms.check.sql`.
+`access.check.sql`, `calendar.check.sql`, `classmates.check.sql`,
+`deletion.check.sql`, `forms.check.sql`, `groups.check.sql`,
+`invites.check.sql`, `records.check.sql`, `referrals.check.sql`,
+`rooms.check.sql`, `sync.check.sql`.
+
+(This list had gone stale by four — it named seven of the eleven, and the four
+it left out include the two whose subject is whether an account can be created
+at all and whether a deleted one really goes. `check.sh` runs every file in the
+directory rather than a list, so nothing was unrun; what was missing was
+anybody knowing they existed.)
 
 Each one invents two to five users, proves the row-level policies refuse what
 they should refuse, and ends in `rollback;`. `rooms.check.sql` covers both halves of

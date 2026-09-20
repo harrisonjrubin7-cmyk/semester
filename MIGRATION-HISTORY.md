@@ -27,18 +27,23 @@ disaster recovery.
 `supabase/migrations/`. They were applied through the dashboard or the
 management API. The repository has never described the database it deploys to.
 
-**3 · Five files have never been applied.** `usage_atomic`,
-`group_columns_pinned`, `forms`, `invites` and `access_log` are in
+**3 · Six files have never been applied.** `usage_atomic`,
+`group_columns_pinned`, `forms`, `invites`, `access_log` and `referrals` are in
 `supabase/migrations/` and absent from production — verified object by object,
-not inferred from the history. Two of them matter for the pilot: the atomic AI
+not inferred from the history, for the first five. Two of them matter for the pilot: the atomic AI
 metering fix and the invite gate are merged code sitting on a schema that does
 not support them.
 
 It was four when this was written and became five the same evening.
 `20260901001300_access_log.sql` merged to main at 17:34 on 18 September and
 production had not received it twenty-five minutes later — no failure, no
-notice. **The gap grows on its own**, which is the argument for doing this
-rather than watching it.
+notice. It became six on 20 September with
+`20260901001400_referrals.sql`, which is counted here on the strength of the
+same argument rather than a fresh object-by-object check: nothing has applied
+a file from this directory in the window, so a file that landed after the
+audit is unapplied unless somebody has gone and done it by hand. **The gap
+grows on its own**, which is the argument for doing this rather than watching
+it.
 
 ## The rule this repair runs under
 
@@ -121,7 +126,8 @@ is not empty, this step does not happen.
 
 Out of scope here and worth naming so it is not forgotten. Once production is
 reproducible, a preview branch can finally be built that matches it, and
-`usage_atomic`, `group_columns_pinned`, `forms`, `invites` and `access_log` can
+`usage_atomic`, `group_columns_pinned`, `forms`, `invites`, `access_log` and
+`referrals` can
 be rehearsed against it before a merge applies them. That is the staging work the rest of the
 plan was always about; it could not start until this was true.
 
