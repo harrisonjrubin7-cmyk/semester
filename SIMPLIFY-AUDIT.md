@@ -1,3 +1,117 @@
+# One app — the eighteenth pass: the guard was right about the app and wrong about the file
+
+Against `main` at `b7c96e2`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge, no screen touched — one function inside one test.
+
+The seventeenth pass left *"the remaining fifty-five destinations have not been
+read this way, only counted."* Reading fifty-five screens one at a time is that
+pass done fifty-five times, so this took the rule it discovered instead —
+**a screen keyed on a pointer must be reached with that pointer set** — and ran
+it over every destination at once.
+
+That found no second instance in the app, and one in the instrument.
+
+## R1 — the class, across all fifty-eight, has one instance and it is fixed
+
+The addendum's `screens/editroute.test.ts` asks the pairing question of `edit`.
+Asked of every destination, by the same method:
+
+| Pair found | Verdict |
+| --- | --- |
+| `edit` ← `openCourse` ×4 | correct, and the one that was `openGuide` is fixed |
+| `courses` ← `openCourse` | correct — `Degree.tsx` opens the course it then lists |
+| `announce` ← `openUpdate` | **not a pair.** Different buttons. |
+| `equations` ← `openNote` | **not a pair.** Different `case`, with a `return` between. |
+
+So the defect the seventeenth pass found is the only one of its shape that this
+method can see, and `editroute.test.ts` holds the recurrence.
+
+**What the method cannot see, stated so the next pass does not over-read it.**
+It matches a literal `dispatch({ type: 'go', screen: '…' })`, so a `go` whose
+screen is a variable — the directory, search and the command palette — is
+invisible to it, exactly as the sixteenth pass said of the census it grew from.
+It also only sees pairs at all where an `open*` and a `go` sit together; most
+navigation here is an `open*` alone, which carries its own destination. And the
+seventeenth pass's other question — front door or contextual action — is
+**not** answered for the other fifty-five by any of this. That row stays open.
+
+## R2 — two of the four pairs above were the instrument, not the app
+
+Both false pairs have the same cause, and it is the one thing in
+`editroute.test.ts` that was approximate: *"the handler this sits in,
+approximated as the 400 characters before it."*
+
+Characters are not handlers.
+
+- **`screens/Courses.tsx`** draws "Add a reading to this course"
+  (`openUpdate`), and nine lines later a separate button that goes to
+  `announce` carrying nothing. The window reached back into the first button
+  and reported them as one handler.
+- **`components/ForThis.tsx`** has `case 'note': openNote; return;` directly
+  above `case 'equation': … go 'equations'`. The window read straight through
+  the `return`.
+
+Neither is a fault in the app. Both would have read as one.
+
+### The margin on the real thing is 227 characters
+
+That matters more than the two false readings, because `Courses.tsx` also holds
+a genuine `go: 'edit'` — the one that correctly carries nothing, being drawn
+inside an already-open course. Its distance from that same `openUpdate` is
+**627 characters**, against a 400-character window. It clears by 227.
+
+Measured rather than imagined: inserting one ordinary button above it — a
+`btn-secondary` dispatching `openGuide`, the shape of the four already in that
+column — puts the opener 333 characters away, and the old window then reports
+
+    edit <- openGuide  (screens/Courses.tsx)
+
+which is a red build naming a file that is correct. A guard that fails on
+correct code is the kind that gets deleted rather than fixed, and it would have
+been deleted for being wrong about the one screen it was most needed on.
+
+### So the window is cut back to the handler
+
+`handlerOf` trims the 400 characters at the last boundary inside them — an
+`on…=` prop, a `case` label, or a bare `return`. An opener on the far side of
+one of those is different code.
+
+Proved in both directions, because a guard's change has to be:
+
+- **It still catches the bug it was written for.** Essay reverted to
+  `openGuide` on main's own fixed file: red, naming `screens/Essay.tsx`,
+  `expected 'openGuide' to be 'openCourse'`.
+- **It no longer fails on correct code.** With that extra button in
+  `Courses.tsx`, the old window fails and this one passes.
+- **It has not become a guard over nothing.** Still four sites, so the file's
+  own `toBeGreaterThanOrEqual(4)` floor still bites.
+
+## What this pass did not do, and why
+
+**It did not generalise the guard beyond `edit`.** The obvious next move is a
+check over every pointer-keyed screen rather than one, and R1 is the argument
+against writing it today: there is nothing for it to catch, and this file
+already says what a guard with no failing case is worth. `editroute.test.ts`
+guards the one pairing that has ever been wrong. When a second appears, the
+generalisation will have a failing case to be written against.
+
+**It did not rebuild what landed while it was running.** `#522` is a second
+session that found the seventeenth pass's defect independently, dropped its own
+fix in favour of main's, and contributed the guard instead. That is `CLAUDE.md`
+working. Its closing note — that the check for a duplicate belongs immediately
+before the push as well as at the start — was run before this one, and again
+before pushing it.
+
+## To do
+
+- Front door or contextual action, for the fifty-five destinations that have
+  been counted and not read. Unchanged by this pass; R1 answers a different
+  question about the same list.
+- A pointer-pairing guard covering screens other than `edit`, when there is a
+  second instance to write it against.
+
+---
+
 # One app — an addendum to the seventeenth pass: the guard for the recurrence
 
 Against `main` at `2558309`. **<!--screens-->fifty-eight<!--/--> destinations**,

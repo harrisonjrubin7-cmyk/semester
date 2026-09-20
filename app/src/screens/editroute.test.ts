@@ -55,6 +55,44 @@ function sources(dir: string): string[] {
   });
 }
 
+/**
+ * The handler a `go` actually sits in, rather than the characters near it.
+ *
+ * The first version of this took the 400 characters before the `go` and used
+ * the last `open*` in them, which is right for all seven current sites and
+ * wrong in a way that costs a red build on correct code: a window measured in
+ * characters crosses into the *previous button*.
+ *
+ * Measured on this tree by the eighteenth simplify pass, which ran the same
+ * pairing over every destination rather than over `edit` alone. Two of the
+ * four pairs it found were not pairs at all:
+ *
+ *   - `screens/Courses.tsx` draws "Add a reading to this course"
+ *     (`openUpdate`) and then, nine lines later, a separate button that goes
+ *     to `announce` carrying nothing. The window reported them as one.
+ *   - `components/ForThis.tsx` has `case 'note': openNote; return;` directly
+ *     above `case 'equation': … go 'equations'`. The window read across the
+ *     `return`.
+ *
+ * Neither is a fault in the app, and both would have read as one. And the
+ * margin on the real thing is thin: in `Courses.tsx` the `go: 'edit'` button
+ * misses that same `openUpdate` by **227 characters**. One more button
+ * between them, or a longer `style` prop, and this guard fails naming a file
+ * that is correct — which is the failure mode that gets a guard deleted
+ * rather than fixed.
+ *
+ * So the window is cut back to the last handler boundary in it: an `on…=`
+ * prop, a `case` label, or a bare `return`. An opener on the far side of one
+ * of those belongs to different code.
+ */
+function handlerOf(before: string): string {
+  let cut = 0;
+  for (const m of before.matchAll(/on[A-Z][a-zA-Z]*=|case\s+'[^']*':|return;/g)) {
+    cut = (m.index ?? 0) + m[0].length;
+  }
+  return before.slice(cut);
+}
+
 /** Every `open*` dispatched in the same handler as a `go: 'edit'`, with its file. */
 function openersBeforeEdit(): { file: string; opener: string }[] {
   const out: { file: string; opener: string }[] = [];
@@ -63,12 +101,11 @@ function openersBeforeEdit(): { file: string; opener: string }[] {
     const go = /dispatch\(\{\s*type:\s*'go',\s*screen:\s*'edit'\s*\}\)/g;
     for (const hit of code.matchAll(go)) {
       /*
-       * The handler this sits in, approximated as the 400 characters before
-       * it. Long enough to hold an `open*` and the lines between, short
-       * enough not to reach an unrelated one further up the file — measured
-       * against all seven current sites, whose openers sit one line above.
+       * 400 characters to bound the search, then `handlerOf` to cut it back
+       * to the handler itself. The character count alone is what reached
+       * into a neighbouring button; see the note on `handlerOf`.
        */
-      const before = code.slice(Math.max(0, hit.index - 400), hit.index);
+      const before = handlerOf(code.slice(Math.max(0, hit.index - 400), hit.index));
       const opens = [...before.matchAll(/type:\s*'(open[A-Za-z]+)'/g)];
       const last = opens[opens.length - 1];
       if (last) out.push({ file: file.slice(SRC.length), opener: last[1] });
