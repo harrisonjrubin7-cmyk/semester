@@ -58,3 +58,33 @@ export function atLastBeat(at: BeatPosition): boolean {
   const moreAdded = at.finished && at.added > 0 && at.extra < at.added;
   return !moreAdded && at.index >= at.cues - 1;
 }
+
+/**
+ * How far ahead of the voice a slide turns, in seconds.
+ *
+ * A cue records the second its narration *starts*, so turning the slide
+ * exactly on it puts the type up a frame after the first syllable. The lead
+ * is small enough not to spoil an answer and large enough that the slide is
+ * already there when the sentence begins.
+ */
+export const CUE_LEAD = 0.15;
+
+/**
+ * Which cue is on screen at `seconds` into the narration.
+ *
+ * Shared rather than restated. The player computed this inline and the video
+ * renderer needed the identical rule — including the lead above, which is the
+ * kind of constant that gets copied as `0.15` and then fixed in one of the two
+ * places. `pipeline/README.md` claims a deck, a handout and a lesson cannot
+ * disagree with the app; a lesson and a video of that lesson are the same
+ * claim, so they ask one function.
+ *
+ * Cues are in ascending `at` order, as `pipeline/lessons.py` writes them.
+ * Before the first cue's time — and for a unit that arrived with none — the
+ * answer is 0, which is what the player drew there anyway.
+ */
+export function cueIndexAt(cues: readonly { at: number }[], seconds: number): number {
+  let i = 0;
+  for (let n = 0; n < cues.length; n += 1) if (cues[n].at <= seconds + CUE_LEAD) i = n;
+  return i;
+}
