@@ -42,7 +42,7 @@ const LABEL_STYLE = {
 
 const BLURB_STYLE = {
   fontSize: 'var(--type-base)',
-  opacity: 0.65,
+  color: 'var(--app-dim)',
   marginBottom: 'var(--sp-5)',
   textWrap: 'pretty',
 } as const;

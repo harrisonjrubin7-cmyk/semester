@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DIMMED_ROW } from '../lib/dim';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
@@ -233,7 +234,7 @@ export function Grades() {
                         alignItems: 'baseline',
                         padding: '8px 0',
                         borderBottom: '1px solid var(--app-line-soft)',
-                        opacity: impossible ? 0.45 : 1,
+                        opacity: impossible ? DIMMED_ROW : 1,
                       }}
                     >
                       <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>

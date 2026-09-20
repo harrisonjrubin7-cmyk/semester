@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { faintLine, secondLine } from '../lib/dim';
 import { Blueprint } from './Blueprint';
 import { Recorder, clockOf, micSupported, recordingName } from '../lib/mic';
 import { addFile, formatBytes, type FileMeta } from '../lib/files';
@@ -161,7 +162,7 @@ export function RecordButton({
             onChange={(e) => setWantText(e.target.checked)}
             style={{ marginTop: 'var(--sp-1)', flex: 'none' }}
           />
-          <span style={{ opacity: 0.75 }}>
+          <span style={secondLine()}>
             Write it down as it goes. Live only — the recogniser has to hear the speech happening,
             so this cannot be run on the file afterwards. It mishears technical words, it does not
             know who is talking, and in Chrome the audio goes to Google to be recognised.
@@ -259,18 +260,18 @@ export function RecordButton({
             >
               {paragraphs(segments).slice(-6).map((seg) => (
                 <p key={`${seg.at}-${seg.text.length}`} style={{ margin: '0 0 8px' }}>
-                  <span style={{ opacity: 0.4, fontVariantNumeric: 'tabular-nums' }}>
+                  <span style={{ ...faintLine(), fontVariantNumeric: 'tabular-nums' }}>
                     {stamp(seg.at)}{' '}
                   </span>
                   {seg.text}
                 </p>
               ))}
-              {interim && <p style={{ margin: 0, opacity: 0.45 }}>{interim}…</p>}
+              {interim && <p style={{ margin: 0, ...secondLine() }}>{interim}…</p>}
             </div>
           )}
 
           {wantText && segments.length === 0 && !interim && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 11 }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 11 }}>
               Listening. Words appear here as they are recognised.
             </div>
           )}

@@ -251,7 +251,7 @@ function MealsDetails() {
                 className="bare"
                 aria-label="Remove this reading"
                 onClick={() => dispatch({ type: 'dropBalance', id: r.id })}
-                style={{ flex: 'none', width: 24, opacity: 0.4, fontSize: 'var(--type-md)' }}
+                style={{ flex: 'none', width: 24, color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
               >
                 ×
               </button>

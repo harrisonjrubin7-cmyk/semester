@@ -21,7 +21,7 @@
  */
 
 import { useMemo, useState } from 'react';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { CustomRow, Group } from '../components/shell/Rows';
 import { Blueprint } from '../components/Blueprint';
@@ -187,7 +187,7 @@ export function Bill() {
                   className="bare"
                   aria-label={`Remove ${c.what}`}
                   onClick={() => dispatch({ type: 'dropCharge', id: c.id })}
-                  style={{ width: 24, flex: 'none', opacity: 0.45, fontSize: 'var(--type-md)' }}
+                  style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                 >
                   ×
                 </button>
@@ -223,7 +223,11 @@ export function Bill() {
                       flex: 'none',
                       fontSize: 'var(--type-md)',
                       fontVariantNumeric: 'tabular-nums',
-                      opacity: a.pending ? 0.55 : 1,
+                      /* Pending aid is money that is not there yet, which is a
+                         fact about the amount rather than about the row — the
+                         row's other half is still live. So the number is
+                         dimmed as text, at the audited strength. */
+                      ...secondLine(!a.pending),
                     }}
                   >
                     {money(a.cents)}
@@ -242,7 +246,7 @@ export function Bill() {
                     className="bare"
                     aria-label={`Remove ${a.what}`}
                     onClick={() => dispatch({ type: 'dropAid', id: a.id })}
-                    style={{ width: 24, flex: 'none', opacity: 0.45, fontSize: 'var(--type-md)' }}
+                    style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                   >
                     ×
                   </button>
@@ -298,13 +302,23 @@ export function Bill() {
             const settled = next === null || inst.n < next.instalment.n;
             return (
               <CustomRow key={inst.n}>
-                <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 'var(--sp-4)',
+                    alignItems: 'baseline',
+                    /* One dim on the row rather than the same number written on
+                       each of its two spans: the date and the amount are one
+                       fact — this instalment is behind you — and saying it
+                       twice is what `lib/dim.ts` calls the multiplication. */
+                    opacity: settled ? DIMMED_ROW : 1,
+                  }}
+                >
                   <span
                     style={{
                       flex: 1,
                       minWidth: 0,
                       fontSize: 'var(--type-base)',
-                      opacity: settled ? 0.5 : 1,
                     }}
                   >
                     {longLabel(isoToDate(inst.due))}
@@ -319,7 +333,6 @@ export function Bill() {
                       flex: 'none',
                       fontSize: 'var(--type-md)',
                       fontVariantNumeric: 'tabular-nums',
-                      opacity: settled ? 0.5 : 1,
                       color: isNext && next.overdue ? 'var(--app-warn)' : undefined,
                     }}
                   >
@@ -358,7 +371,7 @@ export function Bill() {
                   className="bare"
                   aria-label={`Remove ${p.what}`}
                   onClick={() => dispatch({ type: 'dropPayment', id: p.id })}
-                  style={{ width: 24, flex: 'none', opacity: 0.45, fontSize: 'var(--type-md)' }}
+                  style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                 >
                   ×
                 </button>

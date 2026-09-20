@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { faintLine, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { EmptyState } from '../components/ui';
 import { allCards } from '../data/catalog';
@@ -324,7 +325,7 @@ function Run({ win }: { win: GapWindow }) {
             style={{
               fontSize: 'calc(16px * var(--text-scale, 1))',
               lineHeight: 1.55,
-              opacity: 0.85,
+              color: 'var(--app-dim)',
               textWrap: 'pretty',
               borderTop: '1px solid var(--app-line)',
               paddingTop: 14,
@@ -333,7 +334,7 @@ function Run({ win }: { win: GapWindow }) {
             {card.a}
           </div>
         ) : (
-          <div style={{ fontSize: 'var(--type-sm)', opacity: 0.4, letterSpacing: '0.06em' }}>
+          <div style={{ fontSize: 'var(--type-sm)', ...faintLine(), letterSpacing: '0.06em' }}>
             Tap anywhere to turn it over
           </div>
         )}
@@ -376,7 +377,7 @@ function Run({ win }: { win: GapWindow }) {
           type="button"
           className="bare"
           onClick={() => setStopped(true)}
-          style={{ width: '100%', height: 36, fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 'var(--sp-2)' }}
+          style={{ width: '100%', height: 36, fontSize: 'var(--type-sm)', ...secondLine(), marginTop: 'var(--sp-2)' }}
         >
           Stop here
         </button>

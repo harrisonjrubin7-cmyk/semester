@@ -246,7 +246,7 @@ const LEAD = {
   margin: 'var(--sp-3) 0 var(--sp-4)',
   fontSize: 'var(--type-sm)',
   lineHeight: 'var(--leading-normal)',
-  opacity: 0.75,
+  color: 'var(--app-dim)',
 } as const;
 
 const FRESH = {
@@ -259,7 +259,7 @@ const WARN = {
   margin: 'var(--sp-3) 0 0',
   fontSize: 'var(--type-xs)',
   lineHeight: 'var(--leading-normal)',
-  opacity: 0.75,
+  color: 'var(--app-dim)',
 } as const;
 
 /** Big enough for a phone camera at arm's length, small enough not to dominate. */

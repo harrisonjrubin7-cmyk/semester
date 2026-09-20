@@ -402,7 +402,7 @@ function Collection({
         <span style={{ fontSize: 'var(--type-sm)', ...secondLine(row.count === 0), fontVariantNumeric: 'tabular-nums', flex: 'none' }}>
           {row.count.toLocaleString()}
         </span>
-        <span style={{ fontSize: 'var(--type-sm)', opacity: row.count === 0 ? 1 : 0.75, fontVariantNumeric: 'tabular-nums', flex: 'none', minWidth: 62, textAlign: 'right' }}>
+        <span style={{ fontSize: 'var(--type-sm)', ...secondLine(row.count === 0), fontVariantNumeric: 'tabular-nums', flex: 'none', minWidth: 62, textAlign: 'right' }}>
           {formatBytes(row.bytes)}
         </span>
       </button>

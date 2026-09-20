@@ -134,7 +134,7 @@ export function PullDown({ area }: { area: React.RefObject<HTMLElement | null> }
         lineHeight: 1.4,
         textAlign: 'center',
         textWrap: 'pretty',
-        opacity: result ? 0.85 : 0.55,
+        color: result ? 'var(--app-fg)' : 'var(--app-dim)',
         transition: drag > 0 ? 'none' : 'height 160ms ease, opacity 160ms ease',
       }}
     >

@@ -138,8 +138,7 @@ function HuePicker() {
               style={{
                 flex: 'none',
                 fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                opacity: verdict.ok ? 0.65 : 1,
-                color: verdict.ok ? undefined : 'var(--app-warn, #d9534f)',
+                color: verdict.ok ? 'var(--app-dim)' : 'var(--app-warn, #d9534f)',
                 textAlign: 'right',
               }}
             >

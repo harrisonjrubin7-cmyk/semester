@@ -165,7 +165,7 @@ export function ProjectFile({ courseId, course }: { courseId: CourseId; course: 
         <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 5 }}>{runway(dueDate, now)}</div>
       ) : null}
       {catalog.courses.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 5 }}>
+        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 5 }}>
           For {course}. Switch course from Study.
         </div>
       )}

@@ -276,7 +276,9 @@ interface Caret {
 const MARK_BUTTONS: { id: Mark; label: string; glyph: string }[] = [
   { id: 'bold', label: 'Bold', glyph: 'B' },
   { id: 'italic', label: 'Italic', glyph: 'I' },
+  { id: 'underline', label: 'Underline', glyph: 'U' },
   { id: 'strike', label: 'Strike through', glyph: 'S' },
+  { id: 'highlight', label: 'Highlight', glyph: '▮' },
   { id: 'code', label: 'Monospace', glyph: '‹›' },
 ];
 
@@ -858,7 +860,7 @@ function Editor({ doc }: { doc: Doc }) {
             label: 'How to mark a few words',
             run: () =>
               say(
-                'Choose the words, then press B, I, S or ‹›. They are markdown underneath — **bold**, *italic*, ~~struck out~~, `code` — so what you type by hand works too, and [words](https://…) becomes a real link in the Word file.',
+                'Choose the words, then press B, I, U, S, ▮ or ‹›. They are markdown underneath — **bold**, *italic*, ++underlined++, ~~struck out~~, ==highlighted==, `code` — so what you type by hand works too, and [words](https://…) becomes a real link in the Word file.',
               ),
           },
         ],
@@ -1851,7 +1853,7 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (next: Block
           className="input"
           value={block.text}
           onChange={(e) => onChange({ ...block, text: e.target.value })}
-          placeholder="Write. **Bold**, *italic*, ~~struck out~~, `code` and [a link](vanderbilt.edu) all work."
+          placeholder="Write. **Bold**, *italic*, ++underlined++, ~~struck out~~, ==highlighted==, `code` and [a link](vanderbilt.edu) all work."
           aria-label="Paragraph"
           rows={5}
           style={{ width: '100%', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed)' }}

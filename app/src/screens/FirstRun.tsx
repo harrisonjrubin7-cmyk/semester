@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { faintLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -59,7 +60,7 @@ function Door({
           {takes}
         </span>
       </span>
-      <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+      <ChevronRight size={16} style={{ ...faintLine(), flex: 'none' }} />
     </Blueprint>
   );
 }

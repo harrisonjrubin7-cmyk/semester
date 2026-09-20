@@ -256,7 +256,7 @@ function HousingDetails() {
                 className="bare"
                 aria-label="Remove this room"
                 onClick={() => dispatch({ type: 'dropResidence', id: mine.id })}
-                style={{ width: 24, opacity: 0.4, fontSize: 'var(--type-md)' }}
+                style={{ width: 24, color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
               >
                 ×
               </button>

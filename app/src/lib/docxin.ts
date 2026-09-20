@@ -163,7 +163,7 @@ function alignOf(p: string): Align | undefined {
  * arrives as `"the "` + `"important"` + `" bit"` — and `** important **` is
  * not emphasis in markdown, it is four asterisks and a word.
  */
-function textOf(p: string, links: Record<string, string>): string {
+function textOf(p: string, links: Record<string, string>, inLink = false): string {
   let out = '';
   const parts = new RegExp(
     `<(${ns('hyperlink')}|${ns('r')})(\\s[^>]*)?>([\\s\\S]*?)</\\1>`,
@@ -173,17 +173,24 @@ function textOf(p: string, links: Record<string, string>): string {
     const [, name, head = '', inner] = part;
     if (/hyperlink$/.test(name)) {
       const target = links[attr(head, 'id')] ?? '';
-      const words = textOf(inner, links);
+      /*
+       * `inLink`, because every word processor underlines a link and none of
+       * them means it as emphasis. Without this a round trip turns
+       * `[words](url)` into `[++words++](url)` — the link's own decoration
+       * read back as something the writer typed, and it compounds: each pass
+       * through Word would add another pair.
+       */
+      const words = textOf(inner, links, true);
       out += target && words ? `[${words}](${target})` : words;
       continue;
     }
-    out += marked(inner);
+    out += marked(inner, inLink);
   }
   return out;
 }
 
 /** One run's words, wrapped in whatever its properties say it is. */
-function marked(run: string): string {
+function marked(run: string, inLink = false): string {
   const props = new RegExp(`<${ns('rPr')}(?:\\s[^>]*)?>([\\s\\S]*?)</${ns('rPr')}>`).exec(run);
   const rPr = props ? props[1] : '';
   // `<w:b w:val="0"/>` is bold turned *off*, which Word writes when a style
@@ -213,6 +220,10 @@ function marked(run: string): string {
   const [, lead, core, trail] = /^(\s*)([\s\S]*?)(\s*)$/.exec(body)!;
   let wrapped = core;
   if (mono) wrapped = `\`${wrapped}\``;
+  /* `<w:highlight w:val="none"/>` is the pen lifted, which `on` already reads
+     as off along with `0` and `false`. */
+  if (on('highlight')) wrapped = `==${wrapped}==`;
+  if (!inLink && on('u')) wrapped = `++${wrapped}++`;
   if (on('strike')) wrapped = `~~${wrapped}~~`;
   if (on('i')) wrapped = `*${wrapped}*`;
   if (on('b')) wrapped = `**${wrapped}**`;

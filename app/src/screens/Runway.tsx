@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -481,7 +481,7 @@ export function Runway() {
               gap: 'var(--sp-5)',
               alignItems: 'baseline',
               ...rowStyle,
-              opacity: u.cards === 0 ? 0.5 : 1,
+              opacity: u.cards === 0 ? DIMMED_ROW : 1,
             }}
           >
             <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>{u.name}</span>

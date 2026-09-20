@@ -725,7 +725,7 @@ function WeekStrip({ days }: { days: Day[] }) {
             style={{
               fontSize: 'var(--type-xs)',
               fontFamily: 'var(--font-heading)',
-              opacity: d.due > 0 ? 0.75 : 0.3,
+              color: d.due > 0 ? 'var(--app-dim)' : 'var(--app-faint)',
             }}
           >
             {d.due > 0 ? d.due : '·'}
@@ -776,7 +776,7 @@ function WeekStrip({ days }: { days: Day[] }) {
               fontSize: 'var(--type-xs)',
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.08em',
-              opacity: d.today ? 0.9 : 0.45,
+              color: d.today ? 'var(--app-fg)' : 'var(--app-dim)',
             }}
           >
             {DOW_INITIALS[d.dow]}

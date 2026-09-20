@@ -24,6 +24,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { CheckIt } from '../components/CheckIt';
@@ -190,7 +191,7 @@ export function Proof() {
                 // Nothing is coloured like an error. A quote the app has never
                 // seen the source of is not a finding against the student, and
                 // a red rule down the side would say it was.
-                opacity: q.verdict === 'missing' ? 0.75 : 1,
+                ...secondLine(q.verdict !== 'missing'),
               }}
             >
               <div

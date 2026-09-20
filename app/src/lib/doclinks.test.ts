@@ -65,6 +65,8 @@ const piece = (text: string, on: Partial<Omit<ReturnType<typeof runs>[number], '
   bold: false,
   italic: false,
   strike: false,
+  underline: false,
+  highlight: false,
   code: false,
   link: '',
   ...on,

@@ -1,4 +1,5 @@
 import { useState, type CSSProperties } from 'react';
+import { faintLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { chromeFor } from '../lib/chrome';
@@ -409,7 +410,7 @@ export function Chat() {
             <div
               style={{
                 fontSize: 'var(--type-xs)',
-                opacity: 0.4,
+                ...faintLine(),
                 marginTop: 'var(--sp-3)',
                 textAlign: 'center',
               }}
@@ -447,7 +448,7 @@ const QUIET = {
 /** The separator between two of those. Decoration, so no reader hears it. */
 function Dot() {
   return (
-    <span aria-hidden style={{ fontSize: 'var(--type-xs)', opacity: 0.25 }}>
+    <span aria-hidden style={{ fontSize: 'var(--type-xs)', ...faintLine() }}>
       ·
     </span>
   );

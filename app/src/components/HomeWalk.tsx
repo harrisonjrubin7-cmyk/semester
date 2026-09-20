@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { railFor, datedItems } from '../lib/select';
 import { clock, minutesNow } from '../lib/date';
@@ -97,7 +98,7 @@ export function HomeWalk() {
         <div
           style={{
             fontSize: morning ? 12.5 : 14.5,
-            opacity: morning ? 0.7 : 1,
+            ...secondLine(!morning),
             lineHeight: 'var(--leading-normal)',
             marginTop: morning ? 7 : 5,
             textWrap: 'pretty',

@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 
 /**
  * One tile in a wrapping grid of choices.
@@ -62,7 +62,7 @@ export function GridCard({
           : 'linear-gradient(180deg, rgba(255,255,255,.022), rgba(255,255,255,0) 60%)',
         boxShadow: selected ? '0 0 0 3px var(--app-accent-wash)' : '0 1px 0 var(--app-line-top) inset',
         transition: 'border-color var(--fast), box-shadow var(--fast), background var(--fast)',
-        opacity: dim ? 0.45 : 1,
+        opacity: dim ? DIMMED_ROW : 1,
         display: 'block',
         ...style,
       }}

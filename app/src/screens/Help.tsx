@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { secondLine } from '../lib/dim';
+import { faintLine, secondLine } from '../lib/dim';
 import { Page } from '../components/Page';
 import { build, toMarkdown, type Section } from '../lib/guidebook';
 import { download } from '../lib/deliver';
@@ -152,7 +152,7 @@ function render(body: string) {
             padding: '2px 0',
           }}
         >
-          <span style={{ opacity: 0.4, flex: 'none' }}>·</span>
+          <span style={{ ...faintLine(), flex: 'none' }}>·</span>
           <span style={{ flex: 1, minWidth: 0 }}>{inline(line.slice(2))}</span>
         </div>
       );

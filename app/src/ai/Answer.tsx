@@ -196,7 +196,7 @@ const QUOTE = {
   margin: '0 0 var(--sp-5)',
   paddingLeft: 'var(--sp-5)',
   borderLeft: '2px solid var(--app-line)',
-  opacity: 0.8,
+  color: 'var(--app-dim)',
   lineHeight: 'var(--leading-relaxed)',
 } as const;
 

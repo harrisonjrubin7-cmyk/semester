@@ -8,7 +8,7 @@ import { Folding } from '../../components/Fold';
 import { ActionButton, EmptyState, SectionLabel } from '../../components/ui';
 import { Bench } from '../../components/Bench';
 import { ChevronLeft, ChevronRight, DeckIcon } from '../../components/Icons';
-import { secondLine } from '../../lib/dim';
+import { DIMMED_ROW, secondLine } from '../../lib/dim';
 import { download } from '../../lib/deliver';
 import { deckFileName, pptx } from '../../lib/pptx';
 import { revealKindly } from '../../lib/prefers';
@@ -747,7 +747,7 @@ function Rail({
               style={{
                 width: '100%',
                 padding: 0,
-                opacity: off ? 0.45 : 1,
+                opacity: off ? DIMMED_ROW : 1,
                 outline: i === on ? '2px solid var(--app-accent)' : 'none',
               }}
             >

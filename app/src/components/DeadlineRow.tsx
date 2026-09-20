@@ -279,8 +279,7 @@ export function DeadlineRow({
               flex: 'none',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              color: late ? 'var(--app-warn)' : 'inherit',
-              opacity: late ? 0.95 : 0.45,
+              color: late ? 'var(--app-warn)' : 'var(--app-dim)',
             }}
           >
             {marker}

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { faintLine } from '../lib/dim';
 import {RegistrationPortal} from '../components/RegistrationPortal';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -97,7 +98,7 @@ function EnrolledSchedule() {
                 {l.blurb}
               </span>
             </span>
-            <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+            <ChevronRight size={16} style={{ ...faintLine(), flex: 'none' }} />
           </Blueprint>
         </a>
       ))}

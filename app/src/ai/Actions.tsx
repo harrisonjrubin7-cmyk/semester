@@ -1,4 +1,5 @@
 import { Blueprint } from '../components/Blueprint';
+import { faintLine, secondLine } from '../lib/dim';
 import type { Local } from '../lib/localask';
 import type { Lists, Proposal } from '../lib/tools';
 import type { Screen } from '../lib/types';
@@ -76,7 +77,7 @@ export function Proposals({
               className="bare"
               aria-label={`Dismiss: ${p.said}`}
               onClick={() => onDismiss(p.id)}
-              style={{ flex: 'none', width: 20, opacity: 0.4 }}
+              style={{ flex: 'none', width: 20, ...faintLine() }}
             >
               ×
             </button>
@@ -161,7 +162,7 @@ export function Locally({
           >
             <div style={{ fontSize: 'var(--type-sm)', fontFamily: 'var(--font-heading)' }}>
               {m.label}
-              <span style={{ opacity: 0.45, fontFamily: 'var(--font-body)' }}> · {m.group}</span>
+              <span style={{ ...secondLine(), fontFamily: 'var(--font-body)' }}> · {m.group}</span>
             </div>
             <div
               style={{
@@ -180,7 +181,7 @@ export function Locally({
             key={quoted}
             style={{
               fontSize: 'var(--type-xs)',
-              opacity: 0.7,
+              color: 'var(--app-dim)',
               lineHeight: 'var(--leading-relaxed)',
               paddingLeft: 'var(--sp-5)',
               borderLeft: '2px solid var(--app-line)',

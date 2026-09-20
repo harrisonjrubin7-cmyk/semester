@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { focusablesIn, nextInRing } from '../a11y/modal';
 import { useStore } from '../state/store';
 import { useAI, useSeed } from './store';
@@ -703,7 +704,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                   <div
                     style={{
                       fontSize: 'var(--type-xs)',
-                      opacity: 0.45,
+                      ...secondLine(),
                       marginTop: 'var(--sp-3)',
                       lineHeight: 'var(--leading-normal)',
                     }}

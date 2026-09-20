@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
 import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
@@ -61,7 +61,7 @@ export function Walks({ date }: { date?: Date }) {
             gap: 'var(--sp-5)',
             alignItems: 'baseline',
             ...row,
-            opacity: h.known ? 1 : 0.6,
+            opacity: h.known ? 1 : DIMMED_ROW,
           }}
         >
           <span
@@ -69,8 +69,7 @@ export function Walks({ date }: { date?: Date }) {
               flex: 'none',
               width: 16,
               fontSize: 'var(--type-sm)',
-              color: h.known && tight(h) ? 'var(--app-warn)' : 'var(--app-fg)',
-              opacity: h.known && tight(h) ? 1 : 0.35,
+              color: h.known && tight(h) ? 'var(--app-warn)' : 'var(--app-faint)',
             }}
           >
             {h.known && tight(h) ? '!' : '→'}

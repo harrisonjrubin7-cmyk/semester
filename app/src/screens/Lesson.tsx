@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { Page } from '../components/Page';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -106,7 +106,7 @@ const BEAT_TITLE = {
 const BEAT_BODY = {
   fontSize: 'calc(14.5px * var(--text-scale, 1))',
   lineHeight: 1.55,
-  opacity: 0.82,
+  color: 'var(--app-dim)',
   marginTop: 'var(--sp-5)',
   whiteSpace: 'pre-wrap',
 } as const;
@@ -258,7 +258,7 @@ export function LessonPlayer() {
           </>
         ) : (
           <>
-            <div className="kicker" style={{ opacity: 0.7 }}>
+            <div className="kicker" style={{ color: 'var(--app-dim)' }}>
               {cue?.kind === 'title'
                 ? 'Lesson'
                 : cue?.kind === 'close'
@@ -283,7 +283,7 @@ export function LessonPlayer() {
                     lineHeight: 1.15,
                     marginTop: 'var(--sp-5)',
                     textWrap: 'pretty',
-                    opacity: cue?.kind === 'a' ? 0.55 : 1,
+                    ...secondLine(cue?.kind !== 'a'),
                   }}
                 >
                   {cue?.kind === 'a' ? cues[index - 1]?.text : cue?.text}
@@ -430,7 +430,7 @@ export function LessonPlayer() {
             alignItems: 'baseline',
             ...chapterRow,
             textAlign: 'left',
-            opacity: i === index ? 1 : 0.55,
+            opacity: i === index ? 1 : DIMMED_ROW,
           }}
         >
           <span

@@ -307,7 +307,7 @@ function Build() {
             ))}
           </select>
           {catalog.courses.length > 1 && (
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'var(--sp-3)' }}>
               Switch course from Study.
             </div>
           )}

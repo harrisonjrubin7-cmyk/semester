@@ -414,6 +414,34 @@ describe('the file itself', () => {
     });
   });
 
+  /*
+   * The highlighter is the only colour this writer has ever put in a file, so
+   * the thing to check is not that the box is there but that it is closed:
+   * PDF has no scoping, and a fill colour left set is inherited by whatever
+   * is drawn next — which would be the following paragraph's text, in yellow.
+   */
+  it('lays the highlighter down before the words and puts the colour back', () => {
+    const out = new TextDecoder('latin1').decode(
+      pdfBytes(doc([{ kind: 'text', text: 'read ==this== now' }])),
+    );
+    const box = out.indexOf('1 1 0 rg');
+    expect(box).toBeGreaterThan(-1);
+    expect(out.slice(box, box + 120)).toMatch(/re f 0 g/);
+    // The fill is drawn, then the text — the other order paints over it.
+    expect(out.indexOf('re f 0 g')).toBeLessThan(out.indexOf('Tj ET', box));
+  });
+
+  it('rules a line under underlined words', () => {
+    const plain = new TextDecoder('latin1').decode(
+      pdfBytes(doc([{ kind: 'text', text: 'a word' }])),
+    );
+    const lined = new TextDecoder('latin1').decode(
+      pdfBytes(doc([{ kind: 'text', text: 'a ++word++' }])),
+    );
+    expect((plain.match(/0\.6 w /g) ?? []).length).toBe(0);
+    expect((lined.match(/0\.6 w /g) ?? []).length).toBe(1);
+  });
+
   it('points startxref at the table', () => {
     const out = file();
     const at = Number(/startxref\n(\d+)/.exec(out)?.[1]);

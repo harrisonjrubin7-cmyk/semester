@@ -153,7 +153,7 @@ function One({ insight }: { insight: Insight }) {
                 borderLeft: '2px solid var(--app-line)',
                 fontSize: 'var(--type-sm)',
                 lineHeight: 'var(--leading-normal)',
-                opacity: e.screen ? 0.8 : 0.6,
+                color: e.screen ? 'var(--app-fg)' : 'var(--app-dim)',
               }}
             >
               {e.says}

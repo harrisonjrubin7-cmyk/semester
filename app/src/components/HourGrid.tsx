@@ -1,4 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
+import { faintLine } from '../lib/dim';
 import { blockLabel, kindTint } from '../lib/kinds';
 import { gridAttrs, pointIn, useDragToMove } from '../lib/drag';
 import { hourWindow } from '../lib/hourwindow';
@@ -234,7 +235,7 @@ export function HourGrid({
               fontSize: 'calc(10px * var(--text-scale, 1))',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              opacity: 0.4,
+              ...faintLine(),
             }}
           >
             {ampm(h)}

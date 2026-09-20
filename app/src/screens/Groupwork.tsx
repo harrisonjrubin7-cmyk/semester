@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useRowStyle } from '../components/shell/useShell';
@@ -446,7 +446,7 @@ export function Groupwork() {
                         await loadOne(open.id);
                       })
                     }
-                    style={{ flex: 'none', width: 22, fontSize: 'var(--type-md)', opacity: p.done ? 1 : 0.35 }}
+                    style={{ flex: 'none', width: 22, fontSize: 'var(--type-md)', color: p.done ? 'var(--app-fg)' : 'var(--app-faint)' }}
                   >
                     {p.done ? '✓' : '○'}
                   </button>
@@ -457,7 +457,7 @@ export function Groupwork() {
                       fontSize: 'calc(13.5px * var(--text-scale, 1))',
                       lineHeight: 1.35,
                       textDecoration: p.done ? 'line-through' : 'none',
-                      opacity: p.done ? 0.5 : 1,
+                      opacity: p.done ? DIMMED_ROW : 1,
                     }}
                   >
                     {p.title}
@@ -504,7 +504,7 @@ export function Groupwork() {
                           await loadOne(open.id);
                         })
                       }
-                      style={{ flex: 'none', width: 22, opacity: 0.4, fontSize: 'var(--type-md)' }}
+                      style={{ flex: 'none', width: 22, color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                     >
                       ×
                     </button>

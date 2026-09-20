@@ -33,6 +33,8 @@ const piece = (text: string, on: Partial<Omit<ReturnType<typeof runs>[number], '
   bold: false,
   italic: false,
   strike: false,
+  underline: false,
+  highlight: false,
   code: false,
   link: '',
   ...on,
@@ -74,6 +76,45 @@ describe('emphasis', () => {
       piece('cut', { strike: true }),
       piece(' keep'),
     ]);
+  });
+
+  it('reads an underline, the mark markdown never had', () => {
+    expect(runs('the ++signed++ copy')).toEqual([
+      piece('the '),
+      piece('signed', { underline: true }),
+      piece(' copy'),
+    ]);
+  });
+
+  it('reads a highlight', () => {
+    expect(runs('read ==this bit== first')).toEqual([
+      piece('read '),
+      piece('this bit', { highlight: true }),
+      piece(' first'),
+    ]);
+  });
+
+  /*
+   * The two cases the new markers could have broken, and the reason both use
+   * the same shape as `~~`: the markers have to sit against the words. A
+   * methods section full of `n == 40` and a cost line reading `12 ++ 3` are
+   * both ordinary prose, and a naive `/\+\+(.+?)\+\+/` eats them.
+   */
+  it('leaves a comparison and a pair of pluses alone', () => {
+    expect(runs('where n == 40 and n == 41')).toEqual([piece('where n == 40 and n == 41')]);
+    expect(runs('a ++ b ++ c')).toEqual([piece('a ++ b ++ c')]);
+  });
+
+  it('nests the new marks inside the old ones', () => {
+    expect(runs('**a ==b== c**')).toEqual([
+      piece('a ', { bold: true }),
+      piece('b', { bold: true, highlight: true }),
+      piece(' c', { bold: true }),
+    ]);
+  });
+
+  it('strips the new marks for a count too', () => {
+    expect(unmarked('++two++ ==words==')).toBe('two words');
   });
 
   it('reads backticks as code, and reads nothing inside them', () => {

@@ -94,7 +94,7 @@ export function Cutoffs({ courseId, code }: { courseId: string; code: string }) 
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              opacity: 0.7,
+              color: 'var(--app-dim)',
             }}
           >
             Use the default

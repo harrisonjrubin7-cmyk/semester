@@ -14,7 +14,7 @@ import { guideDeck, mixedDeck } from '../lib/drilldeck';
 import { useKeepAwake } from '../lib/awake';
 import { unitName } from '../lib/unit';
 import { ActionButton, EmptyState, Toggle } from '../components/ui';
-import { secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 
 /** Tap-to-flip drill, with Again / Got it and an end-of-run score. */
 export function Drill() {
@@ -436,7 +436,7 @@ export function Drill() {
           style={{
             textAlign: 'center',
             fontSize: 'var(--type-sm)',
-            opacity: 0.45,
+            ...secondLine(),
             marginTop: 'var(--sp-6)',
             fontFamily: 'var(--font-heading)',
             letterSpacing: '0.14em',
@@ -525,7 +525,7 @@ export function Drill() {
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-line)',
                   fontSize: 'calc(10.5px * var(--text-scale, 1))',
-                  opacity: 0.85,
+                  color: 'var(--app-dim)',
                 }}
               >
                 ✗ {s.short}
@@ -765,7 +765,7 @@ export function Quiz() {
                       : 'var(--app-line)'
                 }`,
                 background: reveal && o.ok ? 'var(--app-accent-wash)' : chosen ? 'var(--app-track)' : 'transparent',
-                opacity: (reveal && !o.ok && !chosen) || struck.has(i) ? 0.5 : 1,
+                opacity: (reveal && !o.ok && !chosen) || struck.has(i) ? DIMMED_ROW : 1,
                 textDecoration: struck.has(i) && !reveal ? 'line-through' : undefined,
                 cursor: answered ? 'default' : 'pointer',
               }}

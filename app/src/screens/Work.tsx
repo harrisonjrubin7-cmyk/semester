@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { faintLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { useDraft } from '../lib/draft.hook';
@@ -357,7 +358,7 @@ export function Work() {
 
       <Trouble said={trouble.said} onRetry={trouble.again} busy={busy} />
 
-      <div style={{ fontSize: 'var(--type-xs)', opacity: 0.4, marginTop: 20, lineHeight: 'var(--leading-normal)' }}>
+      <div style={{ fontSize: 'var(--type-xs)', ...faintLine(), marginTop: 20, lineHeight: 'var(--leading-normal)' }}>
         Going through {routeLabel()}.
         Whatever you submit has to be your own work.
       </div>
@@ -457,7 +458,7 @@ function PlanView({
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'calc(20px * var(--text-scale, 1))',
-                  opacity: 0.4,
+                  ...faintLine(),
                 }}
               >
                 {i + 1}
