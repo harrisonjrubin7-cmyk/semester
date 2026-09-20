@@ -16,6 +16,7 @@ lessons.py       guide → a narrated lesson per unit, with slide cues
 slides.py        guide → a PowerPoint deck
 handout.py       guide → a Word document and a PDF
 chapters.py      recover chapter marks from an existing recording
+shorts.py        lessons → one vertical short per flashcard
 ```
 
 Everything after `guide_reader.py` reads the same guide through it, so a deck, a
