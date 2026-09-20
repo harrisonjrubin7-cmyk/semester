@@ -82,7 +82,7 @@ Two things are better than they sound at first, given the economics above.
 | **Movie-format lesson** (upgrade of today's lesson) | The existing narrated-lesson audio, but the flat `0x0a0b0e` rectangle becomes real animated typography, diagrams and highlight boxes moving with the cues already recorded | **Remotion** (React + ffmpeg, runs in the existing Node toolchain, renders locally) driven by the same cue list `pipeline/lessons.py` already writes | Compute only — but see the licence note in §7 |
 | **Animated series** | A recurring host character, or two, appearing across every unit of a course — the visual equivalent of the two-voice podcast | Generate one **character reference sheet** (image model, ~$0.01–0.04/image) once per persona; feed it as the reference image to an **image-to-video** model with strong character consistency for short 5–10s reaction and gesture clips; composite those into the Remotion timeline instead of drawing a static avatar | ~$0.10–1.50 per short clip × a handful of clips per unit, reused across the whole course |
 | **YouTube-length explainer** | 8–15 min, hook in the first 15s, chapter marks | Remotion for the graphics track, same as movie-format, plus 2–4 short AI-video B-roll inserts for the cold open and section transitions. Marks come from the cue list, the way `synth.py` does it — not from `chapters.py` | Same as above; B-roll is optional polish, not the backbone |
-| **TikTok / Shorts** | 15–45s, vertical 9:16, one concept per short, hook-first, burned-in captions | New script granularity: **one short per flashcard**, not per unit. `pipeline/shorts.py <course>` walks `guide.ts` card-by-card rather than unit-by-unit; Remotion vertical composition; captions come free from the beat timings the TTS pass already records | $0 — the cheapest format to mass-produce, and the best fit for "many different versions", since every card in every course can have one |
+| **TikTok / Shorts** ✅ built | Vertical 9:16, one card per short, hook-first, burned-in captions. Measured at 8.4–35.5s, median 14.8s — the 15–45s guessed here was half wrong | **One short per flashcard**, cut from the cue list rather than from `guide.ts`: a cue already has the in and out points inside the unit's MP3, so Remotion trims the existing audio and nothing is re-synthesised | $0 — no new audio, no new file, just frames |
 | **Documentary-style unit recap** | Slower pacing, narration over atmosphere and establishing shots, closer in tone to the two-voice podcast than to a lecture | Two-voice podcast audio (existing pipeline) as the spine, laid under AI-generated establishing shots — text-to-video, no character consistency needed — plus Remotion lower-thirds and captions | ~$0.50–3 per unit in AI video, once per course |
 
 Model choice for the paid steps (Veo, Kling, Sora, Seedance and the rest) moves
@@ -210,10 +210,11 @@ once the format is right.
    both recorded below: the licence is not unconditionally free, and the
    composition shares `cueIndexAt` and `tokensFor` with the app rather than
    restating either.
-2. **`shorts.py`.** Cheapest new format to stand up — no new render technology,
-   just new chunking logic and a vertical composition — and the best match for
-   "generate in several different ways", since it is naturally one short per
-   flashcard.
+2. **`shorts.py`.** ✅ **Built** — `python3 pipeline/shorts.py <course> --all`.
+   It was the cheapest format to stand up, and cheaper than this said: it needs
+   no new audio at all. A cue already marks where each card's narration starts,
+   so a short is a *trim* of the unit's MP3 rather than a new render of it.
+   **278 shorts across the four courses**, 8.4–35.5s, median 14.8s.
 3. **`restyle-script.mjs` with two or three styles.** Prove the LLM rewrite
    pass before building all six presets. Curious-duo and storyteller are
    closest to what `make-script.mjs` already produces, so start there.
@@ -232,6 +233,14 @@ once the format is right.
   re-render only touches what changed; `app/scripts/audiocache.ts` is the app
   side of the same idea. AI video is exactly the cost not to re-spend on an
   unchanged unit.
+- **Captions are per beat, not per word.** This document said the shorts'
+  captions "come free from the beat timings the TTS pass already records" and,
+  elsewhere, from "exact word timing" — the second is wrong about the data. A
+  cue is `{at, kind, text}`: the second a *line* begins, not a syllable. Words
+  on screen therefore change with the line being spoken, which is enough to
+  caption a short honestly and is not enough to bounce along with the voice.
+  Per-word timing would need a forced aligner over the rendered audio, which is
+  a real piece of work and is not built.
 - **Scripts stay the transcript,** as today. `npm run transcripts` regenerates
   `app/src/data/transcripts/<course>.ts` from the scripts, and Listen mode
   shows it under the chapter marks. Whatever style or format renders the words,

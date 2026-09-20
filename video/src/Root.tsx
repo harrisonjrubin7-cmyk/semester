@@ -1,5 +1,6 @@
 import { Composition } from 'remotion';
 import { durationFor, LessonVideo, type LessonVideoProps } from './Lesson';
+import { shortDuration, ShortVideo, type ShortVideoProps } from './Short';
 import type { Lesson } from '../../app/src/lib/types';
 
 /**
@@ -14,6 +15,10 @@ import type { Lesson } from '../../app/src/lib/types';
 export const FPS = 30;
 export const WIDTH = 1920;
 export const HEIGHT = 1080;
+
+/** Vertical, for the shorts. 9:16 at the resolution every platform accepts. */
+export const SHORT_WIDTH = 1080;
+export const SHORT_HEIGHT = 1920;
 
 /** A lesson-shaped stand-in, so the studio opens on something rather than a crash. */
 const PLACEHOLDER: Lesson = {
@@ -30,8 +35,19 @@ const PLACEHOLDER: Lesson = {
   ],
 };
 
+const PLACEHOLDER_SHORT = {
+  unit: 3,
+  card: 0,
+  question: 'What does a sunk cost change about the next decision?',
+  answer: 'Nothing. It is spent either way, so it is not part of the comparison.',
+  start: 6,
+  answerAt: 12,
+  end: 20,
+};
+
 export function Root() {
   return (
+    <>
     <Composition
       id="Lesson"
       component={LessonVideo}
@@ -46,5 +62,27 @@ export function Root() {
         durationInFrames: durationFor(props.lesson, FPS),
       })}
     />
+    <Composition
+      id="Short"
+      component={ShortVideo}
+      durationInFrames={shortDuration(PLACEHOLDER_SHORT, FPS)}
+      fps={FPS}
+      width={SHORT_WIDTH}
+      height={SHORT_HEIGHT}
+      defaultProps={
+        {
+          short: PLACEHOLDER_SHORT,
+          code: 'ECON 1020',
+          unitTitle: 'Thinking at the margin',
+          file: '/audio/lessons/econ/unit-0.mp3',
+          ground: 'ink',
+          accent: 'sterling',
+        } as ShortVideoProps
+      }
+      calculateMetadata={({ props }) => ({
+        durationInFrames: shortDuration(props.short, FPS),
+      })}
+    />
+    </>
   );
 }

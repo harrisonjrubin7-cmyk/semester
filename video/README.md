@@ -30,6 +30,29 @@ node render.mjs econ --ground parchment --accent copper
 npm run studio                    # Remotion Studio, to look at the design
 ```
 
+## Shorts
+
+Step 2: one vertical short per flashcard, at 1080×1920.
+
+```bash
+python3 pipeline/shorts.py econ --unit 3
+python3 pipeline/shorts.py econ --all --dry-run   # the shot list, first
+python3 pipeline/shorts.py econ --unit 3 --card 2 # just the one
+```
+
+A short is a question, the beat the narration already leaves after it, and the
+answer. It is cut out of the unit's own MP3 by the cue list — `trimBefore` and
+`trimAfter` play the seconds that card occupies inside the file every student
+streams. **Nothing is synthesised and no audio file is written**, which is why
+278 shorts across four courses cost compute and nothing else.
+
+Measured across all four: 8.4s to 35.5s, median 14.8s. The roadmap guessed
+15–45s; half of them are shorter than that and none is longer.
+
+The words on screen are the words being spoken, so these are captioned without
+a captioning pass — but per *beat*, not per word. A cue records where a line
+starts, not a syllable, so nothing here bounces along with the voice.
+
 ## It cannot disagree with the app
 
 Two imports reach across the repo root into `app/src/lib`, and both are load-
