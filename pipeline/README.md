@@ -24,6 +24,10 @@ handout and a lesson cannot disagree with the app or with each other.
 `audio/synth.py` renders a script to an MP3 with exact chapter marks. See
 [`../audio/README.md`](../audio/README.md).
 
+Where these formats go next — movie-format lessons, one short per flashcard,
+several podcast hosting styles from one draft, and what each of those actually
+costs — is in [`../docs/VIDEO_PODCAST_ROADMAP.md`](../docs/VIDEO_PODCAST_ROADMAP.md).
+
 ## Adding a course
 
 ```bash

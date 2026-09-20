@@ -126,3 +126,10 @@ Write for the ear, not the page. Spell numbers and symbols out — "eighty perce
 "minus zero point five six", "A B test", "R squared". A synthesiser reads `%`,
 `|E|` and `→` badly or not at all, and a listener cannot see a formula anyway.
 Describe every figure in words rather than referring to one.
+
+## Where this goes next
+
+The two-voice format is one hosting style out of several the same draft could
+be rewritten into, and the same scripts are the spine of a documentary-style
+cut. [`../docs/VIDEO_PODCAST_ROADMAP.md`](../docs/VIDEO_PODCAST_ROADMAP.md) has
+the plan and the cost model behind it.
