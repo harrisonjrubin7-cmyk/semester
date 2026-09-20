@@ -46,6 +46,7 @@
  */
 
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { secondLine } from '../lib/dim';
 import { LOG_KEY, add, entry, read } from '../lib/diagnose';
 import { faultOf, type Fault } from '../lib/fault';
 import { offline } from '../lib/offline';
@@ -195,7 +196,7 @@ export class ScreenTrouble extends Component<Props, State> {
             style={{
               marginTop: 'var(--sp-7)',
               fontSize: 'var(--type-xs)',
-              opacity: 0.45,
+              ...secondLine(),
               lineHeight: 'var(--leading-normal)',
               wordBreak: 'break-word',
             }}

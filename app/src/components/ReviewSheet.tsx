@@ -302,8 +302,7 @@ export function ReviewSheet({
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
-                  opacity: verdict === 'conflict' ? 1 : 0.6,
-                  color: verdict === 'conflict' ? 'var(--app-warn)' : undefined,
+                  color: verdict === 'conflict' ? 'var(--app-warn)' : 'var(--app-dim)',
                 }}
               >
                 {rows.length} {HEADING[verdict].toLowerCase()}

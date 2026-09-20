@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Blueprint } from '../components/Blueprint';
 import { SectionLabel } from './ui';
@@ -125,7 +126,7 @@ export function Snapshots() {
                 <span
                   style={{
                     fontSize: 'var(--type-xs)',
-                    opacity: 0.45,
+                    ...secondLine(),
                     flex: 'none',
                     fontVariantNumeric: 'tabular-nums',
                   }}
@@ -148,7 +149,7 @@ export function Snapshots() {
             {rows.length > 0 && (
               <ul style={{ margin: '8px 0 0', paddingLeft: 17, fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 1.6 }}>
                 {rows.map((r) => (
-                  <li key={r.line} style={{ opacity: r.loses ? 1 : 0.6 }}>
+                  <li key={r.line} style={{ opacity: r.loses ? 1 : DIMMED_ROW }}>
                     {r.line}
                   </li>
                 ))}

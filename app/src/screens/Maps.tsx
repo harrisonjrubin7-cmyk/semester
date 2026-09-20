@@ -1,4 +1,5 @@
 import { Suspense, lazy, useMemo, useRef, useState } from 'react';
+import { faintLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Page } from '../components/Page';
@@ -454,7 +455,7 @@ export function Maps() {
       >
         GO →
       </a>
-      <ChevronRight size={16} style={{ opacity: 0.3, flex: 'none' }} />
+      <ChevronRight size={16} style={{ ...faintLine(), flex: 'none' }} />
     </div>
   );
 
@@ -733,7 +734,7 @@ export function Maps() {
           <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
             {picked.detail}
           </div>
-          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-3)', opacity: 0.9 }}>
+          <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-3)', color: 'var(--app-fg)' }}>
             {pickedReach
               ? pickedReach.line
               : picked.spot
@@ -996,7 +997,7 @@ export function Maps() {
               Vanderbilt's own map — buildings, entrances, parking
             </span>
           </span>
-          <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+          <ChevronRight size={16} style={{ ...faintLine(), flex: 'none' }} />
         </Blueprint>
       </a>
       <a href={CITY_MAP} target="_blank" rel="noreferrer" className="bare">
@@ -1018,7 +1019,7 @@ export function Maps() {
               The city and what surrounds it, in Google Maps
             </span>
           </span>
-          <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+          <ChevronRight size={16} style={{ ...faintLine(), flex: 'none' }} />
         </Blueprint>
       </a>
 

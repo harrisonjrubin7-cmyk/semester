@@ -12,6 +12,7 @@
  */
 
 import { useStore } from '../state/store';
+import { secondLine } from '../lib/dim';
 import { SectionLabel, TickBox } from './ui';
 import {
   MOST_DAYS,
@@ -69,7 +70,7 @@ export function MyRules() {
             >
               <TickBox on={r.on} />
             </button>
-            <div style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', opacity: r.on ? 1 : 0.5 }}>
+            <div style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', ...secondLine(r.on) }}>
               {ruleLine(r, courseCode)}
             </div>
             <button

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { faintLine, secondLine } from '../lib/dim';
 import { blockLabel, kindTint } from '../lib/kinds';
 import { useStore } from '../state/store';
 import { ground as groundOf, resolveGround } from '../lib/look';
@@ -116,12 +117,12 @@ export function WeekGrid({
                 display: 'block',
                 fontSize: 'calc(9.5px * var(--text-scale, 1))',
                 letterSpacing: '0.12em',
-                opacity: d.isToday ? 0.9 : 0.4,
+                color: d.isToday ? 'var(--app-fg)' : 'var(--app-faint)',
               }}
             >
               {DOW_INITIALS[d.date.getDay()]}
             </span>
-            <span style={{ display: 'block', fontSize: 'var(--type-base)', opacity: d.isToday ? 1 : 0.75 }}>
+            <span style={{ display: 'block', fontSize: 'var(--type-base)', ...secondLine(d.isToday) }}>
               {d.date.getDate()}
             </span>
           </button>
@@ -161,7 +162,7 @@ export function WeekGrid({
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'calc(9px * var(--text-scale, 1))',
                 letterSpacing: '0.06em',
-                opacity: 0.4,
+                ...faintLine(),
               }}
             >
               {h % 12 === 0 ? 12 : h % 12}

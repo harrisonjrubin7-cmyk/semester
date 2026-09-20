@@ -12,6 +12,7 @@
  */
 
 import { useNow, useStore } from '../state/store';
+import { secondLine } from '../lib/dim';
 import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { forecast } from '../lib/pace';
@@ -238,7 +239,7 @@ function Kept() {
               }}
               style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />
-            <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, flex: 'none' }}>
+            <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), flex: 'none' }}>
               to
             </span>
             <input

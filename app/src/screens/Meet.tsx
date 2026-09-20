@@ -397,7 +397,7 @@ function Row({
                 // Quoted rather than paraphrased: the claim being made is only
                 // that this course's own material says the word, and the way to
                 // support that claim is to show the sentence.
-                <em style={{ opacity: 0.85 }}>“{s.quote ?? s.where}”</em>
+                <em style={{ color: 'var(--app-dim)' }}>“{s.quote ?? s.where}”</em>
               )}
             </span>
           </button>

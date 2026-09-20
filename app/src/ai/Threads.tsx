@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useModal } from '../a11y/modal';
 import { foundIn, grouped, nameOf, search, startedOn, type Thread } from '../lib/threads';
 import { destination } from '../lib/nav';
@@ -163,7 +164,7 @@ export function Threads({
                 fontSize: 'var(--type-xs)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                opacity: 0.45,
+                ...secondLine(),
                 padding: 'var(--sp-5) var(--sp-5) var(--sp-2)',
               }}
             >
@@ -203,7 +204,7 @@ export function Threads({
                   aria-label={`Name for "${t.title}"`}
                   style={{ flex: 1, minWidth: 0, height: 34, fontSize: 'var(--type-sm)' }}
                 />
-                <button type="submit" className="bare" data-confirm="" style={{ ...SIDE, opacity: 0.8 }}>
+                <button type="submit" className="bare" data-confirm="" style={{ ...SIDE, color: 'var(--app-fg)' }}>
                   ✓
                 </button>
               </form>
@@ -360,7 +361,7 @@ export function Threads({
                         width: 'auto',
                         textAlign: 'left',
                         padding: 'var(--sp-3) var(--sp-5)',
-                        opacity: 0.75,
+                        color: 'var(--app-dim)',
                       }}
                     >
                       <span style={ONE_LINE}>{nameOf(t)}</span>
@@ -393,7 +394,7 @@ const ONE_LINE = {
 const UNDER = {
   display: 'block',
   fontSize: 'var(--type-xs)',
-  opacity: 0.45,
+  color: 'var(--app-dim)',
   marginTop: 'var(--sp-1)',
   overflow: 'hidden',
   textOverflow: 'ellipsis',

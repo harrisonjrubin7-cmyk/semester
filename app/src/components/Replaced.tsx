@@ -85,7 +85,7 @@ export function Replaced() {
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
-          opacity: 0.7,
+          color: 'var(--app-dim)',
         }}
       >
         Got it

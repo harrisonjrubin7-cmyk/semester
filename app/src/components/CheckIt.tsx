@@ -16,6 +16,7 @@
  */
 
 import { useMemo, useRef, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { Panel } from './Produced';
 import { Trouble } from './Trouble';
 import { useTrouble } from '../lib/trouble';
@@ -218,7 +219,7 @@ function Row({
         <span style={{ fontFamily: 'var(--mono, ui-monospace, monospace)' }}>
           {f.found.replace(/\s+/g, ' ')}
         </span>
-        <span style={{ opacity: 0.65 }}> — {f.says}</span>
+        <span style={secondLine()}> — {f.says}</span>
       </span>
       {/* Offered only where there is exactly one right answer. An unclosed
           bracket has no single fix and gets no button, rather than a button

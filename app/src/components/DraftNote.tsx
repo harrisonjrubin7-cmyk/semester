@@ -19,7 +19,7 @@ export function DraftNote({ field }: { field: DraftField }) {
     <div
       style={{
         fontSize: 'var(--type-xs)',
-        opacity: field.said ? 0.75 : 0.45,
+        color: field.said ? 'var(--app-dim)' : 'var(--app-faint)',
         marginTop: 'var(--sp-3)',
         lineHeight: 'var(--leading-normal)',
         textWrap: 'pretty',

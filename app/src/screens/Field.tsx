@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { secondLine } from '../lib/dim';
+import { faintLine, secondLine } from '../lib/dim';
 import { revealKindly } from '../lib/prefers';
 import { useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
@@ -140,7 +140,7 @@ export function FieldGuide() {
               flex: 'none',
               fontFamily: 'var(--font-heading)',
               fontSize: 'var(--type-base)',
-              opacity: 0.4,
+              ...faintLine(),
             }}
           >
             {String(i + 1).padStart(2, '0')}
@@ -152,7 +152,7 @@ export function FieldGuide() {
               fontSize: 'calc(10.5px * var(--text-scale, 1))',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              opacity: 0.4,
+              ...faintLine(),
               flex: 'none',
             }}
           >
@@ -322,7 +322,7 @@ export function FieldGuide() {
                           fontSize: 'calc(10px * var(--text-scale, 1))',
                           letterSpacing: '0.14em',
                           textTransform: 'uppercase',
-                          opacity: 0.45,
+                          ...secondLine(),
                         }}
                       >
                         {label}
@@ -402,7 +402,7 @@ export function FieldGuide() {
                   style={{
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'var(--type-base)',
-                    opacity: 0.4,
+                    ...faintLine(),
                     flex: 'none',
                     width: 20,
                   }}
@@ -445,7 +445,7 @@ export function FieldGuide() {
           paddingTop: 'var(--sp-6)',
           borderTop: '1px solid var(--app-line)',
           fontSize: 'var(--type-xs)',
-          opacity: 0.4,
+          ...faintLine(),
           lineHeight: 'var(--leading-relaxed)',
         }}
       >

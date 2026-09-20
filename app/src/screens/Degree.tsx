@@ -20,6 +20,7 @@
  */
 
 import { useState } from 'react';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
 import { Blueprint } from '../components/Blueprint';
@@ -165,7 +166,7 @@ function WhatIsLeft() {
                     padding: '10px 13px',
                     borderRadius: 'var(--r-md)',
                     border: '1px solid var(--app-line)',
-                    opacity: prog.met ? 0.62 : 1,
+                    opacity: prog.met ? DIMMED_ROW : 1,
                   }}
                 >
                   <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.35, textWrap: 'pretty' }}>
@@ -316,7 +317,7 @@ function ThisTerm() {
               </span>
               {/* The letter band, not one letter: the middle alone would be
                   the same over-confident number this whole file avoids. */}
-              <span style={{ opacity: 0.8 }}>
+              <span style={secondLine()}>
                 {c.band!.low.letter === c.band!.high.letter
                   ? c.band!.mid.letter
                   : `${c.band!.low.letter} to ${c.band!.high.letter}`}
@@ -352,7 +353,7 @@ function ThisTerm() {
                   fontSize: 'var(--type-base)',
                   lineHeight: 'var(--leading-relaxed)',
                   textWrap: 'pretty',
-                  opacity: m.reach === 'unreachable' ? 0.6 : 1,
+                  ...secondLine(m.reach !== 'unreachable'),
                 }}
               >
                 {moveLine(m)}

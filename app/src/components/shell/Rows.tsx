@@ -1,4 +1,5 @@
 import { useId, type CSSProperties, type HTMLAttributes, type ReactNode } from 'react';
+import { faintLine } from '../../lib/dim';
 import { ChevronRight } from '../Icons';
 import { ForcedProvider, InsetProvider, SIDE, useGrouped } from './useShell';
 import { Blueprint } from '../Blueprint';
@@ -364,7 +365,7 @@ export function NavRow({
     <Row as="button" onClick={onClick} tall={tall} drag={drag}>
       <Label label={label} sub={sub} />
       {value ? <Value>{value}</Value> : null}
-      <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+      <ChevronRight size={16} style={{ ...faintLine(), flex: 'none' }} />
     </Row>
   );
 }

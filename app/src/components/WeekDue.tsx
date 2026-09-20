@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { DIMMED_ROW, secondLine } from '../lib/dim';
+import { DIMMED_ROW, faintLine, secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
 import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
@@ -81,14 +81,14 @@ export function WeekDue({
               fontSize: 'var(--type-xs)',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
-              opacity: d.items.length + d.tasks.length > 0 ? 0.8 : 0.35,
+              color: d.items.length + d.tasks.length > 0 ? 'var(--app-dim)' : 'var(--app-faint)',
             }}
           >
             {d.label}
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
             {d.items.length + d.tasks.length === 0 ? (
-              <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', opacity: 0.3 }}>—</span>
+              <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', ...faintLine() }}>—</span>
             ) : (
               d.items.map((i) => (
                 <div
@@ -97,7 +97,7 @@ export function WeekDue({
                     fontSize: 'var(--type-base)',
                     lineHeight: 1.4,
                     marginBottom: 3,
-                    opacity: state.done[i.id] ? 0.45 : 1,
+                    opacity: state.done[i.id] ? DIMMED_ROW : 1,
                     textDecoration: state.done[i.id] ? 'line-through' : 'none',
                   }}
                 >

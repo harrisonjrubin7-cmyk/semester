@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import type { Figure } from '../lib/types';
 import { getFile } from '../lib/files';
 import { Blueprint } from './Blueprint';
@@ -86,7 +87,7 @@ export function FigureCard({ figure, unit }: { figure: Figure; unit?: string }) 
                   gap: 'var(--sp-5)',
                 }}
               >
-                <span style={{ opacity: 0.75 }}>{r.l}</span>
+                <span style={secondLine()}>{r.l}</span>
                 <span style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-md)' }}>
                   {r.v.toLocaleString()}
                   <span style={{ color: 'var(--app-dim)', fontSize: 'var(--type-xs)' }}> {figure.unit}</span>

@@ -1,4 +1,5 @@
 import { useStore } from '../state/store';
+import { secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
 import { SectionLabel } from './ui';
 import { SUGGESTED, daysLine, hoursAWeek, spanLine, tidy } from '../lib/windows';
@@ -121,7 +122,7 @@ export function WorkWindows() {
               }}
               style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />
-            <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', opacity: 0.45, flex: 'none' }}>to</span>
+            <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), flex: 'none' }}>to</span>
             <input
               className="input"
               type="time"

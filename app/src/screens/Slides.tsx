@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { useLive } from '../lib/live';
 import { Blueprint } from '../components/Blueprint';
@@ -189,7 +190,7 @@ export function SlideDeck() {
             >
               {slide.text}
             </div>
-            <div style={{ fontSize: 'var(--type-sm)', opacity: 0.45, marginTop: 'var(--sp-7)' }}>
+            <div style={{ fontSize: 'var(--type-sm)', ...secondLine(), marginTop: 'var(--sp-7)' }}>
               Answer it before you advance.
             </div>
           </>

@@ -711,7 +711,7 @@ export function Connect() {
                 <div
                   style={{
                     fontSize: 'var(--type-sm)',
-                    opacity: 0.7,
+                    color: 'var(--app-dim)',
                     lineHeight: 'var(--leading-relaxed)',
                     marginTop: 'var(--sp-5)',
                     paddingTop: 'var(--sp-5)',

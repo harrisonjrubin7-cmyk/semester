@@ -1,4 +1,5 @@
 import {CampusDirectory} from '../components/CampusDirectory';
+import { DIMMED_ROW, faintLine, secondLine } from '../lib/dim';
 import type {CampusListing} from '../lib/campusdirectory';
 import { useMemo, useState } from 'react';
 import { useStore } from '../state/store';
@@ -119,7 +120,7 @@ export function Activities() {
                     paddingTop: 11,
                     borderTop: '1px solid var(--app-line)',
                     fontSize: 'calc(11.5px * var(--text-scale, 1))',
-                    opacity: 0.65,
+                    color: 'var(--app-dim)',
                   }}
                 >
                   <span>{showHours(week.classHours)} in class</span>
@@ -146,7 +147,7 @@ export function Activities() {
                       {clash.classTitle} on {dayName(clash.day)}s.
                     </div>
                   ))}
-                  <div style={{ opacity: 0.75, marginTop: 'var(--sp-4)' }}>
+                  <div style={{ ...secondLine(), marginTop: 'var(--sp-4)' }}>
                     Said rather than prevented — leaving lecture early on match days is a real thing
                     people do, and the app does not get to decide that.
                   </div>
@@ -196,7 +197,7 @@ function Row({ commitment }: { commitment: Commitment }) {
         display: 'flex',
         gap: 'var(--sp-5)',
         alignItems: 'center',
-        opacity: commitment.active ? 1 : 0.5,
+        opacity: commitment.active ? 1 : DIMMED_ROW,
         ...rowStyle,
       }}
     >
@@ -247,7 +248,7 @@ function Row({ commitment }: { commitment: Commitment }) {
         className="bare"
         onClick={() => dispatch({ type: 'removeCommitment', id: commitment.id })}
         aria-label={`Remove ${commitment.name}`}
-        style={{ width: 26, flex: 'none', opacity: 0.45, fontSize: 'var(--type-lg)' }}
+        style={{ width: 26, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-lg)' }}
       >
         ×
       </button>
@@ -498,7 +499,7 @@ function FindThings() {
                 {l.blurb}
               </span>
             </span>
-            <ChevronRight size={16} style={{ opacity: 0.4, flex: 'none' }} />
+            <ChevronRight size={16} style={{ ...faintLine(), flex: 'none' }} />
           </Blueprint>
         </a>
       ))}

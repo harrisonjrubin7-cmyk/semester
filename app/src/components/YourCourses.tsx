@@ -107,8 +107,7 @@ export function YourCourses() {
                   width: 28,
                   padding: '12px 0',
                   fontSize: 'var(--type-md)',
-                  opacity: mine.pinned ? 1 : 0.28,
-                  color: mine.pinned ? 'var(--app-accent)' : 'inherit',
+                  color: mine.pinned ? 'var(--app-accent)' : 'var(--app-faint)',
                 }}
               >
                 {mine.pinned ? '★' : '☆'}

@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { faintLine, secondLine } from '../lib/dim';
 import { scrollKindly } from '../lib/prefers';
 import { Answer } from './Answer';
 
@@ -76,7 +77,7 @@ export function Question({ text, onEdit }: { text: string; onEdit?: (next: strin
               type="button"
               className="bare"
               onClick={() => setEditing(true)}
-              style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', opacity: 0.45 }}
+              style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', ...secondLine() }}
             >
               EDIT
             </button>
@@ -196,7 +197,7 @@ function Beneath({ text, onRetry }: { text: string; onRetry?: () => void }) {
         className="bare"
         aria-pressed={mark === 'good'}
         onClick={() => setMark((was) => (was === 'good' ? '' : 'good'))}
-        style={{ ...QUIET, opacity: mark === 'good' ? 0.85 : 0.5 }}
+        style={{ ...QUIET, color: mark === 'good' ? 'var(--app-fg)' : 'var(--app-dim)' }}
       >
         GOOD
       </button>
@@ -205,12 +206,12 @@ function Beneath({ text, onRetry }: { text: string; onRetry?: () => void }) {
         className="bare"
         aria-pressed={mark === 'bad'}
         onClick={() => setMark((was) => (was === 'bad' ? '' : 'bad'))}
-        style={{ ...QUIET, opacity: mark === 'bad' ? 0.85 : 0.5 }}
+        style={{ ...QUIET, color: mark === 'bad' ? 'var(--app-fg)' : 'var(--app-dim)' }}
       >
         NOT USEFUL
       </button>
       {mark && (
-        <span style={{ fontSize: 'var(--type-xs)', opacity: 0.4 }}>
+        <span style={{ fontSize: 'var(--type-xs)', ...faintLine() }}>
           Marked on this device. Nothing is sent.
         </span>
       )}

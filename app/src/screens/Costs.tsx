@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { secondLine } from '../lib/dim';
+import { faintLine, secondLine } from '../lib/dim';
 import { ScanIsbn } from '../components/ScanIsbn';
 import { useStore } from '../state/store';
 import { CustomRow, Group } from '../components/shell/Rows';
@@ -157,7 +157,7 @@ function OutOfPocket() {
                       flex: 'none',
                       fontSize: 'var(--type-md)',
                       fontVariantNumeric: 'tabular-nums',
-                      opacity: theirs.length === 0 ? 0.4 : 1,
+                      ...faintLine(theirs.length !== 0),
                     }}
                   >
                     {/* A dash rather than $0.00, which reads as "this course
@@ -216,7 +216,7 @@ function OutOfPocket() {
                       className="bare"
                       aria-label={`Remove ${x.what}`}
                       onClick={() => dispatch({ type: 'dropCost', id: x.id })}
-                      style={{ width: 24, flex: 'none', opacity: 0.45, fontSize: 'var(--type-md)' }}
+                      style={{ width: 24, flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-md)' }}
                     >
                       ×
                     </button>

@@ -1,4 +1,5 @@
 import { useStore } from '../state/store';
+import { faintLine, secondLine } from '../lib/dim';
 
 /**
  * A standing note about where these four courses came from — and two ways out.
@@ -68,7 +69,7 @@ export function SampleMark() {
       }}
     >
       <span aria-hidden="true" style={{ width: 5, height: 5, flex: 'none', background: 'var(--app-accent)' }} />
-      <span style={{ flex: 1, minWidth: 0, opacity: 0.8 }}>The semester this app ships with</span>
+      <span style={{ flex: 1, minWidth: 0, ...secondLine() }}>The semester this app ships with</span>
       <button
         type="button"
         className="bare tap-y"
@@ -80,7 +81,7 @@ export function SampleMark() {
       >
         These are mine
       </button>
-      <span aria-hidden="true" style={{ opacity: 0.3, flex: 'none' }}>·</span>
+      <span aria-hidden="true" style={{ ...faintLine(), flex: 'none' }}>·</span>
       <button
         type="button"
         className="bare tap-y"
@@ -119,5 +120,5 @@ const link = {
   letterSpacing: 'inherit',
   textTransform: 'inherit',
   textDecoration: 'underline',
-  opacity: 0.75,
+  color: 'var(--app-dim)',
 } as const;

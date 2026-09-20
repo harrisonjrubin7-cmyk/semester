@@ -176,7 +176,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
                 key={line}
                 style={{
                   fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                  opacity: line.startsWith('No ') ? 0.55 : 0.85,
+                  color: line.startsWith('No ') ? 'var(--app-dim)' : 'var(--app-fg)',
                   lineHeight: 'var(--leading-normal)',
                   textWrap: 'pretty',
                 }}

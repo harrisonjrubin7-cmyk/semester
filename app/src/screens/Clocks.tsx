@@ -21,6 +21,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { secondLine } from '../lib/dim';
 /*
  * Aliased, because this file has a `useNow` of its own a few lines down and
  * they are not the same clock: the local one ticks every second for the
@@ -195,7 +196,6 @@ function Timers() {
             fontSize: 'var(--type-sm)',
             marginTop: 7,
             color: 'var(--app-warn-ink, var(--app-fg))',
-            opacity: 0.85,
           }}
         >
           {refused}
@@ -424,7 +424,7 @@ function Alarms() {
                       style={{
                         fontSize: 'calc(21px * var(--text-scale, 1))',
                         fontVariantNumeric: 'tabular-nums',
-                        opacity: a.on ? 1 : 0.45,
+                        ...secondLine(a.on),
                       }}
                     >
                       {timeLine(a.at)}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { DIMMED_ROW } from '../lib/dim';
 import type { CSSProperties } from 'react';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -80,7 +81,7 @@ const ACCEPT = `${DOCUMENTS}text/*,application/pdf,application/zip`;
 const QUIET: CSSProperties = {
   display: 'block',
   fontSize: 'calc(12.5px * var(--text-scale, 1))',
-  opacity: 0.65,
+  color: 'var(--app-dim)',
   marginTop: 'var(--sp-5)',
   width: 'auto',
   padding: '6px 0',
@@ -1120,7 +1121,7 @@ function Preview({
             fontSize: 'calc(11.5px * var(--text-scale, 1))',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            opacity: 0.7,
+            color: 'var(--app-dim)',
             marginTop: 'var(--sp-6)',
             paddingTop: 'var(--sp-5)',
             borderTop: '1px solid var(--app-line)',
@@ -1170,7 +1171,7 @@ function Preview({
             onClick={() => onToggle(i.id)}
             aria-pressed={!off}
             aria-label={off ? `Put ${i.title} back` : `Take ${i.title} off this import`}
-            style={{ ...rowTen, width: '100%', textAlign: 'left', display: 'block', opacity: off ? 0.4 : 1 }}
+            style={{ ...rowTen, width: '100%', textAlign: 'left', display: 'block', opacity: off ? DIMMED_ROW : 1 }}
           >
             <span style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'baseline' }}>
               <span style={{ flex: 'none', alignSelf: 'center' }}>

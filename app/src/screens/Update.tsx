@@ -88,7 +88,7 @@ const nameSizeType = (f: FileMeta) => `${f.name}:${f.size}:${f.type}`;
 /** The explanatory line under a control on this screen. */
 const HINT: CSSProperties = {
   fontSize: 'var(--type-sm)',
-  opacity: 0.7,
+  color: 'var(--app-dim)',
   lineHeight: 'var(--leading-relaxed)',
   textWrap: 'pretty',
 };

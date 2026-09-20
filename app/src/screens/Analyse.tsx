@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { secondLine } from '../lib/dim';
 import { Produced } from '../components/Produced';
 import { useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -278,7 +279,7 @@ export function Analyse() {
             </div>
           )}
           {bins.length > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'calc(10.5px * var(--text-scale, 1))', opacity: 0.45, marginTop: 'var(--sp-2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'calc(10.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'var(--sp-2)' }}>
               <span>{show(xSummary.min)}</span>
               <span>{show(xSummary.max)}</span>
             </div>

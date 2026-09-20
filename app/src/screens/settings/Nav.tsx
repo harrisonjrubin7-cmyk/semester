@@ -1,4 +1,5 @@
 import { useStore } from '../../state/store';
+import { DIMMED_ROW } from '../../lib/dim';
 import { SettingsPage } from './Page';
 import { CustomRow, Group, NavRow } from '../../components/shell/Rows';
 import { useRowStyle } from '../../components/shell/useShell';
@@ -313,7 +314,7 @@ export function SettingsNav() {
                     <div
                       tabIndex={0}
                       aria-label={`${section?.label ?? id}. ${MOVE_HINT}`}
-                      style={{ flex: 1, minWidth: 0, padding: '11px 0', opacity: on ? 1 : 0.5 }}
+                      style={{ flex: 1, minWidth: 0, padding: '11px 0', opacity: on ? 1 : DIMMED_ROW }}
                     >
                       <div style={{ fontSize: 'var(--type-md)' }}>{section?.label ?? id}</div>
                       <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>{section?.blurb}</div>
