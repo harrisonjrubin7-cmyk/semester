@@ -127,6 +127,29 @@ Write for the ear, not the page. Spell numbers and symbols out — "eighty perce
 `|E|` and `→` badly or not at all, and a listener cannot see a formula anyway.
 Describe every figure in words rather than referring to one.
 
+## Hosting styles
+
+The two-voice format is one way to say this material. `pipeline/styles.mjs`
+holds three more as *structural* parameters — how often the host takes a turn,
+whether a tangent returns, whether the expert is challenged or received — and
+`pipeline/restyle-script.mjs` rewrites a script into one of them with a model.
+
+```bash
+cd pipeline && npm install                       # once, for the SDK
+node pipeline/restyle-script.mjs audio/scripts/econ1020.json --all-styles --dry-run
+node pipeline/restyle-script.mjs audio/scripts/econ1020.json --style storyteller
+```
+
+A restyle may change how the episode sounds and nothing else. `restyle.mjs`
+checks the model's answer before anything is written and discards a rewrite
+that invents a figure, drops one, renames a chapter, or loses a self-test's
+answering silence — a script that sounds confident and has the wrong number in
+it is worse than no restyle at all. The check counts figures rather than
+merely looking for them, because "eighty" is said four times in the ECON
+episode and three of those could otherwise be styled away unnoticed.
+
+No preset names, imitates, or references a real presenter or show.
+
 ## Where this goes next
 
 The two-voice format is one hosting style out of several the same draft could

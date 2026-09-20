@@ -1,0 +1,10 @@
+{
+  "name": "semester-pipeline",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Dependencies for the pipeline scripts that need one. Most need none.",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0"
+  }
+}

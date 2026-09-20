@@ -161,7 +161,8 @@ node pipeline/restyle-script.mjs audio/scripts/econ.draft.json --all-styles
 python3 audio/synth.py audio/scripts/econ.curious-duo.json app/public/audio
 ```
 
-`restyle-script.mjs` is the one new piece of real work. Today's mechanical
+`restyle-script.mjs` is the one new piece of real work, and it is now built —
+see §6.3 for what in it is proven and what is not. Today's mechanical
 draft says outright that the openings, the transitions between units and the
 closing are where the listenability lives and that they want rewriting by hand.
 That rewrite is exactly what an LLM pass is good at, and the shared key already
@@ -215,9 +216,15 @@ once the format is right.
    no new audio at all. A cue already marks where each card's narration starts,
    so a short is a *trim* of the unit's MP3 rather than a new render of it.
    **278 shorts across the four courses**, 8.4–35.5s, median 14.8s.
-3. **`restyle-script.mjs` with two or three styles.** Prove the LLM rewrite
-   pass before building all six presets. Curious-duo and storyteller are
-   closest to what `make-script.mjs` already produces, so start there.
+3. **`restyle-script.mjs` with two or three styles.** ✅ **Built, with one
+   thing unproven.** Three presets — curious-duo, storyteller, pushback-debate
+   — in `pipeline/styles.mjs`, and `pipeline/restyle.mjs` checks the model's
+   answer before anything is written. **The live model call has not been run**:
+   it was built in a container with no API key, so everything around the call
+   is exercised and the call itself is not. Whoever runs it first is running it
+   first — start with `--dry-run`, then one style on one course, and read the
+   result before rendering audio from it. ~$0.24 a style for a whole ECON
+   episode.
 4. **Animated-series character** and **documentary B-roll** last. These are the
    only two that need real per-clip AI-video spend, so they are worth doing
    once it is known which courses have enough students to justify a one-time
@@ -233,6 +240,23 @@ once the format is right.
   re-render only touches what changed; `app/scripts/audiocache.ts` is the app
   side of the same idea. AI video is exactly the cost not to re-spend on an
   unchanged unit.
+- **The restyle pass is an operator tool, not a student path.** It reads
+  `ANTHROPIC_API_KEY` and calls the API directly rather than going through
+  `supabase/functions/claude`. That Edge Function exists to give a signed-in
+  student a metered share of a server-side key; whoever runs this pipeline is
+  not a student, runs it once per course rather than per request, and should
+  be spending their own budget. Routing authoring traffic through the student
+  path would put it on a student's quota and turn the Edge Function's rate
+  limits into something to work around. This roadmap suggested borrowing that
+  key — it is the wrong key to borrow.
+- **A restyle may change how an episode sounds and nothing else, and that is
+  checked rather than asked for.** The prompt says it at length; `restyle.mjs`
+  makes it true. A rewrite that invents a figure produces a script that sounds
+  exactly as confident as the four that shipped, and a student revising from
+  it has no way to tell. Figures are *counted*, not merely looked for: "eighty"
+  is said four times in the ECON episode, so a check that only asked whether
+  the number still appeared somewhere would have let three of the four be
+  softened away.
 - **Captions are per beat, not per word.** This document said the shorts'
   captions "come free from the beat timings the TTS pass already records" and,
   elsewhere, from "exact word timing" — the second is wrong about the data. A
