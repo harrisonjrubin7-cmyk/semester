@@ -401,7 +401,17 @@ function Piece({ run }: { run: Run }) {
   if (run.code) body = <code className="docpaper-tt">{body}</code>;
   if (run.bold) body = <strong>{body}</strong>;
   if (run.italic) body = <em>{body}</em>;
+  if (run.underline) body = <u>{body}</u>;
   if (run.strike) body = <s>{body}</s>;
+  /*
+   * `<mark>` rather than a span with a background, so the highlight survives
+   * being copied into anything else and is announced as a highlight rather
+   * than read straight past. The colour is fixed in `app.css` beside the rest
+   * of the page's, not taken from the ground: the page is white here and on
+   * paper whatever the app's theme is, and a highlighter that changed colour
+   * with the theme would print differently from how it looked.
+   */
+  if (run.highlight) body = <mark className="docpaper-mark">{body}</mark>;
   if (run.link) {
     /*
      * `rel="noreferrer"` and a new tab, because a link inside somebody's own

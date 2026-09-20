@@ -64,6 +64,26 @@ describe('a document this app wrote', () => {
     expect((await round(blocks)).doc.blocks).toEqual(blocks);
   });
 
+  /*
+   * The whole point of a round trip, for the two marks Word has and markdown
+   * does not: they go out as `<w:u>` and `<w:highlight>` and have to come back
+   * as the markers the editor understands, not as the words with the emphasis
+   * quietly gone. Both exports and both readers, in one claim.
+   */
+  it('keeps an underline and a highlight through Word and back', async () => {
+    const blocks: Block[] = [
+      { kind: 'text', text: 'The ++signed++ copy is ==the one that counts==.' },
+    ];
+    expect((await round(blocks)).doc.blocks).toEqual(blocks);
+  });
+
+  it('keeps an underlined link underlined once, and still a link', async () => {
+    const blocks: Block[] = [
+      { kind: 'text', text: 'See [the syllabus](https://example.com/s.pdf) and ++sign it++.' },
+    ];
+    expect((await round(blocks)).doc.blocks).toEqual(blocks);
+  });
+
   it('keeps a link as a link, not as the words with the address lost', async () => {
     const blocks: Block[] = [
       { kind: 'text', text: 'See [the syllabus](https://example.com/s.pdf) for dates.' },
@@ -233,6 +253,57 @@ describe('a document Word wrote', () => {
       ),
     );
     expect(back.doc.blocks[0]).toEqual({ kind: 'text', text: 'the **important** bit' });
+  });
+
+  it('reads an underline and a highlight back as the marks the editor uses', async () => {
+    const back = await fromDocx(
+      wrap(
+        '<w:p><w:r><w:rPr><w:u w:val="single"/></w:rPr><w:t>signed</w:t></w:r>' +
+          '<w:r><w:t xml:space="preserve"> and </w:t></w:r>' +
+          '<w:r><w:rPr><w:highlight w:val="cyan"/></w:rPr><w:t>marked</w:t></w:r></w:p>',
+      ),
+    );
+    /* Any of Word's seventeen pens comes back as the one mark this app has.
+       The alternative is seventeen markers nobody typed. */
+    expect(back.doc.blocks[0]).toEqual({ kind: 'text', text: '++signed++ and ==marked==' });
+  });
+
+  it('reads the pen lifted as no highlight, not as a highlight', async () => {
+    const back = await fromDocx(
+      wrap('<w:p><w:r><w:rPr><w:highlight w:val="none"/></w:rPr><w:t>plain</w:t></w:r></w:p>'),
+    );
+    expect(back.doc.blocks[0]).toEqual({ kind: 'text', text: 'plain' });
+  });
+
+  /*
+   * The trap, and the reason it matters more than it looks: every word
+   * processor underlines a hyperlink, and none of them means it as emphasis.
+   * Read naively, one trip through Word turns `[words](url)` into
+   * `[++words++](url)` — and because the app writes what it read, the next
+   * trip adds another pair, and the one after that another.
+   */
+  it('does not read a link\'s own underline as emphasis the writer typed', async () => {
+    const file = new File(
+      [
+        new Uint8Array(zipped({
+          'word/_rels/document.xml.rels':
+            '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+            '<Relationship Id="rId9" Target="https://example.edu/paper"/></Relationships>',
+          'word/document.xml':
+            '<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" ' +
+            'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+            '<w:body><w:p><w:hyperlink r:id="rId9"><w:r><w:rPr>' +
+            '<w:color w:val="0563C1"/><w:u w:val="single"/>' +
+            '</w:rPr><w:t>the paper</w:t></w:r></w:hyperlink></w:p></w:body></w:document>',
+        })),
+      ],
+      'Word.docx',
+    );
+    const back = await fromDocx(file);
+    expect(back.doc.blocks[0]).toEqual({
+      kind: 'text',
+      text: '[the paper](https://example.edu/paper)',
+    });
   });
 
   it('reads a heading below level 3 as level 3, and says so', async () => {

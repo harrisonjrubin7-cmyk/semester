@@ -277,6 +277,46 @@ describe('the marks that are not just a run property', () => {
     expect(made).toContain('w:val="CodeChar"');
   });
 
+  it('writes underline and the highlighter as run properties', () => {
+    const made = parts(doc([{ kind: 'text', text: 'the ++signed++ ==copy==' }])).text[
+      'word/document.xml'
+    ];
+    expect(made).toContain('<w:u w:val="single"/>');
+    /* The marker pen, not a shaded background. `w:shd` is the wrong element
+       here: Word's own highlight button does not toggle it, so a reader
+       cannot clear it with the pen. */
+    expect(made).toContain('<w:highlight w:val="yellow"/>');
+    expect(made).not.toContain('<w:shd');
+  });
+
+  /*
+   * `w:rPr`'s children are a sequence in the OOXML schema, not a set. Word and
+   * Pages both open a jumbled one, and the Strict validator does not — so the
+   * order is asserted rather than left to whichever branch of `run()` happened
+   * to be written last.
+   */
+  it('writes run properties in the order the schema lists them', () => {
+    const made = parts(doc([{ kind: 'text', text: '**==++all three++==**' }])).text[
+      'word/document.xml'
+    ];
+    const props = /<w:rPr>([\s\S]*?)<\/w:rPr>/.exec(made)![1];
+    expect(props.indexOf('<w:b/>')).toBeLessThan(props.indexOf('<w:highlight'));
+    expect(props.indexOf('<w:highlight')).toBeLessThan(props.indexOf('<w:u '));
+  });
+
+  /*
+   * A link is underlined by every word processor and none of them means it as
+   * emphasis. Two `<w:u>` in one `w:rPr` is the one way a run property can be
+   * invalid without looking wrong to read.
+   */
+  it('underlines a link once, not twice, when the words are underlined too', () => {
+    const made = parts(doc([{ kind: 'text', text: '++[a paper](https://example.edu)++' }])).text[
+      'word/document.xml'
+    ];
+    const props = /<w:rPr>([\s\S]*?)<\/w:rPr>/.exec(made)![1];
+    expect(props.match(/<w:u /g)).toHaveLength(1);
+  });
+
   it('puts a box in front of each line of a checklist', () => {
     const made = parts(
       doc([

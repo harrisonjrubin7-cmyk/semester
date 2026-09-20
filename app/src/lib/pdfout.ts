@@ -777,6 +777,26 @@ function stream(page: Page, fonts: Map<StandardFont, string>, images: Map<string
       const w =
         widthOf(piece.text, piece.font, piece.size) +
         drawing.extra * (piece.text.match(/ /g)?.length ?? 0);
+      /*
+       * The highlighter goes down before the words, because PDF paints in the
+       * order the operators arrive and a fill after the text would cover it.
+       *
+       * This is the only colour in the file. Everything else here is the
+       * default black, which is why `rg` is followed by `0 g` rather than
+       * left set: the next operator in the stream is somebody else's text,
+       * and a graphics state is not reset between drawings.
+       *
+       * The box is the descender to a little above the cap height — the same
+       * band a marker pen covers — rather than the line's full leading, which
+       * would close up the gap between two highlighted lines into a block.
+       */
+      if (piece.highlight) {
+        const foot = drawing.y - piece.size * 0.22;
+        const height = piece.size * 1.05;
+        out.push(
+          `1 1 0 rg ${round(x)} ${round(foot)} ${round(w)} ${round(height)} re f 0 g`,
+        );
+      }
       out.push(
         `BT /${name} ${round(piece.size)} Tf ${round(drawing.extra)} Tw ` +
           `${round(x)} ${round(drawing.y)} Td ${literal(piece.text)} Tj ET`,
@@ -787,7 +807,10 @@ function stream(page: Page, fonts: Map<StandardFont, string>, images: Map<string
           `0.6 w ${round(x)} ${round(middle)} m ${round(x + w)} ${round(middle)} l S`,
         );
       }
-      if (piece.link) {
+      /* One rule for both, at the same offset, because a link that is also
+         underlined would otherwise be drawn over twice — visibly heavier on
+         a printer, and twice the operators for nothing. */
+      if (piece.link || piece.underline) {
         const under = drawing.y - piece.size * 0.11;
         out.push(`0.6 w ${round(x)} ${round(under)} m ${round(x + w)} ${round(under)} l S`);
       }

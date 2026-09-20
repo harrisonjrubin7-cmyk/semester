@@ -108,3 +108,23 @@ describe('a figure on the page the editor draws', () => {
     });
   });
 });
+
+/*
+ * The page is the third renderer of a mark, after the `.docx` and the `.pdf`,
+ * and the one no file comparison can reach. `<u>` and `<mark>` are asserted as
+ * elements rather than as styling: a highlight drawn as a coloured `<span>`
+ * would look right, copy into another editor as plain words, and be read
+ * straight past by a screen reader.
+ */
+describe('the marks a word processor has and markdown does not', () => {
+  it('draws an underline and a highlight as the elements that mean them', () => {
+    return show(
+      <Paper doc={doc([{ kind: 'text', text: 'the ++signed++ ==copy==' }])} />,
+      () => said().includes('signed'),
+    ).then(() => {
+      expect(host.querySelector('u')?.textContent).toBe('signed');
+      expect(host.querySelector('mark')?.textContent).toBe('copy');
+      expect(said()).toContain('the signed copy');
+    });
+  });
+});

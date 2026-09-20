@@ -194,27 +194,65 @@ class Ids {
 }
 
 /**
- * The blue underline a reader expects on a link.
+ * The blue a reader expects on a link. Its underline is written beside the
+ * document's own in `run` below, so a link inside an underlined sentence
+ * carries one `<w:u>` rather than two.
  *
  * Written into the run rather than added as a `Hyperlink` character style,
  * because a style is a second part to keep in step for one colour and one
  * underline — and a document whose links are styled by a style that a later
  * edit removes is a document whose links stop looking like links.
  */
-const LINK_LOOK = '<w:color w:val="0563C1"/><w:u w:val="single"/>';
+const LINK_COLOUR = '<w:color w:val="0563C1"/>';
+
+/**
+ * The highlighter, in the one value Word's own pen writes.
+ *
+ * `w:highlight` takes a name from a fixed list of seventeen rather than a hex
+ * colour — it is the marker pen, not a shaded background — and `yellow` is
+ * what every one of those pens defaults to. The alternative, `w:shd`, *is* a
+ * hex fill and is the wrong element: shading is a property of the paragraph's
+ * background that happens to be applicable to a run, so Word's own highlight
+ * button does not toggle it and a reader cannot clear it with the pen.
+ */
+const MARKER = '<w:highlight w:val="yellow"/>';
 
 function run(
-  piece: { text: string; bold: boolean; italic: boolean; strike: boolean; code: boolean },
+  piece: {
+    text: string;
+    bold: boolean;
+    italic: boolean;
+    strike: boolean;
+    underline: boolean;
+    highlight: boolean;
+    code: boolean;
+  },
   link = '',
 ): string {
+  /*
+   * In the order the schema lists them, which is not the order they were
+   * written in above: `w:rPr`'s children are a *sequence* in OOXML, so
+   * rStyle, then b, i, strike, then colour, then highlight, then u. Word and
+   * Pages both accept a jumbled one and the Strict validator does not, and a
+   * file that fails validation is a file somebody's submission portal may
+   * refuse — see `xlsx.ts`, which learned the same thing about `w:sst`.
+   *
+   * A named character style rather than a font on the run, so somebody who
+   * has to hand in Courier can restyle every piece of code at once. The
+   * link's blue is direct formatting for the opposite reason — a style a
+   * later edit removes is a link that stops looking like one.
+   *
+   * A link is underlined whether or not the run is: the two would otherwise
+   * write `<w:u>` twice, which is the one way a run property can be invalid
+   * without being obviously wrong to read.
+   */
   const props =
+    `${piece.code ? '<w:rStyle w:val="CodeChar"/>' : ''}` +
     `${piece.bold ? '<w:b/>' : ''}${piece.italic ? '<w:i/>' : ''}` +
     `${piece.strike ? '<w:strike/>' : ''}` +
-    // A named character style rather than a font on the run, so somebody who
-    // has to hand in Courier can restyle every piece of code at once. The
-    // link's blue is direct formatting for the opposite reason — see
-    // `LINK_LOOK`, which explains why one is a style and one is not.
-    `${piece.code ? '<w:rStyle w:val="CodeChar"/>' : ''}${link ? LINK_LOOK : ''}`;
+    `${link ? LINK_COLOUR : ''}` +
+    `${piece.highlight ? MARKER : ''}` +
+    `${piece.underline || link ? '<w:u w:val="single"/>' : ''}`;
   return piece.text
     .split('\n')
     .map((line, i) => {

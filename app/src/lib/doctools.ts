@@ -212,11 +212,18 @@ export function replaceAll(
  * `document.ts` — so this wraps and unwraps markers rather than carrying a
  * second representation of the same fact. A link is not here: its marker has
  * two halves with an address between them, and it has its own function below.
+ *
+ * Every marker is the same string on both sides, which is what lets one
+ * function below serve all six. `runs` says why underline is `++` and not the
+ * `__` everybody reaches for first, and why `<u>…</u>` — the other obvious
+ * answer — was never an option here.
  */
 export const MARKS = {
   bold: '**',
   italic: '*',
+  underline: '++',
   strike: '~~',
+  highlight: '==',
   code: '`',
 } as const;
 
@@ -228,10 +235,10 @@ export type Mark = keyof typeof MARKS;
  * Toggling: a selection already entirely inside a mark loses it, anything
  * else gains it, which is what every editor's Ctrl+B does.
  *
- * Four marks rather than two, and the generalisation is why the marker is a
+ * Six marks rather than two, and the generalisation is why the marker is a
  * parameter — the code below never knew which mark it was applying beyond
- * counting stars, so strike-through and backticks cost a lookup table and
- * nothing else.
+ * counting stars, so strike-through, backticks, underline and the highlighter
+ * each cost a row in the lookup table above and nothing else.
  */
 export function emphasise(text: string, from: number, to: number, mark: Mark): string {
   const start = Math.max(0, Math.min(from, to));

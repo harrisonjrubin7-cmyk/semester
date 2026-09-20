@@ -282,6 +282,14 @@ export interface Piece {
   size: number;
   link: string;
   strike: boolean;
+  /*
+   * Optional, unlike the rest: `pdfout.ts` builds pieces of its own for a
+   * hanging indent, a code line and a caption, and none of those can carry a
+   * mark somebody typed. Leaving them off there says that more clearly than
+   * eight more `false`s would.
+   */
+  underline?: boolean;
+  highlight?: boolean;
 }
 
 /** A laid-out line: the pieces on it and how wide they came to. */
@@ -336,7 +344,9 @@ export function wrap(pieces: Piece[], width: number, keepLeading = false): Place
         last.font === piece.font &&
         last.size === piece.size &&
         last.link === piece.link &&
-        last.strike === piece.strike;
+        last.strike === piece.strike &&
+        !!last.underline === !!piece.underline &&
+        !!last.highlight === !!piece.highlight;
       if (same) last.text += word;
       else line.push({ ...piece, text: word });
       at += w;
@@ -367,6 +377,8 @@ export function piecesOf(text: string, base: { font: string; size: number }): Pi
     size: r.code ? base.size * 0.92 : base.size,
     link: r.link,
     strike: r.strike,
+    underline: r.underline,
+    highlight: r.highlight,
   }));
 }
 

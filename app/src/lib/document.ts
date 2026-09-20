@@ -28,10 +28,11 @@
  *
  * ## Emphasis
  *
- * `**bold**` and `*italic*`, and nothing else. Markdown's two commonest marks
- * are what people type without being told to; anything more and the field
- * needs a toolbar, and a toolbar needs a rich-text field, which is the trap
- * above.
+ * Markdown, held in the text itself rather than as a second structure beside
+ * it. `**bold**` and `*italic*` were the whole set once, on the argument that
+ * anything more needs a toolbar — there is one now, in `screens/Write.tsx`,
+ * and it writes the same markers a person types by hand. See {@link runs} for
+ * the seven and for why underline is `++like this++`.
  */
 
 import type { Layout } from './doclayout';
@@ -477,6 +478,22 @@ export interface Run {
   bold: boolean;
   italic: boolean;
   strike: boolean;
+  /**
+   * A line under the words, which Word writes and markdown has no mark for.
+   *
+   * See {@link runs} for why it is `++like this++` rather than `__like this__`:
+   * the short version is that markdown already spends every underscore on
+   * bold, and a mark that means one thing here and another everywhere else is
+   * worse than one that is merely unfamiliar.
+   */
+  underline: boolean;
+  /**
+   * Marked with a pen, the way a printed reading gets marked.
+   *
+   * `==like this==`, which is the mark Obsidian, Pandoc's `mark` extension and
+   * every note app that has one already use.
+   */
+  highlight: boolean;
   /** Monospaced and literal — nothing inside it is a mark. */
   code: boolean;
   /**
@@ -493,6 +510,8 @@ const PLAIN: Omit<Run, 'text'> = {
   bold: false,
   italic: false,
   strike: false,
+  underline: false,
+  highlight: false,
   code: false,
   link: '',
 };
@@ -540,18 +559,41 @@ const LINK = /\[([^\]\n]+)\]\((\S+?)\)/;
 /**
  * A paragraph split into its marked pieces.
  *
- * Five marks, all of them markdown's own, because markdown is what people
- * type without being told to:
+ * Seven marks, because markdown is what people type without being told to:
  *
  *     **bold**  *italic*  ~~struck out~~  `code`  [a link](https://…)
+ *     ++underlined++  ==highlighted==
  *
  * The first two were the whole set for a long time and the argument for
  * stopping there was that anything more needs a toolbar. It does, and there
- * is one now — but the three added here are not decoration. A link is the
+ * is one now — but the marks added since are not decoration. A link is the
  * commonest thing in a document written this decade and the .docx had no way
  * to carry one; struck-out text is how a shared draft says "cut this" without
  * deleting it; and backticks are what stops a variable name in a methods
  * section turning into italics.
+ *
+ * ## The last two, and the markers they did not get
+ *
+ * Underline and highlight are the two marks a word processor has and markdown
+ * does not, and both were missing here: a student handed a marked-up draft
+ * could read it and could not write one back, and the .docx this app produced
+ * had no way to carry either.
+ *
+ * **Highlight is `==text==`.** Obsidian, Pandoc's `mark` extension and every
+ * note app with a pen use it, so it is the mark somebody types already.
+ *
+ * **Underline is `++text++`, not `__text__`**, and that is the one choice here
+ * worth arguing. `__text__` is the obvious marker and it is already spent:
+ * CommonMark reads it as *bold*, so an underlined sentence exported to
+ * Markdown would come back from any other tool in the wrong mark, silently.
+ * `++text++` is read by fewer tools, and the ones that do not read it show
+ * the pluses — which is the trade this file makes everywhere else, and makes
+ * again here. A mark that renders as literal `++` is visible and fixable. A
+ * mark that turns into bold in somebody else's editor is neither.
+ *
+ * Both markers are symmetric, which is not an aesthetic choice: `emphasise`
+ * in `doctools.ts` wraps and unwraps a single string on both sides, so
+ * `<u>…</u>` would have meant a second code path for one mark.
  *
  * ## How it walks
  *
@@ -580,7 +622,7 @@ export function runs(text: string): Run[] {
     if (!part) return;
 
     /*
-     * Five marks, earliest one first, and the two rules that decide nesting.
+     * Seven marks, earliest one first, and the two rules that decide nesting.
      *
      * **A link is only read outside a link**, because a link inside a link
      * has no meaning and the recursion has to end. A target this app will not
@@ -599,6 +641,11 @@ export function runs(text: string): Run[] {
     const code = on.code ? null : /`([^`\n]+)`/.exec(part);
     const strong = /\*\*(\S(?:(?!\*\*)[\s\S])*?\S|\S)\*\*/.exec(part);
     const struck = /~~(\S(?:(?!~~)[\s\S])*?\S|\S)~~/.exec(part);
+    /* The same shape as `~~`, for the same reason: the markers have to sit
+       against the words, so `a ++ b` and `x == y` stay arithmetic and a
+       comparison rather than becoming marks nobody asked for. */
+    const under = /\+\+(\S(?:(?!\+\+)[\s\S])*?\S|\S)\+\+/.exec(part);
+    const lit = /==(\S(?:(?!==)[\s\S])*?\S|\S)==/.exec(part);
     const em = /\*(\S(?:[^*]*\S)?)\*/.exec(part);
 
     const found = [
@@ -613,6 +660,8 @@ export function runs(text: string): Run[] {
       { at: code, take: () => out.push({ text: code![1], ...on, code: true }) },
       { at: strong, take: () => walk(strong![1], { ...on, bold: true }) },
       { at: struck, take: () => walk(struck![1], { ...on, strike: true }) },
+      { at: under, take: () => walk(under![1], { ...on, underline: true }) },
+      { at: lit, take: () => walk(lit![1], { ...on, highlight: true }) },
       { at: em, take: () => walk(em![1], { ...on, italic: true }) },
     ].filter((f): f is { at: RegExpExecArray; take: () => void } => f.at !== null);
 
