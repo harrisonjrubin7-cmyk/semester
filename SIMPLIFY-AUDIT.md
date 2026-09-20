@@ -1,3 +1,64 @@
+# One app — an addendum to the seventeenth pass: the guard for the recurrence
+
+Against `main` at `2558309`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge, no fix — one test.
+
+This was written as a seventeenth pass, in parallel and without knowing it. It
+reached the same three conclusions the pass above reached — `edit` 7 sites and
+0 front doors, `import` 5 and 0, `courses` 4 and 0 — and found the same defect
+in `screens/Essay.tsx`, the `openGuide` that should have been `openCourse`.
+That pass landed first and is the record; its fix is better than the one here
+was, because it also noticed the history entry nobody visited.
+
+So, by `CLAUDE.md`'s rule for exactly this: **it has landed, so stop.** The
+census row and the fix are not re-litigated here and the duplicate audit entry
+was dropped rather than merged alongside. What remains is the other half of
+that rule — *check whether they left the recurrence open* — and one thing is
+worth adding.
+
+## The instance is guarded; the class is not
+
+`screens/essaypolicy.test.tsx` drives Essay, picks a course, presses the
+button and reads `state.courseId`, with a control that fails a fix which moved
+the pointer on every render. For that screen it is the better of the two tests
+and it stays.
+
+What it cannot say is anything about the **next** route into Edit. The census
+directly above expects seven to move, and the fault has two properties that
+make a per-screen test a thin defence:
+
+| | |
+| --- | --- |
+| It renders correctly when it is wrong | Edit draws a real course editor showing a real course — just not the one the button sat under |
+| It survived six passes of reading screens | The call site reads as though it carries the course, because it does; only the destination knows it reads another field |
+
+`screens/editroute.test.ts` reads the source for the pairing itself: every
+`go: 'edit'` that opens an object must open a *course*. It holds for call
+sites that do not exist yet, which a render test cannot, and it cannot be
+fooled by a screen that draws correctly — the argument
+`src/rootunmount.test.ts` makes for structural checks generally.
+
+Reverting Essay to `openGuide` turns it red naming the file, so it is known to
+be a guard. It also asserts it found at least four sites at all, so a refactor
+cannot quietly reduce it to a guard over nothing.
+
+A site that navigates to Edit without opening anything is not caught and is
+not a fault: it means *edit whatever is open*, which is what the two sites
+drawn inside an open course mean.
+
+## What this cost, and the cheaper check that was skipped
+
+Two sessions built the same census and the same one-line fix within minutes of
+each other. `CLAUDE.md` opens by saying that happens here and gives the check —
+grep `origin/main` for *the thing*, not for titles. It was run at the start of
+this work and the row was open; it was **not** re-run before the rebase that
+followed, and by then the other pass had merged. The cost was one duplicated
+fix, caught before it merged; the check is `git log -p --since=…` over the file
+about to be edited, and it belongs immediately before the push as well as at
+the start.
+
+---
+
 # One app — the seventeenth pass: six of seven carried the course, the seventh only looked like it
 
 Against `main` at `3075fbc`. **<!--screens-->fifty-eight<!--/--> destinations**,
