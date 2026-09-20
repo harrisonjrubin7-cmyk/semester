@@ -16,6 +16,7 @@ import { StoreProvider } from './state/store';
 import { AIProvider } from './ai/store';
 import { redirected } from './lib/redirected';
 import { askedForm } from './lib/formshare';
+import { takeFromUrl } from './lib/referral';
 // Type-only, so it is erased at build and pulls nothing onto the critical path.
 import type { ProviderId } from './lib/connect';
 import { load as loadFromDb, prime as primeDb } from './state/persist';
@@ -66,6 +67,22 @@ if (formLink) {
     );
   });
 } else {
+
+/*
+ * A referral code in the address bar, taken and put away before anything else
+ * looks at the URL.
+ *
+ * Here rather than in a screen because of what happens next: the OAuth
+ * redirect below rewrites the address, the confirmation-email route opens a
+ * different tab entirely, and neither carries a query string across. The code
+ * has to be off the URL and in storage before any of that, and it is claimed
+ * later — in `state/store.tsx`, when a session actually appears, whichever
+ * route produced it. See `lib/referral.ts`.
+ *
+ * Inside this branch, so a stranger answering a published form is left alone:
+ * they have no semester and will not be making an account.
+ */
+takeFromUrl();
 
 finishAnyRedirect()
   .then((result) => {

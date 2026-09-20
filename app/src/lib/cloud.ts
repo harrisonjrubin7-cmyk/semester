@@ -710,6 +710,22 @@ export const OWNED_TABLES: OwnedTable[] = [
   // deleting an account is not a way to reappear in their room.
   { table: 'blocks', column: 'user_id' },
 
+  // ── The referral link ───────────────────────────────────────────────────
+  //
+  // Order is load-bearing again, and for the second reason rather than the
+  // first. Both rows are reachable — `referrals` has a select policy for its
+  // own row precisely so this delete can find it — but the code has to go
+  // *after* the arrival row: deleting `referral_codes` cascades away every
+  // `referrals` row naming that code, and doing it first would be relying on a
+  // cascade to remove a row this list claims to delete itself.
+  //
+  // Two different rows, and they are not the same fact. `referrals` here is
+  // *your own arrival* — the code you came in on. `referral_codes` is the code
+  // you handed out, and the cascade underneath it takes the record of everyone
+  // who came through you. See `supabase/migrations/20260901001400_referrals.sql`.
+  { table: 'referrals', column: 'user_id' },
+  { table: 'referral_codes', column: 'user_id' },
+
   // ── Shared forms ────────────────────────────────────────────────────────
   { table: 'forms', column: 'owner' },
   // Taken by the line above rather than by a request of its own:

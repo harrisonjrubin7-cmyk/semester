@@ -6,6 +6,7 @@ import { StorageRoom } from '../components/StorageRoom';
 import { syncLine } from '../lib/merge';
 import { ActionButton, SectionLabel } from '../components/ui';
 import { Credentials } from '../components/Credentials';
+import { ReferralLink } from '../components/ReferralLink';
 import { cloudConfigured, signOut } from '../lib/cloud';
 
 /**
@@ -163,6 +164,11 @@ export function AccountScreen() {
           What still does not merge is the same note edited on both: the later edit is the one that
           survives. The app would rather say so than pretend.
         </div>
+
+        {/* Between what the account does and leaving it: the one thing on
+            this screen that is about somebody other than the account holder.
+            See `components/ReferralLink.tsx`. */}
+        <ReferralLink />
 
         <ActionButton
           disabled={busy}

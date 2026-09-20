@@ -121,6 +121,8 @@ behind and a client that believes it succeeded.
 | `blocks` | **not** lifted by deletion | keyed on `blocked`, not `user_id`, so deleting your account cannot undo somebody else's protection. This is deliberate and `deletion.check.sql` pins it |
 | `push_devices`, `push_queue` | see the clocks above | |
 | `access_log` | 90 days, see above | readable by the account it is about, which is the difference between an audit log and an operator's private diary |
+| `referral_codes` | account deletion | one generated code per ambassador. Deleting it takes every `referrals` row pointing at it, by the foreign key — an ambassador who leaves is not remembered by a count of who they recruited |
+| `referrals` | account deletion, of either side | the row saying which code an account arrived on. It goes when that account is deleted, **and** when the ambassador whose code it names is. Never readable by the ambassador: it is a count on their screen and nothing else |
 | `invites`, `access_gate` | **no answer yet** — see below | |
 
 ## What has no answer, stated rather than rounded off
