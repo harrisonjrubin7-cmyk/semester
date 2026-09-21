@@ -89,6 +89,54 @@ export function matchPlace(room: string, places: SavedPlace[]): SavedPlace | nul
   );
 }
 
+/**
+ * The building a room is in, out of the list the university published.
+ *
+ * Asked only after {@link matchPlace} has said no, and that order is the whole
+ * design: a place you stood in and named is a coordinate you checked, and it
+ * beats a centroid from an estates department every time. This is what answers
+ * on the first morning, before you have saved anything.
+ *
+ * ## The abbreviation is matched exactly, and the name is not
+ *
+ * A name matches both ways round, as `matchPlace` does — "Featheringill"
+ * finds "Featheringill Hall 201", and "Featheringill Hall" finds
+ * "Featheringill 201" — but only on a whole word. `matchPlace` compares with
+ * a bare `startsWith`, which is safe enough there because the label is one
+ * the reader typed about their own campus; here both sides are supplied,
+ * the list by a registrar and the room by a syllabus, and a bare prefix let
+ * "F 100" match Featheringill Hall. The test for that was written before this
+ * paragraph was true and failed, which is the only reason the hole was found.
+ *
+ * An abbreviation gets no latitude at all. Prefix matching a three-letter
+ * code is how "FGH" claims "FGH" and also how a one-letter `abbr` would claim
+ * the entire campus; the codes are short, they are written exactly as the
+ * registrar prints them, and an exact match is all they need.
+ *
+ * `lng`, not `lon`. The pack format spells it the way GeoJSON and Google do
+ * and the rest of this app spells it the other way, which is a rename waiting
+ * to be a silent transposition — so it is converted here, once, at the edge.
+ */
+export function matchBuilding(
+  room: string,
+  buildings: { name: string; abbr?: string; lat: number; lng: number }[] = [],
+): { name: string; lat: number; lon: number } | null {
+  const building = buildingOf(room).toLowerCase();
+  if (!building) return null;
+  /* A prefix that ends where a word ends, so "Featheringill" is a prefix of
+     "Featheringill Hall" and "F" is not a prefix of anything. */
+  const upTo = (whole: string, part: string): boolean =>
+    whole.startsWith(part) && (whole.length === part.length || /[\s,]/.test(whole[part.length]));
+  const hit = buildings.find((b) => {
+    const abbr = b.abbr?.trim().toLowerCase() ?? '';
+    if (abbr && abbr === building) return true;
+    const name = b.name.trim().toLowerCase();
+    if (!name) return false;
+    return upTo(name, building) || upTo(building, name);
+  });
+  return hit ? { name: hit.name, lat: hit.lat, lon: hit.lng } : null;
+}
+
 /** Minutes to walk a distance. Never less than one, always rounded up. */
 export function walkMinutes(metres: number): number {
   return Math.max(1, Math.ceil(metres / PACE));

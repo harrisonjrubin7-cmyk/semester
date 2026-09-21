@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Five, and each is a deliberate entry point:
+   * The allowlist. Six, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -136,6 +136,9 @@ declare
    *                         that signature structurally, which is the only
    *                         thing standing between this entry and handing the
    *                         table to anybody with the publishable key.
+   *   accept_family_grant — the recipient of a family grant accepts it, which
+   *                         is the one write they have on `family_grants`;
+   *                         `authenticated` only, never `anon`
    *   adopt_lti_identity  — attaches a Brightspace launch to the caller's own
    *                         account. Callable by a signed-in account *because*
    *                         that is half the security argument: it needs a
@@ -148,6 +151,7 @@ declare
    * not, the migration revokes it and this array does not change.
    */
   allowed constant text[] := array[
+    'accept_family_grant(grant_id uuid)',
     'adopt_lti_identity(want_ticket text)',
     'claim_referral(given text)',
     'make_referral_code()',
@@ -188,7 +192,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all five that it should';
+  raise notice 'ok  and can call all six that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
@@ -205,6 +209,117 @@ begin
     raise exception 'FAILED: the invite gate can be flipped through the API';
   end if;
   raise notice 'ok  the invite gate cannot be flipped through the API';
+end $$;
+
+-- ── And now the same question about relations ─────────────────────────────
+--
+-- Everything above is about functions, because a function is the case where
+-- the grant is the only gate. A table is not: row-level security is underneath
+-- it, and a table over-granted to `anon` still yields no rows to a policy that
+-- does not match. That is why this file began by asking only about functions.
+--
+-- A **view** is the case in between, and it is the one that got through.
+--
+-- A view in `public` is created with the definer's rights unless somebody
+-- writes `security_invoker = true`, and it is auto-updatable whenever it is a
+-- plain select of plain columns from one relation. Those two together mean a
+-- write grant on a view is a write that runs as the view's owner and never
+-- meets the base table's policies at all. Row-level security is not
+-- underneath it; nothing is.
+--
+-- `20260901001100_forms.sql` created `public.published_forms` exactly that way
+-- — definer's rights on purpose, so its WHERE clause could stand in front of
+-- `forms`' owner-only policies — and granted SELECT on top of the ALL that
+-- Supabase's default privileges had already given `anon`. Applied to the live
+-- project on 21 September 2026, a signed-out visitor could
+--
+--     delete from public.published_forms;
+--
+-- and take out every form that was open for answers.
+
+do $$
+declare modelled boolean;
+begin
+  select exists (
+    select 1 from pg_default_acl d
+      join pg_namespace n on n.oid = d.defaclnamespace
+     where n.nspname = 'public' and d.defaclobjtype = 'r'
+       and array_to_string(d.defaclacl, ',') like '%anon=%'
+  ) into modelled;
+
+  if not modelled then
+    raise exception 'FAILED: no default table grant to anon in public — '
+      'local.stub.sql has stopped modelling Supabase, so the relation checks below are vacuous';
+  end if;
+  raise notice 'ok  the harness grants tables the way Supabase does';
+end $$;
+
+do $$
+declare writable text;
+begin
+  /*
+   * Every view in `public` that either client role may write through.
+   *
+   * Asked as a sweep rather than about `published_forms` by name, for the
+   * reason the function allowlist is a sweep: the fault is an omission, and
+   * the next view added to this schema will arrive writable by a signed-out
+   * visitor unless its author remembers a line nobody remembered this time.
+   *
+   * There is no allowlist beside it because there is no view here that should
+   * be writable, and a view that genuinely needs to be takes an INSTEAD OF
+   * trigger — which is a thing somebody writes on purpose and can be named
+   * here when it exists.
+   */
+  select string_agg(who || ' → ' || rel, ', ' order by who || rel) into writable from (
+    select r.rolname as who, c.relname as rel
+      from pg_class c
+      join pg_namespace n on n.oid = c.relnamespace
+      cross join (values ('anon'), ('authenticated')) as r(rolname)
+     where n.nspname = 'public' and c.relkind = 'v'
+       and (has_table_privilege(r.rolname, c.oid, 'insert')
+         or has_table_privilege(r.rolname, c.oid, 'update')
+         or has_table_privilege(r.rolname, c.oid, 'delete'))
+  ) t;
+
+  if writable is not null then
+    raise exception 'FAILED: a view in public is writable from the API (%) — '
+      'a view runs with its owner''s rights, so this write meets no policy', writable;
+  end if;
+  raise notice 'ok  no view in public can be written through';
+end $$;
+
+-- The control for the sweep above, and it matters more here than anywhere else
+-- in this file. `relkind = 'v'` matching nothing, a schema with no views in it,
+-- or a `has_table_privilege` call that has stopped lining up would all leave
+-- that check passing while proving nothing — and this is a suite whose whole
+-- subject is a privilege that was there and was not seen.
+--
+-- So: the view this is about must exist, and must be readable by the role the
+-- feature exists for. A respondent with the link is signed out.
+
+do $$
+begin
+  if to_regclass('public.published_forms') is null then
+    raise exception 'FAILED: public.published_forms is gone — the sweep above proved nothing';
+  end if;
+  if not has_table_privilege('anon', 'public.published_forms', 'select') then
+    raise exception 'FAILED: a signed-out respondent cannot read published_forms — '
+      'the revoke took the feature with it';
+  end if;
+  raise notice 'ok  published_forms exists and is readable by a signed-out respondent';
+end $$;
+
+-- And the owner-only table underneath it, named for the same reason
+-- `set_invite_only` is named above: a failure that says `anon can read forms`
+-- is read at a glance, and `forms.marking` is the answer key to every quiz in
+-- the app.
+
+do $$
+begin
+  if has_table_privilege('anon', 'public.forms', 'select') then
+    raise exception 'FAILED: a signed-out visitor holds SELECT on public.forms, which carries the answer keys';
+  end if;
+  raise notice 'ok  the answer keys are not reachable by a signed-out visitor';
 end $$;
 
 rollback;

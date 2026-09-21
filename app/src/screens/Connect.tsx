@@ -9,6 +9,8 @@ import { parseIcs } from '../lib/ics';
 import { fetchCalendar, isCalendar, notCalendar, readLink } from '../lib/feedlink';
 import { pull as pullCanvas, readKey as readCanvasKey } from '../lib/canvas';
 import { cloudConfigured, fetchCanvasVia, fetchIcsVia } from '../lib/cloud';
+import { forgetTicket, heldTicket } from '../lib/ltiarrival';
+import { adopt as adoptLaunch, saidAbout } from '../lib/ltilanding';
 import { aboutWhere, lastPulled, saysWhere, whereFeed, worthSaying } from '../lib/where';
 import {
   PROVIDERS,
@@ -91,6 +93,25 @@ export function Connect() {
   const [canvasHost, setCanvasHost] = useState('');
   const [canvasToken, setCanvasToken] = useState('');
   const [canvasNote, setCanvasNote] = useState('');
+  /*
+   * The Brightspace launch, if this browser arrived through one.
+   *
+   * Read once on the way in, like `note` above and for the same reason: the
+   * launch is a page load, and `main.tsx` has already taken the values off the
+   * address bar by the time anything renders. A ticket means the launch
+   * *created* an account — a returning student's identity is already bound, so
+   * there is nothing to offer and the section below does not draw.
+   */
+  const [launchTicket, setLaunchTicket] = useState<string | null>(() => heldTicket());
+  const [launchNote, setLaunchNote] = useState<string>(() => {
+    try {
+      const left = sessionStorage.getItem('semester.lti.note') ?? '';
+      if (left) sessionStorage.removeItem('semester.lti.note');
+      return left;
+    } catch {
+      return '';
+    }
+  });
   const [files, setFiles] = useState<{ id: ProviderId; list: RemoteFile[] } | null>(null);
   // Kept apart from `note`, which is read at the top of a long screen: a send
   // is started from a button near the bottom and its answer has to be next to
@@ -408,6 +429,30 @@ export function Connect() {
     }
   };
 
+  /**
+   * Attach this launch to the account the student is already signed in to.
+   *
+   * Half the proof; the other half is the ticket. `adopt_lti_identity` refuses
+   * unless it has both, so there is nothing this button can do on its own —
+   * which is the point of it being a button rather than something that
+   * happened automatically when they landed.
+   *
+   * The ticket is forgotten on every outcome but `signed-out`, because every
+   * other one is final: spent, refused for good, or already theirs. Keeping it
+   * after that would leave a dead offer on the screen.
+   */
+  async function connectLaunch(): Promise<void> {
+    if (!launchTicket) return;
+    setBusy('lti');
+    const said = await adoptLaunch(launchTicket);
+    setLaunchNote(saidAbout(said));
+    if (said !== 'signed-out') {
+      forgetTicket();
+      setLaunchTicket(null);
+    }
+    setBusy('');
+  }
+
   return (
     <Page>
       <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', lineHeight: 'var(--leading-display-lg)' }}>
@@ -655,6 +700,58 @@ export function Connect() {
           the same Canvas screen that made it.
         </div>
       </Blueprint>
+
+      {/* ── A Brightspace launch ────────────────────────────────────────── */}
+      {/*
+        Drawn only for a browser that arrived through one, which is why there is
+        no empty state and no entry in `lib/nav.ts`. This is not somewhere a
+        student goes; it is something that is true about how they got here, and
+        it stops being true the moment they answer it. A card that sat here
+        permanently saying "not connected" would be one more grey row on a
+        screen this app is actively trying to shorten.
+      */}
+      {(launchTicket || launchNote) && (
+        <>
+          <SectionLabel>Brightspace</SectionLabel>
+          <Blueprint style={{ paddingBlock: 'var(--sp-5)', paddingInline: 'var(--sp-5)', marginTop: 'var(--sp-5)' }}>
+            {launchTicket && (
+              <>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)' }}>
+                  Already have a Semester account?
+                </div>
+                <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-2)', textWrap: 'pretty' }}>
+                  Brightspace made you a new account when it opened Semester. If you already had
+                  one, <strong>sign in to it first</strong> — then press this, and opening Semester
+                  from Brightspace will use your own account from now on.
+                </div>
+                <ActionButton
+                  tone="primary"
+                  disabled={busy === 'lti'}
+                  onClick={() => void connectLaunch()}
+                  style={{ marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm)' }}
+                >
+                  {busy === 'lti' ? 'Connecting…' : 'Connect my existing account'}
+                </ActionButton>
+              </>
+            )}
+            {launchNote && (
+              <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: launchTicket ? 'var(--sp-4)' : 0, textWrap: 'pretty' }}>
+                {launchNote}
+              </div>
+            )}
+            {launchTicket && (
+              <div style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
+                <strong>Nothing is matched on your email address.</strong> Connecting takes two
+                things at once — this launch, and you being signed in to the account you want —
+                because an email address is something Brightspace tells us, and trusting it would
+                mean anyone who could send us that address could open your account. If the new
+                account already has work in it, connecting is refused rather than merging them;
+                get in touch and we will do it by hand.
+              </div>
+            )}
+          </Blueprint>
+        </>
+      )}
 
       {/* ── OAuth providers ─────────────────────────────────────────────── */}
       {/*

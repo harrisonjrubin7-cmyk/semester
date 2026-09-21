@@ -8,11 +8,26 @@
  *
  * Fourteen days, matching the clash detector's horizon, so what appears here
  * and what the collision warning counts are the same fortnight.
+ *
+ * ## And the ones with no date on them at all
+ *
+ * An application sent five weeks ago with no word has nothing in `standing` —
+ * no deadline left, no next action set — so for as long as this section was
+ * only about dates, the quietest thing in the tracker was the one thing Today
+ * never mentioned. `lib/apply.ts` has computed `quiet` since the tracker was
+ * written, and it was drawn in one place: inside a row on `screens/Applying.tsx`
+ * that you had to expand to see.
+ *
+ * So the rows below say the number of days and stop, which is the same refusal
+ * the tracker makes everywhere else. Thirty-five days is a fact. Whether it
+ * means a nudge, a different employer, or nothing at all is not something a
+ * stage and a date can tell you, and a line here reading "follow up" would be
+ * this app having an opinion it has no grounds for.
  */
 
 import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
-import { ahead, missed, title, type Standing } from '../lib/apply';
+import { QUIET_DAYS, ahead, daysInStage, missed, quietOnes, title, type Application, type Standing } from '../lib/apply';
 import { Folding } from './Fold';
 
 const HORIZON = 14;
@@ -57,7 +72,47 @@ function Row({ s, onOpen, late }: { s: Standing; onOpen: () => void; late?: bool
   );
 }
 
-/** The Today section. Nothing at all when there is nothing dated. */
+/**
+ * One sent and unanswered, with the silence measured and nothing read into it.
+ *
+ * Deliberately the plainest row of the three: no warning ground and no warning
+ * border, because a wait is not a mistake and this is not a deadline going by.
+ */
+function QuietRow({ a, now, onOpen }: { a: Application; now: Date; onOpen: () => void }) {
+  const days = daysInStage(a, now);
+  return (
+    <button
+      type="button"
+      className="bare tappable"
+      onClick={onOpen}
+      style={{
+        display: 'block',
+        width: '100%',
+        textAlign: 'left',
+        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
+        borderRadius: 'var(--r-md)',
+        border: '1px solid var(--app-line)',
+      }}
+    >
+      <span className="kicker" style={{ display: 'block' }}>
+        {days} days, no word
+      </span>
+      <span
+        style={{
+          display: 'block',
+          fontSize: 'var(--type-base-plus)',
+          marginTop: 'calc(3px * var(--density, 1))',
+          lineHeight: 'var(--leading-normal-minus)',
+          textWrap: 'pretty',
+        }}
+      >
+        {title(a)}
+      </span>
+    </button>
+  );
+}
+
+/** The Today section. Nothing at all when there is nothing to say. */
 export function ApplyingSoon() {
   const { state, dispatch } = useStore();
   const now = useNow();
@@ -66,7 +121,10 @@ export function ApplyingSoon() {
   // that has passed is not a task, it is a fact, and a warning about it every
   // morning until it is archived is how a feed stops being read.
   const late = missed(state.applications, now).filter((s) => s.what === 'next');
-  if (soon.length === 0 && late.length === 0) return null;
+  // Sent, and nothing since. These carry no date of their own, so none of them
+  // has ever appeared above — see the note at the top of this file.
+  const silent = quietOnes(state.applications, now);
+  if (soon.length === 0 && late.length === 0 && silent.length === 0) return null;
 
   const open = () => dispatch({ type: 'go', screen: 'applying' });
 
@@ -81,7 +139,25 @@ export function ApplyingSoon() {
         {soon.map((s) => (
           <Row key={s.id} s={s} onOpen={open} />
         ))}
+        {silent.map((a) => (
+          <QuietRow key={a.id} a={a} now={now} onOpen={open} />
+        ))}
       </div>
+      {silent.length > 0 && (
+        <p
+          style={{
+            fontSize: 'var(--type-xs-plus)',
+            color: 'var(--app-dim)',
+            lineHeight: 'var(--leading-normal)',
+            marginTop: 'calc(7px * var(--density, 1))',
+            marginBottom: 0,
+            textWrap: 'pretty',
+          }}
+        >
+          Sent over {QUIET_DAYS} days ago with no word back. The app counts the days and has no opinion
+          about what they mean.
+        </p>
+      )}
       </Folding>
     </div>
   );

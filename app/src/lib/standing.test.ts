@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { badge, lateBy, overdueCount, overdueLine, split, standingOf } from './standing';
+import { badge, claimed, lateBy, overdueCount, overdueLine, split, standingOf } from './standing';
 import type { DatedItem } from './types';
 
 function item(id: string, daysAway: number, title = id): DatedItem {
@@ -126,5 +126,57 @@ describe('badge', () => {
   it('is blank at zero so a chip does not read "Overdue 0"', () => {
     expect(badge(0)).toBe('');
     expect(badge(3)).toBe(' 3');
+  });
+});
+
+describe('claimed', () => {
+  const item = (c: string, id: string) => ({ c, id }) as unknown as DatedItem;
+  const ECON = item('econ', 'econ-1');
+  const PSCI = item('psci', 'psci-1');
+  const MINE = item('hist-3010', 'mine-1');
+
+  it('drops the shipped courses while the question is still open', () => {
+    // `state.sample` true means nobody has answered "these are mine / not
+    // mine" yet, so those four courses belong to nobody — and a deadline
+    // belonging to nobody is not one anybody missed.
+    expect(claimed([ECON, PSCI], [], true)).toEqual([]);
+  });
+
+  it('keeps a deadline from a course the student did import', () => {
+    // The half that makes this a filter rather than a mute: their own missed
+    // deadline still warns them, sample term or not.
+    expect(claimed([ECON, PSCI, MINE], ['hist-3010'], true)).toEqual([MINE]);
+  });
+
+  it('is the identity once the question has been answered', () => {
+    // Adopting copies the sample courses into `state.courses`, so the same
+    // rule that excluded them now includes them. Nothing is special-cased.
+    const own = ['econ', 'psci'];
+    expect(claimed([ECON, PSCI], own, false)).toEqual([ECON, PSCI]);
+    expect(claimed([ECON, PSCI], own, true)).toEqual([ECON, PSCI]);
+  });
+
+  it('does not filter at all when the sample is off, whatever it is given', () => {
+    // With `sample` false the catalogue is the student's own courses only, so
+    // there is nothing to exclude and an empty `own` must not empty the list.
+    // Reading it the other way would blank the banner for everyone who
+    // dismissed the sample, which is the opposite of the bug.
+    expect(claimed([ECON, PSCI, MINE], [], false)).toEqual([ECON, PSCI, MINE]);
+  });
+
+  it('counts nothing as missed on a first run, and the student’s own as missed', () => {
+    // The two ends, through the function the banner actually calls.
+    const done = {};
+    // `standingOf` reads `isPast`, not `daysAway` — the first version of this
+    // fixture set the latter and the count came back nought for the wrong
+    // reason, which would have let a broken `claimed` pass the middle case.
+    const overdueItems = [
+      { ...ECON, isPast: true },
+      { ...PSCI, isPast: true },
+      { ...MINE, isPast: true },
+    ] as unknown as DatedItem[];
+    expect(overdueCount(claimed(overdueItems, [], true), done)).toBe(0);
+    expect(overdueCount(claimed(overdueItems, ['hist-3010'], true), done)).toBe(1);
+    expect(overdueCount(claimed(overdueItems, [], false), done)).toBe(3);
   });
 });

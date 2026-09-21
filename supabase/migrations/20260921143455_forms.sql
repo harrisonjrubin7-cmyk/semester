@@ -89,7 +89,13 @@ create policy "withdraw your own forms" on public.forms
 
 -- The publishable key in the shipped JavaScript maps to `anon`, so this is
 -- the grant that decides whether a stranger can read every form ever made.
-revoke all on public.forms from anon;
+--
+-- `authenticated` is named alongside it and granted back the four verbs its
+-- policies need. Writing it as revoke-then-grant rather than a bare revoke of
+-- `anon` is the habit the rest of this file did not have and should have: see
+-- the block at the foot of the file for what that cost.
+revoke all on public.forms from anon, authenticated;
+grant select, insert, update, delete on public.forms to authenticated;
 
 -- ── What a respondent sees ────────────────────────────────────────────────
 --
@@ -112,6 +118,11 @@ create view public.published_forms as
      and (opens is null or opens <= now())
      and (closes is null or closes >= now());
 
+-- Revoke first. A bare `grant select` here reads like it settles the matter
+-- and does not: on Supabase this view is created with ALL already granted to
+-- both roles, and adding SELECT on top of ALL changes nothing. See the foot of
+-- the file — on this relation that omission was the whole bug.
+revoke all on public.published_forms from anon, authenticated;
 grant select on public.published_forms to anon, authenticated;
 
 -- ── A response ────────────────────────────────────────────────────────────
@@ -193,5 +204,54 @@ create policy "delete answers to your own forms" on public.form_responses
 -- not a response, and a respondent who could rewrite theirs after seeing a
 -- mark is not sitting a quiz.
 
+revoke all on public.form_responses from anon, authenticated;
 grant insert on public.form_responses to anon, authenticated;
 grant select, delete on public.form_responses to authenticated;
+
+-- ── Why every one of those lines revokes before it grants ─────────────────
+--
+-- This file was applied to the live project on 21 September 2026, and it
+-- opened a hole big enough to empty the feature.
+--
+-- Every `grant` above was written as though a new relation in `public` starts
+-- with no privileges on it. On Supabase it does not. The project's default
+-- privileges say
+--
+--     alter default privileges in schema public
+--       grant all on tables to anon, authenticated, service_role;
+--
+-- and in Postgres "TABLES" covers views. So each grant above was a line added
+-- on top of a grant of ALL, and what `anon` actually held on
+-- `published_forms` the moment it was created was DELETE, INSERT, REFERENCES,
+-- SELECT, TRIGGER, TRUNCATE and UPDATE.
+--
+-- On an ordinary table that is survivable, because row-level security is
+-- underneath it and a policy is what decides the rows. `published_forms` is
+-- not an ordinary table. It is a view over six plain columns of one table with
+-- no aggregate, no DISTINCT and no GROUP BY, which makes it **auto-updatable**
+-- — `information_schema.views.is_updatable` says YES — and it is deliberately
+-- left with the definer's rights so that its WHERE clause can be the whole
+-- gate standing in front of `forms`' owner-only policies. Definer rights plus
+-- a write grant is a write that runs as the view's owner and never meets those
+-- policies at all.
+--
+-- Measured on the live project, as `anon`, before this block existed:
+--
+--     update public.published_forms set title = '…'  →  ALLOWED, 1 row
+--     update public.forms          set title = '…'  →  permission denied
+--     delete from public.published_forms            →  ALLOWED, 1 row
+--
+-- The middle line is the control, and it is the half that makes the other two
+-- mean anything: the probe could see a refusal, so "ALLOWED" was a finding and
+-- not a broken instrument.
+--
+-- The delete is the worst of the three. The view carries its own WHERE, so
+-- `delete from public.published_forms` — with no clause of its own, from a
+-- role whose key ships in the page source of a static site — removes every
+-- form that is currently open for answers.
+--
+-- The rule this file now follows, and which `access_log.sql` already did:
+-- **never grant without revoking first.** A grant states an intention; only
+-- the revoke makes it true.
+--
+-- `grants.check.sql` is where this stops being a thing to remember.

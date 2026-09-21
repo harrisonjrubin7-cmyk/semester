@@ -2390,7 +2390,7 @@ export type Action =
   | { type: 'failFeed'; id: string; status: string }
   | { type: 'removeFeed'; id: string }
   | { type: 'setLinkUrl'; id: string; url: string }
-  | { type: 'addLink'; name: string; url: string }
+  | { type: 'addLink'; name: string; url: string; group?: string }
   | { type: 'removeLink'; id: string }
   | { type: 'addCourse'; module: CourseModule }
   /**
