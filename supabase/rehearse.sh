@@ -134,6 +134,51 @@ SQL
 before_gate=$(psql -Atc "select invite_only from public.access_gate")
 before_rows=$(psql -Atc "select count(*) from public.courses")
 
+# ── Catching the snapshot up to the ledger ────────────────────────────────
+#
+# `schema.snapshot.sql` is production's shape *as it was when it was read*, and
+# the ledger has moved since. It declares how far it reaches on a
+# `SNAPSHOT-THROUGH:` line, and everything between that and `LEDGER_NEWEST` is
+# a migration production has applied and this file does not show.
+#
+# Without this the rehearsal starts from a schema sixteen ledger rows behind
+# production and does not know it. Every migration at or below the watermark is
+# assumed present, so `public.forms`, `public.lti_platform`, `public.schools`,
+# `public.app_admins` and `private.is_app_admin()` are all silently absent —
+# and the first pending migration to reference one of them fails with an error
+# about its own SQL. That happened: `20260921214500_report_status.sql` on a
+# branch whose migration was correct and whose `check.sh` suites all passed.
+#
+# These are applied quietly unless one fails. They are not the rehearsal — they
+# are the part of production the snapshot could not show, and a failure here is
+# a broken record rather than a broken deploy, so it says which it is.
+SNAPSHOT_THROUGH=$(sed -n 's/^-- SNAPSHOT-THROUGH: *\([0-9]\{14\}\).*/\1/p' "$here/schema.snapshot.sql" | head -1)
+if [ -z "$SNAPSHOT_THROUGH" ]; then
+  echo "· schema.snapshot.sql declares no SNAPSHOT-THROUGH line." >&2
+  echo "  Without it this script cannot tell which ledger rows the snapshot predates," >&2
+  echo "  and would rehearse against a schema it believes is complete and is not." >&2
+  exit 2
+fi
+
+caught=0
+for m in "$here"/migrations/*.sql; do
+  version=$(basename "$m" | cut -c1-14)
+  [ "$version" -gt "$SNAPSHOT_THROUGH" ] || continue
+  [ "$version" -le "$LEDGER_NEWEST" ] || continue
+  if out=$(psql -v ON_ERROR_STOP=1 -f "$m" 2>&1); then
+    caught=$((caught + 1))
+  else
+    echo "· the snapshot is behind the ledger, and catching it up failed:" >&2
+    echo "    ✗ $(basename "$m")" >&2
+    echo "$out" | grep -E "ERROR" | head -3 | sed 's/^/      /' >&2
+    echo "  This is the snapshot or the ledger being wrong, not the deploy." >&2
+    exit 1
+  fi
+done
+if [ "$caught" -gt 0 ]; then
+  echo "· $caught migrations the ledger has and the snapshot predates, applied first"
+fi
+
 echo "· the migrations a deploy would apply, in the order it would apply them"
 pending=0
 failed=0
