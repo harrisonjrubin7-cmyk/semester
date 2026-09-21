@@ -178,6 +178,9 @@ export function Suppose({
               system={system}
               assumed={source === 'assumed'}
               label={`Suppose a score for ${g.what} in ${course.code}`}
+              /* Nothing here is recorded, so nothing here may announce that
+                 it was. See `kept` on the field. */
+              kept={false}
             />
           </div>
           );

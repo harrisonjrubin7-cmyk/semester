@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { act } from 'react';
+import { act, useEffect } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { StoreProvider } from '../state/store';
 import { loadSeed } from '../data/seed';
 import { STORAGE_KEY } from '../state/shape';
 import { Grades } from './Grades';
+import { useStore } from '../state/store';
 
 /**
  * A grade tried on, and the record it must never touch.
@@ -55,17 +56,42 @@ beforeEach(async () => {
     root = createRoot(host);
   });
   await act(async () => {
-    root.render(<StoreProvider>{<Grades />}</StoreProvider>);
+    root.render(
+      <StoreProvider>
+        <Grades />
+        <Heard />
+      </StoreProvider>,
+    );
   });
 });
 
 afterEach(async () => {
   await act(async () => root.unmount());
   host.remove();
+  said = '';
   localStorage.clear();
 });
 
 const text = () => (host.textContent ?? '').replace(/\s+/g, ' ');
+
+/** The last thing the app announced, as the store holds it. */
+let said = '';
+
+/**
+ * Mounted beside the screen so `state.said` can be read without the shell.
+ *
+ * The write happens in an effect rather than during render: reassigning a
+ * module variable while rendering is a side effect, and the React lint says
+ * so. `act` flushes effects, so every announcement is recorded by the time a
+ * test looks.
+ */
+function Heard() {
+  const { state } = useStore();
+  useEffect(() => {
+    said = state.said ?? '';
+  }, [state.said]);
+  return null;
+}
 
 /** Type into a React-controlled box the way a person would. */
 async function type(box: HTMLInputElement, value: string): Promise<void> {
@@ -73,6 +99,13 @@ async function type(box: HTMLInputElement, value: string): Promise<void> {
   await act(async () => {
     set.call(box, value);
     box.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+}
+
+/** Leave the field, the way a person does. React's onBlur, not a bare event. */
+async function blur(box: HTMLInputElement): Promise<void> {
+  await act(async () => {
+    box.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
   });
 }
 
@@ -155,6 +188,51 @@ describe('supposing a score', () => {
     expect(clear).toBeTruthy();
     await act(async () => clear!.click());
     expect(text()).not.toContain('That would');
+  });
+});
+
+describe('what it says it did', () => {
+  /**
+   * What the app announced, read off the store rather than off the page.
+   *
+   * `say` dispatches into `state.said` and `components/Said.tsx` renders the
+   * live region from it — and that strip belongs to the app shell, which this
+   * file does not mount. A probe looking for `[aria-live]` in here finds
+   * nothing and reports every announcement as absent, which is the same
+   * answer it would give if announcing were broken. So the state is read
+   * instead, and the control below is what proves the probe can see anything
+   * at all.
+   */
+  const spoken = () => said;
+
+  it('does not announce a supposed score as saved', async () => {
+    // Found on the deployed site, driven at phone size: blurring a supposing
+    // box put "Grade saved · Suppose a score for Exams … : 92" in the live
+    // region at the top of the screen. Nothing was saved. The block's whole
+    // premise is that nothing here is kept, and the one group of people who
+    // cannot read that sentence were the only ones being told the opposite.
+    const box = boxesFor(/^Suppose a score/)[0];
+    await type(box, '92');
+    await blur(box);
+    expect(spoken()).not.toContain('Grade saved');
+  });
+
+  it('says what it did do, rather than going silent', async () => {
+    // Announcing nothing would be the other wrong answer: the reading is the
+    // useful half — what the app made of what was typed.
+    const box = boxesFor(/^Suppose a score/)[0];
+    await type(box, '92');
+    await blur(box);
+    expect(spoken()).toContain('Supposed, not saved');
+  });
+
+  it('still announces a real grade as saved, which is the control', async () => {
+    // A fix that quietly stopped every field announcing would pass both
+    // tests above and break the thing they were written to protect.
+    const box = boxesFor(/^Your score for/)[0];
+    await type(box, '77');
+    await blur(box);
+    expect(spoken()).toContain('Grade saved');
   });
 });
 

@@ -34,6 +34,7 @@ export function ScoreField({
   system,
   assumed = false,
   label,
+  kept = true,
 }: {
   value: string;
   onChange: (next: string) => void;
@@ -41,6 +42,21 @@ export function ScoreField({
   /** True when the cutoffs are a common scale rather than this course's own. */
   assumed?: boolean;
   label: string;
+  /**
+   * Whether what is typed here is actually recorded.
+   *
+   * True for every grade box, and the reason this option exists is the one
+   * place it is false: the what-if block on the grades screen reuses this
+   * field for scores that are deliberately *not* kept — see
+   * `components/Suppose.tsx`, whose whole premise is that nothing typed into
+   * it is saved or counted anywhere.
+   *
+   * The announcement below said "Grade saved" either way, so the one group of
+   * people who cannot read the sentence promising otherwise were the only
+   * ones being told the opposite. Seen on the deployed site, in the live
+   * region at the top of the screen.
+   */
+  kept?: boolean;
 }) {
   const { say: announce } = useStore();
   const [touched, setTouched] = useState(false);
@@ -81,7 +97,12 @@ export function ScoreField({
           // part that was missing from the announcement — "Your score for
           // the midterm in ECON 1020: 91" said what the number is and never
           // said that it had been kept.
-          announce(`Grade saved · ${label}: ${next}${read.said ? `. ${read.said}` : ''}`);
+          //
+          // And where it is *not* kept, it says so instead. The reading is
+          // still announced, because that is the useful half — what the app
+          // made of what was typed — but nothing claims it was recorded.
+          const verb = kept ? 'Grade saved' : 'Supposed, not saved';
+          announce(`${verb} · ${label}: ${next}${read.said ? `. ${read.said}` : ''}`);
         }}
         aria-label={label}
         aria-describedby={say ? id : undefined}
