@@ -158,7 +158,7 @@ export function Drill() {
           <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}>
             {got}/{pool.length}
           </div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(24px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-lg)', marginTop: 'var(--sp-2)' }}>
             {verdict}
           </div>
           <div
@@ -415,7 +415,7 @@ export function Drill() {
               marginTop: 'var(--sp-7)',
               paddingTop: 'calc(14px * var(--density, 1))',
               borderTop: '1px solid var(--app-line)',
-              fontSize: 'calc(16px * var(--text-scale, 1))',
+              fontSize: 'var(--type-display-xs)',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
               display: 'block',
@@ -602,7 +602,7 @@ export function Quiz() {
           <div className="chrome-text" style={{ fontSize: 'calc(60px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}>
             {score}/{n}
           </div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(24px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-lg)', marginTop: 'var(--sp-2)' }}>
             {verdict}
           </div>
           {/*
@@ -731,7 +731,7 @@ export function Quiz() {
       <div
         className="chrome-text"
         style={{
-          fontSize: 'calc(24px * var(--text-scale, 1))',
+          fontSize: 'var(--type-display-lg)',
           lineHeight: 1.16,
           letterSpacing: '-0.01em',
           marginTop: 'var(--sp-3)',

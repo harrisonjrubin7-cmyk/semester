@@ -97,7 +97,7 @@ const TITLE = {
 
 const BEAT_TITLE = {
   fontFamily: 'var(--font-heading)',
-  fontSize: 'calc(22px * var(--text-scale, 1))',
+  fontSize: 'var(--type-display)',
   lineHeight: 'var(--leading-display)',
   marginTop: 'var(--sp-5)',
   textWrap: 'pretty',
@@ -279,7 +279,7 @@ export function LessonPlayer() {
                 <div
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 'calc(22px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-display)',
                     lineHeight: 'var(--leading-display)',
                     marginTop: 'var(--sp-5)',
                     textWrap: 'pretty',

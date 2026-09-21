@@ -281,7 +281,7 @@ function DayView() {
           <ChevronLeft size={18} />
         </button>
         <div style={{ textAlign: 'center' }}>
-          <span className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', display: 'block' }}>
+          <span className="chrome-text" style={{ fontSize: 'var(--type-display-sm)', display: 'block' }}>
             {isToday ? 'Today' : DOW[day.getDay()]}
           </span>
           <span className="kicker" style={{ display: 'block' }}>
@@ -429,7 +429,7 @@ function DayView() {
                   <div
                     style={{
                       fontFamily: 'var(--font-heading)',
-                      fontSize: 'calc(18px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-display-xs)',
                       lineHeight: 'var(--leading-display)',
                       textDecoration: b.canceled ? 'line-through' : 'none',
                     }}
@@ -895,7 +895,7 @@ function WeekView() {
             dates at the top of the page; the arrows either side of it do not
             print, and should not. */}
         <div className="wk-head" style={{ textAlign: 'center' }}>
-          <span className="chrome-text" style={{ fontSize: 'calc(18px * var(--text-scale, 1))', display: 'block' }}>
+          <span className="chrome-text" style={{ fontSize: 'var(--type-display-xs)', display: 'block' }}>
             {weekLabel(start, span)}
           </span>
           <span className="kicker" style={{ display: 'block' }}>
@@ -1292,7 +1292,7 @@ function MonthView() {
         </button>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(20px * var(--text-scale, 1))', letterSpacing: '0.06em', textTransform: 'uppercase' }}
+          style={{ fontSize: 'var(--type-display-sm)', letterSpacing: '0.06em', textTransform: 'uppercase' }}
         >
           {MONTHS[shownMonth]} {shownYear}
         </div>
@@ -2323,7 +2323,7 @@ function SemesterView() {
                 <div style={{ fontSize: 'var(--type-2xs)', letterSpacing: '0.12em', color: 'var(--app-dim)' }}>
                   {MONTHS[w.start.getMonth()].toUpperCase()}
                 </div>
-                <div style={{ fontSize: 'calc(19px * var(--text-scale, 1))' }}>{w.start.getDate()}</div>
+                <div style={{ fontSize: 'var(--type-display-sm)' }}>{w.start.getDate()}</div>
               </div>
 
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -2918,7 +2918,7 @@ export function EventDetail() {
             <div className="kicker" style={{ fontSize: 'var(--type-2xs)' }}>
               When
             </div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>
               {event.dow} {event.mon} {event.day}
             </div>
             <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{event.time}</div>
@@ -2928,7 +2928,7 @@ export function EventDetail() {
             <div className="kicker" style={{ fontSize: 'var(--type-2xs)' }}>
               Where
             </div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))', lineHeight: 'var(--leading-display)' }}>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)', lineHeight: 'var(--leading-display)' }}>
               {event.where}
             </div>
           </div>

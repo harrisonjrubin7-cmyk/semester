@@ -447,7 +447,7 @@ export function Exam() {
           </div>
           <div
             className="chrome-text"
-            style={{ fontSize: 'calc(22px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums', flex: 'none' }}
+            style={{ fontSize: 'var(--type-display)', fontVariantNumeric: 'tabular-nums', flex: 'none' }}
           >
             {marking ? `${marks.got}/${marks.outOf}` : clock(left)}
           </div>
@@ -709,7 +709,7 @@ export function Exam() {
               <div className="kicker">Paper code</div>
               <div
                 style={{
-                  fontSize: 'calc(22px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-display)',
                   letterSpacing: '0.18em',
                   marginTop: 'calc(5px * var(--density, 1))',
                   fontVariantNumeric: 'tabular-nums',

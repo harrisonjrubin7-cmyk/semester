@@ -1042,7 +1042,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
       }}
     >
       <div style={{ width: 52, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 'var(--leading-display-lg)' }}>
-        <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}>{a.time}</div>
+        <div style={{ fontSize: 'var(--type-display-xs)' }}>{a.time}</div>
         <div style={{ fontSize: 'var(--type-2xs)', color: 'var(--app-dim)', letterSpacing: '0.1em' }}>
           {longLabel(isoToDate(a.date)).replace(/^\w+ /, '')}
         </div>
@@ -1518,7 +1518,7 @@ export function NoteEditor() {
         value={note.title}
         onChange={(e) => dispatch({ type: 'updateNote', id: note.id, patch: { title: e.target.value } })}
         placeholder="Title"
-        style={{ height: 46, fontSize: 'calc(17px * var(--text-scale, 1))', fontFamily: 'var(--font-heading)' }}
+        style={{ height: 46, fontSize: 'var(--type-display-xs)', fontFamily: 'var(--font-heading)' }}
         aria-label="Note title"
       />
 

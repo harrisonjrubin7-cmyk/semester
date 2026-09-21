@@ -354,7 +354,7 @@ function Header({
           className="chrome-text"
           style={{
             outline: 'none',
-            fontSize: 'calc(23px * var(--text-scale, 1))',
+            fontSize: 'var(--type-display-lg)',
             lineHeight: 'var(--leading-display)',
             overflow: 'hidden',
             textOverflow: 'ellipsis',

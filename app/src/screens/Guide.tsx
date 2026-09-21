@@ -297,7 +297,7 @@ export function Guide() {
                   width: 26,
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(20px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-display-sm)',
                   color: 'var(--app-dim)',
                 }}
               >
@@ -396,7 +396,7 @@ export function Guide() {
                   width: 26,
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(20px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-display-sm)',
                   color: 'var(--app-dim)',
                 }}
               >
@@ -424,7 +424,7 @@ export function Guide() {
 
       {state.mode === 'quiz' && (
         <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 'calc(14px * var(--density, 1))' }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display)', lineHeight: 'var(--leading-display-lg)' }}>
             Ten multiple choice
           </div>
           <div
@@ -555,7 +555,7 @@ export function Guide() {
                           <div
                             style={{
                               fontFamily: 'var(--font-heading)',
-                              fontSize: 'calc(17px * var(--text-scale, 1))',
+                              fontSize: 'var(--type-display-xs)',
                               lineHeight: 'var(--leading-display-sm)',
                               textWrap: 'pretty',
                               marginTop: isNew ? 6 : 0,
@@ -746,7 +746,7 @@ function Watch() {
                   width: 26,
                   flex: 'none',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(20px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-display-sm)',
                   ...secondLine(!lesson),
                 }}
               >
@@ -877,7 +877,7 @@ function Decks() {
                 width: 26,
                 flex: 'none',
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(20px * var(--text-scale, 1))',
+                fontSize: 'var(--type-display-sm)',
                 color: 'var(--app-dim)',
               }}
             >
@@ -1045,7 +1045,7 @@ function Documents() {
       <SectionLabel>The whole guide, in order</SectionLabel>
       {guide.units.map((u, i) => (
         <div key={u.name} style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-sm)' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)', lineHeight: 'var(--leading-display-sm)' }}>
             {i + 1}. {u.name}
           </div>
           {u.cards.map((c) => (
@@ -1160,7 +1160,7 @@ function Cases() {
                 <div
                   style={{
                     fontFamily: 'var(--font-heading)',
-                    fontSize: 'calc(19px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-display-sm)',
                     lineHeight: 'var(--leading-display)',
                     marginTop: 'var(--sp-2)',
                     textWrap: 'pretty',
@@ -1227,7 +1227,7 @@ function Cases() {
             <div
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(19px * var(--text-scale, 1))',
+                fontSize: 'var(--type-display-sm)',
                 lineHeight: 'var(--leading-display)',
                 marginTop: 'var(--sp-4)',
                 textWrap: 'pretty',
@@ -1342,7 +1342,7 @@ function Cram() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
             {guide.frames.map((f) => (
               <Blueprint key={f.t} plain style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 'var(--leading-display)' }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)', lineHeight: 'var(--leading-display)' }}>
                   {f.t}
                 </div>
                 <div
@@ -1367,7 +1367,7 @@ function Cram() {
         const others = also.get(t.t);
         return (
           <div key={t.t} style={shortRow}>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>{t.t}</div>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>{t.t}</div>
             <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-1)' }}>{t.d}</div>
             {others && others.length > 0 && (
               // A button rather than a note, because the useful next move is
@@ -1403,7 +1403,7 @@ function Cram() {
                   {n.source || 'Yours'}
                   {n.unit !== null && guide.units[n.unit] ? ` · ${guide.units[n.unit].name}` : ''}
                 </div>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)', marginTop: 'var(--sp-2)' }}>
                   {n.title || 'Note'}
                 </div>
                 <div
@@ -1438,7 +1438,7 @@ function Cram() {
               <summary
                 style={{
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(16px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-display-xs)',
                   lineHeight: 'var(--leading-display-xs)',
                   cursor: 'pointer',
                   listStyle: 'none',
