@@ -69,6 +69,33 @@ whether it is switched on, because there was never a switch.
 **Nothing you had changes, and nothing stops working.** If you were reading
 that screen as "my Brightspace is hooked up", it never was, and the rest of the
 app has been telling you so on the Connect screen all along.
+### Three things are now counted about your account, and the Privacy screen says which
+
+Semester is about to be piloted, and four questions decide whether it is worth
+building further: does it work for somebody who is not its author, do people
+come back, does the syllabus extraction hold up on real courses, and would
+anybody pay for it. Answering the middle one needs a record of who came back,
+and until now there was none.
+
+**What is recorded, in full:** for each day you had the app open while signed
+in, up to three words — that you opened it, that you had added a course of
+your own by then, and that you had answered a practice card by then. That is
+the whole row. Not which screens you opened, not what you typed, not what time
+of day, not how long for, not which course.
+
+**What has not changed, and was the reason to build it this way:** there is
+still no third-party analytics in this app and no tracking of you anywhere
+else on the web. Signed out, none of this happens at all — nothing leaves the
+device, exactly as before. You can read your own rows, deleting your account
+deletes them, and they are dropped after a little over a year.
+
+The Privacy screen names it in the same words it names everything else, under
+*The three things counted about your account*. It is worth reading: that page
+is the promise, and a record it did not mention would have made the page
+untrue.
+
+Nothing to do, and nothing on screen changes.
+
 
 ### Your university can send its own data as a file, and you load it
 
