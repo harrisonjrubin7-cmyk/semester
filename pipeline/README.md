@@ -17,6 +17,8 @@ slides.py        guide → a PowerPoint deck
 handout.py       guide → a Word document and a PDF
 chapters.py      recover chapter marks from an existing recording
 shorts.py        lessons → one vertical short per flashcard
+restyle-script.mjs  script → the same script in a hosting style (calls a model)
+styles.mjs       the hosting styles, as structural parameters
 ```
 
 Everything after `guide_reader.py` reads the same guide through it, so a deck, a
