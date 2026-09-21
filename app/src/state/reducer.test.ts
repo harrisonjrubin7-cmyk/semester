@@ -105,6 +105,56 @@ describe('ticking things off', () => {
   });
 });
 
+/*
+ * The two marks between finishing something and getting it back, and the one
+ * implication in the store that is deliberately one-way. See `lib/stage.ts`.
+ */
+describe('handing something in', () => {
+  it('ticks it off, because every list decides "missed" from the tick', () => {
+    const next = reducer(blank(), { type: 'markStage', id: 'e1', stage: 'submitted' });
+    expect(next.submitted.e1).toBeGreaterThan(0);
+    expect(next.done.e1).toBe(true);
+    expect(next.tickedAt.e1).toBeGreaterThan(0);
+  });
+
+  it('does not un-tick it when the submission is taken back', () => {
+    // The asymmetry is the whole point. Retracting the claim that the work went
+    // somewhere is not a claim that it was never finished, and an implication
+    // that un-implies itself is how an enum loses a fact.
+    const on = reducer(blank(), { type: 'markStage', id: 'e1', stage: 'submitted' });
+    const off = reducer(on, { type: 'markStage', id: 'e1', stage: 'submitted' });
+    expect('e1' in off.submitted).toBe(false);
+    expect(off.done.e1).toBe(true);
+    expect(off.tickedAt.e1).toBeGreaterThan(0);
+  });
+
+  it('leaves the original tick time alone on something already ticked', () => {
+    const ticked = reducer(blank(), { type: 'toggleDone', id: 'e1' });
+    const when = ticked.tickedAt.e1;
+    const then = reducer(ticked, { type: 'markStage', id: 'e1', stage: 'submitted' });
+    // Re-stamping would move the deadline into the week it was uploaded in on a
+    // report that has already attributed it, which is the one figure
+    // `tickedAt` exists to get right.
+    expect(then.tickedAt.e1).toBe(when);
+  });
+
+  it('implies nothing at all for the other mark', () => {
+    // `ready` is the fact that the work is finished and has not gone anywhere.
+    // A tick on the strength of it would erase the only thing it says.
+    const next = reducer(blank(), { type: 'markStage', id: 'e1', stage: 'ready' });
+    expect(next.ready.e1).toBeGreaterThan(0);
+    expect(next.done.e1).toBeUndefined();
+    expect('e1' in next.tickedAt).toBe(false);
+  });
+
+  it('keeps the two marks apart', () => {
+    const one = reducer(blank(), { type: 'markStage', id: 'e1', stage: 'ready' });
+    const two = reducer(one, { type: 'markStage', id: 'e2', stage: 'submitted' });
+    expect(Object.keys(two.ready)).toEqual(['e1']);
+    expect(Object.keys(two.submitted)).toEqual(['e2']);
+  });
+});
+
 describe('going places', () => {
   it('leaves a way back from a screen that is not a root', () => {
     const there = reducer(blank(), { type: 'go', screen: 'essay' });
