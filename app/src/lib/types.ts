@@ -10,8 +10,9 @@ import type { Repeat } from './repeat';
  */
 export type CourseId = string;
 
-/** A short code for the filter chips — "ECON", "PSCI". */
-export type CourseShort = string;
+/* A `CourseShort = string` stood here for "the filter chips" and nothing
+ * declared one. An alias to `string` checks nothing, so it was documentation;
+ * `CourseId` above is the alias that is actually used. */
 
 export interface GradeRow {
   what: string;

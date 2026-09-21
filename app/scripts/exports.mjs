@@ -58,7 +58,7 @@
  *   npm run census:exports -- --check lib/cloud.ts::providersOn
  */
 import ts from 'typescript';
-import { readdirSync, statSync } from 'node:fs';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
 const APP = resolve(process.argv[2] ?? '.');
@@ -72,6 +72,92 @@ function walk(dir, out = []) {
     else if (/\.(ts|tsx|mts)$/.test(p) && !p.endsWith('.d.ts')) out.push(p);
   }
   return out;
+}
+
+/**
+ * The scripts the checker cannot follow, read as text — on purpose, and loudly.
+ *
+ * `npm run lint` is `node scripts/styles.mjs && node scripts/labels.mjs`, and
+ * those two, with `icons.mjs`, reach into `src` like this:
+ *
+ *     const { …, owed, … } = await import(join(src, 'styles', 'rules.ts'));
+ *
+ * A plain-JS file, and a *computed* specifier. The checker cannot resolve
+ * either, so the first version of this census called `styles/rules.ts`'s
+ * `owed` and `components/mark.svg.ts`'s `APPLE` dead — a function the lint
+ * gate calls, and the SVG `apple-touch-icon.png` is rasterised from. Its own
+ * blind-spot note claimed there was no non-literal `import()`; it had looked
+ * only under `src`, where the imports are, rather than at the callers, where
+ * they are not.
+ *
+ * So these sites are matched by shape and their names credited. The shape is
+ * narrow deliberately, and **anything import-like that does not match it is
+ * counted and printed**: a census that silently skips what it cannot parse is
+ * the 1,054 again. A new caller in a new shape shows up as a number that is
+ * not zero, which is the only part of this that has to keep working.
+ */
+const JOIN_SRC = /join\(\s*src\s*,([^)]*)\)/;
+const PATH_VAR = /const\s+(\w+)\s*=\s*join\(\s*src\s*,([^)]*)\)/g;
+// The specifier is either `join(src, 'a', 'b')` — parens and all — or a
+// variable holding one. A capture of `[^)]+` stops at join's own bracket.
+const SPEC = "(join\\([^)]*\\)|\\w+)";
+const NAMED = new RegExp(`const\\s*\\{([^}]*)\\}\\s*=\\s*await\\s+import\\(\\s*${SPEC}\\s*\\)`, 'g');
+const PICKED = new RegExp(`\\(\\s*await\\s+import\\(\\s*${SPEC}\\s*\\)\\s*\\)\\.(\\w+)`, 'g');
+const ANY_COMPUTED = /await\s+import\(\s*(?!['"`])/g;
+
+function scriptReaches(dirs) {
+  const out = [];
+  let sites = 0;
+  let unmatched = 0;
+  for (const dir of dirs) {
+    let files = [];
+    try {
+      files = readdirSync(dir).filter((f) => /\.(mjs|cjs|js)$/.test(f)).map((f) => join(dir, f));
+    } catch {
+      continue;
+    }
+    for (const file of files) {
+      const text = readFileSync(file, 'utf8');
+
+      // `const ledgerPath = join(src, 'styles', 'budget.ts')` — the specifier a
+      // line away from the import that uses it.
+      const vars = new Map();
+      for (const v of text.matchAll(PATH_VAR)) vars.set(v[1], v[2]);
+
+      const partsOf = (spec) => {
+        const s = spec.trim();
+        const inline = s.match(JOIN_SRC);
+        const arglist = inline ? inline[1] : vars.get(s);
+        if (!arglist) return null;
+        const parts = [...arglist.matchAll(/['"`]([^'"`]+)['"`]/g)].map((x) => x[1]);
+        return parts.length > 0 ? parts : null;
+      };
+
+      let matched = 0;
+      const take = (spec, names) => {
+        const parts = partsOf(spec);
+        if (!parts) return false;
+        matched += 1;
+        sites += 1;
+        out.push({ file, target: join(SRC, ...parts), names });
+        return true;
+      };
+
+      for (const m of text.matchAll(NAMED)) {
+        take(
+          m[2],
+          m[1].split(',').map((n) => n.trim().split(':')[0].trim()).filter(Boolean),
+        );
+      }
+      for (const m of text.matchAll(PICKED)) take(m[1], [m[2]]);
+
+      // Literal specifiers — `await import('playwright')` — are none of our
+      // business. Only a *computed* one we could not follow is a gap, and it
+      // is printed rather than swallowed.
+      unmatched += Math.max(0, (text.match(ANY_COMPUTED) ?? []).length - matched);
+    }
+  }
+  return { out, sites, unmatched };
 }
 
 const cfgPath = join(APP, 'tsconfig.app.json');
@@ -131,6 +217,22 @@ for (const sf of program.getSourceFiles()) {
   ts.forEachChild(sf, visit);
 }
 
+// The script reaches, credited as production references to the named exports.
+const reaches = scriptReaches([join(APP, 'scripts')]);
+for (const r of reaches.out) {
+  const sf = program.getSourceFile(r.target);
+  if (!sf) continue;
+  const mod = checker.getSymbolAtLocation(sf);
+  if (!mod) continue;
+  for (const ex of checker.getExportsOfModule(mod)) {
+    if (!r.names.includes(ex.getName())) continue;
+    const k = keyOf(deAlias(ex));
+    if (!k) continue;
+    if (!refs.has(k)) refs.set(k, []);
+    refs.get(k).push({ file: r.file, pos: -1 });
+  }
+}
+
 const rows = [];
 for (const sf of program.getSourceFiles()) {
   if (sf.isDeclarationFile) continue;
@@ -175,6 +277,12 @@ for (const sf of program.getSourceFiles()) {
 const live = rows.filter((r) => !r.self);
 const by = (b) => live.filter((r) => r.bucket === b);
 console.log(`files in program: ${program.getSourceFiles().filter((s) => !s.isDeclarationFile).length}`);
+console.log(
+  `script reaches followed: ${reaches.sites}` +
+    (reaches.unmatched > 0
+      ? `  ⚠ ${reaches.unmatched} computed import(s) NOT followed — this census is incomplete until they are`
+      : '  (no unfollowed computed imports)'),
+);
 console.log(`exports declared under app/src (excluding test files): ${live.length}`);
 for (const b of ['alive', 'test-only', 'export-surplus', 'dead']) {
   console.log(`  ${b.padEnd(15)} ${by(b).length}`);
