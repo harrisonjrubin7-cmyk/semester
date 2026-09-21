@@ -74,6 +74,29 @@ vi.mock('../lib/shots', async () => {
   };
 });
 
+/** Hands back whatever the last started dictation should transcribe into. */
+let heard: ((text: string) => void) | null = null;
+
+vi.mock('../lib/mic', async () => {
+  const real = await vi.importActual<typeof import('../lib/mic')>('../lib/mic');
+  /*
+   * jsdom has no SpeechRecognition, so the real `dictationSupported` is false
+   * and `Dictate` draws its "this browser has no speech recognition" note
+   * instead of a button — there would be nothing to press and nothing to
+   * prove. Only the two entry points are stood in for.
+   */
+  return {
+    ...real,
+    dictationSupported: () => true,
+    dictate: (onText: (text: string) => void) => {
+      heard = onText;
+      return () => {
+        heard = null;
+      };
+    },
+  };
+});
+
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
 let host: HTMLDivElement;
@@ -87,6 +110,7 @@ beforeEach(() => {
   localStorage.clear();
   sent = [];
   transcript = '';
+  heard = null;
   host = document.createElement('div');
   document.body.append(host);
   act(() => {
@@ -261,5 +285,66 @@ describe('photographing your working', () => {
     expect(brief).toContain('What the student did:');
     expect(brief).toContain('ε = (ΔQ/Q)');
     expect(brief).not.toContain('They have not shown their working');
+  });
+});
+
+describe('dictating your working', () => {
+  const openIt = () => press(/check my working/i);
+
+  /** Start the dictation under a given control and say something into it. */
+  function say(named: RegExp, words: string) {
+    press(named);
+    if (!heard) throw new Error(`${named} started no dictation`);
+    act(() => {
+      heard!(words);
+    });
+  }
+
+  it('is offered under the working box, named for it', () => {
+    openIt();
+    expect(() => button(/read your working out/i)).not.toThrow();
+    // And the problem keeps its own, distinctly named — one label on two
+    // controls is how you press the wrong one.
+    expect(() => button(/read the problem out/i)).not.toThrow();
+  });
+
+  it('lands in the working box, not the problem box', async () => {
+    /*
+     * The same misrouting the camera had, in the control next to it:
+     * `Dictate` is handed the field it appends to and the field it reads as
+     * already-written, and a copy-pasted pair pointing at `problem` would
+     * quietly file spoken working under the question — with nothing on
+     * screen to say so, because both boxes are in view.
+     */
+    openIt();
+    say(/read your working out/i, 'epsilon equals delta Q over Q times P over delta P');
+
+    expect(box('What you did').value).toContain('delta Q over Q');
+    expect(box('The problem').value).toBe('');
+  });
+
+  it('appends after what is already in the box rather than replacing it', async () => {
+    // `Dictate` promises this and the promise is only kept if it was given
+    // the right `current` — the other half of the same wiring.
+    openIt();
+    const work = box('What you did');
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!.set!.call(
+        work,
+        'step one',
+      );
+      work.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    say(/read your working out/i, 'step two');
+
+    expect(box('What you did').value).toContain('step one');
+    expect(box('What you did').value).toContain('step two');
+  });
+
+  it('is not offered where the approach wants no working', () => {
+    // The control, matching the camera's.
+    press(/explain the idea/i);
+    expect(() => button(/read your working out/i)).toThrow();
+    expect(() => button(/read the problem out/i)).not.toThrow();
   });
 });

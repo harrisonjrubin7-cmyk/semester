@@ -225,7 +225,7 @@ export function Solve() {
         className="input"
         value={problem}
         onChange={(e) => setProblem(e.target.value)}
-        placeholder="Type it, or photograph it below."
+        placeholder="Type it, say it, or photograph it below."
         style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed-plus)' }}
       />
       <Dictate compact current={problem} onText={setProblem} label="Read the problem out" />
@@ -257,10 +257,24 @@ export function Solve() {
             className="input"
             value={work}
             onChange={(e) => setWork(e.target.value)}
-            placeholder="Type it, or photograph it below. Rough is fine."
+            placeholder="Type it, say it, or photograph it below. Rough is fine."
             style={{ width: '100%', minHeight: 110, resize: 'vertical', lineHeight: 'var(--leading-relaxed-plus)' }}
           />
           <DraftNote field={workField} />
+          {/*
+            Dictation here as well as on the problem.
+
+            It was left off at first on the argument that nobody reads algebra
+            aloud, which is true of the notation and false of the reason
+            somebody would want it: a student who cannot comfortably type a
+            long field does not become able to when the field holds fractions,
+            and saying "delta Q over Q times P over delta P" is a perfectly
+            good way to get a line down. What arrives is words rather than
+            symbols, and that costs nothing — the working is read by a model
+            that understands both, and by a student who can tidy it here before
+            sending.
+          */}
+          <Dictate compact current={work} onText={setWork} label="Read your working out" />
           <FilePick
             accept="image/*"
             capture="environment"
