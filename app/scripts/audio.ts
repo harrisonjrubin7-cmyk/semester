@@ -78,6 +78,7 @@ import {
   type Made,
   type Manifest,
 } from './audiocache.ts';
+import { isEpisodeScript } from '../src/lib/episodes.ts';
 import type { Guide } from '../src/lib/types.ts';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -129,7 +130,7 @@ export async function wanted(only: string | null = null): Promise<Asset[]> {
   }
 
   for (const name of readdirSync(SCRIPTS).sort()) {
-    if (!name.endsWith('.json') || name.endsWith('.chapters.json')) continue;
+    if (!isEpisodeScript(name)) continue;
     const ep = JSON.parse(readFileSync(join(SCRIPTS, name), 'utf8')) as Episode;
     if (only && ep.course !== only) continue;
     out.push({
@@ -181,7 +182,7 @@ function command(asset: Asset): string[] {
     return ['python3', 'pipeline/lessons.py', asset.course, '--unit', asset.id.slice(asset.id.lastIndexOf('-') + 1)];
   }
   const name = readdirSync(SCRIPTS).find(
-    (f) => f.endsWith('.json') && !f.endsWith('.chapters.json') && JSON.parse(readFileSync(join(SCRIPTS, f), 'utf8')).id === asset.id,
+    (f) => isEpisodeScript(f) && JSON.parse(readFileSync(join(SCRIPTS, f), 'utf8')).id === asset.id,
   );
   if (!name) throw new Error(`no script for ${asset.id}`);
   return ['python3', 'audio/synth.py', `audio/scripts/${name}`, 'app/public/audio'];

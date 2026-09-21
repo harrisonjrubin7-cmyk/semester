@@ -1,6 +1,7 @@
 import { AbsoluteFill, Audio, interpolate, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { cueIndexAt } from '../../app/src/lib/beats';
 import { tokensFor } from '../../app/src/lib/look';
+import { CAPTION_LEADING, captionIndexAt, captionType, type LineTime } from './captions';
 
 /**
  * A documentary cut of a two-voice episode.
@@ -10,19 +11,27 @@ import { tokensFor } from '../../app/src/lib/look';
  * arrive on the second the chapter does. Nothing is synthesised and no audio
  * is cut, the arrangement the shorts established.
  *
- * ## There are no captions, and that is not an oversight
+ * ## The captions, and what they cost to have
  *
- * The roadmap specifies "Remotion lower-thirds and captions" for this format.
- * The lower-thirds are here; the captions are not, because the data for them
- * does not exist. `audio/synth.py` emits *chapter* marks — one every two
- * minutes or so — and nothing records where an individual line starts. The
- * transcript has the words and no times at all.
+ * This file used to say there were none, because `audio/synth.py` recorded
+ * where a *chapter* started and nothing recorded where a line did. It also
+ * said what the two cheap ways out would cost: spread a chapter's lines
+ * evenly, or weight them by word count, and a caption ends up seconds out of
+ * step, which reads as a broken player rather than as an approximation. That
+ * was measured rather than guessed — given the first and last chapter mark of
+ * each episode, word-count interpolation misses every one of the 47 marks in
+ * between, by up to 21 seconds.
  *
- * Captions could be faked by spreading a chapter's lines evenly across its
- * duration, or by weighting them by word count. Both drift, and a caption
- * eight seconds out of step with the voice is worse than no caption: it reads
- * as a broken player rather than as an approximation. The honest fix is a
- * forced aligner over the rendered audio, which is real work and is not this.
+ * `pipeline/align-audio.mjs` is the honest fix and it is now built. It finds
+ * the inserted silences in the rendered audio — they are not performed, they
+ * are three known lengths in an order the script fixes — and lands all 55
+ * chapter marks across the four episodes inside the second they were recorded
+ * in. `synth.py` writes the same times exactly for anything rendered since.
+ *
+ * So the captions are per *line*: a speaker's turn, three to nine seconds of
+ * it, which is the resolution the times have. `captions.ts` has the argument
+ * for not cutting them finer. An episode with no line track still renders —
+ * the lower-thirds and the spine were never dependent on one.
  */
 
 export interface DocumentaryChapter {
@@ -41,6 +50,10 @@ export interface DocumentaryProps extends Record<string, unknown> {
   /** The podcast MP3, as the app addresses it: "/audio/econ-podcast.mp3". */
   file: string;
   chapters: DocumentaryChapter[];
+  /** Per-line times, or empty when none have been recovered for this episode. */
+  times: LineTime[];
+  /** The script's own words, indexed as `times` indexes them. */
+  said: { v: string; t: string }[];
   /** Length of the whole episode, in seconds. */
   seconds: number;
   /** Seconds of the episode this render covers, from the start. */
@@ -57,6 +70,8 @@ export function Documentary({
   title,
   file,
   chapters,
+  times,
+  said,
   seconds: total,
   render,
   ground,
@@ -98,7 +113,34 @@ export function Documentary({
     extrapolateRight: 'clamp',
   });
 
+  /*
+   * The line being spoken, if this episode has a line track.
+   *
+   * `captionIndexAt` reaches `cueIndexAt` too, so the caption, the chapter
+   * card, the lesson video and the app's own player are all one rule about
+   * which thing is up — including the 150ms lead.
+   */
+  const spoken = captionIndexAt(times, at);
+  const caption = spoken === -1 ? undefined : said[times[spoken].i];
+
   const pad = Math.round(width * 0.075);
+  /*
+   * The caption box: a fixed size, chosen once for the longest line this
+   * episode has. `captions.ts` has the argument for both halves of that —
+   * the short version is that a box which grows walks the chapter title up
+   * the frame, and the longest line in the four shipped scripts is 556
+   * characters, which does not fit at any size a short one would want.
+   */
+  const label = Math.round(height * 0.02);
+  const box = {
+    width: Math.round((width - pad * 2) * 0.76),
+    height: Math.round(height * 0.2) - label * 2,
+  };
+  const size = captionType(
+    said.reduce((most, l) => Math.max(most, l.t.length), 0),
+    box,
+    Math.round(height * 0.034),
+  );
   const progress = total > 0 ? Math.min(at / total, 1) : 0;
 
   return (
@@ -161,7 +203,13 @@ export function Documentary({
         }}
       >
         {chapter && (
-          <div style={{ opacity: lower, transform: `translateY(${(1 - lower) * 16}px)` }}>
+          <div
+            style={{
+              opacity: lower,
+              transform: `translateY(${(1 - lower) * 16}px)`,
+              marginBottom: Math.round(height * 0.03),
+            }}
+          >
             <div
               style={{
                 width: Math.round(width * 0.06),
@@ -192,6 +240,42 @@ export function Documentary({
             </div>
           </div>
         )}
+
+        {/*
+          * The words, in a box that is there whether or not they are.
+          *
+          * The column stacks from the bottom, so a box that grew with its
+          * contents would lift the chapter title every time a long line
+          * followed a short one. Fixed height, and the type sized to the
+          * longest line the episode has rather than the one on screen.
+          */}
+        <div style={{ height: Math.round(height * 0.2) }}>
+          {caption && (
+            <>
+              <div
+                style={{
+                  fontSize: label,
+                  letterSpacing: '0.22em',
+                  textTransform: 'uppercase',
+                  color: tokens['--app-accent'],
+                  marginBottom: label,
+                }}
+              >
+                {caption.v}
+              </div>
+              <div
+                style={{
+                  fontSize: size,
+                  lineHeight: CAPTION_LEADING,
+                  textWrap: 'pretty',
+                  width: box.width,
+                }}
+              >
+                {caption.t}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/*

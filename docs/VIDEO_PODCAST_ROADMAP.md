@@ -83,7 +83,7 @@ Two things are better than they sound at first, given the economics above.
 | **Animated series** | A recurring host character, or two, appearing across every unit of a course — the visual equivalent of the two-voice podcast | Generate one **character reference sheet** (image model, ~$0.01–0.04/image) once per persona; feed it as the reference image to an **image-to-video** model with strong character consistency for short 5–10s reaction and gesture clips; composite those into the Remotion timeline instead of drawing a static avatar | ~$0.10–1.50 per short clip × a handful of clips per unit, reused across the whole course |
 | **YouTube-length explainer** | 8–15 min, hook in the first 15s, chapter marks | Remotion for the graphics track, same as movie-format, plus 2–4 short AI-video B-roll inserts for the cold open and section transitions. Marks come from the cue list, the way `synth.py` does it — not from `chapters.py` | Same as above; B-roll is optional polish, not the backbone |
 | **TikTok / Shorts** ✅ built | Vertical 9:16, one card per short, hook-first, burned-in captions. Measured at 8.4–35.5s, median 14.8s — the 15–45s guessed here was half wrong | **One short per flashcard**, cut from the cue list rather than from `guide.ts`: a cue already has the in and out points inside the unit's MP3, so Remotion trims the existing audio and nothing is re-synthesised | $0 — no new audio, no new file, just frames |
-| **Documentary-style unit recap** ◐ partly built | Slower pacing, the two-voice episode with its own chapter marks drawn over it | Podcast audio as the spine, plus Remotion lower-thirds. **Captions are not possible** — see §7. Establishing shots would sit in the middle of the frame; no provider is wired | $0 as built; AI video would be the only paid part |
+| **Documentary-style unit recap** ◐ partly built | Slower pacing, the two-voice episode with its own chapter marks drawn over it | Podcast audio as the spine, plus Remotion lower-thirds and per-line captions — `pipeline/align-audio.mjs` recovers the line times the four shipped episodes never recorded, and `audio/synth.py` writes them exactly from now on. Establishing shots would sit in the middle of the frame; no provider is wired | $0 as built; AI video would be the only paid part |
 
 Model choice for the paid steps (Veo, Kling, Sora, Seedance and the rest) moves
 faster than this document will, so the table names the *capability* each step
@@ -229,6 +229,10 @@ once the format is right.
    - **Documentary, `--broll none`:** ✅ built —
      `python3 pipeline/documentary.py econ`. The podcast spine with its own
      chapter marks over it, $0, no provider involved.
+   - **Captions:** ✅ built — `pipeline/align-audio.mjs` recovers where every
+     line of the four shipped episodes starts, and `audio/synth.py` records it
+     exactly for everything rendered since. §7 has what it cost in precision
+     and what the cheap alternative would have cost. Per line, not per word.
    - **The spending guardrail:** ✅ built —`video/src/clipspend.ts` and its guard.
      Deliberately built *before* any provider, so the first paid run cannot
      happen without the manifest that stops the second run paying again.
@@ -269,16 +273,32 @@ once the format is right.
   is said four times in the ECON episode, so a check that only asked whether
   the number still appeared somewhere would have let three of the four be
   softened away.
-- **A documentary cut cannot be captioned at all, on today's data.** The table
-  above specified "lower-thirds and captions" for this format. The lower-thirds
-  are built; the captions cannot be, because nothing records where a line of a
-  *podcast* starts — `audio/synth.py` emits chapter marks, one every couple of
-  minutes, and the transcript carries the words with no times. Spreading a
-  chapter's lines across its duration, evenly or by word count, drifts; a
-  caption eight seconds out of step reads as a broken player rather than as an
-  approximation. A forced aligner over the rendered audio would fix it
-  properly, for the documentary and the shorts both, and is a piece of work
-  nobody has started.
+- **The documentary is captioned, and the line times under it are measured.**
+  This entry used to say captions were impossible on today's data: nothing
+  recorded where a line of a *podcast* started, only chapter marks a couple of
+  minutes apart, and spreading a chapter's lines across its duration drifted
+  far enough to read as a broken player. Both halves of that turned out to be
+  answerable without the machine learning "forced aligner" implies.
+
+  Going forward there is nothing to infer. `audio/synth.py` already knew the
+  second every line began at — it concatenates an episode piece by piece and
+  keeps a running position — and threw the number away for every line that did
+  not open a chapter. It writes all of them now.
+
+  For the four episodes that shipped before it did, `pipeline/align-audio.mjs`
+  recovers them from the audio. The silences between lines were not performed,
+  they were *inserted*, at three lengths `synth.py` declares and in an order
+  the script fixes, so finding them is arithmetic rather than acoustics — the
+  move `pipeline/chapters.py` already makes for chapter marks. Every one of
+  the 55 chapter marks across the four episodes lands inside the second it was
+  recorded in, which is all the resolution those marks have. The control that
+  makes that mean something: given the first and last mark of an episode and
+  asked to fill in the rest by word count, the cheap method misses all 47
+  interior marks, by up to 21 seconds — which is what this entry originally
+  predicted, now measured.
+
+  It refuses rather than guesses. A quiet-run arrangement that will not fit the
+  script, or a single chapter mark missed, and nothing is written.
 - **Nothing is bought twice.** `video/src/clipspend.ts` hashes what decides a clip
   — prompt, length, provider, model, and nothing else — so a re-run of an
   unchanged course spends nothing and an edited chapter re-buys only itself.
@@ -291,8 +311,12 @@ once the format is right.
   cue is `{at, kind, text}`: the second a *line* begins, not a syllable. Words
   on screen therefore change with the line being spoken, which is enough to
   caption a short honestly and is not enough to bounce along with the voice.
-  Per-word timing would need a forced aligner over the rendered audio, which is
-  a real piece of work and is not built.
+  Per-word timing is still not available and the aligner does not change that:
+  what it recovers is where a *line* starts, to a fraction of a second, which
+  is the same resolution a cue already has. Captions stay per beat in the
+  shorts and per line in the documentary. Splitting a line into phrases would
+  mean apportioning its seconds by character count, which is the technique the
+  entry above exists to avoid — only wrong by a second rather than by twenty.
 - **Scripts stay the transcript,** as today. `npm run transcripts` regenerates
   `app/src/data/transcripts/<course>.ts` from the scripts, and Listen mode
   shows it under the chapter marks. Whatever style or format renders the words,

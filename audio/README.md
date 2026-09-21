@@ -64,10 +64,21 @@ tar xzf voice-en-us-lessac-medium.tar.gz -C ~/piper-voices
 slower and more deliberate. The contrast is what makes it read as two people
 rather than one voice switching topics.
 
-Each run writes the MP3 into `app/public/audio` and a `*.chapters.json` beside
-the script. **Chapter marks come out of the render**, measured from the actual
-audio positions rather than estimated, so every seek lands on the first word of
-its section. Paste them into `app/src/data/podcast.ts`.
+Each run writes the MP3 into `app/public/audio` and two files beside the
+script. **Both come out of the render**, measured from the actual audio
+positions rather than estimated.
+
+- `*.chapters.json` — the chapter marks, so every seek lands on the first word
+  of its section. Paste them into `app/src/data/podcast.ts`.
+- `*.lines.json` — the second every line starts and ends at, which is what the
+  documentary cut captions from. This is the same running position the chapter
+  marks come from; it used to be written down only where a chapter opened and
+  discarded for every other line.
+
+The four episodes that shipped before it recorded them had their line times
+recovered from the audio instead, by `node pipeline/align-audio.mjs --all`.
+Those are good to a fraction of a second rather than exact, and say so:
+`source` in the file reads `recovered` rather than `synth`.
 
 ## Rendering only what changed
 

@@ -63,6 +63,29 @@ const chapterFile = existsSync(scripts)
 if (!chapterFile) usage(`No chapter marks for "${course}" in ${scripts}.`);
 const episode = JSON.parse(readFileSync(join(scripts, chapterFile), 'utf8'));
 
+/*
+ * The captions, if this episode has any.
+ *
+ * Two files, on purpose. `<stem>.lines.json` is where each line starts —
+ * written by `audio/synth.py` for anything rendered since it began recording
+ * them, recovered from the audio by `pipeline/align-audio.mjs` for the four
+ * that shipped before. `<stem>.json` is what each line says. Keeping the
+ * words in the script means a restyle pass cannot change what is spoken
+ * without changing what is captioned.
+ *
+ * An episode with neither still renders. The lower-thirds and the spine
+ * never needed a line track, and a cut with no captions is what this format
+ * was before there were any.
+ */
+const stem = chapterFile.replace('.chapters.json', '');
+const linesPath = join(scripts, `${stem}.lines.json`);
+const scriptPath = join(scripts, `${stem}.json`);
+const track = existsSync(linesPath) && existsSync(scriptPath)
+  ? JSON.parse(readFileSync(linesPath, 'utf8'))
+  : undefined;
+const said = track ? JSON.parse(readFileSync(scriptPath, 'utf8')).lines : [];
+const times = track ? track.lines.filter((l) => l.i < said.length) : [];
+
 const file = `/audio/${episode.id}.mp3`;
 if (!existsSync(join(ROOT, 'app/public', file.slice(1)))) {
   usage(`No episode audio at app/public${file}`);
@@ -83,6 +106,12 @@ console.log(
   `${course}: ${episode.title}\n` +
     `  ${episode.chapters.length} chapters, ${episode.len} total, rendering ${mmss(covered)} ` +
     `(${Math.round(covered * FPS).toLocaleString()} frames at ${FPS}fps)`,
+);
+console.log(
+  times.length
+    ? `  ${times.length} captions, ${track.source === 'synth' ? 'measured while rendering' : 'recovered from the audio'}`
+    : `  no captions: nothing at ${linesPath.replace(`${ROOT}/`, '')}` +
+      ' — run `node pipeline/align-audio.mjs ' + course + '`',
 );
 
 /*
@@ -146,6 +175,8 @@ const inputProps = {
   title: episode.title,
   file,
   chapters: episode.chapters,
+  times,
+  said,
   seconds: episode.seconds,
   render: covered,
   ground,

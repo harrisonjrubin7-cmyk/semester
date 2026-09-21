@@ -24,8 +24,12 @@
  * Measured off a real 1920×1080 render rather than taken from a table: the
  * first line of the CORE unit 4 answer set 58 characters across 1387px at
  * 45px, which is 0.53em a character in this app's body face at this size.
+ *
+ * Exported because `captions.ts` sizes the documentary's caption type the same
+ * way and off the same face. A second number measured a second time would be
+ * a second number to re-measure when the face changes.
  */
-const GLYPH = 0.53;
+export const GLYPH = 0.53;
 
 export interface SlideMetrics {
   /** Characters on the slide, question and answer together. */

@@ -54,6 +54,21 @@ const PLACEHOLDER_DOC = {
     { s: 0, t: '0:00', name: 'Cold open' },
     { s: 35, t: '0:36', name: 'How to actually pass' },
   ],
+  // The first four lines of the real episode, at the seconds
+  // `pipeline/align-audio.mjs` recovered for them, so the studio opens on a
+  // caption doing what a caption does rather than on lorem.
+  times: [
+    { i: 0, s: 0, e: 9.181 },
+    { i: 1, s: 9.731, e: 21.028 },
+    { i: 2, s: 21.578, e: 27.207 },
+    { i: 3, s: 27.757, e: 34.443 },
+  ],
+  said: [
+    { v: 'host', t: 'Eighty percent of this grade is three multiple-choice exams, in class, clo…' },
+    { v: 'expert', t: 'Which is exactly what Stromme says separates the A students. Memorisers do…' },
+    { v: 'host', t: 'So this episode is the blocks. Ten chapters, the formula sheet, and the tr…' },
+    { v: 'expert', t: 'And a self-test at the end. But do the problem sets yourself — the connect…' },
+  ],
   seconds: 1696,
   render: 60,
 };
