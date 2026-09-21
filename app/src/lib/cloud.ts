@@ -709,6 +709,12 @@ export const OWNED_TABLES: OwnedTable[] = [
   // goes with it. `access.check.sql` proves the delete policy that makes this
   // line work, and proves a stranger cannot use it to clear somebody else's.
   { table: 'access_log', column: 'user_id' },
+  // Which days this account opened the app, and how far through the funnel it
+  // got. It is about the account rather than about the work, which is what
+  // lets it have a clock at all — and is exactly why it has to go when the
+  // account does. `activity.check.sql` proves the delete policy this line
+  // needs, and that it cannot be aimed at somebody else's rows.
+  { table: 'activity', column: 'user_id' },
 
   // ── Classmates: yours, but other people can see them ────────────────────
   //

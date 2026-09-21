@@ -124,10 +124,18 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Three, and each is a deliberate entry point:
+   * The allowlist. Four, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
+   *   note_activity       — the caller says which of three things are true of
+   *                         it today. It is here rather than behind the
+   *                         service key because the caller is a browser, and
+   *                         it is safe to be here because it takes neither an
+   *                         account nor a date: `activity.check.sql` holds
+   *                         that signature structurally, which is the only
+   *                         thing standing between this entry and handing the
+   *                         table to anybody with the publishable key.
    *
    * Adding a line here is the decision. If a new function needs to be callable
    * it belongs in this array with its own migration granting it; if it does
@@ -136,6 +144,7 @@ declare
   allowed constant text[] := array[
     'claim_referral(given text)',
     'make_referral_code()',
+    'note_activity(marks text[])',
     'referral_standing()'
   ];
   extra text;
@@ -172,7 +181,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all three that it should';
+  raise notice 'ok  and can call all four that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────
