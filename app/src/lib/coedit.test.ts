@@ -29,6 +29,7 @@ const layer = (id: string, over: Partial<DesignLayer> = {}): DesignLayer => ({
   bold: false,
   opacity: 1,
   rotation: 0,
+  gradient: null,
   fileId: '',
   ...over,
 });
@@ -195,6 +196,30 @@ describe('what to send after an edit here', () => {
     expect(changes(before, after, 'me', NOW)).toEqual([]);
   });
 
+  /*
+   * The same rule, one level down.
+   *
+   * `gradient` is the only field on a layer that is itself an object, so it is
+   * the only one where `===` can be false for two equal values — and every
+   * other field being compared by value is exactly what hides it. Written
+   * separately because the test above passes with a reference check in place:
+   * its layers have `gradient: null`, and `null === null` is true.
+   */
+  it('compares a gradient by value too, though it is an object', () => {
+    const grad = () => ({ gradient: { to: '#ffffff', angle: 90 } });
+    const before = canvasOf(layer('one', grad()));
+    const after = canvasOf(layer('one', grad()));
+    expect(after.layers[0]!.gradient).not.toBe(before.layers[0]!.gradient);
+    expect(changes(before, after, 'me', NOW)).toEqual([]);
+  });
+
+  it('notices a gradient turned off, and one turned on', () => {
+    const on = canvasOf(layer('one', { gradient: { to: '#ffffff', angle: 90 } }));
+    const off = canvasOf(layer('one'));
+    expect(changes(on, off, 'me', NOW)).toHaveLength(1);
+    expect(changes(off, on, 'me', NOW)).toHaveLength(1);
+  });
+
   it('names the one layer that moved', () => {
     const edits = changes(canvasOf(layer('one'), layer('two')), canvasOf(layer('one', { x: 99 }), layer('two')), 'me', NOW);
     expect(edits).toEqual([layerEdit(layer('one', { x: 99 }), 'me', NOW)]);
@@ -222,6 +247,7 @@ describe('what to send after an edit here', () => {
     ['bold', { bold: true }],
     ['opacity', { opacity: 0.5 }],
     ['rotation', { rotation: 15 }],
+    ['gradient', { gradient: { to: '#ffffff', angle: 90 } }],
     ['kind', { kind: 'rectangle' as const }],
     ['fileId', { fileId: 'abc' }],
   ] as [string, Partial<DesignLayer>][]) {

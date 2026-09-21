@@ -10,6 +10,8 @@ import {
   LAYER_OPACITY,
   clampOpacity,
   designSvg,
+  gradientEnds,
+  gradientId,
   layerTransform,
   newLayer,
   trianglePoints,
@@ -58,6 +60,10 @@ const readData = (blob: Blob) =>
     r.onerror = () => reject(r.error);
     r.readAsDataURL(blob);
   });
+
+/** What a layer paints with: its gradient if it has one, else its colour. */
+const paintOf = (l: DesignLayer) =>
+  l.gradient && l.kind !== 'image' ? `url(#${gradientId(l.id)})` : l.fill;
 
 const MAX_LAYERS = 60;
 const UNDO = 30;
@@ -600,6 +606,25 @@ export function DesignEditor({
             drag.current = null;
           }}
         >
+          {/*
+            * The same `<defs>` the export writes, for the same reason: an SVG
+            * cannot paint with a gradient it has not declared. Built from the
+            * same two helpers, so the canvas and the file cannot disagree
+            * about which way a gradient runs.
+            */}
+          <defs>
+            {d.layers
+              .filter((x) => x.gradient && x.kind !== 'image')
+              .map((x) => {
+                const ends = gradientEnds(x.gradient!.angle);
+                return (
+                  <linearGradient key={x.id} id={gradientId(x.id)} {...ends}>
+                    <stop offset="0" stopColor={x.fill} />
+                    <stop offset="1" stopColor={x.gradient!.to} />
+                  </linearGradient>
+                );
+              })}
+          </defs>
           <rect width={d.width} height={d.height} fill={d.background} />
           {d.layers.map((layer, i) => (
             <g
@@ -662,7 +687,7 @@ export function DesignEditor({
                 <text
                   x={layer.x}
                   y={layer.y + layer.fontSize}
-                  fill={layer.fill}
+                  fill={paintOf(layer)}
                   fontSize={layer.fontSize}
                   fontFamily="Arial,sans-serif"
                   fontWeight={layer.bold ? 700 : 400}
@@ -675,15 +700,15 @@ export function DesignEditor({
                   ))}
                 </text>
               ) : layer.kind === 'ellipse' ? (
-                <ellipse cx={layer.x + layer.w / 2} cy={layer.y + layer.h / 2} rx={layer.w / 2} ry={layer.h / 2} fill={layer.fill} opacity={layer.opacity} />
+                <ellipse cx={layer.x + layer.w / 2} cy={layer.y + layer.h / 2} rx={layer.w / 2} ry={layer.h / 2} fill={paintOf(layer)} opacity={layer.opacity} />
               ) : layer.kind === 'triangle' ? (
                 // `trianglePoints` is the export's own, so what is on screen
                 // and what lands in the SVG are the same three corners.
-                <polygon points={trianglePoints(layer)} fill={layer.fill} opacity={layer.opacity} />
+                <polygon points={trianglePoints(layer)} fill={paintOf(layer)} opacity={layer.opacity} />
               ) : layer.kind === 'image' ? (
                 <image x={layer.x} y={layer.y} width={layer.w} height={layer.h} href={images[layer.fileId]} opacity={layer.opacity} />
               ) : (
-                <rect x={layer.x} y={layer.y} width={layer.w} height={layer.h} fill={layer.fill} opacity={layer.opacity} />
+                <rect x={layer.x} y={layer.y} width={layer.w} height={layer.h} fill={paintOf(layer)} opacity={layer.opacity} />
               )}
               {layer.id === selected && (
                 <rect
@@ -826,6 +851,73 @@ export function DesignEditor({
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Colour</span>
             <input type="color" value={l.fill} onChange={(e) => patch({ fill: e.target.value })} style={input} />
           </label>
+          {/*
+            * A gradient is offered for everything that has a fill, which is
+            * everything but a picture — an image layer paints with its pixels
+            * and a second colour has nowhere to go on it.
+            *
+            * `fill` above stays the first stop rather than becoming a "from"
+            * field of its own. So the switch adds a colour instead of
+            * replacing one, and turning it off leaves the layer exactly the
+            * flat colour it was before.
+            */}
+          {l.kind !== 'image' && (
+            <>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-4)',
+                  marginBottom: 'var(--sp-5)',
+                  fontSize: 'var(--type-base)',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={Boolean(l.gradient)}
+                  onChange={(e) =>
+                    patch({ gradient: e.target.checked ? { to: '#ffffff', angle: 90 } : null })
+                  }
+                />
+                <span>Fade to a second colour</span>
+              </label>
+              {l.gradient && (
+                <>
+                  <label style={field}>
+                    <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Second colour</span>
+                    <input
+                      type="color"
+                      value={l.gradient.to}
+                      onChange={(e) => patch({ gradient: { to: e.target.value, angle: l.gradient!.angle } })}
+                      style={input}
+                    />
+                  </label>
+                  <label style={field}>
+                    <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+                      Direction · {Math.round(l.gradient.angle)}°
+                    </span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={360}
+                      step={5}
+                      value={l.gradient.angle}
+                      onChange={(e) =>
+                        patch({
+                          gradient: {
+                            to: l.gradient!.to,
+                            angle: Math.max(0, Math.min(360, Math.round(Number(e.target.value)) || 0)),
+                          },
+                        })
+                      }
+                      style={input}
+                    />
+                  </label>
+                </>
+              )}
+            </>
+          )}
+
           {/*
             * The number is said next to the slider because a slider on its own
             * cannot be read back. Somebody matching two layers to the same

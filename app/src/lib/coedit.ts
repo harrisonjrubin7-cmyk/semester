@@ -226,6 +226,12 @@ function same(a: DesignLayer, b: DesignLayer): boolean {
     a.bold === b.bold &&
     a.opacity === b.opacity &&
     a.rotation === b.rotation &&
+    // By value, not by reference. A gradient is the one field here that is an
+    // object, and `===` on two equal gradients rebuilt by a render is false —
+    // which would broadcast an edit on every keystroke somewhere else.
+    a.gradient?.to === b.gradient?.to &&
+    a.gradient?.angle === b.gradient?.angle &&
+    !a.gradient === !b.gradient &&
     a.fileId === b.fileId
   );
 }

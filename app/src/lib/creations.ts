@@ -115,6 +115,21 @@ export interface DesignLayer {
    * you can move something.
    */
   rotation: number;
+  /**
+   * A second colour and a direction, or null for a flat fill.
+   *
+   * Null is the ordinary state and the one every renderer must draw, which is
+   * why this is a nullable object rather than a `gradient: boolean` beside two
+   * fields that mean nothing when it is false. `fill` stays the first stop, so
+   * a layer that has never had a gradient is byte-for-byte the layer it was
+   * and turning one off cannot lose the colour it had.
+   *
+   * `angle` is degrees clockwise from left-to-right: 0 runs across, 90 runs
+   * down. It is the gradient's own direction, in the layer's box — so a
+   * rotated layer's gradient turns with it, for free, because the transform
+   * applies to the element the gradient is painting.
+   */
+  gradient: { to: string; angle: number } | null;
   /** Into `lib/files.ts`. The picture itself is never in here. */
   fileId: string;
 }
@@ -288,6 +303,7 @@ export function readCreations(value: unknown): CreationLibrary {
        */
       if (obj(l) && l.opacity === undefined) l.opacity = 1;
       if (obj(l) && l.rotation === undefined) l.rotation = 0;
+      if (obj(l) && l.gradient === undefined) l.gradient = null;
 
       const ok =
         obj(l) &&
@@ -304,6 +320,9 @@ export function readCreations(value: unknown): CreationLibrary {
         typeof l.bold === 'boolean' &&
         finite(l.opacity, LAYER_OPACITY.min, LAYER_OPACITY.max) &&
         finite(l.rotation, -180, 180) &&
+        // Null or a whole gradient. A half-built one — a second colour with no
+        // direction — is a layer no renderer here knows how to draw.
+        (l.gradient === null || (obj(l.gradient) && color(l.gradient.to) && finite(l.gradient.angle, 0, 360))) &&
         textValue(l.fileId, 100);
       if (!ok) throw new Error('Invalid design layer.');
       layerIds.add(l.id);
@@ -385,6 +404,7 @@ export function newLayer(kind: DesignLayer['kind'], canvas: DesignData, fileId =
     bold: true,
     opacity: 1,
     rotation: 0,
+    gradient: null,
     fileId,
   };
 }
@@ -621,6 +641,33 @@ export const layerTransform = (l: Pick<DesignLayer, 'x' | 'y' | 'w' | 'h' | 'rot
   l.rotation ? `rotate(${l.rotation} ${l.x + l.w / 2} ${l.y + l.h / 2})` : '';
 
 /**
+ * Where a gradient's line starts and ends, for an `angle` in degrees.
+ *
+ * In `objectBoundingBox` units, so the answer is the same whatever size the
+ * layer is and the gradient turns with a rotated layer without being told.
+ * 0 runs left to right and 90 runs top to bottom, which is the convention CSS
+ * readers already have in their heads — and the opposite of the one SVG gives
+ * you for free, which is why this exists rather than being written inline.
+ */
+export const gradientEnds = (angle: number) => {
+  const r = (angle * Math.PI) / 180;
+  const dx = Math.cos(r) / 2;
+  const dy = Math.sin(r) / 2;
+  // Rounded, because these land in a document and `0.9999999999999999` is a
+  // diff nobody wants to read.
+  const at = (n: number) => Math.round((0.5 + n) * 1e4) / 1e4;
+  return { x1: at(-dx), y1: at(-dy), x2: at(dx), y2: at(dy) };
+};
+
+/**
+ * The id a layer's gradient is referenced by inside one SVG document.
+ *
+ * Prefixed rather than being the bare layer id: an id is a name in a document
+ * and a UUID beginning with a digit is not one every parser will take.
+ */
+export const gradientId = (layerId: string) => `grad-${layerId}`;
+
+/**
  * A design as an SVG document.
  *
  * Every piece of text goes through `xml`, because a layer's text is typed by
@@ -645,22 +692,25 @@ export function designSvg(d: DesignData, images: Record<string, string> = {}): s
      */
     const fade = l.opacity < 1 ? ` opacity="${l.opacity}"` : '';
     const turn = layerTransform(l) ? ` transform="${layerTransform(l)}"` : '';
+    // A gradient layer paints with the def below rather than with `fill`.
+    // `fill` is still the first stop, so nothing is lost by pointing away.
+    const paint = l.gradient ? `url(#${gradientId(l.id)})` : l.fill;
 
     if (l.kind === 'text') {
       const lines = l.text
         .split('\n')
         .map((t, i) => `<tspan x="${l.x}" dy="${i ? l.fontSize * 1.25 : 0}">${xml(t)}</tspan>`)
         .join('');
-      return `<text x="${l.x}" y="${l.y + l.fontSize}" fill="${l.fill}" font-family="Arial,sans-serif" font-size="${l.fontSize}" font-weight="${l.bold ? '700' : '400'}"${fade}${turn}>${lines}</text>`;
+      return `<text x="${l.x}" y="${l.y + l.fontSize}" fill="${paint}" font-family="Arial,sans-serif" font-size="${l.fontSize}" font-weight="${l.bold ? '700' : '400'}"${fade}${turn}>${lines}</text>`;
     }
     if (l.kind === 'ellipse') {
-      return `<ellipse cx="${l.x + l.w / 2}" cy="${l.y + l.h / 2}" rx="${l.w / 2}" ry="${l.h / 2}" fill="${l.fill}"${fade}${turn}/>`;
+      return `<ellipse cx="${l.x + l.w / 2}" cy="${l.y + l.h / 2}" rx="${l.w / 2}" ry="${l.h / 2}" fill="${paint}"${fade}${turn}/>`;
     }
     if (l.kind === 'triangle') {
       // Apex centred on the top edge, base on the bottom one — the same three
       // points `trianglePoints` gives the editor, so the export and the screen
       // cannot drift apart.
-      return `<polygon points="${trianglePoints(l)}" fill="${l.fill}"${fade}${turn}/>`;
+      return `<polygon points="${trianglePoints(l)}" fill="${paint}"${fade}${turn}/>`;
     }
     if (l.kind === 'image') {
       const src = images[l.fileId] || '';
@@ -668,8 +718,25 @@ export function designSvg(d: DesignData, images: Record<string, string> = {}): s
       if (!/^data:image\/(png|jpeg|webp);base64,/.test(src)) return '';
       return `<image x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" href="${xml(src)}"${fade}${turn}/>`;
     }
-    return `<rect x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" fill="${l.fill}"${fade}${turn}/>`;
+    return `<rect x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" fill="${paint}"${fade}${turn}/>`;
   };
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${d.width}" height="${d.height}" viewBox="0 0 ${d.width} ${d.height}"><rect width="100%" height="100%" fill="${d.background}"/>${d.layers.map(layer).join('')}</svg>`;
+  /*
+   * The `<defs>`, which is the one part of this document that is not a layer.
+   *
+   * An SVG cannot paint with a gradient it has not declared, so every gradient
+   * layer needs a `<linearGradient>` ahead of the drawing. Emitted only for
+   * the layers that have one — an export of a design with no gradients in it
+   * carries no `<defs>` at all, which is the same promise `opacity` and
+   * `transform` make above.
+   */
+  const defs = d.layers
+    .filter((l) => l.gradient && l.kind !== 'image')
+    .map((l) => {
+      const { x1, y1, x2, y2 } = gradientEnds(l.gradient!.angle);
+      return `<linearGradient id="${gradientId(l.id)}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"><stop offset="0" stop-color="${l.fill}"/><stop offset="1" stop-color="${l.gradient!.to}"/></linearGradient>`;
+    })
+    .join('');
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${d.width}" height="${d.height}" viewBox="0 0 ${d.width} ${d.height}">${defs ? `<defs>${defs}</defs>` : ''}<rect width="100%" height="100%" fill="${d.background}"/>${d.layers.map(layer).join('')}</svg>`;
 }
