@@ -234,15 +234,33 @@ worse is one people stop checking.
   when they were applied by hand; the ledger recorded them under that day's
   timestamps rather than their filenames, which is a third fault and not a fix.
 
-**Until this is repaired, do not merge a pull request that touches
-`supabase/`.** If Branching is applying migrations, a merge sends those four to
-a schema no test has ever reproduced — and the one that has already been
-applied by hand, `invites`, is the shape of the risk: it puts a `before insert`
-trigger on `auth.users`, the table every sign-up passes through, and it went in
-with `set_invite_only` executable by anybody holding the browser's publishable
-key. If Branching is not applying migrations, the merge widens the gap by one
-more file, silently, which is what `access_log` has just demonstrated. Neither
-is a good reason to merge one.
+### The rule that stood here, and what replaced it
+
+For three days this said: **until this is repaired, do not merge a pull request
+that touches `supabase/`.** The reasoning was that a merge sends the pending
+migrations to a schema no test had ever reproduced — and `invites` is the shape
+of that risk, since it puts a `before insert` trigger on `auth.users`, the table
+every sign-up passes through — or else widens the gap by one more file,
+silently, which is what `access_log` demonstrated.
+
+**Both halves are answered, so the rule is lifted.** The schema is reproduced
+and fingerprinted, and the pending migrations are rehearsed against that
+reproduction with live state in it: the invite gate on, an account, a course,
+all unmoved afterwards. `supabase/rehearse.sh` is that rehearsal and CI runs it
+on every pull request, so the condition the rule was protecting is now checked
+by a machine on each change rather than remembered by a person.
+
+What replaces it is narrower and permanent:
+
+> **A migration whose version is not greater than every version the live ledger
+> already holds cannot be deployed**, whatever its SQL says. That is what broke
+> the deploy on 18 September, and `supabase/rehearse.sh` will not catch it —
+> Postgres applies a file whatever it is called, and the refusal lives in
+> Supabase's CLI. `rollback.test.ts` pins the filenames instead.
+
+The first merge after this one is what proves the deploy works again. If it
+fails, the Supabase branch record is where it will say so, and nothing in
+GitHub will — that is the lesson of 18 September and it has not changed.
 
 [`MIGRATION-HISTORY.md`](MIGRATION-HISTORY.md) holds the repair.
 

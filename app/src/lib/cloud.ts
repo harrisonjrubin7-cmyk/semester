@@ -722,7 +722,7 @@ export const OWNED_TABLES: OwnedTable[] = [
   // Two different rows, and they are not the same fact. `referrals` here is
   // *your own arrival* — the code you came in on. `referral_codes` is the code
   // you handed out, and the cascade underneath it takes the record of everyone
-  // who came through you. See `supabase/migrations/20260901001400_referrals.sql`.
+  // who came through you. See `supabase/migrations/20260921003500_referrals.sql`.
   { table: 'referrals', column: 'user_id' },
   { table: 'referral_codes', column: 'user_id' },
 
@@ -888,7 +888,7 @@ export async function replaceFeed(token: string): Promise<void> {
 // holds the token because Apple and Google arrive with no credentials, and the
 // reminder sender, run by the scheduler rather than by a person.
 //
-// `supabase/migrations/20260901001300_access_log.sql` writes both down, and
+// `supabase/migrations/20260921003400_access_log.sql` writes both down, and
 // the policy on that table makes it readable by the account it is about. This
 // is that read. The point of the whole thing is the calendar: a published link
 // is a bearer credential living in somebody's phone for months, the app has
