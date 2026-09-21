@@ -124,20 +124,46 @@ begin
   set local role postgres;
   insert into public.app_admins (user_id, note) values (admin, 'founder');
 
-  -- Read by nobody. The third of these is the one worth having: an
-  -- administrator reading their own row is the most natural policy to write
-  -- and there is deliberately no policy at all.
+  /*
+   * Read by nobody. The third of these is the one worth having: an
+   * administrator reading their own row is the most natural policy to write
+   * and there is deliberately no policy at all.
+   *
+   * Two locks stand in front of this table and which one answers first
+   * changed under this suite. `check.sh` used to hand `authenticated` every
+   * table privilege back after the migrations ran, so a select reached
+   * row-level security, matched no row, and returned nought. That blanket
+   * grant is gone — it erased the evidence of every relation-level revoke,
+   * which is exactly what `revoke all on public.app_admins from anon,
+   * authenticated` is — so the *grant* now refuses first, with an error
+   * rather than an empty count.
+   *
+   * Both are the table behaving, so both are accepted and the notice says
+   * which happened. What is never accepted is a row coming back.
+   */
   perform pg_temp.become_anon();
-  select count(*) into n from public.app_admins;
-  perform pg_temp.counted('a signed-out visitor reads no admin rows', n, 0);
+  begin
+    select count(*) into n from public.app_admins;
+    perform pg_temp.counted('a signed-out visitor reads no admin rows', n, 0);
+  exception when insufficient_privilege then
+    raise notice 'ok  a signed-out visitor cannot read app_admins at all';
+  end;
 
   perform pg_temp.become(person);
-  select count(*) into n from public.app_admins;
-  perform pg_temp.counted('an ordinary account reads none', n, 0);
+  begin
+    select count(*) into n from public.app_admins;
+    perform pg_temp.counted('an ordinary account reads none', n, 0);
+  exception when insufficient_privilege then
+    raise notice 'ok  an ordinary account cannot read app_admins at all';
+  end;
 
   perform pg_temp.become(admin);
-  select count(*) into n from public.app_admins;
-  perform pg_temp.counted('and an administrator cannot read their own row', n, 0);
+  begin
+    select count(*) into n from public.app_admins;
+    perform pg_temp.counted('and an administrator cannot read their own row', n, 0);
+  exception when insufficient_privilege then
+    raise notice 'ok  an administrator cannot read app_admins at all either';
+  end;
 
   -- The control: the row is really there. Without this, every count above is
   -- zero for the uninteresting reason and the suite proves nothing.
@@ -154,18 +180,33 @@ begin
     raise notice 'ok  an account cannot make itself an administrator';
   end;
 
-  update public.app_admins set note = 'mine now';
-  get diagnostics n = row_count;
-  perform pg_temp.counted('nor edit the list', n, 0);
+  -- The same two locks as the reads above, in the same order, for the same
+  -- reason. A refusal at the grant and nought rows at the policy both mean
+  -- the list is not this account's to touch.
+  begin
+    update public.app_admins set note = 'mine now';
+    get diagnostics n = row_count;
+    perform pg_temp.counted('nor edit the list', n, 0);
+  exception when insufficient_privilege then
+    raise notice 'ok  an account has no update privilege on app_admins at all';
+  end;
 
-  delete from public.app_admins;
-  get diagnostics n = row_count;
-  perform pg_temp.counted('nor remove anybody from it', n, 0);
+  begin
+    delete from public.app_admins;
+    get diagnostics n = row_count;
+    perform pg_temp.counted('nor remove anybody from it', n, 0);
+  exception when insufficient_privilege then
+    raise notice 'ok  an account has no delete privilege on app_admins at all';
+  end;
 
   perform pg_temp.become(admin);
-  delete from public.app_admins;
-  get diagnostics n = row_count;
-  perform pg_temp.counted('and neither can an administrator', n, 0);
+  begin
+    delete from public.app_admins;
+    get diagnostics n = row_count;
+    perform pg_temp.counted('and neither can an administrator', n, 0);
+  exception when insufficient_privilege then
+    raise notice 'ok  and an administrator has no delete privilege either';
+  end;
 
   -- ── is_app_admin(), and where it lives ──────────────────────────────────
   perform pg_temp.become(admin);
