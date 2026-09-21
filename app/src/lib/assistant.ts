@@ -276,6 +276,57 @@ export function route(s = settings()): 'proxy' | 'shared' | 'own' | 'openai' | '
 }
 
 /**
+ * Why a question cannot be asked, when `route()` says `none`.
+ *
+ * `routeLabel` collapses four different situations into "nothing yet", and
+ * `components/NeedsKey.tsx` then prints one fixed sentence for all of them:
+ * *"Sign in to use the shared key, or add your own."* Read that as a signed-in
+ * student and it is not advice, it is a contradiction — and that file's own
+ * docstring is about this exact failure, of one install being told two
+ * different stories about whether signing in would be enough.
+ *
+ * This returns the sentence that is actually true, and `''` when a question
+ * can be asked. It takes `signedIn` rather than reading it, because that lives
+ * in the store and this module is deliberately below it: `sessionToken()` is
+ * what the *assistant* can see, and the whole point of the third case is that
+ * those two can disagree.
+ *
+ * ## The third case is the one worth having
+ *
+ * Signed in, this build has a shared endpoint, and the assistant still has no
+ * token. That should be impossible — `state/store.tsx` sets the account and
+ * the token on adjacent lines of one callback — so if a student ever reads
+ * this sentence, the two have come apart, and it says so plainly instead of
+ * blaming them for not signing in. It was written after an afternoon spent
+ * establishing exactly that state from the outside, through gateway logs and
+ * a chunk graph, because the screen would not say it.
+ */
+export function routeWhy(signedIn: boolean, s = settings()): string {
+  if (route(s) !== 'none') return '';
+
+  if (s.provider === 'openai') {
+    return 'Add an OpenAI key under Settings → The assistant, or switch back to Claude.';
+  }
+
+  if (!signedIn) {
+    return 'Sign in to use the shared key, or add your own. Everything else in the app works without it.';
+  }
+
+  if (!sharedEndpoint()) {
+    return (
+      'Signed in, but this copy of Semester was built without a shared key service, ' +
+      'so signing in does not add one. Add your own key under Settings → The assistant.'
+    );
+  }
+
+  return (
+    'Signed in, but this device has not handed its session to the assistant, so the ' +
+    'shared key cannot be reached. Reload the page. If it says this again, the sign-in ' +
+    'is not reaching the assistant and your own key is the way past it.'
+  );
+}
+
+/**
  * "shared key", "your proxy", "your OpenAI key" — where an answer came from.
  *
  * Three screens were each writing their own version of this ternary, and none
