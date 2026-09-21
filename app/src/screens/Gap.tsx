@@ -151,7 +151,7 @@ function Run({ win }: { win: GapWindow }) {
     return (
       <div style={{ padding: 'var(--page-pad)', display: 'flex', flexDirection: 'column', minHeight: '70vh' }}>
         <div style={{ flex: 1, paddingTop: 'calc(40px * var(--density, 1))' }}>
-          <div className="chrome-text" style={{ fontSize: 'calc(46px * var(--text-scale, 1))', lineHeight: 1.1 }}>
+          <div className="chrome-text" style={{ fontSize: 'calc(46px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}>
             {runLine(idx, got)}
           </div>
           <div style={{ fontSize: 'var(--type-lg)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
@@ -316,7 +316,7 @@ function Run({ win }: { win: GapWindow }) {
           style={{
             fontFamily: 'var(--font-heading)',
             fontSize: 'calc(25px * var(--text-scale, 1))',
-            lineHeight: 1.25,
+            lineHeight: 'var(--leading-display-xs)',
             textWrap: 'pretty',
           }}
         >

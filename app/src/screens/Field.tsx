@@ -105,7 +105,7 @@ export function FieldGuide() {
             paddingTop: 'calc(11px * var(--density, 1))',
             borderTop: '1px solid var(--app-line)',
             fontFamily: 'var(--font-heading)',
-            fontSize: 'calc(10.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-2xs-plus)',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
             color: 'var(--app-dim)',
@@ -149,7 +149,7 @@ export function FieldGuide() {
           <span
             style={{
               fontFamily: 'var(--font-heading)',
-              fontSize: 'calc(10.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-2xs-plus)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               ...faintLine(),
@@ -184,7 +184,7 @@ export function FieldGuide() {
             >
               <div
                 className="chrome-text"
-                style={{ fontSize: 'var(--type-xl)', lineHeight: 1, flex: 'none', color: 'var(--app-dim)' }}
+                style={{ fontSize: 'var(--type-xl)', lineHeight: 'var(--leading-none)', flex: 'none', color: 'var(--app-dim)' }}
               >
                 {String(i + 1).padStart(2, '0')}
               </div>
@@ -192,7 +192,7 @@ export function FieldGuide() {
                 style={{
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'calc(19px * var(--text-scale, 1))',
-                  lineHeight: 1.15,
+                  lineHeight: 'var(--leading-display)',
                   flex: 1,
                   minWidth: 0,
                   textWrap: 'pretty',
@@ -221,7 +221,7 @@ export function FieldGuide() {
                   style={{
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'calc(16px * var(--text-scale, 1))',
-                    lineHeight: 1.25,
+                    lineHeight: 'var(--leading-display-xs)',
                     color: 'var(--app-accent)',
                     textWrap: 'pretty',
                   }}
@@ -265,7 +265,7 @@ export function FieldGuide() {
                   paddingBottom: 'var(--sp-1)',
                 }}
               >
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.15 }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 'var(--leading-display)' }}>
                   {f.t}
                 </div>
                 <div
@@ -300,7 +300,7 @@ export function FieldGuide() {
                   style={{
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'calc(18px * var(--text-scale, 1))',
-                    lineHeight: 1.15,
+                    lineHeight: 'var(--leading-display)',
                     marginTop: 'var(--sp-2)',
                   }}
                 >
@@ -319,7 +319,7 @@ export function FieldGuide() {
                       <div
                         style={{
                           fontFamily: 'var(--font-heading)',
-                          fontSize: 'calc(10px * var(--text-scale, 1))',
+                          fontSize: 'var(--type-2xs)',
                           letterSpacing: '0.14em',
                           textTransform: 'uppercase',
                           ...secondLine(),
@@ -415,7 +415,7 @@ export function FieldGuide() {
                       display: 'block',
                       fontFamily: 'var(--font-heading)',
                       fontSize: 'var(--type-lg)',
-                      lineHeight: 1.25,
+                      lineHeight: 'var(--leading-display-xs)',
                     }}
                   >
                     {c.q}

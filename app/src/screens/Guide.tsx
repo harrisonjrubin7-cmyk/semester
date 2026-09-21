@@ -172,7 +172,7 @@ export function Guide() {
         <span style={{ flex: 1 }} />
         <span
           style={{
-            fontSize: 'calc(10px * var(--text-scale, 1))',
+            fontSize: 'var(--type-2xs)',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
             color: 'var(--app-dim)',
@@ -260,7 +260,7 @@ export function Guide() {
               <span className="kicker" style={{ display: 'block' }}>
                 Weakest unit
               </span>
-              <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25, marginTop: 'var(--sp-1)' }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-display-xs)', marginTop: 'var(--sp-1)' }}>
                 {weak.unit.name}
               </span>
               {/*
@@ -304,7 +304,7 @@ export function Guide() {
                 {i + 1}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{u.name}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>{u.name}</span>
                 <span style={{ display: 'block', marginTop: 'var(--sp-3)' }}>
                   <Standing
                     state={standings[i]?.state ?? 'unseen'}
@@ -354,7 +354,7 @@ export function Guide() {
                     paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
                     borderRadius: 'var(--r-sm)',
                     border: '1px solid var(--app-line)',
-                    fontSize: 'calc(10.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-2xs-plus)',
                     fontFamily: 'var(--font-heading)',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
@@ -424,7 +424,7 @@ export function Guide() {
 
       {state.mode === 'quiz' && (
         <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 'calc(14px * var(--density, 1))' }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1.1 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}>
             Ten multiple choice
           </div>
           <div
@@ -501,7 +501,7 @@ export function Guide() {
                       transition: 'transform 140ms ease',
                     }}
                   />
-                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>
                     {u.name}
                   </span>
                   <span
@@ -556,7 +556,7 @@ export function Guide() {
                             style={{
                               fontFamily: 'var(--font-heading)',
                               fontSize: 'calc(17px * var(--text-scale, 1))',
-                              lineHeight: 1.2,
+                              lineHeight: 'var(--leading-display-sm)',
                               textWrap: 'pretty',
                               marginTop: isNew ? 6 : 0,
                             }}
@@ -696,7 +696,7 @@ function Watch() {
     return (
       <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 'calc(14px * var(--density, 1))', background: 'var(--app-hero)' }}>
         <div className="kicker">Lessons</div>
-        <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 1.1 }}>
+        <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-display-lg)' }}>
           Not recorded yet
         </div>
         <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
@@ -753,7 +753,7 @@ function Watch() {
                 {i + 1}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{u.name}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>{u.name}</span>
                 <span
                   style={{
                     display: 'block',
@@ -884,7 +884,7 @@ function Decks() {
               {i + 1}
             </span>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{u.name}</span>
+              <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>{u.name}</span>
               <span
                 style={{
                   display: 'block',
@@ -1045,7 +1045,7 @@ function Documents() {
       <SectionLabel>The whole guide, in order</SectionLabel>
       {guide.units.map((u, i) => (
         <div key={u.name} style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.2 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-sm)' }}>
             {i + 1}. {u.name}
           </div>
           {u.cards.map((c) => (
@@ -1161,7 +1161,7 @@ function Cases() {
                   style={{
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'calc(19px * var(--text-scale, 1))',
-                    lineHeight: 1.15,
+                    lineHeight: 'var(--leading-display)',
                     marginTop: 'var(--sp-2)',
                     textWrap: 'pretty',
                   }}
@@ -1179,7 +1179,7 @@ function Cases() {
                     <div
                       style={{
                         fontFamily: 'var(--font-heading)',
-                        fontSize: 'calc(10px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-2xs)',
                         letterSpacing: '0.16em',
                         textTransform: 'uppercase',
                         color: 'var(--app-accent)',
@@ -1228,7 +1228,7 @@ function Cases() {
               style={{
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'calc(19px * var(--text-scale, 1))',
-                lineHeight: 1.15,
+                lineHeight: 'var(--leading-display)',
                 marginTop: 'var(--sp-4)',
                 textWrap: 'pretty',
               }}
@@ -1342,7 +1342,7 @@ function Cram() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
             {guide.frames.map((f) => (
               <Blueprint key={f.t} plain style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
-                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 1.15 }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))', lineHeight: 'var(--leading-display)' }}>
                   {f.t}
                 </div>
                 <div
@@ -1439,7 +1439,7 @@ function Cram() {
                 style={{
                   fontFamily: 'var(--font-heading)',
                   fontSize: 'calc(16px * var(--text-scale, 1))',
-                  lineHeight: 1.25,
+                  lineHeight: 'var(--leading-display-xs)',
                   cursor: 'pointer',
                   listStyle: 'none',
                 }}

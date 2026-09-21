@@ -251,7 +251,7 @@ export function WeekGrid({
                   style={{
                     display: 'block',
                     fontSize: 'calc(9px * var(--text-scale, 1))',
-                    lineHeight: 1.15,
+                    lineHeight: 'var(--leading-display)',
                     letterSpacing: '0.01em',
                     textDecoration: b.canceled ? 'line-through' : 'none',
                     overflow: 'hidden',

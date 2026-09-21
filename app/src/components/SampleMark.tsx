@@ -62,7 +62,7 @@ export function SampleMark() {
         background: 'var(--app-hero)',
         borderBottom: '1px solid var(--app-line)',
         fontFamily: 'var(--font-heading)',
-        fontSize: 'calc(10.5px * var(--text-scale, 1))',
+        fontSize: 'var(--type-2xs-plus)',
         letterSpacing: '0.12em',
         textTransform: 'uppercase',
         flexWrap: 'wrap',

@@ -115,10 +115,10 @@ function Icon({
       </span>
       <span
         style={{
-          fontSize: 'calc(10px * var(--text-scale, 1))',
+          fontSize: 'var(--type-2xs)',
           letterSpacing: '0.02em',
           textAlign: 'center',
-          lineHeight: 1.2,
+          lineHeight: 'var(--leading-display-sm)',
           maxWidth: 76,
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -199,7 +199,7 @@ function FolderTile({
             </span>
           ))}
         </span>
-        <span style={{ fontSize: 'calc(10px * var(--text-scale, 1))', lineHeight: 1.2 }}>
+        <span style={{ fontSize: 'var(--type-2xs)', lineHeight: 'var(--leading-display-sm)' }}>
           {folder.label}
         </span>
       </button>
@@ -345,7 +345,7 @@ export function Springboard() {
                 borderRadius: 'var(--r-md)',
               }}
             >
-              <span className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
+              <span className="kicker" style={{ fontSize: 'var(--type-2xs)' }}>
                 {now.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}
               </span>
               <span
@@ -373,7 +373,7 @@ export function Springboard() {
           */}
           {page === 0 && recent.length > 0 && (
             <div style={{ marginBottom: 'calc(18px * var(--density, 1))' }}>
-              <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))', marginBottom: 'var(--sp-4)' }}>
+              <div className="kicker" style={{ fontSize: 'var(--type-2xs)', marginBottom: 'var(--sp-4)' }}>
                 Lately
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'calc(18px * var(--density, 1))' }}>

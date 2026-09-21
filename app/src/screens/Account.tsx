@@ -44,7 +44,7 @@ export function AccountScreen() {
       <Page>
         <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
           <div className="kicker">Device only</div>
-          <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 1.1 }}>
+          <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-display-lg)' }}>
             This build has no account service
           </div>
           <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
@@ -203,7 +203,7 @@ export function AccountScreen() {
       {/* The same test the form opens by, and it has to be made here because
           the form owns which way round it is: somebody with an account is
           coming back to it, and somebody without one has never seen it. */}
-      <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
+      <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-xl)' }}>
         {state.registered ? 'Pick up where you left off.' : 'One semester, every device.'}
       </div>
       <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>

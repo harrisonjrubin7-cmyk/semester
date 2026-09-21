@@ -430,7 +430,7 @@ function DayView() {
                     style={{
                       fontFamily: 'var(--font-heading)',
                       fontSize: 'calc(18px * var(--text-scale, 1))',
-                      lineHeight: 1.15,
+                      lineHeight: 'var(--leading-display)',
                       textDecoration: b.canceled ? 'line-through' : 'none',
                     }}
                   >
@@ -507,7 +507,7 @@ function DayView() {
             >
               <span className="tag tag-outline">{e.kind}</span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{e.title}</span>
+                <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-display-xs)' }}>{e.title}</span>
                 <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
                   {e.time} · {e.where}
                 </span>
@@ -544,7 +544,7 @@ function DayView() {
                   {e.time}
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>
+                  <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-display-xs)' }}>
                     {e.title}
                   </span>
                   <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)' }}>
@@ -1330,7 +1330,7 @@ function MonthView() {
             style={{
               textAlign: 'center',
               fontFamily: 'var(--font-heading)',
-              fontSize: 'calc(10px * var(--text-scale, 1))',
+              fontSize: 'var(--type-2xs)',
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
               ...secondLine(),
@@ -1584,7 +1584,7 @@ function MonthView() {
               flexWrap: 'wrap',
               gap: '6px 14px',
               marginTop: 'var(--sp-3)',
-              fontSize: 'calc(10.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-2xs-plus)',
               fontFamily: 'var(--font-heading)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
@@ -2320,7 +2320,7 @@ function SemesterView() {
                   color: isNow ? 'var(--app-accent)' : 'var(--app-fg)',
                 }}
               >
-                <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', color: 'var(--app-dim)' }}>
+                <div style={{ fontSize: 'var(--type-2xs)', letterSpacing: '0.12em', color: 'var(--app-dim)' }}>
                   {MONTHS[w.start.getMonth()].toUpperCase()}
                 </div>
                 <div style={{ fontSize: 'calc(19px * var(--text-scale, 1))' }}>{w.start.getDate()}</div>
@@ -2615,7 +2615,7 @@ function SemesterView() {
  * and a date column written out twice is a date column that drifts.
  */
 const STAMP: CSSProperties = {
-  fontSize: 'calc(10px * var(--text-scale, 1))',
+  fontSize: 'var(--type-2xs)',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   color: 'var(--app-dim)',
@@ -2625,7 +2625,7 @@ const STACK: CSSProperties = {
   width: 44,
   flex: 'none',
   fontFamily: 'var(--font-heading)',
-  lineHeight: 1,
+  lineHeight: 'var(--leading-none)',
 };
 
 const CAMPUS_ROW: CSSProperties = {
@@ -2722,7 +2722,7 @@ function CampusList() {
                       {e.tag}
                     </span>
                   </div>
-                  <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{e.title}</div>
+                  <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>{e.title}</div>
                   <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
                     {e.time} · {e.where}
                   </div>
@@ -2731,7 +2731,7 @@ function CampusList() {
                   type="button"
                   className="btn btn-ghost"
                   onClick={() => dispatch({ type: 'toggleSaved', id: e.id })}
-                  style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', textTransform: 'uppercase', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(6px * var(--density, 1))' }}
+                  style={{ flex: 'none', fontSize: 'var(--type-2xs)', letterSpacing: '0.12em', textTransform: 'uppercase', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(6px * var(--density, 1))' }}
                 >
                   {saved ? 'Saved' : 'Save'}
                 </button>
@@ -2905,7 +2905,7 @@ export function EventDetail() {
           className="chrome-text"
           style={{
             fontSize: 'calc(28px * var(--text-scale, 1))',
-            lineHeight: 1.08,
+            lineHeight: 'var(--leading-display-xl)',
             letterSpacing: '-0.01em',
             marginTop: 'var(--sp-4)',
             textWrap: 'pretty',
@@ -2915,7 +2915,7 @@ export function EventDetail() {
         </div>
         <div style={{ display: 'flex', marginTop: 'calc(14px * var(--density, 1))', borderTop: '1px solid var(--app-line)' }}>
           <div style={{ flex: 1, paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0' }}>
-            <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
+            <div className="kicker" style={{ fontSize: 'var(--type-2xs)' }}>
               When
             </div>
             <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))' }}>
@@ -2925,10 +2925,10 @@ export function EventDetail() {
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
           <div style={{ flex: 1, paddingTop: 'calc(11px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(11px * var(--density, 1))', paddingLeft: 'calc(14px * var(--density, 1))' }}>
-            <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
+            <div className="kicker" style={{ fontSize: 'var(--type-2xs)' }}>
               Where
             </div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))', lineHeight: 1.15 }}>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(18px * var(--text-scale, 1))', lineHeight: 'var(--leading-display)' }}>
               {event.where}
             </div>
           </div>
