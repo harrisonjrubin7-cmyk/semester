@@ -31,20 +31,6 @@ on:
         required: true
         default: 'fetchcal'
         type: string
-      # A preview branch is a whole separate project with its own ref, and
-      # Supabase's Branching does not carry Edge Functions onto it — the
-      # database is branched, the functions are not. So a staging branch that
-      # "matches production" does not, in the one respect that matters for
-      # `claude`, `push` and `fetchcal`, until somebody deploys them to it.
-      #
-      # This is that somebody. Left empty it changes nothing: the step below
-      # works the project out exactly as it did before. `STAGING.md` is the
-      # rest of the setup, including where to find a branch's ref.
-      project_ref:
-        description: 'Deploy to this project ref instead (a preview branch). Leave empty for production.'
-        required: false
-        default: ''
-        type: string
 
 # Deploys are not worth racing. Never cancel one half-way: the platform is
 # mid-swap of a live function and the loser leaves it undefined.
@@ -67,19 +53,10 @@ jobs:
       - name: Work out the project
         id: project
         env:
-          ASKED_REF: ${{ inputs.project_ref }}
           REF: ${{ vars.SUPABASE_PROJECT_REF }}
           URL: ${{ vars.VITE_SUPABASE_URL }}
         run: |
-          # A ref named on the dispatch wins over everything, because the only
-          # reason to name one is that the default is not where you mean.
-          ref="$ASKED_REF"
-          if [ -n "$ref" ]; then
-            echo "::notice title=Preview branch::Deploying to $ref rather than to production."
-          fi
-          if [ -z "$ref" ]; then
-            ref="$REF"
-          fi
+          ref="$REF"
           if [ -z "$ref" ]; then
             url="$URL"
             # The committed default, which is what the deployed app uses.

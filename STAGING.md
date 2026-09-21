@@ -1,82 +1,83 @@
-# A staging branch that actually matches production
+# Staging, and what a preview branch is actually telling you
 
 The build-out plan asks for "staging preview branches that match production,
-including Edge Functions". The three words at the end are the whole item.
+including Edge Functions". **Branching is already on**, has been since before
+18 September, and builds a preview branch for every pull request touching
+`supabase/` — including the Edge Functions, which reach `FUNCTIONS_DEPLOYED`.
+[`ROLLBACK.md`](ROLLBACK.md) is the history of how that setting was found to be
+misconfigured, corrected, and then watched.
 
-## What Branching gives you, and what it does not
+So this item is not "turn it on". It is the harder half: **a preview branch
+exists, and nobody has established that it matches production.** Those are
+different claims, and the second is the one the plan is asking for.
 
-Supabase's Branching makes a preview branch a **separate project** with its
-own ref, its own database and its own keys, built by applying
-`supabase/migrations/` from empty. That is genuinely most of the work, and it
-is why [`MIGRATION-HISTORY.md`](MIGRATION-HISTORY.md) mattered so much: a
-branch is built from the repository's migrations, so for as long as those
-could not rebuild production, **a preview branch was a database nobody had
-ever run**, and the first thing it would have taught you was something untrue
-about production.
+## What a preview branch is built from, which is the crux
 
-That is fixed. Step 4 of that repair proved the baseline against production —
-five of six fingerprints match and the sixth is comments — so a branch built
-from this directory now has production's shape.
+Not simply `supabase/migrations/`. The one time it was watched closely — a
+branch created on 18 September, recorded in `ROLLBACK.md` — it **replayed
+production's ledger**, and the first eight entries of that ledger carry no SQL
+at all. It ran them as no-ops, created two tables, and reached
+`MIGRATIONS_FAILED` at row eleven when a migration tried to alter a function
+that had never been created. Two tables and no functions, from a history
+claiming ten applied migrations.
 
-Three things it still does not carry, and each one is a way for staging to
-quietly stop matching:
+The bot says the same thing in one line on every pull request it comments on:
 
-**1 · Edge Functions.** The database is branched; the functions are not. A
-preview branch has no `claude`, no `push`, no `fetchcal`, no `canvas` — so
-every AI feature, every reminder and the calendar feed are simply absent, and
-they are absent in a way that looks like an app bug rather than a missing
-deploy.
+> Tasks are run on every commit but **only new migration files are pushed**.
+> Close and reopen this PR if you want to apply changes from existing seed or
+> migration files.
 
-The fix is in this repository: Actions → **Deploy Edge Functions** → Run
-workflow, with **project_ref** set to the branch's ref. Left empty it deploys
-to production exactly as it always has. The ref is on the branch's page in the
-dashboard, and it is the subdomain of that branch's API URL.
+Two consequences, and both are ways staging quietly stops being staging:
 
-**2 · Secrets.** Function secrets do not branch either. `ANTHROPIC_API_KEY`,
-the cron secret and the rest have to be set on the branch, and the honest
-advice is to set a *different* Anthropic key on staging with its own low spend
-cap. A staging environment spending production's AI budget is a way to find
-out about a mistake from a bill.
+1. **A branch inherits production's history, including the parts of it that
+   cannot replay.** That is the fault `MIGRATION-HISTORY.md` is about, and it
+   is why a preview branch was never a trustworthy staging environment: it was
+   not a rebuild, it was a replay of a record that is known to be incomplete.
+2. **Editing an existing migration file changes nothing on the branch.** Only
+   new files are pushed. A branch built before an edit is a branch testing the
+   old text, silently, and closing and reopening the pull request is the only
+   thing that rebuilds it.
 
-**3 · Postgres major.** `supabase/config.toml` carries `major_version`, and
-its own comment says why: a preview branch built on a different major than
-production would teach you something untrue about production on its first
-run. `supabase/check.sh` reads the same number rather than repeating it, so
-the two cannot drift.
+## What is known to work, without a branch
 
-## The order to do it in
+`supabase/check.sh` builds every migration from empty in a throwaway Postgres
+and runs fourteen policy suites against it. That is a genuine rebuild rather
+than a replay, and it is what establishes that `supabase/migrations/` produces
+production's schema — six fingerprints, five matching production exactly and
+the sixth differing only in comments. `supabase/rehearse.sh` goes further and
+applies the pending migrations to production's *shape*, with rows in it.
 
-1. Enable Branching on the project (dashboard; it is a paid feature and a
-   person has to turn it on).
-2. Create a preview branch from this repository's default branch and let it
-   build. It applies every file in `supabase/migrations/` from empty.
-3. Compare it to production: run [`supabase/fingerprint.sql`](supabase/fingerprint.sql)
+Neither can exercise the Edge Functions, the auth providers, the real keys or
+the app against a real API URL. That is what a preview branch is for, and it
+is the only reason to have one.
+
+## What to check before calling staging proven
+
+1. **Did the branch build at all?** The branch record in the dashboard, not
+   the pull request comment. `MIGRATIONS_FAILED` on a branch record is how
+   production's own schema deploy stayed broken for three days with no issue,
+   no red tick and nothing in this repository able to tell.
+2. **Does it match production?** Run [`supabase/fingerprint.sql`](supabase/fingerprint.sql)
    against both and compare the six numbers. **This is the step that makes it
-   staging rather than a second database.** Five matching and the sixth
-   differing on comments is the known-good answer.
-4. Deploy the functions to it, with the workflow above.
-5. Set the branch's secrets, with their own spend cap.
-6. Run [`supabase/health.sql`](supabase/health.sql) blocks 4 and 5 against it.
-   Row-level security is on for every table, and `ensure_rls` is present. A
-   branch is built by applying migrations from empty, which is exactly the
-   situation where that event trigger matters.
-
-## What is proven locally, and what only a branch can prove
-
-`supabase/check.sh` already builds every migration from empty in a throwaway
-Postgres and runs twelve policy suites against it — which is most of what a
-preview branch would tell you about the schema, without a paid feature or a
-network. `supabase/rehearse.sh` goes further and applies the pending
-migrations to production's *shape* with rows in it.
-
-What neither can do is exercise the Edge Functions, the auth providers, the
-real keys and the app against a real API URL end to end. That is what staging
-is for, and it is the only reason to spend money on it.
+   staging rather than a second database**, and it is the step that has never
+   been done.
+3. **Is row-level security actually on?** [`supabase/health.sql`](supabase/health.sql)
+   blocks 4 and 5. A branch is built by applying migrations to a fresh
+   database, which is exactly where the `ensure_rls` event trigger matters.
+4. **Do the functions have their secrets?** Function secrets do not branch.
+   `ANTHROPIC_API_KEY` and the cron secret have to be set on the branch, and
+   the honest advice is a *different* Anthropic key with its own low spend cap
+   — a staging environment spending production's AI budget is a way to find
+   out about a mistake from a bill.
+5. **Is it the same Postgres major?** `supabase/config.toml` carries
+   `major_version` and its own header says why: a branch built on a different
+   major would teach you something untrue about production on its first run.
+   `supabase/check.sh` reads the same number rather than repeating it.
 
 ## Where this stands
 
-The workflow can target a branch, this document is the procedure, and the
-schema half is proven by `check.sh` on every run. **Enabling Branching and
-creating the first branch is a person's job in the dashboard and has not been
-done.** Until it has, "staging proven" in Stage 1's exit gate is not ticked,
-and nothing in this repository should be read as claiming otherwise.
+Steps 1 and 5 are arranged. **Steps 2, 3 and 4 have never been run against a
+preview branch, so "staging proven" in Stage 1's exit gate is not ticked**, and
+nothing in this repository should be read as claiming otherwise. The work is
+twenty minutes in a dashboard and a SQL editor, and it is twenty minutes
+nobody has spent.

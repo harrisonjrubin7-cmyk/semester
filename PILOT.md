@@ -251,8 +251,8 @@ The plan's exit gate, restated so it can be ticked:
 
 - [ ] Running two weeks or more with real testers on real courses
 - [ ] No open critical issue
-- [ ] Staging proven — a preview branch that matches production, Edge
-      Functions included
+- [ ] Staging proven — a preview branch *compared against* production, six
+      fingerprints, not merely one that built. [`STAGING.md`](STAGING.md)
 - [ ] Restore drill done and timed — [`RESTORE.md`](RESTORE.md)
 - [ ] Analytics reporting — [`ANALYTICS.md`](ANALYTICS.md), block 0 first
 - [ ] Extraction audit on every pilot syllabus, at the gate above

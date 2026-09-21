@@ -31,11 +31,27 @@ everything else, and a deliberate refusal to add a dashboard nobody opens.
 | AI budget | The provider's own dashboard is the bill; `supabase/health.sql` block 1 is the early warning | Partly |
 | Auth failures | Supabase dashboard → Logs → Auth | No |
 | Database health | `supabase/health.sql`, blocks 2–5 | Yes |
+| **The schema deploy** | Supabase dashboard → Branches, the `main` branch record | No |
 
-Three of the four are in the platform's logs and not in this repository. That
-is worth stating plainly rather than papering over with a query: nothing in
-`supabase/` can tell you that the `claude` function is returning 500s, and a
-monitoring document that implies otherwise is worse than one that admits it.
+Four of the five are in the platform and not in this repository. That is worth
+stating plainly rather than papering over with a query: nothing in `supabase/`
+can tell you that the `claude` function is returning 500s, and a monitoring
+document that implies otherwise is worse than one that admits it.
+
+**The fifth is not in the plan's list and is here because it is the one that
+has already failed silently.** Supabase Branching applies pending migrations to
+production on merge — [`ROLLBACK.md`](ROLLBACK.md) is the whole history — and on
+18 September that deploy failed. It failed on a branch record in the dashboard:
+no issue, no red tick, no comment, and no test in this repository able to see
+it. **Production's schema deploy was broken for three days and the repository
+was green throughout.**
+
+`migrationorder.test.ts` now catches the *cause* — a migration numbered below
+the ledger's watermark — by holding `migrations/` against
+`supabase/ledger.snapshot`. That is a real guard and it is not the same thing
+as watching the deploy: it checks a file against a dated reading, and the
+reading is only as fresh as the last person who took one. The branch record is
+the deploy itself. Look at it.
 
 ## The one alert
 
@@ -75,10 +91,13 @@ checklist of thirty items is a checklist that gets skipped.
    the pilot it should be `t`; `f` means the front door is open to the
    internet, which is a thing that is easy to leave undone and impossible to
    see from inside the app.
-5. **Dashboard → Logs → Edge Functions**, last seven days, errors only. You are
+5. **Dashboard → Branches**, the `main` record. It should read as having
+   deployed, not `MIGRATIONS_FAILED`. This is ten seconds and it is the check
+   that would have caught the three-day outage above on day one.
+6. **Dashboard → Logs → Edge Functions**, last seven days, errors only. You are
    looking for a shape, not a count: the same error repeating is a bug, a
    scatter of different ones is usually the internet.
-6. **Dashboard → Logs → Auth**, last seven days. Same question. A rise in
+7. **Dashboard → Logs → Auth**, last seven days. Same question. A rise in
    failures on one provider is usually a misconfigured redirect URL rather
    than an attack, and it looks exactly like a student saying "sign-in is
    broken" in a message you have not read yet.
