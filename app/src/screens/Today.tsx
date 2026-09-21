@@ -186,7 +186,14 @@ function YourTasks() {
               // tapped control in the app and it was less than half the
               // size a thumb needs; the padding grows the hit area without
               // moving the box, which is what DeadlineRow already did.
-              style={{ width: 34, flex: 'none', paddingTop: 'calc(11px * var(--density, 1))', paddingRight: 'calc(12px * var(--density, 1))', paddingBottom: 'calc(11px * var(--density, 1))', paddingLeft: '0', marginBlock: 'calc(-9px * var(--density, 1))', marginInline: '0' }}
+              //
+              // Real pixels, not density-scaled. A thumb does not get
+              // smaller because somebody asked for a tighter screen, and a
+              // sweep read these as spacing once already: scaled, the most
+              // tapped control in the app goes 42px to 36 at Tight. Same
+              // argument as `components/Fold.tsx`'s FoldHead, which carries
+              // the measurement that was taken when it happened there.
+              style={{ width: 34, flex: 'none', paddingTop: '11px', paddingRight: '12px', paddingBottom: '11px', paddingLeft: '0', marginBlock: '-9px', marginInline: '0' }}
             >
               <TickBox on={t.done} />
             </button>
@@ -737,7 +744,14 @@ function Feed_due() {
               // tapped control in the app and it was less than half the
               // size a thumb needs; the padding grows the hit area without
               // moving the box, which is what DeadlineRow already did.
-              style={{ width: 34, flex: 'none', paddingTop: 'calc(11px * var(--density, 1))', paddingRight: 'calc(12px * var(--density, 1))', paddingBottom: 'calc(11px * var(--density, 1))', paddingLeft: '0', marginBlock: 'calc(-9px * var(--density, 1))', marginInline: '0' }}
+              //
+              // Real pixels, not density-scaled. A thumb does not get
+              // smaller because somebody asked for a tighter screen, and a
+              // sweep read these as spacing once already: scaled, the most
+              // tapped control in the app goes 42px to 36 at Tight. Same
+              // argument as `components/Fold.tsx`'s FoldHead, which carries
+              // the measurement that was taken when it happened there.
+              style={{ width: 34, flex: 'none', paddingTop: '11px', paddingRight: '12px', paddingBottom: '11px', paddingLeft: '0', marginBlock: '-9px', marginInline: '0' }}
               >
                 <TickBox on={done} />
               </button>

@@ -396,8 +396,8 @@ export function FoldHead({
           against a floor of 24. The drawing is identical at all three: the
           margin gives back exactly what the padding took, whatever it was.
         */
-        paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: '0',
-        marginBlock: 'calc(-6px * var(--density, 1))', marginInline: '0',
+        paddingBlock: '6px', paddingInline: '0',
+        marginBlock: '-6px', marginInline: '0',
         background: 'none',
         border: 'none',
         font: 'inherit',
