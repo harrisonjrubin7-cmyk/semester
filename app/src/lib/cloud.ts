@@ -304,10 +304,16 @@ export function providersOn(): Promise<Provider[] | null> {
   return switchedOn;
 }
 
-/** Ask again — for tests, and for a project reconfigured under a live tab. */
-export function forgetProvidersOn(): void {
-  switchedOn = null;
-}
+/*
+ * A `forgetProvidersOn()` sat here to clear the memo above.
+ *
+ * "For tests, and for a project reconfigured under a live tab" — and neither
+ * came. `cloud.test.ts` isolates by `vi.resetModules()` and a fresh import, so
+ * all eleven of its `providersOn` cases already begin with `switchedOn` unset;
+ * the export was a weaker second way to do what the harness was doing better.
+ * A project reconfigured under a live tab is a page reload away from being
+ * asked again.
+ */
 
 export async function signInWith(provider: Provider): Promise<void> {
   const { error } = await (await cloud()).auth.signInWithOAuth({

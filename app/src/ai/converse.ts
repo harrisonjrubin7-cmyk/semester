@@ -4,7 +4,7 @@ import { ask, type ToolCall, type Turn } from '../lib/claude';
 import { provider } from '../lib/assistant';
 import type { Usage } from '../lib/spend';
 import { build as buildContext } from '../lib/context';
-import { readMode, type Mode } from '../lib/mode';
+import { readMode, type Mode, type Read } from '../lib/mode';
 import type { Thread } from '../lib/threads';
 import { systemPrompt } from './prompt';
 import { answerLocally, type Local } from '../lib/localask';
@@ -51,8 +51,13 @@ export interface Conversation {
   dropped: number;
   streaming: string;
   busy: boolean;
-  /** What the last question was read as. Shown, never hidden. */
-  mode: Mode | null;
+  /**
+   * What the last question was read as. **Shown, never hidden** — which is
+   * what this field said while it was `mode: Mode | null`, a routing value
+   * neither surface drew. Kept whole now, so the two strings `readMode`
+   * computes beside the mode reach the screen they were written for.
+   */
+  read: Read | null;
   /** Which of your records the last answer drew on. */
   used: string[];
   /** What it is reading right now, while it reads it. Empty the rest of the time. */
@@ -157,11 +162,11 @@ export function useConversation(): Conversation {
    * `useState`'s signature so everything downstream is unchanged.
    */
   const live = useLive();
-  const { turns, streaming, busy, mode, used, looking, locally, proposals, applied, spend, dropped } =
+  const { turns, streaming, busy, read, used, looking, locally, proposals, applied, spend, dropped } =
     live;
   const setStreaming = (v: string) => setLive('streaming', v);
   const setBusy = (v: boolean) => setLive('busy', v);
-  const setMode = (v: Mode | null) => setLive('mode', v);
+  const setRead = (v: Read | null) => setLive('read', v);
   const setUsed = (v: string[]) => setLive('used', v);
   const setLooking = (v: string[]) => setLive('looking', v);
   const setLocally = (v: Local | null) => setLive('locally', v);
@@ -287,9 +292,9 @@ export function useConversation(): Conversation {
        */
       let spent: Usage | null = null;
       try {
-        const read = readMode(text);
-        setMode(read.mode);
-        const local = localFor(text, read.mode, offered(school.capabilities, state.role));
+        const how = readMode(text);
+        setRead(how);
+        const local = localFor(text, how.mode, offered(school.capabilities, state.role));
         setLocally(local);
 
         /*
@@ -320,7 +325,7 @@ export function useConversation(): Conversation {
          * different questions — see the note on `build`'s `onScreen`.
          */
         const seen = assemble(ai);
-        const drawn = buildContext(text, read.mode, state, catalog, now, state.screen, seen.text);
+        const drawn = buildContext(text, how.mode, state, catalog, now, state.screen, seen.text);
         /** Everything this answer drew on: what travelled, plus what it fetched. */
         const drew = new Set(drawn.used);
         setUsed(drawn.used);
@@ -378,7 +383,7 @@ export function useConversation(): Conversation {
 
           const said = await ask({
             about: state.screen,
-            system: systemFor(read.mode, drawn.text),
+            system: systemFor(how.mode, drawn.text),
             messages: sending,
             /*
              * Room for an answer that also proposes something.
@@ -411,7 +416,7 @@ export function useConversation(): Conversation {
                * grade scale" is no longer in the mode the prompt describes.
                * `prompt.test.ts` holds the other half of this.
                */
-              read.mode === 'app' || round >= MOST_ROUNDS ? TOOLS : [...TOOLS, ...LOOKUPS],
+              how.mode === 'app' || round >= MOST_ROUNDS ? TOOLS : [...TOOLS, ...LOOKUPS],
             onToolUse: (call) => {
               if (isLookup(call.name)) {
                 wants.push(call);
@@ -584,7 +589,7 @@ export function useConversation(): Conversation {
     turns,
     streaming,
     busy,
-    mode,
+    read,
     used,
     looking,
     locally,

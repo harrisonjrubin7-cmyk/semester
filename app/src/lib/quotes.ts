@@ -350,29 +350,10 @@ function index(text: string): Index {
   return { src, where };
 }
 
-/**
- * The closest passage to a quote in one source, or nothing close enough.
- *
- * Anchored, not scanned. The rarest telling word the quote and the source
- * have in common says where the passage could possibly be; a window is
- * placed around each of its occurrences, sized a little longer than the
- * quote, and only those windows are aligned. A reading with no occurrence of
- * any of the quote's distinctive words is not a reading the quote came from,
- * and is answered without doing any work at all.
- *
- * The window is what keeps this honest. Its length is the quote's plus a
- * quarter either side, so the words have to be in one passage rather than
- * scattered through a chapter — which is the difference between a quotation
- * and a sentence assembled out of a reading's vocabulary.
- *
- * An ellipsis is matched with its gap closed, so a quotation that leaves out
- * more than the window's slack gets no near verdict. That is the right way
- * round: the alternative is a passage offered as "close to yours" that omits
- * a paragraph the reader cannot see.
- */
-export function nearest(text: string, quote: string): Near | null {
-  return closest(index(text), quote);
-}
+/* A `nearest(text, quote)` stood here, wrapping `closest(index(text), …)`,
+ * and nothing imported it: `screens/Proof.tsx` enters through `checkDraft`.
+ * The window heuristic its docstring argued for is not gone — it is what
+ * `closest` below still does, on the path that is taken. */
 
 function closest(held: Index, quote: string): Near | null {
   const q = words(quote).map((t) => t.w);

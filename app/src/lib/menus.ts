@@ -90,7 +90,9 @@ export const ORDER = [
   'help',
 ] as const;
 
-export type MenuId = (typeof ORDER)[number];
+/* A `MenuId = (typeof ORDER)[number]` stood here and nothing annotated with
+ * it. `ORDER` above is exported and is the source of truth; a consumer that
+ * wants the union derives it in one line. */
 
 /**
  * The bar as it should be drawn.
