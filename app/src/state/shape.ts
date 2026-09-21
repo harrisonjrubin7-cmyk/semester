@@ -75,7 +75,7 @@ import { DEFAULTS as DEFAULT_CONTROLS, type Controls } from '../lib/controls';
 import { DEFAULT_ROLE, roleOf, type Role } from '../lib/role';
 import type { Balance } from '../lib/meals';
 import type { Residence } from '../lib/housing';
-import { LEGACY_TERM } from '../lib/term';
+import { LEGACY_TERM, termNow } from '../lib/term';
 import { navOf, readLook, type Look } from '../lib/look';
 import { readStarted } from '../lib/underway';
 import { SCHEMA, migrate, versionOf, type Migrated } from '../lib/migrate';
@@ -1557,11 +1557,51 @@ export function primePersisted(state: Persisted | null): void {
  * What they do, and why, is written over each of them there.
  */
 
+/**
+ * What a fresh install starts as, for the fields a constant cannot answer.
+ *
+ * `DEFAULT_PERSISTED.term` is `LEGACY_TERM`, and that is the right answer to
+ * the question it was written for: a *saved* state with no `term` in it holds
+ * courses from before terms existed, and those courses carry Fall 2026 dates.
+ * It is the wrong answer to a different question that was being asked through
+ * the same field — what semester is it, for somebody opening the app for the
+ * first time — because the answer to that one is a fact about the day, and
+ * `2026FA` was a fact about the week the constant was written.
+ *
+ * Measured, before changing it, on the real `loadPersisted` with nothing
+ * stored:
+ *
+ *     opened Mon Sep 21 2026 · app says 2026FA · actually 2026FA
+ *     opened Wed Feb 03 2027 · app says 2026FA · actually 2027SP
+ *     opened Thu Jun 03 2027 · app says 2026FA · actually 2027SU
+ *     opened Sun Jan 09 2028 · app says 2026FA · actually 2028SP
+ *
+ * `lib/term.ts` has had `termNow` throughout — "the term a date falls in, for
+ * defaulting a new course sensibly" — and outside its own tests **nothing
+ * called it**. This is its caller.
+ *
+ * What the wrong term costs is not a label. `screens/Import.tsx` stamps every
+ * course it adds with `state.term`, and `yearFor` resolves a bare month
+ * against that term's own start month, so a January deadline filed under Fall
+ * 2026 is a deadline in 2027 and a September one is a deadline a year in the
+ * past. And `components/TermSwitch.tsx` is deliberately absent until there is
+ * more than one term, so the student has nothing on screen to correct it
+ * with.
+ *
+ * The sample survives this. `state/store.tsx` falls back to showing every
+ * module when the chosen term holds none, so a fresh install in Spring 2027
+ * still sees the four Fall 2026 sample courses — and stops seeing them once
+ * it has a real course of its own, which is what should happen.
+ */
+export function freshPersisted(now: Date = new Date()): Persisted {
+  return { ...DEFAULT_PERSISTED, term: termNow(now).id };
+}
+
 export function loadPersisted(): Persisted {
   if (primed) return primed;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { ...DEFAULT_PERSISTED };
+    if (!raw) return freshPersisted();
     /*
      * Through the migration before anything reads a field.
      *

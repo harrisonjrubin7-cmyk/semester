@@ -24,6 +24,26 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### The app asks which semester you are in, instead of assuming Fall 2026
+
+A brand-new install started in Fall 2026 whatever day you opened it on — the
+semester was written into the app as a fixed value rather than read off the
+calendar. Today that is right. In January it would not have been, and nothing
+on screen would have said so: courses you added would have been filed under
+last autumn, deadlines with no year on them would have resolved against the
+wrong one, and the semester switcher that would let you fix it does not appear
+until you have courses in two semesters.
+
+A new install now starts in whatever semester it is actually opened in, and
+the first run asks. Step 3 is *"When and where do you study?"*, with the
+calendar's guess already chosen and the semesters either side of it beside it
+— for setting up in December for a January start, or a summer session the
+calendar has already called Fall.
+
+Nothing you have already saved moves. A semester you had already chosen stays
+chosen, and courses saved before the app knew about semesters at all stay in
+Fall 2026, where their dates belong.
+
 ### Your university can send its own data as a file, and you load it
 
 Until now there were two ways to tell Semester where you study: find your

@@ -294,7 +294,7 @@ whether the proposal is good.
 
 | Band | Item | Verdict |
 |---|---|---|
-| P0 | Repeatable first setup | **Partly already built.** The manual route and the key-free doors landed; the school/term-first three-step shape is open. |
+| P0 | Repeatable first setup | **The term half landed; the rest was already built or stays open.** The manual route and the key-free doors were already there. The *term* was not asked at all — it was a constant, correct in the week it was written — and it is now the first thing on the school step. The three-step shape itself (add course → confirm dates → first action, inside the run) is still open. See below. |
 | P1 | Make tools easy to find | **Partly landed.** Three of the patch's five items above; the filter move declined with reasons; user testing is not a code item. |
 | P1 | **Make progress mean actual progress** | **Landed.** The defect. |
 | P1 | One calendar integration, then one LMS | **Not a code item here.** Provider registration and an institutional agreement. The copy that misdescribed it is fixed above. |
@@ -304,6 +304,61 @@ whether the proposal is good.
 | P2 | Offline, sync and reminders | **Open, and the claim is exact.** `HORIZON_DAYS = 7` in `lib/push.ts`: *"How far ahead to queue. A week is enough to survive a phone left in a bag."* The report's question — what happens after longer inactivity — is not answered anywhere. |
 | P2 | Shared coursework with a small group | **Open.** Needs two real accounts, which is the report's own acceptance criterion. |
 | P3 | Lecture capture, career discovery | **Open, and correctly deferred.** |
+
+
+---
+
+### Repeatable first setup — the half of it that was a constant
+
+The report asks for **school + term** before anything else. The school has
+been asked since the first run existed. The term never was: `state.term`
+started life as `LEGACY_TERM`, whose own docstring calls it "the term every
+course saved before terms existed belongs to" and "only ever a fallback". It
+was doing two jobs, and it only does one of them correctly.
+
+Measured on the real `loadPersisted`, with nothing stored:
+
+    opened Mon Sep 21 2026 · app says 2026FA · actually 2026FA
+    opened Wed Feb 03 2027 · app says 2026FA · actually 2027SP
+    opened Thu Jun 03 2027 · app says 2026FA · actually 2027SU
+    opened Sun Jan 09 2028 · app says 2026FA · actually 2028SP
+
+`lib/term.ts` has always had `termNow` — *"the term a date falls in, for
+defaulting a new course sensibly"* — and outside its own tests **nothing
+called it**.
+
+This is not a label. `screens/Import.tsx` stamps every course it adds with
+`state.term`, and `yearFor` resolves a bare month against that term's own
+start month, so a September deadline filed under Fall 2026 is a deadline a
+year in the past. And `components/TermSwitch.tsx` is deliberately absent until
+there is more than one term — an argued decision, and the right one — so a
+student in that state has nothing on screen to correct it with.
+
+**Two changes, and the control is the half that must not move.** A fresh
+install now starts in the term of the day it is opened, through both doors
+onto a first install (`state/shape.ts` and `state/persist/index.ts`; fixing
+one would have left the path this build actually takes still in Fall 2026).
+The constant itself stays exactly where it was, because a *saved* state with
+no term was written before terms existed and its courses really do hold Fall
+2026 dates — filing those under today would move every deadline in them by a
+year, which is the failure `LEGACY_TERM` exists to prevent. Both directions
+are asserted.
+
+Then it is asked. Step 3 of the run becomes *"When and where do you study?"*,
+with the calendar's guess preselected among its neighbours rather than assumed
+— because the two cases a first run actually meets are the ones the calendar
+gets wrong: setting up in December for a term that begins in January, and a
+summer session the calendar has already called Fall.
+
+Driven in Chromium at 420px, `pageerror` empty: the row draws with Fall 2026
+selected, `data-more="end"` so the app's own overflow affordance is doing its
+job at 477px of chips in a 354px row, and choosing Spring 2027 survives a
+reload — read off the screen rather than out of `localStorage`, which this
+document's own last section explains is the wrong store to ask.
+
+**Still open, and it is the larger half:** the run ends and hands an empty app
+to `FirstRun` rather than carrying somebody through add-a-course, confirm the
+dates, and a first task. That is the "three-step shape" proper.
 
 ---
 

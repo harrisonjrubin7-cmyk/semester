@@ -84,6 +84,23 @@ describe('the first run on a device', () => {
     expect(marker?.value).toBe(SCHEMA);
   });
 
+  it('starts the account in the term it was created in, not in a constant', async () => {
+    /*
+     * The second door onto a fresh install. `shape.ts` has one and this file's
+     * `load` has the other, and fixing only the first would leave every
+     * database-path install — which is the path this build actually takes —
+     * still starting in Fall 2026. See `state/freshterm.test.ts` for what the
+     * term costs when it is wrong.
+     */
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2027, 1, 3));
+    const { termNow } = await import('../../lib/term');
+    const state = await load();
+    expect(state?.term).toBe('2027SP');
+    expect(state?.term).toBe(termNow(new Date(2027, 1, 3)).id);
+    vi.useRealTimers();
+  });
+
   it('stamps it when storage cannot be read at all', async () => {
     // A private window with storage off: nothing to move, and nothing ever
     // will be, so this is a new account rather than a move to come back to.
