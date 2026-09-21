@@ -192,8 +192,11 @@ production build clean · driven in a browser, `pageerror` empty on all four run
 
 ## To do
 
-- The eleven hand-drawn rows, one look each, if the owner wants them on
-  `ItemRow` — carried from the twentieth pass.
+- ~~The eleven hand-drawn rows, one look each.~~ **Done** — taken in
+  [#539](https://github.com/harrisonjrubin7-cmyk/semester/pull/539), which
+  merged after this pass was written against `a8c3f7d`. Four were rows and are
+  on `ItemRow`; seven were not rows at all. The verdicts are the twentieth
+  pass's T5 below, so the eleven looks are not taken a third time.
 - `account` on Profile — carried from the nineteenth, the owner's to name.
 - **`offerable()`'s default is still the ungated registry.** The one caller now
   passes a pool; the default is kept for the tests. If a second caller ever
@@ -331,28 +334,33 @@ than a judgement about how much it matters:
 | `screens/call/Stage.tsx:972` | who is at the door · let in / not now | **yes** |
 | `screens/call/Stage.tsx:1087` | who is in the call · their pips | **yes** |
 | `ai/Answer.tsx:269` | a `<th>`/`<td>` in a markdown table | no — a table cell |
-| `components/MuteCourses.tsx:80` | `role="switch"`, `aria-checked` | no — `ItemRow` carries neither |
-| `creation/DesignEditor.tsx:626` | `aria-pressed` layer selector | no — same, and the selection is a colour |
+| `components/MuteCourses.tsx:80` | `role="switch"`, `aria-checked` | **now yes** — `ItemRow` carries them since the widening |
+| `creation/DesignEditor.tsx:626` | `aria-pressed` layer selector | **now yes** — same; the selection stays a colour on the title |
 | `screens/Athletics.tsx:290` | `<label>` wrapping a checkbox | no — a checkbox inside a `button` is invalid |
 | `screens/Career.tsx:908` | `<label>` wrapping a checkbox | no — same |
 | `screens/Data.tsx:384` | `aria-expanded` disclosure | no — the hairline wraps a button *and* its panel |
 | `screens/Pathway.tsx:762` | a `<details>` | no — `ItemRow` cannot be one |
 
-Three of the seven are ruled out by **accessibility rather than by looks** —
+Three of the seven were ruled out by **accessibility rather than by looks** —
 `role="switch"`, `aria-pressed` and the `<label>`/checkbox pairing are all
-things the row would lose on the way in. `ItemRow` could be widened to carry
-the first two (`Row` already takes `role` and `ariaChecked`; `ItemRow` does not
-pass them through), and that is a change to the component rather than to a
-screen, so it is not this worklist's.
+things the row would have lost on the way in. **Two of those three have since
+been answered**: `ItemRow` was widened to carry `role`, `aria-checked`,
+`aria-pressed` and `aria-label`, and `MuteCourses` and `DesignEditor` are on it.
+The `<label>`/checkbox pair cannot be, and is not a widening away: a checkbox
+inside a `button` is invalid markup, not a missing prop.
 
-So the honest figure is **7 hand-drawn rows in 7 files**, and T3's count of 11
+That leaves **5 hand-drawn rows in 5 files**, and T3's count of 11
 was itself still one grep over more than one idiom — the third time in three
 passes that the instrument was the thing that needed correcting.
 
 ## To do
 
-- Widen `ItemRow` to pass `role`/`ariaChecked`/`ariaPressed` through to `Row`,
-  if `MuteCourses` and `DesignEditor` are wanted on it. A component change.
+- ~~Widen `ItemRow` to pass `role`/`ariaChecked`/`ariaPressed` through to
+  `Row`.~~ **Done**, and it was not only a passthrough: `Row`'s `div` branch
+  rendered none of them, so a role on a row without an `onClick` was silently
+  dropped. Both screens are on `ItemRow` now and
+  `components/shell/rows.aria.test.tsx` renders the component and reads the
+  attributes off the DOM, which is the one question source-reading cannot ask.
 - `account` on Profile — carried from the nineteenth pass, the owner's to name.
 - A pointer-pairing guard past `edit`, when a second instance exists.
 

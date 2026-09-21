@@ -27,6 +27,7 @@
 import { useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { secondLine } from '../lib/dim';
+import { ItemRow } from './shell/Rows';
 
 export function MuteCourses() {
   const { state, dispatch, catalog } = useStore();
@@ -62,49 +63,33 @@ export function MuteCourses() {
       {catalog.courses.map((c) => {
         const off = muted.includes(c.id);
         return (
-          <button
+          <ItemRow
             key={c.id}
-            type="button"
-            className="bare tappable"
             role="switch"
-            aria-checked={off}
-            aria-label={off ? `Unmute ${c.code}` : `Mute ${c.code}`}
+            ariaChecked={off}
+            ariaLabel={off ? `Unmute ${c.code}` : `Mute ${c.code}`}
             onClick={() => dispatch({ type: 'muteCourse', courseId: c.id, on: !off })}
-            style={{
-              display: 'flex',
-              alignItems: 'baseline',
-              gap: 'var(--sp-4)',
-              width: '100%',
-              textAlign: 'left',
-              paddingBlock: 'var(--sp-4)',
-              borderBottom: '1px solid var(--app-line)',
-            }}
-          >
-            <span style={{ fontSize: 'var(--type-md)', flex: 'none' }}>{c.code}</span>
-            <span
-              style={{
-                flex: 1,
-                minWidth: 0,
-                fontSize: 'var(--type-xs)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                ...secondLine(),
-              }}
-            >
-              {c.name}
-            </span>
-            <span
-              style={{
-                flex: 'none',
-                fontSize: 'var(--type-xs)',
-                color: off ? 'var(--app-warn)' : undefined,
-                ...(off ? {} : secondLine()),
-              }}
-            >
-              {off ? 'silenced' : 'on'}
-            </span>
-          </button>
+            /*
+              The code leads and the name sits under it, where this drew them
+              side by side with the name clipped to an ellipsis. Stacking is
+              `ItemRow`'s shape and it is the better one here: on a phone the
+              name is the half that was being cut, and it is what somebody
+              scans when two courses share a department.
+            */
+            title={c.code}
+            meta={c.name}
+            trailing={
+              <span
+                style={{
+                  fontSize: 'var(--type-xs)',
+                  color: off ? 'var(--app-warn)' : undefined,
+                  ...(off ? {} : secondLine()),
+                }}
+              >
+                {off ? 'silenced' : 'on'}
+              </span>
+            }
+          />
         );
       })}
 

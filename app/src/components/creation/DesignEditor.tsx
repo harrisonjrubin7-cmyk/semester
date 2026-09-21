@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActionButton, FilePick, SectionLabel } from '../ui';
 import { secondLine } from '../../lib/dim';
+import { ItemRow } from '../shell/Rows';
 import { addFile, getFile } from '../../lib/files';
 import { cloudConfigured } from '../../lib/cloud';
 import { download } from '../../lib/deliver';
@@ -612,24 +613,19 @@ export function DesignEditor({
             Layers
           </SectionLabel>
           {d.layers.map((layer, i) => (
-            <button
+            <ItemRow
               key={layer.id}
-              type="button"
-              className="bare tappable"
-              aria-pressed={layer.id === selected}
+              ariaPressed={layer.id === selected}
               onClick={() => setSelected(layer.id)}
-              style={{
-                display: 'block',
-                width: '100%',
-                textAlign: 'left',
-                paddingBlock: 'var(--sp-3)',
-                borderBottom: '1px solid var(--app-line)',
-                fontSize: 'var(--type-base)',
-                color: layer.id === selected ? 'var(--app-accent)' : 'var(--app-fg)',
-              }}
-            >
-              {i + 1}. {layer.text || layer.kind}
-            </button>
+              // The accent stays on the title rather than on the row: it is
+              // the layer's name that is selected, and `ItemRow` has no colour
+              // of its own to override.
+              title={
+                <span style={{ color: layer.id === selected ? 'var(--app-accent)' : undefined }}>
+                  {i + 1}. {layer.text || layer.kind}
+                </span>
+              }
+            />
           ))}
         </>
       )}
