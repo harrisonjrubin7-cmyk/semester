@@ -323,6 +323,13 @@ So the mechanism gap against Coursicle is closed on the provider that matters
 most, and closed without an institutional agreement — which was the property
 this proposal correctly identified as the point.
 
+Reading an LMS is not submitting into one, and the second question has a
+different answer. `GRADESCOPE-TURNITIN.md` checks it: Gradescope publishes no
+public API and integrates only as an LTI tool a school installs, and the
+Turnitin Core API is reached through a seven-step partner process. Neither is a
+route this app can take by itself, and both are downstream of a professor's
+course configuration rather than of an API key.
+
 ### 6 · A lightweight lecture-capture-to-notes feature · **Landed**
 
 > Due Gooder and Sylly both offer record-the-lecture → transcript →

@@ -53,7 +53,7 @@ function Door({
     >
       <Plus size={18} />
       <span style={{ flex: 1, minWidth: 0 }}>
-        <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'calc(17px * var(--text-scale, 1))' }}>
+        <span style={{ display: 'block', fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>
           {title}
         </span>
         <span style={{ display: 'block', fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>

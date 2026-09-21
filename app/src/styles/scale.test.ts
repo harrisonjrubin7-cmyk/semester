@@ -114,10 +114,23 @@ describe('what it catches', () => {
     expect(p.found).toBe("fontSize: '13px'");
   });
 
+  /*
+   * Case `b`'s 18.5 is chosen the way `DRIFT`'s 1.23 is, and for the third
+   * instance of the same accident. It carried 17px, which was off the scale
+   * when it was written and is `--type-display-xs` now that the gap between
+   * `lg` and `xl` has steps in it — so the case written to prove a calc is
+   * *allowed* began proving the opposite. It had already been repaired once
+   * before, for the same reason.
+   *
+   * A fixture that demonstrates "off the scale" cannot use a value the app
+   * finds useful, because the app's useful values are exactly what later
+   * passes name. 18.5 sits between two steps, is fractional where the scale
+   * is not, and appears nowhere in the app.
+   */
   it('allows a token, a calc against the scale, and inherit', () => {
     expect(
       on(`export const a = <i style={{ fontSize: 'var(--type-md)' }} />;
-export const b = <i style={{ fontSize: 'calc(17px * var(--text-scale, 1))' }} />;
+export const b = <i style={{ fontSize: 'calc(18.5px * var(--text-scale, 1))' }} />;
 export const c = <i style={{ fontSize: 'inherit' }} />;
 export const d = <i style={{ fontSize: '0.92em' }} />;`),
     ).toEqual([]);

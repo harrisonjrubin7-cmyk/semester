@@ -138,7 +138,7 @@ export function Bill() {
         <div
           className="chrome-text"
           style={{
-            fontSize: 'calc(24px * var(--text-scale, 1))',
+            fontSize: 'var(--type-display-lg)',
             lineHeight: 'var(--leading-display)',
             marginTop: 'var(--sp-3)',
             textWrap: 'pretty',

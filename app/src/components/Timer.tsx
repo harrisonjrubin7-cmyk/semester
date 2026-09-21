@@ -271,7 +271,7 @@ export function Timer({
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)' }}>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(20px * var(--text-scale, 1))', flex: 1, fontVariantNumeric: 'tabular-nums' }}
+          style={{ fontSize: 'var(--type-display-sm)', flex: 1, fontVariantNumeric: 'tabular-nums' }}
         >
           {clockLine(spent)}
         </div>

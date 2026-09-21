@@ -57,7 +57,7 @@ export function TimerLine() {
             >
               <span
                 style={{
-                  fontSize: 'calc(19px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-display-sm)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >

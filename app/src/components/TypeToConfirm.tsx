@@ -97,7 +97,7 @@ export function TypeToConfirm({
       <h2
         style={{
           marginTop: 'calc(8px * var(--density, 1))', marginInline: '0', marginBottom: '0',
-          fontSize: 'calc(19px * var(--text-scale, 1))',
+          fontSize: 'var(--type-display-sm)',
           textWrap: 'balance',
         }}
       >

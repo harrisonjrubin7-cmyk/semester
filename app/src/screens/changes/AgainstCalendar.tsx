@@ -165,7 +165,7 @@ export function AgainstCalendar() {
             <div className="kicker">Against {events.length} calendar entries</div>
             <div
               className="chrome-text"
-              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-sm)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
+              style={{ fontSize: 'var(--type-display)', lineHeight: 'var(--leading-display-sm)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
             >
               {summary(report)}
             </div>

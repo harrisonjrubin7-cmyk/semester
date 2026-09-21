@@ -31,6 +31,7 @@ import {
   RATES_READ,
 } from '../../lib/spend';
 import { ActionButton, SectionLabel } from '../../components/ui';
+import { AboutMe } from '../../components/AboutMe';
 
 /**
  * Where the answers come from, what they cost, and what leaves the device.
@@ -427,6 +428,21 @@ export function SettingsAssistant() {
             </Group>
           )}
 
+          {/*
+            Above the two disclosure lists rather than below them, because it
+            is the one thing on this page a person does rather than reads, and
+            the list under "What it can see" now has a line about it.
+          */}
+          <Group
+            header="What it knows about you"
+            footer="Said once, and every part of the app that asks Claude anything is told it — the Ask tab, Work the problem, Draft it, the study tools. Nothing here is guessed at or remembered from a conversation: a line is here because you typed it, and it is gone when you delete it. These are preferences, not instructions — a line cannot make the assistant write work you will hand in as your own."
+            lit={lights('memory about you preferences remember profile context', lit)}
+          >
+            <CustomRow line={false}>
+              <AboutMe />
+            </CustomRow>
+          </Group>
+
           {/* Two lists, both written from what the code does rather than from
               what the feature was meant to do. The first stopped being true
               once `ask` widened past one course, which is exactly how these
@@ -441,10 +457,16 @@ export function SettingsAssistant() {
                 its material.
                 <br />
                 <br />
+                Whatever you have written above, on every request — that is the point of it, and
+                it is the one thing here that travels with the study tools as well as with a
+                question.
+                <br />
+                <br />
                 Never, whatever is asked: your notes, your drafts, your files, anyone in People or
                 Letters, and no key or token of any kind. That list is one file —{' '}
-                <code>lib/context.ts</code> — and it is the only thing that decides what leaves this
-                device. Every screen’s description goes through it too, rather than around it.
+                <code>lib/context.ts</code> — which decides everything that travels with a question,
+                and names the one thing added anywhere else. Every screen’s description goes through
+                it too, rather than around it.
               </div>
             </CustomRow>
           </Group>

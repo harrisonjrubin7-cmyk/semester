@@ -93,7 +93,7 @@ select public.set_invite_only(true);
 
 It does not touch anybody already signed in and it is undone the same way with
 `false`. Use it when you do not yet know whether the way in is still open;
-[`supabase/migrations/20260901001200_invites.sql`](supabase/migrations/20260901001200_invites.sql)
+[`supabase/migrations/20260921003300_invites.sql`](supabase/migrations/20260921003300_invites.sql)
 is the whole of it, and `invites.check.sql` is what proves a signed-out visitor
 cannot call it.
 

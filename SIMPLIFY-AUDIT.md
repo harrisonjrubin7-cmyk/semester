@@ -1,3 +1,141 @@
+# One app — the twenty-eighth pass: two answerers to one typed question, and only one of them was gated
+
+Against `main` at `36807e7`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge. One answerer gated in both halves, one guard.
+
+The twenty-seventh gated three *counts* on `offered(capabilities, role)` and
+said the registry is the app while a count is about a person. This is the same
+sentence one step further in: not a number about the person, but an **answer
+to something they typed**.
+
+## T1 — "where is the meal plan", answered twice
+
+The app answers that question in two places. `lib/find.ts` is the search box.
+`lib/localask.ts` is the offline answerer behind Ask — the thing that replies
+without a model, without a key and without a connection, which is the case its
+own docblock argues is the most important one to have.
+
+Search has been gated on the school and the role since it was written, and
+says why, at length:
+
+> It is here at all because **search is a gate like any other**. Search was the
+> leak that would have let somebody reach a meal-plan screen their university
+> does not have, and a role is the same kind of hole — a professor typing
+> "housing" should not be offered a dorm screen the directory has already
+> stopped showing them.
+
+`localask.ts` read `DESTINATIONS`. Measured, the same words into each:
+
+| Typed | Search answered | Ask answered |
+| --- | --- | --- |
+| "where is the meal plan" — school with no meal plan | *nothing* | **`meals`** |
+| "housing" — faculty | *nothing* | **`housing`** |
+| "meal swipes" — school with no meal plan | *nothing* | **`meals`** |
+| "degree audit" — faculty | *nothing* | **`degree`** |
+| "campus map" — school with no campus map | *nothing* | **`maps`** |
+| **every one of those — Vanderbilt student** | **the screen** | **the same screen** |
+
+**The last row is the control, and it is why this lasted.** For the student
+the app was written against, the two answerers agree exactly, on every query.
+The offline one was not broken; it was right for one person and wrong for
+everybody else — the twenty-seventh's finding, in a different mechanism.
+
+### The file stated its safety property, and it was the wrong one
+
+`localask.ts` ended its docblock with this:
+
+> Everything here comes from the registry and the generated guide, so it **can
+> never name a screen that does not exist** — the same rule the guide is held
+> to, for the same reason.
+
+True, and beside the point. A screen can exist in the app and not exist *for
+the person typing*, and naming one of those is the same failure. The sentence
+is why nobody looked: it reads like a proof.
+
+### Both halves leaked, and the ranking is the half you notice
+
+`answerLocally` returns two things — ranked `matches`, and `fromGuide`, lines
+of the generated manual quoted verbatim. Gating only the ranking would have
+left the leak one field along in the same return value:
+
+| Typed, at a school with none of it | `fromGuide` still answered |
+| --- | --- |
+| "where is the meal plan" | *"Open it when you are thinking about meal, meals, plan."* |
+| "housing move out date" | *"Your room, and the move-out date counted from your last exam rather than left as a rule."* |
+
+That was found by probing the second field rather than assuming the first was
+the whole of it — the habit this repository's teardown probes taught.
+
+The **Every screen** section of the guidebook is one block per registry row,
+headed `### <label>`, so a block belonging to a screen this person does not
+have is dropped whole. Blocks, not lines: a heading names the screen its
+following lines are about, and a line on its own does not.
+
+### What was left alone, measured rather than assumed
+
+The guidebook itself still documents all fifty-eight — the twenty-seventh's
+rule, that a manual describes the app while an answer is addressed to a
+person, and the app-mode system prompt is still right to carry the lot. The
+other operating sections of the guide are not per-screen, and **no settings
+row is gated by school or role** (checked: eleven rows, none of them in
+`REQUIRES` or `STUDENT_ONLY`), so there is nothing there to filter and no
+filter was added.
+
+`lib/localask.ts` no longer imports `DESTINATIONS` at all — the structural
+half, and the stronger one, as `6071626` argued when it did the same to
+`lib/unseen.ts`.
+
+## Also found, recorded rather than fixed
+
+`lib/tabbar.ts` exports `choosable()` — *"every screen that may go in the
+bar"* — over the ungated registry. It has **no production caller**:
+`components/TabChooser.tsx` builds its list from `destinationsFor`, which
+gates on both. So it is a dead export that is also a trap, the exact shape
+`6071626` closed in `lib/unseen.ts`, and the only thing holding it shut is
+that nobody has called it. Left for its own pass rather than folded in here,
+because cutting it rewrites five cases in `tabbar.test.ts` and that is a
+change about tests, not about this.
+
+## Proving it
+
+`lib/twoanswerers.test.ts`, eight cases. Each half reverted separately and
+watched fail:
+
+| Reverted | Red |
+| --- | --- |
+| ranking → registry | *"where is the meal plan" named meals: expected [ 'home', 'brief', 'courses', …(44) ] to include 'meals'* |
+| quoting → unfiltered | *expected 'Open it when you are thinking about m…' not to match /meal/i*; *expected 'Your room, and the move-out date coun…' not to match /move-out/i* |
+
+Both describes carry a control that must **not** move: the Vanderbilt student
+still gets `meals`, `housing`, `degree` and `maps`, and still gets both guide
+lines quoted back. A suite asserting only "the faculty user gets less" would
+pass against an answerer that had simply stopped answering.
+
+## Driven, and what the drive did not show
+
+`pageerror` empty. **The `Locally` panel did not draw**, and this is recorded
+rather than explained: asked *"where is the meal plan"* on a keyless profile,
+the Ask screen showed *"No key yet. Sign in to use the shared one, or add your
+own under Settings"* and no local answer.
+
+Two things rule out the obvious readings. The pool is not the cause — the
+twenty-seventh measured `offered()` at **58** on this same skipped profile, so
+`meals` is in it. And the panel is not mine — `setLocally(local)` runs before
+the request, and `ai/Actions.tsx`'s `<Locally>` hangs off the last turn, both
+untouched here.
+
+So this is a **question about the rendering, not about the answer**, and it is
+a good one: `<Locally>` has no component test anywhere in the suite, and the
+file's own argument for existing is *"a student on a train with no signal, or
+one who has never set up a key, is exactly the person asking where a setting
+lives."* That is the profile the drive used. Left open, honestly, rather than
+written up as a clean drive.
+
+## Gates
+
+`tsc` clean · lint ok · tests in file order · shuffled · production build
+clean.
+
 # One app — the twenty-seventh pass: the registry is the app, and the count is about a person
 
 Against `main` at `0fa38e4`. **<!--screens-->fifty-eight<!--/--> destinations**,

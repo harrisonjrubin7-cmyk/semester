@@ -111,6 +111,35 @@
   --type-base-plus: calc(13.5px * var(--text-scale, 1)); /* body that is the row */
   --type-md: calc(14px * var(--text-scale, 1)); /* list rows, the thing you tap */
   --type-lg: calc(15px * var(--text-scale, 1)); /* a card's own title */
+  /*
+     The gap between `lg` and `xl`, which the app had been filling by hand.
+     Ninety-three sites across eleven values, 15.5 to 25, and no cluster in
+     any of them — nine to fifteen sites apiece. That flatness was the
+     finding: nobody was reading a scale there, each site picked a number.
+
+     Two populations, separated by what they are rather than by size. Forty-
+     nine carry `--font-heading` and sit low, 17 to 20. Thirty-one are
+     figures — a clock, a score, a total, `chrome-text` and tabular numerals —
+     and sit high, 22 to 24. Thirteen are plain and sit lowest of all.
+
+     So the four steps are where those two distributions actually are, chosen
+     to move the least: 42 of the 93 sites move, none by more than a pixel
+     except one 15.5 that moves 1.5. Three steps would have moved 53 by up to
+     two; five would have put 16 and 17 side by side, which is a duplicate
+     rather than a step.
+
+     Named to match `--leading-display-*`, and they pair: a 22px figure takes
+     `--leading-display` at 1.15, which is the ramp's own answer for 18-25px.
+  */
+  --type-display-xs: calc(17px * var(--text-scale, 1)); /* a card or item title — 36 */
+  --type-display-sm: calc(20px * var(--text-scale, 1)); /* a section's own heading — 27 */
+  --type-display: calc(22px * var(--text-scale, 1)); /* a figure read at a glance — 15 */
+  /* The screen's own title, and the largest figures beside it. Both, and the
+     pairing is not tidy: `App.tsx`'s h1 carries `chrome-text` like a figure
+     does, which is what the split below read it as. The fold is the same
+     either way — 23 sits between two steps and goes up — but the name should
+     say what actually uses it. */
+  --type-display-lg: calc(24px * var(--text-scale, 1)); /* the screen's title — 15 */
   --type-xl: calc(26px * var(--text-scale, 1)); /* the one heading on a screen */
 
   /* Spacing.

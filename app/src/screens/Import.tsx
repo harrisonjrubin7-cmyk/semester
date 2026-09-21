@@ -1010,7 +1010,7 @@ function Rediff({
     <Folding name="Rediff">
       <SectionLabel>You already have {code}</SectionLabel>
       <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
-        <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-sm)', textWrap: 'pretty' }}>
+        <div className="chrome-text" style={{ fontSize: 'var(--type-display-sm)', lineHeight: 'var(--leading-display-sm)', textWrap: 'pretty' }}>
           {rediffSummary(changes)}
         </div>
         <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
@@ -1106,7 +1106,7 @@ function Preview({
     <Folding name="Review extracted information">
       <SectionLabel>Review your course</SectionLabel>
       <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
-        <div className="chrome-text" style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}>
+        <div className="chrome-text" style={{ fontSize: 'var(--type-display-lg)', lineHeight: 'var(--leading-display-lg)' }}>
           {m.course.code}
         </div>
         <div style={{ fontSize: 'var(--type-md)', marginTop: 'calc(3px * var(--density, 1))' }}>{m.course.name}</div>
@@ -1225,7 +1225,7 @@ function Preview({
       })}
 
       <SectionLabel>The first unit</SectionLabel>
-      <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(16px * var(--text-scale, 1))' }}>{m.guide.units[0]?.name}</div>
+      <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-xs)' }}>{m.guide.units[0]?.name}</div>
       {(m.guide.units[0]?.cards ?? []).slice(0, 2).map((c) => (
         <div key={c.q} style={{ marginTop: 'var(--sp-4)' }}>
           <div style={{ fontSize: 'var(--type-base-plus)', fontWeight: 600, lineHeight: 'var(--leading-tight-plus)' }}>{c.q}</div>

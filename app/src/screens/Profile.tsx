@@ -7,7 +7,7 @@ import { Avatar } from '../components/Avatar';
 import { SectionLabel } from '../components/ui';
 import { CustomRow, Group, NavRow } from '../components/shell/Rows';
 import { inventory } from '../lib/inventory';
-import { heading, held, named, nothingHeld, oldestLine, saidAbout } from '../lib/profile';
+import { heading, held, named, nothingHeld, oldestLine, saidAbout, toldLine } from '../lib/profile';
 import { roleOf } from '../lib/role';
 import { cloudConfigured } from '../lib/cloud';
 
@@ -98,7 +98,7 @@ export function Profile() {
                  the legible one. */
               className={named(state.myName) ? 'chrome-text' : undefined}
               style={{
-                fontSize: 'calc(22px * var(--text-scale, 1))',
+                fontSize: 'var(--type-display)',
                 lineHeight: 'var(--leading-display-lg)',
                 ...(named(state.myName) ? {} : { color: 'var(--app-dim)' }),
               }}
@@ -175,6 +175,22 @@ export function Profile() {
         </CustomRow>
       </Group>
 
+      {/*
+        A row rather than the list itself, for the reason the whole screen is
+        rows: the editor lives on the page that explains what leaves the
+        device, because that is the context in which "the assistant knows this"
+        is a decision rather than a novelty. What belongs here is the count,
+        which is what makes it findable from the question this screen answers.
+      */}
+      <Group header="What the assistant knows about you">
+        <NavRow
+          label="Things you have told it"
+          value={toldLine(state.aboutMe.length)}
+          sub="Said once, and every part of the app that asks Claude is told it."
+          onClick={() => dispatch({ type: 'go', screen: 'setAssistant' })}
+        />
+      </Group>
+
       {/* Where the pickers are, said as values so the rows answer the question
           without being opened. Neither picker is drawn twice. */}
       <Group header="Where you study">
@@ -234,7 +250,7 @@ export function Profile() {
             <Blueprint plain key={h.label} style={{ padding: 'var(--sp-5)' }}>
               <div
                 className="chrome-text"
-                style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}
+                style={{ fontSize: 'var(--type-display-sm)', lineHeight: 'var(--leading-display-lg)' }}
               >
                 {h.count}
               </div>

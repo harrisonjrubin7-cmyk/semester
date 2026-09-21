@@ -182,7 +182,7 @@ export function SlideDeck() {
             <div
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(25px * var(--text-scale, 1))',
+                fontSize: 'var(--type-display-lg)',
                 lineHeight: 'var(--leading-display)',
                 marginTop: 'var(--sp-6)',
                 textWrap: 'pretty',
@@ -201,7 +201,7 @@ export function SlideDeck() {
             <div
               style={{
                 fontFamily: 'var(--font-heading)',
-                fontSize: 'calc(17px * var(--text-scale, 1))',
+                fontSize: 'var(--type-display-xs)',
                 lineHeight: 'var(--leading-display-sm)',
                 color: 'var(--app-dim)',
                 textWrap: 'pretty',
@@ -211,7 +211,7 @@ export function SlideDeck() {
             </div>
             <div
               style={{
-                fontSize: 'calc(17px * var(--text-scale, 1))',
+                fontSize: 'var(--type-display-xs)',
                 lineHeight: 'var(--leading-relaxed)',
                 marginTop: 'var(--sp-6)',
                 textWrap: 'pretty',
@@ -371,7 +371,7 @@ export function SlideDeck() {
         {slide.kind === 'note' && (
           <>
             <div className="kicker">{slide.from}</div>
-            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(20px * var(--text-scale, 1))', marginTop: 'var(--sp-2)' }}>
+            <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)', marginTop: 'var(--sp-2)' }}>
               {slide.title}
             </div>
             <div

@@ -257,7 +257,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           width: '100%',
           height: 52,
           marginTop: 'var(--sp-5)',
-          fontSize: 'calc(16px * var(--text-scale, 1))',
+          fontSize: 'var(--type-display-xs)',
         }}
       />
 

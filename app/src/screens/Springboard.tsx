@@ -352,7 +352,7 @@ export function Springboard() {
                 style={{
                   display: 'block',
                   fontFamily: 'var(--font-heading)',
-                  fontSize: 'calc(17px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-display-xs)',
                   marginTop: 'var(--sp-2)',
                 }}
               >

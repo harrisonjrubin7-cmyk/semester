@@ -8,6 +8,7 @@ import { readMode, type Mode } from '../lib/mode';
 import type { Thread } from '../lib/threads';
 import { systemPrompt } from './prompt';
 import { answerLocally, type Local } from '../lib/localask';
+import { offered, type Destination } from '../lib/nav';
 import { monthStart, read as readSpend, since, total } from '../lib/spend';
 import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Lists, type Proposal } from '../lib/tools';
 import { isLookup, LOOKUPS, MOST_ROUNDS, runLookups } from '../lib/lookup';
@@ -110,8 +111,38 @@ export interface Conversation {
   restore: (id: string) => void;
 }
 
+/**
+ * What the app itself can say about the app, before anything is sent.
+ *
+ * Runs on every question, not only the ones the mode reader calls app
+ * questions: gating it on the mode meant it never fired on "where is the meal
+ * plan", which is the plainest app question there is. The threshold moves
+ * instead.
+ *
+ * Out here for the reason `systemFor` is, one note down: a pure function of
+ * its arguments has no business wearing a hook's clothes. It was inside the
+ * component and closed over nothing reactive — until the pool arrived, which
+ * made it a component-scope value the send callback reads without declaring,
+ * and `react-hooks(exhaustive-deps)` said so. Taking the pool as an argument
+ * is the fix rather than the cause: the caller already has to know whose app
+ * it is asking about.
+ *
+ * The pool is `offered(capabilities, role)`, never the registry. `lib/find.ts`
+ * has gated search on the school and the role since it was written, for the
+ * case this note names above — "where is the meal plan". This answers the same
+ * question from the same words, and read the ungated registry, so it named the
+ * meal screen at a university that has none and offered a professor typing
+ * "housing" the dorm screen the directory had already stopped showing them.
+ */
+function localFor(text: string, read: Mode, pool: Destination[]): Local | null {
+  const found = answerLocally(text, pool);
+  if (!found) return null;
+  if (read === 'app') return found;
+  return (found.matches[0]?.score ?? 0) >= 1.5 ? found : null;
+}
+
 export function useConversation(): Conversation {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, school } = useStore();
   const now = useNow();
   const ai = useAI();
   const trouble = useTrouble();
@@ -198,21 +229,6 @@ export function useConversation(): Conversation {
     keepTurns(next);
   }, []);
 
-  /**
-   * What the app itself can say about the app, before anything is sent.
-   *
-   * Runs on every question, not only the ones the mode reader calls app
-   * questions: gating it on the mode meant it never fired on "where is the
-   * meal plan", which is the plainest app question there is. The threshold
-   * moves instead.
-   */
-  const localFor = (text: string, read: Mode): Local | null => {
-    const found = answerLocally(text);
-    if (!found) return null;
-    if (read === 'app') return found;
-    return (found.matches[0]?.score ?? 0) >= 1.5 ? found : null;
-  };
-
   /*
    * The prompt is built in `ai/prompt.ts`, not here.
    *
@@ -273,7 +289,7 @@ export function useConversation(): Conversation {
       try {
         const read = readMode(text);
         setMode(read.mode);
-        const local = localFor(text, read.mode);
+        const local = localFor(text, read.mode, offered(school.capabilities, state.role));
         setLocally(local);
 
         /*
@@ -516,7 +532,7 @@ export function useConversation(): Conversation {
         setBusy(false);
       }
     },
-    [busy, turns, remember, trouble, ai, state, catalog, now, systemFor, held, dispatch],
+    [busy, turns, remember, trouble, ai, state, catalog, now, school, systemFor, held, dispatch],
   );
 
   /*

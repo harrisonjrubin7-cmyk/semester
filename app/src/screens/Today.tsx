@@ -96,7 +96,7 @@ function NextClassCard() {
           {next.block.time}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)', lineHeight: 'var(--leading-display-lg)' }}>
             {next.block.title}
           </div>
           <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
@@ -727,7 +727,7 @@ function Feed_due() {
           >
             <Check size={18} />
           </div>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))' }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-display-sm)' }}>
             {today.length === 0 ? 'Nothing due today.' : 'Nothing left today.'}
           </div>
           <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-2)' }}>
@@ -1056,7 +1056,7 @@ function Feed_rail() {
                     <div
                       style={{
                         fontFamily: 'var(--font-heading)',
-                        fontSize: 'calc(19px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-display-sm)',
                         lineHeight: 'var(--leading-display)',
                         opacity: b.canceled ? DIMMED_ROW : 1,
                         textDecoration: b.canceled ? 'line-through' : 'none',
@@ -1697,7 +1697,7 @@ function FeedHome() {
                 >
                   {f.top}
                 </div>
-                <div style={{ fontSize: 'calc(17px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{f.bottom}</div>
+                <div style={{ fontSize: 'var(--type-display-xs)', color: 'var(--app-dim)' }}>{f.bottom}</div>
               </div>
               <div
                 style={{

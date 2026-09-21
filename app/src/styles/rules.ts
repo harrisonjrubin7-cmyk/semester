@@ -47,6 +47,10 @@ export const TYPE: Record<string, string> = {
   '13.5': 'base-plus',
   '14': 'md',
   '15': 'lg',
+  '17': 'display-xs',
+  '20': 'display-sm',
+  '22': 'display',
+  '24': 'display-lg',
   '26': 'xl',
 };
 
