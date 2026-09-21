@@ -8,7 +8,7 @@ import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { useConversation, provider } from './converse';
 import { Composer, sendHint } from './Composer';
 import { useVoice } from './usevoice';
-import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
+import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
 import { Opening } from './Opening';
 import { money } from '../lib/spend';
 import { configured, modelLabel } from '../lib/assistant';
@@ -554,6 +554,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         extra={
                           i === talk.turns.length - 1 && !talk.busy ? (
                             <>
+                              <Using read={talk.read} />
                               {talk.used.length > 0 && (
                                 <Looked
                                   said={`Read ${talk.used.length} ${

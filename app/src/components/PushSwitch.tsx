@@ -15,7 +15,7 @@ import {
 import { INSTALL_FIRST, NO_PUSH_HERE, reach } from '../lib/onhome';
 import { atRiskToday } from '../lib/atrisk';
 import { classesToNudge } from '../lib/notify';
-import { dropDevice, queuedSendAts, saveDevice, saveQueue, wipeQueue } from '../lib/cloud';
+import { cloudConfigured, dropDevice, queuedSendAts, saveDevice, saveQueue, wipeQueue } from '../lib/cloud';
 import { railFor, datedItems } from '../lib/select';
 import { beginNow, planFrom } from '../lib/start';
 
@@ -114,11 +114,24 @@ export function PushSwitch() {
     );
   }
 
+  /*
+   * Three reasons, not two. The build can lack the push key, the build can
+   * lack an account service, or the person can simply be signed out — and
+   * only the last of those is an instruction they can act on.
+   *
+   * The middle one used to fall through to "Sign in first", which on a build
+   * with `VITE_SUPABASE_URL` set and `VITE_SUPABASE_KEY` unset is advice with
+   * nothing behind it: `screens/Account` says there is no account service, and
+   * there is no form to fill in. The push key already had its own sentence
+   * here for exactly this reason; the account service did not.
+   */
   const blocked = !VAPID
     ? 'This build has no push key set, so reminders cannot be delivered. See supabase/functions/push.'
-    : !account
-      ? 'Sign in first — the queue lives on your account, and there is nowhere to keep it otherwise.'
-      : '';
+    : !cloudConfigured
+      ? 'This build has no account service, and the queue lives on an account, so reminders cannot be delivered.'
+      : !account
+        ? 'Sign in first — the queue lives on your account, and there is nowhere to keep it otherwise.'
+        : '';
 
   const turnOn = async () => {
     setBusy(true);

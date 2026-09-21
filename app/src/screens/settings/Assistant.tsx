@@ -462,6 +462,13 @@ export function SettingsAssistant() {
                 question.
                 <br />
                 <br />
+                Find sources, on the Sources screen, is the one place any of this reaches past
+                Anthropic: it turns on the API’s own web search, so the question you type there
+                becomes a search query and is read by whoever runs the search. Your course’s name
+                goes with it for context. Nothing else does — no deadline, no grade, no note — and
+                no other screen in the app searches anything.
+                <br />
+                <br />
                 Asking out loud adds one thing this page cannot promise about. The words reach the
                 assistant the same way a typed question does, but the <em>recording</em> is
                 recognised by the browser rather than by this app — and in Chrome that means the

@@ -17,7 +17,7 @@
  */
 
 import { overdueLine as toneOverdue, type Tone } from './tone';
-import type { DatedItem } from './types';
+import type { CourseId, DatedItem } from './types';
 
 export type Standing = 'ahead' | 'overdue' | 'done';
 
@@ -62,6 +62,50 @@ export function split(items: DatedItem[], done: DoneMap): Split {
 /** How many deadlines have gone by unticked. The number worth a warning. */
 export function overdueCount(items: DatedItem[], done: DoneMap): number {
   return items.reduce((n, i) => n + (standingOf(i, done) === 'overdue' ? 1 : 0), 0);
+}
+
+/**
+ * The deadlines that are actually this student's.
+ *
+ * The app ships with a whole semester in it, and until somebody answers the
+ * standing question at the top of every screen — *these are mine* or *not
+ * mine* — those four courses belong to nobody. `state.sample` is exactly that
+ * question still being open: `components/SampleMark.tsx` draws it, and either
+ * answer closes it for good, one by copying the courses into the student's own
+ * library and the other by removing them.
+ *
+ * Counting their deadlines as missed work in the meantime is how a first run
+ * greets somebody with *"14 deadlines went by without being ticked off"* — in
+ * warning colour, at the top of the first screen, about a term they have never
+ * seen and have not been asked whether they want. `lib/you.ts` draws the line
+ * this is on the wrong side of: late is named because a missed deadline is
+ * worth naming, "not to shame anyone with a red number".
+ *
+ * ## It filters rather than hiding
+ *
+ * A student who has imported their own syllabus alongside the sample and
+ * genuinely missed one of *its* deadlines still gets warned, because that one
+ * is theirs. Only the unclaimed courses drop out, and they stop dropping out
+ * the moment the question is answered — adopting the sample copies those
+ * courses into `state.courses`, so the same rule that excluded them then
+ * includes them, with nothing to special-case.
+ *
+ * ## Which courses are unclaimed, without asking the store for the seed
+ *
+ * The catalogue is `sample ? [...seed, ...own] : own` — see `state/store.tsx`.
+ * So while the question is open, the unclaimed courses are precisely the ones
+ * in the catalogue that are not in the student's own library, and the seed
+ * never has to be passed around to say so. When it is closed, everything in
+ * the catalogue is theirs and this is the identity.
+ */
+export function claimed<T extends { c: CourseId }>(
+  items: T[],
+  own: Iterable<CourseId>,
+  sample: boolean,
+): T[] {
+  if (!sample) return items;
+  const mine = new Set(own);
+  return items.filter((i) => mine.has(i.c));
 }
 
 /** "2 days late" — said plainly, because softening it helps nobody. */

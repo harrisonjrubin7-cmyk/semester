@@ -170,14 +170,22 @@ for m in "$here"/migrations/*.sql; do
   echo "  ✓ $(basename "$m")"
 done
 
-# After the migrations, because they are `on all tables` and there are no
-# tables until the migrations have run. Supabase applies the equivalent as
-# default privileges on `public`, which is why nothing in `migrations/` grants
-# them itself and why `local.stub.sql` cannot either. See its header.
+# Schema usage and the stub's own `auth.users`, which lives outside `public`
+# and so is not covered by the default privileges.
+#
+# What used to be here as well was
+#
+#     grant all on all tables in schema public to anon, authenticated;
+#
+# and it had to go. Running after the migrations, it handed back every table
+# privilege a migration had deliberately revoked — so a relation-level revoke
+# could neither succeed nor fail here, because the evidence was erased a moment
+# later. `local.stub.sql` now sets the table privileges as default privileges
+# before the migrations run, the way Supabase does, which leaves a revoke
+# standing where a suite can read it. See the note in that file.
 psql -v ON_ERROR_STOP=1 >/dev/null <<'SQL'
 grant usage on schema auth, public to anon, authenticated;
 grant select, insert on auth.users to anon, authenticated;
-grant all on all tables in schema public to anon, authenticated;
 SQL
 
 echo "· checks"

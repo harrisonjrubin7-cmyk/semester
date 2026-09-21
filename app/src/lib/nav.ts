@@ -421,7 +421,7 @@ export const DESTINATIONS: Destination[] = [
     screen: 'sources',
     label: 'Sources',
     blurb: 'Every reading you have kept, with what each is for — and out as BibTeX.',
-    keywords: 'source sources citation citations bibliography reference references reading list bibtex zotero overleaf works cited quote author year paper article book cite',
+    keywords: 'source sources citation citations bibliography reference references reading list bibtex zotero overleaf works cited quote author year paper article book cite research search web find literature secondary scholarly journal evidence background beyond syllabus google scholar library',
     /*
      * Courses rather than Make, since the making screens arrived.
      *

@@ -1353,6 +1353,7 @@ describe('checking the shared key', () => {
 
   it('reads the function\'s own refusal as the key being there', async () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_KEY', 'sb_publishable_test');
     reply(401, { error: { message: 'Sign in to use the shared key.' } });
 
     const got = await checkShared();
@@ -1365,6 +1366,7 @@ describe('checking the shared key', () => {
 
   it('sends nothing that could be metered', async () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_KEY', 'sb_publishable_test');
     const fetched = reply(401, { error: { message: 'Sign in to use the shared key.' } });
 
     await checkShared();
@@ -1382,6 +1384,7 @@ describe('checking the shared key', () => {
     // when a deploy left JWT verification on, and a probe that keyed on the
     // number alone would confirm a shared key that does not exist.
     vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_KEY', 'sb_publishable_test');
     reply(401, { code: 401, message: 'Missing authorization header' });
 
     const got = await checkShared();
@@ -1391,6 +1394,7 @@ describe('checking the shared key', () => {
 
   it('names a deployed function with no key in it', async () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_KEY', 'sb_publishable_test');
     reply(501, { error: { message: 'This deployment has no shared key.' } });
 
     const got = await checkShared();
@@ -1400,6 +1404,7 @@ describe('checking the shared key', () => {
 
   it('names a function that was never deployed', async () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'https://project.supabase.co');
+    vi.stubEnv('VITE_SUPABASE_KEY', 'sb_publishable_test');
     reply(404, { message: 'Function not found' });
 
     const got = await checkShared();

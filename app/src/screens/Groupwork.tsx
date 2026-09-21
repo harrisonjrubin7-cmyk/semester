@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { cloudConfigured } from '../lib/cloud';
 import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { Page } from '../components/Page';
@@ -188,22 +189,37 @@ export function Groupwork() {
   };
 
   if (!account) {
+    /*
+     * Two different things, and this screen used to say the first to both.
+     *
+     * Signed out on a build that has accounts is an instruction: sign in, and
+     * here is the button. Signed out on a build with no account service is not
+     * — there is nobody to sign in to, and the button led to `screens/Account`
+     * which says so. Measured on a build with `VITE_SUPABASE_URL` set and
+     * `VITE_SUPABASE_KEY` unset: "Sign in first" here, a button, and then
+     * "This build has no account service" on arrival. `screens/Classmates.tsx`
+     * next door already asked this question; this screen did not.
+     */
+    const noService = !cloudConfigured;
     return (
       <Page>
         <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
-          <div className="kicker">Sign in first</div>
+          <div className="kicker">{noService ? 'No account service on this build' : 'Sign in first'}</div>
           <div style={{ fontSize: 'var(--type-md)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>
-            A group is other people, so it needs an account. Everything else in the app works
-            signed out.
+            {noService
+              ? 'A group is other people, so it needs an account service, and this copy of Semester was built without one. Everything else in the app works signed out.'
+              : 'A group is other people, so it needs an account. Everything else in the app works signed out.'}
           </div>
-          <button
-            type="button"
-            className="btn btn-primary btn-block"
-            onClick={() => dispatch({ type: 'go', screen: 'account' })}
-            style={{ height: 42, marginTop: 'var(--sp-6)' }}
-          >
-            Sign in
-          </button>
+          {!noService && (
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              onClick={() => dispatch({ type: 'go', screen: 'account' })}
+              style={{ height: 42, marginTop: 'var(--sp-6)' }}
+            >
+              Sign in
+            </button>
+          )}
         </Blueprint>
       </Page>
     );

@@ -101,8 +101,10 @@ for it. Return no figure rather than the nearest one.
 Return "figures":[] when the material has none. Most material has none.`;
 }
 
-/** The shapes at the default ceiling — what every caller used before. */
-export const FIGURE_SHAPES = figureShapes();
+/* `FIGURE_SHAPES = figureShapes()` stood here — "the shapes at the default
+ * ceiling, what every caller used before". Every caller now passes its own
+ * caps (`lib/claude.ts` is the one), so this was the old default outliving
+ * the reason for it. */
 
 function text(v: unknown, cap: number): string {
   return typeof v === 'string' ? v.trim().slice(0, cap) : '';

@@ -1,3 +1,427 @@
+# One app — the thirty-first pass: the same sentence about three different questions
+
+Against `main` at `176b2f7`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge. One line restored, one live field given a reader, one
+guard.
+
+`lib/mode.ts` reads every question as one of three — about this app, about this
+student's records, or general — and returns four things:
+
+```ts
+export interface Read {
+  mode: Mode;
+  /** Shown next to the answer: "Using: your courses". Never a mystery. */
+  says: string;
+  /** What in the question decided it, for the same reason a quote is shown. */
+  because: string;
+  /** Screens the question seems to be about, when it is about the app. */
+  screens: string[];
+}
+```
+
+`ai/converse.ts` is its only production caller. It kept `read.mode` — four
+times, all routing — and dropped the rest at the line it computed them:
+
+```ts
+const read = readMode(text);
+setMode(read.mode);          // and `says`, `because` and `screens` end here
+```
+
+## T1 — three docblocks say it is shown, and it never was
+
+| Where | What it says |
+| --- | --- |
+| `Read.says` | *"**Shown next to the answer**: 'Using: your courses'. Never a mystery."* |
+| `Read.because` | *"What in the question decided it, **for the same reason a quote is shown**."* |
+| `Conversation.mode` | *"What the last question was read as. **Shown, never hidden**."* |
+
+The third is the interesting one. `mode` was in live state — set on every
+question through `setMode`, cleared between conversations, carried on the
+`Conversation` interface — and read by **neither** surface. `Chat.tsx` and
+`Panel.tsx` both draw every other field the interface exposes; `talk.mode` is
+the one nothing touches. State written on every question and never read is the
+`lastOpened` shape from the twenty-third, and this time the field's own comment
+said what it was for.
+
+### What made it invisible
+
+Something was always on screen. `Looked` renders from `used` and says *"Read 4
+parts of your records"* — and measured, `used` is **the same four entries in
+all three modes**:
+
+| Typed | Mode | `used` | `Looked` said | The line that was dropped |
+| --- | --- | --- | --- | --- |
+| "explain price elasticity" | general | date, term, screen, course codes | Read 4 parts of your records | **General** |
+| "what is due Thursday" | grounded | *the same four* | *the same sentence* | **Using: your courses — "what is due"** |
+| "where do I set my grade scale" | app | *the same four* | *the same sentence* | **Using: this app — "where do I set"** |
+
+`lib/context.ts` pushes the date, the term and the screen unconditionally and
+the course codes whenever there are courses, so the row is mode-blind by
+construction. It was never missing — it was constant. The one line that varied
+with what the app had actually done was the one being thrown away, and a row
+that always says something is exactly the camouflage the reveal gate, `showAll`
+and `lastOpened` all had.
+
+### Restored
+
+`Live.mode: Mode | null` becomes `Live.read: Read | null` — the whole reading
+rather than the routing value — which costs nothing, since nothing read the
+narrower one. `ai/Turns.tsx` gains `Using`, a one-line dim row above `Looked`
+on the answer, saying what the question was taken to be and quoting the phrase
+that decided it. A general question is the default rather than a match, so
+`because` is empty and nothing is quoted.
+
+`Using` sits on `Reply` only. On a question with no reply — the twenty-ninth's
+case — there is no answer to describe, and "Using: your courses" beside a
+failed request would be furniture.
+
+Tidied in passing: `const read = readMode(text)` inside `send` now shadowed the
+new live value, so it is `how` — `how.mode` at all four routing sites.
+
+## Driven, and what the drive could not reach
+
+The keyless profile still draws the twenty-ninth's panel and nothing else
+changed; `pageerror` empty. **`Using` was not reached in the browser, and that
+is stated rather than implied:** it renders on a `Reply`, a reply needs a
+request to come back, and a request needs a key this container does not have.
+The component and both call sites are covered by tests instead, and the drive's
+role here was to prove no regression on the one path a keyless run *can* reach.
+
+## Proving it
+
+`ai/usingline.test.tsx`, seven cases, in two halves for the reason the
+twenty-ninth's guard was: the line could not be drawn, **and** neither surface
+drew it. Each reverted separately:
+
+| Reverted | Red |
+| --- | --- |
+| the quote in `Using` | *expected 'An answer.Using: your coursesCOPY…' to contain 'what is due'*; and the same for "where do I set" |
+| `<Using read={talk.read} />` from both files | *Chat.tsx does not draw `<Using>`*; *Panel.tsx does not draw `<Using>`* |
+
+The first case is the **measurement**, pinned as a test: the three modes
+produce one `used` list between them, and the three modes really are three.
+If `Looked` ever starts varying with the mode, that test fails and the two
+rows should be reconsidered rather than stacked — which is the thing a future
+pass would otherwise have to rediscover.
+
+The control: `<Using read={null}>` draws the answer and no line, so "it renders
+the line" cannot pass against a component printing one unconditionally.
+
+## Gates
+
+`tsc` clean · lint ok · tests in file order · shuffled · production build
+clean — every one by its **exit status**.
+
+# One app — the thirtieth pass: the census that asked the compiler
+
+Against `main` at `0fa38e4`, rebased onto `f8af9c7`. **<!--screens-->fifty-eight<!--/-->
+destinations**, unchanged. One instrument, one census, sixteen cuts — and
+three claims this pass made and then had to withdraw, which are T5b, T7 and T8
+below. The third is the probe's own.
+
+**Numbered thirtieth after arriving as the twenty-sixth, and being renamed
+three times on the way.** Four passes landed while this was being written, and one
+of them, the twenty-seventh's T2, cut `archivedTerms` — a row off this census's
+own list, found independently and argued better than this pass would have: not
+"called by nothing" but *"a name over a call the only caller was making
+anyway"*. `CLAUDE.md`'s first rule, and the rate it is warning about: this file
+gained three entries in the time it took to write one.
+
+It was taken nine times in all, across twelve merges of `main` — 20, 20, 19, 16,
+15, 16, 16, 14, 3 — moving by cuts, by T7's restoration, and once by the probe
+itself getting better in T8, never by the base shifting underneath it.
+
+The twenty-third pass's last To do, carried by the twenty-fourth and the
+twenty-fifth: *"the dead-export question is still open and still unasked. Two
+instruments failed at it here. It wants a probe that resolves dynamic
+`import()`, distinguishes in-module use from an import, and knows a test helper
+from a dead one — which is a pass of its own, not a paragraph of this one."*
+
+## T1 — the old number was 1,054, and the new one is 20
+
+The twenty-third pass's census reported **1,054 dead exports across 714 files**,
+hand-checked three rows, found all three wrong and threw it away. This one
+reports **20**, out of 4,842 exports declared under `app/src` — **3** after the
+sixteen cuts below and the twenty-seventh pass's one, and all three of those are
+decided keeps.
+
+A number that falls by 98% is not self-evidently the better number. What makes
+it believable is that the three rows that killed the old census are the three
+controls here, and each lands in a different bucket:
+
+| The twenty-third pass's false positive | Old probe | This one |
+| --- | --- | --- |
+| `screens/Import.tsx · Import`, reached by `lazy(() => import(…))` | dead | **alive** — `prod: 1` |
+| `data/schools/index.ts · BUNDLED`, used twice in its own module | dead | **test-only**, and it reports `internal: 2` |
+| `styles/rules.ts · sources`, a helper test files import | dead | **alive** — `prod: 3`, 29 test files |
+
+The middle row is the one worth reading twice. The old census's hand-check said
+`BUNDLED` "is used twice inside its own module"; this probe, which was not told
+that, independently reports `internal: 2`. The instrument reproduced a figure a
+person had counted by hand, without being aimed at it.
+
+## T2 — it does not read the source, which is the whole of the fix
+
+It builds the same `ts.Program` the types gate builds and asks the checker what
+every identifier resolves to. `import('./x').then((m) => m.Thing)` resolves
+`m.Thing` to the export. So does `typeof import('./Panel')['Panel']`, a JSX tag,
+a namespace import's property access, a re-export chain. **None of that is
+special-cased, because none of it is special to the checker.** The three blind
+spots were three cases a parser had to be taught; the checker already knows
+them, because the app would not compile if it did not.
+
+The old "dead" was three questions wearing one coat, which is why its number
+could not mean anything. Four buckets now:
+
+| | |
+| --- | --- |
+| **alive** 3,467 | imported by a file that ships |
+| **test-only** 776 | imported, but only by tests — a helper, with the test-file count beside it |
+| **export-surplus** 573 | used inside its own module and nowhere else: the *export* is surplus, the code is not dead |
+| **dead** 20 | no reference anywhere, in or out — **3** once this pass's cuts land, and every one of the three a decided keep |
+
+## T3 — the fourth blind spot, which the first census could not have seen
+
+`app/src` is imported from **outside** `app/src`. Eleven files under
+`app/scripts` and `video/src` import `lib/look`, `lib/beats`, `lib/fnv`,
+`lib/guidebook`, `lib/episodes`, `lib/types`. A program built from
+`tsconfig.app.json` alone — which is what a census of `app/src` naturally
+builds — calls every one of those dead. They are roots here.
+
+Two more are ruled out by absence rather than by assumption, which is a
+different and weaker claim, so it is written down: there is no
+`import.meta.glob` under `src`, and no dynamic `import()` with a non-literal
+specifier. Either would be invisible to this. Either appearing later makes this
+census wrong until it is taught about them.
+
+## T4 — the control that convicts one row and clears eight beside it
+
+A probe that reported everything dead would have cleared the three controls
+above by luck. The strongest evidence is inside one file:
+
+    components/shell/Rows.tsx
+      Group        alive            prod 147
+      CustomRow    alive            prod 120
+      ItemRow      alive            prod  49
+      NavRow       alive            prod  22
+      FullBleed    alive            prod   3
+      SelectRow    alive            prod   2
+      ValueRow     alive            prod   2
+      ROW_HEIGHT   export-surplus   internal 1
+      ToggleRow    dead             0, 0, 0
+
+Nine exports, one file, one export style, every one reached only through JSX.
+A probe blind to JSX calls all nine dead; a probe that always says "alive"
+never isolates the ninth. This one splits them three ways.
+
+`grep` cannot do this at all, and the attempt is instructive: a text search for
+the twenty dead names returns 663 "mentions" of `ask`, 219 of `stale`, 135 of
+`readable`. Every one is a different symbol, a comment, or a `describe()`
+title. On the four names rare enough to check by eye — `ToggleRow`,
+`dotsForMonth`, `Enrollment`, `Carrying` — every single hit outside the
+declaring file is prose. `ToggleRow`'s only mention anywhere is a comment on
+`screens/settings/Page.tsx` naming it as one of the shared rows, which is the
+sort of thing that keeps a dead component looking alive to a reader.
+
+## T5 — two cut, and they were cut because they were read, not because they were listed
+
+Both from `lib/chatlog.ts`, and the reason is one commit of history rather than
+a judgement about whether anybody wants them:
+
+    chatlog.ts    fit    alive        trim   alive
+                  load   alive        clear  alive
+                  save   DEAD         stale  DEAD
+
+A store that loads and clears and never writes reads like a live bug, and is
+not. `lib/threads.ts` keeps many conversations under its own key; the only
+thing still touching the old single-conversation store is its `migrate()`,
+which reads it once, moves it into a thread, and calls `clear`. So `load` and
+`clear` have a caller and `save` cannot have one — it could only ever write a
+store the app had stopped reading. `stale` answered "is this old enough to say
+so" for the screen that no longer exists; **no caller has asked it in this
+repository's history**, so the six hours in it was never a decision anybody saw
+the effect of.
+
+## T7 — `forgetMarks` restored, because the earlier passes had asked a better question
+
+The cut above was made on "a seam nothing reaches is not a seam", and that
+reading was one step too narrow. The twenty-sixth pass had already opened this
+row and left it open with the sharper framing: *"either the bookmarks hook's
+cache leaks between tests and nobody noticed, or this is surplus — and that is
+a question about the hook's tests, not about the export."*
+
+It is answerable, and the answer is neither. **Nothing tests this hook at all**
+— no test file touches `useMarks`, `star` or `isSaved` — so there was never a
+leak to notice, and the seam is unreached rather than unnecessary. And it is
+not alone: two sibling hooks export exactly this and four test files call them.
+
+    lib/sound.hook.ts     forgetSound    used by 2 test files
+    lib/browser.hook.ts   forgetStrip    used by 2 test files
+    lib/bookmarks.hook.ts forgetMarks    used by none — the hook has no tests
+
+Cutting the third of three because its module is the one still without tests is
+how a pattern acquires a hole. It is also the move the twenty-sixth pass
+explicitly refused for `fourier.ts`'s `phaseAt` — *"cutting one of a
+mathematical pair to satisfy a census is how a library loses its shape"* — and
+that argument did not stop applying because the pair is a convention rather
+than a theorem. Restored, with the reasoning at the site.
+
+The pattern this pass's own cut-note recommended instead — `vi.resetModules()`
+and a fresh import, as `cloud.test.ts` does — is right for a module, and is why
+`forgetProvidersOn` stayed cut. It is not what this repository does for hooks.
+
+## The fourteen looks that had already been taken
+
+This pass's write-up said it had "taken six of twenty looks". That was true of
+this pass and false about the file. **The twenty-fifth and twenty-sixth passes
+had already opened fourteen of these rows**, and their verdicts stand where
+they reached one:
+
+| | Their verdict |
+| --- | --- |
+| `chatlog.ts` `save` | "Cut candidate, not cut. Wants reading before removal." — read here, and cut |
+| `rollover.ts` `archivedTerms` | Open, "the interesting one left" — cut by the twenty-seventh, better argued |
+| `fourier.ts` `phaseAt` | **Keep, recorded** — the pair of `sizeAt`. Already adjudicated; it is on the list below as *unreferenced*, not as a candidate |
+| `decks.ts` `deckId` | Cut candidate — "one look at `pptx.ts` settles it" |
+| `docxin.ts` `readable` | Open — one of five declarations of that name |
+| `pdf.ts` `frameFor`, `select.ts` `dotsForMonth` | Open |
+
+Of the fourteen they opened, **four were not dead**: a live duplicate with a
+hole, two lost features, and a mathematical pair. That figure is the best
+argument in this file against sweeping a census, and it was earned before this
+pass started.
+
+## T8 — the probe was wrong twice, in the shape it was written to catch
+
+Taking the remaining looks found two false positives, and they are the same
+species as the 1,054.
+
+`scripts/icons.mjs` and `scripts/styles.mjs` reach into `src` like this:
+
+    const { APPLE, FILES } = await import(join(src, 'components', 'mark.svg.ts'));
+    const { …, owed, … }   = await import(join(src, 'styles', 'rules.ts'));
+
+A plain-JS file, and a **computed** specifier. The checker can resolve neither,
+so this census called `APPLE` dead — the SVG `apple-touch-icon.png` is
+rasterised from — and `owed` dead, which is a function **`npm run lint` calls
+on every run**. `styles/budget.ts`'s `BUDGET` was wrong a third way, filed
+test-only when the lint gate reads it too.
+
+And the pass had *claimed this blind spot was ruled out*: "no dynamic
+`import()` with a non-literal specifier". It had looked under `src`, where the
+imports are, rather than at the callers, where they are not. A blind-spot check
+that searches the wrong half of the tree is worth less than none, because it
+converts an unknown into a stated fact.
+
+**The fix is not only the matcher.** The probe now follows these sites by
+shape — and counts every computed `import()` it could *not* follow and prints
+the number. A census that silently skips what it cannot parse is how 1,054
+happened; one that says "6 followed, 0 unfollowed" can be checked, and the
+first version of the matcher printed `⚠ 2 NOT followed`, which is how the
+`BUDGET` case was found rather than shipped.
+
+## T9 — the remaining looks, taken
+
+Fourteen rows, fourteen looks, and the split is not what a sweep would have
+produced: **eleven cut, three kept.**
+
+| Cut | Why |
+| --- | --- |
+| `pdf.ts` `frameFor` | `frameOf(layoutOf(doc))` — both halves exported and used directly |
+| `decks.ts` `deckId` | `return newId()`, claiming to match "what `pptx.ts` would call it". It does not: `pptx.ts` names a file `${stem \|\| 'deck'}.pptx`. A stale claim over an alias |
+| `docxin.ts` `readable` | `/\.docx$/i`, and the app filters by extension in `FilePick`'s `accept`, which is the check a person actually meets |
+| `quotes.ts` `nearest` | wraps `closest(index(text), …)`; `screens/Proof.tsx` enters through `checkDraft`. The window heuristic is on the path that is taken |
+| `select.ts` `dotsForMonth` | the month grid does draw those dots, and computes them per day from items it already has |
+| `ai/store.tsx` `useAIContext` | the screens that register context call `register` directly in their own effects |
+| `figure.ts` `FIGURE_SHAPES` | "the default ceiling, what every caller used before" — every caller now passes its own caps |
+| `drag.ts` `Carrying<T>` | `days` and `minutes` for an hour axis; the one grid that carries keeps `{ what, day }`. A contract designed ahead of a second implementation that has not come |
+| `menus.ts` `MenuId`, `ribbon.ts` `TabId` | `(typeof ORDER)[number]` and `(typeof TABS)[number]`; both tuples are exported and the union is one line away |
+| `types.ts` `CourseShort` | `= string`, so it checks nothing and was documentation; `CourseId` beside it is the alias that is used |
+
+`noUnusedLocals` then caught two imports the cuts had orphaned — `newId` in
+`decks.ts`, `layoutOf` in `pdf.ts` — which is the property the twenty-fifth
+pass's `offerable` fix relied on, doing its job unprompted.
+
+**Three kept, each with the reason at the site**, and they are the answer to
+why this was never a sweep:
+
+- `fourier.ts` `phaseAt` — the twenty-sixth pass's decision, the pair of
+  `sizeAt`.
+- `bookmarks.hook.ts` `forgetMarks` — T7 above, the third of three hook seams.
+- `classmates.ts` `Enrollment` — the third of three table row shapes beside
+  `Profile` and `Message`, which are both used. A schema with two of its three
+  rows written down documents worse than one with none. The open question is
+  recorded rather than guessed: the code reading `enrollments` does not
+  annotate with it, and one look at the query says whether that is a wiring job
+  or a stale type. This pass did not take that look.
+
+**Dead: 3, and all three are decided keeps.** Which is the sentence this whole
+exercise was for — not a number at zero, but a number where every row left has
+an argument attached.
+
+## The three that are named, not swept
+
+They are the three in T9's keep column, and the twentieth pass's rule is why
+they read as a result rather than as a remainder: *"eleven rows is eleven
+looks."* Twenty rows, twenty looks, taken across this pass and the two above
+it — the twenty-fifth and twenty-sixth opened fourteen of them first, and four
+of those fourteen were not dead.
+
+Sixteen cut in the end, none of them from the list alone.
+
+## It is a script and not a gate, and that is deliberate
+
+`npm run census:exports`. The twenty-fifth pass declined to land its own census
+as a test — *"a guard whose probe is that young would fail on correct code
+before it caught anything"* — and this one is younger still. It also takes 24
+seconds, a 40% tax on a suite that runs in 60.
+
+So the number is recorded here and not held, which means it can rot, which is
+the thing this file has spent three passes learning to hate. The trade is made
+with open eyes: a false gate is worse than an unheld number, and the way out is
+not to land it braver but to run it across a few passes first. It graduates
+when it has been right for a while.
+
+## Gates
+
+`tsc` clean · lint ok · production build clean · five cold boots clean.
+
+**11,388 tests pass across 565 files** in file order, shuffled and in both other
+timezones.
+
+Two of those were red for about an hour, on `main` rather than here:
+`lib/migrationorder.test.ts` and `lib/rollback.test.ts` said
+`supabase/migrations/20260921003700_lti.sql` was pending and below the
+`20260921150750` watermark, where a deploy can never reach it. Established by
+running them on `origin/main` with this branch stashed, reported on the pull
+request rather than fixed from here, and fixed on `main` by `#608` — which
+renumbered the same file to `20260921160000_lti.sql` four minutes before this
+session had finished renumbering it to `20260921160413`. The fourth
+convergence of the day, and the first where stopping cost nothing because
+their fix covered both filename references exactly as this one would have.
+
+Taken nine times across twelve merges of `main` — 20, 20, 19, 16, 15, 16, 16,
+14, 3 — moving by cuts, by T7's one restoration, and once by the probe itself
+getting better in T8. Never by the base shifting underneath it, through twelve
+merges, which is the real test of that claim.
+
+## To do
+
+- **`classmates.ts`'s `enrollments` read.** The one look T9 did not take: does
+  the query annotate its rows with `Enrollment`, or is the type stale? It is a
+  wiring job or a deletion and nothing else.
+- **The probe is one blind spot better and still not a gate.** T8's matcher
+  follows six computed reaches and prints the count it could not follow; that
+  number being zero is the only part that has to keep working. It graduates to
+  a gate once it has been right across a few passes — and it was wrong twice
+  in this one, which is the argument for waiting.
+- **`census:exports` is not held by a gate.** It graduates when it has run
+  across a few passes without a false positive.
+- **Two blind spots are ruled out by absence.** `import.meta.glob` or a
+  non-literal `import()` appearing under `src` makes this census wrong until
+  the probe is taught about them.
+
+---
 # One app — the twenty-ninth pass: the answer that needs no key was only ever drawn beside one that did
 
 Against `main` at `a66fd33`. **<!--screens-->fifty-eight<!--/--> destinations**,

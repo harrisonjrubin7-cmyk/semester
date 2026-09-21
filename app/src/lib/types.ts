@@ -10,8 +10,9 @@ import type { Repeat } from './repeat';
  */
 export type CourseId = string;
 
-/** A short code for the filter chips — "ECON", "PSCI". */
-export type CourseShort = string;
+/* A `CourseShort = string` stood here for "the filter chips" and nothing
+ * declared one. An alias to `string` checks nothing, so it was documentation;
+ * `CourseId` above is the alias that is actually used. */
 
 export interface GradeRow {
   what: string;
@@ -634,8 +635,16 @@ export interface CampusLink {
   /** Shown as the input's placeholder — a suggestion, not a claim. */
   hint: string;
   note: string;
-  /** Which heading it sits under. Links you add yourself go under "Yours". */
-  group?: 'Campus' | 'Books' | 'Tickets' | 'Social' | 'Yours';
+  /**
+   * Which heading it sits under.
+   *
+   * The bundled rows name one of the app's own four, or none, which means
+   * Campus. A link the student added carries whatever they called its group,
+   * or nothing, which means "Yours" — so this is a string rather than the
+   * five-name union it used to be. `lib/linkgroups.ts` holds the fold and the
+   * order; nothing should compare this field by hand.
+   */
+  group?: string;
 }
 
 /** An external calendar the app reads — Brightspace, Outlook, anything .ics. */

@@ -304,10 +304,16 @@ export function providersOn(): Promise<Provider[] | null> {
   return switchedOn;
 }
 
-/** Ask again — for tests, and for a project reconfigured under a live tab. */
-export function forgetProvidersOn(): void {
-  switchedOn = null;
-}
+/*
+ * A `forgetProvidersOn()` sat here to clear the memo above.
+ *
+ * "For tests, and for a project reconfigured under a live tab" — and neither
+ * came. `cloud.test.ts` isolates by `vi.resetModules()` and a fresh import, so
+ * all eleven of its `providersOn` cases already begin with `switchedOn` unset;
+ * the export was a weaker second way to do what the harness was doing better.
+ * A project reconfigured under a live tab is a page reload away from being
+ * asked again.
+ */
 
 export async function signInWith(provider: Provider): Promise<void> {
   const { error } = await (await cloud()).auth.signInWithOAuth({
@@ -755,6 +761,20 @@ export const OWNED_TABLES: OwnedTable[] = [
   // who came through you. See `supabase/migrations/20260921002623_referrals.sql`.
   { table: 'referrals', column: 'user_id' },
   { table: 'referral_codes', column: 'user_id' },
+
+  // ── What you let a parent see ───────────────────────────────────────────
+  //
+  // Keyed on `student_id`, because a grant is a statement the *student* made.
+  //
+  // **This does not empty the recipient's side, and that is a known gap rather
+  // than a decision.** A parent pressing Delete everything sends
+  // `student_id = me`, matches none of the grants naming them as recipient,
+  // and leaves them in place — the policy lets either party delete one (see
+  // `supabase/family.check.sql`), but this list sends one filter per entry.
+  // The cascade on `auth.users` covers a real account removal; this button is
+  // explicitly not that. Closing it belongs with the auth flows that first
+  // give a parent an account to delete.
+  { table: 'family_grants', column: 'student_id' },
 
   // ── Shared forms ────────────────────────────────────────────────────────
   { table: 'forms', column: 'owner' },
