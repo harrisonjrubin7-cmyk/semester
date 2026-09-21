@@ -78,8 +78,15 @@ create policy schools_write on public.schools
 alter table public.profiles
   add column if not exists school_id text references public.schools on delete set null;
 
-create index if not exists profiles_by_school on public.profiles (school_id)
-  where school_id is not null;
+-- Not partial, though `where school_id is not null` is the tempting version and
+-- was the first one written. `indexes.check.sql` excludes partial indexes from
+-- what counts as covering a foreign key, and it is right to: the reference
+-- below is `on delete set null`, so removing a school has to find every row
+-- pointing at it, and an index that omits the nulls is not the one that
+-- scan uses. The nulls are most of the table today and will be most of it
+-- until people claim, which is the argument for a partial index and against
+-- it being this one.
+create index if not exists profiles_by_school on public.profiles (school_id);
 
 -- Pinned against a direct write, which is the entire point.
 --
