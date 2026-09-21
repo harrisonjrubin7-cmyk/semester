@@ -1,5 +1,5 @@
 import { Blueprint } from '../components/Blueprint';
-import { faintLine, secondLine } from '../lib/dim';
+import { secondLine } from '../lib/dim';
 import type { Local } from '../lib/localask';
 import type { Held } from './converse';
 import type { Lists, Proposal } from '../lib/tools';
@@ -78,7 +78,7 @@ export function Proposals({
               className="bare"
               aria-label={`Dismiss: ${p.said}`}
               onClick={() => onDismiss(p.id)}
-              style={{ flex: 'none', width: 20, ...faintLine() }}
+              style={{ flex: 'none', width: 20, ...secondLine() }}
             >
               ×
             </button>
