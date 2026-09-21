@@ -232,3 +232,66 @@ export function markRefilled(at: number): void {
     // Storage off. It refills every open instead, which is wasteful and works.
   }
 }
+
+/**
+ * How far past its moment a queued reminder must be before it is evidence.
+ *
+ * The queue is the only thing either end shares, and it says one true thing:
+ * **the sender deletes a row once it has sent it.** So a row still sitting
+ * there long after its `send_at` was never delivered, and nothing else has to
+ * be asked to know that.
+ *
+ * Two hours is eight runs of the fifteen-minute job in `supabase/scheduler.sql`. It
+ * is deliberately far past the point of doubt: a device whose clock is wrong
+ * by an hour, a project that was paused over a deploy, a single run that
+ * timed out — none of those reach two hours, and none of them should make the
+ * app tell a student their reminders are broken. What does reach it is the
+ * state this exists for, which is a delivery chain that is not running at all.
+ *
+ * `REFILL_HOURS` above is the same failure caught one level lower: a queue
+ * that empties and is never refilled. This is what that comment did not
+ * cover — a queue refilled perfectly, on time, forever, into a sender that
+ * never came for it. Both are *"a feature that stops working without saying
+ * so"*, and only one of them had a guard.
+ */
+export const OVERDUE_HOURS = 2;
+
+/**
+ * How many queued reminders came due and are still there.
+ *
+ * Takes the moments rather than the rows, because that is the whole of what
+ * the question needs and it keeps this testable without a database.
+ *
+ * A moment in the future is not overdue, and neither is an unreadable one —
+ * a `send_at` that did not parse is a row this cannot reason about, and
+ * counting it would turn a bad timestamp into an accusation against the
+ * server.
+ */
+export function neverArrived(sendAts: number[], now: number, hours = OVERDUE_HOURS): number {
+  const by = hours * 3_600_000;
+  return sendAts.filter((at) => Number.isFinite(at) && at <= now && now - at >= by).length;
+}
+
+/**
+ * What to say about it, or nothing at all.
+ *
+ * Empty when there is nothing to report, so the caller renders a line only
+ * when there is one — the switch already says "on", and a second line
+ * underneath it saying "and it is working" would be noise on every screen
+ * every day for the sake of the rare day it is not.
+ *
+ * It says what is wrong and who can fix it, and it does not say "try again":
+ * this is not a state a student can do anything about from their phone, and
+ * an instruction they cannot follow is worse than none. The wording names the
+ * queue because that is the honest shape of it — the reminders were made and
+ * are waiting, which is different from having been lost.
+ */
+export function stalledLine(overdue: number): string {
+  if (overdue < 1) return '';
+  const many = overdue === 1 ? 'reminder' : 'reminders';
+  return (
+    `${overdue} ${many} came due and did not arrive. They are still queued, so nothing has been ` +
+    `lost — but this device cannot deliver them, and the server has not. Whoever runs this ` +
+    `deployment needs to check the push job in supabase/scheduler.sql.`
+  );
+}

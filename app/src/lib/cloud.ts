@@ -578,6 +578,36 @@ export async function saveQueue(
 }
 
 /**
+ * When every queued reminder was due, for this account.
+ *
+ * Read rather than assumed, because the queue is the one place the client and
+ * the sender both touch, and the sender's contract is that it deletes a row
+ * once it has sent it. Anything still here is therefore still unsent, and
+ * `neverArrived` in `lib/push.ts` decides which of those are old enough to
+ * mean something.
+ *
+ * Only `send_at` is selected. The titles and bodies are the part of this table
+ * that is somebody's coursework — `PUSH_NOTE` is the promise made about them —
+ * and a liveness check has no business reading them back down to the device to
+ * count rows.
+ *
+ * Signed out there is no queue to have an opinion about, so this answers with
+ * an empty list rather than throwing: a caller asking "is delivery working"
+ * before an account exists is asking about nothing, not hitting an error.
+ */
+export async function queuedSendAts(): Promise<number[]> {
+  if (!cloudConfigured) return [];
+  const db = await cloud();
+  const { data: who } = await db.auth.getUser();
+  const userId = who.user?.id;
+  if (!userId) return [];
+
+  const { data, error } = await db.from('push_queue').select('send_at').eq('user_id', userId);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => new Date((r as { send_at: string }).send_at).getTime());
+}
+
+/**
  * Delete the rows belonging to this account.
  *
  * Not a flag, not an archive. `on delete cascade` in the schema means removing

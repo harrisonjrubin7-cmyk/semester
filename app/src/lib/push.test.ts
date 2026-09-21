@@ -1,6 +1,16 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { REFILL_HOURS, canPush, enrolmentOf, keyBytes, needsRefill, queueFor } from './push';
+import {
+  OVERDUE_HOURS,
+  REFILL_HOURS,
+  canPush,
+  enrolmentOf,
+  keyBytes,
+  needsRefill,
+  neverArrived,
+  queueFor,
+  stalledLine,
+} from './push';
 import type { NotifKey } from '../data/misc';
 import type { DatedItem } from './types';
 
@@ -184,5 +194,84 @@ describe('keeping the queue fed', () => {
     // The bug this exists for: the queue held a week, was written once at the
     // moment the switch was turned on, and was empty seven days later.
     expect(REFILL_HOURS).toBeLessThanOrEqual(24);
+  });
+});
+
+/*
+ * A queue that is filled and never emptied.
+ *
+ * `needsRefill` above guards the failure where the queue runs dry. This is
+ * the other one, and it is the one production is in: the queue is refilled
+ * perfectly and the sender never comes for it. Measured against the live
+ * project on 21 September — the `push` job in `cron.job` is `active = false`
+ * and `cron.job_run_details` holds no run of it, ever — so every reminder
+ * this app has queued in production has gone undelivered, with the switch
+ * saying "on" throughout.
+ *
+ * The signal is the sender's own contract: it deletes a row once it has sent
+ * it. Anything still sitting there long after its moment was never sent.
+ */
+describe('reminders that came due and did not arrive', () => {
+  const NOW = 1_700_000_000_000;
+  const HOURS = 3_600_000;
+  const ago = (h: number) => NOW - h * HOURS;
+
+  it('counts a row left behind long after its moment', () => {
+    expect(neverArrived([ago(3)], NOW)).toBe(1);
+    expect(neverArrived([ago(3), ago(9), ago(30)], NOW)).toBe(3);
+  });
+
+  /*
+   * The control, and the half that matters.
+   *
+   * A check that counted everything still in the queue would pass the test
+   * above and be wrong about every working deployment on earth — the queue
+   * holds a week ahead, so most of it is *supposed* to still be there. These
+   * are the rows a correct reading must not accuse the server over.
+   */
+  it('says nothing about a reminder whose moment has not come', () => {
+    expect(neverArrived([NOW + 5 * HOURS, NOW + 48 * HOURS], NOW)).toBe(0);
+  });
+
+  it('holds off inside the grace period, so one slow run is not an accusation', () => {
+    // Two hours is eight runs of the fifteen-minute job. A single timeout, a
+    // paused project or an hour of clock skew must not reach it.
+    expect(neverArrived([ago(1)], NOW)).toBe(0);
+    expect(neverArrived([ago(OVERDUE_HOURS) + 1], NOW)).toBe(0);
+    expect(neverArrived([ago(OVERDUE_HOURS)], NOW)).toBe(1);
+  });
+
+  it('cannot be made to accuse the server by an unreadable timestamp', () => {
+    /*
+     * The first draft of this test named NaN and +Infinity, and passed
+     * against a faithful revert of the guard it was written for — both fail
+     * `at <= now` on their own, so `Number.isFinite` never had to fire and
+     * the test was reading as coverage that was not there.
+     *
+     * `-Infinity` is the value the bound actually catches: it is at or before
+     * every `now`, and `now - -Infinity` is Infinity, which clears any grace
+     * period. Without the check it counts as a reminder the server swallowed.
+     * It is named first because it is the one doing the work.
+     */
+    expect(neverArrived([Number.NEGATIVE_INFINITY], NOW)).toBe(0);
+    expect(neverArrived([Number.NaN, Number.POSITIVE_INFINITY], NOW)).toBe(0);
+  });
+
+  it('is quiet when there is nothing to report', () => {
+    // The switch already says "on". A second line under it saying "and it is
+    // working" would be noise on every screen every day.
+    expect(stalledLine(0)).toBe('');
+    expect(stalledLine(neverArrived([NOW + HOURS], NOW))).toBe('');
+  });
+
+  it('says what is wrong, and does not tell a student to fix a server', () => {
+    const one = stalledLine(1);
+    expect(one).toContain('1 reminder came due');
+    expect(one).toContain('scheduler.sql');
+    // Nothing has been lost is the true and the reassuring half, and it is
+    // load-bearing: the rows are still queued.
+    expect(one).toContain('nothing has been lost');
+    expect(one).not.toMatch(/try again|retry/i);
+    expect(stalledLine(4)).toContain('4 reminders came due');
   });
 });
