@@ -50,6 +50,42 @@ begin
   execute 'set local role anon';
 end $$;
 
+/**
+ * A statement the current role must not be allowed to run at all.
+ *
+ * `pg_temp.counted(..., 0)` was the right assertion while a relation-level
+ * revoke could not survive this harness: `check.sh` used to run
+ * `grant all on all tables in schema public to anon, authenticated` *after* the
+ * migrations, which handed back every privilege a migration had revoked, so the
+ * only thing left to observe was row-level security returning no rows.
+ *
+ * That grant is gone — its own comment in `check.sh` says why, and
+ * `local.stub.sql` now sets the table privileges as default privileges before
+ * the migrations instead, the way Supabase does. A revoke therefore stands
+ * where a suite can read it, which is what #596 set out to make possible.
+ *
+ * The consequence for this file: `20260921161500_roles.sql` revokes all on
+ * `public.app_admins` from `anon` and `authenticated`, so counting that table
+ * as either role no longer returns zero — it raises `insufficient_privilege`.
+ * The schema is stricter than the assertion was, and the assertion has to catch
+ * up rather than the schema loosen. "Cannot read it at all" is a stronger
+ * statement than "reads no rows", and it is the one that is now true.
+ *
+ * Takes the statement as text because a helper cannot wrap an arbitrary one any
+ * other way. `raise exception` with no condition name raises `raise_exception`,
+ * not `insufficient_privilege`, so the failure path below cannot be swallowed
+ * by its own handler.
+ */
+create or replace function pg_temp.refused(what text, stmt text)
+returns void language plpgsql as $$
+begin
+  execute stmt;
+  raise exception 'FAILED: % — the statement was allowed', what;
+exception
+  when insufficient_privilege then
+    raise notice 'ok  % (refused outright)', what;
+end $$;
+
 create or replace function pg_temp.counted(what text, got bigint, want bigint)
 returns void language plpgsql as $$
 begin
@@ -128,16 +164,16 @@ begin
   -- administrator reading their own row is the most natural policy to write
   -- and there is deliberately no policy at all.
   perform pg_temp.become_anon();
-  select count(*) into n from public.app_admins;
-  perform pg_temp.counted('a signed-out visitor reads no admin rows', n, 0);
+  perform pg_temp.refused('a signed-out visitor cannot read the admin list',
+                          'select count(*) from public.app_admins');
 
   perform pg_temp.become(person);
-  select count(*) into n from public.app_admins;
-  perform pg_temp.counted('an ordinary account reads none', n, 0);
+  perform pg_temp.refused('nor can an ordinary account',
+                          'select count(*) from public.app_admins');
 
   perform pg_temp.become(admin);
-  select count(*) into n from public.app_admins;
-  perform pg_temp.counted('and an administrator cannot read their own row', n, 0);
+  perform pg_temp.refused('and neither can an administrator, about their own row',
+                          'select count(*) from public.app_admins');
 
   -- The control: the row is really there. Without this, every count above is
   -- zero for the uninteresting reason and the suite proves nothing.
@@ -154,18 +190,15 @@ begin
     raise notice 'ok  an account cannot make itself an administrator';
   end;
 
-  update public.app_admins set note = 'mine now';
-  get diagnostics n = row_count;
-  perform pg_temp.counted('nor edit the list', n, 0);
+  perform pg_temp.refused('nor edit the list',
+                          $q$update public.app_admins set note = 'mine now'$q$);
 
-  delete from public.app_admins;
-  get diagnostics n = row_count;
-  perform pg_temp.counted('nor remove anybody from it', n, 0);
+  perform pg_temp.refused('nor remove anybody from it',
+                          'delete from public.app_admins');
 
   perform pg_temp.become(admin);
-  delete from public.app_admins;
-  get diagnostics n = row_count;
-  perform pg_temp.counted('and neither can an administrator', n, 0);
+  perform pg_temp.refused('and an administrator cannot remove anybody either',
+                          'delete from public.app_admins');
 
   -- ── is_app_admin(), and where it lives ──────────────────────────────────
   perform pg_temp.become(admin);
