@@ -41,7 +41,7 @@
  */
 
 import { creditHoursOr0 } from './credits';
-import { LEGACY_TERM, readTerm, sortTerms, termId, type Term } from './term';
+import { LEGACY_TERM, readTerm, termId, type Term } from './term';
 import type { CourseModule } from './types';
 import type { Taken } from './degree';
 
@@ -126,10 +126,22 @@ export function asTaken(rows: Closing[], term: string): Taken[] {
   }));
 }
 
-/** Terms that have been closed, newest first, for a switcher to grey out. */
-export function archivedTerms(ids: string[]): Term[] {
-  return sortTerms(ids);
-}
+/*
+ * `archivedTerms(ids)` was here: `return sortTerms(ids)`, exported, and called
+ * by nothing. Its docblock read "for a switcher to grey out", and no switcher
+ * greys anything out — `components/TermSwitch.tsx` marks a *past* term, which
+ * is `isPast`, a calendar guess its own note says may be a fortnight out, and
+ * a different question from whether this person closed the term.
+ *
+ * Cut rather than wired, because it was never the missing piece: the store
+ * already unions `state.archivedTerms` into `terms` and already sorts it with
+ * `sortTerms` — see `state/store.tsx` — so this added a name and nothing else.
+ *
+ * What is genuinely open is whether the switcher should say "closed out"
+ * where it now says "finished", and the two differ less often than they look:
+ * by the time somebody has their grades to type, `termNow` has usually moved
+ * on and `isPast` is already true. Recorded rather than claimed.
+ */
 
 export function isArchived(term: string, archived: string[]): boolean {
   return archived.includes(term);

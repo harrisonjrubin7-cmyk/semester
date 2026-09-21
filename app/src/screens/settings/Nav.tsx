@@ -15,6 +15,7 @@ import { MOVE_HINT, nudged, useMovable } from '../../lib/arrange';
 import { afterMove, boardLists } from '../../lib/springboard';
 import { readOrder, shelfLists, writeOrder } from '../../lib/launcher';
 // Aliased: `Group` is already the settings page's own panel component.
+import { offered } from '../../lib/nav';
 import type { Group as Shelf } from '../../lib/nav';
 import type { Screen } from '../../lib/types';
 import { currentLook } from '../../state/shape';
@@ -363,7 +364,7 @@ export function SettingsNav() {
                 onChange={() => dispatch({ type: 'showEverything', on: !state.showAll })}
               />
               <div style={HINT}>
-                {revealLine(countHidden(facts, state.visited, state.showAll), state.showAll)}
+                {revealLine(countHidden(offered(school.capabilities, state.role), facts, state.visited, state.showAll), state.showAll)}
               </div>
             </CustomRow>
             {/* The other half of the same question is a page away, so it is

@@ -36,7 +36,7 @@ describe('a first morning', () => {
   });
 
   it('hides a good deal, but not most of it', () => {
-    const hidden = countHidden(fresh, none, false);
+    const hidden = countHidden(DESTINATIONS, fresh, none, false);
     expect(hidden).toBeGreaterThan(8);
     expect(hidden).toBeLessThan(DESTINATIONS.length - FIRST.length + 6);
   });
@@ -67,7 +67,7 @@ describe('earning a screen', () => {
   });
 
   it('shows everything to somebody a term in', () => {
-    expect(countHidden(settled, none, false)).toBe(0);
+    expect(countHidden(DESTINATIONS, settled, none, false)).toBe(0);
   });
 
   it('gates on a fact about the semester, never on a timer', () => {
@@ -92,12 +92,12 @@ describe('the three rules that stop it being annoying', () => {
     for (const d of DESTINATIONS) {
       expect(showing(d.screen as string, fresh, none, true), d.screen).toBe(true);
     }
-    expect(countHidden(fresh, none, true)).toBe(0);
+    expect(countHidden(DESTINATIONS, fresh, none, true)).toBe(0);
   });
 
   it('hides nothing from somebody who has been everywhere', () => {
     const been = Object.fromEntries(DESTINATIONS.map((d) => [d.screen, true]));
-    expect(countHidden(fresh, been, false)).toBe(0);
+    expect(countHidden(DESTINATIONS, fresh, been, false)).toBe(0);
   });
 });
 

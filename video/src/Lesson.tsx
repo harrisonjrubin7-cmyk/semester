@@ -9,7 +9,7 @@ import {
 import { cueIndexAt } from '../../app/src/lib/beats';
 import { tokensFor } from '../../app/src/lib/look';
 import type { Lesson, LessonCue } from '../../app/src/lib/types';
-import { slideScale } from './fit';
+import { Slide } from './Slide';
 
 /**
  * A narrated lesson, as a real video.
@@ -42,23 +42,12 @@ export interface LessonVideoProps extends Record<string, unknown> {
   accent: string;
 }
 
-/** The seconds a cue is on screen, for the animation that introduces it. */
-function cueStart(cues: readonly LessonCue[], index: number): number {
-  return cues[index]?.at ?? 0;
-}
-
 /**
  * The kicker over each slide.
  *
  * Lifted from the player rather than reworded: "Question" over a question and
  * "Answer" over an answer is what a student reading along already knows.
  */
-function kickerFor(kind: LessonCue['kind'] | undefined): string {
-  if (kind === 'title') return 'Lesson';
-  if (kind === 'close') return 'That is the unit';
-  if (kind === 'q') return 'Question';
-  return 'Answer';
-}
 
 export function LessonVideo({ lesson, code, ground, accent }: LessonVideoProps) {
   const frame = useCurrentFrame();
@@ -67,7 +56,6 @@ export function LessonVideo({ lesson, code, ground, accent }: LessonVideoProps) 
 
   const cues = lesson.cues ?? [];
   const index = cueIndexAt(cues, seconds);
-  const cue = cues[index];
   const tokens = tokensFor({ ground, accent }, false);
 
   /*
@@ -77,39 +65,15 @@ export function LessonVideo({ lesson, code, ground, accent }: LessonVideoProps) 
    * leaves between beats (`GAP_TURN` in `pipeline/lessons.py`), so the motion
    * finishes before the next sentence starts and never runs under one.
    */
-  const since = seconds - cueStart(cues, index);
-  const enter = interpolate(since, [0, 0.42], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-  const rise = interpolate(enter, [0, 1], [18, 0]);
 
   const progress = lesson.seconds > 0 ? Math.min(seconds / lesson.seconds, 1) : 0;
 
   const fg = tokens['--app-fg'];
   const pad = Math.round(width * 0.075);
-  const cardPad = Math.round(width * 0.055);
 
-  /*
-   * Shrink the type when the words need it, and only then. See `fit.ts` —
-   * the numbers below are the frame this composition actually draws, so the
-   * estimate is made against the real geometry rather than a nominal one.
-   */
-  const question = cue?.kind === 'a' ? (cues[index - 1]?.text ?? '') : '';
-  const body = cue?.text ?? '';
-  const bodySize = Math.round(height * 0.042);
-  const headSize = Math.round(height * 0.052);
-  const scale = slideScale({
-    chars: body.length + question.length,
-    innerWidth: width - 2 * pad - 2 * cardPad,
-    // What is left once the running head and the progress track have taken
-    // theirs, and the card's own padding with it.
-    available: height - 2 * pad - Math.round(height * 0.11) - 2 * cardPad,
-    bodySize,
-    lineHeight: 1.5,
-    overhead: Math.round(height * 0.026) + headSize * 1.15 + Math.round(height * 0.058),
-  });
-  const big = (px: number) => Math.round(px * scale);
+  // What the running head and the progress track leave. `Slide` takes its own
+  // padding off this and shrinks the type to fit — `fit.ts` has the argument.
+  const available = height - 2 * pad - Math.round(height * 0.11);
 
   return (
     <AbsoluteFill
@@ -178,71 +142,16 @@ export function LessonVideo({ lesson, code, ground, accent }: LessonVideoProps) 
           paddingBottom: Math.round(height * 0.02),
         }}
       >
-        <div
-          style={{
-            width: '100%',
-            background: tokens['--app-hero'],
-            borderRadius: 18,
-            padding: cardPad,
-            transform: `translateY(${rise}px)`,
-            opacity: enter,
-          }}
-        >
-          <div
-            style={{
-              fontSize: big(Math.round(height * 0.026)),
-              letterSpacing: '0.22em',
-              textTransform: 'uppercase',
-              color: tokens['--app-accent-deep'],
-            }}
-          >
-            {kickerFor(cue?.kind)}
-          </div>
-
-          {cue?.kind === 'title' || cue?.kind === 'close' ? (
-            <div
-              style={{
-                fontSize: big(Math.round(height * 0.082)),
-                lineHeight: 1.08,
-                marginTop: big(Math.round(height * 0.03)),
-                textWrap: 'pretty',
-              }}
-            >
-              {cue.text}
-            </div>
-          ) : (
-            <>
-              {/*
-               * An answer keeps its question above it, faded — the player does
-               * this, and on a screen you cannot scroll back it matters more:
-               * an answer alone is a sentence with no subject.
-               */}
-              <div
-                style={{
-                  fontSize: big(headSize),
-                  lineHeight: 1.15,
-                  marginTop: big(Math.round(height * 0.03)),
-                  textWrap: 'pretty',
-                  opacity: cue?.kind === 'a' ? 0.55 : 1,
-                }}
-              >
-                {cue?.kind === 'a' ? cues[index - 1]?.text : cue?.text}
-              </div>
-              {cue?.kind === 'a' && (
-                <div
-                  style={{
-                    fontSize: big(bodySize),
-                    lineHeight: 1.5,
-                    marginTop: big(Math.round(height * 0.028)),
-                    textWrap: 'pretty',
-                  }}
-                >
-                  {cue.text}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        <Slide
+          cues={cues}
+          index={index}
+          seconds={seconds}
+          tokens={tokens}
+          width={width}
+          height={height}
+          pad={pad}
+          available={available}
+        />
       </div>
 
       {/* How far in, on the track the app uses for the same job. */}

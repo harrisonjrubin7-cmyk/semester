@@ -102,6 +102,19 @@ export interface DesignLayer {
    * find.
    */
   opacity: number;
+  /**
+   * Degrees clockwise about the layer's own centre, -180 to 180.
+   *
+   * Signed rather than 0–360 so the slider's middle is upright and a nudge
+   * either way is a nudge either way. The two ends meet at the same picture,
+   * which is a property of rotation and not a thing to design around.
+   *
+   * It turns the layer and *not* its box: `x`/`y`/`w`/`h` stay axis-aligned,
+   * so dragging, the arrow keys and the alignment buttons all keep working on
+   * a tilted layer, and a rotation is never a thing you have to undo before
+   * you can move something.
+   */
+  rotation: number;
   /** Into `lib/files.ts`. The picture itself is never in here. */
   fileId: string;
 }
@@ -274,6 +287,7 @@ export function readCreations(value: unknown): CreationLibrary {
        * be this build calling every design made before it unreadable.
        */
       if (obj(l) && l.opacity === undefined) l.opacity = 1;
+      if (obj(l) && l.rotation === undefined) l.rotation = 0;
 
       const ok =
         obj(l) &&
@@ -289,6 +303,7 @@ export function readCreations(value: unknown): CreationLibrary {
         finite(l.fontSize, 8, 200) &&
         typeof l.bold === 'boolean' &&
         finite(l.opacity, LAYER_OPACITY.min, LAYER_OPACITY.max) &&
+        finite(l.rotation, -180, 180) &&
         textValue(l.fileId, 100);
       if (!ok) throw new Error('Invalid design layer.');
       layerIds.add(l.id);
@@ -369,6 +384,7 @@ export function newLayer(kind: DesignLayer['kind'], canvas: DesignData, fileId =
     fontSize: 48,
     bold: true,
     opacity: 1,
+    rotation: 0,
     fileId,
   };
 }
@@ -592,6 +608,19 @@ export const trianglePoints = (l: Pick<DesignLayer, 'x' | 'y' | 'w' | 'h'>): str
   `${l.x + l.w / 2},${l.y} ${l.x + l.w},${l.y + l.h} ${l.x},${l.y + l.h}`;
 
 /**
+ * A layer's rotation as an SVG `transform`, or nothing at all.
+ *
+ * About the centre of the layer's own box, so a layer turns in place rather
+ * than swinging around the page's origin — which is what `rotate(deg)` with no
+ * centre does, and it throws the layer off the canvas on the first degree.
+ *
+ * Empty at 0, for the reason `opacity` is omitted at 1: an export of a design
+ * nobody has rotated carries no transforms, and stays the document it was.
+ */
+export const layerTransform = (l: Pick<DesignLayer, 'x' | 'y' | 'w' | 'h' | 'rotation'>): string =>
+  l.rotation ? `rotate(${l.rotation} ${l.x + l.w / 2} ${l.y + l.h / 2})` : '';
+
+/**
  * A design as an SVG document.
  *
  * Every piece of text goes through `xml`, because a layer's text is typed by
@@ -615,30 +644,31 @@ export function designSvg(d: DesignData, images: Record<string, string> = {}): s
      * it was before layers could be faded.
      */
     const fade = l.opacity < 1 ? ` opacity="${l.opacity}"` : '';
+    const turn = layerTransform(l) ? ` transform="${layerTransform(l)}"` : '';
 
     if (l.kind === 'text') {
       const lines = l.text
         .split('\n')
         .map((t, i) => `<tspan x="${l.x}" dy="${i ? l.fontSize * 1.25 : 0}">${xml(t)}</tspan>`)
         .join('');
-      return `<text x="${l.x}" y="${l.y + l.fontSize}" fill="${l.fill}" font-family="Arial,sans-serif" font-size="${l.fontSize}" font-weight="${l.bold ? '700' : '400'}"${fade}>${lines}</text>`;
+      return `<text x="${l.x}" y="${l.y + l.fontSize}" fill="${l.fill}" font-family="Arial,sans-serif" font-size="${l.fontSize}" font-weight="${l.bold ? '700' : '400'}"${fade}${turn}>${lines}</text>`;
     }
     if (l.kind === 'ellipse') {
-      return `<ellipse cx="${l.x + l.w / 2}" cy="${l.y + l.h / 2}" rx="${l.w / 2}" ry="${l.h / 2}" fill="${l.fill}"${fade}/>`;
+      return `<ellipse cx="${l.x + l.w / 2}" cy="${l.y + l.h / 2}" rx="${l.w / 2}" ry="${l.h / 2}" fill="${l.fill}"${fade}${turn}/>`;
     }
     if (l.kind === 'triangle') {
       // Apex centred on the top edge, base on the bottom one — the same three
       // points `trianglePoints` gives the editor, so the export and the screen
       // cannot drift apart.
-      return `<polygon points="${trianglePoints(l)}" fill="${l.fill}"${fade}/>`;
+      return `<polygon points="${trianglePoints(l)}" fill="${l.fill}"${fade}${turn}/>`;
     }
     if (l.kind === 'image') {
       const src = images[l.fileId] || '';
       // Whitelist, not a sanity check. See above.
       if (!/^data:image\/(png|jpeg|webp);base64,/.test(src)) return '';
-      return `<image x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" href="${xml(src)}"${fade}/>`;
+      return `<image x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" href="${xml(src)}"${fade}${turn}/>`;
     }
-    return `<rect x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" fill="${l.fill}"${fade}/>`;
+    return `<rect x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" fill="${l.fill}"${fade}${turn}/>`;
   };
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${d.width}" height="${d.height}" viewBox="0 0 ${d.width} ${d.height}"><rect width="100%" height="100%" fill="${d.background}"/>${d.layers.map(layer).join('')}</svg>`;

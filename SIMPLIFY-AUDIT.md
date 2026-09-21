@@ -1,3 +1,138 @@
+# One app — the twenty-seventh pass: the registry is the app, and the count is about a person
+
+Against `main` at `0fa38e4`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge. Three counts gated, one export cut, one guard.
+
+`DESTINATIONS` is every screen this app has ever had — the list before
+`allowed` has asked what the school has, and before `forRole` has asked who is
+holding the phone. `lib/nav.ts` says so in its own words, beside the helper
+that fixes it:
+
+> There were three, and they are three different questions. `allowed` is about
+> the school — a meal plan screen at a university with no meal plan is
+> **absent, not pending**, and no amount of using the app produces one.
+
+`offered(capabilities, role)` is that helper. `screens/Directory.tsx`,
+`lib/desk.ts`, `lib/springboard.ts`, `components/Command.tsx` and
+`components/nav/ByTask.tsx` all go through it. Three sentences about *how much
+of this app you have seen* do not, and each of them reads the registry
+instead.
+
+## T1 — three figures that describe the app, printed as though they described you
+
+| Where | What it says | Pool |
+| --- | --- | --- |
+| `ai/providers/personal.ts` | "N of 58 screens have been opened at least once" — **and every unopened name**, to the model | registry |
+| `screens/Privacy.tsx` | "N of 58 screens you have never opened" | registry |
+| `lib/reveal.ts` `countHidden` | the settings line's "46 held back" | registry |
+
+Measured on a fresh profile, per person:
+
+| Person | Screens they have | `countHidden` said | Truth | Overstated by |
+| --- | --- | --- | --- | --- |
+| **Vanderbilt student** | **58** | **46** | **46** | **0** |
+| Vanderbilt faculty | 47 | 46 | 35 | 11 |
+| Student, school with no meal plan, housing or campus map | 53 | 46 | 41 | 5 |
+| Faculty at that school | 46 | 46 | 34 | 12 |
+
+**The first row is why this survived, and it is the control.** For a
+Vanderbilt student the registry and `offered()` are the same fifty-eight
+screens, so all three sentences were exactly right for the app's main user and
+for every test written from their point of view. Nothing was wrong until
+somebody else opened it.
+
+### The assistant one is the one that bites
+
+`personal.ts` does not only count. It sends `neverOpened` — the list, by name —
+and it sends it with `open_screen` in `actions` and this in `suggestions`:
+
+> *"What have I never opened that I should?"*
+
+For a faculty user that list carried all eleven screens `forRole` exists to
+remove: `degree`, `costs`, `groupwork`, `meals`, `housing`, `runway`,
+`behind`, `yes`, `classmates`, `activities`, `applying`. The model is being
+handed a degree audit to recommend to somebody teaching the course, under a
+prompt inviting exactly that recommendation, with a tool to act on it. At a
+school with no meal plan, no housing and no campus map, a *student* got the
+same treatment for five: `meals`, `housing`, `maps`, `yes`, `activities`.
+
+### What was deliberately left alone
+
+`lib/guidebook.ts` still documents all fifty-eight, and the app-mode system
+prompt still describes screens this person cannot reach. That is correct and
+it is the distinction the whole pass turns on: **a manual describes the app; a
+count describes the person holding it.** "Does this app have a meal plan
+screen" is a question about the app, and the guidebook's own self-check
+asserts it has an entry per registry row. Gating it would make the assistant
+lie about what was built.
+
+`screens/Privacy.tsx` also keeps `DESTINATIONS` for the row labels three lines
+above the count — the registry as a name table, which is its proper use.
+
+### The gate reaches the settings line too
+
+`countHidden` now takes the pool rather than naming the registry, so
+`lib/reveal.ts` no longer imports `DESTINATIONS` at all. That matters because
+of what the line it feeds *offers*: a switch reading **"show every screen
+straight away"**. A screen `allowed` or `forRole` has removed is not waiting
+behind that switch. Counting it promised a faculty user forty-six screens that
+a toggle would produce, when eleven of them do not exist in their app and
+thirty-five is the real figure.
+
+`lib/gateapplied.test.ts` has kept the *reveal* gate applied where somebody can
+see it since the twenty-first pass. Nothing was asking whether the other two
+gates had reached the count.
+
+## T2 — `archivedTerms()`, from the carried worklist
+
+`lib/rollover.ts` exported `archivedTerms(ids)` — `return sortTerms(ids)` —
+called by nothing, with a docblock reading *"for a switcher to grey out"*. The
+twenty-sixth flagged it as the interesting one left. It is not: `state/store.tsx`
+already unions `state.archivedTerms` into `terms` and already sorts them with
+`sortTerms`, so this was a name over a call the only caller was making anyway.
+Cut.
+
+The question underneath it stays open and is recorded in the file rather than
+claimed: `components/TermSwitch.tsx` marks a term as *finished* by `isPast`, a
+calendar guess whose own note says it may be a fortnight out, and never says
+*closed out*, which is a thing the person did. The two differ less often than
+they look — by the time somebody has grades to type, `termNow` has usually
+moved on — so it is written down, not fixed on a hunch.
+
+## What another session landed mid-pass
+
+This pass began with two halves. The second was the `offerable()` default in
+`lib/unseen.ts`, carried as an open to-do since the twenty-first: the pool was
+a parameter, but it defaulted to the registry, so the fix held only while every
+caller remembered to pass one.
+
+**It landed on `main` as `6071626` while this was being written**, and that
+work is better than what was here. Its guard is a `@ts-expect-error` in
+`lib/unseen.test.ts`, which fails both when the default comes back *and* when
+the parameter is merely made optional; the version here was an import check,
+which catches only the first. Dropped rather than merged, per the rule at the
+top of `CLAUDE.md`. The three counts above are untouched by it.
+
+## Proving it
+
+`lib/perperson.test.ts`, nine cases. Each fix was reverted and watched fail:
+
+| Reverted | Red |
+| --- | --- |
+| `personal.ts` pool → registry | *expected 'Progress — …' to contain 'of 47 screens'*; *degree: expected [ 'home', …(44) ] to include 'degree'* |
+| `countHidden` → registry | *expected 46 to be less than 46* |
+
+Every describe carries a control that must **not** move: a Vanderbilt
+student's figures stay at 58 and 46, and the same probe run against a student
+still names `degree` and `meals`. A suite asserting only "faculty sees fewer"
+would pass against a pool that had simply been truncated, which is the failure
+the second teardown probe taught this repository to check for.
+
+## Gates
+
+`tsc` clean · lint ok · tests in file order · shuffled · production build
+clean.
+
 # One app — the twenty-sixth pass: the merge carried the controls and left the content
 
 Against `main` at `8e13574`. **<!--screens-->fifty-eight<!--/--> destinations**,

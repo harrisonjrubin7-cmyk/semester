@@ -29,7 +29,7 @@ import { migrationReport } from '../state/shape';
 import { cloudConfigured, deleteEverything } from '../lib/cloud';
 import { eraseDevice } from '../lib/erase';
 import { Toggle } from '../components/ui';
-import { DESTINATIONS } from '../lib/nav';
+import { DESTINATIONS, offered } from '../lib/nav';
 import {
   USAGE_KEY,
   neverOpened,
@@ -63,7 +63,9 @@ function stored(key: string): string | null {
 }
 
 export function Privacy() {
-  const { account, state, dispatch } = useStore();
+  const { account, state, dispatch, school } = useStore();
+  // Their app, not the registry. See the note on the count below.
+  const theirs = offered(school.capabilities, state.role);
   // Read once on mount: the counts live outside React state on purpose, and a
   // page that re-read them on every render would show its own opening being
   // counted while somebody was looking at it.
@@ -165,7 +167,13 @@ export function Privacy() {
             </div>
           ))}
           <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginTop: 'var(--sp-4)', textWrap: 'pretty' }}>
-            {unusedLine(neverOpened(counts, DESTINATIONS.map((d) => d.screen as string)).length, DESTINATIONS.length)}
+            {/* `DESTINATIONS` is every screen the app has ever had, so this
+                told a faculty user "52 of 58 screens you have never opened"
+                about a 47-screen app — and then offered the reveal switch as
+                the remedy for eleven it can never reveal. The label lookup
+                above is the registry's proper use: a name table. Same fix as
+                `ai/providers/personal.ts` and `lib/reveal.ts`. */}
+            {unusedLine(neverOpened(counts, theirs.map((d) => d.screen as string)).length, theirs.length)}
           </div>
           <button
             type="button"

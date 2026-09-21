@@ -53,6 +53,25 @@ The words on screen are the words being spoken, so these are captioned without
 a captioning pass — but per *beat*, not per word. A cue records where a line
 starts, not a syllable, so nothing here bounces along with the voice.
 
+## Explainers
+
+The last format in the roadmap's §3, and the only one that was never in its
+rollout order.
+
+```bash
+python3 pipeline/explainer.py econ --dry-run
+python3 pipeline/explainer.py econ
+```
+
+`src/Explainer.tsx` plays a run of a course's units as one 8–15 minute video —
+one `Audio` per unit, each sequenced onto its own frame, so a ten-unit
+explainer plays ten existing MP3s and writes no audio file. `pipeline/README.md`
+has the arithmetic and why every course gets truncated.
+
+The slide is `src/Slide.tsx`, which is the lesson video's slide: an explainer
+*is* a run of lessons, and two compositions setting the same sentence
+differently would tell a viewer the pipeline is two pipelines.
+
 ## Documentary cuts
 
 Step 4's free half: the two-voice episode with its chapter marks drawn over it.
@@ -153,6 +172,23 @@ The cue list is the interface between the two halves of the pipeline:
 `lessons.py` writes it, this reads it. Rendering a video never re-synthesises a
 voice, so it is free and safe to re-run on a unit whose narration has not
 changed.
+
+## The slide, and the 150ms it used to vanish for
+
+`src/Slide.tsx` draws the card both the lesson video and the explainer set
+their words on, and it owns the entrance as well as the type, which is not
+tidiness. `cueIndexAt` turns a slide `CUE_LEAD` — 150ms — *before* the cue's
+own second; that lead is the point of it. The lesson video measured the fade
+from `cue.at` instead, so for exactly that 150ms the incoming slide was at zero
+opacity while the outgoing one had already gone, and the frame held nothing but
+the running head. Ten cues a unit, a hundred and twenty in a thirteen-minute
+explainer.
+
+It survived because a frame sampled at random is almost never inside a 150ms
+window, and because the two halves of one rule lived in different files.
+`cueEntrance` in `app/src/lib/beats.ts` is now the other half, beside
+`cueIndexAt` and `CUE_LEAD`, and `beats.test.ts` walks every handover a frame
+at a time asserting the slide is never invisible while it is the slide.
 
 ## Fitting the words to the frame
 

@@ -3,12 +3,14 @@ import { ActionButton, FilePick, SectionLabel } from '../ui';
 import { secondLine } from '../../lib/dim';
 import { ItemRow } from '../shell/Rows';
 import { addFile, getFile } from '../../lib/files';
+import { TOLERANCE, clearedShare, edgeColour, keyOut } from '../../lib/cutout';
 import { cloudConfigured } from '../../lib/cloud';
 import { download } from '../../lib/deliver';
 import {
   LAYER_OPACITY,
   clampOpacity,
   designSvg,
+  layerTransform,
   newLayer,
   trianglePoints,
   type CreativeProject,
@@ -117,6 +119,16 @@ export function DesignEditor({
   const latest = useRef(project.design);
   latest.current = project.design;
   const [notice, setNotice] = useState('');
+  /*
+   * The tolerance the background lift will use, kept on the editor rather than
+   * on the layer. It is a setting for an *action*, not a property of the
+   * artwork: once the lift has run, the layer is a picture with a hole in it
+   * and the number that made the hole is history. Storing it on the layer
+   * would put it in the file, the export and the shared canvas, all describing
+   * something that already happened.
+   */
+  const [tolerance, setTolerance] = useState<number>(TOLERANCE.deft);
+  const [lifting, setLifting] = useState(false);
   const [past, setPast] = useState<DesignData[]>([]);
   const [future, setFuture] = useState<DesignData[]>([]);
   const svg = useRef<SVGSVGElement>(null);
@@ -289,6 +301,71 @@ export function DesignEditor({
       }
     } catch (e) {
       setNotice((e as Error).message);
+    }
+  };
+
+  /**
+   * Lift a flat background off the selected picture.
+   *
+   * Non-destructive, and that is the whole shape of it: the cut-out is written
+   * to Files as a *new* PNG and the layer is pointed at it, so the original
+   * upload is still there. A background lift that overwrote the only copy of
+   * somebody's picture would be a one-way door with a slider on it, and the
+   * tolerance that was right is found by trying one that was not.
+   *
+   * The result is refused rather than applied when it would take nearly
+   * everything: at that point the key has matched the subject too, and the
+   * honest outcome is a sentence about the tolerance rather than a layer that
+   * has silently become a blank rectangle.
+   */
+  const liftBackground = async (layer: DesignLayer) => {
+    setLifting(true);
+    try {
+      const stored = await getFile(layer.fileId);
+      if (!stored) throw new Error('That picture is no longer in Files.');
+
+      const bitmap = await createImageBitmap(stored.blob);
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      ctx.drawImage(bitmap, 0, 0);
+      bitmap.close();
+
+      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const key = edgeColour(frame.data, canvas.width, canvas.height);
+      const cleared = keyOut(frame.data, key, tolerance);
+      const took = clearedShare(cleared, canvas.width * canvas.height);
+
+      if (took > 0.97) {
+        setNotice('That would have taken nearly the whole picture — the background and the subject are too close in colour at this tolerance. Try a lower one.');
+        return;
+      }
+      if (cleared === 0) {
+        setNotice('Nothing matched the edges of that picture closely enough to lift. Try a higher tolerance.');
+        return;
+      }
+
+      ctx.putImageData(frame, 0, 0);
+      // PNG, always: the format is the point. A JPEG has no alpha, so the
+      // hole this just made would come back as black on the way out.
+      const blob = await new Promise<Blob>((resolve, reject) =>
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('The cut-out could not be written.'))), 'image/png'),
+      );
+      const saved = await addFile(
+        new File([blob], `${stored.name.replace(/\.[^.]+$/, '')} (background lifted).png`, { type: 'image/png' }),
+        project.courseId || null,
+        null,
+        '',
+        project.itemId || null,
+      );
+
+      change({ ...d, layers: d.layers.map((x) => (x.id === layer.id ? { ...x, fileId: saved.id } : x)) });
+      setNotice(`Lifted ${Math.round(took * 100)}% of that picture. The original is still in Files — undo puts the layer back on it.`);
+    } catch (e) {
+      setNotice((e as Error).message);
+    } finally {
+      setLifting(false);
     }
   };
 
@@ -529,6 +606,14 @@ export function DesignEditor({
               key={layer.id}
               role="button"
               tabIndex={0}
+              /*
+               * The rotation goes on the `<g>`, and the opacity below goes on
+               * the shape. The difference is the selection outline, which is
+               * in here too: it has to *turn* with the layer to keep framing
+               * it, and it has to not fade with it, or a layer taken down to a
+               * tenth would be one you could no longer see you had selected.
+               */
+              transform={layerTransform(layer) || undefined}
               aria-label={`${layer.kind} ${layer.text || i + 1}`}
               onClick={() => setSelected(layer.id)}
               onKeyDown={(e) => {
@@ -761,6 +846,46 @@ export function DesignEditor({
               style={input}
             />
           </label>
+          {/*
+            * Only for a picture, and named for what it does.
+            *
+            * "Lift a flat background", not "Remove background": this keys out
+            * a colour, it does not know what a person is. Calling it the
+            * second thing would have somebody try it on a photo of themselves
+            * against a room and conclude the feature is broken, when what it
+            * is, is a different feature. See `lib/cutout.ts`.
+            */}
+          {l.kind === 'image' && (
+            <>
+              <label style={field}>
+                <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+                  How close a colour counts as the background · {tolerance}
+                </span>
+                <input
+                  type="range"
+                  min={TOLERANCE.min}
+                  max={TOLERANCE.max}
+                  step={1}
+                  value={tolerance}
+                  onChange={(e) => setTolerance(Number(e.target.value) || TOLERANCE.deft)}
+                  style={input}
+                />
+              </label>
+              <ActionButton
+                disabled={lifting}
+                onClick={() => void liftBackground(l)}
+                style={{ marginBottom: 'var(--sp-5)' }}
+              >
+                {lifting ? 'Lifting…' : 'Lift a flat background'}
+              </ActionButton>
+              <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+                Finds the colour around the edges of this picture and clears it. Made for a logo, a
+                scanned figure or a plot on plain paper — not for a photograph of somebody against a
+                room, which needs a tool that knows what a person is. The original picture stays in
+                Files either way.
+              </p>
+            </>
+          )}
           {l.kind === 'text' && (
             <label
               style={{
@@ -775,6 +900,26 @@ export function DesignEditor({
               <span>Bold</span>
             </label>
           )}
+          <label style={field}>
+            <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+              Rotation · {Math.round(l.rotation)}°
+            </span>
+            <input
+              type="range"
+              min={-180}
+              max={180}
+              step={1}
+              value={l.rotation}
+              onChange={(e) => patch({ rotation: Math.max(-180, Math.min(180, Math.round(Number(e.target.value)) || 0)) })}
+              style={input}
+            />
+          </label>
+          {l.rotation !== 0 && (
+            <ActionButton onClick={() => patch({ rotation: 0 })} style={{ marginBottom: 'var(--sp-5)' }}>
+              Straighten
+            </ActionButton>
+          )}
+
           {/*
             * Against the page, not against another layer.
             *
@@ -784,6 +929,14 @@ export function DesignEditor({
             * makes right and centre an approximation for text and exact for
             * everything else, which is the same approximation the one Centre
             * button here always made, now said out loud.
+            *
+            * And it is the box for a rotated layer too: a tilted layer aligned
+            * right has its *box* against the right edge, so a corner of the
+            * layer itself pokes past it. Aligning the turned shape's true
+            * extent would need its bounding box after rotation, which is a
+            * different and larger thing than the one every other control here
+            * moves — so the box stays the box, and Straighten is next to the
+            * slider for anybody who wanted the other answer.
             */}
           <SectionLabel style={{ marginBlock: 'var(--sp-5) var(--sp-4)' }}>Align on the page</SectionLabel>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>

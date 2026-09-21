@@ -53,3 +53,7 @@ app/public/video/personas/
 # `video/shots/<course>.json`, which *is* committed, says exactly what each
 # one was asked to be.
 app/public/video/broll/
+
+# And the explainers, which are 8–15 minutes each. The chapters.txt beside
+# them is derived from the same plan and re-written every render.
+app/public/video/explainer/
