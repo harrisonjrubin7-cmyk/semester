@@ -587,6 +587,7 @@ const MOCKS_MODULES = [
   'src/components/StudyStudio.test.tsx',
   'src/components/gpascalenote.test.tsx',
   'src/lib/extract.test.ts',
+  'src/lib/extractaccuracy.test.ts',
   'src/lib/referral.test.ts',
   'src/lib/generate.test.ts',
   'src/lib/presence.test.ts',
