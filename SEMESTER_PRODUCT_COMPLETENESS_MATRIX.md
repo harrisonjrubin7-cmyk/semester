@@ -457,6 +457,51 @@ already have.
 
 ---
 
+## Part 6 — §247, and why "not built" was the wrong first reading
+
+The plan's first reading of Part C listed §247 (time zone system) as
+**probably absent**, on the grounds that `lib/` has no timezone module. Measured,
+that was wrong in the way that matters.
+
+### There is no hardcoded Central Time, and CI proves it twice a commit
+
+§247's one imperative is *"Never hardcode Central Time."* Grepping for it finds
+three hits and all three are innocent: two are the string `W3CDTF` inside
+`lib/docx.ts`, and the third is a comment in `screens/Calendar.tsx` recording
+the timezone a **fixed** daylight-saving bug was measured in — the code around
+it uses `setDate`, which knows a day can be 23 or 25 hours long.
+
+What actually enforces §247 is a CI step:
+
+```
+"test:zones": "TZ=America/Chicago vitest run && TZ=Pacific/Kiritimati vitest run"
+```
+
+**The entire suite runs twice, under two zones nineteen hours apart**, on every
+commit — `ci.yml` step 12. A hardcoded zone, or a date computed as
+`getTime() + 86_400_000`, fails somewhere in 12,054 tests under one of them.
+That is a stronger guarantee than §247 asks for, and it is the reason no
+timezone module exists: the correctness is held by the test matrix rather than
+by an abstraction.
+
+### The one real absence, and why it should stay absent for now
+
+§247 also asks for a **tenant timezone**. `public.schools` has `id`, `name`,
+`short_name`, `email_domains` and `created_at` — no timezone column.
+
+That is a genuine gap and it should not be filled yet. Nothing would read it:
+every date the app shows is either a calendar day compared as a string in the
+reader's own zone (`familyPlanActive`, deliberately — see its docblock) or a
+time quoted in the syllabus's own words (`Item.dueTime`). A column added now
+would be a field with no reader, which is exactly what the thirty-third pass
+cut out of this app and what `state/keyread.test.ts` exists to prevent.
+
+It becomes worth adding when a school's own calendar — term dates, an
+institutional deadline — is served from the server rather than typed on the
+device. That is §47.14's work.
+
+---
+
 ## What to fix, in order
 
 §226: *"Do not merely document gaps. Fix them according to priority."*
