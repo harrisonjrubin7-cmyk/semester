@@ -94,6 +94,48 @@ export class ActionJournal {
     `);
   }
 
+  /**
+   * Whether this journal could actually record an action right now.
+   *
+   * Not "was it constructed" — that happened at boot and proves nothing about
+   * a disk that filled up at four in the morning. The two-phase action records
+   * an attempt *before* making it, so a journal that cannot write is not a
+   * degraded gateway, it is one that must refuse work: the alternative is
+   * calling a university with no record that it was called, which is the exact
+   * situation the `uncertain` state exists to make impossible.
+   *
+   * `BEGIN IMMEDIATE` rather than a `SELECT`, because taking a RESERVED lock
+   * is the cheapest statement that asks for write intent rather than read
+   * access, and the `ROLLBACK` means no page is ever dirtied.
+   *
+   * ## What this is known to catch, and what it is not
+   *
+   * Proven: a connection that can no longer serve — the database closed under
+   * it, which is what a lost volume looks like from inside a process that is
+   * otherwise still answering. `gateway.test.ts` stages exactly that.
+   *
+   * **Not proven: a read-only file, or a full disk.** The obvious test for the
+   * first — chmod the file and probe — cannot run here, because the suite runs
+   * as root and root bypasses the permission bits: a plain `INSERT` against a
+   * 0444 database succeeds, so the case never arises to be caught. That was
+   * measured rather than assumed, and the test was removed rather than left
+   * passing for a reason unrelated to the thing it named.
+   *
+   * So do not read this as a promise about disks. It answers whether the
+   * journal can be written to *now*, by the only means available without
+   * writing; it cannot predict a write that has not been attempted, and no
+   * cheap probe can. The honest scope is: an unusable journal is reported,
+   * a journal that is about to become unusable is not.
+   */
+  healthy(): boolean {
+    try {
+      this.db.exec('BEGIN IMMEDIATE; ROLLBACK;');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   /** AES-256-GCM, with the IV and tag carried in front of the ciphertext. */
   private seal(v: unknown): string {
     const iv = randomBytes(12);

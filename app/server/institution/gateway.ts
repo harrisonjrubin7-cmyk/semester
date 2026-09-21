@@ -127,9 +127,40 @@ export function createGateway(config: Config) {
       const url = new URL(request.url);
       const path = url.pathname;
 
-      // Before authentication, deliberately: it is how a deployment is checked.
+      /*
+       * Before authentication, deliberately: it is how a deployment is checked.
+       *
+       * It used to answer `{service, version}` unconditionally, which is a
+       * liveness check wearing a readiness check's name. Those two are worth
+       * separating here more than in most services: this process answers 200
+       * while being unable to do the one thing it exists for, because the
+       * journal is a file and a file can stop being usable long after boot —
+       * a volume that did not come back is the case this catches.
+       * `journal.healthy()` is precise about which failures it can and cannot
+       * see; read that before quoting this endpoint's green at anybody.
+       *
+       * A deployment check that cannot see that is worse than none. It is the
+       * green light somebody points at while a student's withdrawal is going
+       * unrecorded, and the two-phase action means an unrecorded attempt is
+       * precisely the failure the `uncertain` state was built to prevent.
+       *
+       * 503 rather than 200-with-a-flag, so that a load balancer and a
+       * monitor reading nothing but the status code both get it right. What it
+       * does *not* say is why: "journal" names a subsystem, and an unauthenticated
+       * endpoint that narrates which part of a service is broken is a map for
+       * somebody choosing what to lean on.
+       */
       if (request.method === 'GET' && path === '/health') {
-        return Response.json({ service: 'Semester university gateway', version: 1 }, { headers });
+        const ready = config.journal.healthy();
+        return Response.json(
+          {
+            service: 'Semester university gateway',
+            version: 1,
+            status: ready ? 'ready' : 'unavailable',
+            adapters: config.adapters.length,
+          },
+          { status: ready ? 200 : 503, headers },
+        );
       }
       if (!['GET', 'POST'].includes(request.method)) fail(405, 'Method not supported.');
 
