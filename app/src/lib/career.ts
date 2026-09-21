@@ -258,6 +258,50 @@ export function readOpportunities(text: string): Opportunity[] {
   return readCareer({ ...EMPTY_CAREER, opportunities: mapped }).opportunities;
 }
 
+/**
+ * What "Build it in Write" calls the draft it makes.
+ *
+ * One expression, used by the button that writes the document and by the
+ * readout that says whether one exists. Two spellings of the same title is how
+ * the readout ends up saying "not built" about a draft sitting in Write.
+ */
+export const resumeDocumentTitle = (c: CareerLibrary) => `${c.name || 'My'} résumé`;
+
+/**
+ * Whether one of these documents is a résumé draft this screen built.
+ *
+ * By the title's ending rather than by an exact match, because the name on the
+ * résumé is part of the title and somebody who corrects their name afterwards
+ * has not un-built the draft.
+ */
+export const builtResume = (titles: readonly string[]) =>
+  titles.some((t) => t.trim().toLowerCase().endsWith('résumé'));
+
+/**
+ * What is filled in, as four facts and no verdict.
+ *
+ * Every competing product puts a meter here — "Profile strength: Intermediate",
+ * a percentage, a ring that fills. All of them are the same move: a number
+ * derived from how much somebody has typed, presented as a measure of how they
+ * are doing. It is not one. A student with two real jobs on a one-page résumé
+ * scores below one with nine lines of padding, and the meter's advice is to
+ * add the padding.
+ *
+ * So this counts and says, and stops. No score, no percentage, no band, no
+ * colour, and nothing ordered by it — "Headline: not set" is a fact somebody
+ * can act on or ignore, and it is the whole of what the app knows.
+ */
+export function resumeReadout(c: CareerLibrary, draft: boolean): string {
+  const experiences = c.experiences.length;
+  const contacts = c.contacts.length;
+  return [
+    `Headline: ${c.headline.trim() ? 'set' : 'not set'}`,
+    `${experiences} experience ${experiences === 1 ? 'entry' : 'entries'}`,
+    `${contacts} ${contacts === 1 ? 'contact' : 'contacts'} saved`,
+    draft ? 'résumé draft built in Write' : 'no résumé draft built in Write yet',
+  ].join(' · ');
+}
+
 /** The résumé as Markdown, for Write or an export. */
 export function resumeMarkdown(c: CareerLibrary): string {
   const entries = c.experiences

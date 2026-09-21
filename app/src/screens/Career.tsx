@@ -14,11 +14,14 @@ import {
   EXPERIENCE_TYPES,
   OPPORTUNITY_FORMATS,
   OPPORTUNITY_KINDS,
+  builtResume,
   coverLetter,
   newOpportunity,
   readCareer,
   readOpportunities,
+  resumeDocumentTitle,
   resumeMarkdown,
+  resumeReadout,
   type CareerContact,
   type CareerExperience,
   type Opportunity,
@@ -506,6 +509,17 @@ function Workspace({ storageKey }: { storageKey: string }) {
             Everything here is what you say about yourself. Nothing is marked verified, and nothing is
             shared anywhere on its own.
           </p>
+          {/*
+           * What is filled in, as four facts. Not a meter: every product that
+           * competes with this one puts a "profile strength" here, and all of
+           * them are the same move — a number derived from how much somebody
+           * has typed, shown as a measure of how they are doing. Two real jobs
+           * on one page score below nine lines of padding, and the meter's
+           * advice is to add the padding. See `resumeReadout`.
+           */}
+          <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+            {resumeReadout(lib.value, builtResume(state.documents.map((d) => d.title)))}
+          </p>
           {(['name', 'headline', 'contact'] as const).map((k) => (
             <label key={k} style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
@@ -523,7 +537,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
             <ActionButton
               tone="primary"
-              onClick={() => write(`${lib.value.name || 'My'} résumé`, resumeMarkdown(lib.value))}
+              onClick={() => write(resumeDocumentTitle(lib.value), resumeMarkdown(lib.value))}
               style={{ flex: '1 1 auto' }}
             >
               Build it in Write
