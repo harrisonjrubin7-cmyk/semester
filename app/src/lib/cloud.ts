@@ -756,6 +756,20 @@ export const OWNED_TABLES: OwnedTable[] = [
   { table: 'referrals', column: 'user_id' },
   { table: 'referral_codes', column: 'user_id' },
 
+  // ── What you let a parent see ───────────────────────────────────────────
+  //
+  // Keyed on `student_id`, because a grant is a statement the *student* made.
+  //
+  // **This does not empty the recipient's side, and that is a known gap rather
+  // than a decision.** A parent pressing Delete everything sends
+  // `student_id = me`, matches none of the grants naming them as recipient,
+  // and leaves them in place — the policy lets either party delete one (see
+  // `supabase/family.check.sql`), but this list sends one filter per entry.
+  // The cascade on `auth.users` covers a real account removal; this button is
+  // explicitly not that. Closing it belongs with the auth flows that first
+  // give a parent an account to delete.
+  { table: 'family_grants', column: 'student_id' },
+
   // ── Shared forms ────────────────────────────────────────────────────────
   { table: 'forms', column: 'owner' },
   // Taken by the line above rather than by a request of its own:
