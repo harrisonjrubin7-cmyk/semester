@@ -209,7 +209,7 @@ export function RecordButton({
             />
             <span
               className="chrome-text"
-              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}
+              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)', fontVariantNumeric: 'tabular-nums' }}
             >
               {clockOf(seconds)}
             </span>

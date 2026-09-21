@@ -1041,9 +1041,9 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
         borderLeft: `2px solid ${kindOf(a.kind).tint}`,
       }}
     >
-      <div style={{ width: 52, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1.1 }}>
+      <div style={{ width: 52, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 'var(--leading-display-lg)' }}>
         <div style={{ fontSize: 'calc(16px * var(--text-scale, 1))' }}>{a.time}</div>
-        <div style={{ fontSize: 'calc(10px * var(--text-scale, 1))', color: 'var(--app-dim)', letterSpacing: '0.1em' }}>
+        <div style={{ fontSize: 'var(--type-2xs)', color: 'var(--app-dim)', letterSpacing: '0.1em' }}>
           {longLabel(isoToDate(a.date)).replace(/^\w+ /, '')}
         </div>
       </div>
@@ -1064,7 +1064,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
         aria-label={`Edit ${a.title}`}
         style={{ flex: 1, minWidth: 0, textAlign: 'left', padding: 0 }}
       >
-        <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{a.title}</span>
+        <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>{a.title}</span>
         <span style={{ display: 'block', fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
           {/* How long and how often, on the row: a shelf of appointments that
               all read alike is a shelf where the four-hour shift and the
@@ -1357,7 +1357,7 @@ function Notes({ rows }: { rows?: Note[] }) {
               }}
             >
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>
+                <span style={{ display: 'block', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>
                   {n.title || 'Untitled note'}
                 </span>
                 <span
@@ -1617,7 +1617,7 @@ export function NoteEditor() {
               type="button"
               className="btn btn-ghost"
               onClick={() => dispatch({ type: 'detachFile', noteId: note.id, fileId: f.id })}
-              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(6px * var(--density, 1))' }}
+              style={{ flex: 'none', fontSize: 'var(--type-2xs)', letterSpacing: '0.12em', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(6px * var(--density, 1))' }}
             >
               Detach
             </button>

@@ -90,7 +90,7 @@ export function SettingsPage({
       <div style={{ paddingTop: '0', paddingInline: 'var(--page-pad)', paddingBottom: 'calc(12px * var(--density, 1))' }}>
         <div
           style={{
-            fontSize: 'calc(10.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-2xs-plus)',
             fontFamily: 'var(--font-heading)',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
@@ -119,7 +119,7 @@ export function SettingsPage({
             fontSize: 'calc(21px * var(--text-scale, 1))',
             fontFamily: 'var(--font-heading)',
             fontWeight: 'var(--font-heading-weight)' as never,
-            lineHeight: 1.2,
+            lineHeight: 'var(--leading-display-sm)',
           }}
         >
           {title}

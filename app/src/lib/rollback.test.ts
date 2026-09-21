@@ -419,3 +419,118 @@ describe('what the document points at exists', () => {
     }
   });
 });
+
+/*
+ * The fingerprint, which is the only reason anyone can say the repository and
+ * production agree.
+ *
+ * Step 1 of the repair proved the snapshot against production and did not
+ * write down the queries, so the proof could be quoted and not repeated. Step
+ * 4 ran six of them and five matched; `supabase/fingerprint.sql` is the file
+ * that makes those numbers something a person can produce again rather than
+ * read in a commit message.
+ *
+ * `code` is pinned alongside `functions` for a reason worth keeping: they
+ * disagreed. Four functions were applied to production with their comments
+ * stripped, so `functions` said the two databases differ and `code` said every
+ * statement in them is the same. Dropping either row leaves a measurement that
+ * cannot tell those two cases apart.
+ */
+describe('the fingerprint queries', () => {
+  const PATH = join(ROOT, 'supabase', 'fingerprint.sql');
+
+  it('exist as a file somebody can run again', () => {
+    expect(existsSync(PATH), 'supabase/fingerprint.sql is gone').toBe(true);
+  });
+
+  it('and measure the six things the repair claims to have matched', () => {
+    const sql = readFileSync(PATH, 'utf8');
+    for (const what of ['columns', 'constraints', 'indexes', 'functions', 'code', 'policies']) {
+      expect(sql, `the fingerprint no longer measures ${what}`).toMatch(
+        new RegExp(`'${what}\\s*'\\s*\\|\\|`),
+      );
+    }
+  });
+
+  it('and are pointed at by the plan that rests on them', () => {
+    expect(
+      readFileSync(join(ROOT, 'MIGRATION-HISTORY.md'), 'utf8'),
+      'the repair plan no longer links the fingerprint',
+    ).toContain('supabase/fingerprint.sql');
+  });
+});
+
+/*
+ * `rls_auto_enable` is the platform's, and the revoke on it is not.
+ *
+ * Production has an event trigger that turns row-level security on for every
+ * table created in `public`. Nothing in `migrations/` creates it and nothing
+ * should — it is installed by a dashboard setting, and the one migration that
+ * names it only revokes EXECUTE. Its absence from `local.stub.sql` was the
+ * whole of the difference between production's function fingerprint and a
+ * local build's.
+ *
+ * The revoke is the part that has already gone wrong once. Production closed
+ * that grant on 7 September and the statement lives in `history/`, which
+ * nothing applies — so a database built from `migrations/` had it open, and
+ * `grants.check.sql` could not see that until the stub started creating the
+ * function the way a real project does. Both halves are pinned here: the stub
+ * must define it, and a migration must close it.
+ */
+describe('the event trigger that belongs to the platform', () => {
+  const stub = () => readFileSync(join(ROOT, 'supabase', 'local.stub.sql'), 'utf8');
+
+  it('is defined in the stub, with its trigger', () => {
+    /*
+     * The creation, not the name. The first draft asked whether the string
+     * `rls_auto_enable` appeared, and a control that renamed the function to
+     * `rls_auto_enabled_x` left the test green — the new name contains the old
+     * one. A substring is not a definition.
+     */
+    expect(stub(), 'local.stub.sql no longer defines rls_auto_enable').toMatch(
+      /create\s+(or\s+replace\s+)?function\s+public\.rls_auto_enable\s*\(\s*\)/i,
+    );
+    expect(stub(), 'local.stub.sql no longer creates the ensure_rls event trigger').toMatch(
+      /create\s+event\s+trigger\s+ensure_rls\b/i,
+    );
+  });
+
+  it('and no migration creates it, because the repository does not own it', () => {
+    const dir = join(ROOT, 'supabase', 'migrations');
+    for (const f of readdirSync(dir).filter((n) => n.endsWith('.sql'))) {
+      const sql = readFileSync(join(dir, f), 'utf8');
+      expect(
+        /create\s+(or\s+replace\s+)?function\s+\S*rls_auto_enable/i.test(sql),
+        `${f} creates rls_auto_enable, which the platform owns`,
+      ).toBe(false);
+      expect(
+        /create\s+event\s+trigger\s+ensure_rls\b/i.test(sql),
+        `${f} creates the ensure_rls event trigger, which the platform owns`,
+      ).toBe(false);
+    }
+  });
+
+  it('and a migration does revoke it, from PUBLIC as well as by name', () => {
+    const dir = join(ROOT, 'supabase', 'migrations');
+    const all = readdirSync(dir)
+      .filter((n) => n.endsWith('.sql'))
+      .map((n) => readFileSync(join(dir, n), 'utf8'))
+      .join('\n');
+    /*
+     * The role list, not the line. The first draft asked whether a line
+     * mentioning `rls_auto_enable` also said `public` and `anon` — and
+     * `['public.rls_auto_enable()', 'anon, authenticated']` says both, because
+     * the schema is called public. A control that removed the PUBLIC half left
+     * the test green while the check went red, which is the wrong way round.
+     * So the second element is read on its own.
+     */
+    const entry = all.match(
+      /\[\s*'public\.rls_auto_enable\(\)'\s*,\s*'([^']*)'\s*\]/i,
+    );
+    expect(entry, 'nothing in migrations/ revokes rls_auto_enable').toBeTruthy();
+    const roles = (entry?.[1] ?? '').split(',').map((r) => r.trim().toLowerCase());
+    for (const role of ['public', 'anon', 'authenticated']) {
+      expect(roles, `the revoke no longer takes the grant away from ${role}`).toContain(role);
+    }
+  });
+});

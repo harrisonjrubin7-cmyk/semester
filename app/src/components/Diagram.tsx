@@ -55,7 +55,7 @@ function Axes({ x = 'Quantity', y = 'Price' }: { x?: string; y?: string }) {
 }
 
 const label = {
-  fontSize: 'calc(10px * var(--text-scale, 1))',
+  fontSize: 'var(--type-2xs)',
   fontFamily: 'var(--font-heading)',
   letterSpacing: '0.06em',
 } as const;

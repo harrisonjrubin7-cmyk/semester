@@ -51,3 +51,65 @@ describe('the map cleans up after itself', () => {
     expect(cleanup).toMatch(/\.remove\(\)/);
   });
 });
+
+
+/**
+ * The map nobody can use is withdrawn, and not merely covered.
+ *
+ * When no tile arrives, this file paints a panel over the map at a z-index of
+ * 1200 — deliberately over Leaflet's own furniture, "so nothing offers to zoom
+ * in on nothing". That stops a pointer and stops nothing else. The targets
+ * sweep reported four controls on the maps screen answering nowhere inside
+ * their own box, and they were the four under that panel: the host, the two
+ * zoom links and the attribution link. Tabbing the screen in a real browser
+ * reached every one of them — opaque panel above, four live controls below.
+ * Measured: eight stops over two passes before, zero after, and taking the
+ * attribute off again in the same page brought the same four straight back.
+ *
+ * So the pairing is what is asserted, not the presence. `inert` on a different
+ * condition from the panel is the fault in a new place — withdrawn with
+ * nothing said, or said with nothing withdrawn — and it would look right in
+ * review either way.
+ *
+ * The sweep's half is here rather than beside the sweep's other tests because
+ * it is the same fix: an inert control is not a target, the script had no way
+ * to know that, and a run where the app withdraws a control and the instrument
+ * still counts it reports a failure that is the author doing the right thing.
+ * Splitting the pair across two files is how one half gets deleted alone.
+ */
+describe('the map that cannot be used', () => {
+  /** What the panel is drawn on, taken from the source rather than assumed. */
+  const condition = (): string => {
+    const m = /\{(\w+) && \(/.exec(source);
+    expect(m, 'the blank panel is no longer rendered on a bare condition').not.toBeNull();
+    return m![1];
+  };
+
+  it('is rendered over, on a condition this test can name', () => {
+    expect(condition()).toBe('blank');
+    expect(source).toMatch(/The map itself needs a connection\./);
+  });
+
+  it('is withdrawn on that same condition, not merely painted over', () => {
+    expect(
+      source,
+      'the host takes inert from something other than the panel condition',
+    ).toContain(`inert={${condition()}}`);
+  });
+
+  it('is withdrawn on the host, which is what holds Leaflet and its controls', () => {
+    // Between `ref={host}` and the end of that element's props. On the wrapper
+    // instead, inert would swallow the panel's own text along with the map.
+    const el = source.slice(source.indexOf('ref={host}'), source.indexOf('{blank &&'));
+    expect(el).toContain('inert={blank}');
+  });
+
+  it('is skipped by the sweep, which would otherwise fail it for being right', () => {
+    const sweep = readFileSync(new URL('../../scripts/targets-sweep.mjs', import.meta.url), 'utf8');
+    expect(sweep, 'the sweep no longer knows what inert means').toMatch(
+      /const live = \(el\) => !el\.closest\('\[inert\]'\)/,
+    );
+    // Both control loops, or the census and the measurement disagree.
+    expect(sweep.match(/!seen\(el\) \|\| !live\(el\)/g) ?? []).toHaveLength(2);
+  });
+});

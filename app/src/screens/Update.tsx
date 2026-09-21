@@ -907,7 +907,7 @@ export function AddMaterial() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(9px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
           {parsed.cards.slice(0, 3).map((c) => (
             <Blueprint plain key={c.q} style={{ paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))' }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)', lineHeight: 1.2 }}>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-sm)' }}>
                 {c.q}
               </div>
               <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(3px * var(--density, 1))' }}>

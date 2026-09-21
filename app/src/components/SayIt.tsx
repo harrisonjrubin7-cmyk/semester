@@ -77,7 +77,7 @@ export function SayIt({
     if (!said) return null;
     return (
       <Panel style={{ marginTop: 'var(--sp-6)' }}>
-        <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
+        <div className="kicker" style={{ fontSize: 'var(--type-2xs)' }}>
           What you said
         </div>
         <div style={{ fontSize: 'var(--type-base-plus)', marginTop: 'calc(5px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>

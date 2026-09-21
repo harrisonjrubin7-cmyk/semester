@@ -183,7 +183,7 @@ export function SlideDeck() {
               style={{
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'calc(25px * var(--text-scale, 1))',
-                lineHeight: 1.15,
+                lineHeight: 'var(--leading-display)',
                 marginTop: 'var(--sp-6)',
                 textWrap: 'pretty',
               }}
@@ -202,7 +202,7 @@ export function SlideDeck() {
               style={{
                 fontFamily: 'var(--font-heading)',
                 fontSize: 'calc(17px * var(--text-scale, 1))',
-                lineHeight: 1.2,
+                lineHeight: 'var(--leading-display-sm)',
                 color: 'var(--app-dim)',
                 textWrap: 'pretty',
               }}
@@ -391,7 +391,7 @@ export function SlideDeck() {
 
         {slide.kind === 'end' && (
           <>
-            <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08 }}>
+            <div className="chrome-text" style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-xl)' }}>
               {slide.title}
             </div>
             <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>{slide.sub}</div>

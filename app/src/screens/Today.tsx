@@ -92,11 +92,11 @@ function NextClassCard() {
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-6)', marginTop: 'var(--sp-5)' }}>
-        <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
+        <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}>
           {next.block.time}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.1 }}>
+          <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}>
             {next.block.title}
           </div>
           <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
@@ -357,11 +357,11 @@ function ThisWeek() {
             style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', display: 'flex', gap: 'calc(13px * var(--density, 1))', alignItems: 'center' }}
           >
             <div
-              style={{ width: 44, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 1 }}
+              style={{ width: 44, flex: 'none', fontFamily: 'var(--font-heading)', lineHeight: 'var(--leading-none)' }}
             >
               <div
                 style={{
-                  fontSize: 'calc(10px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-2xs)',
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
                   color: 'var(--app-dim)',
@@ -372,7 +372,7 @@ function ThisWeek() {
               <div style={{ fontSize: 'var(--type-xl)' }}>{nextEvent.day}</div>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.25 }}>{nextEvent.title}</div>
+              <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-display-xs)' }}>{nextEvent.title}</div>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
                 {nextEvent.time} · {nextEvent.where}
               </div>
@@ -704,7 +704,7 @@ function Feed_due() {
         className="chrome-text"
         style={{
           fontSize: 'calc(27px * var(--text-scale, 1))',
-          lineHeight: 1.08,
+          lineHeight: 'var(--leading-display-xl)',
           marginBottom: 'calc(14px * var(--density, 1))',
           textWrap: 'pretty',
         }}
@@ -1057,7 +1057,7 @@ function Feed_rail() {
                       style={{
                         fontFamily: 'var(--font-heading)',
                         fontSize: 'calc(19px * var(--text-scale, 1))',
-                        lineHeight: 1.15,
+                        lineHeight: 'var(--leading-display)',
                         opacity: b.canceled ? DIMMED_ROW : 1,
                         textDecoration: b.canceled ? 'line-through' : 'none',
                       }}
@@ -1454,7 +1454,7 @@ function DoneToday() {
       <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))', background: 'var(--app-hero)' }}>
         <div className="kicker">Finished</div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)', marginTop: 'var(--sp-3)' }}>
-          <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 1 }}>
+          <div className="chrome-text" style={{ fontSize: 'calc(34px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}>
             {done.length}
           </div>
           <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)' }}>
@@ -1689,7 +1689,7 @@ function FeedHome() {
               >
                 <div
                   style={{
-                    fontSize: 'calc(10px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-2xs)',
                     letterSpacing: '0.12em',
                     textTransform: 'uppercase',
                     color: 'var(--app-dim)',

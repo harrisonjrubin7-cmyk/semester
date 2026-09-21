@@ -405,7 +405,7 @@ function PlanView({
         <div className="kicker">What this is</div>
         <div
           className="chrome-text"
-          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 1.15, marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
+          style={{ fontSize: 'calc(21px * var(--text-scale, 1))', lineHeight: 'var(--leading-display)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
         >
           {plan.title}
         </div>
@@ -472,7 +472,7 @@ function PlanView({
                 )}
                 <div
                   style={{
-                    fontSize: 'calc(10.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-2xs-plus)',
                     color: 'var(--app-dim)',
                     marginTop: 'calc(5px * var(--density, 1))',
                     fontFamily: 'var(--font-heading)',

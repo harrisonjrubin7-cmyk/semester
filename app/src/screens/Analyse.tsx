@@ -279,7 +279,7 @@ export function Analyse() {
             </div>
           )}
           {bins.length > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'calc(10.5px * var(--text-scale, 1))', ...secondLine(), marginTop: 'var(--sp-2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--type-2xs-plus)', ...secondLine(), marginTop: 'var(--sp-2)' }}>
               <span>{show(xSummary.min)}</span>
               <span>{show(xSummary.max)}</span>
             </div>

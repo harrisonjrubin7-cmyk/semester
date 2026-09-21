@@ -111,7 +111,7 @@ export function FirstRun({ where = 'here' }: { where?: string }) {
       <div className="kicker">Nothing {where} yet</div>
       <div
         className="chrome-text"
-        style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08, marginTop: 'var(--sp-4)', textWrap: 'pretty' }}
+        style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-xl)', marginTop: 'var(--sp-4)', textWrap: 'pretty' }}
       >
         Start with a syllabus.
       </div>
