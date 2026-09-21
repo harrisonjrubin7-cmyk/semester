@@ -571,3 +571,117 @@ thing to build.
 §126 should be read against that third row before it is scheduled. It is the
 same shape as §47.10: not unbuilt, but blocked on somebody else's API, and the
 codebase already wrote down why.
+
+---
+
+# The measured baseline
+
+Added by a second Phase 0 pass, which had §36–45 of the command but not §1–35 —
+so it could not do the section-by-section conformance audit above, and did the
+thing that audit does not: **ran everything, at `e4cf671`.**
+
+Every figure here was taken by running the app or the repository's own
+instruments. None is quoted.
+
+## Gates
+
+| Check | Result |
+| --- | --- |
+| `npx tsc -b` · `npm run check:university` · `npm run lint` | clean |
+| `npm test` | 11,788 passed · 10 skipped · **0 failed** |
+| `npm run test:shuffle` | identical |
+| `npm run build` | clean |
+| `node pipeline/validate.mjs` | 4 courses, 48 items, 8 episodes |
+| `SEMESTER_CHECK_PG_ANY=1 supabase/check.sh` | **17 suites, 354 policy checks**, all passing |
+
+## Driven in a browser, all 59 destinations
+
+- **59 of 59 render. 0 page errors. 0 application console errors. 0 dead
+  routes.** (Proxy refusals for outbound fonts and map tiles excluded — those are
+  the container, not the app.)
+- The three thinnest screens — `groupwork`, `classmates`, `account` — draw zero
+  controls signed out. All three are correctly auth-gated, rendering a heading
+  and an explanation rather than a broken form.
+- `npm run sweep:walls` — 59/59 plus 71 tabs within them, **0 walls**, 0 screens
+  with competing filled actions.
+- `npm run smoke:cold` — 5 cold boots against the built app, no findings.
+
+## Responsive, at every width §37 names
+
+59 screens × 7 widths = **413 combinations, 0 with horizontal page scroll.**
+
+| 320 | 375 | 390 | 430 | 768 | 1024 | 1440 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+§37's "do not wait until the end to fix mobile" is already satisfied.
+
+## Tap targets and type
+
+```
+under 24px — WCAG 2.5.8 AA, the failure line
+  phone    Comfortable 0/1500 · Snug 0/1500 · Tight 0/1500
+  desktop  Comfortable 0/2112 · Snug 0/2112 · Tight 0/2112
+
+under 44px — WCAG 2.5.5 AAA, an aim and not a failure
+  phone     810/1500 ·  879/1500 ·  870/1500
+  desktop  1438/2112 · 1486/2112 · 1486/2112
+```
+
+Zero AA failures at every density. Sub-12px text reads 1,173 of 3,122 — **not** a
+WCAG failure, since there is no minimum font size and 1.4.4 Resize Text is
+satisfied, but a design decision worth making deliberately before nine more
+surfaces are added.
+
+## Mock functionality, secrets
+
+- `TODO`/`FIXME`/`HACK` in non-test source: **2**, across 644 files.
+- No "coming soon" or "not implemented" screens. No payment code at all, which
+  is the correct state.
+- **No secret is reachable from the client.** `ANTHROPIC_API_KEY` is deliberately
+  *not* prefixed `VITE_`, so Vite cannot compile it into the page;
+  `VITE_SUPABASE_KEY` is publishable and row-level security is the boundary.
+
+## Two findings this pass adds, both infrastructural
+
+**1 · 212 MB of the 223 MB build is committed audio.**
+
+```
+dist total    223 MB
+  audio       212 MB   ← 8 MP3s, 15–24 MB each, for 4 seeded courses
+  assets      9.8 MB   (7.5 MB JS across 290 code-split chunks)
+  decks       952 KB
+```
+
+Fine for four bundled demo courses; impossible for real ones. Needs object
+storage and generation on demand before any multi-user pilot imports a real
+syllabus.
+
+**2 · No edge function is declared in `config.toml`.**
+
+There are six — `claude`, `calendar`, `canvas`, `fetchcal`, `push`, `lti` — and
+`config.toml` declares none, so **Supabase preview branches deploy the database
+and none of the functions.** Every preview branch therefore exercises the schema
+and never the request path, including the Claude gateway and the LTI handshake.
+The gateway has never run outside a manual test. This is the cheapest
+high-value fix available, and it is a cost decision rather than a code one, so it
+belongs with the author.
+
+## Three notes on the instruments themselves
+
+1. **`supabase/check.sh` was red twice during this pass and is green now** — a
+   *missing* covering index on `lti_link_ticket(provisioned_user_id)`, then forty
+   minutes later a *duplicate* one after two sessions each added it, then #660.
+   No fix was written either time, because one was in flight both times. The
+   finding that outlasts it: the parallel-agent workflow is now producing
+   duplicate **schema**, not just duplicate documents.
+2. **Only CI can see that.** `check.sh` needs Postgres 17 and correctly refuses a
+   major mismatch locally, so most contributors never run it.
+   `SEMESTER_CHECK_PG_ANY=1` exists, says on every run that a pass on the wrong
+   major is not a statement about production, and is easy to miss. These figures
+   were taken that way, on 16.
+3. **This pass duplicated the two documents above before discovering they
+   existed**, having checked `main` for the *spec* and not for the *documents*.
+   Theirs landed first and is better grounded — it has §1–35. Only the additive
+   part survives: this section, and `docs/architecture/`, which §43 asks for and
+   which nothing else in the repository provides.
