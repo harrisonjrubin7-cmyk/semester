@@ -1,3 +1,77 @@
+# One app — the thirty-second pass: the row type that belonged on the write
+
+Against `main` at `97ecedc`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No cut. One type wired, and the last open row of the thirtieth
+pass's census closed.
+
+The thirtieth left exactly one look untaken and said so: *"does the query
+annotate its rows with `Enrollment`, or is the type stale? It is a wiring job
+or a deletion and nothing else."* It was neither, and the reason is worth more
+than the row.
+
+## The look
+
+`lib/classmates.ts` declares three row types. Two are used the same way —
+`data as Profile`, `data as Message[]` — annotating whole rows coming back.
+`Enrollment` was not used at all, and the guess either way was wrong because
+**nothing in this file ever selects a whole enrollments row**:
+
+| | |
+| --- | --- |
+| `myRooms` | `.select('code')` → cast `{ code: string }[]` |
+| `whoIsIn` | `.select('user_id')` → cast `{ user_id: string }[]` |
+| `leave` | `.delete()` — no row at all |
+| `join` | `.upsert({ user_id, term, code })` — **all three columns** |
+
+Annotating either read with `Enrollment` would have been a lie about what
+PostgREST returned: `.select('code')` does not come back carrying `user_id`
+and `term`, and saying it does is worse than saying nothing. So "wire it" in
+the obvious direction was the wrong answer, and so was "delete it" — the
+shape is real, it just never appears on the way *in*.
+
+It appears on the way *out*, once, in `join`'s upsert, and that was an object
+literal nothing checked.
+
+## What the wiring buys, proved by breaking it
+
+    const row: Enrollment = { user_id: userId, term, code: clean };
+
+Rename a column on the type, as a migration would, and the write stops
+compiling at the line that sends the old name:
+
+    interface Enrollment { user_id; term_id; code }   ← term → term_id
+
+    src/lib/classmates.ts(298,46): error TS2353: Object literal may only
+    specify known properties, and 'term' does not exist in type 'Enrollment'.
+
+Before, that rename compiled clean and the write went on sending `term`. The
+control is the unmodified tree, where `tsc` is green — the error comes from the
+mismatch, not from the annotation existing.
+
+## The census reads 2, and both are deliberate
+
+`forgetMarks` and `phaseAt`, each kept with its argument at the site. There are
+no unexplained dead exports in `app/src`.
+
+That is the end of a line that started at **1,054**, and the shape of the
+journey is the finding rather than the number: 1,054 → 20 → 3 → 2, with three
+claims withdrawn on the way, two of them about the probe rather than the code.
+
+## Gates
+
+`tsc` clean · lint ok · **11,597 tests pass across 581 files** · zones clean ·
+shuffle clean · production build clean · five cold boots clean.
+
+## To do
+
+- **`census:exports` is still a script, not a gate.** It has now been right
+  across two passes and wrong twice within one; the argument for waiting is
+  unchanged.
+- Nothing on the dead-export row. It is closed, and the two that remain are
+  held by their own docstrings rather than by a list.
+
+---
+
 # One app — the thirty-first pass: the same sentence about three different questions
 
 Against `main` at `176b2f7`. **<!--screens-->fifty-nine<!--/--> destinations**,
@@ -409,9 +483,9 @@ merges, which is the real test of that claim.
 
 ## To do
 
-- **`classmates.ts`'s `enrollments` read.** The one look T9 did not take: does
-  the query annotate its rows with `Enrollment`, or is the type stale? It is a
-  wiring job or a deletion and nothing else.
+- ~~**`classmates.ts`'s `enrollments` read.**~~ Taken by the thirty-second pass
+  above, and it was neither of the two answers this row offered: no read is a
+  whole row, so the type belonged on the write.
 - **The probe is one blind spot better and still not a gate.** T8's matcher
   follows six computed reaches and prints the count it could not follow; that
   number being zero is the only part that has to keep working. It graduates to
