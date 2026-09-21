@@ -439,6 +439,80 @@ export function resumeMarkdown(c: CareerLibrary): string {
 }
 
 /**
+ * Three openings to one person, none of them sent.
+ *
+ * The same rule as `coverLetter`, and for the same reason: the brackets are
+ * the feature. A message this app could finish by itself would be the message
+ * two hundred other people sent, and the one sentence that gets an answer —
+ * why this person and not somebody else — is the one only the student can
+ * write. What is filled in is what the app actually knows: their name, where
+ * they work, what the student recorded they have in common.
+ *
+ * Three because they are three different asks and the wrong one is obvious in
+ * hindsight only: the first conversation with somebody you have a way in to,
+ * the note afterwards, and the message to somebody you have never met. The
+ * third is where the shared attribute belongs — it is the only one where "we
+ * both studied X" is doing any work — and where there is none recorded, it
+ * says so rather than inventing one.
+ *
+ * Nothing here sends anything, and the document says so at the top. The
+ * permission this note carries is repeated there too, because "Not requested"
+ * is exactly the state somebody is in when they are about to write a message.
+ */
+export function outreachDrafts(c: CareerContact, tags: SharedTag[]): string {
+  const name = c.name || '[their name]';
+  const shared = tags.includes('school')
+    ? `We were both at ${c.school}.`
+    : tags.includes('major')
+      ? `We both studied ${c.major}.`
+      : '[Say what you actually have in common. If it is nothing, say why you are writing to them anyway.]';
+
+  return [
+    `# Messages to ${name}`,
+    '',
+    [c.organization, `Permission recorded: ${c.permission}`].filter(Boolean).join(' · '),
+    '',
+    'Three drafts. Nothing has been sent, and this app cannot send anything — copy the one that fits into',
+    'your own mail. Every line in brackets is one only you can write, and those are the lines that get a reply.',
+    '',
+    '## Asking for a first conversation',
+    '',
+    `Hello ${name},`,
+    '',
+    '[One true sentence on how you came to be writing to them.]',
+    '',
+    '[What you are doing now, and the actual question you are stuck on — not "advice about my career".]',
+    '',
+    'Would twenty minutes in the next few weeks be possible? I am happy to work around you.',
+    '',
+    '[Your name]',
+    '',
+    '## After you have spoken',
+    '',
+    `Hello ${name},`,
+    '',
+    '[Thank them for the specific thing you were glad of. Not "your insights" — the sentence you wrote down',
+    'afterwards because it changed what you were going to do.]',
+    '',
+    '[The thing you are now going to do because of it, and when.]',
+    '',
+    '[Your name]',
+    '',
+    '## Writing to somebody you have not met',
+    '',
+    `Hello ${name},`,
+    '',
+    shared,
+    '',
+    '[Why them and not somebody else. One sentence, and it has to be true.]',
+    '',
+    '[The one question you would ask if you only got one.]',
+    '',
+    '[Your name]',
+  ].join('\n');
+}
+
+/**
  * A cover letter opened for you, not written for you.
  *
  * The brackets are the feature. Four recorded experiences go in as evidence,

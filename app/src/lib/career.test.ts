@@ -4,6 +4,7 @@ import {
   builtResume,
   hasTargets,
   newOpportunity,
+  outreachDrafts,
   readCareer,
   resumeDocumentTitle,
   resumeReadout,
@@ -211,5 +212,48 @@ describe('what a contact has in common with the student', () => {
     expect(sharedTags(EDUCATION, both)).toEqual(['school', 'major']);
     expect(sharedTags(EDUCATION, { ...both, major: 'Chemistry' })).toEqual(['school']);
     expect(() => readCareer({ ...EMPTY_CAREER, contacts: [{ ...both, major: 'x'.repeat(201) }] })).toThrow();
+  });
+});
+
+describe('the three outreach drafts', () => {
+  const priya = contact('Priya');
+
+  it('fills in only what the app knows, and leaves the rest in brackets', () => {
+    const drafts = outreachDrafts({ ...priya, organization: 'Brookings' }, []);
+    expect(drafts).toContain('# Messages to Priya');
+    expect(drafts).toContain('Brookings');
+    expect(drafts).toContain('Permission recorded: Not requested');
+    expect(drafts.match(/\[/g)?.length ?? 0).toBeGreaterThanOrEqual(6);
+  });
+
+  it('is three asks, not one message repeated', () => {
+    const drafts = outreachDrafts(priya, []);
+    expect(drafts).toContain('## Asking for a first conversation');
+    expect(drafts).toContain('## After you have spoken');
+    expect(drafts).toContain('## Writing to somebody you have not met');
+  });
+
+  /*
+   * The shared line belongs to the cold ask and nowhere else — it is the one
+   * of the three where "we were both at X" is doing any work.
+   */
+  it('opens the cold ask on a shared attribute where one was recorded', () => {
+    const together = { ...priya, school: 'Vanderbilt University', major: 'Economics' };
+    expect(outreachDrafts(together, ['school'])).toContain('We were both at Vanderbilt University.');
+    expect(outreachDrafts(together, ['major'])).toContain('We both studied Economics.');
+  });
+
+  it('asks for the sentence rather than inventing one where nothing is shared', () => {
+    const drafts = outreachDrafts(priya, []);
+    expect(drafts).toContain('[Say what you actually have in common.');
+    expect(drafts).not.toMatch(/We were both at|We both studied/);
+  });
+
+  it('says nothing has been sent, because nothing has and nothing can be', () => {
+    expect(outreachDrafts(priya, [])).toContain('Nothing has been sent');
+  });
+
+  it('writes a draft for a note with no name rather than addressing an empty string', () => {
+    expect(outreachDrafts({ ...priya, name: '' }, [])).toContain('Hello [their name],');
   });
 });

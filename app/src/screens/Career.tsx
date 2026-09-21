@@ -18,6 +18,7 @@ import {
   coverLetter,
   hasTargets,
   newOpportunity,
+  outreachDrafts,
   readCareer,
   readOpportunities,
   resumeDocumentTitle,
@@ -1003,6 +1004,14 @@ function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey:
                   style={{ flex: '1 1 auto' }}
                 >
                   Prepare
+                </ActionButton>
+                <ActionButton
+                  onClick={() =>
+                    write(`Messages to ${c.name}`, outreachDrafts(c, sharedTags(education, c)))
+                  }
+                  style={{ flex: '1 1 auto' }}
+                >
+                  Draft an outreach message
                 </ActionButton>
               </div>
             </section>

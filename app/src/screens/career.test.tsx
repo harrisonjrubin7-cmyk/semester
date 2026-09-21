@@ -3,6 +3,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { StoreProvider } from '../state/store';
+import { STORAGE_KEY } from '../state/shape';
 import { loadSeed } from '../data/seed';
 import {
   EMPTY_CAREER,
@@ -218,5 +219,24 @@ describe('filtering contacts by what you have in common', () => {
     // The screen's own preamble uses "verified alumni" to say it has none; the
     // card must not claim one, so this reads the card rather than the page.
     expect(card).not.toMatch(/verified|confirmed/i);
+  });
+});
+
+describe('drafting a message to a contact', () => {
+  it('opens a draft beside Prepare rather than instead of it, and sends nothing', async () => {
+    await mount(
+      { contacts: [person('Priya', { organization: 'Brookings', school: 'Vanderbilt University' })] },
+      'Vanderbilt University, B.A. Economics',
+    );
+    await press('Contacts');
+    expect(text()).toContain('Prepare');
+
+    await press('Draft an outreach message');
+    // The draft is a document in Write, the way "Prepare" and the cover letter
+    // already are. Nothing about the contact changed, and nothing was sent.
+    const written = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}');
+    const titles = (written.documents ?? []).map((d: { title: string }) => d.title);
+    expect(titles).toContain('Messages to Priya');
+    expect(JSON.parse(localStorage.getItem(KEY)!).contacts).toHaveLength(1);
   });
 });
