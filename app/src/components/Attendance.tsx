@@ -64,7 +64,7 @@ export function Attendance({ courseId }: { courseId: CourseId }) {
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
               <span
                 className="chrome-text"
-                style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}
+                style={{ fontSize: 'var(--type-2xl)', lineHeight: 'var(--leading-none)' }}
               >
                 {b.over > 0 ? `−${Math.round(b.cost * 10) / 10}%` : b.left}
               </span>

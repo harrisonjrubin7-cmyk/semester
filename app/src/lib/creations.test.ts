@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   CREATION_LIMIT,
+  NOTE_LIMIT,
   designSvg,
+  gradientEnds,
+  gradientId,
   formResponse,
   newCreation,
   newLayer,
@@ -15,7 +18,9 @@ import {
   videoSeconds,
   visibleQuestions,
   xml,
+  type CreativeProject,
   type DesignLayer,
+  type DesignNote,
   type FormData,
   type Question,
   type VideoClip,
@@ -290,6 +295,65 @@ describe('a design as SVG', () => {
     expect(designSvg(d, { f1: 'data:image/png;base64,AAAA' })).toContain('transform="rotate(45');
   });
 
+  /*
+   * The direction convention, which is the thing here that can be silently
+   * backwards. 0 must run left to right and 90 must run top to bottom — the
+   * reading a CSS gradient gives you, and the opposite of what falls out of
+   * SVG's own axes if nobody decides. A gradient pointing the wrong way is a
+   * poster that looks merely odd, so nothing else would catch it.
+   */
+  it('runs 0° across the layer and 90° down it', () => {
+    expect(gradientEnds(0)).toEqual({ x1: 0, y1: 0.5, x2: 1, y2: 0.5 });
+    expect(gradientEnds(90)).toEqual({ x1: 0.5, y1: 0, x2: 0.5, y2: 1 });
+  });
+
+  it('turns a gradient right round without drifting off its box', () => {
+    for (const angle of [0, 45, 90, 180, 270, 360]) {
+      const e = gradientEnds(angle);
+      for (const n of [e.x1, e.y1, e.x2, e.y2]) {
+        expect(n, `${angle}°`).toBeGreaterThanOrEqual(0);
+        expect(n, `${angle}°`).toBeLessThanOrEqual(1);
+      }
+      // Opposite ends of one line through the centre, whatever the angle.
+      expect(e.x1 + e.x2, `${angle}°`).toBeCloseTo(1);
+      expect(e.y1 + e.y2, `${angle}°`).toBeCloseTo(1);
+    }
+  });
+
+  it('declares a gradient before painting with it, and points the layer at it', () => {
+    const d = canvas();
+    d.layers = [{ ...newLayer('rectangle', d), fill: '#ff0000', gradient: { to: '#0000ff', angle: 90 } }];
+    const out = designSvg(d);
+    const id = gradientId(d.layers[0].id);
+
+    expect(out).toContain(`<linearGradient id="${id}"`);
+    expect(out).toContain('stop-color="#ff0000"');
+    expect(out).toContain('stop-color="#0000ff"');
+    expect(out).toContain(`fill="url(#${id})"`);
+    // Declared before it is used, or the document does not render.
+    expect(out.indexOf('<linearGradient')).toBeLessThan(out.indexOf(`url(#${id})`));
+  });
+
+  it('writes no defs at all for a design nobody gave a gradient', () => {
+    // The control, and the same promise the fade and the transform make.
+    const d = canvas();
+    d.layers = [newLayer('rectangle', d), newLayer('text', d)];
+    const out = designSvg(d);
+    expect(out).not.toContain('<defs>');
+    expect(out).not.toContain('linearGradient');
+    expect(out).toContain('fill="#1a73e8"');
+  });
+
+  it('leaves a picture painting with its pixels, gradient or not', () => {
+    // An image has no fill for a second colour to go into, and an `<image>`
+    // pointed at `url(#…)` would simply not draw.
+    const d = canvas();
+    d.layers = [{ ...newLayer('image', d), fileId: 'f1', gradient: { to: '#ffffff', angle: 0 } }];
+    const out = designSvg(d, { f1: 'data:image/png;base64,AAAA' });
+    expect(out).not.toContain('linearGradient');
+    expect(out).toContain('<image');
+  });
+
   it('fades every kind of layer, not only the shapes', () => {
     // Four separate attributes in four branches of one function, which is
     // exactly the shape of code where one gets missed.
@@ -346,6 +410,20 @@ describe('a video sequence', () => {
 describe('a creation library', () => {
   const lib = (p: unknown) => readCreations({ version: 1, projects: [p] });
 
+  /** A note pinned to a design, said once rather than ten times. */
+  const pinned = (id: string, over: Partial<DesignNote> = {}): DesignNote => ({
+    id,
+    replyTo: '',
+    x: 10,
+    y: 20,
+    at: 1_700_000_000_000,
+    authorId: 'acct-1',
+    authorName: 'Harrison',
+    body: 'A note.',
+    resolved: false,
+    ...over,
+  });
+
   it('reads a project a screen would save', () => {
     expect(lib(newCreation('form')).projects[0].kind).toBe('form');
   });
@@ -395,6 +473,82 @@ describe('a creation library', () => {
       p.design.layers = [{ ...newLayer('rectangle', p.design), rotation }];
       expect(() => lib(p), String(rotation)).toThrow(/layer/i);
     }
+  });
+
+  it('reads a design saved before layers could have a gradient', () => {
+    const p = newCreation('design');
+    p.design.layers = [newLayer('rectangle', p.design)];
+    delete (p.design.layers[0] as Partial<DesignLayer>).gradient;
+
+    const out = readCreations({ version: 1, projects: [p] });
+    expect(out.projects[0].design.layers[0].gradient).toBeNull();
+  });
+
+  it('refuses a half-built gradient', () => {
+    // A second colour with no direction, or a direction off the dial, is a
+    // layer no renderer here knows how to draw.
+    const bad = [
+      { to: '#ffffff' },
+      { to: 'white', angle: 90 },
+      { to: '#ffffff', angle: 400 },
+      { angle: 90 },
+    ];
+    for (const gradient of bad) {
+      const p = newCreation('design');
+      p.design.layers = [{ ...newLayer('rectangle', p.design), gradient: gradient as DesignLayer['gradient'] }];
+      expect(() => lib(p), JSON.stringify(gradient)).toThrow(/layer/i);
+    }
+  });
+
+  it('reads a project saved before designs could be commented on', () => {
+    const p = newCreation('design');
+    delete (p as Partial<CreativeProject>).notes;
+    expect(readCreations({ version: 1, projects: [p] }).projects[0].notes).toEqual([]);
+  });
+
+  it('reads a design with a note and an answer to it', () => {
+    const p = newCreation('design');
+    p.notes = [pinned('n1'), pinned('r1', { replyTo: 'n1' })];
+    expect(() => lib(p)).not.toThrow();
+  });
+
+  /*
+   * A reply may arrive before its parent — the wire promises no order — so the
+   * parent check runs after the array is read rather than inside the loop. The
+   * second case is what makes that more than a formality.
+   */
+  it('reads an answer that arrived before the note it answers', () => {
+    const p = newCreation('design');
+    p.notes = [pinned('r1', { replyTo: 'n1' }), pinned('n1')];
+    expect(() => lib(p)).not.toThrow();
+  });
+
+  it('refuses an answer to a note that is not there', () => {
+    const p = newCreation('design');
+    p.notes = [pinned('r1', { replyTo: 'ghost' })];
+    expect(() => lib(p)).toThrow(/answer/i);
+  });
+
+  it('refuses an answer to an answer, one level being the whole model', () => {
+    const p = newCreation('design');
+    p.notes = [pinned('n1'), pinned('r1', { replyTo: 'n1' }), pinned('r2', { replyTo: 'r1' })];
+    expect(() => lib(p)).toThrow(/answer/i);
+  });
+
+  it('refuses two notes sharing an id, and a note with no body it can hold', () => {
+    const p = newCreation('design');
+    p.notes = [pinned('n1'), pinned('n1')];
+    expect(() => lib(p)).toThrow(/note/i);
+
+    const q = newCreation('design');
+    q.notes = [pinned('n1', { body: 'x'.repeat(2001) })];
+    expect(() => lib(q)).toThrow(/note/i);
+  });
+
+  it('refuses more notes than a design may hold', () => {
+    const p = newCreation('design');
+    p.notes = Array.from({ length: NOTE_LIMIT + 1 }, (_, i) => pinned(`n${i}`));
+    expect(() => lib(p)).toThrow(/notes/i);
   });
 
   it('refuses an opacity outside the range the editor can reach', () => {

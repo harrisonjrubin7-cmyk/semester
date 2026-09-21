@@ -710,7 +710,7 @@ export function ItemDetail() {
         <div
           className="chrome-text"
           style={{
-            fontSize: 'calc(27px * var(--text-scale, 1))',
+            fontSize: 'var(--type-2xl)',
             lineHeight: 'var(--leading-display-lg)',
             letterSpacing: '-0.01em',
             marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(12px * var(--density, 1))',

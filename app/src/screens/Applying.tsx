@@ -153,7 +153,7 @@ function Row({ a }: { a: Application }) {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(14.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-md-plus)',
             textWrap: 'pretty',
           }}
         >

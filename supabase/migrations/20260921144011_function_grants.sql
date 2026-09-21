@@ -24,8 +24,8 @@
 -- explicit per-role grant. Both spellings are needed, and every file in this
 -- directory had only one of them.
 --
--- **This was live, not theoretical.** `20260921003300_invites.sql` and
--- `20260921003500_referrals.sql` were applied to the project on 21 September
+-- **This was live, not theoretical.** `20260921002428_invites.sql` and
+-- `20260921002623_referrals.sql` were applied to the project on 21 September
 -- 2026, and `set_invite_only(boolean)` landed with `anon=X` and
 -- `authenticated=X` — anybody holding the publishable key that ships in the
 -- browser could have turned the pilot's invite gate on, or off. The check
@@ -53,7 +53,7 @@
 -- ## Why every revoke below is guarded
 --
 -- The header promises this file is safe to run again, and on this project it
--- has to be safe to run *early* as well. `20260921003400_access_log.sql` has
+-- has to be safe to run *early* as well. `20260921143653_access_log.sql` has
 -- not been applied to the live database, so two of the functions named below
 -- do not exist there — and an unguarded `revoke` on a missing function is an
 -- error that aborts the rest of the file. On a fresh project the migrations

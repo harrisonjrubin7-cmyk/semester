@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { faintLine, secondLine } from '../lib/dim';
+import type { Read } from '../lib/mode';
 import { scrollKindly } from '../lib/prefers';
 import { Answer } from './Answer';
 
@@ -20,7 +21,28 @@ import { Answer } from './Answer';
  * decision than for anything else here.
  */
 
-export function Question({ text, onEdit }: { text: string; onEdit?: (next: string) => void }) {
+export function Question({
+  text,
+  onEdit,
+  extra,
+}: {
+  text: string;
+  onEdit?: (next: string) => void;
+  /**
+   * What the app could answer by itself, under a question that got no reply.
+   *
+   * `Reply` has had an `extra` since it was written and `Locally` lived only
+   * there — so the offline answer, the one thing in this conversation that
+   * needs no key and no connection, was drawn only when a request had
+   * succeeded. A student with no key asked "where is the meal plan", the app
+   * worked out the answer, and threw it away because there was no reply to
+   * hang it on. See `ai/localanswer.test.tsx`.
+   *
+   * Below the bubble rather than inside it: the bubble is right-aligned at
+   * 86% because a question is short, and this is a full-width panel.
+   */
+  extra?: ReactNode;
+}) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(text);
 
@@ -68,23 +90,26 @@ export function Question({ text, onEdit }: { text: string; onEdit?: (next: strin
   }
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-      <div style={{ maxWidth: '86%' }}>
-        <div style={BUBBLE}>{text}</div>
-        {onEdit && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--sp-2)' }}>
-            <button
-              type="button"
-              className="bare"
-              onClick={() => setEditing(true)}
-              style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', ...secondLine() }}
-            >
-              EDIT
-            </button>
-          </div>
-        )}
+    <>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ maxWidth: '86%' }}>
+          <div style={BUBBLE}>{text}</div>
+          {onEdit && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 'var(--sp-2)' }}>
+              <button
+                type="button"
+                className="bare"
+                onClick={() => setEditing(true)}
+                style={{ width: 'auto', fontSize: 'var(--type-xs)', letterSpacing: '0.1em', ...secondLine() }}
+              >
+                EDIT
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      {extra}
+    </>
   );
 }
 
@@ -275,6 +300,44 @@ export function Waiting({ who, doing = [] }: { who: string; doing?: string[] }) 
         ))}
       </span>
       {doing.length > 0 ? `${doing.join(', ')}…` : `${who} is reading your screen…`}
+    </div>
+  );
+}
+
+/**
+ * "Using: your courses" — what the question was taken to be.
+ *
+ * A different question from `Looked` below, which is why both are here.
+ * `Looked` lists the parts of the context that travelled, and measured, that
+ * list is **the same four entries in all three modes** — the date, the term,
+ * the screen and the course codes. So "Read 4 parts of your records" is what
+ * the app said about a general question, a question about the student's own
+ * records, and a question about the app itself, without distinction.
+ *
+ * `lib/mode.ts` computes the line that distinguishes them on every question,
+ * and says of it: *"Shown next to the answer: 'Using: your courses'. Never a
+ * mystery."* It was never shown. `converse.ts` kept `read.mode` for routing
+ * and dropped the rest at the moment it was computed.
+ *
+ * The quote is `because` — the phrase in the question that decided the mode,
+ * carried "for the same reason a quote is shown" and empty for a general
+ * question, which is decided by nothing in particular.
+ */
+export function Using({ read }: { read: Read | null }) {
+  if (!read) return null;
+  return (
+    <div
+      style={{
+        fontSize: 'var(--type-xs)',
+        letterSpacing: '0.06em',
+        color: 'var(--app-dim)',
+        marginTop: 'var(--sp-5)',
+        lineHeight: 'var(--leading-normal)',
+        textWrap: 'pretty',
+      }}
+    >
+      {read.says}
+      {read.because ? ` — \u201C${read.because}\u201D` : ''}
     </div>
   );
 }

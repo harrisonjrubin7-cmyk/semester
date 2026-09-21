@@ -61,6 +61,28 @@
 export const DIMMED_ROW = 'var(--app-row-dim)';
 
 /**
+ * How far a control drops while the page moves underneath it.
+ *
+ * One caller: the assistant's button in `ai/Assistant.tsx`, which is fixed to
+ * the viewport so that content passes below it. `DIMMED_ROW` is the wrong
+ * token for that, and the reason is worth stating because the two look alike
+ * from the call site — both are opacities, and both rise under more contrast.
+ *
+ * What differs is what the number is a threshold for. A dimmed row's alpha is
+ * the one at which the row's own ink stays readable against its panel, which
+ * is a property of the ground and is audited per ground. This one is about how
+ * much of somebody else's text you can make out behind opaque chrome, which is
+ * the same on every ground — and it can go all the way to `1` under more
+ * contrast, where a row still has to read as dimmed. Sharing a token would
+ * have picked one of those two jobs at random.
+ *
+ * A token rather than a number for the ordinary reason: `lib/look.ts` decides
+ * it, the contrast setting can reach it, and `styles/rules.ts` counts a
+ * hand-written alpha against the file that writes it.
+ */
+export const PASSING = 'var(--app-passing)';
+
+/**
  * The style for a second line — the time, the room, the course, the count.
  *
  * Takes whether the row around it is already dimmed, and that argument is the

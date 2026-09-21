@@ -1,7 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import { newCreation } from './creations';
-import type { DesignData, DesignLayer } from './creations';
-import { PAPER, changes, describe as describeCanvas, dropEdit, fold, foldAll, layerEdit, newer } from './coedit';
+import type { DesignData, DesignLayer, DesignNote } from './creations';
+import {
+  PAPER,
+  changes,
+  describe as describeCanvas,
+  dropEdit,
+  fold,
+  foldAll,
+  foldNote,
+  foldNotes,
+  layerEdit,
+  newer,
+  noteChanges,
+} from './coedit';
 import type { Seen } from './coedit';
 
 /**
@@ -29,6 +41,7 @@ const layer = (id: string, over: Partial<DesignLayer> = {}): DesignLayer => ({
   bold: false,
   opacity: 1,
   rotation: 0,
+  gradient: null,
   fileId: '',
   ...over,
 });
@@ -195,6 +208,30 @@ describe('what to send after an edit here', () => {
     expect(changes(before, after, 'me', NOW)).toEqual([]);
   });
 
+  /*
+   * The same rule, one level down.
+   *
+   * `gradient` is the only field on a layer that is itself an object, so it is
+   * the only one where `===` can be false for two equal values — and every
+   * other field being compared by value is exactly what hides it. Written
+   * separately because the test above passes with a reference check in place:
+   * its layers have `gradient: null`, and `null === null` is true.
+   */
+  it('compares a gradient by value too, though it is an object', () => {
+    const grad = () => ({ gradient: { to: '#ffffff', angle: 90 } });
+    const before = canvasOf(layer('one', grad()));
+    const after = canvasOf(layer('one', grad()));
+    expect(after.layers[0]!.gradient).not.toBe(before.layers[0]!.gradient);
+    expect(changes(before, after, 'me', NOW)).toEqual([]);
+  });
+
+  it('notices a gradient turned off, and one turned on', () => {
+    const on = canvasOf(layer('one', { gradient: { to: '#ffffff', angle: 90 } }));
+    const off = canvasOf(layer('one'));
+    expect(changes(on, off, 'me', NOW)).toHaveLength(1);
+    expect(changes(off, on, 'me', NOW)).toHaveLength(1);
+  });
+
   it('names the one layer that moved', () => {
     const edits = changes(canvasOf(layer('one'), layer('two')), canvasOf(layer('one', { x: 99 }), layer('two')), 'me', NOW);
     expect(edits).toEqual([layerEdit(layer('one', { x: 99 }), 'me', NOW)]);
@@ -222,6 +259,7 @@ describe('what to send after an edit here', () => {
     ['bold', { bold: true }],
     ['opacity', { opacity: 0.5 }],
     ['rotation', { rotation: 15 }],
+    ['gradient', { gradient: { to: '#ffffff', angle: 90 } }],
     ['kind', { kind: 'rectangle' as const }],
     ['fileId', { fileId: 'abc' }],
   ] as [string, Partial<DesignLayer>][]) {
@@ -269,5 +307,148 @@ describe('the whole round trip', () => {
     const meFirst = foldAll(start, {}, [mineEdit, theirEdit]);
     const themFirst = foldAll(start, {}, [theirEdit, mineEdit]);
     expect(meFirst.canvas.layers).toEqual(themFirst.canvas.layers);
+  });
+});
+
+
+/* ── Notes ───────────────────────────────────────────────────────────────── */
+
+const note = (id: string, over: Partial<DesignNote> = {}): DesignNote => ({
+  id,
+  replyTo: '',
+  x: 100,
+  y: 200,
+  at: NOW,
+  authorId: 'acct-1',
+  authorName: 'Harrison',
+  body: 'This line runs off the edge.',
+  resolved: false,
+  ...over,
+});
+
+const noteEdit = (n: DesignNote, from = 'them', at = NOW + 1) =>
+  ({ t: 'note', id: n.id, at, from, note: n }) as const;
+
+describe('notes folding in from somebody else', () => {
+  it('pins one that was not here', () => {
+    const out = foldNote([], {}, noteEdit(note('n1')));
+    expect(out.changed).toBe(true);
+    expect(out.notes.map((n) => n.id)).toEqual(['n1']);
+  });
+
+  it('replaces one that was, rather than pinning it twice', () => {
+    const had = [note('n1', { body: 'first' })];
+    const out = foldNote(had, {}, noteEdit(note('n1', { body: 'second' })));
+    expect(out.notes).toHaveLength(1);
+    expect(out.notes[0]!.body).toBe('second');
+  });
+
+  /*
+   * The rule the whole flat-reply design exists for. Two people answering the
+   * same note at the same moment must both be heard — which is true here only
+   * because their replies have different ids and never contend for one key.
+   */
+  it('keeps both answers when two people reply at once', () => {
+    let out = foldNote([note('n1')], {}, noteEdit(note('r1', { replyTo: 'n1', body: 'mine' }), 'them', NOW + 1));
+    out = foldNote(out.notes, out.seen, noteEdit(note('r2', { replyTo: 'n1', body: 'theirs' }), 'other', NOW + 1));
+    expect(out.notes.map((n) => n.id)).toEqual(['n1', 'r1', 'r2']);
+  });
+
+  it('ignores an edit older than what this device already applied', () => {
+    const seen: Seen = { n1: { at: NOW + 5, from: 'them' } };
+    const out = foldNote([note('n1', { body: 'kept' })], seen, noteEdit(note('n1', { body: 'stale' }), 'them', NOW));
+    expect(out.changed).toBe(false);
+    expect(out.notes[0]!.body).toBe('kept');
+  });
+
+  it('takes a note away, and its answers with it', () => {
+    const had = [note('n1'), note('r1', { replyTo: 'n1' }), note('n2')];
+    const out = foldNote(had, {}, { t: 'unnote', id: 'n1', at: NOW + 1, from: 'them' });
+    expect(out.notes.map((n) => n.id)).toEqual(['n2']);
+  });
+
+  /*
+   * A reply whose parent is not here is dropped. `readCreations` refuses a
+   * design holding an answer to nothing, so keeping one would build a project
+   * this app could save and then fail to reopen.
+   */
+  it('refuses a reply to a note it has never seen', () => {
+    const out = foldNote([], {}, noteEdit(note('r1', { replyTo: 'ghost' })));
+    expect(out.changed).toBe(false);
+    expect(out.notes).toEqual([]);
+  });
+
+  it('refuses a reply to a reply, one level being the whole model', () => {
+    const had = [note('n1'), note('r1', { replyTo: 'n1' })];
+    const out = foldNote(had, {}, noteEdit(note('r2', { replyTo: 'r1' })));
+    expect(out.changed).toBe(false);
+    expect(out.notes).toHaveLength(2);
+  });
+
+  it('leaves the canvas alone when a note arrives', () => {
+    // The narrowing-by-elimination bug: without an explicit guard, a note
+    // lands in `layers` as an object with no `kind` and the canvas draws it.
+    const canvas = canvasOf(layer('one'));
+    const out = fold(canvas, {}, noteEdit(note('n1')));
+    expect(out.changed).toBe(false);
+    expect(out.canvas.layers).toHaveLength(1);
+    expect(out.canvas.layers.every((l) => l.kind)).toBe(true);
+  });
+
+  it('folds a burst in order', () => {
+    const out = foldNotes([], {}, [
+      noteEdit(note('n1'), 'them', NOW + 1),
+      noteEdit(note('r1', { replyTo: 'n1' }), 'them', NOW + 2),
+      { t: 'unnote', id: 'n1', at: NOW + 3, from: 'them' },
+    ]);
+    expect(out.notes).toEqual([]);
+    expect(out.changed).toBe(true);
+  });
+});
+
+describe('what to send after a note changed here', () => {
+  it('sends nothing when nothing changed', () => {
+    const was = [note('n1')];
+    const now = [note('n1')];
+    expect(now[0]).not.toBe(was[0]);
+    expect(noteChanges(was, now, 'me', NOW)).toEqual([]);
+  });
+
+  it('sends a new note, and an answer', () => {
+    expect(noteChanges([], [note('n1')], 'me', NOW)).toHaveLength(1);
+    expect(noteChanges([note('n1')], [note('n1'), note('r1', { replyTo: 'n1' })], 'me', NOW)).toHaveLength(1);
+  });
+
+  for (const [field, over] of [
+    ['body', { body: 'other' }],
+    ['resolved', { resolved: true }],
+    ['x', { x: 1 }],
+    ['y', { y: 1 }],
+    ['replyTo', { replyTo: 'n0' }],
+    ['authorName', { authorName: 'Someone' }],
+    ['authorId', { authorId: 'acct-2' }],
+    ['at', { at: NOW + 9 }],
+  ] as [string, Partial<DesignNote>][]) {
+    it(`notices a change to ${field}`, () => {
+      // Every field, so one added later is not silently unshared.
+      expect(noteChanges([note('n1')], [note('n1', over)], 'me', NOW)).toHaveLength(1);
+    });
+  }
+
+  /*
+   * A reply that went because its parent did is not its own removal. Sending
+   * an `unnote` for it as well would race the parent's, and the parent's edit
+   * already takes the replies at the other end.
+   */
+  it('sends one removal for a note and its answers, not three', () => {
+    const was = [note('n1'), note('r1', { replyTo: 'n1' }), note('r2', { replyTo: 'n1' })];
+    const edits = noteChanges(was, [], 'me', NOW);
+    expect(edits).toEqual([{ t: 'unnote', id: 'n1', at: NOW, from: 'me' }]);
+  });
+
+  it('sends a removal for an answer taken away on its own', () => {
+    const was = [note('n1'), note('r1', { replyTo: 'n1' })];
+    const edits = noteChanges(was, [note('n1')], 'me', NOW);
+    expect(edits).toEqual([{ t: 'unnote', id: 'r1', at: NOW, from: 'me' }]);
   });
 });

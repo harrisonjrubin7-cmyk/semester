@@ -494,6 +494,7 @@ const claudeProxy = (key: string) => ({
  * fails if this list and the tree disagree.
  */
 const MOCKS_MODULES = [
+  'src/components/pushstalled.test.tsx',
   'src/components/credentials.test.tsx',
   'src/components/referrallink.test.tsx',
   'src/components/downloads.test.tsx',

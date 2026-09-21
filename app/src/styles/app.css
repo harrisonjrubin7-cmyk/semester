@@ -92,6 +92,11 @@
   /* Below `xs`, and not a display size: 10px is the springboard tile's
      caption and the week grid's cell, 10.5 the caps kicker over a section.
      38 sites between them, which is more than any step above `md` carries. */
+  /* Under `2xs`, and the week grid is all of it: the hour down the gutter and
+     the day letter across the top, both caps and both tracked wide. They were
+     9 and 9.5, half a pixel apart in one component, which is drift rather
+     than a distinction — the 9.5 joins the 9 here. */
+  --type-3xs: calc(9px * var(--text-scale, 1)); /* a tracked caps label in a grid */
   --type-2xs: calc(10px * var(--text-scale, 1)); /* a tile's caption, a grid cell */
   --type-2xs-plus: calc(10.5px * var(--text-scale, 1)); /* the caps kicker over a section */
   --type-xs: calc(11px * var(--text-scale, 1)); /* labels, kickers, meta */
@@ -110,6 +115,7 @@
   --type-base: calc(13px * var(--text-scale, 1)); /* body */
   --type-base-plus: calc(13.5px * var(--text-scale, 1)); /* body that is the row */
   --type-md: calc(14px * var(--text-scale, 1)); /* list rows, the thing you tap */
+  --type-md-plus: calc(14.5px * var(--text-scale, 1)); /* the name on a row you open */
   --type-lg: calc(15px * var(--text-scale, 1)); /* a card's own title */
   /*
      The gap between `lg` and `xl`, which the app had been filling by hand.
@@ -141,6 +147,19 @@
      say what actually uses it. */
   --type-display-lg: calc(24px * var(--text-scale, 1)); /* the screen's title — 15 */
   --type-xl: calc(26px * var(--text-scale, 1)); /* the one heading on a screen */
+  /*
+     Above `xl` the app is only ever setting a figure — a clock, a score, a
+     count, a countdown. All twenty-five sites past 26 are one, with no
+     heading among them, and unlike the 15-to-26 gap they do not lie flat:
+     28 is used seven times, 30 five, 34 four, 38 three, then 42, 46 and 60
+     once or twice each. A decaying tail is what display type looks like when
+     it is working — the bigger a number is set, the rarer and more deliberate
+     the moment — so only the mode is named here.
+
+     The 27s come with it. One pixel from 28 across nine sites between them is
+     drift, not a distinction somebody drew.
+  */
+  --type-2xl: calc(28px * var(--text-scale, 1)); /* the figure a screen is about */
 
   /* Spacing.
 
@@ -330,7 +349,7 @@ body {
   background: var(--app-void);
   color: var(--app-fg);
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale, 1));
   -webkit-font-smoothing: antialiased;
 
   /*
@@ -411,7 +430,7 @@ a:hover {
   background: var(--app-panel);
   color: var(--app-ink);
   font-family: var(--font-heading);
-  font-size: 13px;
+  font-size: calc(13px * var(--text-scale, 1));
   letter-spacing: 0.08em;
   text-transform: uppercase;
   text-decoration: none;
@@ -451,7 +470,7 @@ a:hover {
   background: var(--app-bg);
   color: var(--app-fg);
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: calc(15px * var(--text-scale, 1));
   /* Set once here so every screen inherits it. Components that need a tighter
      line for their own reason still override locally; what this fixes is the
      hundred places that were relying on the browser default. */
@@ -730,7 +749,7 @@ a:hover {
 }
 
 .rail-mark {
-  font-size: 16px;
+  font-size: calc(16px * var(--text-scale, 1));
   padding: 0 calc(20px * var(--density, 1)) calc(18px * var(--density, 1));
 }
 
@@ -745,7 +764,7 @@ a:hover {
   width: auto;
   margin-inline: var(--sp-4);
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale, 1));
   letter-spacing: 0.14em;
   text-transform: uppercase;
   transition: color 120ms ease;
@@ -772,7 +791,7 @@ a:hover {
  * of air — and the smaller size, which is what was always doing the work.
  */
 .rail .rail-quiet {
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale, 1));
   padding: calc(9px * var(--density, 1)) calc(20px * var(--density, 1));
 }
 .rail .rail-item:hover {
@@ -840,7 +859,7 @@ a:hover {
     padding: calc(30px * var(--density, 1)) 0 calc(24px * var(--density, 1));
   }
   .rail-mark {
-    font-size: 18px;
+    font-size: calc(18px * var(--text-scale, 1));
     padding: 0 calc(24px * var(--density, 1)) calc(22px * var(--density, 1));
   }
   .rail .rail-item {
@@ -1950,7 +1969,7 @@ a:hover {
 /* The kicker above every screen title. */
 .kicker {
   font-family: var(--font-heading);
-  font-size: 10px;
+  font-size: calc(10px * var(--text-scale, 1));
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--app-accent-deep);
@@ -1960,7 +1979,7 @@ a:hover {
    the browser's own heading margin and size would fight the inline ones. */
 .section-label {
   font-family: var(--font-heading);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale, 1));
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--app-accent-deep);
@@ -2284,6 +2303,55 @@ a:hover {
   display: grid;
   place-items: center;
   font-size: var(--type-md);
+}
+
+/*
+ * The microphone, the same object as the send button and quieter.
+ *
+ * Secondary at rest because it is the second way in, not the first: a pill
+ * with two filled buttons in it reads as a choice between two equal things,
+ * and typing is what nearly everybody does.
+ *
+ * `.is-on` is the one state that has to be legible from across a room, since
+ * the whole point of the mode is that the phone is not in your hand. The
+ * accent ground says the microphone is open, and it is the same accent the
+ * focus ring uses, so it means what it means everywhere else in the app.
+ */
+.device .ai-mic {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: var(--type-sm);
+  background: transparent;
+  border: 1px solid var(--app-line);
+  color: var(--app-dim);
+}
+.device .ai-mic:hover {
+  border-color: var(--app-accent);
+  color: var(--app-fg);
+}
+.device .ai-mic.is-on {
+  background: var(--app-accent-wash);
+  border-color: var(--app-accent);
+  color: var(--app-fg);
+}
+/*
+ * The pulse that says it is live, and is switched off for anybody who asked
+ * for less motion — the colour above already carries the state, so the
+ * animation is decoration and decoration is what that setting turns off.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .device .ai-mic.is-on {
+    animation: micLive 1.6s ease-in-out infinite;
+  }
+}
+@keyframes micLive {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
 }
 
 /*
@@ -2695,7 +2763,7 @@ a:hover {
 }
 .leaflet-popup-content {
   margin: 9px 12px;
-  font-size: 13px;
+  font-size: calc(13px * var(--text-scale, 1));
 }
 
 

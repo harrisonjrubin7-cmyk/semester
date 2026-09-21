@@ -114,6 +114,94 @@ not authentication:
   returns 503 to everything, so a half-finished deploy is silent rather than
   open.
 
+## Not deployed yet: `lti`
+
+    supabase functions deploy lti --no-verify-jwt
+
+`supabase/functions/lti/index.ts`. It is the Brightspace end of the finding in
+`GRADESCOPE-TURNITIN.md`: Semester cannot submit *into* Gradescope or Turnitin,
+and Brightspace can launch Semester. The first needs a partner program; the
+second needs a 1EdTech standard and a school administrator.
+
+Two endpoints, and a school's administrator needs the first one's address:
+
+    …/functions/v1/lti/login     the OIDC login initiation URL
+    …/functions/v1/lti/launch    the redirect URL, and the target link URI
+
+`--no-verify-jwt` on this one is not the same argument as on the other four.
+They verify the caller's Supabase token themselves; **this one has no Supabase
+caller.** Brightspace redirects a student's browser to it, and that browser has
+no session with this project. A launch is authenticated by the platform's own
+signed `id_token`, checked against the keys the platform publishes and then
+claim by claim against the registration below — `supabase/functions/_shared/lti.ts`
+is that check and `app/src/lib/lti.test.ts` walks every refusal in it.
+
+### Registering a school
+
+Nothing in the app writes `public.lti_platform`, deliberately: an account that
+could would be an account that could register an issuer it controls and launch
+as anybody. It is one insert, in the SQL Editor, with the four values the
+administrator reads off the Brightspace side of the registration.
+
+```sql
+insert into public.lti_platform
+  (issuer, client_id, deployment_id, auth_login_url, jwks_url, name)
+values
+  ('https://brightspace.vanderbilt.edu',
+   '<client id Brightspace issued>',
+   '<deployment id Brightspace issued>',
+   'https://brightspace.vanderbilt.edu/d2l/lti/authenticate',
+   'https://brightspace.vanderbilt.edu/d2l/.well-known/jwks',
+   'Vanderbilt University');
+```
+
+**One row per deployment, not per school.** A university with separate
+Brightspace orgs for its schools is the ordinary case, and the deployment id is
+the only thing in a launch that tells them apart. Registering one and expecting
+it to serve both is how a launch from the medical school lands in the law
+school's data — the tool refuses it, but it refuses it as `wrong-deployment`,
+which is a confusing thing to debug if you did not know the row was missing.
+
+Both URLs are `https` by a check constraint rather than by convention: they are
+the two addresses this function redirects a student to and fetches keys from.
+
+### One setting it needs
+
+    SEMESTER_APP_URL = https://harrisonjrubin7-cmyk.github.io/semester/
+
+Set it under Edge Functions → Secrets. There is deliberately **no default**:
+this is the address a student's browser is sent to carrying a one-use session
+token, so a wrong guess is not a broken link, it is a token handed to whatever
+is at the address we assumed. Without it the function refuses the launch and
+says which setting is missing.
+
+### What a launch does
+
+A first launch **makes an account**, keyed on the issuer and the platform's
+subject for that person, and signs them in. A professor switches the tool on
+and two hundred students click it that week; every one asked to go and sign up
+first is one who does not come back.
+
+Attaching an account a student **already had** is never automatic. Nothing in
+this function reads the token's email claim to find an existing account — an
+email claim is a string a registered platform sends us, and matching on it
+hands an account to whoever can get one registration row wrong. Instead the
+launch issues a ticket, and `adopt_lti_identity` spends it only alongside a
+session the student proved. Two proofs, held by no single party.
+
+`_shared/ltiaccount.ts` makes that structural: a provisioned account's address
+is synthesised on `lti.invalid`, a domain that cannot receive mail, so there is
+no account for an email match to find even if somebody later writes one.
+
+**The invite gate is not bypassed.** While it is on, the function puts the
+synthesised address on `public.invites` before creating the account — which is
+the honest reading of what happened, since a school's administrator installing
+this tool is an invitation issued by exactly the person the gate exists to let
+issue them. It leaves a row saying so.
+
+Deep linking and grade passback are still not built; both need a key of this
+tool's own, which is why there is no key material in either migration.
+
 ## Tables
 
 `usage` (claude) and `push_devices` + `push_queue` (push) exist, with row-level

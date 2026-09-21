@@ -133,6 +133,16 @@ jobs:
           # themselves and have to answer a CORS preflight, which carries no
           # Authorization header at all; `push` is called by the scheduler and
           # authenticates with a shared secret. See supabase/DEPLOY.md.
+          #
+          # `lti` is the first one here with no Supabase caller at all, and it
+          # is the one to read the flag carefully on. Brightspace redirects a
+          # student's browser to it, and a browser arriving from an LMS has no
+          # Supabase session to carry. What authenticates a launch is the
+          # platform's own signed id_token, checked against the keys it
+          # publishes and then against the registration a school installed —
+          # `supabase/functions/_shared/lti.ts` is that check and
+          # `app/src/lib/lti.test.ts` walks it. Stronger than the flag that is
+          # off, and not a substitute for it.
           for fn in $LIST; do
             if [ ! -f "supabase/functions/$fn/index.ts" ]; then
               echo "::error title=No such function::supabase/functions/$fn/index.ts does not exist."

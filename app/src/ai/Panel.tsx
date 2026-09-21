@@ -7,7 +7,8 @@ import { assemble } from './assemble';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { useConversation, provider } from './converse';
 import { Composer, sendHint } from './Composer';
-import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
+import { useVoice } from './usevoice';
+import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
 import { Opening } from './Opening';
 import { money } from '../lib/spend';
 import { configured, modelLabel } from '../lib/assistant';
@@ -90,6 +91,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
    * views of one assistant rather than two assistants. See its header.
    */
   const talk = useConversation();
+  const voice = useVoice(talk);
   /** Whether the "what's included" panel is open. Nothing hidden, on request. */
   const [showing, setShowing] = useState(false);
 
@@ -515,6 +517,24 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                             ? (next) => void talk.send(next, talk.turns.slice(0, i))
                             : undefined
                         }
+                        /*
+                         * A question still last in the list got no reply — no
+                         * key, no connection, or a failed request — which is
+                         * precisely when an answer needing neither is worth
+                         * having. It hung only off `Reply` before, so it was
+                         * computed every time and shown only on success.
+                         */
+                        extra={
+                          i === talk.turns.length - 1 && !talk.busy ? (
+                            <Locally
+                              locally={talk.locally}
+                              onGo={(screen) => {
+                                dispatch({ type: 'go', screen });
+                                ai.hide();
+                              }}
+                            />
+                          ) : undefined
+                        }
                       />
                     ) : (
                       <Reply
@@ -534,6 +554,7 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                         extra={
                           i === talk.turns.length - 1 && !talk.busy ? (
                             <>
+                              <Using read={talk.read} />
                               {talk.used.length > 0 && (
                                 <Looked
                                   said={`Read ${talk.used.length} ${
@@ -643,8 +664,13 @@ export function Panel({ side }: { side: 'right' | 'left' }) {
                     return null;
                   }}
                   busy={talk.busy}
-                  placeholder={`Ask about ${assembled.label} — ${sendHint(touch)}`}
+                  placeholder={
+                    voice.on
+                      ? 'Listening — say it out loud'
+                      : `Ask about ${assembled.label} — ${sendHint(touch)}`
+                  }
                   autoFocus
+                  voice={voice}
                 />
                 <div
                   style={{

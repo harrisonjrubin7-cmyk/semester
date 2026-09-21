@@ -703,7 +703,7 @@ function Feed_due() {
       <div
         className="chrome-text"
         style={{
-          fontSize: 'calc(27px * var(--text-scale, 1))',
+          fontSize: 'var(--type-2xl)',
           lineHeight: 'var(--leading-display-xl)',
           marginBottom: 'calc(14px * var(--density, 1))',
           textWrap: 'pretty',
