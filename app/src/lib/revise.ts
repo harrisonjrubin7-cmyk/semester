@@ -30,7 +30,7 @@
  */
 
 import type { Reviews } from './review';
-import { strength } from './review';
+import { anyAnswered, comeRound, neverMet, strength } from './review';
 import { knowingOf, says, type Knowing } from './knowing';
 
 /** How long one card takes, end to end: read, try to remember, judge yourself. */
@@ -276,4 +276,123 @@ export function planTotals(plan: Stretch[]): { minutes: number; cards: number } 
 export function doneToday(reviews: Reviews, now: Date): number {
   const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   return Object.values(reviews).filter((r) => r.seen >= start && r.seen <= now.getTime()).length;
+}
+
+
+// ── What tonight actually is, counted ────────────────────────────────────
+
+/**
+ * The evening's work, split into the things it is made of.
+ *
+ * Revise has always printed one number for the backlog — *"147 cards
+ * waiting"* — and {@link dueIn} builds it by counting two unrelated states as
+ * one: cards you answered before and that have come round again, and cards
+ * nobody has ever met. `lib/review.ts` spends a docstring on why that lump is
+ * the wrong thing to call due, and its argument applies word for word to the
+ * line on the screen: *"a course where you have answered one card of a
+ * hundred and seven was being told that a hundred and one had come round for
+ * review, which is a backlog the student created by studying"*.
+ *
+ * So the same work is described rather than totalled. A hundred and forty new
+ * cards is a course you have not started; a hundred and forty come round is a
+ * fortnight you let slide; and until now the screen said the same sentence
+ * about both.
+ *
+ * ## It is not a score, and that is a rule rather than a preference
+ *
+ * Research on Kahoot's solo modes is right that it keeps its analytics for
+ * live multiplayer and gives a student revising alone nothing back, and right
+ * that this app already computes more than Kahoot ever shows. The obvious
+ * move from there is a streak, and this app has already refused it, in
+ * writing, twice: `lib/you.ts` — *"There is no streak, no percentage of you,
+ * and no comparison with anybody"* — and `lib/weekly.ts`, which carries the
+ * same rule into the words the model is given.
+ *
+ * The refusal is the better product decision and not only an ethical one. A
+ * streak's whole mechanism is that breaking it costs you something, so its
+ * first real day of work is the day a student misses one — reading week, a
+ * shift, flu — and what it does that day is tell somebody already behind that
+ * they are also a failure. They close it, and the app has spent its only
+ * chance to be the thing that says *here is the twenty minutes that gets you
+ * back*.
+ *
+ * So: counts, of things that are true, that go up and down with the work and
+ * describe it rather than grading it. Nothing here can be broken, because
+ * none of it is a run.
+ */
+export interface Counted {
+  /** Cards answered before, now come round again. A real backlog. */
+  comeRound: number;
+  /** Cards nobody has answered yet. New material, not a backlog. */
+  neverMet: number;
+  /** Distinct cards touched today, however many times each was answered. */
+  today: number;
+  /** Units with at least one answer in them — what has been started at all. */
+  warmed: number;
+  /** Units in play, which is what `warmed` is out of. */
+  units: number;
+}
+
+/**
+ * The counts, over whichever units are in play.
+ *
+ * Takes the same `UnitFacts[]` the ranking takes, so a course filter on the
+ * screen narrows the counts with it: "all courses" and "just ECON" are
+ * different evenings and it would be odd for the summary to disagree with the
+ * plan underneath it about which one is on.
+ *
+ * Cards are counted across the whole set rather than per unit, because a card
+ * key can appear in two units of one course — each shipped guide's self-test
+ * recaps a question or two — and counting per unit and summing would report
+ * more cards than the course has. `lib/review.ts` collapses repeats inside
+ * one call, so the keys are pooled first and counted once.
+ */
+export function counted(units: UnitFacts[], reviews: Reviews, now: Date): Counted {
+  const keys = units.flatMap((u) => u.keys);
+  const at = now.getTime();
+  return {
+    comeRound: comeRound(keys, reviews, at),
+    neverMet: neverMet(keys, reviews),
+    today: doneToday(reviews, now),
+    warmed: units.filter((u) => anyAnswered(u.keys, reviews)).length,
+    units: units.length,
+  };
+}
+
+/** One count, said with its noun. Keeps the plurals in one place. */
+function cards(n: number): string {
+  return `${n} ${n === 1 ? 'card' : 'cards'}`;
+}
+
+/**
+ * The counts as a line, with the parts that are nought left out.
+ *
+ * A row of zeroes is how a summary stops being read. A fresh install has
+ * answered nothing and met nothing, and the honest line there is about the
+ * material rather than about the student: everything is new, which is a fact
+ * about the deck and not a judgement on anybody.
+ */
+export function countedLine(c: Counted): string {
+  const parts: string[] = [];
+  if (c.comeRound > 0) parts.push(`${cards(c.comeRound)} come round`);
+  if (c.neverMet > 0) parts.push(`${cards(c.neverMet)} never met`);
+  if (c.today > 0) parts.push(`${cards(c.today)} today`);
+  if (parts.length === 0) return 'Nothing waiting — every card here is answered and none is due back yet.';
+  return parts.join(' · ');
+}
+
+/**
+ * What has been started, out of what there is.
+ *
+ * Deliberately not a percentage and deliberately not called progress. "3 of
+ * 11 units started" is a description of where you are in the material; "27%"
+ * is a mark out of a hundred, and a mark out of a hundred about yourself is
+ * the thing `lib/you.ts` refuses.
+ *
+ * Empty once every unit has been started: a row reading "11 of 11" is a line
+ * that has stopped telling anybody anything.
+ */
+export function warmedLine(c: Counted): string {
+  if (c.units === 0 || c.warmed >= c.units) return '';
+  return `${c.warmed} of ${c.units} units started`;
 }

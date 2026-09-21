@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { DIMMED_ROW } from '../lib/dim';
-import { useStore } from '../state/store';
+import { useNow, useStore } from '../state/store';
 import { useRowStyle } from '../components/shell/useShell';
 import { Blueprint } from '../components/Blueprint';
 import { Meter, SectionLabel } from '../components/ui';
@@ -13,6 +13,9 @@ import { NO_CUTOFFS, letterFor, systemFor, targetsOf } from '../lib/cutoffs';
 import { Cutoffs } from '../components/Cutoffs';
 import { ScoreField } from '../components/ScoreField';
 import { Folding } from '../components/Fold';
+import { Suppose } from '../components/Suppose';
+import { datedItems } from '../lib/select';
+import { isExam } from '../lib/runway';
 
 /**
  * What you have, and what the rest has to be.
@@ -30,6 +33,7 @@ import { Folding } from '../components/Fold';
  */
 export function Grades() {
   const { state, dispatch, catalog, school, tint } = useStore();
+  const now = useNow();
   // The hairline this row wears, in whichever layout is on. Spread rather
   // than wrapped so the row keeps its own insides. See `useRowStyle`.
   const rowFlush = useRowStyle(0);
@@ -53,6 +57,14 @@ export function Grades() {
         const { system, source } = systemFor(c.id, state.gradeSystems, school);
         const targets = targetsOf(system);
         const t = tally(state.attendance, c.id);
+        // Days to this course's next exam, for the one thing a grade
+        // calculator on a website cannot say: how long there is to earn it.
+        // Null where the course has none scheduled, which `runwayLine` reads
+        // as "say nothing" rather than as zero.
+        const nextTest =
+          datedItems(catalog, now)
+            .filter((i) => i.c === c.id && !i.isPast && isExam(i) && !state.done[i.id])
+            .map((i) => i.daysAway)[0] ?? null;
         const s = standing(c, state.grades, {
           pieces: state.pieces,
           drops: state.drops,
@@ -269,6 +281,28 @@ export function Grades() {
               `lib/cutoffs.ts` exists to prevent.
             */}
             <Cutoffs courseId={c.id} code={c.code} />
+
+            {/*
+              The hypothetical, under the facts and never mixed into them.
+
+              Deliberately below `Cutoffs`: the letter the block above prints
+              is only as true as the cutoffs behind it, and a supposition
+              quoting a letter belongs after the line saying whose letters
+              those are. See `components/Suppose.tsx` for why nothing typed
+              in it is stored.
+            */}
+            <Suppose
+              course={c}
+              extras={{
+                pieces: state.pieces,
+                drops: state.drops,
+                pointsOff: pointsOff(policy, t),
+                attendance: { worth: policy.worth, rate: rate(t) },
+              }}
+              system={system}
+              source={source}
+              daysToTest={nextTest}
+            />
 
             {/*
               Practice, beside the projection and deliberately not inside it.

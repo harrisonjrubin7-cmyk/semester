@@ -68,7 +68,7 @@ export const BUDGET: Budget = {
   'components/ProjectFile.tsx': { type: 9, space: 3, shorthand: 3 },
   'components/PullDown.tsx': { leading: 1 },
   'components/PushSwitch.tsx': { type: 1 },
-  'components/QuickAdd.tsx': { type: 5, leading: 1, space: 4 },
+  'components/QuickAdd.tsx': { type: 1, leading: 1, space: 3 },
   'components/ReadingProgress.tsx': { type: 4, leading: 1, space: 6, shorthand: 6 },
   'components/RecordButton.tsx': { type: 8, leading: 1, space: 5, shorthand: 2 },
   'components/Replaced.tsx': { type: 1, shorthand: 3 },
