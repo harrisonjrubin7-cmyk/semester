@@ -294,7 +294,7 @@ whether the proposal is good.
 
 | Band | Item | Verdict |
 |---|---|---|
-| P0 | Repeatable first setup | **The term half landed; the rest was already built or stays open.** The manual route and the key-free doors were already there. The *term* was not asked at all — it was a constant, correct in the week it was written — and it is now the first thing on the school step. The three-step shape itself (add course → confirm dates → first action, inside the run) is still open. See below. |
+| P0 | Repeatable first setup | **The term half landed, a worse half was found and fixed, and the three-step shape stays open.** The manual route and the key-free doors were already there. The *term* was not asked at all and now is. Then the run itself turned out to be describing the sample semester as the student's own — measured, and fixed below. The three-step shape (add course → confirm dates → first action, inside the run) is still open. See below. |
 | P1 | Make tools easy to find | **Partly landed.** Three of the patch's five items above; the filter move declined with reasons; user testing is not a code item. |
 | P1 | **Make progress mean actual progress** | **Landed.** The defect. |
 | P1 | One calendar integration, then one LMS | **Not a code item here.** Provider registration and an institutional agreement. The copy that misdescribed it is fixed above. |
@@ -359,6 +359,48 @@ document's own last section explains is the wrong store to ask.
 **Still open, and it is the larger half:** the run ends and hands an empty app
 to `FirstRun` rather than carrying somebody through add-a-course, confirm the
 dates, and a first task. That is the "three-step shape" proper.
+
+#### And the half that was worse than the one the report named
+
+Chasing the sentence above turned up something the report did not see, because
+seeing it needs a fresh profile rather than a reading: **the run was describing
+the sample semester as the student's own.**
+
+`state.sample` ships on — `DEFAULT_PERSISTED.sample = true` — so the catalogue
+on a brand-new install holds the four shipped courses. `Onboarding` counted
+that catalogue. Driven in Chromium at 420px on a profile with nothing stored,
+`pageerror` empty:
+
+| | Before | After |
+|---|---|---|
+| Step 1 | "4 syllabi. One brain." · **Set it up** | "Your syllabi. One brain." · **Show me** |
+| Step 2 | "Dropped in. Read." — 48 dated obligations across 4 courses, and four ticked filenames: `Econ1020_2026_Fall.pdf`, `PSCI1104_Trounstine_F26.pdf`, `Sports_Fall26_Syllabus.pdf`, `Syllabus Draft 8262026.pdf` · **Looks right** | "Drop one in." · **Good** |
+| Soft layout | "You have 4 courses, 34 deadlines ahead, and 9 days until your first final." | "Nothing loaded yet. Add a syllabus and the semester comes back." |
+
+Both files carry a docstring disowning exactly this. `Onboarding`'s says the
+four fixed sentences were replaced because *"a new user was told 'We found 38
+dated obligations across four courses' before they had uploaded anything, and
+shown four filenames that were not theirs"*; `lib/welcome.ts`'s says an account
+with nothing in it *"gets a sentence about what will happen rather than a
+sentence about four courses it does not have"*. Both fixes were real and both
+were handed the wrong set — the shared catalogue, where the sample lives.
+
+So neither function changed. The run reads `state.courses` instead: the
+student's own modules, with the sample excluded by construction rather than by
+a filter that can drift. Every term of it, not just the open one, because the
+question these screens ask is "what have you given me" and a course filed under
+last Spring is still an answer.
+
+`components/Splash.tsx` keeps the full catalogue deliberately. It describes
+what is in the app and on screen, where the sample is genuinely both.
+
+The guard is `screens/onboardingcounts.test.tsx`, and its arrangement is the
+part worth keeping: the mocked store hands over **both** sets at once — a real
+catalogue built from the four sample modules, and whatever is the student's —
+so every assertion is about which of the two reaches the screen. A test given
+only an empty catalogue would pass against the bug. All four go red on a
+faithful revert, quoting it back: `expected 'Semester4 syllabi. One brain.…'`.
+
 
 ---
 
