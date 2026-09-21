@@ -140,6 +140,21 @@ export interface DatedItem extends Item {
 }
 
 export interface StudyCard {
+  /**
+   * A stable identity that survives the question being reworded.
+   *
+   * Optional, because a card's identity used to be its question and for a card
+   * with no id here it still is — `cardIdentity` in `lib/review` falls back
+   * to hashing `q`, which is exactly what every card did before this field
+   * existed. So a card written without one is no worse off than it was; it
+   * simply keeps the old failure, where an edit to the wording starts the
+   * review history over.
+   *
+   * The four shipped guides carry one on all 324 of their cards. Those ids
+   * were minted as the hash `cardKey` already produced for the question, so
+   * adding them moved no review row that was already stored.
+   */
+  id?: string;
   q: string;
   a: string;
 }

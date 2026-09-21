@@ -242,7 +242,7 @@ describe('tallying a named set of cards', () => {
 });
 
 describe('tallying by course', () => {
-  const deck = (courseId: string, qs: string[]) => ({ courseId, questions: qs });
+  const deck = (courseId: string, qs: string[]) => ({ courseId, cards: qs.map((q) => ({ q, a: '' })) });
 
   it('recomputes the keys, because a hash gives its course back to nobody', () => {
     const reviews: Reviews = {

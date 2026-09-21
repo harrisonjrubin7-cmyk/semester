@@ -103,10 +103,10 @@ describe('reading the evidence', () => {
     expect(evidenceFor(keys, reviews, NOW + DAY).lapsed).toBe(1);
   });
 
-  it('reads a course by its questions the same way it reads keys', () => {
+  it('reads a course by its cards the same way it reads keys', () => {
     const qs = ['What is a deadweight loss?', 'Define elasticity'];
     const reviews: Reviews = { [cardKey('econ', qs[0])]: row({ right: 2, streak: 2 }) };
-    const ev = evidenceForCards('econ', qs, reviews, NOW);
+    const ev = evidenceForCards('econ', qs.map((q) => ({ q })), reviews, NOW);
     expect(ev.cards).toBe(2);
     expect(ev.answered).toBe(1);
     expect(ev.held).toBe(1);

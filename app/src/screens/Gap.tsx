@@ -4,7 +4,7 @@ import { useNow, useStore } from '../state/store';
 import { EmptyState } from '../components/ui';
 import { allCards } from '../data/catalog';
 import { liveGuide } from '../lib/live';
-import { cardKey, dueFirst } from '../lib/review';
+import { cardIdentity, dueFirst } from '../lib/review';
 import { inTime, testsNear } from '../lib/intime';
 import {
   addSample,
@@ -89,7 +89,7 @@ function Run({ win }: { win: GapWindow }) {
       return allCards(guide).map((card) => ({
         ...card,
         code: guide.code || c.code,
-        key: cardKey(c.id, card.q),
+        key: cardIdentity(c.id, card),
       }));
     });
     /*

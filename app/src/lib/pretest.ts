@@ -42,7 +42,7 @@
 
 import type { StudyCard } from './types';
 import type { Reviews } from './review';
-import { cardKey } from './review';
+import { cardIdentity } from './review';
 
 /** How many questions a pretest asks. */
 export const ASK = 4;
@@ -57,7 +57,7 @@ export function unitKey(courseId: string, unit: number): string {
 
 /** Whether any card in this unit has ever been answered. */
 export function studied(courseId: string, cards: StudyCard[], reviews: Reviews): boolean {
-  return cards.some((c) => Boolean(reviews[cardKey(courseId, c.q)]));
+  return cards.some((c) => Boolean(reviews[cardIdentity(courseId, c)]));
 }
 
 /**
