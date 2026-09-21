@@ -1,3 +1,126 @@
+# One app — the twentieth pass: the figures moved, and half of one never counted what it said
+
+Against `main` at `0a5e98a`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge, no screen touched.
+
+The nineteenth pass emptied the to-do list, so this one had to find its own
+subject rather than invent one. Two were available and both are the skill's,
+not this file's: **Step 4, findability**, which has never been checked as a
+whole, and **Step 1 item 4, duplicated UI**, whose figures were last taken
+several passes ago and are the oldest live numbers here.
+
+## T1 — Step 4 is clean, measured across all fifty-eight
+
+The skill asks four things of every surviving destination: a `blurb`,
+`keywords`, at least one `taskTags` entry, and a shelf; and it asks that no
+shelf be left under three screens.
+
+| Check | Missing |
+| --- | --- |
+| `blurb` | **0** |
+| `keywords` | **0** |
+| `taskTags` (non-empty) | **0** |
+| `group` | **0** |
+
+Shelves, smallest first: Beyond 5, Semester 6, Life 7, then Courses, Study,
+Make, Campus and Data at 8 each. **None under three**, so the rule that would
+retire a shelf does not fire.
+
+Recorded because it is the first time the whole of Step 4 has been asked at
+once rather than screen by screen, and because a clean reading is a claim about
+the probe too: this one reads `lib/nav.ts` per destination block, so a field
+present but empty — `taskTags: []` — counts as missing, which is the reading
+that matters.
+
+## T2 — S4's figures have moved a long way, and are worth retaking
+
+S4 measured the same UI drawn by hand. Every one of its numbers has moved
+since, all in the same direction:
+
+| Idiom | S4 said | Now | |
+| --- | --- | --- | --- |
+| caps labels (`textTransform: 'uppercase'`) | 235 | **177** | −58 |
+| hairline under a row | 36 | **22** | −14 |
+| files using `EmptyState` | 5 | **25** | +20 |
+| files using `Segmented` | 6 | **37** | +31 |
+| files using `ItemRow` | 12 | **10** | −2 |
+
+Somebody has been doing this work steadily, and the audit stopped saying so
+several passes ago. The retake is the whole of the point: this file's own rule
+is that *a figure nobody can retake goes stale without anybody noticing it
+has*, and S4's had.
+
+## T3 — and the hairline count was never a count of rows
+
+The more useful half. S4 read `borderBottom: '1px solid var(--app-line)'` and
+called the result hand-drawn rows. It is not one idiom, it is two, and they
+split almost exactly down the middle:
+
+| | Count | What they are |
+| --- | --- | --- |
+| **Repeated rows** | 11 | inside a `.map`, so a list row drawn by hand — a real `ItemRow` candidate |
+| **One-off dividers** | 11 | a rule under a header, a bar, a panel edge — never an `ItemRow` candidate |
+
+Two of the eleven dividers are `components/shell/Rows.tsx:285` and `:547` —
+**`ItemRow`'s own implementation**. The grep that was counting work still to do
+was counting the shared component the work converts *to*.
+
+Checked rather than assumed, since the last two passes each found the
+instrument lying. `screens/Athletics.tsx:290` carries `key={i}` and sets
+`display: flex`, `alignItems`, `gap` and `paddingBlock` — a hand-drawn row, as
+classified. `shell/Rows.tsx:285` sits inside `ItemRow`'s own style object,
+beside the `grouped ? DIVIDER : …` branch — not a row, as classified.
+
+So the honest figure is **11 hand-drawn rows in 10 files**, not 33 in 12, and
+about half of the fall from 36 is conversion while the other half is the
+original number having counted the wrong thing.
+
+### The eleven, as a worklist rather than a bulk change
+
+    ai/Answer.tsx:269            screens/Career.tsx:908
+    components/MuteCourses.tsx:80        screens/Data.tsx:384
+    components/creation/DesignEditor.tsx:626  screens/Pathway.tsx:762
+    screens/Athletics.tsx:290            screens/University.tsx:723, :1170
+                                         screens/call/Stage.tsx:972, :1087
+
+**Not converted here, and the reason is S4's own.** It ruled the caps labels
+must not be replaced in bulk, because `SectionLabel` is 12px at 0.2em in the
+accent colour and most of the inline uses are not, so a silent swap makes quiet
+labels louder on sixty screens. The same caution applies one idiom over:
+`Athletics.tsx:290` sets its own `fontSize` and `lineHeight`, `Data.tsx:384`
+wraps a disclosure button rather than a row of text. Eleven rows is eleven
+looks at what each one draws, and this pass is not entitled to do that from a
+grep.
+
+## T4 — a null result worth recording: the empty states have their remedies
+
+S4 left *"eleven of the forty are converted"*, which reads like twenty-nine
+dead ends waiting. Twenty-two rendered "nothing here" lines sit in files that
+never use `<EmptyState>`, and the strongest candidates were opened:
+
+- `components/Subscribe.tsx:226` — "Nothing published yet." with **"Publish my
+  calendar"** three lines below it.
+- `components/TabMenu.tsx:133` — "Nothing to bookmark yet" above the pin row.
+- `components/desk/AppsPanel.tsx:86` — "Nothing pinned yet." under a pencil
+  labelled *Choose favourites*, which draws "Tap an app below to pin or unpin
+  it. Up to six." and the whole shelf.
+
+None is a dead end. And most of the rest are not empty *by absence* at all —
+"Nothing here matches that" and "Nothing open or lately closed matches that"
+are **filter** results, where the remedy is the filter the student just typed.
+An empty state wants a way out; a filtered-empty list already has one.
+
+That distinction is the reason the forty was never forty dead ends, and it is
+the same shape as T3: one grep, two idioms.
+
+## To do
+
+- The eleven rows, one look each, if the owner wants them on `ItemRow`.
+- `account` on Profile — carried from the nineteenth pass, the owner's to name.
+- A pointer-pairing guard past `edit`, when a second instance exists.
+
+---
+
 # One app — the nineteenth pass: a file is not a screen
 
 Against `main` at `054e427`. **<!--screens-->fifty-eight<!--/--> destinations**,
