@@ -36,7 +36,29 @@ here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # The versions production's ledger already has. A migration numbered at or
 # below the last of these cannot be applied by `db push` at all, whatever this
 # script says about its SQL — see the header.
-LEDGER_NEWEST=20260921002658
+#
+# Read from `ledger.snapshot` rather than written here, and that is not a
+# style preference. This was `LEDGER_NEWEST=20260921002658`, correct when it
+# was typed on 21 September and wrong within the hour: the ledger took seven
+# more rows that afternoon and the newest became `20260921150750`. A constant
+# copied out of a database carries no date and cannot go stale loudly, so this
+# script went on calling six already-applied migrations "pending" and
+# rehearsing a deploy that was not the one about to run. The same constant in
+# `rollback.test.ts` let a renumbering land at `20260921003000`-`003600`,
+# below the real watermark, which is the fault it was written to prevent.
+#
+# `ledger.snapshot` is one dated reading of every row, and its header says a
+# newer reading that disagrees is a finding rather than a number to bump.
+LEDGER_SNAPSHOT=$here/ledger.snapshot
+[ -f "$LEDGER_SNAPSHOT" ] || { echo "supabase/ledger.snapshot is missing" >&2; exit 2; }
+LEDGER_NEWEST=$(sed -e 's/#.*//' "$LEDGER_SNAPSHOT" | awk 'NF {print $1}' | sort | tail -1)
+# The control, before anything is concluded from it: a parse that stopped
+# matching yields an empty string, and an empty string makes every `-gt`
+# comparison below treat the whole directory as pending.
+case "$LEDGER_NEWEST" in
+  [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]) ;;
+  *) echo "ledger.snapshot did not parse into a version: '$LEDGER_NEWEST'" >&2; exit 2 ;;
+esac
 
 want=$(sed -nE 's/^[[:space:]]*major_version[[:space:]]*=[[:space:]]*([0-9]+).*/\1/p' \
   "$here/config.toml" | head -1)

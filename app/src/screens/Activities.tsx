@@ -227,7 +227,7 @@ function Row({ commitment }: { commitment: Commitment }) {
               background: kindOf(kind.tint).tint,
             }}
           />
-          <span style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))', minWidth: 0 }}>{commitment.name}</span>
+          <span style={{ fontSize: 'var(--type-md-plus)', minWidth: 0 }}>{commitment.name}</span>
         </div>
         <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
           {[kind.label, commitment.role, when, commitment.where].filter(Boolean).join(' · ')}

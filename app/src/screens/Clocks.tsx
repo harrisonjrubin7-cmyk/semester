@@ -251,7 +251,7 @@ function TimerRow({ t, at }: { t: Timer; at: number }) {
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
         <span
           style={{
-            fontSize: 'calc(28px * var(--text-scale, 1))',
+            fontSize: 'var(--type-2xl)',
             fontVariantNumeric: 'tabular-nums',
             letterSpacing: '0.01em',
           }}
