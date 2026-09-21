@@ -147,7 +147,12 @@ declare
     'adopt_lti_identity(want_ticket text)',
     'claim_referral(given text)',
     'make_referral_code()',
-    'referral_standing()'
+    'referral_standing()',
+    -- Sets `profiles.school_id` from the address the server confirmed. The
+    -- column's own UPDATE privilege is revoked from both API roles, so this
+    -- function is the only way in and has to be callable by a signed-in
+    -- account. See 20260921170000_schools.sql.
+    'claim_school(want text)'
   ];
   extra text;
   missing text;
