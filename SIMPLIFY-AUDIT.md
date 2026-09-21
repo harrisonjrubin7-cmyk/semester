@@ -1,3 +1,120 @@
+# One app — the thirty-second pass: the card said it had searched
+
+Against `main` at `da1e581`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge. One broken promise cut, one guard.
+
+The thirty-first gave a live field a reader. This one found a live field that
+should never have existed, by asking the same question of the whole session
+half of state: **which of these does nobody read?**
+
+Sixty-six fields. One answer: `query`.
+
+## T1 — a search the app announced, dispatched, and never ran
+
+`lib/tools.ts` gave the model a `search` parameter on `open_screen`, and said
+what it was for:
+
+> For a view: text to search for once there. Carried beside the action rather
+> than inside it because `go` and `setQuery` are two dispatches, and **the
+> screen runs them in that order so it arrives already narrowed** rather than
+> narrowing in front of you.
+
+No screen ran the second one. `state.query` was written by exactly two lines,
+both in `ai/converse.ts`, and **read by nothing in this app** — every search
+box in here is a local `useState`, nineteen of them.
+
+What the student saw:
+
+| | |
+| --- | --- |
+| the card offered | *Open Personal, searching for “Stromme” — your own list* |
+| after the tap, `did` said | *Personal, searching for “Stromme”* |
+| what happened | Personal opened, unnarrowed |
+
+`did` is documented as *"Said after it runs: what changed, past tense."* So
+this is not a dead field with no consequence. It is the app telling somebody
+it did a thing it did not do.
+
+### Measured before cutting it
+
+`open_screen` may target twenty-three screens. Resolving each through
+`screens.tsx` to its component:
+
+| | |
+| --- | --- |
+| screens `open_screen` can reach | **23** |
+| of those, with a search box at all | **2** — `courses`, and `sheet` |
+| of those two, reading `state.query` | **0** |
+
+So on twenty-one screens the parameter was a promise the app *could not*
+keep, and on the other two it was one it *did not*. And `sheet`'s box searches
+spreadsheet functions rather than the student's words, which leaves
+`screens/Courses.tsx` as the only real candidate there has ever been.
+
+Cut, therefore, rather than wired: the honest fix for a sentence nothing
+backs is to stop saying it. Recorded in `lib/tools.ts` where the parameter
+was: if arriving already narrowed is wanted, the way to build it is a screen
+that takes what to search for, not a global field every screen has to
+remember to read.
+
+Gone with it: `Ephemeral.query`, its default, the `setQuery` action, its
+reducer case, and both dispatches. `send`'s dependency array lost `dispatch`
+too — the one call it made was this search.
+
+### The test pinned the sentence and never checked the screen
+
+`lib/tools.test.ts` had a case called **"says the search in the line, so
+arriving somewhere filtered is not a surprise"**, asserting the exact string
+`'Open Personal, searching for “Stromme” — your own list'`. Its own example is
+a screen with no search box. A test can hold a promise in place as firmly as
+it can hold a behaviour, and this one had.
+
+It is rewritten to assert what is true, and a control beside it asks the
+question the old one did not: **all twenty-three screens**, rather than one,
+and for each that the line, the past tense and the action agree.
+
+## T2 — the guard, and the way it failed first
+
+`state/sessionread.test.ts`: every field `initialEphemeral` sets has a reader
+outside the three files that merely carry it — `state/shape.ts` declares it,
+`state/slices/` reduces it, `state/persist/` moves it. It is the sibling of
+`state/keyread.test.ts`, which the twenty-third pass wrote for the persisted
+half after `lastOpened`. The session half had one too; nothing was asking.
+
+**The first version passed against a faithful revert of the bug.** Restoring
+`query` to `initialEphemeral` left it green, and the reason is one this
+repository has already written down twice, arriving from the other direction:
+
+> this codebase explains at length what a file used to do, so a test that
+> cannot tell the explanation from the thing being explained fails on its own
+> documentation — `ai/split.test.ts`, and `ai/live.test.ts` learned it the
+> same way
+
+Here it *passed* on documentation. The note this pass had just written into
+`lib/tools.ts` contains the words `state.query`, explaining that nothing reads
+it — and the probe counted that sentence as a reader. Comments now come out
+first, and the third case is a control on exactly that: `lib/tools.ts` still
+contains the phrase, and stripped of comments it does not.
+
+The stripper is deliberately only two lines. The twenty-sixth pass had one
+that also tried to remove template literals, mispaired a backtick and
+swallowed the code between — seventeen false findings out of thirty.
+
+Reverted again with the stripping in place:
+
+    expected [ 'query' ] to deeply equal []
+
+Two more controls: the field parse must yield more than twenty names, because
+a parse that stops matching reports every field dead and passes a broken probe
+off as a clean tree; and the matcher must find both shapes of read, `state.x`
+and `const { x } = state`, since three files use the second and two of those
+are ephemeral fields.
+
+## Gates
+
+`tsc` clean · lint ok · tests in file order · shuffled · production build
+clean — every one by its **exit status**.
+
 # One app — the thirty-first pass: the same sentence about three different questions
 
 Against `main` at `176b2f7`. **<!--screens-->fifty-eight<!--/--> destinations**,

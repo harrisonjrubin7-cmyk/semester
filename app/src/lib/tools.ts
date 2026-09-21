@@ -367,19 +367,15 @@ export const TOOLS: ToolSpec[] = [
   {
     name: 'open_screen',
     description:
-      'Take the student to a screen in the app, when the answer to their question lives there. Prefer this over describing where to tap. Optionally narrow what they will find there with a filter or a search.',
+      'Take the student to a screen in the app, when the answer to their question lives there. Prefer this over describing where to tap.',
     strict: true,
     input_schema: {
       type: 'object',
       properties: {
         screen: { type: 'string', enum: REACHABLE, description: 'Which screen.' },
         why: { type: 'string', description: 'One short clause: what they will find there.' },
-        search: {
-          type: 'string',
-          description: 'Text to search for once there, or empty. Only words the student used.',
-        },
       },
-      required: ['screen', 'why', 'search'],
+      required: ['screen', 'why'],
     },
   },
 ];
@@ -441,14 +437,28 @@ export interface Proposal {
   undo?: Undo;
   /** For a view: the screen it targets, so "already there" can be decided. */
   screen?: Screen;
-  /**
-   * For a view: text to search for once there.
+  /*
+   * There was a `search` here, and the promise it made was never kept.
    *
-   * Carried beside the action rather than inside it because `go` and
-   * `setQuery` are two dispatches, and the screen runs them in that order so
-   * it arrives already narrowed rather than narrowing in front of you.
+   * It read: "text to search for once there… `go` and `setQuery` are two
+   * dispatches, and the screen runs them in that order so it arrives already
+   * narrowed rather than narrowing in front of you." No screen ran the second
+   * one. `state.query` was written by exactly two lines, both in
+   * `ai/converse.ts`, and read by nothing in the app — every search box in
+   * here is a local `useState`.
+   *
+   * So the card offered "Open Personal, searching for “Stromme”" and then
+   * said, past tense, that it had. Measured before cutting it: of the
+   * twenty-three screens `open_screen` may target, **two** have a search box
+   * at all, and neither reads the field. The parameter was a promise the app
+   * could not keep on twenty-one screens and did not keep on the other two.
+   *
+   * If arriving already narrowed is wanted, the way to build it is a screen
+   * that takes what to search for — not a global field every screen would
+   * have to remember to read. `screens/Courses.tsx` is the one real
+   * candidate; `sheet`'s box searches spreadsheet functions, not the
+   * student's words.
    */
-  search?: string;
   /** Said after it runs: what changed, past tense. */
   did: string;
 }
@@ -851,19 +861,14 @@ export function readProposal(call: ToolCall, known: Known): Proposal | null {
     const screen = str(call.input, 'screen') as Screen;
     if (!REACHABLE.includes(screen)) return null;
     const why = str(call.input, 'why');
-    const search = str(call.input, 'search').slice(0, 60);
     const where = label(screen);
     return {
       id,
-      said:
-        `Open ${where}` +
-        (search ? `, searching for “${search}”` : '') +
-        (why ? ` — ${why}` : ''),
-      did: search ? `${where}, searching for “${search}”` : where,
+      said: `Open ${where}` + (why ? ` — ${why}` : ''),
+      did: where,
       verb: 'Open it',
       sort: 'view',
       screen,
-      search,
       action: { type: 'go', screen },
       // Deliberately no undo: nothing was kept, so there is nothing to put
       // back. Going somewhere is undone by going back.
