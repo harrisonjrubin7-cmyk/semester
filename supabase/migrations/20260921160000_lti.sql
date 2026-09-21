@@ -36,7 +36,7 @@
 --     would leave the table doing nothing but costing a round trip.
 --
 -- So the grants are revoked as well as the policies withheld, which is belt
--- and braces on purpose: `20260921003500_referrals.sql` records the lesson
+-- and braces on purpose: `20260921002623_referrals.sql` records the lesson
 -- that a `security definer` function revoked from `anon` and `authenticated`
 -- by name keeps the grant both inherit from PUBLIC. The same trap applies to
 -- tables, and the same answer: revoke from PUBLIC.
@@ -88,7 +88,7 @@ create table if not exists public.lti_platform (
 
 alter table public.lti_platform enable row level security;
 
--- Both spellings, and `20260921003600_function_grants.sql` is the file that
+-- Both spellings, and `20260921144011_function_grants.sql` is the file that
 -- explains why at length. Supabase's default privileges grant every new object
 -- in `public` to `anon` and `authenticated` **by name**, so a revoke aimed at
 -- PUBLIC leaves `anon=arwdDxt/postgres` sitting there untouched. Row-level
@@ -192,10 +192,10 @@ $$;
 --
 --   * Postgres grants EXECUTE on a new function to PUBLIC, and `anon` and
 --     `authenticated` are members — so revoking the two names alone leaves the
---     grant they inherit. `20260921003500_referrals.sql` records that one.
+--     grant they inherit. `20260921002623_referrals.sql` records that one.
 --   * Supabase *also* grants every new function in `public` to those two roles
 --     explicitly, by name, through default privileges — so revoking PUBLIC
---     alone leaves `anon=X/postgres` behind. `20260921003600_function_grants.sql`
+--     alone leaves `anon=X/postgres` behind. `20260921144011_function_grants.sql`
 --     records that one, and it is the one this file was missing.
 --
 -- `grants.check.sql` is what caught it, on the first run, by asserting that no
