@@ -42,6 +42,7 @@ const layer = (id: string, over: Partial<DesignLayer> = {}): DesignLayer => ({
   opacity: 1,
   rotation: 0,
   gradient: null,
+  chartKind: 'column',
   fileId: '',
   ...over,
 });
@@ -260,6 +261,7 @@ describe('what to send after an edit here', () => {
     ['opacity', { opacity: 0.5 }],
     ['rotation', { rotation: 15 }],
     ['gradient', { gradient: { to: '#ffffff', angle: 90 } }],
+    ['chartKind', { chartKind: 'pie' as const }],
     ['kind', { kind: 'rectangle' as const }],
     ['fileId', { fileId: 'abc' }],
   ] as [string, Partial<DesignLayer>][]) {

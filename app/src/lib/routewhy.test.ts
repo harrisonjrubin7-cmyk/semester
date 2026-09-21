@@ -16,9 +16,21 @@ import { setSessionToken } from './token';
  * argument for the function existing.
  */
 
+/**
+ * A build with a shared key service, which is the pair and not the address.
+ *
+ * `sharedEndpoint()` reads `VITE_SUPABASE_KEY` as well as the URL, because
+ * the function it names verifies the account: an address with no key is an
+ * endpoint nothing can authenticate to, and calling it a service is what let
+ * this file's third case be reached by a whole build rather than by a
+ * session. See `lib/cloudsplit.test.ts`.
+ */
 const shared = (url: string | undefined) => {
   if (url === undefined) vi.unstubAllEnvs();
-  else vi.stubEnv('VITE_SUPABASE_URL', url);
+  else {
+    vi.stubEnv('VITE_SUPABASE_URL', url);
+    vi.stubEnv('VITE_SUPABASE_KEY', url ? 'sb_publishable_test' : '');
+  }
 };
 
 beforeEach(() => {
