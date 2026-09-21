@@ -823,6 +823,7 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   feed: 'the shape of Today',
   ground: 'the background the app is drawn on',
   hue: 'the tint behind the ground',
+  calm: 'how much the app may move and decorate itself',
   iconShape: 'how the icons are drawn',
   labels: 'whether the tab bar names its tabs',
   lineHeight: 'how far apart the lines sit',
