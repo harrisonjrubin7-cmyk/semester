@@ -5,7 +5,7 @@ The schema this app runs on cannot be rebuilt from its own record.
 concern; this is the plan for fixing it, written before any of it was done so
 that the reasoning can be argued with rather than discovered in a diff.
 
-**Nothing here has been carried out.** Every step below is a proposal.
+**Step 1 is done — see its own section. Steps 2 to 6 are still proposals.**
 
 ## What is actually wrong
 
@@ -26,6 +26,12 @@ disaster recovery.
 (20260911151826) have full SQL in the database and no file in
 `supabase/migrations/`. They were applied through the dashboard or the
 management API. The repository has never described the database it deploys to.
+
+Three more records arrived on 21 September and are *not* in this count, because
+each has a file — under a different version. Item 3 explains why, and item 4
+explains the third. A version that does not match its filename is a different
+fault from a migration with no file at all, and counting them together hides
+both.
 
 **3 · Four files have never been applied**, and it was six until 21 September.
 `usage_atomic`, `group_columns_pinned`, `forms` and `access_log` are in
@@ -90,6 +96,57 @@ have, so every revoke in it is guarded by `to_regprocedure`: it is safe to run
 early, and running it again after `access_log` finally lands is what closes
 those two.
 
+## Why production's deploy fails, which is now measured
+
+Settled 21 September, from three facts that fit together:
+
+1. **A preview branch built from this repository succeeds.** PR #545 got one,
+   and it applied exactly the thirteen files in `supabase/migrations/` — the
+   eight shared ones and then `usage_atomic`, `group_columns_pinned`, `forms`,
+   `invites` and `access_log` — reaching `FUNCTIONS_DEPLOYED`.
+2. **Production's deploy fails.** Its branch record has read
+   `MIGRATIONS_FAILED` since `2026-09-18T17:37`, three minutes after the merge
+   carrying `access_log`.
+3. **The two databases are not the same schema.** The preview branch has
+   thirteen migrations, all from files. Production has twenty-one, thirteen of
+   which have no file. They share eight and diverge after that.
+
+The cause is structural. The four files production lacks are numbered
+`20260901000900` through `20260901001300`, and the two applied by hand were
+recorded at `2026092100…`. Either way production has thirteen migrations
+applied with numbers *higher* than the unapplied files, from `20260907050718`
+onward. Migrations run in timestamp order, so every file version in that range
+is in the past relative to what is already applied — the four that production
+lacks, and the two whose SQL it has under a version of its own. Supabase's
+documentation names exactly this: "Using the Dashboard's SQL editor or Table
+Editor on your remote database bypasses the migration history, and `db push`
+will start failing with sync errors."
+
+**Three things follow, and they change the plan below rather than decorate it.**
+
+- **A preview branch does not rehearse production.** It rehearses the
+  repository. That was the whole premise of the staging work, and it is not
+  true until the two describe one database. A green preview branch says nothing
+  about what a merge will do.
+- **And it has no Edge Functions**, which is a second reason, independent of
+  the schema and still true after the repair. The same build warned: "Only
+  Functions declared in config.toml will be automatically deployed to
+  branches." `config.toml` declares none, deliberately — its own header says a
+  `[functions]` block would give one function two deploy paths that can
+  disagree about which version is live, and `functions.yml` is the one path.
+  So a preview branch has no `claude`, `push`, `fetchcal` or `calendar`. The
+  metering `usage_atomic` exists to make race-safe is reached through the
+  `claude` function, and the function is not there to reach it with. Rehearsing
+  that particular migration wants either a `[functions]` block accepted as a
+  second deploy path, or a test that drives the SQL directly.
+- **Step 6 cannot be "apply the four".** They cannot apply as numbered: they
+  need timestamps ahead of `20260921002658`. Renumbering files that are already
+  merged is its own decision, because a version is what the ledger keys on.
+- **The deploy being broken is, for now, the thing stopping a bad apply.** No
+  merge can push those four at production while the step that pushes them is
+  failing. That is not safety, it is a stuck valve, and fixing the history is
+  what lets it open onto something correct.
+
 ## The rule this repair runs under
 
 > **Read before write, and never write to production to make a record tidy.**
@@ -102,15 +159,43 @@ it is to the history table alone, and it is the last thing that happens.
 
 ## The steps
 
-### 1 · Capture what production actually is
+### 1 · Capture what production actually is — **done, 21 September**
 
-Dump the live schema — `pg_dump --schema-only`, or the equivalent through the
-management API — and commit it as `supabase/schema.snapshot.sql`, marked
-plainly as a record rather than a migration.
+[`supabase/schema.snapshot.sql`](supabase/schema.snapshot.sql). 23 tables, 67
+constraints, 44 indexes, 17 functions, 41 policies, 11 triggers and one event
+trigger, read out of the live catalogs.
 
-This is worth doing first even if the rest of the plan is rejected, because it
-is the only step that on its own restores disaster recovery. Everything after it
-is about making the record *structured*; this makes it *exist*.
+`pg_dump` was not available: this session reaches the project through the
+management API and has no database connection, so the DDL was generated by
+querying `pg_catalog` and `information_schema` and then transcribed. **That is
+a step that can go wrong silently**, so it was proved rather than trusted — the
+file is applied to a throwaway cluster and the same fingerprint queries are run
+against it and against production:
+
+| | production | replayed snapshot |
+| --- | --- | --- |
+| md5 of every column, type and nullability | `9d8c08dc…` | `9d8c08dc…` |
+| md5 of every constraint definition | `d434135b…` | `d434135b…` |
+| md5 of every policy, command and expression | `33680d66…` | `33680d66…` |
+
+Two things the control caught that reading alone had not:
+
+- **Alphabetical order does not replay.** `private.group_in_my_class` calls
+  `private.in_class`, and a SQL-language function is parsed when created, so the
+  first draft failed with `function private.in_class(text, text) does not
+  exist`. The functions are ordered by dependency and the file says so.
+- **An event trigger was missing.** Production has seven; six belong to Supabase
+  and one, `ensure_rls`, is this project's and is what makes RLS-on-by-default
+  true. A schema rebuilt without it would have been quietly less safe than the
+  original, and no count of tables or policies would have shown it.
+
+Two harmless oddities are recorded rather than tidied, because both are
+evidence of the same migration having been applied twice: `public.courses`
+carries two identical touch triggers (`courses_touch` and `touch_courses`), and
+`calendar_feeds.token` has both a unique constraint and a separate unique index.
+
+What it does not contain: data, roles, extensions, the schemas Supabase owns,
+and the `supabase_migrations` table itself.
 
 ### 2 · Write the ten missing migrations into files
 
@@ -118,6 +203,11 @@ Their SQL is in the history table and is complete. Each becomes a file under its
 own version number, byte-for-byte as recorded. No editing, no tidying, no
 merging two into one: the point is that the file and the row agree, and any
 improvement breaks that.
+
+This is the ten from fault 2 only. The three records from 21 September already
+have files and need no new ones: what is wrong with them is the version, and a
+version is what step 5 exists to correct. Writing a second copy of `invites`
+under today's timestamp would make the ledger tidy and the directory a liar.
 
 ### 3 · Reconstruct the eight name-only migrations
 
@@ -143,8 +233,8 @@ kind, and each one gets written down.
 ### 4 · Prove the reconstruction before trusting it
 
 `supabase/check.sh` already builds a throwaway Postgres 17 from the migrations
-directory. After steps 2 and 3 it will be applying twenty-two files instead of
-twelve, and the suites must still pass.
+directory. After steps 2 and 3 it will be applying twenty-five files instead of
+fifteen, and the suites must still pass.
 
 That is necessary and not sufficient — the suites test policies, not schema
 shape. The real check is a diff: build the schema from the repaired file set,
@@ -181,8 +271,9 @@ Steps 1–4 touch no live system and can be abandoned at any point with nothing
 to undo. Step 5 is reversible in the sense that matters: the rows already exist,
 only their statements change, and the previous values can be captured first.
 
-It does not fix the habit. Ten migrations reached production without files
-because applying SQL from a dashboard is easier than writing one, and nothing
+It does not fix the habit. Ten migrations reached production without files, and
+three more under versions that are not their filenames', because applying SQL
+from a dashboard is easier than writing one, and nothing
 stops that happening again — `rollback.test.ts` watches the workflows, and the
 dashboard is not a workflow. A guard for that is worth its own thought and is
 not proposed here, because a check that compares the repository against a live
@@ -193,12 +284,12 @@ repository, and it should be argued for on its own.
 
 | Step | State |
 | --- | --- |
-| 1 · snapshot production | not started |
+| 1 · snapshot production | **done 21 Sep** — verified by three matching fingerprints |
 | 2 · ten missing migrations into files | not started |
 | 3 · reconstruct the eight | not started |
 | 4 · diff against the snapshot | not started |
 | 5 · `migration repair` | not started |
-| 6 · the pending migrations (five as of 18 Sep) | blocked on 1–5 |
+| 6 · the pending migrations (four unapplied files) | blocked on 1–5 |
 
 Until step 5 is done, **no pull request touching `supabase/` should be merged**.
 If Branching is applying migrations, a merge sends the pending ones to a schema
