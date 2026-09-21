@@ -1,4 +1,6 @@
 import { finite, isoDay, obj, textValue } from './device-library';
+import { CHART_KINDS, type ChartKind } from './chart';
+import { chartBox, chartShapes, readTable } from './chartlayer';
 
 /**
  * Three makers that had nowhere else to live: a form, a design, a video.
@@ -83,7 +85,7 @@ export interface FormData {
 
 export interface DesignLayer {
   id: string;
-  kind: 'text' | 'rectangle' | 'ellipse' | 'triangle' | 'image';
+  kind: 'text' | 'rectangle' | 'ellipse' | 'triangle' | 'chart' | 'image';
   x: number;
   y: number;
   w: number;
@@ -130,6 +132,19 @@ export interface DesignLayer {
    * applies to the element the gradient is painting.
    */
   gradient: { to: string; angle: number } | null;
+  /**
+   * Which picture a chart layer draws, and meaningless on every other kind.
+   *
+   * Beside `fontSize` and `bold`, which have always been meaningful only on a
+   * text layer, rather than tucked inside an object of its own: it is one
+   * scalar off a fixed list, and a nullable object would be a deeper thing for
+   * the reader to validate and for `coedit.ts` to compare than the value
+   * deserves.
+   *
+   * A chart's *numbers* are not here. They live in `text`, as a pasted table —
+   * see `lib/chartlayer.ts` for why that is the field and not a structure.
+   */
+  chartKind: ChartKind;
   /** Into `lib/files.ts`. The picture itself is never in here. */
   fileId: string;
 }
@@ -235,7 +250,7 @@ export const CREATION_LIMIT = 40;
  */
 export const NOTE_LIMIT = 300;
 export const PROJECT_KINDS = ['form', 'design', 'video'] as const;
-export const LAYER_KINDS = ['text', 'rectangle', 'ellipse', 'triangle', 'image'] as const;
+export const LAYER_KINDS = ['text', 'rectangle', 'ellipse', 'triangle', 'chart', 'image'] as const;
 
 /** A six-digit hex colour, which is the only form anything here writes. */
 const color = (x: unknown) => typeof x === 'string' && /^#[\da-f]{6}$/i.test(x);
@@ -360,6 +375,7 @@ export function readCreations(value: unknown): CreationLibrary {
       if (obj(l) && l.opacity === undefined) l.opacity = 1;
       if (obj(l) && l.rotation === undefined) l.rotation = 0;
       if (obj(l) && l.gradient === undefined) l.gradient = null;
+      if (obj(l) && l.chartKind === undefined) l.chartKind = 'column';
 
       const ok =
         obj(l) &&
@@ -379,6 +395,7 @@ export function readCreations(value: unknown): CreationLibrary {
         // Null or a whole gradient. A half-built one — a second colour with no
         // direction — is a layer no renderer here knows how to draw.
         (l.gradient === null || (obj(l.gradient) && color(l.gradient.to) && finite(l.gradient.angle, 0, 360))) &&
+        CHART_KINDS.includes(l.chartKind as ChartKind) &&
         textValue(l.fileId, 100);
       if (!ok) throw new Error('Invalid design layer.');
       layerIds.add(l.id);
@@ -494,15 +511,24 @@ export function newLayer(kind: DesignLayer['kind'], canvas: DesignData, fileId =
     kind,
     x: 60,
     y: 80,
-    w: Math.min(400, canvas.width - 60),
-    h: 180,
-    text: kind === 'text' ? 'Your headline' : '',
+    w: Math.min(kind === 'chart' ? 760 : 400, canvas.width - 60),
+    h: kind === 'chart' ? 460 : 180,
+    text:
+      kind === 'text'
+        ? 'Your headline'
+        : // A chart with nothing in it draws nothing and explains nothing. The
+          // starting table is a real one so the layer is a picture the moment
+          // it lands, and pasting over it is one select-all away.
+          kind === 'chart'
+          ? 'Week\tAttended\tAbsent\n1\t24\t3\n2\t22\t5\n3\t26\t1\n4\t23\t4'
+          : '',
     fill: '#1a73e8',
     fontSize: 48,
     bold: true,
     opacity: 1,
     rotation: 0,
     gradient: null,
+    chartKind: 'column',
     fileId,
   };
 }
@@ -804,6 +830,31 @@ export function designSvg(d: DesignData, images: Record<string, string> = {}): s
     if (l.kind === 'ellipse') {
       return `<ellipse cx="${l.x + l.w / 2}" cy="${l.y + l.h / 2}" rx="${l.w / 2}" ry="${l.h / 2}" fill="${paint}"${fade}${turn}/>`;
     }
+    if (l.kind === 'chart') {
+      /*
+       * The same marks the editor's canvas draws, rendered as a string.
+       *
+       * `chartShapes` is the only place that knows where a bar goes. Two
+       * renderers, one geometry — the rule `trianglePoints` and `gradientEnds`
+       * already set, and the one that keeps an exported chart identical to the
+       * one somebody arranged on screen.
+       *
+       * Wrapped in a `<g>` so the fade and the rotation apply to the whole
+       * picture rather than having to be threaded onto every bar in it.
+       */
+      const marks = chartShapes(readTable(l.text), l.chartKind, chartBox(l), l.fill);
+      if (!marks.length) return '';
+      const body = marks
+        .map((m) => {
+          if (m.t === 'rect') return `<rect x="${m.x}" y="${m.y}" width="${m.w}" height="${m.h}" fill="${m.fill}"/>`;
+          if (m.t === 'line') return `<line x1="${m.x1}" y1="${m.y1}" x2="${m.x2}" y2="${m.y2}" stroke="${m.stroke}" stroke-width="${m.width}" opacity="0.25"/>`;
+          if (m.t === 'poly') return `<polyline points="${m.points}" fill="none" stroke="${m.stroke}" stroke-width="${m.width}" stroke-linejoin="round" stroke-linecap="round"/>`;
+          if (m.t === 'path') return `<path d="${m.d}" fill="${m.fill}"/>`;
+          return `<text x="${m.x}" y="${m.y}" fill="${m.fill}" font-family="Arial,sans-serif" font-size="${m.size}" text-anchor="${m.anchor}">${xml(m.s)}</text>`;
+        })
+        .join('');
+      return `<g${fade}${turn}>${body}</g>`;
+    }
     if (l.kind === 'triangle') {
       // Apex centred on the top edge, base on the bottom one — the same three
       // points `trianglePoints` gives the editor, so the export and the screen
@@ -829,7 +880,7 @@ export function designSvg(d: DesignData, images: Record<string, string> = {}): s
    * `transform` make above.
    */
   const defs = d.layers
-    .filter((l) => l.gradient && l.kind !== 'image')
+    .filter((l) => l.gradient && l.kind !== 'image' && l.kind !== 'chart')
     .map((l) => {
       const { x1, y1, x2, y2 } = gradientEnds(l.gradient!.angle);
       return `<linearGradient id="${gradientId(l.id)}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"><stop offset="0" stop-color="${l.fill}"/><stop offset="1" stop-color="${l.gradient!.to}"/></linearGradient>`;

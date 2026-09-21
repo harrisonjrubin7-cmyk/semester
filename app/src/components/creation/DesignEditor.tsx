@@ -4,6 +4,8 @@ import { DIMMED_ROW, secondLine } from '../../lib/dim';
 import { ItemRow } from '../shell/Rows';
 import { addFile, getFile } from '../../lib/files';
 import { TOLERANCE, clearedShare, edgeColour, keyOut } from '../../lib/cutout';
+import { chartBox, chartShapes, readTable } from '../../lib/chartlayer';
+import { CHART_KINDS, CHART_LABELS, CHART_SAYS, MAX_SERIES } from '../../lib/chart';
 import { cloudConfigured } from '../../lib/cloud';
 import { useStore } from '../../state/store';
 import { download } from '../../lib/deliver';
@@ -652,13 +654,13 @@ export function DesignEditor({
             }}
           >
             Every one of these is ordinary layers once it lands — move them, recolour them, delete the
-            ones you do not want. Or start with a blank canvas and the four buttons below.
+            ones you do not want. Or start with a blank canvas and the five buttons below.
           </div>
         </div>
       )}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
-        {(['text', 'rectangle', 'ellipse', 'triangle'] as const).map((k) => (
+        {(['text', 'rectangle', 'ellipse', 'triangle', 'chart'] as const).map((k) => (
           <ActionButton key={k} onClick={() => add(k)} style={{ flex: '1 1 auto' }}>
             {k}
           </ActionButton>
@@ -856,6 +858,29 @@ export function DesignEditor({
                 </text>
               ) : layer.kind === 'ellipse' ? (
                 <ellipse cx={layer.x + layer.w / 2} cy={layer.y + layer.h / 2} rx={layer.w / 2} ry={layer.h / 2} fill={paintOf(layer)} opacity={layer.opacity} />
+              ) : layer.kind === 'chart' ? (
+                /*
+                  * The same marks `designSvg` writes into the file, as JSX.
+                  * `chartShapes` is the single place that knows where a bar
+                  * goes; this and the exporter are two thin renderers of it.
+                  */
+                <g opacity={layer.opacity}>
+                  {chartShapes(readTable(layer.text), layer.chartKind, chartBox(layer), layer.fill).map((m, j) =>
+                    m.t === 'rect' ? (
+                      <rect key={j} x={m.x} y={m.y} width={m.w} height={m.h} fill={m.fill} />
+                    ) : m.t === 'line' ? (
+                      <line key={j} x1={m.x1} y1={m.y1} x2={m.x2} y2={m.y2} stroke={m.stroke} strokeWidth={m.width} opacity={0.25} />
+                    ) : m.t === 'poly' ? (
+                      <polyline key={j} points={m.points} fill="none" stroke={m.stroke} strokeWidth={m.width} strokeLinejoin="round" strokeLinecap="round" />
+                    ) : m.t === 'path' ? (
+                      <path key={j} d={m.d} fill={m.fill} />
+                    ) : (
+                      <text key={j} x={m.x} y={m.y} fill={m.fill} fontFamily="Arial,sans-serif" fontSize={m.size} textAnchor={m.anchor}>
+                        {m.s}
+                      </text>
+                    ),
+                  )}
+                </g>
               ) : layer.kind === 'triangle' ? (
                 // `trianglePoints` is the export's own, so what is on screen
                 // and what lands in the SVG are the same three corners.
@@ -1062,6 +1087,71 @@ export function DesignEditor({
       {l && (
         <>
           <SectionLabel style={{ marginBlock: 'var(--sp-6) var(--sp-4)' }}>Selected {l.kind}</SectionLabel>
+          {l.kind === 'chart' && (
+            <>
+              <label style={field}>
+                <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Picture</span>
+                <select
+                  className="input"
+                  value={l.chartKind}
+                  onChange={(e) => patch({ chartKind: e.target.value as DesignLayer['chartKind'] })}
+                  style={input}
+                >
+                  {CHART_KINDS.map((k) => (
+                    <option key={k} value={k}>
+                      {CHART_LABELS[k]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {/*
+                * What the chosen picture is for, in the app's own words.
+                *
+                * `CHART_SAYS` is written for the sheet's chart picker and is
+                * the same sentence here, because choosing the *form* is the
+                * decision somebody actually gets wrong — a pie of six things
+                * over time is the commonest bad chart there is, and the
+                * remedy is a line that says what each one is for.
+                */}
+              <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>{CHART_SAYS[l.chartKind]}</p>
+              <label style={field}>
+                <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+                  The table — paste a block straight out of a spreadsheet
+                </span>
+                <textarea
+                  rows={6}
+                  maxLength={2000}
+                  value={l.text}
+                  onChange={(e) => patch({ text: e.target.value })}
+                  style={{ ...input, fontFamily: 'ui-monospace, monospace' }}
+                />
+              </label>
+              {/*
+                * What the picture is leaving out, said where it is happening.
+                *
+                * Both cases are the same failure and the one `lib/chart.ts`
+                * already names: a chart that covers less than the table it was
+                * given, and looks complete. A pie draws one series; the
+                * palette has eight slots and a ninth is never a generated
+                * colour. Neither is allowed to be silent.
+                */}
+              {(() => {
+                const read = readTable(l.text);
+                const said = read.trouble
+                  ? read.trouble
+                  : read.beyond.length
+                    ? `Drawing the first ${MAX_SERIES} columns. Not drawn: ${read.beyond.join(', ')}.`
+                    : l.chartKind === 'pie' && read.series.length > 1
+                      ? `A pie draws one series, so this is “${read.series[0]!.name}” alone.`
+                      : '';
+                return said ? (
+                  <p role="status" style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+                    {said}
+                  </p>
+                ) : null;
+              })()}
+            </>
+          )}
           {l.kind === 'text' && (
             <label style={field}>
               <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Text</span>
@@ -1094,7 +1184,11 @@ export function DesignEditor({
               );
             })}
           <label style={field}>
-            <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Colour</span>
+            <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+              {/* On a chart this is the writing, not the bars: the series
+                  colours are fixed and validated — see `lib/chartlayer.ts`. */}
+              {l.kind === 'chart' ? 'Colour of the writing' : 'Colour'}
+            </span>
             <input type="color" value={l.fill} onChange={(e) => patch({ fill: e.target.value })} style={input} />
           </label>
           {/*
