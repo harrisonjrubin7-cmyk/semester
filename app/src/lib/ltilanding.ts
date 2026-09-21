@@ -1,75 +1,18 @@
 /**
- * Landing in the app after Brightspace launched it.
+ * The heavy half of landing from a Brightspace launch.
  *
- * `supabase/functions/lti/index.ts` ends a good launch by redirecting here
- * with three values in the query string: a one-use session token, the address
- * it was minted for, and — only when this launch is what created the account —
- * a ticket for saying "I already have a Semester account".
+ * `lib/ltiarrival.ts` asks whether this load is a launch and takes the values
+ * off the address bar. This module is what happens next, and it reaches
+ * `lib/cloud.ts` — which is exactly why the question is not asked here. See
+ * that file's header, and `ENGINEERING-AUDIT.md` §1 for what asking a cheap
+ * question from inside an expensive module cost the last time.
  *
- * This module is the other end of that. The parsing is pure so it can be
- * tested; the two functions that touch the network are thin and say what they
- * do.
- *
- * ## The address bar is cleaned before anything else happens
- *
- * A one-use token is still a token, and a URL lives in history, in the back
- * button, in whatever the student pastes into a group chat when they say "this
- * is the link". `strip()` runs first and unconditionally — before the token is
- * spent, not after — because the failure that matters is the one where
- * consuming it throws and the address stays in the bar with the token still in
- * it.
- *
- * ## Why the query string and not the fragment
- *
- * This app keeps its own routes in the fragment (`#/today`), so the handoff
- * would be fighting the router for the same space. The query string is read
- * once, here, and removed.
+ * `main.tsx` reaches this through `import()` on the load that is a launch, and
+ * on no other.
  */
 
 import { cloud } from './cloud';
-
-/** What the launch handed over, when it handed anything over. */
-export interface Handoff {
-  /** The one-use token a session is established from. */
-  token: string;
-  /** The address it was minted for. */
-  email: string;
-  /**
-   * Present only when this launch created the account, and so only when there
-   * is something to adopt. A returning student gets none, because their
-   * identity is already bound and a live proof in their history buys nothing.
-   */
-  ticket: string | null;
-}
-
-/**
- * Read the handoff out of a query string, or null.
- *
- * Null for anything short of both halves. A token with no address cannot mint
- * a session and an address with no token is just an address, so a partial
- * handoff is treated as no handoff rather than as an error — the ordinary way
- * to arrive here is with neither, by opening the app normally.
- */
-export function readHandoff(search: string): Handoff | null {
-  const q = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search);
-  const token = (q.get('lti_token') ?? '').trim();
-  const email = (q.get('lti_email') ?? '').trim();
-  if (!token || !email) return null;
-  const ticket = (q.get('lti_ticket') ?? '').trim();
-  return { token, email, ticket: ticket || null };
-}
-
-/** The same address with every handoff parameter removed, fragment intact. */
-export function stripped(href: string): string {
-  const url = new URL(href);
-  for (const k of ['lti_token', 'lti_email', 'lti_ticket']) url.searchParams.delete(k);
-  /*
-   * `URL` leaves a bare `?` behind when the last parameter goes, which is
-   * harmless and looks broken. Removing it is the difference between an
-   * address a student would paste and one they would ask about.
-   */
-  return url.search === '' ? url.toString().replace(/\?(?=#|$)/, '') : url.toString();
-}
+import type { Handoff } from './ltiarrival';
 
 /** What `adopt` can come back with. The words are the database's. */
 export type Adopted = 'ok' | 'signed-out' | 'stale' | 'same-account' | 'in-use' | 'failed';

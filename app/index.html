@@ -2,6 +2,108 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      A Content-Security-Policy, as far as a <meta> tag can carry one.
+
+      ## What this is a partial mitigation of, and why it is partial
+
+      The app is served from GitHub Pages, which sends the headers it wants to
+      send and offers no way to add one. A policy delivered in a <meta> tag is
+      enforced by the browser exactly like a header with two exceptions, and
+      both of them are named here rather than quietly dropped:
+
+        · `frame-ancestors` is **ignored in a meta tag**, so nothing below
+          stops this page being framed. Clickjacking is the exposure and it is
+          open. `X-Frame-Options` is also a header and is equally unavailable.
+        · `report-uri` / `report-to` are ignored too, so a violation is a line
+          in one person's console and is reported nowhere. There is no way to
+          learn from here that this policy is breaking something for a student
+          on a device nobody is holding.
+
+      Both close the moment this is served from somewhere that can set a
+      header — Cloudflare Pages, Netlify, a Supabase-fronted host. Until then
+      this covers script, style, image, font, media, worker and connect, which
+      is where an injected script would actually have to go to do anything.
+
+      ## Every source below is here because something loads from it
+
+      Read off the code rather than guessed at, then driven in a browser: the
+      production build served by `vite preview`, 72 routes, no refusal and no
+      page error. That sweep is not in CI and the claim is only as good as the
+      control behind it — the same sweep with `font-src 'none'` and `img-src
+      'self'` reported twelve refused fonts and a refused OpenStreetMap tile,
+      so it can see a violation when there is one.
+
+      `src/lib/csp.test.ts` is what keeps the list current. It reads this tag
+      and the app's own code and fails both ways round: a host the app fetches
+      that is missing here, and a host named here that nothing fetches.
+
+        script-src   'self'. The production build emits no inline script and
+                     no eval — `dist/index.html` is one external module and a
+                     stylesheet, nothing more.
+        style-src    'self' and 'unsafe-inline'. This is the one line that
+                     looks like it should be tightened and cannot be. Mermaid
+                     returns a diagram as an SVG string with a <style> element
+                     inside it, and `components/Drawing.tsx` puts that string
+                     into the page as it came. Measured: with 'unsafe-inline'
+                     the sheet reports 59 rules; without it, no sheet at all
+                     and 64 refusals in the console, and every generated figure
+                     in every study guide draws unstyled.
+        img-src      'self', plus data: for the marker icons Leaflet inlines
+                     into its CSS, blob: for anything the app renders or a
+                     student photographs, and OpenStreetMap's tile servers,
+                     which is where the map draws from — the refused tile in
+                     the control above is that one.
+        media-src    'self' and blob:. The lesson audio ships with the app;
+                     a recording made on the device is an object URL.
+        worker-src   'self'. pdf.js is the only worker, and Vite emits it
+                     beside the bundle rather than as a blob.
+        connect-src  'self' and the services the app can be configured to talk
+                     to. Supabase is a wildcard because the project reference
+                     is per-deployment; the rest are literal.
+
+      The origins at the end of `connect-src` are what this deployment adds to
+      that list, and they are not written here: the tag carries a
+      `VITE_CSP_EXTRA_CONNECT` placeholder that Vite substitutes at build time.
+      (Deliberately not spelled with its percent signs in this comment — Vite
+      substitutes inside a comment too, and a paragraph explaining the
+      mechanism would be rewritten by it.)
+
+      Four build variables name a host this file cannot know — the Supabase
+      URL, the Claude and calendar proxies, and the university gateway — and a
+      policy that hardcoded a guess at them would silently switch those
+      features off wherever the guess was wrong. `vite.config.ts` derives the
+      origins from whatever is actually configured. Unset, it is empty and
+      nothing is added.
+
+      Deliberately not enforced by the dev server: `@vitejs/plugin-react`
+      injects its refresh preamble as an inline script, which `script-src
+      'self'` refuses, so `npm run dev` would open to a blank page. The
+      `csp()` plugin in `vite.config.ts` strips this tag while serving and
+      says so there. `vite preview` keeps it, which is what CI opens.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               base-uri 'self';
+               object-src 'none';
+               form-action 'self';
+               script-src 'self';
+               style-src 'self' 'unsafe-inline';
+               img-src 'self' data: blob: https://*.tile.openstreetmap.org;
+               font-src 'self';
+               media-src 'self' blob:;
+               worker-src 'self';
+               manifest-src 'self';
+               connect-src 'self' blob: https://*.supabase.co wss://*.supabase.co
+                 https://api.anthropic.com https://api.openai.com
+                 https://login.microsoftonline.com https://graph.microsoft.com
+                 https://accounts.google.com https://oauth2.googleapis.com
+                 https://www.googleapis.com https://gmail.googleapis.com
+                 https://tasks.googleapis.com https://zoom.us https://api.zoom.us
+                 https://appleid.apple.com https://nominatim.openstreetmap.org
+                 https://photon.komoot.io %VITE_CSP_EXTRA_CONNECT%"
+    />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"

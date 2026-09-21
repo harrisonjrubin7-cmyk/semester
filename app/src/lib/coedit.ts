@@ -248,6 +248,7 @@ function same(a: DesignLayer, b: DesignLayer): boolean {
     a.gradient?.to === b.gradient?.to &&
     a.gradient?.angle === b.gradient?.angle &&
     !a.gradient === !b.gradient &&
+    a.chartKind === b.chartKind &&
     a.fileId === b.fileId
   );
 }

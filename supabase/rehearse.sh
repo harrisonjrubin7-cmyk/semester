@@ -164,5 +164,49 @@ if [ "$before_gate" != "$after_gate" ] || [ "$before_rows" != "$after_rows" ]; t
   failed=1
 fi
 
+# ── And that a re-apply did not hand a view back to the browser ───────────
+#
+# Rows are not the only live state a second application can move, and this
+# script's first version could only see rows.
+#
+# `20260921003200_forms.sql` says `drop view if exists public.published_forms`
+# and creates it again. The statements are idempotent and the **privileges are
+# not**: a recreated relation in `public` is handed the default privileges
+# afresh, and on Supabase those are `grant all on tables to anon,
+# authenticated, service_role`. `published_forms` is auto-updatable and runs
+# with its owner's rights, so that restores every verb on a relation whose
+# writes never meet `forms`' owner-only policies — measured on the live
+# project as `anon` going from SELECT to the full seven across one re-run.
+#
+# It moves no rows, so everything above stayed green while it happened. A
+# deploy is exactly the re-application this models, which makes this the right
+# place to ask.
+#
+# **It cannot fail on today's pending set, and that is worth saying rather
+# than discovering.** `forms.sql` now carries the version the ledger recorded,
+# so a deploy does not re-apply it and this rehearsal never runs the statement
+# that would reopen the hole — the snapshot it starts from already has the
+# view correct. Dropping the revoke from `forms.sql` is caught by
+# `grants.check.sql`, which builds from `migrations/` on an empty cluster,
+# and not by this. What this guards is the next migration to create or
+# recreate a view while it is still pending, which is the state `forms.sql`
+# was in this morning.
+writable=$(psql -Atc "
+  select string_agg(r.rolname || ' → ' || c.relname, ', ')
+    from pg_class c
+    join pg_namespace n on n.oid = c.relnamespace
+    cross join (values ('anon'), ('authenticated')) as r(rolname)
+   where n.nspname = 'public' and c.relkind = 'v'
+     and (has_table_privilege(r.rolname, c.oid, 'insert')
+       or has_table_privilege(r.rolname, c.oid, 'update')
+       or has_table_privilege(r.rolname, c.oid, 'delete'))")
+if [ -n "$writable" ]; then
+  echo "· views writable from the API after the deploy: $writable"
+  echo "  ✗ a view runs with its owner's rights, so those writes meet no policy." >&2
+  failed=1
+else
+  echo "· no view in public is writable from the API afterwards"
+fi
+
 [ "$failed" = 0 ] && echo "· $pending pending migrations apply to production's shape, and move nothing"
 exit "$failed"

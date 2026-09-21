@@ -126,10 +126,36 @@ export function saveSettings(next: ClaudeSettings): void {
 
 const env = import.meta.env as unknown as Record<string, string | undefined>;
 
-/** The function that holds the shared key, when this build has one. */
+/**
+ * The function that holds the shared key, when this build has one.
+ *
+ * Both halves of the project, not just the address. The function verifies the
+ * account and meters the call, so `lib/claude.ts` sends it
+ * `Bearer ${sessionToken()}` — and a token only ever exists inside the effect
+ * in `state/store.tsx` that returns early on `!cloudConfigured`. An address
+ * without a key is therefore an endpoint nothing can ever authenticate to,
+ * and calling that "a shared key service this build has" is what made the app
+ * contradict itself.
+ *
+ * `VITE_SUPABASE_URL` set and `VITE_SUPABASE_KEY` unset is one repository
+ * variable away — `SETUP.md` asks for both — and in that build `route()` was
+ * already correct by accident, because `sessionToken()` is null and it
+ * returns `none`. What was wrong was every sentence explaining why: this
+ * returned an address, so `routeWhy` skipped its "built without a shared key
+ * service" branch and told a reader to sign in, on a build where
+ * `screens/Classmates.tsx` was simultaneously saying there is no account
+ * service to sign in to.
+ *
+ * So the condition is the same one `lib/cloud.ts` uses, read here rather than
+ * imported from there. `lib/assistant.ts` is below the account layer and the
+ * whole of `lib/token.ts` is about what an import from the wrong side drags
+ * into a chunk; the duplicate is two `env` reads and `cloudsplit.test.ts`
+ * holds the two in step.
+ */
 export function sharedEndpoint(): string {
   const base = env.VITE_SUPABASE_URL ?? '';
-  return base ? `${base.replace(/\/$/, '')}/functions/v1/claude` : '';
+  const key = env.VITE_SUPABASE_KEY ?? '';
+  return base && key ? `${base.replace(/\/$/, '')}/functions/v1/claude` : '';
 }
 
 /**

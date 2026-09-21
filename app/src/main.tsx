@@ -17,6 +17,7 @@ import { AIProvider } from './ai/store';
 import { redirected } from './lib/redirected';
 import { askedForm } from './lib/formshare';
 import { takeFromUrl } from './lib/referral';
+import { takeHandoff } from './lib/ltiarrival';
 // Type-only, so it is erased at build and pulls nothing onto the critical path.
 import type { ProviderId } from './lib/connect';
 import { load as loadFromDb, prime as primeDb } from './state/persist';
@@ -84,7 +85,55 @@ if (formLink) {
  */
 takeFromUrl();
 
-finishAnyRedirect()
+/**
+ * A Brightspace launch comes back to this page too, carrying a one-use token
+ * the `lti` Edge Function minted after checking the platform's `id_token`
+ * claim by claim.
+ *
+ * `takeHandoff()` is the cheap half and the reason `lib/ltiarrival.ts` is a
+ * leaf that imports nothing: it reads two query parameters, cleans them off
+ * the address bar, and on every load but one in a student's term answers null.
+ * The module that establishes the session reaches `lib/cloud.ts`, and asking
+ * the question from inside *that* would put the Supabase client in front of
+ * the first render for everybody — the same fault `lib/redirected.ts` was
+ * extracted to stop, written up in `ENGINEERING-AUDIT.md` §1.
+ *
+ * Taken before the redirect below, and before anything mounts, for the reason
+ * that paragraph gives about the referral code: the address is about to be
+ * rewritten and the values do not survive it.
+ */
+const launched = takeHandoff();
+
+/**
+ * And redeemed, on the one load that has one.
+ *
+ * A failure is left as a note rather than thrown, because the student is
+ * standing in front of an LMS that has just told them this works. The app
+ * mounts either way; what changes is whether they are signed in, and the
+ * Connect screen is where the sentence about it belongs.
+ */
+function finishAnyLaunch(): Promise<void> {
+  if (!launched) return Promise.resolve();
+  return import('./lib/ltilanding')
+    .then((m) => m.consume(launched))
+    .then((ok) => {
+      if (!ok) {
+        sessionStorage.setItem(
+          'semester.lti.note',
+          'Brightspace opened Semester, but signing in did not finish. Try opening it from Brightspace again.',
+        );
+      }
+    })
+    .catch(() => {
+      sessionStorage.setItem(
+        'semester.lti.note',
+        'Brightspace opened Semester, but signing in did not finish. Try opening it from Brightspace again.',
+      );
+    });
+}
+
+finishAnyLaunch()
+  .then(finishAnyRedirect)
   .then((result) => {
     if (!result) return;
     sessionStorage.setItem(

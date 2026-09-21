@@ -56,7 +56,28 @@ import type { Mode } from './mode';
  * It is written into `always` below anyway, and the sentence above about this
  * file being the only one that decides is now wrong on its face rather than
  * quietly: an allowlist that stops describing what leaves is worse than none,
- * because it is trusted. What keeps that door narrow is different in kind from
+ * because it is trusted.
+ *
+ * ## The fourth door, which goes somewhere else entirely
+ *
+ * Every other door on this list leads to the same place: the model, at
+ * Anthropic, answering one question. `components/FindSources.tsx` is the one
+ * that does not. It sets `search` on the request, which turns on the API's
+ * server-side web search — so the *words of that question* become a search
+ * query, and a search query is read by whoever runs the search engine.
+ *
+ * That is a different kind of leaving and is listed separately below rather
+ * than folded in with the rest. Three things bound it, and none of them is
+ * this file:
+ *
+ * - It is off by default and set by exactly one caller. `search` is a
+ *   per-request flag, not a property of the assistant, so every other surface
+ *   in this app — Ask Claude, the study tools, the drafting tools — reaches
+ *   nothing but the API, and `research.wire.test.ts` asserts that.
+ * - What goes is what the student typed into that box and the course's name,
+ *   and nothing else. No deadline, no grade, no note travels with it: the
+ *   panel builds its own request rather than calling `build` below.
+ * - The screen says so before they type. What keeps that door narrow is different in kind from
  * what keeps this one narrow — not an allowlist of fields, but the fact that
  * every line was typed by the student into a box labelled with what it is for,
  * capped at twelve of them, and deletable one at a time on the screen that
@@ -101,6 +122,12 @@ export const PICK = {
      * assembles. See "The third door" above.
      */
     'The standing preferences the student typed about themselves, capped at twelve short lines. Never inferred, never written by the model.',
+    /*
+     * Not assembled here and not sent with a question — see "The fourth door"
+     * above. Listed because this is the list of what leaves, and a question
+     * that becomes a search query leaves further than any other line here.
+     */
+    'On Find sources, and only there: the question the student typed and their course’s name, as a web search query. Never a deadline, a grade, a note or anything else on this list.',
   ],
   onDemand: [
     'Deadlines in a window the question names — title, date, weight. Never the quote.',
