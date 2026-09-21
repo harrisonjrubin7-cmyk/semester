@@ -11,14 +11,20 @@ import type { DesignData, DesignLayer } from './creations';
  * somebody who is not a designer, and the build-out plan names it —
  * "templates and layers" — with the layers already built.
  *
- * ## Why these five
+ * ## Why these eight
  *
- * They are the five things a student is asked to produce that are *designed*
- * rather than written. A research symposium poster, a slide-shaped title card,
- * a study-group flyer, a handout header, and a one-page summary board. Not a
- * general-purpose template gallery: five arrangements that answer the five
- * briefs this app already knows its user gets, because a template nobody has a
- * use for is a menu item that makes the menu longer.
+ * They are the things a student is asked to produce that are *designed* rather
+ * than written. A research symposium poster, a slide-shaped title card, a
+ * study-group flyer, a handout header, a one-page summary board, a square
+ * social post, an event invitation and a certificate. Not a general-purpose
+ * template gallery: eight arrangements that answer briefs this app already
+ * knows its user gets, because a template nobody has a use for is a menu item
+ * that makes the menu longer.
+ *
+ * The last three are the ones somebody making a poster at eleven at night does
+ * *not* need and somebody running a club does: the square post is the shape
+ * every feed wants, the invitation is the flyer with a date on it, and the
+ * certificate is the one thing on this list that is made for somebody else.
  *
  * ## Every template is ordinary layers
  *
@@ -80,14 +86,16 @@ const words = (
   fontSize: number,
   fill: string,
   bold = true,
-): Omit<DesignLayer, 'id' | 'fileId'> => ({ kind: 'text', text, fill, fontSize, bold, ...at });
+  opacity = 1,
+): Omit<DesignLayer, 'id' | 'fileId'> => ({ kind: 'text', text, fill, fontSize, bold, opacity, ...at });
 
 /** A block of colour. */
 const block = (
   at: { x: number; y: number; w: number; h: number },
   fill: string,
-  kind: 'rectangle' | 'ellipse' = 'rectangle',
-): Omit<DesignLayer, 'id' | 'fileId'> => ({ kind, text: '', fill, fontSize: 48, bold: false, ...at });
+  kind: 'rectangle' | 'ellipse' | 'triangle' = 'rectangle',
+  opacity = 1,
+): Omit<DesignLayer, 'id' | 'fileId'> => ({ kind, text: '', fill, fontSize: 48, bold: false, opacity, ...at });
 
 const INK = '#101418';
 const PAPER = '#ffffff';
@@ -180,6 +188,64 @@ export const TEMPLATES: Template[] = [
       words('The caveat, in the same\nsize type as the claim.', { x: 640, y: 396, w: 480, h: 480 }, 24, QUIET, false),
       block({ x: 80, y: 1000, w: 1040, h: 110 }, '#e8eef7'),
       words('Where this came from', { x: 112, y: 1038, w: 980, h: 40 }, 24, QUIET, false),
+    ],
+  },
+  {
+    id: 'social',
+    name: 'Social post',
+    about: 'A square post for a feed — one claim, big, and where to find you.',
+    width: 1080,
+    height: 1080,
+    background: INK,
+    parts: [
+      // Faded, and behind everything because it is first in the list: layer
+      // order here is paint order, the same rule the editor's To front is.
+      block({ x: 600, y: 600, w: 480, h: 480 }, ACCENT, 'triangle', 0.35),
+      block({ x: 80, y: 96, w: 160, h: 8 }, ACCENT),
+      words('The one thing\nyou want seen', { x: 80, y: 150, w: 920, h: 260 }, 82, PAPER),
+      words('Said once, in the size\nsomebody reads at arm’s length.', { x: 80, y: 460, w: 920, h: 120 }, 30, QUIET, false),
+      words('@yourhandle · the course', { x: 80, y: 920, w: 920, h: 44 }, 26, ACCENT, false),
+    ],
+  },
+  {
+    id: 'invitation',
+    name: 'Event invitation',
+    about: 'A club or society invitation — what, when, where, and reply by.',
+    width: 1080,
+    height: 1350,
+    background: PAPER,
+    parts: [
+      block({ x: 0, y: 0, w: 1080, h: 520 }, INK),
+      words('You are invited', { x: 80, y: 150, w: 920, h: 90 }, 64, PAPER),
+      words('Econ Society · end-of-term social', { x: 80, y: 270, w: 920, h: 50 }, 30, QUIET, false),
+      words('Friday 12 December', { x: 80, y: 620, w: 920, h: 70 }, 52, INK),
+      words('6pm · Sarratt 216', { x: 80, y: 706, w: 920, h: 60 }, 40, INK, false),
+      block({ x: 80, y: 820, w: 920, h: 3 }, ACCENT),
+      words('Food at six, the talk at seven,\nand the room is ours until ten.', { x: 80, y: 870, w: 920, h: 140 }, 28, QUIET, false),
+      block({ x: 820, y: 1120, w: 180, h: 160 }, ACCENT, 'triangle', 0.25),
+      words('Reply by the Wednesday before.', { x: 80, y: 1150, w: 640, h: 44 }, 26, QUIET, false),
+    ],
+  },
+  {
+    id: 'certificate',
+    name: 'Certificate',
+    about: 'A landscape certificate — a name, what it was for, and two signature lines.',
+    width: 1600,
+    height: 1200,
+    background: PAPER,
+    parts: [
+      // A wash rather than a border: at 0.12 the accent reads as tinted paper,
+      // which is what a printed certificate's panel actually looks like.
+      block({ x: 60, y: 60, w: 1480, h: 1080 }, ACCENT, 'rectangle', 0.12),
+      words('Certificate of completion', { x: 200, y: 200, w: 1200, h: 80 }, 58, INK),
+      words('awarded to', { x: 200, y: 330, w: 1200, h: 50 }, 28, QUIET, false),
+      words('Your name here', { x: 200, y: 410, w: 1200, h: 120 }, 88, ACCENT),
+      block({ x: 200, y: 580, w: 1200, h: 3 }, QUIET),
+      words('for finishing the reading group on\nmonetary policy, autumn 2026.', { x: 200, y: 630, w: 1200, h: 120 }, 32, QUIET, false),
+      words('Signed', { x: 200, y: 900, w: 420, h: 44 }, 24, QUIET, false),
+      block({ x: 200, y: 960, w: 420, h: 3 }, QUIET),
+      words('Date', { x: 980, y: 900, w: 420, h: 44 }, 24, QUIET, false),
+      block({ x: 980, y: 960, w: 420, h: 3 }, QUIET),
     ],
   },
 ];
