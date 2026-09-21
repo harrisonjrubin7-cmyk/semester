@@ -1,86 +1,86 @@
 {
-  "course": "core",
-  "id": "core-podcast",
-  "shots": [
-    {
-      "slot": "core/chapter-0",
-      "at": 0,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Cold open",
-      "subject": ""
-    },
-    {
-      "slot": "core/chapter-1",
-      "at": 28,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "How the grade actually works",
-      "subject": ""
-    },
-    {
-      "slot": "core/chapter-2",
-      "at": 150,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "The five big ideas",
-      "subject": ""
-    },
-    {
-      "slot": "core/chapter-3",
-      "at": 250,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Week 2 — Fox and Konner, why we play",
-      "subject": ""
-    },
-    {
-      "slot": "core/chapter-4",
-      "at": 527,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Week 3 — Woman the Hunter",
-      "subject": ""
-    },
-    {
-      "slot": "core/chapter-5",
-      "at": 716,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Week 3 — Epstein, hardware and software",
-      "subject": ""
-    },
-    {
-      "slot": "core/chapter-6",
-      "at": 911,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Week 4 — the (un)science of race",
-      "subject": ""
-    },
-    {
-      "slot": "core/chapter-7",
-      "at": 1225,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Self-test",
-      "subject": ""
-    },
-    {
-      "slot": "core/chapter-8",
-      "at": 1489,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Reflections that earn the points",
-      "subject": ""
-    },
-    {
-      "slot": "core/chapter-9",
-      "at": 1580,
-      "seconds": 6,
-      "kind": "establishing",
-      "chapter": "Close",
-      "subject": ""
-    }
-  ]
+ "course": "core",
+ "id": "core-podcast",
+ "shots": [
+  {
+   "slot": "core/chapter-0",
+   "at": 0,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Cold open",
+   "subject": "a cave mouth at first light, the rock floor worn smooth by long use"
+  },
+  {
+   "slot": "core/chapter-1",
+   "at": 28,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "How the grade actually works",
+   "subject": "a cairn of small stones on a ridge, the top one not yet placed"
+  },
+  {
+   "slot": "core/chapter-2",
+   "at": 150,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "The five big ideas",
+   "subject": "five ochre hand prints on a cave wall, palms outward, at arm's height"
+  },
+  {
+   "slot": "core/chapter-3",
+   "at": 250,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Week 2 — Fox and Konner, why we play",
+   "subject": "a rope swing over a river, still swinging, nobody on it"
+  },
+  {
+   "slot": "core/chapter-4",
+   "at": 527,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Week 3 — Woman the Hunter",
+   "subject": "a spear thrower propped against a rock, the notch at its end worn pale"
+  },
+  {
+   "slot": "core/chapter-5",
+   "at": 716,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Week 3 — Epstein, hardware and software",
+   "subject": "a knapped hand axe and a length of braided cord laid side by side on cloth"
+  },
+  {
+   "slot": "core/chapter-6",
+   "at": 911,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Week 4 — the (un)science of race",
+   "subject": "one river from the air, braiding into many channels and rejoining downstream"
+  },
+  {
+   "slot": "core/chapter-7",
+   "at": 1225,
+   "seconds": 6,
+   "kind": "detail",
+   "chapter": "Self-test",
+   "subject": "an hourglass on a stone sill, the sand very nearly through"
+  },
+  {
+   "slot": "core/chapter-8",
+   "at": 1489,
+   "seconds": 6,
+   "kind": "abstract",
+   "chapter": "Reflections that earn the points",
+   "subject": "still water in a rock pool holding the sky, broken by a single drop"
+  },
+  {
+   "slot": "core/chapter-9",
+   "at": 1580,
+   "seconds": 6,
+   "kind": "establishing",
+   "chapter": "Close",
+   "subject": "a cave mouth at dusk, the light going, the floor still holding warmth"
+  }
+ ]
 }
