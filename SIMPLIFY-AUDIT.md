@@ -1,3 +1,130 @@
+# One app — the twenty-second pass: the expensive answer was holding nothing
+
+Against `main` at `8d653be`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge, no screen touched, no route removed. One guard.
+
+Rebased across nine merges while it was being written, one of which was the
+eleven rows arriving as the twentieth pass's T5 from another session — which is
+the second time in two days that two sessions have reached the same row of this
+file within a minute of each other. `CLAUDE.md`'s first rule, twice, and the
+reason this pass checked `main` for its own subject before starting rather than
+after.
+
+Asked for the destinations again, so the destinations were audited again from
+the registry rather than from this file. **Every cluster the skill names is
+argued, and the arguments are right.** What is not right is that the most
+expensive of those arguments was left as prose.
+
+## T1 — the clusters, re-read from the current fifty-eight
+
+The skill's Step 1 names six suspected duplicate groups. Five are closed and
+the sixth is closed differently from how it reads:
+
+| Cluster | Where it stands |
+| --- | --- |
+| six screens over "what is due" | `ahead`, `tonight`, `weekly` merged; `home`, `brief`, `mine` remain and are three questions |
+| calendar grains vs `ahead`/`weekly` | kept — grains of one report and grains of one grid |
+| `ask`/`chat`/the assistant sheet | the `/ask-tab` command's, not this file's |
+| `grades`/`standing`/`worked`/`proof` | `grades`, `worked`, `standing` gone; `proof` is spelling and quotation checking, a different job |
+| five ways to find a screen | `everything` gone; `me` is the directory, which is an index |
+| five ways to change course data | `check` gone; `import`, `edit`, `update`, `announce` are four moments, not four doors |
+
+The two that looked live on a fresh reading were `account`/`profile` and
+`data`/`privacy`/`export`. Both are settled, and `screens/Profile.tsx` settles
+them in its own docstring rather than anywhere in this file:
+
+> It owns exactly one thing: **your name** … Signing in belongs to Account,
+> because that screen explains what syncs and what does not; what is held and
+> how big it is belongs to Your data; what leaves the device belongs to
+> Privacy … A profile screen that re-implemented any of those would be the
+> second door onto a room that already has one.
+
+That is the skill's answer, already taken: a hub of rows that owns one field,
+pointing at four screens that each own their job. There is no merge here and
+proposing one would be re-arguing a decision with a better argument on the
+other side.
+
+## T2 — so the finding is what the answer was left holding, which was nothing
+
+The seventeenth pass read three destinations by hand. The nineteenth read the
+remaining fifty-five, closed the row, and wrote the verdict here. **Nothing has
+held that verdict since.** `lib/onehome.test.ts` guards a different fault — a
+destination rendered as another screen's tab — and no test asked the route
+question at all.
+
+One `dispatch({ type: 'go' })` added tomorrow reopens the whole row, and the
+only way to notice would be to read fifty-five screens again. The skill's own
+"Done means" asks for this as *"a checked claim, with the grep you ran"*; what
+existed was the claim without the check.
+
+`lib/oneroute.test.ts` is the check.
+
+## T3 — and it encodes the lesson rather than recording it
+
+Four passes over-reported on this row, each by measuring the wrong unit, and
+the nineteenth stated the rule that survived: **group by rendered unit, not by
+path.** That rule has been a paragraph in this file ever since. It is now the
+test's implementation.
+
+Splitting each file at its top-level components clears both of the nineteenth
+pass's false positives without either being written down as an exception:
+
+| File | Offers | In | |
+| --- | --- | --- | --- |
+| `components/Applying.tsx` | `applying` ×2 | `ApplyingSoon` / `ApplyingOn` | clears |
+| `screens/Guide.tsx` | `deck` ×2 | `Decks()` / `Documents()` | clears |
+| `screens/Profile.tsx` | `account` ×2 | both in `Profile()` | **stands** |
+
+A per-file check calls all three. A per-component check calls one, and it is
+the one the nineteenth pass identified by hand as the only real pair. The
+census reproduced that pass's result exactly before the rule was applied —
+same three files, same lines — which is the evidence that the two instruments
+agree about the app and disagree only about what counts.
+
+**Cross-references are not counted, and that is the other half of the rule.**
+`maps` is offered from `Walks` and from `Housing`, `registrar` from `Meals` and
+from `Today`, `edit` from seven places. Twelve destinations have more than one
+call-site file and none of them is a fault: one offer, from one screen, in that
+screen's own context. The fault is the same door twice *where you already are*.
+
+## T4 — checked against a planted fault and against two controls
+
+A guard that has never failed is not known to be a guard, and a guard that
+always fires is a broken probe:
+
+| | Expected | Got |
+| --- | --- | --- |
+| a second `maps` offer planted inside one `Housing` component | red | red — `screens/Housing.tsx · HousingDetails · maps (lines 150, 152)` |
+| **control:** the same destination offered once each by two components | **green** | **green** |
+| **control:** `Profile` settled without updating the allowlist | red | red — *"still has every argued pair"* |
+
+The middle row is the one worth keeping. It is the exact shape that made four
+passes over-report, and a file-scoped version of this test fails it.
+
+## The one pair left standing
+
+`screens/Profile.tsx` offers `account` at two sites that are on screen at once
+— an `ActionButton` whose label is the sign-in state, and a `NavRow` under
+"Your account and your data". The file argues for both, at both sites. Three
+passes have declined to settle it and this is the fourth: it is a taste call
+about two affordances rather than a defect.
+
+It is now a named line in `ARGUED` rather than a paragraph, so settling it
+means deleting that line and watching the test go green — and leaving it
+settled *without* deleting the line fails too, so the exemption cannot outlive
+the thing it excuses.
+
+## To do
+
+- `account` on Profile — the owner's, still, and now one line to delete.
+- The `ItemRow` ARIA widening, carried from the twentieth pass's T5: `Row`
+  already accepts `role` and `ariaChecked`, so passing them through would bring
+  `MuteCourses` and `DesignEditor` onto the shared row and take the eleven from
+  four converted to six.
+- Nothing else on the destinations row. It is closed, and now it is held.
+
+---
+
 # One app — the twenty-first pass: the gate that governed nothing
 
 Against `main` at `a8c3f7d`. **<!--screens-->fifty-eight<!--/--> destinations**,
