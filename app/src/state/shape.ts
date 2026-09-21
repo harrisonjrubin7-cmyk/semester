@@ -339,25 +339,6 @@ export interface Persisted {
    */
   visited: Record<string, boolean>;
   /**
-   * When each screen was last opened, to the day.
-   *
-   * `visited` answers "ever?" and that is all the app needed until the
-   * Everything directory wanted to say "three weeks ago" beside a row and to
-   * separate a screen nobody has opened from one abandoned in September.
-   *
-   * To the day, and not to the second, deliberately. The finer number is a
-   * record of somebody's evenings that no screen has a use for, and rounding
-   * it is the difference between a directory that knows what you have tried
-   * and a log of when you were awake. It does go to the account when you are
-   * signed in, the same as everything else here — the sentence that used to
-   * stand in this paragraph said the opposite, and `merge.ts` has reasoned
-   * about which of two devices' answers wins for as long as it has existed.
-   * Signed out it leaves the device no more than the rest does, and the day
-   * is still all that is kept: what a feature does not need is not stored,
-   * whichever machines end up holding it.
-   */
-  lastOpened: Record<string, number>;
-  /**
    * Practice papers you have sat.
    *
    * Capped, and the cap is real rather than cautious: a sitting keeps its
@@ -1363,7 +1344,6 @@ export const DEFAULT_PERSISTED: Persisted = {
   feedHidden: {},
   tabs: DEFAULT_TABS,
   visited: {},
-  lastOpened: {},
   yours: {},
   courseOrder: [],
   myRules: [],
@@ -1717,7 +1697,6 @@ export function loadPersisted(): Persisted {
       // times, so any date invented here would be today's, and "opened
       // today" beside a screen somebody last saw in August is worse than
       // "opened at some point", which is what an empty entry says.
-      lastOpened: saved.lastOpened ?? {},
       sittings: list(saved.sittings),
       sessions: list(saved.sessions),
       // Kept across a reload so a sitting left half done goes on being
@@ -1844,7 +1823,6 @@ export function pickPersisted(state: State): Persisted {
     feedHidden: state.feedHidden,
     recent: state.recent,
     visited: state.visited,
-    lastOpened: state.lastOpened,
     sittings: state.sittings,
     sessions: state.sessions,
     liveSession: state.liveSession,

@@ -14,7 +14,6 @@ import { LIBRARIES, NAMED } from '../../lib/route';
 import { ROOTS, type Action, type State } from '../shape';
 import { ONB_STEPS } from '../../data/misc';
 import { firstScreen } from '../../lib/chrome';
-import { dayOf } from '../../lib/date';
 
 /**
  * Where you have been lately, for the top of the directory.
@@ -65,11 +64,18 @@ export function push(state: State, screen: Screen): State {
     // Written on the way in rather than counted: how many times somebody
     // opened the map is not the app's business, and whether they ever did is
     // the only part that makes a difference to what it offers them.
+    /*
+     * Whether, not when.
+     *
+     * `lastOpened` was written here too — the day each screen was opened, on
+     * every navigation — and the twenty-third simplify pass cut it: no
+     * screen in this repository's history ever read it. Its own docblock
+     * carried the rule that condemned it, *what a feature does not need is
+     * not stored*, and there was no feature. This line is the whole of what
+     * the app actually asks about where somebody has been, beside `recent`
+     * just above, which is the order rather than the dates.
+     */
     visited: state.visited[screen] ? state.visited : { ...state.visited, [screen]: true },
-    // Rounded to the day it happened. See `lastOpened` in `state/shape.ts`
-    // for why the finer number is deliberately not kept, and why this is
-    // written on the way in rather than counted.
-    lastOpened: { ...state.lastOpened, [screen]: dayOf(Date.now()) },
   };
 }
 
