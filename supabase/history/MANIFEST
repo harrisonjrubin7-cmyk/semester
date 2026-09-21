@@ -1,4 +1,4 @@
-# What production's migration ledger says these thirteen files are.
+# What production's migration ledger says these fourteen files are.
 #
 # Each line is the md5 and byte length of one row's `statements[1]` in
 # `supabase_migrations.schema_migrations` on the live project, read on
@@ -30,6 +30,23 @@
 # now the only description of it in this repository was a sentence saying it
 # could not be described.
 #
+# ## The fourteenth, which is a version with two texts
+#
+# Every other line here is a row whose version has no real SQL in
+# `migrations/` — a stand-in sits there so a deploy can see the version, and
+# the statements live in this directory. `20260921144011` is not that shape.
+# `migrations/20260921144011_function_grants.sql` is a real 8,088-byte
+# migration, and it is **not what the ledger holds at that version**. The row
+# is 2,050 bytes, named `function_grants_rerun_after_access_log`, and it is
+# the second time production ran that file — the run after `access_log`
+# existed, which is what closed `note_access` and `read_feed`.
+#
+# Nothing had noticed, and nothing could: `ledgerfiles.test.ts` asks whether a
+# version has a file, not whether the file is what ran, and at this version the
+# answer to the first question was yes the whole time. So the row's own text is
+# recorded here, and `migrationhistory.test.ts` now asserts the case directly
+# rather than leaving it to be rediscovered.
+#
 #   md5                               bytes  file
 822d2a0f5b08ade4288cedf84b019096       1453  20260907050718_push_devices_and_queue.sql
 6ca07698039de38a5f74d765a67d7508        707  20260907133756_push_scheduler_extensions.sql
@@ -44,3 +61,4 @@ c6733bc1d662040d68b1ebbb08a0f10c       5804  20260911151826_groups.sql
 e847a7487970a86c0475047c8ec3ca97       2080  20260921002658_revoke_function_execute_from_supabase_default_roles.sql
 65ceff743008e75fa1ddde2b4678af8a       3088  20260921144711_forms_relation_grants.sql
 bfc5a6401b439a225094492ac3ea477c       2198  20260921150750_access_log_function_search_path.sql
+59fdfe1fded25a64a1c8f5c9a9451c38       2050  20260921144011_function_grants_rerun_after_access_log.sql
