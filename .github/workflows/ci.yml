@@ -120,6 +120,26 @@ jobs:
       # `Documentary.tsx` and passed `tsc -b` and the lint step; the only
       # thing that caught it was rendering a frame, which CI does not do and
       # cannot afford to.
+      # Its own dependencies, because typechecking a package means resolving
+      # what it imports and `remotion` is not in `app/node_modules` — which is
+      # the entire reason `video/` is a separate package.
+      #
+      # `--omit=optional` drops `@remotion/compositor-linux-x64-gnu`, 26MB of
+      # platform binary that only a render needs, and `--ignore-scripts` is
+      # belt and braces: this package has no install scripts today and a
+      # dependency that grew one would be running it in CI for a typecheck.
+      # 184MB and seven seconds, measured.
+      #
+      # No browser is fetched here. `video/README.md` used to say that putting
+      # Remotion in `app/package.json` would make every `npm ci` download a
+      # Chrome Headless Shell; it does not — Remotion fetches it lazily at
+      # render time, which is why `REMOTION_BROWSER` exists. What the split
+      # actually buys is that `app`'s lockfile stays small and its install
+      # stays fast, which is still worth having.
+      - name: Install the video package
+        working-directory: video
+        run: npm ci --ignore-scripts --omit=optional
+
       - name: Typecheck the video package
         working-directory: app
         run: npm run check:video

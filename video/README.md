@@ -166,10 +166,20 @@ nothing, and that is where CI already is.
 
 ## Why a separate package
 
-Remotion brings a browser with it. Putting it in `app/package.json` would make
-every `npm ci` in CI download a Chrome Headless Shell to run a test suite that
-does not render video. So this is its own package, installed only when somebody
-is actually making a video, and nothing in `app/` or CI depends on it.
+Remotion is 153 packages and 445MB installed. Putting it in `app/package.json`
+would put all of that in the app's lockfile and in every `npm ci` that runs to
+execute a test suite which does not render video. So this is its own package.
+
+CI does now install it — `npm ci --ignore-scripts --omit=optional`, which is
+184MB and seven seconds — because `npm run check:video` typechecks these files
+and typechecking a package means resolving what it imports. That check exists
+because `tsc -b` never opened this directory: six of ten files here, every
+composition plus `index.ts`, were typechecked by nothing at all.
+
+This section used to say the split was about a browser — that `npm ci` would
+download a Chrome Headless Shell. It does not. Remotion fetches the browser
+lazily at render time, which is why `REMOTION_BROWSER` exists and why the
+paragraph below is needed at all.
 
 On a machine whose network egress is filtered, Remotion's own browser download
 will 403. Point it at one that is already installed:
