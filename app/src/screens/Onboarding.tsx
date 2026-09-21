@@ -1,10 +1,11 @@
+import { useMemo } from 'react';
 import { useNow, useStore } from '../state/store';
 import { askReminders, type Tone } from '../lib/tone';
 import { Blueprint } from '../components/Blueprint';
 import { ActionButton, Toggle } from '../components/ui';
 import { NOTIF_DEFS } from '../data/misc';
 import { Check } from '../components/Icons';
-import type { Catalog } from '../data/catalog';
+import { buildCatalog, type Catalog } from '../data/catalog';
 import { SchoolPicker } from '../components/SchoolPicker';
 import { TermChoice } from '../components/TermChoice';
 import { Credentials } from '../components/Credentials';
@@ -15,14 +16,40 @@ import { Step } from '../components/soft/Soft';
 import { welcomeLead, welcomeLine } from '../lib/welcome';
 
 /**
- * The first two screens, written from what is actually loaded.
+ * The first two screens, written from what the student has actually given it.
  *
  * These used to be four fixed sentences about one student's four PDFs — a new
  * user was told "We found 38 dated obligations across four courses" before
  * they had uploaded anything, and shown four filenames that were not theirs.
  * The first thing the app said was false, which is a bad way to be trusted
- * with a semester. Now it counts what is there, and when nothing is there it
- * says what will happen instead of pretending it already has.
+ * with a semester. So it was made to count what is there.
+ *
+ * ## Which is not the same as what is *theirs*
+ *
+ * `state.sample` ships **on**, so what is there on a brand-new install is the
+ * four sample courses. Counting the catalogue therefore reproduced the exact
+ * sentence above with a different number — measured, on `freshPersisted` with
+ * nothing stored:
+ *
+ *     2026-09-21 · term 2026FA · own 0 courses
+ *       step 1: "4 syllabi. One brain."
+ *       step 2: "Dropped in. Read." — 48 dated obligations across 4 courses
+ *              [✓] Econ1020_2026_Fall.pdf        4 dates · 11 units
+ *              [✓] PSCI1104_Trounstine_F26.pdf   8 dates · 14 units
+ *              [✓] Sports_Fall26_Syllabus.pdf   24 dates ·  6 units
+ *              [✓] Syllabus Draft 8262026.pdf   12 dates · 13 units
+ *
+ * Four filenames that are not theirs, ticked, under a heading saying they were
+ * dropped in — which is the sentence this docstring was written to disown,
+ * word for word.
+ *
+ * The fix is not in this function or in `lib/welcome.ts`; both were right and
+ * were handed the wrong set. The run is the one screen whose whole subject is
+ * what the *student* supplied, so it reads `state.courses` — their own
+ * modules, sample excluded by construction rather than by a filter that can
+ * drift. Everywhere else the sample is genuinely in the app and on screen, and
+ * counting it there is honest; `components/Splash.tsx` keeps the full
+ * catalogue for that reason.
  */
 function steps(cat: Catalog, tone: Tone, hasAccount: boolean) {
   // A build with no project configured has nothing to sign in to, and saying
@@ -119,10 +146,20 @@ function steps(cat: Catalog, tone: Tone, hasAccount: boolean) {
 
 /** Five screens: the promise, what it read, where you study, the account, the alerts. */
 export function Onboarding() {
-  const { state, dispatch, catalog, account } = useStore();
+  const { state, dispatch, account } = useStore();
   const now = useNow();
   const soft = useSoft();
-  const all = steps(catalog, state.tone, Boolean(account));
+  /*
+   * Theirs, not the app's. See the note on `steps` — the sample ships on, so
+   * the shared catalogue holds four courses on a brand-new install and every
+   * sentence below would be about somebody else's semester.
+   *
+   * Every term of it, not just the open one: the question these screens ask
+   * is "what have you given me", and a course filed under last Spring is
+   * still an answer to it.
+   */
+  const mine = useMemo(() => buildCatalog(state.courses), [state.courses]);
+  const all = steps(mine, state.tone, Boolean(account));
   const step = all[state.onb] ?? all[0];
 
   /*
@@ -178,10 +215,10 @@ export function Onboarding() {
           textWrap: 'pretty',
         }}
       >
-        {soft && state.onb === 0 ? welcomeLine(catalog, now) : step.t}
+        {soft && state.onb === 0 ? welcomeLine(mine, now) : step.t}
       </div>
       <div style={{ fontSize: 'var(--type-display-xs)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', maxWidth: '30ch' }}>
-        {soft && state.onb === 0 ? welcomeLead(catalog) : step.b}
+        {soft && state.onb === 0 ? welcomeLead(mine) : step.b}
       </div>
 
       {/*
@@ -231,7 +268,7 @@ export function Onboarding() {
       )}
 
       {/* Empty boxes on a first run look like something failed to load. */}
-      {!soft && state.onb === 0 && catalog.courses.length > 0 && (
+      {!soft && state.onb === 0 && mine.courses.length > 0 && (
         <Blueprint
           style={{
             marginTop: 'calc(34px * var(--density, 1))',
@@ -241,7 +278,7 @@ export function Onboarding() {
             gap: 'calc(14px * var(--density, 1))',
           }}
         >
-          {catalog.courses.map((c) => (
+          {mine.courses.map((c) => (
             <div key={c.id} style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-5)' }}>
               <div
                 style={{
@@ -259,9 +296,9 @@ export function Onboarding() {
         </Blueprint>
       )}
 
-      {state.onb === 1 && catalog.courses.length > 0 && (
+      {state.onb === 1 && mine.courses.length > 0 && (
         <div style={{ marginTop: 'calc(30px * var(--density, 1))', display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
-          {catalog.courses.map((c) => (
+          {mine.courses.map((c) => (
             <div
               key={c.id}
               style={{
@@ -305,8 +342,8 @@ export function Onboarding() {
                     letterSpacing: '0.08em',
                   }}
                 >
-                  {catalog.items.filter((i) => i.c === c.id).length} dates ·{' '}
-                  {catalog.guides[c.id]?.units.length ?? 0} units
+                  {mine.items.filter((i) => i.c === c.id).length} dates ·{' '}
+                  {mine.guides[c.id]?.units.length ?? 0} units
                 </div>
               </div>
             </div>
