@@ -142,12 +142,21 @@ const migration = () =>
     'utf8',
   );
 
-/** The tables `lti_account_untouched` actually looks in, read out of the SQL. */
+/**
+ * The tables `lti_account_untouched` actually looks in, read out of the SQL.
+ *
+ * They live in a `values` list rather than in the body of one `select`,
+ * because the function walks them and skips any relation that is not there —
+ * see the migration for why `public.forms` made that necessary. So this reads
+ * the list, and the control below is what caught this extractor returning
+ * nothing when the shape changed: without it, every assertion here would have
+ * passed against an empty set and reported all clear.
+ */
 function tablesChecked(): Set<string> {
   const body = migration().split('create or replace function public.lti_account_untouched')[1];
   expect(body, 'lti_account_untouched is not in that migration any more').toBeTruthy();
   const sql = body.split('$$')[1] ?? '';
-  return new Set([...sql.matchAll(/from\s+public\.(\w+)\s/g)].map((m) => m[1]));
+  return new Set([...sql.matchAll(/\('public\.(\w+)'/g)].map((m) => m[1]));
 }
 
 describe('the emptiness check and the list of what an account owns', () => {

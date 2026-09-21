@@ -147,29 +147,59 @@ comment on table public.lti_link_ticket is
 
 create or replace function public.lti_account_untouched(who uuid)
 returns boolean
-language sql
+language plpgsql
 stable
 security definer
 set search_path = ''
 as $$
-  select not (
-       exists (select 1 from public.state             t where t.user_id = who)
-    or exists (select 1 from public.courses           t where t.user_id = who)
-    or exists (select 1 from public.notes             t where t.user_id = who)
-    or exists (select 1 from public.tasks             t where t.user_id = who)
-    or exists (select 1 from public.appointments      t where t.user_id = who)
-    or exists (select 1 from public.sittings          t where t.user_id = who)
-    or exists (select 1 from public.calendar_feeds    t where t.user_id = who)
-    or exists (select 1 from public.messages          t where t.user_id = who)
-    or exists (select 1 from public.message_reactions t where t.user_id = who)
-    or exists (select 1 from public.group_members     t where t.user_id = who)
-    or exists (select 1 from public.enrollments       t where t.user_id = who)
-    or exists (select 1 from public.blocks            t where t.user_id = who)
-    or exists (select 1 from public.referrals         t where t.user_id = who)
-    or exists (select 1 from public.referral_codes    t where t.user_id = who)
-    or exists (select 1 from public.forms             t where t.owner   = who)
-  )
-$$;
+declare
+  t   record;
+  hit integer;
+begin
+  for t in
+    select * from (values
+      ('public.state',             'user_id'),
+      ('public.courses',           'user_id'),
+      ('public.notes',             'user_id'),
+      ('public.tasks',             'user_id'),
+      ('public.appointments',      'user_id'),
+      ('public.sittings',          'user_id'),
+      ('public.calendar_feeds',    'user_id'),
+      ('public.messages',          'user_id'),
+      ('public.message_reactions', 'user_id'),
+      ('public.group_members',     'user_id'),
+      ('public.enrollments',       'user_id'),
+      ('public.blocks',            'user_id'),
+      ('public.referrals',         'user_id'),
+      ('public.referral_codes',    'user_id'),
+      ('public.forms',             'owner')
+    ) as x(rel, col)
+  loop
+    /*
+     * **A table that is not there holds no rows, so skipping it loses
+     * nothing** — and without this the whole migration fails to apply.
+     *
+     * `public.forms` is in `migrations/` and has never reached production,
+     * and the renumbering left its file below the watermark, so a deploy will
+     * never create it. A `language sql` body naming it resolves every
+     * relation at creation time and refuses to be created at all.
+     * `supabase/rehearse.sh` is what found that, and it is the only
+     * instrument here that could: `check.sh` builds from empty and applies
+     * every migration, so `forms` exists there and the fault is invisible.
+     *
+     * Skipping is safe in the one direction that matters. The danger in this
+     * function is answering "untouched" about an account that has work in it,
+     * and a relation that does not exist cannot be holding any. Once `forms`
+     * reaches production this starts counting it with no change here.
+     */
+    if pg_catalog.to_regclass(t.rel) is null then continue; end if;
+
+    execute pg_catalog.format('select 1 from %s where %I = $1 limit 1', t.rel, t.col)
+      into hit using who;
+    if hit is not null then return false; end if;
+  end loop;
+  return true;
+end $$;
 
 revoke all on function public.lti_account_untouched(uuid) from public;
 revoke all on function public.lti_account_untouched(uuid) from anon, authenticated;
