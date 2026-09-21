@@ -39,6 +39,10 @@ export interface ClipJob {
   slot: string;
   /** Everything that decides what comes back. */
   prompt: string;
+  /**
+   * Length of the clip. **Zero means a still** — a character reference sheet
+   * is one image and is priced per image, not per second.
+   */
   seconds: number;
   provider: string;
   model: string;
@@ -86,35 +90,60 @@ export function unspent(manifest: SpendManifest, jobs: readonly ClipJob[]): Clip
   return jobs.filter((job) => manifest.made[job.slot]?.key !== clipKey(job));
 }
 
-/** Per-second price of a provider's clips, in cents. */
+/**
+ * What a provider charges, in cents.
+ *
+ * Supplied by the caller rather than tabulated here on purpose: these prices
+ * change faster than this repository does, and a stale number written into the
+ * code would be quoted in a `--dry-run` as though it were measured. Read it off
+ * the provider's current pricing page when you configure a run.
+ *
+ * Both sides are optional because a run may be all clips or all stills, and a
+ * caller that has only the rate it needs should not have to invent the other.
+ * What it must not do is get a total that quietly leaves jobs out, which is
+ * what `Estimate.unpriced` is for.
+ */
 export interface Rate {
-  /**
-   * Cents per second of generated video.
-   *
-   * Supplied by the caller rather than tabulated here on purpose: these prices
-   * change faster than this repository does, and a stale number written into
-   * the code would be quoted in a `--dry-run` as though it were measured. Read
-   * it off the provider's current pricing page when you configure a run.
-   */
-  centsPerSecond: number;
+  /** Cents per second of generated video. */
+  centsPerSecond?: number;
+  /** Flat cents for one generated still — a character sheet is one. */
+  centsPerImage?: number;
 }
 
 export interface Estimate {
+  /** Jobs with a length: video. */
   clips: number;
+  /** Jobs without one: character sheets and anything else bought per image. */
+  stills: number;
   seconds: number;
   cents: number;
+  /**
+   * Jobs the given rate could not price.
+   *
+   * `lib/spend.ts` reached the same conclusion about the student's own meter
+   * and its guard states the reason: a total that silently covers only some of
+   * what it was given is worse than a total with a caveat on it. `cents` is
+   * still right for what it covers; this says what it does not.
+   */
+  unpriced: number;
 }
 
 /** What a set of jobs would cost at a given rate. */
 export function estimate(jobs: readonly ClipJob[], rate: Rate): Estimate {
-  const seconds = jobs.reduce((n, j) => n + j.seconds, 0);
-  return {
-    clips: jobs.length,
-    seconds,
-    // Rounded up: a cost estimate that reads low is worse than one that reads
-    // high by a cent.
-    cents: Math.ceil(seconds * rate.centsPerSecond),
-  };
+  const moving = jobs.filter((j) => j.seconds > 0);
+  const stills = jobs.length - moving.length;
+  const seconds = moving.reduce((n, j) => n + j.seconds, 0);
+
+  let cents = 0;
+  let unpriced = 0;
+  // Rounded up, each side separately: a cost estimate that reads low is worse
+  // than one that reads high by a cent.
+  if (rate.centsPerSecond === undefined) unpriced += moving.length;
+  else cents += Math.ceil(seconds * rate.centsPerSecond);
+  if (rate.centsPerImage === undefined) unpriced += stills;
+  else cents += Math.ceil(stills * rate.centsPerImage);
+
+  return { clips: moving.length, stills, seconds, cents, unpriced };
 }
 
 /** Cents as a string somebody can read in a terminal. */
@@ -152,9 +181,13 @@ export function record(
 /** Everything spent so far, across every clip the manifest knows about. */
 export function spentSoFar(manifest: SpendManifest): Estimate {
   const entries = Object.values(manifest.made);
+  const moving = entries.filter((m) => m.seconds > 0);
   return {
-    clips: entries.length,
-    seconds: entries.reduce((n, m) => n + m.seconds, 0),
+    clips: moving.length,
+    stills: entries.length - moving.length,
+    seconds: moving.reduce((n, m) => n + m.seconds, 0),
     cents: entries.reduce((n, m) => n + m.cents, 0),
+    // Nothing: every row here was paid for, so every row has a price.
+    unpriced: 0,
   };
 }

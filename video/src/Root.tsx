@@ -2,6 +2,12 @@ import { Composition } from 'remotion';
 import { durationFor, LessonVideo, type LessonVideoProps } from './Lesson';
 import { shortDuration, ShortVideo, type ShortVideoProps } from './Short';
 import { Documentary, documentaryDuration, type DocumentaryProps } from './Documentary';
+import {
+  Persona,
+  PERSONA_HEIGHT,
+  PERSONA_WIDTH,
+  type PersonaProps,
+} from './Persona';
 import type { Lesson } from '../../app/src/lib/types';
 
 /**
@@ -73,6 +79,37 @@ const PLACEHOLDER_DOC = {
   render: 60,
 };
 
+/*
+ * A real persona, not a stand-in.
+ *
+ * `pipeline/persona-sheet.mjs --layout` passes the props; this is what
+ * `npm run studio` opens on, and a sheet full of lorem would be the one
+ * composition nobody could judge the design of.
+ */
+const PLACEHOLDER_PERSONA = {
+  id: 'host-nell',
+  name: 'Nell',
+  role: 'host',
+  label: 'The one asking',
+  described:
+    'a slight figure in their twenties, with tightly coiled hair, wearing an ' +
+    'open overshirt, holding a notebook, warm in manner',
+  note: 'leaning slightly in, mid-question, eyebrows up',
+  panels: [
+    { view: 'front', expression: 'neutral' },
+    { view: 'three-quarter', expression: 'neutral' },
+    { view: 'profile', expression: 'neutral' },
+    { view: 'front', expression: 'explaining' },
+    { view: 'three-quarter', expression: 'explaining' },
+    { view: 'profile', expression: 'explaining' },
+    { view: 'front', expression: 'pleased' },
+    { view: 'three-quarter', expression: 'pleased' },
+    { view: 'profile', expression: 'pleased' },
+  ],
+  ground: 'ink',
+  accent: 'copper',
+};
+
 export function Root() {
   return (
     <>
@@ -122,6 +159,15 @@ export function Root() {
       calculateMetadata={({ props }) => ({
         durationInFrames: documentaryDuration(props.render, FPS),
       })}
+    />
+    <Composition
+      id="Persona"
+      component={Persona}
+      durationInFrames={1}
+      fps={FPS}
+      width={PERSONA_WIDTH}
+      height={PERSONA_HEIGHT}
+      defaultProps={PLACEHOLDER_PERSONA as PersonaProps}
     />
     </>
   );
