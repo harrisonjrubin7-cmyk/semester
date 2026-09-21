@@ -37,3 +37,6 @@ app/public/audio/lessons/**/*.mp4
 # And the shorts, for the same reason and more so: one per flashcard is 278
 # files across the four courses.
 app/public/audio/shorts/
+
+# And the documentary cuts, which are 28 minutes each.
+app/public/audio/documentary/

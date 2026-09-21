@@ -1,6 +1,7 @@
 import { Composition } from 'remotion';
 import { durationFor, LessonVideo, type LessonVideoProps } from './Lesson';
 import { shortDuration, ShortVideo, type ShortVideoProps } from './Short';
+import { Documentary, documentaryDuration, type DocumentaryProps } from './Documentary';
 import type { Lesson } from '../../app/src/lib/types';
 
 /**
@@ -45,6 +46,18 @@ const PLACEHOLDER_SHORT = {
   end: 20,
 };
 
+const PLACEHOLDER_DOC = {
+  code: 'ECON 1020',
+  title: 'ECON 1020 — Thinking at the Margin',
+  file: '/audio/econ-podcast.mp3',
+  chapters: [
+    { s: 0, t: '0:00', name: 'Cold open' },
+    { s: 35, t: '0:36', name: 'How to actually pass' },
+  ],
+  seconds: 1696,
+  render: 60,
+};
+
 export function Root() {
   return (
     <>
@@ -81,6 +94,18 @@ export function Root() {
       }
       calculateMetadata={({ props }) => ({
         durationInFrames: shortDuration(props.short, FPS),
+      })}
+    />
+    <Composition
+      id="Documentary"
+      component={Documentary}
+      durationInFrames={documentaryDuration(PLACEHOLDER_DOC.render, FPS)}
+      fps={FPS}
+      width={WIDTH}
+      height={HEIGHT}
+      defaultProps={{ ...PLACEHOLDER_DOC, ground: 'ink', accent: 'sterling' } as DocumentaryProps}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: documentaryDuration(props.render, FPS),
       })}
     />
     </>
