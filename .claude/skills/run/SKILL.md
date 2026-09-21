@@ -246,10 +246,27 @@ seven cases identical and looked like proof the seed was dead; it was the
 probe that was dead. Point a probe at the fault it is meant to see before you
 trust the run it is in.
 
-**The default is `workspace`,** not the tab bar (`state/shape.ts`). So a run
-that seeds nothing is a run in the workspace shell — a browser-shaped strip
-of app tabs over a search bar — and it is easy to screenshot that while
-believing you are looking at the tab bar.
+**The default is the tab bar** (`nav: 'tabs'` in `state/shape.ts`, and the
+one entry in `NAVS` marked `deft`). This file said `workspace` for several
+releases, and the reason it survived is worth more than the correction:
+**whoever wrote it had seeded without `schemaVersion`,** and that really does
+come up in the workspace. Measured, three starts, reading the chrome off the
+page rather than the stored value:
+
+| What the run starts from | What it draws |
+| --- | --- |
+| no storage at all | **tabs** |
+| `{ schemaVersion: 6, seenOnboarding: true }` | **tabs** |
+| `{ seenOnboarding: true }` — no version | **workspace** |
+
+So the old claim was a true observation of the *next* section's fault,
+written up as a fact about the app. The two contradicted each other in one
+file, and the migrations section below is the one that was right.
+
+The warning it was making still stands, pointed at the right thing: a run
+that seeds nothing is not a neutral run, it is a **tab bar** run, and a run
+that seeds carelessly is a workspace one. Neither is something to infer from
+having asked — read it off the DOM (§6b).
 
 **Read `NAVS` and `SHELLS` rather than trusting the rows above.** Both have
 moved without this file noticing, and in both directions. `NAVS` was four
