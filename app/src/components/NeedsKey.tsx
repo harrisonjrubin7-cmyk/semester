@@ -2,7 +2,7 @@ import { useStore } from '../state/store';
 import { Blueprint } from './Blueprint';
 import { ActionButton } from './ui';
 import { Page } from './Page';
-import { provider } from '../lib/assistant';
+import { provider, routeWhy } from '../lib/assistant';
 
 /**
  * The eight places that told you where the key lives, and now take you there.
@@ -54,13 +54,24 @@ export function NeedsKey({
   /** The button's words, where the screen can say something better. */
   action?: string;
 }) {
-  const { dispatch } = useStore();
+  const { dispatch, account } = useStore();
   const go = () => dispatch({ type: 'go', screen: 'setAssistant' });
 
+  /*
+   * The sentence used to be fixed: *"Sign in to use the shared key, or add
+   * your own."* — printed to everybody, including the person already signed
+   * in, for whom it is not advice but a contradiction. That is the same fault
+   * this file was written to end, one layer down: eight screens telling one
+   * install two different stories, replaced by one screen telling every
+   * install the same wrong one.
+   *
+   * `routeWhy` names the situation instead, and needs the account because the
+   * interesting case is a session the assistant cannot see — which only the
+   * store and `lib/token.ts` together can tell apart. See `lib/assistant.ts`.
+   */
   const says = (
     <>
-      Sign in to use the shared key, or add your own. Everything else in the app works
-      without it.
+      {routeWhy(Boolean(account))}
       {also ? ` ${also}` : ''}
     </>
   );

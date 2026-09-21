@@ -14,6 +14,7 @@ import {
   proxyProblem,
   route,
   routeLabel,
+  routeWhy,
   saveSettings,
   settings,
   sharedEndpoint,
@@ -99,7 +100,7 @@ export function SettingsAssistant() {
   const month = total(since(spend, monthStart(new Date())));
   const courses = byCourse(spend);
   const askers = byAsker(spend);
-  const { courseCode } = useStore();
+  const { courseCode, account } = useStore();
   /*
    * One row of the breakdown. Written here rather than in a component because
    * it is two spans and a gap, and `scripts/styles.mjs` counts what is worth
@@ -338,9 +339,27 @@ export function SettingsAssistant() {
                   {result.detail}
                 </div>
               )}
-              {configured() && (
+              {configured() ? (
                 <div className="kicker" style={{ marginTop: 'var(--sp-4)' }}>
                   {modelLabel()} · {routeLabel()}
+                </div>
+              ) : (
+                /*
+                 * The half this screen used to leave blank. `configured()`
+                 * false is exactly when somebody is looking for the reason,
+                 * and hiding the line meant the one screen named in every
+                 * gate's button said nothing at all when they arrived.
+                 */
+                <div
+                  style={{
+                    fontSize: 'var(--type-sm)',
+                    color: 'var(--app-dim)',
+                    marginTop: 'var(--sp-4)',
+                    lineHeight: 'var(--leading-relaxed)',
+                    textWrap: 'pretty',
+                  }}
+                >
+                  {routeWhy(Boolean(account))}
                 </div>
               )}
             </CustomRow>
