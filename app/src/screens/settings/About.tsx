@@ -26,7 +26,11 @@ export function SettingsAbout() {
     >
       {(lit) => (
         <>
-          <Group header="Where the numbers come from" lit={lights('sources data where from figures citations', lit)}>
+          <Group
+            header="Where the numbers come from"
+            footer="The tag says what each one takes, not whether it is switched on — nothing here runs in the background. This app holds no university password and no Top Hat session."
+            lit={lights('sources data where from figures citations top hat tophat sync connected', lit)}
+          >
             <CustomRow>
               <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(2px * var(--density, 1))' }}>Sources</SectionLabel>
               {SOURCES.map((s) => (

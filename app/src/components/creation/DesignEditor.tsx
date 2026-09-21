@@ -1,24 +1,29 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActionButton, FilePick, SectionLabel } from '../ui';
-import { secondLine } from '../../lib/dim';
+import { DIMMED_ROW, secondLine } from '../../lib/dim';
 import { ItemRow } from '../shell/Rows';
 import { addFile, getFile } from '../../lib/files';
 import { TOLERANCE, clearedShare, edgeColour, keyOut } from '../../lib/cutout';
 import { cloudConfigured } from '../../lib/cloud';
+import { useStore } from '../../state/store';
 import { download } from '../../lib/deliver';
 import {
   LAYER_OPACITY,
   clampOpacity,
+  NOTE_LIMIT,
   designSvg,
+  gradientEnds,
+  gradientId,
   layerTransform,
   newLayer,
   trianglePoints,
   type CreativeProject,
   type DesignData,
   type DesignLayer,
+  type DesignNote,
 } from '../../lib/creations';
 import { TEMPLATES, apply as applyTemplate } from '../../lib/designtemplates';
-import { changes, describe as describeCanvas, foldAll, type Seen } from '../../lib/coedit';
+import { changes, describe as describeCanvas, foldAll, foldNotes, noteChanges, type Seen } from '../../lib/coedit';
 import { share, type Sharing } from '../../lib/cocanvas';
 
 /**
@@ -58,6 +63,45 @@ const readData = (blob: Blob) =>
     r.onerror = () => reject(r.error);
     r.readAsDataURL(blob);
   });
+
+/** What a layer paints with: its gradient if it has one, else its colour. */
+const paintOf = (l: DesignLayer) =>
+  l.gradient && l.kind !== 'image' ? `url(#${gradientId(l.id)})` : l.fill;
+
+/**
+ * What this person asked to be called, per account, on this device.
+ *
+ * Keyed by account id so two people sharing a laptop do not inherit each
+ * other's name, and read from `localStorage` rather than from the app's own
+ * settings because a new settings field means a schema version and a
+ * migration — a blast radius out of proportion to one string.
+ *
+ * The cost is honest and worth saying: the name does not follow the account to
+ * a second device, so signing in on a phone asks again. The *identity* does
+ * follow — `authorId` is the account — so the notes are still recognisably
+ * yours either way, and only the label has to be retyped.
+ *
+ * Every access is wrapped: `localStorage` throws outright in a private window
+ * with site data blocked, and a comment box is not worth taking the editor
+ * down for.
+ */
+const nameKey = (accountId: string) => `semester.notename.${accountId}`;
+
+const savedName = (accountId: string): string => {
+  try {
+    return localStorage.getItem(nameKey(accountId)) ?? '';
+  } catch {
+    return '';
+  }
+};
+
+const rememberName = (accountId: string, name: string) => {
+  try {
+    localStorage.setItem(nameKey(accountId), name);
+  } catch {
+    /* A name that cannot be stored is still usable for this sitting. */
+  }
+};
 
 const MAX_LAYERS = 60;
 const UNDO = 30;
@@ -127,6 +171,39 @@ export function DesignEditor({
    * would put it in the file, the export and the shared canvas, all describing
    * something that already happened.
    */
+  const { account } = useStore();
+  /*
+   * Who this person is, to a note.
+   *
+   * The account when signed in, and this tab's own id when not. The fallback
+   * is the honest one rather than the good one: a signed-out person's notes
+   * stop being recognisably theirs after a reload, because there is nothing
+   * durable to key them to and inventing one is what this app has always
+   * refused to do.
+   */
+  const meId = account?.id || me;
+  const [myName, setMyName] = useState(() => savedName(account?.id || ''));
+  const [naming, setNaming] = useState('');
+  const [placing, setPlacing] = useState(false);
+  const [openNote, setOpenNote] = useState('');
+  /*
+   * Where a note is about to go, before it is a note.
+   *
+   * Placing a pin used to create the note straight away and let the card's
+   * textarea fill it in. Two things were wrong with that, and the first is
+   * what a browser found: the textarea autofocused and was blurred by the tail
+   * of the very click that placed the pin, so the "an empty pin is not a note"
+   * cleanup deleted it before anybody could type. Patching the blur would have
+   * left the second fault standing — an unwritten note is still a note on the
+   * wire, so every collaborator would watch a blank pin appear and vanish
+   * again. It is local until it has something to say.
+   */
+  const [pending, setPending] = useState<{ x: number; y: number } | null>(null);
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  const notes = project.notes;
+  const notesRef = useRef(notes);
+  notesRef.current = notes;
+
   const [tolerance, setTolerance] = useState<number>(TOLERANCE.deft);
   const [lifting, setLifting] = useState(false);
   const [past, setPast] = useState<DesignData[]>([]);
@@ -187,6 +264,13 @@ export function DesignEditor({
         const out = foldAll(latest.current, seen.current, edits);
         seen.current = out.seen;
         if (out.changed) remoteRef.current(out.canvas);
+
+        // Notes fold separately, against the same `seen` — both key on a uuid,
+        // so a note and a layer cannot file under one entry. Applied without
+        // touching undo, for the same reason a remote layer edit is.
+        const said = foldNotes(notesRef.current, seen.current, edits);
+        seen.current = said.seen;
+        if (said.changed) remoteNotesRef.current(said.notes);
       },
       onAsked: () => joined?.send([describeCanvas(latest.current, me, Date.now())]),
       onHere: (names) => live && setAlsoHere(names),
@@ -221,6 +305,25 @@ export function DesignEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sharing]);
 
+  // The name is per account, so switching account must not leave the previous
+  // person's label in the box.
+  useEffect(() => {
+    setMyName(savedName(account?.id || ''));
+  }, [account?.id]);
+
+  /**
+   * Notes changed here: stored on the project, and sent to anybody sharing.
+   *
+   * Deliberately *not* `change()`. That pushes an undo step and writes to
+   * `design`, and a note is neither — pressing Undo after a colleague pins
+   * one must not take it away. See `DesignNote` on why they live beside the
+   * canvas rather than in it.
+   */
+  const noteChange = (next: DesignNote[]) => {
+    if (wire.current) wire.current.send(noteChanges(notesRef.current, next, me, Date.now()));
+    onChange({ notes: next });
+  };
+
   /** A change worth undoing. Drags record once, on the way in. */
   const change = (next: DesignData, record = true) => {
     if (record) {
@@ -243,6 +346,9 @@ export function DesignEditor({
    */
   const remote = (next: DesignData) => onChange({ design: next });
   remoteRef.current = remote;
+
+  const remoteNotesRef = useRef<(next: DesignNote[]) => void>(() => {});
+  remoteNotesRef.current = (next: DesignNote[]) => onChange({ notes: next });
 
   const patch = (p: Partial<DesignLayer>) =>
     change({ ...d, layers: d.layers.map((l) => (l.id === selected ? { ...l, ...p } : l)) });
@@ -367,6 +473,54 @@ export function DesignEditor({
     } finally {
       setLifting(false);
     }
+  };
+
+  const roots = notes.filter((n) => !n.replyTo);
+  const repliesTo = (id: string) => notes.filter((n) => n.replyTo === id);
+
+  /** A note in the shape the wire and the reader both expect. */
+  const written = (body: string, over: Partial<DesignNote> = {}): DesignNote => ({
+    id: crypto.randomUUID(),
+    replyTo: '',
+    x: 0,
+    y: 0,
+    at: Date.now(),
+    authorId: meId,
+    authorName: myName,
+    body,
+    resolved: false,
+    ...over,
+  });
+
+  const pinNote = (x: number, y: number) => {
+    setPlacing(false);
+    if (notes.length >= NOTE_LIMIT) return setNotice(`A design holds ${NOTE_LIMIT} notes.`);
+    setPending({ x, y });
+    setDraft((old) => ({ ...old, pending: '' }));
+  };
+
+  /** The pending pin, once it has something to say. */
+  const commitPending = () => {
+    const body = (draft.pending ?? '').trim();
+    if (!pending || !body) return;
+    noteChange([...notes, written(body, { x: pending.x, y: pending.y })]);
+    setPending(null);
+    setDraft((old) => ({ ...old, pending: '' }));
+  };
+
+  const answer = (parent: DesignNote) => {
+    const body = (draft[parent.id] ?? '').trim();
+    if (!body) return;
+    if (notes.length >= NOTE_LIMIT) return setNotice(`A design holds ${NOTE_LIMIT} notes.`);
+    noteChange([...notes, written(body, { replyTo: parent.id })]);
+    setDraft((old) => ({ ...old, [parent.id]: '' }));
+  };
+
+  // A note's answers go with it, the same rule `foldNote` applies at the other
+  // end — the reader refuses a design holding an answer to nothing.
+  const unpin = (id: string) => {
+    noteChange(notes.filter((n) => n.id !== id && n.replyTo !== id));
+    if (openNote === id) setOpenNote('');
   };
 
   const l = d.layers.find((x) => x.id === selected);
@@ -578,6 +732,13 @@ export function DesignEditor({
           overflow: 'hidden',
         }}
       >
+        {/*
+          * A box that is exactly the canvas, so a pin's percentage lands
+          * where its note is. The padded container around it is not: a
+          * percentage of that would be off by the padding, and off by more
+          * the nearer the pin is to an edge.
+          */}
+        <div style={{ position: 'relative' }}>
         <svg
           ref={svg}
           viewBox={`0 0 ${d.width} ${d.height}`}
@@ -600,6 +761,25 @@ export function DesignEditor({
             drag.current = null;
           }}
         >
+          {/*
+            * The same `<defs>` the export writes, for the same reason: an SVG
+            * cannot paint with a gradient it has not declared. Built from the
+            * same two helpers, so the canvas and the file cannot disagree
+            * about which way a gradient runs.
+            */}
+          <defs>
+            {d.layers
+              .filter((x) => x.gradient && x.kind !== 'image')
+              .map((x) => {
+                const ends = gradientEnds(x.gradient!.angle);
+                return (
+                  <linearGradient key={x.id} id={gradientId(x.id)} {...ends}>
+                    <stop offset="0" stopColor={x.fill} />
+                    <stop offset="1" stopColor={x.gradient!.to} />
+                  </linearGradient>
+                );
+              })}
+          </defs>
           <rect width={d.width} height={d.height} fill={d.background} />
           {d.layers.map((layer, i) => (
             <g
@@ -662,7 +842,7 @@ export function DesignEditor({
                 <text
                   x={layer.x}
                   y={layer.y + layer.fontSize}
-                  fill={layer.fill}
+                  fill={paintOf(layer)}
                   fontSize={layer.fontSize}
                   fontFamily="Arial,sans-serif"
                   fontWeight={layer.bold ? 700 : 400}
@@ -675,15 +855,15 @@ export function DesignEditor({
                   ))}
                 </text>
               ) : layer.kind === 'ellipse' ? (
-                <ellipse cx={layer.x + layer.w / 2} cy={layer.y + layer.h / 2} rx={layer.w / 2} ry={layer.h / 2} fill={layer.fill} opacity={layer.opacity} />
+                <ellipse cx={layer.x + layer.w / 2} cy={layer.y + layer.h / 2} rx={layer.w / 2} ry={layer.h / 2} fill={paintOf(layer)} opacity={layer.opacity} />
               ) : layer.kind === 'triangle' ? (
                 // `trianglePoints` is the export's own, so what is on screen
                 // and what lands in the SVG are the same three corners.
-                <polygon points={trianglePoints(layer)} fill={layer.fill} opacity={layer.opacity} />
+                <polygon points={trianglePoints(layer)} fill={paintOf(layer)} opacity={layer.opacity} />
               ) : layer.kind === 'image' ? (
                 <image x={layer.x} y={layer.y} width={layer.w} height={layer.h} href={images[layer.fileId]} opacity={layer.opacity} />
               ) : (
-                <rect x={layer.x} y={layer.y} width={layer.w} height={layer.h} fill={layer.fill} opacity={layer.opacity} />
+                <rect x={layer.x} y={layer.y} width={layer.w} height={layer.h} fill={paintOf(layer)} opacity={layer.opacity} />
               )}
               {layer.id === selected && (
                 <rect
@@ -699,7 +879,98 @@ export function DesignEditor({
               )}
             </g>
           ))}
+
+          {/*
+            * Where the pending note will land. Hollow, so it reads as a place
+            * rather than as a note somebody else can see — because nobody
+            * else can: it is not on the wire until it is written.
+            */}
+          {pending && (
+            <circle
+              cx={pending.x}
+              cy={pending.y}
+              r={Math.max(14, Math.min(d.width, d.height) * 0.022)}
+              fill="none"
+              stroke="#d93025"
+              strokeWidth={Math.max(3, Math.min(d.width, d.height) * 0.004)}
+              strokeDasharray="6 5"
+            />
+          )}
+
+          {/*
+            * While placing, one transparent rectangle over the whole page.
+            *
+            * It takes the tap that would otherwise select or drag a layer,
+            * which is the alternative to teaching every layer handler about a
+            * mode it has no other business knowing. Leaving placing mode
+            * removes it, and the canvas is exactly what it was.
+            */}
+          {placing && (
+            <rect
+              width={d.width}
+              height={d.height}
+              fill="transparent"
+              style={{ cursor: 'crosshair' }}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                const at_ = at(e.clientX, e.clientY);
+                pinNote(Math.max(0, Math.min(d.width, at_.x)), Math.max(0, Math.min(d.height, at_.y)));
+              }}
+            />
+          )}
         </svg>
+
+        {/*
+          * The pins are HTML over the canvas, not shapes inside it.
+          *
+          * Drawn in the SVG they were sized in canvas units, so their size on
+          * screen fell as the design got bigger — a pin on a 1600-wide poster
+          * came out about eight pixels across on a phone, which is a quarter
+          * of the tap target this app holds everything else to. Here they are
+          * real buttons at a real size, the same however large the page is,
+          * and they get a name a screen reader can read rather than a
+          * `role="button"` painted on a `<g>`.
+          *
+          * Positioned in percentages of the canvas box, so they stay on their
+          * spot when the page is resized or the window is.
+          */}
+        {roots.map((n, i) => (
+          <button
+            key={n.id}
+            type="button"
+            aria-label={`Note ${i + 1} from ${n.authorName || 'somebody'}${n.resolved ? ', settled' : ''}: ${n.body}`}
+            aria-pressed={openNote === n.id}
+            onClick={() => setOpenNote(openNote === n.id ? '' : n.id)}
+            className="tap"
+            style={{
+              position: 'absolute',
+              left: `${(n.x / d.width) * 100}%`,
+              top: `${(n.y / d.height) * 100}%`,
+              // Centred on its spot, so the pin marks the point rather than
+              // starting at it.
+              translate: '-50% -50%',
+              width: '28px',
+              height: '28px',
+              borderRadius: '50%',
+              border: '2px solid #ffffff',
+              background: n.resolved ? '#5f6b7a' : '#d93025',
+              color: '#ffffff',
+              fontSize: 'var(--type-sm)',
+              fontWeight: 700,
+              // Grid rather than a line-height of 1: centring a digit is not a
+              // typographic decision, and `styles/rules.ts` is right that a
+              // hand-written leading is one.
+              display: 'grid',
+              placeItems: 'center',
+              cursor: 'pointer',
+              padding: 0,
+              opacity: n.resolved ? DIMMED_ROW : 1,
+            }}
+          >
+            {i + 1}
+          </button>
+        ))}
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
@@ -826,6 +1097,73 @@ export function DesignEditor({
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Colour</span>
             <input type="color" value={l.fill} onChange={(e) => patch({ fill: e.target.value })} style={input} />
           </label>
+          {/*
+            * A gradient is offered for everything that has a fill, which is
+            * everything but a picture — an image layer paints with its pixels
+            * and a second colour has nowhere to go on it.
+            *
+            * `fill` above stays the first stop rather than becoming a "from"
+            * field of its own. So the switch adds a colour instead of
+            * replacing one, and turning it off leaves the layer exactly the
+            * flat colour it was before.
+            */}
+          {l.kind !== 'image' && (
+            <>
+              <label
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--sp-4)',
+                  marginBottom: 'var(--sp-5)',
+                  fontSize: 'var(--type-base)',
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={Boolean(l.gradient)}
+                  onChange={(e) =>
+                    patch({ gradient: e.target.checked ? { to: '#ffffff', angle: 90 } : null })
+                  }
+                />
+                <span>Fade to a second colour</span>
+              </label>
+              {l.gradient && (
+                <>
+                  <label style={field}>
+                    <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Second colour</span>
+                    <input
+                      type="color"
+                      value={l.gradient.to}
+                      onChange={(e) => patch({ gradient: { to: e.target.value, angle: l.gradient!.angle } })}
+                      style={input}
+                    />
+                  </label>
+                  <label style={field}>
+                    <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+                      Direction · {Math.round(l.gradient.angle)}°
+                    </span>
+                    <input
+                      type="range"
+                      min={0}
+                      max={360}
+                      step={5}
+                      value={l.gradient.angle}
+                      onChange={(e) =>
+                        patch({
+                          gradient: {
+                            to: l.gradient!.to,
+                            angle: Math.max(0, Math.min(360, Math.round(Number(e.target.value)) || 0)),
+                          },
+                        })
+                      }
+                      style={input}
+                    />
+                  </label>
+                </>
+              )}
+            </>
+          )}
+
           {/*
             * The number is said next to the slider because a slider on its own
             * cannot be read back. Somebody matching two layers to the same
@@ -1009,6 +1347,197 @@ export function DesignEditor({
             </ActionButton>
           </div>
         </>
+      )}
+
+      {/*
+        * Notes on the design.
+        *
+        * Under the canvas rather than floating over it: a pin opens its thread
+        * here, which is one place to read and one to type, and on a 390px
+        * screen a popover anchored to a pin near the edge has nowhere to go.
+        */}
+      <SectionLabel
+        aside={roots.length ? `${roots.filter((n) => !n.resolved).length} open` : undefined}
+        style={{ marginBlock: 'var(--sp-6) var(--sp-4)' }}
+      >
+        Notes
+      </SectionLabel>
+
+      {/*
+        * The name, asked once and never invented.
+        *
+        * This is the whole of the app's position on names, applied here: the
+        * sharing switch above sends none because a canvas has no moment to ask
+        * for one, and a note does — you are about to write a sentence to
+        * somebody. So it is asked at the point it is needed, and until it is
+        * answered there is nothing to pin. `authorId` is the account either
+        * way, so a note is recognisably yours before the label exists.
+        */}
+      {!myName ? (
+        <div style={{ marginBottom: 'var(--sp-5)' }}>
+          <label style={field}>
+            <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>What should a note of yours be signed?</span>
+            <input
+              type="text"
+              maxLength={80}
+              value={naming}
+              placeholder="Your name, or whatever you want on it"
+              onChange={(e) => setNaming(e.target.value)}
+              style={input}
+            />
+          </label>
+          <ActionButton
+            disabled={!naming.trim()}
+            onClick={() => {
+              const chosen = naming.trim().slice(0, 80);
+              rememberName(account?.id || '', chosen);
+              setMyName(chosen);
+              setNaming('');
+            }}
+          >
+            Use this name
+          </ActionButton>
+          <p style={{ ...line, marginBlock: 'var(--sp-4) 0', textWrap: 'pretty' }}>
+            Kept on this device, against the account you are signed in with — so somebody else signing in
+            here is not you, and signing in on a phone will ask again.
+          </p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
+          <ActionButton
+            tone={placing ? 'primary' : undefined}
+            onClick={() => setPlacing(!placing)}
+            style={{ flex: '1 1 auto' }}
+          >
+            {placing ? 'Tap the design…' : 'Pin a note'}
+          </ActionButton>
+        </div>
+      )}
+
+      {/*
+        * The composer for a pin that has been placed but not yet written.
+        * Nothing here is on the wire: `pending` is local state, and the note
+        * is made only when there is a sentence to make it out of.
+        */}
+      {pending && (
+        <div
+          style={{
+            border: '1px solid var(--app-accent)',
+            borderRadius: 'var(--r-md)',
+            padding: 'var(--sp-4)',
+            marginBottom: 'var(--sp-4)',
+          }}
+        >
+          <label style={field}>
+            <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>What needs saying about this spot?</span>
+            <textarea
+              rows={2}
+              maxLength={2000}
+              value={draft.pending ?? ''}
+              onChange={(e) => setDraft((old) => ({ ...old, pending: e.target.value }))}
+              style={input}
+            />
+          </label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
+            <ActionButton
+              tone="primary"
+              disabled={!(draft.pending ?? '').trim()}
+              onClick={commitPending}
+              style={{ flex: '1 1 auto' }}
+            >
+              Pin it
+            </ActionButton>
+            <ActionButton
+              onClick={() => {
+                setPending(null);
+                setDraft((old) => ({ ...old, pending: '' }));
+              }}
+              style={{ flex: '1 1 auto' }}
+            >
+              Cancel
+            </ActionButton>
+          </div>
+        </div>
+      )}
+
+      {roots.length === 0 && !pending ? (
+        <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+          Nothing pinned yet. A note sits at a spot on the design — for the thing that needs saying about
+          that corner of it — and everybody sharing this canvas sees it. Notes are never exported: they
+          are about the poster, not on it.
+        </p>
+      ) : (
+        roots.map((n, i) => (
+          <div
+            key={n.id}
+            /*
+              * Tapping a pin opens its card here, and the accent is what makes
+              * that legible — a pin near the bottom of a tall poster and its
+              * thread are far apart on a phone, so without this the tap looks
+              * like it did nothing.
+              */
+            style={{
+              border: `1px solid ${openNote === n.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
+              borderRadius: 'var(--r-md)',
+              padding: 'var(--sp-4)',
+              marginBottom: 'var(--sp-4)',
+              // A settled note is a whole row gone quiet, which is the one
+              // case `styles/rules.ts` says `opacity` is the right tool for —
+              // and it names the token, so the number is not picked by eye.
+              opacity: n.resolved ? DIMMED_ROW : 1,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-3)' }}>
+              <strong style={{ fontSize: 'var(--type-base)' }}>
+                {i + 1}. {n.authorName || 'Somebody'}
+              </strong>
+              {n.resolved && <span style={{ fontSize: 'var(--type-xs)', ...secondLine() }}>settled</span>}
+            </div>
+
+            <p style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal)', marginBlock: 'var(--sp-3)', textWrap: 'pretty' }}>
+              {n.body}
+            </p>
+
+            {repliesTo(n.id).map((r) => (
+              <div key={r.id} style={{ borderLeft: '2px solid var(--app-line)', paddingLeft: 'var(--sp-4)', marginBottom: 'var(--sp-3)' }}>
+                <strong style={{ fontSize: 'var(--type-sm)' }}>{r.authorName || 'Somebody'}</strong>
+                <p style={{ fontSize: 'var(--type-sm)', lineHeight: 'var(--leading-normal)', marginBlock: 'var(--sp-2) 0', textWrap: 'pretty' }}>
+                  {r.body}
+                </p>
+              </div>
+            ))}
+
+            {myName && (
+              <label style={field}>
+                <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Answer this</span>
+                <textarea
+                  rows={2}
+                  maxLength={2000}
+                  value={draft[n.id] ?? ''}
+                  onChange={(e) => setDraft((old) => ({ ...old, [n.id]: e.target.value }))}
+                  style={input}
+                />
+              </label>
+            )}
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
+              {myName && (
+                <ActionButton disabled={!(draft[n.id] ?? '').trim()} onClick={() => answer(n)} style={{ flex: '1 1 auto' }}>
+                  Reply
+                </ActionButton>
+              )}
+              <ActionButton
+                onClick={() => noteChange(notes.map((x) => (x.id === n.id ? { ...x, resolved: !x.resolved } : x)))}
+                style={{ flex: '1 1 auto' }}
+              >
+                {n.resolved ? 'Reopen' : 'Settle'}
+              </ActionButton>
+              <ActionButton onClick={() => unpin(n.id)} style={{ flex: '1 1 auto' }}>
+                Remove
+              </ActionButton>
+            </div>
+          </div>
+        ))
       )}
 
       <p style={{ ...line, marginBlock: 'var(--sp-5)', textWrap: 'pretty' }}>

@@ -104,7 +104,7 @@ const BEAT_TITLE = {
 } as const;
 
 const BEAT_BODY = {
-  fontSize: 'calc(14.5px * var(--text-scale, 1))',
+  fontSize: 'var(--type-md-plus)',
   lineHeight: 'var(--leading-relaxed-plus)',
   color: 'var(--app-dim)',
   marginTop: 'var(--sp-5)',

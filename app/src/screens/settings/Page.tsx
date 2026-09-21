@@ -66,7 +66,7 @@ export function SettingsPage({
      * This used to force `grouped` on itself, whatever anybody had chosen.
      * The argument was that an index is findable because every row looks like
      * every other row — which is true, and is a fact about the row primitives
-     * rather than about the grouped layout: `ItemRow`, `NavRow`, `ToggleRow`
+     * rather than about the grouped layout: `ItemRow`, `NavRow`, `SelectRow`
      * and the rest are the same rows in all three, and every one of them
      * already knows how to draw itself in each.
      *

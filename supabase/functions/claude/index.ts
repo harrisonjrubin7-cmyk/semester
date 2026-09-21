@@ -19,7 +19,7 @@
  *     a function.
  *
  * Deploy:
- *     psql "$DATABASE_URL" -f supabase/migrations/20260921003000_usage_atomic.sql
+ *     psql "$DATABASE_URL" -f supabase/migrations/20260921142822_usage_atomic.sql
  *     supabase secrets set ANTHROPIC_API_KEY=sk-ant-…
  *     supabase functions deploy claude
  *
@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
   // ordinary path through the app was the one that dropped counts. The cap was
   // therefore not a cap. `count_call` does the arithmetic inside one statement
   // that holds the row lock — see
-  // `supabase/migrations/20260921003000_usage_atomic.sql`.
+  // `supabase/migrations/20260921142822_usage_atomic.sql`.
   //
   // *Before*, because the alternative is that the count lands after a network
   // call that can be abandoned. A client that disconnects mid-stream would be

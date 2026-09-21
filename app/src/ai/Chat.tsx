@@ -5,9 +5,10 @@ import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { chromeFor } from '../lib/chrome';
 import { useKeyboardInset } from '../lib/keyboard';
 import { useConversation, provider } from './converse';
+import { useVoice } from './usevoice';
 import { configured, modelLabel } from '../lib/assistant';
 import { Composer, sendHint } from './Composer';
-import { Dropped, Question, Reply, Waiting, Looked, useFollowing } from './Turns';
+import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
 import { Threads, ThreadsOver } from './Threads';
 import { Opening } from './Opening';
 import { Applied, Locally, Proposals } from './Actions';
@@ -49,6 +50,7 @@ export function Chat() {
   const { state, dispatch } = useStore();
   const now = useNow();
   const talk = useConversation();
+  const voice = useVoice(talk);
   const touch = useMedia(TOUCH);
   const wide = useMedia(WIDE);
   /*
@@ -192,6 +194,21 @@ export function Chat() {
                       ? (next) => void talk.send(next, talk.turns.slice(0, i))
                       : undefined
                   }
+                  /*
+                   * A question that is still the last turn got no reply — no
+                   * key, no connection, or a request that failed — and that is
+                   * exactly when the app's own answer is worth having. It used
+                   * to hang only off `Reply`, so it was computed on every
+                   * question and drawn only when a request had succeeded.
+                   */
+                  extra={
+                    i === talk.turns.length - 1 && !talk.busy ? (
+                      <Locally
+                        locally={talk.locally}
+                        onGo={(screen) => dispatch({ type: 'go', screen })}
+                      />
+                    ) : undefined
+                  }
                 />
               ) : (
                 <Reply
@@ -212,6 +229,7 @@ export function Chat() {
                   extra={
                     i === talk.turns.length - 1 && !talk.busy ? (
                       <>
+                        <Using read={talk.read} />
                         {talk.used.length > 0 && (
                           <Looked
                             said={`Read ${talk.used.length} ${talk.used.length === 1 ? 'part' : 'parts'} of your records`}
@@ -315,8 +333,9 @@ export function Chat() {
               return null;
             }}
             busy={talk.busy}
-            placeholder={sendHint(touch)}
+            placeholder={voice.on ? 'Listening — say it out loud' : sendHint(touch)}
             autoFocus={!touch}
+            voice={voice}
           />
           {/*
             One line, centred, under the pill — the shape every chat has, and

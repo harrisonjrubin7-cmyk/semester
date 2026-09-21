@@ -542,6 +542,11 @@ describe('“Increase contrast”, which cannot be done in a media query', () =>
       '--app-line-soft',
       '--app-track',
       '--app-row-dim',
+      // Not a dimming that gets stronger like the rest of this list — the
+      // assistant's button stops fading altogether. It is the one token here
+      // whose job under this setting is to switch a rendering off rather than
+      // to raise it. See `lib/look.ts` where it is written.
+      '--app-passing',
     ]);
     for (const [name, value] of Object.entries(plain)) {
       if (moved.has(name)) continue;

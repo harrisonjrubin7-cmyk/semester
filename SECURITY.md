@@ -63,6 +63,7 @@ complete rather than a selection.
 | **`CRON_SECRET`** | Supabase Vault and a function secret | The ability to make the sender run early. Not to read anything | Rotate in Vault and `supabase secrets set CRON_SECRET=…`, both, or the job 401s every fifteen minutes |
 | `SUPABASE_URL` | Injected | Nothing. It is in the JavaScript every visitor downloads | — |
 | `VAPID_PUBLIC_KEY`, `VAPID_SUBJECT` | Function secrets | Nothing. The public half is compiled into the page on purpose | — |
+| **`SEMESTER_APP_URL`** | Function secret | Where a validated Brightspace launch sends the student's browser, carrying a one-use session token. Not a credential itself, but a wrong value hands that token to whatever is at the address — so it is treated as one | `supabase secrets set SEMESTER_APP_URL=…`. The `lti` function has **no default** and refuses a launch while it is unset, which is the intended behaviour: a guess here is worse than an outage |
 | `ALLOWED_ORIGIN`, `MONTHLY_CALL_LIMIT` | Function secrets | Nothing. Limits, not credentials | `ALLOWED_ORIGIN` is a comma-separated allowlist read by three functions; one wrong value makes all three unreachable from the browser and says nothing. See `supabase/DEPLOY.md` |
 
 Two more that are not environment variables and are easy to forget:
@@ -93,7 +94,7 @@ select public.set_invite_only(true);
 
 It does not touch anybody already signed in and it is undone the same way with
 `false`. Use it when you do not yet know whether the way in is still open;
-[`supabase/migrations/20260921003300_invites.sql`](supabase/migrations/20260921003300_invites.sql)
+[`supabase/migrations/20260921002428_invites.sql`](supabase/migrations/20260921002428_invites.sql)
 is the whole of it, and `invites.check.sql` is what proves a signed-out visitor
 cannot call it.
 

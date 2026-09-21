@@ -49,6 +49,27 @@ inside it the quotation sits.
 
 Nothing to do. Guides you already saved keep the wording they were saved with.
 
+### Settings now tells the truth about what it is connected to
+
+*Settings › About* has a list headed **Where the numbers come from**. It said
+Brightspace was on and had synced four courses at 6:40 AM, that Gradescope was
+on, that Apple Calendar was two-way, and it printed a Top Hat join code.
+
+**None of that was a connection.** This app has never synced Brightspace — the
+Brightspace route is a calendar link you paste, and it is read-only. There is
+no Gradescope route at all. Apple publishes a calendar *out*, one direction.
+And no app, this one included, can read your Top Hat score: Top Hat has no
+student API, so there is nothing to connect to.
+
+The list now names the routes that actually exist — your syllabus, a calendar
+link, a Canvas token you issue yourself, what you type in, and Top Hat marked
+*not connected* — and the tag beside each says **what it takes** rather than
+whether it is switched on, because there was never a switch.
+
+**Nothing you had changes, and nothing stops working.** If you were reading
+that screen as "my Brightspace is hooked up", it never was, and the rest of the
+app has been telling you so on the Connect screen all along.
+
 ### Your university can send its own data as a file, and you load it
 
 Until now there were two ways to tell Semester where you study: find your

@@ -21,7 +21,7 @@
  * would fall off this one.
  */
 
-import { layoutOf, lineHeight, pageSize, type Layout } from './doclayout';
+import { lineHeight, pageSize, type Layout } from './doclayout';
 import { runs, type Run } from './document';
 import { COURIER_WIDTH, WIDTHS, type StandardFont } from './pdfwidths.data';
 
@@ -403,6 +403,5 @@ export function frameOf(layout: Layout): Frame {
   };
 }
 
-export function frameFor(doc: { layout?: Layout }): Frame {
-  return frameOf(layoutOf(doc));
-}
+/* A `frameFor(doc)` stood here: `frameOf(layoutOf(doc))`, and nothing called
+ * it. Both halves are exported and used directly. */

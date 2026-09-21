@@ -504,7 +504,7 @@ export function Import() {
             : undefined
         }
       >
-      <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-xl)' }}>
+      <div className="chrome-text" style={{ fontSize: 'var(--type-2xl)', lineHeight: 'var(--leading-display-xl)' }}>
         Upload it. Walk away.
       </div>
       <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>

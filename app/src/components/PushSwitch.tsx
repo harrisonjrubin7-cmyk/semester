@@ -1,11 +1,21 @@
 import { useEffect, useState } from 'react';
 import { secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
-import { canPush, enrol, enrolled, leave, markRefilled, PUSH_NOTE, queueFor } from '../lib/push';
+import {
+  canPush,
+  enrol,
+  enrolled,
+  leave,
+  markRefilled,
+  neverArrived,
+  PUSH_NOTE,
+  queueFor,
+  stalledLine,
+} from '../lib/push';
 import { INSTALL_FIRST, NO_PUSH_HERE, reach } from '../lib/onhome';
 import { atRiskToday } from '../lib/atrisk';
 import { classesToNudge } from '../lib/notify';
-import { dropDevice, saveDevice, saveQueue, wipeQueue } from '../lib/cloud';
+import { dropDevice, queuedSendAts, saveDevice, saveQueue, wipeQueue } from '../lib/cloud';
 import { railFor, datedItems } from '../lib/select';
 import { beginNow, planFrom } from '../lib/start';
 
@@ -41,10 +51,47 @@ export function PushSwitch() {
   const [on, setOn] = useState(false);
   const [busy, setBusy] = useState(false);
   const [said, setSaid] = useState('');
+  const [stalled, setStalled] = useState('');
 
   useEffect(() => {
     void enrolled().then(setOn);
   }, []);
+
+  /*
+   * Whether anything is actually being delivered.
+   *
+   * The switch has always been able to say "on" while nothing arrived, because
+   * "on" was only ever a fact about this browser: a `PushSubscription` exists,
+   * the queue has rows in it, and both remain true when the sender is not
+   * running. `REFILL_HOURS` in `lib/push.ts` caught the version of this where
+   * the queue empties; this is the version where it does not.
+   *
+   * Asked once per switch-on rather than on a timer. It is a question about a
+   * job that runs every fifteen minutes, so polling it would cost a request an
+   * hour to learn something that changes about once a deploy.
+   *
+   * A failure here is not reported. This is the check that tells you the
+   * reminders are broken, and a check that announces its own network error
+   * would put a second, wronger sentence in front of exactly the person the
+   * first one was written for.
+   */
+  useEffect(() => {
+    // Not `if (!on) setStalled('')`. Clearing it synchronously here is a
+    // setState inside an effect, which the React rules rightly count against
+    // the warning budget — and the rule's own advice is the better shape
+    // anyway: the thing that makes this stale is the switch being turned off,
+    // so `turnOff` clears it, at the event that caused the change.
+    if (!on) return;
+    let live = true;
+    void queuedSendAts()
+      .then((ats) => {
+        if (live) setStalled(stalledLine(neverArrived(ats, Date.now())));
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [on]);
 
   // Not `if (!canPush()) return null`. See the note above: on iOS the absence
   // of push is a thing the student can fix in two taps, and drawing nothing
@@ -136,6 +183,8 @@ export function PushSwitch() {
     if (endpoint) await dropDevice(endpoint);
     await wipeQueue();
     setOn(false);
+    // The queue is gone, so nothing is overdue in it any more.
+    setStalled('');
     setSaid('Off, and the queue is deleted.');
     setBusy(false);
   };
@@ -155,6 +204,25 @@ export function PushSwitch() {
       {(said || blocked) && (
         <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
           {blocked || said}
+        </div>
+      )}
+
+      {stalled && (
+        <div
+          role="status"
+          style={{
+            fontSize: 'var(--type-sm)',
+            color: 'var(--app-warn)',
+            background: 'var(--app-warn-wash)',
+            border: '1px solid var(--app-warn-line)',
+            borderRadius: 'var(--radius-sm)',
+            padding: 'var(--sp-4)',
+            marginTop: 'var(--sp-4)',
+            lineHeight: 'var(--leading-relaxed)',
+            textWrap: 'pretty',
+          }}
+        >
+          {stalled}
         </div>
       )}
 

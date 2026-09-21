@@ -24,18 +24,16 @@ function open(look: Parameters<Provide>[0]) {
   return course && guide ? { course, guide } : null;
 }
 
-/** Ask Claude — the screen this whole feature is replacing. */
-export const ask: Provide = (look) => {
-  const it = open(look);
-  if (!it) return null;
-  return {
-    summary: `The Ask screen, scoped to ${it.course.code}. This is the older, single-course version of the assistant.`,
-    focus: { course: it.course.code },
-    visible: [],
-    actions: ['open_screen'],
-    suggestions: [`Explain the coldest unit in ${it.course.code}.`, 'What should I revise first?'],
-  };
-};
+/*
+ * There were ten providers here and there are nine.
+ *
+ * `ask` described the Ask screen — "the older, single-course version of the
+ * assistant", in its own summary string, for the screen its own docstring said
+ * "this whole feature is replacing". The replacement happened; nothing ever
+ * registered the provider, so it described a screen to a model that could not
+ * be sent there. Cut in the twenty-sixth pass, after the census found it alone
+ * at zero among nine siblings each with exactly one caller.
+ */
 
 /** Work on it — an assignment broken into a rubric and a plan. */
 export const work: Provide = (look) => {

@@ -37,6 +37,7 @@ import { join } from 'node:path';
 
 /** `fontSize: 'var(--type-xs)'` and friends — the six named steps. */
 export const TYPE: Record<string, string> = {
+  '9': '3xs',
   '10': '2xs',
   '10.5': '2xs-plus',
   '11': 'xs',
@@ -46,12 +47,14 @@ export const TYPE: Record<string, string> = {
   '13': 'base',
   '13.5': 'base-plus',
   '14': 'md',
+  '14.5': 'md-plus',
   '15': 'lg',
   '17': 'display-xs',
   '20': 'display-sm',
   '22': 'display',
   '24': 'display-lg',
   '26': 'xl',
+  '28': '2xl',
 };
 
 export const LEADING: Record<string, string> = {

@@ -9,6 +9,7 @@
     "lint": "oxlint --max-warnings=25 src && node scripts/styles.mjs && node scripts/labels.mjs",
     "lint:styles": "node scripts/styles.mjs",
     "counts": "node scripts/counts.mjs",
+    "census:exports": "node scripts/exports.mjs .",
     "icons": "node scripts/icons.mjs",
     "mirror": "node scripts/mirror.mjs",
     "preview": "vite preview",

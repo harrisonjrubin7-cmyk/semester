@@ -184,6 +184,20 @@ export interface Profile {
   about: string;
 }
 
+/**
+ * The `enrollments` row, and the one of these three shapes nothing declares.
+ *
+ * `Profile` and `Message` beside it are both used. This is not, and it stays:
+ * the three together are what the classmates tables *are*, and a schema with
+ * two of its three row shapes written down is worse documentation than one
+ * with none, because the gap reads as a table that does not exist.
+ *
+ * The question the census cannot answer, recorded rather than guessed at: the
+ * code that reads `enrollments` does not annotate its rows with this. Either
+ * it should, and this is a wiring job, or the read is shaped differently and
+ * this is stale. One look at the query settles it and this pass did not take
+ * that look.
+ */
 export interface Enrollment {
   user_id: string;
   term: string;
