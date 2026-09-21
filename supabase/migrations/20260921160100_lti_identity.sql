@@ -107,16 +107,10 @@ revoke all on public.lti_link_ticket from anon, authenticated;
 
 create index if not exists lti_link_ticket_expires_at_idx on public.lti_link_ticket (expires_at);
 
--- The cascade above needs this one. `provisioned_user_id` references
--- `auth.users on delete cascade`, and Postgres does not index a foreign key
--- for you: deleting an account has to find that account's tickets, so without
--- it every account deletion seq-scans this table. `lti_identity.user_id` two
--- tables up got the same treatment for the same reason; this one was missed.
---
--- `indexes.check.sql` is what said so, on the tree where #614 added the table
--- and #611 added the sweep. Neither could see the other.
-create index if not exists lti_link_ticket_provisioned_user_id_idx
-  on public.lti_link_ticket (provisioned_user_id);
+-- The covering index this table's cascade needs is not here. It is its own
+-- migration — `20260921174500_index_lti_link_ticket_user.sql` — which is
+-- where it stayed after two sessions added it twice, under two names, in the
+-- same afternoon. See that file for why the column needs one.
 
 comment on table public.lti_link_ticket is
   'Proof that a launch was validated, spent once when a student attaches an account they already had.';
