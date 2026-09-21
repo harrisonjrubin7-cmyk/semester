@@ -456,48 +456,21 @@ export function ItemRow({
   );
 }
 
-/** A real switch, so a screen reader says "on" rather than "button". */
-export function ToggleRow({
-  label,
-  sub,
-  on,
-  onChange,
-}: {
-  label: string;
-  sub?: ReactNode;
-  on: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <Row as="button" onClick={onChange} role="switch" ariaChecked={on} ariaLabel={label}>
-      <Label label={label} sub={sub} />
-      <span
-        aria-hidden
-        style={{
-          width: 42,
-          height: 24,
-          padding: 'var(--sp-1)',
-          flex: 'none',
-          borderRadius: 'var(--r-sm)',
-          border: '1px solid var(--app-line)',
-          background: on ? 'var(--app-accent-fill)' : 'transparent',
-          display: 'flex',
-          justifyContent: on ? 'flex-end' : 'flex-start',
-        }}
-      >
-        <span
-          style={{
-            width: 18,
-            height: 18,
-            borderRadius: 'var(--r-sm)',
-            background: on ? 'var(--app-bg)' : 'var(--app-faint)',
-            display: 'block',
-          }}
-        />
-      </span>
-    </Row>
-  );
-}
+/*
+ * `ToggleRow` was here, and nothing ever rendered it.
+ *
+ * A real switch — `role="switch"`, `aria-checked`, a drawn track and knob —
+ * and the only mention of it anywhere in the app was a comment on
+ * `screens/settings/Page.tsx` listing it among the shared rows, which is how a
+ * component nobody uses goes on looking used. Found by
+ * `scripts/exports.mjs`: dead in a file where eight neighbours read alive,
+ * `Group` at 147 uses and `CustomRow` at 120.
+ *
+ * What it was for is not gone. `Row` takes `role` and `ariaChecked` directly,
+ * and `ItemRow` has passed them through since the widening, so a screen that
+ * wants a switch row writes one out of the same parts — `MuteCourses` does
+ * exactly that. This was a second way to get there that never got a caller.
+ */
 
 /**
  * A choice, with the options underneath.

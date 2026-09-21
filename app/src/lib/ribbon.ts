@@ -128,7 +128,9 @@ export interface Tab {
  */
 export const TABS = ['home', 'insert', 'formulas', 'data', 'view'] as const;
 
-export type TabId = (typeof TABS)[number];
+/* A `TabId = (typeof TABS)[number]` stood here, unused, for the same reason
+ * and with the same remedy as `MenuId` in `lib/menus.ts`: `TABS` is exported
+ * and the union is one line away. */
 
 /**
  * The ribbon as it should be drawn.

@@ -651,7 +651,6 @@ function pictureOf(
   };
 }
 
-/** Whether this is a file this reader will open at all. */
-export function readable(file: File): boolean {
-  return /\.docx$/i.test(file.name);
-}
+/* A `readable(file)` stood here — `/\.docx$/i` — and nothing asked it. The
+ * app filters by extension where the file is chosen, in `FilePick`'s `accept`,
+ * which is the check a person actually meets. */

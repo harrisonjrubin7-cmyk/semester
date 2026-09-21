@@ -87,7 +87,26 @@ export function shiftMark(id: string, by: number): void {
   put(shift(marks(), id, by));
 }
 
-/** For tests: forget what was read, so the next read goes to the device. */
+/**
+ * Drop the memo above, so the next read goes to the device.
+ *
+ * Unused, and staying, which is not where the twenty-eighth pass's census
+ * first left it. It was cut there on the reading that a seam nothing reaches
+ * is not a seam — and the reading was too narrow by one step. The
+ * twenty-sixth pass had already asked the better question and left it open:
+ * *"either the bookmarks hook's cache leaks between tests and nobody noticed,
+ * or this is surplus."*
+ *
+ * Neither, it turns out. **Nothing tests this hook at all** — no test file
+ * touches `useMarks`, `star` or `isSaved` — so there is no leak to have
+ * noticed, and the seam is unreached rather than unnecessary. Two sibling
+ * hooks keep exactly this export and four test files call them:
+ * `forgetSound` in `lib/sound.hook.ts`, `forgetStrip` in `lib/browser.hook.ts`.
+ * Cutting the third of three because its module is the one still without
+ * tests is how a pattern acquires a hole, and is the same move the
+ * twenty-sixth pass refused for `fourier.ts`'s `phaseAt`: you do not cut one
+ * of a pair to satisfy a census.
+ */
 export function forgetMarks(): void {
   held = null;
   for (const listener of listeners) listener();

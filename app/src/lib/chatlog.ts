@@ -137,18 +137,19 @@ export function trim(turns: Turn[]): Turn[] {
   return fit(turns).turns;
 }
 
-export function save(kept: Kept): void {
-  try {
-    const turns = trim(kept.turns);
-    if (turns.length === 0) {
-      localStorage.removeItem(KEY);
-      return;
-    }
-    localStorage.setItem(KEY, JSON.stringify({ ...kept, turns }));
-  } catch {
-    // A full store must not lose the answer that is on screen right now.
-  }
-}
+/*
+ * Nothing writes this store any more, and that is on purpose.
+ *
+ * `save` lived here, beside `load` and `clear`, from when the assistant kept
+ * one conversation. `lib/threads.ts` keeps many, under its own key, and the
+ * only thing that still touches this one is its `migrate()` — which reads the
+ * old single conversation once, moves it into a thread, and calls `clear`.
+ * So `load` and `clear` stay and are called; a `save` had no caller left and
+ * could only ever have written a store the app had stopped reading.
+ *
+ * Found by `scripts/exports.mjs`, which asks the compiler rather than the
+ * text. It read as dead in a file whose four neighbours read as alive.
+ */
 
 /**
  * The conversation as it was left, or nothing.
@@ -190,14 +191,11 @@ export function clear(): void {
   }
 }
 
-/**
- * Whether a kept conversation is old enough to be worth saying so.
+/*
+ * `stale` went with it, for the same reason and with one of its own.
  *
- * Coming back an hour later to a thread you have forgotten starting is
- * disorienting in a way coming back after two minutes is not. The screen says
- * when it was, rather than silently deciding for you — a conversation is
- * yours to keep or clear.
+ * It answered "is this conversation old enough to say so" for the single-log
+ * screen that no longer exists. No caller has ever asked it in this
+ * repository's history, so the six hours in it was never a decision anybody
+ * saw the effect of — a threshold nothing reads is a number, not a rule.
  */
-export function stale(kept: Kept, now: number): boolean {
-  return now - kept.at > 6 * 60 * 60 * 1000;
-}
