@@ -1,3 +1,171 @@
+# One app — the twenty-third pass: a record of where you have been, that nothing has ever read
+
+Against `main` at `1d1b0bc`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge, no screen touched. One cut and one guard.
+
+Numbered twenty-third because the twenty-second landed while this was being
+written — `#542`, from another session, on routes. `CLAUDE.md`'s first rule
+caught it before a word of this was committed, and the subjects turned out to
+be unrelated: theirs is the route claim, this is a persisted field. Their T1
+also closes a row this file has carried since the nineteenth pass as *the
+owner's to name* — `account` against `profile` — by finding the answer already
+written in `screens/Profile.tsx`'s own docstring. It is struck below.
+
+## The subject, and two instruments that had to be thrown away first
+
+The twenty-first pass found a gate that nothing applied. The obvious follow-up
+is *what else is carried and never used*, and the first two ways of asking it
+were both wrong in ways worth recording, because each failed the rule this file
+keeps re-learning.
+
+**A dead-export census over `app/src` reported 1,054 dead exports in 714
+files.** That is not a finding, it is a broken probe, and three hand-checks
+said why: `screens/Import.tsx`'s `Import` is reached by
+`lazy(() => import('./screens/Import'))`, which the parser never saw, so every
+lazily-loaded screen read as dead; `data/schools/index.ts`'s `BUNDLED` is used
+twice inside its own module; `styles/rules.ts`'s `sources` is a helper 28 test
+files import. Three blind spots, one number, no way to tell which rows were
+real. Dropped rather than reported.
+
+**A settings census flagged three keys, and two were the probe's fault.**
+`seenOnboarding` is read as `persisted.seenOnboarding`, off the persisted
+object rather than off `state`, which the regex did not cover. `liveSession` is
+read five times in `state/slices/study.ts` — and the probe had excluded the
+slices as *carriers*, which is wrong: a reducer reading a field to decide the
+next state is the app using it. **The exclusion list was the fault, not the
+field.**
+
+One of the three survived both corrections.
+
+## T1 — `lastOpened`: written on every navigation, read by nothing, ever
+
+`state/slices/navigate.ts` wrote it on every `go`: the day each screen was
+opened, per screen, rounded to the day. From there it is carried by every
+system this app has for carrying data:
+
+| Carried by | Where |
+| --- | --- |
+| persisted | `pickPersisted`, `state/shape.ts` |
+| restored | `loadPersisted`, with its own default |
+| merged across devices | `lib/merge.ts`, strategy `newer` |
+| described in the backup | `lib/export.ts` — *"when each screen was last opened"* |
+| disclosed on the privacy screen | `lib/privacy.ts`, in the list of what is held |
+
+And read by nothing. Not narrowed to "no current caller" — **no screen or
+component in this repository's history has ever contained the word**:
+
+    $ git log --all -S"lastOpened" -- app/src/screens app/src/components
+    (no output)
+
+It is worse than the twenty-first pass's `showAll` in the way that matters.
+`showAll` was a setting somebody chose and the app then ignored. This is a
+record of where a student has been, collected on every navigation, kept
+forever, and synced between their devices, for a feature that was never built.
+
+### Its own docblock carries the rule that condemns it
+
+`state/shape.ts` said what it was for, and in the same paragraph stated the
+principle:
+
+> Everything directory wanted to say "three weeks ago" beside a row and to
+> separate a screen nobody has opened from one abandoned in September. …
+> **what a feature does not need is not stored, whichever machines end up
+> holding it.**
+
+Both halves of that purpose exist in the app today and neither uses this field.
+**Lately** is `lately(state.recent, …)` in `lib/nav.ts` — an order, not a date,
+so it cannot say "three weeks ago". **Not opened yet** is `lib/unseen.ts` over
+`state.visited` — a boolean, so it separates never-opened from opened and
+cannot tell a screen abandoned in September from one opened this morning.
+
+Three records of where you have been. `recent` is used, `visited` is used, and
+the third was never wired to anything.
+
+## T2 — the cut, and what came with it
+
+The field, its write, and its four carrier entries. Then one thing that is only
+visible once the field is gone: **`lastOpened` was the only field with the
+`newer` merge strategy**, so `merge.ts`'s `newer()`, its `Strategy` union
+member and its `switch` case were dead the moment it went — and no test had
+ever exercised any of them. They are cut too, rather than left as a strategy
+nothing can select. `lib/coedit.ts` has its own unrelated `newer`, which is the
+same name-collision trap the last pass hit with three `showing`s.
+
+No migration step, and that is the claim rather than the assumption — the first
+version of the test asserted the wrong mechanism and failed, usefully.
+`loadPersisted` spreads `...saved` before it names a field, so a copy saved
+before this pass **does** carry `lastOpened` back in and holds it until the
+next write. It is `pickPersisted` that drops it, by naming what it takes rather
+than by removing what it does not want. So: it opens, it carries, it does not
+survive the next save.
+
+## T3 — the guard, and the gap it fills
+
+This repository already guards the other direction, and thoroughly. Every
+persisted field must be accounted for in the backup (`lib/export.test.ts`),
+assigned a merge strategy (`lib/merge.test.ts`) and named in the privacy
+disclosure (`lib/privacy.test.ts`) — and all three read the field list out of
+`pickPersisted` so they cannot drift from a copy.
+
+**Every one of those is a guard about being carried.** A field that is only
+carried passes all three, which is exactly how this one lived: it satisfied
+each of them and did nothing.
+
+`src/state/keyread.test.ts` asks the other question — is any persisted field
+read by something that is not merely carrying it. Five carriers are excluded
+and the list is argued rather than assumed: the shape, the migration ladder,
+the merge, the backup, the privacy list. `state/slices/` is deliberately **not**
+excluded, because an earlier draft did exclude it and reported `liveSession` as
+a finding.
+
+It reads `.field` rather than a bare name: a bare match would report every key
+whose name is an ordinary word — `notes`, `term`, `scale`, `progress`,
+`people` — as read by whichever file happens to use the word, which is a probe
+that can only pass. And it reads the tree once; the first version opened every
+file per field, seventy thousand reads, and timed out at five seconds. A guard
+slow enough to be deleted is a guard that will be.
+
+Reverted — the field carried again and read by nothing — it fails naming
+`lastOpened`. Restored, it passes.
+
+## What was checked and is not a finding
+
+- **`liveSession`** — five readers in `slices/study.ts`. Live.
+- **`seenOnboarding`** — read at `state/store.tsx:310`, off `persisted`. Live,
+  and the reason the probe now matches that form.
+- **Lately absent from the directory** on a fresh profile. Driven in a browser
+  and it looked like a regression; the control on `main` is identical, and the
+  reason is `lately`'s own: every screen the walk visited was on the tab bar,
+  which it excludes. Not a fault, and not this pass's.
+- **The browser check of persistence proved nothing either way** and is
+  recorded as such rather than dressed up. Neither tree wrote `visited`,
+  `recent` or `lastOpened` to storage under the probe — the first version
+  re-seeded `localStorage` on every navigation through `addInitScript`, and
+  the second could not make an in-page hash change reach the reducer at all.
+  The evidence for T1 is the source and the history, which are not in doubt;
+  what the browser confirms is narrower and is the right claim for it: the
+  cut tree is **indistinguishable from `main`** on the directory, on Not
+  opened yet, and on `pageerror`.
+
+## Gates
+
+`tsc` clean · lint ok · **10,845 tests pass across 530 files** · shuffle clean ·
+production build clean.
+
+## To do
+
+- ~~`account` on Profile.~~ **Closed** by the twenty-second pass's T1: the
+  answer was already in `screens/Profile.tsx`'s docstring.
+- **`offerable()`'s default is still the ungated registry** — carried from the
+  twenty-first. The one caller passes a pool; a second would get the registry
+  unless it said otherwise.
+- **The dead-export question is still open and still unasked.** Two instruments
+  failed at it here. It wants a probe that resolves dynamic `import()`,
+  distinguishes in-module use from an import, and knows a test helper from a
+  dead one — which is a pass of its own, not a paragraph of this one.
+
+---
+
 # One app — the twenty-second pass: the expensive answer was holding nothing
 
 Against `main` at `8d653be`. **<!--screens-->fifty-eight<!--/--> destinations**,
