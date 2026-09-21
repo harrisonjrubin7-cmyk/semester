@@ -56,6 +56,18 @@ const type = async (label: string, value: string) => {
   });
 };
 
+/** The EDIT / ADD control on one row, by the link's name. */
+const openRow = async (name: string) => {
+  const row = [...host.querySelectorAll('a.bare > span:first-child, span > span:first-child')]
+    .find((s) => s.textContent?.trim() === name)
+    ?.closest('div')?.parentElement;
+  const button = [...(row?.querySelectorAll('button') ?? [])].find((b) =>
+    /^(EDIT|ADD)$/i.test(b.textContent?.trim() ?? ''),
+  );
+  expect(button, `no EDIT on the row for ${name}`).toBeTruthy();
+  await act(async () => button!.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+};
+
 const press = async (label: string) => {
   const button = [...host.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
   expect(button, `no button called ${label}`).toBeTruthy();
@@ -134,5 +146,69 @@ describe('headings a student names', () => {
     // place — see `groupName` in `lib/linkgroups.ts`.
     expect(both[1].group).toBeUndefined();
     expect(under(OWN_GROUP)).toEqual(['Gym']);
+  });
+});
+
+describe('re-filing a link you already added', () => {
+  it('moves it to the group typed, and leaves the address alone', async () => {
+    await mount([link('Landlord', 'Housing'), link('Gym', 'Housing')]);
+    expect(under('Housing')).toEqual(['Landlord', 'Gym']);
+
+    await openRow('Landlord');
+    await type('Landlord group', 'Rent');
+    await press('Save');
+
+    // A heading sits where its first link sits, so re-filing the first link
+    // moves the heading with it — "Rent" is now what the topmost added row
+    // names. Asserted rather than tolerated: it is the visible consequence of
+    // ordering headings by their rows instead of by a list of their own.
+    expect(headings().slice(4)).toEqual(['Rent', 'Housing']);
+    expect(under('Housing')).toEqual(['Gym']);
+    expect(under('Rent')).toEqual(['Landlord']);
+
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY)!).extraLinks;
+    expect(saved.find((l: CampusLink) => l.name === 'Landlord').group).toBe('Rent');
+    expect(saved.find((l: CampusLink) => l.name === 'Landlord').url).toBe('https://landlord.example.edu');
+  });
+
+  /*
+   * The box shows what is stored, not what is drawn. The screen files an
+   * ungrouped row under "Yours" before rendering it, so reading the group off
+   * the row would put "Yours" in a box the student left empty — and saving
+   * would then write it into the record, which is the default leaking out of
+   * `groupName` into the data.
+   */
+  it('opens empty on a link that was never given a group', async () => {
+    await mount([link('Gym')]);
+    await openRow('Gym');
+    const box = host.querySelector<HTMLInputElement>('input[aria-label="Gym group"]');
+    expect(box?.value).toBe('');
+    await press('Save');
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).extraLinks[0].group).toBeUndefined();
+    expect(under(OWN_GROUP)).toEqual(['Gym']);
+  });
+
+  it('empties back to "Yours" by clearing the box, rather than by typing it', async () => {
+    await mount([link('Gym', 'Sport')]);
+    expect(headings()).toContain('Sport');
+
+    await openRow('Gym');
+    await type('Gym group', '   ');
+    await press('Save');
+
+    expect(headings()).not.toContain('Sport');
+    expect(under(OWN_GROUP)).toEqual(['Gym']);
+    expect(JSON.parse(localStorage.getItem(STORAGE_KEY)!).extraLinks[0].group).toBeUndefined();
+  });
+
+  /*
+   * A bundled row's heading is the app's. There is no record to patch, so the
+   * box is not offered rather than offered and quietly ignored.
+   */
+  it('offers no group box on a link the app shipped', async () => {
+    await mount();
+    await openRow('oneVU');
+    expect(host.querySelector('input[aria-label="oneVU group"]')).toBeNull();
+    expect(host.querySelector('input[aria-label="oneVU address"]')).toBeTruthy();
   });
 });

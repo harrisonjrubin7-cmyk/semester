@@ -644,19 +644,29 @@ CREATE TRIGGER touch_tasks BEFORE INSERT OR UPDATE ON public.tasks FOR EACH ROW 
 -- RLS-on-by-default true, so a schema rebuilt without it would be quietly
 -- less safe than the original.
 --
--- **It is not this project's either**, which the first version of this file
--- said it was. It is installed by Supabase's "automatically enable RLS"
--- setting: written in Supabase's house style rather than this repository's,
--- and the one migration that names it — `history/20260907134823_…` — only
--- revokes EXECUTE on the function, which is a thing you do to something that
--- already exists. Nothing in `migrations/` creates it and nothing should.
--- It is kept here because this file is a record of production, and production
--- has it.
+-- **It is this project's**, which the first version of this file said and a
+-- later one withdrew. The withdrawal reasoned that Supabase's "automatically
+-- enable RLS" setting installs it — the code is in Supabase's house style
+-- rather than this repository's, and the one migration that named it only
+-- revoked EXECUTE, which is a thing you do to something that already exists.
 --
--- Guarded, because `local.stub.sql` now creates it too — that is where the
--- platform's objects belong, and a replay that applies the stub first would
--- otherwise die on this line with `event trigger "ensure_rls" already
--- exists`. Which it did, on the rehearsal that found this.
+-- Two Supabase-built preview branches settled it on 21 September. One whose
+-- migrations do not create the trigger came up with six event triggers, every
+-- one the platform's own, and no `ensure_rls`; one whose migrations do create
+-- it came up with seven. Both had applied all their migrations. The platform
+-- does not supply this, and the house style is explained instead by Supabase's
+-- documentation, which prints this exact function and trigger under
+-- *Auto-enable RLS for new tables* as a recipe to run yourself. Somebody did.
+--
+-- So `20260901000100_schema.sql` creates it, and `local.stub.sql` — which is
+-- deployed nowhere — no longer does. It is still recorded here because this
+-- file is a record of production and production has it.
+--
+-- Guarded all the same, and the guard is what matters rather than the reason
+-- for it: a replay that applies the migrations first, or an earlier stub that
+-- still carried the trigger, would otherwise die on this line with
+-- `event trigger "ensure_rls" already exists`. Which it did, on the rehearsal
+-- that found the collision.
 --
 -- Needs superuser, which is why it is last: everything above applies without
 -- it, and this is the only line that will fail for a non-superuser.

@@ -332,9 +332,13 @@ whether that person shares a class with you.
   against whatever the caller had set. Now `''`; its body calls only `now()`.
 - **`touch_updated_at` and `rls_auto_enable`** lost their EXECUTE grants.
   Neither needs one: Postgres checks that privilege when a trigger is created,
-  not each time it fires. `rls_auto_enable` is Supabase's own event-trigger
-  function and is not defined anywhere in this repo, so only the live grant
-  changed.
+  not each time it fires. This entry used to add that `rls_auto_enable` "is
+  Supabase's own event-trigger function and is not defined anywhere in this
+  repo, so only the live grant changed". The second half was true and the first
+  half is why: Supabase's documentation offers the function and its `ensure_rls`
+  trigger as a recipe to run yourself, under *Auto-enable RLS for new tables*,
+  and somebody ran it here. `20260901000100_schema.sql` creates it now, so a
+  rebuild gets the trigger and the revoke above has something to close.
 - **`groups.sql`** got the same treatment ahead of time. It is not applied to
   the live project, and it had no grants at all — so its three helpers would
   have inherited the same default EXECUTE and appeared as three more

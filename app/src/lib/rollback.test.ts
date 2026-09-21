@@ -519,53 +519,75 @@ describe('the fingerprint queries', () => {
 });
 
 /*
- * `rls_auto_enable` is the platform's, and the revoke on it is not.
+ * `rls_auto_enable` is this project's, and a migration has to create it.
  *
  * Production has an event trigger that turns row-level security on for every
- * table created in `public`. Nothing in `migrations/` creates it and nothing
- * should — it is installed by a dashboard setting, and the one migration that
- * names it only revokes EXECUTE. Its absence from `local.stub.sql` was the
- * whole of the difference between production's function fingerprint and a
- * local build's.
+ * table created in `public`. This block used to assert the opposite of what it
+ * asserts now — that the platform owns it, that no migration should create it,
+ * and that defining it in `local.stub.sql` was the fix. That was wrong, and it
+ * was pinned, which is worse: the test enforced the hole.
  *
- * The revoke is the part that has already gone wrong once. Production closed
- * that grant on 7 September and the statement lives in `history/`, which
- * nothing applies — so a database built from `migrations/` had it open, and
- * `grants.check.sql` could not see that until the stub started creating the
- * function the way a real project does. Both halves are pinned here: the stub
- * must define it, and a migration must close it.
+ * What settled it is Supabase's own documentation. Under the heading
+ * *Auto-enable RLS for new tables* it says "if you want RLS enabled
+ * automatically for new tables, you can create an event trigger", and prints
+ * this exact function and trigger. There is no dashboard setting that installs
+ * them. Somebody ran the documented recipe against this project by hand, which
+ * is why the code reads in Supabase's house style and why the only migration
+ * that mentions it merely revokes EXECUTE on something already there.
+ *
+ * The cost of having it in the stub was measured rather than argued. With the
+ * stub's copy removed and all fifteen migrations applied — the shape of a real
+ * rebuild or a preview branch, where `local.stub.sql` is not deployed at all —
+ * `ensure_rls` was absent. Nothing failed and nothing said so: the revoke in
+ * `function_grants.sql` skips a function that is not there rather than erroring
+ * on it. A recovered database would have had no RLS-on-by-default and looked
+ * entirely healthy.
+ *
+ * So three halves are pinned: a migration creates the function, a migration
+ * creates the trigger, and a migration closes the grant.
  */
-describe('the event trigger that belongs to the platform', () => {
-  const stub = () => readFileSync(join(ROOT, 'supabase', 'local.stub.sql'), 'utf8');
+describe('the event trigger that makes RLS the default', () => {
+  const migrations = () => {
+    const dir = join(ROOT, 'supabase', 'migrations');
+    return readdirSync(dir)
+      .filter((n) => n.endsWith('.sql'))
+      .map((n) => readFileSync(join(dir, n), 'utf8'))
+      .join('\n');
+  };
 
-  it('is defined in the stub, with its trigger', () => {
+  it('is created by a migration, with its trigger', () => {
     /*
-     * The creation, not the name. The first draft asked whether the string
-     * `rls_auto_enable` appeared, and a control that renamed the function to
-     * `rls_auto_enabled_x` left the test green — the new name contains the old
-     * one. A substring is not a definition.
+     * The creation, not the name — kept from the version of this test that
+     * pointed at the stub. Asking whether the string `rls_auto_enable` appears
+     * passes against a control that renames the function to
+     * `rls_auto_enabled_x`, because the new name contains the old one. A
+     * substring is not a definition.
      */
-    expect(stub(), 'local.stub.sql no longer defines rls_auto_enable').toMatch(
+    expect(migrations(), 'no migration defines rls_auto_enable').toMatch(
       /create\s+(or\s+replace\s+)?function\s+public\.rls_auto_enable\s*\(\s*\)/i,
     );
-    expect(stub(), 'local.stub.sql no longer creates the ensure_rls event trigger').toMatch(
+    expect(migrations(), 'no migration creates the ensure_rls event trigger').toMatch(
       /create\s+event\s+trigger\s+ensure_rls\b/i,
     );
   });
 
-  it('and no migration creates it, because the repository does not own it', () => {
-    const dir = join(ROOT, 'supabase', 'migrations');
-    for (const f of readdirSync(dir).filter((n) => n.endsWith('.sql'))) {
-      const sql = readFileSync(join(dir, f), 'utf8');
-      expect(
-        /create\s+(or\s+replace\s+)?function\s+\S*rls_auto_enable/i.test(sql),
-        `${f} creates rls_auto_enable, which the platform owns`,
-      ).toBe(false);
-      expect(
-        /create\s+event\s+trigger\s+ensure_rls\b/i.test(sql),
-        `${f} creates the ensure_rls event trigger, which the platform owns`,
-      ).toBe(false);
-    }
+  it('and not only in the stub, which is deployed nowhere', () => {
+    /*
+     * The control for the test above, and the whole point of this change. An
+     * object defined only in `local.stub.sql` exists in no rebuilt database and
+     * on no preview branch — `supabase/README.md` says that file is "not
+     * deployed anywhere" — so every local check can pass while the thing it is
+     * checking is missing everywhere it matters.
+     */
+    const stub = readFileSync(join(ROOT, 'supabase', 'local.stub.sql'), 'utf8');
+    expect(
+      /create\s+(or\s+replace\s+)?function\s+public\.rls_auto_enable\s*\(\s*\)/i.test(stub),
+      'local.stub.sql defines rls_auto_enable again, where a rebuild cannot see it',
+    ).toBe(false);
+    expect(
+      /create\s+event\s+trigger\s+ensure_rls\b/i.test(stub),
+      'local.stub.sql creates the ensure_rls trigger again, where a rebuild cannot see it',
+    ).toBe(false);
   });
 
   it('and a migration does revoke it, from PUBLIC as well as by name', () => {

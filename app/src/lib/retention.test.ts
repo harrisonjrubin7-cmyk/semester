@@ -70,14 +70,27 @@ const flat = () =>
  * the reason `scripts/destinations.mjs` gives about screens: a list in a test
  * is a list that drifts from the thing it is about and says nothing when it
  * does. `if not exists` and a bare or `public.`-qualified name are all in use
- * across the thirteen migrations, so the pattern takes all four shapes.
+ * across the migrations, so the pattern takes all four shapes.
+ *
+ * Anchored to the start of a line, because a migration can *mention* the words
+ * without creating anything. `20260901000100_schema.sql` lists the command tags
+ * its RLS event trigger fires on — `'CREATE TABLE'`, `'CREATE TABLE AS'`,
+ * `'SELECT INTO'` — and read as DDL that is a table called `as`, which this
+ * test then demanded a retention answer for: a failure of exactly the right
+ * shape, about nothing. Every real `create table` in this directory begins a
+ * line, indented or not, and the only mid-line ones are those two literals.
+ *
+ * Blanking quoted strings instead was tried first and is worse: the bodies here
+ * are dollar-quoted and full of `''`, so pairing apostrophes swallows whole
+ * statements and the probe goes quiet about tables that do exist.
  */
 function tablesCreated(): string[] {
   const found = new Set<string>();
   for (const file of readdirSync(MIGRATIONS)) {
     if (!file.endsWith('.sql')) continue;
     const sql = readFileSync(join(MIGRATIONS, file), 'utf8');
-    for (const m of sql.matchAll(/create table\s+(?:if not exists\s+)?(?:public\.)?([a-z_]+)/gi)) {
+    const statements = /^[ \t]*create table\s+(?:if not exists\s+)?(?:public\.)?([a-z_]+)/gim;
+    for (const m of sql.matchAll(statements)) {
       found.add(m[1]);
     }
   }

@@ -790,11 +790,20 @@ export const OWNED_TABLES: OwnedTable[] = [
 /**
  * The tables a deleted account leaves rows in, and why.
  *
- * Every one of these is a row the account created that another person is
- * relying on, or a record about another person. There is no version of
- * "delete everything" that includes them and is not also "delete somebody
- * else's data", so the honest thing is to leave them, say so, and say why —
- * which is what `privacy.ts` does with these sentences.
+ * Two kinds, and the second was added later. Most are a row the account
+ * created that another person is relying on, or a record about another
+ * person: there is no version of "delete everything" that includes them and
+ * is not also "delete somebody else's data", so the honest thing is to leave
+ * them, say so, and say why — which is what `privacy.ts` does with these
+ * sentences.
+ *
+ * The other kind is reference data the account never wrote at all. The guard
+ * in `privacy.test.ts` matches every `.from('…')` in the client, reads and
+ * writes alike, which is the right posture for a privacy check — touching a
+ * table should force a decision about what deletion does to it — but it means
+ * a table nobody's account owns arrives here too. Saying "your departure does
+ * not remove it" about the list of universities is a true and slightly odd
+ * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
@@ -808,6 +817,10 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'reports',
     why: 'A report you filed is a record about somebody else. It has no delete policy at all, deliberately: deleting your account is not a way to withdraw one.',
+  },
+  {
+    table: 'schools',
+    why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
   },
 ];
 
