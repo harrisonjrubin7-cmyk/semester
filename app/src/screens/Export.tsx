@@ -281,7 +281,7 @@ export function Export() {
           </button>
           <div style={{ flex: 1, minWidth: 0, paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: '0' }}>
             <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
-              <span style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))' }}>{part.label}</span>
+              <span style={{ fontSize: 'var(--type-md-plus)' }}>{part.label}</span>
               <span className="tag tag-neutral" style={{ flex: 'none' }}>
                 {part.format}
               </span>
