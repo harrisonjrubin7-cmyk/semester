@@ -34,7 +34,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
         state.reviews,
         catalog.modules.map((m) => ({
           courseId: m.course.id,
-          questions: allCards(m.guide).map((c) => c.q),
+          cards: allCards(m.guide),
         })),
       ),
     [state.reviews, catalog.modules],

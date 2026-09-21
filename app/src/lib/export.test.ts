@@ -15,6 +15,7 @@ import {
   fold,
   icsText,
   notesMarkdown,
+  projectFile,
   safeName,
   stampedName,
   toCsv,
@@ -448,7 +449,7 @@ describe('notesMarkdown', () => {
     body: 'I am writing to ask…',
     courseId: 'econ' as const,
     purposeId: 'extension',
-    updated: Date.UTC(2026, 8, 5),
+    updated: new Date(2026, 8, 5, 9, 0).getTime(),
     handed: null,
   };
 
@@ -470,8 +471,80 @@ describe('notesMarkdown', () => {
     expect(md).toContain('## Extension on the essay');
   });
 
+  it('dates a draft on the student\'s clock too, not Greenwich\'s', () => {
+    /*
+     * The notes half of this file was fixed for exactly this and carries the
+     * guard above; the drafts half was written later and reintroduced
+     * `toISOString().slice(0, 10)`. So one export could date a note the 3rd
+     * and the extension request written minutes after it the 4th.
+     *
+     * The fixture above used to be `Date.UTC(2026, 8, 5)` — a UTC midnight,
+     * which is the one value that reads the same either way — and no draft
+     * test asserted a date at all, which is why `test:zones` ran green over
+     * this for as long as it existed. Local fields in, local fields out.
+     */
+    const evening = new Date(2026, 8, 3, 21, 30);
+    const md = notesMarkdown([], code, [{ ...draft, updated: evening.getTime() }]);
+    expect(md).toContain('2026-09-03');
+  });
+
+  it('gives a note and a draft written minutes apart the same date', () => {
+    const evening = new Date(2026, 8, 3, 21, 30);
+    const md = notesMarkdown(
+      [{ ...note, updated: evening.getTime() }],
+      code,
+      [{ ...draft, updated: evening.getTime() + 60_000 }],
+    );
+    expect(md.match(/2026-09-03/g)).toHaveLength(2);
+    expect(md).not.toContain('2026-09-04');
+  });
+
   it('is unchanged for a caller that has no drafts', () => {
     expect(notesMarkdown([note], code, [])).toBe(notesMarkdown([note], code));
+  });
+});
+
+describe('projectFile', () => {
+  it('names a file after the project', () => {
+    expect(projectFile('Midterm survey', 'form', 'csv', 'responses')).toBe(
+      'Midterm-survey-responses.csv',
+    );
+    expect(projectFile('Lab walkthrough', 'video', 'webm')).toBe('Lab-walkthrough.webm');
+  });
+
+  it('never produces a file with no stem, which is the defect it was written for', () => {
+    /*
+     * `screens/Create.tsx` lets a title be emptied — a plain input, no trim,
+     * nothing required — and the video export put it straight in front of the
+     * extension. A browser rewrites what it will accept as a download name, so
+     * this is not about the downloads folder; it is about `lib/files.ts:addFile`,
+     * which stores the name verbatim and put a `.webm` row with no stem in the
+     * app's own Files list. See the note on `projectFile`.
+     */
+    expect(projectFile('', 'video', 'webm')).toBe('untitled-video.webm');
+    expect(projectFile('   ', 'form', 'csv', 'responses')).toBe('untitled-form-responses.csv');
+    for (const title of ['', '   ', '///', '???', '...']) {
+      expect(projectFile(title, 'form', 'csv'), title).not.toMatch(/^\./);
+    }
+  });
+
+  it('takes the separators out of a title that is allowed to hold them', () => {
+    // "Midterm 1/2 survey" is an ordinary name for a form and a path
+    // separator to everything downstream.
+    expect(projectFile('Midterm 1/2 survey', 'form', 'csv')).toBe('Midterm-12-survey.csv');
+    expect(projectFile('Notes: "final"?', 'design', 'png')).toBe('Notes-final.png');
+  });
+
+  it('says what kind of thing it was when there is no title to use', () => {
+    // A folder holding three files called `export.webm` is its own problem.
+    expect(projectFile('', 'form', 'csv')).toBe('untitled-form.csv');
+    expect(projectFile('', 'design', 'png')).toBe('untitled-design.png');
+    expect(projectFile('', '', 'csv')).toBe('untitled-project.csv');
+  });
+
+  it('keeps the suffix optional, and out of the name when there is none', () => {
+    expect(projectFile('Survey', 'form', 'csv')).toBe('Survey.csv');
+    expect(projectFile('Survey', 'form', 'csv', '')).toBe('Survey.csv');
   });
 });
 
@@ -566,7 +639,7 @@ describe('readBackup', () => {
 describe('a backup carries the semester, not the look', () => {
   const LOOK = [
     'accent', 'textSize', 'ground', 'density', 'corners', 'typeface', 'bodyface',
-    'lineHeight', 'readingWidth', 'iconShape', 'labels', 'badges', 'feed', 'shell',
+    'lineHeight', 'readingWidth', 'iconShape', 'calm', 'labels', 'badges', 'feed', 'shell',
     'groupOrder', 'boardOrder', 'hue',
   ];
 

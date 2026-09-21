@@ -287,6 +287,37 @@ switching one on in the dashboard makes its button appear with nothing to
 deploy. Nothing here checks which university an address belongs to; any Google,
 Microsoft or Apple account is valid.
 
+### Optional · Making an administrator
+
+`public.app_admins` decides who may open the internal administrator dashboard.
+It has row-level security on and **no policy at all**, so no account can read
+it, write it, or take itself off it — including the administrator it names.
+That is deliberate: an account that can make itself an administrator is one,
+and there is no in-app route into this table by design.
+
+So the only way in is a terminal and a key the app does not have:
+
+```bash
+cd app
+export SUPABASE_URL=https://<project-ref>.supabase.co
+export SUPABASE_SERVICE_ROLE_KEY=<service key>     # Settings → API
+
+node scripts/grant-admin.ts list
+node scripts/grant-admin.ts grant ada@vanderbilt.edu "founder"
+node scripts/grant-admin.ts revoke ada@vanderbilt.edu
+```
+
+They have to have signed up in the app first — the script never creates an
+account, it only finds one.
+
+**This is the one place the service key belongs outside Supabase**, and the
+paragraph above about not putting it anywhere else still holds everywhere
+else. Export it for the one command and close the shell; do not put it in
+`.env`, a script, or anything the app builds from. The script refuses a
+publishable key rather than using it, because `app_admins` has no policy —
+with the wrong key `list` returns an empty table and no error, which reads
+exactly like "there are no administrators yet".
+
 ## 3 · The shared Claude key (optional)
 
 Without this, each user pastes their own API key under **Settings → The
@@ -305,7 +336,10 @@ and a monthly cap added because this one is reachable from the internet.
    (from console.anthropic.com), and optionally `MONTHLY_CALL_LIMIT`.
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected by Supabase — do
-not add them yourself, and do not put the service key anywhere else.
+not add them yourself, and do not put the service key anywhere else. The one
+exception is `scripts/grant-admin.ts`, which is run by hand from a terminal
+and is described under *Making an administrator* above; it is an exception
+because `app_admins` is unreachable by every key that is not this one.
 
 **Or from a terminal:**
 

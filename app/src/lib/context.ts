@@ -404,12 +404,7 @@ export function build(
       parts.push(
         `${course.code} units:\n${guide.units
           .map((u) => {
-            const ev = evidenceForCards(
-              course.id,
-              u.cards.map((card) => card.q),
-              state.reviews,
-              Date.now(),
-            );
+            const ev = evidenceForCards(course.id, u.cards, state.reviews, Date.now());
             return `- ${u.name} (${says(knowing(ev)).toLowerCase()}: ${why(ev)})`;
           })
           .join('\n')}`,

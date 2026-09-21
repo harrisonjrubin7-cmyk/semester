@@ -11,7 +11,7 @@ import { allCards } from '../../data/catalog';
 import { DOW, DOW_INITIALS, dateToIso } from '../../lib/date';
 import { liveGuide } from '../../lib/live';
 import { learned, showSpan } from '../../lib/pace';
-import { cardKey, comeRound, neverMet, tallyKeys } from '../../lib/review';
+import { cardIdentity, comeRound, neverMet, tallyKeys } from '../../lib/review';
 import { inTime, testsNear } from '../../lib/intime';
 import { datedItems, loadByCourse } from '../../lib/select';
 import {
@@ -143,7 +143,7 @@ export function You() {
    */
   const cards = useMemo(() => {
     const keys = catalog.courses.flatMap((c) =>
-      allCards(liveGuide(catalog, c.id, state.updates, state.reviews)).map((q) => cardKey(c.id, q.q)),
+      allCards(liveGuide(catalog, c.id, state.updates, state.reviews)).map((card) => cardIdentity(c.id, card)),
     );
     const t = tallyKeys(keys, state.reviews);
     // The same schedule the drill deals from, so this row and that screen
@@ -725,7 +725,16 @@ function WeekStrip({ days }: { days: Day[] }) {
             style={{
               fontSize: 'var(--type-xs)',
               fontFamily: 'var(--font-heading)',
-              color: d.due > 0 ? 'var(--app-dim)' : 'var(--app-faint)',
+              /*
+               * One rung for the figure and the placeholder alike.
+               *
+               * The `·` was the faint rung, which `dim.ts` holds to 3:1 and
+               * allows only at 24px or 18.66px bold — this is 11px. The
+               * browser sweep read it at 3.44:1 on Parchment and 3.64:1 on
+               * Ink against the 4.5 small text needs. Quiet is carried by the
+               * glyph being a dot rather than by a token that cannot be read.
+               */
+              color: 'var(--app-dim)',
             }}
           >
             {d.due > 0 ? d.due : '·'}

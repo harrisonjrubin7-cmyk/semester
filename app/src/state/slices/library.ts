@@ -285,6 +285,31 @@ export function library(state: State, action: Action): State | null {
       return { ...state, extraLinks: [...state.extraLinks, link] };
     }
 
+    /*
+     * Re-filing one of your own links, which is the half `addLink` left out.
+     *
+     * A group could be named when a link was added and never afterwards, so a
+     * heading typed wrong was permanent short of deleting the row and adding
+     * it again — losing the corrected address with it, since `removeLink`
+     * takes the `linkUrls` entry too.
+     *
+     * Only the student's own rows: a bundled link's group is the app's, there
+     * is no record here to patch, and this leaves such an id untouched rather
+     * than inventing one. Emptying the box drops the field instead of writing
+     * "Yours" into it, so the default keeps living in `groupName` alone.
+     */
+    case 'setLinkGroup': {
+      const group = action.group.trim();
+      return {
+        ...state,
+        extraLinks: state.extraLinks.map((l) => {
+          if (l.id !== action.id) return l;
+          const { group: _was, ...rest } = l;
+          return group ? { ...rest, group } : rest;
+        }),
+      };
+    }
+
     case 'removeLink': {
       const { [action.id]: _gone, ...linkUrls } = state.linkUrls;
       return {

@@ -125,15 +125,28 @@ failed. It failed where nobody was looking: on a branch record in the Supabase
 dashboard, with no issue, no red tick and no comment. **Production's schema
 deploy has been broken since 18 September and the repository could not tell.**
 
-**Fixed on 21 September; the diagnosis below is kept because the mechanism is
-worth knowing and because the numbers in it are what those files were called at
-the time.** The four were applied to production by hand that afternoon, and the
-seven files stranded below the watermark — the four, plus `invites`, `referrals`
-and `function_grants` — were renamed to the versions the ledger recorded their
-content under, which empties the pending set. `MIGRATION-HISTORY.md` step 6 has
-the mapping, the reason it is a rename rather than a write to production, and
-the guard. **Nothing about that flips the branch record**: it reads what the
-last deploy left, and it changes when a merge runs the deploy again.
+**Fixed on 21 September, and observed fixed rather than declared.** The branch
+record now reads `FUNCTIONS_DEPLOYED`, and — because a status is a word in a
+dashboard — the ledger was read as well: production took **nine rows between
+15:2x and 21:5x that afternoon, none of them applied by hand**, from `activity`
+through `pin_profile_school`. Nine migrations, several merges, no SQL editor.
+`MIGRATION-HISTORY.md` records the reading under *The deploy, observed*.
+
+**It took two fixes, and only the second one mattered.** The diagnosis below is
+about version *ordering*, and it is real: the four migrations production had
+never had were numbered in the past relative to a ledger that had moved on, and
+step 6 renamed the seven stranded files onto the versions the ledger recorded
+their content under. That did not fix the deploy — the merges after it failed
+identically. `db push` was refusing **before it ordered anything**, on the
+opposite direction entirely:
+
+    ERROR Remote migration versions not found in local migrations directory.
+
+Thirteen rows in the ledger had no file of that name in `supabase/migrations/`,
+and a stub per row — a file holding a version and no SQL — is what cleared it.
+The ordering account below is kept because the mechanism is worth knowing and
+the numbers in it are what those files were called at the time; it is simply
+not what was in the way.
 
 Why it failed is in `MIGRATION-HISTORY.md` and is structural rather than a bad
 statement: the four migration files production had never had are numbered

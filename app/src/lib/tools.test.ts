@@ -5,6 +5,7 @@ import { LOOKUPS } from './lookup';
 import type { ToolCall } from './claude';
 import type { Attended } from './attend';
 import type { CourseId } from './types';
+import type { Screen } from './types';
 
 /**
  * What the assistant may do, and what it may never do.
@@ -343,6 +344,15 @@ describe('changing the look', () => {
   });
 });
 
+/** The screens `open_screen` accepts, read off the tool it publishes. */
+const REACHABLE_FOR_TEST = (() => {
+  const tool = TOOLS.find((t) => t.name === 'open_screen');
+  const props = (tool?.input_schema as { properties?: Record<string, { enum?: string[] }> } | undefined)?.properties;
+  const list = props?.screen?.enum ?? [];
+  expect(list.length, 'open_screen publishes no screen list').toBeGreaterThan(10);
+  return list as Screen[];
+})();
+
 describe('opening a screen', () => {
   it('names the screen the way a person would', () => {
     const p = read('open_screen', { screen: 'runway', why: 'it counts back from the exam', search: '' });
@@ -350,9 +360,38 @@ describe('opening a screen', () => {
     expect(p?.action).toEqual({ type: 'go', screen: 'runway' });
   });
 
-  it('says the search in the line, so arriving somewhere filtered is not a surprise', () => {
+  it('promises only the going, because that is all it does', () => {
+    /*
+     * This case used to read: *"says the search in the line, so arriving
+     * somewhere filtered is not a surprise"*, and asserted
+     * `'Open Personal, searching for “Stromme” — your own list'`.
+     *
+     * The sentence was pinned and the screen was never checked. Nothing read
+     * `state.query`; Personal has no search box at all; and of the
+     * twenty-three screens `open_screen` may target, two have one. So the
+     * card offered a search, and `did` said afterwards that it had searched.
+     *
+     * A `search` passed in now changes nothing about what is offered, which
+     * is the property worth holding: the line and the action say the same
+     * thing. See the note on `Proposal` in `lib/tools.ts`.
+     */
     const p = read('open_screen', { screen: 'mine', why: 'your own list', search: 'Stromme' });
-    expect(p?.said).toBe('Open Personal, searching for “Stromme” — your own list');
+    expect(p?.said).toBe('Open Personal — your own list');
+    expect(p?.did).toBe('Personal');
+    expect(p?.said).not.toMatch(/search/i);
+    expect(p?.did).not.toMatch(/search/i);
+  });
+
+  it('says the same thing it did, on every screen it can reach — the control', () => {
+    // Not one example: the fault was a promise made for twenty-three screens
+    // and kept on none, so this asks all of them.
+    for (const screen of REACHABLE_FOR_TEST) {
+      const p = read('open_screen', { screen, why: '', search: 'anything' });
+      expect(p, screen).not.toBeNull();
+      expect(p?.said, screen).not.toMatch(/searching for/i);
+      expect(p?.did, screen).not.toMatch(/searching for/i);
+      expect(p?.action, screen).toEqual({ type: 'go', screen });
+    }
   });
 
   it('refuses a screen that is not on the list', () => {

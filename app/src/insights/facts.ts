@@ -1,4 +1,4 @@
-import { cardKey } from '../lib/review';
+import { cardIdentity } from '../lib/review';
 import { datedItems } from '../lib/select';
 import type { Catalog } from '../data/catalog';
 import type { State } from '../state/shape';
@@ -22,7 +22,7 @@ export function factsFrom(state: State, catalog: Catalog, now: Date): Facts {
   for (const module of catalog.modules) {
     for (const unit of module.guide.units) {
       for (const card of unit.cards) {
-        units.set(`${module.course.id}::${cardKey(module.course.id, card.q)}`, unit.name);
+        units.set(`${module.course.id}::${cardIdentity(module.course.id, card)}`, unit.name);
       }
     }
   }
@@ -31,7 +31,7 @@ export function factsFrom(state: State, catalog: Catalog, now: Date): Facts {
     const name =
       update.unit !== null ? (module?.guide.units[update.unit]?.name ?? update.title) : update.title;
     for (const card of update.cards) {
-      units.set(`${update.courseId}::${cardKey(update.courseId, card.q)}`, name);
+      units.set(`${update.courseId}::${cardIdentity(update.courseId, card)}`, name);
     }
   }
 

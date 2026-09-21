@@ -27,6 +27,7 @@ import type { Launch } from '../../../supabase/functions/_shared/lti';
  */
 
 const who = (over: Partial<Launch> = {}): Launch => ({
+  messageType: 'LtiResourceLinkRequest',
   subject: 'platform-user-88',
   issuer: 'https://brightspace.vanderbilt.edu',
   clientId: 'semester-client',
@@ -134,7 +135,29 @@ describe('where a launch lands', () => {
  * an owned table later fails this file until somebody says which it is, which
  * is the whole point.
  */
-const NOT_CONTENT = new Set(['push_devices', 'push_queue', 'access_log', 'profiles']);
+const NOT_CONTENT = new Set([
+  'push_devices',
+  'push_queue',
+  'access_log',
+  'profiles',
+  /*
+   * `activity` is the strongest case in this list rather than the weakest, and
+   * it is worth saying why in more than a word.
+   *
+   * It holds one row per account per day per mark — that the app was opened,
+   * that a course existed by then, that a card had been answered. Nothing a
+   * person typed, and nothing that could be lost: it is a record *about* the
+   * work, which is the same category as `access_log` two lines up and the
+   * reason `RETENTION.md` lets it have a clock at all.
+   *
+   * And counting it would break the check rather than tighten it. An account
+   * that has been opened once has an `opened` row, so *every* account that has
+   * ever signed in would read as non-empty — and an emptiness check that
+   * always answers "not empty" refuses every attach, including the ones this
+   * flow exists to allow. `20260921151000_activity.sql` is the table.
+   */
+  'activity',
+]);
 
 const migration = () =>
   readFileSync(

@@ -7,8 +7,33 @@ are missing.
 
 ## What is live
 
-    claude   ACTIVE, v1, verify_jwt off
-    push     ACTIVE, v1, verify_jwt off
+Read off the project at 16:05 UTC on 21 September 2026, not remembered:
+
+    claude     ACTIVE, v19, verify_jwt off
+    push       ACTIVE, v16, verify_jwt off
+    calendar   ACTIVE, v12, verify_jwt off
+    fetchcal   ACTIVE, v13, verify_jwt off
+    canvas     ACTIVE,  v4, verify_jwt off
+    lti        ACTIVE,  v1, verify_jwt off
+
+**This file said two, at v1, and three of the other four were filed below under
+"Not deployed yet".** `fetchcal` had been live since 9 September when that was
+written — twelve days — and `calendar` since the 8th and was named nowhere at
+all. `lti` went up at 15:48 on the 21st, about two hours after its own section
+said it had not.
+
+The cause is not forgetfulness, and that is why the rows above carry a
+timestamp. `functions.yml` deploys on every push to main that touches a
+function's directory, so **a function directory on main is a deployed
+function**: "not deployed yet" is true only until the pull request merges, and
+then it is false with nobody having edited anything. A hand-written record
+cannot win that race. `app/src/lib/deployfunctions.test.ts` is what holds this
+section to the directories instead — it cannot see the project, so it checks
+the one thing it can: that every function here is accounted for, and that none
+of them is described as unshipped.
+
+The version numbers are the part that will go stale first and the part that
+matters least; the deployed-or-not column is the one that misled.
 
 ## Deploying a function without a laptop
 
@@ -28,7 +53,7 @@ deploys nothing rather than failing main.
 The project is read from the `SUPABASE_PROJECT_REF` variable if set, and
 otherwise off `VITE_SUPABASE_URL` — so a fork deploys to its own project.
 
-## Not deployed yet: `fetchcal`
+## Live: `fetchcal`
 
     supabase functions deploy fetchcal
 
@@ -38,8 +63,10 @@ on behalf of a signed-in device — the Connect screen's *Subscribe* button.
 Why it has to exist at all: a calendar server sends no CORS headers, so the
 browser is refused before the request leaves. The dev server forwards that one
 request itself (`/feed?url=` in `app/vite.config.ts`), which is why pasting a
-Brightspace or Outlook link works on a laptop running `npm run dev` and, until
-this is deployed, fails on the built app.
+Brightspace or Outlook link works on a laptop running `npm run dev`. On the
+built app it works too, through this function. For twelve days this paragraph
+ended "and, until this is deployed, fails on the built app", which told anybody
+reading it that a working feature was broken.
 
 It takes no secret and needs no SQL. It verifies the caller's own JWT, refuses
 anything that is not https to a public host, refuses a redirect that lands
@@ -53,11 +80,12 @@ person's calendar.
 function checks the token itself, and the platform check would reject the CORS
 preflight, which carries no `Authorization` header.
 
-Until it is deployed the app degrades rather than breaks — links from hosts
-that do allow the browser still work, the screen says what failed, and adding a
-downloaded `.ics` needs no network at all.
+Were it ever down or rolled back, the app degrades rather than breaks — links
+from hosts that do allow the browser still work, the screen says what failed,
+and adding a downloaded `.ics` needs no network at all. That is worth keeping
+written down; it is a fallback, not the current state.
 
-## Not deployed yet: `canvas`
+## Live: `canvas`
 
     supabase functions deploy canvas
 
@@ -96,9 +124,9 @@ It takes no secret of its own and needs no SQL. `verify_jwt` should be **off**,
 for the same reason as the others: the function checks the token itself, and
 the platform check would reject the CORS preflight.
 
-Until it is deployed the app says so and points at the calendar link, which
-needs no server at all and carries most of the same dates — just not whether
-you did them.
+Were it down, the app says so and points at the calendar link, which needs no
+server at all and carries most of the same dates — just not whether you did
+them. Again: a fallback, not where things stand.
 
 `verify_jwt` is off on both, and on both it is the platform check that is off,
 not authentication:
@@ -114,7 +142,7 @@ not authentication:
   returns 503 to everything, so a half-finished deploy is silent rather than
   open.
 
-## Not deployed yet: `lti`
+## Live: `lti`
 
     supabase functions deploy lti --no-verify-jwt
 
@@ -136,6 +164,55 @@ signed `id_token`, checked against the keys the platform publishes and then
 claim by claim against the registration below — `supabase/functions/_shared/lti.ts`
 is that check and `app/src/lib/lti.test.ts` walks every refusal in it.
 
+### The tool's own key
+
+    supabase secrets set LTI_PRIVATE_KEY='{"kty":"RSA","n":"…","e":"AQAB","d":"…", …}'
+
+An RS256 JWK, private half included. It lives as a function secret for the
+same reason `VAPID_PRIVATE_KEY` does — a signing key used only by an Edge
+Function, with its public half published on purpose — and not in the Vault,
+which holds only the one secret Postgres itself has to read.
+
+Its public half is served at:
+
+    …/functions/v1/lti/jwks
+
+**That address is the third thing a school's administrator needs**, alongside
+the two below, and they need it while they are registering the tool rather
+than afterwards: Brightspace asks for a JWKS URL during the install. With no
+key set the endpoint answers 503 and says so, and **launches keep working** —
+a launch is the platform proving itself to us and needs nothing of ours.
+
+**Deep linking signs with it**, and is the only thing that does. Grade
+passback still does not exist; the key is no longer idle.
+
+### Deep linking, on the launch endpoint
+
+There is no third URL for this. Deep linking is a different *message* arriving
+at `…/lti/launch`, which is why the administrator's list above did not grow.
+
+What it is for: an instructor inside Brightspace's "add an activity" flow
+picks Semester, Brightspace opens the launch endpoint with an
+`LtiDeepLinkingRequest`, and what comes back is not a page but a JWT this tool
+signs, posted to an address the platform nominated. The instructor never
+really leaves Brightspace, and the course ends up holding a link that launches
+Semester properly — with a token, verified — rather than a bare address.
+
+Three things refuse it, and each says which:
+
+    not-a-teacher        the launch carried no instructor role
+    no-key               LTI_PRIVATE_KEY is not set, so nothing can be signed
+    insecure-return-url  the platform's return address was not https
+
+The first is the one worth stating plainly: a deep-linking response is an
+instruction to put something in a course, so a platform that asks a *student*
+for one is confused or being driven, and the answer is no either way.
+
+The second is why this section sits under the key rather than beside the
+endpoints. A launch works with no key at all. This does not, and the person
+who has to fix it is the same person standing in the dialog — so it answers
+503 and names the setting rather than 500 and a log they cannot read.
+
 ### Registering a school
 
 Nothing in the app writes `public.lti_platform`, deliberately: an account that
@@ -154,6 +231,20 @@ values
    'https://brightspace.vanderbilt.edu/d2l/.well-known/jwks',
    'Vanderbilt University');
 ```
+
+`token_url` is a fourth column and is **null until somebody fills it in**. It
+is where the platform hands out access tokens for calling back into it, which
+a launch never does — so it can be left out now and added when grade passback
+exists. Brightspace's is not on the school's own host:
+
+```sql
+update public.lti_platform
+   set token_url = 'https://auth.brightspace.com/core/connect/token'
+ where issuer = 'https://brightspace.vanderbilt.edu';
+```
+
+There is deliberately no default. The value is where this tool posts a
+*signed assertion*, and a guess sends it to somebody else's server.
 
 **One row per deployment, not per school.** A university with separate
 Brightspace orgs for its schools is the ordinary case, and the deployment id is
@@ -199,8 +290,10 @@ the honest reading of what happened, since a school's administrator installing
 this tool is an invitation issued by exactly the person the gate exists to let
 issue them. It leaves a row saying so.
 
-Deep linking and grade passback are still not built; both need a key of this
-tool's own, which is why there is no key material in either migration.
+Grade passback is still not built. Deep linking now is, and signs with the key
+described above — which is why there is still no key material in either
+migration: the key was always going to live as a function secret, and the
+thing that needed it arrived without changing that.
 
 ## Tables
 
@@ -304,9 +397,13 @@ whether that person shares a class with you.
   against whatever the caller had set. Now `''`; its body calls only `now()`.
 - **`touch_updated_at` and `rls_auto_enable`** lost their EXECUTE grants.
   Neither needs one: Postgres checks that privilege when a trigger is created,
-  not each time it fires. `rls_auto_enable` is Supabase's own event-trigger
-  function and is not defined anywhere in this repo, so only the live grant
-  changed.
+  not each time it fires. This entry used to add that `rls_auto_enable` "is
+  Supabase's own event-trigger function and is not defined anywhere in this
+  repo, so only the live grant changed". The second half was true and the first
+  half is why: Supabase's documentation offers the function and its `ensure_rls`
+  trigger as a recipe to run yourself, under *Auto-enable RLS for new tables*,
+  and somebody ran it here. `20260901000100_schema.sql` creates it now, so a
+  rebuild gets the trigger and the revoke above has something to close.
 - **`groups.sql`** got the same treatment ahead of time. It is not applied to
   the live project, and it had no grants at all — so its three helpers would
   have inherited the same default EXECUTE and appeared as three more

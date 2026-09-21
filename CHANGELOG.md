@@ -24,6 +24,118 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### The first thing the app said about your semester was about somebody else's
+
+Open the app for the first time and it introduced itself with **"4 syllabi.
+One brain."** On the next screen — *"Dropped in. Read."* — it listed four PDF
+filenames with ticks beside them: `Econ1020_2026_Fall.pdf`,
+`PSCI1104_Trounstine_F26.pdf`, `Sports_Fall26_Syllabus.pdf`, `Syllabus Draft
+8262026.pdf`, adding up to *48 dated obligations across 4 courses*, under a
+button that said **Looks right**. On the Soft layout the opening line was
+*"You have 4 courses, 34 deadlines ahead, and 9 days until your first final."*
+
+None of it was yours. Those are the four sample courses, which ship switched
+on so the app has something to show — and the first run was counting
+everything loaded rather than everything you had given it.
+
+The run now counts your own courses and nothing else. A brand-new install
+opens on *"Your syllabi. One brain."* and **Show me**, the second screen says
+*"Drop one in."*, and the Soft layout says *"Nothing loaded yet. Add a
+syllabus and the semester comes back."*
+
+Add a course and it goes back to counting — *"1 syllabus. One brain."*, your
+filename, your dates — with the sample still on and still not counted. The
+sample semester itself has not changed and is where it was, under Settings.
+
+Nothing to do, and nothing you had is affected.
+
+### Photograph a score, and it lands in your grades
+
+Top Hat, iClicker and the rest have no way to hand this app your score — there
+is no student API to ask. So under each course's grading table there is now
+**From a photo**: photograph the screen that shows your score, and the number
+comes across.
+
+What it does *not* do is decide anything for you. It reads the page, shows you
+every number on it that could be a score with the line each one came from, and
+you tap the one that is yours. Then it proposes which category it belongs to —
+and where the line does not name one, it says so and leaves the choice to you
+rather than guessing. **Nothing reaches your grades until you have picked
+both.**
+
+It files exactly what was on your screen. Photograph "13/14" and "13/14" is
+what the field holds, the same as if you had typed it.
+
+Needs the assistant set up, like every other place the app has to read a
+photograph. Typing the number in is unchanged and still the fastest route for
+a single figure.
+
+### Fixing the wording of a question no longer wipes what you knew about it
+
+A card's identity used to be its question. Drill a card fifty times, then have
+the question reworded in an update — a typo fixed, a sentence tightened — and
+the app treated it as a card it had never seen. Your streak, your ease, your
+next review date: gone, with nothing said, and the unit's mastery quietly back
+to the number the guide shipped with.
+
+Every card in the four prepared guides now carries an identity of its own, and
+that identity does not move when the wording does. Nothing you have already
+answered has changed: each id was set to the key that card's history is
+already filed under, so this took effect without anything being migrated,
+rebuilt or reset.
+
+Cards from material you add yourself are not covered. A re-imported reading
+produces genuinely new cards with no thread back to the old ones, so those
+still start their history over — as they always have.
+
+Nothing to do, and nothing to look at: this is only visible the next time a
+question is edited, which is exactly when it is meant to be invisible.
+
+### The app asks which semester you are in, instead of assuming Fall 2026
+
+A brand-new install started in Fall 2026 whatever day you opened it on — the
+semester was written into the app as a fixed value rather than read off the
+calendar. Today that is right. In January it would not have been, and nothing
+on screen would have said so: courses you added would have been filed under
+last autumn, deadlines with no year on them would have resolved against the
+wrong one, and the semester switcher that would let you fix it does not appear
+until you have courses in two semesters.
+
+A new install now starts in whatever semester it is actually opened in, and
+the first run asks. Step 3 is *"When and where do you study?"*, with the
+calendar's guess already chosen and the semesters either side of it beside it
+— for setting up in December for a January start, or a summer session the
+calendar has already called Fall.
+
+Nothing you have already saved moves. A semester you had already chosen stays
+chosen, and courses saved before the app knew about semesters at all stay in
+Fall 2026, where their dates belong.
+
+### A quotation in a study guide now tells you where in your material it is
+
+Open *View cited material* under any section of a generated study guide. It
+used to name the source — "Prepared course guide · Unit 1; original page not
+recorded" — and then print the whole source underneath for you to search by
+eye. It now names the place: *characters 27–65*, with the paragraph too where
+the material has paragraphs, and shows the quotation underlined inside the few
+lines either side of it instead of the entire text.
+
+Nothing changed about which quotations are accepted. Every guide has always
+been refused outright if a quotation could not be matched to the material you
+selected, and that is unchanged — including the small number of quotations the
+app can verify but cannot pin down (an accent written as two characters in your
+file and one in the quotation, for instance). Those still appear, still
+verified, and simply show the source without a location rather than a location
+the app did not find.
+
+The locators that end "original page not recorded" still say so. A prepared
+course guide, a pasted excerpt and a PDF with no page structure genuinely have
+no page in the original, and a sentence claiming otherwise would be the thing
+worth distrusting. You now get both: what the original does not have, and where
+inside it the quotation sits.
+
+Nothing to do. Guides you already saved keep the wording they were saved with.
+
 ### Settings now tells the truth about what it is connected to
 
 *Settings › About* has a list headed **Where the numbers come from**. It said
@@ -44,6 +156,33 @@ whether it is switched on, because there was never a switch.
 **Nothing you had changes, and nothing stops working.** If you were reading
 that screen as "my Brightspace is hooked up", it never was, and the rest of the
 app has been telling you so on the Connect screen all along.
+### Three things are now counted about your account, and the Privacy screen says which
+
+Semester is about to be piloted, and four questions decide whether it is worth
+building further: does it work for somebody who is not its author, do people
+come back, does the syllabus extraction hold up on real courses, and would
+anybody pay for it. Answering the middle one needs a record of who came back,
+and until now there was none.
+
+**What is recorded, in full:** for each day you had the app open while signed
+in, up to three words — that you opened it, that you had added a course of
+your own by then, and that you had answered a practice card by then. That is
+the whole row. Not which screens you opened, not what you typed, not what time
+of day, not how long for, not which course.
+
+**What has not changed, and was the reason to build it this way:** there is
+still no third-party analytics in this app and no tracking of you anywhere
+else on the web. Signed out, none of this happens at all — nothing leaves the
+device, exactly as before. You can read your own rows, deleting your account
+deletes them, and they are dropped after a little over a year.
+
+The Privacy screen names it in the same words it names everything else, under
+*The three things counted about your account*. It is worth reading: that page
+is the promise, and a record it did not mention would have made the page
+untrue.
+
+Nothing to do, and nothing on screen changes.
+
 
 ### Your university can send its own data as a file, and you load it
 

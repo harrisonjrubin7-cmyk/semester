@@ -20,7 +20,7 @@ import { ChevronRight } from '../components/Icons';
 import { AppGrid } from '../components/nav/AppGrid';
 import { nextExam, testedIn } from '../lib/select';
 import { beside, nextStep, rest } from '../lib/nextstep';
-import { anyAnswered, cardKey, comeRound, neverMet } from '../lib/review';
+import { anyAnswered, cardIdentity, comeRound, neverMet } from '../lib/review';
 import { inTime, missingCount, testsNear } from '../lib/intime';
 import { DESTINATIONS, destinationsIn } from '../lib/nav';
 import { suggest, type Coming } from '../lib/toolnow';
@@ -136,7 +136,7 @@ export function Study() {
           index,
           name: u.name,
           mastery: u.mastery,
-          keys: u.cards.map((card) => cardKey(c.id, card.q)),
+          keys: u.cards.map((card) => cardIdentity(c.id, card)),
           testInDays: test?.days ?? null,
           testKind: test?.kind ?? null,
         }));
@@ -374,7 +374,7 @@ export function Study() {
                * one: it is all ahead of you, and where you start matters less
                * than starting.
                */
-              const keys = allCards(guide).map((card) => cardKey(exam.item.c, card.q));
+              const keys = allCards(guide).map((card) => cardIdentity(exam.item.c, card));
               const cards = keys.length;
               if (!anyAnswered(keys, state.reviews)) {
                 return `${guide.units.length} units on it and ${cards} cards, none of them answered yet. Nothing here knows what you know until you drill some — start with the first unit.`;
@@ -399,7 +399,7 @@ export function Study() {
               const coldUnits = guide.units.filter(
                 (u) =>
                   knowingOf(
-                    u.cards.map((card) => cardKey(exam.item.c, card.q)),
+                    u.cards.map((card) => cardIdentity(exam.item.c, card)),
                     state.reviews,
                     now.getTime(),
                   ).state !== 'retained',
@@ -581,7 +581,7 @@ export function Study() {
            * were told they had none, however close their own was. It also only
            * counted exams, so a quiz on Thursday changed nothing.
            */
-          const keys = allCards(g).map((card) => cardKey(c.id, card.q));
+          const keys = allCards(g).map((card) => cardIdentity(c.id, card));
           /*
            * Counted against a schedule that knows about the test — see
            * `lib/intime.ts`. Without it this number is the one the drill
@@ -608,7 +608,7 @@ export function Study() {
             standings: g.units.map(
               (u) =>
                 knowingOf(
-                  u.cards.map((card) => cardKey(c.id, card.q)),
+                  u.cards.map((card) => cardIdentity(c.id, card)),
                   state.reviews,
                   now.getTime(),
                 ).state,

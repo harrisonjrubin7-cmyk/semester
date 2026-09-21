@@ -111,7 +111,11 @@ export function notesMarkdown(
   if (drafts.length === 0) return written;
 
   const composed = drafts.map((d) => {
-    const when = new Date(d.updated).toISOString().slice(0, 10);
+    // Same clock as the notes above, for the same reason: a draft written in
+    // the evening west of Greenwich is already tomorrow in UTC, and the two
+    // halves of one file disagreeing about what day it is is worse than either
+    // date being wrong on its own.
+    const when = dateToIso(new Date(d.updated));
     const tag = d.courseId ? ` · ${code(d.courseId)}` : '';
     // Said plainly, because a draft that was handed to a mail app may or may
     // not have been sent from it — the app saw it leave and nothing after.
@@ -644,6 +648,47 @@ export function safeName(text: string, fallback = 'export'): string {
   return clean || fallback;
 }
 
+/**
+ * What a file exported from one of the creation projects is called.
+ *
+ * `screens/Create.tsx:196` gives a project a free-text title — `maxLength`
+ * 160, no trim, nothing required — and two exports put that title straight in
+ * front of an extension with nothing in between. {@link safeName} has been in
+ * this file the whole time and is what every other export in the app goes
+ * through; these two did not.
+ *
+ * ## What that actually cost, which is less than it looks and worse
+ *
+ * Driven in Chromium against the form's Download CSV, emptying the title and
+ * then putting a slash in it:
+ *
+ *     title            before                              after
+ *     (empty)          _responses.csv                      untitled-form-responses.csv
+ *     Midterm 1/2 …    Midterm 1_2 survey responses.csv    Midterm-12-survey-responses.csv
+ *
+ * So the download was **not** broken, and the first version of this note said
+ * it was. A browser sanitises `a.download` itself: Chromium turned the leading
+ * space into `_` and the slash into `_`, and what reached the folder was ugly
+ * rather than lost. That substitution is the browser's, not this app's, and it
+ * differs between browsers — but "the download fails" was a claim about a
+ * measurement nobody had taken.
+ *
+ * The video export is the one that mattered, and for a reason the download
+ * measurement cannot show: the same string was handed to `lib/files.ts:addFile`,
+ * which stores `file.name` verbatim (`files.ts:138`) into the app's own Files
+ * library. No browser stands between a title and that row. An emptied title
+ * therefore stored a file named `.webm` — no stem at all — and a slashed one
+ * stored the slash. That is asserted from the code rather than driven: the
+ * recorder needs a camera, so it is the one claim here with no run behind it.
+ *
+ * The fallback names the kind rather than saying "export", because a folder
+ * holding three files called `export.webm` is its own problem.
+ */
+export function projectFile(title: string, kind: string, extension: string, suffix = ''): string {
+  const stem = safeName(title, `untitled-${kind || 'project'}`);
+  return `${suffix ? `${stem}-${suffix}` : stem}.${extension}`;
+}
+
 /** "semester-2026-09-03" — sorts chronologically in any file list. */
 export function stampedName(stem: string, at = new Date()): string {
   return `${safeName(stem)}-${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`;
@@ -790,6 +835,8 @@ export const BACKUP_SECTIONS: { key: string; label: string; array: boolean; valu
   { key: 'plans', label: 'payment plans', array: false },
   { key: 'tickedAt', label: 'completion history', array: false },
   { key: 'started', label: 'work start history', array: false },
+  { key: 'ready', label: 'finished-work history', array: false },
+  { key: 'submitted', label: 'submission history', array: false },
   { key: 'term', label: 'current term', array: false, valueType: 'string' },
   { key: 'schoolId', label: 'school selection', array: false, valueType: 'string' },
   { key: 'myName', label: 'your name', array: false, valueType: 'string' },
@@ -823,6 +870,7 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   feed: 'the shape of Today',
   ground: 'the background the app is drawn on',
   hue: 'the tint behind the ground',
+  calm: 'how much the app may move and decorate itself',
   iconShape: 'how the icons are drawn',
   labels: 'whether the tab bar names its tabs',
   lineHeight: 'how far apart the lines sit',
@@ -1049,6 +1097,8 @@ export function backupOf(state: State) {
     plans: state.plans,
     tickedAt: state.tickedAt,
     started: state.started,
+    ready: state.ready,
+    submitted: state.submitted,
     term: state.term,
     schoolId: state.schoolId,
     myName: state.myName,

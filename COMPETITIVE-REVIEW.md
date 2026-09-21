@@ -294,16 +294,192 @@ whether the proposal is good.
 
 | Band | Item | Verdict |
 |---|---|---|
-| P0 | Repeatable first setup | **Partly already built.** The manual route and the key-free doors landed; the school/term-first three-step shape is open. |
+| P0 | Repeatable first setup | **The term half landed, a worse half was found and fixed, and the three-step shape stays open.** The manual route and the key-free doors were already there. The *term* was not asked at all and now is. Then the run itself turned out to be describing the sample semester as the student's own — measured, and fixed below. The three-step shape (add course → confirm dates → first action, inside the run) is still open. See below. |
 | P1 | Make tools easy to find | **Partly landed.** Three of the patch's five items above; the filter move declined with reasons; user testing is not a code item. |
 | P1 | **Make progress mean actual progress** | **Landed.** The defect. |
 | P1 | One calendar integration, then one LMS | **Not a code item here.** Provider registration and an institutional agreement. The copy that misdescribed it is fixed above. |
 | P1 | Schedule work into real availability | **Open.** The largest genuinely-new item in the document, and correctly sequenced behind trustworthy calendar input. |
-| P1 | Carry exact source locations | **Open, and the claim is exact.** `components/StudyStudio.tsx` writes `original page not recorded` in three locators — prepared guide units, added course material, and pasted text. |
-| P2 | Mistakes into the next practice session | **Open, and the claim is exact.** `cardKey()` in `lib/review.ts` is FNV-1a over the *question text*, so rewording a card changes its identity. `data/catalog.ts:155` already documents this as the design; the report is right that it blocks a scheduler migration, and right to say stable ids come first. |
+| P1 | Carry exact source locations | **Landed, and the claim was exact.** The three locators still say what is true of the original — a prepared unit and a pasted excerpt have no page — but a citation now names the place inside the source it was found at. See below. |
+| P2 | Mistakes into the next practice session | **The prerequisite landed; the loop is still open.** The claim was exact — `cardKey()` was FNV-1a over the *question text* — and the report was right that stable ids come first. They are in: all 325 shipped cards carry one, minted as the hash they already keyed on, so nothing stored moved. The closed loop itself — error → concept → scheduled revisit → measured improvement — is what is left. See below. |
 | P2 | Offline, sync and reminders | **Open, and the claim is exact.** `HORIZON_DAYS = 7` in `lib/push.ts`: *"How far ahead to queue. A week is enough to survive a phone left in a bag."* The report's question — what happens after longer inactivity — is not answered anywhere. |
 | P2 | Shared coursework with a small group | **Open.** Needs two real accounts, which is the report's own acceptance criterion. |
 | P3 | Lecture capture, career discovery | **Open, and correctly deferred.** |
+
+
+---
+
+### Repeatable first setup — the half of it that was a constant
+
+The report asks for **school + term** before anything else. The school has
+been asked since the first run existed. The term never was: `state.term`
+started life as `LEGACY_TERM`, whose own docstring calls it "the term every
+course saved before terms existed belongs to" and "only ever a fallback". It
+was doing two jobs, and it only does one of them correctly.
+
+Measured on the real `loadPersisted`, with nothing stored:
+
+    opened Mon Sep 21 2026 · app says 2026FA · actually 2026FA
+    opened Wed Feb 03 2027 · app says 2026FA · actually 2027SP
+    opened Thu Jun 03 2027 · app says 2026FA · actually 2027SU
+    opened Sun Jan 09 2028 · app says 2026FA · actually 2028SP
+
+`lib/term.ts` has always had `termNow` — *"the term a date falls in, for
+defaulting a new course sensibly"* — and outside its own tests **nothing
+called it**.
+
+This is not a label. `screens/Import.tsx` stamps every course it adds with
+`state.term`, and `yearFor` resolves a bare month against that term's own
+start month, so a September deadline filed under Fall 2026 is a deadline a
+year in the past. And `components/TermSwitch.tsx` is deliberately absent until
+there is more than one term — an argued decision, and the right one — so a
+student in that state has nothing on screen to correct it with.
+
+**Two changes, and the control is the half that must not move.** A fresh
+install now starts in the term of the day it is opened, through both doors
+onto a first install (`state/shape.ts` and `state/persist/index.ts`; fixing
+one would have left the path this build actually takes still in Fall 2026).
+The constant itself stays exactly where it was, because a *saved* state with
+no term was written before terms existed and its courses really do hold Fall
+2026 dates — filing those under today would move every deadline in them by a
+year, which is the failure `LEGACY_TERM` exists to prevent. Both directions
+are asserted.
+
+Then it is asked. Step 3 of the run becomes *"When and where do you study?"*,
+with the calendar's guess preselected among its neighbours rather than assumed
+— because the two cases a first run actually meets are the ones the calendar
+gets wrong: setting up in December for a term that begins in January, and a
+summer session the calendar has already called Fall.
+
+Driven in Chromium at 420px, `pageerror` empty: the row draws with Fall 2026
+selected, `data-more="end"` so the app's own overflow affordance is doing its
+job at 477px of chips in a 354px row, and choosing Spring 2027 survives a
+reload — read off the screen rather than out of `localStorage`, which this
+document's own last section explains is the wrong store to ask.
+
+**Still open, and it is the larger half:** the run ends and hands an empty app
+to `FirstRun` rather than carrying somebody through add-a-course, confirm the
+dates, and a first task. That is the "three-step shape" proper.
+
+#### And the half that was worse than the one the report named
+
+Chasing the sentence above turned up something the report did not see, because
+seeing it needs a fresh profile rather than a reading: **the run was describing
+the sample semester as the student's own.**
+
+`state.sample` ships on — `DEFAULT_PERSISTED.sample = true` — so the catalogue
+on a brand-new install holds the four shipped courses. `Onboarding` counted
+that catalogue. Driven in Chromium at 420px on a profile with nothing stored,
+`pageerror` empty:
+
+| | Before | After |
+|---|---|---|
+| Step 1 | "4 syllabi. One brain." · **Set it up** | "Your syllabi. One brain." · **Show me** |
+| Step 2 | "Dropped in. Read." — 48 dated obligations across 4 courses, and four ticked filenames: `Econ1020_2026_Fall.pdf`, `PSCI1104_Trounstine_F26.pdf`, `Sports_Fall26_Syllabus.pdf`, `Syllabus Draft 8262026.pdf` · **Looks right** | "Drop one in." · **Good** |
+| Soft layout | "You have 4 courses, 34 deadlines ahead, and 9 days until your first final." | "Nothing loaded yet. Add a syllabus and the semester comes back." |
+
+Both files carry a docstring disowning exactly this. `Onboarding`'s says the
+four fixed sentences were replaced because *"a new user was told 'We found 38
+dated obligations across four courses' before they had uploaded anything, and
+shown four filenames that were not theirs"*; `lib/welcome.ts`'s says an account
+with nothing in it *"gets a sentence about what will happen rather than a
+sentence about four courses it does not have"*. Both fixes were real and both
+were handed the wrong set — the shared catalogue, where the sample lives.
+
+So neither function changed. The run reads `state.courses` instead: the
+student's own modules, with the sample excluded by construction rather than by
+a filter that can drift. Every term of it, not just the open one, because the
+question these screens ask is "what have you given me" and a course filed under
+last Spring is still an answer.
+
+`components/Splash.tsx` keeps the full catalogue deliberately. It describes
+what is in the app and on screen, where the sample is genuinely both.
+
+The guard is `screens/onboardingcounts.test.tsx`, and its arrangement is the
+part worth keeping: the mocked store hands over **both** sets at once — a real
+catalogue built from the four sample modules, and whatever is the student's —
+so every assertion is about which of the two reaches the screen. A test given
+only an empty catalogue would pass against the bug. All four go red on a
+faithful revert, quoting it back: `expected 'Semester4 syllabi. One brain.…'`.
+
+
+---
+
+### Carry exact source locations — what landed, and what did not
+
+The studio has always *found* the place a quotation sits and then dropped it.
+A citation is only accepted because `normalized(source.text)` **includes**
+`normalized(quote)` — a search that knows the index and returns a boolean. So
+the app could tell a student the quotation was somewhere in their material and
+not where, and the panel that showed the evidence printed the entire source
+underneath for them to find it by eye.
+
+`locateQuote` in `lib/studystudio.ts` keeps the index, in the *source's own*
+offsets. That is the whole difficulty: normalized offsets are not original
+offsets, because NFKC expands (ﬁ → fi), `toLowerCase` can expand, and — the
+case that matters, since models quote sentences the source wrapped — a run of
+whitespace collapses to one space. The map is therefore rebuilt one original
+character at a time. `quotelocation.test.ts` pins a line-break quote that a raw
+`indexOf` cannot find at all, and a ﬁ quote where a normalized offset used as
+an original one lands mid-word and reads back *wrong* rather than absent.
+
+**What did not change is the sentence the report quoted.** A prepared guide
+unit has no page; a pasted excerpt has no page; an upload with no page
+structure has no page. Rewording those three locators would have been the
+cosmetic fix, and the report's own standing instruction — never hide "page not
+recorded" — argues against it. They still say it, and a citation from one now
+reads *Prepared course guide · Unit 1; original page not recorded · characters
+27–65*, with the quotation marked in place in the panel rather than a wall of
+source text beside it. The honest half of the old string is kept; the useless
+half is answered.
+
+**The controls are two, and the second is the one that matters.** A quotation
+that is not in the source must come back with no span *and* still be refused.
+And a quotation only the looser whole-string check can match — NFKC composes
+"e" + U+0301 into "é" across characters, which a per-character map cannot —
+must still be **accepted**, with no location. A locator that becomes a new way
+to reject a true citation is worse than the gap it closes, so the strict search
+decides where, and the loose one goes on deciding whether.
+
+### Stable card ids — the prerequisite, and the measurement that nearly stopped it
+
+`cardKey` hashed the question and nothing else, and the docstring above it
+argued for that: a materially different question deserves to be re-learned.
+The argument is not silly and it is not what happens. The app cannot tell a
+rewrite from a rewording, so it answers both with the harsher of the two — a
+typo fixed in a guide, a sentence tightened, a question asked in clearer words,
+and the row holding what a student knew becomes one nothing will look up again.
+Silently: no message, and the unit's mastery figure quietly falls back to the
+estimate the guide shipped with.
+
+**The measurement came first, and it argued the other way.** Across this
+repository's whole history, no shipped question has ever been edited — 325
+`q:` lines added under `src/data/`, 0 removed. The failure has never fired.
+`CLAUDE.md` is explicit that a merged decision is a decision and that re-tuning
+what somebody has already argued for is not work, so an argued trade-off with
+no victims is close to a reason to leave it alone.
+
+What settles it is the price. `StudyCard` gains an optional `id`, and every id
+on the 325 shipped cards was minted as **the hash `cardKey` already returned
+for that card's question** — so `cardIdentity` and `cardKey` agreed on every
+card in the app on the day it landed, 325 of 325, and not one stored review row
+moved. There is no migration, because there was nothing to migrate. A loaded
+gun unloaded for free is worth doing before it goes off rather than after.
+
+Two things the change made newly breakable, both guarded. A copy-pasted id on
+two different questions would merge two cards' histories and read as an
+ordinary line of data, so `cardidentity.test.ts` asserts that cards share an id
+only where they share a question — which the five deliberate unit/self-test
+repeats do. And `allCards` collapsed those repeats by question text; keyed on
+text it agrees with keying on id only until one half is reworded, at which
+point the pair splits in the deck while still sharing one review row, which is
+the bug that function exists to prevent, back again wearing the fix.
+
+**Not covered, and said rather than left to be found:** cards a student adds
+with their own material still have no id and keep the old behaviour exactly.
+There is nothing to key them on — re-importing a reading produces new card
+objects with no thread back to the old ones — and inventing one would be a
+migration nobody asked for. The fallback is the old failure, kept deliberately
+and documented where it lives.
 
 ---
 

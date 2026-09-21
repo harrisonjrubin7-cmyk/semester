@@ -21,6 +21,7 @@ import { readDrop } from '../../lib/drop';
 import { readLeadDays } from '../../lib/runway';
 import { readSettings as readGeocode } from '../../lib/geocode';
 import { toggle as toggleStarted } from '../../lib/underway';
+import { toggleStage } from '../../lib/stage';
 
 export function settings(state: State, action: Action): State | null {
   switch (action.type) {
@@ -260,6 +261,8 @@ export function settings(state: State, action: Action): State | null {
         done: {},
         tickedAt: {},
         started: {},
+        ready: {},
+        submitted: {},
         reviews: {},
       };
 
@@ -285,6 +288,41 @@ export function settings(state: State, action: Action): State | null {
 
     case 'toggleStarted':
       return { ...state, started: toggleStarted(action.id, state.started, Date.now()) };
+
+    /*
+     * Finished but not handed in, and handed in. See `lib/stage.ts`.
+     *
+     * ## Handing something in ticks it off, and un-saying it does not un-tick
+     *
+     * Every list in the app decides whether a deadline was missed by looking at
+     * `state.done`, so a paper marked as handed in and not ticked would read
+     * *Handed in* on its own page and *missed* in the list it was opened from.
+     * That is the cross-screen contradiction `lib/standing.ts` already settled
+     * once — *"Done wins over overdue — something handed in late is finished,
+     * not still bleeding"* — and uploading something is the clearest case of
+     * having finished it there is.
+     *
+     * So marking `submitted` ticks `done` and stamps `tickedAt`, exactly as
+     * `toggleDone` would. What it must not do — and does not — is the reverse:
+     * *Not handed in after all* retracts only the claim that the work went
+     * somewhere, and leaves the tick where it is. That asymmetry is the point.
+     * An implication that un-implies itself is how an enum loses a fact, and
+     * `state.started` exists because that already happened once here.
+     *
+     * `ready` implies nothing at all. It is the fact that the work is finished
+     * and has not gone anywhere, which is the opposite of a claim about the
+     * world, and the one the warning is built on.
+     */
+    case 'markStage': {
+      const next = { ...state, [action.stage]: toggleStage(action.id, state[action.stage], Date.now()) };
+      const handedIn = action.stage === 'submitted' && !state.submitted[action.id];
+      if (!handedIn || state.done[action.id]) return next;
+      return {
+        ...next,
+        done: { ...state.done, [action.id]: true },
+        tickedAt: { ...state.tickedAt, [action.id]: Date.now() },
+      };
+    }
 
     // How long a finished thing took. Recorded once per item — a second
     // report for the same id replaces the first rather than counting twice,

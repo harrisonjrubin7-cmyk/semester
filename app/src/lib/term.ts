@@ -108,6 +108,36 @@ export function termNow(now: Date): Term {
 }
 
 /**
+ * The terms to offer somebody who is being asked which one they are in.
+ *
+ * `termNow` is a guess from the calendar and it is right for most people most
+ * of the time. It is wrong for the two cases a first run actually meets: a
+ * student setting the app up in December for a term that starts in January,
+ * and one in a summer session that the calendar has already called Fall. So
+ * the question is asked with the guess in the middle rather than asked as a
+ * yes.
+ *
+ * One term back and three forward, which is not symmetric on purpose. Looking
+ * backwards is for somebody entering a term that has nearly finished; looking
+ * forwards is for somebody setting up early, which is the commoner of the two
+ * and the one the app would otherwise handle worst.
+ */
+export function termsAround(now: Date, back = 1, forward = 3): Term[] {
+  const here = termNow(now);
+  const at = SEASONS.findIndex((s) => s.code === here.id.slice(4));
+  const out: Term[] = [];
+  for (let step = -back; step <= forward; step++) {
+    const i = at + step;
+    // Floor division, so a negative step walks back into the previous year
+    // rather than off the front of the table.
+    const year = here.year + Math.floor(i / SEASONS.length);
+    const season = SEASONS[((i % SEASONS.length) + SEASONS.length) % SEASONS.length];
+    out.push(readTerm(termId(year, season.code)));
+  }
+  return out;
+}
+
+/**
  * A term as one number, so two of them can be compared with a subtraction.
  *
  * `startMonth` is 0, 4, 7 or 11, so twelve per year keeps every season of

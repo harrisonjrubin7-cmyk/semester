@@ -70,8 +70,16 @@ const ctx = await browser.newContext({
 
 ## 3 · Get past the adoption prompt
 
-A fresh profile opens on "4 syllabi. One brain." with **SET IT UP** and
+A fresh profile opens on **"Your syllabi. One brain."** with **SHOW ME** and
 **SKIP**. Nothing is reachable behind it, so every script starts here:
+
+It used to read *"4 syllabi. One brain."* with **SET IT UP**, and that was
+the bug rather than the greeting: the run counted the shared catalogue, and
+`state.sample` ships on, so a brand-new install was told it had four syllabi
+and 48 dated obligations it had never uploaded. The run now counts
+`state.courses`. Both buttons still answer to `/skip/i`, and the primary one
+is named for whichever of the two states you are in — match it as
+`/^(show me|set it up)$/i` rather than by either name alone.
 
 ```js
 await page.goto('http://localhost:5173/', { waitUntil: 'domcontentloaded' });

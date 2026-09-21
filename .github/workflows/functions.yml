@@ -16,13 +16,51 @@
 
 name: Deploy Edge Functions
 
+# Only what CI has passed reaches the project.
+#
+# This used to be `on: push: branches: ['main']`, and `pages.yml` carries the
+# argument for why that is wrong at length — two workflows watching one event,
+# neither aware of the other, so a commit that failed `tsc`, failed the suite
+# or failed the policy checks deployed anyway, at the same moment CI was going
+# red about it.
+#
+# That argument was made about the app and acted on only there. The functions
+# kept the ungated trigger for as long as the gate has existed, which is the
+# more surprising half of the two: **an Edge Function is the half with the
+# service-role key in it.** `claude` meters the AI spend, `fetchcal` serves a
+# calendar by token past row-level security, `push` is the sender, and the
+# invite gate is a `security definer` function these sit in front of. A broken
+# one of those is not a page drawing wrong, and it was the one deploying
+# unverified.
+#
+# So the same gate, written the same way. The cost is that a function now waits
+# for the CI run — nine or ten minutes rather than going live on the merge —
+# and that is the right trade for the half of the deploy that can read
+# somebody else's coursework.
+#
+# Two consequences of `workflow_run` worth knowing, both handled below:
+#
+#   1. **It takes no `paths:` filter**, so this fires on every CI run that
+#      passes on main rather than only on the ones touching a function. The
+#      `what` step already answers "which functions changed" from the diff and
+#      already deploys nothing when the answer is none, so the extra runs are a
+#      checkout and two shell steps that print "Nothing to deploy". No npm and
+#      no CLI: `setup-cli` and `Deploy` are both conditional on the list being
+#      non-empty, and were before this change.
+#   2. **It checks out the default branch head by default**, not the commit
+#      that passed. `head_sha` below pins it, the same as `pages.yml` — and
+#      here it matters twice over, because the diff that decides *what* to
+#      deploy is taken against `HEAD^` and would otherwise be a diff of
+#      somebody else's merge.
+#
+# `workflow_dispatch` is unchanged: it still deploys whatever is on main, names
+# its own functions, and is how a function first goes up. It is also the escape
+# hatch for deploying past a red CI when somebody has decided to.
 on:
-  # A change to a function's own directory, once it is on main.
-  push:
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
     branches: ['main']
-    paths:
-      - 'supabase/functions/**'
-      - '.github/workflows/functions.yml'
   # Or by hand, which is how a function first goes up.
   workflow_dispatch:
     inputs:
@@ -41,10 +79,25 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # A completed CI run that failed still fires `workflow_run`, so the
+    # conclusion is checked rather than the event. A hand-started deploy
+    # carries no `workflow_run` at all, hence the first clause. Identical to
+    # `pages.yml`'s, deliberately: two deploys with two different ideas of
+    # "passing" is most of what this change is about.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
     steps:
       - uses: actions/checkout@v7
         with:
-          # Two commits, so a push can be asked which functions it changed.
+          # The commit CI passed, not whatever main has drifted to since —
+          # which on this repository is a real distance: five merges landed
+          # inside two minutes on the afternoon this was written. Empty on a
+          # `workflow_dispatch`, which checks out the default branch, and that
+          # is the intended behaviour for a hand-started deploy.
+          ref: ${{ github.event.workflow_run.head_sha }}
+          # Two commits, so the merge can be asked which functions it changed.
           fetch-depth: 2
 
       # Which project. A repository variable wins; otherwise the ref is read
@@ -70,9 +123,14 @@ jobs:
           echo "::notice title=Project::Deploying to $ref."
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
 
-      # Which functions. Named by hand on a dispatch; on a push, whichever
-      # directories the push actually touched — so a change to `fetchcal` does
-      # not redeploy `claude` and `push` for no reason.
+      # Which functions. Named by hand on a dispatch; otherwise whichever
+      # directories the merge actually touched — so a change to `fetchcal` does
+      # not redeploy `claude` and `push` for no reason, and a CI run that
+      # touched no function at all deploys nothing.
+      #
+      # `HEAD^ HEAD` reads the same under `workflow_run` as it did under
+      # `push`: `HEAD` is the merge commit and `HEAD^` is its first parent,
+      # which is the previous state of main either way.
       - name: Work out what to deploy
         id: what
         env:

@@ -14,6 +14,8 @@ import { Cutoffs } from '../components/Cutoffs';
 import { ScoreField } from '../components/ScoreField';
 import { Folding } from '../components/Fold';
 import { Suppose } from '../components/Suppose';
+import { ScoreShot } from '../components/ScoreShot';
+import { configured } from '../lib/assistant';
 import { datedItems } from '../lib/select';
 import { isExam } from '../lib/runway';
 
@@ -210,6 +212,30 @@ export function Grades() {
               ) : null}
               </div>
             ))}
+
+            {/*
+              Reading a score off a photograph of somewhere else.
+
+              Under the whole table rather than on each row: there is no
+              icon-button idiom in this app, so a camera beside every field
+              would mean inventing one and drawing five of it on a phone. One
+              control, and the photograph says which category it is about —
+              `lib/readout.ts:categoryFor` proposes, and refuses a tie rather
+              than opening on a row somebody then taps.
+
+              Behind the key gate, like every other door a model has to read:
+              see `screens/Import.tsx`, which gates its camera the same way
+              and for the same reason.
+            */}
+            {configured() && c.grading.length > 0 && (
+              <ScoreShot
+                categories={c.grading.map((g) => g.what)}
+                system={system}
+                onFile={(index, value) =>
+                  dispatch({ type: 'setGrade', key: key(c.id, index), value })
+                }
+              />
+            )}
 
             {s.remaining > 0 && s.counted > 0 && (
               <>

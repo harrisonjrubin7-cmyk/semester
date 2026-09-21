@@ -70,14 +70,27 @@ const flat = () =>
  * the reason `scripts/destinations.mjs` gives about screens: a list in a test
  * is a list that drifts from the thing it is about and says nothing when it
  * does. `if not exists` and a bare or `public.`-qualified name are all in use
- * across the thirteen migrations, so the pattern takes all four shapes.
+ * across the migrations, so the pattern takes all four shapes.
+ *
+ * Anchored to the start of a line, because a migration can *mention* the words
+ * without creating anything. `20260901000100_schema.sql` lists the command tags
+ * its RLS event trigger fires on — `'CREATE TABLE'`, `'CREATE TABLE AS'`,
+ * `'SELECT INTO'` — and read as DDL that is a table called `as`, which this
+ * test then demanded a retention answer for: a failure of exactly the right
+ * shape, about nothing. Every real `create table` in this directory begins a
+ * line, indented or not, and the only mid-line ones are those two literals.
+ *
+ * Blanking quoted strings instead was tried first and is worse: the bodies here
+ * are dollar-quoted and full of `''`, so pairing apostrophes swallows whole
+ * statements and the probe goes quiet about tables that do exist.
  */
 function tablesCreated(): string[] {
   const found = new Set<string>();
   for (const file of readdirSync(MIGRATIONS)) {
     if (!file.endsWith('.sql')) continue;
     const sql = readFileSync(join(MIGRATIONS, file), 'utf8');
-    for (const m of sql.matchAll(/create table\s+(?:if not exists\s+)?(?:public\.)?([a-z_]+)/gi)) {
+    const statements = /^[ \t]*create table\s+(?:if not exists\s+)?(?:public\.)?([a-z_]+)/gim;
+    for (const m of sql.matchAll(statements)) {
       found.add(m[1]);
     }
   }
@@ -196,6 +209,23 @@ describe('the clocks that run are still the clocks the document describes', () =
     const sql = readFileSync(join(MIGRATIONS, '20260921143653_access_log.sql'), 'utf8');
     expect(sql).toMatch(/date - 90\b/);
     expect(flat()).toMatch(/\*\*90 days\*\*/);
+  });
+
+  /*
+   * The second clock, and the first one added since this document existed —
+   * which is the case the whole file was written for. `activity` is a record
+   * about a student's work rather than the work, so it is allowed a clock at
+   * all; what it is not allowed is a clock the document does not know about.
+   *
+   * Pinned at both ends, like the access log's: the migration's prune and the
+   * table above cannot move independently. `lib/activity.ts` exports the same
+   * number for the app's side of it, and `activity.test.ts` is what holds
+   * that third copy to these two.
+   */
+  it('agrees with the migration about the activity record', () => {
+    const sql = readFileSync(join(MIGRATIONS, '20260921151000_activity.sql'), 'utf8');
+    expect(sql).toMatch(/date - 400\b/);
+    expect(flat()).toMatch(/\*\*400 days\*\*/);
   });
 
   /*

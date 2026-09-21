@@ -5,6 +5,7 @@ import { secondLine } from '../../lib/dim';
 import { Answering } from './Answering';
 import { Publishing } from './Publishing';
 import { download } from '../../lib/deliver';
+import { projectFile } from '../../lib/export';
 import { fromRows, toCsv } from '../../lib/sheet';
 import {
   QUESTION_TYPES,
@@ -317,7 +318,7 @@ export function FormBuilder({
               disabled={!f.responses.length}
               onClick={() =>
                 download({
-                  name: `${project.title} responses.csv`,
+                  name: projectFile(project.title, project.kind, 'csv', 'responses'),
                   body: toCsv(responseRows(project)),
                   mime: 'text/csv',
                 })
