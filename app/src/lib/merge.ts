@@ -194,6 +194,7 @@ export const STRATEGY: Record<string, Strategy> = {
   corners: 'theirs',
   typeface: 'theirs',
   iconShape: 'theirs',
+  calm: 'theirs',
   // The accent hue travels with the accent it replaces, or the two would
   // disagree about what colour the app is.
   hue: 'theirs',

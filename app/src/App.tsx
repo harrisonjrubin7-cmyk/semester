@@ -20,11 +20,20 @@ import { Onboarding } from './screens/Onboarding';
 import { Said } from './components/Said';
 import { Replaced } from './components/Replaced';
 import { SampleMark } from './components/SampleMark';
-import { scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
+import { CALM_ATTR, scrollKindly, usePrefersContrast, usePrefersDark } from './lib/prefers';
 import { Today } from './screens/Today';
 import { Guides, SCREENS, Springboard } from './screens';
 import { headOf, type Head } from './headers';
-import { DRAWN_AT, ground, resolveGround, scaleFrom, scaleOf, tokensFor, type Look } from './lib/look';
+import {
+  calmOf,
+  DRAWN_AT,
+  ground,
+  resolveGround,
+  scaleFrom,
+  scaleOf,
+  tokensFor,
+  type Look,
+} from './lib/look';
 
 /**
  * Every screen but the first, fetched when it is opened.
@@ -1081,6 +1090,18 @@ export default function App() {
     // `=== 'parchment'`, so Paper and Fog — both light — got a dark scrollbar
     // and a dark overscroll edge.
     root.style.colorScheme = ground(JSON.parse(lookKey).ground).light ? 'light' : 'dark';
+
+    /*
+     * How much the app may move and decorate itself, as one attribute.
+     *
+     * An attribute rather than a custom property because both readers need it
+     * and only one of them can read a variable: `styles/app.css` selects on
+     * `[data-calm="calm"]`, and `lib/prefers.ts` reads it with
+     * `getAttribute` from plain functions that have no hooks in scope. A
+     * custom property would have served the stylesheet and left `scrollKindly`
+     * with no way to ask.
+     */
+    root.setAttribute(CALM_ATTR, calmOf((JSON.parse(lookKey) as Look).calm));
 
     /*
      * And the other half of the browser's chrome.
