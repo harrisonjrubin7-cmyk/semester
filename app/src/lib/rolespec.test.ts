@@ -209,6 +209,61 @@ describe('what it reports about the schema', () => {
   });
 });
 
+describe('what it now claims is built', () => {
+  /*
+   * The document says items 239 and 300 are done, in five places. That claim
+   * can rot in the same direction as the findings above: a revert, or a
+   * renumbering of the migration, and the prose still reads as true.
+   *
+   * The behaviour of the table and the predicate is `supabase/rolegrants.check.sql`'s
+   * job — it has the policies, the two locks and the liveness. This only
+   * checks that the things the document names by name are there, which is the
+   * half a TypeScript suite can see.
+   */
+  const migration = at('supabase', 'migrations', '20260921223000_role_grants.sql');
+
+  it('the migration the document names is there', () => {
+    expect(existsSync(migration), 'role_grants migration').toBe(true);
+    expect(existsSync(at('supabase', 'rolegrants.check.sql')), 'its suite').toBe(true);
+  });
+
+  it('it creates the grant row and the predicate, and the predicate is private', () => {
+    const sql = readFileSync(migration, 'utf8');
+    expect(sql).toMatch(/^create table if not exists public\.role_grants/m);
+    expect(sql).toMatch(/^create or replace function private\.holds_role\(/m);
+    // A `public.holds_role` would be a URL PostgREST publishes, which is the
+    // whole reason for the schema choice. `grants.check.sql` fails on it too.
+    expect(sql).not.toMatch(/function public\.holds_role/);
+  });
+
+  /*
+   * Every pattern below is anchored to the start of a line, and that is not
+   * style. The first version of this block was not, so commenting the revoke
+   * out — `-- revoke all on table public.role_grants …` — still matched it and
+   * the assertion passed on a table open to every visitor. `rolegrants.check.sql`
+   * caught that fault; this file claimed to and did not, which is the worse of
+   * the two failures because it is the one that reads as covered.
+   */
+  it('the table is closed to clients by both locks', () => {
+    const sql = readFileSync(migration, 'utf8');
+    // The outer lock: Supabase's default privileges grant ALL on a new table
+    // in `public` to both API roles, so the revoke is not optional.
+    expect(sql).toMatch(/^revoke all on table public\.role_grants from anon, authenticated;/m);
+    // The inner lock: exactly one policy, and it reads.
+    const policies = [...sql.matchAll(/^create policy .*? on public\.role_grants/gm)];
+    expect(policies).toHaveLength(1);
+    expect(sql).toMatch(/^create policy "your roles are yours to see" on public\.role_grants\s+for select/m);
+  });
+
+  it('the predicate reads the caller and only live grants', () => {
+    const sql = readFileSync(migration, 'utf8');
+    // Each of these is a fault `rolegrants.check.sql` was watched go red under.
+    expect(sql).toMatch(/^[ \t]*and g\.subject = \(select auth\.uid\(\)\)|^[ \t]*where g\.subject = \(select auth\.uid\(\)\)/m);
+    expect(sql).toMatch(/^[ \t]*and g\.revoked_at is null/m);
+    expect(sql).toMatch(/^[ \t]*and \(g\.expires_at is null or g\.expires_at > now\(\)\)/m);
+  });
+});
+
 describe('the specification it continues', () => {
   const items = [...spec.matchAll(/^# (\d+)\./gm)].map((m) => Number(m[1]));
 

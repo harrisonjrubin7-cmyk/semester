@@ -30,7 +30,15 @@ The repository already has three lists of what a person can be. They were writte
 
 The first two agree. The third does not agree with either: it has `parent` where they have `payer`, it has `mentor` where they have nothing, and it has no `faculty`, `advisor`, `admin` or `staff` at all. **The one vocabulary a server actually enforces is the one that shares a single value with the other two.**
 
-None of the three is the twenty roles item 239 asks for, and the difference is not a matter of adding strings. All three are *one role per account*: a `text` column, a union type, a single `Role` in application state (`app/src/state/shape.ts`). Item 239 requires a person to hold several at once, which is a different shape, not a longer list.
+And "enforces" means the value set, not any authority. `supabase/migrations/20260921211500_pin_profile_school.sql` had to decide whether to take the client's write privilege on that column away, and deliberately did not:
+
+> `account_role` … is what an account *says* it is — chosen at sign-up, writable by its owner, and it decides nothing about authorization; it picks which dashboard the app draws. Every value it can hold is one anybody may give themselves.
+
+That is the correct decision for that column, and it settles the shape of everything below: **a permission its subject can write is not a permission.** Any role that grants something has to live somewhere its holder cannot reach.
+
+There is now a fourth list, and it is the one that decides authorization: `role` in `public.role_grants`, added by `supabase/migrations/20260921223000_role_grants.sql`, which carries item 239's twenty values and is written by the service key alone. The other three are unchanged by it on purpose — reconciling them is the rest of item 239's work, and doing it quietly inside a migration about a new table would be a behaviour change riding along with a schema addition.
+
+None of the original three is the twenty roles item 239 asks for, and the difference is not a matter of adding strings. All three are *one role per account*: a `text` column, a union type, a single `Role` in application state (`app/src/state/shape.ts`). Item 239 requires a person to hold several at once, which is a different shape, not a longer list.
 
 ## The global admin capability, and the thing it got right
 
@@ -75,7 +83,7 @@ Resolved against the tree. "Present" means the file or table exists and does the
 
 | Item | Needs | Present today |
 |---|---|---|
-| 239 role model | Multi-role account | `profiles.account_role`, single-valued, three values |
+| 239 role model | Multi-role account | **Built** — `public.role_grants`, scoped and provenanced, twenty roles. `profiles.account_role` remains what an account says it is |
 | 240 role switching | Context switch | `app/src/lib/role.ts` + `setRole` in `app/src/state/shape.ts`, single role, no contexts |
 | 241 student role | The core product | Built — this is the app |
 | 246–250 faculty, TA | Course-scoped authority | `supabase/functions/_shared/lti.ts` knows the roles; nothing stores them |
@@ -92,9 +100,22 @@ Resolved against the tree. "Present" means the file or table exists and does the
 | 291–292 registrar | Process translation | `app/src/lib/registrar.ts`, `app/src/lib/transcript.ts`, `app/src/screens/Registrar.tsx` |
 | 294–296 moderation | Case system | `public.reports` stores `reporter`, `about`, `message_id`, `reason`, `copy`, `created_at` — and no status, category, assignee or resolution. A sink, not a queue |
 | 297–298 platform admin | Differentiated capability | `public.app_admins` + `private.is_app_admin()`, one tier |
-| 299 permission matrix | Central definitions | Nothing central. `app/src/lib/school.ts` (`allowed`) and `app/src/lib/role.ts` (`forRole`) gate *screens*, and both say they are not permissions |
-| 300 resource authorization | Server-side ownership check | `family_grants` policies and `private.in_group()` — the two working instances |
+| 299 permission matrix | Central definitions | Still nothing central. `app/src/lib/school.ts` (`allowed`) and `app/src/lib/role.ts` (`forRole`) gate *screens*, and both say they are not permissions. `private.holds_role()` is what a capability map would be built on |
+| 300 resource authorization | Server-side ownership check | **Built** — `private.holds_role()`, beside `family_grants`' policies and `private.in_group()` |
 | 301 impersonation | Controlled support mode | Nothing, which is the right amount for now |
+
+## Two locks that do not behave alike
+
+Worth knowing before building any of the tables below, because it was learned by writing the assertion the wrong way round first.
+
+A table closed to clients is closed twice over here: the relation privilege is revoked from `anon` and `authenticated`, *and* there is no write policy. Those two refuse differently, and only one of them raises:
+
+| | `insert` | `update` | `delete` |
+|---|---|---|---|
+| privilege revoked | refuses (`42501`) | refuses (`42501`) | refuses (`42501`) |
+| privilege granted, no policy | refuses (`42501`) | **succeeds, matches no row** | **succeeds, matches no row** |
+
+So a suite asserting "refused outright" for all three passes for the wrong reason as soon as the revoke is in place, and would keep passing if the policy half were removed. `supabase/rolegrants.check.sql` asserts the first row with `pg_temp.refused` and the second with `pg_temp.untouched`, which reads `row_count`. The first version of that file did not, and the suite caught it.
 
 ## The audit-log position this repository already holds
 
@@ -139,6 +160,8 @@ Three consequences that follow from the current schema, and each is a change rat
 - `profiles.account_role` is a single `text` column with a three-value `check`. A person holding three roles cannot be represented in it at all, so the grant of a role becomes a **row**, not a column value: one table keyed by person, role and the resource the role is held over.
 - A role held over nothing is meaningless for most of this list. `ORGANIZATION_ADMIN` is always admin *of a particular organization*; `FACULTY` is faculty *of particular courses*. Only `PLATFORM_ADMIN` and `MODERATOR` are genuinely global, and those two are the ones that need the strongest controls (items 297–298). The scope column is therefore not optional metadata — it is half the primary key.
 - A role has a **provenance**. `UNDERGRADUATE_STUDENT` asserted by the holder is a preference; asserted by an LTI launch or a student-information system it is a fact. Items 246, 250, 251, 274 and 286 all require institutional authorization, which is unenforceable unless the row records where it came from. Three provenances are enough to start: self-asserted, institution-asserted, and platform-granted.
+
+**Built**, as `public.role_grants` in `supabase/migrations/20260921223000_role_grants.sql`: one row per role per scope, the twenty values above, `scope_kind` and `scope_id`, `provenance`, `granted_by`, `expires_at` and `revoked_at`. It is revoked from `anon` and `authenticated` and has no write policy, so there is no route to granting yourself anything — the two locks are tested independently in `supabase/rolegrants.check.sql`. What it does **not** yet have is any way for a row to come into existence apart from the service key; the one self-service path item 254 needs (`tutor`, and nothing else) is still to write.
 
 # 240. Role switching
 
@@ -787,6 +810,8 @@ The repository has two working instances to copy, and they are both security-def
 
 A general version answers one question — *may this person do this thing to this resource* — and returns one boolean. Every dashboard in this document is then a query over what that predicate permits, rather than a place where the question is asked again in a different way.
 
+**Built**, as `private.holds_role(want_role, want_scope_kind, want_scope_id)` in `supabase/migrations/20260921223000_role_grants.sql`. It answers the narrower question — does this person hold this role over this scope, right now — because the capability mapping is item 299 and is not written yet; a capability check is built *on* this answer rather than instead of it. Live only: a revoked or expired grant is absent inside the predicate rather than at the call sites, since the call site that forgets is the one nobody finds. In `private` for the reason `is_app_admin()` is, and `grants.check.sql` independently fails on a `public` twin — measured by moving it there and watching that suite go red, not assumed.
+
 # 301. Impersonation and support mode
 
 If support impersonation is ever implemented, it must be highly controlled:
@@ -802,12 +827,12 @@ The banner is not decoration either. It is what stops a support engineer forgett
 
 # Sequencing
 
-Four things come first, and everything else in this document reads or writes them:
+Four things come first, and everything else in this document reads or writes them. **The first two are built**; the remaining two are unchanged and are now the front of the queue.
 
-1. **The grant row** (item 239) — person, role, scope, provenance. Every other item is a query over this table, and building any role workspace before it means building a second place roles live.
-2. **The predicate** (item 300) — one server-side function answering *may this person do this to this resource*. The two existing instances are the model.
-3. **Persisting what the LTI launch already says** (items 246–250, 274) — the only institutionally-vouched role data the platform receives, currently discarded per request. Every faculty, TA, advisor and department item is blocked on it, and it is the smallest of the four.
-4. **Splitting `private.is_app_admin()`** into named capabilities (items 294–299) — before, not after, the moderator queue and the platform dashboard are built against it, because both will otherwise be written to ask a boolean.
+1. ~~**The grant row** (item 239)~~ — **done.** `public.role_grants`, in `supabase/migrations/20260921223000_role_grants.sql`. Person, role, scope, provenance, expiry, revocation; no write route through the API.
+2. ~~**The predicate** (item 300)~~ — **done.** `private.holds_role()`, in the same migration, with `supabase/rolegrants.check.sql` as the suite.
+3. **Persisting what the LTI launch already says** (items 246–250, 274) — the only institutionally-vouched role data the platform receives, currently discarded per request. Every faculty, TA, advisor and department item is blocked on it, it is the smallest of the four, and it now has somewhere to be written to: a launch carrying `Instructor` becomes a `faculty` grant over that course with `provenance = 'institution'`.
+4. **Splitting `private.is_app_admin()`** into named capabilities (items 294–299) — before, not after, the moderator queue and the platform dashboard are built against it, because both will otherwise be written to ask a boolean. `role_grants` can already carry `moderator` and `platform_admin`; what is missing is the capability map of item 299 and the migration that moves the existing admin rows onto it.
 
 After those, the roles that need no institutional integration are the ones to build first, because they exercise the whole architecture without waiting on anybody: **tutor** (item 254) and **organization officer and admin** (items 255–258). Both are students holding a second role over a scope, which is item 239's case in its most ordinary form.
 
