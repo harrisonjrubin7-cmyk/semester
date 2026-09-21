@@ -1,3 +1,129 @@
+# One app — the thirty-fourth pass: the warning outlived the fault
+
+Against `main` at `593c235`. **<!--screens-->fifty-nine<!--/--> destinations**,
+unchanged. No cut, no merge. Five false sentences corrected and one guard
+written.
+
+The thirty-third asked which live fields nobody reads. This one asks the
+question the other way round: **which of the rules written down in this
+codebase are no longer true?** A comment cannot be caught by `tsc`, `oxlint`
+or the suite, so the only thing standing between a stale rule and the next
+author is somebody going and looking.
+
+The specimen came from the file that exists *because* of this fault. The
+thirtieth-odd pass extracted `lib/opencal.ts` from a module-private
+`useOpenDay`, with the argument written out: **a helper nobody can import is a
+rule nobody can follow.** It landed, it is correct, and all four call sites
+use it.
+
+Its own docblock has been lying ever since.
+
+## The four sentences
+
+`lib/opencal.ts` carried a warning that `month` was a broken grain:
+
+> `month` and `semester` do not [honour the date]. The month view anchors on
+> `calYear` and `calMonth` — separate fields, reachable only through
+> `stepMonth`, which moves by a delta and cannot be sent to a date. So
+> `openCal(date, 'month')` sets a day nothing reads and lands on whatever month
+> the calendar was already showing. **It fails silently.**
+
+Every word of that was true when written. Then the pass that merged the
+calendar's position onto one field deleted `calMonth`, `calYear` and the month
+view's private `selDate`, pointed `stepMonth` at `calDay`, and recorded in this
+very document that it *"also closes L3 without needing the 'go to this month'
+action that row said was missing"*.
+
+So the fault was fixed, the audit said so, and the warning stayed.
+
+| Where | The claim | Checked against |
+| --- | --- | --- |
+| `lib/opencal.ts` | `month` does not honour the date | `MonthView` derives the month shown **and** the day selected from `calDay` |
+| `lib/opencal.ts` | the position is held twice, recorded as an open row | L3 closed; `calMonth`/`calYear`/`selDate` deleted |
+| `lib/opencal.ts` | Today's aside passes `month` | it passes `week` |
+| `screens/Today.tsx` | "`month` is not available" | it is |
+| `state/readstate.test.ts` | Calendar destructures `calYear`, `calMonth`, `calSource` | it destructures `calSource` |
+
+`semester` is the control. It is the other half of the original sentence, it is
+still true — `SemesterView` anchors on `useNow()` and reads no date anywhere in
+its 662 lines — and it is what says the sentence was written carefully rather
+than carelessly. A correction that had found the whole claim wrong would have
+been the suspicious result.
+
+## It had propagated, and it was costing something
+
+The cheap reading of a stale comment is that it is untidy. This one was not.
+
+`screens/Today.tsx` draws the aside under the seven-day window — *"what a
+seven-day window cannot show, said out loud"* — and its handler carried the
+claim onward, as reasoning:
+
+> `month` is not available: the month view anchors on `calYear` and `calMonth`,
+> which `setCalDay` does not touch, so asking for it lands on the current month
+> whatever date you pass.
+
+That is an author reaching for a grain, being told by a comment that it was
+unavailable, and picking another. The comment had stopped being true before
+they read it. **A wrong warning is more expensive than a missing helper**: the
+missing helper makes the next author do the work again, and the wrong warning
+makes them design around a road that is open.
+
+`week` is kept. The aside points at the first thing past the window, and the
+week holding it shows that thing with its neighbours, which is what "the
+calendar has the rest" promises; a month would show more and locate it less.
+That is a judgement about wording rather than a bug, so it is recorded below
+rather than settled by a pass whose subject is stale comments.
+
+## The guard, and what it turned out not to be
+
+`Calendar.opencal.test.tsx` asserts the corrected half through the view: open
+`2026-09-24` in `month` from a calendar sitting in January, and the grid names
+September and selects the 24th.
+
+Reverting `MonthView`'s anchor to `now` — the pre-merge behaviour, minus the
+deleted fields — turns two of its three assertions red. The third stays green,
+which is what makes it the control: the reverted view shows January whatever it
+is asked for, so "January is on screen" cannot tell the two apart.
+
+**A first draft of that file's note claimed the revert broke nothing else. That
+was wrong and is recorded rather than quietly fixed.** `Calendar.keyboard.test.tsx`
+fails on it too, because paging with `PageDown` moves `calDay` and its
+assertions read the grid. The anchor *line* therefore had incidental cover all
+along. What had none is the claim the new file is named for — that a date handed
+to `openCal` arrives — and the gap between those two is the finding:
+
+| File | Under the revert | What it actually holds |
+| --- | --- | --- |
+| `lib/opencal.test.ts` | **passes** | the action list's shape — `[1]` carries `view: 'month'` |
+| `Calendar.keyboard.test.tsx` | fails | paging from today |
+| `Calendar.opencal.test.tsx` | fails | a date handed in arrives |
+
+The middle row is the one worth keeping in mind. The file whose *name* says it
+covers `openCal` is the file that passes throughout, because asserting the
+dispatches says nothing about where the calendar ends up.
+
+## Gates
+
+`tsc` clean · lint ok · the suite in file order, shuffled and in both other
+timezones · production build clean · five cold boots clean. Figures in the
+commit.
+
+## To do
+
+- **Today's aside: `week` or `month`?** Now a real choice rather than a
+  constraint. Recorded, not taken — it is a question about what the sentence
+  promises, and the owner's.
+- **Nothing holds a docblock to the code it describes**, and nothing can in
+  general. This pass found five stale sentences by reading; the narrow ones
+  that name a deleted symbol could be caught — `oneday.test.ts` already
+  forbids `selDate`, `calMonth`, `calYear` and `selectDate` coming back, and a
+  sibling rule could fail when a deleted name appears in a comment in the
+  present tense. Not written here: the rule needs a tense, and a census that
+  cannot tell "anchors on `calYear`" from "used to anchor on `calYear`" would
+  redden every honest history note in the repository, this document included.
+
+---
+
 # One app — the thirty-third pass: the card said it had searched
 
 Against `main` at `d8aa171`. **<!--screens-->fifty-nine<!--/--> destinations**,
