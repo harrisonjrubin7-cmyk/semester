@@ -16,6 +16,8 @@ lessons.py       guide → a narrated lesson per unit, with slide cues
 slides.py        guide → a PowerPoint deck
 handout.py       guide → a Word document and a PDF
 chapters.py      recover chapter marks from an existing recording
+align-audio.mjs  recover where every line starts, from the episode itself
+align.mjs        the arithmetic that does it, pure
 shorts.py        lessons → one vertical short per flashcard
 documentary.py   podcast episode → a documentary cut of it
 restyle-script.mjs  script → the same script in a hosting style (calls a model)
@@ -25,8 +27,38 @@ styles.mjs       the hosting styles, as structural parameters
 Everything after `guide_reader.py` reads the same guide through it, so a deck, a
 handout and a lesson cannot disagree with the app or with each other.
 
-`audio/synth.py` renders a script to an MP3 with exact chapter marks. See
-[`../audio/README.md`](../audio/README.md).
+`audio/synth.py` renders a script to an MP3 with exact chapter marks and exact
+line times. See [`../audio/README.md`](../audio/README.md).
+
+## Line times, for captions
+
+`synth.py` has always known the second every line begins at — it concatenates
+an episode piece by piece and keeps a running position — and until now wrote
+down only the dozen-odd values where a chapter opened. It writes all of them
+now, to `audio/scripts/<stem>.lines.json`.
+
+The four episodes that shipped before it did have to be recovered:
+
+```bash
+node pipeline/align-audio.mjs econ
+node pipeline/align-audio.mjs --all --dry-run
+```
+
+This is not a forced aligner in the usual sense — nothing listens to speech or
+matches phonemes, and there is no model to download. It does not need one. The
+silences between lines were not performed, they were *inserted*, at three
+lengths `synth.py` declares and in an order the script fixes, so finding them
+is arithmetic. `chapters.py` makes the same move for chapter marks.
+
+Measured across all four episodes, every one of the 55 chapter marks
+`synth.py` recorded lands inside the second the recovery puts it in — which is
+the whole resolution those marks have, since they were stored as
+`int(position)`. The control that makes that mean something: given the first
+and last mark of each episode and asked to interpolate the rest by word count,
+the cheap method misses all 47 interior marks, by up to 21 seconds.
+
+It refuses rather than guesses. If the quiet runs cannot be made to fit the
+script, or any chapter mark is missed, nothing is written and it says why.
 
 Where these formats go next — movie-format lessons, one short per flashcard,
 several podcast hosting styles from one draft, and what each of those actually

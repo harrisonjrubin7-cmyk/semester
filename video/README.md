@@ -67,11 +67,19 @@ its own chapter marks — the ones `audio/synth.py` measured while rendering it,
 not the ones `chapters.py` recovers afterwards. Nothing is synthesised, no
 audio is cut, and `--broll none` is the only mode that exists.
 
-**There are no captions.** `synth.py` records where a *chapter* starts; nothing
-records where a line starts, and the transcript has the words with no times at
-all. A caption track would have to be invented, and one eight seconds out of
-step reads as a broken player rather than as an approximation. A forced aligner
-over the rendered audio is the honest fix and is not built.
+**The captions are per line, and the times under them are measured.** This
+used to say there were none, because nothing recorded where a line started.
+`pipeline/align-audio.mjs` recovers it from the audio and `audio/synth.py`
+now writes it down exactly; `pipeline/README.md` has both. A line is one
+speaker's turn, three to nine seconds of it, and that is the resolution the
+captions get — `video/src/captions.ts` says why they are not cut finer.
+
+The type is one size for the whole episode, chosen for the longest line it has:
+PSCI's is 556 characters, which at the size a two-line caption wants would run
+off the bottom of a frame that has no scrollbar. The box around it is a fixed
+height for the same reason `fit.ts` exists — the column stacks from the bottom,
+so a box that grew would walk the chapter title up the frame every time a long
+line followed a short one.
 
 **The chapter card holds rather than fading.** The first cut faded it after
 seven seconds, which on a 28-minute episode with a chapter every two minutes

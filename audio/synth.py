@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 """
-Render a two-voice podcast script to an MP3, and emit chapter marks taken from
-the real audio positions rather than estimated.
+Render a two-voice podcast script to an MP3, and emit chapter marks and line
+times taken from the real audio positions rather than estimated.
 
     python3 audio/synth.py audio/scripts/bus1600.json app/public/audio
 
 Voices are Piper neural models. A script is a list of lines, each with a speaker
 ("v") and text ("t"); a line may open a chapter and may request a pause after it
 (used for the self-test, so there is room to answer out loud).
+
+Two files come out beside the MP3. `<script>.chapters.json` is the chapter
+marks. `<script>.lines.json` is the second every line starts and ends at —
+which this has always known, because it concatenates the episode piece by
+piece and keeps a running `position`, and used to write down only the
+fourteen-odd values where a chapter opened. Captions need the rest of them.
+The four episodes rendered before it wrote them have to be recovered from
+the audio instead; `pipeline/align-audio.mjs` does that, and says in its own
+comments what it costs in precision.
 """
 
 from __future__ import annotations
@@ -84,6 +93,7 @@ def main() -> int:
     rate = max(v.config.sample_rate for v in voices.values())
     pieces: list[np.ndarray] = []
     chapters: list[dict] = []
+    times: list[dict] = []
     position = 0.0  # seconds of audio emitted so far
     prev_speaker: str | None = None
 
@@ -110,10 +120,13 @@ def main() -> int:
         if chapter:
             chapters.append({"t": mmss(position), "s": int(position), "name": chapter})
 
+        began = position
         audio, src_rate = say(voices[speaker], line["t"])
         audio = resample(audio, src_rate, rate)
         pieces.append(audio)
         position += audio.size / rate
+        # Exact, and free: it is the same counter the chapter marks come from.
+        times.append({"i": i - 1, "s": round(began, 3), "e": round(position, 3)})
 
         add_silence(float(line.get("pause", 0)))
         prev_speaker = speaker
@@ -160,9 +173,27 @@ def main() -> int:
     meta_path = script_path.with_suffix(".chapters.json")
     meta_path.write_text(json.dumps(meta, indent=2) + "\n")
 
+    # Index, start, end — and no text. The words are in the script one file
+    # over, and copying them here would let a restyle pass change what is said
+    # without changing what is captioned.
+    lines_path = script_path.with_suffix(".lines.json")
+    lines_path.write_text(
+        json.dumps(
+            {
+                "id": stem,
+                "course": script["course"],
+                "source": "synth",
+                "seconds": round(position, 3),
+                "lines": times,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+
     size_mb = mp3_path.stat().st_size / 1_000_000
     print(f"\n{mp3_path}  {meta['len']}  {size_mb:.1f} MB  {len(chapters)} chapters")
-    print(f"{meta_path}")
+    print(f"{meta_path}\n{lines_path}  {len(times)} lines")
     return 0
 
 

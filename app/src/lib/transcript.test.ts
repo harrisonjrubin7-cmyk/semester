@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadSeed } from '../data/seed';
+import { isEpisodeScript } from './episodes';
 import { hasTranscript, readingTime, speaker, type Transcript } from './transcript';
 import econ from '../data/transcripts/econ';
 import psci from '../data/transcripts/psci';
@@ -32,7 +33,7 @@ interface Line {
 
 function script(course: string): { id: string; lines: Line[]; voices: Record<string, string> } {
   const file = readdirSync(SCRIPTS).find(
-    (f) => f.endsWith('.json') && !f.endsWith('.chapters.json') && JSON.parse(readFileSync(join(SCRIPTS, f), 'utf8')).course === course,
+    (f) => isEpisodeScript(f) && JSON.parse(readFileSync(join(SCRIPTS, f), 'utf8')).course === course,
   );
   if (!file) throw new Error(`no script for ${course}`);
   return JSON.parse(readFileSync(join(SCRIPTS, file), 'utf8'));
