@@ -442,7 +442,7 @@ export function DesignEditor({
 
       const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const key = edgeColour(frame.data, canvas.width, canvas.height);
-      const cleared = keyOut(frame.data, key, tolerance);
+      const cleared = keyOut(frame.data, canvas.width, canvas.height, key, tolerance);
       const took = clearedShare(cleared, canvas.width * canvas.height);
 
       if (took > 0.97) {

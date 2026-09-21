@@ -124,7 +124,7 @@ end $$;
 do $$
 declare
   /*
-   * The allowlist. Six, and each is a deliberate entry point:
+   * The allowlist. Seven, and each is a deliberate entry point:
    *   make_referral_code  — mints this account's own code
    *   claim_referral      — records that this account arrived on somebody's
    *   referral_standing   — two integers and a boolean about the caller
@@ -156,7 +156,12 @@ declare
     'claim_referral(given text)',
     'make_referral_code()',
     'note_activity(marks text[])',
-    'referral_standing()'
+    'referral_standing()',
+    -- Sets `profiles.school_id` from the address the server confirmed. The
+    -- column's own UPDATE privilege is revoked from both API roles, so this
+    -- function is the only way in and has to be callable by a signed-in
+    -- account. See 20260921170000_schools.sql.
+    'claim_school(want text)'
   ];
   extra text;
   missing text;
@@ -192,7 +197,7 @@ begin
   if missing is not null then
     raise exception 'FAILED: the allowlist names %, which a signed-in account cannot call', missing;
   end if;
-  raise notice 'ok  and can call all six that it should';
+  raise notice 'ok  and can call all seven that it should';
 end $$;
 
 -- ── The gate's own switch, named because it is the one that was open ──────

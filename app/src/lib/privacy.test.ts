@@ -295,12 +295,23 @@ describe('"delete my account" really means every row', () => {
      * include them — which makes the reason part of the product, not a code
      * comment. An entry with no sentence, or a sentence the page does not
      * print, is the broad-false-claim failure coming back in a smaller shape.
+     *
+     * `schools` is the one entry that is neither of those. It is reference
+     * data no account ever wrote, and it is on the list because the guard
+     * above matches every `.from('…')` in the client rather than only the
+     * writes — which is the right posture for a privacy check and means a
+     * table nobody owns arrives here too. The sentence it carries says that
+     * rather than pretending it is somebody's record.
+     *
+     * The list is pinned rather than derived, so that adding a table to it is
+     * an edit somebody made on purpose in two places.
      */
     const { KEPT_TABLES } = await import('./cloud');
     expect(KEPT_TABLES.map((t) => t.table).sort()).toEqual([
       'group_tasks',
       'groups',
       'reports',
+      'schools',
     ]);
     const said = deletionClaims().map((c) => c.body).join(' ');
     for (const { table, why } of KEPT_TABLES) {
