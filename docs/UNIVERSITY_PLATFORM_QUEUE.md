@@ -70,8 +70,8 @@ the liability rather than the feature. These come first.
 
 | Item | State | Note |
 | --- | --- | --- |
-| **156 Do not fake integrations** `PARTIAL` | The principle is already enforced for *connections* — `app/server/institution/`'s production adapter registry is empty and `UNIVERSITY_CONNECTIONS.md` says why. What does not exist is the catalog-level state (`PUBLIC DATA` / `AVAILABLE` / `PILOT` / `CONNECTED` / `INSTITUTIONAL CUSTOMER`) on a university record, or anything rendering it. |
-| **155 Readiness levels** `TODO` | Levels 0–5. Needs to be derived from what a tenant actually has, never hand-set, or it becomes a second thing to keep true. |
+| **156 Do not fake integrations** `PARTIAL` | The five states now exist as `Relationship` in `app/src/lib/readiness.ts`, default to the weakest, and carry a sentence each rather than a label. The refusals are enforced and tested: no quantity of pack data reaches a connected level, and a configured integration against an institution that agreed to nothing is still shown as public data. **Nothing renders them yet** — that is what is left. |
+| **155 Readiness levels** `PARTIAL` | Levels 0–5 in `app/src/lib/readiness.ts`, derived with no setter, and capped by what the relationship permits. Levels 3+ are unreachable from a data pack by construction, so every school here — Vanderbilt included — is level 2 while the adapter registry stays empty. **No screen shows the level yet.** |
 | **157 Public university mode** `TODO` | Depends on 156 landing first. |
 | **158 Contracted mode** `TODO` | Depends on 156. |
 

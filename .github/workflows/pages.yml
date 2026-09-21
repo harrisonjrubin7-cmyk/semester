@@ -241,6 +241,26 @@ jobs:
             exit 1
           fi
 
+          # Zoom and Apple cannot finish a sign-in from a browser: Zoom's API
+          # sends no CORS headers, and Apple's client secret is a JWT signed
+          # with a private key. Both exchange tokens only through the proxy.
+          # A client ID set without VITE_OAUTH_PROXY builds a button that
+          # sends a student to a consent screen, takes the grant, and then
+          # fails on the way back. Without the ID the same panel says the
+          # sign-in is not switched on and points at the .ics route, which is
+          # true and needs no account — so a missing ID is the better half to
+          # be missing. Microsoft and Google are absent here on purpose: both
+          # are registered as single-page apps and talk to the browser direct.
+          if [ -z "$VITE_OAUTH_PROXY" ]; then
+            needs=""
+            if [ -n "$VITE_ZOOM_CLIENT_ID" ]; then needs="$needs VITE_ZOOM_CLIENT_ID"; fi
+            if [ -n "$VITE_APPLE_CLIENT_ID" ]; then needs="$needs VITE_APPLE_CLIENT_ID"; fi
+            if [ -n "$needs" ]; then
+              echo "::error title=Connect::$needs is set and VITE_OAUTH_PROXY is not. Those providers exchange tokens only through the proxy. Set VITE_OAUTH_PROXY, or unset them to build without that sign-in."
+              exit 1
+            fi
+          fi
+
           if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_KEY" ]; then
             echo "::notice title=Accounts::Supabase configured (url ${#VITE_SUPABASE_URL} chars, key ${#VITE_SUPABASE_KEY} chars) — this build has accounts."
           else
