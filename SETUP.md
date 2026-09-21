@@ -348,7 +348,7 @@ answers with no account and no app. The answers come back to the author and to
 nobody else.
 
 It needs the table, which is not applied by this repository — apply
-`supabase/migrations/20260921003200_forms.sql` the same way as the rest (SQL
+`supabase/migrations/20260921143455_forms.sql` the same way as the rest (SQL
 Editor → New query → paste → Run). Without it, publishing reports the error
 Postgres gives and everything else about a form keeps working, because a form
 still lives on the device that built it.

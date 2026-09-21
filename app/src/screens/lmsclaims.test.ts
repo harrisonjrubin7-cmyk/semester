@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { SOURCES } from '../data/misc';
 
 /**
  * What the app tells a student a Brightspace account can do for it.
@@ -87,5 +88,91 @@ describe('the control', () => {
     // claim, and its clean readings on the other three mean nothing.
     expect(CONTROL).not.toMatch(/carries every due date/);
     expect(CONTROL).not.toMatch(/Valence/);
+  });
+});
+
+/**
+ * The fourth place, which survived the pass that found the other three.
+ *
+ * Settings › About draws `SOURCES` under the header *Where the numbers come
+ * from*, which is the app's own promise about provenance. The list shipped
+ * out of the design comp, where four plausible connected accounts are exactly
+ * what a mockup should have, and three of its four rows named something this
+ * repository does not do:
+ *
+ *  · Brightspace, “4 courses · synced 6:40 AM · On” — the route is a
+ *    read-only .ics feed the student pastes. Nothing syncs on a clock.
+ *  · Gradescope, “On” — the word exists nowhere in `app/src` outside sample
+ *    course data.
+ *  · Apple Calendar, “Two-way” — `lib/connect.ts` says “Apple — sign-in
+ *    only. There is no iCloud calendar API”.
+ *
+ * The prose probes above could not reach it because it is **data**, not a
+ * sentence, and that is the only reason it lasted. So this one reads the data.
+ *
+ * The fourth row was Top Hat, with a join code beside it. Top Hat's only
+ * integration surface is LTI, which joins it to an institution's LMS; there is
+ * no public API and no student export, so a join code next to three sources
+ * marked *On* is the one claim here that could never come true.
+ */
+const SYNC_CLAIM = /\bsynced?\b|\bsyncing\b|\btwo-way\b/i;
+
+/** Systems the app has no route to, in any file outside sample course data. */
+const NO_ROUTE = /\bGradescope\b/i;
+
+const oversold = (row: { label: string; meta: string; state: string }) =>
+  SYNC_CLAIM.test(`${row.label} ${row.meta} ${row.state}`) ||
+  NO_ROUTE.test(`${row.label} ${row.meta}`);
+
+describe('what the source list claims the app is connected to', () => {
+  it.each(SOURCES.map((s) => [s.label, s] as const))(
+    'claims no background sync and no system without a route: %s',
+    (_label, row) => {
+      expect(oversold(row)).toBe(false);
+    },
+  );
+
+  it('says Top Hat is not connected, rather than printing a join code', () => {
+    // Asserted positively so the test cannot be satisfied by deleting the row.
+    // Dropping Top Hat would leave a student who has a Top Hat grade category
+    // — two of the four shipped courses do — with no answer at all.
+    const tophat = SOURCES.find((s) => /top hat/i.test(s.label));
+    expect(tophat).toBeDefined();
+    expect(`${tophat?.meta} ${tophat?.state}`).toMatch(/not connected/i);
+    expect(`${tophat?.meta} ${tophat?.state}`).not.toMatch(/\bjoin code\b/i);
+  });
+});
+
+describe('the control on the source-list probe', () => {
+  /**
+   * The list as it shipped. A probe that convicts nothing is indistinguishable
+   * from a broken one, so the thing it is supposed to catch is kept here and
+   * run through it — which is the revert-and-watch-it-go-red check of
+   * `CLAUDE.md`, made permanent instead of done once by hand.
+   */
+  const AS_SHIPPED = [
+    { label: 'Brightspace', meta: '4 courses · synced 6:40 AM', state: 'On' },
+    { label: 'Gradescope', meta: 'ECON 1020 problem sets', state: 'On' },
+    { label: 'Apple Calendar', meta: 'Two-way, “Fall 2026” calendar', state: 'On' },
+  ];
+
+  it.each(AS_SHIPPED.map((s) => [s.label, s] as const))(
+    'catches the row it was written for: %s',
+    (_label, row) => {
+      expect(oversold(row)).toBe(true);
+    },
+  );
+
+  it('does not simply reject every row, including ones that are real', () => {
+    // Canvas is a genuine connection — `lib/canvas.ts`, a token the student
+    // issues. A probe that flagged it too would be matching the shape of a
+    // source row rather than the claim.
+    expect(
+      oversold({
+        label: 'Canvas',
+        meta: 'A token you issue yourself — assignments, and your own submissions',
+        state: 'Token',
+      }),
+    ).toBe(false);
   });
 });

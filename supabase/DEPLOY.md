@@ -114,6 +114,71 @@ not authentication:
   returns 503 to everything, so a half-finished deploy is silent rather than
   open.
 
+## Not deployed yet: `lti`
+
+    supabase functions deploy lti --no-verify-jwt
+
+`supabase/functions/lti/index.ts`. It is the Brightspace end of the finding in
+`GRADESCOPE-TURNITIN.md`: Semester cannot submit *into* Gradescope or Turnitin,
+and Brightspace can launch Semester. The first needs a partner program; the
+second needs a 1EdTech standard and a school administrator.
+
+Two endpoints, and a school's administrator needs the first one's address:
+
+    …/functions/v1/lti/login     the OIDC login initiation URL
+    …/functions/v1/lti/launch    the redirect URL, and the target link URI
+
+`--no-verify-jwt` on this one is not the same argument as on the other four.
+They verify the caller's Supabase token themselves; **this one has no Supabase
+caller.** Brightspace redirects a student's browser to it, and that browser has
+no session with this project. A launch is authenticated by the platform's own
+signed `id_token`, checked against the keys the platform publishes and then
+claim by claim against the registration below — `supabase/functions/_shared/lti.ts`
+is that check and `app/src/lib/lti.test.ts` walks every refusal in it.
+
+### Registering a school
+
+Nothing in the app writes `public.lti_platform`, deliberately: an account that
+could would be an account that could register an issuer it controls and launch
+as anybody. It is one insert, in the SQL Editor, with the four values the
+administrator reads off the Brightspace side of the registration.
+
+```sql
+insert into public.lti_platform
+  (issuer, client_id, deployment_id, auth_login_url, jwks_url, name)
+values
+  ('https://brightspace.vanderbilt.edu',
+   '<client id Brightspace issued>',
+   '<deployment id Brightspace issued>',
+   'https://brightspace.vanderbilt.edu/d2l/lti/authenticate',
+   'https://brightspace.vanderbilt.edu/d2l/.well-known/jwks',
+   'Vanderbilt University');
+```
+
+**One row per deployment, not per school.** A university with separate
+Brightspace orgs for its schools is the ordinary case, and the deployment id is
+the only thing in a launch that tells them apart. Registering one and expecting
+it to serve both is how a launch from the medical school lands in the law
+school's data — the tool refuses it, but it refuses it as `wrong-deployment`,
+which is a confusing thing to debug if you did not know the row was missing.
+
+Both URLs are `https` by a check constraint rather than by convention: they are
+the two addresses this function redirects a student to and fetches keys from.
+
+### What a launch does today, and what it does not
+
+It verifies, and then it stops. The last thing the function does on a good
+launch is render a page saying the connection works. **Signing in from
+Brightspace is not built** — turning a platform's id for a person into a
+Semester account is a real decision, including what happens when that human
+already made an account themselves, and `20260921003700_lti.sql` says why there
+is deliberately no foreign key answering it yet.
+
+So this is installable and testable by an administrator now, and it is not yet
+a way in for a student. Deep linking and grade passback are not built either;
+both need a key of this tool's own, which is why there is no key material in
+the migration.
+
 ## Tables
 
 `usage` (claude) and `push_devices` + `push_queue` (push) exist, with row-level

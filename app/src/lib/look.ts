@@ -1344,6 +1344,34 @@ export function tokensFor(look: Look, moreContrast = false): Record<string, stri
      */
     '--app-row-dim': String(moreContrast ? Math.max(g.dimAlpha, LOUD.dim) : g.dimAlpha),
 
+    /*
+     * How far the assistant's button drops while the page moves under it.
+     *
+     * A different job from `--app-row-dim` above, and near enough to it to be
+     * worth saying how. Both are opacities and both rise with the contrast
+     * setting — neither is the other's opposite. What differs is what the
+     * number is a threshold *for*.
+     *
+     * A dimmed row is a claim about the row, and its alpha is the one at which
+     * the row's own ink stays readable against the panel. That is a property
+     * of the ground: on Ink 0.5 is comfortable and on Parchment the same value
+     * is 3.28:1. Hence `dimAlpha`, audited per ground.
+     *
+     * This is not about reading anything through ink on a panel. The button is
+     * opaque chrome, and the question is how much of a line of somebody else's
+     * text you can make out behind a circle — which does not change between
+     * grounds. So one number, not thirteen.
+     *
+     * It goes all the way to `1` under more contrast, where the row token
+     * stops at a bounded `LOUD.dim`. A row still has to read as dimmed; this
+     * has nothing to say and can simply stop saying it. Somebody who asked for
+     * a more distinct interface did not ask for a control to become a ghost
+     * over their reading, and `lib/bottomchrome.hook.ts`'s reservation is what
+     * keeps content off the button either way. See `lib/dim.ts` and
+     * `lib/scrolling.hook.ts`.
+     */
+    '--app-passing': moreContrast ? '1' : '0.2',
+
     // On a light ground the accent has to darken to stay legible as text —
     // the same metal, three steps down — and the wash has to be mixed from
     // that darker shade or it is a selection state you cannot see.
