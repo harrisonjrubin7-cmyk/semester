@@ -313,7 +313,7 @@ export function Groupwork() {
             <div className="kicker">{code}</div>
             <div
               className="chrome-text"
-              style={{ fontSize: 'calc(22px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-sm)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
+              style={{ fontSize: 'var(--type-display)', lineHeight: 'var(--leading-display-sm)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}
             >
               {open.name}
             </div>

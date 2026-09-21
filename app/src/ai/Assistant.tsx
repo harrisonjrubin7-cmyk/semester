@@ -804,7 +804,7 @@ export function Assistant() {
             border: '1px solid rgba(255,255,255,.45)',
             boxShadow: 'var(--glow)',
             fontFamily: 'var(--font-heading)',
-            fontSize: 'calc(17px * var(--text-scale, 1))',
+            fontSize: 'var(--type-display-xs)',
             cursor: 'pointer',
           }}
         >

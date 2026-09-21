@@ -87,7 +87,7 @@ export function Grades() {
                       has cutoffs to read it against. The line under the
                       targets below says whose cutoffs those are. */}
                   {s.current !== null && letterFor(s.current, system) ? (
-                    <span style={{ fontSize: 'calc(17px * var(--text-scale, 1))', color: 'var(--app-dim)', marginLeft: 'var(--sp-4)' }}>
+                    <span style={{ fontSize: 'var(--type-display-xs)', color: 'var(--app-dim)', marginLeft: 'var(--sp-4)' }}>
                       {letterFor(s.current, system)}
                     </span>
                   ) : null}

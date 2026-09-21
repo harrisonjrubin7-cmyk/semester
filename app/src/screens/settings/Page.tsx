@@ -116,7 +116,7 @@ export function SettingsPage({
         <h2
           style={{
             marginTop: 'calc(4px * var(--density, 1))', marginInline: '0', marginBottom: '0',
-            fontSize: 'calc(21px * var(--text-scale, 1))',
+            fontSize: 'var(--type-display-sm)',
             fontFamily: 'var(--font-heading)',
             fontWeight: 'var(--font-heading-weight)' as never,
             lineHeight: 'var(--leading-display-sm)',
