@@ -4,7 +4,8 @@
 #
 # 182 claude/* branches: 171 here, 5 excluded for having an open pull request,
 # and 6 that no pull request of their own ever landed — those carry their own
-# note at the bottom.
+# note at the bottom, as does one stray ref outside the claude/* namespace that
+# is deleted alongside them.
 #
 # Regenerated 2026-09-21 13:50 UTC, classified against main @ 8e135742. The counts move
 # fast, so treat the SHAs as the authority and the numbers in this comment as
@@ -363,6 +364,31 @@ claude/app-ux-calendar-refactor-hb7cwr	22ec4a515f10df903ba12737e3748ccba7e0795e
 claude/draggable-elements-app-8cm3zv	926c6668e186c1621fb49151537b0a336000b675
 "
 
+# ── STRAY ────────────────────────────────────────────────────────────────
+#
+# Not a claude/* branch and not anybody's work: a diagnostic ref, left on the
+# remote because the thing it was diagnosing is the thing that would remove it.
+#
+# Branch deletion is blocked from an agent session. A delete refspec has its
+# connection severed — "send-pack: unexpected disconnect while reading sideband
+# packet" — across both `--delete` and `:refs/heads/x`, with push.negotiate off,
+# every time. It is specific to deletes: creating a branch, pushing a commit and
+# merging a pull request all work from the same session, and the egress proxy
+# records no denial, so it is not an egress policy and not a credential.
+#
+# This ref exists because that was established on a throwaway rather than on one
+# of the 177 branches below — which was the right way round, but it does mean the
+# probe cannot clean itself up. Its tip is an ancestor of main, so there is
+# nothing on it to lose.
+#
+# If you are running this script from a checkout where deletion works, it goes
+# with the rest. If this section is still here on a later regeneration, check
+# whether the ref is actually gone before copying it forward.
+#
+STRAY="
+tmp/delete-probe-5291	1bae34decbcc23b422db017c85a883cf25ce44cc
+"
+
 git fetch origin
 
 deleted=0; skipped=0; moved=0; failed=()
@@ -385,7 +411,7 @@ while read -r br want; do
   else
     failed+=("$br")
   fi
-done <<< "$BRANCHES$ORPHANED"
+done <<< "$BRANCHES$ORPHANED$STRAY"
 
 echo
 echo "deleted $deleted, already gone $skipped, moved since listing $moved, failed ${#failed[@]}"
