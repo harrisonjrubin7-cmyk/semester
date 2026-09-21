@@ -21,6 +21,33 @@
  * knows to look for does not stop a wrong number being believed, and a
  * disclaimer over a number you cannot change is an apology rather than a fix.
  *
+ * ## The school's own note on grading, where it has one
+ *
+ * `SchoolData.gradingNotes` was the last field of the profile that reached no
+ * screen. VANDERBILT-AUDIT.md made that finding about ten fields and the
+ * reason it gives is the one that matters: a populated field that renders
+ * nowhere reads as done. `docs/SCHOOL_DATA_PACK.md` then asked partners to
+ * fill it in, which made an unrendered field somebody else's afternoon.
+ *
+ * It belongs here rather than on `components/Cutoffs.tsx`, and the difference
+ * is the one `screens/settings/Grading.tsx` is already organised around.
+ * Cutoffs are a fact about a *syllabus* and repeat per course; that file's own
+ * comment refuses to put school-wide prose there because it would print four
+ * times down one screen. A grading note is a fact about the *school*, like the
+ * table below it, and is shown once.
+ *
+ * It sits directly under the paragraph that says to check the table against
+ * your registrar, because that is the sentence it answers. Vanderbilt's note
+ * — an A+ still counts as 4.0 — settles exactly the A+ question that
+ * paragraph raises, which is why the two are adjacent rather than in separate
+ * sections.
+ *
+ * **Attributed, never merged into the app's own voice.** The line names the
+ * school, because this is the school's claim about itself and the app has not
+ * checked it. That is the same rule `sourceLine` in `lib/cutoffs.ts` keeps for
+ * the cutoffs: a number shown without a source reads as institutional fact and
+ * gets planned around.
+ *
  * ## The letters are the scale's own keys
  *
  * Not a fixed list of thirteen. A school with no minus grades should be able
@@ -48,9 +75,15 @@ function letters(scale: Scale): string[] {
 }
 
 export function GpaScale() {
-  const { state, dispatch } = useStore();
+  const { state, dispatch, school } = useStore();
   const scale = state.scale;
   const [adding, setAdding] = useState('');
+
+  // Trimmed here rather than trusted: a profile edited by somebody else, or
+  // loaded from a file, can carry whitespace where a sentence was meant, and
+  // `note &&` on a string of spaces would draw an empty attributed box.
+  const note = school.data.gradingNotes?.trim() ?? '';
+  const schoolName = school.shortName?.trim() || school.name.trim() || 'Your school';
 
   const set = (next: Scale) => dispatch({ type: 'setScale', scale: next });
 
@@ -93,6 +126,31 @@ export function GpaScale() {
           ? 'This is the common American table, which the app assumes until you say otherwise. Universities disagree — about whether an A+ is 4.0 or 4.3, and about whether minus grades exist at all — so check it against your registrar before trusting the GPA it produces.'
           : 'Your own table. The GPA on The degree is computed from these numbers.'}
       </div>
+
+      {/* The school's own words, attributed to the school. Shown only where
+          there are some — a heading over an empty paragraph is worse than no
+          heading, and most profiles carry none. */}
+      {note && (
+        <div
+          style={{
+            // `--type-sm` rather than the 12.5px of the paragraph above it.
+            // That size is one of two this file is already allowed off the
+            // scale, and spending the third on a new element would be raising
+            // the ledger to avoid picking a token — the thing
+            // `npm run lint:styles` exists to make somebody argue for.
+            fontSize: 'var(--type-sm)',
+            lineHeight: 'var(--leading-relaxed)',
+            marginBottom: 'var(--sp-5)',
+            padding: 'var(--sp-4)',
+            border: '1px solid var(--app-line)',
+            borderRadius: 'var(--r-md)',
+            textWrap: 'pretty',
+          }}
+        >
+          <span style={{ color: 'var(--app-dim)' }}>{schoolName} publishes: </span>
+          {note}
+        </div>
+      )}
 
       {letters(scale).map((letter) => (
         <div
