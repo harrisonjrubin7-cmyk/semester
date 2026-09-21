@@ -111,7 +111,15 @@ describe('a screen taller than the window', () => {
      * Asserted as a pair, so the day `.scrollarea` stops padding its bottom
      * this says the cancel is now unnecessary rather than quietly passing.
      */
-    const base = SHEET.match(/\.scrollarea \{[^}]*padding-bottom: (\d+)px/s);
+    /*
+     * The px is read out of a `calc(30px * var(--density, 1))` now — that
+     * padding became density-aware with the rest of the sheet's spacing, and
+     * this pattern read only a bare `30px`, so it went null and the case
+     * failed on its own wording: *the scroller no longer pads its bottom*.
+     * It still does. What changed is that the number answers the Density
+     * setting, which is the thing the pair below is indifferent to.
+     */
+    const base = SHEET.match(/\.scrollarea \{[^}]*padding-bottom: (?:calc\()?(\d+)px/s);
     expect(base, 'the scroller no longer pads its bottom; this reset can go').toBeTruthy();
     expect(Number(base![1])).toBeGreaterThan(0);
     const filled = SHEET.slice(SHEET.indexOf('.scrollarea.is-filled {'));
