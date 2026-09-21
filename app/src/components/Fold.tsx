@@ -398,6 +398,27 @@ export function FoldHead({
         */
         paddingBlock: '6px', paddingInline: '0',
         marginBlock: '-6px', marginInline: '0',
+        /*
+          The other half of that trick. A negative margin pulls the next
+          sibling up over the padding it just gave back, and an unpositioned
+          button loses that overlap to whatever paints after it — the reach is
+          drawn, it just is not hittable. `elementFromPoint` on the bottom pad
+          answers with the div below. Stacking the button makes its own box win
+          its own padding; `.tap`, `.tap-x` and `.tap-y` all do the same, for
+          the same reason. Nothing moves.
+
+          And `z-index`, because `position` alone only ties. Two positioned
+          siblings on `z-index: auto` paint in document order, so the panel
+          after the heading still took the bottom pad wherever that panel was
+          itself positioned — which `.blueprint` is, and which is why Settings
+          and Profile were the two screens left failing after the line above.
+          Raising it draws nothing new: this button has no background and no
+          border, so the only thing the layer decides is which element answers
+          a point that both of them occupy, and that point is the heading's
+          own padding.
+        */
+        position: 'relative',
+        zIndex: 1,
         background: 'none',
         border: 'none',
         font: 'inherit',

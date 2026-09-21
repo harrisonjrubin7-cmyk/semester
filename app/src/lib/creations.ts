@@ -83,7 +83,7 @@ export interface FormData {
 
 export interface DesignLayer {
   id: string;
-  kind: 'text' | 'rectangle' | 'ellipse' | 'image';
+  kind: 'text' | 'rectangle' | 'ellipse' | 'triangle' | 'image';
   x: number;
   y: number;
   w: number;
@@ -92,6 +92,16 @@ export interface DesignLayer {
   fill: string;
   fontSize: number;
   bold: boolean;
+  /**
+   * How solid this layer is, 0.1 to 1.
+   *
+   * The floor is not 0 on purpose. A layer at zero is invisible *and* still
+   * selectable, which reads as a layer that has been deleted and will not go
+   * away — and the only route back is a panel you reach by selecting the thing
+   * you cannot see. A tenth is faint enough to be a wash and visible enough to
+   * find.
+   */
+  opacity: number;
   /** Into `lib/files.ts`. The picture itself is never in here. */
   fileId: string;
 }
@@ -141,7 +151,7 @@ export const EMPTY_CREATIONS: CreationLibrary = { version: 1, projects: [] };
 
 export const CREATION_LIMIT = 40;
 export const PROJECT_KINDS = ['form', 'design', 'video'] as const;
-export const LAYER_KINDS = ['text', 'rectangle', 'ellipse', 'image'] as const;
+export const LAYER_KINDS = ['text', 'rectangle', 'ellipse', 'triangle', 'image'] as const;
 
 /** A six-digit hex colour, which is the only form anything here writes. */
 const color = (x: unknown) => typeof x === 'string' && /^#[\da-f]{6}$/i.test(x);
@@ -255,6 +265,16 @@ export function readCreations(value: unknown): CreationLibrary {
 
     const layerIds = new Set<string>();
     for (const l of d.layers) {
+      /*
+       * Every design saved before layers had an opacity has no such field,
+       * and there is no version bump to hang a migration off — the library is
+       * version 1 and the projects in it are the ones a student already made.
+       * So the default is filled in here, on the way past, and the range check
+       * below sees a number either way. Refusing those projects instead would
+       * be this build calling every design made before it unreadable.
+       */
+      if (obj(l) && l.opacity === undefined) l.opacity = 1;
+
       const ok =
         obj(l) &&
         textValue(l.id, 100) &&
@@ -268,6 +288,7 @@ export function readCreations(value: unknown): CreationLibrary {
         color(l.fill) &&
         finite(l.fontSize, 8, 200) &&
         typeof l.bold === 'boolean' &&
+        finite(l.opacity, LAYER_OPACITY.min, LAYER_OPACITY.max) &&
         textValue(l.fileId, 100);
       if (!ok) throw new Error('Invalid design layer.');
       layerIds.add(l.id);
@@ -347,9 +368,31 @@ export function newLayer(kind: DesignLayer['kind'], canvas: DesignData, fileId =
     fill: '#1a73e8',
     fontSize: 48,
     bold: true,
+    opacity: 1,
     fileId,
   };
 }
+
+/**
+ * The range a layer's opacity may hold, and a clamp onto it.
+ *
+ * Here rather than in the editor for the reason `newLayer`'s numbers are here:
+ * a tenth is a property of the *artwork* — how faint a wash on a poster may be
+ * before it stops being findable — and not an alpha somebody picked by eye to
+ * dim a caption with. The style budget in `styles/rules.ts` counts the second
+ * and is right to; it reads an `opacity:` with a decimal after it and cannot
+ * tell the two apart, which is exactly what keeping this out of a component
+ * settles.
+ *
+ * Single-sourced because the alternative is three copies — the clamp, the
+ * slider's own bounds, and the range `readCreations` enforces — drifting until
+ * the editor can produce a design the reader then refuses.
+ */
+export const LAYER_OPACITY = { min: 0.1, max: 1 } as const;
+
+/** A number onto that range. Anything unreadable lands at full strength. */
+export const clampOpacity = (n: number): number =>
+  Number.isFinite(n) ? Math.max(LAYER_OPACITY.min, Math.min(LAYER_OPACITY.max, n)) : LAYER_OPACITY.max;
 
 export function newQuestion(): Question {
   return {
@@ -537,6 +580,18 @@ export const xml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]!);
 
 /**
+ * The three corners of a triangle layer, as an SVG `points` list.
+ *
+ * Shared by the export and the editor's own canvas rather than written twice.
+ * A triangle occupies the same `x`/`y`/`w`/`h` box every other layer does —
+ * apex centred on the top edge, base along the bottom — so dragging, nudging,
+ * the selection outline and the alignment buttons all work on it without
+ * knowing it is not a rectangle.
+ */
+export const trianglePoints = (l: Pick<DesignLayer, 'x' | 'y' | 'w' | 'h'>): string =>
+  `${l.x + l.w / 2},${l.y} ${l.x + l.w},${l.y + l.h} ${l.x},${l.y + l.h}`;
+
+/**
  * A design as an SVG document.
  *
  * Every piece of text goes through `xml`, because a layer's text is typed by
@@ -551,23 +606,39 @@ export const xml = (s: string) =>
  */
 export function designSvg(d: DesignData, images: Record<string, string> = {}): string {
   const layer = (l: DesignLayer): string => {
+    /*
+     * Omitted entirely at 1 rather than written as `opacity="1"`.
+     *
+     * An SVG export is a file somebody opens in something else, and every
+     * design in the library is about to carry this attribute on every layer.
+     * The default costs nothing to leave out and the export stays the document
+     * it was before layers could be faded.
+     */
+    const fade = l.opacity < 1 ? ` opacity="${l.opacity}"` : '';
+
     if (l.kind === 'text') {
       const lines = l.text
         .split('\n')
         .map((t, i) => `<tspan x="${l.x}" dy="${i ? l.fontSize * 1.25 : 0}">${xml(t)}</tspan>`)
         .join('');
-      return `<text x="${l.x}" y="${l.y + l.fontSize}" fill="${l.fill}" font-family="Arial,sans-serif" font-size="${l.fontSize}" font-weight="${l.bold ? '700' : '400'}">${lines}</text>`;
+      return `<text x="${l.x}" y="${l.y + l.fontSize}" fill="${l.fill}" font-family="Arial,sans-serif" font-size="${l.fontSize}" font-weight="${l.bold ? '700' : '400'}"${fade}>${lines}</text>`;
     }
     if (l.kind === 'ellipse') {
-      return `<ellipse cx="${l.x + l.w / 2}" cy="${l.y + l.h / 2}" rx="${l.w / 2}" ry="${l.h / 2}" fill="${l.fill}"/>`;
+      return `<ellipse cx="${l.x + l.w / 2}" cy="${l.y + l.h / 2}" rx="${l.w / 2}" ry="${l.h / 2}" fill="${l.fill}"${fade}/>`;
+    }
+    if (l.kind === 'triangle') {
+      // Apex centred on the top edge, base on the bottom one — the same three
+      // points `trianglePoints` gives the editor, so the export and the screen
+      // cannot drift apart.
+      return `<polygon points="${trianglePoints(l)}" fill="${l.fill}"${fade}/>`;
     }
     if (l.kind === 'image') {
       const src = images[l.fileId] || '';
       // Whitelist, not a sanity check. See above.
       if (!/^data:image\/(png|jpeg|webp);base64,/.test(src)) return '';
-      return `<image x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" href="${xml(src)}"/>`;
+      return `<image x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" href="${xml(src)}"${fade}/>`;
     }
-    return `<rect x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" fill="${l.fill}"/>`;
+    return `<rect x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" fill="${l.fill}"${fade}/>`;
   };
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${d.width}" height="${d.height}" viewBox="0 0 ${d.width} ${d.height}"><rect width="100%" height="100%" fill="${d.background}"/>${d.layers.map(layer).join('')}</svg>`;

@@ -34,8 +34,14 @@ import { Folding } from './Fold';
  * could offer a meal plan at a university with no meal plan. `lately`, the
  * list beside this one, has been gated since it was written; this one never
  * was, and nothing was comparing them.
+ *
+ * The prop is required, and was optional until the pool became required in
+ * `lib/unseen.ts`. An optional one here would have put the same trap back a
+ * level up: `<NotYetOpened />` compiles, reads well, and offers the ungated
+ * registry. There is no pool this component could sensibly default to — the
+ * right one is whatever its caller is drawing.
  */
-export function NotYetOpened({ pool }: { pool?: Destination[] }) {
+export function NotYetOpened({ pool }: { pool: Destination[] }) {
   const { state, dispatch, school } = useStore();
   const now = useNow();
 

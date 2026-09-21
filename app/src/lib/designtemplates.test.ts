@@ -60,7 +60,7 @@ describe('every design template', () => {
         }
       });
 
-      it('says what it is for, so a menu of five is readable', () => {
+      it('says what it is for, so a menu of eight is readable', () => {
         expect(t.name.length).toBeGreaterThan(2);
         expect(t.about.length).toBeGreaterThan(10);
       });
