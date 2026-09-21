@@ -146,7 +146,7 @@ Three already have a shape worth recording, from the looks this pass did take:
 
 ## Gates
 
-`tsc` clean · lint ok · **10,866 tests pass across 533 files** · shuffle clean ·
+`tsc` clean · lint ok · **10,892 tests pass across 534 files** · shuffle clean ·
 production build clean · driven in a real browser with a control on `main`,
 `pageerror` empty.
 
