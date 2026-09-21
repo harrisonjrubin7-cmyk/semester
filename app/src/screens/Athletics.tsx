@@ -20,6 +20,7 @@ import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
 import { dateToIso, decorateItem } from '../lib/date';
 import { lengthOf, railFor } from '../lib/select';
+import { TravelPack } from '../components/TravelPack';
 
 /**
  * A season beside the coursework it collides with.
@@ -321,6 +322,16 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 </>
               )}
 
+              {(selected.kind === 'Travel' || selected.kind === 'Competition') && (
+                /*
+                 * Offered for the two kinds that take somebody off campus.
+                 * A practice is two hours in a gym with the campus wifi in it;
+                 * queueing a course's audio for one would fill a phone to
+                 * solve a problem nobody has.
+                 */
+                <TravelPack event={selected} />
+              )}
+
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
                 <ActionButton
                   onClick={() => {
@@ -368,7 +379,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                             conflicts(selected).map((c) => `- ${c}`).join('\n'),
                             '',
                             '## Before departure',
-                            '- Download course readings and guides from Files.',
+                            '- Download this trip\'s lessons, recordings and files with *Take it offline* on the Athletics screen, while you still have a connection.',
                             '- Finish anything time-sensitive.',
                             '- Confirm assessment arrangements.',
                             '',
