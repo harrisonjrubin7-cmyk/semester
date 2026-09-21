@@ -779,6 +779,7 @@ export type Screen =
    * term at all because applying to graduate school spans several.
    */
   | 'athletics'
+  | 'nil'
   | 'career'
   | 'family'
   | 'pathway'

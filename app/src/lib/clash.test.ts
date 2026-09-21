@@ -313,3 +313,116 @@ describe('what to do about it', () => {
     for (const s of said) expect(s.toLowerCase()).not.toContain('work harder');
   });
 });
+
+/**
+ * The two days a timetable cannot see: an exam on a competition day, and work
+ * due while you are on a bus.
+ *
+ * Every assertion here has a control beside it, because the cheap way to write
+ * this detector is one that fires on any athletic event at all — which would
+ * find something on nearly every day of a season and be indistinguishable, in
+ * a green test run, from one that works. So: a competition with no exam is
+ * quiet, a practice on an exam day is quiet, and a free travel day is quiet.
+ *
+ * Reverted against `clashes` ignoring its `athletics` argument, the four
+ * positive cases go red and the four controls stay green — measured, both
+ * ways.
+ */
+describe('a season against the fortnight', () => {
+  /** An athletics event covering the whole of a day `daysAway` from NOW. */
+  const on = (daysAway: number, kind: 'Competition' | 'Travel' | 'Practice', title: string) => {
+    const date = new Date(NOW);
+    date.setDate(date.getDate() + daysAway);
+    const iso = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const next = new Date(date);
+    next.setDate(next.getDate() + 1);
+    return {
+      id: `a${daysAway}${kind}`,
+      title,
+      team: 'Track',
+      kind,
+      start: `${iso(date)}T08:00`,
+      end: `${iso(next)}T00:00`,
+      where: '',
+      notes: '',
+      steps: [],
+    };
+  };
+
+  it('names an exam on the day of a competition', () => {
+    const out = clashes(
+      [item({ daysAway: 6, kind: 'Midterm' })],
+      [],
+      [],
+      code,
+      DEFAULT_BUDGET,
+      [on(6, 'Competition', 'SEC championships')],
+    );
+    const found = out.find((c) => c.kind === 'competition');
+    expect(found?.says).toBe('An exam on the day of SEC championships.');
+    expect(adviceFor(found!)).toMatch(/letter|absence request/i);
+  });
+
+  it('says nothing about a competition on a day with no exam on it', () => {
+    const out = clashes([item({ daysAway: 6 })], [], [], code, DEFAULT_BUDGET, [
+      on(6, 'Competition', 'SEC championships'),
+    ]);
+    expect(out.find((c) => c.kind === 'competition')).toBeUndefined();
+  });
+
+  it('says nothing about a practice on the day of an exam', () => {
+    const out = clashes([item({ daysAway: 6, kind: 'Midterm' })], [], [], code, DEFAULT_BUDGET, [
+      on(6, 'Practice', 'Evening session'),
+    ]);
+    expect(out).toEqual([]);
+  });
+
+  it('names one thing due on a travel day, where a commitment would want two', () => {
+    const out = clashes([item({ daysAway: 4 })], [], [], code, DEFAULT_BUDGET, [
+      on(4, 'Travel', 'Bus to Knoxville'),
+    ]);
+    expect(out.find((c) => c.kind === 'travel')?.says).toBe(
+      '1 thing due on a travel day — Bus to Knoxville.',
+    );
+  });
+
+  it('counts every day of a trip, not only the day it left on', () => {
+    const trip = {
+      ...on(3, 'Travel', 'Away weekend'),
+      end: on(5, 'Travel', 'Away weekend').end,
+    };
+    const out = clashes(
+      [item({ daysAway: 3 }), item({ daysAway: 5, kind: 'Essay' })],
+      [],
+      [],
+      code,
+      DEFAULT_BUDGET,
+      [trip],
+    );
+    expect(out.filter((c) => c.kind === 'travel').map((c) => c.daysAway).sort()).toEqual([3, 5]);
+  });
+
+  it('says nothing about a travel day with nothing due on it', () => {
+    expect(clashes([item({ daysAway: 1 })], [], [], code, DEFAULT_BUDGET, [
+      on(9, 'Travel', 'Away weekend'),
+    ])).toEqual([]);
+  });
+
+  it('ranks a competition above a heavy day and below two exams', () => {
+    const out = clashes(
+      [item({ daysAway: 2, kind: 'Exam' }), item({ daysAway: 2, kind: 'Final' })],
+      [],
+      [],
+      code,
+      DEFAULT_BUDGET,
+      [on(2, 'Competition', 'Home meet')],
+    );
+    expect(out.map((c) => c.kind)).toEqual(['exams', 'competition']);
+  });
+
+  it('changes nothing for a student who has entered no season', () => {
+    const work = [item({ daysAway: 4 }), item({ daysAway: 4, kind: 'Essay' })];
+    expect(clashes(work, [], [], code, DEFAULT_BUDGET, [])).toEqual(clashes(work, [], [], code));
+  });
+});
