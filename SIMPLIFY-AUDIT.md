@@ -1,3 +1,207 @@
+# One app — the twenty-first pass: the gate that governed nothing
+
+Against `main` at `a8c3f7d`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge. One restoration, one cut, two guards.
+
+The twentieth pass retook Step 4 and Step 1 item 4 because they were the oldest
+live figures here. **Step 2 — routes per destination — was older still**: §2 of
+the sixth-pass appendix, never retaken, and the only table in this file the
+skill's own *Done means* asks for by name. Retaking it is T1. What the retake
+turned up on the way is everything after it.
+
+## T1 — the route census, retaken, and every figure in it has moved
+
+Same grep as §2, same nine navigation-infrastructure files excluded:
+
+| | Sixth pass | Now |
+| --- | --- | --- |
+| top of the table | `courses` 8 · `import` 7 · `mine` 6 · `edit` 6 · `calendar` 6 · `study` 5 · `ahead` 5 · `exam` 4 | `courses` 9 · `edit` 8 · `study` 6 · `import` 6 · `home` 6 · `exam` 4 |
+| two routes | 16 | 18 |
+| one route | 15 | 15 |
+| **none** | 12 | **10** |
+
+`ahead` has left the table altogether — the eleventh pass made it the calendar's
+week grain — and `home` has arrived at six without ever being mentioned. §2's
+settled reading still holds and is not reopened: the counts are three navigations
+of which a student sees one, contextual actions, and keyboard accelerators, none
+of which is a second home.
+
+### The ten with no routes are the interesting column
+
+Ten destinations appear in **no production file but `lib/nav.ts` itself** —
+`people`, `pathway`, `groupwork`, `family`, `essay`, `create`, `career`, `call`,
+`brief`, `athletics`. Nothing dispatches to them by name. They are reached only
+by the surfaces that read the registry generically: the directory, search, the
+springboard, the tab bar.
+
+Which is by design, and is also the reason the rest of this pass exists. A
+destination with no literal route has **no backstop**: whatever the registry
+surfaces decide, that is its entire reachability. So the question the census
+cannot ask, and which nobody had asked, is not *how many ways in* but *do the
+gates on those surfaces do what they say*.
+
+## T2 — the progressive-disclosure gate is applied nowhere
+
+`lib/reveal.ts` is the gate that stops a first morning being a wall of sixty
+names: twelve screens do something before there is a course, and the rest are
+earned by importing a syllabus, entering a grade, putting an exam in the
+calendar. It is 211 lines, fully reasoned, with **eighteen tests**.
+
+Every one of those eighteen calls `showing`, `unlocked`, `countHidden` or
+`revealLine` directly. **Not one asks whether anything in the app calls them.**
+
+| Importer of `lib/reveal` | What it takes |
+| --- | --- |
+| `lib/nav.ts` | `showing`, for a `listed()` that nothing called |
+| `state/store.tsx` | the `Facts` type, only |
+| `screens/settings/Nav.tsx` | `countHidden` and `revealLine` — the *sentence*, not the gate |
+
+That is the complete list. Every surface that draws the registry — the directory,
+Me's task view, the shelves, the springboard, the desk, search — reads `offered`,
+which is the school gate and the role gate and not the third one.
+
+The name is what hid it. **Three different `showing` functions live in this
+tree** — `lib/strip.ts`'s, `lib/ribbon.ts`'s and this one — and the two that are
+called from components are the other two. A grep for `showing(` reports this gate
+as applied, and has done every day since it stopped being.
+
+### Measured on screen, not inferred
+
+A fresh profile, no courses, driven in a browser:
+
+| | |
+| --- | --- |
+| **Settings → Layout and navigation** said | *"46 screens appear once there is something for them to work on — an exam, a grade, a second course."* |
+| the directory, same account, same moment, drew | **58 of 58** |
+| **Show every screen straight away**, the switch under that sentence | produced a **byte-identical** list either way |
+
+Three user-visible claims, none of them true. And `showAll` is persisted,
+merged across devices by `lib/merge.ts`, and described in the data export
+(`lib/export.ts:860`) as *"whether the screens held back on a first morning are
+shown"* — a setting fully carried by every system that carries settings, and
+read by nothing that draws anything.
+
+**The control, because a clean reading is a claim about the probe.** The same
+probe, on the same screen, with `role: 'faculty'` seeded: **47 rows, exactly 11
+fewer**, which is `STUDENT_ONLY` to the screen. The probe can see a gate that is
+applied. The reveal gate removes nothing because it is not applied.
+
+## T3 — it is a regression, and the commit is nameable
+
+`4eb1044`, *"The directory has one home: Progress → Everything merges into it"*.
+That merge is this file's own work — two surfaces drawing one registry, which is
+the exact thing this audit exists to remove — and it was right. What it did not
+notice is that **the gate was the thing that differed between them**:
+
+- the tab that went called `listed(group, caps, facts, visited, showAll, role)`,
+  `nav.ts`'s composition of all three gates;
+- the screen that survived, `screens/Directory.tsx`, had always used `allApps` →
+  `offered`, and says so in its own header comment;
+- `listed()` has had **no caller since**, for a week.
+
+The merge's message audits itself, in this file's own house style, and lands one
+short:
+
+> *What the merge carried, because a merge is only honest if nothing goes
+> missing in it: Lately and Not-opened-yet were the only things the tab had*
+
+They were not. The third thing was the gate, and two files went on arguing from
+it after it was gone — `components/nav/ShelfNav.tsx` justifies not gating the
+chrome on the words *"Reveal still governs Everything"*, and `lib/role.ts` calls
+itself *"the third gate, beside `allowed` … and `showing`"*. Both arguments are
+good. Both were load-bearing on a fact that had stopped being one.
+
+## T4 — restored at the one directory, and the blast radius is small
+
+`screens/Directory.tsx` now applies `showing` to the list it draws. Not the
+chrome: ShelfNav's argument for leaving the pills alone is right and is now true
+again. Not search: `reveal.ts` is explicit that hiding something from a directory
+is a claim about what is useful yet, and hiding it from search would be a claim
+about what somebody is allowed to want — so `components/Command.tsx` stays
+ungated, and **a query in the directory's own box lifts the gate too**, because
+two boxes disagreeing about one app is what this file is for.
+
+The change sounds enormous and is not. Measured across three accounts:
+
+| Account | Directory drew | Now draws |
+| --- | --- | --- |
+| no courses at all | 58 | **12** |
+| one syllabus in — or the shipped sample | 58 | **55** |
+| a term in | 58 | 58 |
+
+So it bites on exactly one account: the one with nothing in it, which is the
+account the gate was written for. From the first course it is 55 of 58, and the
+three still held back want an exam, a grade or a second course.
+
+`nav.ts`'s `listed()` is **cut** rather than rewired: its shape was per-shelf and
+the surviving directory is one list with a category filter over it. The three
+gates and where each now lives are kept as a comment where it stood.
+
+## T5 — and the panel underneath was offering what the list hides
+
+Fixing the list made this screen contradict itself in two panels. `NotYetOpened`
+read `DESTINATIONS` through `offerable()` — **the registry before any gate at
+all** — so the directory drew twelve and the suggestions directly below it
+offered *Pathway, Career and Family*, by name and with their sentences, none of
+which was in the twelve.
+
+Reveal is only the visible half of that. The registry is also every screen before
+the *school* and *role* gates have spoken, so the same panel could offer a meal
+plan at a university that has none. `lately`, the list beside it, has been gated
+since it was written. Nothing was comparing the two.
+
+`offerable()` now takes its pool, defaulted so that `unseen.test.ts` — which is
+about rotation and counting, not about who is holding the phone — still asks its
+own question. The directory passes the set it draws.
+
+### One suspect convicted and cleared, which is why the probe is scoped
+
+The first version of the guard asked whether a held-back screen appeared
+*anywhere* on the directory. It failed, naming **`study`** — held back with no
+courses, and also one of the five shipped favourites.
+
+That is not the fault, and `ShelfNav.tsx` had already settled it: the chrome you
+navigate by is not gated, because a row that changes length as the term goes on
+is a row whose positions cannot be learned. Study is a tab on a first morning
+whatever the directory says. A *suggestion* panel is the opposite — it exists to
+name what you have not been to — so the guard is scoped to it and the favourites
+are left alone, on an argument this file already accepted once.
+
+Third time in three passes that one grep turned out to be two idioms.
+
+## The guards
+
+- **`src/lib/gateapplied.test.ts`** — structural, and the one that would have
+  caught `4eb1044`. It resolves the *import* rather than grepping the name, for
+  the three-`showing` reason above, and asserts the gate reaches a screen rather
+  than merely existing in `lib/`. Reverted, all three cases go red on `[]`.
+- **`src/screens/directoryreveal.test.tsx`** — four render cases: the gate bites,
+  the switch lifts it, search reaches past it, the panel agrees with the list.
+  Against a revert of the gate, three fail; against a revert of *only* the
+  panel's pool, the fourth fails naming `pathway, career, family` — the three
+  the browser showed.
+
+Each case was run against a faithful revert and watched go red. The one that
+passes both ways is the control: *"draws all of it once the switch is on"* would
+fail against an over-eager fix that hid screens with `showAll` set.
+
+## Gates
+
+`tsc` clean · lint ok · **10,786 tests pass across 523 files** · shuffle clean ·
+production build clean · driven in a browser, `pageerror` empty on all four runs.
+
+## To do
+
+- The eleven hand-drawn rows, one look each, if the owner wants them on
+  `ItemRow` — carried from the twentieth pass.
+- `account` on Profile — carried from the nineteenth, the owner's to name.
+- **`offerable()`'s default is still the ungated registry.** The one caller now
+  passes a pool; the default is kept for the tests. If a second caller ever
+  appears it will get the registry unless it says otherwise, which is the shape
+  of the fault this pass just fixed.
+
+---
+
 # One app — the twentieth pass: the figures moved, and half of one never counted what it said
 
 Against `main` at `0a5e98a`. **<!--screens-->fifty-eight<!--/--> destinations**,

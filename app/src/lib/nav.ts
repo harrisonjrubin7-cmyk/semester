@@ -19,7 +19,6 @@ import type { Screen } from './types';
 import { settingsTitle } from './settings';
 import { allowed, cardName, lmsName, showsCash, showsSwipes, swipeUnit, type Capabilities } from './school';
 import { DEFAULT_ROLE, forRole, type Role } from './role';
-import { showing, type Facts } from './reveal';
 
 /**
  * The shelves the directory is arranged on.
@@ -1073,27 +1072,31 @@ export function offered(c: Capabilities, role: Role = DEFAULT_ROLE): Destination
   return DESTINATIONS.filter((d) => allowed(d.screen, c) && forRole(d.screen, role));
 }
 
-/**
- * The three gates together, which are three different questions.
+/*
+ * The third gate is not here, and used to be.
  *
- * `allowed` is about the school — a meal plan screen at a university with no
- * meal plan is absent, not pending, and no amount of using the app produces
- * one. `forRole` is about who is holding the phone — a degree audit is not
- * addressed to the person teaching the course. `showing` is about how far
- * along somebody is — a real screen that is not useful yet. A destination has
- * to pass all three, and the order does not matter because none of them can
- * un-hide what another hid.
+ * There were three, and they are three different questions. `allowed` is
+ * about the school — a meal plan screen at a university with no meal plan is
+ * absent, not pending, and no amount of using the app produces one.
+ * `forRole` is about who is holding the phone — a degree audit is not
+ * addressed to the person teaching the course. `showing`, in
+ * `lib/reveal.ts`, is about how far along somebody is: a real screen that is
+ * not useful yet. None of the three can un-hide what another hid.
+ *
+ * `listed()` composed all three and lived here. Its only caller was
+ * `Progress → Everything`, and `4eb1044` merged that tab into
+ * `screens/Directory.tsx` — which had always drawn the registry through the
+ * weaker `offered`, a difference the merge did not notice. `listed()` then
+ * sat exported and uncalled for a week while Settings went on offering a
+ * switch for the gate and a sentence counting what it was holding back.
+ *
+ * It is cut rather than restored because the shape was wrong for the screen
+ * that survived: `listed` is per-shelf and the directory is one list with a
+ * category filter over it. The third gate is applied at
+ * `screens/Directory.tsx`, which is the app's one directory, and
+ * `lib/gateapplied.test.ts` is what keeps it applied somewhere a person can
+ * see.
  */
-export function listed(
-  group: Group,
-  c: Capabilities,
-  facts: Facts,
-  visited: Record<string, boolean>,
-  showAll: boolean,
-  role: Role = DEFAULT_ROLE,
-): Destination[] {
-  return destinationsFor(group, c, role).filter((d) => showing(d.screen, facts, visited, showAll));
-}
 
 /**
  * A destination said the way this school says it.

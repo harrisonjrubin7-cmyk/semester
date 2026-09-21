@@ -41,20 +41,33 @@ export const ENOUGH_SEEN = 0.6;
 /** How many to offer at once. Three is a glance; six is another directory. */
 export const OFFER = 3;
 
-/** Every place that can sensibly be suggested. */
-export function offerable(): Destination[] {
-  return DESTINATIONS.filter((d) => !REACHED_THROUGH.includes(d.screen));
+/**
+ * Every place that can sensibly be suggested.
+ *
+ * The pool is a parameter because the registry is not the answer on any real
+ * screen. `DESTINATIONS` is every place the app has ever had, before the
+ * school gate, the role gate or `lib/reveal.ts` have said anything — so a
+ * panel reading it offers a meal plan at a university with no meal plan, a
+ * degree audit to somebody teaching the course, and the screens the directory
+ * two panels above is holding back. It did all three.
+ *
+ * The default is kept so this file's own tests, which are about the rotation
+ * and the counting rather than about who is holding the phone, still ask the
+ * question they were written to ask.
+ */
+export function offerable(pool: Destination[] = DESTINATIONS): Destination[] {
+  return pool.filter((d) => !REACHED_THROUGH.includes(d.screen));
 }
 
-export function unseen(visited: Visited | undefined): Destination[] {
-  return offerable().filter((d) => !visited?.[d.screen]);
+export function unseen(visited: Visited | undefined, pool?: Destination[]): Destination[] {
+  return offerable(pool).filter((d) => !visited?.[d.screen]);
 }
 
 /** How much of the app they have been to, 0 to 1. */
-export function seenShare(visited: Visited | undefined): number {
-  const all = offerable();
+export function seenShare(visited: Visited | undefined, pool?: Destination[]): number {
+  const all = offerable(pool);
   if (all.length === 0) return 1;
-  return (all.length - unseen(visited).length) / all.length;
+  return (all.length - unseen(visited, pool).length) / all.length;
 }
 
 /**
@@ -65,10 +78,14 @@ export function seenShare(visited: Visited | undefined): number {
  * twice, and a fixed three are three the student learns to ignore together.
  * The same day gives the same three, and tomorrow gives the next three along.
  */
-export function offer(visited: Visited | undefined, dayIndex: number): Destination[] {
-  const left = unseen(visited);
+export function offer(
+  visited: Visited | undefined,
+  dayIndex: number,
+  pool?: Destination[],
+): Destination[] {
+  const left = unseen(visited, pool);
   if (left.length === 0) return [];
-  if (seenShare(visited) >= ENOUGH_SEEN) return [];
+  if (seenShare(visited, pool) >= ENOUGH_SEEN) return [];
 
   const start = ((dayIndex % left.length) + left.length) % left.length;
   const out: Destination[] = [];
@@ -86,9 +103,9 @@ export function dayOf(now: Date): number {
 }
 
 /** "You have opened 9 of the 37 places in the app." Empty once that stops mattering. */
-export function seenLine(visited: Visited | undefined): string {
-  const all = offerable().length;
-  const been = all - unseen(visited).length;
-  if (been === 0 || seenShare(visited) >= ENOUGH_SEEN) return '';
+export function seenLine(visited: Visited | undefined, pool?: Destination[]): string {
+  const all = offerable(pool).length;
+  const been = all - unseen(visited, pool).length;
+  if (been === 0 || seenShare(visited, pool) >= ENOUGH_SEEN) return '';
   return `You have opened ${been} of the ${all} places in here.`;
 }

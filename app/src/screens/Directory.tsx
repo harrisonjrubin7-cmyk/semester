@@ -42,9 +42,10 @@ import { createElement, useState } from 'react';
 import { useStore } from '../state/store';
 import { currentLook } from '../state/shape';
 import { directoryOf } from '../lib/look';
-import { allApps, categories, isFavourite, narrowApps, readFavourites, toggleFavourite } from '../lib/desk';
+import { allApps, isFavourite, narrowApps, readFavourites, toggleFavourite } from '../lib/desk';
 import type { Destination } from '../lib/nav';
-import { ALWAYS_TO_HAND, lately, saysFor } from '../lib/nav';
+import { ALWAYS_TO_HAND, GROUPS, lately, saysFor } from '../lib/nav';
+import { showing } from '../lib/reveal';
 import { secondLine } from '../lib/dim';
 import { glyphFor } from '../components/icons.pick';
 import { AppsIcon, NotesIcon, Search as SearchIcon, StarIcon } from '../components/Icons';
@@ -62,7 +63,7 @@ import type { Screen } from '../lib/types';
  */
 
 export function Directory() {
-  const { state, dispatch, school } = useStore();
+  const { state, dispatch, facts, school } = useStore();
   const caps = school.capabilities;
   const look = currentLook(state);
   /*
@@ -90,11 +91,48 @@ export function Directory() {
   const [category, setCategory] = useState('');
   const [query, setQuery] = useState('');
 
-  const apps = allApps(caps, state.role);
-  const shown = narrowApps(apps, category, query, caps);
+  /*
+   * The third gate, which this screen was the one place left to apply.
+   *
+   * `allApps` is the school and the role. `showing` is `lib/reveal.ts` — the
+   * screens that are real but not useful yet, which a brand-new account is
+   * not shown a wall of. Settings offers a switch for it and a sentence
+   * counting what it is holding back, and until this line existed both were
+   * describing something no code did: measured on a fresh account with no
+   * courses, the switch said *46 screens appear once there is something for
+   * them to work on* while this list drew all 58, and flipping the switch
+   * changed nothing.
+   *
+   * It is a restoration rather than a new rule. `Progress → Everything` used
+   * to draw the registry through `nav.ts`'s `listed()`, which is these three
+   * gates together; `4eb1044` merged that tab into this screen because two
+   * surfaces should not draw one registry, and the gate was what differed
+   * between them. The merge's own message lists what it carried across —
+   * Lately and Not-opened-yet — and the gate is the one thing it did not
+   * notice going. `listed()` has had no caller since.
+   *
+   * Browsing only. A query lifts it, because `reveal.ts` is explicit that
+   * hiding something from a directory is a claim about what is useful yet
+   * and hiding it from *search* would be a claim about what somebody is
+   * allowed to want. The top bar was never gated and still is not.
+   */
+  const every = allApps(caps, state.role);
+  const browsing = every.filter((d) => showing(d.screen, facts, state.visited, state.showAll));
+  const apps = query.trim() ? every : browsing;
+  /*
+   * The chips are read off what this list actually holds, not off the
+   * registry, for the reason `desk.ts`'s `categories` gives about the school
+   * gate: a shelf whose every screen is held back is a chip that empties the
+   * list when pressed. With no courses that is most of them.
+   *
+   * And a chip that is no longer offered is not honoured — clearing a query
+   * can take the shelf you were standing on away with it, and a filter on a
+   * shelf with nothing on it is an empty screen with no way back to the list.
+   */
+  const chips: string[] = GROUPS.filter((g) => apps.some((d) => d.group === g));
+  const shown = narrowApps(apps, chips.includes(category) ? category : '', query, caps);
   const favourites = readFavourites(look.favourites, caps, state.role);
   const recent = lately(state.recent, state.tabs, caps, ALWAYS_TO_HAND, 4, state.role);
-  const chips = categories(caps, state.role);
 
   const star = (screen: Screen) =>
     dispatch({
@@ -192,7 +230,9 @@ export function Directory() {
             </>
           )}
 
-          <NotYetOpened />
+          {/* The same set the list above draws, so the two panels on this
+              screen cannot disagree about what the app contains. */}
+          <NotYetOpened pool={browsing} />
         </>
       )}
 
