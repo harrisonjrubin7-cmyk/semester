@@ -318,6 +318,49 @@ publishable key rather than using it, because `app_admins` has no policy —
 with the wrong key `list` returns an empty table and no error, which reads
 exactly like "there are no administrators yet".
 
+### Optional · Listing a university
+
+`public.schools` is what `claim_school()` checks a student's confirmed address
+against, and it starts empty. That is deliberate — seeding Vanderbilt would put
+one university's name in the schema every other university has to live in — but
+it means that until somebody lists a school, *no student can claim one*:
+`claim_school()` refuses every call, because there is nothing to claim. The
+screen that does the claiming is under **Account**, and until this runs it says
+"No universities are set up on this server yet" and nothing else.
+
+Writing the table is an administrator act for the same reason the admin list
+is: `email_domains` is the whole of the check, so whoever can write it can
+admit anyone. Same terminal, same key:
+
+```bash
+cd app
+export SUPABASE_URL=https://<project-ref>.supabase.co
+export SUPABASE_SERVICE_ROLE_KEY=<service key>     # Settings → API
+
+node scripts/add-school.ts list
+node scripts/add-school.ts add vanderbilt "Vanderbilt University" Vanderbilt
+node scripts/add-school.ts domains vanderbilt vanderbilt.edu
+node scripts/add-school.ts remove vanderbilt
+```
+
+The id is the slug the app already builds room keys from — `vanderbilt/ECON
+1020` — so it has to match the school profile's own id. It is not checked
+against anything at write time; a mismatch is not an error, it is a school
+whose rooms nobody finds.
+
+**`add` cannot set a domain, and that is on purpose.** A school listed with no
+domains admits nobody, which is the right state to be in while somebody works
+out which addresses the university actually issues; `domains` is then a second
+command whose only subject is who gets in. Running it with no domains at all
+takes the school back to admitting nobody, without disturbing anyone who has
+already claimed it.
+
+**`remove` is refused while anybody is claiming the school.** `profiles.school_id`
+is `on delete set null`, so removing the row would clear every one of those
+claims with no error anywhere — students stay signed in and the server quietly
+stops believing they are anywhere. The script counts first and tells you the
+number.
+
 ## 3 · The shared Claude key (optional)
 
 Without this, each user pastes their own API key under **Settings → The
@@ -337,9 +380,10 @@ and a monthly cap added because this one is reachable from the internet.
 
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected by Supabase — do
 not add them yourself, and do not put the service key anywhere else. The one
-exception is `scripts/grant-admin.ts`, which is run by hand from a terminal
-and is described under *Making an administrator* above; it is an exception
-because `app_admins` is unreachable by every key that is not this one.
+exceptions are `scripts/grant-admin.ts` and `scripts/add-school.ts`, which are
+run by hand from a terminal and are described under *Making an administrator*
+and *Listing a university* above; they are exceptions because `app_admins` and
+writes to `public.schools` are unreachable by every key that is not this one.
 
 **Or from a terminal:**
 
