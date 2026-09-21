@@ -73,7 +73,15 @@ export function Suppose({
   // refused would take a number and move nothing, which is the shape of a
   // broken feature even though every part of it is behaving.
   const rows = course.grading
-    .map((g, i) => ({ g, i, k: key(course.id, i), weight: s.now.rows[i]?.weight ?? null }))
+    .map((g, i) => ({
+      g,
+      i,
+      k: key(course.id, i),
+      weight: s.now.rows[i]?.weight ?? null,
+      // Extra credit adds on top of the hundred rather than being part of it,
+      // so it is named here for the same reason the real table names it.
+      extra: s.now.rows[i]?.extra ?? false,
+    }))
     .filter((r) => r.weight !== null);
 
   if (rows.length === 0) return null;
@@ -118,7 +126,9 @@ export function Suppose({
           saved or counted anywhere — it is gone when you leave the screen.
         </div>
 
-        {rows.map(({ g, i, k }) => (
+        {rows.map(({ g, i, k, extra }) => {
+          const mark = s.now.rows[i]?.score ?? null;
+          return (
           <div
             key={g.what}
             style={{
@@ -143,12 +153,23 @@ export function Suppose({
                   textTransform: 'uppercase',
                 }}
               >
-                {/* What is on record for this row, so the box beside it is
-                    plainly a second, different thing rather than a duplicate
-                    of the grade field above. */}
-                {s.now.rows[i]?.score === null || s.now.rows[i]?.score === undefined
-                  ? 'Nothing on record'
-                  : `${Math.round(s.now.rows[i].score as number)}% on record`}
+                {/*
+                  The weight first, then what is on record.
+
+                  The weight is the fact that decides where a supposition is
+                  worth spending — 92 on a row worth 80% of the course and 92
+                  on one worth 20% are not the same evening — and this row had
+                  been showing only the second half. Drawn exactly as the real
+                  grade table above draws it, including the extra-credit mark,
+                  because a row that adds on top of the hundred behaves
+                  differently from every other row here and a student supposing
+                  into one would otherwise watch the number move for no visible
+                  reason.
+                */}
+                {g.pct}
+                {extra ? ' · extra credit' : ''}
+                {' · '}
+                {mark === null ? 'nothing on record' : `${Math.round(mark)}% on record`}
               </div>
             </div>
             <ScoreField
@@ -159,7 +180,8 @@ export function Suppose({
               label={`Suppose a score for ${g.what} in ${course.code}`}
             />
           </div>
-        ))}
+          );
+        })}
 
         {tried && (
           <Blueprint style={{ padding: 'var(--sp-7)', marginTop: 'var(--sp-6)', background: 'var(--app-hero)' }}>

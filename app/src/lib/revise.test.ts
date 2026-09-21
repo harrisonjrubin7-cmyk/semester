@@ -370,6 +370,39 @@ describe('counted', () => {
   });
 });
 
+describe('doneToday', () => {
+  const card = (seen: number) => ({
+    right: 1, wrong: 0, streak: 1, ease: 2.5, interval: 1, seen, due: seen,
+  });
+  const now = new Date('2026-09-21T20:00:00');
+  const start = new Date(2026, 8, 21).getTime();
+
+  it('counts a card answered since the last tick of the clock', () => {
+    // `useNow` ticks every thirty seconds, so `now` on screen is a snapshot
+    // that can be half a minute behind the answer just given — and the moment
+    // anybody reads this number is the moment they come off a drill. The old
+    // bound was `now.getTime()`, which looks like the day and is not.
+    expect(doneToday({ a: card(now.getTime() + 12_000) }, now)).toBe(1);
+  });
+
+  it('counts one answered earlier today', () => {
+    expect(doneToday({ a: card(start + 3_600_000) }, now)).toBe(1);
+  });
+
+  it('does not count yesterday', () => {
+    // The control: the bound moved to the end of the day, not away.
+    expect(doneToday({ a: card(start - 1) }, now)).toBe(0);
+  });
+
+  it('does not count tomorrow', () => {
+    expect(doneToday({ a: card(start + 86_400_000) }, now)).toBe(0);
+  });
+
+  it('does not count a card never answered', () => {
+    expect(doneToday({ a: card(0) }, now)).toBe(0);
+  });
+});
+
 describe('countedLine', () => {
   const line = (c: Partial<Counted>) =>
     countedLine({ comeRound: 0, neverMet: 0, today: 0, warmed: 0, units: 0, ...c });
@@ -422,5 +455,12 @@ describe('warmedLine', () => {
 
   it('says nothing where there are no units at all', () => {
     expect(at(0, 0)).toBe('');
+  });
+
+  it('says nothing before anything has been started', () => {
+    // "0 of 44" is a scoreboard reading nought on a fresh install, beside a
+    // line that has already said every card here is new. Seen on the screen,
+    // which is the only place it was visible.
+    expect(at(0, 44)).toBe('');
   });
 });

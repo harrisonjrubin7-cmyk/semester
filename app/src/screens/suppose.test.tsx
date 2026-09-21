@@ -99,6 +99,20 @@ describe('the block itself', () => {
     expect(text()).toContain('on record');
   });
 
+  it('carries each row’s weight, which is what decides where a score is worth having', () => {
+    // 92 on a row worth 80% of the course and 92 on one worth 20% are not
+    // the same evening, and this row showed only what was on record.
+    expect(text()).toContain('80% · nothing on record');
+    expect(text()).toContain('20% · 80% on record');
+  });
+
+  it('marks an extra-credit row as one', () => {
+    // It adds on top of the hundred rather than being part of it, so a
+    // supposition into it moves the number in a way nothing else here does.
+    // ECON's Top Hat row is "+3% EC".
+    expect(text()).toContain('extra credit · nothing on record');
+  });
+
   it('says nothing about a grade until something is supposed', () => {
     // An empty verdict standing there would be the screen answering a
     // question nobody asked, in the voice it answers real ones in.
@@ -159,7 +173,7 @@ describe('the two things it refuses to be quiet about', () => {
     const boxes = boxesFor(/^Suppose a score/);
     const empty = boxes.find((b) => {
       const row = b.closest('div')?.parentElement;
-      return (row?.textContent ?? '').includes('Nothing on record');
+      return (row?.textContent ?? '').includes('nothing on record');
     });
     expect(empty).toBeTruthy();
     await type(empty!, '90');

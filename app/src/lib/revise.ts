@@ -274,8 +274,27 @@ export function planTotals(plan: Stretch[]): { minutes: number; cards: number } 
  * to somebody checking whether they have done their reviewing.
  */
 export function doneToday(reviews: Reviews, now: Date): number {
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  return Object.values(reviews).filter((r) => r.seen >= start && r.seen <= now.getTime()).length;
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const start = midnight.getTime();
+  /*
+   * The day's end, not the moment this was rendered.
+   *
+   * The bound used to be `now.getTime()`, which looks like the same thing and
+   * is not: `now` comes from `useNow`, which ticks every thirty seconds, so it
+   * is a snapshot that can be half a minute behind the answer a student has
+   * just given. Every card marked since the last tick was therefore excluded
+   * from "answered today" — and the moment somebody reads that line is the
+   * moment they come off a drill, which is precisely when the lag is live.
+   * Seen on screen: eight cards drilled, the never-met count down by eight,
+   * and the same line reporting nothing done.
+   *
+   * A day boundary is what the sentence is about anyway. Nothing in this app
+   * writes a `seen` in the future, so the bound is not holding anything back;
+   * and if a clock has moved, counting a card the student answered is the
+   * better error than dropping it.
+   */
+  const end = new Date(midnight.getFullYear(), midnight.getMonth(), midnight.getDate() + 1).getTime();
+  return Object.values(reviews).filter((r) => r.seen >= start && r.seen < end).length;
 }
 
 
@@ -389,10 +408,19 @@ export function countedLine(c: Counted): string {
  * is a mark out of a hundred, and a mark out of a hundred about yourself is
  * the thing `lib/you.ts` refuses.
  *
- * Empty once every unit has been started: a row reading "11 of 11" is a line
- * that has stopped telling anybody anything.
+ * Empty at both ends, and the lower one is the one worth arguing for. "11 of
+ * 11" has stopped telling anybody anything, which is the obvious half. "0 of
+ * 44" is worse than uninformative: it is a scoreboard reading nought, on the
+ * screen of somebody who has just installed the app, beside a line that has
+ * already said every card here is new. Two ways of saying "you have not
+ * started", one of them a fraction with a zero on top — which is the shape
+ * this file's own note above refuses, and refused in the line and not here
+ * until somebody looked at the screen.
+ *
+ * So it appears once there is a mix, which is the only state it describes
+ * anything in.
  */
 export function warmedLine(c: Counted): string {
-  if (c.units === 0 || c.warmed >= c.units) return '';
+  if (c.units === 0 || c.warmed === 0 || c.warmed >= c.units) return '';
   return `${c.warmed} of ${c.units} units started`;
 }
