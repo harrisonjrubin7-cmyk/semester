@@ -18,7 +18,10 @@
 --     **refuses `admin`** — the value whose absence is the point.
 --   * `app_admins` is readable by nobody through the API: not by a signed-out
 --     visitor, not by an ordinary account, and **not by the administrator the
---     row is about**. RLS is on and there is no policy at all.
+--     row is about**. Two separate things refuse it — the relation grant and
+--     row-level security — and each is read with the other taken out of the
+--     way, because a door with two locks is a door you cannot tell is
+--     unlocked by trying the handle.
 --   * It is writable by nobody, in all three senses, so there is no in-app
 --     route to making yourself one.
 --   * `is_app_admin()` lives in `private` and has no twin in `public`. That is
@@ -181,6 +184,58 @@ begin
   select count(*) into n from public.app_admins;
   perform pg_temp.counted('while the row exists to the service key', n, 1);
 
+  -- ── The second lock, read with the first one taken off ──────────────────
+  --
+  -- Everything above is the relation grant. Nothing above is row-level
+  -- security — and the comment four paragraphs up, that an administrator
+  -- reading their own row is the most natural policy to write and there is
+  -- deliberately no policy at all, is the claim nothing now measures. Against
+  -- `revoke all`, a self-read policy added tomorrow is refused before it is
+  -- ever consulted, and this suite stays green. `a1d79e8` listed exactly that
+  -- mutation among the ten it watched go red; it no longer goes red, and
+  -- neither does switching row-level security off altogether.
+  --
+  -- So take the first lock off, on purpose, inside a transaction that rolls
+  -- back, and read the second on its own.
+  set local role postgres;
+  grant select on public.app_admins to authenticated;
+
+  perform pg_temp.become(admin);
+  select count(*) into n from public.app_admins;
+  perform pg_temp.counted('granted the select, an administrator still reads no row of their own', n, 0);
+
+  perform pg_temp.become(person);
+  select count(*) into n from public.app_admins;
+  perform pg_temp.counted('and an ordinary account none', n, 0);
+
+  -- The control for that pair, and the reason it is not two lines: a zero is
+  -- also exactly what a grant that never took effect looks like. With
+  -- row-level security switched off and nothing else changed, the same
+  -- account reads the row — so the zeros above are the absence of a policy,
+  -- and not the absence of a privilege.
+  set local role postgres;
+  alter table public.app_admins disable row level security;
+
+  perform pg_temp.become(admin);
+  select count(*) into n from public.app_admins;
+  perform pg_temp.counted('and reads it the moment row-level security is off', n, 1);
+
+  set local role postgres;
+  alter table public.app_admins enable row level security;
+  revoke select on public.app_admins from authenticated;
+
+  -- The structural half of the same sentence. The reads above cannot tell a
+  -- missing policy from a policy that happens to match no row, and only one
+  -- of those is the design.
+  select count(*) into n
+    from pg_policies where schemaname = 'public' and tablename = 'app_admins';
+  perform pg_temp.counted('there is no policy on app_admins at all', n, 0);
+
+  select count(*) into n
+    from pg_class c join pg_namespace ns on ns.oid = c.relnamespace
+   where ns.nspname = 'public' and c.relname = 'app_admins' and c.relrowsecurity;
+  perform pg_temp.counted('and row-level security is on, so no policy means no row', n, 1);
+
   -- Written by nobody.
   perform pg_temp.become(person);
   begin
@@ -223,6 +278,32 @@ begin
     from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
    where p.proname = 'is_app_admin' and ns.nspname = 'private';
   perform pg_temp.counted('and exactly one in private', n, 1);
+
+  -- ── the floor under the revoke, which nothing above can see ─────────────
+  --
+  -- Every `refused` in this file is the *grant* talking. The grant is checked
+  -- before row-level security, so once `app_admins` is revoked from `anon` and
+  -- `authenticated` the statement raises and RLS is never consulted — which
+  -- means this file's second claim, "RLS is on and there is no policy at all",
+  -- stopped being observable from any role the suite can become.
+  --
+  -- That is not hypothetical. Planting `create policy … for select using
+  -- (true)` on this table leaves **every `refused` assertion above still
+  -- passing**, because the grant stops the statement first. Two layers are
+  -- claimed and only one was being checked.
+  --
+  -- So this one is read from the catalogue. It is what says the floor is
+  -- still there if the revoke is ever loosened — the day somebody grants
+  -- select back, the assertions above turn red, and these say whether there
+  -- was anything underneath them.
+  select count(*) into n
+    from pg_class c join pg_namespace ns on ns.oid = c.relnamespace
+   where ns.nspname = 'public' and c.relname = 'app_admins' and c.relrowsecurity;
+  perform pg_temp.counted('row-level security is on for app_admins', n, 1);
+
+  select count(*) into n
+    from pg_policies where schemaname = 'public' and tablename = 'app_admins';
+  perform pg_temp.counted('and there is no policy on it at all', n, 0);
 end $$;
 
 rollback;
