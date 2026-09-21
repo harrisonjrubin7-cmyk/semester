@@ -32,7 +32,23 @@ const catalog = buildCatalog([ECON, BUS]);
  * twice. "Looking at: Ask Claude" is also the one context line that could
  * never help an answer.
  */
-const EXPECTED_WITHOUT: string[] = ['ask', 'people'];
+/*
+ * And `nil`, for a reason closer to `people`'s than to `ask`'s.
+ *
+ * That screen holds what a student was paid, by whom, and for what. It is a
+ * device library rather than store data, so `lib/context.ts` cannot reach it
+ * and no provider is *needed* to keep it out — but a provider is the one thing
+ * that could put it back in, by reading the library itself, and somebody
+ * writing one later would be doing it in a file that contains no argument
+ * against it. This is the argument: the screen's whole promise is that the
+ * record stays on the device, and a context line reading "you have logged
+ * $4,200 from a collective this year" is that promise broken in the one
+ * direction a student would never see.
+ *
+ * The cost is that asking the assistant a question while on that screen gets
+ * no "Looking at:" line, which is the right trade.
+ */
+const EXPECTED_WITHOUT: string[] = ['ask', 'people', 'nil'];
 const NOW = new Date(2026, 8, 15);
 
 const look = (over: Partial<State> = {}): Look => ({

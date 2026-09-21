@@ -460,6 +460,22 @@ export const SHAPES = {
     { d: 'M9.5 9h5a2 2 0 0 1 0 4h-5a2 2 0 0 1 0-4z' },
   ],
 
+  /*
+   * NIL — a signed page.
+   *
+   * A page with a signature across the foot of it, rather than the dollar
+   * sign or the handshake the subject invites. Both of those say *money
+   * changing hands*, which is what this screen is least about: it is a record
+   * of an agreement and the date that agreement starts a clock from. The
+   * signature line is also what tells it apart from `costs`, which is a
+   * receipt with a torn edge, and from `applying`, which is a case.
+   */
+  nil: [
+    { d: 'M5.5 3.5h9l4 4v13h-13z' },
+    { d: 'M14.5 3.5V7.5h4' },
+    { d: 'M8 16.5c1.2-2.4 2-3.6 2.4-3.6.6 0 .3 3.2 1.1 3.2.7 0 1.3-2.4 2-2.4.5 0 .8.9 2.5.9' },
+  ],
+
   /** Apply — a briefcase. */
   applying: [
     { d: 'M3.5 7.5h17v12h-17z' },

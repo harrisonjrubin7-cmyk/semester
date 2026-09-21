@@ -59,6 +59,7 @@ import { occurrences } from './repeat';
 import { overdueCount } from './standing';
 import { termProgress } from './you';
 import { week as weekAhead, headline, pressure, showHours } from './ahead';
+import type { AthleticEvent } from './athletics';
 import { standing } from './grades';
 import { isExam } from './runway';
 import { behindLine, howBehind } from './behind';
@@ -121,6 +122,25 @@ export interface TopInput {
    * screen nobody has opened holds anyway.
    */
   familyPlans?: number;
+  /**
+   * The season — practice, competition, training, travel — read from the
+   * Athletics device library by whoever could open it.
+   *
+   * Exactly the same exception as `familyPlans`, for exactly the same reason:
+   * it is not store data and this function does not open libraries. It is
+   * passed on to `lib/ahead.ts` so that the hours a bus takes out of a week
+   * are in the figure Today shows, rather than only in the figure the week
+   * report shows. Absent means nobody read it, and the week then counts what
+   * it always counted.
+   */
+  athletics?: AthleticEvent[];
+  /**
+   * How many NIL deals are recorded, counted by whoever could read them.
+   *
+   * The same exception as `familyPlans` and `athletics`, from the same kind of
+   * device library. A count and never an amount — see the case that uses it.
+   */
+  nilDeals?: number;
 }
 
 /**
@@ -324,6 +344,7 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
           done: state.done,
           commitments: state.commitments,
           appointments: state.appointments,
+          athletics: input.athletics,
         });
         return {
           hero: {
@@ -657,8 +678,31 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
      * a `familyPlans` for it: see the case below for what the stand-in was
      * claiming.
      */
+    /*
+     * Athletics was a second one of those, and it is fixed here because the
+     * figure it needed has only just become reachable.
+     *
+     * `state.commitments` is the Activities list — a job, a club, a rehearsal.
+     * A student who logs four of those and has entered no season at all read
+     * "Commitments 4" over an empty Athletics screen, and one with a season
+     * and no commitments read nought over a term of travel. The season is in a
+     * device library, which is why the stand-in was there; `athletics` carries
+     * it now, by the same route and for the same reason as `familyPlans`.
+     */
     case 'athletics':
-      return holds('Commitments', state.commitments.length, 'commitment');
+      return holds('Planned', input.athletics?.length ?? 0, 'event');
+
+    /*
+     * Deals recorded, and deliberately not money.
+     *
+     * A figure in the biggest type on the screen is a figure anybody standing
+     * behind this student can read, and what somebody was paid is the one
+     * number on any of these screens that is nobody else's business. The count
+     * is the fact the screen is about — a record kept or not kept — and it is
+     * the one the list underneath agrees with.
+     */
+    case 'nil':
+      return holds('Deals recorded', input.nilDeals ?? 0, 'deal');
 
     case 'career':
       return holds('Applications', state.applications.length, 'application');
