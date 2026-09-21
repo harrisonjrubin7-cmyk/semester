@@ -605,7 +605,7 @@ jobs:
     # is "Read and write".
     continue-on-error: true
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         env:
           BUILD: ${{ needs.build.result }}
           # A committed key is the failure on main that most needs somebody
