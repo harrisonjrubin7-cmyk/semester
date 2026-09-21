@@ -15,6 +15,7 @@ import {
   MATERIAL_STATES,
   PATHWAY_LIMITS,
   PATHWAY_TEMPLATES,
+  materialGrid,
   netProgramCost,
   newPathwayProject,
   newProgram,
@@ -68,6 +69,19 @@ const TABS = [
 
 type Tab = (typeof TABS)[number]['id'] | 'edit';
 
+/**
+ * Two ways of reading the same saved programmes.
+ *
+ * The list answers "what does this one need"; the grid answers "which of them
+ * wants a writing sample", which is the question the cards cannot be asked
+ * because it is about a column. Neither is a summary of the other — see
+ * `materialGrid` in `lib/pathway.ts`.
+ */
+const VIEWS = [
+  { id: 'list' as const, label: 'List' },
+  { id: 'grid' as const, label: 'Grid' },
+];
+
 /** The screens this one hands off to, with what each is for. */
 const CONNECTED: [Screen, string][] = [
   ['degree', 'Degree plan'],
@@ -111,6 +125,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
     Dispatch<SetStateAction<Tab>>,
   ];
   const [query, setQuery] = useState('');
+  const [view, setView] = useState<(typeof VIEWS)[number]['id']>('list');
   const [programId, setProgramId] = useWorkspaceSelection(storageKey, 'programId', '');
   const [program, setProgram] = useState<Program>(() =>
     structuredClone(lib.value.programs.find((p) => p.id === programId) ?? newProgram()),
@@ -256,14 +271,25 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
       {tab === 'programs' && (
         <>
-          <input
-            className="input"
-            aria-label="Search saved programs"
-            placeholder="School, program, degree or location"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            style={{ width: '100%', marginBottom: 'var(--sp-4)' }}
-          />
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 'var(--sp-4)',
+              alignItems: 'center',
+              marginBottom: 'var(--sp-4)',
+            }}
+          >
+            <input
+              className="input"
+              aria-label="Search saved programs"
+              placeholder="School, program, degree or location"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              style={{ flex: '2 1 180px', minWidth: 0 }}
+            />
+            <Segmented options={VIEWS} value={view} onChange={setView} style={{ flex: '1 1 120px' }} />
+          </div>
           <ActionButton
             tone="primary"
             onClick={() => {
@@ -283,6 +309,15 @@ function Workspace({ storageKey }: { storageKey: string }) {
               Nothing yet. Add programs by hand, or import a catalog your school provided. Nothing here is
               labelled verified, because there is no institutional source behind it.
             </p>
+          ) : view === 'grid' ? (
+            <MaterialsGrid
+              programs={programs}
+              programId={programId}
+              onPick={(p) => {
+                setProgramId(p.id);
+                setProgram(structuredClone(p));
+              }}
+            />
           ) : (
             <CardGrid min={150}>
               {programs.map((p) => (
@@ -1006,5 +1041,102 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </>
       )}
     </Page>
+  );
+}
+
+/**
+ * The shortlist transposed: programmes down, required materials across.
+ *
+ * Two things the cards cannot say. Which programmes want the same document —
+ * one column read top to bottom — and which of them is the odd one out, which
+ * is the column with a gap in it. Both are answers about a requirement rather
+ * than about a programme, and a list of programmes has nowhere to put them.
+ *
+ * An empty cell is left empty and the caption says what empty means. It is not
+ * "Not started": the programme has no material of that title at all, and
+ * drawing those the same would invent a requirement nobody recorded.
+ *
+ * Nothing is counted, scored or ordered by how full a row is. A shortlist
+ * sorted by "most ready" is a ranking of programmes on the strength of what
+ * somebody has typed about them, which is the one thing this screen has
+ * always refused to produce.
+ */
+function MaterialsGrid({
+  programs,
+  programId,
+  onPick,
+}: {
+  programs: Program[];
+  programId: string;
+  onPick: (p: Program) => void;
+}) {
+  const { titles, rows } = materialGrid(programs);
+  const cell = { padding: 'var(--sp-3)', borderBottom: '1px solid var(--app-line)' } as const;
+
+  if (titles.length === 0) {
+    return (
+      <p
+        style={{
+          fontSize: 'var(--type-base)',
+          lineHeight: 'var(--leading-normal)',
+          ...secondLine(),
+          textWrap: 'pretty',
+        }}
+      >
+        Nothing to line up yet. Open a program and list what it asks for, and every program that asks for
+        the same thing gets a column here.
+      </p>
+    );
+  }
+
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 'var(--type-sm)' }}>
+        <caption
+          style={{
+            captionSide: 'bottom',
+            textAlign: 'left',
+            paddingTop: 'var(--sp-4)',
+            ...secondLine(),
+            textWrap: 'pretty',
+          }}
+        >
+          What you recorded, for each program. An empty cell means that program has no material of that
+          title — not that it is unstarted.
+        </caption>
+        <thead>
+          <tr>
+            <th style={{ ...cell, textAlign: 'left', whiteSpace: 'nowrap', ...secondLine() }}>Program</th>
+            {titles.map((t) => (
+              <th key={t} style={{ ...cell, textAlign: 'left', ...secondLine() }}>
+                {t}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(({ program, cells }) => (
+            <tr key={program.id}>
+              <th style={{ ...cell, textAlign: 'left', fontWeight: 'inherit' }}>
+                <button
+                  type="button"
+                  className="bare"
+                  aria-pressed={program.id === programId}
+                  onClick={() => onPick(program)}
+                  style={{ textAlign: 'left', width: 'auto', fontSize: 'inherit' }}
+                >
+                  {program.school}
+                </button>
+              </th>
+              {cells.map((status, i) => (
+                <td key={titles[i]} style={cell}>
+                  {status}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
