@@ -714,6 +714,17 @@ export const DESTINATIONS: Destination[] = [
     root: 'mine',
   },
   {
+    screen: 'nil',
+    label: 'NIL deals',
+    short: 'NIL',
+    blurb: 'A private record of what you were paid, what it adds up to, and the date that follows from it.',
+    keywords:
+      'nil name image likeness deal deals brand sponsorship endorsement collective booster payment paid money disclose disclosure report reporting compliance office nil go college sports commission 600 threshold aggregate fair market value valid business purpose pay for play 1099 taxes athlete athletics',
+    group: 'Beyond',
+    taskTags: ['ahead', 'campus'],
+    root: 'mine',
+  },
+  {
     screen: 'applying',
     label: 'Applications',
     short: 'Apply',

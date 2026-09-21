@@ -114,7 +114,7 @@ clean — every one by its **exit status**.
 
 # One app — the thirtieth pass: the census that asked the compiler
 
-Against `main` at `0fa38e4`, rebased onto `f8af9c7`. **<!--screens-->fifty-eight<!--/-->
+Against `main` at `0fa38e4`, rebased onto `f8af9c7`. **<!--screens-->fifty-nine<!--/-->
 destinations**, unchanged. One instrument, one census, sixteen cuts — and
 three claims this pass made and then had to withdraw, which are T5b, T7 and T8
 below. The third is the probe's own.

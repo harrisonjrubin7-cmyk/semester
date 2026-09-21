@@ -134,6 +134,13 @@ export interface TopInput {
    * it always counted.
    */
   athletics?: AthleticEvent[];
+  /**
+   * How many NIL deals are recorded, counted by whoever could read them.
+   *
+   * The same exception as `familyPlans` and `athletics`, from the same kind of
+   * device library. A count and never an amount — see the case that uses it.
+   */
+  nilDeals?: number;
 }
 
 /**
@@ -684,6 +691,18 @@ export function softTop(screen: Screen, input: TopInput): SoftTop {
      */
     case 'athletics':
       return holds('Planned', input.athletics?.length ?? 0, 'event');
+
+    /*
+     * Deals recorded, and deliberately not money.
+     *
+     * A figure in the biggest type on the screen is a figure anybody standing
+     * behind this student can read, and what somebody was paid is the one
+     * number on any of these screens that is nobody else's business. The count
+     * is the fact the screen is about — a record kept or not kept — and it is
+     * the one the list underneath agrees with.
+     */
+    case 'nil':
+      return holds('Deals recorded', input.nilDeals ?? 0, 'deal');
 
     case 'career':
       return holds('Applications', state.applications.length, 'application');
