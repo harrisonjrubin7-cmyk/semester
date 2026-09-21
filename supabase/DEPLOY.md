@@ -171,7 +171,7 @@ It verifies, and then it stops. The last thing the function does on a good
 launch is render a page saying the connection works. **Signing in from
 Brightspace is not built** — turning a platform's id for a person into a
 Semester account is a real decision, including what happens when that human
-already made an account themselves, and `20260921003700_lti.sql` says why there
+already made an account themselves, and `20260921160000_lti.sql` says why there
 is deliberately no foreign key answering it yet.
 
 So this is installable and testable by an administrator now, and it is not yet

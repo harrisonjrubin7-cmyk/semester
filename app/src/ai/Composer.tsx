@@ -1,5 +1,14 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { TOUCH, useMedia } from '../lib/media';
+import { MicIcon, SpeakerIcon } from '../components/Icons';
+
+/** What the microphone button says it will do, per phase. */
+const VOICE_LABEL: Record<string, string> = {
+  off: 'Ask out loud',
+  listening: 'Listening — tap to stop',
+  thinking: 'Thinking — tap to stop',
+  speaking: 'Speaking — tap to stop',
+};
 
 /**
  * The box you type into, on both surfaces.
@@ -30,6 +39,7 @@ export function Composer({
   busy,
   placeholder,
   autoFocus = false,
+  voice,
 }: {
   value: string;
   onChange: (next: string) => void;
@@ -48,6 +58,20 @@ export function Composer({
   busy: boolean;
   placeholder: string;
   autoFocus?: boolean;
+  /**
+   * The hands-free loop, when the caller has one.
+   *
+   * Passed in rather than started here, because the loop needs the
+   * conversation — what to send and what came back — and this component has
+   * never known about either. Optional so a composer with nothing behind it
+   * still renders; `ai/usevoice.ts` is the other end.
+   */
+  voice?: {
+    phase: string;
+    on: boolean;
+    supported: boolean;
+    toggle: () => void;
+  };
 }) {
   const box = useRef<HTMLTextAreaElement>(null);
   const touch = useMedia(TOUCH);
@@ -137,6 +161,35 @@ export function Composer({
           lineHeight: 'var(--leading-relaxed)',
         }}
       />
+      {/*
+        Beside the send button rather than above the box or in the header.
+
+        It is the same kind of thing as send — a way to put a question in —
+        and the two surfaces share this component precisely so a control like
+        this cannot exist on one and not the other. Hidden rather than
+        disabled where the browser has no recogniser or no voice: a dead
+        microphone invites tapping, and Firefox has no speech recognition at
+        all, which is not a state somebody can fix by trying again.
+      */}
+      {voice?.supported ? (
+        <button
+          type="button"
+          className={`btn ai-mic${voice.on ? ' is-on' : ''}`}
+          onClick={voice.toggle}
+          aria-label={VOICE_LABEL[voice.phase] ?? 'Ask out loud'}
+          aria-pressed={voice.on}
+        >
+          {/*
+            The two glyphs the icon set already distinguishes: `mic` is what
+            this device is sending, `speaker` is what it is playing. The note
+            beside them in `icons.data.ts` makes that distinction on purpose,
+            and the phases are exactly it — so while the answer is being read
+            out the button shows a speaker, which is also the thing somebody
+            reaches for when they want it to stop talking.
+          */}
+          {voice.phase === 'speaking' ? <SpeakerIcon size={16} /> : <MicIcon size={16} />}
+        </button>
+      ) : null}
       <button
         type="button"
         className="btn btn-primary ai-send"

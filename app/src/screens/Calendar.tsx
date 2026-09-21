@@ -2904,7 +2904,7 @@ export function EventDetail() {
         <div
           className="chrome-text"
           style={{
-            fontSize: 'calc(28px * var(--text-scale, 1))',
+            fontSize: 'var(--type-2xl)',
             lineHeight: 'var(--leading-display-xl)',
             letterSpacing: '-0.01em',
             marginTop: 'var(--sp-4)',
