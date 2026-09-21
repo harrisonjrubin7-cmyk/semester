@@ -16,6 +16,7 @@ import {
   ScreenShareIcon,
   SpotlightIcon,
 } from '../../components/Icons';
+import { ItemRow } from '../../components/shell/Rows';
 import { secondLine } from '../../lib/dim';
 import { dictate, dictationSupported } from '../../lib/mic';
 import {
@@ -962,51 +963,52 @@ export function Stage({
                 <>
                   <SectionLabel>Waiting</SectionLabel>
                   {atDoor.map((k) => (
-                    <div
+                    <ItemRow
                       key={k.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 'var(--sp-4)',
-                        paddingBlock: 'var(--sp-5)',
-                        borderBottom: '1px solid var(--app-line)',
-                      }}
-                    >
-                      <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)' }}>
-                        {k.name || 'Somebody'}
-                        {/* Refused stays on the list rather than vanishing.
-                            They are still in the call's roster — they can hear
-                            nothing and see nobody, but they have not gone — and
-                            a queue that dropped them would say they had. */}
-                        {removed.includes(k.id) ? ' · not let in' : ''}
-                      </span>
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => {
-                          const signal = { t: 'admit' as const, from: me, to: k.id };
-                          session?.send(signal);
-                          // Broadcast does not echo to the sender, so this
-                          // device applies its own decision itself.
-                          setAllowed((was) => admitted(was, signal, me));
-                          setRemoved((was) => was.filter((id) => id !== k.id));
-                        }}
-                      >
-                        Let in
-                      </button>
-                      {!removed.includes(k.id) && (
-                        <button
-                          type="button"
-                          className="btn"
-                          onClick={() => {
-                            session?.send({ t: 'deny', from: me, to: k.id });
-                            setRemoved((was) => (was.includes(k.id) ? was : [...was, k.id]));
-                          }}
-                        >
-                          Not now
-                        </button>
-                      )}
-                    </div>
+                      title={
+                        <>
+                          {k.name || 'Somebody'}
+                          {/* Refused stays on the list rather than vanishing.
+                              They are still in the call's roster — they can hear
+                              nothing and see nobody, but they have not gone — and
+                              a queue that dropped them would say they had. */}
+                          {removed.includes(k.id) ? ' · not let in' : ''}
+                        </>
+                      }
+                      trailing={
+                        // Two buttons, so they keep a gap of their own:
+                        // `trailing` is one `flex: none` box, and without this
+                        // they would sit against each other.
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
+                          <button
+                            type="button"
+                            className="btn"
+                            onClick={() => {
+                              const signal = { t: 'admit' as const, from: me, to: k.id };
+                              session?.send(signal);
+                              // Broadcast does not echo to the sender, so this
+                              // device applies its own decision itself.
+                              setAllowed((was) => admitted(was, signal, me));
+                              setRemoved((was) => was.filter((id) => id !== k.id));
+                            }}
+                          >
+                            Let in
+                          </button>
+                          {!removed.includes(k.id) && (
+                            <button
+                              type="button"
+                              className="btn"
+                              onClick={() => {
+                                session?.send({ t: 'deny', from: me, to: k.id });
+                                setRemoved((was) => (was.includes(k.id) ? was : [...was, k.id]));
+                              }}
+                            >
+                              Not now
+                            </button>
+                          )}
+                        </span>
+                      }
+                    />
                   ))}
                 </>
               )}
@@ -1077,47 +1079,46 @@ export function Stage({
 
           <SectionLabel>In this call</SectionLabel>
           {shown.map((p) => (
-            <div
+            <ItemRow
               key={p.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 'var(--sp-4)',
-                paddingBlock: 'var(--sp-5)',
-                borderBottom: '1px solid var(--app-line)',
-              }}
-            >
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-md)' }}>
-                {p.name}
-                {p.self ? ' (you)' : ''}
-                {p.id === host ? ' · started it' : ''}
-              </span>
-              {p.hand > 0 ? <HandIcon size={15} /> : null}
-              {p.muted ? <MicOffIcon size={15} /> : null}
-              {!p.camera ? <CamOffIcon size={15} /> : null}
-              {/*
-                * Removing somebody is the one thing a host here can actually
-                * do to another person, and it works for the same reason the
-                * door does: every device closes its connection to them.
-                * Muting them is not offered, and `hostOf`'s own comment says
-                * why — nothing here can reach their microphone, and a button
-                * that claimed to would be a lie somebody relied on.
-                */}
-              {iHost && !p.self && (
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => {
-                    const signal = { t: 'evict' as const, from: me, to: p.id };
-                    session?.send(signal);
-                    setAllowed((was) => admitted(was, signal, me));
-                    setRemoved((was) => (was.includes(p.id) ? was : [...was, p.id]));
-                  }}
-                >
-                  Remove
-                </button>
-              )}
-            </div>
+              title={
+                <>
+                  {p.name}
+                  {p.self ? ' (you)' : ''}
+                  {p.id === host ? ' · started it' : ''}
+                </>
+              }
+              trailing={
+                // The state pips and the one action, keeping the gap they had.
+                <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
+                  {p.hand > 0 ? <HandIcon size={15} /> : null}
+                  {p.muted ? <MicOffIcon size={15} /> : null}
+                  {!p.camera ? <CamOffIcon size={15} /> : null}
+                  {/*
+                    * Removing somebody is the one thing a host here can actually
+                    * do to another person, and it works for the same reason the
+                    * door does: every device closes its connection to them.
+                    * Muting them is not offered, and `hostOf`'s own comment says
+                    * why — nothing here can reach their microphone, and a button
+                    * that claimed to would be a lie somebody relied on.
+                    */}
+                  {iHost && !p.self && (
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={() => {
+                        const signal = { t: 'evict' as const, from: me, to: p.id };
+                        session?.send(signal);
+                        setAllowed((was) => admitted(was, signal, me));
+                        setRemoved((was) => (was.includes(p.id) ? was : [...was, p.id]));
+                      }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </span>
+              }
+            />
           ))}
           <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             {busy.total === 0

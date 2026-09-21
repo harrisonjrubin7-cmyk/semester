@@ -113,9 +113,42 @@ An empty state wants a way out; a filtered-empty list already has one.
 That distinction is the reason the forty was never forty dead ends, and it is
 the same shape as T3: one grep, two idioms.
 
+## T5 — the eleven looks, taken
+
+Done since this pass was written, and recorded here so nobody takes the eleven
+looks a second time. **Four were list rows and are now `ItemRow`. Seven were
+not rows at all**, and each one's reason is a property of what it draws rather
+than a judgement about how much it matters:
+
+| Site | What it draws | On `ItemRow`? |
+| --- | --- | --- |
+| `screens/University.tsx:723` | checkbox · step · remove | **yes** |
+| `screens/University.tsx:1170` | service · its access | **yes** |
+| `screens/call/Stage.tsx:972` | who is at the door · let in / not now | **yes** |
+| `screens/call/Stage.tsx:1087` | who is in the call · their pips | **yes** |
+| `ai/Answer.tsx:269` | a `<th>`/`<td>` in a markdown table | no — a table cell |
+| `components/MuteCourses.tsx:80` | `role="switch"`, `aria-checked` | no — `ItemRow` carries neither |
+| `creation/DesignEditor.tsx:626` | `aria-pressed` layer selector | no — same, and the selection is a colour |
+| `screens/Athletics.tsx:290` | `<label>` wrapping a checkbox | no — a checkbox inside a `button` is invalid |
+| `screens/Career.tsx:908` | `<label>` wrapping a checkbox | no — same |
+| `screens/Data.tsx:384` | `aria-expanded` disclosure | no — the hairline wraps a button *and* its panel |
+| `screens/Pathway.tsx:762` | a `<details>` | no — `ItemRow` cannot be one |
+
+Three of the seven are ruled out by **accessibility rather than by looks** —
+`role="switch"`, `aria-pressed` and the `<label>`/checkbox pairing are all
+things the row would lose on the way in. `ItemRow` could be widened to carry
+the first two (`Row` already takes `role` and `ariaChecked`; `ItemRow` does not
+pass them through), and that is a change to the component rather than to a
+screen, so it is not this worklist's.
+
+So the honest figure is **7 hand-drawn rows in 7 files**, and T3's count of 11
+was itself still one grep over more than one idiom — the third time in three
+passes that the instrument was the thing that needed correcting.
+
 ## To do
 
-- The eleven rows, one look each, if the owner wants them on `ItemRow`.
+- Widen `ItemRow` to pass `role`/`ariaChecked`/`ariaPressed` through to `Row`,
+  if `MuteCourses` and `DesignEditor` are wanted on it. A component change.
 - `account` on Profile — carried from the nineteenth pass, the owner's to name.
 - A pointer-pairing guard past `edit`, when a second instance exists.
 
