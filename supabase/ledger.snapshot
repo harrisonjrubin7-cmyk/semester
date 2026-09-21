@@ -1,4 +1,4 @@
-# What production's migration ledger held, read at 15:2x UTC on 21 September 2026.
+# What production's migration ledger holds, read at 21:5x UTC on 21 September 2026.
 #
 # `supabase_migrations.schema_migrations` on the live project, one line per row:
 # version, then name. This is a reading, not a wish — `app/src/lib/deploy.test.ts`
@@ -19,6 +19,31 @@
 # all below a watermark that had reached `20260911151826`, so every one of them
 # was pending and in the past. The deploy failed on the whole set, silently, on
 # a branch record in a dashboard with no red tick anywhere in this repository.
+#
+# ## The re-reading of 21 September, and the finding it is
+#
+# This file was read at 15:2x with twenty-eight rows. It now has thirty-seven,
+# and **nine of them were applied by the deploy rather than by hand** — the
+# first time that has been true since 18 September:
+#
+#     20260921151000  activity
+#     20260921155500  index_foreign_keys_added_since
+#     20260921160000  lti
+#     20260921160100  lti_identity
+#     20260921161500  roles
+#     20260921162000  lti_token_url
+#     20260921170000  schools
+#     20260921174500  index_lti_link_ticket_user
+#     20260921211500  pin_profile_school
+#
+# That is the finding, and it is the good one: the repair worked. The header
+# below says a newer reading that disagrees belongs in `MIGRATION-HISTORY.md`
+# before it belongs here, so it is written up there under *The deploy, observed*
+# rather than only landing as a diff to this file.
+#
+# Every one of the thirty-seven has a file in `supabase/migrations/`, thirteen
+# of them stubs holding a version and no SQL. That is what `db push` checks
+# before it orders anything, and checking it is `ledgerfiles.test.ts`'s job.
 #
 # ## Why this file is a snapshot rather than a live check
 #
@@ -77,3 +102,12 @@
 20260921144011  function_grants_rerun_after_access_log
 20260921144711  forms_relation_grants
 20260921150750  access_log_function_search_path
+20260921151000  activity
+20260921155500  index_foreign_keys_added_since
+20260921160000  lti
+20260921160100  lti_identity
+20260921161500  roles
+20260921162000  lti_token_url
+20260921170000  schools
+20260921174500  index_lti_link_ticket_user
+20260921211500  pin_profile_school

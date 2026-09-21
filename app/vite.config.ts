@@ -584,6 +584,7 @@ const MOCKS_MODULES = [
   'src/components/pushstalled.test.tsx',
   'src/components/credentials.test.tsx',
   'src/components/referrallink.test.tsx',
+  'src/components/schoolclaim.test.tsx',
   'src/components/downloads.test.tsx',
   'src/data/seed.test.ts',
   'src/components/rework.test.tsx',

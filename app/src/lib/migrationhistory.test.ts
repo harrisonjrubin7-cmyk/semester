@@ -4,24 +4,29 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 /**
- * `supabase/history/` holds the ten migrations that existed only in
- * production, and its whole value is that each file equals the row it was read
- * from. Nothing else about it is interesting: it is never applied, so a
- * mistake in it cannot break a deploy — it can only quietly stop being a
- * record of what the database ran, which is the one thing it is for.
+ * `supabase/history/` holds the migrations that existed only in production,
+ * and its whole value is that each file equals the row it was read from.
+ * Nothing else about it is interesting: it is never applied, so a mistake in
+ * it cannot break a deploy — it can only quietly stop being a record of what
+ * the database ran, which is the one thing it is for.
  *
- * So the test is the fingerprints. `MANIFEST` carries the md5 and byte length
- * the live ledger reported for each row before any of it was copied, and every
- * file is re-hashed here. A file somebody tidied, reflowed, or added a
- * trailing newline to is a file that no longer describes production, and it
+ * So the first test is the fingerprints. `MANIFEST` carries the md5 and byte
+ * length the live ledger reported for each row before any of it was copied,
+ * and every file is re-hashed here. A file somebody tidied, reflowed, or added
+ * a trailing newline to is a file that no longer describes production, and it
  * fails.
  *
- * The second half is the mistake that would actually cost something. Moved
- * into `supabase/migrations/` these stop being records: `check.sh` would apply
- * them to a throwaway cluster, Branching would send them at preview branches,
- * and the third of them fails outright because `classmates.sql` has long since
- * absorbed it. `supabase/history/README.md` explains that at length; this
- * makes it a rule rather than a paragraph.
+ * The second is the mistake that would actually cost something. These records'
+ * *statements* must not reach `supabase/migrations/`: applied on top of the
+ * baseline, which already contains their effects, the third of them fails
+ * outright because `classmates.sql` absorbed it. Their *versions* must reach
+ * it, or `db push` refuses to start. So `migrations/` carries a stand-in per
+ * row — the version and no SQL — and this asserts both halves of that.
+ *
+ * The third is the case neither of those can see: a version where
+ * `migrations/` holds a real migration and the ledger holds a *different*
+ * text. `20260921144011` is one, and was invisible for exactly as long as
+ * nobody asked. `supabase/history/README.md` sets all three out at length.
  */
 
 const ROOT = join(process.cwd(), '..');
@@ -47,14 +52,18 @@ describe('the recovered migration history', () => {
      * The control for everything below: a manifest that had gone empty would
      * pass every per-file check there is, because there would be none.
      *
-     * Ten to begin with, from 7 to 11 September. Two more on 21 September —
-     * `forms_relation_grants` and `access_log_function_search_path`, applied by
-     * hand that afternoon while three sessions were writing about the habit of
-     * applying things by hand. A count rather than a floor, so that a thirteenth
-     * arriving is a decision somebody makes here rather than a number that
-     * drifts.
+     * Ten to begin with, from 7 to 11 September. Three more on 21 September —
+     * `forms_relation_grants`, `access_log_function_search_path` and
+     * `revoke_function_execute_from_supabase_default_roles`, applied by hand
+     * that afternoon while three sessions were writing about the habit of
+     * applying things by hand. The fourteenth is a different shape and the
+     * test below is about it: `20260921144011`, where `migrations/` holds a
+     * real migration and the ledger holds a different text.
+     *
+     * A count rather than a floor, so that a fifteenth arriving is a decision
+     * somebody makes here rather than a number that drifts.
      */
-    expect(manifest()).toHaveLength(13);
+    expect(manifest()).toHaveLength(14);
   });
 
   it('holds exactly the files the manifest names, and no others', () => {
@@ -114,6 +123,62 @@ describe('the recovered migration history', () => {
 
     // The control: there are migrations there for either check to have bitten on.
     expect(migrations.length).toBeGreaterThan(5);
+  });
+
+  /*
+   * The case the check above cannot see, and which nothing else was asking
+   * about either.
+   *
+   * Every record but one is there because its version has no real SQL in
+   * `migrations/` — a stand-in carries the version so `db push` finds it, and
+   * the statements live in `history/`. `20260921144011` is the other shape:
+   * `migrations/20260921144011_function_grants.sql` is a real migration, and
+   * the row the ledger holds at that version is a different, shorter text —
+   * the re-run after `access_log` existed.
+   *
+   * `ledgerfiles.test.ts` asks whether a version has a file. At this version
+   * the answer was always yes, so it passed throughout, correctly: it is not
+   * a question about what the file says. The gap was that nothing asked the
+   * second question, and a version quietly having two texts is exactly the
+   * thing this directory exists to stop being invisible.
+   *
+   * So the split is asserted by name. A new version joining the second list
+   * is a line somebody edits here, having looked at why.
+   */
+  it('separates the versions with a stand-in from the one with two texts', () => {
+    const dir = join(ROOT, 'supabase', 'migrations');
+    /** A stand-in carries the version and no SQL: comments and blank lines. */
+    const isStandIn = (file: string) =>
+      readFileSync(join(dir, file), 'utf8')
+        .split('\n')
+        .every((l) => l.trim() === '' || l.trim().startsWith('--'));
+
+    const standIn: string[] = [];
+    const twoTexts: string[] = [];
+    for (const row of manifest()) {
+      const version = row.file.slice(0, 14);
+      const at = readdirSync(dir).find((f) => f.startsWith(version) && f.endsWith('.sql'));
+      expect(at, `nothing in migrations/ carries version ${version}`).toBeDefined();
+      (isStandIn(at!) ? standIn : twoTexts).push(version);
+    }
+
+    expect(twoTexts, 'a ledger version has a real migration whose text is not what ran').toEqual([
+      '20260921144011',
+    ]);
+
+    /*
+     * The controls, because a classifier that answered "stand-in" to
+     * everything would satisfy the line above by saying nothing. Both kinds
+     * have to be seen, and the one with two texts has to actually differ from
+     * the record — if it ever stops differing, this file is recording a copy
+     * of a migration and should say so instead.
+     */
+    expect(standIn.length, 'no stand-in was recognised, so the split is not being made').toBe(13);
+    const row = manifest().find((r) => r.file.startsWith('20260921144011'))!;
+    const at = readdirSync(dir).find((f) => f.startsWith('20260921144011') && f.endsWith('.sql'))!;
+    expect(md5(readFileSync(join(dir, at))), 'the two texts are the same text now').not.toBe(
+      row.md5,
+    );
   });
 
   it('and says on its face that it is not a migration set', () => {
