@@ -40,3 +40,10 @@ app/public/audio/shorts/
 
 # And the documentary cuts, which are 28 minutes each.
 app/public/audio/documentary/
+
+# And the character-sheet layouts. Both files here are derived from
+# `pipeline/personas.mjs` — the spec by `persona-sheet.mjs`, the picture from
+# the spec — and re-drawn by `node pipeline/persona-sheet.mjs --all --layout`
+# in a few seconds. Committing them would be committing the preset twice, and
+# the second copy is the one that goes stale.
+app/public/video/personas/

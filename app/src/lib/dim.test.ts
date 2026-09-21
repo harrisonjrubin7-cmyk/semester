@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
@@ -265,5 +265,82 @@ describe('a hand-written opacity', () => {
       }
     }
     expect(found).toEqual([]);
+  });
+});
+
+describe('the faint rung, on a glyph too small to carry it', () => {
+  /*
+   * `--app-faint` is audited to 3:1, and `dim.ts` says in as many words what
+   * that buys: *"WCAG allows for large text only — 24px, or 18.66px bold. Use
+   * it for a figure, not for a caption; `secondLine` is the one that is safe
+   * at 11px."*
+   *
+   * A separator drawn as a character is the case that slips through, because
+   * it reads as a hairline to whoever writes it and renders as text to
+   * everything that measures it. `contrast.test.ts` has met this defect once
+   * already and named it exactly:
+   *
+   *   > It was `--app-faint`, the strength held to 3:1 — right for a hairline,
+   *   > wrong for the hero's meta note … It sat at 3.6–3.8:1 on all hundred
+   *   > and forty-three, so it was not an unlucky pairing; it was the wrong
+   *   > token.
+   *
+   * It came back as a `·` between the two buttons on `SampleMark`, which draws
+   * on Today and on Courses, and as the bullet on `Help`. The browser sweep
+   * measured them at **3.60–3.92:1 against the 4.5 small text needs**, on
+   * every ground and both widths — sixty rows of one mistake.
+   *
+   * The token audit cannot see this and neither can `lint:styles`: the colour
+   * is a token, correctly used as a token, on an element whose size makes it
+   * the wrong one. Only the size of the thing wearing it decides, and that is
+   * what this reads.
+   */
+  const SEPARATORS = '·—–•×';
+  /** `src/`, from this file's own location, so the walk cannot miss a folder. */
+  const SRC = dirname(dirname(fileURLToPath(import.meta.url)));
+
+  /** Every component in the tree, so a new file cannot arrive unmeasured. */
+  function sources(dir = SRC, found: string[] = []): string[] {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const at = join(dir, entry.name);
+      if (entry.isDirectory()) sources(at, found);
+      else if (entry.name.endsWith('.tsx') && !entry.name.includes('.test.')) found.push(at);
+    }
+    return found;
+  }
+
+  it('is not what a bare separator glyph is painted with', () => {
+    const bad: string[] = [];
+    for (const file of sources()) {
+      const src = readFileSync(file, 'utf8');
+      for (const m of src.matchAll(
+        new RegExp(`<span[^>]*faintLine\\(\\)[^>]*>\\s*([${SEPARATORS}])\\s*</span>`, 'g'),
+      )) {
+        bad.push(`${file.slice(SRC.length + 1)}  “${m[1]}”`);
+      }
+    }
+    expect(
+      bad,
+      `a separator glyph is small text, so it needs secondLine() rather than faintLine():\n  ${bad.join('\n  ')}`,
+    ).toEqual([]);
+  });
+
+  /*
+   * The probe, pointed at the fault it is meant to see.
+   *
+   * A regex that stopped matching reports an empty list, and an empty list
+   * passes — the "green tick for the wrong question" this repository keeps
+   * finding in its own instruments. So the walk is checked for reach, and the
+   * pattern is checked against the shape it is looking for rather than
+   * trusted.
+   */
+  it('and the probe reads the tree and the shape it is about', () => {
+    const files = sources();
+    expect(files.length).toBeGreaterThan(100);
+    expect(files.some((f) => f.endsWith(join('components', 'SampleMark.tsx')))).toBe(true);
+
+    const shape = new RegExp(`<span[^>]*faintLine\\(\\)[^>]*>\\s*([${SEPARATORS}])\\s*</span>`);
+    expect(shape.test(`<span style={{ ...faintLine(), flex: 'none' }}>·</span>`)).toBe(true);
+    expect(shape.test(`<span style={{ ...secondLine(), flex: 'none' }}>·</span>`)).toBe(false);
   });
 });

@@ -126,7 +126,7 @@ export function underModal(doc?: Document): boolean {
    * had the right selector in a `hasOpenModal` nothing ever called, and its
    * docblock claimed these shortcuts deferred to it. They deferred to this
    * instead. One question, two answers, and the one in use was the wrong one;
-   * see the twenty-fourth pass in `SIMPLIFY-AUDIT.md`.
+   * see the twenty-fifth pass in `SIMPLIFY-AUDIT.md`.
    *
    * `aria-modal="false"` is still not caught, which is right: the shortcut
    * sheet itself carries that, and `?` has to keep closing it.

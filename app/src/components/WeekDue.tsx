@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { DIMMED_ROW, faintLine, secondLine } from '../lib/dim';
+import { DIMMED_ROW, secondLine } from '../lib/dim';
 import { useRowStyle } from './shell/useShell';
 import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
@@ -88,7 +88,7 @@ export function WeekDue({
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
             {d.items.length + d.tasks.length === 0 ? (
-              <span style={{ fontSize: 'var(--type-sm-plus)', ...faintLine() }}>—</span>
+              <span style={{ fontSize: 'var(--type-sm-plus)', ...secondLine() }}>—</span>
             ) : (
               d.items.map((i) => (
                 <div

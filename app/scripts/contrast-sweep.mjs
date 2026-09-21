@@ -307,7 +307,8 @@ const forceStates = async (page, cdp) => {
         return r;
       }, [AUDIT, `#${m.measureId}`]);
       if (res && !res.missingRoot) out.push({ state: m.state, measured: res.measured, rows: res.rows,
-        skipped: res.skipped, gradient: res.gradient, invisible: res.invisible ?? 0 });
+        skipped: res.skipped, gradient: res.gradient, invisible: res.invisible ?? 0,
+        decorative: res.decorative ?? 0 });
     } catch { /* the element went away mid-pass; nothing measured, nothing claimed */ }
     finally {
       try { await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] }); } catch { /* page gone */ }
@@ -443,6 +444,7 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
         coverage.push({ nav, ground: g.id, width: tag, state, reached, screen, onScreen,
                         verified: groundOk && navOk && onScreen,
                         measured: res ? res.measured : 0, invisible: res ? res.invisible ?? 0 : 0,
+                        decorative: res ? res.decorative ?? 0 : 0,
                         skipped: res ? res.skipped : 0, gradient: res ? res.gradient : 0 });
         for (const r of (res ? res.rows : [])) findings.push({ nav, ground: g.id, width: tag, state, ...r });
 
@@ -451,7 +453,8 @@ for (const [nav, navLabel, firstScreen, proof] of NAVS.filter(n => !ONLY_NAVS ||
           for (const h of hits) {
             coverage.push({ nav, ground: g.id, width: tag, state: `${state}:${h.state}`, reached: true,
                             screen, onScreen, verified: groundOk && navOk && onScreen, measured: h.measured,
-                            invisible: h.invisible ?? 0, skipped: h.skipped, gradient: h.gradient });
+                            invisible: h.invisible ?? 0, decorative: h.decorative ?? 0,
+                            skipped: h.skipped, gradient: h.gradient });
             for (const r of h.rows) findings.push({ nav, ground: g.id, width: tag, state: `${state}:${h.state}`, ...r });
           }
         }
@@ -497,9 +500,11 @@ const total = coverage.reduce((n,c)=>n+c.measured, 0);
 const skipped = coverage.reduce((n,c)=>n+(c.skipped||0), 0);
 const gradient = coverage.reduce((n,c)=>n+(c.gradient||0), 0);
 const invisible = coverage.reduce((n,c)=>n+(c.invisible||0), 0);
+const decorative = coverage.reduce((n,c)=>n+(c.decorative||0), 0);
 console.log(`\nPASSES: ${coverage.length}   ELEMENTS MEASURED: ${total}   GROUNDS: ${GROUNDS.length}`);
 console.log(`NOT MEASURED: ${gradient} on a gradient (see scripts/paint.mjs), ${skipped} with no text or no colour, ` +
-  `${invisible} painted in no ink at all`);
+  `${invisible} painted in no ink at all, ` +
+  `${decorative} a single glyph the markup calls decoration`);
 
 /*
  * And which of the sixty were opened at all, which is the number this file

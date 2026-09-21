@@ -135,12 +135,59 @@ describe('not paying twice for the same clip', () => {
 
 describe('what a run would cost', () => {
   it('is nothing for nothing', () => {
-    expect(estimate([], { centsPerSecond: 10 })).toEqual({ clips: 0, seconds: 0, cents: 0 });
+    expect(estimate([], { centsPerSecond: 10 })).toEqual({
+      clips: 0,
+      stills: 0,
+      seconds: 0,
+      cents: 0,
+      unpriced: 0,
+    });
   });
 
   it('counts seconds across clips', () => {
     const jobs = [job({ seconds: 6 }), job({ slot: 'b', seconds: 8 })];
-    expect(estimate(jobs, { centsPerSecond: 10 })).toEqual({ clips: 2, seconds: 14, cents: 140 });
+    expect(estimate(jobs, { centsPerSecond: 10 })).toEqual({
+      clips: 2,
+      stills: 0,
+      seconds: 14,
+      cents: 140,
+      unpriced: 0,
+    });
+  });
+
+  it('prices a still per image, because a character sheet has no seconds', () => {
+    /*
+     * `pipeline/personas.mjs` makes one job per persona with `seconds: 0`. At
+     * a per-second rate that is free, which is the kind of zero that gets a
+     * card charged: a sheet is the first thing bought in step 4 and it is an
+     * image.
+     */
+    const sheet = job({ slot: 'persona/host-nell', seconds: 0 });
+    const priced = estimate([sheet], { centsPerImage: 4 });
+    expect(priced).toEqual({ clips: 0, stills: 1, seconds: 0, cents: 4, unpriced: 0 });
+    expect(estimate([sheet], { centsPerSecond: 10 }).cents).toBe(0);
+    expect(estimate([sheet], { centsPerSecond: 10 }).unpriced).toBe(1);
+  });
+
+  it('says how many jobs it could not price, rather than totalling only some', () => {
+    /*
+     * `lib/spend.ts` reached this first, about the student's own meter: a
+     * total that silently covers one of two answers is worse than a total
+     * with a count beside it. Here it is a run of clips and sheets given only
+     * one of the two rates.
+     */
+    const mixed = [job({ seconds: 6 }), job({ slot: 'persona/host-nell', seconds: 0 })];
+    const half = estimate(mixed, { centsPerSecond: 10 });
+    expect(half.cents).toBe(60); // right for what it covers
+    expect(half.unpriced).toBe(1);
+    expect(estimate(mixed, { centsPerSecond: 10, centsPerImage: 4 })).toEqual({
+      clips: 1,
+      stills: 1,
+      seconds: 6,
+      cents: 64,
+      unpriced: 0,
+    });
+    expect(estimate(mixed, {}).unpriced).toBe(2);
   });
 
   it('rounds a part-cent up, never down', () => {
@@ -169,10 +216,22 @@ describe('the manifest as a record of what was spent', () => {
 
   it('adds up everything bought so far', () => {
     const jobs = [job({ seconds: 6 }), job({ slot: 'b', seconds: 8 })];
-    expect(spentSoFar(afterBuying(jobs))).toEqual({ clips: 2, seconds: 14, cents: 120 });
+    expect(spentSoFar(afterBuying(jobs))).toEqual({
+      clips: 2,
+      stills: 0,
+      seconds: 14,
+      cents: 120,
+      unpriced: 0,
+    });
   });
 
   it('is empty before anything is bought', () => {
-    expect(spentSoFar(EMPTY)).toEqual({ clips: 0, seconds: 0, cents: 0 });
+    expect(spentSoFar(EMPTY)).toEqual({
+      clips: 0,
+      stills: 0,
+      seconds: 0,
+      cents: 0,
+      unpriced: 0,
+    });
   });
 });

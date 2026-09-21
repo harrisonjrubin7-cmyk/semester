@@ -102,7 +102,8 @@ python3 pipeline/lessons.py econ --unit 3 --remotion   # a real composition
                                                        # flat colour field
 
 # Animated-series character sheet (once per persona, reused everywhere)
-python3 pipeline/persona-sheet.py tutor-mia --style "friendly, 20s, warm lighting"
+node pipeline/persona-sheet.mjs --all --dry-run        # the prompt, first
+node pipeline/persona-sheet.mjs host-nell --layout     # the sheet's layout, $0
 
 # Shorts: one clip per flashcard instead of one per unit
 python3 pipeline/shorts.py econ --unit 3          # every card in unit 3 gets
@@ -239,8 +240,13 @@ once the format is right.
    - **B-roll generation:** ✗ not wired. `--broll <provider>` prints what it
      would ask for and exits non-zero. No provider is chosen and no per-second
      price is written down, because both are spending decisions.
-   - **Animated-series character:** ✗ not started. `persona-sheet.py` does not
-     exist.
+   - **Animated-series character:** ◐ built up to the provider.
+     `pipeline/personas.mjs` holds the two personas — one host, one expert,
+     the podcast's own two roles — and `persona-sheet.mjs` builds the sheet
+     prompt, checks the persona, prices the run through the same manifest the
+     B-roll would use, and draws the sheet's *layout* through Remotion for
+     nothing. `--image <provider>` is not wired and exits non-zero, for the
+     same reason `--broll` does.
 
    The order above still stands: these are the only steps that cost money per
    clip, so the two unbuilt parts are worth doing once the pilot numbers say
@@ -336,3 +342,25 @@ once the format is right.
   character sheet. The archetypes in §4 are described by structure, not by who
   they resemble, and that is also the version that survives a platform-policy
   or legal review later without a rewrite.
+
+  Now enforced rather than promised, because a rule a document states is one a
+  `--style "like <somebody>"` walks straight through — and the command line in
+  §3 originally *had* a free-text `--style` flag, which is where this would
+  have gone in. `pipeline/personas.mjs` makes appearance a choice from
+  enumerated axes instead, so a likeness is unrepresentable rather than
+  refused. The one free-text field is a note about lighting and posture, and
+  it gets the two rules enforceable on free text: no construction that points
+  at somebody ("like", "in the style of", "-esque"), and no capital letter
+  anywhere but the first, since a name is capitalised and "leaning slightly
+  in, mid-question" has no reason to be. What that misses — a description with
+  neither, "the presenter from that programme about the bus" — is written down
+  in the module rather than implied away, and what limits it is that a note
+  can only modulate a character the axes have already fixed.
+
+  It is also why `--layout` exists. The sheet is the one artefact nobody can
+  un-make, so the mode that costs nothing draws the nine panels and the
+  sentence that will be generated from them, and somebody looks at it first.
+
+  The command moved from `persona-sheet.py` to `persona-sheet.mjs` for the
+  reason `restyle-script.mjs` is not Python: the part worth guarding is pure
+  and the suite that guards it is vitest.

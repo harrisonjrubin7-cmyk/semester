@@ -129,22 +129,26 @@ function offers(): Map<string, number[]> {
 }
 
 /**
- * The one pair that is real, left standing on purpose.
+ * Pairs that are real and are staying, each with the argument for it.
  *
- * `screens/Profile.tsx` offers `account` twice and both are on screen at once:
- * an `ActionButton` whose label is the sign-in state, and a `NavRow` under
- * "Your account and your data". The file argues for both, at both sites, and
- * three passes have now declined to settle it — it is a taste call about two
- * affordances rather than a defect, and the audit records it as the owner's to
- * name.
+ * **Empty, and it was not when this file was written.** It held one entry:
+ * `screens/Profile.tsx` offered `account` from an `ActionButton` and from a
+ * `NavRow`, both on screen at once. Four passes of `SIMPLIFY-AUDIT.md` left it
+ * standing as a taste call about two affordances; the owner settled it by
+ * removing the button, and `Profile.tsx` carries the reasoning at the site.
  *
- * Listed here rather than exempted silently, so that settling it means deleting
- * a line from this array and watching the test go green.
+ * The emptying is worth more than the entry was. The second case below asserts
+ * that everything named here still *exists*, so this array could not be left
+ * pointing at a duplicate somebody had already deleted — and when the button
+ * went, that case is what said so rather than a reader noticing months later.
+ *
+ * Anything added here later is a claim that a screen should offer one door
+ * twice, and wants the argument written beside it.
  */
-const ARGUED = ['screens/Profile.tsx · Profile · account'];
+const ARGUED: string[] = [];
 
 describe('no screen offers the same destination twice', () => {
-  it('finds only the pair the audit has left to the owner', () => {
+  it('finds no screen offering one destination twice', () => {
     const twice = [...offers()]
       .filter(([, lines]) => lines.length > 1)
       .map(([key, lines]) => `${key} (lines ${lines.join(', ')})`);

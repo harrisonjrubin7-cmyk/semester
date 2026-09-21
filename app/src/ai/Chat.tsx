@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react';
-import { faintLine } from '../lib/dim';
+import { faintLine, secondLine } from '../lib/dim';
 import { useNow, useStore } from '../state/store';
 import { TOUCH, WIDE, useMedia } from '../lib/media';
 import { chromeFor } from '../lib/chrome';
@@ -448,7 +448,7 @@ const QUIET = {
 /** The separator between two of those. Decoration, so no reader hears it. */
 function Dot() {
   return (
-    <span aria-hidden style={{ fontSize: 'var(--type-xs)', ...faintLine() }}>
+    <span aria-hidden style={{ fontSize: 'var(--type-xs)', ...secondLine() }}>
       ·
     </span>
   );

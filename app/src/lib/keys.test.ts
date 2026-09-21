@@ -85,7 +85,7 @@ describe('under a modal dialog', () => {
    * dismiss, and every shortcut went straight through it.
    *
    * `a11y/modal.ts` held the right selector in a `hasOpenModal` that nothing
-   * called; the twenty-fourth simplify pass moved it here and cut that.
+   * called; the twenty-fifth simplify pass moved it here and cut that.
    */
   const ringing = () => {
     document.body.innerHTML =

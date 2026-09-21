@@ -12,7 +12,7 @@ import { useEffect, useRef, type KeyboardEvent, type RefObject } from 'react';
  * and so missed `components/Ringing.tsx`, the alarm, which is correctly
  * `role="alertdialog"`.
  *
- * The twenty-fourth simplify pass moved the selector onto `underModal` and
+ * The twenty-fifth simplify pass moved the selector onto `underModal` and
  * cut this. One question, one answer, and it is the one that is called.
  */
 
