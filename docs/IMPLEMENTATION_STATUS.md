@@ -294,7 +294,7 @@ writes.
 - **Pathway:** prospective-to-alumni stage preference, school/program search over imported or entered records, application-material preparation, self-reported statuses, comparable cost estimates, reusable draft profile and essay handoff. Eleven customizable milestone templates cover applications, arrival, transfer, international arrival, dissertation, publication, clinical preparation, graduation, faculty launch, pilot rollout and appeals. Owners, deadlines, notes and local preparation history are editable. These are not official decisions, signatures, approvals or transcripts.
 - **Continuity:** Family and Pathway use account-scoped local stores independent of term. Their stage selection leaves all original coursework intact. New creative projects and portal selections reopen separately per app tab. A complete permanent identity lifecycle, alumni provisioning and school retention policy are still future work.
 
-The registry now contains **60 destinations**. The institution transport recognizes **37 service areas**. Each added service has a preparation entry point; the count is not a claim of 37 implemented live integrations.
+The registry now contains **58 destinations**. The institution transport recognizes **37 service areas**. Each added service has a preparation entry point; the count is not a claim of 37 implemented live integrations.
 
 ## Requested work: what can be done now
 

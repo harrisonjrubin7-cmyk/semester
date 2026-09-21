@@ -1,8 +1,9 @@
 # The app, from underneath — an engineering audit
 
 Seven `SIMPLIFY-AUDIT` passes have already asked *does this app do the same job
-twice?* and the answer, repeatedly, was no: 60 destinations, and the duplication
-that existed is gone. `SPEC-AUDIT.md` asks what is still missing against the
+twice?* and the answer, repeatedly, was no: sixty destinations at the time of
+those passes — **fifty-eight since `80fbc5c` folded `ahead` and `tonight` into
+Today's tabs** — and the duplication that existed is gone. `SPEC-AUDIT.md` asks what is still missing against the
 product vision and answers that too.
 
 So this pass asks the third question neither of those covers: **what does this
