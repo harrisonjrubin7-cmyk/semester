@@ -59,7 +59,7 @@ export function Avatar({ name, size = 40 }: { name: string; size?: number }) {
         fontSize: Math.round(size * 0.4),
         fontFamily: 'var(--font-heading)',
         letterSpacing: '0.04em',
-        lineHeight: 1,
+        lineHeight: 'var(--leading-none)',
         overflow: 'hidden',
       }}
     >

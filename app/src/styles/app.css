@@ -89,6 +89,11 @@
      that multiplier is what makes the text-size setting reach inline styles
      at all; a token that dropped it would silently disable the setting
      wherever it was adopted. See the note in App.tsx. */
+  /* Below `xs`, and not a display size: 10px is the springboard tile's
+     caption and the week grid's cell, 10.5 the caps kicker over a section.
+     38 sites between them, which is more than any step above `md` carries. */
+  --type-2xs: calc(10px * var(--text-scale, 1)); /* a tile's caption, a grid cell */
+  --type-2xs-plus: calc(10.5px * var(--text-scale, 1)); /* the caps kicker over a section */
   --type-xs: calc(11px * var(--text-scale, 1)); /* labels, kickers, meta */
   /*
    * The three half-steps, which the app used 462 times before the scale
@@ -201,6 +206,33 @@
    * this one. Recorded in the ledger, left for a pass that is about display
    * type.
    */
+  /*
+     Display leading, and it is a separate family rather than more steps on
+     the one below.
+
+     The body ramp runs 1.3 to 1.6 and answers "how much air between lines of
+     prose". These answer a different question: big type needs *less* leading,
+     not more, because the line box already carries it. Measured against the
+     font size written beside each one, that is exactly what the app does —
+     1.25 at 15-17px, 1.15 at 18-25, 1.08 and tighter past 26.
+
+     Named by the size each serves rather than by feel, because at 0.05 apart
+     "how it feels" stops being nameable — the note on the body ramp says the
+     same about its own names. The value is what the token promises; the band
+     is what it is for.
+
+     Six, because six are what the app uses seven or more times. Below that
+     the tail is 1.04, 1.05, 1.06, 1.14 and 1.16 — nine sites between them,
+     none used more than three times, and a token apiece would make this a
+     lookup table rather than a ramp.
+  */
+  --leading-none: 1; /* one line that sets its own box */
+  --leading-display-xl: 1.08; /* 30-60px */
+  --leading-display-lg: 1.1; /* 26-30px */
+  --leading-display: 1.15; /* 18-25px */
+  --leading-display-sm: 1.2; /* 15-20px */
+  --leading-display-xs: 1.25; /* 14-17px, a row's own title */
+
   --leading-tight: 1.3;
   --leading-tight-plus: 1.35;
   --leading-normal-minus: 1.4;

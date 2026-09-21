@@ -192,14 +192,23 @@ describe('the per-file ledger', () => {
   /*
    * Two off-scale values, in the two axes, so a test can move one at a time.
    *
-   * `1.15` rather than the `1.35` this used to carry: 1.35 became
-   * `--leading-tight-plus` when the ramp grew to seven steps, which left this
-   * fixture measuring `leading 0` and three cases here red. 1.15 is on the
-   * display tail that pass deliberately did not name — headline leading, a
-   * different job from the body ramp — so it is off the scale for a reason
-   * rather than by accident, which is what a fixture wants.
+   * `1.23`, and the reason is that the last two values here were chosen the
+   * way a person would and both got adopted out from under this file. 1.35
+   * became `--leading-tight-plus` when the ramp grew to seven steps. Its
+   * replacement, 1.15, was picked because headline leading was "a different
+   * job from the body ramp" and deliberately unnamed — and then the display
+   * ramp named it `--leading-display`, because 1.15 was the single most used
+   * line height in the app at twenty-three sites. Three cases here went red
+   * both times, for the same reason both times.
+   *
+   * The mistake was picking a plausible value. A fixture wants one nobody has
+   * a reason to adopt: 1.23 appears nowhere in the app, sits between two
+   * named steps rather than beyond the ends of the ramp, and is not a number
+   * anybody reaches for. If a later pass ever does name it, that is a signal
+   * worth having rather than an accident — but it will not, and that is the
+   * point of choosing it.
    */
-  const DRIFT = `export const x = <i style={{ padding: 14, lineHeight: 1.15 }} />;`;
+  const DRIFT = `export const x = <i style={{ padding: 14, lineHeight: 1.23 }} />;`;
 
   it('passes a file that owes exactly what the ledger says', () => {
     expect(overBudget(tree(DRIFT), { 'Probe.tsx': { leading: 1, space: 1 } })).toEqual([]);

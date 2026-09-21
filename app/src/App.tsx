@@ -355,7 +355,7 @@ function Header({
           style={{
             outline: 'none',
             fontSize: 'calc(23px * var(--text-scale, 1))',
-            lineHeight: 1.15,
+            lineHeight: 'var(--leading-display)',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',

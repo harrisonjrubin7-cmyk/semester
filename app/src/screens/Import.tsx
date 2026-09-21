@@ -504,7 +504,7 @@ export function Import() {
             : undefined
         }
       >
-      <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 1.08 }}>
+      <div className="chrome-text" style={{ fontSize: 'calc(28px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-xl)' }}>
         Upload it. Walk away.
       </div>
       <div style={{ fontSize: 'var(--type-md)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
@@ -1010,7 +1010,7 @@ function Rediff({
     <Folding name="Rediff">
       <SectionLabel>You already have {code}</SectionLabel>
       <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
-        <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 1.2, textWrap: 'pretty' }}>
+        <div className="chrome-text" style={{ fontSize: 'calc(20px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-sm)', textWrap: 'pretty' }}>
           {rediffSummary(changes)}
         </div>
         <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
@@ -1106,7 +1106,7 @@ function Preview({
     <Folding name="Review extracted information">
       <SectionLabel>Review your course</SectionLabel>
       <Blueprint style={{ padding: 'var(--sp-7)', background: 'var(--app-hero)' }}>
-        <div className="chrome-text" style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 1.1 }}>
+        <div className="chrome-text" style={{ fontSize: 'calc(24px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}>
           {m.course.code}
         </div>
         <div style={{ fontSize: 'var(--type-md)', marginTop: 'calc(3px * var(--density, 1))' }}>{m.course.name}</div>

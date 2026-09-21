@@ -410,7 +410,7 @@ export function Connect() {
 
   return (
     <Page>
-      <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', lineHeight: 1.1 }}>
+      <div className="chrome-text" style={{ fontSize: 'var(--type-xl)', lineHeight: 'var(--leading-display-lg)' }}>
         Everything in one place
       </div>
       <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', textWrap: 'pretty' }}>

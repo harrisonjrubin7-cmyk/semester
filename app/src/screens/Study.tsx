@@ -331,11 +331,11 @@ export function Study() {
         >
           <div className="kicker">Exam radar</div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-6)', marginTop: 'var(--sp-5)' }}>
-            <div className="chrome-text" style={{ fontSize: 'calc(38px * var(--text-scale, 1))', lineHeight: 1 }}>
+            <div className="chrome-text" style={{ fontSize: 'calc(38px * var(--text-scale, 1))', lineHeight: 'var(--leading-none)' }}>
               {exam.days}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(19px * var(--text-scale, 1))', lineHeight: 1.1 }}>
+              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 'calc(19px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-lg)' }}>
                 {exam.days === 1 ? 'day' : 'days'} to {exam.code} {exam.item.title}
               </div>
               <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>
@@ -1100,7 +1100,7 @@ export function Study() {
                   {s.minutes}m
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.25 }}>{s.name}</span>
+                  <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-display-xs)' }}>{s.name}</span>
                   {/* The code is set like every other code in the app; the
                       reason is a sentence and is set like one. Three clauses
                       of tracked capitals is a wall nobody reads, which would

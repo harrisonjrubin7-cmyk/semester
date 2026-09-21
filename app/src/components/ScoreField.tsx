@@ -124,7 +124,7 @@ export function ScoreField({
             // and still makes the row taller, which an absolute one would not.
             width: CAPTION,
             marginLeft: BOX - CAPTION,
-            fontSize: 'calc(10.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-2xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'calc(5px * var(--density, 1))',
             lineHeight: 'var(--leading-normal-minus)',

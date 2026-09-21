@@ -234,7 +234,7 @@ export function Notifications() {
             style={{
               fontFamily: 'var(--font-heading)',
               fontSize: 'calc(19px * var(--text-scale, 1))',
-              lineHeight: 1.15,
+              lineHeight: 'var(--leading-display)',
               marginTop: 'var(--sp-4)',
             }}
           >

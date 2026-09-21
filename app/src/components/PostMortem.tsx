@@ -125,7 +125,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
             style={{ ...chip(draft.kinds.includes(k.id)), textAlign: 'left', width: '100%' }}
           >
             <span style={{ display: 'block' }}>{k.label}</span>
-            <span style={{ display: 'block', fontSize: 'calc(10.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
+            <span style={{ display: 'block', fontSize: 'var(--type-2xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
               {k.blurb}
             </span>
           </button>

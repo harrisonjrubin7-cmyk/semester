@@ -98,7 +98,7 @@ const TITLE = {
 const BEAT_TITLE = {
   fontFamily: 'var(--font-heading)',
   fontSize: 'calc(22px * var(--text-scale, 1))',
-  lineHeight: 1.15,
+  lineHeight: 'var(--leading-display)',
   marginTop: 'var(--sp-5)',
   textWrap: 'pretty',
 } as const;
@@ -270,7 +270,7 @@ export function LessonPlayer() {
             {cue?.kind === 'title' || cue?.kind === 'close' ? (
               <div
                 className="chrome-text"
-                style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 1.08, marginTop: 'var(--sp-5)', textWrap: 'pretty' }}
+                style={{ fontSize: 'calc(30px * var(--text-scale, 1))', lineHeight: 'var(--leading-display-xl)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}
               >
                 {cue.text}
               </div>
@@ -280,7 +280,7 @@ export function LessonPlayer() {
                   style={{
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'calc(22px * var(--text-scale, 1))',
-                    lineHeight: 1.15,
+                    lineHeight: 'var(--leading-display)',
                     marginTop: 'var(--sp-5)',
                     textWrap: 'pretty',
                     ...secondLine(cue?.kind !== 'a'),
