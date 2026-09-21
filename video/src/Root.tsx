@@ -2,6 +2,7 @@ import { Composition } from 'remotion';
 import { durationFor, LessonVideo, type LessonVideoProps } from './Lesson';
 import { shortDuration, ShortVideo, type ShortVideoProps } from './Short';
 import { Documentary, documentaryDuration, type DocumentaryProps } from './Documentary';
+import { Explainer, explainerDuration, type ExplainerProps } from './Explainer';
 import {
   Persona,
   PERSONA_HEIGHT,
@@ -112,6 +113,81 @@ const PLACEHOLDER_PERSONA = {
   accent: 'copper',
 };
 
+/*
+ * The first two units of ECON, which is a real explainer that happens to be
+ * short. The studio opens on it, so the hook and the unit spine are both
+ * doing something rather than holding placeholder text.
+ */
+const PLACEHOLDER_EXPLAINER = {
+  code: 'ECON 1020',
+  title: 'ECON 1020 — units 1–2',
+  ...{
+    'units': [
+      {
+        'unit': 0,
+        'title': 'How to actually pass this class',
+        'file': '/audio/lessons/econ/unit-0.mp3',
+        'at': 0,
+        'seconds': 106
+      },
+      {
+        'unit': 1,
+        'title': 'What economics is',
+        'file': '/audio/lessons/econ/unit-1.mp3',
+        'at': 106.8,
+        'seconds': 69
+      }
+    ],
+    'cues': [
+      {
+        'at': 0,
+        'kind': 'title',
+        'text': 'How to actually pass this class',
+        'unit': 0
+      },
+      {
+        'at': 5.19,
+        'kind': 'q',
+        'text': 'How is the grade built?',
+        'unit': 0
+      },
+      {
+        'at': 8.92,
+        'kind': 'a',
+        'text': '80% exams, 20% problem sets, plus up to 3% extra credit from Top Hat. Your best exam counts 30%, the other two 25% each \u2014 or swap Midterm 3 for a comprehensive final worth 40% if it helps.',
+        'unit': 0
+      },
+      {
+        'at': 24.56,
+        'kind': 'q',
+        'text': 'What quietly protects you in the syllabus?',
+        'unit': 0
+      },
+      {
+        'at': 29.22,
+        'kind': 'a',
+        'text': 'Your lowest problem set is dropped (missing ones can be emailed at term\u2019s end for 50%), and about five classes of Top Hat are excused. But no pset extensions, ever.',
+        'unit': 0
+      },
+      {
+        'at': 39.47,
+        'kind': 'q',
+        'text': 'Step 1 of the four-step method?',
+        'unit': 0
+      }
+    ],
+    'hook': {
+      'until': 8.92,
+      'questions': [
+        'Define economics and an economic agent.'
+      ]
+    },
+    'seconds': 175.8
+  },
+  ground: 'ink',
+  accent: 'sterling',
+};
+
 export function Root() {
   return (
     <>
@@ -160,6 +236,18 @@ export function Root() {
       defaultProps={{ ...PLACEHOLDER_DOC, ground: 'ink', accent: 'sterling' } as DocumentaryProps}
       calculateMetadata={({ props }) => ({
         durationInFrames: documentaryDuration(props.render, FPS),
+      })}
+    />
+    <Composition
+      id="Explainer"
+      component={Explainer}
+      durationInFrames={explainerDuration(PLACEHOLDER_EXPLAINER.seconds, FPS)}
+      fps={FPS}
+      width={WIDTH}
+      height={HEIGHT}
+      defaultProps={PLACEHOLDER_EXPLAINER as unknown as ExplainerProps}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: explainerDuration(props.seconds, FPS),
       })}
     />
     <Composition

@@ -20,6 +20,8 @@ align-audio.mjs  recover where every line starts, from the episode itself
 align.mjs        the arithmetic that does it, pure
 shorts.py        lessons → one vertical short per flashcard
 documentary.py   podcast episode → a documentary cut of it
+explainer.py     lessons → one YouTube-length video of a course
+explainer.mjs    which units fit, where they land, and what the hook promises
 restyle-script.mjs  script → the same script in a hosting style (calls a model)
 styles.mjs       the hosting styles, as structural parameters
 persona-sheet.mjs   persona → its character reference sheet
@@ -68,6 +70,43 @@ script, or any chapter mark is missed, nothing is written and it says why.
 Where these formats go next — movie-format lessons, one short per flashcard,
 several podcast hosting styles from one draft, and what each of those actually
 costs — is in [`../docs/VIDEO_PODCAST_ROADMAP.md`](../docs/VIDEO_PODCAST_ROADMAP.md).
+
+## The YouTube-length explainer
+
+```bash
+python3 pipeline/explainer.py econ --dry-run    # the plan and the chapters
+python3 pipeline/explainer.py econ              # 8–15 minutes of it
+python3 pipeline/explainer.py econ --from 0 --to 5
+```
+
+A run of a course's units played in order, with a hook over the opening and a
+chapter mark on every unit boundary. Nothing is synthesised: the audio is the
+unit MP3s the app already serves, sequenced, and the cue list is those units'
+own cues offset onto one timeline — the same move the shorts make.
+
+**It is always a truncation.** Measured from unit 0, counting the beat between
+units:
+
+| course | units | length | left out |
+| --- | --- | --- | --- |
+| econ | 10 of 11 | 13:48 | 1 |
+| bus | 9 of 13 | 13:37 | 4 |
+| psci | 7 of 14 | 13:06 | 7 |
+| core | 5 of 6 | 12:35 | 1 |
+
+Not one fits whole. ECON is closest — eleven units is 15:00 of narration
+exactly, and the ten beats between them put it eight seconds over the ceiling.
+
+**The hook ends on a cue, not on the number.** The roadmap asks for one in the
+first fifteen seconds; this takes the last cue at or before 15s, so the cut to
+the first slide lands where a sentence starts. For ECON that is 8.92s: the
+title and the first question are the hook, and the cut happens as the answer
+begins. What it promises is drawn from the units *after* the first, because the
+narration underneath is already asking and answering something and listing that
+question would be reading the viewer their own subtitles.
+
+A `chapters.txt` lands beside the MP4, first mark at `0:00`, ready to paste
+into a description box.
 
 ## B-roll for a documentary cut
 
