@@ -500,6 +500,7 @@ const MOCKS_MODULES = [
   'src/data/seed.test.ts',
   'src/components/rework.test.tsx',
   'src/components/StudyStudio.test.tsx',
+  'src/components/gpascalenote.test.tsx',
   'src/lib/extract.test.ts',
   'src/lib/referral.test.ts',
   'src/lib/generate.test.ts',
