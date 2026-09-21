@@ -14,6 +14,27 @@
 -- used throughout so that applying it to an *empty* database is safe, which is
 -- how it is verified, and that is the only place it should ever run.
 --
+-- ## How far through the ledger this reaches
+--
+-- SNAPSHOT-THROUGH: 20260921002658
+--
+-- That line is read by `supabase/rehearse.sh` and is not decoration. This file
+-- was generated when the live ledger had **twenty-one rows**, the last of them
+-- `20260921002658_revoke_function_execute_from_supabase_default_roles`. The
+-- ledger has thirty-seven now, so this file is sixteen rows behind it.
+--
+-- The rehearsal has to know that. It starts from this file and applies only
+-- what is newer than the ledger's *newest* row, so without the line above it
+-- would assume everything up to `20260921211500` were already here — and
+-- silently rehearse a deploy against a schema missing `public.forms`,
+-- `public.lti_platform`, `public.schools`, `public.app_admins` and
+-- `private.is_app_admin()`, among others. The first migration to reference one
+-- of those failed with `function private.is_app_admin() does not exist`, on a
+-- branch whose own SQL was sound.
+--
+-- **Whoever regenerates this file updates this line in the same commit.** It is
+-- the one fact about the snapshot that cannot be derived from its contents.
+--
 -- ## What it does not contain
 --
 -- Data. Roles, extensions and the `auth`/`storage`/`realtime` schemas Supabase
