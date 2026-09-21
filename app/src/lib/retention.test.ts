@@ -109,6 +109,11 @@ const NOT_TABLES = new Set([
   'pg_cron',
   'note_access',
   'sweep_tombstones',
+  // Migrations, named where the document explains which have not been applied
+  // to production. `forms` and `access_log` are in that list too and are left
+  // out of this one, because those two are also real tables.
+  'usage_atomic',
+  'group_columns_pinned',
   'deleteEverything',
   'KEPT_TABLES',
   'tombstones',
