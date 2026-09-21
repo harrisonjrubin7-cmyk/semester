@@ -24,6 +24,31 @@ will happily serve you the copy you already had.
 
 ## Unreleased
 
+### A quotation in a study guide now tells you where in your material it is
+
+Open *View cited material* under any section of a generated study guide. It
+used to name the source — "Prepared course guide · Unit 1; original page not
+recorded" — and then print the whole source underneath for you to search by
+eye. It now names the place: *characters 27–65*, with the paragraph too where
+the material has paragraphs, and shows the quotation underlined inside the few
+lines either side of it instead of the entire text.
+
+Nothing changed about which quotations are accepted. Every guide has always
+been refused outright if a quotation could not be matched to the material you
+selected, and that is unchanged — including the small number of quotations the
+app can verify but cannot pin down (an accent written as two characters in your
+file and one in the quotation, for instance). Those still appear, still
+verified, and simply show the source without a location rather than a location
+the app did not find.
+
+The locators that end "original page not recorded" still say so. A prepared
+course guide, a pasted excerpt and a PDF with no page structure genuinely have
+no page in the original, and a sentence claiming otherwise would be the thing
+worth distrusting. You now get both: what the original does not have, and where
+inside it the quotation sits.
+
+Nothing to do. Guides you already saved keep the wording they were saved with.
+
 ### Your university can send its own data as a file, and you load it
 
 Until now there were two ways to tell Semester where you study: find your
