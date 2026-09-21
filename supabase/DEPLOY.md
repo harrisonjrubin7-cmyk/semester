@@ -164,6 +164,28 @@ signed `id_token`, checked against the keys the platform publishes and then
 claim by claim against the registration below — `supabase/functions/_shared/lti.ts`
 is that check and `app/src/lib/lti.test.ts` walks every refusal in it.
 
+### The tool's own key
+
+    supabase secrets set LTI_PRIVATE_KEY='{"kty":"RSA","n":"…","e":"AQAB","d":"…", …}'
+
+An RS256 JWK, private half included. It lives as a function secret for the
+same reason `VAPID_PRIVATE_KEY` does — a signing key used only by an Edge
+Function, with its public half published on purpose — and not in the Vault,
+which holds only the one secret Postgres itself has to read.
+
+Its public half is served at:
+
+    …/functions/v1/lti/jwks
+
+**That address is the third thing a school's administrator needs**, alongside
+the two below, and they need it while they are registering the tool rather
+than afterwards: Brightspace asks for a JWKS URL during the install. With no
+key set the endpoint answers 503 and says so, and **launches keep working** —
+a launch is the platform proving itself to us and needs nothing of ours.
+
+Nothing signs with the key yet. Grade passback and deep linking are what will,
+and neither is built.
+
 ### Registering a school
 
 Nothing in the app writes `public.lti_platform`, deliberately: an account that
@@ -182,6 +204,20 @@ values
    'https://brightspace.vanderbilt.edu/d2l/.well-known/jwks',
    'Vanderbilt University');
 ```
+
+`token_url` is a fourth column and is **null until somebody fills it in**. It
+is where the platform hands out access tokens for calling back into it, which
+a launch never does — so it can be left out now and added when grade passback
+exists. Brightspace's is not on the school's own host:
+
+```sql
+update public.lti_platform
+   set token_url = 'https://auth.brightspace.com/core/connect/token'
+ where issuer = 'https://brightspace.vanderbilt.edu';
+```
+
+There is deliberately no default. The value is where this tool posts a
+*signed assertion*, and a guess sends it to somebody else's server.
 
 **One row per deployment, not per school.** A university with separate
 Brightspace orgs for its schools is the ordinary case, and the deployment id is

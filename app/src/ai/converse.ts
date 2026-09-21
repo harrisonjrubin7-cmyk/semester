@@ -11,6 +11,7 @@ import { answerLocally, type Local } from '../lib/localask';
 import { offered, type Destination } from '../lib/nav';
 import { monthStart, read as readSpend, since, total } from '../lib/spend';
 import { proposalsLine, readProposal, TOOLS, undoFor, type Known, type Lists, type Proposal } from '../lib/tools';
+import { taking } from '../lib/reach';
 import { toolsFor } from '../lib/toolscope';
 import { isLookup, LOOKUPS, MOST_ROUNDS, runLookups } from '../lib/lookup';
 import { currentLook } from '../state/shape';
@@ -45,6 +46,9 @@ import { dropThread, flight, keepTurns, newThread, openThread, sender, setLive, 
  * It is not what makes the two surfaces agree — a write on change is not a
  * subscription, and a copy that has already mounted never hears it.
  */
+
+import type { Held } from './live';
+export type { Held } from './live';
 
 export interface Conversation {
   turns: Turn[];
@@ -88,6 +92,17 @@ export interface Conversation {
   send: (text: string, from?: Turn[]) => Promise<void>;
   stop: () => void;
   run: (p: Proposal) => void;
+  /**
+   * The one waiting on a second answer, or null.
+   *
+   * Set only for a proposal reaching past your own device. It is out of
+   * `proposals` while it is here, so a held offer cannot be shown twice.
+   */
+  holding: Held | null;
+  /** Take the held one. */
+  confirm: () => void;
+  /** Drop it. Nothing happened. */
+  letGo: () => void;
   takeBack: (entry: { p: Proposal; before: Lists }) => void;
   /** Start a new conversation, keeping the one you were in. */
   clear: () => void;
@@ -428,13 +443,10 @@ export function useConversation(): Conversation {
               }
               const p = readProposal(call, held);
               if (!p) return;
-              // A view change on the screen you are already looking at runs now:
-              // you can see the filter land and see it go, so a card asking
-              // permission to narrow the list in front of you is pure friction.
-              if (p.sort === 'view' && p.screen === state.screen) {
-                if (p.search) dispatch({ type: 'setQuery', query: p.search });
-                return;
-              }
+              // A card offering to take you where you already are is noise, so
+              // it is dropped rather than shown. It used to dispatch a search
+              // here as well; nothing read it — see the note on `Proposal`.
+              if (p.sort === 'view' && p.screen === state.screen) return;
               setProposals((was) => (was.some((q) => q.id === p.id) ? was : [...was, p]));
             },
             onUsage: (u) => {
@@ -541,7 +553,9 @@ export function useConversation(): Conversation {
         setBusy(false);
       }
     },
-    [busy, turns, remember, trouble, ai, state, catalog, now, school, systemFor, held, dispatch],
+    // No `dispatch`: the one call `send` made was the search the card
+    // promised and no screen ran. See the note on `Proposal` in `lib/tools.ts`.
+    [busy, turns, remember, trouble, ai, state, catalog, now, school, systemFor, held],
   );
 
   /*
@@ -556,11 +570,21 @@ export function useConversation(): Conversation {
     sender.run = send;
   }, [send]);
 
-  const run = useCallback(
+  /*
+   * A proposal that has been offered a second time and not yet answered.
+   *
+   * Only ever set for a proposal whose `reach` is past your own device. It
+   * stays out of `proposals` while it is here so the list cannot show it
+   * twice, and `Chat.tsx` draws it with the sentence saying what cannot be
+   * taken back — which is the thing being agreed to, and is not "are you
+   * sure".
+   */
+  const holding = live.holding;
+
+  const apply = useCallback(
     (p: Proposal) => {
       const before = lists();
       dispatch(p.action);
-      if (p.sort === 'view' && p.search) dispatch({ type: 'setQuery', query: p.search });
       setProposals((was) => was.filter((q) => q.id !== p.id));
       // A view keeps no row: you are somewhere else now, and going back is the
       // undo. Only writes leave something to take back.
@@ -568,6 +592,39 @@ export function useConversation(): Conversation {
     },
     [dispatch, lists],
   );
+
+  /*
+   * One tap, unless the proposal reaches further than your own device.
+   *
+   * `taking` decides, in `lib/reach.ts`, because the loop asking
+   * `needsMoreThanATap` inline would be the second place that knows — and the
+   * second place is the one that gets missed when a level is added.
+   *
+   * A held proposal is removed from the list rather than left in it: a button
+   * that stays after being pressed reads as a press that failed.
+   */
+  const run = useCallback(
+    (p: Proposal) => {
+      const how = taking(p.reach, false);
+      if (!how.take) {
+        setProposals((was) => was.filter((q) => q.id !== p.id));
+        setLive('holding', { p, because: how.because });
+        return;
+      }
+      apply(p);
+    },
+    [apply],
+  );
+
+  /** Take the held one. The only caller that may say the tap already happened. */
+  const confirm = useCallback(() => {
+    if (!holding) return;
+    setLive('holding', null);
+    apply(holding.p);
+  }, [apply, holding]);
+
+  /** Drop it. Nothing happened, and the proposal does not come back. */
+  const letGo = useCallback(() => setLive('holding', null), []);
 
   const takeBack = useCallback(
     (entry: { p: Proposal; before: Lists }) => {
@@ -590,6 +647,9 @@ export function useConversation(): Conversation {
   );
 
   return {
+    holding,
+    confirm,
+    letGo,
     turns,
     streaming,
     busy,

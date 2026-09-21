@@ -162,7 +162,7 @@ describe('the counts, given a key twice', () => {
     const t = tallyKeys(twice, reviews);
     expect(t).toMatchObject({ cards: 1, right: 3, wrong: 1 });
 
-    expect(tallyBy(reviews, [{ courseId: 'econ', questions: ['Shared question?', 'Shared question?'] }]))
+    expect(tallyBy(reviews, [{ courseId: 'econ', cards: [{ q: 'Shared question?' }, { q: 'Shared question?' }] }]))
       .toEqual({ econ: { right: 3, wrong: 1 } });
   });
 });

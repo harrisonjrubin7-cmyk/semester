@@ -217,6 +217,54 @@ export function toBibtex(list: Source[]): string {
     .join('\n\n');
 }
 
+/**
+ * What to call this list, given what it is narrowed to.
+ *
+ * The screen builds a heading out of the two pickers above the list, and the
+ * heading is not only a heading: it is the `# ` title of the exported reading
+ * list and, through {@link listFile}, the name of both downloaded files. So a
+ * scope that does not read as English follows a student out of the app.
+ *
+ * It did. The course picker's first option is labelled *Everything*, which is
+ * the right word in a dropdown and the wrong one in front of a noun, and the
+ * screen was using the option's label as the scope — so the default state of
+ * the screen, the one nobody has to choose, was headed **"Everything sources"**
+ * and exported `everything-sources.md` titled `# Everything sources`.
+ *
+ * The fix is not a rename of that option. A picker names a choice and a
+ * heading names a list, and the reason this went wrong is that one string was
+ * asked to do both jobs. They are separate here:
+ *
+ * - a course and a project → `ECON 1020 · Midterm paper sources`
+ * - a course alone → `ECON 1020 sources`
+ * - a project alone → `Midterm paper sources`, because the project already
+ *   names the list and "All · Midterm paper" would be naming the absence of a
+ *   narrowing that the next word contradicts
+ * - neither → `All sources`
+ */
+export function listName(course: string, project: string): string {
+  const scope = [course.trim(), project.trim()].filter(Boolean).join(' · ');
+  return scope ? `${scope} sources` : 'All sources';
+}
+
+/**
+ * That name as a file name.
+ *
+ * Two download buttons built this the same way inline, which is one copy too
+ * many of a rule about what a file may be called. Runs of anything that is not
+ * a word character become one dash — that is what collapses the `·` — and the
+ * dashes are then trimmed off both ends, which the inline version did not do:
+ * a project named `(draft)` produced `-draft-sources.bib`, a leading dash that
+ * some tools read as the start of an option rather than a name.
+ *
+ * An empty result falls back rather than producing a file called `.md`, which
+ * is a hidden file on every system this app runs on.
+ */
+export function listFile(name: string, extension: string): string {
+  const stem = name.toLowerCase().replace(/[^\w]+/g, '-').replace(/^-+|-+$/g, '');
+  return `${stem || 'sources'}.${extension}`;
+}
+
 /** The list as a markdown reading list, with what each is for. */
 export function toMarkdown(list: Source[], heading: string): string {
   const lines = [`# ${heading}`, ''];

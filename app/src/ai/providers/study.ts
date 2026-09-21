@@ -1,5 +1,5 @@
 import { datedItems } from '../../lib/select';
-import { cardKey, dueCount } from '../../lib/review';
+import { cardIdentity, dueCount } from '../../lib/review';
 import { inTime, testsNear } from '../../lib/intime';
 import type { Provide } from '../shape';
 import { guideNow, standingNow, startedNow, type Look } from '../shape';
@@ -229,7 +229,7 @@ export const tonight: Provide = (look) => {
     // it has never been seen or its interval has run out. See `lib/review.ts`.
     const ready = guide
       ? dueCount(
-          guide.units.flatMap((u) => u.cards.map((card) => cardKey(c.id, card.q))),
+          guide.units.flatMap((u) => u.cards.map((card) => cardIdentity(c.id, card))),
           schedule,
           now.getTime(),
         )

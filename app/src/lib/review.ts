@@ -46,17 +46,54 @@ const MIN_EASE = 1.3;
 const START_EASE = 2.5;
 
 /**
- * A stable key for a card.
+ * A card's identity to the review system.
  *
- * Cards are `{q, a}` with no id, so identity has to come from the content. The
- * question is what identifies a card to a person, so it is what identifies it
- * here: hashed, because the raw text would put kilobytes of duplicated prose in
- * localStorage and then in every sync.
+ * Prefer this over {@link cardKey} wherever the card itself is in hand, which
+ * is everywhere but the two callers that are handed a list of question strings
+ * and nothing else.
  *
- * The trade-off is stated plainly: reword a question and its history starts
- * over. That is the right failure — a materially different question deserves to
- * be re-learned, and pretending otherwise would credit you for work you did on
- * a different card.
+ * ## Why the question stopped being the identity
+ *
+ * It was, and the argument for it was not silly: a materially different
+ * question deserves to be re-learned, and crediting the new wording with the
+ * old card's work would be crediting you for something else. What that
+ * argument leaves out is that the app cannot tell the two cases apart. A typo
+ * fixed in a guide, a sentence tightened, a question rewritten to say the same
+ * thing — all of them read to `cardKey` as a new card, and the student's
+ * record of the old one becomes a row nothing will ever look up again. It goes
+ * silently: nothing tells them, and the mastery figure the guide draws simply
+ * falls back to the shipped estimate.
+ *
+ * Measured before changing it: across this repository's whole history, no
+ * shipped question has ever been edited — 325 `q:` lines added to
+ * `src/data/`, 0 removed — so the failure has never fired. It is a loaded
+ * gun rather than a wound, and the cost of unloading it turned out to be
+ * nothing, which is the only reason to do it now rather than after it goes
+ * off.
+ *
+ * ## Why this needed no migration
+ *
+ * Every id on the 324 shipped cards was minted as the hash `cardKey` already
+ * returns for that card's question, so `cardIdentity` and `cardKey` agree on
+ * every card in the app today, character for character. Nothing stored moves.
+ * What changes is only what happens *next* time a question is edited: the id
+ * stays put, so the history does.
+ *
+ * A card with no id keeps the old behaviour exactly. That is deliberate — a
+ * card somebody adds without one is no worse off than every card was
+ * yesterday.
+ */
+export function cardIdentity(courseId: string, card: { id?: string; q: string }): string {
+  return card.id ? `${courseId}:${card.id}` : cardKey(courseId, card.q);
+}
+
+/**
+ * A card's identity derived from its question alone.
+ *
+ * The fallback {@link cardIdentity} uses for a card with no id, and the only
+ * thing available to the two callers that are handed questions rather than
+ * cards. Hashed, because the raw text would put kilobytes of duplicated prose
+ * in localStorage and then in every sync.
  */
 export function cardKey(courseId: string, question: string): string {
   // FNV-1a, 32-bit. Small, fast, and good enough for a few thousand cards.
@@ -398,24 +435,30 @@ function totals(all: CardReview[]): Tally {
 /**
  * The same tally, split by course.
  *
- * A card's key is a hash of its question, so a course cannot be recovered from
- * one — the caller hands over each course's questions and the keys are
- * recomputed. Done this way round so this file stays free of the catalogue,
- * which imports half the app.
+ * A card's key carries no course in a form this file can read back, so the
+ * caller hands over each course's cards and the keys are recomputed. Done this
+ * way round so this file stays free of the catalogue, which imports half the
+ * app.
+ *
+ * Cards rather than question strings, since {@link cardIdentity} is the thing
+ * that decides a key and it needs the card. Handing over questions worked only
+ * for as long as the two agreed, which is to say only until the first reworded
+ * question — the failure this whole pass is about, arriving here as a course
+ * quietly tallying nothing.
  *
  * Only cards you have actually answered count. A deck of two hundred you have
  * never opened is not evidence of anything.
  */
 export function tallyBy(
   reviews: Reviews,
-  decks: { courseId: string; questions: string[] }[],
+  decks: { courseId: string; cards: { id?: string; q: string }[] }[],
 ): Record<string, { right: number; wrong: number }> {
   const out: Record<string, { right: number; wrong: number }> = {};
   for (const deck of decks) {
     let right = 0;
     let wrong = 0;
-    for (const q of distinct(deck.questions)) {
-      const r = reviews[cardKey(deck.courseId, q)];
+    for (const key of distinct(deck.cards.map((c) => cardIdentity(deck.courseId, c)))) {
+      const r = reviews[key];
       if (!r || r.seen === 0) continue;
       right += r.right;
       wrong += r.wrong;

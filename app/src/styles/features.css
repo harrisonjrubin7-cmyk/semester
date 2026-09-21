@@ -183,6 +183,12 @@
 .study-source-list small, .study-format-list small{display:block;color:var(--app-dim);line-height:1.5;margin-top:calc(5px * var(--density, 1));font-size:calc(12px * var(--text-scale, 1))}
 .study-source-list button{border:0;background:none;color:var(--app-accent-deep);min-height:32px}
 .study-source-preview pre, .studio-section pre{white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit;max-height:300px;overflow:auto;font-size:calc(13px * var(--text-scale, 1))}
+/* The quotation shown where it sits, rather than a dump of the whole source.
+   The highlight is a rule under the words and not a coloured ground: the
+   marked run keeps the panel's own ink, so it has nothing new to contrast
+   against on any of the thirteen grounds `lib/look.ts` can put behind it. */
+.study-cite-place{white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;font-size:calc(13px * var(--text-scale, 1));line-height:1.7;color:var(--app-dim)}
+.study-cite-place mark{background:none;color:var(--app-ink);font-weight:600;box-shadow:inset 0 -2px var(--app-accent-bright)}
 .study-controls{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(16px * var(--density, 1))!important}
 .study-controls label{display:flex;flex-direction:column;gap:calc(8px * var(--density, 1))}
 .study-question-types{display:flex;gap:calc(16px * var(--density, 1));flex-wrap:wrap;margin:calc(20px * var(--density, 1)) 0!important}

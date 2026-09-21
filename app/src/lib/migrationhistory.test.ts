@@ -54,7 +54,7 @@ describe('the recovered migration history', () => {
      * arriving is a decision somebody makes here rather than a number that
      * drifts.
      */
-    expect(manifest()).toHaveLength(12);
+    expect(manifest()).toHaveLength(13);
   });
 
   it('holds exactly the files the manifest names, and no others', () => {
