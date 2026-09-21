@@ -6,6 +6,7 @@ import { NOTIF_DEFS } from '../data/misc';
 import { Check } from '../components/Icons';
 import type { Catalog } from '../data/catalog';
 import { SchoolPicker } from '../components/SchoolPicker';
+import { TermChoice } from '../components/TermChoice';
 import { Credentials } from '../components/Credentials';
 import { cloudConfigured } from '../lib/cloud';
 import { costShort } from '../lib/allowance';
@@ -64,16 +65,21 @@ function steps(cat: Catalog, tone: Tone, hasAccount: boolean) {
     },
     {
       k: 'Step 3 of 5',
-      t: 'Where do you study?',
+      t: 'When and where do you study?',
       /*
-       * Asked, and genuinely optional.
+       * Two questions on one screen, and they are not equally optional.
        *
-       * What it buys is small and specific: the meal screen, the move-out
-       * countdown, the campus map, and the app calling your registrar by the
-       * name you call it. What it does not touch is everything anybody comes
-       * here for — so the skip below is a real path and is worded like one.
+       * The **term** is what every course added from here is stamped with, and
+       * a bare month resolves to a year against it — so it is load-bearing,
+       * and it is answered with the calendar's guess rather than left blank.
+       *
+       * The **school** buys something small and specific: the meal screen, the
+       * move-out countdown, the campus map, and the app calling your registrar
+       * by the name you call it. What it does not touch is everything anybody
+       * comes here for — so the skip below is a real path and is worded like
+       * one. The sentence says which of the two is which.
        */
-      b: 'It switches on the handful of screens that only make sense on a campus, and changes a few words. Everything else works without it.',
+      b: 'The semester is what your deadlines get filed under, so it is worth a glance. The school switches on the handful of screens that only make sense on a campus — everything else works without it.',
       cta: 'Next',
     },
     {
@@ -308,8 +314,19 @@ export function Onboarding() {
         </div>
       )}
 
+      {/*
+        School and term together, because they are one question.
+
+        The term used to be answered by a constant — `2026FA`, correct in the
+        week it was written — and never asked. A fresh install now starts on
+        the term of the day it is opened (`freshPersisted` in `state/shape`),
+        which is the right guess and still a guess; this is where it is put to
+        the student. The school is optional and says so; the term is not, and
+        has a default rather than a skip.
+      */}
       {state.onb === 2 && (
-        <div style={{ marginTop: 'calc(26px * var(--density, 1))' }}>
+        <div style={{ marginTop: 'calc(26px * var(--density, 1))', display: 'flex', flexDirection: 'column', gap: 'var(--sp-7)' }}>
+          <TermChoice />
           <SchoolPicker />
         </div>
       )}
