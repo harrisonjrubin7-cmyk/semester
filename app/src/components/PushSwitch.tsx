@@ -147,7 +147,7 @@ export function PushSwitch() {
         className="btn btn-secondary btn-block"
         disabled={busy || Boolean(blocked)}
         onClick={() => void (on ? turnOff() : turnOn())}
-        style={{ height: 40, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+        style={{ height: 40, fontSize: 'var(--type-sm-plus)' }}
       >
         {busy ? 'Just a moment…' : on ? 'Stop sending reminders to this device' : 'Send reminders to this device'}
       </button>

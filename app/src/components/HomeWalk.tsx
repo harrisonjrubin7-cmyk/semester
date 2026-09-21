@@ -76,8 +76,8 @@ export function HomeWalk() {
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        padding: '12px 14px',
-        marginBottom: 14,
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
+        marginBottom: 'calc(14px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
         // The morning card is about getting to one particular class, so it
@@ -90,7 +90,7 @@ export function HomeWalk() {
     >
       <div className="kicker">{morning ? 'Before your first class' : 'Move-out'}</div>
       {morning ? (
-        <div style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 1.4, marginTop: 5, textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-normal-minus)', marginTop: 'calc(5px * var(--density, 1))', textWrap: 'pretty' }}>
           {morning}
         </div>
       ) : null}

@@ -69,11 +69,11 @@ export function Applying() {
     <Page
     >
         <>
-      <Blueprint style={{ padding: '14px 15px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="kicker">Where it stands</div>
         <div
           className="chrome-text"
-          style={{ marginTop: 5, fontSize: 'var(--type-md)', textWrap: 'pretty' }}
+          style={{ marginTop: 'calc(5px * var(--density, 1))', fontSize: 'var(--type-md)', textWrap: 'pretty' }}
         >
           {summary(state.applications, now)}
         </div>
@@ -87,7 +87,7 @@ export function Applying() {
         ]}
         value={tab}
         onChange={setTab}
-        style={{ margin: '16px 0' }}
+        style={{ marginBlock: 'calc(16px * var(--density, 1))', marginInline: '0' }}
       />
 
       {tab === 'add' ? <AddOne onAdded={() => setTab('open')} /> : null}
@@ -102,9 +102,9 @@ export function Applying() {
         ) : (
           <p
             style={{
-              fontSize: 'calc(12.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-sm-plus)',
               color: 'var(--app-dim)',
-              lineHeight: 1.55,
+              lineHeight: 'var(--leading-relaxed-plus)',
               textWrap: 'pretty',
             }}
           >
@@ -123,7 +123,7 @@ export function Applying() {
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+          <p style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>
             Nothing closed out yet.
           </p>
         )
@@ -143,7 +143,7 @@ function Row({ a }: { a: Application }) {
   const url = safeUrl(a.url);
 
   return (
-    <Blueprint style={{ padding: '13px 14px' }}>
+    <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
       <button
         type="button"
         className="bare tappable"
@@ -162,9 +162,9 @@ function Row({ a }: { a: Application }) {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
-            marginTop: 3,
+            marginTop: 'calc(3px * var(--density, 1))',
             textWrap: 'pretty',
           }}
         >
@@ -176,11 +176,11 @@ function Row({ a }: { a: Application }) {
         <div
           style={{
             marginTop: 'var(--sp-4)',
-            padding: '8px 10px',
+            paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             background: 'var(--app-warn-wash)',
             border: '1px solid var(--app-warn-line)',
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}
@@ -191,7 +191,7 @@ function Row({ a }: { a: Application }) {
       ) : null}
 
       {open ? (
-        <div style={{ marginTop: 11 }}>
+        <div style={{ marginTop: 'calc(11px * var(--density, 1))' }}>
           <div className="kicker">Move it</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)', marginTop: 'var(--sp-3)' }}>
             {STAGES.map((s) => (
@@ -203,10 +203,10 @@ function Row({ a }: { a: Application }) {
                 onClick={() => dispatch({ type: 'moveApplication', id: a.id, stage: s.id })}
                 style={{
                   width: 'auto',
-                  padding: '7px 11px',
+                  paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: `1px solid ${a.stage === s.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                 }}
               >
                 {s.label}
@@ -236,14 +236,14 @@ function Row({ a }: { a: Application }) {
               dispatch({ type: 'patchApplication', id: a.id, patch: { nextBy: e.target.value } })
             }
             aria-label={`When the next step for ${title(a)} is wanted by`}
-            style={{ width: 170, height: 38, marginTop: 7 }}
+            style={{ width: 170, height: 38, marginTop: 'calc(7px * var(--density, 1))' }}
           />
 
           <div
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
-              marginTop: 11,
+              marginTop: 'calc(11px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -261,10 +261,10 @@ function Row({ a }: { a: Application }) {
                 rel="noreferrer noopener"
                 style={{
                   width: 'auto',
-                  padding: '7px 12px',
+                  paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                   borderRadius: 'var(--r-sm)',
                   border: '1px solid var(--app-line)',
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   textDecoration: 'none',
                 }}
               >
@@ -277,8 +277,8 @@ function Row({ a }: { a: Application }) {
               onClick={() => dispatch({ type: 'removeApplication', id: a.id })}
               style={{
                 width: 'auto',
-                padding: '7px 12px',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 color: 'var(--app-dim)',
               }}
             >
@@ -334,7 +334,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         style={{ width: '100%', height: 42, marginTop: 'var(--sp-4)' }}
       />
 
-      <SectionLabel style={{ margin: '16px 0 8px' }}>What kind</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(16px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>What kind</SectionLabel>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
         {KINDS.map((k) => (
           <button
@@ -345,10 +345,10 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
             onClick={() => setKind(k.id)}
             style={{
               width: 'auto',
-              padding: '7px 12px',
+              paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${kind === k.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
             }}
           >
             {k.label}
@@ -356,7 +356,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         ))}
       </div>
 
-      <SectionLabel style={{ margin: '16px 0 8px' }}>When it closes</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(16px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>When it closes</SectionLabel>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center', flexWrap: 'wrap' }}>
         <input
           className="input"
@@ -374,10 +374,10 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
           onClick={() => setRolling(!rolling)}
           style={{
             width: 'auto',
-            padding: '8px 13px',
+            paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${rolling ? 'var(--app-accent)' : 'var(--app-line)'}`,
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
           }}
         >
           Rolling
@@ -388,9 +388,9 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
           "no hurry". */}
       <div
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
-          marginTop: 7,
+          marginTop: 'calc(7px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
@@ -400,7 +400,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
           : 'Leave it blank if you do not know yet — the app will not guess one.'}
       </div>
 
-      <SectionLabel style={{ margin: '16px 0 8px' }}>Where it has got to</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(16px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Where it has got to</SectionLabel>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
         {STAGES.filter((s) => s.id !== 'closed').map((s) => (
           <button
@@ -411,10 +411,10 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
             onClick={() => setStage(s.id)}
             style={{
               width: 'auto',
-              padding: '7px 12px',
+              paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${stage === s.id ? 'var(--app-accent)' : 'var(--app-line)'}`,
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
             }}
           >
             {s.label}
@@ -437,7 +437,7 @@ function AddOne({ onAdded }: { onAdded: () => void }) {
         disabled={!org.trim() && !role.trim()}
         title={org.trim() || role.trim() ? undefined : 'Enter the organisation or the role first'}
         spacing="0.09em"
-        style={{ marginTop: 14 }}
+        style={{ marginTop: 'calc(14px * var(--density, 1))' }}
       >
         Add it
       </ActionButton>

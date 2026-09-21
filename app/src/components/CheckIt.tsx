@@ -65,7 +65,7 @@ export function CheckIt({
         onClick={() => setOpen(true)}
         style={{
           width: 'auto',
-          padding: '8px 0 2px',
+          paddingTop: 'calc(8px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(2px * var(--density, 1))',
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
           textAlign: 'left',
@@ -101,7 +101,7 @@ export function CheckIt({
         <span
           style={{
             flex: 1,
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             textWrap: 'pretty',
           }}
         >
@@ -111,16 +111,16 @@ export function CheckIt({
           type="button"
           className="bare"
           onClick={() => setOpen(false)}
-          style={{ width: 'auto', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}
+          style={{ width: 'auto', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}
         >
           Close
         </button>
       </div>
 
       {groups.map(([kind, list]) => (
-        <div key={kind} style={{ marginTop: 11 }}>
+        <div key={kind} style={{ marginTop: 'calc(11px * var(--density, 1))' }}>
           <div className="kicker">{KIND_LABEL[kind]}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 5 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(5px * var(--density, 1))', marginTop: 'calc(5px * var(--density, 1))' }}>
             {list.map((f) => (
               <Row key={`${f.at}:${f.kind}`} f={f} text={text} onChange={onChange} />
             ))}
@@ -133,9 +133,9 @@ export function CheckIt({
           and a flatterer. */}
       <p
         style={{
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
-          marginTop: 13,
+          marginTop: 'calc(13px * var(--density, 1))',
           lineHeight: 'var(--leading-relaxed)',
           textWrap: 'pretty',
         }}
@@ -154,8 +154,8 @@ export function CheckIt({
               onClick={asking ? () => abort.current?.abort() : runSecond}
               style={{
                 width: 'auto',
-                marginTop: 9,
-                padding: '8px 13px',
+                marginTop: 'calc(9px * var(--density, 1))',
+                paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                 borderRadius: 'var(--r-sm)',
                 border: '1px solid var(--app-line)',
                 fontSize: 'var(--type-sm)',
@@ -168,8 +168,8 @@ export function CheckIt({
               <div
                 style={{
                   marginTop: 'var(--sp-5)',
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
-                  lineHeight: 1.6,
+                  fontSize: 'var(--type-sm-plus)',
+                  lineHeight: 'var(--leading-loose)',
                   whiteSpace: 'pre-wrap',
                   textWrap: 'pretty',
                 }}
@@ -181,9 +181,9 @@ export function CheckIt({
         ) : (
           <p
             style={{
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
-              marginTop: 9,
+              marginTop: 'calc(9px * var(--density, 1))',
               lineHeight: 'var(--leading-relaxed)',
               textWrap: 'pretty',
             }}
@@ -207,11 +207,11 @@ function Row({
   onChange?: (next: string) => void;
 }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: 'calc(9px * var(--density, 1))' }}>
       <span
         style={{
           flex: 1,
-          fontSize: 'calc(12.5px * var(--text-scale, 1))',
+          fontSize: 'var(--type-sm-plus)',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}
@@ -231,7 +231,7 @@ function Row({
           onClick={() => onChange(applyFix(text, f))}
           style={{
             width: 'auto',
-            padding: '4px 9px',
+            paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(9px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: '1px solid var(--app-line)',
             fontSize: 'var(--type-xs)',

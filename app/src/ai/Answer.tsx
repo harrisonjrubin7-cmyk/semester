@@ -419,7 +419,7 @@ function inline(text: string): ReactNode {
 
 const INLINE_CODE = {
   fontSize: '0.92em',
-  padding: '1px 4px',
+  paddingBlock: 'calc(1px * var(--density, 1))', paddingInline: 'calc(4px * var(--density, 1))',
   borderRadius: 'var(--r-sm)',
   background: 'var(--app-hero)',
   border: '1px solid var(--app-line)',

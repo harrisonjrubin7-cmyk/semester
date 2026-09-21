@@ -133,7 +133,7 @@ export function Bill() {
 
   return (
     <>
-      <Blueprint style={{ padding: '15px 16px', marginTop: 'var(--sp-6)' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
         <div className="kicker">{readTerm(state.term).label}</div>
         <div
           className="chrome-text"
@@ -166,7 +166,7 @@ export function Bill() {
           {charges.map((c) => (
             <CustomRow key={c.id}>
               <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
-                <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}>
+                <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}>
                   {c.what}
                   <span style={{ color: 'var(--app-dim)' }}>
                     {' · '}
@@ -205,7 +205,7 @@ export function Bill() {
               <CustomRow key={a.id}>
                 <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
                   <span
-                    style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.35 }}
+                    style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)' }}
                   >
                     {a.what}
                     <span style={{ color: 'var(--app-dim)' }}>
@@ -237,7 +237,7 @@ export function Bill() {
                     className="btn btn-ghost"
                     aria-pressed={!a.pending}
                     onClick={() => dispatch({ type: 'patchAid', id: a.id, patch: { pending: !a.pending } })}
-                    style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', padding: '0 8px' }}
+                    style={{ flex: 'none', height: 28, fontSize: 'var(--type-xs)', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))' }}
                   >
                     {a.pending ? 'Not yet' : 'Confirmed'}
                   </button>
@@ -285,7 +285,7 @@ export function Bill() {
       {instalments.length === 0 ? (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             ...secondLine(),
             marginBottom: 'var(--sp-4)',
             lineHeight: 'var(--leading-normal)',
@@ -479,7 +479,7 @@ export function Bill() {
             display: 'block',
             width: '100%',
             textAlign: 'left',
-            padding: '9px 11px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
             marginBottom: 'var(--sp-4)',
             borderRadius: 'var(--r-md)',
             border: `1px solid ${pending ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
@@ -494,7 +494,7 @@ export function Bill() {
       {adding === 'aid' && !aidKindOf(aidKind).credits && (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             ...secondLine(),
             marginBottom: 'var(--sp-4)',
             lineHeight: 'var(--leading-normal)',
@@ -508,7 +508,7 @@ export function Bill() {
       {bad ? (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-warn)',
             marginBottom: 'var(--sp-4)',
             lineHeight: 'var(--leading-normal)',
@@ -545,7 +545,7 @@ export function Bill() {
         style={{
           fontSize: 'var(--type-xs)',
           ...secondLine(),
-          marginTop: 14,
+          marginTop: 'calc(14px * var(--density, 1))',
           lineHeight: 'var(--leading-normal)',
         }}
       >

@@ -29,8 +29,8 @@ export function HowLong({
   if (!askAbout(state.spent, id, courseId, kind)) return null;
 
   return (
-    <div style={{ padding: '9px 0 4px' }}>
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-3)', lineHeight: 1.4 }}>
+    <div style={{ paddingTop: 'calc(9px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(4px * var(--density, 1))' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-3)', lineHeight: 'var(--leading-normal-minus)' }}>
         How long did that take? It teaches the week ahead your own pace.
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-3)' }}>
@@ -40,7 +40,7 @@ export function HowLong({
             type="button"
             className="btn btn-secondary"
             onClick={() => dispatch({ type: 'timeSpent', id, courseId, kind, bucketId: b.id })}
-            style={{ height: 32, fontSize: 'var(--type-sm)', padding: '0 10px', flex: 'none' }}
+            style={{ height: 32, fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(10px * var(--density, 1))', flex: 'none' }}
           >
             {b.label}
           </button>

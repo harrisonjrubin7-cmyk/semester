@@ -71,7 +71,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
         const when = whenLine(next, now);
 
         return (
-          <Blueprint plain key={r.courseId} style={{ padding: '13px 14px', marginBottom: 'var(--sp-4)' }}>
+          <Blueprint plain key={r.courseId} style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginBottom: 'var(--sp-4)' }}>
             <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
               <CourseTag id={r.courseId}>{mod?.course.code ?? r.courseId}</CourseTag>
               {when ? (
@@ -80,10 +80,10 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                 </span>
               ) : null}
             </div>
-            <div style={{ fontSize: 'var(--type-md)', lineHeight: 1.4, marginTop: 7 }}>{r.said}</div>
+            <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-normal-minus)', marginTop: 'calc(7px * var(--density, 1))' }}>{r.said}</div>
 
             {next ? (
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+              <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                 {next.block.title}
                 {next.block.meta ? ` · ${next.block.meta}` : ''}
               </div>
@@ -107,7 +107,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                * edited and offering to is the dead end that gating was for.
                */
               <>
-                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
+                <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                   {yours
                     ? "The app does not have this course's office hours. They are on the syllabus, and they take a minute to add."
                     : "The app does not have this course's office hours — it is one of the ones this app ships with, and there is no syllabus behind it to read them from."}
@@ -120,7 +120,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                       dispatch({ type: 'openCourse', id: r.courseId });
                       dispatch({ type: 'go', screen: 'edit' });
                     }}
-                    style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+                    style={{ height: 38, marginTop: 'calc(9px * var(--density, 1))', fontSize: 'var(--type-sm-plus)' }}
                   >
                     Add them
                   </button>
@@ -138,7 +138,7 @@ export function DropBy({ courseId, limit }: { courseId?: string; limit?: number 
                     draft: draftFor('meeting', { course: mod.course, to: mod.course.email }),
                   })
                 }
-                style={{ height: 36, marginTop: 'var(--sp-3)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+                style={{ height: 36, marginTop: 'var(--sp-3)', fontSize: 'var(--type-sm-plus)' }}
               >
                 Or write to {mod.course.prof || 'them'} first
               </button>

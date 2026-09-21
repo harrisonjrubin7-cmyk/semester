@@ -29,7 +29,7 @@ export function CloseTerm() {
 
   if (done) {
     return (
-      <div style={{ marginTop: 18 }}>
+      <div style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
         <div className="kicker">{readTerm(term).label}</div>
         <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {ARCHIVED_LINE}
@@ -40,7 +40,7 @@ export function CloseTerm() {
 
   if (!open) {
     return (
-      <div style={{ marginTop: 18 }}>
+      <div style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
         <div className="kicker">Closing the term</div>
         <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
           {offerLine(rows, term)}
@@ -52,7 +52,7 @@ export function CloseTerm() {
             onClick={() => setOpen(true)}
             style={{
               width: 'auto',
-              padding: '6px 10px',
+              paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
               marginTop: 'var(--sp-4)',
               borderRadius: 'var(--r-sm)',
               border: '1px solid var(--app-line)',
@@ -72,7 +72,7 @@ export function CloseTerm() {
   const after = nextTerm(term);
 
   return (
-    <div style={{ marginTop: 18 }}>
+    <div style={{ marginTop: 'calc(18px * var(--density, 1))' }}>
       <div className="kicker">Closing {readTerm(term).label}</div>
       <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         The grade your registrar posted, as they wrote it — a letter, or whatever your school
@@ -83,7 +83,7 @@ export function CloseTerm() {
         {rows.map((r) => (
           <div key={r.courseId} style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'center' }}>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ display: 'block', fontSize: 'calc(13.5px * var(--text-scale, 1))' }}>
+              <span style={{ display: 'block', fontSize: 'var(--type-base-plus)' }}>
                 {r.code}
               </span>
               <span style={{ display: 'block', fontSize: 'var(--type-xs)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)' }}>
@@ -102,7 +102,7 @@ export function CloseTerm() {
         ))}
       </div>
 
-      <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
+      <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>
         {readyLine(rows)}
       </div>
 

@@ -265,7 +265,7 @@ export function Export() {
           key={part.id}
           style={{
             display: 'flex',
-            gap: 11,
+            gap: 'calc(11px * var(--density, 1))',
             alignItems: 'center',
             ...rowStyle,
           }}
@@ -275,11 +275,11 @@ export function Export() {
             className="bare tappable"
             onClick={() => setPicked((p) => ({ ...p, [part.id]: !p[part.id] }))}
             aria-label={`${picked[part.id] ? 'Leave out' : 'Include'} ${part.label}`}
-            style={{ flex: 'none', width: 30, padding: '13px 2px 13px 0' }}
+            style={{ flex: 'none', width: 30, paddingTop: 'calc(13px * var(--density, 1))', paddingRight: 'calc(2px * var(--density, 1))', paddingBottom: 'calc(13px * var(--density, 1))', paddingLeft: '0' }}
           >
             <TickBox on={picked[part.id]} />
           </button>
-          <div style={{ flex: 1, minWidth: 0, padding: '12px 0' }}>
+          <div style={{ flex: 1, minWidth: 0, paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: '0' }}>
             <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'baseline' }}>
               <span style={{ fontSize: 'calc(14.5px * var(--text-scale, 1))' }}>{part.label}</span>
               <span className="tag tag-neutral" style={{ flex: 'none' }}>
@@ -289,7 +289,7 @@ export function Export() {
                 <span style={{ fontSize: 'var(--type-xs)', ...secondLine() }}>{counts[part.id]}</span>
               )}
             </div>
-            <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', lineHeight: 1.4 }}>
+            <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-1)', lineHeight: 'var(--leading-normal-minus)' }}>
               {part.blurb}
             </div>
           </div>
@@ -336,25 +336,25 @@ export function Export() {
       )}
 
       {done ? (
-        <div style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>{done}</div>
+        <div style={{ fontSize: 'var(--type-base)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)' }}>{done}</div>
       ) : null}
       {error ? (
         <div
           role="alert"
-          style={{ fontSize: 'var(--type-base)', marginTop: 14, lineHeight: 'var(--leading-relaxed)', color: 'var(--app-warn)' }}
+          style={{ fontSize: 'var(--type-base)', marginTop: 'calc(14px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-warn)' }}
         >
           {error}
         </div>
       ) : null}
 
-      <div style={{ marginTop: 22 }}>
+      <div style={{ marginTop: 'calc(22px * var(--density, 1))' }}>
         <Subscribe />
 
         <Snapshots />
       </div>
 
       <SectionLabel>Bring one back</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         A backup file from this app, from any device. An export nobody can import is a museum
         piece.
       </div>
@@ -379,9 +379,9 @@ export function Export() {
       </FilePick>
 
       {offered && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
+        <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">Ready to restore</div>
-          <div style={{ fontSize: 'var(--type-base)', marginTop: 7, lineHeight: 'var(--leading-relaxed)' }}>
+          <div style={{ fontSize: 'var(--type-base)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)' }}>
             {offered.parts.length > 0 ? offered.parts.join(', ') : 'an empty backup'}.
           </div>
           <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-relaxed)' }}>
@@ -419,9 +419,9 @@ export function Export() {
         <WorkspaceBackup />
       </div>
 
-      <Blueprint style={{ padding: '13px 14px', marginTop: 18 }}>
+      <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'calc(18px * var(--density, 1))' }}>
         <div className="kicker">The backup file</div>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
           It holds your courses, notes, tasks, appointments, grades, saved places and what you have
           ticked off — everything except the attachments, which are in the zip beside it. Keys and
           the tokens for connected accounts are deliberately left out: a backup that carries your

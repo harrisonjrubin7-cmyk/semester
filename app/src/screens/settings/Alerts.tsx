@@ -45,10 +45,10 @@ export function SettingsAlerts() {
             lit={lights('lead days ahead early warning notice registration access', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+              <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
                 Testing-centre lead time
               </SectionLabel>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 9 }}>
+              <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'calc(9px * var(--density, 1))' }}>
                 If you book exams through Student Access, its lead time is stated in business days and
                 counting those backwards over a weekend is easy to get wrong. Set it here and the exam
                 runway does it. Leave it at zero if you do not use one.
@@ -64,7 +64,7 @@ export function SettingsAlerts() {
                   onChange={(e) => dispatch({ type: 'setAccessLead', days: Number(e.target.value) })}
                   style={{ width: 90, flex: 'none' }}
                 />
-                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+                <span style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>
                   {state.accessLeadDays === 0
                     ? 'not used'
                     : `business days before an exam`}
@@ -79,15 +79,15 @@ export function SettingsAlerts() {
             lit={lights('quiet hours sleep night do not disturb silence mute overnight', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}>
+              <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>
                 Nothing between
               </SectionLabel>
               <div
                 style={{
-                  fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-sm-plus)',
                   color: 'var(--app-dim)',
                   lineHeight: 'var(--leading-relaxed)',
-                  marginBottom: 9,
+                  marginBottom: 'calc(9px * var(--density, 1))',
                 }}
               >
                 {quiet
@@ -108,7 +108,7 @@ export function SettingsAlerts() {
                   }
                   style={{ flex: 1, minWidth: 0 }}
                 />
-                <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', flex: 'none' }}>
+                <span style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', flex: 'none' }}>
                   and
                 </span>
                 <input
@@ -132,9 +132,9 @@ export function SettingsAlerts() {
               {quiet && quiet.from === quiet.to ? (
                 <div
                   style={{
-                    fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-sm-plus)',
                     color: 'var(--app-warn)',
-                    marginTop: 9,
+                    marginTop: 'calc(9px * var(--density, 1))',
                     lineHeight: 'var(--leading-normal)',
                   }}
                 >
@@ -146,16 +146,16 @@ export function SettingsAlerts() {
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => dispatch({ type: 'setQuiet', quiet: null })}
-                  style={{ marginTop: 11, height: 36, fontSize: 'var(--type-sm)' }}
+                  style={{ marginTop: 'calc(11px * var(--density, 1))', height: 36, fontSize: 'var(--type-sm)' }}
                 >
                   Turn quiet hours off
                 </button>
               ) : (
                 <div
                   style={{
-                    fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                    fontSize: 'var(--type-sm-plus)',
                     color: 'var(--app-dim)',
-                    marginTop: 9,
+                    marginTop: 'calc(9px * var(--density, 1))',
                     lineHeight: 'var(--leading-normal)',
                   }}
                 >
@@ -176,7 +176,7 @@ export function SettingsAlerts() {
             lit={lights('notifications alerts tell me when reminders notify due mute silence course quiet one', lit)}
           >
             <CustomRow>
-              <SectionLabel style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(2px * var(--density, 1))' }}>Tell me when</SectionLabel>
+              <SectionLabel style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(2px * var(--density, 1))' }}>Tell me when</SectionLabel>
               <Reminders />
               {NOTIF_DEFS.map((n) => (
                 <Toggle

@@ -864,7 +864,6 @@ export const NOT_IN_BACKUP: Record<string, string> = {
   // from.
   cleared: 'whether the sample term has been cleared',
   countScreens: 'whether screen opens are counted at all',
-  lastOpened: 'when each screen was last opened',
   lastSync: 'when this device last reached the account',
   recent: 'the screens opened lately',
   registered: 'whether this device registered for reminders',

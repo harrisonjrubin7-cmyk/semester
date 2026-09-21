@@ -85,16 +85,16 @@ export function Snapshots() {
     <Folding name="Snapshots">
       <div>
         <SectionLabel>Go back a day</SectionLabel>
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)', textWrap: 'pretty' }}>
           {LOCAL_LINE}
         </div>
 
         {list === null ? null : list.length === 0 ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {NONE_LINE}
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(1px * var(--density, 1))' }}>
             {list.map((s) => (
               <button
                 key={s.id}
@@ -139,7 +139,7 @@ export function Snapshots() {
         )}
 
         {picked && (
-          <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
+          <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
             <div className="kicker">
               {reasonLabel(picked.reason)} · {whenLine(picked.at, now)}
             </div>
@@ -147,7 +147,7 @@ export function Snapshots() {
               {costLine(rows)}
             </div>
             {rows.length > 0 && (
-              <ul style={{ margin: '8px 0 0', paddingLeft: 17, fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 1.6 }}>
+              <ul style={{ marginTop: 'calc(8px * var(--density, 1))', marginInline: '0', marginBottom: '0', paddingLeft: 'calc(17px * var(--density, 1))', fontSize: 'var(--type-sm-plus)', lineHeight: 'var(--leading-loose)' }}>
                 {rows.map((r) => (
                   <li key={r.line} style={{ opacity: r.loses ? 1 : DIMMED_ROW }}>
                     {r.line}
@@ -155,7 +155,7 @@ export function Snapshots() {
                 ))}
               </ul>
             )}
-            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 9, lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+            <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'calc(9px * var(--density, 1))', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {RESTORE_LINE}
             </div>
             <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
@@ -193,7 +193,7 @@ export function Snapshots() {
                 background: 'transparent',
                 border: 'none',
                 color: 'var(--app-dim)',
-                fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-xs-plus)',
                 cursor: 'pointer',
                 padding: 0,
               }}
@@ -214,7 +214,7 @@ export function Snapshots() {
         </button>
 
         {said ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)', color: 'var(--app-dim)', textWrap: 'pretty' }}>
             {said}
           </div>
         ) : null}

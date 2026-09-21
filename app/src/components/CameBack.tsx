@@ -35,7 +35,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         onClick={() => dispatch({ type: 'markReturned', id: item.id, courseId: item.c })}
         style={{
           width: 'auto',
-          padding: '8px 0 2px',
+          paddingTop: 'calc(8px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(2px * var(--density, 1))',
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
           textAlign: 'left',
@@ -52,7 +52,7 @@ export function CameBack({ item }: { item: DatedItem }) {
     <div
       style={{
         marginTop: 'var(--sp-5)',
-        padding: '12px 13px',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         border: `1px solid ${window.days > 0 && !record.raised ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
         background: window.days > 0 && !record.raised ? 'var(--app-warn-wash)' : 'transparent',
         borderRadius: 'var(--r-md)',
@@ -62,7 +62,7 @@ export function CameBack({ item }: { item: DatedItem }) {
       <div
         style={{
           fontSize: 'var(--type-base)',
-          marginTop: 5,
+          marginTop: 'calc(5px * var(--density, 1))',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}
@@ -70,7 +70,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         {open}
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 11, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(11px * var(--density, 1))', flexWrap: 'wrap' }}>
         <input
           className="input"
           value={record.score}
@@ -90,7 +90,7 @@ export function CameBack({ item }: { item: DatedItem }) {
           }
           style={{
             width: 'auto',
-            padding: '9px 13px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${record.raised ? 'var(--app-accent)' : 'var(--app-line)'}`,
             fontSize: 'var(--type-sm)',
@@ -124,7 +124,7 @@ export function CameBack({ item }: { item: DatedItem }) {
         }}
       />
 
-      <div className="kicker" style={{ marginTop: 13 }}>
+      <div className="kicker" style={{ marginTop: 'calc(13px * var(--density, 1))' }}>
         {code}&rsquo;s window
       </div>
       <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-3)', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -156,15 +156,15 @@ export function CameBack({ item }: { item: DatedItem }) {
           }
           style={{
             width: 'auto',
-            padding: '7px 12px',
+            paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${window.business ? 'var(--app-accent)' : 'var(--app-line)'}`,
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
           }}
         >
           Business days
         </button>
-        <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>
+        <span style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}>
           {windowSummary(window)}
         </span>
       </div>
@@ -175,9 +175,9 @@ export function CameBack({ item }: { item: DatedItem }) {
       {window.business ? (
         <div
           style={{
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
-            marginTop: 7,
+            marginTop: 'calc(7px * var(--density, 1))',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
           }}
@@ -193,8 +193,8 @@ export function CameBack({ item }: { item: DatedItem }) {
         onClick={() => dispatch({ type: 'unmarkReturned', id: item.id })}
         style={{
           width: 'auto',
-          marginTop: 11,
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          marginTop: 'calc(11px * var(--density, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
         }}
       >

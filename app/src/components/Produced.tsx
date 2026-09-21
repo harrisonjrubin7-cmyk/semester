@@ -36,7 +36,7 @@ export function Produced({
   return (
     <div
       style={{
-        padding: 14,
+        paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
         borderRadius: 'var(--r-lg)',
         border: '1px solid var(--app-line)',
         fontSize: 'var(--type-md)',
@@ -48,7 +48,7 @@ export function Produced({
          * what this holds. Written once here rather than six times across the
          * screens, which is the part that was actually wrong.
          */
-        lineHeight: 1.6,
+        lineHeight: 'var(--leading-loose)',
         // The newlines are the model's paragraphing. Collapsing them would
         // turn a structured answer into one block.
         whiteSpace: 'pre-wrap',
@@ -90,7 +90,7 @@ export function Panel({
   return (
     <div
       style={{
-        padding: '12px 13px',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
         ...(tone === 'raised' ? { background: 'var(--app-hero)' } : {}),

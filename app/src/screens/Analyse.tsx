@@ -154,9 +154,9 @@ export function Analyse() {
   };
 
   const stat = (label: string, value: string) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', gap: 'var(--sp-6)' }}>
-      <span style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}>{label}</span>
-      <span style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: '0', gap: 'var(--sp-6)' }}>
+      <span style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)' }}>{label}</span>
+      <span style={{ fontSize: 'var(--type-base-plus)', fontVariantNumeric: 'tabular-nums' }}>{value}</span>
     </div>
   );
 
@@ -198,7 +198,7 @@ export function Analyse() {
       />
       <DraftNote field={textField} />
       {table.rows.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
           {name ? `${name} · ` : ''}
           {table.rows.length} rows · {table.headers.length} columns · {numericCols.length} numeric
         </div>
@@ -249,7 +249,7 @@ export function Analyse() {
       {xSummary && (
         <>
           <SectionLabel>{table.headers[xi] || 'That column'}</SectionLabel>
-          <Blueprint style={{ padding: '10px 14px' }}>
+          <Blueprint style={{ paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
             {stat('n', String(xSummary.n))}
             {xSummary.missing > 0 ? stat('not a number', String(xSummary.missing)) : null}
             {stat('mean', show(xSummary.mean))}
@@ -290,7 +290,7 @@ export function Analyse() {
       {categories.length > 0 && (
         <>
           <SectionLabel>{table.headers[xi] || 'That column'} — counts</SectionLabel>
-          <Blueprint style={{ padding: '10px 14px' }}>
+          <Blueprint style={{ paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
             {categories.map((c) => stat(c.value, String(c.count)))}
           </Blueprint>
         </>
@@ -302,7 +302,7 @@ export function Analyse() {
             {table.headers[yi]} on {table.headers[xi]}
           </SectionLabel>
           <Scatter data={both} slope={fit.slope} intercept={fit.intercept} />
-          <Blueprint style={{ padding: '10px 14px', marginTop: 'var(--sp-5)' }}>
+          <Blueprint style={{ paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
             {stat('pairs used', String(fit.n))}
             {stat('slope', `${show(fit.slope)}  (se ${show(fit.se)})`)}
             {stat('intercept', show(fit.intercept))}
@@ -310,7 +310,7 @@ export function Analyse() {
             {stat('R²', show(fit.r2))}
             {r === null ? null : stat('Pearson r', show(r))}
           </Blueprint>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)', lineHeight: 'var(--leading-normal)' }}>
             Rows where either column was blank were dropped, not read as zero. No p-value: turning
             t into one needs the incomplete beta function, and an approximation that is wrong in
             the tail — exactly where a p-value is read — would be worse than a table.

@@ -173,11 +173,11 @@ export function Links() {
                         placeholder={link.hint || 'https://…'}
                         onChange={(e) => setDraft(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && save(link.id)}
-                        style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
+                        style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'calc(9px * var(--density, 1))' }}
                         aria-label={`${link.name} address`}
                       />
                       {link.note && (
-                        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 7 }}>
+                        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(7px * var(--density, 1))' }}>
                           {link.note}
                         </div>
                       )}
@@ -186,7 +186,7 @@ export function Links() {
                         className="btn btn-secondary"
                         onClick={() => save(link.id)}
                         style={{
-                          marginTop: 9,
+                          marginTop: 'calc(9px * var(--density, 1))',
                           fontSize: 'var(--type-xs)',
                           letterSpacing: '0.12em',
                           textTransform: 'uppercase',
@@ -205,7 +205,7 @@ export function Links() {
           })}
 
           {adding ? (
-            <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-6)' }}>
+            <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-6)' }}>
               <div className="kicker">Your own link</div>
               <input
                 aria-label="What the link is"
@@ -213,7 +213,7 @@ export function Links() {
                 placeholder="What it is — Commodore Card, the gym"
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                style={{ fontSize: 'var(--type-base)', marginTop: 9 }}
+                style={{ fontSize: 'var(--type-base)', marginTop: 'calc(9px * var(--density, 1))' }}
               />
               <input
                 aria-label="Its address"
@@ -221,7 +221,7 @@ export function Links() {
                 placeholder="https://…"
                 value={newUrl}
                 onChange={(e) => setNewUrl(e.target.value)}
-                style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 'var(--sp-4)' }}
+                style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'var(--sp-4)' }}
               />
               <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
                 <button
@@ -262,7 +262,7 @@ export function Links() {
             </ActionButton>
           )}
 
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'var(--sp-5)', textWrap: 'pretty' }}>
             These open the system itself — the app on a phone that recognises the address, the site
             otherwise. None of them expose an API a student can use alone, so the app links out rather
             than pretending to read them. Correct any address here and the correction is what sticks.

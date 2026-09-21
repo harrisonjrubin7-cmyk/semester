@@ -78,7 +78,7 @@ export function Capture({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 7,
+            gap: 'calc(7px * var(--density, 1))',
           }}
         >
           <Plus size={14} />
@@ -135,7 +135,7 @@ export function Capture({
                     fontSize: 'calc(9px * var(--text-scale, 1))',
                     letterSpacing: '0.1em',
                     textTransform: 'uppercase',
-                    padding: '2px 0',
+                    paddingBlock: 'calc(2px * var(--density, 1))', paddingInline: '0',
                     textAlign: 'center',
                   }}
                 >
@@ -144,14 +144,14 @@ export function Capture({
               </button>
             ))}
           </div>
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-4)' }}>
             {shots.length} of {MAX_SHOTS} · about {weigh(shots)} KB after resizing
           </div>
         </>
       )}
 
       {errors.length > 0 && (
-        <Blueprint plain style={{ padding: '10px 12px', marginTop: 'var(--sp-5)' }} role="alert">
+        <Blueprint plain style={{ paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))', marginTop: 'var(--sp-5)' }} role="alert">
           {errors.map((e) => (
             <div
               key={e}

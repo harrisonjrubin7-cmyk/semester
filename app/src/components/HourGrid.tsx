@@ -335,7 +335,7 @@ export function HourGrid({
               height: box.height,
               overflow: 'hidden',
               textAlign: 'left',
-              padding: '4px 8px',
+              paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(8px * var(--density, 1))',
               borderLeft: `2px solid ${tint}`,
               borderRadius: 'var(--r-sm)',
               background: 'var(--app-panel)',
@@ -366,7 +366,7 @@ export function HourGrid({
             <span
               style={{
                 display: 'block',
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 lineHeight: 1.2,
                 textDecoration: b.canceled ? 'line-through' : 'none',
                 overflow: 'hidden',
@@ -381,7 +381,7 @@ export function HourGrid({
                 display: 'block',
                 fontSize: 'calc(10.5px * var(--text-scale, 1))',
                 color: 'var(--app-dim)',
-                marginTop: 1,
+                marginTop: 'calc(1px * var(--density, 1))',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',

@@ -191,7 +191,7 @@ export function Courses() {
                 key={c.id}
                 onClick={() => dispatch({ type: 'openCourse', id: c.id })}
                 style={{
-                  padding: '15px 16px',
+                  paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))',
                   display: 'block',
                   // The colour is a stripe down the edge rather than a tint on the
                   // whole card: four tinted cards is a dashboard, and the whole point
@@ -199,7 +199,7 @@ export function Courses() {
                   // the stripe used to appear only for a course somebody had
                   // coloured by hand, which is to say almost never.
                   borderLeft: `3px solid ${tint(c.id).edge}`,
-                  paddingLeft: 13,
+                  paddingLeft: 'calc(13px * var(--density, 1))',
                 }}
               >
                 <div
@@ -235,7 +235,7 @@ export function Courses() {
                     gap: 'var(--sp-4)',
                     alignItems: 'center',
                     marginTop: 'var(--sp-6)',
-                    paddingTop: 11,
+                    paddingTop: 'calc(11px * var(--density, 1))',
                     borderTop: '1px solid var(--app-line)',
                   }}
                 >
@@ -356,9 +356,9 @@ function ComingUp() {
         onChange={(t) => dispatch({ type: 'setDueTab', tab: t })}
         style={{ marginBottom: 'var(--sp-6)' }}
       />
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>{blurb}</div>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-2)' }}>{blurb}</div>
       {list.length === 0 && (
-        <div style={{ padding: '22px 0', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>
+        <div style={{ paddingBlock: 'calc(22px * var(--density, 1))', paddingInline: '0', fontSize: 'var(--type-md)', color: 'var(--app-dim)' }}>
           {tab === 'overdue'
             ? 'Nothing has gone by unticked.'
             : tab === 'done'
@@ -455,10 +455,10 @@ function LmsLink({ course }: { course: Course }) {
             value={draft}
             placeholder="https://brightspace.vanderbilt.edu/d2l/home/123456"
             onChange={(e) => setDraft(e.target.value)}
-            style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', marginTop: 9 }}
+            style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'calc(9px * var(--density, 1))' }}
             aria-label={`${course.code} Brightspace address`}
           />
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 7 }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(7px * var(--density, 1))' }}>
             Open the course in Brightspace and copy the address from the bar. Grades and
             submissions need D2L’s Valence API, which only Vanderbilt can issue a key for — so
             this is a link, and the dates come from the calendar feed under Connect.
@@ -475,7 +475,7 @@ function LmsLink({ course }: { course: Course }) {
               });
               setEditing(false);
             }}
-            style={{ marginTop: 9, fontSize: 'var(--type-xs)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
+            style={{ marginTop: 'calc(9px * var(--density, 1))', fontSize: 'var(--type-xs)', letterSpacing: '0.12em', textTransform: 'uppercase' }}
           >
             Save
           </button>
@@ -510,10 +510,10 @@ function CourseInformation() {
       {renamed(course, state.yours) ? (
         <div style={{ fontSize: 'var(--type-sm)', ...secondLine(), marginTop: 'var(--sp-1)' }}>{course.name}</div>
       ) : null}
-      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 3 }}>
+      <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', marginTop: 'calc(3px * var(--density, 1))' }}>
         {course.prof} · {course.email}
       </div>
-      <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginTop: 'var(--sp-6)' }}>
+      <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', flexWrap: 'wrap', marginTop: 'var(--sp-6)' }}>
         <span className="tag tag-outline">{course.meets}</span>
         {/* The room is the one detail here you might need to act on, so it is
             a link to directions rather than a label to read and retype. */}
@@ -599,7 +599,7 @@ function CourseInformation() {
       {/* Next to the grade, because that is what it changes. */}
       <Attendance courseId={course.id} />
 
-      <SectionLabel style={{ margin: '24px 0 6px' }}>How the grade is built</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>How the grade is built</SectionLabel>
       <table className="table">
         <tbody>
           {course.grading.map((g) => (
@@ -628,16 +628,16 @@ function CourseInformation() {
         */}
       {mineOpen.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '24px 0 6px' }}>In progress</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>In progress</SectionLabel>
           {mineOpen.map((i) => (
             <DeadlineRow key={i.id} item={i} tone={standingOf(i, state.done)} />
           ))}
         </>
       )}
 
-      <SectionLabel style={{ margin: '24px 0 6px' }}>Still ahead</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Still ahead</SectionLabel>
       {mine.ahead.length === 0 && (
-        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', padding: '8px 0' }}>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--app-dim)', paddingBlock: 'calc(8px * var(--density, 1))', paddingInline: '0' }}>
           Nothing left in this course.
         </div>
       )}
@@ -647,7 +647,7 @@ function CourseInformation() {
 
       {mine.overdue.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '24px 0 6px' }}>Went by</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Went by</SectionLabel>
           {mine.overdue.map((i) => (
             <DeadlineRow key={i.id} item={i} tone="overdue" />
           ))}
@@ -656,7 +656,7 @@ function CourseInformation() {
 
       {mine.done.length > 0 && (
         <>
-          <SectionLabel style={{ margin: '24px 0 6px' }}>Done</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>Done</SectionLabel>
           {mine.done.map((i) => (
             <DeadlineRow key={i.id} item={i} tone="done" />
           ))}
@@ -667,7 +667,7 @@ function CourseInformation() {
         style={{
           fontSize: 'var(--type-xs)',
           color: 'var(--app-dim)',
-          marginTop: 14,
+          marginTop: 'calc(14px * var(--density, 1))',
           fontFamily: 'var(--font-heading)',
           letterSpacing: '0.08em',
         }}
@@ -693,7 +693,7 @@ export function ItemDetail() {
     <div style={{ padding: 'var(--page-pad)' }}>
       <Folding name="ItemDetail">
       <Blueprint style={{ padding: 'var(--sp-7)' }}>
-        <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', alignItems: 'center' }}>
           <CourseTag id={item.c} />
           <span
             style={{
@@ -713,7 +713,7 @@ export function ItemDetail() {
             fontSize: 'calc(27px * var(--text-scale, 1))',
             lineHeight: 1.1,
             letterSpacing: '-0.01em',
-            margin: '10px 0 12px',
+            marginTop: 'calc(10px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(12px * var(--density, 1))',
             textWrap: 'pretty',
           }}
         >
@@ -730,7 +730,7 @@ export function ItemDetail() {
           the long value.
         */}
         <div style={{ display: 'flex', borderTop: '1px solid var(--app-line)' }}>
-          <div style={{ flex: 1, minWidth: 0, padding: '11px 0' }}>
+          <div style={{ flex: 1, minWidth: 0, paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: '0' }}>
             <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               Due
             </div>
@@ -738,7 +738,7 @@ export function ItemDetail() {
             <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}>{item.dueTime}</div>
           </div>
           <div style={{ width: 1, background: 'var(--app-line)' }} />
-          <div style={{ flex: 1, minWidth: 0, padding: '11px 0 11px 14px' }}>
+          <div style={{ flex: 1, minWidth: 0, paddingTop: 'calc(11px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(11px * var(--density, 1))', paddingLeft: 'calc(14px * var(--density, 1))' }}>
             <div className="kicker" style={{ fontSize: 'calc(10px * var(--text-scale, 1))' }}>
               Weight
             </div>
@@ -751,8 +751,8 @@ export function ItemDetail() {
       <div
         style={{
           fontSize: 'var(--type-md)',
-          lineHeight: 1.55,
-          marginTop: 18,
+          lineHeight: 'var(--leading-relaxed-plus)',
+          marginTop: 'calc(18px * var(--density, 1))',
           color: 'var(--app-dim)',
           textWrap: 'pretty',
         }}
@@ -782,11 +782,11 @@ export function ItemDetail() {
           up, then do it. */}
       <ForThis item={item} />
 
-      <SectionLabel style={{ margin: '22px 0 8px' }}>Straight from the syllabus</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(22px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Straight from the syllabus</SectionLabel>
       <div
         style={{
           borderLeft: '2px solid var(--app-accent)',
-          padding: '2px 0 2px 14px',
+          paddingTop: 'calc(2px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(2px * var(--density, 1))', paddingLeft: 'calc(14px * var(--density, 1))',
           fontSize: 'var(--type-base)',
           lineHeight: 'var(--leading-relaxed)',
           color: 'var(--app-dim)',
@@ -857,7 +857,7 @@ export function ItemDetail() {
           aria-pressed={going}
           onClick={() => dispatch({ type: 'toggleStarted', id: item.id })}
           style={{
-            marginTop: 24,
+            marginTop: 'calc(24px * var(--density, 1))',
             height: 46,
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
@@ -870,7 +870,7 @@ export function ItemDetail() {
       {going && !done && (
         <div
           style={{
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-4)',
             lineHeight: 'var(--leading-relaxed)',

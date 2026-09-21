@@ -14,6 +14,7 @@ import {
   proxyProblem,
   route,
   routeLabel,
+  routeWhy,
   saveSettings,
   settings,
   sharedEndpoint,
@@ -99,7 +100,7 @@ export function SettingsAssistant() {
   const month = total(since(spend, monthStart(new Date())));
   const courses = byCourse(spend);
   const askers = byAsker(spend);
-  const { courseCode } = useStore();
+  const { courseCode, account } = useStore();
   /*
    * One row of the breakdown. Written here rather than in a component because
    * it is two spans and a gap, and `scripts/styles.mjs` counts what is worth
@@ -113,7 +114,7 @@ export function SettingsAssistant() {
   } as const;
 
   const chip = (on: boolean) => ({
-    padding: '5px 11px',
+    paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))',
     fontSize: 'var(--type-xs)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
@@ -154,7 +155,7 @@ export function SettingsAssistant() {
                     className="btn"
                     onClick={() => setConfig({ ...config, provider: p.id })}
                     aria-pressed={config.provider === p.id}
-                    style={{ flex: 1, ...chip(config.provider === p.id), padding: '7px 11px' }}
+                    style={{ flex: 1, ...chip(config.provider === p.id), paddingBlock: 'calc(7px * var(--density, 1))', paddingInline: 'calc(11px * var(--density, 1))' }}
                   >
                     {p.label}
                   </button>
@@ -164,7 +165,7 @@ export function SettingsAssistant() {
 
             {config.provider === 'openai' ? (
               <CustomRow>
-                <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
+                <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)' }}>
                   There is no shared key on this side — the server function holds an Anthropic key
                   and nothing else. So this means your own OpenAI key, in this browser, where
                   anything running here can read it. It is billable and has no spend cap of its own.
@@ -192,7 +193,7 @@ export function SettingsAssistant() {
                     </button>
                   ))}
                 </div>
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
                   {OPENAI_MODELS.find((m) => m.id === config.openaiModel)?.note} Extended thinking is
                   Anthropic-only, so the screens that ask for it simply do not get it here.
                 </div>
@@ -280,7 +281,7 @@ export function SettingsAssistant() {
                     </button>
                   ))}
                 </div>
-                <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
+                <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
                   {MODELS.find((m) => m.id === config.model)?.note}
                 </div>
               </CustomRow>
@@ -338,9 +339,27 @@ export function SettingsAssistant() {
                   {result.detail}
                 </div>
               )}
-              {configured() && (
+              {configured() ? (
                 <div className="kicker" style={{ marginTop: 'var(--sp-4)' }}>
                   {modelLabel()} · {routeLabel()}
+                </div>
+              ) : (
+                /*
+                 * The half this screen used to leave blank. `configured()`
+                 * false is exactly when somebody is looking for the reason,
+                 * and hiding the line meant the one screen named in every
+                 * gate's button said nothing at all when they arrived.
+                 */
+                <div
+                  style={{
+                    fontSize: 'var(--type-sm)',
+                    color: 'var(--app-dim)',
+                    marginTop: 'var(--sp-4)',
+                    lineHeight: 'var(--leading-relaxed)',
+                    textWrap: 'pretty',
+                  }}
+                >
+                  {routeWhy(Boolean(account))}
                 </div>
               )}
             </CustomRow>

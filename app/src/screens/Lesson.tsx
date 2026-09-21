@@ -105,7 +105,7 @@ const BEAT_TITLE = {
 
 const BEAT_BODY = {
   fontSize: 'calc(14.5px * var(--text-scale, 1))',
-  lineHeight: 1.55,
+  lineHeight: 'var(--leading-relaxed-plus)',
   color: 'var(--app-dim)',
   marginTop: 'var(--sp-5)',
   whiteSpace: 'pre-wrap',
@@ -228,13 +228,13 @@ export function LessonPlayer() {
       <div className="kicker">
         Unit {unit + 1} of {guide.units.length} · {lesson.len}
       </div>
-      <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 3 }}>{lesson.title}</div>
+      <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-tight)', marginTop: 'calc(3px * var(--density, 1))' }}>{lesson.title}</div>
 
       {/* ── the slide ─────────────────────────────────────────────────── */}
       <Blueprint
         style={{
-          marginTop: 14,
-          padding: 20,
+          marginTop: 'calc(14px * var(--density, 1))',
+          paddingBlock: 'calc(20px * var(--density, 1))', paddingInline: 'calc(20px * var(--density, 1))',
           minHeight: 260,
           display: 'flex',
           flexDirection: 'column',
@@ -292,7 +292,7 @@ export function LessonPlayer() {
                   <div
                     style={{
                       fontSize: 'var(--type-lg)',
-                      lineHeight: 1.55,
+                      lineHeight: 'var(--leading-relaxed-plus)',
                       marginTop: 'var(--sp-6)',
                       textWrap: 'pretty',
                     }}
@@ -325,7 +325,7 @@ export function LessonPlayer() {
           fontSize: 'var(--type-xs)',
           letterSpacing: '0.1em',
           color: 'var(--app-dim)',
-          marginTop: 5,
+          marginTop: 'calc(5px * var(--density, 1))',
         }}
       >
         <span>{clock(time)}</span>
@@ -444,7 +444,7 @@ export function LessonPlayer() {
           >
             {clock(c.at)}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>{c.text}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>{c.text}</span>
         </button>
       ))}
 

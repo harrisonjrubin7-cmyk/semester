@@ -265,7 +265,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
         <div
           role="status"
           style={{
-            fontSize: 'var(--type-sm)',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-warn)',
             marginTop: 'var(--sp-4)',
             lineHeight: 'var(--leading-normal)',
@@ -281,7 +281,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           <div className="kicker">What it heard</div>
           <div
             style={{
-              fontSize: 'var(--type-sm)',
+              fontSize: 'var(--type-sm-plus)',
               color: 'var(--app-dim)',
               marginTop: 'var(--sp-3)',
               lineHeight: 'var(--leading-normal)',
@@ -309,7 +309,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div
                     style={{
-                      fontSize: 'var(--type-base)',
+                      fontSize: 'var(--type-base-plus)',
                       lineHeight: 'var(--leading-tight)',
                       textWrap: 'pretty',
                     }}
@@ -318,7 +318,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
                   </div>
                   <div
                     style={{
-                      fontSize: 'var(--type-xs)',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
                       marginTop: 'var(--sp-2)',
                       lineHeight: 'var(--leading-normal)',
@@ -348,7 +348,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
               and it is still there to be corrected. */}
           <div
             style={{
-              fontSize: 'var(--type-xs)',
+              fontSize: 'var(--type-xs-plus)',
               color: 'var(--app-dim)',
               marginTop: 'var(--sp-4)',
               lineHeight: 'var(--leading-normal)',
@@ -369,14 +369,14 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
           </ActionButton>
         </div>
       ) : text.trim() ? (
-        <div style={{ marginTop: 'var(--sp-7)' }}>
+        <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
           <div className="kicker">What it read</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginTop: 7 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(5px * var(--density, 1))', marginTop: 'calc(7px * var(--density, 1))' }}>
             {readBack(caught, codeOf).map((line) => (
               <div
                 key={line}
                 style={{
-                  fontSize: 'var(--type-sm)',
+                  fontSize: 'var(--type-sm-plus)',
                   color: line.startsWith('No ') ? 'var(--app-dim)' : 'var(--app-fg)',
                   lineHeight: 'var(--leading-normal)',
                   textWrap: 'pretty',
@@ -387,7 +387,7 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
             ))}
             <div
               style={{
-                fontSize: 'var(--type-sm)',
+                fontSize: 'var(--type-sm-plus)',
                 marginTop: 'var(--sp-2)',
                 lineHeight: 'var(--leading-normal)',
                 textWrap: 'pretty',
@@ -409,10 +409,10 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
       ) : (
         <div
           style={{
-            fontSize: 'var(--type-sm)',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-7)',
-            lineHeight: 1.6,
+            lineHeight: 'var(--leading-loose)',
             textWrap: 'pretty',
           }}
         >
@@ -429,9 +429,9 @@ export function QuickAdd({ onClose }: { onClose: () => void }) {
         <div
           role="status"
           style={{
-            fontSize: 'var(--type-sm)',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
-            marginTop: 14,
+            marginTop: 'calc(14px * var(--density, 1))',
           }}
         >
           {said} It is one of yours, filed against the course — not a line pretending the

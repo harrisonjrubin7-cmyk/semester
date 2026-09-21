@@ -41,8 +41,8 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
         onClick={() => setOpen(true)}
         style={{
           width: 'auto',
-          padding: '2px 0 8px',
-          fontSize: 'calc(11.5px * var(--text-scale, 1))',
+          paddingTop: 'calc(2px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(8px * var(--density, 1))',
+          fontSize: 'var(--type-xs-plus)',
           color: 'var(--app-dim)',
           textAlign: 'left',
         }}
@@ -53,7 +53,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
   }
 
   return (
-    <div style={{ padding: '2px 0 12px' }}>
+    <div style={{ paddingTop: 'calc(2px * var(--density, 1))', paddingInline: '0', paddingBottom: 'calc(12px * var(--density, 1))' }}>
       <textarea
         className="input"
         value={text}
@@ -68,10 +68,10 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
           lineHeight: 'var(--leading-relaxed)',
         }}
       />
-      <div style={{ display: 'flex', gap: 9, alignItems: 'center', marginTop: 7, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 'calc(9px * var(--density, 1))', alignItems: 'center', marginTop: 'calc(7px * var(--density, 1))', flexWrap: 'wrap' }}>
         <label
           style={{
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             display: 'flex',
             alignItems: 'center',
@@ -98,7 +98,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
             dispatch({ type: 'setDrop', key: gradeKey, drop: 0 });
             setOpen(false);
           }}
-          style={{ width: 'auto', fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)' }}
+          style={{ width: 'auto', fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)' }}
         >
           Use one score instead
         </button>
@@ -109,7 +109,7 @@ export function PiecesRow({ gradeKey, what }: { gradeKey: string; what: string }
           style={{
             fontSize: 'var(--type-sm)',
             color: 'var(--app-dim)',
-            marginTop: 7,
+            marginTop: 'calc(7px * var(--density, 1))',
             lineHeight: 'var(--leading-normal)',
             textWrap: 'pretty',
           }}

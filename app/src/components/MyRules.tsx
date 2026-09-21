@@ -43,7 +43,7 @@ export function MyRules() {
   return (
     <Folding name="MyRules">
       <SectionLabel
-        style={{ margin: 'calc(26px * var(--density, 1)) 0 calc(6px * var(--density, 1))' }}
+        style={{ marginTop: 'calc(26px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}
       >
         Your own reminders
       </SectionLabel>
@@ -60,17 +60,17 @@ export function MyRules() {
             ...row,
           }}
         >
-          <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', gap: 'calc(9px * var(--density, 1))', alignItems: 'flex-start' }}>
             <button
               type="button"
               className="bare tappable"
               onClick={() => set(editRule(rules, r.id, { on: !r.on }))}
               aria-label={r.on ? `Switch off: ${ruleLine(r, courseCode)}` : `Switch on: ${ruleLine(r, courseCode)}`}
-              style={{ flex: 'none', width: 28, padding: '2px 0' }}
+              style={{ flex: 'none', width: 28, paddingBlock: 'calc(2px * var(--density, 1))', paddingInline: '0' }}
             >
               <TickBox on={r.on} />
             </button>
-            <div style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', ...secondLine(r.on) }}>
+            <div style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', ...secondLine(r.on) }}>
               {ruleLine(r, courseCode)}
             </div>
             <button
@@ -84,13 +84,13 @@ export function MyRules() {
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: 7, marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'calc(7px * var(--density, 1))', marginTop: 'var(--sp-4)', flexWrap: 'wrap' }}>
             <select
               className="input"
               value={r.days}
               onChange={(e) => set(editRule(rules, r.id, { days: Number(e.target.value) }))}
               aria-label="How long before"
-              style={{ flex: '1 1 96px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 96 }}
+              style={{ flex: '1 1 96px', fontSize: 'var(--type-sm-plus)', minWidth: 96 }}
             >
               {LEADS.map((d) => (
                 <option key={d} value={d}>
@@ -106,7 +106,7 @@ export function MyRules() {
                 set(editRule(rules, r.id, { watches: e.target.value as typeof r.watches }))
               }
               aria-label="What it watches"
-              style={{ flex: '1 1 92px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 92 }}
+              style={{ flex: '1 1 92px', fontSize: 'var(--type-sm-plus)', minWidth: 92 }}
             >
               <option value="deadline">every deadline</option>
               <option value="exam">exams only</option>
@@ -117,7 +117,7 @@ export function MyRules() {
               value={r.hour}
               onChange={(e) => set(editRule(rules, r.id, { hour: Number(e.target.value) }))}
               aria-label="What time of day"
-              style={{ flex: '0 1 78px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 74 }}
+              style={{ flex: '0 1 78px', fontSize: 'var(--type-sm-plus)', minWidth: 74 }}
             >
               {HOURS.map((h) => (
                 <option key={h} value={h}>
@@ -131,7 +131,7 @@ export function MyRules() {
               value={r.courseId}
               onChange={(e) => set(editRule(rules, r.id, { courseId: e.target.value }))}
               aria-label="Which course"
-              style={{ flex: '1 1 120px', fontSize: 'calc(12.5px * var(--text-scale, 1))', minWidth: 110 }}
+              style={{ flex: '1 1 120px', fontSize: 'var(--type-sm-plus)', minWidth: 110 }}
             >
               <option value="">all courses</option>
               {catalog.courses.map((c) => (
@@ -154,7 +154,7 @@ export function MyRules() {
           Add a reminder rule
         </button>
       ) : (
-        <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-6)' }}>
+        <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-6)' }}>
           {MOST_RULES} is the limit — past that nobody remembers what they asked for.
         </div>
       )}

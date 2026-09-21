@@ -137,7 +137,7 @@ export function WeekReport() {
 
   return (
     <>
-      <Blueprint style={{ padding: '15px 16px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
         <div className="kicker">{back.label}</div>
         <div
           className="chrome-text"
@@ -200,8 +200,8 @@ export function WeekReport() {
       </Group>
 
       <Group header="The week coming" framed={false}>
-        <Blueprint style={{ padding: '13px 14px' }}>
-          <div style={{ fontSize: 'var(--type-lg)', lineHeight: 1.4 }}>
+        <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
+          <div style={{ fontSize: 'var(--type-lg)', lineHeight: 'var(--leading-normal-minus)' }}>
             {showHours(forward.promised)} already promised
             {forward.due.length > 0
               ? `, ${forward.due.length} ${forward.due.length === 1 ? 'deadline' : 'deadlines'}`
@@ -209,7 +209,7 @@ export function WeekReport() {
             .
           </div>
           {forward.heaviest ? (
-            <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
+            <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-relaxed)' }}>
               {forward.heaviest.name} carries most of it, at {showHours(forward.heaviest.promised)}
               {forward.freest && forward.freest !== forward.heaviest
                 ? `; ${forward.freest.name} has the most room`
@@ -247,7 +247,7 @@ export function WeekReport() {
             onClick={() => void read()}
             disabled={busy}
             tone="primary"
-            style={{ marginTop: 18 }}
+            style={{ marginTop: 'calc(18px * var(--density, 1))' }}
           >
             {busy ? 'Reading it…' : 'What should I make of this week?'}
           </ActionButton>
@@ -265,7 +265,7 @@ export function WeekReport() {
         </>
       )}
 
-      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 14 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
         <button
           type="button"
           className="btn btn-secondary"

@@ -71,7 +71,7 @@ cd app && npm run build → exit 0, 234 JS chunks, 6,469,990 B total
 - [ ] **D1** All four `NavMode`s still work: `tabs`, `feed`, `springboard`, `shelves`.
 - [ ] **D2** Tab bar defaults to `home, courses, study, calendar, me`; a saved
       custom tab set still loads; the `FEWEST_CHOSEN` floor still reverts.
-- [ ] **D3** All 52 destinations still appear in the launcher, on the same shelf.
+- [ ] **D3** All <!--screens-->fifty-eight<!--/--> destinations still appear in the launcher, on the same shelf.
 - [ ] **D4** The seven shelves are still `Semester, Courses, Study, Make,
       Campus, Life, Data`, in that order.
 - [ ] **D5** Tile reordering still saves and reloads (`groupOrder`).

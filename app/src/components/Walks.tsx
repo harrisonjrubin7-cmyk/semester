@@ -49,7 +49,7 @@ export function Walks({ date }: { date?: Date }) {
   return (
     <Folding name="Walks">
       <SectionLabel>Getting between them</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-4)' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-4)' }}>
         {daySummary(list)}
       </div>
 
@@ -74,7 +74,7 @@ export function Walks({ date }: { date?: Date }) {
           >
             {h.known && tight(h) ? '!' : '→'}
           </span>
-          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 1.4 }}>{hopLine(h)}</span>
+          <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base)', lineHeight: 'var(--leading-normal-minus)' }}>{hopLine(h)}</span>
         </div>
       ))}
 
@@ -83,7 +83,7 @@ export function Walks({ date }: { date?: Date }) {
           type="button"
           className="btn btn-secondary btn-block"
           onClick={() => dispatch({ type: 'go', screen: 'maps' })}
-          style={{ height: 38, marginTop: 9, fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+          style={{ height: 38, marginTop: 'calc(9px * var(--density, 1))', fontSize: 'var(--type-sm-plus)' }}
         >
           Find the buildings you use
         </button>

@@ -66,7 +66,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        padding: '12px 13px',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-warn-line)',
         background: 'var(--app-warn-wash)',
@@ -80,7 +80,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
           display: 'block',
           fontSize: 'var(--type-md)',
           marginTop: 'var(--sp-2)',
-          lineHeight: 1.4,
+          lineHeight: 'var(--leading-normal-minus)',
           textWrap: 'pretty',
         }}
       >
@@ -91,7 +91,7 @@ function Row({ c, onOpen }: { c: Clash; onOpen: () => void }) {
           display: 'block',
           fontSize: 'var(--type-sm)',
           color: 'var(--app-dim)',
-          marginTop: 5,
+          marginTop: 'calc(5px * var(--density, 1))',
           lineHeight: 'var(--leading-normal)',
           textWrap: 'pretty',
         }}
@@ -109,7 +109,7 @@ export function WorstDay() {
   if (!worst) return null;
 
   return (
-    <div style={{ marginTop: 14 }}>
+    <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
       <Row c={worst} onOpen={() => openDay(worst.date)} />
     </div>
   );
@@ -181,7 +181,7 @@ export function ClashList() {
 
   return (
     <Folding name="Clashes">
-      <SectionLabel style={{ margin: 'calc(24px * var(--density, 1)) 0 calc(8px * var(--density, 1))' }}>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>
         Worth seeing coming
       </SectionLabel>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>

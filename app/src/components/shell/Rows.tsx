@@ -154,7 +154,7 @@ export function Group({
         {shut ? null : framed ? (
           <Blueprint
             style={{
-              padding: 14,
+              paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
               // The same two-second outline the grouped panel gets, on the
               // frame this layout already draws.
               borderColor: lit ? 'var(--app-accent)' : undefined,
@@ -223,7 +223,7 @@ export function Group({
         <div
           style={{
             margin: `calc(7px * var(--density, 1)) ${SIDE}px 0`,
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             lineHeight: 'var(--leading-relaxed)',
             textWrap: 'pretty',
@@ -243,6 +243,7 @@ function Row({
   as = 'div',
   role,
   ariaChecked,
+  ariaPressed,
   ariaLabel,
   tall = false,
   drag,
@@ -252,6 +253,14 @@ function Row({
   as?: 'div' | 'button';
   role?: string;
   ariaChecked?: boolean;
+  /**
+   * For a row that is a two-state control rather than a switch.
+   *
+   * `aria-checked` says "on or off", which is what a mute is; `aria-pressed`
+   * says "this is the one you picked", which is what a layer in the design
+   * editor is. A radio is neither and already has `SelectRow`.
+   */
+  ariaPressed?: boolean;
   ariaLabel?: string;
   tall?: boolean;
   /**
@@ -293,6 +302,7 @@ function Row({
         onClick={onClick}
         role={role}
         aria-checked={ariaChecked}
+        aria-pressed={ariaPressed}
         aria-label={ariaLabel}
         style={{ ...style, ...drag?.style }}
       >
@@ -300,23 +310,42 @@ function Row({
       </button>
     );
   }
-  return <div {...drag} style={{ ...style, ...drag?.style }}>{children}</div>;
+  /*
+   * The same three on the div, because a row without an `onClick` is still
+   * allowed a role — and the alternative is worse than a missing feature. A
+   * caller that passed `role="switch"` to a non-clickable row would have had
+   * it silently dropped here and would have read as a plain `div` to a screen
+   * reader, which is the failure this whole file exists to stop screens
+   * hand-rolling for themselves.
+   */
+  return (
+    <div
+      {...drag}
+      role={role}
+      aria-checked={ariaChecked}
+      aria-pressed={ariaPressed}
+      aria-label={ariaLabel}
+      style={{ ...style, ...drag?.style }}
+    >
+      {children}
+    </div>
+  );
 }
 
 function Label({ label, sub }: { label: ReactNode; sub?: ReactNode }) {
   return (
     <span style={{ flex: 1, minWidth: 0 }}>
-      <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 1.35 }}>
+      <span style={{ display: 'block', fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight-plus)' }}>
         {label}
       </span>
       {sub ? (
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
-            lineHeight: 1.4,
+            lineHeight: 'var(--leading-normal-minus)',
           }}
         >
           {sub}
@@ -331,7 +360,7 @@ function Value({ children }: { children: ReactNode }) {
   return (
     <span
       style={{
-        fontSize: 'calc(12.5px * var(--text-scale, 1))',
+        fontSize: 'var(--type-sm-plus)',
         color: 'var(--app-dim)',
         maxWidth: '45%',
         overflow: 'hidden',
@@ -383,6 +412,10 @@ export function ItemRow({
   trailing,
   onClick,
   leading,
+  role,
+  ariaChecked,
+  ariaPressed,
+  ariaLabel,
 }: {
   title: ReactNode;
   meta?: ReactNode;
@@ -391,9 +424,31 @@ export function ItemRow({
   /** A tick box or an icon, before the title. */
   leading?: ReactNode;
   onClick?: () => void;
+  /*
+   * What the row *is*, when it is not just a row.
+   *
+   * These are `Row`'s and were not passed through, and the cost was two
+   * screens that could not use this component at all. `MuteCourses` is a
+   * `role="switch"` per course and `creation/DesignEditor` is an
+   * `aria-pressed` layer list; both drew their own row rather than lose the
+   * semantics, and both were then counted as hand-drawn rows by an audit that
+   * could not see why. A component that makes the accessible choice the
+   * expensive one gets worked around, and the working-around is invisible.
+   */
+  role?: string;
+  ariaChecked?: boolean;
+  ariaPressed?: boolean;
+  ariaLabel?: string;
 }) {
   return (
-    <Row as={onClick ? 'button' : 'div'} onClick={onClick}>
+    <Row
+      as={onClick ? 'button' : 'div'}
+      onClick={onClick}
+      role={role}
+      ariaChecked={ariaChecked}
+      ariaPressed={ariaPressed}
+      ariaLabel={ariaLabel}
+    >
       {leading ? <span style={{ flex: 'none', display: 'flex' }}>{leading}</span> : null}
       <Label label={title} sub={meta} />
       {trailing ? <span style={{ flex: 'none' }}>{trailing}</span> : null}

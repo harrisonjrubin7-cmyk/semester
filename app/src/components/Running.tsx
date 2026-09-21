@@ -46,15 +46,15 @@ export function Running() {
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: 7,
+        gap: 'calc(7px * var(--density, 1))',
         width: 'auto',
         flex: 'none',
-        padding: '0 9px',
+        paddingBlock: '0', paddingInline: 'calc(9px * var(--density, 1))',
         height: 28,
         borderRadius: 999,
         border: `1px solid ${lost ? 'var(--app-warn-line)' : 'var(--app-line-top)'}`,
         background: lost ? 'var(--app-warn-wash)' : 'var(--app-hero)',
-        fontSize: 'calc(11.5px * var(--text-scale, 1))',
+        fontSize: 'var(--type-xs-plus)',
         fontVariantNumeric: 'tabular-nums',
       }}
     >

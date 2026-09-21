@@ -139,7 +139,7 @@ export const SYNC_GROUPS: { says: string; keys: string[] }[] = [
     keys: [
       'nav', 'tone', 'seenOnboarding', 'registered', 'cleared',
       'waysOpen', 'keyOpen', 'countScreens', 'lastSync', 'recent', 'visited',
-      'lastOpened', 'tabs', 'yours', 'controls', 'role', 'showAll',
+      'tabs', 'yours', 'controls', 'role', 'showAll',
       'schemaVersion', 'accent', 'textSize', 'ground', 'density', 'corners',
       'typeface', 'bodyface', 'lineHeight', 'readingWidth', 'iconShape',
       'labels', 'badges', 'feed', 'courseColours', 'shell', 'favourites',

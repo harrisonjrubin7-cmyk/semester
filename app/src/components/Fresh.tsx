@@ -49,7 +49,7 @@ export function Fresh() {
         display: 'flex',
         alignItems: 'center',
         gap: 'var(--sp-5)',
-        padding: '10px 12px',
+        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line-top)',
         background: 'var(--app-panel)',
@@ -58,7 +58,7 @@ export function Fresh() {
         marginInline: 'auto',
       }}
     >
-      <span style={{ flex: 1, fontSize: 'calc(12.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-normal)' }}>
+      <span style={{ flex: 1, fontSize: 'var(--type-sm-plus)', lineHeight: 'var(--leading-normal)' }}>
         A newer version of the app is ready.
       </span>
       <button
@@ -66,7 +66,7 @@ export function Fresh() {
         className="bare"
         onClick={() => setReady(false)}
         aria-label="Not now"
-        style={{ width: 'auto', flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-sm)', padding: '0 6px' }}
+        style={{ width: 'auto', flex: 'none', color: 'var(--app-dim)', fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(6px * var(--density, 1))' }}
       >
         Later
       </button>

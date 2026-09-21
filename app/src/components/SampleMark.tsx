@@ -114,7 +114,7 @@ export function SampleMark() {
 const link = {
   flex: 'none',
   width: 'auto',
-  padding: '2px 3px',
+  paddingBlock: 'calc(2px * var(--density, 1))', paddingInline: 'calc(3px * var(--density, 1))',
   fontFamily: 'inherit',
   fontSize: 'inherit',
   letterSpacing: 'inherit',

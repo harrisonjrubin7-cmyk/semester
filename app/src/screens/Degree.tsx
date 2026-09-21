@@ -69,13 +69,13 @@ export function Degree() {
   return (
     <Page>
       <>
-      <Blueprint style={{ padding: '14px 15px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(15px * var(--density, 1))' }}>
         <div className="kicker">Your arithmetic, not the registrar’s</div>
         <div
           style={{
             marginTop: 'var(--sp-3)',
-            fontSize: 'calc(12.5px * var(--text-scale, 1))',
-            lineHeight: 1.55,
+            fontSize: 'var(--type-sm-plus)',
+            lineHeight: 'var(--leading-relaxed-plus)',
             textWrap: 'pretty',
           }}
         >
@@ -94,7 +94,7 @@ export function Degree() {
         ]}
         value={tab}
         onChange={setTab}
-        style={{ margin: '16px 0' }}
+        style={{ marginBlock: 'calc(16px * var(--density, 1))', marginInline: '0' }}
       />
 
       {tab === 'left' ? <WhatIsLeft /> : null}
@@ -115,7 +115,7 @@ function WhatIsLeft() {
   if (list.length === 0) {
     return (
       <Folding name="WhatIsLeft">
-        <p style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 1.55, textWrap: 'pretty' }}>
+        <p style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed-plus)', textWrap: 'pretty' }}>
           Nothing recorded yet. Add your requirements under Requirements — one row per line of
           your audit — and the courses you have taken under Taken.
         </p>
@@ -129,7 +129,7 @@ function WhatIsLeft() {
         */}
         {h.done > 0 ? (
           <>
-            <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
+            <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Hours and grades</SectionLabel>
             <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
               {h.done} hours finished
               {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g, isCommon(state.scale))}
@@ -146,37 +146,37 @@ function WhatIsLeft() {
       {list.map((p) => {
         const r = rollup(state.requirements, state.taken, p);
         return (
-          <div key={p} style={{ marginBottom: 20 }}>
+          <div key={p} style={{ marginBottom: 'calc(20px * var(--density, 1))' }}>
             <Folding name="WhatIsLeft">
-            <SectionLabel style={{ margin: '0 0 6px' }}>{p}</SectionLabel>
+            <SectionLabel style={{ marginTop: '0', marginInline: '0', marginBottom: 'calc(6px * var(--density, 1))' }}>{p}</SectionLabel>
             <div
               style={{
                 fontSize: 'var(--type-base)',
-                marginBottom: 9,
+                marginBottom: 'calc(9px * var(--density, 1))',
                 textWrap: 'pretty',
               }}
             >
               {rollupLine(r)}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
               {forProgramme(state.requirements, state.taken, p).map((prog) => (
                 <div
                   key={prog.req.id}
                   style={{
-                    padding: '10px 13px',
+                    paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
                     borderRadius: 'var(--r-md)',
                     border: '1px solid var(--app-line)',
                     opacity: prog.met ? DIMMED_ROW : 1,
                   }}
                 >
-                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 1.35, textWrap: 'pretty' }}>
+                  <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-tight-plus)', textWrap: 'pretty' }}>
                     {prog.req.name || 'Unnamed requirement'}
                   </div>
                   <div
                     style={{
-                      fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                      fontSize: 'var(--type-xs-plus)',
                       color: 'var(--app-dim)',
-                      marginTop: 3,
+                      marginTop: 'calc(3px * var(--density, 1))',
                       textWrap: 'pretty',
                     }}
                   >
@@ -188,7 +188,7 @@ function WhatIsLeft() {
                   {prog.done.length + prog.doing.length > 0 ? (
                     <div
                       style={{
-                        fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                        fontSize: 'var(--type-xs-plus)',
                         color: 'var(--app-dim)',
                         marginTop: 'var(--sp-2)',
                         textWrap: 'pretty',
@@ -205,7 +205,7 @@ function WhatIsLeft() {
         );
       })}
 
-      <SectionLabel style={{ margin: '24px 0 8px' }}>Hours and grades</SectionLabel>
+      <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Hours and grades</SectionLabel>
       <div style={{ fontSize: 'var(--type-base)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
         {h.done} hours finished
         {h.withThisTerm !== h.done ? `, ${h.withThisTerm} with this term` : ''}. {gpaLine(g, isCommon(state.scale))}
@@ -215,11 +215,11 @@ function WhatIsLeft() {
 
       {loose.length > 0 ? (
         <>
-          <SectionLabel style={{ margin: '24px 0 8px' }}>Counting towards nothing</SectionLabel>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Counting towards nothing</SectionLabel>
           {/* Either they really are free electives, or a requirement has not
               been entered yet. Both are worth knowing and the app does not
               guess which. */}
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', textWrap: 'pretty' }}>
             {loose.map((c) => c.code).join(', ')}. Either these are free electives, or a
             requirement they satisfy has not been entered yet.
           </div>
@@ -518,10 +518,10 @@ function Transcript({ rows }: { rows?: Taken[] }) {
           onClick={() => setCurrent(!current)}
           style={{
             width: 'auto',
-            padding: '9px 13px',
+            paddingBlock: 'calc(9px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
             borderRadius: 'var(--r-sm)',
             border: `1px solid ${current ? 'var(--app-accent)' : 'var(--app-line)'}`,
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
           }}
         >
           Taking it now
@@ -542,8 +542,8 @@ function Transcript({ rows }: { rows?: Taken[] }) {
 
       {state.taken.length > 0 ? (
         <>
-          <SectionLabel style={{ margin: '24px 0 8px' }}>Recorded</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Recorded</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {taken.map((c) => (
               <TakenRow key={c.id} course={c} />
             ))}
@@ -639,8 +639,8 @@ function Rules() {
 
       {state.requirements.length > 0 ? (
         <>
-          <SectionLabel style={{ margin: '24px 0 8px' }}>Recorded</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+          <SectionLabel style={{ marginTop: 'calc(24px * var(--density, 1))', marginInline: '0', marginBottom: 'calc(8px * var(--density, 1))' }}>Recorded</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(7px * var(--density, 1))' }}>
             {state.requirements.map((r) => (
               <RequirementRow key={r.id} requirement={r} />
             ))}
@@ -801,7 +801,7 @@ function TakenRow({ course: c }: { course: Taken }) {
         display: 'flex',
         gap: 'var(--sp-5)',
         alignItems: 'baseline',
-        padding: '10px 13px',
+        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
       }}
@@ -819,7 +819,7 @@ function TakenRow({ course: c }: { course: Taken }) {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
             textWrap: 'pretty',
@@ -965,7 +965,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
         display: 'flex',
         gap: 'var(--sp-5)',
         alignItems: 'baseline',
-        padding: '10px 13px',
+        paddingBlock: 'calc(10px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: '1px solid var(--app-line)',
       }}
@@ -983,7 +983,7 @@ function RequirementRow({ requirement: r }: { requirement: Requirement }) {
         <span
           style={{
             display: 'block',
-            fontSize: 'calc(11.5px * var(--text-scale, 1))',
+            fontSize: 'var(--type-xs-plus)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-1)',
             textWrap: 'pretty',

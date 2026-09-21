@@ -336,7 +336,7 @@ export function ReviewSheet({
                   display: 'block',
                   width: '100%',
                   textAlign: 'left',
-                  padding: '11px 12px',
+                  paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
                   borderRadius: 'var(--r-md)',
                   border: `1px solid ${rows.every(({ at }) => taken[at]) ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
                   background: rows.every(({ at }) => taken[at]) ? 'var(--app-accent-wash)' : 'transparent',
@@ -447,8 +447,8 @@ function Row({
         display: 'block',
         width: '100%',
         textAlign: 'left',
-        padding: '11px 12px',
-        marginBottom: 7,
+        paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(12px * var(--density, 1))',
+        marginBottom: 'calc(7px * var(--density, 1))',
         borderRadius: 'var(--r-md)',
         border: `1px solid ${on ? 'var(--app-accent-deep)' : conflict ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
         background: on ? 'var(--app-accent-wash)' : conflict ? 'var(--app-warn-wash)' : 'transparent',
@@ -464,7 +464,7 @@ function Row({
             display: 'block',
             fontSize: 'var(--type-sm)',
             color: 'var(--app-dim)',
-            marginTop: 3,
+            marginTop: 'calc(3px * var(--density, 1))',
             lineHeight: 'var(--leading-normal)',
           }}
         >
@@ -498,7 +498,7 @@ function Row({
             fontSize: 'var(--type-sm)',
             color: 'var(--app-dim)',
             marginTop: 'var(--sp-3)',
-            paddingLeft: 9,
+            paddingLeft: 'calc(9px * var(--density, 1))',
             borderLeft: `2px solid ${conflict ? 'var(--app-warn-line)' : 'var(--app-line)'}`,
             lineHeight: 'var(--leading-normal)',
           }}

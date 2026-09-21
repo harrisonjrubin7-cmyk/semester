@@ -163,14 +163,14 @@ export function Sources() {
             />
           ) : (
             <>
-              <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
+              <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-relaxed)' }}>
                 {completeness(list)}
               </div>
               {list.map((s) => {
                 const missing = gaps(s);
                 return (
-                  <Blueprint plain key={s.id} style={{ padding: '12px 13px', marginBottom: 'var(--sp-4)' }}>
-                    <div style={{ fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>{s.raw}</div>
+                  <Blueprint plain key={s.id} style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))', marginBottom: 'var(--sp-4)' }}>
+                    <div style={{ fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-normal)', textWrap: 'pretty' }}>{s.raw}</div>
                     {s.role.trim() ? (
                       <div style={{ fontSize: 'var(--type-sm)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal)' }}>
                         For: {s.role}
@@ -189,7 +189,7 @@ export function Sources() {
                             patch: { role: e.target.value.trim() },
                           })
                         }
-                        style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'calc(12.5px * var(--text-scale, 1))' }}
+                        style={{ width: '100%', marginTop: 'var(--sp-4)', fontSize: 'var(--type-sm-plus)' }}
                       />
                     )}
                     <div
@@ -214,13 +214,13 @@ export function Sources() {
                         className="bare"
                         onClick={() => dispatch({ type: 'dropSource', id: s.id })}
                         aria-label={`Remove ${s.raw.slice(0, 40)}`}
-                        style={{ padding: '6px 10px', color: 'var(--app-dim)', fontSize: 'var(--type-sm)' }}
+                        style={{ paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))', color: 'var(--app-dim)', fontSize: 'var(--type-sm)' }}
                       >
                         Remove
                       </button>
                     </div>
                     {missing.length > 0 ? (
-                      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-3)', lineHeight: 1.4 }}>
+                      <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-3)', lineHeight: 'var(--leading-normal-minus)' }}>
                         Missing {missing.join(', ')}. Kept as you wrote it either way.
                       </div>
                     ) : null}

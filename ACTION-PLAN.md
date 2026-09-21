@@ -143,7 +143,7 @@ Two halves, and they are in opposite states.
 **The empty shells are done.** "Roughly 17 of the 60 destinations are empty
 shells on first visit — hiding or clearly deferring them for new users would cut
 the effective destination count dramatically." That is `lib/reveal.ts`, shipping:
-a brand-new account sees **eleven** destinations of sixty, and each of the rest
+a brand-new account sees **eleven** destinations of fifty-eight, and each of the rest
 is unlocked by a fact about the semester rather than a timer — an exam runway
 when there is an exam, the grade machinery when there is a grade, the reflective
 screens when a week has happened. Visited screens never re-lock, search finds

@@ -143,7 +143,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
     return (
       /* `data-editing`: the assistant's floating button stands down while a
          row is a form. See the note on `editing` in `ai/Assistant.tsx`. */
-      <Blueprint data-editing="" style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
+      <Blueprint data-editing="" style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', background: 'var(--app-panel)' }}>
         <input
           className="input"
           value={title}
@@ -264,7 +264,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             className="btn btn-primary"
             onClick={save}
             disabled={!title.trim()}
-            style={{ width: 'auto', padding: '0 16px', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(16px * var(--density, 1))', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Save
           </button>
@@ -272,7 +272,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
             type="button"
             className="bare"
             onClick={() => setEditing(false)}
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Cancel
           </button>
@@ -286,7 +286,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
                any overlap rather than at half of it — see `tappable` in
                `ai/Assistant.tsx`. */
             data-danger=""
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Delete
           </button>
@@ -294,7 +294,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         {/* Where it came from, when something put it here. A step in a plan
             found three weeks later says what it is for. */}
         {t.note ? (
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
             {t.note}
           </div>
         ) : null}
@@ -307,7 +307,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
       style={{
         display: 'flex',
         gap: 'var(--sp-6)',
-        padding: '12px 14px',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
         alignItems: 'flex-start',
         background: t.done ? 'transparent' : 'var(--app-panel)',
       }}
@@ -362,7 +362,7 @@ function TaskRow({ task: t }: { task: PersonalTask }) {
         >
           {t.title}
         </span>
-        <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine(t.done), marginTop: 3 }}>
+        <span style={{ display: 'block', fontSize: 'var(--type-xs)', ...secondLine(t.done), marginTop: 'calc(3px * var(--density, 1))' }}>
           <span className="tag tag-neutral" style={{ marginRight: 'var(--sp-3)' }}>
             {t.courseId ? courseCode(t.courseId) : 'Personal'}
           </span>
@@ -454,7 +454,7 @@ function Tasks({ rows }: { rows?: PersonalTask[] }) {
   return (
     <div>
       {open ? (
-        <Blueprint style={{ padding: 14, marginBottom: 14 }}>
+        <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginBottom: 'calc(14px * var(--density, 1))' }}>
           <input
             className="input"
             value={title}
@@ -904,7 +904,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
 
   if (editing) {
     return (
-      <Blueprint data-editing="" style={{ padding: '12px 14px', background: 'var(--app-panel)' }}>
+      <Blueprint data-editing="" style={{ paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', background: 'var(--app-panel)' }}>
         <input
           className="input"
           value={title}
@@ -979,7 +979,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
               aria-pressed={kind === k.id}
               style={{
                 flex: 'none',
-                padding: '5px 10px',
+                paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
                 fontSize: 'var(--type-xs)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
@@ -1001,7 +1001,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             className="btn btn-primary"
             onClick={save}
             disabled={!title.trim()}
-            style={{ width: 'auto', padding: '0 16px', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(16px * var(--density, 1))', height: 38, fontSize: 'var(--type-xs)', letterSpacing: '0.1em', textTransform: 'uppercase' }}
           >
             Save
           </button>
@@ -1009,7 +1009,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             type="button"
             className="bare"
             onClick={() => setEditing(false)}
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Cancel
           </button>
@@ -1020,7 +1020,7 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
             onClick={() => dispatch({ type: 'deleteAppointment', id: a.id })}
             aria-label={`Delete ${a.title}`}
             data-danger=""
-            style={{ width: 'auto', padding: '0 8px', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
+            style={{ width: 'auto', paddingBlock: '0', paddingInline: 'calc(8px * var(--density, 1))', height: 38, fontSize: 'var(--type-sm)', color: 'var(--app-dim)' }}
           >
             Delete
           </button>
@@ -1034,8 +1034,8 @@ function AppointmentRow({ appointment: a }: { appointment: Appointment }) {
       plain
       style={{
         display: 'flex',
-        gap: 13,
-        padding: '12px 14px',
+        gap: 'calc(13px * var(--density, 1))',
+        paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))',
         // The same tint the hour grid uses, so a row and its block on the
         // day are recognisably the same thing.
         borderLeft: `2px solid ${kindOf(a.kind).tint}`,
@@ -1165,7 +1165,7 @@ function Appointments() {
   return (
     <div>
       {open ? (
-        <Blueprint style={{ padding: 14, marginBottom: 14 }}>
+        <Blueprint style={{ paddingBlock: 'calc(14px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginBottom: 'calc(14px * var(--density, 1))' }}>
           <input
             className="input"
             value={title}
@@ -1241,7 +1241,7 @@ function Appointments() {
                 aria-pressed={kind === k.id}
                 style={{
                   flex: 'none',
-                  padding: '5px 10px',
+                  paddingBlock: 'calc(5px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
                   fontSize: 'var(--type-xs)',
                   letterSpacing: '0.08em',
                   textTransform: 'uppercase',
@@ -1290,7 +1290,7 @@ function Appointments() {
         />
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: 'calc(14px * var(--density, 1))' }}>
         {upcoming.map((a) => (
           <AppointmentRow key={a.id} appointment={a} />
         ))}
@@ -1342,7 +1342,7 @@ function Notes({ rows }: { rows?: Note[] }) {
           body="Write anything — a lecture summary, a question for office hours — and attach files to it."
         />
       ) : (
-        <div style={{ marginTop: 14 }}>
+        <div style={{ marginTop: 'calc(14px * var(--density, 1))' }}>
           {notes.map((n) => (
             <div key={n.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
             <button
@@ -1365,7 +1365,7 @@ function Notes({ rows }: { rows?: Note[] }) {
                     display: 'block',
                     fontSize: 'var(--type-xs)',
                     color: 'var(--app-dim)',
-                    marginTop: 3,
+                    marginTop: 'calc(3px * var(--density, 1))',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -1545,7 +1545,7 @@ export function NoteEditor() {
         onChange={(e) => dispatch({ type: 'updateNote', id: note.id, patch: { body: e.target.value } })}
         placeholder="Write anything."
         spellCheck
-        style={{ minHeight: 260, fontSize: 'var(--type-md)', lineHeight: 1.55, marginTop: 'var(--sp-6)' }}
+        style={{ minHeight: 260, fontSize: 'var(--type-md)', lineHeight: 'var(--leading-relaxed-plus)', marginTop: 'var(--sp-6)' }}
         aria-label="Note body"
       />
 
@@ -1591,7 +1591,7 @@ export function NoteEditor() {
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         {attached.map((f) => (
-          <Blueprint plain key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', padding: '11px 13px' }}>
+          <Blueprint plain key={f.id} style={{ display: 'flex', gap: 'var(--sp-6)', paddingBlock: 'calc(11px * var(--density, 1))', paddingInline: 'calc(13px * var(--density, 1))' }}>
             <button
               type="button"
               className="bare"
@@ -1617,7 +1617,7 @@ export function NoteEditor() {
               type="button"
               className="btn btn-ghost"
               onClick={() => dispatch({ type: 'detachFile', noteId: note.id, fileId: f.id })}
-              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', padding: '4px 6px' }}
+              style={{ flex: 'none', fontSize: 'calc(10px * var(--text-scale, 1))', letterSpacing: '0.12em', paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(6px * var(--density, 1))' }}
             >
               Detach
             </button>
@@ -1635,7 +1635,7 @@ export function NoteEditor() {
         dispatch({ type: 'back' });
         }}
         tone="ghost" spacing="0.12em"
-        style={{ marginTop: 18, color: 'var(--app-dim)' }}
+        style={{ marginTop: 'calc(18px * var(--density, 1))', color: 'var(--app-dim)' }}
       >
         Delete note
       </ActionButton>

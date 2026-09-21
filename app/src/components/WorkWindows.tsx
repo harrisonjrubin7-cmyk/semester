@@ -42,7 +42,7 @@ export function WorkWindows() {
   return (
     <Folding name="WorkWindows">
       <SectionLabel>When you actually work</SectionLabel>
-      <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
+      <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-relaxed)', marginBottom: 'var(--sp-5)' }}>
         The app counts a day as sixteen waking hours until you say otherwise, which is a default
         rather than a fact about you. Two or three windows here make every hour figure in the app
         true — the week ahead, the exam runway, what is left over.
@@ -98,7 +98,7 @@ export function WorkWindows() {
                   }
                   style={{
                     flex: 1,
-                    padding: '6px 0',
+                    paddingBlock: 'calc(6px * var(--density, 1))', paddingInline: '0',
                     fontSize: 'var(--type-xs)',
                     background: on ? 'var(--app-accent-wash)' : 'transparent',
                     borderColor: on ? 'var(--app-accent-deep)' : 'var(--app-line)',
@@ -122,7 +122,7 @@ export function WorkWindows() {
               }}
               style={{ flex: 1, minWidth: 0, height: 36, fontSize: 'var(--type-base)' }}
             />
-            <span style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', ...secondLine(), flex: 'none' }}>to</span>
+            <span style={{ fontSize: 'var(--type-xs-plus)', ...secondLine(), flex: 'none' }}>to</span>
             <input
               className="input"
               type="time"
@@ -136,7 +136,7 @@ export function WorkWindows() {
             />
           </div>
 
-          <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
+          <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-3)' }}>
             {tidy(w)
               ? `${daysLine(w.days)} · ${spanLine(w)} · ${hoursAWeek([w])} hours a week`
               : 'Pick at least one day, and an end after the start. Counted as nothing until you do.'}
@@ -151,7 +151,7 @@ export function WorkWindows() {
             type="button"
             className="btn btn-secondary"
             onClick={() => dispatch({ type: 'addWindow', window: s })}
-            style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
+            style={{ height: 34, fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(11px * var(--density, 1))', flex: 'none' }}
           >
             + {s.label}
           </button>
@@ -165,14 +165,14 @@ export function WorkWindows() {
               window: { label: '', days: [1, 2, 3, 4, 5], from: 9 * 60, to: 12 * 60 },
             })
           }
-          style={{ height: 34, fontSize: 'var(--type-sm)', padding: '0 11px', flex: 'none' }}
+          style={{ height: 34, fontSize: 'var(--type-sm)', paddingBlock: '0', paddingInline: 'calc(11px * var(--density, 1))', flex: 'none' }}
         >
           + One of your own
         </button>
       </div>
 
       {windows.length > 0 && (
-        <div style={{ fontSize: 'calc(11.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
+        <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
           {hoursAWeek(windows)} hours a week before anything is promised. Nothing is ever scheduled
           into a window — this only says how many hours are actually there.
         </div>

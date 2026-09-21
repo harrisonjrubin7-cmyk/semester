@@ -107,7 +107,7 @@ export function Suppose({
         </SectionLabel>
         <div
           style={{
-            fontSize: 'var(--type-sm)',
+            fontSize: 'var(--type-sm-plus)',
             color: 'var(--app-dim)',
             marginBottom: 'var(--sp-5)',
             lineHeight: 'var(--leading-relaxed)',
@@ -180,7 +180,7 @@ export function Suppose({
                   <div
                     key={line}
                     style={{
-                      fontSize: 'var(--type-base)',
+                      fontSize: 'var(--type-base-plus)',
                       color: 'var(--app-dim)',
                       lineHeight: 'var(--leading-relaxed)',
                       textWrap: 'pretty',
@@ -195,7 +195,7 @@ export function Suppose({
             {runway ? (
               <div
                 style={{
-                  fontSize: 'var(--type-sm)',
+                  fontSize: 'var(--type-sm-plus)',
                   color: 'var(--app-dim)',
                   marginTop: 'var(--sp-4)',
                   lineHeight: 'var(--leading-relaxed)',
@@ -212,7 +212,7 @@ export function Suppose({
             {s.over.length > 0 && (
               <div
                 style={{
-                  fontSize: 'var(--type-sm)',
+                  fontSize: 'var(--type-sm-plus)',
                   color: 'var(--app-warn)',
                   marginTop: 'var(--sp-4)',
                   lineHeight: 'var(--leading-relaxed)',
@@ -227,7 +227,7 @@ export function Suppose({
             {s.unreadable.length > 0 && (
               <div
                 style={{
-                  fontSize: 'var(--type-sm)',
+                  fontSize: 'var(--type-sm-plus)',
                   color: 'var(--app-warn)',
                   marginTop: 'var(--sp-4)',
                   lineHeight: 'var(--leading-relaxed)',

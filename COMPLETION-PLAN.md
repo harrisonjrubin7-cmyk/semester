@@ -1273,7 +1273,7 @@ decision, and not as a side effect of wanting a dashboard.
 ### 7.1 Performance
 
 Measured today, against the four shipped courses: 44 units, 44 narrated lessons,
-8 podcast editions, 60 destinations, 164 spreadsheet functions.
+8 podcast editions, <!--screens-->fifty-eight<!--/--> destinations, 164 spreadsheet functions.
 
 | Watch for | Today | What would trigger work |
 | --- | --- | --- |
@@ -2928,7 +2928,7 @@ does that is **not a screen**, and there were two whole registries of that:
 
 | Registry | Holds | Searched by |
 | --- | --- | --- |
-| `lib/nav.ts` `DESTINATIONS` | 60 screens | the global search |
+| `lib/nav.ts` `DESTINATIONS` | <!--screens-->fifty-eight<!--/--> screens | the global search |
 | `lib/modes.ts` | the 11 ways through a course | nothing |
 | `lib/settings.ts` | 11 settings pages, each with label, contents and synonyms | only the Settings screen's own box |
 
@@ -3774,7 +3774,7 @@ done
 # Engine coverage.
 grep -oE "case '[A-Z0-9.]+'" src/lib/sheet.ts | sort -u | wc -l   # 164 functions
 sed -n '/DIAGRAM_KINDS = \[/,/\] as const/p' src/lib/types.ts | grep -c "^  '"   # 21 kinds
-grep -c '^  {' src/lib/nav.ts                                      # 60 destinations
+grep -c '^  {' src/lib/nav.ts                                      # destinations in the registry
 wc -l src/lib/runway.ts src/lib/covers.ts src/screens/Runway.tsx
 wc -l src/lib/pivot.ts src/lib/termgpa.ts src/lib/diagram.ts src/lib/quotes.ts
 

@@ -48,7 +48,7 @@ export function MarkClass({
   if (!started) return null;
 
   return (
-    <div style={{ display: 'flex', gap: 5, marginTop: 7, flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 'calc(5px * var(--density, 1))', marginTop: 'calc(7px * var(--density, 1))', flexWrap: 'wrap' }}>
       {CHOICES.map((c) => {
         const on = now === c.mark;
         return (
@@ -73,12 +73,12 @@ export function MarkClass({
             style={{
               width: 'auto',
               flex: 'none',
-              padding: '4px 10px',
+              paddingBlock: 'calc(4px * var(--density, 1))', paddingInline: 'calc(10px * var(--density, 1))',
               height: 28,
               borderRadius: 'var(--r-sm)',
               border: `1px solid ${on ? 'var(--app-accent-deep)' : 'var(--app-line)'}`,
               background: on ? 'var(--app-accent-wash)' : 'transparent',
-              fontSize: 'calc(11.5px * var(--text-scale, 1))',
+              fontSize: 'var(--type-xs-plus)',
               ...secondLine(on),
             }}
           >

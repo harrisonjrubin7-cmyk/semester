@@ -179,7 +179,7 @@ export function Runway() {
   if (!exam || !r) {
     return (
       <Page>
-        <Blueprint style={{ padding: '15px 16px' }}>
+        <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
           <EmptyState
             inline
             title="Nothing to count down to"
@@ -225,11 +225,11 @@ export function Runway() {
           value={exam.id}
           labels={Object.fromEntries(next.map((e) => [e.id, `${code(e.c)} · ${e.daysAway}d`]))}
           onChange={(id) => setPick(next.findIndex((e) => e.id === id))}
-          style={{ marginBottom: 14 }}
+          style={{ marginBottom: 'calc(14px * var(--density, 1))' }}
         />
       )}
 
-      <Blueprint style={{ padding: '15px 16px' }}>
+      <Blueprint style={{ paddingBlock: 'calc(15px * var(--density, 1))', paddingInline: 'calc(16px * var(--density, 1))' }}>
         <div className="kicker">
           {code(exam.c)} · {exam.title}
         </div>
@@ -243,7 +243,7 @@ export function Runway() {
           {r.stage.label}. {r.stage.shape}
         </div>
         {r.daysAway > 0 ? (
-          <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginTop: 7, lineHeight: 'var(--leading-normal)' }}>
+          <div style={{ fontSize: 'var(--type-sm-plus)', color: 'var(--app-dim)', marginTop: 'calc(7px * var(--density, 1))', lineHeight: 'var(--leading-normal)' }}>
             {r.clearDays} of those days have nothing else standing on them.
           </div>
         ) : null}
@@ -255,7 +255,7 @@ export function Runway() {
         eleven at night. Silent for everybody who has not set one.
       */}
       {book && (
-        <Blueprint style={{ padding: '13px 14px', marginTop: 'var(--sp-5)' }}>
+        <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))', marginTop: 'var(--sp-5)' }}>
           <div className="kicker">Student Access</div>
           <div
             style={{
@@ -277,8 +277,8 @@ export function Runway() {
               className="btn btn-secondary btn-block"
               style={{
                 height: 38,
-                marginTop: 9,
-                fontSize: 'calc(12.5px * var(--text-scale, 1))',
+                marginTop: 'calc(9px * var(--density, 1))',
+                fontSize: 'var(--type-sm-plus)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -311,7 +311,7 @@ export function Runway() {
               unit: r.units.indexOf(worst),
             })
           }
-          style={{ height: 52, marginTop: 14, display: 'block', textAlign: 'center' }}
+          style={{ height: 52, marginTop: 'calc(14px * var(--density, 1))', display: 'block', textAlign: 'center' }}
         >
           {/*
             `--app-dim` is wrong here, and main is right about why: it is the
@@ -484,7 +484,7 @@ export function Runway() {
               opacity: u.cards === 0 ? DIMMED_ROW : 1,
             }}
           >
-            <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>{u.name}</span>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>{u.name}</span>
             <span
               style={{
                 flex: 'none',
@@ -528,14 +528,14 @@ export function Runway() {
                 style={{
                   flex: 'none',
                   width: 58,
-                  fontSize: 'calc(11.5px * var(--text-scale, 1))',
+                  fontSize: 'var(--type-xs-plus)',
                   color: 'var(--app-dim)',
                   fontVariantNumeric: 'tabular-nums',
                 }}
               >
                 {i.dueShort}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 'calc(13.5px * var(--text-scale, 1))', lineHeight: 1.35 }}>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 'var(--type-base-plus)', lineHeight: 'var(--leading-tight-plus)' }}>
                 {i.title}
                 <span style={{ color: 'var(--app-dim)' }}> · {code(i.c)}</span>
               </span>
@@ -544,7 +544,7 @@ export function Runway() {
         </>
       )}
 
-      <PrintButton label="Print the runway" style={{ marginTop: 14 }} />
+      <PrintButton label="Print the runway" style={{ marginTop: 'calc(14px * var(--density, 1))' }} />
       <div style={{ fontSize: 'var(--type-xs)', ...secondLine(), marginTop: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
         Every number here is counted from your own drilling and your own deadlines. There is no
         readiness score and there will not be one — it would be believed, and the app cannot know.

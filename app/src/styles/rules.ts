@@ -38,8 +38,11 @@ import { join } from 'node:path';
 /** `fontSize: 'var(--type-xs)'` and friends — the six named steps. */
 export const TYPE: Record<string, string> = {
   '11': 'xs',
+  '11.5': 'xs-plus',
   '12': 'sm',
+  '12.5': 'sm-plus',
   '13': 'base',
+  '13.5': 'base-plus',
   '14': 'md',
   '15': 'lg',
   '26': 'xl',
@@ -47,8 +50,12 @@ export const TYPE: Record<string, string> = {
 
 export const LEADING: Record<string, string> = {
   '1.3': 'tight',
+  '1.35': 'tight-plus',
+  '1.4': 'normal-minus',
   '1.45': 'normal',
   '1.5': 'relaxed',
+  '1.55': 'relaxed-plus',
+  '1.6': 'loose',
 };
 
 export const SPACE: Record<string, string> = {

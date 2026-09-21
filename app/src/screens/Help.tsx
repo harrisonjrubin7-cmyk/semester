@@ -91,7 +91,7 @@ function Chapter({
           width: '100%',
           gap: 'var(--sp-5)',
           alignItems: 'baseline',
-          padding: '12px 0',
+          paddingBlock: 'calc(12px * var(--density, 1))', paddingInline: '0',
           textAlign: 'left',
         }}
       >
@@ -149,7 +149,7 @@ function render(body: string) {
             gap: 'var(--sp-4)',
             fontSize: 'var(--type-base)',
             lineHeight: 'var(--leading-relaxed)',
-            padding: '2px 0',
+            paddingBlock: 'calc(2px * var(--density, 1))', paddingInline: '0',
           }}
         >
           <span style={{ ...faintLine(), flex: 'none' }}>·</span>
@@ -192,7 +192,7 @@ function inline(text: string) {
           style={{
             fontFamily: 'var(--font-heading)',
             fontSize: 'var(--type-sm)',
-            padding: '1px 5px',
+            paddingBlock: 'calc(1px * var(--density, 1))', paddingInline: 'calc(5px * var(--density, 1))',
             border: '1px solid var(--app-line)',
             borderRadius: 'var(--r-sm)',
           }}

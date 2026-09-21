@@ -44,7 +44,7 @@ function One({ insight }: { insight: Insight }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <Blueprint style={{ padding: '13px 14px' }}>
+    <Blueprint style={{ paddingBlock: 'calc(13px * var(--density, 1))', paddingInline: 'calc(14px * var(--density, 1))' }}>
       <div style={{ fontSize: 'var(--type-md)', lineHeight: 'var(--leading-tight)', textWrap: 'pretty' }}>
         {insight.headline}
       </div>
@@ -149,7 +149,7 @@ function One({ insight }: { insight: Insight }) {
                 display: 'block',
                 width: '100%',
                 textAlign: 'left',
-                padding: '6px 0 6px 11px',
+                paddingTop: 'calc(6px * var(--density, 1))', paddingRight: '0', paddingBottom: 'calc(6px * var(--density, 1))', paddingLeft: 'calc(11px * var(--density, 1))',
                 borderLeft: '2px solid var(--app-line)',
                 fontSize: 'var(--type-sm)',
                 lineHeight: 'var(--leading-normal)',

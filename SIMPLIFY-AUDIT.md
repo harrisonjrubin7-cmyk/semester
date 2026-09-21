@@ -1,3 +1,298 @@
+# One app — the twenty-third pass: a record of where you have been, that nothing has ever read
+
+Against `main` at `1d1b0bc`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge, no screen touched. One cut and one guard.
+
+Numbered twenty-third because the twenty-second landed while this was being
+written — `#542`, from another session, on routes. `CLAUDE.md`'s first rule
+caught it before a word of this was committed, and the subjects turned out to
+be unrelated: theirs is the route claim, this is a persisted field. Their T1
+also closes a row this file has carried since the nineteenth pass as *the
+owner's to name* — `account` against `profile` — by finding the answer already
+written in `screens/Profile.tsx`'s own docstring. It is struck below.
+
+## The subject, and two instruments that had to be thrown away first
+
+The twenty-first pass found a gate that nothing applied. The obvious follow-up
+is *what else is carried and never used*, and the first two ways of asking it
+were both wrong in ways worth recording, because each failed the rule this file
+keeps re-learning.
+
+**A dead-export census over `app/src` reported 1,054 dead exports in 714
+files.** That is not a finding, it is a broken probe, and three hand-checks
+said why: `screens/Import.tsx`'s `Import` is reached by
+`lazy(() => import('./screens/Import'))`, which the parser never saw, so every
+lazily-loaded screen read as dead; `data/schools/index.ts`'s `BUNDLED` is used
+twice inside its own module; `styles/rules.ts`'s `sources` is a helper 28 test
+files import. Three blind spots, one number, no way to tell which rows were
+real. Dropped rather than reported.
+
+**A settings census flagged three keys, and two were the probe's fault.**
+`seenOnboarding` is read as `persisted.seenOnboarding`, off the persisted
+object rather than off `state`, which the regex did not cover. `liveSession` is
+read five times in `state/slices/study.ts` — and the probe had excluded the
+slices as *carriers*, which is wrong: a reducer reading a field to decide the
+next state is the app using it. **The exclusion list was the fault, not the
+field.**
+
+One of the three survived both corrections.
+
+## T1 — `lastOpened`: written on every navigation, read by nothing, ever
+
+`state/slices/navigate.ts` wrote it on every `go`: the day each screen was
+opened, per screen, rounded to the day. From there it is carried by every
+system this app has for carrying data:
+
+| Carried by | Where |
+| --- | --- |
+| persisted | `pickPersisted`, `state/shape.ts` |
+| restored | `loadPersisted`, with its own default |
+| merged across devices | `lib/merge.ts`, strategy `newer` |
+| described in the backup | `lib/export.ts` — *"when each screen was last opened"* |
+| disclosed on the privacy screen | `lib/privacy.ts`, in the list of what is held |
+
+And read by nothing. Not narrowed to "no current caller" — **no screen or
+component in this repository's history has ever contained the word**:
+
+    $ git log --all -S"lastOpened" -- app/src/screens app/src/components
+    (no output)
+
+It is worse than the twenty-first pass's `showAll` in the way that matters.
+`showAll` was a setting somebody chose and the app then ignored. This is a
+record of where a student has been, collected on every navigation, kept
+forever, and synced between their devices, for a feature that was never built.
+
+### Its own docblock carries the rule that condemns it
+
+`state/shape.ts` said what it was for, and in the same paragraph stated the
+principle:
+
+> Everything directory wanted to say "three weeks ago" beside a row and to
+> separate a screen nobody has opened from one abandoned in September. …
+> **what a feature does not need is not stored, whichever machines end up
+> holding it.**
+
+Both halves of that purpose exist in the app today and neither uses this field.
+**Lately** is `lately(state.recent, …)` in `lib/nav.ts` — an order, not a date,
+so it cannot say "three weeks ago". **Not opened yet** is `lib/unseen.ts` over
+`state.visited` — a boolean, so it separates never-opened from opened and
+cannot tell a screen abandoned in September from one opened this morning.
+
+Three records of where you have been. `recent` is used, `visited` is used, and
+the third was never wired to anything.
+
+## T2 — the cut, and what came with it
+
+The field, its write, and its four carrier entries. Then one thing that is only
+visible once the field is gone: **`lastOpened` was the only field with the
+`newer` merge strategy**, so `merge.ts`'s `newer()`, its `Strategy` union
+member and its `switch` case were dead the moment it went — and no test had
+ever exercised any of them. They are cut too, rather than left as a strategy
+nothing can select. `lib/coedit.ts` has its own unrelated `newer`, which is the
+same name-collision trap the last pass hit with three `showing`s.
+
+No migration step, and that is the claim rather than the assumption — the first
+version of the test asserted the wrong mechanism and failed, usefully.
+`loadPersisted` spreads `...saved` before it names a field, so a copy saved
+before this pass **does** carry `lastOpened` back in and holds it until the
+next write. It is `pickPersisted` that drops it, by naming what it takes rather
+than by removing what it does not want. So: it opens, it carries, it does not
+survive the next save.
+
+## T3 — the guard, and the gap it fills
+
+This repository already guards the other direction, and thoroughly. Every
+persisted field must be accounted for in the backup (`lib/export.test.ts`),
+assigned a merge strategy (`lib/merge.test.ts`) and named in the privacy
+disclosure (`lib/privacy.test.ts`) — and all three read the field list out of
+`pickPersisted` so they cannot drift from a copy.
+
+**Every one of those is a guard about being carried.** A field that is only
+carried passes all three, which is exactly how this one lived: it satisfied
+each of them and did nothing.
+
+`src/state/keyread.test.ts` asks the other question — is any persisted field
+read by something that is not merely carrying it. Five carriers are excluded
+and the list is argued rather than assumed: the shape, the migration ladder,
+the merge, the backup, the privacy list. `state/slices/` is deliberately **not**
+excluded, because an earlier draft did exclude it and reported `liveSession` as
+a finding.
+
+It reads `.field` rather than a bare name: a bare match would report every key
+whose name is an ordinary word — `notes`, `term`, `scale`, `progress`,
+`people` — as read by whichever file happens to use the word, which is a probe
+that can only pass. And it reads the tree once; the first version opened every
+file per field, seventy thousand reads, and timed out at five seconds. A guard
+slow enough to be deleted is a guard that will be.
+
+Reverted — the field carried again and read by nothing — it fails naming
+`lastOpened`. Restored, it passes.
+
+## What was checked and is not a finding
+
+- **`liveSession`** — five readers in `slices/study.ts`. Live.
+- **`seenOnboarding`** — read at `state/store.tsx:310`, off `persisted`. Live,
+  and the reason the probe now matches that form.
+- **Lately absent from the directory** on a fresh profile. Driven in a browser
+  and it looked like a regression; the control on `main` is identical, and the
+  reason is `lately`'s own: every screen the walk visited was on the tab bar,
+  which it excludes. Not a fault, and not this pass's.
+- **The browser check of persistence proved nothing either way** and is
+  recorded as such rather than dressed up. Neither tree wrote `visited`,
+  `recent` or `lastOpened` to storage under the probe — the first version
+  re-seeded `localStorage` on every navigation through `addInitScript`, and
+  the second could not make an in-page hash change reach the reducer at all.
+  The evidence for T1 is the source and the history, which are not in doubt;
+  what the browser confirms is narrower and is the right claim for it: the
+  cut tree is **indistinguishable from `main`** on the directory, on Not
+  opened yet, and on `pageerror`.
+
+## Gates
+
+`tsc` clean · lint ok · **10,845 tests pass across 530 files** · shuffle clean ·
+production build clean.
+
+## To do
+
+- ~~`account` on Profile.~~ **Closed** by the twenty-second pass's T1: the
+  answer was already in `screens/Profile.tsx`'s docstring.
+- **`offerable()`'s default is still the ungated registry** — carried from the
+  twenty-first. The one caller passes a pool; a second would get the registry
+  unless it said otherwise.
+- **The dead-export question is still open and still unasked.** Two instruments
+  failed at it here. It wants a probe that resolves dynamic `import()`,
+  distinguishes in-module use from an import, and knows a test helper from a
+  dead one — which is a pass of its own, not a paragraph of this one.
+
+---
+
+# One app — the twenty-second pass: the expensive answer was holding nothing
+
+Against `main` at `8d653be`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge, no screen touched, no route removed. One guard.
+
+Rebased across nine merges while it was being written, one of which was the
+eleven rows arriving as the twentieth pass's T5 from another session — which is
+the second time in two days that two sessions have reached the same row of this
+file within a minute of each other. `CLAUDE.md`'s first rule, twice, and the
+reason this pass checked `main` for its own subject before starting rather than
+after.
+
+Asked for the destinations again, so the destinations were audited again from
+the registry rather than from this file. **Every cluster the skill names is
+argued, and the arguments are right.** What is not right is that the most
+expensive of those arguments was left as prose.
+
+## T1 — the clusters, re-read from the current fifty-eight
+
+The skill's Step 1 names six suspected duplicate groups. Five are closed and
+the sixth is closed differently from how it reads:
+
+| Cluster | Where it stands |
+| --- | --- |
+| six screens over "what is due" | `ahead`, `tonight`, `weekly` merged; `home`, `brief`, `mine` remain and are three questions |
+| calendar grains vs `ahead`/`weekly` | kept — grains of one report and grains of one grid |
+| `ask`/`chat`/the assistant sheet | the `/ask-tab` command's, not this file's |
+| `grades`/`standing`/`worked`/`proof` | `grades`, `worked`, `standing` gone; `proof` is spelling and quotation checking, a different job |
+| five ways to find a screen | `everything` gone; `me` is the directory, which is an index |
+| five ways to change course data | `check` gone; `import`, `edit`, `update`, `announce` are four moments, not four doors |
+
+The two that looked live on a fresh reading were `account`/`profile` and
+`data`/`privacy`/`export`. Both are settled, and `screens/Profile.tsx` settles
+them in its own docstring rather than anywhere in this file:
+
+> It owns exactly one thing: **your name** … Signing in belongs to Account,
+> because that screen explains what syncs and what does not; what is held and
+> how big it is belongs to Your data; what leaves the device belongs to
+> Privacy … A profile screen that re-implemented any of those would be the
+> second door onto a room that already has one.
+
+That is the skill's answer, already taken: a hub of rows that owns one field,
+pointing at four screens that each own their job. There is no merge here and
+proposing one would be re-arguing a decision with a better argument on the
+other side.
+
+## T2 — so the finding is what the answer was left holding, which was nothing
+
+The seventeenth pass read three destinations by hand. The nineteenth read the
+remaining fifty-five, closed the row, and wrote the verdict here. **Nothing has
+held that verdict since.** `lib/onehome.test.ts` guards a different fault — a
+destination rendered as another screen's tab — and no test asked the route
+question at all.
+
+One `dispatch({ type: 'go' })` added tomorrow reopens the whole row, and the
+only way to notice would be to read fifty-five screens again. The skill's own
+"Done means" asks for this as *"a checked claim, with the grep you ran"*; what
+existed was the claim without the check.
+
+`lib/oneroute.test.ts` is the check.
+
+## T3 — and it encodes the lesson rather than recording it
+
+Four passes over-reported on this row, each by measuring the wrong unit, and
+the nineteenth stated the rule that survived: **group by rendered unit, not by
+path.** That rule has been a paragraph in this file ever since. It is now the
+test's implementation.
+
+Splitting each file at its top-level components clears both of the nineteenth
+pass's false positives without either being written down as an exception:
+
+| File | Offers | In | |
+| --- | --- | --- | --- |
+| `components/Applying.tsx` | `applying` ×2 | `ApplyingSoon` / `ApplyingOn` | clears |
+| `screens/Guide.tsx` | `deck` ×2 | `Decks()` / `Documents()` | clears |
+| `screens/Profile.tsx` | `account` ×2 | both in `Profile()` | **stands** |
+
+A per-file check calls all three. A per-component check calls one, and it is
+the one the nineteenth pass identified by hand as the only real pair. The
+census reproduced that pass's result exactly before the rule was applied —
+same three files, same lines — which is the evidence that the two instruments
+agree about the app and disagree only about what counts.
+
+**Cross-references are not counted, and that is the other half of the rule.**
+`maps` is offered from `Walks` and from `Housing`, `registrar` from `Meals` and
+from `Today`, `edit` from seven places. Twelve destinations have more than one
+call-site file and none of them is a fault: one offer, from one screen, in that
+screen's own context. The fault is the same door twice *where you already are*.
+
+## T4 — checked against a planted fault and against two controls
+
+A guard that has never failed is not known to be a guard, and a guard that
+always fires is a broken probe:
+
+| | Expected | Got |
+| --- | --- | --- |
+| a second `maps` offer planted inside one `Housing` component | red | red — `screens/Housing.tsx · HousingDetails · maps (lines 150, 152)` |
+| **control:** the same destination offered once each by two components | **green** | **green** |
+| **control:** `Profile` settled without updating the allowlist | red | red — *"still has every argued pair"* |
+
+The middle row is the one worth keeping. It is the exact shape that made four
+passes over-report, and a file-scoped version of this test fails it.
+
+## The one pair left standing
+
+`screens/Profile.tsx` offers `account` at two sites that are on screen at once
+— an `ActionButton` whose label is the sign-in state, and a `NavRow` under
+"Your account and your data". The file argues for both, at both sites. Three
+passes have declined to settle it and this is the fourth: it is a taste call
+about two affordances rather than a defect.
+
+It is now a named line in `ARGUED` rather than a paragraph, so settling it
+means deleting that line and watching the test go green — and leaving it
+settled *without* deleting the line fails too, so the exemption cannot outlive
+the thing it excuses.
+
+## To do
+
+- `account` on Profile — the owner's, still, and now one line to delete.
+- The `ItemRow` ARIA widening, carried from the twentieth pass's T5: `Row`
+  already accepts `role` and `ariaChecked`, so passing them through would bring
+  `MuteCourses` and `DesignEditor` onto the shared row and take the eleven from
+  four converted to six.
+- Nothing else on the destinations row. It is closed, and now it is held.
+
+---
+
 # One app — the twenty-first pass: the gate that governed nothing
 
 Against `main` at `a8c3f7d`. **<!--screens-->fifty-eight<!--/--> destinations**,
@@ -192,8 +487,11 @@ production build clean · driven in a browser, `pageerror` empty on all four run
 
 ## To do
 
-- The eleven hand-drawn rows, one look each, if the owner wants them on
-  `ItemRow` — carried from the twentieth pass.
+- ~~The eleven hand-drawn rows, one look each.~~ **Done** — taken in
+  [#539](https://github.com/harrisonjrubin7-cmyk/semester/pull/539), which
+  merged after this pass was written against `a8c3f7d`. Four were rows and are
+  on `ItemRow`; seven were not rows at all. The verdicts are the twentieth
+  pass's T5 below, so the eleven looks are not taken a third time.
 - `account` on Profile — carried from the nineteenth, the owner's to name.
 - **`offerable()`'s default is still the ungated registry.** The one caller now
   passes a pool; the default is kept for the tests. If a second caller ever
@@ -331,28 +629,33 @@ than a judgement about how much it matters:
 | `screens/call/Stage.tsx:972` | who is at the door · let in / not now | **yes** |
 | `screens/call/Stage.tsx:1087` | who is in the call · their pips | **yes** |
 | `ai/Answer.tsx:269` | a `<th>`/`<td>` in a markdown table | no — a table cell |
-| `components/MuteCourses.tsx:80` | `role="switch"`, `aria-checked` | no — `ItemRow` carries neither |
-| `creation/DesignEditor.tsx:626` | `aria-pressed` layer selector | no — same, and the selection is a colour |
+| `components/MuteCourses.tsx:80` | `role="switch"`, `aria-checked` | **now yes** — `ItemRow` carries them since the widening |
+| `creation/DesignEditor.tsx:626` | `aria-pressed` layer selector | **now yes** — same; the selection stays a colour on the title |
 | `screens/Athletics.tsx:290` | `<label>` wrapping a checkbox | no — a checkbox inside a `button` is invalid |
 | `screens/Career.tsx:908` | `<label>` wrapping a checkbox | no — same |
 | `screens/Data.tsx:384` | `aria-expanded` disclosure | no — the hairline wraps a button *and* its panel |
 | `screens/Pathway.tsx:762` | a `<details>` | no — `ItemRow` cannot be one |
 
-Three of the seven are ruled out by **accessibility rather than by looks** —
+Three of the seven were ruled out by **accessibility rather than by looks** —
 `role="switch"`, `aria-pressed` and the `<label>`/checkbox pairing are all
-things the row would lose on the way in. `ItemRow` could be widened to carry
-the first two (`Row` already takes `role` and `ariaChecked`; `ItemRow` does not
-pass them through), and that is a change to the component rather than to a
-screen, so it is not this worklist's.
+things the row would have lost on the way in. **Two of those three have since
+been answered**: `ItemRow` was widened to carry `role`, `aria-checked`,
+`aria-pressed` and `aria-label`, and `MuteCourses` and `DesignEditor` are on it.
+The `<label>`/checkbox pair cannot be, and is not a widening away: a checkbox
+inside a `button` is invalid markup, not a missing prop.
 
-So the honest figure is **7 hand-drawn rows in 7 files**, and T3's count of 11
+That leaves **5 hand-drawn rows in 5 files**, and T3's count of 11
 was itself still one grep over more than one idiom — the third time in three
 passes that the instrument was the thing that needed correcting.
 
 ## To do
 
-- Widen `ItemRow` to pass `role`/`ariaChecked`/`ariaPressed` through to `Row`,
-  if `MuteCourses` and `DesignEditor` are wanted on it. A component change.
+- ~~Widen `ItemRow` to pass `role`/`ariaChecked`/`ariaPressed` through to
+  `Row`.~~ **Done**, and it was not only a passthrough: `Row`'s `div` branch
+  rendered none of them, so a role on a row without an `onClick` was silently
+  dropped. Both screens are on `ItemRow` now and
+  `components/shell/rows.aria.test.tsx` renders the component and reads the
+  attributes off the DOM, which is the one question source-reading cannot ask.
 - `account` on Profile — carried from the nineteenth pass, the owner's to name.
 - A pointer-pairing guard past `edit`, when a second instance exists.
 

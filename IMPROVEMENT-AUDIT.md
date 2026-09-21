@@ -388,6 +388,28 @@ parent, eight are Settings pages that Settings lists. So the fix is not to
 register them. It is to say so once, somewhere that fails when the next screen
 lands in neither: `lib/nav.registry.test.ts`.
 
+> **Retaken 21 September 2026, at `a8c3f7d`: 71 union members, 58
+> destinations, 14 in neither** — and the fourteen is not 71 − 58, which is
+> the first thing worth saying about it. The two sets are not nested:
+> **`create` is a destination and is not a member of the `Screen` union**, so
+> 57 of the 58 are in the union and 71 − 57 is the fourteen. Subtracting the
+> totals gives thirteen and would have sent somebody looking for a screen that
+> does not exist.
+>
+> The shape of the answer is unchanged and the enumeration still holds where
+> it has anything left to count: `search` and `directory` are the shell
+> looking at itself; `onboarding` is first run; and `course`, `item`, `event`,
+> `guide`, `quiz`, `drill`, `guess`, `gap`, `lesson`, `note` and `slides` are
+> the eleven detail pages opened from a registered parent. The eight Settings
+> pages are gone — Settings now lists what it lists without a screen of its
+> own per row.
+>
+> The figures are retaken rather than corrected in place because that is what
+> this paragraph is: a measurement, on a day, of a tree that moves. What makes
+> the *claim* above still true three weeks later is not the arithmetic — it is
+> `lib/nav.registry.test.ts`, which passes, and which is the thing §4 was
+> actually asking for.
+
 Adding a screen touches several files. Forgetting the registry compiles,
 renders, and leaves a screen that exists and cannot be reached from the
 launcher, search, the directory or the shortcut row. That is step one of the
