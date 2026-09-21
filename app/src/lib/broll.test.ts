@@ -267,15 +267,15 @@ describe('the shot lists in the repository', () => {
 
   it('has every written subject passing the rules it was written under', () => {
     /*
-     * ECON is written; the other three are not. That asymmetry is the point
-     * of this test rather than an accident of it — the first course through
-     * is where a subject that does not survive `check` would show up, and
-     * "all four are blank" would have gone on passing whatever anybody wrote.
+     * All four are written now. The rule this holds is the one that outlives
+     * that: a list is either wholly blank or wholly written, and a half-filled
+     * one is somebody interrupted. It is worth failing on rather than
+     * shipping — `broll-shots.mjs` refuses to price a half-filled list anyway,
+     * so what lands in the repository is a list nobody can use and nothing
+     * says why.
      *
-     * A list is either wholly blank or wholly written. A half-filled one is
-     * somebody interrupted, and it is worth failing on rather than shipping:
-     * `broll-shots.mjs` refuses to price it anyway, so a half-filled list in
-     * the repository is a list nobody can use and nothing says why.
+     * It still earns its place with every course filled, because the next
+     * course to arrive gets drafted blank and filled in exactly the same way.
      */
     for (const file of lists) {
       const list = JSON.parse(readFileSync(join(SHOTS, file), 'utf8'));
@@ -284,15 +284,24 @@ describe('the shot lists in the repository', () => {
     }
   });
 
-  it('still has courses nobody has written yet, and says which', () => {
-    // The state of the work, asserted. When the last one is filled in, this
-    // is the line that tells whoever did it to retire this test rather than
-    // weaken it.
+  it('has nothing left blank, which is what replaced the list of what was', () => {
+    /*
+     * This test used to assert `['bus.json', 'core.json', 'psci.json']` — the
+     * courses nobody had written — and said in a comment that whoever filled
+     * the last one in should retire it rather than weaken it. BUS, CORE and
+     * PSCI are written, so this is that retirement.
+     *
+     * Retired by inverting it rather than by deleting it. The old assertion
+     * stopped being true the moment the work was done; the statement worth
+     * keeping is the one it was counting down to, and it goes red for a new
+     * course drafted and left blank, which is the state it was always really
+     * about.
+     */
     const blank = lists.filter((file) => {
       const list = JSON.parse(readFileSync(join(SHOTS, file), 'utf8'));
       return checkAll(list.shots).length === list.shots.length;
     });
-    expect(blank.sort()).toEqual(['bus.json', 'core.json', 'psci.json']);
+    expect(blank.sort(), 'drafted and never written').toEqual([]);
   });
 });
 

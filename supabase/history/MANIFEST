@@ -20,3 +20,5 @@
 a091b63a85ee5c7d5839632de9b227fd       4214  20260908053943_per_record_sync_with_soft_deletes.sql
 c87932c42613c9e4db93d30dbd5dafa9       1649  20260908054007_calendar_feeds.sql
 c6733bc1d662040d68b1ebbb08a0f10c       5804  20260911151826_groups.sql
+65ceff743008e75fa1ddde2b4678af8a       3088  20260921144711_forms_relation_grants.sql
+bfc5a6401b439a225094492ac3ea477c       2198  20260921150750_access_log_function_search_path.sql
