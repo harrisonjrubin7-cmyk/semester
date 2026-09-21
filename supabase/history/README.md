@@ -1,4 +1,4 @@
-# The ten migrations that existed only in production
+# The migrations that existed only in production
 
 Step 2 of [`MIGRATION-HISTORY.md`](../../MIGRATION-HISTORY.md). Ten migrations
 were applied to the live project through the dashboard or the management API
@@ -45,6 +45,28 @@ has never been a history. Until step 3 reconstructs the eight as they were
 actually applied, there is no order in which twenty-five files replay, and
 adding these ten to `migrations/` would turn CI red and break every preview
 branch for nothing.
+
+## The fourteenth file is a different shape
+
+The ten above, and the three added on 21 September, are all the same case: a
+ledger row whose version has no real SQL in `migrations/`. A stand-in sits
+there so `db push` can see the version, and the statements live here.
+
+`20260921144011_function_grants_rerun_after_access_log.sql` is not that.
+`migrations/20260921144011_function_grants.sql` is a real migration, 8,088
+bytes of it, and it is **not the text the ledger holds at that version**. The
+row is 2,050 bytes and one statement: the second time production ran that
+file, after `access_log` existed, which is the run that closed `note_access`
+and `read_feed`. A directory cannot hold two files at one version, so the
+repository's own migration stays in `migrations/` and the row's text is here.
+
+**Why this one was invisible.** `ledgerfiles.test.ts` asks whether every
+version the database already ran has a file in `migrations/`. At this version
+it always did, so the check passed the whole time — it is not a question about
+what the file says. That is the right scope for it; the gap was that nothing
+else was asking the second question either. `migrationhistory.test.ts` now
+asserts this case by name, so a second version acquiring two texts is a test
+somebody has to edit rather than a thing nobody sees.
 
 ## How they were proved
 
