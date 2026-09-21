@@ -90,7 +90,7 @@ Resolved against the tree. "Present" means the file or table exists and does the
 | 270–271 employer | Semester Recruit | `app/src/lib/career.ts` and `app/src/screens/Career.tsx` are the student's side |
 | 277–287 campus services | Service profiles | `app/src/lib/meals.ts`, `app/src/lib/housing.ts`, `app/src/lib/maps.ts`, `app/src/lib/athletics.ts` — all student-facing readers |
 | 291–292 registrar | Process translation | `app/src/lib/registrar.ts`, `app/src/lib/transcript.ts`, `app/src/screens/Registrar.tsx` |
-| 294–296 moderation | Case system | `public.reports` stores `reporter`, `about`, `message_id`, `reason`, `copy`, `created_at` — and no status, category, assignee or resolution. A sink, not a queue |
+| 294–296 moderation | Case system | **Partly.** `public.reports` gained `status` (`open`/`under_review`/`resolved`/`dismissed`) and a select policy for `private.is_app_admin()` in `20260921214500_report_status.sql`, so a report can now be read and moved. Still no category, assignee or resolution, and **no screen** — a queue nobody has opened is not yet a case system |
 | 297–298 platform admin | Differentiated capability | `public.app_admins` + `private.is_app_admin()`, one tier |
 | 299 permission matrix | Central definitions | Nothing central. `app/src/lib/school.ts` (`allowed`) and `app/src/lib/role.ts` (`forRole`) gate *screens*, and both say they are not permissions |
 | 300 resource authorization | Server-side ownership check | `family_grants` policies and `private.in_group()` — the two working instances |
@@ -711,7 +711,11 @@ OPEN → UNDER_REVIEW → ACTION_REQUIRED → RESOLVED
                                       → DISMISSED
 ```
 
-`public.reports` today has `reporter`, `about`, `message_id`, `reason`, `copy` and `created_at`. It has no status, no category, no assignee and no resolution — so it is a place reports arrive, not a queue anything can be worked from, and a report filed today is read by nobody and answered never.
+`public.reports` has `reporter`, `about`, `message_id`, `reason`, `copy`, `created_at` — and, since `20260921214500_report_status.sql`, `status`, constrained to `open`, `under_review`, `resolved` and `dismissed`. That migration also gave it the select policy it had never had: the table was readable by **nobody**, in principle, and is now readable by `private.is_app_admin()` and by nobody else. The update is narrowed to the status column by a column grant rather than a policy, because row-level security chooses rows and has nothing to say about columns — a reviewer who could rewrite the complaint would be worse than no reviewer.
+
+It has no category, no assignee and no resolution, and **there is no screen**. So a report is now answerable and still unanswered: `app/src/lib/classmates.ts` still says *"Reports are stored, not moderated. Nobody is watching a queue"*, and that sentence stays true until somebody is.
+
+**The screen is sequenced behind the capability split, not in front of it.** The fourth item under *Sequencing* below says the moderator queue must not be built against `private.is_app_admin()` as a boolean, and that is still the right order: `public.role_grants` can carry `moderator`, and a queue written against a single global admin flag would have to be rewritten the moment it does.
 
 Two fields deserve a decision rather than a default. `reported_entity` has to be polymorphic — a user, a message, a listing, an event, an organization — and the honest options are a column per kind or a kind plus an id; the second is smaller and the first is what a foreign key can enforce. And `evidence` must be captured at report time, like `copy` already is, because a reported listing gets edited the moment its author suspects a report.
 
