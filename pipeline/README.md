@@ -23,7 +23,7 @@ documentary.py   podcast episode → a documentary cut of it
 explainer.py     lessons → one YouTube-length video of a course
 explainer.mjs    which units fit, where they land, and what the hook promises
 restyle-script.mjs  script → the same script in a hosting style (calls a model)
-styles.mjs       the hosting styles, as structural parameters
+styles.mjs       the six hosting styles, as structural parameters
 persona-sheet.mjs   persona → its character reference sheet
 personas.mjs     the animated series' characters, as structural parameters
 broll-shots.mjs  chapter marks → a shot list, checked and priced
