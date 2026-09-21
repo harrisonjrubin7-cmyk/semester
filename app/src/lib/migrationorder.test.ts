@@ -191,22 +191,31 @@ describe('no migration is numbered in the past', () => {
   });
 });
 
-describe('the ten recovered migrations stay out of the push', () => {
+describe('the recovered migrations stay out of the push', () => {
   /*
-   * `history/` holds what production ran. Its ten versions are all in the
-   * ledger, so a push would skip them — but they must not be in `migrations/`
-   * for a different reason, measured rather than argued: put there, they break
-   * a *preview* branch, which starts empty and applies every file from scratch
+   * `history/` holds what production ran. Every version in it is in the ledger,
+   * so a push would skip them — but they must not be in `migrations/` for a
+   * different reason, measured rather than argued: put there, they break a
+   * *preview* branch, which starts empty and applies every file from scratch
    * rather than consulting production's ledger. `history/README.md` and
    * `migrationhistory.test.ts` hold that line; this asserts the consequence
    * the ledger makes visible.
+   *
+   * Ten when this was written, twelve now: `forms_relation_grants` and
+   * `access_log_function_search_path` were applied by hand on the afternoon of
+   * 21 September and joined them. The count lives in `MANIFEST` and is asserted
+   * once, by `migrationhistory.test.ts`, rather than in both places — a number
+   * repeated in two files is the fault `counts.ts` was written about, and the
+   * half that is not generated is the half that goes stale.
    */
   it('are in the ledger, so a push has nothing to do with them', () => {
     const applied = new Set(ledger().map((r) => r.version));
     const history = readdirSync(join(ROOT, 'supabase', 'history'))
       .filter((f) => f.endsWith('.sql'))
       .map((f) => f.slice(0, 14));
-    expect(history).toHaveLength(10);
+    // A floor, not a count: the control against an empty directory reading as
+    // "every version is applied" while asserting nothing.
+    expect(history.length).toBeGreaterThan(5);
     expect(history.filter((v) => !applied.has(v))).toEqual([]);
   });
 });

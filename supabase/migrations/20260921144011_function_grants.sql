@@ -74,8 +74,9 @@ declare
    *                            function's own migration has already revoked
    *                            the PUBLIC grant it was created with
    *   'public, anon,
-   *    authenticated'        — both spellings, for a function no migration
-   *                            here creates. Postgres grants EXECUTE to
+   *    authenticated'        — both spellings, for a function whose own
+   *                            migration never revoked the PUBLIC grant it was
+   *                            created with. Postgres grants EXECUTE to
    *                            PUBLIC on every new function, so the named
    *                            revoke alone leaves `=X/postgres` behind and
    *                            `anon` still reaches it through PUBLIC — the
@@ -104,19 +105,22 @@ declare
     ['public.note_access(uuid, text, text)',       'anon, authenticated'],
     ['public.read_feed(text, text)',               'anon, authenticated'],
 
-    -- Not this repository's function, and revoked anyway. `rls_auto_enable`
-    -- and `touch_updated_at` are installed by the platform and by
-    -- `records`, and both are reached by a trigger rather than by a caller —
-    -- Postgres checks EXECUTE when a trigger is created, not each time it
-    -- fires, so neither needs a client grant to do its job.
+    -- Reached by a trigger rather than by a caller. `rls_auto_enable` and
+    -- `touch_updated_at` both fire from triggers, and Postgres checks EXECUTE
+    -- when a trigger is created, not each time it fires, so neither needs a
+    -- client grant to do its job.
     --
-    -- `rls_auto_enable` is here because a rebuild from this directory would
-    -- otherwise be less safe than production is. Production revoked it on
-    -- 7 September, in `history/20260907134823_harden_security_definer_helpers.sql`,
-    -- and that file is a record rather than a migration — so the revoke lived
-    -- nowhere that a fresh database would run. `grants.check.sql` is what
-    -- noticed, the moment `local.stub.sql` started creating the function the
-    -- way a real project does.
+    -- `rls_auto_enable` is this repository's function after all, and the line
+    -- above it used to say the platform installed it. It does not: two
+    -- Supabase-built preview branches settled that, one whose migrations create
+    -- the trigger and one whose do not, 7 event triggers against 6. It is
+    -- Supabase's *documented recipe*, run by hand on 7 September, and
+    -- `schema.sql` creates it now — which is what makes this revoke reachable
+    -- rather than skipped. Production revoked it the same day, in
+    -- `history/20260907134823_harden_security_definer_helpers.sql`, and that
+    -- file is a record rather than a migration, so the revoke lived nowhere a
+    -- fresh database would run. `grants.check.sql` is what noticed, the moment
+    -- the function started existing in a rebuild the way it does in production.
     ['public.rls_auto_enable()',                   'public, anon, authenticated'],
     ['public.touch_updated_at()',                  'public, anon, authenticated'],
 
