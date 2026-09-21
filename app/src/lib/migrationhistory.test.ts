@@ -42,12 +42,19 @@ const manifest = (): Row[] =>
     });
 
 describe('the recovered migration history', () => {
-  it('lists the ten that existed only in production', () => {
+  it('lists every migration that reached production without a file', () => {
     /*
      * The control for everything below: a manifest that had gone empty would
      * pass every per-file check there is, because there would be none.
+     *
+     * Ten to begin with, from 7 to 11 September. Two more on 21 September —
+     * `forms_relation_grants` and `access_log_function_search_path`, applied by
+     * hand that afternoon while three sessions were writing about the habit of
+     * applying things by hand. A count rather than a floor, so that a thirteenth
+     * arriving is a decision somebody makes here rather than a number that
+     * drifts.
      */
-    expect(manifest()).toHaveLength(10);
+    expect(manifest()).toHaveLength(12);
   });
 
   it('holds exactly the files the manifest names, and no others', () => {

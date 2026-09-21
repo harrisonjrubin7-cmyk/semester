@@ -165,7 +165,7 @@ $function$;
 -- by it. Guarded rather than dropped and recreated, so that running this
 -- against a database that already has the trigger leaves it exactly as it is.
 --
--- The EXECUTE grant is closed by `20260901001500_function_grants.sql`, which
+-- The EXECUTE grant is closed by `function_grants`, which
 -- already lists this function. Until now it skipped it, because on a rebuild
 -- there was nothing there to revoke.
 do $$ begin
