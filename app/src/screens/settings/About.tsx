@@ -1,11 +1,12 @@
 import { useStore } from '../../state/store';
 import { SettingsPage } from './Page';
-import { CustomRow, Group, ValueRow } from '../../components/shell/Rows';
+import { CustomRow, Group } from '../../components/shell/Rows';
 import { useRowStyle } from '../../components/shell/useShell';
 import { lights } from '../../lib/settings';
 import { ActionButton, SectionLabel } from '../../components/ui';
 import { SOURCES } from '../../data/misc';
 import { SUPPORT } from '../../lib/privacy';
+import { SaySomething } from '../../components/SaySomething';
 
 /**
  * What this is, where its numbers come from, and how to get in touch.
@@ -71,10 +72,12 @@ export function SettingsAbout() {
 
           <Group
             header="Saying something is wrong"
-            footer={`Write to ${SUPPORT}. A bug report that names the screen and what you expected is worth ten that say it is broken.`}
+            footer={`This goes to the person who builds the app, with the screen you were on and nothing you have not been shown. If you would rather write, the address is ${SUPPORT}.`}
             lit={lights('support contact email feedback bug report help problem', lit)}
           >
-            <ValueRow label="Where to write" value={SUPPORT} />
+            <CustomRow>
+              <SaySomething />
+            </CustomRow>
           </Group>
         </>
       )}

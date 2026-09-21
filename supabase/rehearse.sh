@@ -150,52 +150,44 @@ for m in "$here"/migrations/*.sql; do
   fi
 done
 
-# ── Nothing pending, which is now the healthy answer ──────────────────────
+# ── Nothing to rehearse, and the two ways to arrive there ─────────────────
 #
-# This exited 2 on an empty pending set, and that was right while the deploy
-# was broken: every file in `migrations/` was newer than a watermark stuck at
-# `20260921150750`, so zero pending could only mean the snapshot had gone
-# wrong. Once the deploy started working the ledger caught up to the newest
-# file, and the steady state of a healthy repository became the thing this
-# script called an error. `build` went red on `main` and stayed red across
-# four merges, none of which had anything to do with it.
+# This used to be one case and an `exit 2`, which read as "you asked for a
+# rehearsal and got nothing, which is not a pass". That is the right instinct
+# and it was aimed at the wrong half.
 #
-# What made it worth a check rather than a deletion is that zero pending has
-# two causes and only one of them is fine:
+# **Everything on disk is in the ledger.** Production has applied all of it
+# and the next deploy carries nothing. That is the ordinary state of this
+# repository between migrations, and it is what `20260921211500` produced the
+# moment its row was recorded: the watermark passed the newest file, every
+# branch in the repository went red on `rehearse.sh`, and not one of them had
+# touched `supabase/`. A gate that fails on the calendar rather than on the
+# diff teaches people to ignore it, which is the one thing a gate cannot
+# survive.
 #
-#   * every file is in the ledger — the deploy has applied everything, and
-#     there is genuinely nothing to rehearse;
-#   * a file is *below* the watermark and not in the ledger — it is stranded,
-#     `db push` can never apply it, and skipping it silently is how this fault
-#     stayed invisible for three days in the first place.
+# **Or a file is missing from the ledger and numbered at or below the
+# watermark.** `db push` can never apply it, whatever this script would have
+# said about its SQL. That is a real fault and keeps a non-zero exit.
 #
-# The second is indistinguishable from the first by counting pending files,
-# which is why counting was the wrong question. So the set is compared
-# instead, and an empty rehearsal has to earn its pass.
-#
-# `migrationorder.test.ts` owns the same rule from the tests' side. This is
-# here because a script that can rehearse nothing should say which of the two
-# reasons it is looking at, rather than exiting on both or neither.
-#
-# Ported verbatim from #706, which is not this branch's work — see the comment
-# on #701. Two sessions had already written the same fix (#706, #708) before
-# this branch reached it, and it no-ops the moment `main` carries either.
+# `lib/migrationorder.test.ts` holds the same rule from the other side, and
+# says it plainly: *"The rule is not 'every migration must already be
+# applied'. A new migration is supposed to be pending; that is what a
+# migration is. The rule is that a pending version may not be below the
+# watermark."* The old `exit 2` failed the first sentence to enforce the
+# third.
 if [ "$pending" = 0 ]; then
-  applied=$(sed -e 's/#.*//' "$LEDGER_SNAPSHOT" | awk 'NF {print $1}' | sort -u)
+  applied=$(sed -e 's/#.*//' "$LEDGER_SNAPSHOT" | awk 'NF {print $1}')
   stranded=""
   for m in "$here"/migrations/*.sql; do
     version=$(basename "$m" | cut -c1-14)
-    printf '%s\n' "$applied" | grep -qx "$version" || stranded="$stranded $(basename "$m")"
+    printf '%s\n' "$applied" | grep -qxF "$version" || stranded="$stranded  $(basename "$m")"
   done
-  if [ -n "${stranded// /}" ]; then
-    echo "· nothing is newer than $LEDGER_NEWEST, and these are older and not in the ledger:" >&2
-    for f in $stranded; do echo "    ✗ $f" >&2; done
-    echo "  A version below the watermark cannot be applied by \`db push\`, so these" >&2
-    echo "  would never deploy and rehearsing zero migrations would have said so." >&2
+  if [ -n "$stranded" ]; then
+    echo "  ✗ at or below the watermark $LEDGER_NEWEST and not in the ledger, so a" >&2
+    echo "    deploy can never apply them:$stranded" >&2
     exit 2
   fi
-  echo "· nothing newer than $LEDGER_NEWEST, and every migration here is in the ledger"
-  echo "· so there is no deploy to rehearse, which is the deploy working"
+  echo "  (every migration is in the ledger — nothing to deploy, nothing to rehearse)"
   exit 0
 fi
 
