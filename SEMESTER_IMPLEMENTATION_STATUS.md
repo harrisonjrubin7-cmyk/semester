@@ -5,6 +5,14 @@ measured against this repository, with the file that settles it. Step 1 of §63.
 
 Measured at `origin/main` `387dcfb`, 21 September 2026.
 
+**Part C (§226–300) is not audited here.** It arrived after this document was
+written, and §226's own first instruction is that it gets an audit of its own —
+`SEMESTER_PRODUCT_COMPLETENESS_MATRIX.md`, classifying every feature across six
+states and thirteen defect flags. That is queued in
+[`SEMESTER_IMPLEMENTATION_PLAN.md`](SEMESTER_IMPLEMENTATION_PLAN.md), with the
+first reading of what it is likely to find and why that reading is not a
+verdict.
+
 ## How to read a verdict
 
 | | means |

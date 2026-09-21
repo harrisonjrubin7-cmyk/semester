@@ -6,33 +6,44 @@ tell a requirement from a note about one.
 
 ## What is here, and what is not
 
-Two blocks of the specification have been supplied to this repository. They are
-reproduced in full below:
+Three blocks of the specification have been supplied to this repository. They
+are reproduced in full below:
 
 | | sections | subject |
 | --- | --- | --- |
 | Part A | **46–63** | the MVP definition, and the execution instruction |
 | Part B | **86–128** | the Academic OS expansion |
+| Part C | **226–300** | the second-pass gap analysis |
 
-**Sections 1–45 and 64–85 have never been supplied.** Each block arrived with a
-header addressed to a document that was expected to already exist here:
+**Sections 1–45, 64–85 and 129–225 have never been supplied**, and **§300 is
+truncated mid-sentence.** Each block arrived with a header addressed to a
+document that was expected to already exist here:
 
 > \[KEEP ALL EXISTING SECTIONS 1–45 ABOVE EXACTLY AS CURRENTLY WRITTEN.]
 
 > \[CONTINUE FROM THE EXISTING MASTER SPECIFICATION. DO NOT REMOVE OR WEAKEN
 > PREVIOUS REQUIREMENTS.]
 
+> \[CONTINUE DIRECTLY FROM THE EXISTING MASTER SPECIFICATION. PRESERVE ALL
+> PREVIOUS REQUIREMENTS. NOW PERFORM A SECOND-PASS GAP ANALYSIS ACROSS THE
+> ENTIRE PRODUCT.]
+
 Nothing in this repository contains those sections. `IMPLEMENTATION-PLAN.md`,
 `SPEC-AUDIT.md`, `COMPLETION-PLAN.md` and `ACTION-PLAN.md` are audits of the
 product as it stands rather than a numbered specification, and none of them is
 the document those headers refer to. So this file is the specification's home
 from §46 onward, and it says so rather than renumbering to hide the gap: a
-document claiming to be complete at §1 would make the missing eighty-three
-sections unfindable, and the two headers above are the only evidence that they
-exist at all.
+document claiming to be complete at §1 would make the missing one hundred and
+sixty-four sections unfindable, and the three headers above are the only evidence
+that they exist at all.
 
-Where §64–85 would have sat — between the MVP definition and the Academic OS —
-there is a marker saying so.
+Where §64–85 and §129–225 would have sat, there are markers saying so.
+
+**One section is incomplete rather than absent.** §300 stops mid-sentence, at
+the words *"Never silently switch to a model that"*. It is reproduced as far as
+it goes and marked there. Finishing the sentence would put a rule in this
+document that nobody wrote, and a reader could not tell which — the same reason
+every imported deadline in this app carries the sentence it came from.
 
 ## How it has been transcribed
 
@@ -42,9 +53,11 @@ can be read and linked:
 - A numbered section line (`46. MVP DEFINITION`) is set as a markdown heading.
   Only lines whose number continues the expected sequence were treated this way,
   so the numbered steps *inside* §61 and §63 are left as the lists they are.
-- **Part B was pasted twice.** The two copies are identical except that the
-  second stops mid-§128; the complete copy is kept and the truncated one
-  dropped. No requirement differs between them.
+- **Parts B and C were each pasted twice.** In both cases the two copies are
+  identical and the second is the shorter, so the complete copy is kept and the
+  duplicate dropped. No requirement differs between them. Part C's *complete*
+  copy is itself truncated at §300 — that is the author's paste, not this
+  transcription.
 
 ## Where the requirements are answered
 
@@ -1973,3 +1986,1232 @@ SOURCE
 Canvas
 Imported Sep 
 ```
+
+---
+
+# §129–225 — not supplied
+
+Nothing between the Academic OS expansion and the second-pass gap analysis has
+been supplied to this repository. As with §1–45 and §64–85, the gap is left
+open rather than closed up.
+
+---
+
+# Part C — Second-pass gap analysis (§226–300)
+
+Seventy-five sections, supplied 21 September 2026. As with Part B, this block
+was pasted twice; the copies are identical and **both stop mid-sentence in
+§300** — the last words received are *"Never silently switch to a model
+that"*. §300 is therefore reproduced as far as it goes and marked, rather than
+completed by guesswork: a fallback rule invented here would be indistinguishable
+from one the author wrote, which is the failure this repository's whole
+citation discipline exists to prevent.
+
+## 226. SECOND-PASS PRODUCT COMPLETENESS AUDIT
+Before adding additional surface-area features, audit everything specified so far.
+For every feature classify:
+
+```
+DOES NOT EXIST
+UI ONLY
+PARTIALLY FUNCTIONAL
+FUNCTIONAL
+CONNECTED
+PRODUCTION READY
+```
+
+Also identify:
+
+```
+BROKEN
+
+DUPLICATED
+
+DISCONNECTED
+
+CONFUSING
+
+UNNECESSARY
+
+MISSING BACKEND
+
+MISSING AUTHORIZATION
+
+MISSING MOBILE
+
+MISSING ACCESSIBILITY
+
+MISSING TESTS
+
+MISSING ERROR HANDLING
+
+MISSING ANALYTICS
+```
+
+Create:
+`SEMESTER_PRODUCT_COMPLETENESS_MATRIX.md`
+Do not merely document gaps.
+Fix them according to priority.
+## 227. FEATURE CONNECTION AUDIT
+Semester's greatest advantage should be that features work together.
+Audit every major module for connections.
+Example:
+
+```
+COURSE
+ ↓
+Assignment
+ ↓
+Calendar
+ ↓
+Study Plan
+ ↓
+Document
+ ↓
+Study Group
+ ↓
+AI
+ ↓
+Exam
+```
+
+Another:
+
+```
+ORGANIZATION
+ ↓
+Event
+ ↓
+Calendar
+ ↓
+Group Chat
+ ↓
+Meeting
+ ↓
+Files
+ ↓
+Tasks
+```
+
+Another:
+
+```
+CAREER
+ ↓
+Job
+ ↓
+Company
+ ↓
+Event
+ ↓
+Resume
+ ↓
+Application
+ ↓
+Calendar
+```
+
+Eliminate unnecessary isolated data silos.
+## 228. UNIVERSAL ENTITY GRAPH
+Create a standardized relationship architecture.
+Conceptually:
+
+```
+ENTITY
+│
+├── User
+├── Course
+├── Assignment
+├── Event
+├── Organization
+├── Document
+├── File
+├── Meeting
+├── Job
+├── Housing
+├── Marketplace
+└── Campus Resource
+```
+
+Entities can have relationships:
+
+```
+BELONGS_TO
+RELATED_TO
+CREATED_BY
+ATTENDED_BY
+LINKED_TO
+PART_OF
+SHARED_WITH
+```
+
+Do not overengineer this into a graph database unless justified.
+## 229. UNIVERSAL SAVE SYSTEM
+Currently different features may have separate bookmark behavior.
+Standardize:
+Save
+Users can save:
+
+* Event
+* Course
+* Organization
+* Job
+* Marketplace item
+* Housing
+* Campus resource
+* Document
+
+Create:
+
+```
+Saved
+```
+
+navigation.
+## 230. COLLECTIONS
+Allow users to organize saved content.
+Example:
+
+```
+COLLECTIONS
+
+Spring Classes
+
+Finance Recruiting
+
+Housing 2027
+
+Things To Do
+
+Research Sources
+```
+
+Any compatible entity can belong to a collection.
+## 231. SMART COLLECTIONS
+System-generated collections:
+
+```
+Recently Viewed
+
+Upcoming
+
+Shared With Me
+
+Due Soon
+
+Applications
+
+Favorites
+```
+
+Do not duplicate data unnecessarily.
+## 232. UNIVERSAL SHARE SYSTEM
+Standardize sharing.
+Share targets:
+
+```
+Person
+
+Group
+
+Course Group
+
+Organization
+
+Copy Link
+
+External Share
+```
+
+Every entity determines which sharing options are permitted.
+## 233. UNIVERSAL COMMENTS
+Build reusable comment infrastructure.
+Potential entities:
+
+* Documents
+* Projects
+* Assignments where appropriate
+* Organization content
+* Files
+* Whiteboards
+
+Support:
+
+```
+Comment
+Reply
+Mention
+Resolve
+Reopen
+```
+
+Permissions apply.
+## 234. MENTIONS
+Support:
+
+```
+@person
+```
+
+where appropriate.
+Potential:
+
+```
+@FinanceClub
+```
+
+for authorized organizational contexts.
+Mention creates notification.
+Prevent spam.
+## 235. UNIVERSAL ACTIVITY FEED INFRASTRUCTURE
+Do NOT necessarily create a public social feed.
+Create reusable internal activity infrastructure.
+Example project activity:
+
+```
+Maya uploaded research.pdf
+
+Harrison edited Presentation
+
+Alex completed Task 4
+```
+
+Useful in:
+
+* Projects
+* Organizations
+* Documents
+* Study groups
+
+## 236. COMMAND CENTER
+Expand universal command palette.
+Examples:
+
+```
+Create assignment
+
+Open calendar
+
+Find ECON 301
+
+Message Maya
+
+Create study group
+
+Open Finance Club
+
+Find internship
+
+Switch university
+
+Open history
+
+New window
+```
+
+Keyboard-first users should be able to navigate most of Semester without touching the mouse.
+## 237. UNIVERSAL CREATE SYSTEM
+One:
+
+```
++ Create
+```
+
+Context-sensitive options.
+From Home:
+
+```
+Task
+Event
+Document
+Study Session
+Meeting
+```
+
+From Course:
+
+```
+Course Note
+Study Group
+Study Session
+Document
+```
+
+From Organization:
+
+```
+Event
+Announcement
+Meeting
+Document
+```
+
+Avoid multiple unrelated creation flows.
+## 238. QUICK ADD
+Create extremely fast entry.
+Example:
+
+```
++ ECON problem set Friday 11:59pm
+```
+
+Semester parses candidate:
+
+```
+Assignment
+ECON
+Friday
+11:59 PM
+```
+
+User confirms.
+## 239. UNIVERSAL INBOX
+Consolidate:
+
+```
+MESSAGES
+
+NOTIFICATIONS
+
+REQUESTS
+
+MENTIONS
+
+IMPORTANT
+```
+
+Avoid forcing users to check five inboxes.
+## 240. REQUEST CENTER
+Create:
+
+```
+REQUESTS
+```
+
+Examples:
+
+* Connection request
+* Organization membership
+* Study group invitation
+* Document access
+* Event invitation
+* Project invitation
+
+Actions:
+
+```
+Accept
+Decline
+Review
+```
+
+## 241. TASK CENTER
+Create a universal task layer.
+Tasks can originate from:
+
+```
+User
+
+Course
+
+Assignment
+
+Project
+
+Meeting
+
+Organization
+
+AI suggestion
+```
+
+Example:
+
+```
+TODAY
+
+Finish ECON problems
+
+Review presentation
+
+Submit club budget
+
+Reply to advisor
+```
+
+## 242. TASK SOURCE
+Every task should show context.
+Example:
+
+```
+Finish charts
+
+ECON Final Project
+```
+
+not simply:
+Finish charts
+Context reduces confusion.
+## 243. NATURAL LANGUAGE TASK CREATION
+Examples:
+Remind me to finish ECON homework tomorrow at 6.
+Add task to email professor Friday.
+Parse into structured task.
+Confirm ambiguity.
+## 244. RECURRING TASKS
+Support:
+
+```
+Daily
+
+Weekly
+
+Custom
+```
+
+Example:
+Review ECON flashcards every Tuesday.
+Allow easy stop/edit.
+## 245. DEADLINE CENTER
+Create one place showing:
+
+```
+ACADEMIC
+
+REGISTRATION
+
+UNIVERSITY
+
+ORGANIZATION
+
+CAREER
+
+PERSONAL
+```
+
+Deadlines.
+Sort by urgency.
+## 246. SEMESTER TIMELINE 2.0
+Create semester-wide visualization combining:
+
+* Exams
+* Projects
+* Registration
+* Breaks
+* Career deadlines
+* Organization events
+* University deadlines
+
+Users can zoom:
+
+```
+WEEK
+MONTH
+TERM
+```
+
+## 247. TIME ZONE SYSTEM
+Semester will eventually support international students, study abroad, remote meetings and multiple campuses.
+Store times correctly.
+Use:
+
+```
+UTC internally where appropriate
+
+Tenant timezone
+
+User timezone
+```
+
+Never hardcode Central Time.
+## 248. DATE / TIME DISPLAY
+Respect user preferences.
+Examples:
+
+```
+12-hour
+
+24-hour
+```
+
+Always clarify timezone when event context is ambiguous.
+## 249. INTERNATIONALIZATION ARCHITECTURE
+Prepare UI strings for localization.
+Do not hardcode user-facing text throughout components.
+Create translation infrastructure.
+Initial language can remain English.
+Architecture should support future languages.
+## 250. LOCALE SUPPORT
+Account for:
+
+* Date formats
+* Time formats
+* Number formats
+* Currency
+* Names
+
+Do not assume U.S. formatting in core architecture even if initial universities are U.S.-based.
+## 251. GLOBAL SEARCH 2.0
+Search should become one of Semester's strongest features.
+Search across:
+
+```
+People
+Courses
+Organizations
+Events
+Files
+Documents
+Assignments
+Notes
+Jobs
+Housing
+Marketplace
+Campus
+University Processes
+Help
+```
+
+## 252. SEARCH RESULT GROUPING
+Example:
+
+```
+SEARCH: "finance"
+
+COURSES
+Finance 301
+
+ORGANIZATIONS
+Finance Club
+
+EVENTS
+Finance Networking Night
+
+CAREER
+Finance Internship
+
+PEOPLE
+Students with discoverable finance interests
+```
+
+## 253. SEARCH AUTOCOMPLETE
+As user types:
+
+```
+econ
+```
+
+suggest:
+
+```
+ECON 301
+Economics Department
+Economics Club
+ECON Study Group
+```
+
+Prioritize current tenant.
+## 254. TYPO TOLERANCE
+Search should tolerate reasonable spelling mistakes.
+Example:
+
+```
+econimics
+```
+
+should still find:
+Economics
+## 255. SEARCH SYNONYMS
+Institution terminology varies.
+Examples:
+
+```
+gym
+→ recreation center
+
+advisor
+→ academic advising
+
+registrar
+→ registration / records
+```
+
+Create tenant-specific synonym dictionaries where useful.
+## 256. SEARCH ANALYTICS
+Track aggregate:
+
+* Query
+* Result count
+* Click
+* Zero result
+
+Use zero-result queries to improve data.
+Protect sensitive searches appropriately.
+## 257. SEARCH PRIVACY
+Do not expose private entities simply because search index contains them.
+Search results must apply authorization before returning records.
+This is critical.
+## 258. OFFLINE-FIRST REVIEW
+Campus Wi-Fi can be unreliable.
+Determine which features can reasonably support cached/offline access.
+Candidates:
+
+```
+Schedule
+
+Assignments
+
+Recent notes
+
+Downloaded files
+
+Study materials
+
+Saved campus information
+```
+
+Do not promise offline capability for features that require server confirmation.
+## 259. OFFLINE QUEUE
+For safe actions where appropriate:
+
+```
+User edits note offline
+      ↓
+Local queue
+      ↓
+Connection returns
+      ↓
+Sync
+```
+
+Conflict handling required.
+Do not queue consequential transactions such as payments or registration without explicit design.
+## 260. SYNC STATUS
+Display when relevant:
+
+```
+Saved
+
+Saving...
+
+Offline
+
+Syncing...
+
+Sync failed
+```
+
+Users should never wonder whether work was saved.
+## 261. CONFLICT RESOLUTION
+Collaborative edits may conflict.
+Provide:
+
+```
+Your version
+
+Server version
+
+Merge
+```
+
+Avoid silently overwriting user work.
+## 262. AUTOSAVE STANDARD
+Autosave:
+
+* Documents
+* Notes
+* Draft messages
+* Registration plans
+* Degree plans
+* Whiteboards
+* Presentations
+* Spreadsheets
+
+Use debounced saves.
+Show state.
+## 263. DRAFT RECOVERY
+Recover:
+
+* Email drafts
+* Messages
+* Documents
+* Posts
+* Applications
+* Organization announcements
+
+Unexpected refresh should not destroy significant work.
+## 264. TRASH / RECOVERY
+Create trash for recoverable content.
+Potential:
+
+* Documents
+* Files
+* Notes
+* Presentations
+* Spreadsheets
+
+Allow restore for defined period.
+Permanent deletion requires confirmation.
+## 265. BULK OPERATIONS
+Power users/admins need bulk actions.
+Examples:
+
+```
+Select multiple files
+
+Move
+
+Archive
+
+Delete
+
+Share
+```
+
+Admin:
+
+```
+Select users
+
+Assign role
+
+Export
+
+Deactivate
+```
+
+Bulk operations need confirmation and audit where appropriate.
+## 266. IMPORT CENTER
+Create:
+Import
+Support where appropriate:
+
+```
+CSV
+XLSX
+PDF
+DOCX
+PPTX
+ICS
+```
+
+Validate files.
+Preview structured imports before committing.
+## 267. EXPORT CENTER
+Users should export appropriate data.
+Examples:
+
+```
+Calendar → ICS
+
+Spreadsheet → XLSX / CSV
+
+Document → PDF / DOCX
+
+Presentation → PPTX / PDF
+
+Notes → PDF / Markdown
+```
+
+Where technically feasible.
+## 268. PRINT EXPERIENCE
+Create proper print layouts for:
+
+* Schedule
+* Degree plan
+* Study guide
+* Document
+* Registration plan
+
+Do not simply print the web interface with navigation.
+## 269. PDF WORKSPACE
+PDFs are central to university workflows.
+Build:
+
+* Viewer
+* Search
+* Page navigation
+* Highlight
+* Notes
+* Comments
+* Course association
+
+Where supported.
+## 270. PDF → STUDY MATERIAL
+With user authorization:
+
+```
+PDF
+ ↓
+Extract text
+ ↓
+Summary
+ ↓
+Notes
+ ↓
+Flashcards
+ ↓
+Practice questions
+```
+
+Always preserve source reference.
+## 271. PDF ANNOTATIONS
+Support:
+
+```
+Highlight
+
+Underline
+
+Comment
+
+Drawing
+```
+
+Annotations should persist.
+## 272. FILE PREVIEW
+Preview common formats without forced downloads.
+Examples:
+
+```
+PDF
+Image
+Document
+Spreadsheet
+Presentation
+Text
+```
+
+## 273. FILE SECURITY
+Uploaded files require:
+
+* MIME validation
+* Size limits
+* Authorization
+* Safe filenames
+* Malware scanning architecture where appropriate
+* Signed/private URLs
+
+Never trust extension alone.
+## 274. STORAGE QUOTAS
+Create configurable storage limits.
+Potential per:
+
+```
+User
+Organization
+University
+```
+
+Admins can view aggregate storage.
+## 275. ARCHIVING
+Old:
+
+* Courses
+* Organizations
+* Projects
+* Terms
+
+should be archived rather than clutter active views.
+Example:
+
+```
+Fall 2026
+Archived
+```
+
+Still searchable.
+## 276. TERM TRANSITION
+At end of academic term:
+Semester should help user transition.
+Example:
+
+```
+Fall 2026 ended.
+
+Archive completed courses?
+
+Keep pinned:
+✓ ECON Study Guide
+✓ Research Paper
+```
+
+Never delete automatically.
+## 277. NEW TERM SETUP
+Start-of-term flow:
+
+```
+Welcome to Spring 2027
+
+Import courses
+
+Review schedule
+
+Connect LMS
+
+Set study preferences
+
+Review organizations
+```
+
+Keep optional and short.
+## 278. GRADUATION TRANSITION
+When student graduates:
+Offer transition:
+
+```
+Student
+→ Alumni
+```
+
+Preserve allowed:
+
+* Files
+* Network
+* Career
+* Organizations
+* Alumni events
+
+Institutional permissions may change.
+## 279. TRANSFER TRANSITION
+When user changes universities:
+Do not erase previous academic context.
+Support:
+
+```
+Previous University
+
+Current University
+```
+
+Separate permissions/data by tenant.
+## 280. STUDY ABROAD MODE
+Students temporarily at another institution may need:
+
+* Local timezone
+* Host institution
+* Courses
+* Events
+* Travel/calendar
+
+Do not merge institutional permissions incorrectly.
+## 281. MULTI-CAMPUS SUPPORT
+Universities may have several campuses.
+Entity model:
+
+```
+University
+   ↓
+Campus
+   ↓
+Building
+```
+
+Allow filtering.
+## 282. BUILDING DIRECTORY
+Building page:
+
+```
+Name
+Map
+Hours
+Departments
+Rooms
+Resources
+Accessibility information where available
+```
+
+## 283. ROOM DIRECTORY
+Where institution provides legitimate data:
+
+```
+Building
+Room
+Capacity
+Type
+Accessibility
+```
+
+Useful for classes/events.
+## 284. WAYFINDING
+Eventually support:
+Take me to ECON 301.
+Return appropriate map/directions integration.
+Do not claim indoor navigation unless supported.
+## 285. CAMPUS ACCESSIBILITY INFORMATION
+Campus locations may include:
+
+* Accessible entrance
+* Elevator
+* Accessible restroom
+* Accessibility office information
+
+Only publish reliable data.
+Allow corrections.
+## 286. CAMPUS EMERGENCY INFORMATION
+Provide easy access to official:
+
+* Campus emergency contacts
+* Safety resources
+* Emergency procedures
+
+Do not attempt to replace official emergency systems without institutional authorization.
+## 287. EMERGENCY COMMUNICATION INTEGRATION
+If institutionally integrated:
+Official alerts can appear prominently.
+Clearly label source.
+Do not generate AI-written emergency instructions unless explicitly grounded in official information.
+## 288. SEMESTER STATUS / SERVICE HEALTH
+Students should see understandable service state.
+Example:
+
+```
+Canvas sync delayed
+
+Last successful sync:
+20 minutes ago
+```
+
+Avoid vague failure.
+## 289. INTEGRATION RETRY
+Users can:
+
+```
+Reconnect
+
+Retry sync
+
+View status
+```
+
+where appropriate.
+## 290. CONNECTION MANAGEMENT
+Settings:
+
+```
+CONNECTED APPS
+
+Google Calendar
+
+Google Drive
+
+Microsoft 365
+
+Zoom
+
+University LMS
+```
+
+Users can review permissions and disconnect user-authorized integrations.
+Institution-managed integrations should be labeled separately.
+## 291. PERMISSION TRANSPARENCY
+Before connecting service:
+
+```
+Semester would like access to:
+
+✓ View calendar
+✓ Create Semester calendar events
+
+Semester will not:
+✗ Delete unrelated events
+```
+
+Be specific.
+## 292. SESSION MANAGEMENT
+Settings:
+
+```
+ACTIVE SESSIONS
+
+MacBook Pro
+Nashville
+Current
+
+iPhone
+Last active 2 hours ago
+```
+
+Allow:
+Sign out other sessions
+Location should remain coarse and security-appropriate.
+## 293. SECURITY SETTINGS
+Users can manage:
+
+* Password where applicable
+* MFA architecture
+* Sessions
+* Connected apps
+* Security notifications
+
+University SSO users may have password managed externally.
+## 294. MFA
+Support appropriate multi-factor authentication architecture for native Semester accounts.
+Institutional SSO may provide MFA externally.
+Do not duplicate unnecessarily.
+## 295. LOGIN NOTIFICATIONS
+Optional:
+New sign-in to your Semester account.
+Include:
+
+* Device
+* Approximate location
+* Time
+
+Provide:
+This wasn't me
+workflow.
+## 296. DEVICE MANAGEMENT
+Allow users to review devices/sessions.
+Revoke compromised session.
+## 297. USER DATA DASHBOARD
+Settings → Data & Privacy.
+Show:
+
+```
+Profile data
+
+History
+
+Connected apps
+
+AI data
+
+Downloads
+
+Delete account
+```
+
+Make privacy understandable.
+## 298. AI MEMORY CONTROLS
+Semester Intelligence may benefit from user preferences.
+Create explicit controls.
+Potential remembered context:
+
+```
+Preferred study duration
+
+Schedule preferences
+
+Preferred explanation style
+```
+
+Users can:
+
+* View
+* Edit
+* Clear
+* Disable
+
+Do not create hidden indefinite AI memory.
+## 299. AI PERSONALIZATION BOUNDARIES
+AI may personalize from legitimate context.
+Do not infer sensitive characteristics unnecessarily.
+Do not use one student's private data to personalize another student's experience.
+## 300. AI MODEL FALLBACK
+If primary model unavailable:
+Use configured fallback where appropriate.
+Never silently switch to a model that
+
+> **§300 ends here.** Both copies supplied stop mid-sentence at these words.
+> Nothing has been added to complete it.
