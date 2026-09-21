@@ -225,6 +225,7 @@ function same(a: DesignLayer, b: DesignLayer): boolean {
     a.fontSize === b.fontSize &&
     a.bold === b.bold &&
     a.opacity === b.opacity &&
+    a.rotation === b.rotation &&
     a.fileId === b.fileId
   );
 }
