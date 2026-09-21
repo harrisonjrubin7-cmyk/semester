@@ -150,9 +150,53 @@ for m in "$here"/migrations/*.sql; do
   fi
 done
 
+# ── Nothing pending, which is now the healthy answer ──────────────────────
+#
+# This exited 2 on an empty pending set, and that was right while the deploy
+# was broken: every file in `migrations/` was newer than a watermark stuck at
+# `20260921150750`, so zero pending could only mean the snapshot had gone
+# wrong. Once the deploy started working the ledger caught up to the newest
+# file, and the steady state of a healthy repository became the thing this
+# script called an error. `build` went red on `main` and stayed red across
+# four merges, none of which had anything to do with it.
+#
+# What made it worth a check rather than a deletion is that zero pending has
+# two causes and only one of them is fine:
+#
+#   * every file is in the ledger — the deploy has applied everything, and
+#     there is genuinely nothing to rehearse;
+#   * a file is *below* the watermark and not in the ledger — it is stranded,
+#     `db push` can never apply it, and skipping it silently is how this fault
+#     stayed invisible for three days in the first place.
+#
+# The second is indistinguishable from the first by counting pending files,
+# which is why counting was the wrong question. So the set is compared
+# instead, and an empty rehearsal has to earn its pass.
+#
+# `migrationorder.test.ts` owns the same rule from the tests' side. This is
+# here because a script that can rehearse nothing should say which of the two
+# reasons it is looking at, rather than exiting on both or neither.
+#
+# Ported verbatim from #706, which is not this branch's work — see the comment
+# on #701. Two sessions had already written the same fix (#706, #708) before
+# this branch reached it, and it no-ops the moment `main` carries either.
 if [ "$pending" = 0 ]; then
-  echo "  (nothing newer than $LEDGER_NEWEST — there is no deploy to rehearse)" >&2
-  exit 2
+  applied=$(sed -e 's/#.*//' "$LEDGER_SNAPSHOT" | awk 'NF {print $1}' | sort -u)
+  stranded=""
+  for m in "$here"/migrations/*.sql; do
+    version=$(basename "$m" | cut -c1-14)
+    printf '%s\n' "$applied" | grep -qx "$version" || stranded="$stranded $(basename "$m")"
+  done
+  if [ -n "${stranded// /}" ]; then
+    echo "· nothing is newer than $LEDGER_NEWEST, and these are older and not in the ledger:" >&2
+    for f in $stranded; do echo "    ✗ $f" >&2; done
+    echo "  A version below the watermark cannot be applied by \`db push\`, so these" >&2
+    echo "  would never deploy and rehearsing zero migrations would have said so." >&2
+    exit 2
+  fi
+  echo "· nothing newer than $LEDGER_NEWEST, and every migration here is in the ledger"
+  echo "· so there is no deploy to rehearse, which is the deploy working"
+  exit 0
 fi
 
 after_gate=$(psql -Atc "select invite_only from public.access_gate")
