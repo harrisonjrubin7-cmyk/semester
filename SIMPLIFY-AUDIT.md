@@ -283,9 +283,20 @@ files and twenty-four tests of their own.
   would get the registry unless it said otherwise.
 - **The dead-export question is still open and still unasked**, carried from the
   twenty-third, which threw away two instruments at it.
-- The `ItemRow` ARIA widening, carried from the twentieth pass's T5 and the
-  twenty-second: `Row` already accepts `role` and `ariaChecked`, so passing them
-  through would bring `MuteCourses` and `DesignEditor` onto the shared row.
+- ~~The `ItemRow` ARIA widening, carried from the twentieth pass's T5 and the
+  twenty-second.~~ **Already landed when this row was written**, and struck
+  afterwards. `#541` merged fifty-four minutes before this pass's commit, and
+  the twentieth pass's own T5 — above, in this file — had already recorded it
+  closed. `ItemRow` carries `role`, `aria-checked`, `aria-pressed` and
+  `aria-label`; `MuteCourses` and `DesignEditor` are on it; and
+  `components/shell/rows.aria.test.tsx` renders the component to hold it.
+
+  Worth leaving struck rather than deleted, because of which pass it is in.
+  The twenty-fourth is about a row crossed out in prose while the code still
+  had the defect. This is that fault inverted, in the same pass's own To do: a
+  row carried forward in prose after the code was fixed. Neither direction is
+  free, and this one costs whoever picks the row up the dig that finds it
+  already done.
 - **Nothing on the destinations row, and now nothing exempted from it either.**
   `ARGUED` is empty for the first time since it was written, so the next entry
   in it is a new claim rather than an inherited one.
