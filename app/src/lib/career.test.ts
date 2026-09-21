@@ -2,10 +2,16 @@ import { describe, expect, it } from 'vitest';
 import {
   EMPTY_CAREER,
   builtResume,
+  hasTargets,
+  newOpportunity,
+  readCareer,
   resumeDocumentTitle,
   resumeReadout,
+  targetScore,
+  targetTerms,
   type CareerContact,
   type CareerExperience,
+  type Opportunity,
 } from './career';
 
 /**
@@ -106,5 +112,66 @@ describe('whether a draft has been built', () => {
   it('is false with nothing written, and is not fooled by another career draft', () => {
     expect(builtResume([])).toBe(false);
     expect(builtResume(['Brookings · Cover letter', 'Conversation with Priya'])).toBe(false);
+  });
+});
+
+const listing = (patch: Partial<Opportunity> = {}): Opportunity => ({
+  ...newOpportunity(),
+  title: 'Summer analyst',
+  ...patch,
+});
+
+describe('what the student says they are looking for', () => {
+  it('reads a stored library that predates the fields rather than refusing it', () => {
+    const old = { ...EMPTY_CAREER } as Record<string, unknown>;
+    delete old.targetRoles;
+    delete old.targetLocations;
+    delete old.lookingSince;
+    const read = readCareer(old);
+    expect(read.targetRoles).toBe('');
+    expect(read.targetLocations).toBe('');
+    expect(read.lookingSince).toBe('');
+  });
+
+  it('keeps what was typed, and refuses a date that is not one', () => {
+    const lib = { ...EMPTY_CAREER, targetRoles: 'Policy analyst', lookingSince: '2026-09-01' };
+    expect(readCareer(lib).targetRoles).toBe('Policy analyst');
+    expect(readCareer(lib).lookingSince).toBe('2026-09-01');
+    expect(() => readCareer({ ...EMPTY_CAREER, lookingSince: '2026-02-31' })).toThrow();
+    expect(() => readCareer({ ...EMPTY_CAREER, targetRoles: 'x'.repeat(501) })).toThrow();
+  });
+
+  it('splits a comma list into terms, and nothing out of an empty box', () => {
+    expect(targetTerms('Policy analyst, Research , ,economics')).toEqual([
+      'policy analyst',
+      'research',
+      'economics',
+    ]);
+    expect(targetTerms('   ')).toEqual([]);
+    expect(hasTargets(EMPTY_CAREER)).toBe(false);
+    expect(hasTargets({ ...EMPTY_CAREER, targetLocations: 'Washington' })).toBe(true);
+  });
+
+  it('counts role terms in the title and the skills line', () => {
+    const lib = { ...EMPTY_CAREER, targetRoles: 'analyst, economics' };
+    expect(targetScore(listing({ title: 'Summer analyst', skills: 'economics, Stata' }), lib)).toBe(2);
+    expect(targetScore(listing({ title: 'Summer analyst' }), lib)).toBe(1);
+    expect(targetScore(listing({ title: 'Kitchen porter' }), lib)).toBe(0);
+  });
+
+  /*
+   * A place is looked for where places are written down. "Washington Fellow"
+   * is not a job in Washington, and counting it as one is a coincidence
+   * dressed up as an answer.
+   */
+  it('looks for a place in the location and the country, not in the job title', () => {
+    const lib = { ...EMPTY_CAREER, targetLocations: 'washington' };
+    expect(targetScore(listing({ title: 'Washington Fellow' }), lib)).toBe(0);
+    expect(targetScore(listing({ location: 'Washington, DC' }), lib)).toBe(1);
+    expect(targetScore(listing({ country: 'United States', location: 'Washington' }), lib)).toBe(1);
+  });
+
+  it('scores nothing at all when nothing has been said', () => {
+    expect(targetScore(listing({ title: 'Analyst', location: 'Nashville' }), EMPTY_CAREER)).toBe(0);
   });
 });

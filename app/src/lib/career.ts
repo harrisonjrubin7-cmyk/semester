@@ -102,6 +102,21 @@ export interface CareerLibrary {
   experiences: CareerExperience[];
   contacts: CareerContact[];
   abroadSteps: Record<string, boolean>;
+  /**
+   * What the student says they are looking for, as their own words.
+   *
+   * Comma-separated, free text, and read by exactly one thing: the ordering on
+   * the Discover tab. It is not a signal, it is not shown to anybody, and
+   * nothing outside this device can see it — "Open to work" in this app is a
+   * note to yourself about which of your own saved listings to read first.
+   *
+   * Empty by default, and empty in a library saved before these existed, which
+   * is why `readCareer` fills them in rather than refusing the record.
+   */
+  targetRoles: string;
+  targetLocations: string;
+  /** The day they started looking, if they want it written down. Their claim. */
+  lookingSince: string;
 }
 
 export const EMPTY_CAREER: CareerLibrary = {
@@ -113,6 +128,9 @@ export const EMPTY_CAREER: CareerLibrary = {
   experiences: [],
   contacts: [],
   abroadSteps: {},
+  targetRoles: '',
+  targetLocations: '',
+  lookingSince: '',
 };
 
 export const CAREER_LIMITS = {
@@ -123,6 +141,7 @@ export const CAREER_LIMITS = {
   requirements: 8000,
   notes: 6000,
   url: 2000,
+  targets: 500,
 } as const;
 
 /**
@@ -176,8 +195,27 @@ export function newOpportunity(): Opportunity {
  * reusing it rather than writing a second one is what keeps the answer single.
  */
 export function readCareer(v: unknown): CareerLibrary {
+  /*
+   * The three target fields arrived after libraries were already being saved,
+   * so a stored record predating them is missing all three. Filled in before
+   * the check rather than exempted from it: the validated value is what the
+   * device library writes back, so one load normalises the record and every
+   * later read is of a whole one.
+   */
+  const given: Record<string, unknown> = obj(v) ? v : {};
+  // Asserted rather than trusted: the three checks at the top of `top` are
+  // what make these casts honest, in the same order as every other field here.
+  const targets = {
+    targetRoles: (given.targetRoles ?? '') as string,
+    targetLocations: (given.targetLocations ?? '') as string,
+    lookingSince: (given.lookingSince ?? '') as string,
+  };
+
   const top =
     obj(v) &&
+    textValue(targets.targetRoles, CAREER_LIMITS.targets) &&
+    textValue(targets.targetLocations, CAREER_LIMITS.targets) &&
+    isoDay(targets.lookingSince) &&
     v.version === 1 &&
     Array.isArray(v.opportunities) &&
     v.opportunities.length <= CAREER_LIMITS.opportunities &&
@@ -239,8 +277,48 @@ export function readCareer(v: unknown): CareerLibrary {
     if (!shaped) throw new Error('Invalid networking note.');
   }
 
-  return lib;
+  return { ...lib, ...targets };
 }
+
+/**
+ * What somebody typed into a target field, as terms to match on.
+ *
+ * Split on commas, because that is how people write a list of roles in one
+ * box. Empty pieces and whitespace go; nothing is stemmed, expanded or
+ * corrected, so "policy" does not quietly become "policies" and a student who
+ * typed one word gets exactly that word.
+ */
+export const targetTerms = (text: string): string[] =>
+  text
+    .split(',')
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
+
+/**
+ * How many of the student's own target terms this listing carries.
+ *
+ * Role terms are looked for in the title and the skills line, location terms
+ * in the location and the country — matching a place against a job title would
+ * find "Washington Fellow" for somebody who wants to work in Washington and
+ * call it a location match, which is a coincidence dressed as an answer.
+ *
+ * The number leaves this function. It orders the list and is never drawn: a
+ * "92% match" beside a listing is a claim about a job somebody typed in
+ * themselves, from a fit this app has no way to judge. What the student gets
+ * is their own listings, theirs-first.
+ */
+export function targetScore(o: Opportunity, c: CareerLibrary): number {
+  const roles = `${o.title} ${o.skills}`.toLowerCase();
+  const where = `${o.location} ${o.country}`.toLowerCase();
+  return (
+    targetTerms(c.targetRoles).filter((t) => roles.includes(t)).length +
+    targetTerms(c.targetLocations).filter((t) => where.includes(t)).length
+  );
+}
+
+/** Whether anything has been recorded for the ordering above to read. */
+export const hasTargets = (c: CareerLibrary): boolean =>
+  targetTerms(c.targetRoles).length > 0 || targetTerms(c.targetLocations).length > 0;
 
 /**
  * Opportunities out of a file somebody chose.

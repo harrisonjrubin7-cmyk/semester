@@ -4,7 +4,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { StoreProvider } from '../state/store';
 import { loadSeed } from '../data/seed';
-import { EMPTY_CAREER, type CareerLibrary } from '../lib/career';
+import { EMPTY_CAREER, newOpportunity, type CareerLibrary, type Opportunity } from '../lib/career';
 import { Career } from './Career';
 
 /**
@@ -41,6 +41,14 @@ const mount = async (lib: Partial<CareerLibrary> = {}) => {
 };
 
 const text = () => (host.textContent ?? '').replace(/\s+/g, ' ');
+
+/** The labels on the cards in the one `CardGrid` a tab draws, in order. */
+const cards = () =>
+  [...host.querySelectorAll('[style*="auto-fit"] > button > span:first-child')].map((s) =>
+    s.textContent?.trim(),
+  );
+
+const listing = (patch: Partial<Opportunity>): Opportunity => ({ ...newOpportunity(), ...patch });
 
 const press = async (label: string) => {
   const button = [...host.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
@@ -95,5 +103,39 @@ describe('what the résumé tab says is filled in', () => {
     await press('Build it in Write');
     expect(text()).toContain('résumé draft built in Write');
     expect(text()).not.toContain('no résumé draft built in Write yet');
+  });
+});
+
+describe('ordering Discover by what you said you want', () => {
+  const three = [
+    listing({ id: 'porter', title: 'Kitchen porter', deadline: '2026-10-01' }),
+    listing({ id: 'analyst', title: 'Policy analyst', location: 'Washington', deadline: '2026-11-01' }),
+    listing({ id: 'assistant', title: 'Research assistant', skills: 'economics', deadline: '2026-12-01' }),
+  ];
+
+  it('opens soonest first, and puts the closest to the targets first when asked', async () => {
+    await mount({ opportunities: three, targetRoles: 'analyst, economics', targetLocations: 'washington' });
+    expect(cards()).toEqual(['Kitchen porter', 'Policy analyst', 'Research assistant']);
+
+    await press('Closest to my targets');
+    // Two target terms for the analyst, one for the assistant, none for the
+    // porter — and the deadline order survives as the tie-break beneath it.
+    expect(cards()).toEqual(['Policy analyst', 'Research assistant', 'Kitchen porter']);
+
+    await press('Closest to my targets');
+    expect(cards()).toEqual(['Kitchen porter', 'Policy analyst', 'Research assistant']);
+  });
+
+  it('shows no number beside a listing, only the order', async () => {
+    await mount({ opportunities: three, targetRoles: 'analyst, economics' });
+    await press('Closest to my targets');
+    expect(text()).not.toMatch(/%|\bmatch(?:es|ed)?\b/i);
+  });
+
+  it('says where to set targets rather than reordering nothing in silence', async () => {
+    await mount({ opportunities: three });
+    await press('Closest to my targets');
+    expect(text()).toContain('Nothing to sort by yet');
+    expect(cards()).toEqual(['Kitchen porter', 'Policy analyst', 'Research assistant']);
   });
 });

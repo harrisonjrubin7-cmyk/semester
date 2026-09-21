@@ -16,12 +16,14 @@ import {
   OPPORTUNITY_KINDS,
   builtResume,
   coverLetter,
+  hasTargets,
   newOpportunity,
   readCareer,
   readOpportunities,
   resumeDocumentTitle,
   resumeMarkdown,
   resumeReadout,
+  targetScore,
   type CareerContact,
   type CareerExperience,
   type Opportunity,
@@ -131,6 +133,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const [kind, setKind] = useState('All types');
   const [format, setFormat] = useState('All formats');
   const [savedOnly, setSavedOnly] = useState(false);
+  const [byTarget, setByTarget] = useState(false);
   const [selected, setSelected] = useState('');
   const [edit, setEdit] = useState<Opportunity | null>(null);
   const [experience, setExperience] = useState<CareerExperience | null>(null);
@@ -149,6 +152,19 @@ function Workspace({ storageKey }: { storageKey: string }) {
           .includes(query.toLowerCase()),
     )
     .sort((a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999'));
+
+  /*
+   * Soonest first, or closest to what the student said they are looking for.
+   *
+   * The second is a reordering of the first and nothing more: the deadline
+   * order is the tie-break, so two listings that carry the same number of
+   * target terms stay in the order they were already in. No number is drawn,
+   * because a "match" figure beside a listing somebody typed in themselves is
+   * a claim about fit this app has no way to make. See `targetScore`.
+   */
+  const ordered = byTarget
+    ? [...matches].sort((a, b) => targetScore(b, lib.value) - targetScore(a, lib.value))
+    : matches;
 
   const write = (title: string, body: string) =>
     dispatch({
@@ -252,10 +268,24 @@ function Workspace({ storageKey }: { storageKey: string }) {
             >
               Saved only
             </ActionButton>
+            <ActionButton
+              onClick={() => setByTarget(!byTarget)}
+              aria-pressed={byTarget}
+              tone={byTarget ? 'primary' : 'secondary'}
+              style={{ flex: '1 1 auto' }}
+            >
+              Closest to my targets
+            </ActionButton>
             <ActionButton onClick={() => setEdit(newOpportunity())} style={{ flex: '1 1 auto' }}>
               Add one
             </ActionButton>
           </div>
+          {byTarget && !hasTargets(lib.value) && (
+            <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+              Nothing to sort by yet. Say what you are looking for under Résumé, and this puts your own
+              saved listings carrying those words first — the order changes, nothing else does.
+            </p>
+          )}
           <FilePick
             accept=".json"
             multiple={false}
@@ -382,17 +412,17 @@ function Workspace({ storageKey }: { storageKey: string }) {
             </form>
           )}
 
-          <SectionLabel aside={`${matches.length}`} style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>
+          <SectionLabel aside={`${ordered.length}`} style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>
             Opportunities
           </SectionLabel>
-          {matches.length === 0 ? (
+          {ordered.length === 0 ? (
             <p style={{ ...body, ...secondLine(), textWrap: 'pretty' }}>
               Nothing here yet. Add a real listing, or import an export your school provided. No invented
               jobs or alumni are included — there is no job board behind this screen.
             </p>
           ) : (
             <CardGrid min={150}>
-              {matches.map((o) => (
+              {ordered.map((o) => (
                 <GridCard
                   key={o.id}
                   label={o.title}
@@ -534,6 +564,42 @@ function Workspace({ storageKey }: { storageKey: string }) {
               />
             </label>
           ))}
+          {/*
+           * "Open to work", with nothing open about it. Three notes on this
+           * device, read by the ordering on Discover and by nothing else: no
+           * badge, no signal to anybody, and nowhere for it to go — see the
+           * field notes in `lib/career.ts`.
+           */}
+          <SectionLabel style={{ marginBlock: 'var(--sp-6) var(--sp-4)' }}>What you are looking for</SectionLabel>
+          <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+            Kept on this device and shown to nobody. It orders your own saved listings on Discover, and
+            does nothing else.
+          </p>
+          {(['targetRoles', 'targetLocations'] as const).map((k) => (
+            <label key={k} style={field}>
+              <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+                {k === 'targetRoles' ? 'Roles you want, separated by commas' : 'Places, separated by commas'}
+              </span>
+              <input
+                className="input"
+                maxLength={CAREER_LIMITS.targets}
+                value={lib.value[k]}
+                onChange={(e) => lib.update((old) => ({ ...old, [k]: e.target.value }))}
+                style={input}
+              />
+            </label>
+          ))}
+          <label style={field}>
+            <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Looking since</span>
+            <input
+              className="input"
+              type="date"
+              value={lib.value.lookingSince}
+              onChange={(e) => lib.update((old) => ({ ...old, lookingSince: e.target.value }))}
+              style={input}
+            />
+          </label>
+
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
             <ActionButton
               tone="primary"
