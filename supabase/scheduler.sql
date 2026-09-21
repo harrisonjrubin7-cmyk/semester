@@ -79,3 +79,52 @@ select cron.alter_job(
   (select jobid from cron.job where jobname = 'push'),
   active := false
 );
+
+
+-- ── Clearing out old tombstones ───────────────────────────────────────────
+--
+-- `public.sweep_tombstones` has existed since `20260901000700_records.sql`
+-- and until now nothing called it. Its own header says why it was left that
+-- way — *"an automatic job that deletes rows is not something this file
+-- should switch on without you having read this paragraph"* — and the
+-- paragraph has been read: ninety days is far longer than any device is
+-- plausibly offline, and short enough that the tables do not accumulate a
+-- term of deletions.
+--
+-- **The tradeoff this makes, stated rather than buried.** A tombstone is what
+-- stops a deletion being resurrected by a device that was offline when it
+-- happened. Deleting one after ninety days means a device offline for longer
+-- than that, still holding the row, would sync it back as though it were new.
+-- That is the cost of not keeping every deletion for the life of the account,
+-- and ninety days is where `records.sql` put the line.
+--
+-- Here rather than in the migration, because a file that runs on every deploy
+-- is the wrong place for a decision somebody has to take once. `RETENTION.md`
+-- is the record of it, and `app/src/lib/retention.test.ts` holds this file and
+-- that document to the same number.
+--
+-- **Active, unlike `push` above.** That job is parked because it calls an Edge
+-- Function that answers 503 until `CRON_SECRET` is set, so an unparked one
+-- would fail every fifteen minutes about a half-finished deploy. This calls a
+-- function that is already there and needs no secret, so there is nothing to
+-- wait for.
+--
+-- Weekly rather than nightly: the work is proportional to deletions, not to
+-- the size of the tables, and a sweep that runs seven times as often deletes
+-- the same rows seven days sooner for no benefit anybody can see. 04:17 UTC on
+-- Sunday is deliberately off `push`'s `*/15` cadence so the two are not
+-- contending, and the odd minute is so that a project restoring from backup
+-- does not start every job on the hour.
+--
+-- Runs as whoever applies this file, which in the SQL editor is `postgres`.
+-- `sweep_tombstones` is `security invoker`, so the deletes run with that
+-- role's privileges and reach every account — which is what a sweep is. It is
+-- revoked from `public`, `anon` and `authenticated`, and this does not change
+-- that: the owner's own EXECUTE is what a revoke from PUBLIC leaves alone.
+--
+-- `cron.schedule` replaces a job of the same name, so this is safe to re-run.
+select cron.schedule(
+  'tombstones',
+  '17 4 * * 0',
+  $job$select public.sweep_tombstones('90 days')$job$
+);
