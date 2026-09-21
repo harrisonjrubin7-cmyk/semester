@@ -16,14 +16,30 @@ import { useNow, useStore } from '../state/store';
 import { SectionLabel } from './ui';
 import { TabGlyph } from './TabIcon';
 import { dayOf, offer, seenLine } from '../lib/unseen';
-import { saysFor } from '../lib/nav';
+import { saysFor, type Destination } from '../lib/nav';
 import { Folding } from './Fold';
 
-export function NotYetOpened() {
+/**
+ * The pool is the caller's, and that is the whole of the fix.
+ *
+ * This read `DESTINATIONS` through `offerable()`, which is the registry
+ * before any gate — so on a brand-new account the directory drew twelve
+ * screens and this panel, directly underneath it, offered three of the
+ * forty-six it was holding back, by name and with their sentences. Measured
+ * on a fresh profile: the list said twelve and this said *Pathway, Career,
+ * Family*, none of which was in it.
+ *
+ * Reveal is only the visible half. The registry is also every screen the app
+ * has ever had before the school and the role have spoken, so the same panel
+ * could offer a meal plan at a university with no meal plan. `lately`, the
+ * list beside this one, has been gated since it was written; this one never
+ * was, and nothing was comparing them.
+ */
+export function NotYetOpened({ pool }: { pool?: Destination[] }) {
   const { state, dispatch, school } = useStore();
   const now = useNow();
 
-  const three = offer(state.visited, dayOf(now));
+  const three = offer(state.visited, dayOf(now), pool);
   if (three.length === 0) return null;
 
   return (
@@ -34,7 +50,7 @@ export function NotYetOpened() {
         Not opened yet
       </SectionLabel>
       <div style={{ fontSize: 'calc(12.5px * var(--text-scale, 1))', color: 'var(--app-dim)', marginBottom: 'var(--sp-5)', lineHeight: 'var(--leading-normal)' }}>
-        {seenLine(state.visited)} These three change each day.
+        {seenLine(state.visited, pool)} These three change each day.
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
