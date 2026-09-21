@@ -3,13 +3,75 @@
 The build-out plan asks for "staging preview branches that match production,
 including Edge Functions". **Branching is already on**, has been since before
 18 September, and builds a preview branch for every pull request touching
-`supabase/` — including the Edge Functions, which reach `FUNCTIONS_DEPLOYED`.
-[`ROLLBACK.md`](ROLLBACK.md) is the history of how that setting was found to be
-misconfigured, corrected, and then watched.
+`supabase/`. [`ROLLBACK.md`](ROLLBACK.md) is the history of how that setting was
+found to be misconfigured, corrected, and then watched.
 
-So this item is not "turn it on". It is the harder half: **a preview branch
-exists, and nobody has established that it matches production.** Those are
-different claims, and the second is the one the plan is asking for.
+So this item is not "turn it on". It is two harder halves: **a preview branch
+exists and nobody has established that it matches production**, and **the
+three words at the end of the plan's sentence are not true today**.
+
+## The Edge Functions, which a preview branch does not have
+
+This was read off a branch rather than reasoned about. The preview branch for
+the pull request that added this file finished its Edge Functions task with a
+warning, and the warning is the whole finding:
+
+> **⚠️ Warning — Only Functions declared in config.toml will be automatically
+> deployed to branches: `[functions.my-slug]`**
+
+[`supabase/config.toml`](supabase/config.toml) declares none, and says so in
+its own header, deliberately:
+
+> In particular there is no `[functions]` block. Edge Functions are deployed by
+> `.github/workflows/functions.yml` … Declaring them here as well would give
+> one function two deploy paths that can disagree about which version is live.
+
+That reasoning is about **production**, where it is sound. Its consequence is
+about **staging**, and the file does not mention it: a preview branch has no
+`claude`, no `push`, no `fetchcal`, no `canvas`, no `lti`, no `calendar`.
+Every AI feature, every reminder and the calendar feed are simply absent from
+staging — and absent in the way that looks like an app bug rather than a
+missing deploy.
+
+`functions.yml` cannot cover for that. It works the project ref out from
+`SUPABASE_PROJECT_REF` or `VITE_SUPABASE_URL`, both of which name production,
+so it has never deployed a function anywhere else.
+
+### The decision this needs, which is not mine to take
+
+Two ways out, and the first is a change to how production's functions are
+deployed, so it belongs to whoever wrote that comment.
+
+**Declare the functions in `config.toml`** with `verify_jwt = false` on each,
+matching the `--no-verify-jwt` that `functions.yml` passes to every one of
+them. Branching then deploys them to every preview branch, and staging becomes
+what the plan asks for.
+
+The comment's objection survives this and should be taken seriously: two deploy
+paths for one function can disagree, and the specific thing they can disagree
+about is exactly that flag. `claude`, `fetchcal` and `canvas` verify the
+caller's token themselves and must answer a CORS preflight, which carries no
+`Authorization` header at all — so a path that quietly turned platform JWT
+verification back on would break every AI feature in the app, and it would
+break it at whichever deploy ran last.
+
+But *undetected* divergence is the fault, not duplication. This repository
+already has the instrument for two sides that cannot import from each other and
+must agree: `lib/referral.test.ts` and `lib/allowance.test.ts` read the other
+side as text and go red when the two stop matching. A test holding every
+`[functions.*]` block in `config.toml` against the flag `functions.yml` passes,
+and against the set of directories in `supabase/functions/`, turns "two paths
+that can disagree" into "two paths pinned to agree".
+
+**Or leave it, and say so.** Staging then covers the database, the policies and
+the app, and does not cover the functions. That is a smaller thing than it
+sounds — `check.sh` exercises the schema far harder than a branch does — and it
+is an honest position as long as it is written down rather than discovered by
+somebody testing a feature on staging that was never there.
+
+What is not an option is the current state, where the plan's exit gate says
+"including Edge Functions" and nobody had established that they are not
+included.
 
 ## What a preview branch is built from, which is the crux
 
@@ -78,6 +140,8 @@ is the only reason to have one.
 
 Steps 1 and 5 are arranged. **Steps 2, 3 and 4 have never been run against a
 preview branch, so "staging proven" in Stage 1's exit gate is not ticked**, and
-nothing in this repository should be read as claiming otherwise. The work is
+nothing in this repository should be read as claiming otherwise. That part is
 twenty minutes in a dashboard and a SQL editor, and it is twenty minutes
 nobody has spent.
+
+The Edge Functions half is not twenty minutes; it is the decision above.
