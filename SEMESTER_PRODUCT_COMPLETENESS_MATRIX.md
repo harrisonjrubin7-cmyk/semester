@@ -295,10 +295,20 @@ the fourth probe fault in this one document.
 The lesson for whoever extends this matrix: **the window-based field reader is
 not safe on `lib/nav.ts`.** Parse the entry, or read the field by hand.
 
-### BROKEN — one, and it is the P0 already on the books
+### BROKEN — one, and half of it is fixed in this commit
 
-**`public.reports`**: no status column, and no select policy at all. A report
-cannot be read by anybody, in principle. Unchanged by Part C, and still first.
+**`public.reports`** had no status column and **no select policy at all**: a
+report could not be read by anybody, in principle. Half of that is now closed —
+`20260921214500_report_status.sql` adds the four statuses and a read for
+`private.is_app_admin()`, with `supabase/reports.check.sql` holding it at 14
+checks.
+
+**The other half is a person.** A table an administrator *may* read is not a
+queue somebody *is* watching, and `lib/classmates.ts` still says *"Reports are
+stored, not moderated. Nobody is watching a queue."* That sentence is still
+true and the migration deliberately does not touch it. It changes when there
+is an administrator dashboard and somebody reading it — §58's *"Review reports
+through admin interface"*, which no screen in this app provides yet.
 
 ### Flags that did not fire
 
@@ -315,9 +325,11 @@ open product decision, not a per-feature defect.
 
 §226: *"Do not merely document gaps. Fix them according to priority."*
 
-1. **`public.reports`** — the P0. A status column, an admin select policy on
-   `private.is_app_admin()`, a check suite, a screen. Nothing about it is
-   blocked.
+1. ~~**`public.reports`**~~ — **the database half is done in this commit.**
+   Four statuses, an admin read and a status-only update, and a check suite
+   that fails in both directions. What remains is the admin screen, and the
+   sentence in `lib/classmates.ts` that must not change until a person is
+   actually reading the queue.
 2. ~~**A test at the component seam for `family`**~~ — **done in this commit,
    and it turned out to be the wrong seam.** Looking properly found that
    `lib/family.ts` itself had no test: 271 lines, the module behind the one
