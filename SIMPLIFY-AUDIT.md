@@ -1,3 +1,115 @@
+# One app — the nineteenth pass: a file is not a screen
+
+Against `main` at `054e427`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge, no screen touched, no test changed.
+
+This closes the row the seventeenth pass opened and the eighteenth left alone:
+*front door or contextual action, for the fifty-five destinations that have been
+counted and not read.*
+
+## S1 — what made it tractable, since reading fifty-five screens is not
+
+The seventeenth pass read three destinations by hand. Doing that fifty-five
+more times is the same pass fifty-five times, and the eighteenth pass already
+said so. What changes the size of the job is one observation:
+
+**A destination with one call site cannot have two front doors.**
+
+The duplicate-pathway question is only ever about a destination offered from
+more than one place. So the list that needs reading is not fifty-eight, it is
+the destinations with more than one non-index call site — where an *index* is
+the set of surfaces that list every destination by design and that the skill
+already exempts: `lib/nav.ts`, the springboard, the command palette, search,
+`Me.tsx`, and the persistent chrome in `App.tsx`, `Tabs.tsx` and `desk/`.
+
+That leaves **sixteen**, of which the seventeenth pass resolved three
+(`edit`, `import`, `courses`). Thirteen were left.
+
+## S2 — and of the thirteen, every one offers its destination once per screen
+
+Counted rather than read: across all thirteen, no screen dispatches to the same
+destination twice. `maps` is offered by `Walks` and by `Housing`; `registrar`
+by `Meals` and by `Today`; `connect` by `StudyStudio` and by `Mail` — in every
+case one offer, from one screen, in that screen's own context.
+
+Two screens each linking to a third is not the fault this audit is about. It is
+what a cross-reference is, and the skill's own rule names the fault precisely:
+*one route per home*, a place reached two ways **from where you are**.
+
+So the question reduces to a single, checkable shape: **one screen offering one
+destination more than once.** Three files answered to it.
+
+## S3 — and two of the three were the instrument again
+
+| File | Both doors? | Verdict |
+| --- | --- | --- |
+| `components/Applying.tsx` | lines 71, 109 | **No.** Two exported components — `ApplyingSoon` (61) and `ApplyingOn` (91). One file, two cards, one door each. |
+| `screens/Guide.tsx` | lines 834, 1021 | **No.** `Decks()` renders at `state.mode === 'slides'`, `Documents()` at `=== 'doc'` (`Guide.tsx:656-657`). Mutually exclusive; never on screen together. |
+| `screens/Profile.tsx` | lines 143, 279 | **Yes**, and deliberate — see below. |
+
+Both false positives have one cause, and it is the third of its family in three
+passes. The sixteenth pass counted call sites and could not tell a pathway from
+a contextual action. The eighteenth found a window measured in characters that
+mistook a neighbouring button for the same handler — *characters are not
+handlers*. This one grouped by filename and mistook two components, and two
+mode-exclusive sections, for one screen.
+
+**A file is not a screen.** Proximity in a text file is not proximity in the
+app, and every probe in this file that has assumed otherwise has been wrong in
+the same direction: it over-reports, and it over-reports on exactly the dense,
+well-factored files where a real finding would matter most.
+
+Worth stating as a rule rather than a third anecdote, because the next census
+will want it: **group by rendered unit, not by path.** A component boundary, a
+`mode` guard and an early `return` are all screen boundaries; a filename is not.
+
+## S4 — the one real pair, and why it stays
+
+`screens/Profile.tsx` offers `account` twice, and both are on screen together:
+
+- **Line 143**, an `ActionButton` whose label is the sign-in state —
+  *"Manage your account"*, *"Sign in"*, or *"How this device works"*.
+- **Line 279**, a `NavRow` labelled *"Account"* inside
+  `<Group header="Your account and your data">`.
+
+The file argues for both, at both sites, and the arguments are good. The button
+carries its own note — *"One button, and which one depends on whether there is
+an account to manage. Both open the same screen — it is the screen that knows
+the difference"* — so it is a state-aware call to action rather than a second
+listing. The group carries the other half: *"A profile that grew into a second
+directory would be the thing `screens/Me.tsx` already is."*
+
+So they are two affordances, not two routes: a primary action that changes with
+your state, and a row in a complete list. The skill exempts an index from the
+pathway count for the same reason.
+
+**Recorded as the one taste call in the row rather than settled here.** It is
+the shape §6 covers — a question about how one person uses their own app — and
+nothing about it is broken. If the owner would rather the hero went, that is
+theirs to say; this pass is not entitled to it from the code.
+
+## The row, closed
+
+Front door or contextual action, across all fifty-eight: **no destination is
+offered twice from the same place, except `account` on Profile, which is
+deliberate and argued in the file.** There is nothing here to merge.
+
+What this does *not* claim, in the sixteenth pass's words, which still hold: the
+census reads literal `type: 'go'` rows, so a `go` whose screen is a variable is
+invisible to it, and that is most of what the directory, search and the palette
+do. Those are indexes, exempt by the rule rather than by the method — but they
+are exempt by the rule, so the gap does not touch this conclusion.
+
+## To do
+
+- Nothing in the skill's three headings is open. Screens, pathways and controls
+  have each been resolved or kept with a reason across nineteen passes.
+- `account` on Profile, if the owner wants the hero gone.
+- A pointer-pairing guard past `edit`, when a second instance exists to write it
+  against — carried from the eighteenth pass, unchanged.
+
+---
+
 # One app — the eighteenth pass: the guard was right about the app and wrong about the file
 
 Against `main` at `b7c96e2`. **<!--screens-->fifty-eight<!--/--> destinations**,
