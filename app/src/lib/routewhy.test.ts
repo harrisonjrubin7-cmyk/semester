@@ -44,11 +44,34 @@ describe('when a question can be asked, it says nothing', () => {
 });
 
 describe('the four ways there is no route', () => {
-  it('signed out: the sentence the app always gave, which is right here only', () => {
+  it('signed out, on a build that has a shared key service: sign in', () => {
     bare();
+    // The stub is the whole point. This case read `bare()` and nothing else,
+    // so it ran against whatever the environment happened to hold — and the
+    // sentence it asserted is right only where there is a shared key to sign
+    // in *for*. Naming the condition is what turns it from a sentence the app
+    // always gave into a sentence about a situation.
+    shared('https://project.supabase.co');
     const said = routeWhy(false);
     expect(said).toMatch(/Sign in to use the shared key/);
     expect(said).toMatch(/add your own/);
+  });
+
+  it('signed out, on a build with no shared key service: not "sign in"', () => {
+    /*
+     * The case the order got wrong.
+     *
+     * `!signedIn` was tested before `!sharedEndpoint()`, so a signed-out
+     * student on a build with no shared key service — where `cloud.ts` may
+     * offer no sign-in at all — was told to sign in to use a shared key that
+     * does not exist. That is the contradiction this file's header says the
+     * function exists to end, arriving by the other door.
+     */
+    bare();
+    shared('');
+    const said = routeWhy(false);
+    expect(said).toMatch(/built without a shared key service/);
+    expect(said).not.toMatch(/Sign in/);
   });
 
   it('signed in, but this build has no shared key service', () => {
@@ -103,13 +126,20 @@ describe('and the session actually reaching it is the difference', () => {
   it('gives four different answers to four different situations', () => {
     const said = new Set<string>();
 
+    // No shared key service. Signing in adds nothing here, so both sign-in
+    // states get the same answer — and that is the fix rather than a
+    // collapse: the four situations are keyed on what would help, not on
+    // whether somebody happens to be signed in.
     bare();
     shared('');
     setSessionToken(null);
     said.add(routeWhy(false));
     said.add(routeWhy(true));
+    expect(said.size).toBe(1);
 
+    // With a service, the sign-in state is the difference again.
     shared('https://project.supabase.co');
+    said.add(routeWhy(false));
     said.add(routeWhy(true));
 
     saveSettings({ ...settings(), provider: 'openai', openaiKey: '' });

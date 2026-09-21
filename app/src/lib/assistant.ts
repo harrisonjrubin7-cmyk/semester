@@ -308,15 +308,28 @@ export function routeWhy(signedIn: boolean, s = settings()): string {
     return 'Add an OpenAI key under Settings → The assistant, or switch back to Claude.';
   }
 
-  if (!signedIn) {
-    return 'Sign in to use the shared key, or add your own. Everything else in the app works without it.';
-  }
-
+  /*
+   * Before the sign-in branch, not after it.
+   *
+   * On a build with no shared key service there is nothing to sign in *for*,
+   * and where `cloud.ts` is also unconfigured there is no sign-in at all — so
+   * ordering the signed-out branch first told a signed-out student to "sign
+   * in to use the shared key" on a copy of the app where doing so adds
+   * nothing and may not be possible. That is the same contradiction the
+   * paragraph above says this function exists to remove, arriving by the
+   * other door.
+   *
+   * Worded for both states, because it is now reachable from both.
+   */
   if (!sharedEndpoint()) {
     return (
-      'Signed in, but this copy of Semester was built without a shared key service, ' +
-      'so signing in does not add one. Add your own key under Settings → The assistant.'
+      'This copy of Semester was built without a shared key service, so signing in does ' +
+      'not add one. Add your own key under Settings → The assistant.'
     );
+  }
+
+  if (!signedIn) {
+    return 'Sign in to use the shared key, or add your own. Everything else in the app works without it.';
   }
 
   return (

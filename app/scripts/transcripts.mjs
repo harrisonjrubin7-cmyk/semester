@@ -115,7 +115,14 @@ if (!existsSync(out)) mkdirSync(out, { recursive: true });
 let stale = 0;
 const written = [];
 for (const file of readdirSync(scripts).sort()) {
-  if (!file.endsWith('.json') || file.endsWith('.chapters.json')) continue;
+  // The same rule as `isEpisodeScript` in `app/src/lib/episodes.ts`, which
+  // exists because three walks told scripts from sidecars by naming the one
+  // sidecar that existed. This was the third walk and it was never migrated:
+  // `.lines.json` carries the same `id` and `course` fields it searches on,
+  // so it was read as a script and `npm run transcripts` died on the first
+  // one. Said as what a script looks like, so the next sidecar is not a
+  // fourth bug. `transcripts.script.test.ts` keeps the two in step.
+  if (!/^[^.]+\.json$/.test(file)) continue;
   const script = { ...JSON.parse(readFileSync(join(scripts, file), 'utf8')), file };
   const path = join(out, `${script.course}.ts`);
   const next = render(script);
