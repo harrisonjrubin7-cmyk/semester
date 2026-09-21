@@ -37,68 +37,48 @@ missing deploy.
 `SUPABASE_PROJECT_REF` or `VITE_SUPABASE_URL`, both of which name production,
 so it has never deployed a function anywhere else.
 
-### The decision this needs, which is not mine to take
+### Settled on 21 September: declare the live ones, and pin the flag
 
-Two ways out, and the first is a change to how production's functions are
-deployed, so it belongs to whoever wrote that comment.
+`supabase/config.toml` now carries a `[functions]` block. The argument that
+stood against one is answered rather than overruled, and the answer has two
+halves.
 
-**Declare the functions in `config.toml`** with `verify_jwt = false` on each,
-matching the `--no-verify-jwt` that `functions.yml` passes to every one of
-them. Branching then deploys them to every preview branch, and staging becomes
-what the plan asks for.
+**Only the functions that are live.** `claude` and `push`, which is what
+`DEPLOY.md` records as ACTIVE — and not `fetchcal`, `canvas`, `lti` or
+`calendar`, which production deliberately does not have. This is the point
+rather than a shortcut: the plan asks for a branch that *matches* production,
+and a branch carrying four functions production lacks would not match it, it
+would exceed it. Declaring a function is also **how it gets deployed**, so
+listing those four would have shipped them.
 
-The comment's objection survives this and should be taken seriously: two deploy
-paths for one function can disagree, and the specific thing they can disagree
-about is exactly that flag. `claude`, `fetchcal` and `canvas` verify the
-caller's token themselves and must answer a CORS preflight, which carries no
-`Authorization` header at all — so a path that quietly turned platform JWT
-verification back on would break every AI feature in the app, and it would
-break it at whichever deploy ran last.
+**The one flag they can disagree about is pinned.** Two deploy paths hurt when
+they can disagree *silently*, and the thing these two can disagree about is
+`verify_jwt`. `app/src/lib/functionconfig.test.ts` reads this file, the
+workflow and `DEPLOY.md` as text and goes red when any pair stops agreeing —
+the instrument `lib/referral.test.ts` and `lib/allowance.test.ts` use for every
+other pair of sides in this repository that cannot import from each other.
 
-But *undetected* divergence is the fault, not duplication. This repository
-already has the instrument for two sides that cannot import from each other and
-must agree: `lib/referral.test.ts` and `lib/allowance.test.ts` read the other
-side as text and go red when the two stop matching. A test holding every
-`[functions.*]` block in `config.toml` against the flag `functions.yml` passes,
-and against the set of directories in `supabase/functions/`, turns "two paths
-that can disagree" into "two paths pinned to agree".
+It holds three things, in both directions:
 
-**Or leave it, and say so.** Staging then covers the database, the policies and
-the app, and does not cover the functions. That is a smaller thing than it
-sounds — `check.sh` exercises the schema far harder than a branch does — and it
-is an honest position as long as it is written down rather than discovered by
-somebody testing a feature on staging that was never there.
+| | |
+| --- | --- |
+| a live function missing from `config.toml` | a preview branch that silently lacks it — the original fault |
+| a function declared that is not live | worse, because declaring it deploys it |
+| `verify_jwt` disagreeing with `--no-verify-jwt` | every AI request failing in the browser, at whichever deploy ran last |
 
-What is not an option is the current state, where the plan's exit gate says
-"including Edge Functions" and nobody had established that they are not
-included.
+That third one is why the objection deserved taking seriously rather than
+waving through. `claude` answers a CORS preflight, which carries no
+`Authorization` header at all, so the *stricter* of the two paths is the one
+that breaks the app.
 
-## What a preview branch is built from, which is the crux
+Seven mutations were run against the guard and all seven are caught: dropping
+a live function, declaring one that is not live, a slug matching no directory,
+`verify_jwt` flipped to true, `verify_jwt` left unset, the workflow dropping
+its flag, and a function going live in `DEPLOY.md` without being declared here.
 
-Not simply `supabase/migrations/`. The one time it was watched closely — a
-branch created on 18 September, recorded in `ROLLBACK.md` — it **replayed
-production's ledger**, and the first eight entries of that ledger carry no SQL
-at all. It ran them as no-ops, created two tables, and reached
-`MIGRATIONS_FAILED` at row eleven when a migration tried to alter a function
-that had never been created. Two tables and no functions, from a history
-claiming ten applied migrations.
-
-The bot says the same thing in one line on every pull request it comments on:
-
-> Tasks are run on every commit but **only new migration files are pushed**.
-> Close and reopen this PR if you want to apply changes from existing seed or
-> migration files.
-
-Two consequences, and both are ways staging quietly stops being staging:
-
-1. **A branch inherits production's history, including the parts of it that
-   cannot replay.** That is the fault `MIGRATION-HISTORY.md` is about, and it
-   is why a preview branch was never a trustworthy staging environment: it was
-   not a rebuild, it was a replay of a record that is known to be incomplete.
-2. **Editing an existing migration file changes nothing on the branch.** Only
-   new files are pushed. A branch built before an edit is a branch testing the
-   old text, silently, and closing and reopening the pull request is the only
-   thing that rebuilds it.
+**What this does not do** is deploy anything new. Both functions were already
+live and already deployed by the workflow; what changes is that a preview
+branch now gets them too.
 
 ## Renaming a migration breaks every branch that already applied it
 
@@ -181,6 +161,7 @@ nothing in this repository should be read as claiming otherwise. That part is
 twenty minutes in a dashboard and a SQL editor, and it is twenty minutes
 nobody has spent.
 
-The Edge Functions half is not twenty minutes; it is the decision above. And
-none of it can be checked at all while the Migrations task is refusing, which
-it is on every branch that predates the renumbering.
+The Edge Functions half is settled and done. None of it can be *checked* while
+the Migrations task is refusing, which it is on every branch that predates the
+renumbering — the first branch built after that clears is the first one where
+any of this can be confirmed rather than reasoned about.

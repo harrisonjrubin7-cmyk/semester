@@ -8,10 +8,35 @@
 # time a deploy runs, and a dashboard that lies to the person reading it is
 # worse than a config file that is short.
 #
-# In particular there is no [functions] block. Edge Functions are deployed by
-# `.github/workflows/functions.yml`, which deploys only the directories a push
-# actually changed — see DEPLOY.md. Declaring them here as well would give one
-# function two deploy paths that can disagree about which version is live.
+# There is a [functions] block at the bottom, and there was deliberately not one
+# until 21 September. The argument that stood here was:
+#
+#   > Edge Functions are deployed by `.github/workflows/functions.yml`, which
+#   > deploys only the directories a push actually changed. Declaring them here
+#   > as well would give one function two deploy paths that can disagree about
+#   > which version is live.
+#
+# That is about production and it is right. What it did not say is what it
+# costs staging, and a preview branch is where that bill arrives: Branching
+# deploys only the functions named here, so with no block a preview branch had
+# **no functions at all** — no `claude`, no `push`, nothing. Every AI feature
+# and every reminder was absent from staging, in the way that looks like an app
+# bug rather than a missing deploy. The branch on pull request #618 said so
+# itself, in a warning nobody had read before:
+#
+#   > ⚠️ Only Functions declared in config.toml will be automatically deployed
+#   > to branches: [functions.my-slug]
+#
+# So the objection is answered rather than overruled. Two deploy paths are a
+# problem when they can *silently* disagree, and the thing they can disagree
+# about here is exactly one flag — `verify_jwt`. `lib/functionconfig.test.ts`
+# reads this file and the workflow as text and goes red if the two stop
+# matching, which is the instrument `lib/referral.test.ts` and
+# `lib/allowance.test.ts` use for every other pair of sides that cannot import
+# from each other. Undetected divergence was the fault; duplication was only
+# ever the symptom.
+#
+# See STAGING.md for the whole of it.
 
 project_id = "lzrqvlugnawcgywkhqlz"
 
@@ -20,3 +45,29 @@ project_id = "lzrqvlugnawcgywkhqlz"
 # would be built on a different major than production, and the first thing you
 # would learn from it is something untrue about production.
 major_version = 17
+
+# ── Edge Functions ────────────────────────────────────────────────────────
+#
+# **Only the ones that are live in production**, which is the whole point
+# rather than an oversight. The plan asks for a preview branch that *matches*
+# production; a branch carrying `fetchcal`, `canvas`, `lti` and `calendar`
+# would not match it, it would exceed it — and worse, declaring a function here
+# is how it gets deployed, so listing the four that production deliberately
+# does not have would deploy them. DEPLOY.md is the record of what is live, and
+# `functionconfig.test.ts` holds this list to it: deploy a function for real,
+# say so there, and this file has to follow.
+#
+# `verify_jwt = false` on both, matching the `--no-verify-jwt` that
+# `functions.yml` passes to every deploy. It is the platform's own check that
+# is off, not authentication: `claude` verifies the caller's token itself and
+# has to answer a CORS preflight, which carries no Authorization header at all,
+# and `push` is called by the scheduler and authenticates with a shared secret.
+# DEPLOY.md argues both at length. Getting this flag wrong in the other
+# direction is the one way these two deploy paths can hurt each other, which is
+# why a test pins it.
+
+[functions.claude]
+verify_jwt = false
+
+[functions.push]
+verify_jwt = false
