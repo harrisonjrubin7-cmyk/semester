@@ -10,9 +10,11 @@ import {
   responseRows,
   sheetText,
   splitClip,
+  trianglePoints,
   videoSeconds,
   visibleQuestions,
   xml,
+  type DesignLayer,
   type FormData,
   type Question,
   type VideoClip,
@@ -222,6 +224,51 @@ describe('a design as SVG', () => {
     const out = designSvg(d);
     expect(out.match(/<tspan/g)).toHaveLength(2);
   });
+
+  /*
+   * A triangle exported as a rectangle is the failure this is for, and it is
+   * a quiet one: the layer is in the file, the colour is right, the box is
+   * right, and the shape is wrong. So the corners are checked rather than the
+   * tag — and against `trianglePoints`, which is what the editor's own canvas
+   * draws, because the two drifting apart is the same bug wearing a different
+   * hat.
+   */
+  it('draws a triangle as its three corners, not as its box', () => {
+    const d = canvas();
+    d.layers = [{ ...newLayer('triangle', d), x: 100, y: 200, w: 300, h: 400 }];
+    const out = designSvg(d);
+    expect(out).toContain(`<polygon points="${trianglePoints(d.layers[0])}"`);
+    expect(out).toContain('points="250,200 400,600 100,600"');
+    expect(out).not.toContain('<rect x="100"');
+  });
+
+  /*
+   * Opacity in the export. The interesting half is the second expectation:
+   * a layer at full strength must not carry the attribute at all, so an SVG
+   * out of this build is the same document it was out of the last one.
+   */
+  it('fades a layer in the file, and says nothing about one that is not faded', () => {
+    const d = canvas();
+    d.layers = [{ ...newLayer('rectangle', d), opacity: 0.4 }];
+    expect(designSvg(d)).toContain('opacity="0.4"');
+
+    d.layers = [{ ...newLayer('rectangle', d), opacity: 1 }];
+    expect(designSvg(d)).not.toContain('opacity');
+  });
+
+  it('fades every kind of layer, not only the shapes', () => {
+    // Four separate attributes in four branches of one function, which is
+    // exactly the shape of code where one gets missed.
+    for (const kind of ['text', 'rectangle', 'ellipse', 'triangle'] as const) {
+      const d = canvas();
+      d.layers = [{ ...newLayer(kind, d), text: 'hello', opacity: 0.5 }];
+      expect(designSvg(d), kind).toContain('opacity="0.5"');
+    }
+
+    const d = canvas();
+    d.layers = [{ ...newLayer('image', d), fileId: 'f1', opacity: 0.5 }];
+    expect(designSvg(d, { f1: 'data:image/png;base64,AAAA' })).toContain('opacity="0.5"');
+  });
 });
 
 /* ── Videos ─────────────────────────────────────────────────────────────── */
@@ -274,6 +321,46 @@ describe('a creation library', () => {
     const d = newCreation('design');
     d.design.background = 'white';
     expect(() => lib(d)).toThrow(/design/i);
+  });
+
+  /*
+   * The designs that already exist.
+   *
+   * Layers had no opacity until this build, and the library is still version
+   * 1 — there is no version bump to hang a migration off, and the projects
+   * without the field are the ones a student already made. Refusing them
+   * would be this build calling every earlier design unreadable, so the
+   * reader fills the default in on the way past.
+   *
+   * The second half is the half that matters: it is not enough that the read
+   * succeeds. The layer has to come back *with a number on it*, because every
+   * screen downstream multiplies by it, and `undefined` reaches the canvas as
+   * an invisible layer rather than as an error.
+   */
+  it('reads a design saved before layers had an opacity, and gives it one', () => {
+    const p = newCreation('design');
+    p.design.layers = [newLayer('rectangle', p.design)];
+    delete (p.design.layers[0] as Partial<DesignLayer>).opacity;
+
+    const out = readCreations({ version: 1, projects: [p] });
+    expect(out.projects[0].design.layers[0].opacity).toBe(1);
+  });
+
+  it('refuses an opacity outside the range the editor can reach', () => {
+    for (const opacity of [0, -1, 1.5, Number.NaN]) {
+      const p = newCreation('design');
+      p.design.layers = [{ ...newLayer('rectangle', p.design), opacity }];
+      expect(() => lib(p), String(opacity)).toThrow(/layer/i);
+    }
+  });
+
+  it('reads a triangle, and still refuses a kind it does not have', () => {
+    const p = newCreation('design');
+    p.design.layers = [newLayer('triangle', p.design)];
+    expect(() => lib(p)).not.toThrow();
+
+    p.design.layers = [{ ...newLayer('rectangle', p.design), kind: 'hexagon' as DesignLayer['kind'] }];
+    expect(() => lib(p)).toThrow(/layer/i);
   });
 
   /*

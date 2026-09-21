@@ -5,7 +5,16 @@ import { ItemRow } from '../shell/Rows';
 import { addFile, getFile } from '../../lib/files';
 import { cloudConfigured } from '../../lib/cloud';
 import { download } from '../../lib/deliver';
-import { designSvg, newLayer, type CreativeProject, type DesignData, type DesignLayer } from '../../lib/creations';
+import {
+  LAYER_OPACITY,
+  clampOpacity,
+  designSvg,
+  newLayer,
+  trianglePoints,
+  type CreativeProject,
+  type DesignData,
+  type DesignLayer,
+} from '../../lib/creations';
 import { TEMPLATES, apply as applyTemplate } from '../../lib/designtemplates';
 import { changes, describe as describeCanvas, foldAll, type Seen } from '../../lib/coedit';
 import { share, type Sharing } from '../../lib/cocanvas';
@@ -14,10 +23,10 @@ import { share, type Sharing } from '../../lib/cocanvas';
  * A canvas: text, shapes and pictures on a page, exported as an image.
  *
  * For the poster, the diagram and the one slide that has to look like
- * something. Small on purpose — four layer kinds and a colour — because the
- * alternative is a worse version of a design tool the student already has,
- * and what is actually missing is somewhere to make a conference poster at
- * eleven at night without leaving the app their material is in.
+ * something. Small on purpose — five layer kinds, a colour and an opacity —
+ * because the alternative is a worse version of a design tool the student
+ * already has, and what is actually missing is somewhere to make a conference
+ * poster at eleven at night without leaving the app their material is in.
  *
  * ## The picture is not in the project
  *
@@ -50,6 +59,22 @@ const readData = (blob: Blob) =>
 
 const MAX_LAYERS = 60;
 const UNDO = 30;
+
+/**
+ * Page sizes by the name somebody would ask for them by.
+ *
+ * Every one is inside the 200–2,400 the reader allows on both sides, which is
+ * why 1080 × 1920 is here and a 4K anything is not: a preset that produced a
+ * design the app then refused to reopen would be the worst kind of shortcut.
+ */
+const PAGE_SIZES = [
+  { name: 'Square post', width: 1080, height: 1080 },
+  { name: 'Story', width: 1080, height: 1920 },
+  { name: 'Poster', width: 1600, height: 1200 },
+  { name: 'Slide', width: 1600, height: 900 },
+  { name: 'Flyer', width: 900, height: 1200 },
+  { name: 'Letter page', width: 1275, height: 1650 },
+] as const;
 
 export function DesignEditor({
   project,
@@ -272,6 +297,25 @@ export function DesignEditor({
   const field = { display: 'block', marginBottom: 'var(--sp-5)' } as const;
   const input = { width: '100%', marginTop: 'var(--sp-2)' } as const;
 
+  /**
+   * A new page size, from the fields or from a preset.
+   *
+   * Shrinking the page pulls anything outside it back in, so a layer cannot
+   * be stranded off-canvas with no way to select it. Both axes are clamped on
+   * every call even when only one changed, which costs nothing — a coordinate
+   * already inside the page is its own minimum.
+   */
+  const resize = (width: number, height: number) => {
+    const w = Math.max(200, Math.min(2400, Math.round(width) || 200));
+    const h = Math.max(200, Math.min(2400, Math.round(height) || 200));
+    change({
+      ...d,
+      width: w,
+      height: h,
+      layers: d.layers.map((l) => ({ ...l, x: Math.min(w, l.x), y: Math.min(h, l.y) })),
+    });
+  };
+
   /** Where a pointer is, in canvas units. */
   const at = (clientX: number, clientY: number) => {
     const rect = svg.current!.getBoundingClientRect();
@@ -377,13 +421,13 @@ export function DesignEditor({
             }}
           >
             Every one of these is ordinary layers once it lands — move them, recolour them, delete the
-            ones you do not want. Or start with a blank canvas and the three buttons below.
+            ones you do not want. Or start with a blank canvas and the four buttons below.
           </div>
         </div>
       )}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
-        {(['text', 'rectangle', 'ellipse'] as const).map((k) => (
+        {(['text', 'rectangle', 'ellipse', 'triangle'] as const).map((k) => (
           <ActionButton key={k} onClick={() => add(k)} style={{ flex: '1 1 auto' }}>
             {k}
           </ActionButton>
@@ -520,6 +564,15 @@ export function DesignEditor({
                 drag.current = { id: layer.id, dx: p.x - layer.x, dy: p.y - layer.y };
               }}
             >
+              {/*
+                * The opacity goes on the shape and never on the `<g>`.
+                *
+                * The group also holds the selection outline, so fading it
+                * would fade the one thing that has to stay visible: a layer
+                * taken down to a tenth would be a layer you could no longer
+                * see you had selected, which is precisely when you need the
+                * outline most.
+                */}
               {layer.kind === 'text' ? (
                 <text
                   x={layer.x}
@@ -528,6 +581,7 @@ export function DesignEditor({
                   fontSize={layer.fontSize}
                   fontFamily="Arial,sans-serif"
                   fontWeight={layer.bold ? 700 : 400}
+                  opacity={layer.opacity}
                 >
                   {layer.text.split('\n').map((t, j) => (
                     <tspan key={j} x={layer.x} dy={j ? layer.fontSize * 1.25 : 0}>
@@ -536,11 +590,15 @@ export function DesignEditor({
                   ))}
                 </text>
               ) : layer.kind === 'ellipse' ? (
-                <ellipse cx={layer.x + layer.w / 2} cy={layer.y + layer.h / 2} rx={layer.w / 2} ry={layer.h / 2} fill={layer.fill} />
+                <ellipse cx={layer.x + layer.w / 2} cy={layer.y + layer.h / 2} rx={layer.w / 2} ry={layer.h / 2} fill={layer.fill} opacity={layer.opacity} />
+              ) : layer.kind === 'triangle' ? (
+                // `trianglePoints` is the export's own, so what is on screen
+                // and what lands in the SVG are the same three corners.
+                <polygon points={trianglePoints(layer)} fill={layer.fill} opacity={layer.opacity} />
               ) : layer.kind === 'image' ? (
-                <image x={layer.x} y={layer.y} width={layer.w} height={layer.h} href={images[layer.fileId]} />
+                <image x={layer.x} y={layer.y} width={layer.w} height={layer.h} href={images[layer.fileId]} opacity={layer.opacity} />
               ) : (
-                <rect x={layer.x} y={layer.y} width={layer.w} height={layer.h} fill={layer.fill} />
+                <rect x={layer.x} y={layer.y} width={layer.w} height={layer.h} fill={layer.fill} opacity={layer.opacity} />
               )}
               {layer.id === selected && (
                 <rect
@@ -588,24 +646,39 @@ export function DesignEditor({
             min={200}
             max={2400}
             value={d[k]}
-            onChange={(e) => {
-              const n = Math.max(200, Math.min(2400, Number(e.target.value) || 200));
-              // Shrinking the page pulls anything outside it back in, so a
-              // layer cannot be stranded off-canvas with no way to select it.
-              change({
-                ...d,
-                [k]: n,
-                layers: d.layers.map((l) => ({
-                  ...l,
-                  x: k === 'width' ? Math.min(n, l.x) : l.x,
-                  y: k === 'height' ? Math.min(n, l.y) : l.y,
-                })),
-              });
-            }}
+            onChange={(e) =>
+              resize(
+                k === 'width' ? Number(e.target.value) : d.width,
+                k === 'height' ? Number(e.target.value) : d.height,
+              )
+            }
             style={input}
           />
         </label>
       ))}
+
+      {/*
+        * The sizes somebody actually asks for, by name.
+        *
+        * Nobody knows that a story is 1080 by 1920; they know it is a story.
+        * These go through `resize` rather than setting the numbers directly,
+        * so a preset clamps and pulls stranded layers back in exactly the way
+        * typing the numbers does — the one path, not a second one that has to
+        * be remembered when the first changes.
+        */}
+      <SectionLabel style={{ marginBlock: 'var(--sp-5) var(--sp-4)' }}>Common sizes</SectionLabel>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
+        {PAGE_SIZES.map((p) => (
+          <ActionButton
+            key={p.name}
+            onClick={() => resize(p.width, p.height)}
+            title={`${p.width} × ${p.height}`}
+            style={{ flex: '1 1 auto' }}
+          >
+            {p.name}
+          </ActionButton>
+        ))}
+      </div>
 
       {d.layers.length > 0 && (
         <>
@@ -668,6 +741,26 @@ export function DesignEditor({
             <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Colour</span>
             <input type="color" value={l.fill} onChange={(e) => patch({ fill: e.target.value })} style={input} />
           </label>
+          {/*
+            * The number is said next to the slider because a slider on its own
+            * cannot be read back. Somebody matching two layers to the same
+            * wash needs to know they are both at 40%, and a thumb position is
+            * not an answer to that.
+            */}
+          <label style={field}>
+            <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+              Opacity · {Math.round(l.opacity * 100)}%
+            </span>
+            <input
+              type="range"
+              min={LAYER_OPACITY.min}
+              max={LAYER_OPACITY.max}
+              step={0.05}
+              value={l.opacity}
+              onChange={(e) => patch({ opacity: clampOpacity(Number(e.target.value)) })}
+              style={input}
+            />
+          </label>
           {l.kind === 'text' && (
             <label
               style={{
@@ -682,9 +775,63 @@ export function DesignEditor({
               <span>Bold</span>
             </label>
           )}
+          {/*
+            * Against the page, not against another layer.
+            *
+            * A layer's box is `x`/`y`/`w`/`h` for every kind, including text —
+            * where the renderer draws from `x` with no line box, so `w` is the
+            * width somebody set rather than the width the words came out. That
+            * makes right and centre an approximation for text and exact for
+            * everything else, which is the same approximation the one Centre
+            * button here always made, now said out loud.
+            */}
+          <SectionLabel style={{ marginBlock: 'var(--sp-5) var(--sp-4)' }}>Align on the page</SectionLabel>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
+            {(
+              [
+                ['Left', { x: 0 }],
+                ['Centre', { x: Math.max(0, (d.width - l.w) / 2) }],
+                ['Right', { x: Math.max(0, d.width - l.w) }],
+                ['Top', { y: 0 }],
+                ['Middle', { y: Math.max(0, (d.height - l.h) / 2) }],
+                ['Bottom', { y: Math.max(0, d.height - l.h) }],
+              ] as const
+            ).map(([name, to]) => (
+              <ActionButton key={name} onClick={() => patch(to)} style={{ flex: '1 1 auto' }}>
+                {name}
+              </ActionButton>
+            ))}
+          </div>
+
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)' }}>
-            <ActionButton onClick={() => patch({ x: Math.max(0, (d.width - l.w) / 2) })} style={{ flex: '1 1 auto' }}>
-              Centre
+            {/*
+              * "Duplicate layer", not "Duplicate".
+              *
+              * The screen this panel sits on already has a Duplicate button,
+              * and that one copies the whole project. Two buttons a thumb apart
+              * reading the same word, doing things an order of magnitude
+              * different in size, is a trap — found by opening the screen, not
+              * by reading this file.
+              */}
+            <ActionButton
+              onClick={() => {
+                if (d.layers.length >= MAX_LAYERS) return setNotice(`A design holds ${MAX_LAYERS} layers.`);
+                // Offset so the copy is visibly a second thing rather than
+                // sitting exactly on top of the original, and clamped so it
+                // cannot be nudged off the page by the offset itself.
+                const copy = {
+                  ...l,
+                  id: crypto.randomUUID(),
+                  x: Math.min(d.width, l.x + 20),
+                  y: Math.min(d.height, l.y + 20),
+                };
+                const i = d.layers.findIndex((x) => x.id === l.id);
+                change({ ...d, layers: [...d.layers.slice(0, i + 1), copy, ...d.layers.slice(i + 1)] });
+                setSelected(copy.id);
+              }}
+              style={{ flex: '1 1 auto' }}
+            >
+              Duplicate layer
             </ActionButton>
             <ActionButton
               onClick={() => change({ ...d, layers: [...d.layers.filter((x) => x.id !== l.id), l] })}
