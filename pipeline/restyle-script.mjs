@@ -122,7 +122,28 @@ console.log(
 console.log(
   `  ~$${perStyle.toFixed(2)} per style, ~$${(perStyle * wanted.length).toFixed(2)} for this run`,
 );
-for (const id of wanted) console.log(`    ${id.padEnd(18)} ${STYLES[id].label}`);
+for (const id of wanted) {
+  console.log(`    ${id.padEnd(18)} ${STYLES[id].label} (${STYLES[id].voice} voice)`);
+}
+
+/*
+ * Which of these the renderer can actually perform, said before anything is
+ * spent rather than discovered after.
+ *
+ * `audio/synth.py` speaks with Piper, which reads evenly and does not do
+ * range. A restyle is still worth buying for an expressive preset — the
+ * script is the artefact and it outlives the voice that reads it — so this
+ * warns rather than refuses. `styles.mjs` has the argument.
+ */
+const expressive = wanted.filter((id) => STYLES[id].voice === 'expressive');
+if (expressive.length) {
+  console.log(
+    `\n  ${expressive.join(', ')} ${expressive.length === 1 ? 'wants' : 'want'} an expressive voice.\n` +
+      '  Piper, which audio/synth.py uses, reads evenly and does not do range — the\n' +
+      '  rewrite is worth having either way, but rendering it as it stands gives you\n' +
+      '  a script whose words are excited and whose delivery is not.',
+  );
+}
 
 if (dry) {
   console.log('\n--dry-run: nothing sent, nothing written, nothing spent.');

@@ -142,7 +142,7 @@ curious tangent that circles back to the point.
 | **Pushback debate duo** | Host plays devil's advocate and challenges the expert's claims rather than receiving them; productive friction | Concept clarification. The pushback forces the expert to defend and re-explain, which is active recall with better pacing |
 | **High-energy reaction duo** | Big reactions to surprising facts, fast pace, hype framing | Exam-cram highlight reels — "ten facts that will be on your test" — where reaction energy is what makes them stick |
 | **Reflective narrative** | First-person, vulnerable, "here is why this actually matters" framing wrapped around the material | Opening of a course or of a unit: the why-this-matters episode |
-| **Casual direct-to-camera** | Intimacy, stream-of-consciousness asides, very short attention span, native to vertical short-form | The shorts audio track specifically — one card explained as an aside |
+| **Casual direct-to-camera** | Intimacy, stream-of-consciousness asides, very short attention span, native to vertical short-form | ~~The shorts audio track specifically~~ — **wrong**: a short is cut from the unit's own MP3 by the cue list and has no track of its own to style. Built as `solo-aside`, a one-voice episode |
 
 **Build this as one system, not six.** Extend `make-script.mjs` with a
 `--style` flag backed by a small preset file that encodes each archetype as
@@ -217,10 +217,40 @@ once the format is right.
    no new audio at all. A cue already marks where each card's narration starts,
    so a short is a *trim* of the unit's MP3 rather than a new render of it.
    **278 shorts across the four courses**, 8.4–35.5s, median 14.8s.
-3. **`restyle-script.mjs` with two or three styles.** ✅ **Built, with one
-   thing unproven.** Three presets — curious-duo, storyteller, pushback-debate
-   — in `pipeline/styles.mjs`, and `pipeline/restyle.mjs` checks the model's
-   answer before anything is written. **The live model call has not been run**:
+3. **`restyle-script.mjs` with all six styles.** ✅ **Built, with one
+   thing unproven.** All six presets in `pipeline/styles.mjs`, and
+   `pipeline/restyle.mjs` checks the model's answer before anything is
+   written.
+
+   The other three arrived later than the first three, and the reason they
+   were held back turned out to cover one of them rather than all three. The
+   note in `styles.mjs` said they "lean on prosody Piper does not really do".
+   True of **hype-reaction** — a script whose words are excited read by a
+   voice that is not reads as a mistake rather than as a style. Not true of
+   **reflective**, which wants exactly the level, unhurried read Piper is best
+   at, and not really true of **solo-aside**, which wants a conversational
+   register rather than a wider range.
+
+   So the constraint is a property of a preset now, not a list: every style
+   declares the `voice` it needs, `restyle-script.mjs` says so before it
+   spends anything, and `hype-reaction` is the only thing in the file waiting
+   on a paid voice. It can still be bought and read — the script outlives the
+   voice that reads it — which is why the tool warns rather than refuses.
+
+   **`solo-aside` is not what this document said it was.** §3 describes the
+   casual direct-to-camera format as "the shorts audio track specifically",
+   and the shorts have no audio track to style: a short is cut out of the
+   unit's own MP3 by the cue list, and nothing is synthesised for it. There is
+   no script for that preset to rewrite. It is built as what it can be — a
+   one-voice, direct-address *episode* — and §3's row is wrong about where it
+   attaches.
+
+   And the file's own claim that "nothing here is a person, a show, or a
+   voice" is now checked rather than asserted, by the same `likeness.mjs` rule
+   `personas.mjs` puts on an appearance note and `broll.mjs` on a shot
+   subject. §7 reads as a rule about personas and is not.
+
+   **The live model call has not been run**:
    it was built in a container with no API key, so everything around the call
    is exercised and the call itself is not. Whoever runs it first is running it
    first — start with `--dry-run`, then one style on one course, and read the
