@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -66,6 +66,48 @@ jobs:
       - name: Install
         working-directory: app
         run: npm ci
+
+      # ── Advisories published since the lockfile was written ──────────────
+      #
+      # Everything else in this job asks whether the code is right. This asks
+      # the one question the code cannot answer about itself: whether somebody
+      # outside has since published that one of these packages is exploitable.
+      # Nothing in this repository was asking it — an advisory against a
+      # transitive dependency of `pdfjs-dist` or `@supabase/supabase-js` would
+      # have arrived here only by the owner happening to read about it.
+      #
+      # `.github/dependabot.yml` is the other half and they are not a
+      # duplicate: this one says a bad version is installed *now*, on this
+      # branch, and Dependabot opens the pull request that replaces it.
+      #
+      # `--audit-level=high` rather than the default `low`, because the default
+      # reports development-only advisories against build tooling that no
+      # student's browser ever runs, and a step that reports something every
+      # week is a step that is skimmed. High and critical are the two levels
+      # that describe something exploitable.
+      #
+      # ## Why it cannot fail the build, when the tree is clean today
+      #
+      # `npm audit --audit-level=high` in `app/` reports **0 vulnerabilities**
+      # as this is written, so "non-blocking until the tree is clean" is not
+      # the reason — the tree is clean, and this could be made blocking by
+      # deleting one line.
+      #
+      # The reason is that this step's input is not in the repository. An
+      # advisory published overnight turns this red on a pull request about a
+      # button, whose author did not introduce it and cannot fix it there;
+      # they either wait or learn to merge past a red check, and the second is
+      # a habit that costs more than this step is worth. Left non-blocking it
+      # is an annotation in the log of every run, which is enough to be seen
+      # and not enough to stop unrelated work.
+      #
+      # Flip it by removing `continue-on-error` — the step already exits
+      # non-zero on a finding, which is what makes that a one-line change
+      # rather than a rewrite.
+      - name: Audit the dependency tree
+        working-directory: app
+        continue-on-error: true
+        run: npm audit --audit-level=high
 
       - name: Typecheck
         working-directory: app
@@ -386,6 +428,149 @@ jobs:
       - name: Rehearse the deploy against production's shape
         run: supabase/rehearse.sh
 
+  # ── A key that got committed ────────────────────────────────────────────
+  #
+  # The one kind of breakage in this repository that a test cannot see and a
+  # revert cannot undo. Every other failure here is about the code being
+  # wrong; this is about the code being right and carrying something that has
+  # to be rotated within the hour. `SECURITY.md` is the procedure for after,
+  # and it opens by saying rotate before you investigate — which is a
+  # commitment about mechanism, and mechanism is faster the earlier somebody
+  # knows.
+  #
+  # Nothing here was looking. The repository has a documented list of secrets,
+  # a rotation table and an incident process, and no check that would notice
+  # one of them going in. GitHub's own secret scanning is a real second pair of
+  # eyes and is not this: it runs after the push has landed, it covers the
+  # providers it has partnered with, and it is a repository setting rather than
+  # something this file can state. This runs on the pull request, before the
+  # merge, and fails it.
+  #
+  # ## Two scans, because the action alone does not cover the branch
+  #
+  # This was written as one step and the first run said otherwise. On a
+  # `pull_request` event `gitleaks-action` builds its own range and it is one
+  # commit —
+  #
+  #     gitleaks detect … --log-opts=--no-merges --first-parent <sha>^..<sha>
+  #     1 commits scanned.
+  #     scanned ~59520 bytes (59.52 KB) in 161ms
+  #
+  # — so a key added in the first commit of a two-commit pull request is never
+  # looked at, and 59 KB of a 206 MB repository reads as a clean sweep. The
+  # comment here used to say "the whole history, which is the point", which
+  # was wrong in the direction that matters: it described coverage this job
+  # did not have.
+  #
+  # So the action keeps the job it is actually good at — the licence check,
+  # the version fetch, the SARIF artifact, and the diff of what this push
+  # added, which catches a key committed and then removed again within the
+  # branch — and the step after it scans the **working tree**, which is every
+  # file the branch would merge whichever commit put it there. Neither covers
+  # the other: one sees what is gone, the other sees what is there.
+  #
+  # A full-history sweep is neither, and is deliberately not run on every
+  # push: 430 commits in 21.8 s once, by hand, clean. It is an audit, and the
+  # thing worth doing on every push is the branch in front of you.
+  #
+  # `fetch-depth: 0` stays because the action's range needs the parent commit
+  # present, not because anything scans all of it.
+  #
+  # ## Why the version is pinned
+  #
+  # `gitleaks-action@v2` installs the version *it* pins, which was **8.24.3**
+  # on this job's first run, and `.gitleaks.toml` was written against 8.28.0.
+  # Two differences, both measured, both silent:
+  #
+  #   · **8.24.3 has no `anthropic-api-key` rule.** A full-length
+  #     `sk-ant-api03-…` planted in three files was reported by 8.28.0 and by
+  #     none of them on 8.24.3. For this project that is the likeliest key to
+  #     leak, so the default was the wrong version to scan with.
+  #   · **8.24.3 ignores the `[[allowlists]]` plural form** the current
+  #     documentation shows — and takes the stock config's own allowlists with
+  #     it, which turns two findings on one file into six. `.gitleaks.toml`
+  #     uses the singular `[allowlist]`, checked clean on both, so the pin and
+  #     the config are belt and braces rather than one load-bearing guess.
+  #
+  # Raising the pin is a one-line change and Dependabot will not do it: it
+  # bumps the action, not the binary the action downloads. That is the cost of
+  # the pin and it is the cheaper of the two.
+  #
+  # `gitleaks-action@v2` is free for a repository owned by a personal account —
+  # the log says so in as many words, `[harrisonjrubin7-cmyk] is an individual
+  # user. No license key is required.` An organisation needs
+  # `GITLEAKS_LICENSE`; if this repository ever moves under one, that is the
+  # line that will need adding, and the symptom will be this job failing with a
+  # licence message rather than a finding.
+  #
+  # ## Why it is a job of its own
+  #
+  # The history the action's range needs makes `fetch-depth: 0` unavoidable,
+  # and this repository's pack is 206 MB — mostly rendered audio — so a full
+  # checkout is not free, and putting it on the `build` job above would make
+  # every step in that job pay for it. As a separate job it runs beside
+  # `build` rather than in front of it, so the wall clock of a run does not
+  # move; what it costs is one more checkout's bandwidth. That is the opposite
+  # of the trade the concurrency comment at the top of this file makes about a
+  # Node matrix, and deliberately: three jobs re-downloading this repository to
+  # ask the same question in three runtimes buys nothing, and this one asks a
+  # question no other job here asks.
+  secrets:
+    runs-on: ubuntu-latest
+    permissions:
+      # Read-only. The action wants `pull-requests: write` to annotate a pull
+      # request with what it found, and a comment quoting a leaked key is a
+      # second copy of it in a place nobody can delete — so that is off, and
+      # the job log is where the finding is read. `GITLEAKS_ENABLE_COMMENTS`
+      # below is the switch, set explicitly rather than left to the default.
+      contents: read
+
+    env:
+      # One place, read by both scans, so they cannot drift onto different
+      # binaries. See the block above for what the default cost.
+      GITLEAKS_VERSION: 8.28.0
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The action diffs against the parent commit, which a depth-1
+          # checkout does not have. This is what that needs — not a full
+          # history sweep, which nothing here runs.
+          fetch-depth: 0
+
+      # What this push *added*, including anything a later commit took out
+      # again. Removed is not gone: it is still in the pack and still readable
+      # by anyone who clones.
+      - name: Scan what this branch changed
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_CONFIG: .gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: false
+          # Off for the same reason the comments are: this repository is one
+          # person's, and a summary of what was found belongs in the log
+          # rather than on a page.
+          GITLEAKS_ENABLE_SUMMARY: false
+
+      # And every file the branch would merge, whichever commit put it there.
+      #
+      # `--exit-code 1` rather than the default 0: a scan that finds a key and
+      # exits successfully is the failure this whole job exists to avoid, and
+      # the flag is the difference between a check and a log line.
+      #
+      # No `npm ci` runs in this job, so there is no `node_modules` for this to
+      # walk — the whole tree is 257 MB and 2.9 s, measured.
+      - name: Scan every file the branch carries
+        run: |
+          cd "$(mktemp -d)"
+          curl -fsSL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar xzf gitleaks.tar.gz gitleaks
+          bin="$PWD/gitleaks"
+          cd "$GITHUB_WORKSPACE"
+          "$bin" version
+          "$bin" dir . --no-banner --redact --config .gitleaks.toml --exit-code 1
+
   # ── Saying so when main is red ──────────────────────────────────────────
   #
   # A pull request that fails tells the person who opened it: the check sits
@@ -408,7 +593,7 @@ jobs:
     # job before this failed. Push only — see the trigger at the top, which
     # makes that main.
     if: always() && github.event_name == 'push'
-    needs: build
+    needs: [build, secrets]
     runs-on: ubuntu-latest
     permissions:
       issues: write
@@ -420,12 +605,17 @@ jobs:
     # is "Read and write".
     continue-on-error: true
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         env:
           BUILD: ${{ needs.build.result }}
+          # A committed key is the failure on main that most needs somebody
+          # told, so the notice covers both jobs rather than only the one it
+          # was written for. Either failing is red.
+          SECRETS: ${{ needs.secrets.result }}
         with:
           script: |
-            const red = process.env.BUILD === 'failure';
+            const red =
+              process.env.BUILD === 'failure' || process.env.SECRETS === 'failure';
             const TITLE = 'main is red';
             const { owner, repo } = context.repo;
             const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;

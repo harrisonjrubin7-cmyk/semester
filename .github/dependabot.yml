@@ -1,0 +1,108 @@
+# What this is for: nothing in this repository notices a dependency going bad.
+#
+# CI checks that the app compiles, that the tests pass and that the policies
+# hold. None of those questions is "is one of these packages now known to be
+# exploitable", and the answer to that one arrives from outside — an advisory
+# published by somebody else, days or months after the version was installed.
+# Until this file existed the only way it reached this project was a person
+# happening to read about it.
+#
+# `npm audit` in `ci.yml` asks the same question against the tree as it stands.
+# The two are not a duplicate of each other: audit reports, this one opens the
+# pull request that fixes the report, and a report nobody can act on in a
+# minute is a report that waits.
+#
+# ## Why the updates are grouped, and which ones are not
+#
+# Ungrouped, a weekly sweep of this tree opens a pull request per package, and
+# a page of eight one-line bumps is a page nobody reads — which is how a real
+# one goes through with the rest. So minor and patch updates arrive as one
+# pull request per ecosystem: one diff, one CI run, one decision.
+#
+# **Major versions are deliberately left out of the groups**, which means they
+# arrive one at a time. That is the point. A major is a breaking change by
+# declaration — React 19 to 20, Vite 7 to 8 — and reviewing it mixed into a
+# grouped bump is reviewing it at the wrong level of attention. Dependabot
+# groups only the update types a group names, so a major that lands in the same
+# week as the group simply gets its own pull request alongside it.
+#
+# ## Which directories
+#
+# `app/` and the workflows. The three other lockfiles here are deliberately
+# out for now rather than forgotten:
+#
+#   · `video/` installs in CI to be typechecked and renders nothing a student
+#     loads. Remotion pulls a large tree and a weekly sweep of it would be most
+#     of the noise for none of the exposure.
+#   · `pipeline/` runs at the repository root to validate course data, never in
+#     a browser and never against input from outside.
+#   · `packages/*` are source-only aliases — `vite.config.ts` resolves them to
+#     TypeScript in this repository, so they have no dependencies of their own.
+#
+# Only `app/` ships to a student's browser, so `app/` is where a vulnerable
+# transitive dependency is worth a weekly pull request. Adding the others is a
+# one-line change each if that judgement turns out to be wrong.
+version: 2
+
+updates:
+  # ── The app's own tree ──────────────────────────────────────────────────
+  #
+  # `directory: /app` rather than `/`: the repository root has no
+  # `package.json`, which is the same trap `CLAUDE.md` names about `npm test`.
+  # Pointed at the root, Dependabot finds nothing and says so nowhere.
+  - package-ecosystem: npm
+    directory: /app
+    schedule:
+      interval: weekly
+      # Monday morning, in the timezone the app is actually used in — the same
+      # reason `ci.yml` runs its suite in Chicago. A sweep that lands on Friday
+      # evening sits over a weekend; one that lands on Monday is looked at.
+      day: monday
+      time: '06:00'
+      timezone: America/Chicago
+    # Five, so that a week of majors cannot bury the branch list. The grouped
+    # pull request counts as one of them.
+    open-pull-requests-limit: 5
+    groups:
+      # Everything that is not a major, in one pull request. `patterns: ['*']`
+      # with `update-types` is what scopes it: the group takes any package, but
+      # only its minor and patch bumps.
+      app-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: deps
+      include: scope
+
+  # ── The actions the workflows pin ───────────────────────────────────────
+  #
+  # `directory: /` is right here and is not the trap above: the github-actions
+  # ecosystem is defined as reading `.github/workflows/` from the repository
+  # root, and pointing it at `.github/workflows` finds nothing.
+  #
+  # Worth having for a reason the npm sweep does not cover: a third-party
+  # action runs with this repository's `GITHUB_TOKEN`, so a stale major is a
+  # supply-chain exposure rather than a bug in something a student downloads.
+  # `gitleaks-action` and `actions/checkout` are two of the four this workflow
+  # trusts with that token.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '06:00'
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    groups:
+      actions-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch
+    commit-message:
+      prefix: deps
+      include: scope

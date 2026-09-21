@@ -120,7 +120,7 @@ const SAME = 30;
  * different jobs and the app is only better at the first one.
  */
 export function Maps() {
-  const { state, dispatch, catalog } = useStore();
+  const { state, dispatch, catalog, school } = useStore();
   const now = useNow();
   // A row's padding and hairline, from the layout rather than hard-coded.
   const linkRow = useRowStyle(13);
@@ -168,6 +168,16 @@ export function Maps() {
     return course && isPlace(course.room) ? course.room : '';
   };
 
+  /*
+   * The buildings the school published, if it published any.
+   *
+   * Read through `school.data` rather than from a bundled table, so a campus
+   * this app has never heard of arrives with its rooms already placed the
+   * moment somebody imports its pack — which is the whole of what the pack is
+   * for. A school that sent none leaves this empty and nothing below changes.
+   */
+  const sent = school.data.buildings ?? [];
+
   const stopFor = (
     key: string,
     kind: Stop['kind'],
@@ -176,7 +186,7 @@ export function Maps() {
     extra: Partial<Stop> = {},
   ): Stop[] => {
     const dest = fromRoom(room);
-    return dest ? [roomStop(key, kind, label, room, dest, places, extra)] : [];
+    return dest ? [roomStop(key, kind, label, room, dest, places, sent, extra)] : [];
   };
 
   const today: Stop[] = blocksFor(catalog, now)
@@ -197,6 +207,15 @@ export function Maps() {
   const saved: Stop[] = places.map(savedStop);
   const found: Stop[] = hits.map(foundStop);
   const everything = [...today, ...saved, ...rooms, ...found];
+  /*
+   * The buildings with no coordinate yet, read once and spent twice.
+   *
+   * `FillPlaces` below renders only while this is non-empty, and the next
+   * stop's own button steps down to secondary while it is — see the note
+   * there. Computing it in both places would be the same call twice and, more
+   * to the point, would let the two disagree.
+   */
+  const toPlace = unplaced(everything);
 
   /**
    * What the map is currently drawing, as a string.
@@ -507,8 +526,25 @@ export function Maps() {
           </div>
           {nextStop && (
             <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+              {/*
+                Filled only when it is the screen's one filled thing.
+
+                This card is already a proper pair — one action, one link
+                beside it. What it could not see is the other card: while any
+                building has no coordinate, `FillPlaces` offers "Find them on
+                the map", and the two were filled at once. `scripts/wallsweep.mjs`
+                counts that and exits non-zero on it, which is the whole of
+                what it is for: "the hierarchy is local rather than designed —
+                each section decided its own emphasis".
+
+                Placing the buildings wins while any are unplaced, and not
+                because it is the larger button. It is the precondition: with
+                no coordinate there is no walk to measure, which is what the
+                line above this literally says. Once they are placed
+                `FillPlaces` stops rendering and this is filled again, alone.
+              */}
               <ActionButton
-                tone="primary"
+                tone={toPlace.length > 0 ? 'secondary' : 'primary'}
                 onClick={() => pick(nextStop)}
                 style={{ fontSize: 'var(--type-xs)' }}
               >
@@ -702,7 +738,7 @@ export function Maps() {
         coordinate per building, and until this existed the only ways to get
         one were to stand in the doorway or to search eight times by hand.
       */}
-      <FillPlaces buildings={unplaced(everything)} />
+      <FillPlaces buildings={toPlace} />
 
       {/*
         One panel for whatever is selected, whether it was tapped on the map or

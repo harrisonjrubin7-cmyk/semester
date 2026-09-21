@@ -37,12 +37,27 @@ const catalog = buildCatalog([ECON, PSCI, BUS, CORE]);
 /** Every question must be able to offer at least this many rungs. */
 const FLOOR = 2;
 
+/** How few choice questions in a run of ten would make this census thin. */
+const ENOUGH = 4;
+
 describe('the ladder on the shipped decks', () => {
   const rows = catalog.courses.map((c) => {
     const guide = catalog.guides[c.id]!;
-    const quiz = buildQuiz(guide, 1);
+    const run = buildQuiz(guide, 1);
+    /*
+     * Multiple choice only, because that is the only kind the ladder is
+     * offered on — see `screens/Drill.tsx`. Its useful rung strikes options
+     * out, and striking one of a true-or-false's two is the answer rather
+     * than a hint; a matching question has no options at all.
+     *
+     * Filtering rather than dropping the census: the question it exists to
+     * answer — on a real question from a real guide, how much help is there —
+     * is still asked of every question that can be helped.
+     */
+    const quiz = run.filter((q) => q.kind === 'choice');
     return {
       code: guide.code,
+      run,
       counts: quiz.map((q) => ladderFor(q, guide.terms ?? []).length),
       quiz,
       guide,
@@ -53,7 +68,14 @@ describe('the ladder on the shipped decks', () => {
     // The census is worthless if the decks came back empty and every "no
     // question fell short" below passed over nothing. This is the control.
     expect(rows).toHaveLength(4);
-    for (const r of rows) expect(r.counts.length, r.code).toBe(10);
+    for (const r of rows) expect(r.run.length, r.code).toBe(10);
+  });
+
+  it('still fields enough multiple choice for the census to mean anything', () => {
+    // The second half of that control, now that a run is a mix: a change
+    // that quietly turned every question into a true-or-false would leave
+    // the assertions below passing over almost nothing.
+    for (const r of rows) expect(r.quiz.length, r.code).toBeGreaterThanOrEqual(ENOUGH);
   });
 
   it('offers at least two rungs on every question in every deck', () => {

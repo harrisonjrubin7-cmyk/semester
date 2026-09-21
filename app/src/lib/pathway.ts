@@ -432,3 +432,59 @@ export const programReadiness = (p: Program) => ({
   hasRequirements: !!p.requirements.trim(),
   hasDeadline: !!p.deadline,
 });
+
+/**
+ * Every saved programme against every material any of them asks for.
+ *
+ * The cards answer "what does this one still need", and cannot answer "which
+ * of the six wants a writing sample" — that is a question about a column, and
+ * a card is a row. This is the same records transposed: one row per saved
+ * programme, one column per distinct material title in use, and the cell is
+ * the status that programme recorded.
+ *
+ * A blank cell is not "Not started". It means the programme has no material of
+ * that title at all — it never asked, or nobody has written it down yet — and
+ * conflating the two would put a requirement on a programme that does not have
+ * one. The screen leaves it empty for the same reason.
+ *
+ * Titles are folded case-insensitively, because "Writing sample" and "writing
+ * sample" are one requirement typed twice; the first spelling somebody used is
+ * the one the column keeps. Where a programme has two materials of the same
+ * title, the first is the one shown, which is the order the screen lists them
+ * in already.
+ *
+ * Nothing here is derived beyond the transpose. There is no count of filled
+ * cells, no readiness figure and no ordering by either — `programReadiness`
+ * says what one programme is missing, and the grid says what is recorded.
+ */
+export interface MaterialRow {
+  program: Program;
+  /** One per column of `titles`, and `''` where that programme has none. */
+  cells: ((typeof MATERIAL_STATES)[number] | '')[];
+}
+
+export function materialGrid(programs: Program[]): { titles: string[]; rows: MaterialRow[] } {
+  const titles: string[] = [];
+  const column = new Map<string, number>();
+  for (const p of programs) {
+    for (const m of p.materials) {
+      const title = m.title.trim();
+      const key = title.toLowerCase();
+      if (!title || column.has(key)) continue;
+      column.set(key, titles.length);
+      titles.push(title);
+    }
+  }
+
+  const rows = programs.map((program) => {
+    const cells: MaterialRow['cells'] = titles.map(() => '');
+    for (const m of program.materials) {
+      const at = column.get(m.title.trim().toLowerCase());
+      if (at === undefined || cells[at]) continue;
+      cells[at] = m.status;
+    }
+    return { program, cells };
+  });
+
+  return { titles, rows };
+}

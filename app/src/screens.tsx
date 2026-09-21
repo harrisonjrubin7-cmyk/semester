@@ -43,6 +43,7 @@ const SearchHome = lazy(() => import('./screens/Search').then((m) => ({ default:
 const Directory = lazy(() => import('./screens/Directory').then((m) => ({ default: m.Directory })));
 const University = lazy(() => import('./screens/University').then((m) => ({ default: m.University })));
 const Athletics = lazy(() => import('./screens/Athletics').then((m) => ({ default: m.Athletics })));
+const Nil = lazy(() => import('./screens/Nil').then((m) => ({ default: m.Nil })));
 const Career = lazy(() => import('./screens/Career').then((m) => ({ default: m.Career })));
 const Family = lazy(() => import('./screens/Family').then((m) => ({ default: m.Family })));
 const Pathway = lazy(() => import('./screens/Pathway').then((m) => ({ default: m.Pathway })));
@@ -131,6 +132,7 @@ export const SCREENS: Record<Exclude<Screen, 'home' | 'onboarding'>, ComponentTy
   directory: Directory,
   university: University,
   athletics: Athletics,
+  nil: Nil,
   career: Career,
   family: Family,
   pathway: Pathway,

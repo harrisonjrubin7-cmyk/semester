@@ -117,8 +117,10 @@ clean — every one by its **exit status**.
 
 # One app — the thirty-first pass: the same sentence about three different questions
 
-Against `main` at `176b2f7`. **<!--screens-->fifty-eight<!--/--> destinations**,
-unchanged. No merge. One line restored, one live field given a reader, one
+Against `main` at `176b2f7`. **<!--screens-->fifty-nine<!--/--> destinations**,
+fifty-eight when this pass was written — the NIL record arrived on a branch
+afterwards and `npm run counts` rewrote the figure, which is what that marker
+is for. No merge. One line restored, one live field given a reader, one
 guard.
 
 `lib/mode.ts` reads every question as one of three — about this app, about this
@@ -231,7 +233,7 @@ clean — every one by its **exit status**.
 
 # One app — the thirtieth pass: the census that asked the compiler
 
-Against `main` at `0fa38e4`, rebased onto `f8af9c7`. **<!--screens-->fifty-eight<!--/-->
+Against `main` at `0fa38e4`, rebased onto `f8af9c7`. **<!--screens-->fifty-nine<!--/-->
 destinations**, unchanged. One instrument, one census, sixteen cuts — and
 three claims this pass made and then had to withdraw, which are T5b, T7 and T8
 below. The third is the probe's own.

@@ -68,7 +68,7 @@ jobs:
       # `workflow_dispatch` there is no triggering run and this is empty,
       # which checks out the default branch — the intended behaviour for a
       # hand-started deploy.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
@@ -76,7 +76,7 @@ jobs:
       # Build and deployment → Source: GitHub Actions. A workflow token is not
       # allowed to create the site ("Resource not accessible by integration"),
       # so asking it to would only fail on every run.
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
         id: pages
 
       - uses: actions/setup-node@v4
@@ -261,9 +261,9 @@ jobs:
       - name: Fall back to the app on unknown paths
         run: cp app/dist/index.html app/dist/404.html
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: app/dist
 
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v5
         id: deployment

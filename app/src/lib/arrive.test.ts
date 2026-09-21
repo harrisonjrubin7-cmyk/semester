@@ -59,6 +59,52 @@ describe('roomStop', () => {
   });
 });
 
+describe('roomStop, and the buildings a university published', () => {
+  /*
+   * The pack's own spelling, deliberately. `lng` is what the format uses and
+   * `lon` is what the app uses, and a test that quietly wrote `lon` here
+   * would pass against the transposition it exists to catch.
+   */
+  const FGH = { name: 'Featheringill Hall', abbr: 'FGH', lat: 36.1447, lng: -86.8027 };
+
+  it('places a room the school listed, on a campus nobody has saved a thing on', () => {
+    const stop = roomStop('k', 'class', 'CS 1101', 'Featheringill 201', { query: 'x' }, [], [FGH]);
+    expect(stop.spot).toEqual({ lat: 36.1447, lon: -86.8027 });
+    expect(stop.dest.lat).toBe(36.1447);
+  });
+
+  it('does not claim you saved it', () => {
+    // `placeId` is what the screen reads to decide between "this is yours"
+    // and "save this spot". A building the school sent is not yours yet.
+    const stop = roomStop('k', 'class', 'CS 1101', 'Featheringill 201', { query: 'x' }, [], [FGH]);
+    expect(stop.placeId).toBeUndefined();
+  });
+
+  it('loses to a place you stood in and named', () => {
+    const mine = { ...buttrick, label: 'Featheringill', lat: 36.9, lon: -86.9 };
+    const stop = roomStop('k', 'class', 'CS 1101', 'Featheringill 201', { query: 'x' }, [mine], [
+      FGH,
+    ]);
+    expect(stop.spot).toEqual({ lat: 36.9, lon: -86.9 });
+    expect(stop.placeId).toBe(mine.id);
+  });
+
+  it('changes nothing at all for a school that sent no buildings', () => {
+    // The condition for this being safe to ship: no bundled profile carries a
+    // buildings list, so every existing reader is on this path.
+    const without = roomStop('k', 'class', 'CS 1101', 'Furman 114', { query: 'Furman' }, []);
+    const withEmpty = roomStop('k', 'class', 'CS 1101', 'Furman 114', { query: 'Furman' }, [], []);
+    expect(withEmpty).toEqual(without);
+    expect(withEmpty.spot).toBeNull();
+  });
+
+  it('still says it does not know a building the school left out', () => {
+    const stop = roomStop('k', 'class', 'ECON 1020', 'Buttrick 101', { query: 'B' }, [], [FGH]);
+    expect(stop.spot).toBeNull();
+    expect(stop.placeId).toBeUndefined();
+  });
+});
+
 describe('said', () => {
   it('keeps the minutes, which an hour grid drops and a sentence needs', () => {
     expect(said(545)).toBe('9:05a');

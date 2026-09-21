@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildQuiz, distinctAnswers } from './quiz';
+import { buildQuiz, distinctAnswers, matchableTerms, MATCH_PAIRS } from './quiz';
 import type { Guide } from './types';
 
 /**
@@ -55,8 +55,13 @@ describe('buildQuiz', () => {
     expect(buildQuiz(guide([]), 1)).toEqual([]);
   });
 
-  it('gives every question one right answer and three wrong ones', () => {
-    for (const q of buildQuiz(SIX, 1)) {
+  it('gives every choice question one right answer and three wrong ones', () => {
+    const asked = buildQuiz(SIX, 1).filter((q) => q.kind === 'choice');
+    // The control on the filter: a run that fielded no choice questions would
+    // pass the loop below over nothing, which is what a broken builder looks
+    // like too.
+    expect(asked.length).toBeGreaterThan(0);
+    for (const q of asked) {
       expect(q.opts).toHaveLength(4);
       expect(q.opts.filter((o) => o.ok)).toHaveLength(1);
     }
@@ -66,7 +71,9 @@ describe('buildQuiz', () => {
     // The whole point: every wrong option is true of something, so telling
     // them apart is the discrimination the exam asks for.
     const answers = new Set(SIX.units[0].cards.map((c) => c.a));
-    for (const q of buildQuiz(SIX, 3)) {
+    const asked = buildQuiz(SIX, 3).filter((q) => q.kind === 'choice');
+    expect(asked.length).toBeGreaterThan(0);
+    for (const q of asked) {
       for (const opt of q.opts) expect(answers.has(opt.text)).toBe(true);
     }
   });
@@ -82,7 +89,7 @@ describe('buildQuiz', () => {
       { q: 'q4', a: 'Four' },
       { q: 'q5', a: 'Five' },
     ]);
-    const asked = buildQuiz(withLong, 1).find((q) => q.full === long);
+    const asked = buildQuiz(withLong, 1).find((q) => q.kind === 'choice' && q.full === long);
     expect(asked).toBeTruthy();
     const shown = asked!.opts.find((o) => o.ok)!.text;
     expect(shown.length).toBeLessThan(long.length);
@@ -145,7 +152,7 @@ describe('options that would read as the same thing', () => {
     ]);
     const out = buildQuiz(just, 5);
     expect(out.length).toBeGreaterThan(0);
-    for (const q of out) expect(q.opts).toHaveLength(4);
+    for (const q of out.filter((q) => q.kind === 'choice')) expect(q.opts).toHaveLength(4);
   });
 });
 
@@ -172,5 +179,156 @@ describe('distinctAnswers', () => {
     ]);
     expect(distinctAnswers(thin)).toBeLessThan(4);
     expect(buildQuiz(thin, 1)).toEqual([]);
+  });
+});
+
+/**
+ * A guide with key terms, which is what a matching question is cut from.
+ *
+ * Separate from `SIX` because the fixtures above deliberately carry no terms:
+ * every assertion written before matching existed would otherwise start
+ * seeing a kind it was not written for, and a test that quietly changes
+ * subject is worse than one that fails.
+ */
+const TERMED = (): Guide => ({
+  ...guide(
+    ['one', 'two', 'three', 'four', 'five', 'six'].map((n) => ({
+      q: `Question ${n}?`,
+      a: `Answer ${n}.`,
+    })),
+  ),
+  terms: [
+    { t: 'Elasticity', d: 'How much quantity moves when price moves.' },
+    { t: 'Surplus', d: 'The gap between what you would pay and what you did.' },
+    { t: 'Marginal cost', d: 'What one more unit adds to total cost.' },
+    { t: 'Deadweight loss', d: 'Trades worth making that no longer happen.' },
+    { t: 'HHI', d: 'The sum of squared market shares.' },
+  ],
+});
+
+describe('true-or-false', () => {
+  it('asks some, and never as many as the whole run', () => {
+    const out = buildQuiz(SIX, 1);
+    const tf = out.filter((q) => q.kind === 'truefalse');
+    expect(tf.length).toBeGreaterThan(0);
+    expect(tf.length).toBeLessThan(out.length);
+  });
+
+  it('offers exactly True and False, with exactly one of them right', () => {
+    for (const q of buildQuiz(SIX, 4).filter((q) => q.kind === 'truefalse')) {
+      expect(q.opts.map((o) => o.text)).toEqual(['True', 'False']);
+      expect(q.opts.filter((o) => o.ok)).toHaveLength(1);
+    }
+  });
+
+  /*
+   * The one that would cost a student a mark.
+   *
+   * A statement is false only because the answer under it belongs to a
+   * different question. If the borrowed answer reads the same as the real
+   * one, the honest response is "true" and the quiz marks it wrong — and
+   * unlike a fourth option, there is nothing on screen to show it coming.
+   */
+  it('never proposes the right answer and calls it false', () => {
+    for (const seed of [1, 2, 3, 7, 42, 1000, 99999]) {
+      for (const q of buildQuiz(SIX, seed).filter((q) => q.kind === 'truefalse')) {
+        const holds = q.opts.find((o) => o.text === 'True')!.ok;
+        if (holds) expect(q.claim).toBe(q.full);
+        else expect(q.claim).not.toBe(q.full);
+      }
+    }
+  });
+
+  it('keeps the real answer to reveal, whichever way the statement went', () => {
+    const cards = new Map(SIX.units[0].cards.map((c) => [c.q, c.a]));
+    for (const q of buildQuiz(SIX, 9).filter((q) => q.kind === 'truefalse')) {
+      expect(q.full).toBe(cards.get(q.q));
+      expect(q.claim).toBeTruthy();
+    }
+  });
+
+  it('asks both ways across a spread of seeds, rather than always one', () => {
+    // A generator stuck on "true" is a generator a student beats without
+    // reading, and every individual run would still look correct.
+    const said = new Set<boolean>();
+    for (let seed = 1; seed < 40; seed++) {
+      for (const q of buildQuiz(SIX, seed).filter((q) => q.kind === 'truefalse')) {
+        said.add(q.opts.find((o) => o.text === 'True')!.ok);
+      }
+    }
+    expect([...said].sort()).toEqual([false, true]);
+  });
+});
+
+describe('matching', () => {
+  it('asks one round when the guide has terms, and never two', () => {
+    for (const seed of [1, 2, 3, 7, 42]) {
+      const matches = buildQuiz(TERMED(), seed).filter((q) => q.kind === 'match');
+      expect(matches).toHaveLength(1);
+      expect(matches[0].pairs).toHaveLength(MATCH_PAIRS);
+    }
+  });
+
+  it('asks none at all when the guide has no terms', () => {
+    // The control: `SIX` is the same deck without terms, so a matching
+    // question appearing here would mean it is being invented rather than
+    // cut from the guide.
+    expect(buildQuiz(SIX, 1).filter((q) => q.kind === 'match')).toEqual([]);
+  });
+
+  it('shows every definition once, and knows which term owns it', () => {
+    const q = buildQuiz(TERMED(), 3).find((q) => q.kind === 'match')!;
+    expect([...(q.shown ?? [])].sort((a, b) => a - b)).toEqual([0, 1, 2, 3]);
+    // `shown` indexes into `pairs`, so the truth is `left i` ↔ `right i` and
+    // the scramble is only about the order they are drawn in.
+    expect(new Set(q.pairs!.map((p) => p.right)).size).toBe(MATCH_PAIRS);
+    expect(new Set(q.pairs!.map((p) => p.left)).size).toBe(MATCH_PAIRS);
+  });
+
+  it('refuses two terms that share a definition', () => {
+    // Two identical right-hand sides is a question a student can get wrong
+    // while being right, which is the same fault the option de-duplication
+    // above exists to prevent.
+    const same = 'The same definition, twice.';
+    const terms = [
+      { t: 'A', d: same },
+      { t: 'B', d: same },
+      { t: 'C', d: 'Something else.' },
+      { t: 'D', d: 'A third thing.' },
+      { t: 'E', d: 'A fourth thing.' },
+    ];
+    expect(matchableTerms({ ...SIX, terms })).toHaveLength(4);
+    const q = buildQuiz({ ...SIX, terms }, 2).find((q) => q.kind === 'match')!;
+    expect(new Set(q.pairs!.map((p) => p.right)).size).toBe(MATCH_PAIRS);
+  });
+
+  it('asks nothing when there are too few terms to match', () => {
+    const thin = { ...SIX, terms: [{ t: 'A', d: 'One.' }, { t: 'B', d: 'Two.' }] };
+    expect(buildQuiz(thin, 1).filter((q) => q.kind === 'match')).toEqual([]);
+  });
+});
+
+describe('the run as a whole', () => {
+  it('never asks one card twice, across kinds', () => {
+    // A card asked as a choice and again as a true-or-false is the same
+    // question with its answer already given away by the first of them.
+    for (const seed of [1, 2, 3, 7, 42, 1000]) {
+      const asked = buildQuiz(TERMED(), seed).map((q) => q.q);
+      expect(new Set(asked).size).toBe(asked.length);
+    }
+  });
+
+  it('still repeats exactly for the same seed, with the new kinds in it', () => {
+    const shape = (seed: number) =>
+      buildQuiz(TERMED(), seed)
+        .map((q) => `${q.kind}|${q.q}|${q.claim ?? ''}|${(q.shown ?? []).join('')}`)
+        .join('\n');
+    expect(shape(5)).toBe(shape(5));
+    expect(shape(5)).not.toBe(shape(6));
+  });
+
+  it('mixes all three kinds when the guide can field them', () => {
+    const kinds = new Set(buildQuiz(TERMED(), 1).map((q) => q.kind));
+    expect([...kinds].sort()).toEqual(['choice', 'match', 'truefalse']);
   });
 });

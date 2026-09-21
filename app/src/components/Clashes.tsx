@@ -16,12 +16,23 @@ import { SectionLabel } from './ui';
 import { datedItems } from '../lib/select';
 import { asItems } from '../lib/apply';
 import { adviceFor, clashes, whenLine, worstAhead, type Clash } from '../lib/clash';
+import { useAthleticEvents } from '../lib/athletics.hook';
 import { Folding } from './Fold';
 import { goCal } from '../lib/opencal';
 
 function useClashes(): Clash[] {
   const { state, catalog, courseCode } = useStore();
   const now = useNow();
+  /*
+   * The season, for the two clashes a timetable cannot see.
+   *
+   * An exam on the morning of a competition and a paper due on a travel day
+   * are both days this list was silent about, because the events are in a
+   * device library rather than in the store. Read here for the same reason
+   * everything else in this hook is: the detector is a pure function and the
+   * screen is what can open a library.
+   */
+  const season = useAthleticEvents();
   return useMemo(
     () =>
       clashes(
@@ -39,8 +50,19 @@ function useClashes(): Clash[] {
         state.commitments,
         courseCode,
         state.dayBudget,
+        season,
       ),
-    [catalog, now, state.done, state.spent, state.commitments, state.applications, courseCode, state.dayBudget],
+    [
+      catalog,
+      now,
+      state.done,
+      state.spent,
+      state.commitments,
+      state.applications,
+      courseCode,
+      state.dayBudget,
+      season,
+    ],
   );
 }
 

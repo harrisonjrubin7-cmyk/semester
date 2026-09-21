@@ -306,10 +306,28 @@ declare n bigint;
 begin
   perform pg_temp.become('eeeeeeee-0000-0000-0000-000000000001');
 
-  update public.form_responses set answers = '{"a":"rewritten"}'::jsonb
-   where form_id = '22222222-2222-2222-2222-222222222222';
-  get diagnostics n = row_count;
-  perform pg_temp.counted('not even the author can rewrite a response', n, 0);
+  /*
+   * As in `access.check.sql`: this asserted that the update changed no rows,
+   * which was true and was not the fence that holds. `forms.sql` grants
+   * `authenticated` SELECT and DELETE on `form_responses` and grants UPDATE to
+   * nobody, so the statement is refused before any policy is consulted —
+   * "there is no update policy at all" is backed by there being no update
+   * grant either.
+   *
+   * It passed here for the wrong reason until `check.sh` stopped handing the
+   * table privileges back after the migrations. A respondent who could rewrite
+   * theirs after seeing a mark is not sitting a quiz, and an author who could
+   * rewrite one is not collecting answers, so this is worth the stronger form.
+   */
+  begin
+    update public.form_responses set answers = '{"a":"rewritten"}'::jsonb
+     where form_id = '22222222-2222-2222-2222-222222222222';
+    get diagnostics n = row_count;
+    raise exception 'FAILED: a submitted answer was rewritten (% row(s))', n;
+  exception
+    when insufficient_privilege then
+      raise notice 'ok  not even the author can rewrite a response';
+  end;
 end $$;
 
 -- ── Withdrawing a form takes its answers with it ──────────────────────────
