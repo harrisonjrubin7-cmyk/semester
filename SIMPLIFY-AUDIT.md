@@ -1,3 +1,119 @@
+# One app — the twenty-ninth pass: the answer that needs no key was only ever drawn beside one that did
+
+Against `main` at `a66fd33`. **<!--screens-->fifty-eight<!--/--> destinations**,
+unchanged. No merge. One panel made reachable, one prop added, one guard.
+
+The twenty-eighth ended with something it could not explain and recorded
+rather than dressed up: driven on a keyless profile, asking *"where is the
+meal plan"* drew the question, then *"No key yet. Sign in to use the shared
+one…"*, and **no local answer**. Two readings were already ruled out — not the
+pool, not that pass's change. This is what it was.
+
+## T1 — `<Locally>` hangs off a reply, and a failed request has no reply
+
+`ai/Chat.tsx` and `ai/Panel.tsx` draw the transcript the same way:
+
+```jsx
+{t.role === 'user' ? (
+  <Question … />                      // no extra
+) : (
+  <Reply … extra={<Locally … />} />   // here, and only here
+)}
+```
+
+`<Locally>` is the offline answer — the screens whose own description matches
+the question, and lines lifted from the guidebook. Its kicker says what it is:
+**"From this app, with nothing sent."**
+
+A `Reply` exists only when a request came back. `ai/converse.ts` pushes the
+question with `remember(next)` — user turn only — and every assistant turn is
+appended *after* a response (three places, all past the `await`). When `ask()`
+throws, `trouble.failed` renders the error and the last turn is still the
+question.
+
+So on every question the app worked out its own answer, stored it with
+`setLocally(local)`, and drew it only if a request had succeeded.
+
+### The two places that already promised it
+
+`lib/localask.ts` opens by arguing this is the case most worth having:
+
+> It is also the case most worth having offline. A student on a train with no
+> signal, **or one who has never set up a key**, is exactly the person asking
+> where a setting lives; a study app that cannot describe itself without an
+> internet connection has its dependency in the wrong place.
+
+And `converse.ts`'s offline branch says it out loud, to the student:
+
+> 'No connection, so **this is what the app can tell you about itself**.
+> Anything else needs one.'
+
+That sentence points at a panel that could not be on screen. The dependency
+was not in `localask.ts`, which needs nothing; it was in the layout, which
+would only draw its answer next to an answer from the network.
+
+### Driven, both ways
+
+| Keyless profile, asked "where is the meal plan" | Drawn |
+| --- | --- |
+| before | the question · *"No key yet. Sign in to use the shared one…"* · nothing else |
+| after | the question · **FROM THIS APP, WITH NOTHING SENT** · *Meal plan · Campus* · *"What is on your plan, what it is a day, and the week it runs out."* · *"Open it when you are thinking about meal, meals, plan."* |
+
+`pageerror` empty both times. Note the card is `meals` because this profile is
+a Vanderbilt student — the twenty-eighth's gate still decides *which* screens
+may be named, and it still does.
+
+### The fix, and where it sits
+
+`Question` gains an `extra`, mirroring the one `Reply` has always had, and
+renders it **below** the bubble rather than inside: the bubble is right-aligned
+at 86% because a question is short, and this is a full-width panel. Both
+surfaces pass `<Locally>` when the question is the last turn and nothing is in
+flight — which is exactly the condition "no reply came".
+
+The two branches are mutually exclusive, so nothing draws twice: if the last
+turn is a question, only `Question` renders it; if it is a reply, only `Reply`
+does.
+
+Deliberately not moved: `Looked` and `Proposals` stay on the reply. Both are
+*about* an answer that was fetched — the note above them in `Panel.tsx` argues
+a proposal belongs inside the sentence that offered it, and that argument
+holds. `Locally` is not a proposal; it is an independent answer that happened
+to be computed alongside one.
+
+## Proving it
+
+`ai/localanswer.test.tsx`, four cases, and it is in two halves because the
+fault was: the component could not carry the panel, **and** neither surface
+handed it one. Each half reverted separately:
+
+| Reverted | Red | And the other half |
+| --- | --- | --- |
+| the `{extra}` slot in `Question` | *expected 'where is the meal plan' to contain 'From this app, with nothing sent'* | structural tests still **passed** |
+| `extra=` on both `<Question>`s | *no extra on `<Question>`: expected '\<Question…' to contain 'extra='* (twice) | the render test still **passed** |
+
+That is the reason for both: a structural test alone passes against a prop
+that is accepted and dropped, and a render test alone passes against a
+component nobody hands anything to. Either one shipped on its own would have
+been a guard that could not fail for the real fault.
+
+The control: `<Question>` given `<Locally locally={null}>` draws the question
+and **not** the kicker, so "it renders the panel" cannot pass against a
+`Question` that had started printing one unconditionally.
+
+Two traps this repository has already recorded, hit again and fixed the same
+way: `import.meta.url` resolves to `/src/ai/…` under jsdom, so the source
+reads use `process.cwd()` (see `state/keyread.test.ts`); and `<Locally>`'s
+cards are `Blueprint`s, which call `useStore`, so the renders are wrapped in
+`StoreProvider`.
+
+## Gates
+
+`tsc` clean · lint ok · tests in file order · shuffled · production build
+clean. Every gate checked by its **exit status**, which is what the twenty-
+eighth got wrong: piping `npm run lint` into `tail` printed the reassuring
+last two lines and threw the failure away with the pipe.
+
 # One app — the twenty-eighth pass: two answerers to one typed question, and only one of them was gated
 
 Against `main` at `36807e7`. **<!--screens-->fifty-eight<!--/--> destinations**,
