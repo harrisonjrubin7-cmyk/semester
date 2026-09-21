@@ -30,6 +30,20 @@ it('regenerates only the chosen section and saves a course-linked editable docum
 it('keeps existing sections when regenerated citations cannot be verified',async()=>{
  await prepare();mock.ask.mockResolvedValue(JSON.stringify({sections:[{...result(),citations:[{sourceId:'unit-0',quote:'This invented quotation cannot be verified.'}]}]}));await press('Regenerate this section');expect(host.textContent).toContain('First section');expect(host.textContent).toContain('Second section');expect(host.textContent).toContain('could not be verified');
 });
+it('shows a verified quotation where it sits, on the source that has no page to name',async()=>{
+ // The prepared guide unit is the worst case and the commonest one: its
+ // locator ends "original page not recorded" because a guide has no pages,
+ // so before this the panel could say the quotation was somewhere in 65
+ // characters of unit text and nothing more. The offsets are a place that
+ // source does have, and the mark is that place shown rather than described.
+ await prepare();
+ const cited=host.textContent??'';
+ expect(cited).toContain('original page not recorded \u00b7 characters 27\u201365');
+ const marked=[...host.querySelectorAll('mark')].map(m=>m.textContent);
+ expect(marked).toContain('The value of the next best alternative.');
+ // And the panel no longer prints the whole source beside it as a wall.
+ expect(host.querySelector('.study-cite-place')).not.toBeNull();
+});
 it('blocks AI generation for a course with an AI prohibition',()=>{
  mock.stance='banned';mount();check('Opportunity cost');expect(button('Create study guide').disabled).toBe(true);expect(host.textContent).toContain('does not permit AI');expect(mock.ask).not.toHaveBeenCalled();
 });
