@@ -174,9 +174,28 @@ begin
       raise notice 'ok  you cannot forge a row in your own access log';
   end;
 
-  update public.access_log set hits = 0;
-  get diagnostics n = row_count;
-  perform pg_temp.counted('nor rewrite one', n, 0);
+  /*
+   * This used to run the update and assert that it changed no rows, which was
+   * the right assertion about the wrong fence. `access_log.sql` grants
+   * `authenticated` SELECT and DELETE and no UPDATE at all, so on the live
+   * project the statement never reaches a policy — it is refused outright.
+   *
+   * It read as passing here only because `check.sh` used to hand every table
+   * privilege back to both client roles after the migrations ran, which put
+   * the UPDATE grant back and left row-level security to do a job the grant
+   * had already done. With the harness now granting tables the way Supabase
+   * does, the refusal is visible, and asserting it is strictly stronger: an
+   * audit log whose rows can be rewritten is a log that can be doctored, so
+   * "no grant" is the property worth pinning, not "no rows".
+   */
+  begin
+    update public.access_log set hits = 0;
+    get diagnostics n = row_count;
+    raise exception 'FAILED: an account could rewrite its own access log (% row(s))', n;
+  exception
+    when insufficient_privilege then
+      raise notice 'ok  nor rewrite one';
+  end;
 end $$;
 
 do $$

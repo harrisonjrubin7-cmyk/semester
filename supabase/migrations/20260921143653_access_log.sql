@@ -134,6 +134,13 @@ create or replace function public.note_access(
 )
 returns void
 language plpgsql
+-- Pinned, for the reason this file argues above `access_log` and then did not
+-- apply to its own two functions: a body that resolves `access_log` against
+-- whatever the caller had set is a body the caller chooses the meaning of.
+-- Everything below is schema-qualified already, so an empty path costs
+-- nothing; `pg_catalog` stays implicitly searched, which is what `now()`,
+-- `coalesce()` and the type names rely on.
+set search_path = ''
 as $$
 begin
   insert into public.access_log as a (user_id, day, what, client, hits, last_at)
@@ -224,6 +231,9 @@ comment on function public.note_access(uuid, text, text) is
 create or replace function public.read_feed(feed_token text, family text default 'unknown')
 returns table (body text, name text, updated_at timestamptz)
 language plpgsql
+-- As above. Supabase's own linter flags both of these as
+-- `function_search_path_mutable`, and it was right.
+set search_path = ''
 as $$
 declare owner uuid;
 begin
