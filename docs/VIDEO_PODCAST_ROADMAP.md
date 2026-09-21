@@ -5,6 +5,9 @@ into movie-format lessons, an animated series, YouTube- and TikTok-native cuts,
 documentary-style units, and podcast episodes in several distinct hosting
 styles — without breaking the cost model that makes the app work.
 
+Written as a plan and kept as a record. Everything below was built in the order
+it is written in, and the parts that turned out wrong say so where they stand.
+
 Companion to [`../pipeline/README.md`](../pipeline/README.md) and
 [`../audio/README.md`](../audio/README.md), which describe what exists today.
 This covers the *generation* side only: the in-app editor on the
@@ -15,6 +18,31 @@ project, and nothing below builds toward it.
 Everything in §1 was read out of the code rather than remembered, because the
 whole argument for what to build next rests on what the existing thing
 actually costs.
+
+## Where this stands
+
+Every format in §3 is built and every step of §6 is done. Five Remotion
+compositions render from one shared slide and one shared "which cue is up"
+rule: `Lesson`, `Short`, `Documentary`, `Explainer`, `Persona`.
+
+What is left is not work. Four things are waiting on a decision or a
+credential, and each is named where it belongs below:
+
+| waiting on | what it unblocks |
+| --- | --- |
+| a video provider and a per-second price | B-roll inserts (§6.4) |
+| an image provider and a per-image price | character sheets (§6.4) |
+| an expressive TTS voice | rendering `hype-reaction` (§6.3) |
+| an `ANTHROPIC_API_KEY` | the restyle pass has never been run live (§6.3) |
+
+The last is the cheapest to close and the least proven: `restyle-script.mjs`
+has been built, guarded and merged without a single real model call.
+
+This document has been wrong about its own subject several times, and each
+correction is kept in place rather than quietly edited out — the predictions
+that did not survive contact are the most useful part of it. §6.5 is the
+shortest example: an entire format was specified here and put in no step of
+the rollout order.
 
 ## 1. What "video" and "podcast" are today
 
@@ -49,6 +77,14 @@ waveform. New generated formats get theirs for free from the cue data, the same
 way `synth.py` does — `chapters.py` is the rescue path for old recordings, not
 a step in a new pipeline.
 
+The same split turned out to apply one level down, to where each *line* starts,
+and that was not obvious when this was written. `synth.py` always knew: it
+concatenates an episode piece by piece and keeps a running position. It wrote
+that number down only where a chapter opened and discarded it everywhere else.
+It records all of them now, and `pipeline/align-audio.mjs` recovers them for
+the four episodes that shipped before it did — which is what made the
+documentary's captions possible. §7 has the measurement.
+
 **Everything is rendered once per course, not once per student.** `unit-3.mp3`
 for ECON is the same file every ECON student streams; the 44 lesson MP3s under
 `app/public/audio/lessons/` total 46MB for all four courses. This is the single
@@ -75,15 +111,33 @@ Two things are better than they sound at first, given the economics above.
    format below is a different render of the same material rather than six
    separate content pipelines.
 
+   **Half right, and the half that was wrong is worth keeping.** There are
+   two roots, not one, and they were never going to merge. The course guide
+   becomes a *lesson* — narration plus a cue list — and the movie-format
+   lesson, the shorts and the explainer are all renders of that. The podcast
+   script is a separate artefact with two speakers and its own chapters, and
+   the documentary cut and every restyle are renders of *it*. Nothing reads
+   both.
+
+   The prediction's real content survived anyway: no format needed a content
+   pipeline of its own. Five of them are re-renders of two existing artefacts,
+   and the one thing every format does share is smaller and more useful than a
+   script layer — `cueIndexAt`, the rule for which thing is on screen at a
+   given second, asked by the app's player and all five compositions.
+
 ## 3. Visual formats
 
 | Format | What it is | How to build it | Cost driver |
 | --- | --- | --- | --- |
-| **Movie-format lesson** (upgrade of today's lesson) | The existing narrated-lesson audio, but the flat `0x0a0b0e` rectangle becomes real animated typography, diagrams and highlight boxes moving with the cues already recorded | **Remotion** (React + ffmpeg, runs in the existing Node toolchain, renders locally) driven by the same cue list `pipeline/lessons.py` already writes | Compute only — but see the licence note in §7 |
-| **Animated series** | A recurring host character, or two, appearing across every unit of a course — the visual equivalent of the two-voice podcast | Generate one **character reference sheet** (image model, ~$0.01–0.04/image) once per persona; feed it as the reference image to an **image-to-video** model with strong character consistency for short 5–10s reaction and gesture clips; composite those into the Remotion timeline instead of drawing a static avatar | ~$0.10–1.50 per short clip × a handful of clips per unit, reused across the whole course |
+| **Movie-format lesson** ✅ built | The existing narrated-lesson audio, but the flat `0x0a0b0e` rectangle becomes real animated typography, diagrams and highlight boxes moving with the cues already recorded | **Remotion** (React + ffmpeg, runs in the existing Node toolchain, renders locally) driven by the same cue list `pipeline/lessons.py` already writes | Compute only — but see the licence note in §7 |
+| **Animated series** ◐ built to the provider | A recurring host character, or two, appearing across every unit of a course — the visual equivalent of the two-voice podcast | Generate one **character reference sheet** (image model, ~$0.01–0.04/image) once per persona; feed it as the reference image to an **image-to-video** model with strong character consistency for short 5–10s reaction and gesture clips; composite those into the Remotion timeline instead of drawing a static avatar | ~$0.10–1.50 per short clip × a handful of clips per unit, reused across the whole course |
 | **YouTube-length explainer** ✅ built | 8–15 min, hook in the first 15s, chapter marks. `python3 pipeline/explainer.py <course>` | Remotion for the graphics track, same as movie-format, plus 2–4 short AI-video B-roll inserts for the cold open and section transitions. Marks come from the cue list, the way `synth.py` does it — not from `chapters.py` | Same as above; B-roll is optional polish, not the backbone |
 | **TikTok / Shorts** ✅ built | Vertical 9:16, one card per short, hook-first, burned-in captions. Measured at 8.4–35.5s, median 14.8s — the 15–45s guessed here was half wrong | **One short per flashcard**, cut from the cue list rather than from `guide.ts`: a cue already has the in and out points inside the unit's MP3, so Remotion trims the existing audio and nothing is re-synthesised | $0 — no new audio, no new file, just frames |
-| **Documentary-style unit recap** ◐ partly built | Slower pacing, the two-voice episode with its own chapter marks drawn over it | Podcast audio as the spine, plus Remotion lower-thirds and per-line captions — `pipeline/align-audio.mjs` recovers the line times the four shipped episodes never recorded, and `audio/synth.py` writes them exactly from now on. Establishing shots would sit in the middle of the frame; no provider is wired | $0 as built; AI video would be the only paid part |
+| **Documentary-style unit recap** ◐ built to the provider | Slower pacing, the two-voice episode with its own chapter marks drawn over it | Podcast audio as the spine, plus Remotion lower-thirds and per-line captions — `pipeline/align-audio.mjs` recovers the line times the four shipped episodes never recorded, and `audio/synth.py` writes them exactly from now on. Establishing shots would sit in the middle of the frame; no provider is wired | $0 as built; AI video would be the only paid part |
+
+**✅ means it renders today at $0.** ◐ means everything up to the purchase is
+built, checked and refuses to run without a price — the rows that need a
+provider are the only two, and both are step 4.
 
 Model choice for the paid steps (Veo, Kling, Sora, Seedance and the rest) moves
 faster than this document will, so the table names the *capability* each step
@@ -184,6 +238,15 @@ checking at build time rather than quoting here. Once per course, not per
 student, so even a real per-minute rate stays small in aggregate.
 
 ## 5. Prototyping before touching the pipeline
+
+**Overtaken, and recorded rather than deleted.** This section said to compose
+one lesson and one short by hand before committing to a pipeline, on the
+reasoning that an afternoon of something to look at beats a multi-day build.
+Reasonable then; the pipeline now renders five formats and the thing to look at
+is a real render. Keep it for the next format nobody has built yet, where the
+advice applies again unchanged.
+
+What follows is as written.
 
 The motion-graphics layer is worth looking at before it is worth building.
 HeyGen's HyperFrames composes programmable HTML/GSAP video that renders to
@@ -326,6 +389,43 @@ once the format is right.
 
    B-roll inserts are named here as optional polish for this format, and they
    stay unwired for the reason step 4 does.
+
+### What the order got right, and what it missed
+
+The sequence held: each step was cheaper than the one after it, and each was
+buildable because the one before it existed. The shorts needed the cue list the
+movie-format work made legible; the explainer needed the shorts' argument that a
+format can be a *cut* rather than a render; the documentary's captions needed
+line times nobody had until step 4 went looking for them.
+
+Two things it missed, and both are the same kind of miss — a step that was
+never listed is a step nobody schedules:
+
+- **The explainer was in §3's table and in no step at all.** It was the last
+  format left and the only one that needed no money, which is exactly the
+  entry an order like this should have started with, not omitted.
+- **Nothing in this order was about proving what had been built.** The restyle
+  pass reached step 3 and has still never made a live model call. Building
+  something and running it once are different pieces of work and only one of
+  them was scheduled.
+
+### What each format actually costs, measured
+
+Every figure below came out of a real run rather than an estimate.
+
+| format | per course | what it costs |
+| --- | --- | --- |
+| Movie-format lesson | 11–14 units | compute; 20MB for two 1080p units |
+| Shorts | 55–95 each, **278 in all** | compute; 8.4–35.5s, median 14.8s |
+| Explainer | one, 12:35–13:48 | compute; no audio file written |
+| Documentary | one, 26:30–35:03 | compute; audio is the shipped MP3 |
+| Restyle | ~$0.24 a style a course | a model call, never yet made |
+| B-roll | 10–16 inserts | unpriced — no provider chosen |
+| Character sheets | 2, once, reused everywhere | unpriced — no provider chosen |
+
+The one-time-per-course argument in §1 held all the way through: 44 lesson
+MP3s are 47MB for four courses and the four episodes another 87MB, and every
+video above is a re-render of those rather than a new recording.
 
 ## 7. Guardrails worth keeping from day one
 
