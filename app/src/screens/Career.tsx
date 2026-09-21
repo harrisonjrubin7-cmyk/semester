@@ -14,15 +14,26 @@ import {
   EXPERIENCE_TYPES,
   OPPORTUNITY_FORMATS,
   OPPORTUNITY_KINDS,
+  builtResume,
   coverLetter,
+  hasTargets,
+  careerEvent,
   newOpportunity,
+  outreachDrafts,
   readCareer,
   readOpportunities,
+  resumeDocumentTitle,
   resumeMarkdown,
+  resumeReadout,
+  SHARED_TAGS,
+  sharedTags,
+  targetScore,
   type CareerContact,
   type CareerExperience,
   type Opportunity,
+  type SharedTag,
 } from '../lib/career';
+import { EMPTY_PATHWAY, readPathway } from '../lib/pathway';
 import { fromMarkdown } from '../lib/document';
 import { download } from '../lib/deliver';
 import { LIVE, safeUrl, type ApplyKind } from '../lib/apply';
@@ -81,11 +92,15 @@ import { LIVE, safeUrl, type ApplyKind } from '../lib/apply';
 
 const TABS = [
   { id: 'discover' as const, label: 'Discover' },
+  { id: 'fairs' as const, label: 'Fairs' },
   { id: 'resume' as const, label: 'Résumé' },
   { id: 'network' as const, label: 'Contacts' },
   { id: 'abroad' as const, label: 'Abroad' },
   { id: 'library' as const, label: 'Library' },
 ];
+
+/** The four things a careers-fair poster tells you, and nothing else. */
+const EMPTY_EVENT = { name: '', date: '', where: '', note: '' };
 
 type Tab = (typeof TABS)[number]['id'];
 
@@ -116,22 +131,38 @@ const APPLY_KIND: Record<Opportunity['kind'], ApplyKind> = {
 export function Career() {
   const { state, account } = useStore();
   const scope = `${account?.id || 'device'}:${state.term}`;
-  return <Workspace key={scope} storageKey={`semester.career.v1:${scope}`} />;
+  /*
+   * The pathway library is read here and never written. It carries the one
+   * line the student wrote about their own education, which is the only thing
+   * "same school" could be answered against — and it is not term-scoped,
+   * because applying somewhere spans several of them.
+   */
+  return (
+    <Workspace
+      key={scope}
+      storageKey={`semester.career.v1:${scope}`}
+      pathwayKey={`semester.pathway.v1:${account?.id || 'device'}`}
+    />
+  );
 }
 
-function Workspace({ storageKey }: { storageKey: string }) {
+function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey: string }) {
   const { state, dispatch } = useStore();
   const lib = useDeviceLibrary(storageKey, readCareer, EMPTY_CAREER);
+  const education = useDeviceLibrary(pathwayKey, readPathway, EMPTY_PATHWAY).value.profile.education;
 
   const [tab, setTab] = useState<Tab>('discover');
   const [query, setQuery] = useState('');
   const [kind, setKind] = useState('All types');
   const [format, setFormat] = useState('All formats');
   const [savedOnly, setSavedOnly] = useState(false);
+  const [byTarget, setByTarget] = useState(false);
   const [selected, setSelected] = useState('');
   const [edit, setEdit] = useState<Opportunity | null>(null);
   const [experience, setExperience] = useState<CareerExperience | null>(null);
   const [person, setPerson] = useState<CareerContact | null>(null);
+  const [shared, setShared] = useState<SharedTag[]>([]);
+  const [event, setEvent] = useState(EMPTY_EVENT);
   const [notice, setNotice] = useState('');
 
   const open = lib.value.opportunities.find((o) => o.id === selected);
@@ -145,6 +176,35 @@ function Workspace({ storageKey }: { storageKey: string }) {
           .toLowerCase()
           .includes(query.toLowerCase()),
     )
+    .sort((a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999'));
+
+  /*
+   * Soonest first, or closest to what the student said they are looking for.
+   *
+   * The second is a reordering of the first and nothing more: the deadline
+   * order is the tie-break, so two listings that carry the same number of
+   * target terms stay in the order they were already in. No number is drawn,
+   * because a "match" figure beside a listing somebody typed in themselves is
+   * a claim about fit this app has no way to make. See `targetScore`.
+   */
+  const ordered = byTarget
+    ? [...matches].sort((a, b) => targetScore(b, lib.value) - targetScore(a, lib.value))
+    : matches;
+
+  /*
+   * Which of the two shared attributes any saved contact actually has, and the
+   * contacts left after the ones that are switched on. Both sides of a tag are
+   * free text somebody typed — see `sharedWith` in `lib/career.ts`.
+   */
+  const offered = SHARED_TAGS.filter((t) => lib.value.contacts.some((c) => sharedTags(education, c).includes(t.id)));
+  const people = lib.value.contacts.filter((c) => {
+    const has = sharedTags(education, c);
+    return shared.every((t) => has.includes(t));
+  });
+
+  /** Career events, soonest first, for the quick-add's own list. */
+  const events = lib.value.opportunities
+    .filter((o) => o.kind === 'Career event')
     .sort((a, b) => (a.deadline || '9999').localeCompare(b.deadline || '9999'));
 
   const write = (title: string, body: string) =>
@@ -249,10 +309,24 @@ function Workspace({ storageKey }: { storageKey: string }) {
             >
               Saved only
             </ActionButton>
+            <ActionButton
+              onClick={() => setByTarget(!byTarget)}
+              aria-pressed={byTarget}
+              tone={byTarget ? 'primary' : 'secondary'}
+              style={{ flex: '1 1 auto' }}
+            >
+              Closest to my targets
+            </ActionButton>
             <ActionButton onClick={() => setEdit(newOpportunity())} style={{ flex: '1 1 auto' }}>
               Add one
             </ActionButton>
           </div>
+          {byTarget && !hasTargets(lib.value) && (
+            <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+              Nothing to sort by yet. Say what you are looking for under Résumé, and this puts your own
+              saved listings carrying those words first — the order changes, nothing else does.
+            </p>
+          )}
           <FilePick
             accept=".json"
             multiple={false}
@@ -379,17 +453,17 @@ function Workspace({ storageKey }: { storageKey: string }) {
             </form>
           )}
 
-          <SectionLabel aside={`${matches.length}`} style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>
+          <SectionLabel aside={`${ordered.length}`} style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>
             Opportunities
           </SectionLabel>
-          {matches.length === 0 ? (
+          {ordered.length === 0 ? (
             <p style={{ ...body, ...secondLine(), textWrap: 'pretty' }}>
               Nothing here yet. Add a real listing, or import an export your school provided. No invented
               jobs or alumni are included — there is no job board behind this screen.
             </p>
           ) : (
             <CardGrid min={150}>
-              {matches.map((o) => (
+              {ordered.map((o) => (
                 <GridCard
                   key={o.id}
                   label={o.title}
@@ -500,11 +574,126 @@ function Workspace({ storageKey }: { storageKey: string }) {
         </>
       )}
 
+      {tab === 'fairs' && (
+        <>
+          <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+            A fair is on a poster for a fortnight and then it is not. Four answers, and it lands in the
+            same list as everything else under Discover — nothing here registers you for anything.
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!event.name.trim()) return;
+              const made = careerEvent(event);
+              try {
+                const next = { ...lib.value, opportunities: [...lib.value.opportunities, made] };
+                readCareer(next);
+                if (lib.update(next)) {
+                  setEvent(EMPTY_EVENT);
+                  setNotice('Saved with your other opportunities. Nothing has been registered for.');
+                }
+              } catch (err) {
+                setNotice((err as Error).message);
+              }
+            }}
+          >
+            <label style={field}>
+              <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>What it is called</span>
+              <input
+                className="input"
+                required
+                maxLength={160}
+                value={event.name}
+                onChange={(e) => setEvent({ ...event, name: e.target.value })}
+                style={input}
+              />
+            </label>
+            <label style={field}>
+              <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>When</span>
+              <input
+                className="input"
+                type="date"
+                value={event.date}
+                onChange={(e) => setEvent({ ...event, date: e.target.value })}
+                style={input}
+              />
+            </label>
+            <label style={field}>
+              {/*
+               * One box, because a poster gives you a room or a link and
+               * almost never both. Which field it lands in is decided by what
+               * was typed — see `eventWhere` in `lib/career.ts`.
+               */}
+              <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Where, or the link</span>
+              <input
+                className="input"
+                maxLength={CAREER_LIMITS.url}
+                value={event.where}
+                onChange={(e) => setEvent({ ...event, where: e.target.value })}
+                style={input}
+              />
+            </label>
+            <label style={field}>
+              <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+                One note — who is coming, what to bring
+              </span>
+              <textarea
+                className="input"
+                rows={3}
+                maxLength={CAREER_LIMITS.description}
+                value={event.note}
+                onChange={(e) => setEvent({ ...event, note: e.target.value })}
+                style={input}
+              />
+            </label>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+              Add the event
+            </button>
+          </form>
+
+          <SectionLabel aside={`${events.length}`} style={{ marginBlock: 'var(--sp-7) var(--sp-4)' }}>
+            Events you have written down
+          </SectionLabel>
+          {events.length === 0 ? (
+            <p style={{ ...body, ...secondLine(), textWrap: 'pretty' }}>
+              Nothing yet. What is on the poster is all this needs.
+            </p>
+          ) : (
+            <CardGrid min={150}>
+              {events.map((o) => (
+                <GridCard
+                  key={o.id}
+                  label={o.title}
+                  meta={o.deadline || 'No date'}
+                  title={o.location || o.url || 'No place recorded'}
+                  onClick={() => {
+                    setKind('Career event');
+                    setSelected(o.id);
+                    setTab('discover');
+                  }}
+                />
+              ))}
+            </CardGrid>
+          )}
+        </>
+      )}
+
       {tab === 'resume' && (
         <>
           <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
             Everything here is what you say about yourself. Nothing is marked verified, and nothing is
             shared anywhere on its own.
+          </p>
+          {/*
+           * What is filled in, as four facts. Not a meter: every product that
+           * competes with this one puts a "profile strength" here, and all of
+           * them are the same move — a number derived from how much somebody
+           * has typed, shown as a measure of how they are doing. Two real jobs
+           * on one page score below nine lines of padding, and the meter's
+           * advice is to add the padding. See `resumeReadout`.
+           */}
+          <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+            {resumeReadout(lib.value, builtResume(state.documents.map((d) => d.title)))}
           </p>
           {(['name', 'headline', 'contact'] as const).map((k) => (
             <label key={k} style={field}>
@@ -520,10 +709,46 @@ function Workspace({ storageKey }: { storageKey: string }) {
               />
             </label>
           ))}
+          {/*
+           * "Open to work", with nothing open about it. Three notes on this
+           * device, read by the ordering on Discover and by nothing else: no
+           * badge, no signal to anybody, and nowhere for it to go — see the
+           * field notes in `lib/career.ts`.
+           */}
+          <SectionLabel style={{ marginBlock: 'var(--sp-6) var(--sp-4)' }}>What you are looking for</SectionLabel>
+          <p style={{ ...line, marginBlock: '0 var(--sp-5)', textWrap: 'pretty' }}>
+            Kept on this device and shown to nobody. It orders your own saved listings on Discover, and
+            does nothing else.
+          </p>
+          {(['targetRoles', 'targetLocations'] as const).map((k) => (
+            <label key={k} style={field}>
+              <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>
+                {k === 'targetRoles' ? 'Roles you want, separated by commas' : 'Places, separated by commas'}
+              </span>
+              <input
+                className="input"
+                maxLength={CAREER_LIMITS.targets}
+                value={lib.value[k]}
+                onChange={(e) => lib.update((old) => ({ ...old, [k]: e.target.value }))}
+                style={input}
+              />
+            </label>
+          ))}
+          <label style={field}>
+            <span style={{ fontSize: 'var(--type-sm)', ...secondLine() }}>Looking since</span>
+            <input
+              className="input"
+              type="date"
+              value={lib.value.lookingSince}
+              onChange={(e) => lib.update((old) => ({ ...old, lookingSince: e.target.value }))}
+              style={input}
+            />
+          </label>
+
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginBottom: 'var(--sp-5)' }}>
             <ActionButton
               tone="primary"
-              onClick={() => write(`${lib.value.name || 'My'} résumé`, resumeMarkdown(lib.value))}
+              onClick={() => write(resumeDocumentTitle(lib.value), resumeMarkdown(lib.value))}
               style={{ flex: '1 1 auto' }}
             >
               Build it in Write
@@ -722,7 +947,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               }}
               style={{ marginTop: 'var(--sp-5)' }}
             >
-              {(['name', 'organization', 'interests', 'next'] as const).map((k) => (
+              {(['name', 'organization', 'school', 'major', 'interests', 'next'] as const).map((k) => (
                 <label key={k} style={field}>
                   <span style={{ fontSize: 'var(--type-sm)', ...secondLine(), textTransform: 'capitalize' }}>
                     {k === 'next' ? 'Next step' : k}
@@ -730,8 +955,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <input
                     className="input"
                     required={k === 'name'}
-                    maxLength={500}
-                    value={person[k]}
+                    maxLength={k === 'school' || k === 'major' ? 200 : 500}
+                    value={person[k] ?? ''}
                     onChange={(e) => setPerson({ ...person, [k]: e.target.value })}
                     style={input}
                   />
@@ -784,7 +1009,33 @@ function Workspace({ storageKey }: { storageKey: string }) {
             </form>
           )}
 
-          {lib.value.contacts.map((c) => (
+          {/*
+           * Offered only where there is something to filter to. A chip that
+           * always appears and always empties the list is a control that
+           * teaches you not to press it — and these can only mean anything
+           * once a contact carries a school or a course, and the student has
+           * written down their own under Pathway → Profile.
+           */}
+          {offered.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+              {offered.map((t) => {
+                const on = shared.includes(t.id);
+                return (
+                  <ActionButton
+                    key={t.id}
+                    onClick={() => setShared(on ? shared.filter((x) => x !== t.id) : [...shared, t.id])}
+                    aria-pressed={on}
+                    tone={on ? 'primary' : 'secondary'}
+                    style={{ flex: '1 1 auto' }}
+                  >
+                    {t.label}
+                  </ActionButton>
+                );
+              })}
+            </div>
+          )}
+
+          {people.map((c) => (
             <section
               key={c.id}
               style={{
@@ -798,6 +1049,14 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 {c.name}
               </SectionLabel>
               <p style={line}>{c.organization}</p>
+              {sharedTags(education, c).length > 0 && (
+                <p style={line}>
+                  {SHARED_TAGS.filter((t) => sharedTags(education, c).includes(t.id))
+                    .map((t) => t.label)
+                    .join(' · ')}{' '}
+                  — as you and they wrote it down
+                </p>
+              )}
               {c.interests && <p style={body}>{c.interests}</p>}
               {c.notes && <p style={{ ...body, whiteSpace: 'pre-wrap' }}>{c.notes}</p>}
               <p style={line}>
@@ -860,6 +1119,14 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   style={{ flex: '1 1 auto' }}
                 >
                   Prepare
+                </ActionButton>
+                <ActionButton
+                  onClick={() =>
+                    write(`Messages to ${c.name}`, outreachDrafts(c, sharedTags(education, c)))
+                  }
+                  style={{ flex: '1 1 auto' }}
+                >
+                  Draft an outreach message
                 </ActionButton>
               </div>
             </section>

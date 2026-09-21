@@ -12,6 +12,7 @@ import {
   newApplication,
   order,
   quiet,
+  quietOnes,
   readApplications,
   safeUrl,
   standing,
@@ -72,6 +73,40 @@ describe('silence, which is a number and not a feeling', () => {
     // That is not quiet, it is unfinished, and a nudge is not what it needs.
     const a = moveTo(app({}), 'writing', AT);
     expect(quiet(a, new Date(AT + 90 * 86_400_000))).toBe(false);
+  });
+
+  /*
+   * The list Today draws. Longest silence first is the only ordering the facts
+   * support: thirty-five days is a bigger number than twenty-two, and neither
+   * the app nor this function says which is more worth chasing.
+   */
+  it('gathers them longest-silent first', () => {
+    const now = new Date(AT + 60 * 86_400_000);
+    const five = moveTo(app({ org: 'Five weeks' }), 'sent', AT + 25 * 86_400_000);
+    const nine = moveTo(app({ org: 'Nine weeks' }), 'sent', AT);
+    const fresh = moveTo(app({ org: 'Last week' }), 'sent', AT + 55 * 86_400_000);
+    expect(quietOnes([five, fresh, nine], now).map((a) => a.org)).toEqual(['Nine weeks', 'Five weeks']);
+  });
+
+  it('gathers nothing out of a tracker with nothing sent', () => {
+    const now = new Date(AT + 60 * 86_400_000);
+    expect(quietOnes([], now)).toEqual([]);
+    expect(quietOnes([moveTo(app({}), 'writing', AT), moveTo(app({}), 'talking', AT)], now)).toEqual([]);
+  });
+
+  /*
+   * The same predicate the tracker's own sentence counts with. Two answers to
+   * "how many have gone quiet" is how Today and Applications come to disagree.
+   */
+  it('counts the same ones the summary sentence does', () => {
+    const now = new Date(AT + 60 * 86_400_000);
+    const apps = [
+      moveTo(app({ org: 'A' }), 'sent', AT),
+      moveTo(app({ org: 'B' }), 'sent', AT + 55 * 86_400_000),
+      moveTo(app({ org: 'C' }), 'sent', AT + 10 * 86_400_000),
+    ];
+    expect(quietOnes(apps, now)).toHaveLength(2);
+    expect(summary(apps, now)).toContain(`2 sent over ${QUIET_DAYS} days ago`);
   });
 });
 
