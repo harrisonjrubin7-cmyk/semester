@@ -59,25 +59,52 @@ const env = import.meta.env as unknown as Record<string, string | undefined>;
  * and the one nearly every browser already talks to. It sees that a connection
  * was attempted and nothing else — no media, no identity, no room code.
  */
+/**
+ * The relay this build can actually reach, or `null`.
+ *
+ * All three of `VITE_TURN_URL`, `VITE_TURN_USER` and `VITE_TURN_PASS`, which
+ * is how `SETUP.md` documents them and how the header above describes them —
+ * "point at one if you have one" is one setting in three parts, not three
+ * settings. TURN authenticates every allocation, so an address with no
+ * credential is a server that answers and then refuses, which is not a relay
+ * this build has.
+ *
+ * It matters because of what the address alone used to buy. `relayed` was
+ * `Boolean(VITE_TURN_URL)`, and `screens/call/Lobby.tsx` reads it to say "a
+ * relay is configured, so a network that refuses a direct connection still
+ * works" — to somebody who is, at that moment, on exactly such a network. A
+ * half-set trio made that sentence false in the one place it is load-bearing,
+ * and the call then failed the way the other branch of that sentence promises
+ * it would not.
+ *
+ * Returning the server rather than a boolean is what keeps the sentence and
+ * the `RTCIceServer` from drifting: `iceServers()` and `relayed` are the same
+ * question asked twice, and they now have one answer.
+ */
+function turnServer(): RTCIceServer | null {
+  const urls = (env.VITE_TURN_URL ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const username = (env.VITE_TURN_USER ?? '').trim();
+  const credential = (env.VITE_TURN_PASS ?? '').trim();
+  if (!urls.length || !username || !credential) return null;
+  return { urls, username, credential };
+}
+
 export function iceServers(): RTCIceServer[] {
   const stun = (env.VITE_STUN_URLS ?? 'stun:stun.l.google.com:19302')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
   const servers: RTCIceServer[] = [{ urls: stun }];
-  const turn = (env.VITE_TURN_URL ?? '').trim();
-  if (turn) {
-    servers.push({
-      urls: turn.split(',').map((s) => s.trim()).filter(Boolean),
-      username: env.VITE_TURN_USER ?? '',
-      credential: env.VITE_TURN_PASS ?? '',
-    });
-  }
+  const turn = turnServer();
+  if (turn) servers.push(turn);
   return servers;
 }
 
 /** Whether a relay is configured, so the screen can say what it is promising. */
-export const relayed = Boolean((env.VITE_TURN_URL ?? '').trim());
+export const relayed = Boolean(turnServer());
 
 /** Whether this browser can do any of this at all. */
 export function supported(): boolean {

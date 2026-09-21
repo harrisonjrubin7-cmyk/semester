@@ -225,6 +225,22 @@ jobs:
             echo "::error title=Accounts::VITE_SUPABASE_KEY is set and VITE_SUPABASE_URL is not. Set VITE_SUPABASE_URL, or unset VITE_SUPABASE_KEY to build device-only."
             exit 1
           fi
+          # The relay is one setting in three parts, and a partial one is
+          # worse than none: `lib/rtc.ts` would report a relay to the call
+          # screens, which then tell somebody on a locked-down network that
+          # the call "still works" — and TURN authenticates every allocation,
+          # so an address with no credential answers and refuses. Without any
+          # of the three the screens say plainly that no relay is configured,
+          # which is true and useful; with one or two they say the opposite.
+          turn_set=0
+          for v in "$VITE_TURN_URL" "$VITE_TURN_USER" "$VITE_TURN_PASS"; do
+            [ -n "$v" ] && turn_set=$((turn_set + 1))
+          done
+          if [ "$turn_set" -ne 0 ] && [ "$turn_set" -ne 3 ]; then
+            echo "::error title=Calls::VITE_TURN_URL, VITE_TURN_USER and VITE_TURN_PASS are one setting in three parts and $turn_set of 3 are set. Set all three, or none to build without a relay."
+            exit 1
+          fi
+
           if [ -n "$VITE_SUPABASE_URL" ] && [ -n "$VITE_SUPABASE_KEY" ]; then
             echo "::notice title=Accounts::Supabase configured (url ${#VITE_SUPABASE_URL} chars, key ${#VITE_SUPABASE_KEY} chars) — this build has accounts."
           else
