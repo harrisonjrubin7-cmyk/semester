@@ -222,7 +222,7 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'How long anything is kept',
     body:
-      'Until you delete it. There is no retention schedule that quietly removes your work, and no archive kept after you delete your account. Nothing is used to train anything. The one thing that does age out is not your work but a record about it: the log of who has read your rows, described below, keeps ninety days and drops what is older.',
+      'Until you delete it. There is no retention schedule that quietly removes your work, and no archive kept after you delete your account. Nothing is used to train anything. Two things do age out, and neither of them is your work — both are records about it. The log of who has read your rows, described below, keeps ninety days. The record of which days you opened the app, also described below, keeps a little over a year.',
   },
   {
     heading: 'Who has read your rows, and how you can see it',
@@ -232,7 +232,7 @@ export const CLAIMS: Claim[] = [
   {
     heading: 'Deleting everything',
     body:
-      'Delete my account, in Settings, empties every table this app can reach on your behalf: your courses and their deadlines, your notes, grades and cards, your reminders and calendar feed, the record of what read them, your display name, which courses you said you were in, the messages and reactions you posted in class threads, the people you blocked, your group memberships, and any practice paper you shared along with the answers sent back to it. Deleting your messages leaves gaps in conversations other people are still reading, which is the deliberate half of a real choice: the alternative was leaving your words in their thread under a name nobody can look up. This device’s own copy is separate — signing out leaves it alone, and Erase from this device removes it.',
+      'Delete my account, in Settings, empties every table this app can reach on your behalf: your courses and their deadlines, your notes, grades and cards, your reminders and calendar feed, the record of what read them, the record of which days you opened the app, your display name, which courses you said you were in, the messages and reactions you posted in class threads, the people you blocked, your group memberships, and any practice paper you shared along with the answers sent back to it. Deleting your messages leaves gaps in conversations other people are still reading, which is the deliberate half of a real choice: the alternative was leaving your words in their thread under a name nobody can look up. This device’s own copy is separate — signing out leaves it alone, and Erase from this device removes it.',
   },
   {
     heading: 'What deleting leaves behind',
@@ -247,6 +247,11 @@ export const CLAIMS: Claim[] = [
     heading: 'Which screens you open',
     body:
       'The app keeps a count of how many times each of its screens has been opened, in this device’s own storage, under the key “semester.usage”. It is a number per screen — not when, not in what order, not how long. That count is not uploaded and is not in the sync payload; what it is for is the figure on this page of how many screens you never open, so you can decide whether to hide the rest. Switch it off on this page and nothing is counted. Two smaller facts about the same thing do go to the account when you are signed in, because the app uses them on every device you read on: which screens you have ever opened, and the day each was last opened. Both are in the list above, neither is timed to anything finer than the day, and signed out neither leaves the device at all.',
+  },
+  {
+    heading: 'The three things counted about your account',
+    body:
+      'Semester is being piloted, and three questions decide whether it is worth building further: how many people who sign up get a course of their own in and study from it, how many open it in a given week, and how many are still opening it a month later. Answering them needs a record, and this is all of it: for each day you had the app open signed in, up to three words — that you opened it, that you had added a course by then, and that you had answered a card by then. No screen names, no titles, no course, no counts, no time of day, nothing about what you wrote or read. It is kept for a little over a year and then dropped, it is not in your export, deleting your account deletes it, and — this is the part worth saying plainly — it is ours, sent nowhere else. There is still no third-party analytics in this app and there is no tracking of you across the web. Signed out, none of it happens at all.',
   },
   {
     heading: 'Who can see your rows',
