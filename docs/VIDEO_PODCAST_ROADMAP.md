@@ -81,7 +81,7 @@ Two things are better than they sound at first, given the economics above.
 | --- | --- | --- | --- |
 | **Movie-format lesson** (upgrade of today's lesson) | The existing narrated-lesson audio, but the flat `0x0a0b0e` rectangle becomes real animated typography, diagrams and highlight boxes moving with the cues already recorded | **Remotion** (React + ffmpeg, runs in the existing Node toolchain, renders locally) driven by the same cue list `pipeline/lessons.py` already writes | Compute only — but see the licence note in §7 |
 | **Animated series** | A recurring host character, or two, appearing across every unit of a course — the visual equivalent of the two-voice podcast | Generate one **character reference sheet** (image model, ~$0.01–0.04/image) once per persona; feed it as the reference image to an **image-to-video** model with strong character consistency for short 5–10s reaction and gesture clips; composite those into the Remotion timeline instead of drawing a static avatar | ~$0.10–1.50 per short clip × a handful of clips per unit, reused across the whole course |
-| **YouTube-length explainer** | 8–15 min, hook in the first 15s, chapter marks | Remotion for the graphics track, same as movie-format, plus 2–4 short AI-video B-roll inserts for the cold open and section transitions. Marks come from the cue list, the way `synth.py` does it — not from `chapters.py` | Same as above; B-roll is optional polish, not the backbone |
+| **YouTube-length explainer** ✅ built | 8–15 min, hook in the first 15s, chapter marks. `python3 pipeline/explainer.py <course>` | Remotion for the graphics track, same as movie-format, plus 2–4 short AI-video B-roll inserts for the cold open and section transitions. Marks come from the cue list, the way `synth.py` does it — not from `chapters.py` | Same as above; B-roll is optional polish, not the backbone |
 | **TikTok / Shorts** ✅ built | Vertical 9:16, one card per short, hook-first, burned-in captions. Measured at 8.4–35.5s, median 14.8s — the 15–45s guessed here was half wrong | **One short per flashcard**, cut from the cue list rather than from `guide.ts`: a cue already has the in and out points inside the unit's MP3, so Remotion trims the existing audio and nothing is re-synthesised | $0 — no new audio, no new file, just frames |
 | **Documentary-style unit recap** ◐ partly built | Slower pacing, the two-voice episode with its own chapter marks drawn over it | Podcast audio as the spine, plus Remotion lower-thirds and per-line captions — `pipeline/align-audio.mjs` recovers the line times the four shipped episodes never recorded, and `audio/synth.py` writes them exactly from now on. Establishing shots would sit in the middle of the frame; no provider is wired | $0 as built; AI video would be the only paid part |
 
@@ -272,6 +272,30 @@ once the format is right.
    The order above still stands: these are the only steps that cost money per
    clip, so the two unbuilt parts are worth doing once the pilot numbers say
    which courses have the students to justify a one-time production cost.
+
+5. **The YouTube-length explainer.** ✅ **Built** — `python3
+   pipeline/explainer.py <course>`. It was in §3's table and in no step of this
+   order, which is why it was the last thing left that cost nothing.
+
+   A run of a course's units played in order: the MP3s the app already serves,
+   sequenced, with those units' cue lists offset onto one timeline and a
+   chapter mark on every boundary. Nothing is synthesised, the same way the
+   shorts are cut rather than recorded.
+
+   **8–15 minutes turned out to be a real constraint.** Not one of the four
+   courses fits whole — ECON is eleven units and 15:00 of narration exactly,
+   and the ten beats between them put it eight seconds over. Every explainer is
+   a truncation, and `explainer.mjs` says how many units it left behind rather
+   than quietly producing the 26 minutes psci would otherwise be.
+
+   **The hook ends on a cue rather than on the number.** The last one at or
+   before 15s, so the cut to the first slide lands where a sentence starts. It
+   promises questions from the units *after* the first: the opening narration
+   is already asking and answering something, and listing that question would
+   be reading the viewer their own subtitles.
+
+   B-roll inserts are named here as optional polish for this format, and they
+   stay unwired for the reason step 4 does.
 
 ## 7. Guardrails worth keeping from day one
 
