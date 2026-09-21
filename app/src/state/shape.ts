@@ -948,7 +948,6 @@ export interface Ephemeral {
   lessonUnit: number;
   /** Unit the Add-material screen is filing against; null for a new one. */
   updateUnit: number | null;
-  query: string;
   onb: number;
   openUnit: number;
   drillUnit: number | null;
@@ -1551,7 +1550,6 @@ export function initialEphemeral(): Ephemeral {
     blockAt: null,
     lessonUnit: 0,
     updateUnit: null,
-    query: '',
     onb: 0,
     openUnit: 0,
     drillUnit: null,
@@ -2110,7 +2108,6 @@ export type Action =
   | { type: 'setLook'; look: Partial<Look> }
   | { type: 'setFilter'; filter: string }
   | { type: 'setEvFilter'; filter: string }
-  | { type: 'setQuery'; query: string }
   | { type: 'stepMonth'; delta: number }
   | { type: 'toggleUnit'; index: number }
   | { type: 'clearNotifs' }
