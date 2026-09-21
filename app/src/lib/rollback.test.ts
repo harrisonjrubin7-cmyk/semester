@@ -124,7 +124,7 @@ describe('what the history findings say, which is not about a dashboard', () => 
    * and no longer says schema changes are made by hand. That was written from
    * Supabase's documentation and from a bot comment, and the repository then
    * produced evidence against it: `access_log` — then numbered
-   * `20260901001300`, now `20260921003400` — merged to main at 17:34 on
+   * `20260901001300`, now `20260921143653` — merged to main at 17:34 on
    * 18 September and production had eighteen rows, no `access_log`, and the
    * same newest version twenty-five minutes later. A merged migration did not
    * arrive, and the old number is why: it sorted before thirteen versions the
@@ -224,27 +224,38 @@ describe('what the history findings say, which is not about a dashboard', () => 
      * comparison between numbers.
      *
      * Supabase applies a migration only if its version is newer than every
-     * version the live ledger holds. Production's ledger holds twenty-one, of
-     * which the newest is `20260921002658` — and eight are the baseline files
-     * below, recorded at their own versions when the directory was created.
+     * version the live ledger holds. So a file here is deployable if the
+     * ledger already holds its version, or if it sorts after the newest one.
+     * Anything in between will sit in this directory looking applied and never
+     * reach the database, which is what `access_log` did for three days while
+     * nothing said so. `rehearse.sh` cannot catch it — Postgres applies a file
+     * whatever it is called.
      *
-     * So a file here is deployable if it is one of those eight, or if it sorts
-     * after the newest. Anything in between is a file that will sit in this
-     * directory looking applied and never reach the database, which is what
-     * `access_log` did for three days while nothing said so. `rehearse.sh`
-     * cannot catch this — Postgres applies a file whatever it is called.
+     * **This read the ledger out of two constants until 21 September, and the
+     * constants went stale within the hour they were written.** They said the
+     * ledger held twenty-one rows, newest `20260921002658`, and both were true
+     * when typed; then five pending migrations were applied by hand and two
+     * more followed, and the newest became `20260921150750`. A renumbering
+     * done against the stale figure put seven files at `20260921003000`–`003600`
+     * — above the watermark the constant named, below the real one — which is
+     * the same fault the renumbering was for.
+     *
+     * So the ledger is read from `supabase/ledger.snapshot` instead: one dated
+     * reading of every row, in a file that says when it was taken. A constant
+     * copied out of a database has no date on it and cannot go stale loudly.
+     * `migrationorder.test.ts` holds the same rule from the other end.
      */
-    const LEDGER_NEWEST = '20260921002658';
-    const IN_LEDGER_ALREADY = [
-      '20260901000100',
-      '20260901000200',
-      '20260901000300',
-      '20260901000400',
-      '20260901000500',
-      '20260901000600',
-      '20260901000700',
-      '20260901000800',
-    ];
+    const LEDGER = readFileSync(join(ROOT, 'supabase', 'ledger.snapshot'), 'utf8')
+      .split('\n')
+      .map((l) => l.replace(/#.*/, '').trim())
+      .filter(Boolean)
+      .map((l) => l.split(/\s+/)[0]);
+    // The control on the reading, before anything is concluded from it: an
+    // unparsed snapshot yields an empty list, and an empty list makes
+    // `LEDGER_NEWEST` undefined and every comparison below vacuous.
+    expect(LEDGER.length, 'ledger.snapshot did not parse').toBeGreaterThan(20);
+    const LEDGER_NEWEST = LEDGER[LEDGER.length - 1];
+    const IN_LEDGER_ALREADY = LEDGER;
     const versions = readdirSync(join(ROOT, 'supabase', 'migrations'))
       .filter((f) => f.endsWith('.sql'))
       .map((f) => f.slice(0, 14));

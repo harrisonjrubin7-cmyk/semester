@@ -5,11 +5,12 @@ The schema this app runs on cannot be rebuilt from its own record.
 concern; this is the plan for fixing it, written before any of it was done so
 that the reasoning can be argued with rather than discovered in a diff.
 
-**The repair is done.** Steps 1, 2, 4 and 6 were carried out; step 3 turned out
-not to be needed and step 5 is withdrawn, both on evidence gathered doing the
-others, and each section says why. The only write to production in any of it is
-the one a merge makes by deploying the renumbered migrations — nothing here
-edited the ledger by hand.
+**The repair is done.** Steps 1, 2, 4 and 6 were carried out; step 3 turned
+out not to be needed and step 5 is withdrawn, both on evidence gathered doing
+the others, and each section says why. Step 6 was the last to close and the
+only one that could turn the deploy green: steps 1 to 5 change no version, and
+a version is the whole of the fault. **No step wrote to the ledger by hand** —
+the only production write in any of it is the one a merge makes by deploying.
 
 ## What is actually wrong
 
@@ -45,6 +46,13 @@ both.
 `usage_atomic`, `group_columns_pinned`, `forms` and `access_log` are in
 `supabase/migrations/` and absent from production — verified object by object,
 not inferred from the history.
+
+*Closed the same day, and not by this plan.* All four were applied by hand
+between 14:28 and 14:40 UTC on 21 September, and `function_grants` was run a
+second time behind them. Step 6 has the ledger rows, the verification against
+the live catalogs, and what it did and did not fix. The paragraphs below are
+kept as the statement of what was wrong, because the shape of it — a version
+the ledger chose rather than the one on disk — is the fault that survived.
 
 `invites` and `referrals` were applied by hand on 21 September, which is the
 first time anything in this directory reached the database since the audit.
@@ -90,7 +98,7 @@ spellings are needed. `check.sh` granted tables and never functions, so the
 suite was green on a hole that was open.
 
 This is fault 2 happening again in miniature, and it is being closed the way
-fault 2 should have been: `supabase/migrations/20260921003600_function_grants.sql`
+fault 2 should have been: `supabase/migrations/20260921144011_function_grants.sql`
 is the file, `local.stub.sql` now sets the same default privileges Supabase
 does so the harness can see the hole, and `grants.check.sql` is an allowlist
 over the whole schema so the next function cannot ship reachable quietly.
@@ -104,7 +112,7 @@ have, so every revoke in it is guarded by `to_regprocedure`: it is safe to run
 early, and running it again after `access_log` finally lands is what closes
 those two.
 
-## Why production's deploy fails, which is now measured
+## Why production's deploy fails, which is now measured — and is fixed in step 6
 
 Settled 21 September, from three facts that fit together:
 
@@ -129,6 +137,12 @@ lacks, and the two whose SQL it has under a version of its own. Supabase's
 documentation names exactly this: "Using the Dashboard's SQL editor or Table
 Editor on your remote database bypasses the migration history, and `db push`
 will start failing with sync errors."
+
+**This diagnosis held, and it was one file short of complete.** It counts the
+four production lacks and the two applied by hand; `function_grants` was in the
+same position and is not named here, so the true count of stranded files was
+**seven**, not six. Step 6 renames all seven to the versions the ledger records,
+which empties the pending set and is what the fix turned out to be.
 
 **Three things follow, and they change the plan below rather than decorate it.**
 
@@ -356,13 +370,191 @@ applied, nothing was repaired, no row was edited. What changed is that this
 repository now holds the SQL production was carrying alone, and a way to ask
 whether the two still agree.
 
-### 6 · Then, and separately, the pending migrations
+### 6 · Then, and separately, the pending migrations — **done, 21 September**
 
-Out of scope here and worth naming so it is not forgotten. Once production is
-reproducible, a preview branch can finally be built that matches it, and
-`usage_atomic`, `group_columns_pinned`, `forms` and `access_log` can be
-rehearsed against it before a merge applies them. That is the staging work the
-rest of the plan was always about; it could not start until this was true.
+Out of scope when this was written, and the only step that was ever going to
+turn the deploy green. Steps 1 to 5 change no version, and a version is the
+whole of the fault.
+
+#### What happened, in the order it happened
+
+Two things, by two different hands, within twenty minutes of each other.
+
+**The content went in.** Between 14:28 and 14:40 UTC on 21 September the four
+unapplied files were applied to production, and `function_grants` was run a
+second time now that `access_log` existed. Five new ledger rows:
+
+| version | name |
+| --- | --- |
+| `20260921142822` | `usage_atomic` |
+| `20260921142841` | `group_columns_pinned` |
+| `20260921143455` | `forms` |
+| `20260921143653` | `access_log` |
+| `20260921144011` | `function_grants_rerun_after_access_log` |
+
+Verified against the live catalogs rather than taken from the ledger:
+`access_log`, `forms` and `form_responses` are real tables, `note_access` and
+`count_call` are real functions, and the schema is twenty-six tables against
+twenty-three that morning.
+
+**The deploy stayed broken anyway**, and this is the part worth understanding.
+Applying SQL by hand does not tell `db push` anything. It reads the ledger,
+takes every local version the ledger lacks, and runs them **in version order**.
+Seven files here were numbered `20260901000900`–`20260901001500`, all below a
+watermark that had stood at `20260911151826` since 11 September. Every one was
+pending; every one was in the past. Not four — **seven**, because `invites`,
+`referrals` and `function_grants` were in the same position, their content
+applied on 21 September under versions of the ledger's own choosing.
+
+#### The fix, and why it is a rename rather than a write
+
+Each of the seven files is renamed to the version production recorded its
+content under:
+
+| was | is now |
+| --- | --- |
+| `20260901000900_usage_atomic.sql` | `20260921142822_usage_atomic.sql` |
+| `20260901001000_group_columns_pinned.sql` | `20260921142841_group_columns_pinned.sql` |
+| `20260901001100_forms.sql` | `20260921143455_forms.sql` |
+| `20260901001200_invites.sql` | `20260921002428_invites.sql` |
+| `20260901001300_access_log.sql` | `20260921143653_access_log.sql` |
+| `20260901001400_referrals.sql` | `20260921002623_referrals.sql` |
+| `20260901001500_function_grants.sql` | `20260921144011_function_grants.sql` |
+
+Pending is now empty, so the step that has been failing has nothing to do.
+
+The alternative was `supabase migration repair --status applied` on the seven
+old versions, which would have left every filename alone. It is rejected on
+this document's own rule: it writes seven rows to production asserting that
+versions ran which never ran, **to make a record tidy**. The rename keeps every
+change inside the repository and, for the first time, makes every filename in
+`migrations/` equal the version the ledger holds — which is fault 3, cured
+rather than described.
+
+**`function_grants` had two rows to choose between** and the choice is not
+cosmetic. Production ran that file twice: `20260921002658` before `access_log`
+existed, and `20260921144011` after. Its revokes on `note_access` and
+`read_feed` are guarded by `to_regprocedure`, so on the first run they are
+no-ops. Taking the earlier version would have sorted the file before
+`access_log` and left both functions reachable by `anon` and `authenticated` in
+any database rebuilt from this directory — measured on a throwaway cluster
+rather than reasoned about:
+
+```
+file ordered before access_log:  note_access  anon=X/postgres authenticated=X/postgres …
+file ordered after  access_log:  note_access  postgres=X/postgres service_role=X/postgres
+```
+
+So `20260921144011`, which is also where the file's own comment says it belongs.
+`20260921002658` keeps no file, and is the one ledger row in the project with
+none; it is the same file's first run.
+
+#### What the rename costs, stated rather than buried
+
+Twenty-seven references across nineteen files, all updated — except in
+`ROLLBACK.md` and in the fault list above, where the old numbers are load-bearing
+history: they are what those files *were called* when the deploy broke on
+18 September, and renaming them there would make the account of the failure
+untrue. `security.test.ts` caught the one link left dangling.
+
+Two things this does not reach. The ledger rows' own SQL carries comments
+naming the old filenames — `-- Repo file: supabase/migrations/20260901001400_referrals.sql`
+— and those are production's bytes, which this plan does not rewrite to match a
+rename. And the rows are not byte-identical to the files in any case: they were
+applied with comments stripped, 6,092 bytes against the file's 17,934 for
+`referrals`. #577 measured what that does and does not mean — every statement
+identical, only the comments gone.
+
+#### The guard
+
+`app/src/lib/migrationorder.test.ts`, against `supabase/ledger.snapshot`, a
+dated reading of the live ledger. It holds the one rule that matters — **no
+pending version below the watermark** — and it is deliberately not "nothing is
+pending", which was the first version of it and went red for a newly added
+migration, the one thing the rule permits. It also pins that each renamed file
+sits on the row its own content was recorded as, by name, because a version
+that exists but belongs to different content would satisfy everything else and
+be a silent lie.
+
+Mutation-checked four ways: one file back on its old number goes red, a new
+migration above the watermark stays green, a truncated snapshot goes red rather
+than reporting all clear, and a file moved onto another file's row goes red
+naming both.
+
+#### Two sessions renumbered these files an hour apart, and one of them was wrong
+
+This is worth the space, because the way it went wrong is the thing this whole
+document is about.
+
+**#587 did the same step, at the same time, and picked different numbers.** It
+renumbered the seven to `20260921003000`–`003600`: fresh values chosen to sort
+after the newest version its author had read, `20260921002658`. That was a
+correct reading when it was taken, and the reasoning built on it was sound.
+
+It was not correct by the time the work merged. The ledger took seven more rows
+that afternoon — five from the pending migrations being applied by hand at
+14:28–14:40, then `forms_relation_grants` at 14:47 and
+`access_log_function_search_path` at 15:07 — and the newest became
+`20260921150750`. So all seven renumbered files landed **above the watermark
+its author saw and below the real one**, which is precisely the state that
+broke the deploy in the first place. The repair reproduced the fault it was
+for.
+
+Two things made it invisible. The numbers *look* right: they sort after
+everything anybody had written down. And the guard that would have caught it
+read the ledger out of two constants in `rollback.test.ts` —
+`LEDGER_NEWEST = '20260921002658'`, and a comment saying the ledger held
+twenty-one rows. Both were true when typed, and a constant copied out of a
+database carries no date and cannot go stale loudly.
+
+**This repair uses the versions the ledger actually recorded instead**, which
+has the property that no reading can go stale underneath it: a file whose
+version is *in* the ledger is never pending, whatever the watermark does next.
+The two sets of names differ in one more way that matters — #587's numbers are
+new, so a deploy would apply all seven to production a second time; these are
+the recorded ones, so a deploy applies nothing.
+
+Both guards now read `supabase/ledger.snapshot`, one dated reading of every
+row, and `migrationorder.test.ts` carries #587's seven numbers as a control
+alongside the original seven. A guard that only catches the fault as first seen
+is a guard against history.
+
+#### The renamed set still builds production
+
+Renaming changes the order files apply in, so the fingerprint was taken again
+afterwards — with step 4's own instrument, `supabase/fingerprint.sql`, rather
+than a new one written to flatter the change. All fifteen files over
+`local.stub.sql` on a throwaway cluster, against the live project:
+
+| | built from `migrations/` | production |
+| --- | --- | --- |
+| columns | `2c9112d6…` | `2c9112d6…` |
+| constraints | `9ea3a171…` | `9ea3a171…` |
+| indexes | `05e7e9e3…` | `05e7e9e3…` |
+| functions | `48a6a903…` | `7e98a9ef…` |
+| code (comments out) | `1a2b60bc…` | `1a2b60bc…` |
+| policies | `a85e79d0…` | `a85e79d0…` |
+
+Five of six, and the sixth is the difference step 4 already named and explained:
+functions were applied to production with their comments stripped, so
+`pg_get_functiondef` differs while the code with comments removed does not.
+
+This is a stronger reading than step 4's, and not because it is a better
+instrument — it is the same one. Step 4 measured eleven files against
+production as it stood that morning. This measures fifteen against production
+as it stands now, four migrations later, and lands on the same five numbers
+with the same single explained exception.
+
+#### What it still does not do
+
+**Nothing here flips the status.** The branch record reads what the last deploy
+left, and the last deploy was 18 September. It changes when a merge to `main`
+runs the deploy again — and that merge is the test of this change, because no
+preview branch can rehearse it: a preview starts empty and never consults
+production's ledger, which is the whole mechanism at issue. The reading to check
+afterwards is the `main` branch record: `MIGRATIONS_FAILED` stamped
+`2026-09-18T17:37` before, and a fresh timestamp reaching `FUNCTIONS_DEPLOYED`
+after.
 
 ## What this costs, and what it does not fix
 
@@ -388,86 +580,27 @@ repository, and it should be argued for on its own.
 | 3 · reconstruct the eight | **not needed** — the baseline builds production, so there is nothing to back out |
 | 4 · prove the baseline against production | **done 21 Sep** — five of six fingerprints match, the sixth is comments |
 | 5 · `migration repair` | **withdrawn** — it would write a history that cannot replay |
-| 6 · the pending files | **done 21 Sep** — seven renumbered above the ledger, rehearsed against production's shape |
+| 6 · the pending migrations | **done 21 Sep** — content applied by hand, seven files renumbered to the versions it recorded |
 
-Step 6 was the call nobody could make from the evidence alone, and it has been
-made: **renumber.** The alternative was applying the files by hand and letting
-a fourth version stop matching its filename, which is the fault this whole
-document exists about.
+Step 6 closed last and by a route this plan did not propose. It assumed the
+four pending files would be applied *by* the deploy, once the deploy worked.
+They were applied by hand instead, on 21 September, and once that had
+happened the only thing between the deploy and green was seven filenames.
 
-It was seven files and not four. `invites`, `referrals` and `function_grants`
-have their *content* in production, applied by hand on 21 September, but under
-versions the ledger assigned — `20260921002428`, `…2623`, `…2658` — and their
-*file* versions were as pending as the other four. Renumbering four would have
-left three files that `db push` still refuses, and the deploy still broken.
+The rule that **no pull request touching `supabase/` should be merged** is
+**lifted**, and [`ROLLBACK.md`](ROLLBACK.md) records the same thing at more
+length. It stood while a merge could send an unrehearsed migration to a schema
+nothing had reproduced. Both halves are answered: step 4 reproduces the schema
+and fingerprints it, `supabase/rehearse.sh` runs the pending set against that
+reproduction on every pull request, and after step 6 nothing in `migrations/`
+is pending at all.
 
-| was | is | why it moved |
-| --- | --- | --- |
-| `20260901000900_usage_atomic` | `20260921003000_usage_atomic` | never applied |
-| `20260901001000_group_columns_pinned` | `20260921003100_group_columns_pinned` | never applied |
-| `20260901001100_forms` | `20260921003200_forms` | never applied |
-| `20260901001200_invites` | `20260921003300_invites` | applied under `20260921002428` |
-| `20260901001300_access_log` | `20260921003400_access_log` | never applied |
-| `20260901001400_referrals` | `20260921003500_referrals` | applied under `20260921002623` |
-| `20260901001500_function_grants` | `20260921003600_function_grants` | applied under `20260921002658` |
-
-Relative order is unchanged, so a build from empty applies them in the same
-sequence it always did — and the six fingerprints are byte-identical before and
-after, which is what says the renumbering moved names and not schema.
-
-Three of the seven will therefore be applied to production a second time. Every
-one is idempotent by construction — `create table if not exists`, `create or
-replace function`, `drop policy if exists` then create, and revokes guarded by
-`to_regprocedure` — and re-applying them replaces the comment-stripped function
-bodies of step 4 with this repository's, which closes the one fingerprint that
-did not match. The seed in `invites` carries `on conflict (only_one) do
-nothing`, so it cannot reset the gate; that was checked rather than read, below.
-
-### Rehearsed, because reading a migration is not running one
-
-[`supabase/rehearse.sh`](supabase/rehearse.sh) builds production's shape from
-the snapshot, puts rows in it — the invite gate on, an account, a course —
-applies every migration numbered above the ledger's newest, and checks that the
-rows did not move.
-
-    · the migrations a deploy would apply, in the order it would apply them
-      ✓ 20260921003000_usage_atomic.sql
-      ✓ 20260921003100_group_columns_pinned.sql
-      ✓ 20260921003200_forms.sql
-      ✓ 20260921003300_invites.sql
-      ✓ 20260921003400_access_log.sql
-      ✓ 20260921003500_referrals.sql
-      ✓ 20260921003600_function_grants.sql
-    · the pilot's invite gate: t → t
-    · one account's courses:   1 → 1
-
-`check.sh` could not have caught a fault here, and that is the point of adding
-a second script rather than a case to the first: it builds from empty, where
-there is no live state to damage and no earlier migration to collide with. **A
-deploy asks a different question, and nothing in this repository had ever asked
-it** — which is part of why production's deploy failed on 18 September with
-nobody aware.
-
-Two controls, because a rehearsal that always passes proves nothing. A
-migration edited to reference a column that does not exist is reported `✗` with
-its error. A migration edited to write `invite_only = false` is reported as
-`t → f` and **STATE MOVED**. A third control was run first and was a bad one: a
-`not null` column added to `forms`, which succeeds against an empty table and
-told me nothing until I noticed the table it was added to had no rows in it.
-
-What this cannot prove is that the *ledger* accepts them: Postgres applies a
-file whatever it is called, and the refusal that was failing lives in Supabase's
-CLI. The filenames are what decide that, and `rollback.test.ts` pins them.
-
-### The freeze
-
-**It lifts with this change, and not before.** The instruction was: no pull
-request touching `supabase/` gets merged, because a merge sends pending
-migrations to a schema nothing has reproduced, or widens the gap by one more
-file. Both halves are now answered — the schema is reproduced and fingerprinted
-(step 4), and the pending migrations are rehearsed against it with live state
-in place. This pull request is the one that was always going to have to touch
-`supabase/` to end it. See [`ROLLBACK.md`](ROLLBACK.md).
+What replaces it is narrower and permanent, and is the one thing three days of
+this cost buys: **a migration whose version is not in the live ledger, and not
+greater than every version the ledger holds, cannot be deployed — whatever its
+SQL says.** `check.sh` and `rehearse.sh` both apply files in filename order to
+a database that has never seen them, so neither can see that fault.
+`supabase/ledger.snapshot` and the two guards over it are what can.
 
 What that rule is protecting is `supabase/migrations/`, because that directory
 is the only thing a merge can send anywhere. Steps 1 and 2 both landed under

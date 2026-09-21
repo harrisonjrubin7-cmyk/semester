@@ -125,8 +125,18 @@ failed. It failed where nobody was looking: on a branch record in the Supabase
 dashboard, with no issue, no red tick and no comment. **Production's schema
 deploy has been broken since 18 September and the repository could not tell.**
 
-Why it fails is in `MIGRATION-HISTORY.md` and is structural rather than a bad
-statement: the four migration files production has never had are numbered
+**Fixed on 21 September; the diagnosis below is kept because the mechanism is
+worth knowing and because the numbers in it are what those files were called at
+the time.** The four were applied to production by hand that afternoon, and the
+seven files stranded below the watermark — the four, plus `invites`, `referrals`
+and `function_grants` — were renamed to the versions the ledger recorded their
+content under, which empties the pending set. `MIGRATION-HISTORY.md` step 6 has
+the mapping, the reason it is a rename rather than a write to production, and
+the guard. **Nothing about that flips the branch record**: it reads what the
+last deploy left, and it changes when a merge runs the deploy again.
+
+Why it failed is in `MIGRATION-HISTORY.md` and is structural rather than a bad
+statement: the four migration files production had never had are numbered
 between `20260901000900` and `20260901001300`, and production has thirteen
 migrations
 applied with *later* numbers. Migrations run in timestamp order, so these are
@@ -152,8 +162,9 @@ settles it:
 - The bot's comment on a pull request at 17:43 read **"no changes detected in
   `supabase` directory"** — a third string, and on the append model above the
   one a correctly-set root would produce.
-- **A migration merged and did not arrive.** `20260901001300_access_log.sql`
-  landed on main at 17:34. Twenty-five minutes later production's history still
+- **A migration merged and did not arrive.** The access_log migration — called
+  `20260901001300_access_log.sql` then, renumbered `20260921143653` on
+  21 September — landed on main at 17:34. Twenty-five minutes later production's history still
   held eighteen rows, its newest still `20260911151826`, and `public.access_log`
   did not exist.
 
