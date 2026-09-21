@@ -31,12 +31,18 @@
 # *exactly* this list: an eleventh refusal, or one of these with different
 # wording, fails the run. Anything else applies under ON_ERROR_STOP as before.
 #
+# There were ten. `public.rls_auto_enable() does not exist` was the eleventh
+# line here for about an hour, until the step-4 fingerprint was widened to
+# cover functions and found that the object existed in production and in no
+# migration file anywhere. It is now created by `20260901000100_schema.sql`,
+# so that statement applies instead of being refused, and the line is gone.
+# This guard is what made that a failure rather than a silent improvement.
+#
 # Format: <migration filename>|<the ERROR text, verbatim>
 
 20260907134823_harden_security_definer_helpers.sql|function public.verified_student() does not exist
 20260907134823_harden_security_definer_helpers.sql|function public.classmate(uuid) does not exist
 20260907134823_harden_security_definer_helpers.sql|function public.in_class(text, text) does not exist
-20260907134823_harden_security_definer_helpers.sql|function public.rls_auto_enable() does not exist
 20260907141019_rls_initplan_and_policy_overlap.sql|policy "join your own classes" for table "enrollments" already exists
 20260907141019_rls_initplan_and_policy_overlap.sql|policy "change your own enrollment" for table "enrollments" already exists
 20260907141019_rls_initplan_and_policy_overlap.sql|policy "leave your own classes" for table "enrollments" already exists

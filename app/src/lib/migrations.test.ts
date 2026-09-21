@@ -81,7 +81,7 @@ describe('the recovered migrations still are what production ran', () => {
 /**
  * The replay's expected refusals, held to the files they name.
  *
- * `supabase/replay.expected` lists the ten statements that are refused when
+ * `supabase/replay.expected` lists the nine statements that are refused when
  * the recovered files are replayed on top of the base eight, and `check.sh`
  * requires the errors to match it exactly. Its header explains why each is a
  * refusal rather than a difference, and step 4 is where that claim is tested.
@@ -97,8 +97,16 @@ describe('replay.expected names only files that are there', () => {
     .map((l) => l.replace(/#.*/, '').trim())
     .filter(Boolean);
 
+  /*
+   * Nine, not ten. `function public.rls_auto_enable() does not exist` was here
+   * until the step-4 fingerprint was widened to cover functions and found that
+   * object in production and in no migration file at all — it is created by
+   * `20260901000100_schema.sql` now, so the statement applies rather than being
+   * refused. The number is asserted so that a line cannot be added back to this
+   * list without somebody saying why.
+   */
   it('reads the file rather than reporting an empty list', () => {
-    expect(lines).toHaveLength(10);
+    expect(lines).toHaveLength(9);
   });
 
   it('names a migration that exists, on every line', () => {

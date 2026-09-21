@@ -101,3 +101,76 @@ create trigger courses_touch before insert or update on public.courses
 drop trigger if exists state_touch on public.state;
 create trigger state_touch before insert or update on public.state
   for each row execute function public.touch_updated_at();
+
+-- ── RLS on by default, and where this came from ───────────────────────────
+--
+-- **Found in production on 21 September, not designed here.** `public.rls_auto_enable()`
+-- and the `ensure_rls` event trigger exist on the live project and were
+-- created by no migration in this directory — not these eight, not the ten
+-- recovered from the history table, not the four still pending. The shape of
+-- them is Supabase's dashboard toggle for RLS-on-by-default, so the likeliest
+-- story is that somebody switched it on and the switch wrote them.
+--
+-- They are written down here because a rebuild without them is **quietly less
+-- safe than the original**: a table added later would come up with row-level
+-- security off and no policy, and nothing about the rebuild would look wrong.
+-- `schema.snapshot.sql` makes the same argument about the same object — its
+-- first draft omitted the event trigger, and only a control caught it, because
+-- no count of tables or policies can see one.
+--
+-- How it was found: the step-4 fingerprint in `MIGRATION-HISTORY.md` compared
+-- columns, constraints and policies, and all three matched. Functions were not
+-- among the three, and when they were added the repaired file set had sixteen
+-- where the snapshot and production have seventeen. This is the seventeenth.
+-- A clean reading was a claim about the probe, and the probe was answering a
+-- narrower question than the one being asked.
+--
+-- Transcribed from the live definition rather than written: `search_path` is
+-- `pg_catalog` and not `''`, the body swallows its own errors into the log,
+-- and the schema list is a one-element `in ('public')`. None of that is how
+-- this repository writes a function, and all of it is what is actually
+-- running, which is the thing a record is for.
+create or replace function public.rls_auto_enable()
+returns event_trigger
+language plpgsql
+security definer
+set search_path to 'pg_catalog'
+as $$
+DECLARE
+  cmd record;
+BEGIN
+  FOR cmd IN
+    SELECT *
+    FROM pg_event_trigger_ddl_commands()
+    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+      AND object_type IN ('table','partitioned table')
+  LOOP
+     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN
+      BEGIN
+        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);
+        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;
+      EXCEPTION
+        WHEN OTHERS THEN
+          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;
+      END;
+     ELSE
+        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;
+     END IF;
+  END LOOP;
+END;
+$$;
+
+-- `20260907134823_harden_security_definer_helpers.sql` revokes EXECUTE on this
+-- from public, anon and authenticated — and that statement is one of the ten
+-- `replay.expected` records as refused, because until now the function it
+-- names did not exist here at all. It applies from this commit onward.
+revoke all on function public.rls_auto_enable() from public, anon, authenticated;
+
+-- Needs superuser, which is why it is last. Everything above this line applies
+-- without it; `supabase/check.sh` runs as `postgres` and gets it, and a
+-- developer applying these files by hand as a non-superuser will see this one
+-- line fail by name rather than silently not happen.
+drop event trigger if exists ensure_rls;
+create event trigger ensure_rls on ddl_command_end
+  when tag in ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')
+  execute function public.rls_auto_enable();

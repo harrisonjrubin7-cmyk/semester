@@ -12,7 +12,11 @@ one that fixes the deploy.**
 ## What is actually wrong
 
 Three separate faults, and they are usually described as one. Repairing them in
-the wrong order makes two of them worse.
+the wrong order makes two of them worse. A fourth was found on 21 September and
+has its own item below; a **fifth** was found the same evening, by step 4, and is
+written up there because the way it was found is the point: `public.rls_auto_enable()`
+and the `ensure_rls` event trigger exist in production and are created by no file
+in this directory. They are what make RLS-on-by-default true.
 
 **1 · Eight migrations have no SQL.** Production's
 `supabase_migrations.schema_migrations` records `schema`, `classmates`,
@@ -332,36 +336,84 @@ known to be large.
 `supabase/check.sh` passes: twenty-five migrations applied, twelve suites, 246
 checks. That is the necessary half.
 
-The sufficient half is the fingerprint, taken three ways over the same three
-questions — the md5 of every column with its type and nullability, of every
-constraint definition, and of every policy with its command and both
-expressions. **Set A** is the repaired file set in the order production applied
-it: the base eight, then the ten recovered, then `invites`, `referrals` and
-`function_grants`. The four files production does not have are excluded,
-because it does not have them. **Set B** is `schema.snapshot.sql`, step 1's
-capture. The third is a live read of production.
+The sufficient half is the fingerprint. **Set A** is the repaired file set in
+the order production applied it: the base eight, then the ten recovered, then
+`invites`, `referrals` and `function_grants`. The four files production does
+not have are excluded, because it does not have them. **Set B** is
+`schema.snapshot.sql`, step 1's capture. The third is a live read of
+production.
 
-| | columns | constraints | policies | tables |
-| --- | --- | --- | --- | --- |
-| A · repaired file set | `d2e04c94…` / 116 | `fa90f0a6…` / 67 | `cb91b8b5…` / 41 | 23 |
-| B · `schema.snapshot.sql` | `d2e04c94…` / 116 | `fa90f0a6…` / 67 | `cb91b8b5…` / 41 | 23 |
-| production, read live | `d2e04c94…` / 116 | `fa90f0a6…` / 67 | `cb91b8b5…` / 41 | 23 |
+| | columns | constraints | policies | functions | triggers | indexes |
+| --- | --- | --- | --- | --- | --- | --- |
+| A · repaired file set | `d2e04c94…` / 116 | `fa90f0a6…` / 67 | `cb91b8b5…` / 41 | `6faf3235…` / 17 | `70846a82…` / 10 | `5f952b72…` / 44 |
+| B · `schema.snapshot.sql` | `d2e04c94…` / 116 | `fa90f0a6…` / 67 | `cb91b8b5…` / 41 | `6faf3235…` / 17 | `70846a82…` / 10 | `5f952b72…` / 44 |
+| production, read live | `d2e04c94…` / 116 | `fa90f0a6…` / 67 | `cb91b8b5…` / 41 | `6faf3235…` / 17 | `70846a82…` / 10 | `5f952b72…` / 44 |
 
-**The diff is empty, which is this repair's acceptance criterion.** It also
-settles step 3's ten refusals: a refusal that had swallowed a real difference
-would show here, and none does.
+23 tables in all three. **The diff is empty, which is this repair's acceptance
+criterion.** It also settles step 3's refusals: one that had swallowed a real
+difference would show here, and none does.
+
+The function column compares names, identity arguments, `security definer` and
+`search_path`, with extension-owned functions excluded — `local.stub.sql`
+installs `pgcrypto` into `public` and production keeps it in `extensions`, so
+counting raw would compare thirty-six `pgcrypto` entries against none and
+report a difference that is the harness rather than the schema. Ruling that
+out is what the exclusion is for; the seventeen that remain are compared line
+for line and are identical.
 
 And the controls, because three identical rows are also what a probe that
 answers "same" to everything looks like:
 
-| control | columns | constraints | policies | tables |
-| --- | --- | --- | --- | --- |
-| the base eight alone, as if the ten had never been recovered | `54584b2e…` / 104 | `ad4b1d9d…` / 57 | `21690c6c…` / 37 | 19 |
-| every file in `migrations/`, filename order — the four pending included | `103ad560…` / 144 | `5b9b5627…` / 79 | `82c3636c…` / 50 | 26 |
+| control | columns | constraints | policies | functions | tables |
+| --- | --- | --- | --- | --- | --- |
+| the base eight alone, as if the ten had never been recovered | `54584b2e…` / 104 | `ad4b1d9d…` / 57 | `21690c6c…` / 37 | 9 | 19 |
+| every file in `migrations/`, filename order — the four pending included | `103ad560…` / 144 | `5b9b5627…` / 79 | `82c3636c…` / 50 | 22 | 26 |
 
-Both differ on all three, and the second differs in the direction fault 3
-predicts: the four unapplied files add three tables and twenty-eight columns
-production has never seen.
+Both differ on every column, and the second differs in the direction fault 3
+predicts: the four unapplied files add three tables, twenty-eight columns and
+five functions production has never seen — `note_access`, `count_call`,
+`form_open` and the rest.
+
+#### The three questions were not enough, and a seventeenth function is why
+
+This section said "the diff is empty" before it said anything about functions,
+and it was **wrong in the way this repository keeps catching itself**: the
+three fingerprints were columns, constraints and policies — the same three
+step 1 used — and none of them can see a function.
+
+Widening it found one. The repaired file set produced **sixteen** functions
+where the snapshot and production have seventeen, and the missing one is
+`public.rls_auto_enable()`: the function behind the `ensure_rls` event trigger,
+which is what makes RLS-on-by-default true on this project.
+
+**No migration in this directory creates it.** Not the base eight, not the ten
+recovered, not the four pending. The shape of it is Supabase's dashboard toggle
+for auto-enabling RLS, so the likeliest story is that somebody switched it on
+and the switch wrote the function and the trigger. It is a **fifth fault**, of
+the same family as fault 2 and found the same way: an object that exists in one
+database and in no record that could recreate it.
+
+It is also the most consequential one to have missed, and step 1 said so about
+the same object without either of us connecting it — *"a schema rebuilt without
+it would have been quietly less safe than the original, and no count of tables
+or policies would have shown it."* That was a note about the snapshot. It was
+true of the repaired file set as well, for four hours, while this document
+called the diff empty.
+
+`20260901000100_schema.sql` now carries both, transcribed from the live
+definition rather than written — `search_path` is `pg_catalog`, the body
+swallows its own errors into the log, the schema list is a one-element
+`in ('public')`. None of that is this repository's house style and all of it is
+what is running. It went into a base file rather than a new migration on
+purpose: the base eight are desired state, production's ledger already has that
+version, and a new file would have needed a version and run into step 6.
+
+One thing fell out of it that is worth naming as a result rather than a tidy-up.
+`replay.expected` had ten lines; `harden_security_definer_helpers` revokes
+EXECUTE on `public.rls_auto_enable()`, and that statement was being refused
+only because the function did not exist here. With the function present the
+statement applies, the refusal is gone, and **the guard failed the run rather
+than quietly accepting nine** — which is what it is for.
 
 **One caveat, stated rather than buried.** This ran on Postgres 16; the live
 project is 17, and `check.sh` said so loudly both times. The chain still holds,
@@ -451,6 +503,9 @@ project on every run is a different kind of thing from the tests in this
 repository, and it should be argued for on its own.
 
 ## Status
+
+Fault 5 is closed by the same commit that closed fault 2: `20260901000100_schema.sql`
+now carries the function and the trigger, transcribed from the live definition.
 
 | Step | State |
 | --- | --- |
