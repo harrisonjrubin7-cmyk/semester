@@ -23,11 +23,15 @@ import {
   resumeDocumentTitle,
   resumeMarkdown,
   resumeReadout,
+  SHARED_TAGS,
+  sharedTags,
   targetScore,
   type CareerContact,
   type CareerExperience,
   type Opportunity,
+  type SharedTag,
 } from '../lib/career';
+import { EMPTY_PATHWAY, readPathway } from '../lib/pathway';
 import { fromMarkdown } from '../lib/document';
 import { download } from '../lib/deliver';
 import { LIVE, safeUrl, type ApplyKind } from '../lib/apply';
@@ -121,12 +125,25 @@ const APPLY_KIND: Record<Opportunity['kind'], ApplyKind> = {
 export function Career() {
   const { state, account } = useStore();
   const scope = `${account?.id || 'device'}:${state.term}`;
-  return <Workspace key={scope} storageKey={`semester.career.v1:${scope}`} />;
+  /*
+   * The pathway library is read here and never written. It carries the one
+   * line the student wrote about their own education, which is the only thing
+   * "same school" could be answered against — and it is not term-scoped,
+   * because applying somewhere spans several of them.
+   */
+  return (
+    <Workspace
+      key={scope}
+      storageKey={`semester.career.v1:${scope}`}
+      pathwayKey={`semester.pathway.v1:${account?.id || 'device'}`}
+    />
+  );
 }
 
-function Workspace({ storageKey }: { storageKey: string }) {
+function Workspace({ storageKey, pathwayKey }: { storageKey: string; pathwayKey: string }) {
   const { state, dispatch } = useStore();
   const lib = useDeviceLibrary(storageKey, readCareer, EMPTY_CAREER);
+  const education = useDeviceLibrary(pathwayKey, readPathway, EMPTY_PATHWAY).value.profile.education;
 
   const [tab, setTab] = useState<Tab>('discover');
   const [query, setQuery] = useState('');
@@ -138,6 +155,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const [edit, setEdit] = useState<Opportunity | null>(null);
   const [experience, setExperience] = useState<CareerExperience | null>(null);
   const [person, setPerson] = useState<CareerContact | null>(null);
+  const [shared, setShared] = useState<SharedTag[]>([]);
   const [notice, setNotice] = useState('');
 
   const open = lib.value.opportunities.find((o) => o.id === selected);
@@ -165,6 +183,17 @@ function Workspace({ storageKey }: { storageKey: string }) {
   const ordered = byTarget
     ? [...matches].sort((a, b) => targetScore(b, lib.value) - targetScore(a, lib.value))
     : matches;
+
+  /*
+   * Which of the two shared attributes any saved contact actually has, and the
+   * contacts left after the ones that are switched on. Both sides of a tag are
+   * free text somebody typed — see `sharedWith` in `lib/career.ts`.
+   */
+  const offered = SHARED_TAGS.filter((t) => lib.value.contacts.some((c) => sharedTags(education, c).includes(t.id)));
+  const people = lib.value.contacts.filter((c) => {
+    const has = sharedTags(education, c);
+    return shared.every((t) => has.includes(t));
+  });
 
   const write = (title: string, body: string) =>
     dispatch({
@@ -802,7 +831,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
               }}
               style={{ marginTop: 'var(--sp-5)' }}
             >
-              {(['name', 'organization', 'interests', 'next'] as const).map((k) => (
+              {(['name', 'organization', 'school', 'major', 'interests', 'next'] as const).map((k) => (
                 <label key={k} style={field}>
                   <span style={{ fontSize: 'var(--type-sm)', ...secondLine(), textTransform: 'capitalize' }}>
                     {k === 'next' ? 'Next step' : k}
@@ -810,8 +839,8 @@ function Workspace({ storageKey }: { storageKey: string }) {
                   <input
                     className="input"
                     required={k === 'name'}
-                    maxLength={500}
-                    value={person[k]}
+                    maxLength={k === 'school' || k === 'major' ? 200 : 500}
+                    value={person[k] ?? ''}
                     onChange={(e) => setPerson({ ...person, [k]: e.target.value })}
                     style={input}
                   />
@@ -864,7 +893,33 @@ function Workspace({ storageKey }: { storageKey: string }) {
             </form>
           )}
 
-          {lib.value.contacts.map((c) => (
+          {/*
+           * Offered only where there is something to filter to. A chip that
+           * always appears and always empties the list is a control that
+           * teaches you not to press it — and these can only mean anything
+           * once a contact carries a school or a course, and the student has
+           * written down their own under Pathway → Profile.
+           */}
+          {offered.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+              {offered.map((t) => {
+                const on = shared.includes(t.id);
+                return (
+                  <ActionButton
+                    key={t.id}
+                    onClick={() => setShared(on ? shared.filter((x) => x !== t.id) : [...shared, t.id])}
+                    aria-pressed={on}
+                    tone={on ? 'primary' : 'secondary'}
+                    style={{ flex: '1 1 auto' }}
+                  >
+                    {t.label}
+                  </ActionButton>
+                );
+              })}
+            </div>
+          )}
+
+          {people.map((c) => (
             <section
               key={c.id}
               style={{
@@ -878,6 +933,14 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 {c.name}
               </SectionLabel>
               <p style={line}>{c.organization}</p>
+              {sharedTags(education, c).length > 0 && (
+                <p style={line}>
+                  {SHARED_TAGS.filter((t) => sharedTags(education, c).includes(t.id))
+                    .map((t) => t.label)
+                    .join(' · ')}{' '}
+                  — as you and they wrote it down
+                </p>
+              )}
               {c.interests && <p style={body}>{c.interests}</p>}
               {c.notes && <p style={{ ...body, whiteSpace: 'pre-wrap' }}>{c.notes}</p>}
               <p style={line}>

@@ -7,6 +7,8 @@ import {
   readCareer,
   resumeDocumentTitle,
   resumeReadout,
+  sharedTags,
+  sharedWith,
   targetScore,
   targetTerms,
   type CareerContact,
@@ -173,5 +175,41 @@ describe('what the student says they are looking for', () => {
 
   it('scores nothing at all when nothing has been said', () => {
     expect(targetScore(listing({ title: 'Analyst', location: 'Nashville' }), EMPTY_CAREER)).toBe(0);
+  });
+});
+
+describe('what a contact has in common with the student', () => {
+  const EDUCATION = 'Vanderbilt University, B.A. Economics and Political Science, 2029';
+
+  it('matches a school or a course the student wrote into their own line', () => {
+    expect(sharedWith(EDUCATION, 'Vanderbilt University')).toBe(true);
+    expect(sharedWith(EDUCATION, 'economics')).toBe(true);
+    expect(sharedWith(EDUCATION, 'Duke')).toBe(false);
+  });
+
+  /*
+   * Everybody has nothing in common with a blank. A tag that matched on
+   * emptiness would offer to filter a list of people down to the ones nothing
+   * is known about, which is the opposite of what it is for.
+   */
+  it('shares nothing with an empty field on either side', () => {
+    expect(sharedWith(EDUCATION, '')).toBe(false);
+    expect(sharedWith(EDUCATION, '   ')).toBe(false);
+    expect(sharedWith(EDUCATION, undefined)).toBe(false);
+    expect(sharedWith('', 'Vanderbilt University')).toBe(false);
+    expect(sharedWith('   ', 'Vanderbilt University')).toBe(false);
+  });
+
+  it('reads a note saved before the two fields existed rather than refusing it', () => {
+    const before = contact('Priya');
+    expect(readCareer({ ...EMPTY_CAREER, contacts: [before] }).contacts[0].school).toBeUndefined();
+    expect(sharedTags(EDUCATION, before)).toEqual([]);
+  });
+
+  it('names both where both overlap, and refuses an overlong one', () => {
+    const both = { ...contact('Priya'), school: 'Vanderbilt University', major: 'Economics' };
+    expect(sharedTags(EDUCATION, both)).toEqual(['school', 'major']);
+    expect(sharedTags(EDUCATION, { ...both, major: 'Chemistry' })).toEqual(['school']);
+    expect(() => readCareer({ ...EMPTY_CAREER, contacts: [{ ...both, major: 'x'.repeat(201) }] })).toThrow();
   });
 });

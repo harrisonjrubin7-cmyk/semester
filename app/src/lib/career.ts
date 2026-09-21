@@ -91,6 +91,15 @@ export interface CareerContact {
   next: string;
   nextDate: string;
   notes: string;
+  /**
+   * Where they studied and what in, as the student wrote it down.
+   *
+   * Optional, and absent from every note saved before these existed. Both are
+   * one person's account of another person — nobody has confirmed either, and
+   * a note that says "same school" says that two lines of free text overlap.
+   */
+  school?: string;
+  major?: string;
 }
 
 export interface CareerLibrary {
@@ -271,6 +280,7 @@ export function readCareer(v: unknown): CareerLibrary {
     const shaped =
       obj(c) &&
       (['id', 'name', 'organization', 'interests', 'next'] as const).every((k) => textValue(c[k], 500)) &&
+      (['school', 'major'] as const).every((k) => textValue(c[k] ?? '', 200)) &&
       CONTACT_PERMISSIONS.includes(c.permission) &&
       isoDay(c.nextDate) &&
       textValue(c.notes, CAREER_LIMITS.notes);
@@ -315,6 +325,42 @@ export function targetScore(o: Opportunity, c: CareerLibrary): number {
     targetTerms(c.targetLocations).filter((t) => where.includes(t)).length
   );
 }
+
+/**
+ * The two things a contact note can have in common with the student.
+ *
+ * Two, and they stop here. A tag for every field would turn a private list of
+ * people into a set of axes to sort people on, which is the shape of every
+ * network product that ends up ranking the people in it.
+ */
+export const SHARED_TAGS = [
+  { id: 'school' as const, label: 'Same school' },
+  { id: 'major' as const, label: 'Same major' },
+];
+
+export type SharedTag = (typeof SHARED_TAGS)[number]['id'];
+
+/**
+ * Whether what somebody wrote about a contact appears in what they wrote about
+ * themselves.
+ *
+ * Both sides are free text one student typed — their own line under Pathway →
+ * Profile, and the school or course they noted against a person. So this is a
+ * substring test and is not pretending to be more: it says those two lines
+ * overlap, which is the whole claim the chip makes.
+ *
+ * An empty field on either side shares nothing. Everybody has no school in
+ * common with a blank, and a chip that matched on emptiness would offer to
+ * filter a list down to the people nothing is known about.
+ */
+export const sharedWith = (education: string, value: string | undefined): boolean => {
+  const v = (value ?? '').trim().toLowerCase();
+  return !!v && !!education.trim() && education.toLowerCase().includes(v);
+};
+
+/** Which of the two this contact has in common, for the card and the filter. */
+export const sharedTags = (education: string, c: CareerContact): SharedTag[] =>
+  SHARED_TAGS.filter((t) => sharedWith(education, c[t.id])).map((t) => t.id);
 
 /** Whether anything has been recorded for the ordering above to read. */
 export const hasTargets = (c: CareerLibrary): boolean =>

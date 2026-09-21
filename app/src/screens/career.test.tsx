@@ -4,7 +4,14 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { StoreProvider } from '../state/store';
 import { loadSeed } from '../data/seed';
-import { EMPTY_CAREER, newOpportunity, type CareerLibrary, type Opportunity } from '../lib/career';
+import {
+  EMPTY_CAREER,
+  newOpportunity,
+  type CareerContact,
+  type CareerLibrary,
+  type Opportunity,
+} from '../lib/career';
+import { EMPTY_PATHWAY } from '../lib/pathway';
 import { Career } from './Career';
 
 /**
@@ -19,8 +26,9 @@ import { Career } from './Career';
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-/** The key `Career` builds with no account signed in, on the default term. */
+/** The keys `Career` builds with no account signed in, on the default term. */
 const KEY = 'semester.career.v1:device:2026FA';
+const PATHWAY_KEY = 'semester.pathway.v1:device';
 
 let host: HTMLDivElement;
 let root: Root;
@@ -29,8 +37,12 @@ beforeAll(async () => {
   await loadSeed();
 });
 
-const mount = async (lib: Partial<CareerLibrary> = {}) => {
+const mount = async (lib: Partial<CareerLibrary> = {}, education = '') => {
   localStorage.setItem(KEY, JSON.stringify({ ...EMPTY_CAREER, ...lib }));
+  localStorage.setItem(
+    PATHWAY_KEY,
+    JSON.stringify({ ...EMPTY_PATHWAY, profile: { ...EMPTY_PATHWAY.profile, education } }),
+  );
   await act(async () => {
     root.render(
       <StoreProvider>
@@ -49,6 +61,22 @@ const cards = () =>
   );
 
 const listing = (patch: Partial<Opportunity>): Opportunity => ({ ...newOpportunity(), ...patch });
+
+const person = (name: string, patch: Partial<CareerContact> = {}): CareerContact => ({
+  id: name,
+  name,
+  organization: '',
+  interests: '',
+  permission: 'Not requested',
+  next: '',
+  nextDate: '',
+  notes: '',
+  ...patch,
+});
+
+/** The names on the contact cards, in the order they are drawn. */
+const contacts = () =>
+  [...host.querySelectorAll('section h2, section .section-label')].map((h) => h.textContent?.trim());
 
 const press = async (label: string) => {
   const button = [...host.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
@@ -137,5 +165,58 @@ describe('ordering Discover by what you said you want', () => {
     await press('Closest to my targets');
     expect(text()).toContain('Nothing to sort by yet');
     expect(cards()).toEqual(['Kitchen porter', 'Policy analyst', 'Research assistant']);
+  });
+});
+
+describe('filtering contacts by what you have in common', () => {
+  const EDUCATION = 'Vanderbilt University, B.A. Economics';
+  const saved = [
+    person('Priya', { school: 'Vanderbilt University', major: 'Economics' }),
+    person('Tom', { school: 'Vanderbilt University', major: 'Chemistry' }),
+    person('Ada', { school: 'Duke University' }),
+  ];
+
+  it('offers no chips at all when nothing is shared', async () => {
+    await mount({ contacts: saved });
+    await press('Contacts');
+    expect(text()).not.toContain('Same school');
+    expect(contacts()).toEqual(['Priya', 'Tom', 'Ada']);
+  });
+
+  it('offers only the chips some saved contact answers to', async () => {
+    await mount({ contacts: [person('Ada', { school: 'Vanderbilt University' })] }, EDUCATION);
+    await press('Contacts');
+    expect(text()).toContain('Same school');
+    // Nobody has recorded a course that matches, so there is nothing to filter
+    // to and the chip is not drawn.
+    expect(text()).not.toContain('Same major');
+  });
+
+  it('narrows the list, and narrows it further with both on', async () => {
+    await mount({ contacts: saved }, EDUCATION);
+    await press('Contacts');
+    expect(contacts()).toEqual(['Priya', 'Tom', 'Ada']);
+
+    await press('Same school');
+    expect(contacts()).toEqual(['Priya', 'Tom']);
+
+    await press('Same major');
+    expect(contacts()).toEqual(['Priya']);
+
+    await press('Same school');
+    expect(contacts()).toEqual(['Priya']);
+  });
+
+  it('says on the card that the tag is what two people typed, not a check', async () => {
+    await mount({ contacts: [saved[0]] }, EDUCATION);
+    await press('Contacts');
+    const card = [...host.querySelectorAll('section')]
+      .map((el) => (el.textContent ?? '').replace(/\s+/g, ' '))
+      .find((t) => t.includes('Priya'));
+    expect(card, 'no card for Priya').toBeTruthy();
+    expect(card).toContain('Same school · Same major — as you and they wrote it down');
+    // The screen's own preamble uses "verified alumni" to say it has none; the
+    // card must not claim one, so this reads the card rather than the page.
+    expect(card).not.toMatch(/verified|confirmed/i);
   });
 });
