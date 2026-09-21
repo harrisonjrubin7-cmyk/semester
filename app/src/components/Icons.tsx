@@ -171,6 +171,7 @@ export const PathwayIcon = svg('pathway');
 export const CareerIcon = svg('career');
 export const FamilyIcon = svg('family');
 export const AthleticsIcon = svg('athletics');
+export const NilIcon = svg('nil');
 export const ClocksIcon = svg('clocks');
 export const LinksIcon = svg('links');
 export const AccountIcon = svg('account');

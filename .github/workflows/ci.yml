@@ -53,7 +53,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v4
         with:
@@ -531,7 +531,7 @@ jobs:
       GITLEAKS_VERSION: 8.28.0
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # The action diffs against the parent commit, which a depth-1
           # checkout does not have. This is what that needs — not a full
@@ -605,7 +605,7 @@ jobs:
     # is "Read and write".
     continue-on-error: true
     steps:
-      - uses: actions/github-script@v7
+      - uses: actions/github-script@v9
         env:
           BUILD: ${{ needs.build.result }}
           # A committed key is the failure on main that most needs somebody

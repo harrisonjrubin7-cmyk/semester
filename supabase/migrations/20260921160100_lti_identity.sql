@@ -107,6 +107,11 @@ revoke all on public.lti_link_ticket from anon, authenticated;
 
 create index if not exists lti_link_ticket_expires_at_idx on public.lti_link_ticket (expires_at);
 
+-- The covering index this table's cascade needs is not here. It is its own
+-- migration — `20260921174500_index_lti_link_ticket_user.sql` — which is
+-- where it stayed after two sessions added it twice, under two names, in the
+-- same afternoon. See that file for why the column needs one.
+
 comment on table public.lti_link_ticket is
   'Proof that a launch was validated, spent once when a student attaches an account they already had.';
 

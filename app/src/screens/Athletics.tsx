@@ -9,7 +9,7 @@ import {
   ATHLETIC_KINDS,
   ATHLETICS_LIMITS,
   EMPTY_ATHLETICS,
-  absenceDraft,
+  athleticsKey,
   eventDays,
   overlaps,
   readAthletics,
@@ -19,6 +19,10 @@ import { download } from '../lib/deliver';
 import { fromMarkdown } from '../lib/document';
 import { dateToIso, decorateItem } from '../lib/date';
 import { lengthOf, railFor } from '../lib/select';
+import { TravelPack } from '../components/TravelPack';
+import { AbsenceNotices } from '../components/AbsenceNotices';
+import { CaraLog } from '../components/CaraLog';
+import { EligibilityCheck } from '../components/EligibilityCheck';
 
 /**
  * A season beside the coursework it collides with.
@@ -47,6 +51,8 @@ import { lengthOf, railFor } from '../lib/select';
 const TABS = [
   { id: 'schedule' as const, label: 'Schedule' },
   { id: 'edit' as const, label: 'Add' },
+  { id: 'hours' as const, label: 'Hours' },
+  { id: 'eligibility' as const, label: 'Eligibility' },
   { id: 'data' as const, label: 'Import' },
 ];
 
@@ -66,8 +72,11 @@ const fresh = (): AthleticEvent => ({
 
 export function Athletics() {
   const { state, account } = useStore();
-  const scope = `${account?.id || 'device'}:${state.term}`;
-  return <Workspace key={scope} storageKey={`semester.athletics.v1:${scope}`} />;
+  // The key is `lib/athletics.ts`'s, not this screen's: the week-ahead
+  // arithmetic reads the same library, and two spellings of one key is a
+  // planner that reports an empty season.
+  const key = athleticsKey(account?.id, state.term);
+  return <Workspace key={key} storageKey={key} />;
 }
 
 function Workspace({ storageKey }: { storageKey: string }) {
@@ -130,7 +139,10 @@ function Workspace({ storageKey }: { storageKey: string }) {
 
   const save = () => {
     try {
-      const next = { version: 1 as const, events: [...lib.value.events.filter((e) => e.id !== draft.id), draft] };
+      const next = {
+        ...lib.value,
+        events: [...lib.value.events.filter((e) => e.id !== draft.id), draft],
+      };
       readAthletics(next);
       if (lib.update(next)) {
         setChosen(draft.id);
@@ -190,7 +202,12 @@ function Workspace({ storageKey }: { storageKey: string }) {
       <Segmented
         options={TABS.map((t) => ({
           id: t.id,
-          label: t.id === 'schedule' ? `${t.label} (${lib.value.events.length})` : t.label,
+          label:
+            t.id === 'schedule'
+              ? `${t.label} (${lib.value.events.length})`
+              : t.id === 'hours' && lib.value.cara.length > 0
+                ? `${t.label} (${lib.value.cara.length})`
+                : t.label,
         }))}
         value={tab}
         onChange={setTab}
@@ -317,6 +334,18 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 </>
               )}
 
+              <AbsenceNotices event={selected} conflicts={conflicts(selected)} />
+
+              {(selected.kind === 'Travel' || selected.kind === 'Competition') && (
+                /*
+                 * Offered for the two kinds that take somebody off campus.
+                 * A practice is two hours in a gym with the campus wifi in it;
+                 * queueing a course's audio for one would fill a phone to
+                 * solve a problem nobody has.
+                 */
+                <TravelPack event={selected} />
+              )}
+
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-4)', marginTop: 'var(--sp-6)' }}>
                 <ActionButton
                   onClick={() => {
@@ -330,23 +359,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                 <ActionButton onClick={() => addToCalendar(selected)} style={{ flex: '1 1 auto' }}>
                   Add to calendar
                 </ActionButton>
-                <ActionButton
-                  onClick={() =>
-                    dispatch({
-                      type: 'makeDocument',
-                      open: true,
-                      doc: {
-                        title: `${selected.title} · Academic absence request`,
-                        subtitle: 'Draft for review · Not sent, and not an official authorization',
-                        courseId: null,
-                        blocks: fromMarkdown(absenceDraft(selected, conflicts(selected))),
-                      },
-                    })
-                  }
-                  style={{ flex: '1 1 auto' }}
-                >
-                  Draft the request
-                </ActionButton>
+
                 <ActionButton
                   onClick={() =>
                     dispatch({
@@ -364,7 +377,7 @@ function Workspace({ storageKey }: { storageKey: string }) {
                             conflicts(selected).map((c) => `- ${c}`).join('\n'),
                             '',
                             '## Before departure',
-                            '- Download course readings and guides from Files.',
+                            '- Download this trip\'s lessons, recordings and files with *Take it offline* on the Athletics screen, while you still have a connection.',
                             '- Finish anything time-sensitive.',
                             '- Confirm assessment arrangements.',
                             '',
@@ -473,6 +486,14 @@ function Workspace({ storageKey }: { storageKey: string }) {
             </button>
           </fieldset>
         </form>
+      )}
+
+      {tab === 'hours' && (
+        <CaraLog value={lib.value} update={lib.update} blocked={lib.blocked} />
+      )}
+
+      {tab === 'eligibility' && (
+        <EligibilityCheck value={lib.value} update={lib.update} blocked={lib.blocked} />
       )}
 
       {tab === 'data' && (

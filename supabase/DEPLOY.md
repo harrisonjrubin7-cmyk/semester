@@ -7,8 +7,33 @@ are missing.
 
 ## What is live
 
-    claude   ACTIVE, v1, verify_jwt off
-    push     ACTIVE, v1, verify_jwt off
+Read off the project at 16:05 UTC on 21 September 2026, not remembered:
+
+    claude     ACTIVE, v19, verify_jwt off
+    push       ACTIVE, v16, verify_jwt off
+    calendar   ACTIVE, v12, verify_jwt off
+    fetchcal   ACTIVE, v13, verify_jwt off
+    canvas     ACTIVE,  v4, verify_jwt off
+    lti        ACTIVE,  v1, verify_jwt off
+
+**This file said two, at v1, and three of the other four were filed below under
+"Not deployed yet".** `fetchcal` had been live since 9 September when that was
+written — twelve days — and `calendar` since the 8th and was named nowhere at
+all. `lti` went up at 15:48 on the 21st, about two hours after its own section
+said it had not.
+
+The cause is not forgetfulness, and that is why the rows above carry a
+timestamp. `functions.yml` deploys on every push to main that touches a
+function's directory, so **a function directory on main is a deployed
+function**: "not deployed yet" is true only until the pull request merges, and
+then it is false with nobody having edited anything. A hand-written record
+cannot win that race. `app/src/lib/deployfunctions.test.ts` is what holds this
+section to the directories instead — it cannot see the project, so it checks
+the one thing it can: that every function here is accounted for, and that none
+of them is described as unshipped.
+
+The version numbers are the part that will go stale first and the part that
+matters least; the deployed-or-not column is the one that misled.
 
 ## Deploying a function without a laptop
 
@@ -28,7 +53,7 @@ deploys nothing rather than failing main.
 The project is read from the `SUPABASE_PROJECT_REF` variable if set, and
 otherwise off `VITE_SUPABASE_URL` — so a fork deploys to its own project.
 
-## Not deployed yet: `fetchcal`
+## Live: `fetchcal`
 
     supabase functions deploy fetchcal
 
@@ -38,8 +63,10 @@ on behalf of a signed-in device — the Connect screen's *Subscribe* button.
 Why it has to exist at all: a calendar server sends no CORS headers, so the
 browser is refused before the request leaves. The dev server forwards that one
 request itself (`/feed?url=` in `app/vite.config.ts`), which is why pasting a
-Brightspace or Outlook link works on a laptop running `npm run dev` and, until
-this is deployed, fails on the built app.
+Brightspace or Outlook link works on a laptop running `npm run dev`. On the
+built app it works too, through this function. For twelve days this paragraph
+ended "and, until this is deployed, fails on the built app", which told anybody
+reading it that a working feature was broken.
 
 It takes no secret and needs no SQL. It verifies the caller's own JWT, refuses
 anything that is not https to a public host, refuses a redirect that lands
@@ -53,11 +80,12 @@ person's calendar.
 function checks the token itself, and the platform check would reject the CORS
 preflight, which carries no `Authorization` header.
 
-Until it is deployed the app degrades rather than breaks — links from hosts
-that do allow the browser still work, the screen says what failed, and adding a
-downloaded `.ics` needs no network at all.
+Were it ever down or rolled back, the app degrades rather than breaks — links
+from hosts that do allow the browser still work, the screen says what failed,
+and adding a downloaded `.ics` needs no network at all. That is worth keeping
+written down; it is a fallback, not the current state.
 
-## Not deployed yet: `canvas`
+## Live: `canvas`
 
     supabase functions deploy canvas
 
@@ -96,9 +124,9 @@ It takes no secret of its own and needs no SQL. `verify_jwt` should be **off**,
 for the same reason as the others: the function checks the token itself, and
 the platform check would reject the CORS preflight.
 
-Until it is deployed the app says so and points at the calendar link, which
-needs no server at all and carries most of the same dates — just not whether
-you did them.
+Were it down, the app says so and points at the calendar link, which needs no
+server at all and carries most of the same dates — just not whether you did
+them. Again: a fallback, not where things stand.
 
 `verify_jwt` is off on both, and on both it is the platform check that is off,
 not authentication:
@@ -114,7 +142,7 @@ not authentication:
   returns 503 to everything, so a half-finished deploy is silent rather than
   open.
 
-## Not deployed yet: `lti`
+## Live: `lti`
 
     supabase functions deploy lti --no-verify-jwt
 
@@ -304,9 +332,13 @@ whether that person shares a class with you.
   against whatever the caller had set. Now `''`; its body calls only `now()`.
 - **`touch_updated_at` and `rls_auto_enable`** lost their EXECUTE grants.
   Neither needs one: Postgres checks that privilege when a trigger is created,
-  not each time it fires. `rls_auto_enable` is Supabase's own event-trigger
-  function and is not defined anywhere in this repo, so only the live grant
-  changed.
+  not each time it fires. This entry used to add that `rls_auto_enable` "is
+  Supabase's own event-trigger function and is not defined anywhere in this
+  repo, so only the live grant changed". The second half was true and the first
+  half is why: Supabase's documentation offers the function and its `ensure_rls`
+  trigger as a recipe to run yourself, under *Auto-enable RLS for new tables*,
+  and somebody ran it here. `20260901000100_schema.sql` creates it now, so a
+  rebuild gets the trigger and the revoke above has something to close.
 - **`groups.sql`** got the same treatment ahead of time. It is not applied to
   the live project, and it had no grants at all — so its three helpers would
   have inherited the same default EXECUTE and appeared as three more

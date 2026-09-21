@@ -47,6 +47,16 @@ import { join } from 'node:path';
  * history* and dangling by design, which is why this reads only under
  * `supabase/` and says so rather than adding an exception list somebody would
  * later widen.
+ *
+ * The files *inside* `history/` are out of scope for the same reason, and it is
+ * the stronger case. They are byte-for-byte transcriptions of what production
+ * ran, fingerprinted in [`MANIFEST`](../../../supabase/history/MANIFEST) and
+ * re-checked by `migrationhistory.test.ts`. `20260921144711` names
+ * `20260901001100_forms.sql`, which is what `forms` was called on the afternoon
+ * it ran; correcting that to today's number would make the file a better
+ * citation and a false record, and would fail its own md5. A record's prose is
+ * part of the record. They are still resolved *against*, so a citation pointing
+ * into `history/` counts — what is excluded is reading them as prose to check.
  */
 
 const ROOT = join(process.cwd(), '..');
@@ -60,7 +70,12 @@ function readable(dir: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const at = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...readable(at));
+    // `history/` holds transcriptions, not prose somebody may correct. See the
+    // header. `MANIFEST` is read, because it is this repository's own writing.
+    if (entry.isDirectory()) {
+      if (entry.name !== 'history') out.push(...readable(at));
+      else out.push(join(at, 'MANIFEST'), join(at, 'README.md'));
+    }
     else if (/\.(sql|md|sh|ts|toml|snapshot)$/.test(entry.name) || entry.name === 'MANIFEST') {
       out.push(at);
     }
