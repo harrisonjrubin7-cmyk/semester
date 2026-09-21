@@ -480,6 +480,32 @@ migration above the watermark stays green, a truncated snapshot goes red rather
 than reporting all clear, and a file moved onto another file's row goes red
 naming both.
 
+#### The renamed set still builds production
+
+Renaming changes the order files apply in, so the fingerprint was taken again
+afterwards — with step 4's own instrument, `supabase/fingerprint.sql`, rather
+than a new one written to flatter the change. All fifteen files over
+`local.stub.sql` on a throwaway cluster, against the live project:
+
+| | built from `migrations/` | production |
+| --- | --- | --- |
+| columns | `2c9112d6…` | `2c9112d6…` |
+| constraints | `9ea3a171…` | `9ea3a171…` |
+| indexes | `05e7e9e3…` | `05e7e9e3…` |
+| functions | `48a6a903…` | `7e98a9ef…` |
+| code (comments out) | `1a2b60bc…` | `1a2b60bc…` |
+| policies | `a85e79d0…` | `a85e79d0…` |
+
+Five of six, and the sixth is the difference step 4 already named and explained:
+functions were applied to production with their comments stripped, so
+`pg_get_functiondef` differs while the code with comments removed does not.
+
+This is a stronger reading than step 4's, and not because it is a better
+instrument — it is the same one. Step 4 measured eleven files against
+production as it stood that morning. This measures fifteen against production
+as it stands now, four migrations later, and lands on the same five numbers
+with the same single explained exception.
+
 #### What it still does not do
 
 **Nothing here flips the status.** The branch record reads what the last deploy
