@@ -1,3 +1,134 @@
+# One app — the twenty-fourth pass: the row was struck in prose and left standing in code
+
+Against `main` at `423e5ca`, rebased onto `89306af` — two merges arrived while
+this was being written and neither touched `Profile.tsx`, `lib/oneroute.test.ts`
+or this file. **<!--screens-->fifty-eight<!--/--> destinations**, unchanged. No
+merge, no destination removed. One control cut, one exemption emptied.
+
+Asked to settle `account` on Profile — the row this file has carried since the
+nineteenth pass as *the owner's to name*, and the only entry in
+`lib/oneroute.test.ts`'s `ARGUED`.
+
+## It reads as already closed, and it was not
+
+The twenty-third pass's To do strikes it: *"~~`account` on Profile.~~ **Closed**
+by the twenty-second pass's T1."* That is two rows with one name, and the strike
+took the wrong one.
+
+- **The cluster question** — should `account` and `profile` be one destination?
+  Closed, by `Profile.tsx`'s own docstring, exactly as the twenty-second pass's
+  T1 says. A hub that owns one field and points at four screens is the skill's
+  answer already taken.
+- **The pair inside the screen** — should one screen offer the `account` door
+  twice? Left standing by that same pass, four sections later, under *"The one
+  pair left standing"*, whose To do says so in as many words: *"the owner's,
+  still, and now one line to delete."*
+
+Prose was struck and code was not. Nothing in the tree changed when the line was
+crossed out, and `ARGUED` went on naming the pair — which is the argument for
+making the twenty-second pass's answer a test instead of a paragraph, made over
+again by the next pass, by accident.
+
+## T1 — the button goes, the row stays
+
+`screens/Profile.tsx` offered `account` at two sites that were on screen
+together:
+
+- **the hero**, an `ActionButton` whose label was the sign-in state — *"Manage
+  your account"*, *"Sign in"*, or *"How this device works"*;
+- **the list**, a `NavRow` labelled "Account" under "Your account and your
+  data".
+
+The row is the one that stays, and on the file's own principle rather than on
+taste: *"It owns exactly one thing: **your name** … Signing in belongs to
+Account, because that screen explains what syncs and what does not."* A primary
+button in the hero is the screen trying to be the place you sign in. The row
+points, which is what every other line on this screen does.
+
+The reasoning is at the site, in the space the button occupied, rather than
+here — a reader deleting it next year is standing in `Profile.tsx`, not in this
+file.
+
+## T2 — the button knew one thing the row did not, and it was the honest one
+
+The naive cut loses a state. The button carried three labels and the row carried
+two sentences, and the third label is the one that matters:
+
+| | the button said | the row said |
+| --- | --- | --- |
+| signed in | Manage your account | Signing in, syncing, and signing out |
+| signed out, sign-in configured | Sign in | Sign in so two devices hold one semester |
+| **no sign-in in this build** | **How this device works** | *Sign in so two devices hold one semester* |
+
+`cloudConfigured` is false on a build with no backend switched on. Deleting the
+button on its own would leave the row promising a student that "two devices hold
+one semester" on a copy that cannot do it — the shape `components/Credentials.tsx`
+exists to refuse. So the third state moved into the row's `sub` rather than going
+with the button: *"What this copy does without an account."* Three states out,
+three states in; the door halved, the honesty did not.
+
+## T3 — the guard fired before the line was deleted
+
+`lib/oneroute.test.ts` has two live cases and the second is the one nobody
+expects to need. Removing the button and leaving `ARGUED` alone:
+
+    ✓ finds no screen offering one destination twice
+    × still has every argued pair, so the list cannot rot quietly
+      AssertionError: expected [] to include
+        'screens/Profile.tsx · Profile · account'
+
+That is an exemption refusing to outlive the thing it excused — the control the
+twenty-second pass planted, doing the work in earnest one pass later, on the
+same row this file's prose had already crossed out.
+
+With the array emptied, and against a planted fault:
+
+| | Expected | Got |
+| --- | --- | --- |
+| button gone, `ARGUED` emptied | green | green — 7 of 7 |
+| **control:** a second `maps` offer planted inside one `Housing` component | **red** | **red** — `screens/Housing.tsx · HousingDetails · maps (lines 150, 151)` |
+
+The second row is what makes the first mean anything. An empty allowlist and a
+clean run is also exactly what a test that had stopped looking would produce.
+
+## Driven, not reasoned about
+
+At 420×900, seeded:
+
+    old ActionButton gone: true
+    account row: "AccountWhat this copy does without an account"
+    pageerrors: 0 []
+
+The dev build has no backend switched on, so the row the browser drew is the
+third state — the one that had no sentence of its own until this pass, and the
+one a naive cut would have turned into a promise. The state that needed the care
+is the state the screenshot happened to land on.
+
+## Gates
+
+`tsc` clean · lint ok · **10,884 tests pass across 534 files** ·
+zones clean · shuffle clean · production build clean · five cold boots clean.
+
+The seven were run twice: at `423e5ca` (10,860 across 532) and again after the
+rebase, which is where the figures above come from. The two merges brought two
+files and twenty-four tests of their own.
+
+## To do
+
+- **`offerable()`'s default is still the ungated registry** — carried from the
+  twenty-first and the twenty-third. The one caller passes a pool; a second
+  would get the registry unless it said otherwise.
+- **The dead-export question is still open and still unasked**, carried from the
+  twenty-third, which threw away two instruments at it.
+- The `ItemRow` ARIA widening, carried from the twentieth pass's T5 and the
+  twenty-second: `Row` already accepts `role` and `ariaChecked`, so passing them
+  through would bring `MuteCourses` and `DesignEditor` onto the shared row.
+- **Nothing on the destinations row, and now nothing exempted from it either.**
+  `ARGUED` is empty for the first time since it was written, so the next entry
+  in it is a new claim rather than an inherited one.
+
+---
+
 # One app — the twenty-third pass: a record of where you have been, that nothing has ever read
 
 Against `main` at `1d1b0bc`. **<!--screens-->fifty-eight<!--/--> destinations**,
