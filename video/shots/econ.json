@@ -1,0 +1,118 @@
+{
+  "course": "econ",
+  "id": "econ-podcast",
+  "shots": [
+    {
+      "slot": "econ/chapter-0",
+      "at": 0,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Cold open",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-1",
+      "at": 35,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "How to actually pass",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-2",
+      "at": 140,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "What economics is",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-3",
+      "at": 232,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Optimisation and opportunity cost",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-4",
+      "at": 328,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Supply, demand, equilibrium",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-5",
+      "at": 458,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Surplus and elasticity",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-6",
+      "at": 613,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Producers and cost curves",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-7",
+      "at": 776,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Efficiency and externalities",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-8",
+      "at": 951,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Monopoly and game theory",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-9",
+      "at": 1152,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Competition and information",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-10",
+      "at": 1265,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "The formula sheet",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-11",
+      "at": 1332,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Self-test",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-12",
+      "at": 1613,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "The traps",
+      "subject": ""
+    },
+    {
+      "slot": "econ/chapter-13",
+      "at": 1684,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Close",
+      "subject": ""
+    }
+  ]
+}

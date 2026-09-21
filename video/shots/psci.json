@@ -1,0 +1,134 @@
+{
+  "course": "psci",
+  "id": "psci-podcast",
+  "shots": [
+    {
+      "slot": "psci/chapter-0",
+      "at": 0,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Cold open",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-1",
+      "at": 56,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Theory and hypotheses",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-2",
+      "at": 220,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Measurement, and why it decides Kansas",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-3",
+      "at": 397,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Describing data, and the ecological fallacy",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-4",
+      "at": 463,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Hypotheses and variables",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-5",
+      "at": 531,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Causality — the four hurdles",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-6",
+      "at": 658,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Research design and validity",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-7",
+      "at": 758,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Experiments",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-8",
+      "at": 948,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Controlling without an experiment",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-9",
+      "at": 1131,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Sampling",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-10",
+      "at": 1223,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Why polls miss",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-11",
+      "at": 1354,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Probability, inference and regression",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-12",
+      "at": 1558,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Small-N and selection bias",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-13",
+      "at": 1657,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "The five exam frames",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-14",
+      "at": 1766,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Self-test",
+      "subject": ""
+    },
+    {
+      "slot": "psci/chapter-15",
+      "at": 2082,
+      "seconds": 6,
+      "kind": "establishing",
+      "chapter": "Close",
+      "subject": ""
+    }
+  ]
+}

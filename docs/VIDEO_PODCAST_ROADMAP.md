@@ -237,9 +237,30 @@ once the format is right.
    - **The spending guardrail:** ✅ built —`video/src/clipspend.ts` and its guard.
      Deliberately built *before* any provider, so the first paid run cannot
      happen without the manifest that stops the second run paying again.
-   - **B-roll generation:** ✗ not wired. `--broll <provider>` prints what it
-     would ask for and exits non-zero. No provider is chosen and no per-second
-     price is written down, because both are spending decisions.
+   - **B-roll:** ◐ built up to the provider. `pipeline/broll-shots.mjs`
+     drafts a shot list per course into `video/shots/`, checks what somebody
+     wrote into it, prices the run and refuses one without a `--max-spend`
+     ceiling; `Documentary.tsx` cuts whatever has been generated into the
+     frame as a full-width strip. Generating is not wired, and no provider or
+     price is chosen, because both are spending decisions.
+
+     The reason a shot list exists at all is worth recording. This step was
+     costed here as "one establishing shot per chapter", and the code took
+     that literally: the prompt was the chapter's *name*. Fourteen clips for
+     ECON, generated from "Cold open", "Optimisation and opportunity cost" and
+     "The formula sheet" — none of which a camera can point at, at whatever
+     the provider charges, with an estimate indistinguishable from a good
+     one. A chapter title names a passage of argument. Writing what a
+     documentary shows is an editorial act, so the tool drafts the structure
+     and a person writes the subjects, the way `make-script.mjs` already
+     works.
+
+     Three guardrails now, not two. The manifest stops a second run paying for
+     the first run's clips, `--price` has to be supplied so a stale rate never
+     reads as measured, and `--max-spend` stops a run that is correctly priced,
+     correctly deduplicated and far larger than anybody meant — which is what a
+     hand-edited shot list makes possible for the first time. §7 asks for the
+     first two.
    - **Animated-series character:** ◐ built up to the provider.
      `pipeline/personas.mjs` holds the two personas — one host, one expert,
      the podcast's own two roles — and `persona-sheet.mjs` builds the sheet

@@ -1,3 +1,5 @@
+import { pointsAtSomebody } from './likeness.mjs';
+
 /**
  * The recurring characters of the animated series, as structural parameters.
  *
@@ -195,17 +197,6 @@ export function sheetPrompt(persona) {
     .join(' ');
 }
 
-/*
- * Ways of pointing at somebody, which is the thing the axes cannot prevent
- * because `note` is free text.
- */
-const POINTS_AT = [
-  /\b(?:like|resembling|resembles|modell?ed (?:on|after)|based on|inspired by|a la|à la)\b/i,
-  /\bin the (?:style|manner|likeness) of\b/i,
-  /\b(?:lookalike|look-alike|doppelg[aä]nger|impression of|cosplay(?:ing)? as)\b/i,
-  /\b(?:vibes?|energy|aura)\s+of\b/i,
-  /-(?:like|esque|core)\b/i,
-];
 
 /**
  * What is wrong with a persona, or an empty list.
@@ -254,11 +245,9 @@ export function check(persona) {
   }
 
   const note = persona.note ?? '';
-  for (const pattern of POINTS_AT) {
-    if (pattern.test(note)) {
-      problems.push(`note points at somebody ("${note.match(pattern)[0]}") — describe, do not compare`);
-      break;
-    }
+  const points = pointsAtSomebody(note);
+  if (points) {
+    problems.push(`note points at somebody ("${points}") — describe, do not compare`);
   }
   const capital = note.slice(1).match(/[A-Z]/);
   if (capital) {
