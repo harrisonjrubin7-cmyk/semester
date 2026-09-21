@@ -30,7 +30,7 @@ credential, and each is named where it belongs below:
 
 | waiting on | what it unblocks |
 | --- | --- |
-| a video provider and a per-second price | B-roll inserts (§6.4) |
+| a video provider and a per-second price | B-roll inserts (§6.4) — ECON's fourteen shots are written, the other three courses are not |
 | an image provider and a per-image price | character sheets (§6.4) |
 | an expressive TTS voice | rendering `hype-reaction` (§6.3) |
 | an `ANTHROPIC_API_KEY` | the restyle pass has never been run live (§6.3) |
