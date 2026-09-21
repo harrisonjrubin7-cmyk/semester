@@ -247,3 +247,16 @@ export function oldestLine(span: { from: number; to: number } | null, now = Date
   const months = Math.round(days / 30);
   return `The oldest record here is about ${months} month${months === 1 ? '' : 's'} old.`;
 }
+
+/**
+ * How many things they have told the assistant, as the value on a row.
+ *
+ * "Nothing yet" rather than "0", because zero on a row about what an app knows
+ * about you reads as a count that failed to load. The row is the only place
+ * this number appears — the list itself is on the assistant's settings page,
+ * for the reason the row's own comment gives.
+ */
+export function toldLine(count: number): string {
+  if (count === 0) return 'Nothing yet';
+  return `${count} thing${count === 1 ? '' : 's'}`;
+}

@@ -7,7 +7,7 @@
  * comes from is explicit that the paying half is not to be built until two or
  * three real ambassadors have been tracked by hand off exactly these numbers.
  *
- * Almost all of the design is in `supabase/migrations/20260901001400_referrals.sql`,
+ * Almost all of the design is in `supabase/migrations/20260921003500_referrals.sql`,
  * because almost all of it is about what one account may learn about another
  * and that can only be settled in the database. This module is the browser's
  * half: getting a code out of a URL, keeping it across the round trip that

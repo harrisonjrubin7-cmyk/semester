@@ -49,6 +49,7 @@ import { DEFAULT_TABS, readTabs } from '../lib/tabbar';
 import { readTone, type Tone } from '../lib/tone';
 import type { YoursBy } from '../lib/yours';
 import { readRules, type MyRule } from '../lib/myrules';
+import { readFacts, type Fact } from '../lib/aboutme';
 import { readLog, readPolicy, type AttendPolicy, type Attended } from '../lib/attend';
 import { readDrop } from '../lib/drop';
 import { DEFAULT_BUDGET } from '../lib/clash';
@@ -301,6 +302,12 @@ export interface Persisted {
   yours: YoursBy;
   /** Reminder rules the student wrote. See `lib/myrules.ts`. */
   myRules: MyRule[];
+  /**
+   * What they have told the app about themselves, once, for every assistant
+   * feature to read. Typed by them and deleted by them; nothing infers a line.
+   * See `lib/aboutme.ts`.
+   */
+  aboutMe: Fact[];
   /**
    * What to call them. Empty until they say, and never guessed at from an
    * email address — a name is a thing you ask for, not derive.
@@ -1347,6 +1354,7 @@ export const DEFAULT_PERSISTED: Persisted = {
   yours: {},
   courseOrder: [],
   myRules: [],
+  aboutMe: [],
   myName: '',
   attendance: [],
   attendPolicy: {},
@@ -1666,6 +1674,7 @@ export function loadPersisted(): Persisted {
       tone: readTone(saved.tone),
       yours: saved.yours ?? {},
       myRules: readRules(saved.myRules),
+      aboutMe: readFacts(saved.aboutMe),
       myName: typeof saved.myName === 'string' ? saved.myName : '',
       attendance: readLog(saved.attendance),
       attendPolicy: Object.fromEntries(
@@ -1812,6 +1821,7 @@ export function pickPersisted(state: State): Persisted {
     tabs: state.tabs,
     yours: state.yours,
     myRules: state.myRules,
+    aboutMe: state.aboutMe,
     myName: state.myName,
     attendance: state.attendance,
     attendPolicy: state.attendPolicy,
@@ -2032,6 +2042,7 @@ export type Action =
   | { type: 'setTabs'; tabs: Screen[] }
   | { type: 'setYours'; yours: YoursBy }
   | { type: 'setMyRules'; rules: MyRule[] }
+  | { type: 'setAboutMe'; facts: Fact[] }
   | { type: 'setMyName'; name: string }
   | { type: 'markAttendance'; courseId: CourseId; date: string; mark: Attended['mark'] | null }
   | { type: 'setAttendPolicy'; courseId: CourseId; policy: AttendPolicy }

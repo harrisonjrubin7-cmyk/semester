@@ -123,10 +123,12 @@ describe('what the history findings say, which is not about a dashboard', () => 
    * They asserted that `ROLLBACK.md` says Branching applies migrations on merge
    * and no longer says schema changes are made by hand. That was written from
    * Supabase's documentation and from a bot comment, and the repository then
-   * produced evidence against it: `20260901001300_access_log.sql` merged to
-   * main at 17:34 on 18 September and production had eighteen rows, no
-   * `access_log`, and the same newest version twenty-five minutes later. A
-   * merged migration did not arrive.
+   * produced evidence against it: `access_log` — then numbered
+   * `20260901001300`, now `20260921003400` — merged to main at 17:34 on
+   * 18 September and production had eighteen rows, no `access_log`, and the
+   * same newest version twenty-five minutes later. A merged migration did not
+   * arrive, and the old number is why: it sorted before thirteen versions the
+   * ledger already held, so a deploy would never have applied it.
    *
    * Whether the integration is on is a dashboard setting no test here can read,
    * so no test here should pin a claim about it — that is how a document ends
@@ -206,25 +208,70 @@ describe('what the history findings say, which is not about a dashboard', () => 
     );
   });
 
-  it('and both documents still say what must not be merged meanwhile', () => {
-    // The one operational instruction either document carries. It is the thing
-    // a person reads at speed, so it is pinned in both places it appears.
+  /*
+   * This used to require both documents to carry the merge freeze — "do not
+   * merge a pull request that touches `supabase/`" — in either word order.
+   * It did its job: lifting the freeze turned it red, which is exactly what a
+   * tripwire on an operational instruction is for, and the instruction was
+   * then lifted deliberately and in writing rather than by deletion.
+   *
+   * What replaces it is the rule the freeze was standing in for. The freeze was
+   * temporary and vague; this is permanent and arithmetic.
+   */
+  it('and no migration is numbered where a deploy cannot apply it', () => {
+    /*
+     * The fault that broke production's schema deploy on 18 September, as a
+     * comparison between numbers.
+     *
+     * Supabase applies a migration only if its version is newer than every
+     * version the live ledger holds. Production's ledger holds twenty-one, of
+     * which the newest is `20260921002658` — and eight are the baseline files
+     * below, recorded at their own versions when the directory was created.
+     *
+     * So a file here is deployable if it is one of those eight, or if it sorts
+     * after the newest. Anything in between is a file that will sit in this
+     * directory looking applied and never reach the database, which is what
+     * `access_log` did for three days while nothing said so. `rehearse.sh`
+     * cannot catch this — Postgres applies a file whatever it is called.
+     */
+    const LEDGER_NEWEST = '20260921002658';
+    const IN_LEDGER_ALREADY = [
+      '20260901000100',
+      '20260901000200',
+      '20260901000300',
+      '20260901000400',
+      '20260901000500',
+      '20260901000600',
+      '20260901000700',
+      '20260901000800',
+    ];
+    const versions = readdirSync(join(ROOT, 'supabase', 'migrations'))
+      .filter((f) => f.endsWith('.sql'))
+      .map((f) => f.slice(0, 14));
+    // The control: a rule about migration versions means nothing if there are
+    // no migrations, and an empty directory would otherwise satisfy every
+    // assertion below.
+    expect(versions.length, 'there are no migrations to be a rule about').toBeGreaterThan(5);
+    for (const v of versions) {
+      if (IN_LEDGER_ALREADY.includes(v)) continue;
+      expect(
+        v > LEDGER_NEWEST,
+        `${v} is not in the live ledger and sorts before ${LEDGER_NEWEST}, so a deploy will never apply it`,
+      ).toBe(true);
+    }
+  });
+
+  it('and both documents say the freeze lifted, rather than losing it', () => {
+    // A rule that disappears reads the same as a rule nobody wrote. Both
+    // documents carried the freeze, so both have to account for its going.
     for (const [name, text] of [
       ['ROLLBACK.md', doc()],
       ['MIGRATION-HISTORY.md', readFileSync(join(ROOT, 'MIGRATION-HISTORY.md'), 'utf8')],
     ] as const) {
-      /*
-       * Either order. `ROLLBACK.md` says "do not merge a pull request that
-       * touches `supabase/`"; the plan says "no pull request touching
-       * `supabase/` should be merged". The first draft of this required the
-       * warning to precede the path and failed on the document that happened
-       * to say it the other way round — a probe asserting a sentence shape
-       * nobody promised.
-       */
-      const warns =
-        /(do not merge|should be merged)[\s\S]{0,160}`supabase\/`/i.test(text) ||
-        /`supabase\/`[\s\S]{0,160}(do not merge|should be merged)/i.test(text);
-      expect(warns, `${name} no longer warns against merging supabase/ changes`).toBe(true);
+      expect(
+        /lift(s|ed)?\b/i.test(text) && /`supabase\/`/.test(text),
+        `${name} no longer says what happened to the supabase/ merge freeze`,
+      ).toBe(true);
     }
   });
 });
