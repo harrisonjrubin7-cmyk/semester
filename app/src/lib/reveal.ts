@@ -55,6 +55,16 @@ export interface Facts {
   /** Whether a second term exists, which is what makes archiving mean anything. */
   terms: number;
   signedIn: boolean;
+  /**
+   * Whether this student says they are on a team.
+   *
+   * The one entry here that is a declaration rather than something that
+   * happened, and it has to be. Every other fact is observable from the
+   * semester; being on a team is not, and the screen where a season would be
+   * recorded is the screen being gated — so waiting for athletics data would
+   * hide its own way in, exactly as gating Courses on a first score would.
+   */
+  athlete: boolean;
 }
 
 export const NOTHING_YET: Facts = {
@@ -65,6 +75,7 @@ export const NOTHING_YET: Facts = {
   ownThings: 0,
   terms: 1,
   signedIn: false,
+  athlete: false,
 };
 
 /**
@@ -114,6 +125,24 @@ export const UNLOCKS: Record<string, (f: Facts) => boolean> = {
   // Courses rather than a screen, so there is nothing here to gate: Courses is
   // where you type the first score, and gating it would hide the way in.
   proof: (f) => f.sittings > 0,
+
+  /*
+   * The two screens for a student on a team, and the only ones here behind a
+   * declaration.
+   *
+   * Roughly one student in twenty is a varsity athlete, and until #628 landed
+   * these two had no rule at all — so they fell to the default below, which is
+   * `courses > 0`, and every student with a single course was offered a CARA
+   * hours log and a NIL disclosure countdown. That is not a screen that is not
+   * useful *yet*; for most people it is a screen that will never be useful,
+   * which is the distinction this file exists to draw.
+   *
+   * Both, not just `nil`, and the pair is the point: gating the NIL screen
+   * while leaving Athletics on the shelf would hide the consequence and keep
+   * the cause. They arrive together when somebody says they are on a team.
+   */
+  athletics: (f) => f.athlete,
+  nil: (f) => f.athlete,
 
   // Study formats need something to study.
   study: (f) => f.courses > 0,

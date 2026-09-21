@@ -11,6 +11,10 @@ const settled: Facts = {
   ownThings: 9,
   terms: 2,
   signedIn: true,
+  // A semester with everything in it, which is what both of this fixture's
+  // uses mean by it: nothing hidden, and every gate satisfiable. A student on
+  // a team is part of "everything" — see the athletics pair in `UNLOCKS`.
+  athlete: true,
 };
 
 const none: Record<string, boolean> = {};
@@ -145,5 +149,60 @@ describe('the table itself', () => {
     for (const [screen, gate] of Object.entries(UNLOCKS)) {
       expect(gate(settled), screen).toBe(true);
     }
+  });
+});
+
+/**
+ * The two screens that are not about how far along somebody is.
+ *
+ * Every other rule in `UNLOCKS` waits for something to happen. These two wait
+ * to be told, because being on a team is not observable from a semester — and
+ * until they had a rule at all they fell to the default, `courses > 0`, which
+ * offered a CARA hours log and a NIL disclosure countdown to every student
+ * with a single course.
+ */
+describe('the athletics pair', () => {
+  const busy: Facts = { ...settled, athlete: false };
+
+  it('stays shut for a student who has not said they are on a team', () => {
+    expect(unlocked('athletics', busy)).toBe(false);
+    expect(unlocked('nil', busy)).toBe(false);
+  });
+
+  /*
+   * The control, and the reason the case above is worth anything: a full
+   * semester unlocks these the moment the declaration is there, so the falses
+   * are about the declaration and not about some other fact `busy` is short of.
+   */
+  it('opens for the same student once they have', () => {
+    expect(unlocked('athletics', settled)).toBe(true);
+    expect(unlocked('nil', settled)).toBe(true);
+  });
+
+  /*
+   * And the declaration alone is enough. Somebody who says they are on a team
+   * in their first minute gets both screens with no courses imported — the
+   * gate is the declaration, not the declaration plus the default.
+   */
+  it('opens on the declaration alone, with nothing else in the term', () => {
+    const dayOne: Facts = { ...NOTHING_YET, athlete: true };
+    expect(unlocked('athletics', dayOne)).toBe(true);
+    expect(unlocked('nil', dayOne)).toBe(true);
+  });
+
+  /*
+   * Switching it back off takes nothing away, which is this file's oldest
+   * rule: a screen somebody has opened outranks every gate.
+   */
+  it('does not take the screens away from somebody who has opened them', () => {
+    const opened: Record<string, boolean> = { athletics: true, nil: true };
+    expect(showing('athletics', busy, opened, false)).toBe(true);
+    expect(showing('nil', busy, opened, false)).toBe(true);
+  });
+
+  /* And the whole-directory switch reaches them like anything else. */
+  it('is overridden by show-everything', () => {
+    expect(showing('athletics', busy, none, true)).toBe(true);
+    expect(showing('nil', busy, none, true)).toBe(true);
   });
 });
