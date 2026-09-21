@@ -48,8 +48,9 @@ describe('the spacing tokens', () => {
  * And the sheets do not route around them.
  *
  * A count rather than a rule, for the same reason `styles/budget.ts` is a
- * count: `features.css` is a port carrying 125 of these, and a rule it cannot
- * satisfy is a rule somebody deletes. Each number may shrink and may not grow.
+ * count: each number may shrink and may not grow. `features.css` carried 125
+ * of these when this was written and carries none now, so its line is a floor
+ * holding a finished sheet rather than a budget for an unfinished one.
  *
  * `app.css`'s eight are the ones where scaling is the bug, and they are listed
  * rather than tolerated:
@@ -78,7 +79,7 @@ describe('spacing written past the tokens', () => {
   it.each([
     ['app.css', 8],
     ['industry.css', 0],
-    ['features.css', 125],
+    ['features.css', 0],
   ])('%s holds no more than its %i', (file, allowed) => {
     const found = unscaled(file);
     expect(
