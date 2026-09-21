@@ -3,6 +3,7 @@ import { ActionButton, FilePick, Notice, SectionLabel } from '../ui';
 import { secondLine } from '../../lib/dim';
 import { addFile, getFile } from '../../lib/files';
 import { download } from '../../lib/deliver';
+import { projectFile } from '../../lib/export';
 import { splitClip, videoSeconds, type CreativeProject, type VideoClip } from '../../lib/creations';
 
 /**
@@ -331,14 +332,19 @@ export function VideoEditor({
 
       recorder.stop();
       const blob = await finished;
+      // One name for both, because the download and the row in Files are the
+      // same file to the student — and it goes through `projectFile` for the
+      // reason that file gives: an emptied title made this `.webm`, a hidden
+      // file with no stem, stored as well as downloaded.
+      const name = projectFile(project.title, project.kind, 'webm');
       await addFile(
-        new File([blob], `${project.title}.webm`, { type: 'video/webm' }),
+        new File([blob], name, { type: 'video/webm' }),
         project.courseId || null,
         null,
         '',
         project.itemId || null,
       );
-      download({ name: `${project.title}.webm`, body: blob, mime: 'video/webm' });
+      download({ name, body: blob, mime: 'video/webm' });
       setNotice('Exported and saved in Files. Check the audio and captions before you hand it in.');
     } catch (e) {
       setNotice((e as Error).message);

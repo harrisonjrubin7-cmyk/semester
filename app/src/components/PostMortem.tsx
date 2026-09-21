@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNow, useStore } from '../state/store';
 import { useLive } from '../lib/live';
-import { cardKey } from '../lib/review';
+import { cardIdentity } from '../lib/review';
 import { KINDS, OFFER, doneLine, newMortem, saidSomething, type MissKind, type PostMortem as Mortem } from '../lib/postmortem';
 import type { Returned } from '../lib/returned';
 import { unitName } from '../lib/unit';
@@ -149,7 +149,7 @@ export function PostMortem({ record, courseId }: { record: Returned; courseId: s
             // The screen turns unit indexes into card keys, because the
             // reducer has no guide to look them up in.
             const keys = draft.units.flatMap((i) =>
-              (units[i]?.cards ?? []).map((c) => cardKey(courseId, c.q)),
+              (units[i]?.cards ?? []).map((c) => cardIdentity(courseId, c)),
             );
             dispatch({
               type: 'postMortem',

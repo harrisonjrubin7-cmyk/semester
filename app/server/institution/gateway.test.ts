@@ -35,7 +35,16 @@ const journals: ActionJournal[] = [];
 const dirs: string[] = [];
 
 afterEach(() => {
-  journals.splice(0).forEach((journal) => journal.close());
+  journals.splice(0).forEach((journal) => {
+    // Tolerated, because a test may have closed one on purpose: that is how a
+    // lost volume is staged for the health check below, and `close()` throws
+    // on a database that is already shut.
+    try {
+      journal.close();
+    } catch {
+      /* already closed */
+    }
+  });
   dirs.splice(0).forEach((dir) => rmSync(dir, { recursive: true, force: true }));
 });
 
@@ -399,5 +408,66 @@ describe('university gateway boundaries', () => {
     const reopened = new ActionJournal(f.path, key);
     journals.push(reopened);
     expect(reopened.get(r.id, actor)?.state).toBe('uncertain');
+  });
+});
+
+/**
+ * What `/health` is allowed to claim.
+ *
+ * It had no test at all, which is how it stayed a liveness check with a
+ * readiness check's name: it answered `{service, version}` unconditionally,
+ * from two constants that cannot be wrong and therefore prove nothing.
+ *
+ * The distinction is sharper here than in most services. This process answers
+ * while being unable to do the one thing it exists for, because the journal is
+ * a file and a file can stop being writable long after boot. And the two-phase
+ * action records an attempt *before* making it, so a gateway that cannot write
+ * must refuse work rather than degrade: calling a university with no record
+ * that it was called is the exact situation `uncertain` exists to prevent.
+ */
+describe('the health check', () => {
+  it('answers without a token, because that is how a deployment is checked', async () => {
+    const f = fixture();
+    const said = await f.request('/health', undefined, { authorization: '' });
+    expect(said.status).toBe(200);
+    expect((await said.json()).status).toBe('ready');
+  });
+
+  /*
+   * The one that decides whether the endpoint is worth having.
+   *
+   * Closing the journal is what a lost volume looks like from inside the
+   * process: the object is still there, the routes still resolve, and the one
+   * thing it needs is gone. Against the version that returned two constants
+   * this is a 200 saying `ready`.
+   */
+  it('goes 503 when the journal can no longer record anything', async () => {
+    const f = fixture();
+    expect((await f.request('/health', undefined, { authorization: '' })).status).toBe(200);
+
+    f.journal.close();
+
+    const said = await f.request('/health', undefined, { authorization: '' });
+    expect(said.status).toBe(503);
+    expect((await said.json()).status).toBe('unavailable');
+  });
+
+  /*
+   * An unauthenticated endpoint that narrates which subsystem is broken is a
+   * map for somebody choosing what to lean on. It says that it cannot serve,
+   * not what failed underneath.
+   */
+  it('does not name what broke', async () => {
+    const f = fixture();
+    f.journal.close();
+    const body = JSON.stringify(await (await f.request('/health', undefined, { authorization: '' })).json());
+    for (const leak of ['journal', 'sqlite', 'database', f.path]) {
+      expect(body.toLowerCase(), `said “${leak}”`).not.toContain(leak.toLowerCase());
+    }
+  });
+
+  it('counts the adapters, so an empty registry is visible rather than implied', async () => {
+    const f = fixture();
+    expect((await (await f.request('/health', undefined, { authorization: '' })).json()).adapters).toBe(1);
   });
 });

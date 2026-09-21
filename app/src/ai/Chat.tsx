@@ -11,7 +11,7 @@ import { Composer, sendHint } from './Composer';
 import { Dropped, Question, Reply, Waiting, Looked, Using, useFollowing } from './Turns';
 import { Threads, ThreadsOver } from './Threads';
 import { Opening } from './Opening';
-import { Applied, Locally, Proposals } from './Actions';
+import { Applied, Holding, Locally, Proposals } from './Actions';
 import { Trouble } from '../components/Trouble';
 
 /**
@@ -245,6 +245,11 @@ export function Chat() {
                           line={talk.proposalsLine}
                           onRun={talk.run}
                           onDismiss={talk.dismiss}
+                        />
+                        <Holding
+                          holding={talk.holding}
+                          onConfirm={talk.confirm}
+                          onLetGo={talk.letGo}
                         />
                         <Applied applied={talk.applied} onTakeBack={talk.takeBack} />
                       </>

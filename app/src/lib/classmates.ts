@@ -185,18 +185,20 @@ export interface Profile {
 }
 
 /**
- * The `enrollments` row, and the one of these three shapes nothing declares.
+ * The `enrollments` row — checked on the write, because no read is one.
  *
- * `Profile` and `Message` beside it are both used. This is not, and it stays:
- * the three together are what the classmates tables *are*, and a schema with
- * two of its three row shapes written down is worse documentation than one
- * with none, because the gap reads as a table that does not exist.
+ * `Profile` and `Message` beside it annotate whole rows coming back:
+ * `data as Profile`, `data as Message[]`. This one could not, and the census
+ * that found it unreferenced left the reason as an open question. The look,
+ * taken: **nothing here ever selects a whole enrollments row.** `myRooms`
+ * takes `.select('code')` and `whoIsIn` takes `.select('user_id')`, and each
+ * casts to the one column it asked for. Annotating either with `Enrollment`
+ * would be a lie about what PostgREST returned.
  *
- * The question the census cannot answer, recorded rather than guessed at: the
- * code that reads `enrollments` does not annotate its rows with this. Either
- * it should, and this is a wiring job, or the read is shaped differently and
- * this is stale. One look at the query settles it and this pass did not take
- * that look.
+ * The place all three columns do appear together is the *write* — `join`'s
+ * upsert — and until now it was an object literal nothing checked. So that is
+ * where the type went. Rename a column in the migration, update this, and the
+ * write stops compiling; before, it would have gone on sending the old name.
  */
 export interface Enrollment {
   user_id: string;
@@ -290,9 +292,13 @@ export async function join(userId: string, term: string, code: string): Promise<
     throw new Error('That is not a course code. "ECON 1020", with the number.');
   }
   const clean = code;
+  // Named rather than inlined so the shape is checked against the table's own
+  // row type — see `Enrollment`. It is the only place all three columns are
+  // written at once.
+  const row: Enrollment = { user_id: userId, term, code: clean };
   const { error } = await (await cloud())
     .from('enrollments')
-    .upsert({ user_id: userId, term, code: clean }, { onConflict: 'user_id,term,code' });
+    .upsert(row, { onConflict: 'user_id,term,code' });
   if (error) throw new Error(explain(error.message));
 }
 

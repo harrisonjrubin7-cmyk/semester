@@ -25,6 +25,7 @@
  */
 
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
+import { classify, reference, type Code } from './failure';
 import type { Seen } from '../state/shape';
 import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 import { explainSignUp } from './invite';
@@ -361,6 +362,27 @@ export async function signOut(): Promise<void> {
  * recognised is passed through untouched — a wrong guess would be worse than
  * the original.
  */
+/**
+ * The same, from the error itself rather than from its message.
+ *
+ * `state/store.tsx` had the object in scope at both call sites and passed
+ * `e.message`, so PostgREST's `code` and Supabase's `status` were dropped one
+ * line before anything tried to work out what had gone wrong — leaving the
+ * regexes below to guess it back out of English prose.
+ *
+ * This keeps every sentence `explainSyncError` produces, because that advice
+ * is specific and correct and a category cannot replace it: `42P01` is only
+ * "not found" to a taxonomy, while the paragraph below knows it means the
+ * migrations were never applied and says which file to start with. What this
+ * adds is the part support needs — a stable code decided from a stable field,
+ * and a reference to quote — without touching the part students read.
+ */
+export function explainSync(e: unknown, ref = reference()): { said: string; code: Code; ref: string } {
+  const message = e instanceof Error ? e.message : String(e);
+  const code = classify(e);
+  return { said: `${explainSyncError(message)}\n\nReference: ${ref}`, code, ref };
+}
+
 export function explainSyncError(message: string): string {
   if (/schema cache|does not exist|relation .* does not exist/i.test(message)) {
     return (
@@ -715,6 +737,21 @@ export const OWNED_TABLES: OwnedTable[] = [
   // goes with it. `access.check.sql` proves the delete policy that makes this
   // line work, and proves a stranger cannot use it to clear somebody else's.
   { table: 'access_log', column: 'user_id' },
+  // Which days this account opened the app, and how far through the funnel it
+  // got. It is about the account rather than about the work, which is what
+  // lets it have a clock at all — and is exactly why it has to go when the
+  // account does. `activity.check.sql` proves the delete policy this line
+  // needs, and that it cannot be aimed at somebody else's rows.
+  { table: 'activity', column: 'user_id' },
+  // What this account said was wrong. Keyed on `author` rather than
+  // `user_id` — the column list exists for exactly this.
+  //
+  // It belongs up here rather than among the classmates tables because its
+  // select policy asks only `author = auth.uid()`, with no enrolment in the
+  // chain, so none of the ordering hazard below applies to it.
+  // `feedback.check.sql` proves the delete policy this line needs and that it
+  // cannot be aimed at anybody else's reports.
+  { table: 'feedback', column: 'author' },
 
   // ── Classmates: yours, but other people can see them ────────────────────
   //
@@ -790,11 +827,20 @@ export const OWNED_TABLES: OwnedTable[] = [
 /**
  * The tables a deleted account leaves rows in, and why.
  *
- * Every one of these is a row the account created that another person is
- * relying on, or a record about another person. There is no version of
- * "delete everything" that includes them and is not also "delete somebody
- * else's data", so the honest thing is to leave them, say so, and say why —
- * which is what `privacy.ts` does with these sentences.
+ * Two kinds, and the second was added later. Most are a row the account
+ * created that another person is relying on, or a record about another
+ * person: there is no version of "delete everything" that includes them and
+ * is not also "delete somebody else's data", so the honest thing is to leave
+ * them, say so, and say why — which is what `privacy.ts` does with these
+ * sentences.
+ *
+ * The other kind is reference data the account never wrote at all. The guard
+ * in `privacy.test.ts` matches every `.from('…')` in the client, reads and
+ * writes alike, which is the right posture for a privacy check — touching a
+ * table should force a decision about what deletion does to it — but it means
+ * a table nobody's account owns arrives here too. Saying "your departure does
+ * not remove it" about the list of universities is a true and slightly odd
+ * sentence, and it is better than an empty category or a loosened guard.
  */
 export const KEPT_TABLES: KeptTable[] = [
   {
@@ -808,6 +854,10 @@ export const KEPT_TABLES: KeptTable[] = [
   {
     table: 'reports',
     why: 'A report you filed is a record about somebody else. It has no delete policy at all, deliberately: deleting your account is not a way to withdraw one.',
+  },
+  {
+    table: 'schools',
+    why: 'The list of universities the app recognises is not a record about you — no account writes a row in it, and only an administrator can. Leaving is not a way to remove a university, and the entry saying which one you are at lives on your own profile, which does go.',
   },
 ];
 

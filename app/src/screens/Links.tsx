@@ -46,6 +46,7 @@ export function Links() {
   const rowTwelve = useRowStyle(12);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
+  const [groupDraft, setGroupDraft] = useState('');
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState('');
   const [newUrl, setNewUrl] = useState('');
@@ -76,11 +77,14 @@ export function Links() {
     }
   };
 
-  const save = (id: string) => {
+  const save = (id: string, own: boolean) => {
     // A bare "yes.vanderbilt.edu" is what people paste; make it a real address
     // rather than refusing it.
     const url = draft.trim();
     dispatch({ type: 'setLinkUrl', id, url: url && !/^https?:\/\//i.test(url) ? `https://${url}` : url });
+    // Only your own rows carry a group you chose; a bundled link's heading is
+    // the app's, and there is no record here to patch.
+    if (own) dispatch({ type: 'setLinkGroup', id, group: groupDraft });
     setEditing(null);
   };
 
@@ -103,6 +107,10 @@ export function Links() {
             {under.map((link) => {
               const url = addressOf(link);
               const open = editing === link.id;
+              // The stored record rather than the drawn row: `mine` has had
+              // `groupName` applied, so reading the group off `link` would put
+              // "Yours" in a box the student left empty.
+              const own = state.extraLinks.find((l) => l.id === link.id);
               return (
                 <div
                   key={link.id}
@@ -162,13 +170,14 @@ export function Links() {
                       className="bare tap-y"
                       onClick={() => {
                         setDraft(url);
+                        setGroupDraft(own?.group ?? '');
                         setEditing(open ? null : link.id);
                       }}
                       style={{ fontSize: 'var(--type-xs)', color: 'var(--app-dim)', letterSpacing: '0.1em', flex: 'none', width: 'auto' }}
                     >
                       {open ? 'CANCEL' : url ? 'EDIT' : 'ADD'}
                     </button>
-                    {state.extraLinks.some((l) => l.id === link.id) && !open && (
+                    {own && !open && (
                       <button
                         type="button"
                         className="bare"
@@ -187,10 +196,26 @@ export function Links() {
                         value={draft}
                         placeholder={link.hint || 'https://…'}
                         onChange={(e) => setDraft(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && save(link.id)}
+                        onKeyDown={(e) => e.key === 'Enter' && save(link.id, !!own)}
                         style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'calc(9px * var(--density, 1))' }}
                         aria-label={`${link.name} address`}
                       />
+                      {/*
+                        Only on your own rows, and the same box the add form
+                        offers — so a heading typed wrong is a correction
+                        rather than a delete and a retype.
+                      */}
+                      {own && (
+                        <input
+                          className="input"
+                          value={groupDraft}
+                          placeholder={`Group — ${OWN_GROUP} if you leave it`}
+                          onChange={(e) => setGroupDraft(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && save(link.id, true)}
+                          style={{ fontSize: 'var(--type-sm-plus)', marginTop: 'calc(9px * var(--density, 1))' }}
+                          aria-label={`${link.name} group`}
+                        />
+                      )}
                       {link.note && (
                         <div style={{ fontSize: 'var(--type-xs-plus)', color: 'var(--app-dim)', lineHeight: 'var(--leading-normal)', marginTop: 'calc(7px * var(--density, 1))' }}>
                           {link.note}
@@ -199,7 +224,7 @@ export function Links() {
                       <button
                         type="button"
                         className="btn btn-secondary"
-                        onClick={() => save(link.id)}
+                        onClick={() => save(link.id, !!own)}
                         style={{
                           marginTop: 'calc(9px * var(--density, 1))',
                           fontSize: 'var(--type-xs)',

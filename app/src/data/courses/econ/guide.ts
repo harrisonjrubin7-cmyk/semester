@@ -14,26 +14,32 @@ export const ECON_GUIDE: Guide = {
       mastery: 68,
       cards: [
         {
+          id: 'crj5c4',
           q: 'How is the grade built?',
           a: '80% exams, 20% problem sets, plus up to 3% extra credit from Top Hat. Your best exam counts 30%, the other two 25% each — or swap Midterm 3 for a comprehensive final worth 40% if it helps.',
         },
         {
+          id: 's9dwzx',
           q: 'What quietly protects you in the syllabus?',
           a: 'Your lowest problem set is dropped (missing ones can be emailed at term’s end for 50%), and about five classes of Top Hat are excused. But no pset extensions, ever.',
         },
         {
+          id: '1dcuwrt',
           q: 'Step 1 of the four-step method?',
           a: 'Review each slide deck right after lecture, ruthlessly: could you explain every point to a friend, out loud, with no notes? He says 95% of students fool themselves here.',
         },
         {
+          id: 'zntiqa',
           q: 'Step 2 and 3?',
           a: 'Do the psets alone first — every problem targets one building block, so ask which concept it is testing. Then friend, then TA. Then read the answer key carefully, including for questions you got right: a right answer for the wrong reason still costs you.',
         },
         {
+          id: '1aljbov',
           q: 'Step 4, and the thing he asks you to do yourself?',
           a: 'Practice exams, timed and closed-note — then modify every question. What would make a different answer correct? Can you reverse it Jeopardy-style? He asks you to do this rep yourself rather than having AI generate questions for you.',
         },
         {
+          id: '1vhktbn',
           q: 'What separates A students?',
           a: 'Memorizers do fine until a question asks them to do something new with a definition. Top grades go to students who learned the connections between building blocks, not just the blocks.',
         },
@@ -44,18 +50,22 @@ export const ECON_GUIDE: Guide = {
       mastery: 82,
       cards: [
         {
+          id: '1428uyy',
           q: 'Define economics and an economic agent.',
           a: 'The study of how agents choose to allocate scarce resources and how those choices affect society. An agent is anyone making choices — a person, household, firm or government.',
         },
         {
+          id: '124ci80',
           q: 'Positive vs. normative — and the trap?',
           a: 'Positive is an objective, falsifiable claim; normative is a value judgment. The trap: a positive statement can be wrong and still be positive. What makes it positive is that it could be checked.',
         },
         {
+          id: 't825zq',
           q: 'State the course definition of equilibrium — both halves.',
           a: 'Everyone is optimizing AND nobody believes they would personally be better off changing their own choice, holding everyone else’s fixed. Students drop the second half.',
         },
         {
+          id: 'dxo6pk',
           q: 'The two approaches to cause and effect in economics?',
           a: 'Theory-driven — build a model, change one thing, see what happens. Statistics-driven — imitate a controlled experiment using observational data. Real research sits on the spectrum between.',
         },
@@ -66,18 +76,22 @@ export const ECON_GUIDE: Guide = {
       mastery: 74,
       cards: [
         {
+          id: '12cnn4i',
           q: 'Define opportunity cost.',
           a: 'The value of the best foregone alternative — used both as a broad idea and to put a dollar value on time.',
         },
         {
+          id: 'pk58n',
           q: 'Why do sunk costs never matter?',
           a: 'They are already spent and unrecoverable. Only future costs and benefits bear on what to do next.',
         },
         {
+          id: '1g3b2xm',
           q: 'Total vs. marginal analysis — why does marginal win?',
           a: 'Same answer, less arithmetic. Keep going while MB ≥ MC and stop where they cross, instead of computing net benefit for every option.',
         },
         {
+          id: '1ybamp7',
           q: 'Where is the optimum, exactly?',
           a: 'Where MB and MC cross — not where total benefit is highest and not where cost is lowest. MB falls as you do more; MC usually rises.',
         },
@@ -88,22 +102,27 @@ export const ECON_GUIDE: Guide = {
       mastery: 63,
       cards: [
         {
+          id: 'jzb5ol',
           q: 'What do the heights of the two curves mean?',
           a: 'Demand height is willingness to pay — the buyer’s marginal benefit. Supply height is willingness to accept — the seller’s marginal cost.',
         },
         {
+          id: 'psuxvh',
           q: 'Movement along vs. shift — the #1 tested thing?',
           a: 'A change in the good’s own price moves you along the curve. A change in anything else shifts the whole curve. If price changed on its own, do not shift.',
         },
         {
+          id: '6jicz7',
           q: 'What shifts demand? What shifts supply?',
           a: 'Demand: income, substitute and complement prices, tastes, expectations, number of buyers. Supply: input prices, technology, expectations, number of sellers.',
         },
         {
+          id: '1r4kg2z',
           q: 'Both curves shift — what can you conclude?',
           a: 'Whichever effect the two shifts push in the same direction is certain; the other is ambiguous and depends on which shift is bigger.',
         },
         {
+          id: '1i1xtxl',
           q: 'Ceiling or floor — which gives a shortage?',
           a: 'An effective ceiling sits below equilibrium → excess demand → shortage, with trade only up to Qs. A floor sits above → excess supply. A ceiling above equilibrium is not binding and does nothing.',
         },
@@ -114,34 +133,42 @@ export const ECON_GUIDE: Guide = {
       mastery: 41,
       cards: [
         {
+          id: 'n6cj62',
           q: 'Write the midpoint elasticity formula.',
           a: 'ε = [(Q₂−Q₁) ÷ ((Q₁+Q₂)/2)] ÷ [(P₂−P₁) ÷ ((P₁+P₂)/2)]. The only elasticity formula you need.',
         },
         {
+          id: 'oddn47',
           q: 'Price $4→$6, quantity 100→80. Elastic or inelastic?',
           a: '%ΔQ = −20/90 = −22.2%; %ΔP = 2/5 = 40%; ε = −0.56 → inelastic.',
         },
         {
+          id: '10sjusg',
           q: 'Which way does revenue move?',
           a: 'Inelastic: revenue moves with price. Elastic: revenue moves against it. Unit elastic: revenue unchanged and at its maximum.',
         },
         {
+          id: '1ruotfn',
           q: 'Why is elasticity not slope?',
           a: 'A straight-line demand curve has one constant slope and a changing elasticity — elastic on the upper half, unit elastic at the midpoint, inelastic on the lower half. Revenue peaks at that midpoint.',
         },
         {
+          id: '1gkn924',
           q: 'What makes demand more elastic?',
           a: 'More close substitutes, a luxury rather than a necessity, a large share of the budget, a long time to adjust, and a narrowly defined market.',
         },
         {
+          id: '61zxas',
           q: 'Consumer surplus — the two ways to find it?',
           a: 'From a table, subtract price from each unit’s WTP and add the positives. From a graph, the area below demand and above price out to Q traded — usually ½ × base × height.',
         },
         {
+          id: '1mqpcd',
           q: 'Cross-price and income elasticity — what does the sign say?',
           a: 'Cross-price positive = substitutes, negative = complements. Income positive = normal good, negative = inferior good.',
         },
         {
+          id: '1accstv',
           q: '“Bang for your buck” condition?',
           a: 'You are optimizing when MBx/Px = MBy/Py. If one side is bigger, buy more of that good.',
         },
@@ -152,30 +179,37 @@ export const ECON_GUIDE: Guide = {
       mastery: 38,
       cards: [
         {
+          id: 'dku5l9',
           q: 'Why does MC eventually rise?',
           a: 'The law of diminishing returns — adding more of one input to fixed inputs eventually raises output by smaller and smaller amounts. Ten cooks, one oven.',
         },
         {
+          id: 'hmxbm7',
           q: 'Economic vs. accounting profit?',
           a: 'Economic profit subtracts all opportunity costs including the salary you gave up; accounting profit subtracts only explicit money costs. Economic ≤ accounting, always.',
         },
         {
+          id: '1jx7x68',
           q: 'Why does MC cut AVC and ATC at their minimums?',
           a: 'An average falls while the next value is below it and rises once the next value is above it — so the curves cross exactly at the bottom.',
         },
         {
+          id: '1vz5sof',
           q: 'Shutdown vs. exit rule?',
           a: 'Short run: shut down if P < min AVC. Long run: exit if P < min ATC. Breakeven price = min ATC, where economic profit is exactly zero.',
         },
         {
+          id: 'ciavxu',
           q: 'The trap on computing marginals from a table?',
           a: 'Divide by the change in Q. If output jumps 10 → 14, MC = ΔTC ÷ 4, not ΔTC.',
         },
         {
+          id: '7ohmdb',
           q: 'What is the firm’s supply curve?',
           a: 'Its MC curve above the relevant shutdown point. Add firms horizontally for market supply; entry drives price to min long-run ATC and zero economic profit.',
         },
         {
+          id: '12irgac',
           q: 'What makes supply more elastic?',
           a: 'Anything that makes the producer more flexible — inventories, non-perishability, the long run, easily adjusted variable inputs. Heavy fixed inputs make it less elastic.',
         },
@@ -186,18 +220,22 @@ export const ECON_GUIDE: Guide = {
       mastery: 57,
       cards: [
         {
+          id: 'hvy1ws',
           q: 'What does “efficient” mean here?',
           a: 'Total surplus (CS + PS) is maximised. Every unit left of Q* has MB above MC and is worth trading; every unit right of it costs more than it is worth.',
         },
         {
+          id: '1w58sp9',
           q: 'Define deadweight loss and how to compute it.',
           a: 'The surplus destroyed when the market does not trade the efficient quantity. On a graph, the triangle between D and S over the units that failed to trade: ½ × base × height.',
         },
         {
+          id: '1dfl7ni',
           q: 'Pareto efficient vs. Pareto improvement?',
           a: 'Pareto efficient: you cannot make anyone better off without making someone worse off. A Pareto improvement makes at least one person better off and nobody worse off.',
         },
         {
+          id: '17np8it',
           q: 'The equity–efficiency tradeoff?',
           a: 'Efficiency is the size of total surplus; equity is who gets it. Economics alone cannot say which balance is right — that is normative.',
         },
@@ -208,18 +246,22 @@ export const ECON_GUIDE: Guide = {
       mastery: 34,
       cards: [
         {
+          id: 'j0wsjo',
           q: 'Name the four curves and what each captures.',
           a: 'MPB = value to the buyer (the demand curve). MSB = MPB plus spillover benefits. MPC = cost to the seller (the supply curve). MSC = MPC plus spillover costs.',
         },
         {
+          id: 'bb1f3x',
           q: 'Negative externality — which way does the market err?',
           a: 'Overproduction. MSC sits above MPC, so Q_market exceeds Q_optimal and the gap is deadweight loss. Flip it for a positive externality: MSB above MPB, underproduction.',
         },
         {
+          id: 'mss8pu',
           q: 'State the Coase theorem — and its limit.',
           a: 'With clear property rights and low transaction costs, the parties bargain to the efficient quantity no matter who holds the right. Who holds it changes who pays whom, not the efficient quantity. It fails with many parties, murky rights or costly bargaining — which is why it does not solve climate change.',
         },
         {
+          id: 'yvsvwb',
           q: 'Command-and-control vs. market-based fixes?',
           a: 'Command-and-control sets direct rules — caps, bans, mandated technology. Market-based tools — taxes, subsidies, tradable permits — change prices so private incentives line up with social ones and let firms choose how to respond.',
         },
@@ -230,18 +272,22 @@ export const ECON_GUIDE: Guide = {
       mastery: 30,
       cards: [
         {
+          id: '1i8wml6',
           q: 'Why does MR lie below demand for a monopolist?',
           a: 'To sell one more unit it must cut price on every unit, so MR = the new unit’s price minus revenue lost on all previous ones. For a straight-line demand curve, MR has the same intercept and twice the slope.',
         },
         {
+          id: '1052mne',
           q: 'The two-step move for monopoly price?',
           a: 'Find Q where MR = MC, then go straight up to the demand curve to read the price. Setting price at the MR = MC intersection is the classic mistake.',
         },
         {
+          id: '1wmr9ux',
           q: 'What are the two kinds of barrier to entry?',
           a: 'Legal — patents, licences, government franchises. Natural — huge economies of scale, control of a key resource, network effects.',
         },
         {
+          id: 'knhpum',
           q: 'Perfect price discrimination — the striking result?',
           a: 'The firm produces the efficient quantity, so DWL = 0 — but CS = 0 and the firm captures the entire surplus. Efficient and not equitable: the cleanest proof that efficiency ≠ fairness.',
         },
@@ -251,20 +297,24 @@ export const ECON_GUIDE: Guide = {
       name: '13 · Game theory',
       mastery: 45,
       cards: [
-        { q: 'The three ingredients of any game?', a: 'Players, strategies, payoffs.' },
+        { id: '19oxjws', q: 'The three ingredients of any game?', a: 'Players, strategies, payoffs.' },
         {
+          id: '12blca6',
           q: 'Nash equilibrium vs. dominant strategy?',
           a: 'Nash: both players are playing a best response, so neither would unilaterally switch. Dominant: your best response no matter what the other does.',
         },
         {
+          id: '1hzwixm',
           q: 'How do you solve a payoff matrix?',
           a: 'For each of P2’s columns mark P1’s best payoff; for each of P1’s rows mark P2’s best. Any cell marked twice is a Nash equilibrium.',
         },
         {
+          id: '1n6erpg',
           q: 'Prisoner’s dilemma — what is the point?',
           a: '(Fink, Fink) is the unique Nash equilibrium at 1,1 even though (Quiet, Quiet) pays 2,2. The gap between individual rationality and the group outcome is the whole dilemma.',
         },
         {
+          id: '1kxv2e0',
           q: 'How do you solve a game tree?',
           a: 'Backward induction — start at the end, work out the last player’s move at each node, cross off branches they would never take, and work backwards. That is how you see that B’s threat to fight is not credible.',
         },
@@ -275,22 +325,27 @@ export const ECON_GUIDE: Guide = {
       mastery: 36,
       cards: [
         {
+          id: '1kjja9e',
           q: 'Why are cartels unstable?',
           a: 'Collusion is a prisoner’s dilemma — each firm’s private incentive is to cheat and undercut.',
         },
         {
+          id: '1owh9t0',
           q: 'What is HHI and why use it over a firm count?',
           a: 'The sum of each firm’s squared percentage market share — four firms at 25% gives 2,500, a pure monopoly 10,000. It captures share; twenty firms where one holds 95% is not competitive.',
         },
         {
+          id: 'v91i9y',
           q: 'Adverse selection vs. moral hazard?',
           a: 'Adverse selection hides a type, before the deal — only sick people buy the insurance. Moral hazard hides an action, after it — insured drivers drive recklessly.',
         },
         {
+          id: '1d6rx0',
           q: 'Explain the death spiral.',
           a: 'Insurers raise premiums to cover a sick pool, the healthiest drop out, the pool gets sicker, premiums rise again — adverse selection eating itself until the market can collapse.',
         },
         {
+          id: '1jntjet',
           q: 'Does every principal–agent relationship have moral hazard?',
           a: 'No. Only when the principal cannot observe what the agent actually does — exactly the kind of distinction he writes a multiple-choice question around.',
         },
@@ -330,50 +385,62 @@ export const ECON_GUIDE: Guide = {
   ],
   selfTest: [
     {
+      id: '2hqgxe',
       q: 'A question says the price of coffee rose. Do you shift the demand curve?',
       a: 'No. A change in the good’s own price is a movement along the curve. Only a change in something else — income, related prices, tastes, expectations, number of buyers — shifts it.',
     },
     {
+      id: 'it3u1d',
       q: 'Price $4 → $6, quantity 100 → 80. Work the midpoint elasticity and say what happens to revenue.',
       a: '%ΔQ = −20/90 = −22.2%; %ΔP = 2/5 = 40%; ε = −0.56, inelastic. Revenue moves with price when demand is inelastic, so revenue rises.',
     },
     {
+      id: '1xkzda1',
       q: 'A table shows output jumping from 10 to 14 units. How do you compute MC?',
       a: 'ΔTC ÷ 4, not ΔTC. Always divide by the change in Q — this is the trap he warns about directly.',
     },
     {
+      id: '1etdwh0',
       q: 'You found the quantity where MR = MC for a monopolist. Where does the price come from?',
       a: 'Straight up to the demand curve at that quantity. Setting price at the MR = MC intersection is the classic mistake.',
     },
     {
+      id: 'pu6gfb',
       q: 'Why is zero economic profit not a failure?',
       a: 'In long-run competition it means you are earning exactly what you could earn elsewhere — all opportunity costs are already subtracted. Economic profit ≤ accounting profit, always.',
     },
     {
+      id: '1h209ph',
       q: 'Perfect price discrimination: efficient or fair?',
       a: 'Efficient and not fair. The firm produces the efficient quantity so DWL = 0, but CS = 0 and the firm captures the entire surplus. The cleanest proof that efficiency ≠ fairness.',
     },
     {
+      id: '1r902ln',
       q: 'An effective price ceiling — draw it and say what happens.',
       a: 'It sits below equilibrium. Buyers want a lot, sellers offer little: excess demand, a shortage, with trade only up to Qs. A ceiling above equilibrium is not binding and does nothing.',
     },
     {
+      id: '1xxgnd3',
       q: 'Adverse selection or moral hazard: insured drivers drive more recklessly?',
       a: 'Moral hazard — a hidden action, after the deal. Adverse selection is a hidden type, before the deal: only sick people buy the insurance.',
     },
     {
+      id: '1jntjet',
       q: 'Does every principal–agent relationship have moral hazard?',
       a: 'No. Only when the principal cannot observe what the agent actually does — exactly the distinction he writes a multiple-choice question around.',
     },
     {
+      id: '1p16sij',
       q: 'Four firms each hold 25% of a market. What is the HHI, and why not just count firms?',
       a: '4 × 25² = 2,500. A pure monopoly is 10,000. HHI captures share, and twenty firms where one holds 95% is not a competitive market.',
     },
     {
+      id: 'u416x8',
       q: 'Solve a game tree — what is the method, and what does it reveal?',
       a: 'Backward induction. Start at the end, work out the last player’s move at each node, cross off branches they would never take, work backwards. It is how you see that B’s threat to fight is not credible — carrying it out would hurt B.',
     },
     {
+      id: '1paw1yf',
       q: 'A positive statement can be false. Is it still positive?',
       a: 'Yes. What makes a statement positive is that it could be checked against evidence — falsifiable in principle, not true.',
     },

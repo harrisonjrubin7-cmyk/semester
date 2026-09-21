@@ -52,11 +52,15 @@ describe('cardKey', () => {
 });
 
 describe('score', () => {
-  it('schedules a first correct answer one day out', () => {
+  it('schedules a first correct answer two days out', () => {
     const r = score(undefined, true, T0);
     expect(r.right).toBe(1);
     expect(r.streak).toBe(1);
-    expect(r.due).toBe(T0 + DAY);
+    // Two, not one. FSRS's initial stability for a Good first answer is
+    // W[2] = 2.3065 days, and at the retention this app aims for the interval
+    // *is* the stability. SM-2's one day was a constant with no reasoning
+    // behind it; this is a number that came from somewhere.
+    expect(r.due).toBe(T0 + 2 * DAY);
   });
 
   it('sends a missed card back in ten minutes, not next week', () => {
@@ -71,13 +75,54 @@ describe('score', () => {
     expect(r.right).toBe(3);
   });
 
-  it('grows the interval as the streak grows', () => {
+  /*
+   * This used to assert SM-2's ladder exactly: 1 day, then 6, then
+   * interval × ease. Those numbers are gone and they should be — the interval
+   * is read off a forgetting curve now, not off the last interval.
+   *
+   * What is asserted instead is the shape that matters and the one property
+   * SM-2 could not offer: the interval grows, and it grows because the card's
+   * *stability* grew. `pass` answers on the due date each time, so these are
+   * the intervals a student who never falls behind actually sees.
+   */
+  it('grows the interval as the card gets stronger', () => {
     const one = pass(1);
     const two = pass(2);
     const three = pass(3);
-    expect(one.interval).toBe(1);
-    expect(two.interval).toBe(6);
+    expect(one.interval).toBe(2);
+    expect(two.interval).toBe(7);
     expect(three.interval).toBeGreaterThan(two.interval);
+    // And the growth is the memory's, not a multiplier's.
+    expect(one.stability).toBeLessThan(two.stability!);
+    expect(two.stability).toBeLessThan(three.stability!);
+  });
+
+  /*
+   * The half of "on top of SM-2" that nobody sees and everybody would notice:
+   * these rows sync, and a phone on the previous build schedules on `ease`,
+   * `interval` and `streak`. Dropping them would reset every card on that
+   * phone the first time this build wrote a row.
+   */
+  it('still keeps the SM-2 fields a device on the older build reads', () => {
+    const three = pass(3);
+    expect(three.streak).toBe(3);
+    expect(three.ease).toBeGreaterThan(2.5);
+    expect(three.interval).toBeGreaterThan(0);
+  });
+
+  /*
+   * And the other direction: a card written by that older build arrives with
+   * no memory at all, and must not start over. Its interval becomes its
+   * stability — the two are the same quantity at this retention — so a card
+   * SM-2 had got out to twenty days is treated as a twenty-day card.
+   */
+  it('and migrates a card that arrives without one rather than resetting it', () => {
+    const fromOldBuild = {
+      right: 5, wrong: 1, streak: 3, ease: 2.5, interval: 20, seen: T0 - 20 * DAY, due: T0,
+    };
+    const after = score(fromOldBuild, true, T0);
+    expect(after.stability).toBeGreaterThan(20);
+    expect(after.interval).toBeGreaterThan(20);
   });
 
   it('never lets ease fall below the SM-2 floor', () => {
@@ -242,7 +287,7 @@ describe('tallying a named set of cards', () => {
 });
 
 describe('tallying by course', () => {
-  const deck = (courseId: string, qs: string[]) => ({ courseId, questions: qs });
+  const deck = (courseId: string, qs: string[]) => ({ courseId, cards: qs.map((q) => ({ q, a: '' })) });
 
   it('recomputes the keys, because a hash gives its course back to nobody', () => {
     const reviews: Reviews = {
@@ -280,16 +325,30 @@ describe('a right answer the student says they guessed at', () => {
   const DAY = 86_400_000;
 
   it('earns the streak but not the runway', () => {
-    // Letting a guess start a six-day interval is how a card disappears until
-    // the week of the exam. `lib/sure.ts` decides this; `score` only obeys.
+    // Letting a guess start a week-long interval is how a card disappears
+    // until the week of the exam. `lib/sure.ts` decides this; `score` obeys.
     let card = score(undefined, true, NOW);
     card = score(card, true, NOW + DAY);
-    expect(card.interval).toBe(6);
+    expect(card.interval).toBe(7);
 
     let guessed = score(undefined, true, NOW);
     guessed = score(guessed, true, NOW + DAY, true);
     expect(guessed.streak).toBe(2);
     expect(guessed.interval).toBe(1);
+  });
+
+  /*
+   * The floor is on the date and not on the model, and the difference is the
+   * whole design. FSRS grades a lucky guess as Hard and would give it four
+   * days — more than `sure.ts` is willing to give it, which is a product
+   * decision rather than a claim about memory. So the card comes back
+   * tomorrow, **and** its stability still moves, so the next real success is
+   * computed from what actually happened rather than from a punishment.
+   */
+  it('and the memory still learns from it, even though the date does not', () => {
+    const guessed = score(score(undefined, true, NOW), true, NOW + DAY, true);
+    expect(guessed.interval).toBe(1);
+    expect(guessed.stability).toBeGreaterThan(1);
   });
 
   it('does not grow the ease either', () => {

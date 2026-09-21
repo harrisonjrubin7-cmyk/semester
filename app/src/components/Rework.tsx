@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { faintLine, secondLine } from '../lib/dim';
+import { secondLine } from '../lib/dim';
 import { useStore } from '../state/store';
 import { Blueprint } from './Blueprint';
 import { SectionLabel } from './ui';
@@ -250,24 +250,30 @@ export function Rework({
 
           <div style={{ marginTop: 'var(--sp-6)' }}>
             {/*
-              Name soft, count softer — the hierarchy an earlier pass argued
-              for here and was right about. What it could not do at the time
-              was say it in tokens: the outer was an `opacity: 0.8` and the
-              inner a `--app-dim`, and its note explains the bind — taking the
-              token for both would paint the name and the count the same, and
-              putting the sweep's dim inside the opacity would stack 0.64 under
-              0.5 and land the count at 0.32.
+              Name and count at one strength, which is not what was wanted here
+              and is what the size allows.
 
-              The bind was having only one strength to spend. There are two.
-              `--app-dim` is the second line and `--app-faint` the one below
-              it, both audited against every ground, and a colour does not
-              compose with the colour inside it — so the hierarchy survives,
-              the arithmetic does not happen, and "Increase contrast" now
-              reaches both rungs where it could reach neither.
+              An earlier pass argued for "name soft, count softer" and moved
+              the two off a stacked `opacity` onto the two rungs — right about
+              the arithmetic, and right that a colour does not compose with the
+              colour inside it. The part that did not hold is the line it
+              rested on: that both rungs are "audited against every ground".
+              Both are, but not to the same bar. `--app-faint` is held to 3:1,
+              which WCAG allows for large text only, and `dim.ts` says so in as
+              many words — *"use it for a figure, not for a caption"*. This is
+              12.5px.
+
+              Measured through `lib/contrast.ts` on all thirteen grounds, the
+              faint rung on a panel runs **3.35–4.09:1** against the 4.5 small
+              text needs: not one ground reaches it. The dim rung runs
+              5.87–7.03:1 and every ground does. So there was only ever one
+              strength to spend here after all, and the separator carries what
+              is left of the hierarchy — a `·` before a number reads as
+              subordinate to the name without needing ink nobody can see.
             */}
             {plan.guide.units.map((u, i) => (
               <div key={i} style={{ fontSize: 'var(--type-sm-plus)', ...secondLine(), paddingBlock: 'calc(3px * var(--density, 1))', paddingInline: '0' }}>
-                {u.name} <span style={faintLine()}>· {u.cards.length}</span>
+                {u.name} <span style={secondLine()}>· {u.cards.length}</span>
               </div>
             ))}
           </div>

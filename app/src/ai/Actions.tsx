@@ -1,6 +1,7 @@
 import { Blueprint } from '../components/Blueprint';
-import { faintLine, secondLine } from '../lib/dim';
+import { secondLine } from '../lib/dim';
 import type { Local } from '../lib/localask';
+import type { Held } from './converse';
 import type { Lists, Proposal } from '../lib/tools';
 import type { Screen } from '../lib/types';
 
@@ -77,12 +78,91 @@ export function Proposals({
               className="bare"
               aria-label={`Dismiss: ${p.said}`}
               onClick={() => onDismiss(p.id)}
-              style={{ flex: 'none', width: 20, ...faintLine() }}
+              style={{ flex: 'none', width: 20, ...secondLine() }}
             >
               ×
             </button>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The one that needs more than a tap, and the sentence saying why.
+ *
+ * Drawn apart from `Proposals` rather than as a state inside it, because it
+ * is a different question. That list is a set of offers you may take in any
+ * order; this is one thing waiting on an answer, and a second offer arriving
+ * beside it would be a second decision on a screen asking for one.
+ *
+ * The sentence names what cannot be taken back — `beforeYouSend` in
+ * `lib/reach.ts` — rather than asking whether you are sure. "Are you sure" is
+ * a question nobody has ever answered with new information.
+ */
+export function Holding({
+  holding,
+  onConfirm,
+  onLetGo,
+}: {
+  holding: Held | null;
+  onConfirm: () => void;
+  onLetGo: () => void;
+}) {
+  if (!holding) return null;
+  const { p, because } = holding;
+  return (
+    <div
+      role="group"
+      aria-label={p.said}
+      style={{
+        marginTop: 'var(--sp-6)',
+        padding: 'var(--sp-5) var(--sp-6)',
+        borderRadius: 'var(--r-md)',
+        border: '1px solid var(--app-accent)',
+        background: 'var(--app-hero)',
+      }}
+    >
+      <div className="kicker">Nothing has happened yet</div>
+      <div
+        style={{
+          fontSize: 'var(--type-sm)',
+          lineHeight: 'var(--leading-normal)',
+          marginTop: 'var(--sp-4)',
+        }}
+      >
+        {p.said}
+      </div>
+      <div
+        style={{
+          fontSize: 'var(--type-xs)',
+          color: 'var(--app-dim)',
+          lineHeight: 'var(--leading-normal)',
+          marginTop: 'var(--sp-3)',
+        }}
+      >
+        {because}
+      </div>
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', marginTop: 'var(--sp-5)' }}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={onLetGo}
+          style={{ flex: 1, height: 44 }}
+        >
+          Not now
+        </button>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={onConfirm}
+          // Named for the change, as the proposal buttons are.
+          aria-label={p.said}
+          style={{ flex: 1, height: 44 }}
+        >
+          {p.verb}
+        </button>
       </div>
     </div>
   );

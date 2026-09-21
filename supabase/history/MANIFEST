@@ -1,4 +1,4 @@
-# What production's migration ledger says these ten files are.
+# What production's migration ledger says these fourteen files are.
 #
 # Each line is the md5 and byte length of one row's `statements[1]` in
 # `supabase_migrations.schema_migrations` on the live project, read on
@@ -8,6 +8,44 @@
 #
 # These are not checksums of files somebody wrote. They are the fingerprints of
 # what the database ran, and the file is only correct because it matches one.
+#
+# ## The thirteenth, added after the stand-ins landed
+#
+# `20260921002658_revoke_function_execute_from_supabase_default_roles` was the
+# one version with a stand-in in `migrations/` and no record here, and its
+# stand-in said why: "it was typed into the dashboard rather than read back
+# out". That is not what the ledger says. The row carries one statement, and
+#
+#     select md5(array_to_string(statements, E'\n'))
+#       from supabase_migrations.schema_migrations
+#      where version = '20260921002658';
+#
+# returns `e847a7487970a86c0475047c8ec3ca97`, which is the md5 below and the
+# md5 of the file beside it. It was read back out the same way the other twelve
+# were — base64 in chunks, each with its own md5, assembled and checked against
+# the row before anything was written.
+#
+# Worth having rather than tidy: that migration is the one that closes the gap
+# between `revoke ... from public` and Supabase's `pg_default_acl`, and until
+# now the only description of it in this repository was a sentence saying it
+# could not be described.
+#
+# ## The fourteenth, which is a version with two texts
+#
+# Every other line here is a row whose version has no real SQL in
+# `migrations/` — a stand-in sits there so a deploy can see the version, and
+# the statements live in this directory. `20260921144011` is not that shape.
+# `migrations/20260921144011_function_grants.sql` is a real 8,088-byte
+# migration, and it is **not what the ledger holds at that version**. The row
+# is 2,050 bytes, named `function_grants_rerun_after_access_log`, and it is
+# the second time production ran that file — the run after `access_log`
+# existed, which is what closed `note_access` and `read_feed`.
+#
+# Nothing had noticed, and nothing could: `ledgerfiles.test.ts` asks whether a
+# version has a file, not whether the file is what ran, and at this version the
+# answer to the first question was yes the whole time. So the row's own text is
+# recorded here, and `migrationhistory.test.ts` now asserts the case directly
+# rather than leaving it to be rediscovered.
 #
 #   md5                               bytes  file
 822d2a0f5b08ade4288cedf84b019096       1453  20260907050718_push_devices_and_queue.sql
@@ -20,3 +58,7 @@
 a091b63a85ee5c7d5839632de9b227fd       4214  20260908053943_per_record_sync_with_soft_deletes.sql
 c87932c42613c9e4db93d30dbd5dafa9       1649  20260908054007_calendar_feeds.sql
 c6733bc1d662040d68b1ebbb08a0f10c       5804  20260911151826_groups.sql
+e847a7487970a86c0475047c8ec3ca97       2080  20260921002658_revoke_function_execute_from_supabase_default_roles.sql
+65ceff743008e75fa1ddde2b4678af8a       3088  20260921144711_forms_relation_grants.sql
+bfc5a6401b439a225094492ac3ea477c       2198  20260921150750_access_log_function_search_path.sql
+59fdfe1fded25a64a1c8f5c9a9451c38       2050  20260921144011_function_grants_rerun_after_access_log.sql

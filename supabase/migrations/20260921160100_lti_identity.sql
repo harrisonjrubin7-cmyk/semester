@@ -107,6 +107,11 @@ revoke all on public.lti_link_ticket from anon, authenticated;
 
 create index if not exists lti_link_ticket_expires_at_idx on public.lti_link_ticket (expires_at);
 
+-- The covering index this table's cascade needs is not here. It is its own
+-- migration — `20260921174500_index_lti_link_ticket_user.sql` — which is
+-- where it stayed after two sessions added it twice, under two names, in the
+-- same afternoon. See that file for why the column needs one.
+
 comment on table public.lti_link_ticket is
   'Proof that a launch was validated, spent once when a student attaches an account they already had.';
 
@@ -179,7 +184,18 @@ begin
       -- The `to_regclass` guard below is what makes naming a table this
       -- migration does not create safe: until that one applies the relation is
       -- absent and the loop skips it, exactly as it does for `forms`.
-      ('public.family_grants',     'student_id')
+      ('public.family_grants',     'student_id'),
+      -- Created by 20260921215800_feedback.sql, which applies after this file,
+      -- and named here for the same reason `family_grants` is: somebody who
+      -- has written out what went wrong with the app has plainly used this
+      -- account, and a report is something they typed and could lose. The
+      -- `to_regclass` guard makes naming it before it exists safe.
+      --
+      -- `src/lib/ltiaccount.test.ts` is what insists on this line. Its
+      -- `NOT_CONTENT` list is for rows that land without the person doing
+      -- anything — a device registering, a feed being fetched — and feedback
+      -- is the opposite of that.
+      ('public.feedback',          'author')
     ) as x(rel, col)
   loop
     /*

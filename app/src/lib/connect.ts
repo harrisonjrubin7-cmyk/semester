@@ -54,7 +54,7 @@ import { MOVE_MS, fetchWithin, timedOut, tookTooLong } from './net';
 
 export type ProviderId = 'microsoft' | 'google' | 'zoom' | 'apple';
 
-interface ProviderSpec {
+export interface ProviderSpec {
   id: ProviderId;
   name: string;
   blurb: string;
@@ -199,6 +199,39 @@ export const WRITABLE: ProviderId[] = ['google', 'microsoft'];
 /** Which of those are actually connected, in the order they are offered. */
 export function writable(held: TokenStore = tokens()): ProviderId[] {
   return WRITABLE.filter((id) => held[id]);
+}
+
+/**
+ * Whether this copy can finish a sign-in with a provider, rather than start one.
+ *
+ * A client ID is half the setting. Zoom's API sends no CORS headers, and
+ * Apple's client secret is a JWT signed with a private key that a browser
+ * cannot hold — so for both, the token exchange only completes through
+ * `VITE_OAUTH_PROXY`. Every document says so: `.env.example` calls the proxy
+ * the thing Zoom "needs", and describes leaving it unset as talking "to
+ * Microsoft and Google directly", naming exactly the two that do not need it;
+ * `SETUP.md` says Apple needs it "to sign the client secret". `needsProxy` on
+ * the spec has recorded it since these providers were added.
+ *
+ * It was read in one place — `api()`, to rewrite a URL — and never where a
+ * sign-in is offered. `screens/Connect.tsx` asked `spec.clientId` alone, so a
+ * build with `VITE_ZOOM_CLIENT_ID` and no proxy drew "Sign in with Zoom",
+ * sent the student to Zoom's consent screen, and failed the exchange on the
+ * way back: an authorisation granted for nothing, explained afterwards by
+ * `describe()` saying the provider needs the proxy. The other branch of the
+ * same sentence was true and useful — not switched on in this copy, add the
+ * .ics instead, which needs no sign-in at all.
+ *
+ * This is the shape `WRITABLE` above was written for, one flag over. There a
+ * screen read `calendar` and offered buttons that always came back refused;
+ * the fix was to put the question beside the code that answers it rather than
+ * spell it out on a screen. Same here, and the same provider found it.
+ *
+ * `proxy` is a parameter for the reason `writable`'s `held` is: so a caller —
+ * and a test — can ask about a configuration other than this build's.
+ */
+export function signInReady(spec: ProviderSpec, proxy: string = PROXY): boolean {
+  return Boolean(spec.clientId) && (!spec.needsProxy || Boolean(proxy));
 }
 
 function saveToken(token: Token): void {
